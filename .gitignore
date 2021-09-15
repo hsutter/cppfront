@@ -1,0 +1,10 @@
+
+*.vcxproj
+*.filters
+*.recipe
+*.user
+*.ilk
+*.log
+*.enc
+*.tlog
+*.idb
