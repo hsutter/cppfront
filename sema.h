@@ -284,7 +284,7 @@ private:
                             selection_stack.back().branches.back().result = sym.assignment_to;
 
                             int this_depth = symbols[pos].depth;
-                            while (symbols[pos + 1].depth > this_depth) {
+                            while (symbols[pos + 1].depth >= this_depth) {
                                 ++pos;
                             }
                         }
@@ -293,10 +293,17 @@ private:
                     //  Else we're in a selection branch and can skip the rest of this branch
                     //  and record this as the result for the current branch
                     else {
+                        if (!sym.assignment_to) {
+                            errors.emplace_back( 
+                                sym.identifier->lineno(), 
+                                sym.identifier->colno(), 
+                                sym.identifier->as_string(true) 
+                                + " - variable is used in a branch before it was initialized");
+                        }
                         selection_stack.back().branches.back().result = sym.assignment_to;
 
                         int this_depth = symbols[pos].depth;
-                        while (symbols[pos + 1].depth > this_depth) {
+                        while (symbols[pos + 1].depth >= this_depth) {
                             ++pos;
                         }
                     }
@@ -320,9 +327,15 @@ private:
 
                     auto all_true  = true;
                     auto all_false = true;
-                    for (auto const& e : selection_stack.back().branches) {
-                        if (e.result) { all_false = false; }
-                        else          { all_true  = false; }
+                    std::string false_branches;
+                    for (auto i = 0; i < std::ssize(selection_stack.back().branches); ++i) {
+                        if (selection_stack.back().branches[i].result) {
+                            all_false = false;
+                        }
+                        else {
+                            all_true  = false;
+                            false_branches += std::to_string(i) + " ";
+                        }
                     }
                     
                     //  If none of the branches was true
@@ -359,8 +372,8 @@ private:
                         errors.emplace_back( 
                             sym.selection->identifier->lineno(),
                             sym.selection->identifier->colno(),
-                            "initialization is missing in one or more branches of "
-                                + sym.selection->identifier->as_string(true)
+                            sym.selection->identifier->as_string(true)
+                                + " - some branches initialize, others do not"
                         );
 
                         return false;

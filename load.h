@@ -316,7 +316,7 @@ auto process_cpp2_line(
                 if (prev == '/') { in_comment = true; }
 
             break;case '/': 
-                if (prev == '/') { in_comment = false; return true; }
+                if (prev == '/') { in_comment = false; return false; }
             }
         }
 
