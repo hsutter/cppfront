@@ -178,7 +178,8 @@ public:
 
         //  Helpers for readability
         //
-        auto is_uninitialized_variable_decl = [&](symbol const& s) -> declaration_sym const*
+        auto is_uninitialized_variable_decl = [&](symbol const& s) 
+            -> declaration_sym const*
         {
             if (auto const* sym = std::get_if<declaration>(&s.sym)) {
                 if (sym->start && !sym->initializer) {
@@ -234,10 +235,10 @@ private:
                 auto const& sym = std::get<declaration>(symbols[pos].sym);
                 if (sym.start && sym.identifier && *sym.identifier == *id) {
                     errors.emplace_back( 
-                        sym.identifier->lineno(), 
-                        sym.identifier->colno(),
+                        sym.identifier->position(), 
                         sym.identifier->as_string(true) 
-                        + " - variable cannot have the same name as an uninitialized variable in the same function");
+                            + " - variable cannot have the same name as an uninitialized"
+                              " variable in the same function");
                 }
             }
 
@@ -253,10 +254,9 @@ private:
                     if (selection_stack.size() == 0) {
                         if (!sym.assignment_to) {
                             errors.emplace_back( 
-                                sym.identifier->lineno(), 
-                                sym.identifier->colno(), 
+                                sym.identifier->position(), 
                                 sym.identifier->as_string(true) 
-                                + " - variable is used in a general expression before it was initialized");
+                                    + " - variable is used in a general expression before it was initialized");
                         }
                         return sym.assignment_to;
                     }
@@ -269,10 +269,9 @@ private:
                         if (selection_stack.size() == 1) {
                             if (!sym.assignment_to) {
                                 errors.emplace_back( 
-                                    sym.identifier->lineno(), 
-                                    sym.identifier->colno(), 
+                                    sym.identifier->position(), 
                                     sym.identifier->as_string(true) 
-                                    + " - variable is used in a condition before it was initialized");
+                                        + " - variable is used in a condition before it was initialized");
                             }
                             return sym.assignment_to;
                         }
@@ -295,10 +294,9 @@ private:
                     else {
                         if (!sym.assignment_to) {
                             errors.emplace_back( 
-                                sym.identifier->lineno(), 
-                                sym.identifier->colno(), 
+                                sym.identifier->position(), 
                                 sym.identifier->as_string(true) 
-                                + " - variable is used in a branch before it was initialized");
+                                    + " - variable is used in a branch before it was initialized");
                         }
                         selection_stack.back().branches.back().result = sym.assignment_to;
 
@@ -362,16 +360,14 @@ private:
                     //  Else we found a bug, report it and return false
                     else {
                         errors.emplace_back( 
-                            id->lineno(), 
-                            id->colno(),
+                            id->position(), 
                             id->as_string(true) 
                                 + " - variable is not initialized on all paths");
                         
                         assert (symbols[selection_stack.back().pos].sym.index() == selection);
                         auto const& sym = std::get<selection>(symbols[pos].sym);
                         errors.emplace_back( 
-                            sym.selection->identifier->lineno(),
-                            sym.selection->identifier->colno(),
+                            sym.selection->identifier->position(),
                             sym.selection->identifier->as_string(true)
                                 + " - some branches initialize, others do not"
                         );
@@ -389,7 +385,10 @@ private:
                 if (selection_stack.size() > 0) {
                     //  If this is a compound start with the current selection's depth
                     //  plus one, it's the start of one of the branches of that selection
-                    if (sym.start && symbols[pos].depth == symbols[selection_stack.back().pos].depth+1) {
+                    if (sym.start && 
+                        symbols[pos].depth == symbols[selection_stack.back().pos].depth+1
+                        )
+                    {
                         selection_stack.back().branches.emplace_back( pos, false );
                     }
                 }
@@ -402,8 +401,7 @@ private:
         }
 
         errors.emplace_back( 
-            id->lineno(), 
-            id->colno(),
+            id->position(), 
             id->as_string(true) 
             + " - variable is never initialized on any path");
         return false;

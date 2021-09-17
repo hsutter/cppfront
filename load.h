@@ -123,7 +123,8 @@ auto starts_with_whitespace_slash_slash(std::string const& line) -> bool
 // 
 //  line    current line being processed
 //
-auto starts_with_whitespace_slash_star_and_no_star_slash(std::string const& line) -> bool
+auto starts_with_whitespace_slash_star_and_no_star_slash(std::string const& line) 
+    -> bool
 {
     auto i = 0;
 
@@ -208,7 +209,7 @@ auto process_cpp_line(
     struct process_line_ret r { in_comment, true };
 
     auto prev = ' ';
-    for (auto i = 0; i < ssize(line); ++i) {
+    for (auto i = colno_t{0}; i < ssize(line); ++i) {
 
         if (!std::isspace(line[i])) {
             r.empty_line = false;
@@ -228,9 +229,12 @@ auto process_cpp_line(
 
                 break;case '}':
                     if (brace_depth < 1) { 
-                        //  Might as well give a diagnostic in C++ code since we're
-                        //  relying on balanced { } to find Cpp2 code
-                        errors.emplace_back(lineno, i, "closing } does not match a prior {"); 
+                        //  Might as well give a diagnostic in C++ code since
+                        //  we're relying on balanced { } to find Cpp2 code
+                        errors.emplace_back(
+                            source_position{lineno, i},
+                            "closing } does not match a prior {"
+                        ); 
                     }
                     else {
                         --brace_depth; 
@@ -277,7 +281,7 @@ auto process_cpp2_line(
     auto found_end = false;
 
     auto prev = ' ';
-    for (auto i = 0; i < ssize(line); ++i) {
+    for (auto i = colno_t{0}; i < ssize(line); ++i) {
 
         if (in_comment) {
             switch (line[i]) {
@@ -287,10 +291,12 @@ auto process_cpp2_line(
 
         else {
             if (found_end && !isspace(line[i])) {
-                errors.emplace_back(lineno, i, 
-                    std::string("unexpected text '") + line[i] + 
-                    "' - after the closing ; or } of a definition, the rest"
-                    " of the line should contain only whitespace or comments"
+                errors.emplace_back(
+                    source_position{lineno, i}, 
+                    std::string("unexpected text '")
+                        + line[i]
+                        + "' - after the closing ; or } of a definition, the rest"
+                          " of the line should contain only whitespace or comments"
                 ); 
             }
 
@@ -300,7 +306,10 @@ auto process_cpp2_line(
 
             break;case '}':
                 if (brace_depth < 1) { 
-                    errors.emplace_back(lineno, i, "closing } does not match a prior {"); 
+                    errors.emplace_back(
+                        source_position{lineno, i}, 
+                        "closing } does not match a prior {"
+                    ); 
                 }
                 else {
                     --brace_depth; 
@@ -375,9 +384,11 @@ public:
 
             //  Handle preprocessor source separately, they're outside the language
             //
-            if (auto pre = is_preprocessor(buf, true); pre.is_preprocessor) {
+            if (auto pre = is_preprocessor(buf, true); pre.is_preprocessor)
+            {
                 lines.push_back({ &buf[0], source_line::category::preprocessor });
-                while (pre.has_continuation && in.getline(&buf[0], max_line_len)) {
+                while (pre.has_continuation && in.getline(&buf[0], max_line_len))
+                {
                     lines.push_back({ &buf[0], source_line::category::preprocessor });
                     pre = is_preprocessor(buf, false);
                 }
@@ -395,7 +406,10 @@ public:
                     lines.back().cat = source_line::category::cpp2;
                     if (lines.size() > 1) {
                         auto prev = --std::end(lines);
-                        while (--prev != std::begin(lines) && (prev->cat == source_line::category::empty || prev->cat == source_line::category::comment)) {
+                        while (--prev != std::begin(lines)
+                               && (prev->cat == source_line::category::empty
+                                   || prev->cat == source_line::category::comment))
+                        {
                             prev->cat = source_line::category::cpp2;
                         }
                     }
@@ -403,8 +417,19 @@ public:
                     //  Find the end of the definition:
                     auto found_semi = false;
                     auto found_openbrace = false;
-                    while (!process_cpp2_line(lines.back().text, in_comment, brace_depth, found_semi, found_openbrace, lines.size()-1, errors)
-                        && in.getline(&buf[0], max_line_len)) {
+                    while (
+                        !process_cpp2_line(
+                            lines.back().text, 
+                            in_comment, 
+                            brace_depth, 
+                            found_semi, 
+                            found_openbrace, 
+                            lines.size()-1, 
+                            errors
+                        )
+                        && in.getline(&buf[0], max_line_len)
+                        )
+                    {
                         lines.push_back({ &buf[0], source_line::category::cpp2 });
                     }
 
@@ -417,7 +442,13 @@ public:
                         lines.back().cat = source_line::category::import;
                     }
                     else {
-                        auto stats = process_cpp_line(lines.back().text, in_comment, brace_depth, lines.size()-1, errors);
+                        auto stats = process_cpp_line(
+                            lines.back().text, 
+                            in_comment, 
+                            brace_depth, 
+                            lines.size()-1, 
+                            errors
+                        );
                         if (stats.all_comment_line) {
                             lines.back().cat = source_line::category::comment;
                         }
@@ -431,8 +462,11 @@ public:
         }
 
         if (brace_depth != 0) {
-            errors.emplace_back(lines.size(), 0, std::string("end of file reached with ") 
-                + std::to_string(brace_depth) + " missing } to match earlier {");
+            errors.emplace_back(
+                source_position{lineno_t(lines.size()), 0}, 
+                std::string("end of file reached with ") 
+                    + std::to_string(brace_depth) + " missing } to match earlier {"
+            );
         }
     }
 

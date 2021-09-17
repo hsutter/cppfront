@@ -49,6 +49,21 @@ struct source_line
 using lineno_t = int32_t;
 using colno_t  = int16_t;
 
+struct source_position
+{
+    lineno_t    lineno;     // zero-based offset into program
+    colno_t     colno;      // one-based offset into line
+
+    source_position(
+        int l,
+        int c
+    )
+        : lineno{ lineno_t(l) }
+        , colno{ colno_t(c) }
+    {
+    }
+};
+
 
 //-----------------------------------------------------------------------
 // 
@@ -58,25 +73,26 @@ using colno_t  = int16_t;
 //
 struct error 
 {
-    lineno_t    lineno;     // zero-based offset into program
-    colno_t     colno;      // zero-based offset into line
-    std::string msg;
-    bool        internal = false;
+    source_position where;
+    std::string     msg;
+    bool            internal = false;
 
     auto print(auto& o, std::string const& file) const -> void 
     {
-        o << file << ":";
-        if (lineno >= 0) { 
+        o << file ;
+        if (where.lineno >= 0) { 
             //  Add 1 to line to make it 1-based (human-readable)
-            o << (lineno+1) << ":";
-            if (colno >= 0) {
-                o << colno << ":";
+            o << "("<< (where.lineno+1);
+            if (where.colno >= 0) {
+                o << "," << where.colno;
             }
+            o  << ")";
         }
+        o << ":";
         if (internal) {
             o << " internal compiler";
         }
-        o << " error : " << msg << "\n";
+        o << " error: " << msg << "\n";
     }
 };
 

@@ -527,7 +527,10 @@ private:
     auto error(char const* msg) const -> void 
     {
         assert (!done());
-        errors.emplace_back(curr().lineno(), curr().colno(), msg + std::string(" at ") + curr().as_string());
+        errors.emplace_back(
+            curr().position(), 
+            msg + std::string(" at ") + curr().as_string()
+        );
     }
     
     auto error(std::string const& msg) const -> void 

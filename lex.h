@@ -171,17 +171,15 @@ class token
 {
 public:
     token( 
-        char const* start, 
-        int16_t     count, 
-        int32_t     lineno, 
-        int16_t     colno, 
-        lexeme      type
+        char const*     start, 
+        int16_t         count, 
+        source_position pos,
+        lexeme          type
     )
-      : start   {start }
-      , count   {count }
-      , line_no {lineno}
-      , col_no  {colno }
-      , lex_type{type  }
+      : start   {start}
+      , count   {count}
+      , pos     {pos  }
+      , lex_type{type }
     {
     }
 
@@ -211,22 +209,20 @@ public:
         return o << std::string_view(t); 
     }
 
-    auto lineno() const { return line_no; }
-    auto colno()  const { return col_no;  }
-    auto type()   const { return lex_type;   }
+    auto position() const { return pos;      }
+    auto type    () const { return lex_type; }
 
 private:
     //  Store (char*,count) because it's smaller than a string_view
     //
-    char const* start;
-    int         count;
-    lineno_t    line_no;
-    colno_t     col_no;
-    lexeme      lex_type;
+    char const*     start;
+    int16_t         count;
+    source_position pos;
+    lexeme          lex_type;
 };
 
 static_assert (CHAR_BIT == 8);
-static_assert (sizeof(token) <= 16);    // token fits in 128 bits
+//static_assert (sizeof(token) <= 16);    // token fits in 128 bits
 
 
 //-----------------------------------------------------------------------
@@ -247,12 +243,22 @@ auto lex_line(
 {
     auto original_size = tokens.size();
 
-    auto i = 0;
-    auto peek  = [&](int num) { 
+    auto i = colno_t{0};
+
+    auto peek  = [&](int num) 
+    { 
         return (i+num < ssize(line)) ? line[i+num] : '\0';
     };
-    auto store = [&](int num, lexeme type) {
-        tokens.emplace_back(&line[i], num, lineno, i+1, type); i += num-1;
+
+    auto store = [&](int16_t num, lexeme type) 
+    {
+        tokens.push_back({
+            &line[i],
+            num,
+            {lineno, i+1},
+            type
+            });
+        i += num-1;
     };
 
     //-----------------------------------------------------
@@ -291,7 +297,11 @@ auto lex_line(
             auto j = 2;
             while (j <= 9 && is_hexadecimal_digit(peek(j+offset))) { ++j; }
             if (j ==  6 || j == 10) { return j; }
-            errors.emplace_back(lineno, i+offset, "invalid universal character name (\\u must be followed by 4 or 8 hexadecimal digits)");
+            errors.emplace_back(
+                source_position{lineno, i+offset}, 
+                "invalid universal character name (\\u must"
+                    " be followed by 4 or 8 hexadecimal digits)"
+            );
         }
         return 0;
     };
@@ -578,12 +588,18 @@ auto lex_line(
                         store(j, lexeme::BinaryLiteral);
                     }
                     else {
-                        errors.emplace_back(lineno, i, "binary literal cannot be empty (0b must be followed by binary digits)");
+                        errors.emplace_back(
+                            source_position{lineno, i}, 
+                            "binary literal cannot be empty (0b must be followed by binary digits)"
+                        );
                         ++i;
                     }
                 }
                 else if (peek1 == 'B') {
-                    errors.emplace_back(lineno, i, "0B is invalid - did you mean 0b to introduce a binary literal?");
+                    errors.emplace_back(
+                        source_position{lineno, i}, 
+                        "0B is invalid - did you mean 0b to introduce a binary literal?"
+                    );
                     ++i;
                 }
                 else if (peek1 == 'x') {
@@ -592,12 +608,18 @@ auto lex_line(
                         store(j, lexeme::HexadecimalLiteral);
                     }
                     else {
-                        errors.emplace_back(lineno, i, "hexadecimal literal cannot be empty (0x must be followed by hexadecimal digits)");
+                        errors.emplace_back(
+                            source_position{lineno, i}, 
+                            "hexadecimal literal cannot be empty (0x must be followed by hexadecimal digits)"
+                        );
                         ++i;
                     }
                 }
                 else if (peek1 == 'X') {
-                    errors.emplace_back(lineno, i, "0X is invalid - did you mean 0x to introduce a hexadecimal literal?");
+                    errors.emplace_back(
+                        source_position{lineno, i}, 
+                        "0X is invalid - did you mean 0x to introduce a hexadecimal literal?"
+                    );
                     ++i;
                 }
             }
@@ -627,7 +649,13 @@ auto lex_line(
                 //G
                 else if (auto j = is_encoding_prefix_and('\"')) {
                     while (auto len = peek_is_sc_char(j, '\"')) { j += len; }
-                    if (peek(j) != '\"') { errors.emplace_back(lineno, i, "string literal \"" + std::string(&line[i+1],j) + "\" is missing its closing \""); }
+                    if (peek(j) != '\"') { 
+                        errors.emplace_back(
+                            source_position{lineno, i},
+                            "string literal \"" + std::string(&line[i+1],j) 
+                                + "\" is missing its closing \""
+                        );
+                    }
                     ++i;
                     store(j-1, lexeme::StringLiteral);
                     ++i;
@@ -639,13 +667,22 @@ auto lex_line(
                     auto len = peek_is_sc_char(j, '\'');
                     if (len > 0) { 
                         j += len; 
-                        if (peek(j) != '\'') { errors.emplace_back(lineno, i, "character literal '" + std::string(&line[i+1],j) + "' is missing its closing '"); }
+                        if (peek(j) != '\'') { 
+                            errors.emplace_back(
+                                source_position{lineno, i}, 
+                                "character literal '" + std::string(&line[i+1],j) 
+                                    + "' is missing its closing '"
+                            ); 
+                        }
                         ++i;
                         store(j-1, lexeme::CharacterLiteral);
                         ++i;
                     }
                     else {
-                        errors.emplace_back(lineno, i, "character literal is empty");
+                        errors.emplace_back(
+                            source_position{lineno, i}, 
+                            "character literal is empty"
+                        );
                     }
                 }
 
@@ -664,7 +701,10 @@ auto lex_line(
                 //  Anything else should be whitespace
                 //
                 else if (!isspace(line[i])) {
-                    errors.emplace_back(lineno, i, std::string("unexpected text '") + line[i] + "'");
+                    errors.emplace_back(
+                        source_position{lineno, i}, 
+                        std::string("unexpected text '") + line[i] + "'"
+                    );
                 }
             }
         }
@@ -737,10 +777,6 @@ public:
                 lex_line( line->text, lineno, in_comment, entry, errors );
             }
 
-            ////  Parse this Cpp2 section and append its declarations to the tree
-            //if (!parser.parse(entry)) {
-            //    errors.emplace_back(lineno, 0, "parse failed for section ending here");
-            //}
         }
     }
 
@@ -762,8 +798,8 @@ public:
         for (auto const& [lineno, entry] : map) {
             o << "--- Section starting at line " << lineno << "\n";
             for (auto const& token : entry) {
-                o << "    " << token << " (" << token.lineno()
-                    << "," << token.colno() << ") - " 
+                o << "    " << token << " (" << token.position().lineno
+                    << "," << token.position().colno << ") - " 
                     << as_string(token.type()) << "\n";
             }
         }

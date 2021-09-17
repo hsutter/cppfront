@@ -54,7 +54,10 @@ public:
         //
         for (auto const& [line, entry] : tokens.get_map()) {
             if (!parser.parse(entry)) {
-                errors.emplace_back(line, 0, "parse failed for section starting here");
+                errors.emplace_back(
+                    source_position{line, 0}, 
+                    "parse failed for section starting here"
+                );
             }
         }
 
@@ -64,7 +67,10 @@ public:
         debug_print();
 
         if (!sema.apply_local_rules()) {
-            errors.emplace_back(-1, -1, "error encountered while applying local initialization rules");
+            errors.emplace_back(
+                source_position{-1, -1}, 
+                "error encountered while applying local initialization rules"
+            );
         }
     }
 
