@@ -26,22 +26,46 @@ struct declaration_sym {
     declaration_node const* declaration = nullptr;
     token const*            identifier  = nullptr;
     statement_node const*   initializer = nullptr;  // must not be null
+
+    auto position() const -> source_position
+    {
+        assert (declaration);
+        return declaration->position();
+    }
 };
 
 struct identifier_sym {
     bool assignment_to = false;
     token const* identifier = nullptr;
+
+    auto position() const -> source_position
+    {
+        assert (identifier);
+        return identifier->position();
+    }
 };
 
 struct selection_sym {
     bool start = false;
     selection_statement_node const* selection = nullptr;
+
+    auto position() const -> source_position
+    {
+        assert (selection);
+        return selection->position();
+    }
 };
 
 struct compound_sym {
     bool start = false;
     compound_statement_node const* compound = nullptr;
     bool is_true_branch;
+
+    auto position() const -> source_position
+    {
+        assert (compound);
+        return compound->position();
+    }
 };
 
 struct symbol {
@@ -59,6 +83,36 @@ struct symbol {
     symbol(int depth, identifier_sym  const& sym) : depth{depth}, sym{sym} { }
     symbol(int depth, selection_sym   const& sym) : depth{depth}, sym{sym} { }
     symbol(int depth, compound_sym    const& sym) : depth{depth}, sym{sym} { }
+
+    auto position() const -> source_position
+    {
+        switch (sym.index())
+        {
+        break;case declaration: {
+            auto const& s = std::get<declaration>(sym);
+            return s.position();
+        }
+
+        break;case identifier: {
+            auto const& s = std::get<identifier>(sym);
+            return s.position();
+        }
+
+        break;case selection: {
+            auto const& s = std::get<selection>(sym);
+            return s.position();
+        }
+
+        break;case compound: {
+            auto const& s = std::get<compound>(sym);
+            return s.position();
+        }
+
+        break;default:
+            assert (!"illegal symbol state");
+            return { 0, 0 };
+        }
+    }
 };
 
 
@@ -322,27 +376,25 @@ private:
                 //  initializations on some path(s)
                 else {
                     assert (selection_stack.size() > 0);
+                    // selection_stack.back().debug_print(std::cout);
 
-                    auto all_true  = true;
-                    auto all_false = true;
-                    std::string false_branches;
-                    for (auto i = 0; i < std::ssize(selection_stack.back().branches); ++i) {
-                        if (selection_stack.back().branches[i].result) {
-                            all_false = false;
-                        }
-                        else {
-                            all_true  = false;
-                            false_branches += std::to_string(i) + " ";
-                        }
+                    auto true_branches  = std::string{};
+                    auto false_branches = std::string{};
+                    for (auto const& b : selection_stack.back().branches)
+                    {
+                        (b.result ? true_branches : false_branches)
+                            += symbols[b.start].position().as_string() + " ";
                     }
                     
                     //  If none of the branches was true
-                    if (all_false) {
+                    if (true_branches.length() == 0)
+                    {
                         //  Nothing to do, just continue
                     }
 
                     //  Else if all of the branches were true
-                    else if (all_true) {
+                    else if (false_branches.length() == 0)
+                    {
                         //  If this is a top-level selection statement, handle it the same as
                         //  if we weren't an a selection statement
                         if (selection_stack.size() == 1) {
@@ -358,7 +410,8 @@ private:
                     }
 
                     //  Else we found a bug, report it and return false
-                    else {
+                    else
+                    {
                         errors.emplace_back( 
                             id->position(), 
                             id->as_string(true) 
@@ -369,7 +422,8 @@ private:
                         errors.emplace_back( 
                             sym.selection->identifier->position(),
                             sym.selection->identifier->as_string(true)
-                                + " - some branches initialize, others do not"
+                                + " - branches starting at " + true_branches + "initialize, "
+                                  "but branches starting at " + false_branches + "do not"
                         );
 
                         return false;
@@ -395,7 +449,7 @@ private:
             }
 
             break;default:
-                assert (false);
+                assert (!"illegal symbol");
             }
 
         }

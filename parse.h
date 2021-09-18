@@ -99,6 +99,12 @@ struct primary_expression_node
     {
     }
 
+    auto position() const -> source_position
+    {
+        assert (identifier);
+        return identifier->position();
+    }
+
     auto visit(auto& v, int depth) {
         v.start(*this, depth);
         assert (identifier);
@@ -114,6 +120,8 @@ struct unary_expression_node
 {
     std::vector<token const*> ops;
     std::unique_ptr<postfix_expression_node> expr;
+
+    auto position() const -> source_position;
 
     auto visit(auto& v, int depth) -> void;
 };
@@ -133,6 +141,12 @@ struct binary_expression_node
         std::unique_ptr<Term> expr;
     };
     std::vector<term> terms;
+
+    auto position() const -> source_position
+    {
+        assert (expr);
+        return expr->position();
+    }
 
     auto visit(auto& v, int depth) -> void
     {
@@ -165,6 +179,12 @@ struct expression_statement_node
 {
     std::unique_ptr<expression_node> expr;
 
+    auto position() const -> source_position
+    {
+        assert (expr);
+        return expr->position();
+    }
+
     auto visit(auto& v, int depth) -> void
     {
         v.start(*this, depth);
@@ -186,6 +206,12 @@ struct postfix_expression_node
     };
     std::vector<term> ops;
 
+    auto position() const -> source_position
+    {
+        assert (expr);
+        return expr->position();
+    }
+
     auto visit(auto& v, int depth) -> void
     {
         v.start(*this, depth);
@@ -201,6 +227,15 @@ struct postfix_expression_node
         v.end(*this, depth);
     }
 };
+
+auto unary_expression_node::position() const -> source_position
+{
+    if (std::ssize(ops) > 0) {
+        return ops.front()->position();
+    }
+    assert (expr);
+    return expr->position();
+}
 
 auto unary_expression_node::visit(auto& v, int depth) -> void
 {
@@ -224,6 +259,12 @@ struct unqualified_id_node
     {
     }
 
+    auto position() const -> source_position
+    {
+        assert (identifier);
+        return identifier->position();
+    }
+
     auto visit(auto& v, int depth) -> void
     {
         v.start(*this, depth);
@@ -236,6 +277,12 @@ struct unqualified_id_node
 struct qualified_id_node
 {
     std::vector<std::unique_ptr<unqualified_id_node>> ids;
+
+    auto position() const -> source_position
+    {
+        assert (std::ssize(ids) > 0 && ids.front());
+        return ids.front()->position();
+    }
 
     auto visit(auto& v, int depth) -> void
     {
@@ -256,6 +303,31 @@ struct id_expression_node
         std::unique_ptr<qualified_id_node>,
         std::unique_ptr<unqualified_id_node>
     > id;
+
+    auto position() const -> source_position
+    {
+        switch (id.index())
+        {
+        break;case empty:
+            return { 0, 0 };
+
+        break;case qualified: {
+            auto const& s = std::get<qualified>(id);
+            assert (s);
+            return s->position();
+        }
+
+        break;case unqualified: {
+            auto const& s = std::get<unqualified>(id);
+            assert (s);
+            return s->position();
+        }
+
+        break;default:
+            assert (!"illegal id_expression_node state");
+            return { 0, 0 };
+        }
+    }
 
     auto visit(auto& v, int depth) -> void
     {
@@ -283,6 +355,8 @@ struct compound_statement_node
 {
     std::vector<std::unique_ptr<statement_node>> statements;
 
+    auto position() const -> source_position;
+
     auto visit(auto& v, int depth) -> void;
 };
 
@@ -293,6 +367,12 @@ struct selection_statement_node
     std::unique_ptr<expression_node>         expression;
     std::unique_ptr<compound_statement_node> true_branch;
     std::unique_ptr<compound_statement_node> false_branch;
+
+    auto position() const -> source_position
+    {
+        assert (identifier);
+        return identifier->position();
+    }
 
     auto visit(auto& v, int depth) -> void
     {
@@ -321,6 +401,8 @@ struct statement_node
         std::unique_ptr<declaration_node>
     > statement;
 
+    auto position() const -> source_position;
+
     auto visit(auto& v, int depth) -> void
     {
         v.start(*this, depth);
@@ -343,6 +425,12 @@ struct statement_node
     }
 };
 
+auto compound_statement_node::position() const -> source_position
+{
+    assert (std::ssize(statements) > 0 && statements.front());
+    return statements.front()->position();
+}
+
 auto compound_statement_node::visit(auto& v, int depth) -> void
 {
     v.start(*this, depth);
@@ -360,6 +448,8 @@ struct parameter_declaration_node
     style pass = style::in;
     std::unique_ptr<declaration_node> declaration;
 
+    auto position() const -> source_position;
+
     auto visit(auto& v, int depth) -> void;
 };
 
@@ -367,6 +457,12 @@ struct parameter_declaration_node
 struct parameter_declaration_list_node
 {
     std::vector<std::unique_ptr<parameter_declaration_node>> parameters;
+
+    auto position() const -> source_position
+    {
+        assert (std::ssize(parameters) && parameters.front());
+        return parameters.front()->position();
+    }
 
     auto visit(auto& v, int depth) -> void
     {
@@ -392,11 +488,17 @@ struct declaration_node
 
     std::unique_ptr<statement_node> initializer;
 
-    //  Shorthands for common queries
+    //  Shorthand for common query
     //
     auto is(active a) const
     {
         return type.index() == a;
+    }
+
+    auto position() const -> source_position
+    {
+        assert (identifier);
+        return identifier->position();
     }
 
     auto visit(auto& v, int depth) -> void
@@ -424,6 +526,46 @@ struct declaration_node
     }
 };
 
+auto statement_node::position() const -> source_position
+{
+    switch (statement.index())
+    {
+    break;case expression: {
+        auto const& s = std::get<expression>(statement);
+        assert (s);
+        return s->position();
+    }
+
+    break;case compound: {
+        auto const& s = std::get<compound>(statement);
+        assert (s);
+        return s->position();
+    }
+
+    break;case selection: {
+        auto const& s = std::get<selection>(statement);
+        assert (s);
+        return s->position();
+    }
+
+    break;case declaration: {
+        auto const& s = std::get<declaration>(statement);
+        assert (s);
+        return s->position();
+    }
+
+    break;default:
+        assert (!"illegal statement_node state");
+        return { 0, 0 };
+    }
+}
+
+auto parameter_declaration_node::position() const -> source_position
+{
+    assert (declaration);
+    return declaration->position();
+}
+
 auto parameter_declaration_node::visit(auto& v, int depth) -> void
 {
     v.start(*this, depth);
@@ -436,6 +578,12 @@ auto parameter_declaration_node::visit(auto& v, int depth) -> void
 struct translation_unit_node
 {
     std::vector< std::unique_ptr<declaration_node> > declarations;
+
+    auto position() const -> source_position
+    {
+        assert (std::ssize(declarations) > 0 && declarations.front());
+        return declarations.front()->position();
+    }
 
     auto visit(auto& v, int depth) -> void
     {

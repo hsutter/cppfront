@@ -40,7 +40,7 @@ struct source_line
         break;case category::import:        return "|  i  |  ";
         break;case category::cpp:           return "| 1   |  ";
         break;case category::cpp2:          return "|   2 |  ";
-        break;default: assert(false);       abort();
+        break;default: assert(!"illegal category"); abort();
         }
     }
 };
@@ -61,6 +61,12 @@ struct source_position
         : lineno{ lineno_t(l) }
         , colno{ colno_t(c) }
     {
+    }
+
+    auto as_string() const -> std::string
+    {
+        //  Add 1 to line to make it 1-based (human-readable)
+        return "(" + std::to_string(lineno+1) + "," + std::to_string(colno) + ")";
     }
 };
 
