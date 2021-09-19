@@ -261,6 +261,9 @@ public:
     }
 
 private:
+    //  Check that local variable *id is initialized before use on all paths
+    //  starting at the given position and depth in the symbol/scope table
+    //
     auto ensure_definitely_initialized(token const* id, int pos, int depth) -> bool
     {
         struct stack_entry{
@@ -290,8 +293,8 @@ private:
                 if (sym.start && sym.identifier && *sym.identifier == *id) {
                     errors.emplace_back( 
                         sym.identifier->position(), 
-                        sym.identifier->as_string(true) 
-                            + " - variable cannot have the same name as an uninitialized"
+                        "local variable" + sym.identifier->as_string(true)
+                            + " cannot have the same name as an uninitialized"
                               " variable in the same function");
                 }
             }
@@ -309,8 +312,8 @@ private:
                         if (!sym.assignment_to) {
                             errors.emplace_back( 
                                 sym.identifier->position(), 
-                                sym.identifier->as_string(true) 
-                                    + " - variable is used in a general expression before it was initialized");
+                                "local variable " + sym.identifier->as_string(true)
+                                    + " is used in a general expression before it was initialized");
                         }
                         return sym.assignment_to;
                     }
@@ -324,8 +327,8 @@ private:
                             if (!sym.assignment_to) {
                                 errors.emplace_back( 
                                     sym.identifier->position(), 
-                                    sym.identifier->as_string(true) 
-                                        + " - variable is used in a condition before it was initialized");
+                                    "local variable " + sym.identifier->as_string(true)
+                                        + " is used in a condition before it was initialized");
                             }
                             return sym.assignment_to;
                         }
@@ -349,8 +352,8 @@ private:
                         if (!sym.assignment_to) {
                             errors.emplace_back( 
                                 sym.identifier->position(), 
-                                sym.identifier->as_string(true) 
-                                    + " - variable is used in a branch before it was initialized");
+                                "local variable " + sym.identifier->as_string(true)
+                                    + " is used in a branch before it was initialized");
                         }
                         selection_stack.back().branches.back().result = sym.assignment_to;
 
@@ -380,10 +383,13 @@ private:
 
                     auto true_branches  = std::string{};
                     auto false_branches = std::string{};
+                    auto ctrue = 0;
+                    auto cfalse = 0;
                     for (auto const& b : selection_stack.back().branches)
                     {
                         (b.result ? true_branches : false_branches)
-                            += symbols[b.start].position().as_string() + " ";
+                            += std::to_string( symbols[b.start].position().lineno+1 ) + " ";
+                        (b.result ? ctrue : cfalse) ++ ;
                     }
                     
                     //  If none of the branches was true
@@ -414,16 +420,21 @@ private:
                     {
                         errors.emplace_back( 
                             id->position(), 
-                            id->as_string(true) 
-                                + " - variable is not initialized on all paths");
+                            "local variable " + id->as_string(true)
+                                + " is not initialized on all paths");
                         
                         assert (symbols[selection_stack.back().pos].sym.index() == selection);
                         auto const& sym = std::get<selection>(symbols[pos].sym);
                         errors.emplace_back( 
                             sym.selection->identifier->position(),
-                            sym.selection->identifier->as_string(true)
-                                + " - branches starting at " + true_branches + "initialize, "
-                                  "but branches starting at " + false_branches + "do not"
+                            "\"" + sym.selection->identifier->as_string(true)
+                                + "\" initializes " + id->as_string(true) 
+                                + " on branch" + (ctrue>1 ? "es" : "")
+                                + " starting at line" + (ctrue>1 ? "s" : "")
+                                + " " + true_branches
+                                + "but not on branch" + (cfalse>1 ? "es" : "")
+                                + " starting at line" + (cfalse>1 ? "s" : "")
+                                + " " + false_branches
                         );
 
                         return false;
