@@ -94,7 +94,9 @@ enum class lexeme : std::int8_t {
 //  TODO: Remove the duplication above/below with a variadic macro,
 //        but for now it's simpler just to write it out
 
-auto as_string(lexeme l)
+template<typename T>
+    requires std::is_same_v<T, std::string>
+auto as(lexeme l)
 {
     switch (l) {
     break;case lexeme::DivideEq:            return "DivideEq";
@@ -172,12 +174,12 @@ class token
 public:
     token( 
         char const*     start, 
-        int16_t         count, 
+        auto            count, 
         source_position pos,
         lexeme          type
     )
       : start   {start}
-      , count   {count}
+      , count   {int16_t(count)}
       , pos     {pos  }
       , lex_type{type }
     {
@@ -193,14 +195,14 @@ public:
         return s ==  this->operator std::string_view(); 
     }
 
-    auto as_string( bool text_only = false ) const -> std::string 
+    auto to_string( bool text_only = false ) const -> std::string 
     { 
         auto text = std::string{start, (unsigned)count};
         if (text_only) {
             return text;
         }
         else {
-            return cpp2::as_string(lex_type) + std::string(": ") + text;
+            return as<std::string>(lex_type) + std::string(": ") + text;
         }
     }
 
@@ -228,20 +230,28 @@ static_assert (CHAR_BIT == 8);
 //-----------------------------------------------------------------------
 //  lex: Tokenize a single line while maintaining inter-line state
 //
-//  line        the line to be tokenized
-//  lineno      the current line number
-//  in_comment  are we currently in a comment
+//  line                    the line to be tokenized
+//  lineno                  the current line number
+//  in_comment              are we currently in a comment
+//  current_comment         the current partial comment
+//  current_comment_start   the current comment's start position
+//  tokens                  the token list to add to
+//  comments                the comment token list to add to
+//  errors                  the error message list to use for reporting problems
 //
 auto lex_line(
-    std::string const&  line,       // in
-    int const           lineno,     // in
-    bool&               in_comment, // inout
-    std::vector<token>& tokens,     // inout
-    std::vector<error>& errors      // inout
+    std::string const&      line,
+    int const               lineno,
+    bool&                   in_comment,
+    std::string&            current_comment,
+    source_position&        current_comment_start,
+    std::vector<token>&     tokens,
+    std::vector<comment>&   comments,
+    std::vector<error>&     errors
 )
     -> bool
 {
-    auto original_size = tokens.size();
+    auto original_size = std::ssize(tokens);
 
     auto i = colno_t{0};
 
@@ -291,7 +301,7 @@ auto lex_line(
     //G universal-character-name:
     //G     \u { hexadecimal-digit }4 { hexadecimal-digit }4?
     //G
-    auto peek_is_universal_character_name = [&](int offset) 
+    auto peek_is_universal_character_name = [&](colno_t offset) 
     { 
         if (peek(offset) && peek(offset) == '\\' && peek(1+offset) == 'u') {
             auto j = 2;
@@ -409,7 +419,18 @@ auto lex_line(
         if (in_comment) {
             switch (line[i]) {
             //  */ comment end
-            break;case '*': if (peek1 == '/') { in_comment = false; ++i; }
+            break;case '*':
+                if (peek1 == '/') {
+                    current_comment += "*/";
+                    comments.push_back({
+                        current_comment_start,
+                        current_comment
+                        });
+                    in_comment = false;
+                    ++i;
+                }
+            break;default:
+                current_comment += line[i];
             }
         }
 
@@ -434,10 +455,26 @@ auto lex_line(
             //      /* and // comment starts
             //G     /= /
             break;case '/': 
-                if      (peek1 == '*') { in_comment = true; ++i; }
-                else if (peek1 == '/') { in_comment = false; goto END; }
-                else if (peek1 == '=') { store(2, lexeme::DivideEq); }
-                else                   { store(1, lexeme::Divide); }
+                if (peek1 == '*') {
+                    current_comment = "/*";
+                    current_comment_start = source_position(lineno, i);
+                    in_comment = true;
+                    ++i;
+                }
+                else if (peek1 == '/') {
+                    comments.push_back({
+                        {lineno, i},
+                        std::string(&line[i], std::size(line) - i)
+                        });
+                    in_comment = false;
+                    goto END;
+                }
+                else if (peek1 == '=') {
+                    store(2, lexeme::DivideEq);
+                }
+                else {
+                    store(1, lexeme::Divide);
+                }
 
             //G     <<= << <=> <= <
             break;case '<':
@@ -694,7 +731,7 @@ auto lex_line(
 
                 //  Identifier
                 //
-                else if (auto j = starts_with_identifier({&line[i], line.size()-i})) {
+                else if (auto j = starts_with_identifier({&line[i], std::size(line)-i})) {
                     store(j, lexeme::Identifier);
                 }
 
@@ -711,8 +748,12 @@ auto lex_line(
     }
 
 END:
-    assert (tokens.size() >= original_size);
-    return tokens.size() != original_size;
+    if (in_comment) {
+        current_comment += "\n";
+    }
+
+    assert (std::ssize(tokens) >= original_size);
+    return std::ssize(tokens) != original_size;
 }
 
 
@@ -727,11 +768,16 @@ class tokens
 {
     std::vector<error>& errors;
 
-    //  Because Cpp2 is order-independent, this could be an unordered_map
-    //  which might be faster; consider that in the future for release builds.
-    //  For human debugging, for now it's convenient to be able to read the
-    //  map contents in source line number order.
-    std::map<lineno_t, std::vector<token>> map;
+    //  All non-comment tokens go here, which will be parsed in the parser
+    std::map<lineno_t, std::vector<token>> grammar_map;
+
+    //  All comment tokens go here, which are applied in the lexer
+    // 
+    //  We could put all the tokens in the same map, but that would mean the
+    //  parsing logic would have to remember to skip comments everywhere...
+    //  simpler to keep comments separate, at the smaller cost of traversing
+    //  a second token stream when lowering to C++ to re-interleave comments
+    std::vector<comment> comments;
 
 public:
     //-----------------------------------------------------------------------
@@ -758,7 +804,8 @@ public:
         -> void
     {
         auto in_comment = false;
-        auto line = std::begin(lines);
+        assert (std::ssize(lines) > 0);
+        auto line = std::begin(lines)+1;
         while (line != std::end(lines)) {
 
             //  Skip over non-Cpp2 lines
@@ -772,9 +819,21 @@ public:
             //  Create new map entry for the section starting at this line,
             //  and populate its tokens with the tokens in this section
             auto lineno = std::distance(std::begin(lines), line);
-            auto& entry = map[lineno];
-            for ( ; line->cat == source_line::category::cpp2; ++line, ++lineno) {
-                lex_line( line->text, lineno, in_comment, entry, errors );
+            auto& entry = grammar_map[lineno];
+            auto current_comment = std::string{};
+            auto current_comment_start = source_position{};
+
+            for ( 
+                ; 
+                line != std::end(lines) && line->cat == source_line::category::cpp2; 
+                ++line, ++lineno
+                )
+            {
+                lex_line(
+                    line->text, lineno,
+                    in_comment, current_comment, current_comment_start,
+                    entry, comments, errors
+                );
             }
 
         }
@@ -784,9 +843,18 @@ public:
     //-----------------------------------------------------------------------
     //  get_map: Access the token map
     //
-    auto get_map() const -> std::map<lineno_t, std::vector<token>> const& 
+    auto get_map() const -> auto const& 
     {
-        return map;
+        return grammar_map;
+    }
+
+
+    //-----------------------------------------------------------------------
+    //  get_comments: Access the comment list
+    //
+    auto get_comments() const -> auto const& 
+    {
+        return comments;
     }
 
 
@@ -795,14 +863,24 @@ public:
     //
     auto debug_print(std::ostream& o) const -> void 
     {
-        for (auto const& [lineno, entry] : map) {
+        for (auto const& [lineno, entry] : grammar_map) {
+
             o << "--- Section starting at line " << lineno << "\n";
             for (auto const& token : entry) {
                 o << "    " << token << " (" << token.position().lineno
-                    << "," << token.position().colno << ") - " 
-                    << as_string(token.type()) << "\n";
+                    << "," << token.position().colno << ") " 
+                    << as<std::string>(token.type()) << "\n";
             }
+
         }
+
+        o << "--- Comments\n";
+        for (auto const& [pos, text] : comments) {
+            o << "    (" << pos.lineno
+                << "," << pos.colno << ") " 
+                << text << "\n";
+        }
+
     }
 
 };

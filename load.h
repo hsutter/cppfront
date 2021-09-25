@@ -158,7 +158,7 @@ auto starts_with_identifier_colon(std::string const& line) -> bool
     }
 
     //  find identifier
-    auto j = starts_with_identifier({&line[i], line.size()-i});
+    auto j = starts_with_identifier({&line[i], std::size(line)-i});
     if (j == 0) { 
         return false; 
     }
@@ -358,6 +358,7 @@ public:
         std::vector<error>& errors
     )
         : errors{ errors }
+        , lines( 1 )        // extra blank to avoid off-by-one everywhere
     {
     }
 
@@ -404,7 +405,7 @@ public:
 
                     //  Mark this line, and preceding comment/blank source, as cpp2
                     lines.back().cat = source_line::category::cpp2;
-                    if (lines.size() > 1) {
+                    if (std::ssize(lines) > 1) {
                         auto prev = --std::end(lines);
                         while (--prev != std::begin(lines)
                                && (prev->cat == source_line::category::empty
@@ -424,7 +425,7 @@ public:
                             brace_depth, 
                             found_semi, 
                             found_openbrace, 
-                            lines.size()-1, 
+                            std::ssize(lines)-1, 
                             errors
                         )
                         && in.getline(&buf[0], max_line_len)
@@ -446,7 +447,7 @@ public:
                             lines.back().text, 
                             in_comment, 
                             brace_depth, 
-                            lines.size()-1, 
+                            std::ssize(lines) - 1,
                             errors
                         );
                         if (stats.all_comment_line) {
@@ -463,7 +464,7 @@ public:
 
         if (brace_depth != 0) {
             errors.emplace_back(
-                source_position{lineno_t(lines.size()), 0}, 
+                source_position{lineno_t(std::ssize(lines)), 0}, 
                 std::string("end of file reached with ") 
                     + std::to_string(brace_depth) + " missing } to match earlier {"
             );
@@ -486,8 +487,11 @@ public:
     auto debug_print(std::ostream& o) const -> void 
     {
         for (auto lineno = 0; auto const& line : lines) {
-            o << std::setw(5) << lineno << " " << line.prefix();
-            o << line.text << '\n';
+            //  Skip dummy first entry
+            if (lineno > 0) {
+                o << std::setw(5) << lineno << " " << line.prefix();
+                o << line.text << '\n';
+            }
             ++lineno;
         }
     }

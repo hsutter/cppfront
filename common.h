@@ -29,7 +29,9 @@ namespace cpp2 {
 struct source_line
 {
     std::string text;
-    enum class category { empty, preprocessor, comment, import, cpp, cpp2 } cat;
+
+    enum class category { empty, preprocessor, comment, import, cpp, cpp2 }
+        cat = category::empty;
 
     auto prefix() const -> std::string 
     {
@@ -51,25 +53,29 @@ using colno_t  = int16_t;
 
 struct source_position
 {
-    lineno_t    lineno;     // zero-based offset into program
+    lineno_t    lineno;     // one-based offset into program source
     colno_t     colno;      // one-based offset into line
 
     source_position(
-        int l,
-        int c
+        lineno_t l = 0,
+        colno_t  c = 0
     )
-        : lineno{ lineno_t(l) }
-        , colno{ colno_t(c) }
+        : lineno{ l }
+        , colno{ c }
     {
     }
 
-    auto as_string() const -> std::string
+    auto to_string() const -> std::string
     {
-        //  Add 1 to line to make it 1-based (human-readable)
-        return "(" + std::to_string(lineno+1) + "," + std::to_string(colno) + ")";
+        return "(" + std::to_string(lineno) + "," + std::to_string(colno) + ")";
     }
 };
 
+struct comment
+{
+    source_position pos;
+    std::string     text;
+};
 
 //-----------------------------------------------------------------------
 // 
@@ -86,9 +92,8 @@ struct error
     auto print(auto& o, std::string const& file) const -> void 
     {
         o << file ;
-        if (where.lineno >= 0) { 
-            //  Add 1 to line to make it 1-based (human-readable)
-            o << "("<< (where.lineno+1);
+        if (where.lineno > 0) { 
+            o << "("<< (where.lineno);
             if (where.colno >= 0) {
                 o << "," << where.colno;
             }
@@ -204,15 +209,18 @@ struct String
 
 //  Bool to string
 //
-auto as_string(bool b) -> std::string
+template<typename T>
+    requires std::is_same_v<T, std::string>
+auto as(bool b) -> T
 {
     return b ? "true" : "false";
 }
 
 
-// when a cast is required because... don't get me started on signedness
-auto as_size_t(int i) -> size_t {
-    return size_t(i);
+//  Explicit cast
+template<typename T>
+auto as(auto x) -> T {
+    return T(x);
 }
 
 
@@ -224,7 +232,7 @@ auto strip_path(std::string const& file) -> std::string
     while (i >= 0 && file[i] != '\\' && file[i] != '/') {
         --i;
     }
-    return {file, as_size_t(i+1)};
+    return {file, as<size_t>(i+1)};
 }
 
 

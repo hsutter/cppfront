@@ -116,6 +116,24 @@ struct symbol {
 };
 
 
+//  Keep a list of all token*'s found that are definite first uses
+//  of the form "x = expr;" for an uninitialized local variable x,
+//  which we will rewrite to construct the local variable.
+//
+std::vector<token const*> definite_initializations;
+
+auto is_definite_initialization(token const* t) -> bool
+{
+    return
+        std::find(
+            definite_initializations.begin(),
+            definite_initializations.end(),
+            t
+            )
+        != definite_initializations.end();
+}
+
+
 //-----------------------------------------------------------------------
 // 
 //  sema: Semantic analysis
@@ -131,8 +149,9 @@ public:
     std::vector<error>& errors;
     std::vector<symbol> symbols;
     declaration_sym     partial;
-    selection_sym       current_sel;
 
+    std::vector<selection_statement_node const*> active_selections;
+     
 public:
     //-----------------------------------------------------------------------
     //  Constructor
@@ -177,7 +196,7 @@ public:
                 }
 
                 if (sym.start && sym.identifier) {
-                    o << sym.identifier->as_string(true);
+                    o << sym.identifier->to_string(true);
                 }
 
                 if (sym.start && !sym.initializer) {
@@ -188,13 +207,17 @@ public:
             break; case identifier: {
                 auto const& sym = std::get<identifier>(s.sym);
                 assert (sym.identifier);
-                if (sym.assignment_to) {
-                    o << "*** ASSIGNMENT TO ";
+                if (is_definite_initialization(sym.identifier)) {
+                    o << "*** " << sym.identifier->position().to_string() 
+                      << " DEFINITE INITIALIZATION OF ";
+                }
+                else if (sym.assignment_to) {
+                    o << "*** assignment to ";
                 }
                 else {
                     o << "*** use of ";
                 }
-                o << sym.identifier->as_string(true);
+                o << sym.identifier->to_string(true);
             }
 
             break;case selection: {
@@ -293,7 +316,7 @@ private:
                 if (sym.start && sym.identifier && *sym.identifier == *id) {
                     errors.emplace_back( 
                         sym.identifier->position(), 
-                        "local variable" + sym.identifier->as_string(true)
+                        "local variable" + sym.identifier->to_string(true)
                             + " cannot have the same name as an uninitialized"
                               " variable in the same function");
                 }
@@ -308,11 +331,14 @@ private:
 
                     //  If we're not inside a selection statement, we're at the top level --
                     //  just return true if it's an assignment to it, else return false
-                    if (selection_stack.size() == 0) {
-                        if (!sym.assignment_to) {
+                    if (std::ssize(selection_stack) == 0) {
+                        if (sym.assignment_to) {
+                            definite_initializations.push_back( sym.identifier );
+                        }
+                        else {
                             errors.emplace_back( 
                                 sym.identifier->position(), 
-                                "local variable " + sym.identifier->as_string(true)
+                                "local variable " + sym.identifier->to_string(true)
                                     + " is used in a general expression before it was initialized");
                         }
                         return sym.assignment_to;
@@ -320,14 +346,17 @@ private:
 
                     //  Else if we're inside a selection statement but still in the condition
                     //  portion (there are no branches entered yet)
-                    else if (selection_stack.back().branches.size() == 0) {
+                    else if (std::ssize(selection_stack.back().branches) == 0) {
                         //  If this is a top-level selection statement, handle it the same as
                         //  if we weren't an a selection statement
-                        if (selection_stack.size() == 1) {
-                            if (!sym.assignment_to) {
+                        if (std::ssize(selection_stack) == 1) {
+                            if (sym.assignment_to) {
+                                definite_initializations.push_back( sym.identifier );
+                            }
+                            else {
                                 errors.emplace_back( 
                                     sym.identifier->position(), 
-                                    "local variable " + sym.identifier->as_string(true)
+                                    "local variable " + sym.identifier->to_string(true)
                                         + " is used in a condition before it was initialized");
                             }
                             return sym.assignment_to;
@@ -336,7 +365,7 @@ private:
                         //  this as the result of the next outer selection statement's current branch
                         else {
                             selection_stack.pop_back();
-                            assert (selection_stack.back().branches.size() > 0);
+                            assert (std::ssize(selection_stack.back().branches) > 0);
                             selection_stack.back().branches.back().result = sym.assignment_to;
 
                             int this_depth = symbols[pos].depth;
@@ -349,10 +378,13 @@ private:
                     //  Else we're in a selection branch and can skip the rest of this branch
                     //  and record this as the result for the current branch
                     else {
-                        if (!sym.assignment_to) {
+                        if (sym.assignment_to) {
+                            definite_initializations.push_back( sym.identifier );
+                        }
+                        else {
                             errors.emplace_back( 
                                 sym.identifier->position(), 
-                                "local variable " + sym.identifier->as_string(true)
+                                "local variable " + sym.identifier->to_string(true)
                                     + " is used in a branch before it was initialized");
                         }
                         selection_stack.back().branches.back().result = sym.assignment_to;
@@ -378,18 +410,23 @@ private:
                 //  they must all be false or all true, if they're a mix we are missing
                 //  initializations on some path(s)
                 else {
-                    assert (selection_stack.size() > 0);
+                    assert (std::ssize(selection_stack) > 0);
                     // selection_stack.back().debug_print(std::cout);
 
                     auto true_branches  = std::string{};
                     auto false_branches = std::string{};
-                    auto ctrue = 0;
-                    auto cfalse = 0;
                     for (auto const& b : selection_stack.back().branches)
                     {
-                        (b.result ? true_branches : false_branches)
-                            += std::to_string( symbols[b.start].position().lineno+1 ) + " ";
-                        (b.result ? ctrue : cfalse) ++ ;
+                        //  If this is not an implicit 'else' branch (i.e., if lineno > 0)
+                        if (symbols[b.start].position().lineno > 0) {
+                            (b.result ? true_branches : false_branches)
+                                += "\n  branch starting at line " 
+                                    + std::to_string(symbols[b.start].position().lineno);
+                        }
+                        else {
+                            (b.result ? true_branches : false_branches)
+                                += "\n  implicit else branch";
+                        }
                     }
                     
                     //  If none of the branches was true
@@ -403,38 +440,40 @@ private:
                     {
                         //  If this is a top-level selection statement, handle it the same as
                         //  if we weren't an a selection statement
-                        if (selection_stack.size() == 1) {
+                        if (std::ssize(selection_stack) == 1) {
                             return true;
                         }
                         //  Else pop this selection statement, and record this as the result
                         //  of the next outer selection statement's current branch
                         else {
                             selection_stack.pop_back();
-                            assert (selection_stack.back().branches.size() > 0);
+                            assert (std::ssize(selection_stack.back().branches) > 0);
                             selection_stack.back().branches.back().result = true;
+
+                            //  And skip the rest of this branch
+                            auto skip_depth = symbols[pos].depth - 1;
+                            while (symbols[pos + 1].depth >= skip_depth) {
+                                ++pos;
+                            }
                         }
                     }
 
-                    //  Else we found a bug, report it and return false
+                    //  Else we found a missing initializion, report it and return false
                     else
                     {
                         errors.emplace_back( 
                             id->position(), 
-                            "local variable " + id->as_string(true)
+                            "local variable " + id->to_string(true)
                                 + " is not initialized on all paths");
                         
                         assert (symbols[selection_stack.back().pos].sym.index() == selection);
                         auto const& sym = std::get<selection>(symbols[pos].sym);
                         errors.emplace_back( 
                             sym.selection->identifier->position(),
-                            "\"" + sym.selection->identifier->as_string(true)
-                                + "\" initializes " + id->as_string(true) 
-                                + " on branch" + (ctrue>1 ? "es" : "")
-                                + " starting at line" + (ctrue>1 ? "s" : "")
-                                + " " + true_branches
-                                + "but not on branch" + (cfalse>1 ? "es" : "")
-                                + " starting at line" + (cfalse>1 ? "s" : "")
-                                + " " + false_branches
+                            "\"" + sym.selection->identifier->to_string(true)
+                                + "\" initializes " + id->to_string(true) 
+                                + " on:" + true_branches
+                                + "\nbut not on:" + false_branches
                         );
 
                         return false;
@@ -447,7 +486,7 @@ private:
                 auto const& sym = std::get<compound>(symbols[pos].sym);
 
                 //  If we're in a selection 
-                if (selection_stack.size() > 0) {
+                if (std::ssize(selection_stack) > 0) {
                     //  If this is a compound start with the current selection's depth
                     //  plus one, it's the start of one of the branches of that selection
                     if (sym.start && 
@@ -467,8 +506,8 @@ private:
 
         errors.emplace_back( 
             id->position(), 
-            id->as_string(true) 
-            + " - variable is never initialized on any path");
+            id->to_string(true) 
+            + " - variable is not initialized on every path");
         return false;
     }
 
@@ -536,25 +575,26 @@ public:
 
     auto start(selection_statement_node const& n, int) -> void
     {
-        current_sel = { true, &n };
-        symbols.emplace_back( scope_depth, current_sel );
+        active_selections.push_back( &n );
+        symbols.emplace_back( scope_depth, selection_sym{ true, active_selections.back() } );
         ++scope_depth;
     }
 
     auto end(selection_statement_node const& n, int) -> void
     {
-        current_sel = { false, &n };
-        symbols.emplace_back( scope_depth, current_sel );
+        symbols.emplace_back( scope_depth, selection_sym{ false, active_selections.back() } );
+        active_selections.pop_back();
         --scope_depth;
     }
 
     auto start(compound_statement_node const& n, int) -> void
     {
-        if (current_sel.selection) {
-            if (current_sel.selection->true_branch.get() == &n) {
+        if (!active_selections.empty()) {
+            assert (active_selections.back());
+            if (active_selections.back()->true_branch.get() == &n) {
                 symbols.emplace_back( scope_depth, compound_sym{ true, &n, true } );
             }
-            else if (current_sel.selection->false_branch.get() == &n) {
+            else if (active_selections.back()->false_branch.get() == &n) {
                 symbols.emplace_back( scope_depth, compound_sym{ true, &n, false } );
             }
         }
@@ -563,11 +603,12 @@ public:
 
     auto end(compound_statement_node const& n, int) -> void
     {
-        if (current_sel.selection) {
-            if (current_sel.selection->true_branch.get() == &n) {
+        if (!active_selections.empty()) {
+            assert (active_selections.back());
+            if (active_selections.back()->true_branch.get() == &n) {
                 symbols.emplace_back( scope_depth, compound_sym{ false, &n, true } );
             }
-            else if (current_sel.selection->false_branch.get() == &n) {
+            else if (active_selections.back()->false_branch.get() == &n) {
                 symbols.emplace_back( scope_depth, compound_sym{ false, &n, false } );
             }
         }
@@ -575,7 +616,7 @@ public:
     }
 
     auto start(expression_node const& n, int) {
-        if (n.terms.size() > 0) {
+        if (std::ssize(n.terms) > 0) {
             assert (n.terms.front().op);
             if (n.terms.front().op->type() == lexeme::Assignment) {
                 started_assignment_expression = true;

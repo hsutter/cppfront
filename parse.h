@@ -353,9 +353,18 @@ struct statement_node;
 
 struct compound_statement_node
 {
+    source_position pos;
     std::vector<std::unique_ptr<statement_node>> statements;
 
-    auto position() const -> source_position;
+    compound_statement_node(source_position pos)
+        : pos{ pos }
+    {
+    }
+
+    auto position() const -> source_position
+    {
+        return pos;
+    }
 
     auto visit(auto& v, int depth) -> void;
 };
@@ -424,12 +433,6 @@ struct statement_node
         }
     }
 };
-
-auto compound_statement_node::position() const -> source_position
-{
-    assert (std::ssize(statements) > 0 && statements.front());
-    return statements.front()->position();
-}
 
 auto compound_statement_node::visit(auto& v, int depth) -> void
 {
@@ -677,7 +680,7 @@ private:
         assert (!done());
         errors.emplace_back(
             curr().position(), 
-            msg + std::string(" at ") + curr().as_string()
+            msg + std::string(" at ") + curr().to_string()
         );
     }
     
@@ -836,7 +839,7 @@ private:
                 next();
 
                 if ( !(t.expr = term()) ) {
-                    error("invalid expression after " + peek(-1)->as_string());
+                    error("invalid expression after " + peek(-1)->to_string());
                     return n;
                 }
                 n->terms.push_back( std::move(t) );
@@ -1086,6 +1089,10 @@ private:
         }
 
         if (curr().type() != lexeme::Keyword || curr() != "else") {
+            //  Add empty else branch to simplify processing elsewhere
+            //  Note: Position (0,0) signifies it's implicit (no source location)
+            n->false_branch = 
+                std::make_unique<compound_statement_node>( source_position(0,0) );
             return n;
         }
         next();
@@ -1160,9 +1167,9 @@ private:
         if (curr().type() != lexeme::LeftBrace) {
             return {};
         }
-        next();
 
-        auto n = std::make_unique<compound_statement_node>();
+        auto n = std::make_unique<compound_statement_node>( curr().position() );
+        next();
         auto s = std::unique_ptr<statement_node>();
 
         while (curr().type() != lexeme::RightBrace) {
@@ -1375,7 +1382,7 @@ struct printing_visitor
     {
         return {
             indent_str.c_str(),
-            as_size_t( std::min( indent*indent_spaces, std::ssize(indent_str)) )
+            as<size_t>( std::min( indent*indent_spaces, std::ssize(indent_str)) )
         };
     }
 };
@@ -1393,7 +1400,7 @@ struct parse_tree_printer : printing_visitor
 
     auto start(token const& n, int indent) -> void
     {
-        o << pre(indent) << n.as_string() << "\n";
+        o << pre(indent) << n.to_string() << "\n";
     }
 
     auto start(primary_expression_node const& n, int indent) -> void
@@ -1450,7 +1457,7 @@ struct parse_tree_printer : printing_visitor
     auto start(selection_statement_node const& n, int indent) -> void
     {
         o << pre(indent) << "selection-statement\n";
-        o << pre(indent+1) << "is_constexpr: " << as_string(n.is_constexpr) << "\n";
+        o << pre(indent+1) << "is_constexpr: " << as<std::string>(n.is_constexpr) << "\n";
     }
 
     auto start(declaration_node const& n, int indent) -> void
