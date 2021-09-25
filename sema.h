@@ -269,7 +269,7 @@ public:
 
         //  Function logic: For each entry in the table...
         //
-        for (auto sympos = 0; sympos < std::ssize(symbols); ++sympos)
+        for (auto sympos = std::ssize(symbols) - 1; sympos >= 0; --sympos)
         {
             //  If this is an uninitialized local variable
             //
@@ -325,6 +325,16 @@ private:
             break;case identifier: {
                 auto const& sym = std::get<identifier>(symbols[pos].sym);
                 assert (sym.identifier);
+
+                if (is_definite_initialization(sym.identifier)) {
+                    errors.emplace_back( 
+                        sym.identifier->position(), 
+                        "local variable " + id->to_string(true)
+                            + " must be initialized before " + sym.identifier->to_string(true)
+                            + " (local variables must be initialized in the order they are declared)"
+                    );
+                    return false;
+                }
 
                 //  If we find a use of this identifier
                 if (*sym.identifier == *id) {
@@ -389,8 +399,10 @@ private:
                         }
                         selection_stack.back().branches.back().result = sym.assignment_to;
 
-                        int this_depth = symbols[pos].depth;
-                        while (symbols[pos + 1].depth >= this_depth) {
+                        //  The depth of this branch should always be the depth of
+                        //  the current selection statement + 1
+                        int branch_depth = symbols[selection_stack.back().pos].depth + 1;
+                        while (symbols[pos + 1].depth > branch_depth) {
                             ++pos;
                         }
                     }
@@ -432,7 +444,8 @@ private:
                     //  If none of the branches was true
                     if (true_branches.length() == 0)
                     {
-                        //  Nothing to do, just continue
+                        selection_stack.pop_back();
+                        //  Nothing else to do, just continue
                     }
 
                     //  Else if all of the branches were true
