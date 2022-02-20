@@ -1,6 +1,6 @@
 
 //  Copyright (c) Herb Sutter
-//  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//  SPDX-License-Identifier: CC-BY-NC-ND-4.0
 
 
 //===========================================================================
