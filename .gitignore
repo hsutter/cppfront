@@ -10,3 +10,9 @@
 *.idb
 *.obj
 *.pdb
+*.suo
+*.db
+*.ipch
+*.sln
+*.exe
+*.txt
