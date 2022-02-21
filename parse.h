@@ -718,7 +718,7 @@ private:
     auto next(int num = 1) -> void 
     {
         assert (tokens_);
-        pos = std::min( pos+num, std::ssize(*tokens_) );
+        pos = std::min( pos+num, as<int>(std::ssize(*tokens_)) );
     }
 
 
@@ -1382,7 +1382,7 @@ struct printing_visitor
     {
         return {
             indent_str.c_str(),
-            as<size_t>( std::min( indent*indent_spaces, std::ssize(indent_str)) )
+            as<size_t>( std::min( indent*indent_spaces, as<int>(std::ssize(indent_str))) )
         };
     }
 };

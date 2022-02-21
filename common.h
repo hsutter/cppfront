@@ -173,7 +173,7 @@ auto starts_with_identifier(std::string_view s)
 { 
     if (is_identifier_start(s[0])) {
         auto j = 1;
-        while (j < ssize(s) && is_identifier_continue(s[j])) { ++j; }
+        while (j < std::ssize(s) && is_identifier_continue(s[j])) { ++j; }
         return j;
     }
     return 0;
