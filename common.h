@@ -30,7 +30,7 @@ struct source_line
 {
     std::string text;
 
-    enum class category { empty, preprocessor, comment, import, cpp, cpp2 }
+    enum class category { empty, preprocessor, comment, import, cpp1, cpp2 }
         cat = category::empty;
 
     auto prefix() const -> std::string 
@@ -38,9 +38,9 @@ struct source_line
         switch (cat) {
         break;case category::empty:         return "|     |  ";
         break;case category::preprocessor:  return "| #   |  ";
-        break;case category::comment:       return "| /   |  ";
+        break;case category::comment:       return "|  /  |  ";
         break;case category::import:        return "|  i  |  ";
-        break;case category::cpp:           return "| 1   |  ";
+        break;case category::cpp1:          return "| 1   |  ";
         break;case category::cpp2:          return "|   2 |  ";
         break;default: assert(!"illegal category"); abort();
         }
@@ -118,7 +118,7 @@ struct error
 //G binary-digit: one of
 //G     0 1
 //G
-auto is_binary_digit(char c) 
+auto is_binary_digit(char c) -> bool
 { 
     return c == '0' || c == '1'; 
 }
@@ -126,33 +126,30 @@ auto is_binary_digit(char c)
 //G hexadecimal-digit: one of
 //G     0 1 2 3 4 5 6 7 8 9 A B C D E F
 //G     
-auto is_hexadecimal_digit(char c) 
+auto is_hexadecimal_digit(char c) -> bool
 { 
     return isxdigit(c);
 }
 
-//G nonzero-digit: one of
-//G     1 2 3 4 5 6 7 8 9
+//G digit: one of
+//G     0 1 2 3 4 5 6 7 8 9
 //G     
-//G digit: { 0 | nonzero-digit }
-//G     
-auto is_digit(char c) 
+auto is_digit(char c) -> bool
 { 
     return isdigit(c); 
 }
 
 //G nondigit: { a..z | A..Z | _ }
 //G
-auto is_nondigit(char c) 
+auto is_nondigit(char c) -> bool
 { 
     return isalpha(c) || c == '_'; 
 };
 
 //G identifier-start:
 //G     nondigit
-//GT    universal-character-name of class XID_Start
 //G
-auto is_identifier_start(char c) 
+auto is_identifier_start(char c) -> bool
 { 
     return is_nondigit(c); 
 }
@@ -160,16 +157,15 @@ auto is_identifier_start(char c)
 //G identifier-continue:
 //G     digit
 //G     nondigit
-//GT    universal-character-name of class XID_Continue
 //G
-auto is_identifier_continue(char c)
+auto is_identifier_continue(char c) -> bool
 { 
     return is_digit(c) || is_nondigit(c); 
 }
 
 //G identifier: identifier-start { identifier-continue }*
 //G
-auto starts_with_identifier(std::string_view s)
+auto starts_with_identifier(std::string_view s) -> int
 { 
     if (is_identifier_start(s[0])) {
         auto j = 1;
@@ -182,7 +178,7 @@ auto starts_with_identifier(std::string_view s)
 //  Helper to allow one of the above or a digit separator
 //  Example:    is_separator_or( is_binary_digit (c) )
 //
-auto is_separator_or(auto pred, char c) 
+auto is_separator_or(auto pred, char c) -> bool
 { 
     return c == '\'' || pred(c); 
 }

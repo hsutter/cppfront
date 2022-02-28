@@ -664,10 +664,10 @@ auto lex_line(
             break;default:
 
                 //G decimal-literal:
-                //G     nonzero-digit { ' | digit }*
+                //G     digit { ' | digit }*
                 //G     
                 //G floating-point-literal:
-                //G     nonzero-digit { ' | digit }* . { ' | digit }* 
+                //G     digit { ' | digit }* . { ' | digit }* 
                 //G     
                 if (is_digit(line[i])) {
                     auto j = 1;

@@ -16,3 +16,6 @@
 *.sln
 *.exe
 *.txt
+*.db-shm
+*.db-wal
+*.opendb

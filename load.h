@@ -395,9 +395,9 @@ public:
                 }
             }
 
-            else {
-
-                lines.push_back({ &buf[0], source_line::category::cpp });
+            else
+            {
+                lines.push_back({ &buf[0], source_line::category::cpp1 });
 
                 //  Switch to cpp2 mode if the line starts with "identifier :"
                 //
@@ -438,7 +438,8 @@ public:
 
                 //  Else still in ordinary C++ code, but could be a comment, empty, or import
                 //
-                else {
+                else
+                {
                     if (starts_with_import(lines.back().text)) {
                         lines.back().cat = source_line::category::import;
                     }
