@@ -229,7 +229,7 @@ auto process_cpp_line(
 
                 break;case '}':
                     if (brace_depth < 1) { 
-                        //  Might as well give a diagnostic in C++ code since
+                        //  Might as well give a diagnostic in Cpp1 code since
                         //  we're relying on balanced { } to find Cpp2 code
                         errors.emplace_back(
                             source_position{lineno, i},
@@ -436,7 +436,7 @@ public:
 
                 }
 
-                //  Else still in ordinary C++ code, but could be a comment, empty, or import
+                //  Else still in Cpp1 code, but could be a comment, empty, or import
                 //
                 else
                 {
@@ -490,8 +490,7 @@ public:
         for (auto lineno = 0; auto const& line : lines) {
             //  Skip dummy first entry
             if (lineno > 0) {
-                o << std::setw(5) << lineno << " " << line.prefix();
-                o << line.text << '\n';
+                o << line.prefix() << line.text << '\n';
             }
             ++lineno;
         }

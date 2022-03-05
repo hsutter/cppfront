@@ -20,20 +20,12 @@ namespace cpp2 {
 // 
 //  lexeme: represents the type of a token
 // 
-//  The symbols that C++ uses for bitwise operators (and sometimes also
-//  other meanings) are intentionally not named with "Bit". For example,
-//  this uses Caret instead of BitXor. This is because in Cpp2 the
-//  built-in types use the intrinsic functions (e.g. bitxor(a,b))
-//  instead of the operator notation (e.g., a ^ b). Note that for
-//  compatibility with existing C++ experession template libraries we
-//  may still offer the operator notation for overloadable operators.
-// 
 //-----------------------------------------------------------------------
 //
 
 enum class lexeme : std::int8_t {
-    DivideEq,
-    Divide,
+    SlashEq,
+    Slash,
     LeftShiftEq,
     LeftShift,
     Spaceship,
@@ -58,12 +50,12 @@ enum class lexeme : std::int8_t {
     LogicalAnd,
     AmpersandEq,
     Ampersand,
-    MultiplyEq,
-    Multiply,
+    StarEq,
+    Star,
     ModuloEq,
     Modulo,
-    CaretEq,
-    Caret,
+    XorEq,
+    Xor,
     TildeEq,
     Tilde,
     EqualComparison,
@@ -80,6 +72,8 @@ enum class lexeme : std::int8_t {
     Semicolon,
     Comma,
     Dot,
+    Ellipsis,
+    QuestionMark,
     Dollar,
     FloatLiteral,
     BinaryLiteral,
@@ -99,8 +93,8 @@ template<typename T>
 auto as(lexeme l)
 {
     switch (l) {
-    break;case lexeme::DivideEq:            return "DivideEq";
-    break;case lexeme::Divide:              return "Divide";
+    break;case lexeme::SlashEq:             return "SlashEq";
+    break;case lexeme::Slash:               return "Slash";
     break;case lexeme::LeftShiftEq:         return "LeftShiftEq";
     break;case lexeme::LeftShift:           return "LeftShift";
     break;case lexeme::Spaceship:           return "Spaceship";
@@ -125,12 +119,12 @@ auto as(lexeme l)
     break;case lexeme::LogicalAnd:          return "LogicalAnd";
     break;case lexeme::AmpersandEq:         return "AmpersandEq";
     break;case lexeme::Ampersand:           return "Ampersand";
-    break;case lexeme::MultiplyEq:          return "MultiplyEq";
-    break;case lexeme::Multiply:            return "Multiply";
+    break;case lexeme::StarEq:              return "StarEq";
+    break;case lexeme::Star:                return "Star";
     break;case lexeme::ModuloEq:            return "ModuloEq";
     break;case lexeme::Modulo:              return "Modulo";
-    break;case lexeme::CaretEq:             return "CaretEq";
-    break;case lexeme::Caret:               return "Caret";
+    break;case lexeme::XorEq:               return "XorEq";
+    break;case lexeme::Xor:                 return "Xor";
     break;case lexeme::TildeEq:             return "TildeEq";
     break;case lexeme::Tilde:               return "Tilde";
     break;case lexeme::EqualComparison:     return "EqualComparison";
@@ -147,6 +141,8 @@ auto as(lexeme l)
     break;case lexeme::Semicolon:           return "Semicolon";
     break;case lexeme::Comma:               return "Comma";
     break;case lexeme::Dot:                 return "Dot";
+    break;case lexeme::Ellipsis:            return "Ellipsis";
+    break;case lexeme::QuestionMark:        return "QuestionMark";
     break;case lexeme::Dollar:              return "Dollar";
     break;case lexeme::FloatLiteral:        return "FloatLiteral";
     break;case lexeme::BinaryLiteral:       return "BinaryLiteral";
@@ -190,9 +186,9 @@ public:
         return {start, (unsigned)count}; 
     }
 
-    auto operator== (std::string_view s) const 
+    auto operator== (std::string_view s) const -> bool
     { 
-        return s ==  this->operator std::string_view(); 
+        return s == this->operator std::string_view(); 
     }
 
     auto to_string( bool text_only = false ) const -> std::string 
@@ -206,13 +202,14 @@ public:
         }
     }
 
-    friend auto& operator<< (auto& o, token const& t) 
+    friend auto operator<< (auto& o, token const& t) -> auto&
     { 
         return o << std::string_view(t); 
     }
 
-    auto position() const { return pos;      }
-    auto type    () const { return lex_type; }
+    auto position() const -> source_position { return pos;      }
+
+    auto type    () const -> lexeme          { return lex_type; }
 
 private:
     //  Store (char*,count) because it's smaller than a string_view
@@ -275,42 +272,62 @@ auto lex_line(
     //  These functions return the length of sequence if
     //  present at the current location, else 0
 
-    //G escape-sequence:
-    //G     \ { any member of the basic source character set except newline }
+    //G simple-escape-sequence:
+    //G     \ { any member of the basic character set except u, U, or x }
     //G
-    auto peek_is_simple_escape_sequence = [&](int offset) { 
-        if (peek(offset) && peek(offset) == '\\' && peek(1+offset)) { return 2; }
+    auto peek_is_simple_escape_sequence = [&](int offset) {
+        auto peek1 = peek(offset);
+        auto peek2 = peek(1 + offset);
+        if (peek1 == '\\' && peek2 != 'u' && peek2 != 'U' && peek2 != 'x')
+        {
+            return 2;
+        }
         return 0;
     };
 
-    //G hexadecimal-escape-sequence: \x {hexadecimal-digit}+
+    //G hexadecimal-escape-sequence:
+    //G     \x {hexadecimal-digit}+
     //G
     auto peek_is_hexadecimal_escape_sequence = [&](int offset)
     {
-        if (peek(offset) && peek(offset) == '\\' && 
-            peek(1+offset) == 'x' && 
+        if (peek(  offset) == '\\' && 
+            peek(1+offset) == 'x'  && 
             is_hexadecimal_digit(peek(2+offset))) 
         {
             auto j = 3;
-            while (peek(j+offset) && is_hexadecimal_digit(peek(j+offset))) { ++j; }
+            while (peek(j+offset) && is_hexadecimal_digit(peek(j+offset)))
+            {
+                ++j;
+            }
             return j;
         }
         return 0;
     };
 
     //G universal-character-name:
-    //G     \u { hexadecimal-digit }4 { hexadecimal-digit }4?
+    //G     \u { hexadecimal-digit }4
+    //G     \U { hexadecimal-digit }8
     //G
     auto peek_is_universal_character_name = [&](colno_t offset) 
-    { 
-        if (peek(offset) && peek(offset) == '\\' && peek(1+offset) == 'u') {
+    {
+        if (peek(offset) == '\\' && peek(1 + offset) == 'u') {
+            auto j = 2;
+            while (j <= 5 && is_hexadecimal_digit(peek(j + offset))) { ++j; }
+            if (j == 6) { return j; }
+            errors.emplace_back(
+                source_position{ lineno, i + offset },
+                "invalid universal character name (\\u must"
+                " be followed by 4 hexadecimal digits)"
+            );
+        }
+        if (peek(offset) == '\\' && peek(1+offset) == 'U') {
             auto j = 2;
             while (j <= 9 && is_hexadecimal_digit(peek(j+offset))) { ++j; }
-            if (j ==  6 || j == 10) { return j; }
+            if (j == 10) { return j; }
             errors.emplace_back(
                 source_position{lineno, i+offset}, 
-                "invalid universal character name (\\u must"
-                    " be followed by 4 or 8 hexadecimal digits)"
+                "invalid universal character name (\\U must"
+                    " be followed by 8 hexadecimal digits)"
             );
         }
         return 0;
@@ -344,24 +361,24 @@ auto lex_line(
     //G
     auto peek_is_sc_char = [&](int offset, char quote) 
     { 
-        if      (auto u = peek_is_universal_character_name(offset))             { return u; }
-        else if (auto e = peek_is_escape_sequence(offset))                      { return e; }
-        else if (peek(offset) && peek(offset) != quote && peek(offset) != '\\') { return 1; }
+        if (auto u = peek_is_universal_character_name(offset))
+            { return u; }
+        if (auto e = peek_is_escape_sequence(offset))
+            { return e; }
+        if (peek(offset) != quote && peek(offset) != '\\')
+            { return 1; }
         return 0;
     };
 
     //G keyword:
-    //G     any C++20-and-Cpp2 keyword
-    //G     any other C++20 keyword
-    //GT     import-keyword
-    //GT     module-keyword
-    //GT     export-keyword
+    //G     any Cpp1-and-Cpp2 keyword
+    //G     one of: import module export is as
     //G
     auto peek_is_keyword = [&]() 
     { 
-        //  Cpp2 has a smaller set of the C++ globally reserved keywords, but we continue to
-        //  reserve all the ones C++ has both for compatibility and to not give up a keyword
-        //  Cpp2 also adds a couple, notably "is" and "as" (reserved only in Cpp2 code)
+        //  Cpp2 has a smaller set of the Cpp1 globally reserved keywords, but we continue to
+        //  reserve all the ones Cpp1 has both for compatibility and to not give up a keyword
+        //  Cpp2 also adds a couple, notably "is" and "as"
         const auto keys = std::regex(
             "^alignas|^alignof|^asm|^as|^auto|"
             "^bool|^break|"
@@ -371,9 +388,9 @@ auto lex_line(
             "^else|^enum|^explicit|^export|^extern|"
             "^false|^float|^for|^friend|"
             "^goto|"
-            "^if|^inline|^int|^is|"
+            "^if|^import|^inline|^int|^is|"
             "^long|"
-            "^mutable|"
+            "^module|^mutable|"
             "^namespace|^new|^noexcept|^nullptr|"
             "^operator|"
             "^private|^protected|^public|"
@@ -447,9 +464,9 @@ auto lex_line(
 
             switch (line[i]) {
 
-            //  :: .* ->* ? aren't currently used in Cpp2, and aren't needed
+            //  .* ->* ? aren't currently used in Cpp2, and aren't needed
 
-            //  (we do need all the overloadable operators for C++ compat,
+            //  (we do need all the overloadable operators for Cpp1 compat,
             //  even if we may not keep their meanings for built-in types)
 
             //      /* and // comment starts
@@ -470,10 +487,10 @@ auto lex_line(
                     goto END;
                 }
                 else if (peek1 == '=') {
-                    store(2, lexeme::DivideEq);
+                    store(2, lexeme::SlashEq);
                 }
                 else {
-                    store(1, lexeme::Divide);
+                    store(1, lexeme::Slash);
                 }
 
             //G     <<= << <=> <= <
@@ -532,8 +549,8 @@ auto lex_line(
 
             //G     *= *
             break;case '*': 
-                if (peek1 == '=') { store(2, lexeme::MultiplyEq); }
-                else { store(1, lexeme::Multiply); }
+                if (peek1 == '=') { store(2, lexeme::StarEq); }
+                else { store(1, lexeme::Star); }
 
             //G     %= %
             break;case '%': 
@@ -542,8 +559,8 @@ auto lex_line(
 
             //G     ^= ^
             break;case '^': 
-                if (peek1 == '=') { store(2, lexeme::CaretEq); }
-                else { store(1, lexeme::Caret); }
+                if (peek1 == '=') { store(2, lexeme::XorEq); }
+                else { store(1, lexeme::Xor); }
 
             //G     ~= ~
             break;case '~': 
@@ -560,9 +577,14 @@ auto lex_line(
                 if (peek1 == '=') { store(2, lexeme::NotEqualComparison); }
                 else { store(1, lexeme::Not); }
 
+            //G     ... .
+            break;case '.': 
+                if (peek1 == '.' && peek2 == '.') { store(3, lexeme::Ellipsis); }
+                else { store(1, lexeme::Dot); }
+
             //  All the other single-character tokens
 
-            //G     { } ( ) [ ] : ; , . $
+            //G     { } ( ) [ ] : ; , ? $
             //G
             break;case '{': 
                 store(1, lexeme::LeftBrace);
@@ -591,8 +613,8 @@ auto lex_line(
             break;case ',':
                 store(1, lexeme::Comma);
 
-            break;case '.':
-                store(1, lexeme::Dot);
+            break; case '?':
+                store(1, lexeme::QuestionMark);
 
             break;case '$':
                 store(1, lexeme::Dollar);
@@ -600,11 +622,10 @@ auto lex_line(
             //G literal:
             //G     integer-literal
             //G     character-literal
-            //GT     floating-point-literal
+            //G     floating-point-literal
             //G     string-literal
             //GT     boolean-literal
             //GT     pointer-literal
-            //GT     user-defined-literal
             //G
             //G integer-literal:
             //G     binary-literal
@@ -612,14 +633,18 @@ auto lex_line(
             //G     decimal-literal
             //G
             //G binary-literal:
-            //G     0b binary-digit { ' | binary-digit }+
+            //G     0b binary-digit
+            //G     0B binary-digit
+            //G     binary-literal { ' | binary-digit }*
             //G
             //G hexadecimal-literal:
-            //G     0x hexadecimal-digit { ' | hexadecimal-digit }+
+            //G     0x hexadecimal-digit
+            //G     0X hexadecimal-digit
+            //G     hexadecimal-literal { ' | hexadecimal-digit }*
             //G
             break;case '0': {
                 auto j = 3;
-                if (peek1 == 'b') {
+                if (peek1 == 'b' || peek1 == 'B') {
                     if (is_binary_digit(peek2)) {
                         while (is_separator_or(is_binary_digit,peek(j))) { ++j; }
                         store(j, lexeme::BinaryLiteral);
@@ -627,19 +652,12 @@ auto lex_line(
                     else {
                         errors.emplace_back(
                             source_position{lineno, i}, 
-                            "binary literal cannot be empty (0b must be followed by binary digits)"
+                            "binary literal cannot be empty (0B must be followed by binary digits)"
                         );
                         ++i;
                     }
                 }
-                else if (peek1 == 'B') {
-                    errors.emplace_back(
-                        source_position{lineno, i}, 
-                        "0B is invalid - did you mean 0b to introduce a binary literal?"
-                    );
-                    ++i;
-                }
-                else if (peek1 == 'x') {
+                else if (peek1 == 'x' || peek1 == 'X') {
                     if (is_hexadecimal_digit(peek2)) {
                         while (is_separator_or(is_hexadecimal_digit,peek(j))) { ++j; }
                         store(j, lexeme::HexadecimalLiteral);
@@ -647,27 +665,23 @@ auto lex_line(
                     else {
                         errors.emplace_back(
                             source_position{lineno, i}, 
-                            "hexadecimal literal cannot be empty (0x must be followed by hexadecimal digits)"
+                            "hexadecimal literal cannot be empty (0X must be followed by hexadecimal digits)"
                         );
                         ++i;
                     }
                 }
-                else if (peek1 == 'X') {
-                    errors.emplace_back(
-                        source_position{lineno, i}, 
-                        "0X is invalid - did you mean 0x to introduce a hexadecimal literal?"
-                    );
-                    ++i;
-                }
             }
 
-            break;default:
+            // NO BREAK: we want 0 to fall through to numeric literal case
+            // (this will be less kludgy to write with pattern matching)
+            default:
 
                 //G decimal-literal:
                 //G     digit { ' | digit }*
                 //G     
                 //G floating-point-literal:
-                //G     digit { ' | digit }* . { ' | digit }* 
+                //G     digit { ' | digit }* . digit { ' | digit }*
+                //GT TODO: full grammar
                 //G     
                 if (is_digit(line[i])) {
                     auto j = 1;
@@ -677,6 +691,13 @@ auto lex_line(
                     }
                     else {
                         ++j;
+                        if (!is_digit(peek(j))) {
+                            errors.emplace_back(
+                                source_position{ lineno, i },
+                                "floating point literal " + std::string(&line[i], j)
+                                + " fractional part cannot be empty (if floating point was intended, use .0)"
+                            );
+                        }
                         while (is_separator_or(is_digit,peek(j))) { ++j; }
                         store(j, lexeme::FloatLiteral);
                     }
@@ -776,7 +797,7 @@ class tokens
     //  We could put all the tokens in the same map, but that would mean the
     //  parsing logic would have to remember to skip comments everywhere...
     //  simpler to keep comments separate, at the smaller cost of traversing
-    //  a second token stream when lowering to C++ to re-interleave comments
+    //  a second token stream when lowering to Cpp1 to re-interleave comments
     std::vector<comment> comments;
 
 public:

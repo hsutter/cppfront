@@ -25,15 +25,17 @@ namespace cpp2 {
 //
 
 //G unary-prefix-operator:
-//G     one of  ^ $ !
-//GT     one of  * & ~ + -       [[ possibly - would be for C++ library call compatiblity only ]]
+//G     one of  & ~ + - ! $
 //G
 auto is_prefix_operator(lexeme l) 
 { 
     switch (l) {
-    break;case lexeme::Caret:
-          case lexeme::Dollar:
+    break;case lexeme::Ampersand:
+          case lexeme::Tilde:
+          case lexeme::Plus:
+          case lexeme::Minus:
           case lexeme::Not:
+          case lexeme::Dollar:
         return true;
     }
     return false;
@@ -41,12 +43,12 @@ auto is_prefix_operator(lexeme l)
 
 
 //G unary-postfix-operator:
-//G     one of  ^ $ ++ -- [ (
+//G     one of  * $ ++ -- [ (
 //G
 auto is_postfix_operator(lexeme l) 
 { 
     switch (l) {
-    break;case lexeme::Caret:
+    break;case lexeme::Star:
           case lexeme::Dollar:
           case lexeme::PlusPlus:
           case lexeme::MinusMinus:
@@ -59,22 +61,21 @@ auto is_postfix_operator(lexeme l)
 
 
 //G assignment-operator:
-//G     one of  = *= /= %= += -= >>= <<=
-//G     one of  &= ^= |=        [[ for C++ library call compatiblity only ]]
+//G     one of  = *= /= %= += -= >>= <<= &= ^= |=
 //G
 auto is_assignment_operator(lexeme l) 
 { 
     switch (l) {
     break;case lexeme::Assignment:
-          case lexeme::MultiplyEq:
-          case lexeme::DivideEq:
+          case lexeme::StarEq:
+          case lexeme::SlashEq:
           case lexeme::ModuloEq:
           case lexeme::PlusEq:
           case lexeme::MinusEq:
           case lexeme::RightShiftEq:
           case lexeme::LeftShiftEq:
           case lexeme::AmpersandEq:
-          case lexeme::CaretEq:
+          case lexeme::XorEq:
           case lexeme::PipeEq:
         return true;
     }
@@ -736,6 +737,9 @@ private:
             curr().type() == lexeme::DecimalLiteral ||
             curr().type() == lexeme::FloatLiteral ||
             curr().type() == lexeme::StringLiteral ||
+            curr().type() == lexeme::CharacterLiteral ||
+            curr().type() == lexeme::BinaryLiteral ||
+            curr().type() == lexeme::HexadecimalLiteral ||
             curr().type() == lexeme::Keyword
             ) 
         {
@@ -867,7 +871,7 @@ private:
     //G
     auto multiplicative_expression() {
         return binary_expression<multiplicative_expression_node> (
-            [](token const& t){ return t.type() == lexeme::Multiply || t.type() == lexeme::Divide || t.type() == lexeme::Modulo; },
+            [](token const& t){ return t.type() == lexeme::Star || t.type() == lexeme::Slash || t.type() == lexeme::Modulo; },
             [this]{ return is_as_expression(); }
             );
     }
@@ -948,6 +952,8 @@ private:
     //G  expression:
     //G     logical_or-expression { assignment-operator logical_or-expression }*
     //G
+    // TODO: add support for parenthesized expressions
+    //GT    ( expression )
     auto expression() {
         return binary_expression<expression_node> (
             [](token const& t){ return is_assignment_operator(t.type()); },
