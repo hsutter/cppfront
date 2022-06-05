@@ -19,3 +19,5 @@
 *.db-shm
 *.db-wal
 *.opendb
+*.vsidx
+*.lock

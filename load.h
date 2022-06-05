@@ -372,9 +372,12 @@ public:
     auto load( 
         std::string const&  filename 
     )
-        -> void
+        -> bool
     {
         std::ifstream in{ filename };
+        if (!in.is_open()) {
+            return false;
+        }
 
         const auto max_line_len = 5000;
         char buf[max_line_len];
@@ -470,6 +473,8 @@ public:
                     + std::to_string(brace_depth) + " missing } to match earlier {"
             );
         }
+
+        return true;
     }
 
 

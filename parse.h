@@ -24,36 +24,34 @@ namespace cpp2 {
 //  Operator categorization
 //
 
-//G unary-prefix-operator:
-//G     one of  & ~ + - ! $
+//G prefix-operator:
+//G     one of  !
 //G
-auto is_prefix_operator(lexeme l) 
+auto is_prefix_operator(lexeme l) -> bool
 { 
     switch (l) {
-    break;case lexeme::Ampersand:
-          case lexeme::Tilde:
-          case lexeme::Plus:
-          case lexeme::Minus:
-          case lexeme::Not:
-          case lexeme::Dollar:
+    break;case lexeme::Not:
         return true;
     }
     return false;
 }
 
 
-//G unary-postfix-operator:
-//G     one of  * $ ++ -- [ (
+//G postfix-operator:
+//G     one of  .  ++  --  [  (  *  &  ~  $
 //G
-auto is_postfix_operator(lexeme l) 
+auto is_postfix_operator(lexeme l)  -> bool
 { 
     switch (l) {
-    break;case lexeme::Star:
-          case lexeme::Dollar:
+    break;case lexeme::Dot:
           case lexeme::PlusPlus:
           case lexeme::MinusMinus:
           case lexeme::LeftBracket:
           case lexeme::LeftParen:
+          case lexeme::Star:
+          case lexeme::Ampersand:
+          case lexeme::Tilde:
+          case lexeme::Dollar:
         return true;
     }
     return false;
@@ -63,7 +61,7 @@ auto is_postfix_operator(lexeme l)
 //G assignment-operator:
 //G     one of  = *= /= %= += -= >>= <<= &= ^= |=
 //G
-auto is_assignment_operator(lexeme l) 
+auto is_assignment_operator(lexeme l) -> bool
 { 
     switch (l) {
     break;case lexeme::Assignment:
@@ -106,7 +104,7 @@ struct primary_expression_node
         return identifier->position();
     }
 
-    auto visit(auto& v, int depth) {
+    auto visit(auto& v, int depth) -> void {
         v.start(*this, depth);
         assert (identifier);
         v.start(*identifier, depth+1);
@@ -164,7 +162,7 @@ struct binary_expression_node
     }
 };
 
-using is_as_expression_node          = binary_expression_node< "is-as"          , unary_expression_node         >;
+using is_as_expression_node          = binary_expression_node< "is-as"          , unary_expression_node          >;
 using multiplicative_expression_node = binary_expression_node< "multiplicative" , is_as_expression_node          >;
 using additive_expression_node       = binary_expression_node< "additive"       , multiplicative_expression_node >;
 using shift_expression_node          = binary_expression_node< "shift"          , additive_expression_node       >;
@@ -174,7 +172,7 @@ using equality_expression_node       = binary_expression_node< "equality"       
 using logical_and_expression_node    = binary_expression_node< "logical-and"    , equality_expression_node       >;
 using logical_or_expression_node     = binary_expression_node< "logical-or"     , logical_and_expression_node    >;
 using expression_node                = binary_expression_node< "expression"     , logical_or_expression_node     >;
-using expression_list_node           = binary_expression_node< "expression-list", expression_node     >;
+using expression_list_node           = binary_expression_node< "expression-list", expression_node                >;
 
 struct expression_statement_node
 {
@@ -795,7 +793,7 @@ private:
 
 
     //G unary-expression:
-    //G     { unary-prefix-operator }* postfix-expression
+    //G     { prefix-operator }* postfix-expression
     //GT     await-expression
     //GT     sizeof unary-expression
     //GT     sizeof ( type-id )
