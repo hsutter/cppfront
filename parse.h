@@ -38,16 +38,13 @@ auto is_prefix_operator(lexeme l) -> bool
 
 
 //G postfix-operator:
-//G     one of  .  ++  --  [  (  *  &  ~  $
+//G     one of  ++  --  *  &  ~  $
 //G
 auto is_postfix_operator(lexeme l)  -> bool
 { 
     switch (l) {
-    break;case lexeme::Dot:
-          case lexeme::PlusPlus:
+    break;case lexeme::PlusPlus:
           case lexeme::MinusMinus:
-          case lexeme::LeftBracket:
-          case lexeme::LeftParen:
           case lexeme::Star:
           case lexeme::Ampersand:
           case lexeme::Tilde:
@@ -115,7 +112,7 @@ struct primary_expression_node
 
 struct postfix_expression_node;
 
-struct unary_expression_node
+struct prefix_expression_node
 {
     std::vector<token const*> ops;
     std::unique_ptr<postfix_expression_node> expr;
@@ -162,17 +159,42 @@ struct binary_expression_node
     }
 };
 
-using is_as_expression_node          = binary_expression_node< "is-as"          , unary_expression_node          >;
+using is_as_expression_node          = binary_expression_node< "is-as"          , prefix_expression_node         >;
 using multiplicative_expression_node = binary_expression_node< "multiplicative" , is_as_expression_node          >;
 using additive_expression_node       = binary_expression_node< "additive"       , multiplicative_expression_node >;
 using shift_expression_node          = binary_expression_node< "shift"          , additive_expression_node       >;
 using compare_expression_node        = binary_expression_node< "compare"        , shift_expression_node          >;
 using relational_expression_node     = binary_expression_node< "relational"     , compare_expression_node        >;
 using equality_expression_node       = binary_expression_node< "equality"       , relational_expression_node     >;
-using logical_and_expression_node    = binary_expression_node< "logical-and"    , equality_expression_node       >;
+using bit_and_expression_node        = binary_expression_node< "bit-and"        , equality_expression_node       >;
+using bit_xor_expression_node        = binary_expression_node< "bit-xor"        , bit_and_expression_node        >;
+using bit_or_expression_node         = binary_expression_node< "bit-or"         , bit_xor_expression_node        >;
+using logical_and_expression_node    = binary_expression_node< "logical-and"    , bit_or_expression_node         >;
 using logical_or_expression_node     = binary_expression_node< "logical-or"     , logical_and_expression_node    >;
-using expression_node                = binary_expression_node< "expression"     , logical_or_expression_node     >;
+using assignment_expression_node     = binary_expression_node< "assignment"     , logical_or_expression_node     >;
+
+
+struct expression_node
+{
+    std::unique_ptr<assignment_expression_node> expr;
+
+    auto position() const -> source_position
+    {
+        assert (expr);
+        return expr->position();
+    }
+
+    auto visit(auto& v, int depth) -> void
+    {
+        v.start(*this, depth);
+        assert (expr);
+        expr->visit(v, depth+1);
+        v.end(*this, depth);
+    }
+};
+
 using expression_list_node           = binary_expression_node< "expression-list", expression_node                >;
+
 
 struct expression_statement_node
 {
@@ -227,7 +249,7 @@ struct postfix_expression_node
     }
 };
 
-auto unary_expression_node::position() const -> source_position
+auto prefix_expression_node::position() const -> source_position
 {
     if (std::ssize(ops) > 0) {
         return ops.front()->position();
@@ -236,7 +258,7 @@ auto unary_expression_node::position() const -> source_position
     return expr->position();
 }
 
-auto unary_expression_node::visit(auto& v, int depth) -> void
+auto prefix_expression_node::visit(auto& v, int depth) -> void
 {
     v.start(*this, depth);
     for (auto const& x : ops) {
@@ -726,6 +748,7 @@ private:
     // 
 
     //G primary-expression:
+    //G     literal
     //GT     TODO
     //G
     auto primary_expression() 
@@ -750,7 +773,11 @@ private:
 
 
     //G postfix-expression:
-    //G     primary-expression { primary-postfix-operator | [ expression-list ] | ( {expression-list}? ) }*
+    //G     primary-expression
+    //G     postfix-expression postfix-operator
+    //G     postfix-expression [ expression-list ]
+    //G     postfix-expression ( expression-list? )
+    //GT     postfix-expression . id-expression
     //GT     typeid ( expression )
     //GT     typeid ( type-id )
     //G
@@ -763,28 +790,35 @@ private:
             return {};
         }
 
-        while (is_postfix_operator(curr().type())) {
+        while (is_postfix_operator(curr().type()) ||
+               curr().type() == lexeme::LeftBracket ||
+               curr().type() == lexeme::LeftParen ||
+               curr().type() == lexeme::Dot)
+        {
             auto term = postfix_expression_node::term(&curr());
             next();
 
-            switch (term.op->type()) {
+            switch (term.op->type()) 
+            {
             break;case lexeme::LeftBracket:
                 term.expr_list = expression_list();
                 if (!term.expr_list) {
                     error("subscript expression [ ] must not be empty");
                 }
                 if (curr().type() != lexeme::RightBracket) {
-                    error("unexpected text - [ is not followed by a closing ]");
+                    error("unexpected text - [ is not properly matched by ]");
                 }
                 next();
 
             break;case lexeme::LeftParen:
                 term.expr_list = expression_list();
                 if (curr().type() != lexeme::RightParen) {
-                    error("unexpected text - ( is not followed by a closing )");
+                    error("unexpected text - ( is not properly matched by )");
                 }
                 next();
             }
+
+            // TODO: lexeme::Dot
 
             n->ops.push_back( std::move(term) );
         }
@@ -792,19 +826,19 @@ private:
     }
 
 
-    //G unary-expression:
+    //G prefix-expression:
     //G     { prefix-operator }* postfix-expression
     //GT     await-expression
-    //GT     sizeof unary-expression
+    //GT     sizeof prefix-expression
     //GT     sizeof ( type-id )
     //GT     sizeof ... ( identifier )
     //GT     alignof ( type-id )
     //GT     noexcept-expression
     //G
-    auto unary_expression() 
-        -> std::unique_ptr<unary_expression_node>
+    auto prefix_expression() 
+        -> std::unique_ptr<prefix_expression_node>
     {
-        auto n = std::make_unique<unary_expression_node>();
+        auto n = std::make_unique<prefix_expression_node>();
         for ( ; is_prefix_operator(curr().type()); next()) {
             n->ops.push_back(&curr());
         }
@@ -852,7 +886,10 @@ private:
     }
 
     //G is-as-expression:
-    //G     unary-expression { { "is" "as" } unary-expression }*
+    //G     prefix-expression 
+    //GT    is-as-expression is-expression-constraint
+    //GT    is-as-expression as-constraint
+    //GT    type-id is-type-constraint
     //G
     auto is_as_expression() {
         return binary_expression<is_as_expression_node> (
@@ -860,12 +897,15 @@ private:
                 std::string_view s{t};
                 return t.type() == lexeme::Keyword && (s == "is" || s == "as");
             },
-            [this]{ return unary_expression(); }
+            [this]{ return prefix_expression(); }
         );
     }
 
     //G multiplicative-expression:
-    //G     is-as-expression { { * / % } is-as-expression }*
+    //G     is-as-expression 
+    //G     multiplicative-expression * is-as-expression
+    //G     multiplicative-expression / is-as-expression
+    //G     multiplicative-expression % is-as-expression
     //G
     auto multiplicative_expression() {
         return binary_expression<multiplicative_expression_node> (
@@ -875,7 +915,9 @@ private:
     }
 
     //G additive-expression:
-    //G     multiplicative-expression { { + - } multiplicative-expression }*
+    //G     multiplicative-expression
+    //G     additive-expression + multiplicative-expression
+    //G     additive-expression - multiplicative-expression
     //G
     auto additive_expression() {
         return binary_expression<additive_expression_node> (
@@ -885,7 +927,9 @@ private:
     }
 
     //G shift-expression:
-    //G     additive-expression { { << >> } additive-expression }*
+    //G     additive-expression 
+    //G     shift-expression << additive-expression 
+    //G     shift-expression >> additive-expression 
     //G
     auto shift_expression() {
         return binary_expression<shift_expression_node> (
@@ -895,7 +939,8 @@ private:
     }
 
     //G compare-expression:
-    //G     shift-expression { { <=> } shift-expression }*
+    //G     shift-expression 
+    //G     compare-expression <=> shift-expression
     //G
     auto compare_expression() {
         return binary_expression<compare_expression_node> (
@@ -905,7 +950,11 @@ private:
     }
 
     //G relational-expression:
-    //G     compare-expression { { < <= > >= } compare-expression }*
+    //G     compare-expression
+    //G     relational-expression <  compare-expression
+    //G     relational-expression >  compare-expression
+    //G     relational-expression <= compare-expression
+    //G     relational-expression >= compare-expression
     //G
     auto relational_expression() {
         return binary_expression<relational_expression_node> (
@@ -915,7 +964,9 @@ private:
     }
 
     //G equality-expression:
-    //G     relational-expression { { == != } relational-expression }*
+    //G     relational-expression
+    //G     equality-expression == relational-expression
+    //G     equality-expression != relational-expression
     //G
     auto equality_expression() {
         return binary_expression<equality_expression_node> (
@@ -924,20 +975,55 @@ private:
         );
     }
 
-    //G logical_and-expression:
-    //G     equality-expression { && equality-expression }*
+    //G bit-and-expression:
+    //G     equality-expression
+    //G     bit-and-expression & equality-expression
+    //G
+    auto bit_and_expression() {
+        return binary_expression<bit_and_expression_node> (
+            [](token const& t){ return t.type() == lexeme::Ampersand; },
+            [this]{ return equality_expression(); }
+        );
+    }
+
+    //G bit-xor-expression:
+    //G     bit-and-expression
+    //G     bit-xor-expression & bit-and-expression
+    //G
+    auto bit_xor_expression() {
+        return binary_expression<bit_xor_expression_node> (
+            [](token const& t){ return t.type() == lexeme::Xor; },
+            [this]{ return bit_and_expression(); }
+        );
+    }
+
+    //G bit-or-expression:
+    //G     bit-xor-expression
+    //G     bit-or-expression & bit-xor-expression
+    //G
+    auto bit_or_expression() {
+        return binary_expression<bit_or_expression_node> (
+            [](token const& t){ return t.type() == lexeme::LogicalOr; },
+            [this]{ return bit_xor_expression(); }
+        );
+    }
+
+    //G logical-and-expression:
+    //G     bit-xor-expression
+    //G     logical-and-expression && bit-xor-expression
     //G
     auto logical_and_expression() {
         return binary_expression<logical_and_expression_node> (
             [](token const& t){ return t.type() == lexeme::LogicalAnd; },
-            [this]{ return equality_expression(); }
+            [this]{ return bit_or_expression(); }
         );
     }
 
     //  constant-expression:    // don't need intermediate production, just use:
     //  conditional-expression: // don't need intermediate production, just use:
-    //G logical_or-expression:
-    //G     logical_and-expression { || logical_and-expression }*
+    //G logical-or-expression:
+    //G     logical-and-expression
+    //G     logical-or-expression || logical-and-expression
     //G
     auto logical_or_expression() {
         return binary_expression<logical_or_expression_node> (
@@ -946,17 +1032,27 @@ private:
         );
     }
 
-    //  condition:  // don't need intermediate production, just use:
-    //G  expression:
-    //G     logical_or-expression { assignment-operator logical_or-expression }*
+    //G assignment-expression:
+    //G     logical-or-expression
+    //G     assignment-expression assignment-operator assignment-expression
     //G
-    // TODO: add support for parenthesized expressions
-    //GT    ( expression )
-    auto expression() {
-        return binary_expression<expression_node> (
+    auto assignment_expression() {
+        return binary_expression<assignment_expression_node> (
             [](token const& t){ return is_assignment_operator(t.type()); },
             [this]{ return logical_or_expression(); }
         );
+    }
+
+    //G  expression:                // eliminated condition: - use expression:
+    //G     assignment-expression
+    //GT    try expression
+    //G
+    auto expression() -> std::unique_ptr<expression_node> {
+        auto n = std::make_unique<expression_node>();
+        if (!(n->expr = assignment_expression())) {
+            return {};
+        }
+        return n;
     }
 
     //GT expression-list
@@ -1412,9 +1508,9 @@ struct parse_tree_printer : printing_visitor
         o << pre(indent) << "primary-expression\n";
     }
 
-    auto start(unary_expression_node const& n, int indent) -> void
+    auto start(prefix_expression_node const& n, int indent) -> void
     {
-        o << pre(indent) << "unary-expression\n";
+        o << pre(indent) << "prefix-expression\n";
     }
 
     template<String Name, typename Term>

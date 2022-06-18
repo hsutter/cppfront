@@ -628,7 +628,7 @@ public:
         --scope_depth;
     }
 
-    auto start(expression_node const& n, int) {
+    auto start(assignment_expression_node const& n, int) {
         if (std::ssize(n.terms) > 0) {
             assert (n.terms.front().op);
             if (n.terms.front().op->type() == lexeme::Assignment) {
