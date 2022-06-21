@@ -827,13 +827,14 @@ private:
 
 
     //G prefix-expression:
-    //G     { prefix-operator }* postfix-expression
+    //G     postfix-expression
+    //G     prefix-operator prefix-expression
     //GT     await-expression
     //GT     sizeof prefix-expression
     //GT     sizeof ( type-id )
     //GT     sizeof ... ( identifier )
     //GT     alignof ( type-id )
-    //GT     noexcept-expression
+    //GT     throws-expression
     //G
     auto prefix_expression() 
         -> std::unique_ptr<prefix_expression_node>
@@ -1036,7 +1037,7 @@ private:
     //G     logical-or-expression
     //G     assignment-expression assignment-operator assignment-expression
     //G
-    auto assignment_expression() {
+    auto assignment_expression() -> std::unique_ptr<assignment_expression_node> {
         return binary_expression<assignment_expression_node> (
             [](token const& t){ return is_assignment_operator(t.type()); },
             [this]{ return logical_or_expression(); }
@@ -1055,8 +1056,10 @@ private:
         return n;
     }
 
-    //GT expression-list
-    //GT     expression { , expression }*
+    //G expression-list:
+    //G     expression
+    //G     expression-list , expression
+    //G
     auto expression_list() -> std::unique_ptr<expression_list_node> {
         return binary_expression<expression_list_node> (
             [](token const& t){ return t.type() == lexeme::Comma; },
@@ -1068,8 +1071,6 @@ private:
     //G unqualified-id:
     //G     identifier
     //GT     operator-function-id
-    //GT     conversion-function-id
-    //GT     literal-operator-id
     //GT     template-id
     auto unqualified_id() -> std::unique_ptr<unqualified_id_node> 
     {
@@ -1085,7 +1086,13 @@ private:
 
 
     //G qualified-id:
-    //G     unqualified-id { . unqualified-id }*
+    //G     nested-name-specifier unqualified-id
+    //G
+    //GT nested-name-specifier
+    //GT     ::
+    //GT     type-name ::
+    //GT     namespace-name ::
+    //GT     nested-name-specifier identifier ::
     //G
     auto qualified_id() -> std::unique_ptr<qualified_id_node> 
     {
@@ -1117,7 +1124,7 @@ private:
 
     //G id-expression
     //G     unqualified-id
-    //GT     qualified-id
+    //G     qualified-id
     auto id_expression() -> std::unique_ptr<id_expression_node> 
     {
         auto n = std::make_unique<id_expression_node>();
@@ -1156,7 +1163,8 @@ private:
 
 
     //G selection-statement:
-    //G     if {constexpr}? expression compound-statement { else compound-statement }?
+    //G     if constexpr-opt expression compound-statement
+    //G     if constexpr-opt expression compound-statement else compound-statement
     //GT     switch expression compound-statement
     auto selection_statement() -> std::unique_ptr<selection_statement_node> 
     {
@@ -1501,6 +1509,11 @@ struct parse_tree_printer : printing_visitor
     auto start(token const& n, int indent) -> void
     {
         o << pre(indent) << n.to_string() << "\n";
+    }
+
+    auto start(expression_node const& n, int indent) -> void
+    {
+        o << pre(indent) << "expression\n";
     }
 
     auto start(primary_expression_node const& n, int indent) -> void
