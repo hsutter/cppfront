@@ -74,7 +74,7 @@ public:
             //  Sema
             parser.visit( sema );
 
-            debug_print();
+            //debug_print();
 
             if (!sema.apply_local_rules()) {
                 errors.emplace_back(

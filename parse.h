@@ -38,14 +38,14 @@ auto is_prefix_operator(lexeme l) -> bool
 
 
 //G postfix-operator:
-//G     one of  ++  --  *  &  ~  $
+//G     one of  ++  --  ^  &  ~  $
 //G
 auto is_postfix_operator(lexeme l)  -> bool
 { 
     switch (l) {
     break;case lexeme::PlusPlus:
           case lexeme::MinusMinus:
-          case lexeme::Star:
+          case lexeme::Caret:
           case lexeme::Ampersand:
           case lexeme::Tilde:
           case lexeme::Dollar:
@@ -56,22 +56,22 @@ auto is_postfix_operator(lexeme l)  -> bool
 
 
 //G assignment-operator:
-//G     one of  = *= /= %= += -= >>= <<= &= ^= |=
+//G     one of  = *= /= %= += -= >>= <<=
 //G
 auto is_assignment_operator(lexeme l) -> bool
 { 
     switch (l) {
     break;case lexeme::Assignment:
-          case lexeme::StarEq:
+          case lexeme::MultiplyEq:
           case lexeme::SlashEq:
           case lexeme::ModuloEq:
           case lexeme::PlusEq:
           case lexeme::MinusEq:
           case lexeme::RightShiftEq:
           case lexeme::LeftShiftEq:
-          case lexeme::AmpersandEq:
-          case lexeme::XorEq:
-          case lexeme::PipeEq:
+          //case lexeme::AmpersandEq:
+          //case lexeme::CaretEq:
+          //case lexeme::PipeEq:
         return true;
     }
     return false;
@@ -85,27 +85,30 @@ auto is_assignment_operator(lexeme l) -> bool
 //-----------------------------------------------------------------------
 //
 
+struct expression_list_node;
+
 struct primary_expression_node
 {
-    // TODO
-    token const* identifier;
+    enum active { empty=0, identifier, expression_list };
+    std::variant<
+        std::monostate,
+        token const*,
+        std::unique_ptr<expression_list_node>
+    > expr;
 
-    primary_expression_node( token const* tok) 
-        : identifier{ tok }
+    auto position() const -> source_position;
+
+    auto visit(auto& v, int depth) -> void;
+
+    template <int I>
+    auto visit(auto& v, int depth) -> void 
     {
-    }
-
-    auto position() const -> source_position
-    {
-        assert (identifier);
-        return identifier->position();
-    }
-
-    auto visit(auto& v, int depth) -> void {
-        v.start(*this, depth);
-        assert (identifier);
-        v.start(*identifier, depth+1);
-        v.end(*this, depth);
+        if (expr.index() == I) 
+        {
+            auto const& s = std::get<I>(expr);
+            assert (s);
+            s->visit(v, depth+1);
+        }
     }
 };
 
@@ -166,10 +169,10 @@ using shift_expression_node          = binary_expression_node< "shift"          
 using compare_expression_node        = binary_expression_node< "compare"        , shift_expression_node          >;
 using relational_expression_node     = binary_expression_node< "relational"     , compare_expression_node        >;
 using equality_expression_node       = binary_expression_node< "equality"       , relational_expression_node     >;
-using bit_and_expression_node        = binary_expression_node< "bit-and"        , equality_expression_node       >;
-using bit_xor_expression_node        = binary_expression_node< "bit-xor"        , bit_and_expression_node        >;
-using bit_or_expression_node         = binary_expression_node< "bit-or"         , bit_xor_expression_node        >;
-using logical_and_expression_node    = binary_expression_node< "logical-and"    , bit_or_expression_node         >;
+//using bit_and_expression_node        = binary_expression_node< "bit-and"        , equality_expression_node       >;
+//using bit_xor_expression_node        = binary_expression_node< "bit-xor"        , bit_and_expression_node        >;
+//using bit_or_expression_node         = binary_expression_node< "bit-or"         , bit_xor_expression_node        >;
+using logical_and_expression_node    = binary_expression_node< "logical-and"    , equality_expression_node       >;
 using logical_or_expression_node     = binary_expression_node< "logical-or"     , logical_and_expression_node    >;
 using assignment_expression_node     = binary_expression_node< "assignment"     , logical_or_expression_node     >;
 
@@ -193,7 +196,60 @@ struct expression_node
     }
 };
 
-using expression_list_node           = binary_expression_node< "expression-list", expression_node                >;
+struct expression_list_node
+{
+    std::vector< std::unique_ptr<expression_node> > expressions;
+
+    auto position() const -> source_position
+    {
+        assert (std::ssize(expressions) > 0 && expressions.front());
+        return expressions.front()->position();
+    }
+
+    auto visit(auto& v, int depth) -> void
+    {
+        v.start(*this, depth);
+        for (auto const& x : expressions) {
+            assert(x);
+            x->visit(v, depth+1);
+        }
+        v.end(*this, depth);
+    }
+};
+
+
+auto primary_expression_node::position() const -> source_position
+{
+    switch (expr.index())
+    {
+    break;case empty:
+        return { 0, 0 };
+
+    break;case identifier: {
+        auto const& s = std::get<identifier>(expr);
+        assert (s);
+        return s->position();
+    }
+
+    break;case expression_list: {
+        auto const& s = std::get<expression_list>(expr);
+        assert (s);
+        return s->position();
+    }
+
+    break;default:
+        assert (!"illegal primary_expression_node state");
+        return { 0, 0 };
+    }
+}
+
+auto primary_expression_node::visit(auto& v, int depth) -> void
+{
+    v.start(*this, depth);
+    visit<identifier     >(v, depth);
+    visit<expression_list>(v, depth);
+    v.end(*this, depth);
+}
 
 
 struct expression_statement_node
@@ -749,11 +805,14 @@ private:
 
     //G primary-expression:
     //G     literal
+    //G     ( expression-list )
     //GT     TODO
     //G
     auto primary_expression() 
         -> std::unique_ptr<primary_expression_node>
     {
+        auto n = std::make_unique<primary_expression_node>();
+
         if (curr().type() == lexeme::Identifier ||
             curr().type() == lexeme::DecimalLiteral ||
             curr().type() == lexeme::FloatLiteral ||
@@ -764,10 +823,29 @@ private:
             curr().type() == lexeme::Keyword
             ) 
         {
-            auto n = std::make_unique<primary_expression_node>( &curr() );
+            n->expr = &curr();
             next();
             return n;
         }
+
+        if (curr().type() == lexeme::LeftParen) {
+            next();
+            auto expr_list = expression_list();
+            if (!expr_list) {
+                error("unexpected text - ( is not followed by an expression-list");
+                next();
+                return {};
+            }
+            n->expr = std::move(expr_list);
+            if (curr().type() != lexeme::RightParen) {
+                error("unexpected text - expression-list is not terminated by )");
+                next();
+                return {};
+            }
+            next();
+            return n;
+        }
+
         return {};
     }
 
@@ -910,7 +988,7 @@ private:
     //G
     auto multiplicative_expression() {
         return binary_expression<multiplicative_expression_node> (
-            [](token const& t){ return t.type() == lexeme::Star || t.type() == lexeme::Slash || t.type() == lexeme::Modulo; },
+            [](token const& t){ return t.type() == lexeme::Multiply || t.type() == lexeme::Slash || t.type() == lexeme::Modulo; },
             [this]{ return is_as_expression(); }
             );
     }
@@ -976,38 +1054,38 @@ private:
         );
     }
 
-    //G bit-and-expression:
-    //G     equality-expression
-    //G     bit-and-expression & equality-expression
-    //G
-    auto bit_and_expression() {
-        return binary_expression<bit_and_expression_node> (
-            [](token const& t){ return t.type() == lexeme::Ampersand; },
-            [this]{ return equality_expression(); }
-        );
-    }
+    ////G bit-and-expression:
+    ////G     equality-expression
+    ////G     bit-and-expression & equality-expression
+    ////G
+    //auto bit_and_expression() {
+    //    return binary_expression<bit_and_expression_node> (
+    //        [](token const& t){ return t.type() == lexeme::Ampersand; },
+    //        [this]{ return equality_expression(); }
+    //    );
+    //}
 
-    //G bit-xor-expression:
-    //G     bit-and-expression
-    //G     bit-xor-expression & bit-and-expression
-    //G
-    auto bit_xor_expression() {
-        return binary_expression<bit_xor_expression_node> (
-            [](token const& t){ return t.type() == lexeme::Xor; },
-            [this]{ return bit_and_expression(); }
-        );
-    }
+    ////G bit-xor-expression:
+    ////G     bit-and-expression
+    ////G     bit-xor-expression & bit-and-expression
+    ////G
+    //auto bit_xor_expression() {
+    //    return binary_expression<bit_xor_expression_node> (
+    //        [](token const& t){ return t.type() == lexeme::Caret; },
+    //        [this]{ return bit_and_expression(); }
+    //    );
+    //}
 
-    //G bit-or-expression:
-    //G     bit-xor-expression
-    //G     bit-or-expression & bit-xor-expression
-    //G
-    auto bit_or_expression() {
-        return binary_expression<bit_or_expression_node> (
-            [](token const& t){ return t.type() == lexeme::LogicalOr; },
-            [this]{ return bit_xor_expression(); }
-        );
-    }
+    ////G bit-or-expression:
+    ////G     bit-xor-expression
+    ////G     bit-or-expression & bit-xor-expression
+    ////G
+    //auto bit_or_expression() {
+    //    return binary_expression<bit_or_expression_node> (
+    //        [](token const& t){ return t.type() == lexeme::LogicalOr; },
+    //        [this]{ return bit_xor_expression(); }
+    //    );
+    //}
 
     //G logical-and-expression:
     //G     bit-xor-expression
@@ -1016,7 +1094,7 @@ private:
     auto logical_and_expression() {
         return binary_expression<logical_and_expression_node> (
             [](token const& t){ return t.type() == lexeme::LogicalAnd; },
-            [this]{ return bit_or_expression(); }
+            [this]{ return equality_expression(); }
         );
     }
 
@@ -1061,10 +1139,21 @@ private:
     //G     expression-list , expression
     //G
     auto expression_list() -> std::unique_ptr<expression_list_node> {
-        return binary_expression<expression_list_node> (
-            [](token const& t){ return t.type() == lexeme::Comma; },
-            [this]{ return expression(); }
-        );
+        //return binary_expression<expression_list_node> (
+        //    [](token const& t){ return t.type() == lexeme::Comma; },
+        //    [this]{ return expression(); }
+        //);
+        auto n = std::make_unique<expression_list_node>();
+        auto x = expression();
+        if (!x) {
+            return {};
+        }
+        n->expressions.push_back( std::move(x) );
+        while (curr().type() == lexeme::Comma) {
+            next();
+            n->expressions.push_back( expression() );
+        }
+        return n;
     }
 
 
@@ -1133,14 +1222,12 @@ private:
             assert (n->id.index() == id_expression_node::qualified);
             return n;
         }
-        else if (auto id = unqualified_id()) {
+        if (auto id = unqualified_id()) {
             n->id = std::move(id);
             assert (n->id.index() == id_expression_node::unqualified);
             return n;
         }
-        else {
-            return {};
-        }
+        return {};
     }
 
 
@@ -1263,6 +1350,7 @@ private:
         }
 
         else {
+            //next();
             return {};
         }
     }
@@ -1514,6 +1602,11 @@ struct parse_tree_printer : printing_visitor
     auto start(expression_node const& n, int indent) -> void
     {
         o << pre(indent) << "expression\n";
+    }
+
+    auto start(expression_list_node const& n, int indent) -> void
+    {
+        o << pre(indent) << "expression-list\n";
     }
 
     auto start(primary_expression_node const& n, int indent) -> void

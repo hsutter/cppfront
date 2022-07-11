@@ -48,15 +48,15 @@ enum class lexeme : std::int8_t {
     Pipe,
     LogicalAndEq,
     LogicalAnd,
-    AmpersandEq,
-    Ampersand,
-    StarEq,
-    Star,
+    MultiplyEq,
+    Multiply,
     ModuloEq,
     Modulo,
-    XorEq,
-    Xor,
-    TildeEq,
+    //AmpersandEq,
+    Ampersand,
+    //CaretEq,
+    Caret,
+    //TildeEq,
     Tilde,
     EqualComparison,
     Assignment,
@@ -117,15 +117,15 @@ auto as(lexeme l)
     break;case lexeme::Pipe:                return "Pipe";
     break;case lexeme::LogicalAndEq:        return "LogicalAndEq";
     break;case lexeme::LogicalAnd:          return "LogicalAnd";
-    break;case lexeme::AmpersandEq:         return "AmpersandEq";
-    break;case lexeme::Ampersand:           return "Ampersand";
-    break;case lexeme::StarEq:              return "StarEq";
-    break;case lexeme::Star:                return "Star";
+    break;case lexeme::MultiplyEq:          return "MultiplyEq";
+    break;case lexeme::Multiply:            return "Multiply";
     break;case lexeme::ModuloEq:            return "ModuloEq";
     break;case lexeme::Modulo:              return "Modulo";
-    break;case lexeme::XorEq:               return "XorEq";
-    break;case lexeme::Xor:                 return "Xor";
-    break;case lexeme::TildeEq:             return "TildeEq";
+    //break;case lexeme::AmpersandEq:         return "AmpersandEq";
+    break;case lexeme::Ampersand:           return "Ampersand";
+    //break;case lexeme::CaretEq:             return "CaretEq";
+    break;case lexeme::Caret:               return "Caret";
+    //break;case lexeme::TildeEq:             return "TildeEq";
     break;case lexeme::Tilde:               return "Tilde";
     break;case lexeme::EqualComparison:     return "EqualComparison";
     break;case lexeme::Assignment:          return "Assignment";
@@ -210,6 +210,10 @@ public:
     auto position() const -> source_position { return pos;      }
 
     auto type    () const -> lexeme          { return lex_type; }
+
+    auto visit(auto& v, int depth) const -> void {
+        v.start(*this, depth);
+    }
 
 private:
     //  Store (char*,count) because it's smaller than a string_view
@@ -536,36 +540,36 @@ auto lex_line(
                 else if (peek1 == '=') { store(2, lexeme::PipeEq); }
                 else { store(1, lexeme::Pipe); }
 
-            //G     &&= && &= &
+            //G     &&= && &
             break;case '&': 
                 if (peek1 == '&') { 
                     if (peek2 == '=') { store(3, lexeme::LogicalAndEq); }
                     else { store(2, lexeme::LogicalAnd); }
                 }
-                else if (peek1 == '=') { store(2, lexeme::AmpersandEq); }
+                //else if (peek1 == '=') { store(2, lexeme::AmpersandEq); }
                 else { store(1, lexeme::Ampersand); }
 
             //  Next, all the other operators that have a compound assignment form
 
             //G     *= *
             break;case '*': 
-                if (peek1 == '=') { store(2, lexeme::StarEq); }
-                else { store(1, lexeme::Star); }
+                if (peek1 == '=') { store(2, lexeme::MultiplyEq); }
+                else { store(1, lexeme::Multiply); }
 
             //G     %= %
             break;case '%': 
                 if (peek1 == '=') { store(2, lexeme::ModuloEq); }
                 else { store(1, lexeme::Modulo); }
 
-            //G     ^= ^
-            break;case '^': 
-                if (peek1 == '=') { store(2, lexeme::XorEq); }
-                else { store(1, lexeme::Xor); }
+            ////G     ^= ^
+            //break;case '^': 
+            //    if (peek1 == '=') { store(2, lexeme::CaretEq); }
+            //    else { store(1, lexeme::Caret); }
 
-            //G     ~= ~
-            break;case '~': 
-                if (peek1 == '=') { store(2, lexeme::TildeEq); }
-                else { store(1, lexeme::Tilde); }
+            ////G     ~= ~
+            //break;case '~': 
+            //    if (peek1 == '=') { store(2, lexeme::TildeEq); }
+            //    else { store(1, lexeme::Tilde); }
 
             //G     == =
             break;case '=': 
@@ -584,8 +588,14 @@ auto lex_line(
 
             //  All the other single-character tokens
 
-            //G     { } ( ) [ ] : ; , ? $
+            //G     ^ ~ { } ( ) [ ] : ; , ? $
             //G
+            break;case '^': 
+                store(1, lexeme::Caret);
+
+            break;case '~': 
+                store(1, lexeme::Tilde);
+
             break;case '{': 
                 store(1, lexeme::LeftBrace);
 
