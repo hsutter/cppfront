@@ -264,7 +264,7 @@ public:
                     return sym;
                 }
             }
-            return nullptr;
+            return {};
         };
 
         //  Function logic: For each entry in the table...

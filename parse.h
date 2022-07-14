@@ -526,6 +526,8 @@ struct parameter_declaration_node
 {
     enum class style { in=0, inout, out, move, forward };
     style pass = style::in;
+    enum class modifier { none=0, implicit, virtual_, final_ };
+    modifier mod = modifier::none;
     std::unique_ptr<declaration_node> declaration;
 
     auto position() const -> source_position;
@@ -1139,10 +1141,6 @@ private:
     //G     expression-list , expression
     //G
     auto expression_list() -> std::unique_ptr<expression_list_node> {
-        //return binary_expression<expression_list_node> (
-        //    [](token const& t){ return t.type() == lexeme::Comma; },
-        //    [this]{ return expression(); }
-        //);
         auto n = std::make_unique<expression_list_node>();
         auto x = expression();
         if (!x) {
@@ -1161,10 +1159,11 @@ private:
     //G     identifier
     //GT     operator-function-id
     //GT     template-id
+    //G
     auto unqualified_id() -> std::unique_ptr<unqualified_id_node> 
     {
         if (curr().type() != lexeme::Identifier &&
-            curr().type() != lexeme::Keyword)
+            curr().type() != lexeme::Keyword)   // because of fundamental types like 'int' which are keywords
         {
             return {};
         }
@@ -1177,8 +1176,9 @@ private:
     //G qualified-id:
     //G     nested-name-specifier unqualified-id
     //G
-    //GT nested-name-specifier
-    //GT     ::
+    //G nested-name-specifier
+    //G     ::
+    //G     unqualified-id ::
     //GT     type-name ::
     //GT     namespace-name ::
     //GT     nested-name-specifier identifier ::
@@ -1190,19 +1190,20 @@ private:
         //  Remember current position, because we need to look ahead to the .
         auto start_pos = pos;
         auto id = unqualified_id();
-        if (!id || curr().type() != lexeme::Dot) {
+        if (!id || curr().type() != lexeme::Scope) {
             pos = start_pos;    // backtrack
             return {};
         }
 
         n->ids.push_back( std::move(id) );
 
-        assert (curr().type() == lexeme::Dot);
-        while (curr().type() == lexeme::Dot) {
+        assert (curr().type() == lexeme::Scope);
+        while (curr().type() == lexeme::Scope) {
             next();
             id = unqualified_id();
             if (!id) {
-                error("invalid text, . should be followed by a nested name");
+                error("invalid text, :: should be followed by a nested name");
+                return {};
             }
             n->ids.push_back( std::move(id) );
         }
@@ -1214,6 +1215,7 @@ private:
     //G id-expression
     //G     unqualified-id
     //G     qualified-id
+    //G
     auto id_expression() -> std::unique_ptr<id_expression_node> 
     {
         auto n = std::make_unique<id_expression_node>();
@@ -1288,16 +1290,16 @@ private:
             //  Note: Position (0,0) signifies it's implicit (no source location)
             n->false_branch = 
                 std::make_unique<compound_statement_node>( source_position(0,0) );
-            return n;
-        }
-        next();
-
-        if (auto s = compound_statement()) {
-            n->false_branch = std::move(s);
         }
         else {
-            error("invalid else branch body");
-            return {};
+            next();
+            if (auto s = compound_statement()) {
+                n->false_branch = std::move(s);
+            }
+            else {
+                error("invalid else branch body");
+                return {};
+            }
         }
 
         return n;
@@ -1305,22 +1307,15 @@ private:
 
 
     //G statement:
-    //G     selection-statement
-    //G     compound-statement
-    //G     declaration-statement
     //G     expression-statement
+    //G     compound-statement
+    //G     selection-statement
+    //G     declaration-statement
     // 
     //GT     iteration-statement
     //GT     jump-statement
     //GT     try-block
     //G
-    //GT     attribute-specifier-seqopt expression-statement
-    //GT     attribute-specifier-seqopt compound-statement
-    //GT     attribute-specifier-seqopt selection-statement
-    //GT     attribute-specifier-seqopt iteration-statement
-    //GT     attribute-specifier-seqopt jump-statement
-    //GT     declaration-statement
-    //GT     attribute-specifier-seqopt try-block
     auto statement() -> std::unique_ptr<statement_node> 
     {
         auto n = std::make_unique<statement_node>();
@@ -1357,7 +1352,12 @@ private:
 
 
     //G compound-statement:
-    //G     {  statement*  }
+    //G     { statement-seq-opt }
+    //G
+    //G statement-seq:
+    //G     statement
+    //G     statement-seq statement
+    //G
     auto compound_statement() -> std::unique_ptr<compound_statement_node> 
     {
         if (curr().type() != lexeme::LeftBrace) {
@@ -1382,8 +1382,19 @@ private:
     }
 
 
-    //G parameter-declaration
-    //G     { in | inout | out | move | forward }?  declaration
+    //G parameter-declaration:
+    //G     parameter-direction-opt declaration
+    //G
+    //G parameter-direction: one of
+    //G     in inout out move forward
+    //G
+    //G iv-specifier:
+    //G     implicit
+    //G     virt-specifier
+    //G
+    //G virt-specifier:
+    //G     override
+    //G     final
     //G
     auto parameter_declaration() -> std::unique_ptr<parameter_declaration_node> 
     {
@@ -1409,6 +1420,21 @@ private:
             }
             else if (curr() == "forward") {
                 n->pass = parameter_declaration_node::style::forward;
+                next();
+            }
+        }
+
+        if (curr().type() == lexeme::Identifier) { 
+            if (curr() == "implicit") {
+                n->mod = parameter_declaration_node::modifier::implicit;
+                next();
+            }
+            else if (curr() == "virtual") {
+                n->mod = parameter_declaration_node::modifier::virtual_;
+                next();
+            }
+            else if (curr() == "final") {
+                n->mod = parameter_declaration_node::modifier::final_;
                 next();
             }
         }
