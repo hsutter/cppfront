@@ -68,6 +68,7 @@ enum class lexeme : std::int8_t {
     RightParen,
     LeftBracket,
     RightBracket,
+    Scope,
     Colon,
     Semicolon,
     Comma,
@@ -137,6 +138,7 @@ auto as(lexeme l)
     break;case lexeme::RightParen:          return "RightParen";
     break;case lexeme::LeftBracket:         return "LeftBracket";
     break;case lexeme::RightBracket:        return "RightBracket";
+    break;case lexeme::Scope:               return "Scope";
     break;case lexeme::Colon:               return "Colon";
     break;case lexeme::Semicolon:           return "Semicolon";
     break;case lexeme::Comma:               return "Comma";
@@ -586,9 +588,14 @@ auto lex_line(
                 if (peek1 == '.' && peek2 == '.') { store(3, lexeme::Ellipsis); }
                 else { store(1, lexeme::Dot); }
 
+            //G     :: :
+            break;case ':': 
+                if (peek1 == ':') { store(2, lexeme::Scope); }
+                else { store(1, lexeme::Colon); }
+
             //  All the other single-character tokens
 
-            //G     ^ ~ { } ( ) [ ] : ; , ? $
+            //G     ^ ~ { } ( ) [ ] ; , ? $
             //G
             break;case '^': 
                 store(1, lexeme::Caret);
@@ -613,9 +620,6 @@ auto lex_line(
 
             break;case ']':
                 store(1, lexeme::RightBracket);
-
-            break;case ':':
-                store(1, lexeme::Colon);
 
             break;case ';':
                 store(1, lexeme::Semicolon);
