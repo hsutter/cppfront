@@ -196,22 +196,28 @@ struct expression_node
     }
 };
 
+enum class passing_style { in=0, inout, out, move, forward };
+
 struct expression_list_node
 {
-    std::vector< std::unique_ptr<expression_node> > expressions;
+    struct term {
+        passing_style pass; // for `out`
+        std::unique_ptr<expression_node> expr;
+    };
+    std::vector< term > expressions;
 
     auto position() const -> source_position
     {
-        assert (std::ssize(expressions) > 0 && expressions.front());
-        return expressions.front()->position();
+        assert (std::ssize(expressions) > 0 && expressions.front().expr);
+        return expressions.front().expr->position();
     }
 
     auto visit(auto& v, int depth) -> void
     {
         v.start(*this, depth);
         for (auto const& x : expressions) {
-            assert(x);
-            x->visit(v, depth+1);
+            assert(x.expr);
+            x.expr->visit(v, depth+1);
         }
         v.end(*this, depth);
     }
@@ -524,10 +530,11 @@ auto compound_statement_node::visit(auto& v, int depth) -> void
 
 struct parameter_declaration_node 
 {
-    enum class style { in=0, inout, out, move, forward };
-    style pass = style::in;
+    passing_style pass = passing_style::in;
+
     enum class modifier { none=0, implicit, virtual_, final_ };
     modifier mod = modifier::none;
+
     std::unique_ptr<declaration_node> declaration;
 
     auto position() const -> source_position;
@@ -1141,15 +1148,33 @@ private:
     //G     expression-list , expression
     //G
     auto expression_list() -> std::unique_ptr<expression_list_node> {
+        auto pass = passing_style::in;
         auto n = std::make_unique<expression_list_node>();
+
+        //  Remember current position, because we need to look ahead to see if there's an expression
+        auto start_pos = pos;
+
+        if (curr().type() == lexeme::Identifier && curr() == "out") {
+            pass = passing_style::out;
+            next();
+        }
         auto x = expression();
         if (!x) {
+            pos = start_pos;    // backtrack
             return {};
         }
-        n->expressions.push_back( std::move(x) );
+        n->expressions.push_back( { pass, std::move(x) } );
+
+        //  Now we have at least one expression, so see if there are more...
+
         while (curr().type() == lexeme::Comma) {
             next();
-            n->expressions.push_back( expression() );
+            pass = passing_style::in;
+            if (curr().type() == lexeme::Identifier && curr() == "out") {
+                pass = passing_style::out;
+                next();
+            }
+            n->expressions.push_back( { pass, expression() } );
         }
         return n;
     }
@@ -1388,18 +1413,16 @@ private:
     //G parameter-direction: one of
     //G     in inout out move forward
     //G
-    //G iv-specifier:
+    //G this-specifier:
     //G     implicit
-    //G     virt-specifier
-    //G
-    //G virt-specifier:
+    //G     virtual
     //G     override
     //G     final
     //G
     auto parameter_declaration() -> std::unique_ptr<parameter_declaration_node> 
     {
         auto n = std::make_unique<parameter_declaration_node>();
-        n->pass = parameter_declaration_node::style::in;    // should be redundant with default
+        n->pass = passing_style::in;    // should be redundant with default
 
         if (curr().type() == lexeme::Identifier) { 
             if (curr() == "in") {
@@ -1407,19 +1430,19 @@ private:
                 next();
             }
             else if (curr() == "inout") {
-                n->pass = parameter_declaration_node::style::inout;
+                n->pass = passing_style::inout;
                 next();
             }
             else if (curr() == "out") {
-                n->pass = parameter_declaration_node::style::out;
+                n->pass = passing_style::out;
                 next();
             }
             else if (curr() == "move") {
-                n->pass = parameter_declaration_node::style::move;
+                n->pass = passing_style::move;
                 next();
             }
             else if (curr() == "forward") {
-                n->pass = parameter_declaration_node::style::forward;
+                n->pass = passing_style::forward;
                 next();
             }
         }
@@ -1619,6 +1642,8 @@ struct printing_visitor
 struct parse_tree_printer : printing_visitor
 {
     using printing_visitor::printing_visitor;
+    
+    expression_list_node::term const* current_expression_list_term = nullptr;
 
     auto start(token const& n, int indent) -> void
     {
@@ -1628,11 +1653,28 @@ struct parse_tree_printer : printing_visitor
     auto start(expression_node const& n, int indent) -> void
     {
         o << pre(indent) << "expression\n";
+        //  If we are in an expression-list
+        if (current_expression_list_term) {
+            if (current_expression_list_term->pass == passing_style::out) {
+                o << pre(indent+1) << "out\n";
+            }
+            ++current_expression_list_term;
+        }
     }
 
     auto start(expression_list_node const& n, int indent) -> void
     {
+        //  We're going to use the pointer as an iterator
+        current_expression_list_term = &n.expressions[0];
         o << pre(indent) << "expression-list\n";
+    }
+
+    auto end(expression_list_node const& n, int indent) -> void
+    {
+        //  If we're ending an expression list node, our pointer should be
+        //  pointing to one past the end of the expressions
+        assert( current_expression_list_term == &n.expressions[0] + n.expressions.size() );
+        current_expression_list_term = nullptr;
     }
 
     auto start(primary_expression_node const& n, int indent) -> void
@@ -1699,15 +1741,24 @@ struct parse_tree_printer : printing_visitor
 
     auto start(parameter_declaration_node const& n, int indent) -> void
     {
-        using enum parameter_declaration_node::style;
         o << pre(indent) << "parameter-declaration\n";
+
         o << pre(indent+1);
+        using enum passing_style;
         switch (n.pass) {
         break;case in     : o << "in";
         break;case inout  : o << "inout";
         break;case out    : o << "out";
         break;case move   : o << "move";
         break;case forward: o << "forward";
+        }
+
+        o << pre(indent+1);
+        using enum parameter_declaration_node::modifier;
+        switch (n.mod) {
+        break;case implicit : o << "implicit";
+        break;case virtual_ : o << "virtual";
+        break;case final_   : o << "final";
         }
     }
 
