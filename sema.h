@@ -531,6 +531,34 @@ public:
     //
     int  scope_depth = 0;
     bool started_assignment_expression = false;
+    expression_list_node::term const* current_expression_list_term = nullptr;
+    bool is_out_expression = false;
+
+    auto start(expression_node const& n, int indent) -> void
+    {
+        is_out_expression = false;
+
+        //  If we are in an expression-list, remember whether this is an `out`
+        if (current_expression_list_term) {
+            if (current_expression_list_term->pass == passing_style::out) {
+                is_out_expression = true;
+            }
+            ++current_expression_list_term;
+        }
+    }
+
+    auto start(expression_list_node const& n, int indent) -> void
+    {
+        //  We're going to use the pointer as an iterator
+        current_expression_list_term = &n.expressions[0];
+    }
+
+    auto end(expression_list_node const& n, int indent) -> void
+    {
+        //  Unlike debug_print, here we don't assert that we visited all the
+        //  expressions in the list because visiting them all is not always needed
+        current_expression_list_term = nullptr;
+    }
 
     auto start(declaration_node const& n, int) -> void
     {
@@ -577,6 +605,16 @@ public:
         {
             symbols.emplace_back( scope_depth, identifier_sym( true, &t ) );
             started_assignment_expression = false;
+        }
+
+        //  If this is the first identifier since we saw an `out` expression,
+        //  then it's the argument of the `out` expression
+        //  TODO: for now we just take the first identifier, and we should make
+        //  this an id-expression and add a sema rule to disallow complex expressions
+        else if (is_out_expression)
+        {
+            symbols.emplace_back( scope_depth, identifier_sym( true, &t ) );
+            is_out_expression = false;
         }
 
         //  Otherwise it's just an identifier use
