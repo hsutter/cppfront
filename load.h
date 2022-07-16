@@ -346,7 +346,6 @@ class source
 {
     std::vector<error>&      errors;
     std::vector<source_line> lines;
-    std::vector<lineno_t>    cpp2_section_starts;
 
 public:
     //-----------------------------------------------------------------------

@@ -65,6 +65,8 @@ struct source_position
     {
     }
 
+    auto operator<=>(source_position const&) const = default;
+
     auto to_string() const -> std::string
     {
         return "(" + std::to_string(lineno) + "," + std::to_string(colno) + ")";
@@ -73,7 +75,10 @@ struct source_position
 
 struct comment
 {
-    source_position pos;
+    enum class comment_kind { line_comment = 0, stream_comment };
+
+    comment_kind    kind;
+    source_position position;
     std::string     text;
 };
 

@@ -1610,6 +1610,7 @@ private:
 // 
 //-----------------------------------------------------------------------
 //
+template< int Indent = 4 >
 struct printing_visitor
 {
     //-----------------------------------------------------------------------
@@ -1622,14 +1623,27 @@ struct printing_visitor
     //-----------------------------------------------------------------------
     //  pre: Get an indentation prefix
     //
-    inline static int         indent_spaces  = 2;
-    inline static std::string indent_str     = std::string( 1024, ' ' );
+    inline static int         indent_spaces  = Indent;
+    inline static std::string indent_str     = std::string( 1024, ' ' );    // "1K should be enough for everyone"
 
     auto pre(int indent) -> std::string_view
     {
+        assert (indent >= 0);
         return {
             indent_str.c_str(),
             as<size_t>( std::min( indent*indent_spaces, as<int>(std::ssize(indent_str))) )
+        };
+    }
+
+    auto pad(int padding) -> std::string_view
+    {
+        if (padding < 1) { 
+            return "";
+        }
+
+        return {
+            indent_str.c_str(),
+            as<size_t>( std::min( padding, as<int>(std::ssize(indent_str))) )
         };
     }
 };
@@ -1641,12 +1655,13 @@ struct printing_visitor
 // 
 //-----------------------------------------------------------------------
 //
-struct parse_tree_printer : printing_visitor
+class parse_tree_printer : printing_visitor< 2 >    // don't need as much indentation for these deep nests
 {
     using printing_visitor::printing_visitor;
     
     expression_list_node::term const* current_expression_list_term = nullptr;
 
+public:
     auto start(token const& n, int indent) -> void
     {
         o << pre(indent) << n.to_string() << "\n";

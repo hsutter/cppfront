@@ -446,6 +446,7 @@ auto lex_line(
                 if (peek1 == '/') {
                     current_comment += "*/";
                     comments.push_back({
+                        comment::comment_kind::stream_comment,
                         current_comment_start,
                         current_comment
                         });
@@ -486,6 +487,7 @@ auto lex_line(
                 }
                 else if (peek1 == '/') {
                     comments.push_back({
+                        comment::comment_kind::line_comment,
                         {lineno, i},
                         std::string(&line[i], std::size(line) - i)
                         });
@@ -910,9 +912,11 @@ public:
         }
 
         o << "--- Comments\n";
-        for (auto const& [pos, text] : comments) {
-            o << "    (" << pos.lineno
-                << "," << pos.colno << ") " 
+        for (auto const& [kind, position, text] : comments) {
+            o << "    "
+                << (kind == comment::comment_kind::line_comment ? "// " : "/* ")
+                << "(" << position.lineno
+                << "," << position.colno << ") " 
                 << text << "\n";
         }
 

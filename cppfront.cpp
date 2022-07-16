@@ -7,7 +7,7 @@
 //  cppfront
 //===========================================================================
 
-#include "sema.h"
+#include "tocpp1.h"
 #include <iostream>
 
 
@@ -43,9 +43,20 @@ public:
         , parser{errors}
         , sema  {errors}
     {
+        //  "Constraints enable creativity in the right directions"
+        //  sort of applies here
+        //
+        if (!sourcefile.ends_with(".cpp2"))
+        {
+            errors.emplace_back(
+                source_position{-1, -1}, 
+                "source filename must end with .cpp2: " + sourcefile
+            );
+        }
+
         //  Load the program file into memory
         //
-        if (!source.load(sourcefile))
+        else if (!source.load(sourcefile))
         {
             errors.emplace_back(
                 source_position{-1, -1}, 
@@ -84,6 +95,40 @@ public:
             }
         }
     }
+
+    //-----------------------------------------------------------------------
+    //  lower_to_cpp1
+    // 
+    //  Emits the target file with the last '2' stripped -> .cpp
+    //
+    auto lower_to_cpp1() -> void
+    {
+        auto out = std::ofstream{ sourcefile.substr(0, sourcefile.size()-1) };
+
+        //  First, echo the non-Cpp2 parts
+        for (bool first = true; auto const& line : source.get_lines())
+        {
+            //  Skip dummy line we added to make 0-vs-1-based offsets readable
+            if (first) { first = false; continue; }
+
+            if (line.cat != source_line::category::cpp2) {
+                out << line.text << "\n";
+            }
+        }
+
+        //  Next, bring in the Cpp2 helpers
+        out << "\n\n//=== Cpp2 ======================================================================"
+            << "\n\n#include \"cpp2util.h\"\n\n";
+
+        ////  Next, emit the Cpp2 forward declarations
+        auto cpp1_printer = to_cpp1_printer{ out, tokens.get_comments() };
+        parser.visit( cpp1_printer );
+
+        ////  Next, emit the Cpp2 definitions
+        //cpp1_printer.enable_definitions();
+        //parser.visit( cpp1_printer );
+    }
+
 
     //-----------------------------------------------------------------------
     //  debug_print
@@ -129,5 +174,6 @@ int main(int argc, char* argv[])
     for (auto i = 1; i < argc; ++i) {
         cppfront c(argv[i]);
         c.debug_print();
+        c.lower_to_cpp1();
     }
 }
