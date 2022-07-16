@@ -308,7 +308,7 @@ private:
         };
         std::vector<stack_entry> selection_stack;
 
-        for ( ; symbols[pos].depth >= depth; ++pos) {
+        for ( ; pos < std::ssize(symbols) && symbols[pos].depth >= depth; ++pos) {
             switch (symbols[pos].sym.index()) {
 
             break;case declaration: {
@@ -532,7 +532,27 @@ public:
     int  scope_depth = 0;
     bool started_assignment_expression = false;
     expression_list_node::term const* current_expression_list_term = nullptr;
-    bool is_out_expression = false;
+    bool is_out_expression     = false;
+    bool inside_parameter_list = false;
+    bool inside_out_parameter  = false;
+
+    auto start(parameter_declaration_list_node&, int) -> void {
+        inside_parameter_list = true;
+    }
+
+    auto end(parameter_declaration_list_node&, int) -> void {
+        inside_parameter_list = false;
+    }
+
+    auto start(parameter_declaration_node& n, int) -> void {
+        if (n.pass == passing_style::out) {
+            inside_out_parameter = true;
+        }
+    }
+
+    auto end(parameter_declaration_node&, int) -> void {
+        inside_out_parameter = false;
+    }
 
     auto start(expression_node const& n, int indent) -> void
     {
@@ -565,14 +585,18 @@ public:
         //  We're starting a new declaration, so there shouldn't be a
         //  partial one for which we haven't visited the identifier yet
         assert (!partial.declaration);
-        partial = { true, &n, nullptr, n.initializer.get() };
+        if (!inside_parameter_list || inside_out_parameter) {
+            partial = { true, &n, nullptr, n.initializer.get() };
+        }
     }
 
     auto end(declaration_node const& n, int) -> void
     {
-        symbols.emplace_back( scope_depth, declaration_sym( false, &n, nullptr, nullptr ) );
-        if (n.type.index() != variable) {
-            --scope_depth;
+        if (!inside_parameter_list || inside_out_parameter) {
+            symbols.emplace_back( scope_depth, declaration_sym( false, &n, nullptr, nullptr ) );
+            if (n.type.index() != variable) {
+                --scope_depth;
+            }
         }
     }
 
@@ -617,8 +641,8 @@ public:
             is_out_expression = false;
         }
 
-        //  Otherwise it's just an identifier use
-        else
+        //  Otherwise it's just an identifier use (if it's outside the parameter list)
+        else if (!inside_parameter_list)
         {
             symbols.emplace_back( scope_depth, identifier_sym( false, &t ) );
         }

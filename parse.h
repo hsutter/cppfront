@@ -532,7 +532,7 @@ struct parameter_declaration_node
 {
     passing_style pass = passing_style::in;
 
-    enum class modifier { none=0, implicit, virtual_, final_ };
+    enum class modifier { none=0, implicit, virtual_, override_, final_ };
     modifier mod = modifier::none;
 
     std::unique_ptr<declaration_node> declaration;
@@ -558,7 +558,7 @@ struct parameter_declaration_list_node
         v.start(*this, depth);
         for (auto const& x : parameters) {
             assert(x);
-            v.start(*x, depth);
+            x->visit(v, depth+1);
         }
         v.end(*this, depth);
     }
@@ -1260,18 +1260,22 @@ private:
 
     //G expression-statement:
     //G     expression ;
+    //G     expression
     //G
-    auto expression_statement() -> std::unique_ptr<expression_statement_node> 
+    auto expression_statement(bool semicolon_required) -> std::unique_ptr<expression_statement_node> 
     {
         auto n = std::make_unique<expression_statement_node>();
         if (!(n->expr = expression())) {
             return {};
         }
-        if (curr().type() != lexeme::Semicolon) {
+
+        if (semicolon_required && curr().type() != lexeme::Semicolon) {
             error("expression-statement does not end with semicolon");
             return {};
         }
-        next();
+        if (curr().type() == lexeme::Semicolon) {
+            next();
+        }
         return n;
     }
 
@@ -1341,7 +1345,7 @@ private:
     //GT     jump-statement
     //GT     try-block
     //G
-    auto statement() -> std::unique_ptr<statement_node> 
+    auto statement(bool semicolon_required) -> std::unique_ptr<statement_node> 
     {
         auto n = std::make_unique<statement_node>();
 
@@ -1363,7 +1367,7 @@ private:
             return n;
         }
 
-        else if (auto s = expression_statement()) {
+        else if (auto s = expression_statement(semicolon_required)) {
             n->statement = std::move(s);
             assert (n->statement.index() == statement_node::expression);
             return n;
@@ -1394,7 +1398,7 @@ private:
         auto s = std::unique_ptr<statement_node>();
 
         while (curr().type() != lexeme::RightBrace) {
-            auto s = statement();
+            auto s = statement(true);
             if (!s) {
                 error("invalid statement in compound-statement");
                 return {};
@@ -1456,13 +1460,17 @@ private:
                 n->mod = parameter_declaration_node::modifier::virtual_;
                 next();
             }
+            else if (curr() == "override") {
+                n->mod = parameter_declaration_node::modifier::override_;
+                next();
+            }
             else if (curr() == "final") {
                 n->mod = parameter_declaration_node::modifier::final_;
                 next();
             }
         }
 
-        if (!(n->declaration = declaration())) {
+        if (!(n->declaration = declaration(false))) {
             return {};
         }
 
@@ -1471,7 +1479,8 @@ private:
 
 
     //G parameter-declaration-list
-    //G     ( parameter-declaration { , parameter }* )
+    //G     parameter-declaration
+    //G     parameter-declaration-list , parameter-declaration
     //G
     auto parameter_declaration_list() -> std::unique_ptr<parameter_declaration_list_node> 
     {
@@ -1507,34 +1516,12 @@ private:
     }
 
 
-    //G declarator:
-    //GT     type
-    //G     function-type
-    //G     id-expression
-    //G
-    //G function-type:
-    //G     ( {parameter-declaration-list}? ) -> {id-expression}?
-    //G
-
-
     //G declaration:
-    //G     identifier : {declarator}? = statement
-    //
-    //GT     function-definition
-    //GT     block-declaration
-    //GT     nodeclspec-function-declaration
-    //GT     template-declaration
-    //GT     deduction-guide
-    //GT     explicit-instantiation
-    //GT     explicit-specialization
-    //GT     export-declaration
-    //GT     linkage-specification
-    //GT     namespace-definition
-    //GT     empty-declaration
-    //GT     attribute-declaration
-    //GT     module-import-declaration
-    //
-    auto declaration() -> std::unique_ptr<declaration_node> 
+    //G     identifier : parameter-declaration-list = statement
+    //G     identifier : id-expression-opt = statement
+    //G     identifier : id-expression
+    //G
+    auto declaration(bool semicolon_required = true) -> std::unique_ptr<declaration_node> 
     {
         if (done()) { return {}; }
 
@@ -1568,15 +1555,26 @@ private:
         }
 
         //  Next is optionally = followed by an initializer
+
+        //  If there is no =
         if (curr().type() != lexeme::Assignment) {
+            //  Then there may be a semicolon
+            //  If there is a semicolon, eat it
             if (curr().type() == lexeme::Semicolon) {
-                next(); // declaration
+                next();
+            }
+            // But if there isn't one and it was required, diagnose an error
+            else if (semicolon_required) {
+                error("missing semicolon at end of declaration");
+                return {};
             }
             return n;
         }
+
+        //  There was an =, so eat it and continue
         next();
 
-        if (!(n->initializer = statement())) {
+        if (!(n->initializer = statement(semicolon_required))) {
             error("ill-formed initializer");
             next();
             return {};
@@ -1586,8 +1584,12 @@ private:
     }
 
 
+    //G declaration-seq:
+    //G     declaration
+    //G     declaration-seq declaration
+    //G
     //G translation-unit:
-    //G     { declaration }*
+    //G     declaration-seq-opt
     //GT    { global-module-fragment }?  module-declaration  { declaration }*  { private-module-fragment }?
     //
     auto translation_unit() -> std::unique_ptr<translation_unit_node> 
@@ -1756,10 +1758,14 @@ struct parse_tree_printer : printing_visitor
         o << pre(indent+1);
         using enum parameter_declaration_node::modifier;
         switch (n.mod) {
-        break;case implicit : o << "implicit";
-        break;case virtual_ : o << "virtual";
-        break;case final_   : o << "final";
+        break;case implicit  : o << "implicit";
+        break;case virtual_  : o << "virtual";
+        break;case override_ : o << "override";
+        break;case final_    : o << "final";
         }
+        o << "\n";
+
+        assert( n.declaration );
     }
 
     auto start(parameter_declaration_list_node const& n, int indent) -> void
