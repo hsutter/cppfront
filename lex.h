@@ -258,10 +258,9 @@ auto lex_line(
 
     auto i = colno_t{0};
 
-    auto peek  = [&](int num) 
-    { 
-        return (i+num < ssize(line)) ? line[i+num] : '\0';
-    };
+    //  Local helper functions for readability
+    //
+    auto peek = [&](int num) {  return (i+num < std::ssize(line)) ? line[i+num] : '\0';  };
 
     auto store = [&](int16_t num, lexeme type) 
     {

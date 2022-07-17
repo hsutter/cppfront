@@ -144,7 +144,7 @@ auto starts_with_whitespace_slash_star_and_no_star_slash(std::string const& line
 
 //---------------------------------------------------------------------------
 //  starts_with_identifier_colon: returns whether the line starts with an
-//  identifier followed by a colon
+//  identifier followed by one colon (not ::)
 // 
 //  line    current line being processed
 //
@@ -173,16 +173,19 @@ auto starts_with_identifier_colon(std::string const& line) -> bool
         return false;
     }
 
+    //  it's Cpp2 iff what's here is : not followed by another :
+    //  (e.g., not a Cpp1 "using ::something")
     assert (i < ssize(line));
-    return line[i] == ':';
+    return line[i] == ':' && (i == ssize(line)-1 || line[i+1] != ':');
 }
 
 
 //---------------------------------------------------------------------------
 //  process_cpp_line: just enough to know what to skip over
 // 
-//  line        current line being processed
-//  in_comment  whether this line begins inside a multi-line comment
+//  line                current line being processed
+//  in_comment          track whether we're in a comment
+//  in_string_literal   track whether we're in a string literal
 //
 struct process_line_ret { 
     bool all_comment_line; 
@@ -191,17 +194,18 @@ struct process_line_ret {
 auto process_cpp_line(
     std::string const&  line, 
     bool&               in_comment, 
-    int&                brace_depth, 
+    bool&               in_string_literal,
+    std::vector<int>&   brace_depth,
     lineno_t            lineno, 
     std::vector<error>& errors
 )
     -> process_line_ret
 {
-    if (starts_with_whitespace_slash_slash(line)) {
+    if (!in_comment && !in_string_literal && starts_with_whitespace_slash_slash(line)) {
         return { true, false };
     }
 
-    if (starts_with_whitespace_slash_star_and_no_star_slash(line)) {
+    if (!in_comment && !in_string_literal && starts_with_whitespace_slash_star_and_no_star_slash(line)) {
         in_comment = true;
         return { true, false };
     }
@@ -209,13 +213,21 @@ auto process_cpp_line(
     struct process_line_ret r { in_comment, true };
 
     auto prev = ' ';
-    for (auto i = colno_t{0}; i < ssize(line); ++i) {
+    for (auto i = colno_t{0}; i < ssize(line); ++i)
+    {
+        //  Local helper functions for readability
+        //  Note: in_literal is for { and } and so doesn't have to work for escaped ' characters
+        //
+        auto peek       = [&](int num) {  return (i+num < std::ssize(line)) ? line[i+num] : '\0';  };
+        auto in_literal = [&]()        {  return in_string_literal || (prev == '\'' && peek(1) == '\'');  };
 
+        //  Process this source character
+        //
         if (!std::isspace(line[i])) {
             r.empty_line = false;
         }
 
-        if (in_comment) {
+        if (in_comment && !in_string_literal) {
             switch (line[i]) {
                 break;case '/': if (prev == '*') { in_comment = false; }
             }
@@ -224,27 +236,37 @@ auto process_cpp_line(
         else {
             r.all_comment_line = false;
             switch (line[i]) {
+                break;case '\"':
+                    //  If this isn't an escaped quote, toggle string literal state
+                    if (!in_comment && prev != '\\' && prev != '\'') {
+                        in_string_literal = !in_string_literal;
+                    }
+
                 break;case '{':
-                    ++brace_depth;
+                    if (!in_literal()) {
+                        brace_depth.push_back(lineno);
+                    }
 
                 break;case '}':
-                    if (brace_depth < 1) { 
-                        //  Might as well give a diagnostic in Cpp1 code since
-                        //  we're relying on balanced { } to find Cpp2 code
-                        errors.emplace_back(
-                            source_position{lineno, i},
-                            "closing } does not match a prior {"
-                        ); 
-                    }
-                    else {
-                        --brace_depth; 
+                    if (!in_literal()) {
+                        if (std::ssize(brace_depth) < 1) {
+                            //  Might as well give a diagnostic in Cpp1 code since
+                            //  we're relying on balanced { } to find Cpp2 code
+                            errors.emplace_back(
+                                source_position{lineno, i},
+                                "closing } does not match a prior {"
+                            ); 
+                        }
+                        else {
+                            brace_depth.pop_back();
+                        }
                     }
 
                 break;case '*':
-                    if (prev == '/') { in_comment = true; }
+                    if (!in_string_literal && prev == '/') { in_comment = true; }
 
                 break;case '/': 
-                    if (prev == '/') { in_comment = false; return r; }
+                    if (!in_string_literal && prev == '/') { in_comment = false; return r; }
             }
         }
 
@@ -270,7 +292,7 @@ auto process_cpp_line(
 auto process_cpp2_line(
     std::string const&  line, 
     bool&               in_comment, 
-    int&                brace_depth, 
+    std::vector<int>&   brace_depth, 
     bool&               found_semi,
     bool&               found_openbrace,
     lineno_t            lineno, 
@@ -302,24 +324,24 @@ auto process_cpp2_line(
 
             switch (line[i]) {
             break;case '{':
-                ++brace_depth;
+                brace_depth.push_back(lineno);
 
             break;case '}':
-                if (brace_depth < 1) { 
+                if (std::ssize(brace_depth) < 1) {
                     errors.emplace_back(
                         source_position{lineno, i}, 
                         "closing } does not match a prior {"
                     ); 
                 }
                 else {
-                    --brace_depth; 
-                    if (brace_depth < 1) {
+                    brace_depth.pop_back();
+                    if (std::ssize(brace_depth) < 1) {
                         found_end = true;
                     }
                 }
 
             break;case ';':
-                if (brace_depth == 0) { found_end = true; }
+                if (std::ssize(brace_depth) == 0) { found_end = true; }
 
             break;case '*':
                 if (prev == '/') { in_comment = true; }
@@ -378,10 +400,11 @@ public:
             return false;
         }
 
-        const auto max_line_len = 5000;
+        const auto max_line_len = 19'600;
         char buf[max_line_len];
-        auto in_comment = false;
-        auto brace_depth = 0;
+        auto in_comment        = false;
+        auto in_string_literal = false;
+        auto brace_depth = std::vector<int>();
 
         while (in.getline(&buf[0], max_line_len)) {
 
@@ -401,9 +424,10 @@ public:
             {
                 lines.push_back({ &buf[0], source_line::category::cpp1 });
 
-                //  Switch to cpp2 mode if the line starts with "identifier :"
+                //  Switch to cpp2 mode if we're not in a comment, not inside nested { },
+                //  and the line starts with "nonwhitespace :" but not "::"
                 //
-                if (brace_depth == 0 && starts_with_identifier_colon(lines.back().text)) {
+                if (!in_comment && std::ssize(brace_depth) == 0 && starts_with_identifier_colon(lines.back().text)) {
 
                     //  Mark this line, and preceding comment/blank source, as cpp2
                     lines.back().cat = source_line::category::cpp2;
@@ -449,6 +473,7 @@ public:
                         auto stats = process_cpp_line(
                             lines.back().text, 
                             in_comment, 
+                            in_string_literal,
                             brace_depth, 
                             std::ssize(lines) - 1,
                             errors
@@ -465,11 +490,43 @@ public:
             }
         }
 
-        if (brace_depth != 0) {
+        //  Because I encountered a 19,518-character line in real world code during testing
+        //
+        if (in.gcount() >= max_line_len-1)
+        {
+            errors.emplace_back(
+                source_position{lineno_t(std::ssize(lines)), 0}, 
+                std::string("source line too long - length must be less than ") 
+                    + std::to_string(max_line_len)
+            );
+            return false;
+        }
+
+        //  This shouldn't be possible, so check it anyway
+        //
+        if (!in.eof())
+        {
+            errors.emplace_back(
+                source_position{lineno_t(std::ssize(lines)), 0}, 
+                std::string("unexpected error reading source lines - did not reach EOF")
+            );
+            return false;
+        }
+
+        //  Emit diagnostic if braces didn't match
+        //
+        if (std::ssize(brace_depth) != 0) {
+            std::string unmatched_brace_lines;
+            for (auto line : brace_depth) {
+                unmatched_brace_lines = std::to_string(line) + " " + unmatched_brace_lines;
+            }
             errors.emplace_back(
                 source_position{lineno_t(std::ssize(lines)), 0}, 
                 std::string("end of file reached with ") 
-                    + std::to_string(brace_depth) + " missing } to match earlier {"
+                    + std::to_string(std::ssize(brace_depth))
+                    + " missing } to match earlier { on line"
+                    + (std::size(brace_depth)>1 ? "s " : " " )
+                    + unmatched_brace_lines
             );
         }
 

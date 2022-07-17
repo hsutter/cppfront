@@ -28,7 +28,7 @@ class cppfront
     tokens tokens;
     parser parser;
     sema   sema;
-    bool   source_present = true;
+    bool   source_loaded = true;
 
 public:
     //-----------------------------------------------------------------------
@@ -58,11 +58,13 @@ public:
         //
         else if (!source.load(sourcefile))
         {
-            errors.emplace_back(
-                source_position{-1, -1}, 
-                "file not found: " + sourcefile
-            );
-            source_present = false;
+            if (errors.empty()) {
+                errors.emplace_back(
+                    source_position{-1, -1}, 
+                    "file not found: " + sourcefile
+                );
+            }
+            source_loaded = false;
         }
 
         else
@@ -106,6 +108,8 @@ public:
         auto out = std::ofstream{ sourcefile.substr(0, sourcefile.size()-1) };
 
         //  First, echo the non-Cpp2 parts
+        //
+        bool cpp2_found = false;
         for (bool first = true; auto const& line : source.get_lines())
         {
             //  Skip dummy line we added to make 0-vs-1-based offsets readable
@@ -114,17 +118,33 @@ public:
             if (line.cat != source_line::category::cpp2) {
                 out << line.text << "\n";
             }
+            else {
+                cpp2_found = true;
+            }
         }
 
+        //  We can stop here if there's no Cpp2 code -- a file with no Cpp2
+        //  should have perfect passthrough verifiable with diff, including
+        //  that we didn't misidentify anything as Cpp2 including in the
+        //  presence of nonstandard vendor extensions
+        //
+        if (!cpp2_found) {
+            return;
+        }
+
+        //  If there is Cpp2 code, we have more to do...
         //  Next, bring in the Cpp2 helpers
+        //
         out << "\n\n//=== Cpp2 ======================================================================"
             << "\n\n#include \"cpp2util.h\"\n\n";
 
-        ////  Next, emit the Cpp2 forward declarations
+        //  Next, emit the Cpp2 forward declarations
+        //
         auto cpp1_printer = to_cpp1_printer{ out, tokens.get_comments() };
         parser.visit( cpp1_printer );
 
         ////  Next, emit the Cpp2 definitions
+        ////
         //cpp1_printer.enable_definitions();
         //parser.visit( cpp1_printer );
     }
@@ -139,9 +159,9 @@ public:
             error.print(std::cerr, strip_path(sourcefile));
         }
 
-        //  Only create debug output files for an actual source file.
+        //  Only create debug output files if we managed to load the source file.
         //
-        if (source_present)
+        if (source_loaded)
         {
             auto out_source     = std::ofstream{ sourcefile+"-source"  };
             source.debug_print( out_source     );

@@ -670,8 +670,10 @@ struct translation_unit_node
 
     auto position() const -> source_position
     {
-        assert (std::ssize(declarations) > 0 && declarations.front());
-        return declarations.front()->position();
+        if (std::ssize(declarations) > 0) {
+            return declarations.front()->position();
+        }
+        return {};
     }
 
     auto visit(auto& v, int depth) -> void
