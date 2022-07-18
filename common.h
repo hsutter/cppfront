@@ -78,7 +78,8 @@ struct comment
     enum class comment_kind { line_comment = 0, stream_comment };
 
     comment_kind    kind;
-    source_position position;
+    source_position start;
+    source_position end;
     std::string     text;
 };
 

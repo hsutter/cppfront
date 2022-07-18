@@ -528,8 +528,9 @@ auto compound_statement_node::visit(auto& v, int depth) -> void
 }
 
 
-struct parameter_declaration_node 
+struct parameter_declaration_node
 {
+    source_position pos;
     passing_style pass = passing_style::in;
 
     enum class modifier { none=0, implicit, virtual_, override_, final_ };
@@ -545,12 +546,15 @@ struct parameter_declaration_node
 
 struct parameter_declaration_list_node
 {
+    source_position pos_open_paren;
+    source_position pos_close_paren;
+
     std::vector<std::unique_ptr<parameter_declaration_node>> parameters;
 
     auto position() const -> source_position
     {
         assert (std::ssize(parameters) && parameters.front());
-        return parameters.front()->position();
+        return pos_open_paren;
     }
 
     auto visit(auto& v, int depth) -> void
@@ -569,7 +573,7 @@ struct declaration_node
 {
     std::unique_ptr<unqualified_id_node> identifier;
 
-    enum active { function, variable };
+    enum active { function, object };
     std::variant<
         std::unique_ptr<parameter_declaration_list_node>,
         std::unique_ptr<id_expression_node>
@@ -596,7 +600,7 @@ struct declaration_node
         assert (identifier);
         identifier->visit(v, depth+1);
         visit<function>(v, depth+1);
-        visit<variable>(v, depth+1);
+        visit<object>(v, depth+1);
         if (initializer) {
             initializer->visit(v, depth+1);
         }
@@ -652,7 +656,7 @@ auto statement_node::position() const -> source_position
 auto parameter_declaration_node::position() const -> source_position
 {
     assert (declaration);
-    return declaration->position();
+    return pos;
 }
 
 auto parameter_declaration_node::visit(auto& v, int depth) -> void
@@ -748,6 +752,16 @@ public:
             return false;
         }
         return true;
+    }
+
+
+    //-----------------------------------------------------------------------
+    //  get_parse_tree
+    //
+    auto get_parse_tree() -> translation_unit_node&
+    {
+        assert (parse_tree);
+        return *parse_tree;
     }
 
 
@@ -1429,6 +1443,7 @@ private:
     {
         auto n = std::make_unique<parameter_declaration_node>();
         n->pass = passing_style::in;    // should be redundant with default
+        n->pos  = curr().position();
 
         if (curr().type() == lexeme::Identifier) { 
             if (curr() == "in") {
@@ -1489,9 +1504,11 @@ private:
         if (curr().type() != lexeme::LeftParen) {
             return {};
         }
-        next();
 
         auto n = std::make_unique<parameter_declaration_list_node>();
+        n->pos_open_paren = curr().position();
+        next();
+
         auto param = std::make_unique<parameter_declaration_node>();
 
         while (param = parameter_declaration()) {
@@ -1513,6 +1530,7 @@ private:
             return {};
         }
 
+        n->pos_close_paren = curr().position();
         next();
         return n;
     }
@@ -1549,11 +1567,11 @@ private:
         }
         else if (auto t = id_expression()) {
             n->type = std::move(t);
-            assert (n->type.index() == declaration_node::variable);
+            assert (n->type.index() == declaration_node::object);
         }
         else {
             n->type = std::make_unique<id_expression_node>();
-            assert (n->type.index() == declaration_node::variable);
+            assert (n->type.index() == declaration_node::object);
         }
 
         //  Next is optionally = followed by an initializer
@@ -1612,7 +1630,6 @@ private:
 // 
 //-----------------------------------------------------------------------
 //
-template< int Indent = 4 >
 struct printing_visitor
 {
     //-----------------------------------------------------------------------
@@ -1625,7 +1642,7 @@ struct printing_visitor
     //-----------------------------------------------------------------------
     //  pre: Get an indentation prefix
     //
-    inline static int         indent_spaces  = Indent;
+    inline static int         indent_spaces  = 2;
     inline static std::string indent_str     = std::string( 1024, ' ' );    // "1K should be enough for everyone"
 
     auto pre(int indent) -> std::string_view
@@ -1634,18 +1651,6 @@ struct printing_visitor
         return {
             indent_str.c_str(),
             as<size_t>( std::min( indent*indent_spaces, as<int>(std::ssize(indent_str))) )
-        };
-    }
-
-    auto pad(int padding) -> std::string_view
-    {
-        if (padding < 1) { 
-            return "";
-        }
-
-        return {
-            indent_str.c_str(),
-            as<size_t>( std::min( padding, as<int>(std::ssize(indent_str))) )
         };
     }
 };
@@ -1657,7 +1662,7 @@ struct printing_visitor
 // 
 //-----------------------------------------------------------------------
 //
-class parse_tree_printer : printing_visitor< 2 >    // don't need as much indentation for these deep nests
+class parse_tree_printer : printing_visitor
 {
     using printing_visitor::printing_visitor;
     

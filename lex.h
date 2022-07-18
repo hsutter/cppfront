@@ -447,6 +447,7 @@ auto lex_line(
                     comments.push_back({
                         comment::comment_kind::stream_comment,
                         current_comment_start,
+                        {lineno, i+1},
                         current_comment
                         });
                     in_comment = false;
@@ -488,7 +489,8 @@ auto lex_line(
                     comments.push_back({
                         comment::comment_kind::line_comment,
                         {lineno, i},
-                        std::string(&line[i], std::size(line) - i)
+                        {lineno, as<colno_t>(std::ssize(line))},
+                        std::string(&line[i], std::ssize(line) - i)
                         });
                     in_comment = false;
                     goto END;
@@ -911,12 +913,12 @@ public:
         }
 
         o << "--- Comments\n";
-        for (auto const& [kind, position, text] : comments) {
+        for (auto const& [kind, start, end, text] : comments) {
             o << "    "
-                << (kind == comment::comment_kind::line_comment ? "// " : "/* ")
-                << "(" << position.lineno
-                << "," << position.colno << ") " 
-                << text << "\n";
+              << (kind == comment::comment_kind::line_comment ? "// " : "/* ")
+              << "(" << start.lineno << "," << start.colno << ")"
+              << "-(" << end.lineno << "," << end.colno << ")"
+              << " " << text << "\n";
         }
 
     }

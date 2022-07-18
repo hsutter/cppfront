@@ -186,7 +186,7 @@ public:
                         o << "/function";
                     }
                 }
-                else if (sym.declaration->is(variable)) {
+                else if (sym.declaration->is(object)) {
                     if (sym.start) {
                         o << "var ";
                     }
@@ -260,7 +260,7 @@ public:
         {
             if (auto const* sym = std::get_if<declaration>(&s.sym)) {
                 if (sym->start && !sym->initializer) {
-                    assert (sym->declaration->is(variable));
+                    assert (sym->declaration->is(object));
                     return sym;
                 }
             }
@@ -594,7 +594,7 @@ public:
     {
         if (!inside_parameter_list || inside_out_parameter) {
             symbols.emplace_back( scope_depth, declaration_sym( false, &n, nullptr, nullptr ) );
-            if (n.type.index() != variable) {
+            if (n.type.index() != object) {
                 --scope_depth;
             }
         }
@@ -616,7 +616,7 @@ public:
             symbols.emplace_back( scope_depth, partial );
 
             assert (partial.declaration);
-            if (!partial.declaration->is(variable)) {
+            if (!partial.declaration->is(object)) {
                 ++scope_depth;
             }
 
