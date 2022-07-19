@@ -214,56 +214,39 @@ public:
     {
         auto& comments = tokens.get_comments(); // for readability
 
-        //  Flush all comments that we've passed by
+        //  Add unprinted comments and blank lines as needed to catch up vertically
         //
-        for ( ;
-            next_comment < std::ssize(comments) && comments[next_comment].start < pos;
-            ++next_comment
-            )
-        {
-            //  For line comments
-            if (comments[next_comment].kind == comment::comment_kind::line_comment)
-            {
-                //  First repeat any blank lines before the comment
-                while (last_pos.lineno < comments[next_comment].start.lineno) {
+        while (last_pos.lineno < pos.lineno) {
+
+            //  If a comment goes on this line, print it
+            if (next_comment < std::ssize(comments) && comments[next_comment].start.lineno == last_pos.lineno) {
+
+                //  For a line comment, start it at the right indentation and print it
+                //  with a newline end
+                if (comments[next_comment].kind == comment::comment_kind::line_comment) {
+                    print( pad( comments[next_comment].start.colno - last_pos.colno ) );
+                    print( comments[next_comment].text );
+                    assert( comments[next_comment].text.find("\n") == std::string::npos );  // we shouldn't have newlines
                     print_newline();
                 }
 
-                ////  If this comment didn't have whitespace earlier on the start line,
-                ////  start it on its own new line
-                //if (comments[next_comment].all_whitespace_before_on_start_line) {
-                //    //  Then start a new line and repeat the comment
-                //    print_newline();
-                //    print( pad( comments[next_comment].start.colno ) );
-                //    print( comments[next_comment].text );
-                //}
-
-                ////  Otherwise, pad out to its column (if we haven't passed it already)
-                ////  and emit it there
-                //else {
+                //  For a stream comment, pad out to its column (if we haven't passed it already)
+                //  and emit it there
+                else {
                     print( pad( last_pos.colno - comments[next_comment].start.colno ) );
                     print( comments[next_comment].text );
-                    print_newline();
-                //}
-            }
+                    assert(last_pos.lineno <= pos.lineno);  // we shouldn't have overshot
+                }
 
-            // For a stream comment, pad out to its column (if we haven't passed it already)
-            //  and emit it there
-            else
-            {
-                print( pad( last_pos.colno - comments[next_comment].start.colno ) );
-                print( comments[next_comment].text );
                 ++next_comment;
             }
-        };
 
-        //  Now that comments are done, add any additional blank lines
-        //  needed to get to the target vertical position
-        //
-        while (last_pos.lineno < pos.lineno) {
-            print_newline();
+            //  Otherwise, just print a blank line
+            else {
+                print_newline();
+            }
         }
-
+        
         //  Finally, align to the target column
         //
         print( pad( pos.colno - last_pos.colno - 1 ) );
@@ -348,6 +331,32 @@ public:
     //
 
     //-----------------------------------------------------------------------
+    //  try_emit
+    // 
+    //  Helper to emit whatever is in a variant where each
+    //  alternative is a smart pointer
+    //
+    template <int I>
+    auto try_emit(auto& v) -> void {
+        if (v.index() == I) {
+            auto const& alt = std::get<I>(v);
+            assert (alt.get() != nullptr);
+            emit (*alt);
+        }
+    }
+
+    ////-----------------------------------------------------------------------
+    ////
+    //auto emit(statement_node const& n) -> void
+    //{
+    //    try_emit<statement_node::expression >(v.statement);
+    //    try_emit<statement_node::compound   >(v.statement);
+    //    try_emit<statement_node::selection  >(v.statement);
+    //    try_emit<statement_node::declaration>(v.statement);
+    //}
+
+
+    //-----------------------------------------------------------------------
     //
     auto emit(parameter_declaration_node const& n) -> void
     {
@@ -415,15 +424,22 @@ public:
     auto emit(declaration_node const& n) -> void
     {
         if (n.is(declaration_node::function)) {
+
+            //  Function declaration
             print( "auto ", n.position() );
             print( *n.identifier->identifier );
 
             emit( *std::get<declaration_node::function>(n.type) );
 
             if (declarations_only) {
-                print( ";");
+                print( ";" );
                 print_newline();
+                return;
             }
+
+            ////  Function body
+            //assert( n.initializer );
+            //emit( *n.initializer );
         }
 
         else if (n.is(declaration_node::object)) {
@@ -431,12 +447,6 @@ public:
             // TODO
 
         }
-
-
-
-
-
-
     }
 
 

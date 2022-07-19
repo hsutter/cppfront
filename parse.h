@@ -85,6 +85,21 @@ auto is_assignment_operator(lexeme l) -> bool
 //-----------------------------------------------------------------------
 //
 
+//-----------------------------------------------------------------------
+//  try_emit
+// 
+//  Helper to visit whatever is in a variant where each
+//  alternative is a smart pointer
+//
+template <int I>
+auto try_visit(auto& variant, auto& visitor, int depth) -> void {
+    if (variant.index() == I) {
+        auto const& s = std::get<I>(variant);
+        assert (s);
+        s->visit(visitor, depth+1);
+    }
+}
+
 struct expression_list_node;
 
 struct primary_expression_node
@@ -97,19 +112,7 @@ struct primary_expression_node
     > expr;
 
     auto position() const -> source_position;
-
     auto visit(auto& v, int depth) -> void;
-
-    template <int I>
-    auto visit(auto& v, int depth) -> void 
-    {
-        if (expr.index() == I) 
-        {
-            auto const& s = std::get<I>(expr);
-            assert (s);
-            s->visit(v, depth+1);
-        }
-    }
 };
 
 
@@ -121,7 +124,6 @@ struct prefix_expression_node
     std::unique_ptr<postfix_expression_node> expr;
 
     auto position() const -> source_position;
-
     auto visit(auto& v, int depth) -> void;
 };
 
@@ -252,8 +254,8 @@ auto primary_expression_node::position() const -> source_position
 auto primary_expression_node::visit(auto& v, int depth) -> void
 {
     v.start(*this, depth);
-    visit<identifier     >(v, depth);
-    visit<expression_list>(v, depth);
+    try_visit<identifier     >(expr, v, depth);
+    try_visit<expression_list>(expr, v, depth);
     v.end(*this, depth);
 }
 
@@ -380,6 +382,8 @@ struct qualified_id_node
 
 struct id_expression_node
 {
+    source_position pos;
+
     enum active { empty=0, qualified, unqualified };
     std::variant<
         std::monostate,
@@ -389,46 +393,15 @@ struct id_expression_node
 
     auto position() const -> source_position
     {
-        switch (id.index())
-        {
-        break;case empty:
-            return { 0, 0 };
-
-        break;case qualified: {
-            auto const& s = std::get<qualified>(id);
-            assert (s);
-            return s->position();
-        }
-
-        break;case unqualified: {
-            auto const& s = std::get<unqualified>(id);
-            assert (s);
-            return s->position();
-        }
-
-        break;default:
-            assert (!"illegal id_expression_node state");
-            return { 0, 0 };
-        }
+        return pos;
     }
 
     auto visit(auto& v, int depth) -> void
     {
         v.start(*this, depth);
-        visit<qualified  >(v, depth);
-        visit<unqualified>(v, depth);
+        try_visit<qualified  >(id, v, depth);
+        try_visit<unqualified>(id, v, depth);
         v.end(*this, depth);
-    }
-
-    template <int I>
-    auto visit(auto& v, int depth) -> void 
-    {
-        if (id.index() == I) 
-        {
-            auto const& s = std::get<I>(id);
-            assert (s);
-            s->visit(v, depth+1);
-        }
     }
 };
 
@@ -498,22 +471,11 @@ struct statement_node
     auto visit(auto& v, int depth) -> void
     {
         v.start(*this, depth);
-        visit<expression >(v, depth);
-        visit<compound   >(v, depth);
-        visit<selection  >(v, depth);
-        visit<declaration>(v, depth);
+        try_visit<expression >(statement, v, depth);
+        try_visit<compound   >(statement, v, depth);
+        try_visit<selection  >(statement, v, depth);
+        try_visit<declaration>(statement, v, depth);
         v.end(*this, depth);
-    }
-
-    template <int I>
-    auto visit(auto& v, int depth) -> void 
-    {
-        if (statement.index() == I) 
-        {
-            auto const& s = std::get<I>(statement);
-            assert (s);
-            s->visit(v, depth+1);
-        }
     }
 };
 
@@ -599,23 +561,12 @@ struct declaration_node
         v.start(*this, depth);
         assert (identifier);
         identifier->visit(v, depth+1);
-        visit<function>(v, depth+1);
-        visit<object>(v, depth+1);
+        try_visit<function>(type, v, depth+1);
+        try_visit<object  >(type, v, depth+1);
         if (initializer) {
             initializer->visit(v, depth+1);
         }
         v.end(*this, depth);
-    }
-
-    template <int I>
-    auto visit(auto& v, int depth) -> void 
-    {
-        if (type.index() == I) 
-        {
-            auto const& s = std::get<I>(type);
-            assert (s);
-            s->visit(v, depth+1);
-        }
     }
 };
 
@@ -1261,12 +1212,14 @@ private:
     {
         auto n = std::make_unique<id_expression_node>();
         if (auto id = qualified_id()) {
-            n->id = std::move(id);
+            n->pos = id->position();
+            n->id  = std::move(id);
             assert (n->id.index() == id_expression_node::qualified);
             return n;
         }
         if (auto id = unqualified_id()) {
-            n->id = std::move(id);
+            n->pos = id->position();
+            n->id  = std::move(id);
             assert (n->id.index() == id_expression_node::unqualified);
             return n;
         }
