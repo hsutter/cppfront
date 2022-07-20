@@ -12,7 +12,6 @@
 
 #include "lex.h"
 #include <memory>
-#include <map>
 #include <variant>
 #include <iostream>
 #include <algorithm>
@@ -101,14 +100,16 @@ auto try_visit(auto& variant, auto& visitor, int depth) -> void {
 }
 
 struct expression_list_node;
+struct id_expression_node;
 
 struct primary_expression_node
 {
-    enum active { empty=0, identifier, expression_list };
+    enum active { empty=0, identifier, expression_list, id_expression };
     std::variant<
         std::monostate,
         token const*,
-        std::unique_ptr<expression_list_node>
+        std::unique_ptr<expression_list_node>,
+        std::unique_ptr<id_expression_node>
     > expr;
 
     auto position() const -> source_position;
@@ -235,40 +236,6 @@ struct expression_list_node
         v.end(*this, depth);
     }
 };
-
-
-auto primary_expression_node::position() const -> source_position
-{
-    switch (expr.index())
-    {
-    break;case empty:
-        return { 0, 0 };
-
-    break;case identifier: {
-        auto const& s = std::get<identifier>(expr);
-        assert (s);
-        return s->position();
-    }
-
-    break;case expression_list: {
-        auto const& s = std::get<expression_list>(expr);
-        assert (s);
-        return s->position();
-    }
-
-    break;default:
-        assert (!"illegal primary_expression_node state");
-        return { 0, 0 };
-    }
-}
-
-auto primary_expression_node::visit(auto& v, int depth) -> void
-{
-    v.start(*this, depth);
-    try_visit<identifier     >(expr, v, depth);
-    try_visit<expression_list>(expr, v, depth);
-    v.end(*this, depth);
-}
 
 
 struct expression_statement_node
@@ -419,6 +386,48 @@ struct id_expression_node
         v.end(*this, depth);
     }
 };
+
+
+auto primary_expression_node::position() const -> source_position
+{
+    switch (expr.index())
+    {
+    break;case empty:
+        return { 0, 0 };
+
+    break;case identifier: {
+        auto const& s = std::get<identifier>(expr);
+        assert (s);
+        return s->position();
+    }
+
+    break;case expression_list: {
+        auto const& s = std::get<expression_list>(expr);
+        assert (s);
+        return s->position();
+    }
+
+    break;case id_expression: {
+        auto const& s = std::get<id_expression>(expr);
+        assert (s);
+        return s->position();
+    }
+
+    break;default:
+        assert (!"illegal primary_expression_node state");
+        return { 0, 0 };
+    }
+}
+
+auto primary_expression_node::visit(auto& v, int depth) -> void
+{
+    v.start(*this, depth);
+    try_visit<identifier     >(expr, v, depth);
+    try_visit<expression_list>(expr, v, depth);
+    try_visit<id_expression  >(expr, v, depth);
+    v.end(*this, depth);
+}
+
 
 struct statement_node;
 
@@ -797,12 +806,18 @@ private:
     //G primary-expression:
     //G     literal
     //G     ( expression-list )
+    //G     id-expression
     //GT     TODO
     //G
     auto primary_expression() 
         -> std::unique_ptr<primary_expression_node>
     {
         auto n = std::make_unique<primary_expression_node>();
+
+        if (auto id = id_expression()) {
+            n->expr = std::move(id);
+            return n;
+        }
 
         if (curr().type() == lexeme::Identifier ||
             curr().type() == lexeme::DecimalLiteral ||

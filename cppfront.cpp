@@ -208,26 +208,42 @@ public:
 
         //  Add unprinted comments and blank lines as needed to catch up vertically
         //
-        while (last_pos.lineno < pos.lineno) {
-
+        while (last_pos.lineno < pos.lineno)
+        {
             //  If a comment goes on this line, print it
-            if (next_comment < std::ssize(comments) && comments[next_comment].start.lineno == last_pos.lineno) {
-
+            if (next_comment < std::ssize(comments) && comments[next_comment].start.lineno == last_pos.lineno)
+            {
                 //  For a line comment, start it at the right indentation and print it
                 //  with a newline end
                 if (comments[next_comment].kind == comment::comment_kind::line_comment) {
-                    print( pad( comments[next_comment].start.colno - last_pos.colno ) );
-                    print( comments[next_comment].text );
-                    assert( comments[next_comment].text.find("\n") == std::string::npos );  // we shouldn't have newlines
-                    print_newline();
+                    //  Don't print comments in the declarations pass, to avoid duplication
+                    if (declarations_only) {
+                        ++last_pos.lineno;
+                    }
+                    else {
+                        print( pad( comments[next_comment].start.colno - last_pos.colno ) );
+                        print( comments[next_comment].text );
+                        assert( comments[next_comment].text.find("\n") == std::string::npos );  // we shouldn't have newlines
+                        print_newline();
+                    }
                 }
 
                 //  For a stream comment, pad out to its column (if we haven't passed it already)
                 //  and emit it there
                 else {
-                    print( pad( comments[next_comment].start.colno - last_pos.colno ) );
-                    print( comments[next_comment].text );
-                    assert(last_pos.lineno <= pos.lineno);  // we shouldn't have overshot
+                    //  Don't print comments in the declarations pass, to avoid duplication
+                    if (declarations_only) {
+                        last_pos.lineno += 
+                            std::count(
+                                comments[next_comment].text.begin(), 
+                                comments[next_comment].text.end(), 
+                                '\n');
+                    }
+                    else {
+                        print( pad( comments[next_comment].start.colno - last_pos.colno ) );
+                        print( comments[next_comment].text );
+                        assert(last_pos.lineno <= pos.lineno);  // we shouldn't have overshot
+                    }
                 }
 
                 ++next_comment;
@@ -236,6 +252,12 @@ public:
             //  Otherwise, just print a blank line
             else {
                 print_newline();
+ 
+                //  Don't print multiple successive blank lines in the declarations pass, they're not needed
+                if (declarations_only) {
+                    last_pos = {pos.lineno, 0};
+                    break;
+                }
             }
         }
         
@@ -339,7 +361,19 @@ public:
     //
     auto emit(token const& n) -> void
     {
-        print(n, n.position());
+        if (n.type() == lexeme::StringLiteral) {
+            print("\"");
+            print(n, n.position());
+            print("\"");
+        }
+        else if (n.type() == lexeme::CharacterLiteral) {
+            print("\'");
+            print(n, n.position());
+            print("\'");
+        }
+        else {
+            print(n, n.position());
+        }
     }
 
 
@@ -425,6 +459,7 @@ public:
     {
         try_emit<primary_expression_node::identifier     >(n.expr);
         try_emit<primary_expression_node::expression_list>(n.expr);
+        try_emit<primary_expression_node::id_expression  >(n.expr);
     }
 
 
@@ -692,13 +727,19 @@ public:
             assert (!declarations_only);
 
             print( " = ", n.equal_sign );
-            emit( *std::get<declaration_node::object>(n.type) );
-            print( " { ", n.equal_sign );
+            auto& type = std::get<declaration_node::object>(n.type);
+            if (type->id.index() != id_expression_node::empty) {
+                emit( *type );
+                print( " { ", n.equal_sign );
+            }
 
             assert( n.initializer );
             emit( *n.initializer, false );
 
-            print( " };" );
+            if (!type->id.index() == id_expression_node::empty) {
+                print( " }" );
+            }
+            print( ";" );
 
         }
     }
@@ -708,25 +749,37 @@ public:
     //
     auto emit(translation_unit_node const& n) -> void
     {
+        if (n.declarations.empty()) {
+            return;
+        }
+
         //  Restart positioning info for this pass
         //
+        auto curr_map_section = tokens.get_map().cbegin();
+        assert( curr_map_section != tokens.get_map().cend() );
+        assert( !curr_map_section->second.empty() );
+
         next_comment = 0;
-        last_pos     = {};
-        auto next_map_section = tokens.get_map().cbegin();
+        last_pos     = { curr_map_section->first, 0 };
+        print_line_directive( last_pos );
 
         //  Emit each declaration
         //
         for (auto const& x : n.declarations)
         {
-            //  If we're entering a new Cpp2 code section, we need to
-            //  reanchor last_pos to be relative to that section
+            //  If we're leaving the current Cpp2 code section, we need to
+            //  reanchor last_pos to be relative to the next section
             //
-            if (next_map_section != tokens.get_map().cend() &&
-                last_pos.lineno < next_map_section->first /*lineno*/)
+            if (curr_map_section != tokens.get_map().cend())
             {
-                last_pos = { next_map_section->first, 0 };
-                print_line_directive( last_pos );
-                ++next_map_section;
+                assert (std::ssize(curr_map_section->second) > 0);
+                if (last_pos.lineno > curr_map_section->second.back().position().lineno)
+                {
+                    if (++curr_map_section != tokens.get_map().cend()) {
+                        last_pos = { curr_map_section->first, 0 };
+                        print_line_directive( last_pos );
+                    }
+                }
             }
 
             //  And then emit this declaration
