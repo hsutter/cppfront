@@ -19,39 +19,6 @@ namespace cpp2 {
 // 
 //-----------------------------------------------------------------------
 
-auto to_string_view(unqualified_id_node const& n) -> std::string_view
-{
-    return *n.identifier;
-}
-
-auto to_string(qualified_id_node const& n) -> std::string
-{
-    std::string s;
-    for (bool first = true; auto const& id : n.ids)
-    {
-        if (!first) {
-            s += "::";
-        }
-        s += *id->identifier;
-        first = false;
-    }
-    return s;
-}
-
-auto to_string(id_expression_node const& n) -> std::string
-{
-    using enum id_expression_node::active;
-    switch (n.id.index()) {
-    break;case qualified:
-        return to_string( *std::get<qualified>(n.id) );
-    break;case unqualified:
-        return std::string( to_string_view( *std::get<unqualified>(n.id) ) );
-    }
-
-    assert(!"invalid id_expression");
-    return "INVALID ID_EXPRESSION"; // to shut up the compiler
-}
-
 auto pad(int padding) -> std::string_view
 {
     static std::string indent_str = std::string( 1024, ' ' );    // "1K should be enough for everyone"
@@ -92,8 +59,7 @@ class cppfront
     std::ofstream   out                = {};    // Cpp1 syntax output file
     int             next_comment       = 0;     // index of the next comment not yet printed
     source_position last_pos           = {};
-
-    expression_list_node::term const* current_expression_list_term = nullptr;
+    source_position preempt_pos        = {};
 
 public:
     //-----------------------------------------------------------------------
@@ -166,7 +132,7 @@ public:
 
     //-----------------------------------------------------------------------
     //  In the first pass we will print only declarations (the default).
-    //  For the second pass this funciton enables printing definitions.
+    //  For the second pass this function enables printing definitions.
     //
     auto enable_definitions() -> void {
         declarations_only = false;
@@ -179,17 +145,18 @@ public:
     auto print_newline() -> void {
         out << "\n";
         ++last_pos.lineno;
-        last_pos.colno = 0;
+        last_pos.colno = 1;
     }
 
     auto print(std::string_view s) -> void {
         out << s;
 
         auto last_newline = std::string::npos;
-        auto newline_pos  = std::string::npos;
-        while ((newline_pos = s.find('\n')) != std::string::npos) {
+        auto newline_pos  = 0;
+        while ((newline_pos = s.find('\n', newline_pos)) != std::string::npos) {
             ++last_pos.lineno;
             last_newline = newline_pos;
+            ++newline_pos;
         }
 
         if (last_newline != std::string::npos) {
@@ -200,9 +167,14 @@ public:
         }
     }
 
+    auto preempt_position(source_position pos) -> void {
+        preempt_pos = pos;
+    }
+
     auto print(std::string_view s, source_position pos) -> void {
-        align_to(pos);
+        align_to( preempt_pos == source_position{} ? pos : preempt_pos );
         print(s);
+        preempt_pos = {};
     }
 
 
@@ -233,7 +205,7 @@ public:
                 //  For a stream comment, pad out to its column (if we haven't passed it already)
                 //  and emit it there
                 else {
-                    print( pad( last_pos.colno - comments[next_comment].start.colno ) );
+                    print( pad( comments[next_comment].start.colno - last_pos.colno ) );
                     print( comments[next_comment].text );
                     assert(last_pos.lineno <= pos.lineno);  // we shouldn't have overshot
                 }
@@ -249,7 +221,7 @@ public:
         
         //  Finally, align to the target column
         //
-        print( pad( pos.colno - last_pos.colno - 1 ) );
+        print( pad( pos.colno - last_pos.colno ) );
 
         //  Remember our new relative anchor reference point
         //  (always in terms of original source coordinates)
@@ -315,6 +287,8 @@ public:
         //
         emit( parser.get_parse_tree() );  // starts at translation_unit_node
 
+        out << "\n//-------------------------------------------------------------------------------\n\n";
+
         //  Next, emit the Cpp2 definitions
         //
         enable_definitions();
@@ -340,20 +314,193 @@ public:
     auto try_emit(auto& v) -> void {
         if (v.index() == I) {
             auto const& alt = std::get<I>(v);
-            assert (alt.get() != nullptr);
+            assert (alt);
             emit (*alt);
         }
     }
 
-    ////-----------------------------------------------------------------------
-    ////
-    //auto emit(statement_node const& n) -> void
-    //{
-    //    try_emit<statement_node::expression >(v.statement);
-    //    try_emit<statement_node::compound   >(v.statement);
-    //    try_emit<statement_node::selection  >(v.statement);
-    //    try_emit<statement_node::declaration>(v.statement);
-    //}
+
+    //-----------------------------------------------------------------------
+    //
+    auto emit(token const& n) -> void
+    {
+        print(n, n.position());
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
+    auto emit(unqualified_id_node const& n) -> void
+    {
+        print( *n.identifier, n.position() );
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
+    auto emit(qualified_id_node const& n) -> void
+    {
+        for (bool first = true; auto const& id : n.ids)
+        {
+            if (first) {
+                print( *id->identifier, id->identifier->position() );
+                first = false;
+            }
+            else {
+                print( "::" );
+                print( *id->identifier );   // no position, we don't want to create gaps
+            }
+        }
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
+    auto emit(id_expression_node const& n) -> void
+    {
+        try_emit<id_expression_node::qualified  >(n.id);
+        try_emit<id_expression_node::unqualified>(n.id);
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
+    auto emit(compound_statement_node const& n) -> void
+    {
+        print( "{", n.open_brace );
+
+        for (auto const& x : n.statements) {
+            assert(x);
+            emit(*x);
+        }
+
+        print( "}", n.close_brace );
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
+    auto emit(selection_statement_node const& n) -> void
+    {
+        assert(n.identifier);
+        emit(*n.identifier);
+
+        print ("(");
+        assert(n.expression);
+        emit(*n.expression);
+        print (")");
+
+        assert(n.true_branch);
+        emit(*n.true_branch);
+
+        if(n.false_branch) {
+            print ("else ", n.else_pos);
+            emit(*n.false_branch);
+        }
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
+    auto emit(primary_expression_node const& n) -> void
+    {
+        try_emit<primary_expression_node::identifier     >(n.expr);
+        try_emit<primary_expression_node::expression_list>(n.expr);
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
+    auto emit(postfix_expression_node const& n) -> void
+    {
+        assert(n.expr);
+        emit(*n.expr);
+
+        for (auto const& x : n.ops) {
+            assert(x.op);
+            emit(*x.op);
+            if (x.expr_list) {
+                emit(*x.expr_list);
+            }
+        }
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
+    auto emit(prefix_expression_node const& n) -> void
+    {
+        for (auto const& x : n.ops) {
+            assert(x);
+            emit(*x);
+        }
+        assert(n.expr);
+        emit(*n.expr);
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
+    template<
+        String   Name,
+        typename Term
+    >
+    auto emit(binary_expression_node<Name,Term> const& n) -> void
+    {
+        assert(n.expr);
+        emit(*n.expr);
+
+        for (auto const& x : n.terms) {
+            assert(x.op);
+            emit(*x.op);
+            assert(x.expr);
+            emit(*x.expr);
+        }
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
+    auto emit(expression_node const& n) -> void
+    {
+        assert(n.expr);
+        emit(*n.expr);
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
+    auto emit(expression_list_node const& n) -> void
+    {
+        for (auto const& x : n.expressions) {
+            if (x.pass != passing_style::in) {
+                assert(to_string_view(x.pass) == "out");
+                print( "out ");
+            }
+            assert(x.expr);
+            emit(*x.expr);
+        }
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
+    auto emit(expression_statement_node const& n) -> void
+    {
+        assert(n.expr);
+        emit(*n.expr);
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
+    auto emit(statement_node const& n) -> void
+    {
+        try_emit<statement_node::expression >(n.statement);
+        try_emit<statement_node::compound   >(n.statement);
+        try_emit<statement_node::selection  >(n.statement);
+        try_emit<statement_node::declaration>(n.statement);
+    }
 
 
     //-----------------------------------------------------------------------
@@ -365,7 +512,8 @@ public:
         assert( n.declaration->is(declaration_node::object) );
 
         auto const& id_expr = *std::get<declaration_node::object>(n.declaration->type);
-        print( to_string( id_expr ), n.position() );
+        preempt_position( n.position() );
+        emit( id_expr );
 
         switch (n.pass) {
         using enum passing_style;
@@ -377,7 +525,7 @@ public:
         }
 
         print( " " );
-        print( to_string_view( *n.declaration->identifier ) );
+        emit( *n.declaration->identifier );
 
         // TODO: initializers
         //if (n.declaration->initializer) {
@@ -415,7 +563,16 @@ public:
             first = false;
         }
 
-        print( ")", n.pos_close_paren);
+        //  If the ) is on the same line as the previous token
+        auto adjusted_pos = n.pos_close_paren;
+        if (last_pos.lineno == n.pos_close_paren.lineno) {
+            //  Then ignore the original column number - this is so that when
+            //  the Cpp2 source is longer than the Cpp1 source (which can
+            //  happen when we change `inout` to `&`) we don't needlessly
+            //  space the ) too far right visually
+            adjusted_pos.colno = 0;
+        }
+        print( ")", adjusted_pos );
     }
 
 
@@ -423,28 +580,41 @@ public:
     //
     auto emit(declaration_node const& n) -> void
     {
+        print( "auto ", n.position() );
+        print( *n.identifier->identifier );
+
+        //  Function
         if (n.is(declaration_node::function)) {
 
             //  Function declaration
-            print( "auto ", n.position() );
-            print( *n.identifier->identifier );
-
             emit( *std::get<declaration_node::function>(n.type) );
-
             if (declarations_only) {
                 print( ";" );
+                last_pos = n.decl_end;
                 print_newline();
                 return;
             }
 
-            ////  Function body
-            //assert( n.initializer );
-            //emit( *n.initializer );
+            //  Function body
+            assert( n.initializer );
+            preempt_position(n.equal_sign);
+            emit( *n.initializer );
         }
 
+        //  Object
         else if (n.is(declaration_node::object)) {
 
-            // TODO
+            //  We shouldn't get to any objects in the first declarations-only pass
+            assert (!declarations_only);
+
+            print( " = ", n.equal_sign );
+            emit( *std::get<declaration_node::object>(n.type) );
+            print( " { ", n.equal_sign );
+
+            assert( n.initializer );
+            emit( *n.initializer );
+
+            print( " };" );
 
         }
     }
@@ -454,17 +624,23 @@ public:
     //
     auto emit(translation_unit_node const& n) -> void
     {
+        //  Restart positioning info for this pass
+        //
+        next_comment = 0;
+        last_pos     = {};
         auto next_map_section = tokens.get_map().cbegin();
 
+        //  Emit each declaration
+        //
         for (auto const& x : n.declarations)
         {
-            //  Check to see if we have entered a new Cpp2 code section
+            //  If we're entering a new Cpp2 code section, we need to
+            //  reanchor last_pos to be relative to that section
+            //
             if (next_map_section != tokens.get_map().cend() &&
-                next_map_section->first /*lineno*/ < n.position().lineno)
+                last_pos.lineno < next_map_section->first /*lineno*/)
             {
-                //  If so, adjust our anchor position to be relative to
-                //  the start of that section
-                last_pos = {next_map_section->first, 0};
+                last_pos = { next_map_section->first, 0 };
                 ++next_map_section;
             }
 

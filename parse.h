@@ -199,11 +199,22 @@ struct expression_node
 };
 
 enum class passing_style { in=0, inout, out, move, forward };
+auto to_string_view(passing_style pass) -> std::string_view {
+    switch (pass) {
+    break;case passing_style::in     : return "in";
+    break;case passing_style::inout  : return "inout";
+    break;case passing_style::out    : return "out";
+    break;case passing_style::move   : return "move";
+    break;case passing_style::forward: return "forward";
+    break;default:                     return "INVALID passing_tyle";
+    }
+
+}
 
 struct expression_list_node
 {
     struct term {
-        passing_style pass; // for `out`
+        passing_style                    pass = {}; // for `out`
         std::unique_ptr<expression_node> expr;
     };
     std::vector< term > expressions;
@@ -409,17 +420,13 @@ struct statement_node;
 
 struct compound_statement_node
 {
-    source_position pos;
+    source_position open_brace;
+    source_position close_brace;
     std::vector<std::unique_ptr<statement_node>> statements;
-
-    compound_statement_node(source_position pos)
-        : pos{ pos }
-    {
-    }
 
     auto position() const -> source_position
     {
-        return pos;
+        return open_brace;
     }
 
     auto visit(auto& v, int depth) -> void;
@@ -429,6 +436,7 @@ struct selection_statement_node
 {
     bool                                     is_constexpr = false;
     token const*                             identifier;
+    source_position                          else_pos;
     std::unique_ptr<expression_node>         expression;
     std::unique_ptr<compound_statement_node> true_branch;
     std::unique_ptr<compound_statement_node> false_branch;
@@ -541,6 +549,8 @@ struct declaration_node
         std::unique_ptr<id_expression_node>
     > type;
 
+    source_position equal_sign = {};
+    source_position decl_end   = {};
     std::unique_ptr<statement_node> initializer;
 
     //  Shorthand for common query
@@ -755,7 +765,7 @@ private:
     auto peek(int num) const -> token const* 
     {
         assert (tokens_);
-        if (pos + num < std::ssize(*tokens_)) {
+        if (pos + num >= 0 && pos + num < std::ssize(*tokens_)) {
             return &(*tokens_)[pos + num];
         }
         return {};
@@ -1290,6 +1300,7 @@ private:
                 std::make_unique<compound_statement_node>( source_position(0,0) );
         }
         else {
+            n->else_pos = curr().position();
             next();
             if (auto s = compound_statement()) {
                 n->false_branch = std::move(s);
@@ -1362,7 +1373,8 @@ private:
             return {};
         }
 
-        auto n = std::make_unique<compound_statement_node>( curr().position() );
+        auto n = std::make_unique<compound_statement_node>();
+        n->open_brace = curr().position();
         next();
         auto s = std::unique_ptr<statement_node>();
 
@@ -1375,6 +1387,7 @@ private:
             n->statements.push_back( std::move(s) );
         }
 
+        n->close_brace = curr().position();
         next();
         return n;
     }
@@ -1541,18 +1554,21 @@ private:
                 error("missing semicolon at end of declaration");
                 return {};
             }
-            return n;
         }
 
         //  There was an =, so eat it and continue
-        next();
-
-        if (!(n->initializer = statement(semicolon_required))) {
-            error("ill-formed initializer");
+        else {
+            n->equal_sign = curr().position();
             next();
-            return {};
+
+            if (!(n->initializer = statement(semicolon_required))) {
+                error("ill-formed initializer");
+                next();
+                return {};
+            }
         }
 
+        n->decl_end = peek(-1)->position();
         return n;
     }
 

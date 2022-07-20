@@ -369,6 +369,9 @@ class source
     std::vector<error>&      errors;
     std::vector<source_line> lines;
 
+    static const int max_line_len = 19'600;
+    char buf[max_line_len];
+
 public:
     //-----------------------------------------------------------------------
     //  Constructor
@@ -380,6 +383,7 @@ public:
     )
         : errors{ errors }
         , lines( 1 )        // extra blank to avoid off-by-one everywhere
+        , buf{0}
     {
     }
 
@@ -400,8 +404,6 @@ public:
             return false;
         }
 
-        const auto max_line_len = 19'600;
-        char buf[max_line_len];
         auto in_comment        = false;
         auto in_string_literal = false;
         auto brace_depth = std::vector<int>();

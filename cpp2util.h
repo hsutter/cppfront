@@ -38,19 +38,19 @@ public:
 
 
 
-#include <vector>
-#include <iostream>
-#include <cstdlib>
-using namespace std;
-
-int main() {
-    srand(unsigned(time(NULL)));
-    deferred_init<vector<int>> s;
-    if (rand() %2) {
-        s.construct(10, 50);
-    }
-    else {
-        s.construct_list(10, 50);
-    }
-    cout << s.value().size();
-}
+//#include <vector>
+//#include <iostream>
+//#include <cstdlib>
+//using namespace std;
+//
+//int main() {
+//    srand(unsigned(time(NULL)));
+//    deferred_init<vector<int>> s;
+//    if (rand() %2) {
+//        s.construct(10, 50);
+//    }
+//    else {
+//        s.construct_list(10, 50);
+//    }
+//    cout << s.value().size();
+//}

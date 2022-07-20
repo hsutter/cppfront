@@ -205,6 +205,8 @@ struct String
         std::copy_n(str, N, value);
     }
 
+    auto operator<=>(String const&) const = default;
+
     char value[N];
 };
 

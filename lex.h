@@ -185,6 +185,7 @@ public:
 
     operator std::string_view() const 
     { 
+        assert (start);
         return {start, (unsigned)count}; 
     }
 
@@ -447,7 +448,7 @@ auto lex_line(
                     comments.push_back({
                         comment::comment_kind::stream_comment,
                         current_comment_start,
-                        {lineno, i+1},
+                        {lineno, i+2},
                         current_comment
                         });
                     in_comment = false;
@@ -481,7 +482,7 @@ auto lex_line(
             break;case '/': 
                 if (peek1 == '*') {
                     current_comment = "/*";
-                    current_comment_start = source_position(lineno, i);
+                    current_comment_start = source_position(lineno, i+1);
                     in_comment = true;
                     ++i;
                 }
