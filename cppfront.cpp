@@ -58,6 +58,7 @@ class cppfront
     bool            declarations_only  = true;  // print declarations only in first pass
     std::ofstream   out                = {};    // Cpp1 syntax output file
     int             next_comment       = 0;     // index of the next comment not yet printed
+    int             pad_for_this_line  = 0;
     source_position last_pos           = {};
     source_position preempt_pos        = {};
 
@@ -142,10 +143,15 @@ public:
     //-----------------------------------------------------------------------
     //  Printing helpers so we can track number of chars emitted so far in current line
     //
+    auto print_line_directive(source_position pos) -> void {
+        out << "\n#line " << pos.lineno << "\n";
+    }
+
     auto print_newline() -> void {
         out << "\n";
         ++last_pos.lineno;
         last_pos.colno = 1;
+        pad_for_this_line = 0;
     }
 
     auto print(std::string_view s) -> void {
@@ -154,6 +160,7 @@ public:
         auto last_newline = std::string::npos;
         auto newline_pos  = 0;
         while ((newline_pos = s.find('\n', newline_pos)) != std::string::npos) {
+            pad_for_this_line = 0;
             ++last_pos.lineno;
             last_newline = newline_pos;
             ++newline_pos;
@@ -171,8 +178,19 @@ public:
         preempt_pos = pos;
     }
 
+    auto add_pad_in_this_line(colno_t extra) -> void {
+        pad_for_this_line += extra;
+    }
+
     auto print(std::string_view s, source_position pos) -> void {
-        align_to( preempt_pos == source_position{} ? pos : preempt_pos );
+        //  For now, the preempt position use cases are about overriding colno
+        //  and only on the same line. In the future, we might have more use cases.
+        auto adjusted_pos = pos;
+        if (preempt_pos != source_position{} && preempt_pos.lineno == pos.lineno) {
+            adjusted_pos.colno = preempt_pos.colno;
+        }
+
+        align_to(adjusted_pos);
         print(s);
         preempt_pos = {};
     }
@@ -185,6 +203,8 @@ public:
     auto align_to( source_position pos ) -> void
     {
         auto& comments = tokens.get_comments(); // for readability
+
+        pos.colno += pad_for_this_line;
 
         //  Add unprinted comments and blank lines as needed to catch up vertically
         //
@@ -222,11 +242,6 @@ public:
         //  Finally, align to the target column
         //
         print( pad( pos.colno - last_pos.colno ) );
-
-        //  Remember our new relative anchor reference point
-        //  (always in terms of original source coordinates)
-        //
-        last_pos = pos;
     }
 
 
@@ -287,7 +302,7 @@ public:
         //
         emit( parser.get_parse_tree() );  // starts at translation_unit_node
 
-        out << "\n//-------------------------------------------------------------------------------\n\n";
+        out << "\n//-------------------------------------------------------------------------------\n";
 
         //  Next, emit the Cpp2 definitions
         //
@@ -311,11 +326,11 @@ public:
     //  alternative is a smart pointer
     //
     template <int I>
-    auto try_emit(auto& v) -> void {
+    auto try_emit(auto& v, auto... more) -> void {
         if (v.index() == I) {
             auto const& alt = std::get<I>(v);
             assert (alt);
-            emit (*alt);
+            emit (*alt, more...);
         }
     }
 
@@ -385,15 +400,19 @@ public:
         assert(n.identifier);
         emit(*n.identifier);
 
-        print ("(");
+        print (" (");
+        add_pad_in_this_line(1);
+
         assert(n.expression);
         emit(*n.expression);
-        print (")");
+
+        print (") ");
+        add_pad_in_this_line(1);
 
         assert(n.true_branch);
         emit(*n.true_branch);
 
-        if(n.false_branch) {
+        if (n.has_source_false_branch) {
             print ("else ", n.else_pos);
             emit(*n.false_branch);
         }
@@ -414,15 +433,80 @@ public:
     auto emit(postfix_expression_node const& n) -> void
     {
         assert(n.expr);
-        emit(*n.expr);
+
+        auto suffix            = std::string{};
+        auto emitted_n         = false;
+        auto last_was_prefixed = false;
+        auto all_prefix        = true;
+
+        std::vector<std::string> stack;
+
+        auto emit_as_prefixed = [&](std::string_view sv) -> void {
+            std::string s;
+            if (!all_prefix && !last_was_prefixed) { s += "("; }
+            s += sv;
+            stack.push_back(s);
+
+            if (!all_prefix && !last_was_prefixed) { suffix += ")"; }
+
+            last_was_prefixed = true;
+        };
+
+        auto flush = [&] () -> void {
+            for (auto i = std::rbegin(stack); i != std::rend(stack); ++i) {
+                print(*i);
+            }
+            stack = {};
+            if (!emitted_n) {
+                emit(*n.expr);
+                emitted_n = true;
+            }
+            print(suffix);
+            suffix = "";
+        };
+
+        auto op_switches_to_prefix = [&](auto const& op) -> bool {
+            return op == "--" || op == "++" || op == "^"  || op == "&"  || op == "~";
+        };
+
+        for (auto const& x : n.ops) {
+            if (!op_switches_to_prefix(*x.op)) {
+                all_prefix = false;
+            }
+        }
+
+        align_to(n.position());
 
         for (auto const& x : n.ops) {
             assert(x.op);
-            emit(*x.op);
-            if (x.expr_list) {
-                emit(*x.expr_list);
+
+            //  Handle the Cpp2 postfix operators to emit in Cpp1 as prefix
+            //
+            if (op_switches_to_prefix(*x.op)) {
+                if (*x.op == "^") {
+                    emit_as_prefixed("*"); }
+                else {
+                    emit_as_prefixed(*x.op);
+                }
+            }
+
+            //  If we have a legit suffix operator, it's time to flush
+            //
+            else {
+                flush();
+
+                emit(*x.op);
+                if (x.expr_list) {
+                    emit(*x.expr_list);
+                    assert(x.op_close);
+                    emit(*x.op_close);
+                }
+
+                last_was_prefixed = false;
             }
         }
+
+        flush();
     }
 
 
@@ -485,18 +569,21 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(expression_statement_node const& n) -> void
+    auto emit(expression_statement_node const& n, bool can_have_semicolon) -> void
     {
         assert(n.expr);
         emit(*n.expr);
+        if (n.has_semicolon && can_have_semicolon) {
+            print(";");
+        }
     }
 
 
     //-----------------------------------------------------------------------
     //
-    auto emit(statement_node const& n) -> void
+    auto emit(statement_node const& n, bool can_have_semicolon = true ) -> void
     {
-        try_emit<statement_node::expression >(n.statement);
+        try_emit<statement_node::expression >(n.statement, can_have_semicolon);
         try_emit<statement_node::compound   >(n.statement);
         try_emit<statement_node::selection  >(n.statement);
         try_emit<statement_node::declaration>(n.statement);
@@ -525,6 +612,7 @@ public:
         }
 
         print( " " );
+        preempt_position( n.position() );
         emit( *n.declaration->identifier );
 
         // TODO: initializers
@@ -563,16 +651,10 @@ public:
             first = false;
         }
 
-        //  If the ) is on the same line as the previous token
-        auto adjusted_pos = n.pos_close_paren;
-        if (last_pos.lineno == n.pos_close_paren.lineno) {
-            //  Then ignore the original column number - this is so that when
-            //  the Cpp2 source is longer than the Cpp1 source (which can
-            //  happen when we change `inout` to `&`) we don't needlessly
-            //  space the ) too far right visually
-            adjusted_pos.colno = 0;
-        }
-        print( ")", adjusted_pos );
+        //  Position heuristic (aka hack): Avoid emitting extra whitespace before )
+        //  beyond column 10
+        auto col = std::min( n.pos_close_paren.colno, colno_t{10} );
+        print( ")", { n.pos_close_paren.lineno, col } );
     }
 
 
@@ -588,6 +670,7 @@ public:
 
             //  Function declaration
             emit( *std::get<declaration_node::function>(n.type) );
+            print( " -> void" );    // TODO: stub for now
             if (declarations_only) {
                 print( ";" );
                 last_pos = n.decl_end;
@@ -598,6 +681,7 @@ public:
             //  Function body
             assert( n.initializer );
             preempt_position(n.equal_sign);
+            print( " " );
             emit( *n.initializer );
         }
 
@@ -612,7 +696,7 @@ public:
             print( " { ", n.equal_sign );
 
             assert( n.initializer );
-            emit( *n.initializer );
+            emit( *n.initializer, false );
 
             print( " };" );
 
@@ -641,6 +725,7 @@ public:
                 last_pos.lineno < next_map_section->first /*lineno*/)
             {
                 last_pos = { next_map_section->first, 0 };
+                print_line_directive( last_pos );
                 ++next_map_section;
             }
 

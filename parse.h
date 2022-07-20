@@ -274,6 +274,7 @@ auto primary_expression_node::visit(auto& v, int depth) -> void
 struct expression_statement_node
 {
     std::unique_ptr<expression_node> expr;
+    bool has_semicolon = false;
 
     auto position() const -> source_position
     {
@@ -298,7 +299,10 @@ struct postfix_expression_node
     struct term 
     {
         token const* op;
-        std::unique_ptr<expression_list_node> expr_list;    // used if *op is [ or ( - can be null
+
+        //  These are used if *op is [ or ( - can be null
+        std::unique_ptr<expression_list_node> expr_list;
+        token const* op_close;
     };
     std::vector<term> ops;
 
@@ -440,6 +444,7 @@ struct selection_statement_node
     std::unique_ptr<expression_node>         expression;
     std::unique_ptr<compound_statement_node> true_branch;
     std::unique_ptr<compound_statement_node> false_branch;
+    bool                                     has_source_false_branch = false;
 
     auto position() const -> source_position
     {
@@ -872,6 +877,7 @@ private:
                 if (curr().type() != lexeme::RightBracket) {
                     error("unexpected text - [ is not properly matched by ]");
                 }
+                term.op_close = &curr();
                 next();
 
             break;case lexeme::LeftParen:
@@ -879,6 +885,7 @@ private:
                 if (curr().type() != lexeme::RightParen) {
                     error("unexpected text - ( is not properly matched by )");
                 }
+                term.op_close = &curr();
                 next();
             }
 
@@ -1253,6 +1260,7 @@ private:
             return {};
         }
         if (curr().type() == lexeme::Semicolon) {
+            n->has_semicolon = true;
             next();
         }
         return n;
@@ -1304,6 +1312,7 @@ private:
             next();
             if (auto s = compound_statement()) {
                 n->false_branch = std::move(s);
+                n->has_source_false_branch = true;
             }
             else {
                 error("invalid else branch body");
