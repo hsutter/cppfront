@@ -56,6 +56,8 @@ class cppfront
     //  For lowering
     //    
     bool            declarations_only  = true;  // print declarations only in first pass
+    bool            in_definite_init   = false;
+    bool            in_parameter_list  = false;
     std::ofstream   out                = {};    // Cpp1 syntax output file
     int             next_comment       = 0;     // index of the next comment not yet printed
     int             pad_for_this_line  = 0;
@@ -147,11 +149,15 @@ public:
         out << "\n#line " << pos.lineno << "\n";
     }
 
-    auto print_newline() -> void {
-        out << "\n";
+    auto on_newline() -> void {
         ++last_pos.lineno;
         last_pos.colno = 1;
         pad_for_this_line = 0;
+    }
+
+    auto print_newline() -> void {
+        out << "\n";
+        on_newline();
     }
 
     auto print(std::string_view s) -> void {
@@ -161,7 +167,7 @@ public:
         auto newline_pos  = 0;
         while ((newline_pos = s.find('\n', newline_pos)) != std::string::npos) {
             pad_for_this_line = 0;
-            ++last_pos.lineno;
+            on_newline();
             last_newline = newline_pos;
             ++newline_pos;
         }
@@ -203,8 +209,6 @@ public:
     auto align_to( source_position pos ) -> void
     {
         auto& comments = tokens.get_comments(); // for readability
-
-        pos.colno += pad_for_this_line;
 
         //  Add unprinted comments and blank lines as needed to catch up vertically
         //
@@ -255,7 +259,7 @@ public:
  
                 //  Don't print multiple successive blank lines in the declarations pass, they're not needed
                 if (declarations_only) {
-                    last_pos = {pos.lineno, 0};
+                    last_pos = {pos.lineno, 1};
                     break;
                 }
             }
@@ -263,6 +267,7 @@ public:
         
         //  Finally, align to the target column
         //
+        pos.colno += pad_for_this_line;
         print( pad( pos.colno - last_pos.colno ) );
     }
 
@@ -374,6 +379,10 @@ public:
         else {
             print(n, n.position());
         }
+
+        if (is_definite_initialization(&n)) {
+            in_definite_init = true;
+        }
     }
 
 
@@ -382,6 +391,13 @@ public:
     auto emit(unqualified_id_node const& n) -> void
     {
         print( *n.identifier, n.position() );
+        in_definite_init = is_definite_initialization(n.identifier);
+
+        if (!in_definite_init && !in_parameter_list) {
+            if (auto decl = sema.get_declaration_of(*n.identifier); decl && !decl->initializer) {
+                print( ".value()" );
+            }
+        }
     }
 
 
@@ -571,9 +587,21 @@ public:
 
         for (auto const& x : n.terms) {
             assert(x.op);
-            emit(*x.op);
             assert(x.expr);
-            emit(*x.expr);
+
+            //  Normally we'll just emit the operator, but if this is an
+            //  assignment that's a definite initialization, change it to
+            //  a .construct() call
+            if (x.op->type() == lexeme::Assignment && in_definite_init) {
+                print( ".construct(" );
+                emit(*x.expr);
+                print( ")" );
+            }
+            else {
+                emit(*x.op);
+                emit(*x.expr);
+            }
+
         }
     }
 
@@ -594,7 +622,8 @@ public:
         for (auto const& x : n.expressions) {
             if (x.pass != passing_style::in) {
                 assert(to_string_view(x.pass) == "out");
-                print( "out ");
+                print("&");
+                add_pad_in_this_line(-3);
             }
             assert(x.expr);
             emit(*x.expr);
@@ -635,13 +664,21 @@ public:
 
         auto const& id_expr = *std::get<declaration_node::object>(n.declaration->type);
         preempt_position( n.position() );
+
+        //  First any prefix
+        switch (n.pass) {
+        using enum passing_style;
+        break;case out    : print ( "cpp2::out<" );
+        }
+
         emit( id_expr );
 
+        //  Then any suffix
         switch (n.pass) {
         using enum passing_style;
         break;case in     : print ( " const&" );
         break;case inout  : print ( "&" );
-        break;case out    : print ( "&" );
+        break;case out    : print ( ">" );
         break;case move   : print ( "&&" );
         break;case forward: assert(false); // TODO: support forward parameters
         }
@@ -675,6 +712,8 @@ public:
     //
     auto emit(parameter_declaration_list_node const& n) -> void
     {
+        in_parameter_list = true;
+
         print( "(", n.pos_open_paren );
 
         for (auto first = true; auto const& x : n.parameters) {
@@ -690,6 +729,31 @@ public:
         //  beyond column 10
         auto col = std::min( n.pos_close_paren.colno, colno_t{10} );
         print( ")", { n.pos_close_paren.lineno, col } );
+
+        in_parameter_list = false;
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
+    auto emit(function_type_node const& n) -> void
+    {
+        assert(n.parameters);
+        emit(*n.parameters);
+
+        if (!n.throws) {
+            print( " noexcept" );
+        }
+
+        print( " -> " );
+
+        if (n.returns.index() == function_type_node::empty) {
+            print( "void" );
+        }
+        else {
+            try_emit<function_type_node::id_expression >(n.returns);
+            try_emit<function_type_node::parameter_list>(n.returns);
+        }
     }
 
 
@@ -697,6 +761,7 @@ public:
     //
     auto emit(declaration_node const& n) -> void
     {
+        //  Common to functions and objects
         print( "auto ", n.position() );
         print( *n.identifier->identifier );
 
@@ -705,7 +770,6 @@ public:
 
             //  Function declaration
             emit( *std::get<declaration_node::function>(n.type) );
-            print( " -> void" );    // TODO: stub for now
             if (declarations_only) {
                 print( ";" );
                 last_pos = n.decl_end;
@@ -720,26 +784,38 @@ public:
             emit( *n.initializer );
         }
 
-        //  Object
+        //  Object with initializer
         else if (n.is(declaration_node::object)) {
 
             //  We shouldn't get to any objects in the first declarations-only pass
             assert (!declarations_only);
-
-            print( " = ", n.equal_sign );
             auto& type = std::get<declaration_node::object>(n.type);
-            if (type->id.index() != id_expression_node::empty) {
+
+            //  If there's an initializer, emit it
+            if (n.initializer)
+            {
+                print( " = ", n.equal_sign );
+                if (type->id.index() != id_expression_node::empty) {
+                    emit( *type );
+                    print( " { ", n.equal_sign );
+                }
+
+                assert( n.initializer );
+                emit( *n.initializer, false );
+
+                if (!type->id.index() == id_expression_node::empty) {
+                    print( " }" );
+                }
+                print( ";" );
+            }
+
+            //  If not, use cpp2::deferred_init<T>, e.g.,
+            //    auto s = deferred_init<vector<int>>{};
+            else {
+                print( " = cpp2::deferred_init<" );
                 emit( *type );
-                print( " { ", n.equal_sign );
+                print( ">{};" );
             }
-
-            assert( n.initializer );
-            emit( *n.initializer, false );
-
-            if (!type->id.index() == id_expression_node::empty) {
-                print( " }" );
-            }
-            print( ";" );
 
         }
     }

@@ -402,7 +402,7 @@ auto lex_line(
             "^private|^protected|^public|"
             "^register|^reinterpret_­cast|^requires|^return|"
             "^short|^signed|^sizeof|^static|^static_­assert|^static_­cast|^struct|^switch|"
-            "^template|^this|^thread_­local|^throw|^true|^try|^typedef|^typeid|^typename|"
+            "^template|^this|^thread_­local|^throws|^throw|^true|^try|^typedef|^typeid|^typename|"
             "^union|^unsigned|^using|"
             "^virtual|^void|^volatile|"
             "^wchar_­t|^while"

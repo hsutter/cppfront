@@ -9,12 +9,21 @@
 //      #include'd by generated Cpp1 code
 //===========================================================================
 
-#include <cassert>
+#ifndef __CPP2_UTIL
+#define __CPP2_UTIL
 
+#include <cassert>
+#include <exception>
+
+
+namespace cpp2 {
 
 //-----------------------------------------------------------------------
 // 
-//  deferred_init: For deferred-initialized local or member variable
+//  These are closely related...
+// 
+//  deferred_init<T>    For deferred-initialized local or member variable
+//  out<T>              For out parameter
 // 
 //-----------------------------------------------------------------------
 //
@@ -26,6 +35,9 @@ class deferred_init {
         T t;
     };
 
+    template<typename T>
+    friend class out;
+
 public:
     deferred_init() noexcept       : i {0} { }
    ~deferred_init() noexcept       { if (init) t.~T(); }
@@ -35,22 +47,58 @@ public:
     auto construct_list(auto ...args) -> void { assert(!init);  new (&t) T{args...};  init = true; }
 };
 
+template<typename T>
+class out {
+    //  Not going to bother with std::variant here
+    bool has_t;
+    union {
+        T* t;
+        deferred_init<T>* dt;
+    };
+    bool called_construct = false;
+    int  uncaught_count = std::uncaught_exceptions();
+
+public:
+    out(T* t)                 noexcept : t{t},   has_t{true}  { }
+    out(deferred_init<T>* dt) noexcept : dt{dt}, has_t{false} { }
+
+    //  In the case of an exception, if the parameter was uninitialized
+    //  then leave it in the same state on exit (strong guarantee)
+    ~out() {
+        if (called_construct && uncaught_count != std::uncaught_exceptions()) {
+            assert (!has_t);
+            dt->value().~T();
+        }
+    }
+
+    auto construct     (auto ...args) -> void { 
+        if (has_t) {
+            *t = T(args...);
+        }
+        else if (dt->init) {
+            dt->value() = T(args...);
+        }
+        else {
+            dt->construct(args...);
+            called_construct = true;
+        }
+    }
+
+    auto construct_list(auto ...args) -> void { 
+        if (has_t) {
+            *t = T{args...};
+        }
+        else if (dt->init) {
+            dt->value() = T{args...};
+        }
+        else {
+            dt->construct_list(args...);
+            called_construct = true;
+        }
+    }
+};
 
 
+}
 
-//#include <vector>
-//#include <iostream>
-//#include <cstdlib>
-//using namespace std;
-//
-//int main() {
-//    srand(unsigned(time(NULL)));
-//    deferred_init<vector<int>> s;
-//    if (rand() %2) {
-//        s.construct(10, 50);
-//    }
-//    else {
-//        s.construct_list(10, 50);
-//    }
-//    cout << s.value().size();
-//}
+#endif

@@ -25,7 +25,7 @@ struct declaration_sym {
     bool start = false;
     declaration_node const* declaration = nullptr;
     token const*            identifier  = nullptr;
-    statement_node const*   initializer = nullptr;  // must not be null
+    statement_node const*   initializer = nullptr;
 
     auto position() const -> source_position
     {
@@ -165,6 +165,38 @@ public:
     {
     }
 
+
+    auto get_declaration_of(token const& t) -> declaration_sym const*
+    {
+        //  First find the position the query is coming from
+        //  and remember its depth
+        auto i = symbols.cbegin();
+        while (i != symbols.cend() && i->position() < t.position()) {
+            ++i;
+        }
+
+        if (i == symbols.cend()) {
+            --i;
+        }
+
+        auto depth = i->depth;
+
+        //  Then look backward to find the first declaration of
+        //  this name that is not deeper (in a nested cope)
+        for ( ; i != symbols.cbegin() && i->depth <= depth; --i ) {
+            depth = i->depth;
+            if (i->sym.index() == declaration) {
+                auto const& decl = std::get<declaration>(i->sym);
+                if (decl.identifier && *decl.identifier == t) {
+                    return &decl;
+                }
+            }
+        }
+
+        return nullptr;
+    }
+
+
     void debug_print(std::ostream& o)
     {
         for (auto const& s : symbols)
@@ -174,7 +206,7 @@ public:
 
             switch (s.sym.index()) {
 
-            break; case declaration: {
+            break;case declaration: {
                 auto const& sym = std::get<declaration>(s.sym);
 
                 assert (sym.declaration);
@@ -204,7 +236,7 @@ public:
                 }
             }
 
-            break; case identifier: {
+            break;case identifier: {
                 auto const& sym = std::get<identifier>(s.sym);
                 assert (sym.identifier);
                 if (is_definite_initialization(sym.identifier)) {
@@ -644,7 +676,11 @@ public:
         //  Otherwise it's just an identifier use (if it's outside the parameter list)
         else if (!inside_parameter_list)
         {
-            symbols.emplace_back( scope_depth, identifier_sym( false, &t ) );
+            //  Put this into the table if it a use of an uninitialized object in scope
+            if (auto decl = get_declaration_of(t); decl && !decl->initializer)
+            {
+                symbols.emplace_back( scope_depth, identifier_sym( false, &t ) );
+            }
         }
     }
 

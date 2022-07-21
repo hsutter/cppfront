@@ -537,7 +537,6 @@ struct parameter_declaration_list_node
 
     auto position() const -> source_position
     {
-        assert (std::ssize(parameters) && parameters.front());
         return pos_open_paren;
     }
 
@@ -553,13 +552,43 @@ struct parameter_declaration_list_node
 };
 
 
+struct function_type_node
+{
+    std::unique_ptr<parameter_declaration_list_node> parameters;
+    bool throws = false;
+
+    enum active { empty=0, id_expression, parameter_list };
+    std::variant<
+        std::monostate,
+        std::unique_ptr<id_expression_node>,
+        std::unique_ptr<parameter_declaration_list_node>
+    > returns;
+
+    auto position() const -> source_position
+    {
+        assert (parameters);
+        return parameters->position();
+    }
+
+    auto visit(auto& v, int depth) -> void
+    {
+        v.start(*this, depth);
+        assert(parameters);
+        parameters->visit(v, depth+1);
+        try_visit<id_expression >(returns, v, depth+1);
+        try_visit<parameter_list>(returns, v, depth+1);
+        v.end(*this, depth);
+    }
+};
+
+
 struct declaration_node
 {
     std::unique_ptr<unqualified_id_node> identifier;
 
     enum active { function, object };
     std::variant<
-        std::unique_ptr<parameter_declaration_list_node>,
+        std::unique_ptr<function_type_node>,
         std::unique_ptr<id_expression_node>
     > type;
 
@@ -1486,8 +1515,11 @@ private:
 
 
     //G parameter-declaration-list
+    //G     ( parameter-declaration-seq-opt )
+    //G
+    //G parameter-declaration-seq:
     //G     parameter-declaration
-    //G     parameter-declaration-list , parameter-declaration
+    //G     parameter-declaration-seq , parameter-declaration
     //G
     auto parameter_declaration_list() -> std::unique_ptr<parameter_declaration_list_node> 
     {
@@ -1526,8 +1558,59 @@ private:
     }
 
 
+    //G function-type:
+    //G     parameter-declaration-list-opt throws-specifier-opt
+    //G     parameter-declaration-list-opt throws-specifier-opt -> id_expression
+    //G     parameter-declaration-list-opt throws-specifier-opt -> parameter_declaration_list
+    //G
+    //G throws-specifier:
+    //G     throws
+    //G
+    auto function_type() -> std::unique_ptr<function_type_node> 
+    {
+        //  Remember current position, because we need to look ahead
+        auto start_pos = pos;
+
+        auto n = std::make_unique<function_type_node>();
+
+        //  Parameters
+        auto parameters = parameter_declaration_list();
+        if (!parameters) {
+            return {};
+        }
+        n->parameters = std::move(parameters);
+
+        //  Optional "throws"
+        if (curr().type() == lexeme::Keyword && curr() == "throws") {
+            n->throws = true;
+            next();
+        }
+
+        //  If there's no -> then we're done
+        if (curr().type() != lexeme::Arrow) {
+            return n;
+        }
+        next();
+
+        //  a) id-expression
+        auto returns_id = id_expression();
+        if (returns_id) {
+            n->returns = std::move(returns_id);
+            return n;
+        }
+        //  b) parameter-declaration-list
+        auto returns_list = parameter_declaration_list();
+        if (!returns_list) {
+            pos = start_pos;    // backtrack
+            return {};
+        }
+        n->returns = std::move(returns_list);
+        return n;
+    }
+
+
     //G declaration:
-    //G     identifier : parameter-declaration-list = statement
+    //G     identifier : function-type = statement
     //G     identifier : id-expression-opt = statement
     //G     identifier : id-expression
     //G
@@ -1551,7 +1634,7 @@ private:
         next();
 
         //  Next is an an optional type
-        if (auto t = parameter_declaration_list()) {
+        if (auto t = function_type()) {
             n->type = std::move(t);
             assert (n->type.index() == declaration_node::function);
         }
@@ -1749,6 +1832,12 @@ public:
     {
         o << pre(indent) << "selection-statement\n";
         o << pre(indent+1) << "is_constexpr: " << as<std::string>(n.is_constexpr) << "\n";
+    }
+
+    auto start(function_type_node const& n, int indent) -> void
+    {
+        o << pre(indent) << "function\n";
+        o << pre(indent+1) << "throws: " << as<std::string>(n.throws) << "\n";
     }
 
     auto start(declaration_node const& n, int indent) -> void
