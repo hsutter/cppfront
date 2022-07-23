@@ -55,14 +55,17 @@ class cppfront
 
     //  For lowering
     //    
-    bool            declarations_only  = true;  // print declarations only in first pass
-    bool            in_definite_init   = false;
-    bool            in_parameter_list  = false;
-    std::ofstream   out                = {};    // Cpp1 syntax output file
-    int             next_comment       = 0;     // index of the next comment not yet printed
-    int             pad_for_this_line  = 0;
-    source_position last_pos           = {};
-    source_position preempt_pos        = {};
+    bool            declarations_only   = true;  // print declarations only in first pass
+    bool            in_definite_init    = false;
+    bool            in_parameter_list   = false;
+    bool            ignore_align        = false;
+    int             ignore_align_indent = 0;
+    lineno_t        ignore_align_lineno = 0;
+    std::ofstream   out                 = {};    // Cpp1 syntax output file
+    int             next_comment        = 0;     // index of the next comment not yet printed
+    int             pad_for_this_line   = 0;
+    source_position last_pos            = {};
+    source_position preempt_pos         = {};
 
 public:
     //-----------------------------------------------------------------------
@@ -146,18 +149,15 @@ public:
     //  Printing helpers so we can track number of chars emitted so far in current line
     //
     auto print_line_directive(source_position pos) -> void {
-        out << "\n#line " << pos.lineno << "\n";
+        if (last_pos.colno > 1) {
+            out << "\n";
+        }
+        out << "#line " << pos.lineno << "\n";
     }
 
     auto on_newline() -> void {
-        ++last_pos.lineno;
-        last_pos.colno = 1;
+        last_pos.colno    = 1;
         pad_for_this_line = 0;
-    }
-
-    auto print_newline() -> void {
-        out << "\n";
-        on_newline();
     }
 
     auto print(std::string_view s) -> void {
@@ -167,6 +167,7 @@ public:
         auto newline_pos  = 0;
         while ((newline_pos = s.find('\n', newline_pos)) != std::string::npos) {
             pad_for_this_line = 0;
+            ++last_pos.lineno;
             on_newline();
             last_newline = newline_pos;
             ++newline_pos;
@@ -182,6 +183,22 @@ public:
 
     auto preempt_position(source_position pos) -> void {
         preempt_pos = pos;
+    }
+
+    auto ignore_alignment(bool ignore, int indent = 0) -> void {
+        //  We'll only ever call this in local non-nested true/false pairs.
+        //  If we ever want to generalize (support nesting, or make it non-brittle),
+        //  wrap this in a push/pop stack.
+        if (ignore) {
+            ignore_align        = true;
+            ignore_align_indent = indent;
+            ignore_align_lineno = last_pos.lineno;      // push state
+        }
+        else {
+            ignore_align        = false;
+            ignore_align_indent = 0;
+            last_pos.lineno     = ignore_align_lineno;  // pop state
+        }
     }
 
     auto add_pad_in_this_line(colno_t extra) -> void {
@@ -203,10 +220,9 @@ public:
 
 
     //-----------------------------------------------------------------------
-    //  To position ourselves as close to the programmer's original location
-    //  as possible, and to catch up with displaying comments
-    //
-    auto align_to( source_position pos ) -> void
+    //  Catch up with comment/blank lines
+    // 
+    auto flush_comments( source_position pos ) -> void
     {
         auto& comments = tokens.get_comments(); // for readability
 
@@ -225,10 +241,10 @@ public:
                         ++last_pos.lineno;
                     }
                     else {
-                        print( pad( comments[next_comment].start.colno - last_pos.colno ) );
+                        print( pad( comments[next_comment].start.colno - last_pos.colno + 1 ) );
                         print( comments[next_comment].text );
                         assert( comments[next_comment].text.find("\n") == std::string::npos );  // we shouldn't have newlines
-                        print_newline();
+                        print("\n");
                     }
                 }
 
@@ -255,7 +271,7 @@ public:
 
             //  Otherwise, just print a blank line
             else {
-                print_newline();
+                print("\n");
  
                 //  Don't print multiple successive blank lines in the declarations pass, they're not needed
                 if (declarations_only) {
@@ -264,7 +280,33 @@ public:
                 }
             }
         }
-        
+
+        //  In case we emitted extra lines, such as for a multi return
+        //  value structs, re-sync with the original source
+        if (!ignore_align && ignore_align_lineno > 0) {
+            print_line_directive(pos.lineno);
+            ignore_align_lineno = 0;
+            //last_pos.lineno = pos.lineno;
+            //on_newline();
+        }
+    }
+
+
+    //-----------------------------------------------------------------------
+    //  To position ourselves as close to the programmer's original location
+    //  as possible, and to catch up with displaying comments
+    //
+    auto align_to( source_position pos ) -> void
+    {
+        //  This is used when we're generating new code sections,
+        //  such as return value structs
+        if (ignore_align) {
+            print( pad( ignore_align_indent - last_pos.colno ) );
+            return;
+        }
+
+        flush_comments( pos );
+
         //  Finally, align to the target column
         //
         pos.colno += pad_for_this_line;
@@ -656,7 +698,7 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(parameter_declaration_node const& n) -> void
+    auto emit(parameter_declaration_node const& n, bool returns = false) -> void
     {
         //  Can't declare functions as parameters -- only pointers to functions which are objects
         assert( n.declaration );
@@ -666,25 +708,32 @@ public:
         preempt_position( n.position() );
 
         //  First any prefix
-        switch (n.pass) {
-        using enum passing_style;
-        break;case out    : print ( "cpp2::out<" );
+        if (!returns)
+        {
+            switch (n.pass) {
+            using enum passing_style;
+            break;case out    : print ( "cpp2::out<" );
+            }
         }
 
         emit( id_expr );
 
         //  Then any suffix
-        switch (n.pass) {
-        using enum passing_style;
-        break;case in     : print ( " const&" );
-        break;case inout  : print ( "&" );
-        break;case out    : print ( ">" );
-        break;case move   : print ( "&&" );
-        break;case forward: assert(false); // TODO: support forward parameters
+        if (!returns)
+        {
+            switch (n.pass) {
+            using enum passing_style;
+            break;case in     : print ( " const&" );
+            break;case inout  : print ( "&" );
+            break;case out    : print ( ">" );
+            break;case move   : print ( "&&" );
+            break;case forward: print ( "&&" ); assert(false); // TODO: support forward parameters
+            }
+
+            preempt_position( n.position() );
         }
 
         print( " " );
-        preempt_position( n.position() );
         emit( *n.declaration->identifier );
 
         // TODO: initializers
@@ -710,25 +759,38 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(parameter_declaration_list_node const& n) -> void
+    auto emit(parameter_declaration_list_node const& n, bool returns = false) -> void
     {
         in_parameter_list = true;
 
-        print( "(", n.pos_open_paren );
+        if (returns) {
+            print( "{\n" );
+        }
+        else {
+            print( "(", n.pos_open_paren );
+        }
 
         for (auto first = true; auto const& x : n.parameters) {
-            if (!first) {
+            if (!first && !returns) {
                 print( ", " );
             }
             assert(x);
-            emit(*x);
+            emit(*x, returns);
             first = false;
+            if (returns) {
+                print( ";\n" );
+            }
         }
 
-        //  Position heuristic (aka hack): Avoid emitting extra whitespace before )
-        //  beyond column 10
-        auto col = std::min( n.pos_close_paren.colno, colno_t{10} );
-        print( ")", { n.pos_close_paren.lineno, col } );
+        if (returns) {
+            print( "};" );
+        }
+        else {
+            //  Position heuristic (aka hack): Avoid emitting extra whitespace before )
+            //  beyond column 10
+            auto col = std::min( n.pos_close_paren.colno, colno_t{10} );
+            print( ")", { n.pos_close_paren.lineno, col } );
+        }
 
         in_parameter_list = false;
     }
@@ -736,7 +798,7 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(function_type_node const& n) -> void
+    auto emit(function_type_node const& n, token const* ident) -> void
     {
         assert(n.parameters);
         emit(*n.parameters);
@@ -747,12 +809,25 @@ public:
 
         print( " -> " );
 
-        if (n.returns.index() == function_type_node::empty) {
+        if (!n.returns) {
             print( "void" );
         }
+        else if (std::ssize(n.returns->parameters) == 1) {
+            //  For a single return, get its declaration node from its type
+            auto& param   = *n.returns->parameters.front();
+            auto& decl    = *param.declaration;
+            assert (decl.type.index() == declaration_node::object);
+            auto& id_expr = *std::get<declaration_node::object>(decl.type);
+
+            emit( id_expr );
+
+            if (param.pass == passing_style::forward) {
+                print("&");
+            }
+        }
         else {
-            try_emit<function_type_node::id_expression >(n.returns);
-            try_emit<function_type_node::parameter_list>(n.returns);
+            print( *ident );
+            print( "__ret ");
         }
     }
 
@@ -761,6 +836,23 @@ public:
     //
     auto emit(declaration_node const& n) -> void
     {
+        //  If this is a function that has multiple return values,
+        //  first we need to emit the struct that contains the returns
+        if (n.is(declaration_node::function)) 
+        {
+            auto& func = std::get<declaration_node::function>(n.type);
+            assert(func);
+            if (func->returns && std::ssize(func->returns->parameters) >= 1) {
+                ignore_alignment( true, n.position().colno + 4 );
+                print( "struct ");
+                print( *n.identifier->identifier );
+                print( "__ret ");
+                emit(*func->returns, true);
+                print("\n");
+                ignore_alignment( false );
+            }
+        }
+
         //  Common to functions and objects
         print( "auto ", n.position() );
         print( *n.identifier->identifier );
@@ -769,11 +861,11 @@ public:
         if (n.is(declaration_node::function)) {
 
             //  Function declaration
-            emit( *std::get<declaration_node::function>(n.type) );
+            emit( *std::get<declaration_node::function>(n.type), n.identifier->identifier );
             if (declarations_only) {
                 print( ";" );
                 last_pos = n.decl_end;
-                print_newline();
+                print("\n");
                 return;
             }
 
@@ -787,8 +879,6 @@ public:
         //  Object with initializer
         else if (n.is(declaration_node::object)) {
 
-            //  We shouldn't get to any objects in the first declarations-only pass
-            assert (!declarations_only);
             auto& type = std::get<declaration_node::object>(n.type);
 
             //  If there's an initializer, emit it

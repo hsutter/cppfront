@@ -556,13 +556,7 @@ struct function_type_node
 {
     std::unique_ptr<parameter_declaration_list_node> parameters;
     bool throws = false;
-
-    enum active { empty=0, id_expression, parameter_list };
-    std::variant<
-        std::monostate,
-        std::unique_ptr<id_expression_node>,
-        std::unique_ptr<parameter_declaration_list_node>
-    > returns;
+    std::unique_ptr<parameter_declaration_list_node> returns;
 
     auto position() const -> source_position
     {
@@ -575,8 +569,9 @@ struct function_type_node
         v.start(*this, depth);
         assert(parameters);
         parameters->visit(v, depth+1);
-        try_visit<id_expression >(returns, v, depth+1);
-        try_visit<parameter_list>(returns, v, depth+1);
+        if (returns) {
+            returns->visit(v, depth+1);
+        }
         v.end(*this, depth);
     }
 };
@@ -1458,22 +1453,37 @@ private:
     //G     override
     //G     final
     //G
-    auto parameter_declaration() -> std::unique_ptr<parameter_declaration_node> 
+    auto parameter_declaration(
+        bool returns = false
+    ) 
+        -> std::unique_ptr<parameter_declaration_node> 
     {
         auto n = std::make_unique<parameter_declaration_node>();
-        n->pass = passing_style::in;    // should be redundant with default
+        n->pass = returns ? passing_style::move : passing_style::in;
         n->pos  = curr().position();
 
         if (curr().type() == lexeme::Identifier) { 
             if (curr() == "in") {
-                // defaulted above
+                if (returns) {
+                    error("a return value cannot be 'in'");
+                    return {};
+                }
+                n->pass = passing_style::in;
                 next();
             }
             else if (curr() == "inout") {
+                if (returns) {
+                    error("a return value cannot be 'inout'");
+                    return {};
+                }
                 n->pass = passing_style::inout;
                 next();
             }
             else if (curr() == "out") {
+                if (returns) {
+                    error("a return value cannot be 'out' (it is implicitly 'move'-out)");
+                    return {};
+                }
                 n->pass = passing_style::out;
                 next();
             }
@@ -1521,7 +1531,10 @@ private:
     //G     parameter-declaration
     //G     parameter-declaration-seq , parameter-declaration
     //G
-    auto parameter_declaration_list() -> std::unique_ptr<parameter_declaration_list_node> 
+    auto parameter_declaration_list(
+        bool returns = false
+    )
+        -> std::unique_ptr<parameter_declaration_list_node> 
     {
         if (curr().type() != lexeme::LeftParen) {
             return {};
@@ -1533,7 +1546,7 @@ private:
 
         auto param = std::make_unique<parameter_declaration_node>();
 
-        while (param = parameter_declaration()) {
+        while (param = parameter_declaration(returns)) {
             n->parameters.push_back( std::move(param) );
 
             if (curr().type() == lexeme::RightParen) { 
@@ -1560,7 +1573,6 @@ private:
 
     //G function-type:
     //G     parameter-declaration-list-opt throws-specifier-opt
-    //G     parameter-declaration-list-opt throws-specifier-opt -> id_expression
     //G     parameter-declaration-list-opt throws-specifier-opt -> parameter_declaration_list
     //G
     //G throws-specifier:
@@ -1592,14 +1604,8 @@ private:
         }
         next();
 
-        //  a) id-expression
-        auto returns_id = id_expression();
-        if (returns_id) {
-            n->returns = std::move(returns_id);
-            return n;
-        }
-        //  b) parameter-declaration-list
-        auto returns_list = parameter_declaration_list();
+        //  Returns
+        auto returns_list = parameter_declaration_list(true);
         if (!returns_list) {
             pos = start_pos;    // backtrack
             return {};
