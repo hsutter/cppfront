@@ -61,6 +61,7 @@ class cppfront
     bool            ignore_align        = false;
     int             ignore_align_indent = 0;
     lineno_t        ignore_align_lineno = 0;
+    std::string*    emit_string_target  = nullptr;
     std::ofstream   out                 = {};    // Cpp1 syntax output file
     int             next_comment        = 0;     // index of the next comment not yet printed
     int             pad_for_this_line   = 0;
@@ -148,6 +149,10 @@ public:
     //-----------------------------------------------------------------------
     //  Printing helpers so we can track number of chars emitted so far in current line
     //
+    auto emit_to_string( std::string* target = nullptr ) -> void {
+        emit_string_target = target;
+    }
+
     auto print_line_directive(source_position pos) -> void {
         if (last_pos.colno > 1) {
             out << "\n";
@@ -161,6 +166,12 @@ public:
     }
 
     auto print(std::string_view s) -> void {
+        //  Option to emit everything to the specified string instead
+        if (emit_string_target) {
+            *emit_string_target += s;
+            return;
+        }
+
         out << s;
 
         auto last_newline = std::string::npos;
@@ -472,9 +483,27 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(compound_statement_node const& n) -> void
+    auto emit(
+        compound_statement_node const&  n, 
+        std::vector<std::string> const& function_ret_locals = {},
+        colno_t                         function_indent     = 1
+    ) 
+        -> void
     {
         print( "{", n.open_brace );
+
+        if (!function_ret_locals.empty()) {
+            ignore_alignment( true, function_indent + 4 );
+            auto pos = source_position{};
+            if (!n.statements.empty()) {
+                pos = n.statements.front()->position();
+            }
+            for (auto& loc : function_ret_locals) {
+                print("\n");
+                print(loc, pos);
+            }
+            ignore_alignment( false );
+        }
 
         for (auto const& x : n.statements) {
             assert(x);
@@ -675,22 +704,38 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(expression_statement_node const& n, bool can_have_semicolon) -> void
+    auto emit(expression_statement_node const& n, bool can_have_semicolon, bool function_body = false ) -> void
     {
         assert(n.expr);
+
+        if (function_body) {
+            print("{ return ");
+        }
+
         emit(*n.expr);
         if (n.has_semicolon && can_have_semicolon) {
             print(";");
+        }
+
+        if (function_body) {
+            print("}");
         }
     }
 
 
     //-----------------------------------------------------------------------
     //
-    auto emit(statement_node const& n, bool can_have_semicolon = true ) -> void
+    auto emit(
+        statement_node const&           n, 
+        bool                            can_have_semicolon  = true, 
+        bool                            function_body       = false,
+        std::vector<std::string> const& function_ret_locals = {},
+        colno_t                         function_indent     = 1
+    )
+        -> void
     {
-        try_emit<statement_node::expression >(n.statement, can_have_semicolon);
-        try_emit<statement_node::compound   >(n.statement);
+        try_emit<statement_node::expression >(n.statement, can_have_semicolon, function_body);
+        try_emit<statement_node::compound   >(n.statement, function_ret_locals, function_indent);
         try_emit<statement_node::selection  >(n.statement);
         try_emit<statement_node::declaration>(n.statement);
     }
@@ -736,15 +781,12 @@ public:
         print( " " );
         emit( *n.declaration->identifier );
 
-        // TODO: initializers
-        //if (n.declaration->initializer) {
-        //    print ( " = " );
-        //    in_parameter_init = true;
-        //    n.declaration->initializer->visit(*this, 0);    // recurse to statement_node
-        //    in_parameter_init = false;
-        //}
+        if (!returns && n.declaration->initializer) {
+            print ( " = " );
+            emit(*n.declaration->initializer);
+        }
 
-
+        //TODO - when we get to classes and inheritance
         //o << pre(indent+1);
         //using enum parameter_declaration_node::modifier;
         //switch (n.mod) {
@@ -809,19 +851,20 @@ public:
 
         print( " -> " );
 
-        if (!n.returns) {
+        if (!n.returns || std::ssize(n.returns->parameters) == 0) {
             print( "void" );
         }
         else if (std::ssize(n.returns->parameters) == 1) {
             //  For a single return, get its declaration node from its type
-            auto& param   = *n.returns->parameters.front();
-            auto& decl    = *param.declaration;
+            auto& param   = n.returns->parameters.front();
+            assert(param && param->declaration);
+            auto& decl    = *param->declaration;
             assert (decl.type.index() == declaration_node::object);
             auto& id_expr = *std::get<declaration_node::object>(decl.type);
 
             emit( id_expr );
 
-            if (param.pass == passing_style::forward) {
+            if (param->pass == passing_style::forward) {
                 print("&");
             }
         }
@@ -848,7 +891,6 @@ public:
                 print( *n.identifier->identifier );
                 print( "__ret ");
                 emit(*func->returns, true);
-                print("\n");
                 ignore_alignment( false );
             }
         }
@@ -873,7 +915,59 @@ public:
             assert( n.initializer );
             preempt_position(n.equal_sign);
             print( " " );
-            emit( *n.initializer );
+
+            auto function_return_locals = std::vector<std::string>{};
+            if (n.is(declaration_node::function)) 
+            {
+                auto& func = std::get<declaration_node::function>(n.type);
+                assert(func);
+                if (func->returns && std::ssize(func->returns->parameters) >= 1) {
+                    for (auto& param : func->returns->parameters) {
+                        assert(param && param->declaration);
+                        auto& decl    = *param->declaration;
+                        assert(decl.type.index() == declaration_node::object);
+                        auto& id_expr = *std::get<declaration_node::object>(decl.type);
+                        assert(id_expr.id.index() == id_expression_node::unqualified);
+                        auto& type_id = std::get<id_expression_node::unqualified>(id_expr.id);
+                        assert(type_id);
+
+                        auto loc = std::string{};
+                        if (!decl.initializer) {
+                            loc += ("cpp2::deferred_init<");
+                        }
+                        loc += ((std::string_view)*type_id->identifier);
+                        if (!decl.initializer) {
+                            loc += (">");
+                        }
+                        loc += " ";
+                        loc += ((std::string_view)*decl.identifier->identifier);
+                        if (decl.initializer)
+                        {
+                            std::string init;
+                            emit_to_string(&init);
+                            print ( " = " );
+                            if (decl.initializer->statement.index() != statement_node::expression) {
+                                errors.emplace_back(
+                                    decl.initializer->position(),
+                                    "return value initializer must be an expression"
+                                );
+                                return;
+                            }
+                            auto& expr = std::get<statement_node::expression>(decl.initializer->statement);
+                            assert(expr);
+
+                            emit(*decl.initializer);
+                            emit_to_string();
+
+                            loc += init;
+                        }
+                        loc += ";";
+                        function_return_locals.push_back(loc);
+                    }
+                }
+            }
+
+            emit( *n.initializer, true, true, function_return_locals, n.position().colno );
         }
 
         //  Object with initializer

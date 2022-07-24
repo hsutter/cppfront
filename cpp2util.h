@@ -14,6 +14,7 @@
 
 #include <cassert>
 #include <exception>
+#include <new>
 
 
 namespace cpp2 {
