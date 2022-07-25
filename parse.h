@@ -551,6 +551,7 @@ struct parameter_declaration_list_node
     }
 };
 
+struct function_returns_tag { };
 
 struct function_type_node
 {
@@ -570,7 +571,9 @@ struct function_type_node
         assert(parameters);
         parameters->visit(v, depth+1);
         if (returns) {
+            v.start(function_returns_tag{}, depth);
             returns->visit(v, depth+1);
+            v.end(function_returns_tag{}, depth);
         }
         v.end(*this, depth);
     }
@@ -1459,7 +1462,7 @@ private:
         -> std::unique_ptr<parameter_declaration_node> 
     {
         auto n = std::make_unique<parameter_declaration_node>();
-        n->pass = returns ? passing_style::move : passing_style::in;
+        n->pass = returns ? passing_style::out : passing_style::in;
         n->pos  = curr().position();
 
         if (curr().type() == lexeme::Identifier) { 
@@ -1480,14 +1483,14 @@ private:
                 next();
             }
             else if (curr() == "out") {
-                if (returns) {
-                    error("a return value cannot be 'out' (it is implicitly 'move'-out)");
-                    return {};
-                }
                 n->pass = passing_style::out;
                 next();
             }
             else if (curr() == "move") {
+                if (returns) {
+                    error("a return value cannot be 'move' (it is implicitly 'move'-out)");
+                    return {};
+                }
                 n->pass = passing_style::move;
                 next();
             }

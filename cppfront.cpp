@@ -130,7 +130,7 @@ public:
             if (!sema.apply_local_rules()) {
                 errors.emplace_back(
                     source_position{-1, -1}, 
-                    "error encountered while applying local initialization rules"
+                    "program violates initialization safety guarantee - see previous errors"
                 );
             }
         }
@@ -881,7 +881,7 @@ public:
     {
         //  If this is a function that has multiple return values,
         //  first we need to emit the struct that contains the returns
-        if (n.is(declaration_node::function)) 
+        if (declarations_only && n.is(declaration_node::function)) 
         {
             auto& func = std::get<declaration_node::function>(n.type);
             assert(func);

@@ -567,22 +567,27 @@ public:
     bool is_out_expression     = false;
     bool inside_parameter_list = false;
     bool inside_out_parameter  = false;
+    bool inside_returns_list   = false;
 
-    auto start(parameter_declaration_list_node&, int) -> void {
+    auto start(parameter_declaration_list_node const&, int) -> void {
         inside_parameter_list = true;
     }
 
-    auto end(parameter_declaration_list_node&, int) -> void {
+    auto end(parameter_declaration_list_node const&, int) -> void {
         inside_parameter_list = false;
     }
 
-    auto start(parameter_declaration_node& n, int) -> void {
-        if (n.pass == passing_style::out) {
+    auto start(parameter_declaration_node const& n, int) -> void {
+        if (
+            (!inside_returns_list && n.pass == passing_style::out) ||
+            ( inside_returns_list && n.pass == passing_style::out && !n.declaration->initializer)
+        )
+        {
             inside_out_parameter = true;
         }
     }
 
-    auto end(parameter_declaration_node&, int) -> void {
+    auto end(parameter_declaration_node const&, int) -> void {
         inside_out_parameter = false;
     }
 
@@ -610,6 +615,16 @@ public:
         //  Unlike debug_print, here we don't assert that we visited all the
         //  expressions in the list because visiting them all is not always needed
         current_expression_list_term = nullptr;
+    }
+
+    auto start(function_returns_tag const&, int) -> void
+    {
+        inside_returns_list = true;
+    }
+
+    auto end(function_returns_tag const&, int) -> void
+    {
+        inside_returns_list = false;
     }
 
     auto start(declaration_node const& n, int) -> void
