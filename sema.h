@@ -509,7 +509,7 @@ private:
                         errors.emplace_back( 
                             id->position(), 
                             "local variable " + id->to_string(true)
-                                + " is not initialized on all paths");
+                                    + " must be initialized on both branches or neither branch");
                         
                         assert (symbols[selection_stack.back().pos].sym.index() == selection);
                         auto const& sym = std::get<selection>(symbols[pos].sym);
@@ -552,7 +552,7 @@ private:
         errors.emplace_back( 
             id->position(), 
             id->to_string(true) 
-            + " - variable is not initialized on every path");
+            + " - variable must be initialized on every branch path");
         return false;
     }
 

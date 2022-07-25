@@ -477,15 +477,35 @@ struct selection_statement_node
     }
 };
 
+
+struct return_statement_node
+{
+    token const*                     identifier;
+
+    auto position() const -> source_position
+    {
+        assert(identifier);
+        return identifier->position();
+    }
+
+    auto visit(auto& v, int depth) -> void
+    {
+        v.start(*this, depth);
+        v.end(*this, depth);
+    }
+};
+
+
 struct declaration_node;
 struct statement_node
 {
-    enum active { expression=0, compound, selection, declaration };
+    enum active { expression=0, compound, selection, declaration, return_ };
     std::variant<
         std::unique_ptr<expression_statement_node>,
         std::unique_ptr<compound_statement_node>,
         std::unique_ptr<selection_statement_node>,
-        std::unique_ptr<declaration_node>
+        std::unique_ptr<declaration_node>,
+        std::unique_ptr<return_statement_node>
     > statement;
 
     auto position() const -> source_position;
@@ -497,6 +517,7 @@ struct statement_node
         try_visit<compound   >(statement, v, depth);
         try_visit<selection  >(statement, v, depth);
         try_visit<declaration>(statement, v, depth);
+        try_visit<return_    >(statement, v, depth);
         v.end(*this, depth);
     }
 };
@@ -571,6 +592,7 @@ struct function_type_node
         assert(parameters);
         parameters->visit(v, depth+1);
         if (returns) {
+            //  Inform the visitor that this is a returns list
             v.start(function_returns_tag{}, depth);
             returns->visit(v, depth+1);
             v.end(function_returns_tag{}, depth);
@@ -1313,6 +1335,7 @@ private:
     //G     if constexpr-opt expression compound-statement
     //G     if constexpr-opt expression compound-statement else compound-statement
     //GT     switch expression compound-statement
+    //G
     auto selection_statement() -> std::unique_ptr<selection_statement_node> 
     {
         if (curr().type() != lexeme::Keyword || curr() != "if") {
@@ -1366,11 +1389,36 @@ private:
     }
 
 
+    //G return-statement:
+    //G     return expression-opt ;
+    //G
+    auto return_statement() -> std::unique_ptr<return_statement_node> 
+    {
+        if (curr().type() != lexeme::Keyword || curr() != "return") {
+            return {};
+        }
+        auto n = std::make_unique<return_statement_node>();
+        n->identifier = &curr();
+        next();
+
+        //  Return with no expression
+        if (curr().type() != lexeme::Semicolon) {
+            error("missing ; after return");
+            next();
+            return {};
+        }
+
+        next();
+        return n;
+    }
+
+
     //G statement:
     //G     expression-statement
     //G     compound-statement
     //G     selection-statement
     //G     declaration-statement
+    //G     return-statement
     // 
     //GT     iteration-statement
     //GT     jump-statement
@@ -1383,6 +1431,12 @@ private:
         if (auto s = selection_statement()) {
             n->statement = std::move(s);
             assert (n->statement.index() == statement_node::selection);
+            return n;
+        }
+
+        else if (auto s = return_statement()) {
+            n->statement = std::move(s);
+            assert (n->statement.index() == statement_node::return_);
             return n;
         }
 
@@ -1843,10 +1897,20 @@ public:
         o << pre(indent+1) << "is_constexpr: " << as<std::string>(n.is_constexpr) << "\n";
     }
 
+    auto start(return_statement_node const& n, int indent) -> void
+    {
+        o << pre(indent) << "return-statement\n";
+    }
+
     auto start(function_type_node const& n, int indent) -> void
     {
         o << pre(indent) << "function\n";
         o << pre(indent+1) << "throws: " << as<std::string>(n.throws) << "\n";
+    }
+
+    auto start(function_returns_tag const& n, int indent) -> void
+    {
+        o << pre(indent) << "function returns\n";
     }
 
     auto start(declaration_node const& n, int indent) -> void

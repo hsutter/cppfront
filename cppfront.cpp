@@ -68,6 +68,8 @@ class cppfront
     source_position last_pos            = {};
     source_position preempt_pos         = {};
 
+    std::vector<parameter_declaration_list_node*> function_returns = {};
+
 public:
     //-----------------------------------------------------------------------
     //  Constructor
@@ -542,6 +544,35 @@ public:
 
     //-----------------------------------------------------------------------
     //
+    auto emit(return_statement_node const& n) -> void
+    {
+        assert(n.identifier);
+        emit(*n.identifier);
+
+        //std::vector<parameter_declaration_list_node*> function_returns = {};
+        assert (!function_returns.empty());
+        if (function_returns.back()) {
+            ignore_alignment( true );
+            print(" { ");
+            auto& parameters = function_returns.back()->parameters;
+            for (bool first = true; auto& param : parameters) {
+                if (!first) {
+                    print(", ");
+                }
+                first = false;
+                assert(param->declaration->identifier);
+                emit (*param->declaration->identifier);
+            }
+            print(" }");
+            ignore_alignment( false );
+        }
+
+        print(";");
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
     auto emit(primary_expression_node const& n) -> void
     {
         try_emit<primary_expression_node::identifier     >(n.expr);
@@ -738,6 +769,7 @@ public:
         try_emit<statement_node::compound   >(n.statement, function_ret_locals, function_indent);
         try_emit<statement_node::selection  >(n.statement);
         try_emit<statement_node::declaration>(n.statement);
+        try_emit<statement_node::return_    >(n.statement);
     }
 
 
@@ -870,7 +902,7 @@ public:
         }
         else {
             print( *ident );
-            print( "__ret ");
+            print( "__ret");
         }
     }
 
@@ -900,15 +932,25 @@ public:
         print( *n.identifier->identifier );
 
         //  Function
-        if (n.is(declaration_node::function)) {
+        if (n.is(declaration_node::function))
+        {
+            auto& func = std::get<declaration_node::function>(n.type);
+            assert(func);
 
             //  Function declaration
-            emit( *std::get<declaration_node::function>(n.type), n.identifier->identifier );
+            emit( *func, n.identifier->identifier );
             if (declarations_only) {
                 print( ";" );
                 last_pos = n.decl_end;
                 print("\n");
                 return;
+            }
+
+            if (func->returns && std::ssize(func->returns->parameters) >= 1) {
+                function_returns.push_back(func->returns.get());
+            }
+            else {
+                function_returns.push_back(nullptr);
             }
 
             //  Function body
@@ -917,57 +959,56 @@ public:
             print( " " );
 
             auto function_return_locals = std::vector<std::string>{};
-            if (n.is(declaration_node::function)) 
+            if (func->returns && std::ssize(func->returns->parameters) >= 1)
             {
-                auto& func = std::get<declaration_node::function>(n.type);
-                assert(func);
-                if (func->returns && std::ssize(func->returns->parameters) >= 1) {
-                    for (auto& param : func->returns->parameters) {
-                        assert(param && param->declaration);
-                        auto& decl    = *param->declaration;
-                        assert(decl.type.index() == declaration_node::object);
-                        auto& id_expr = *std::get<declaration_node::object>(decl.type);
-                        assert(id_expr.id.index() == id_expression_node::unqualified);
-                        auto& type_id = std::get<id_expression_node::unqualified>(id_expr.id);
-                        assert(type_id);
+                for (auto& param : func->returns->parameters)
+                {
+                    assert(param && param->declaration);
+                    auto& decl    = *param->declaration;
+                    assert(decl.type.index() == declaration_node::object);
+                    auto& id_expr = *std::get<declaration_node::object>(decl.type);
+                    assert(id_expr.id.index() == id_expression_node::unqualified);
+                    auto& type_id = std::get<id_expression_node::unqualified>(id_expr.id);
+                    assert(type_id);
 
-                        auto loc = std::string{};
-                        if (!decl.initializer) {
-                            loc += ("cpp2::deferred_init<");
-                        }
-                        loc += ((std::string_view)*type_id->identifier);
-                        if (!decl.initializer) {
-                            loc += (">");
-                        }
-                        loc += " ";
-                        loc += ((std::string_view)*decl.identifier->identifier);
-                        if (decl.initializer)
-                        {
-                            std::string init;
-                            emit_to_string(&init);
-                            print ( " = " );
-                            if (decl.initializer->statement.index() != statement_node::expression) {
-                                errors.emplace_back(
-                                    decl.initializer->position(),
-                                    "return value initializer must be an expression"
-                                );
-                                return;
-                            }
-                            auto& expr = std::get<statement_node::expression>(decl.initializer->statement);
-                            assert(expr);
-
-                            emit(*decl.initializer);
-                            emit_to_string();
-
-                            loc += init;
-                        }
-                        loc += ";";
-                        function_return_locals.push_back(loc);
+                    auto loc = std::string{};
+                    if (!decl.initializer) {
+                        loc += ("cpp2::deferred_init<");
                     }
+                    loc += ((std::string_view)*type_id->identifier);
+                    if (!decl.initializer) {
+                        loc += (">");
+                    }
+                    loc += " ";
+                    loc += ((std::string_view)*decl.identifier->identifier);
+                    if (decl.initializer)
+                    {
+                        std::string init;
+                        emit_to_string(&init);
+                        print ( " = " );
+                        if (decl.initializer->statement.index() != statement_node::expression) {
+                            errors.emplace_back(
+                                decl.initializer->position(),
+                                "return value initializer must be an expression"
+                            );
+                            return;
+                        }
+                        auto& expr = std::get<statement_node::expression>(decl.initializer->statement);
+                        assert(expr);
+
+                        emit(*decl.initializer);
+                        emit_to_string();
+
+                        loc += init;
+                    }
+                    loc += ";";
+                    function_return_locals.push_back(loc);
                 }
             }
 
             emit( *n.initializer, true, true, function_return_locals, n.position().colno );
+
+            function_returns.pop_back();
         }
 
         //  Object with initializer

@@ -51,13 +51,13 @@ public:
 template<typename T>
 class out {
     //  Not going to bother with std::variant here
-    bool has_t;
     union {
         T* t;
         deferred_init<T>* dt;
     };
+    int  uncaught_count   = std::uncaught_exceptions();
+    bool has_t;
     bool called_construct = false;
-    int  uncaught_count = std::uncaught_exceptions();
 
 public:
     out(T* t)                 noexcept : t{t},   has_t{true}  { }
