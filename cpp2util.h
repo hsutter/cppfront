@@ -14,10 +14,26 @@
 
 #include <cassert>
 #include <exception>
+#include <type_traits>
 #include <new>
 
 
 namespace cpp2 {
+
+//-----------------------------------------------------------------------
+// 
+//  in<T>       For "in" parameter
+// 
+//-----------------------------------------------------------------------
+//
+template<typename T>
+using in = 
+    std::conditional_t <
+        sizeof(T) < 2*sizeof(void*) && std::is_trivially_copy_constructible_v<T>,
+        T const,
+        T const&
+    >;
+
 
 //-----------------------------------------------------------------------
 // 
@@ -36,7 +52,7 @@ class deferred_init {
         T t;
     };
 
-    template<typename T>
+    template<typename U>
     friend class out;
 
 public:

@@ -782,17 +782,18 @@ public:
         assert( n.declaration->is(declaration_node::object) );
 
         auto const& id_expr = *std::get<declaration_node::object>(n.declaration->type);
-        preempt_position( n.position() );
 
         //  First any prefix
         if (!returns)
         {
             switch (n.pass) {
             using enum passing_style;
-            break;case out    : print ( "cpp2::out<" );
+            break;case in     : print ( "cpp2::in<",  n.position() );
+            break;case out    : print ( "cpp2::out<", n.position() );
             }
         }
 
+        preempt_position( n.position() );
         emit( id_expr );
 
         //  Then any suffix
@@ -800,7 +801,7 @@ public:
         {
             switch (n.pass) {
             using enum passing_style;
-            break;case in     : print ( " const&" );
+            break;case in     : print ( ">" );
             break;case inout  : print ( "&" );
             break;case out    : print ( ">" );
             break;case move   : print ( "&&" );
