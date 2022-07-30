@@ -445,6 +445,13 @@ public:
     //
     auto emit(unqualified_id_node const& n) -> void
     {
+        if (is_definite_last_use(n.identifier)) {
+            print( "std::move(", n.position() );
+            print( *n.identifier );
+            print( ")" );
+            return;
+        }
+
         print( *n.identifier, n.position() );
         in_definite_init = is_definite_initialization(n.identifier);
 
@@ -802,6 +809,7 @@ public:
             switch (n.pass) {
             using enum passing_style;
             break;case in     : print ( ">" );
+            break;case copy   : print ( " const" );
             break;case inout  : print ( "&" );
             break;case out    : print ( ">" );
             break;case move   : print ( "&&" );

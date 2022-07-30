@@ -23,9 +23,10 @@ namespace cpp2 {
 //
 struct declaration_sym {
     bool start = false;
-    declaration_node const* declaration = nullptr;
-    token const*            identifier  = nullptr;
-    statement_node const*   initializer = nullptr;
+    declaration_node const*           declaration = nullptr;
+    token const*                      identifier  = nullptr;
+    statement_node const*             initializer = nullptr;
+    parameter_declaration_node const* parameter = nullptr;
 
     auto position() const -> source_position
     {
@@ -134,6 +135,24 @@ auto is_definite_initialization(token const* t) -> bool
 }
 
 
+//  Keep a list of all token*'s found that are definite last uses
+//  for a local variable or copy parameter x, which we will rewrite
+//  to move from the variable.
+//
+std::vector<token const*> definite_last_uses;
+
+auto is_definite_last_use(token const* t) -> bool
+{
+    return
+        std::find(
+            definite_last_uses.begin(),
+            definite_last_uses.end(),
+            t
+            )
+        != definite_last_uses.end();
+}
+
+
 //-----------------------------------------------------------------------
 // 
 //  sema: Semantic analysis
@@ -150,7 +169,7 @@ public:
     std::vector<symbol> symbols;
     declaration_sym     partial;
 
-    std::vector<selection_statement_node const*> active_selections;
+    std::vector<selection_statement_node   const*> active_selections;
      
 public:
     //-----------------------------------------------------------------------
@@ -231,7 +250,7 @@ public:
                     o << sym.identifier->to_string(true);
                 }
 
-                if (sym.start && !sym.initializer) {
+                if (sym.start && !sym.parameter && !sym.initializer) {
                     o << " *** UNINITIALIZED";
                 }
             }
@@ -239,6 +258,11 @@ public:
             break;case identifier: {
                 auto const& sym = std::get<identifier>(s.sym);
                 assert (sym.identifier);
+                if (is_definite_last_use(sym.identifier)) {
+                    o << "*** " << sym.identifier->position().to_string() 
+                      << " DEFINITE LAST USE OF ";
+                }
+
                 if (is_definite_initialization(sym.identifier)) {
                     o << "*** " << sym.identifier->position().to_string() 
                       << " DEFINITE INITIALIZATION OF ";
@@ -285,13 +309,17 @@ public:
     {
         auto ret = true;
 
+        //-----------------------------------------------------------------------
         //  Helpers for readability
+
+        //  It's an uninitialized variable (incl. named return values) if it's
+        //  a variable with no initializer and that isn't a parameter
         //
         auto is_uninitialized_variable_decl = [&](symbol const& s) 
             -> declaration_sym const*
         {
             if (auto const* sym = std::get_if<declaration>(&s.sym)) {
-                if (sym->start && !sym->initializer) {
+                if (sym->start && !sym->initializer && !sym->parameter) {
                     assert (sym->declaration->is(object));
                     return sym;
                 }
@@ -299,16 +327,41 @@ public:
             return {};
         };
 
+        //  It's a local (incl. named return value or copy parameter
+        //
+        auto is_local_variable_or_copy_param = [&](symbol const& s) 
+            -> declaration_sym const*
+        {
+            if (auto const* sym = std::get_if<declaration>(&s.sym)) {
+                if (sym->start && sym->declaration->is(object) && 
+                    (!sym->parameter || sym->parameter->pass == passing_style::copy))
+                {
+                    return sym;
+                }
+            }
+            return {};
+        };
+
+        //-----------------------------------------------------------------------
         //  Function logic: For each entry in the table...
         //
         for (auto sympos = std::ssize(symbols) - 1; sympos >= 0; --sympos)
         {
-            //  If this is an uninitialized local variable
+            //  If this is an uninitialized local variable,
+            //  ensure it is definitely initialized and tag those initializations
             //
             if (auto decl = is_uninitialized_variable_decl(symbols[sympos])) {
                 assert (decl->identifier && !decl->initializer);
                 ret = ret && 
                     ensure_definitely_initialized(decl->identifier, sympos+1, symbols[sympos].depth);
+            }
+
+            //  If this is a local variable or `copy` parameter,
+            //  identify and tag its definite last uses to `std::move` from them
+            //
+            if (auto decl = is_local_variable_or_copy_param(symbols[sympos])) {
+                assert (decl->identifier);
+                find_definite_last_uses(decl->identifier, sympos);
             }
         }
 
@@ -318,6 +371,52 @@ public:
 private:
     //  Check that local variable *id is initialized before use on all paths
     //  starting at the given position and depth in the symbol/scope table
+    //
+    auto find_definite_last_uses(token const* id, int pos) -> void
+    {
+        //  Scan forward to the end of this scope
+        //
+        auto i = pos;
+        auto depth = symbols[pos].depth;
+        while (i+1 < std::ssize(symbols) && symbols[i+1].depth >= depth) {
+            ++i;
+        }
+
+        //  i is now at the end of id's scope, so start scanning backwards
+        //  until we find the first definite last use
+        for (; i > pos; --i)
+        {
+            if (symbols[i].sym.index() == identifier)
+            {
+                auto const& sym = std::get<identifier>(symbols[i].sym);
+                assert (sym.identifier);
+
+                //  If we find a use of this identifier
+                if (*sym.identifier == *id) {
+                    definite_last_uses.push_back( sym.identifier );
+                    break;
+
+                    
+                    
+                    //  TODO - look for more
+
+
+                }
+            }
+        }
+    }
+
+
+    //  Check that local variable *id is initialized before use on all paths
+    //  starting at the given position and depth in the symbol/scope table
+    // 
+    //  TODO: After writing the first version of this, I realized that it could be
+    //        simplified a lot by representing the non-nested base case the same as
+    //        the others instead of as a special case. It's tempting to rewrite this
+    //        to do that cleanup, but the code is working and fully localized, so
+    //        rewriting it wouldn't give any benefit, and I need to resist the urge
+    //        to be distracted by goldplating when I could be implementing another
+    //        new feature.
     //
     auto ensure_definitely_initialized(token const* id, int pos, int depth) -> bool
     {
@@ -566,8 +665,8 @@ public:
     expression_list_node::term const* current_expression_list_term = nullptr;
     bool is_out_expression     = false;
     bool inside_parameter_list = false;
-    bool inside_out_parameter  = false;
     bool inside_returns_list   = false;
+    parameter_declaration_node const* inside_out_parameter = {};
 
     auto start(parameter_declaration_list_node const&, int) -> void {
         inside_parameter_list = true;
@@ -583,12 +682,17 @@ public:
             ( inside_returns_list && n.pass == passing_style::out && !n.declaration->initializer)
         )
         {
-            inside_out_parameter = true;
+            inside_out_parameter = &n;
+        }
+
+        if (n.pass == passing_style::copy)
+        {
+            symbols.emplace_back( scope_depth, declaration_sym( true, n.declaration.get(), n.declaration->identifier->identifier, n.declaration->initializer.get(), &n));
         }
     }
 
     auto end(parameter_declaration_node const&, int) -> void {
-        inside_out_parameter = false;
+        inside_out_parameter = {};
     }
 
     auto start(expression_node const& n, int indent) -> void
@@ -633,14 +737,14 @@ public:
         //  partial one for which we haven't visited the identifier yet
         assert (!partial.declaration);
         if (!inside_parameter_list || inside_out_parameter) {
-            partial = { true, &n, nullptr, n.initializer.get() };
+            partial = { true, &n, nullptr, n.initializer.get(), inside_out_parameter };
         }
     }
 
     auto end(declaration_node const& n, int) -> void
     {
         if (!inside_parameter_list || inside_out_parameter) {
-            symbols.emplace_back( scope_depth, declaration_sym( false, &n, nullptr, nullptr ) );
+            symbols.emplace_back( scope_depth, declaration_sym( false, &n, nullptr, nullptr, inside_out_parameter ) );
             if (n.type.index() != object) {
                 --scope_depth;
             }
@@ -691,8 +795,11 @@ public:
         //  Otherwise it's just an identifier use (if it's outside the parameter list)
         else if (!inside_parameter_list)
         {
-            //  Put this into the table if it a use of an uninitialized object in scope
-            if (auto decl = get_declaration_of(t); decl && !decl->initializer)
+            //  Put this into the table if it's a use of an uninitialized object in scope
+            //  or it's a 'copy' parameter
+            if (auto decl = get_declaration_of(t);
+                decl && !decl->initializer
+                )
             {
                 symbols.emplace_back( scope_depth, identifier_sym( false, &t ) );
             }

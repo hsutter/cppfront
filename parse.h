@@ -199,10 +199,11 @@ struct expression_node
     }
 };
 
-enum class passing_style { in=0, inout, out, move, forward };
+enum class passing_style { in=0, copy, inout, out, move, forward };
 auto to_string_view(passing_style pass) -> std::string_view {
     switch (pass) {
     break;case passing_style::in     : return "in";
+    break;case passing_style::copy   : return "copy";
     break;case passing_style::inout  : return "inout";
     break;case passing_style::out    : return "out";
     break;case passing_style::move   : return "move";
@@ -1502,7 +1503,7 @@ private:
     //G     parameter-direction-opt declaration
     //G
     //G parameter-direction: one of
-    //G     in inout out move forward
+    //G     in copy inout out move forward
     //G
     //G this-specifier:
     //G     implicit
@@ -1526,6 +1527,14 @@ private:
                     return {};
                 }
                 n->pass = passing_style::in;
+                next();
+            }
+            else if (curr() == "copy") {
+                if (returns) {
+                    error("a return value cannot be 'copy'");
+                    return {};
+                }
+                n->pass = passing_style::copy;
                 next();
             }
             else if (curr() == "inout") {
@@ -1926,6 +1935,7 @@ public:
         using enum passing_style;
         switch (n.pass) {
         break;case in     : o << "in";
+        break;case copy   : o << "copy";
         break;case inout  : o << "inout";
         break;case out    : o << "out";
         break;case move   : o << "move";
