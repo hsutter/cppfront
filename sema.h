@@ -201,10 +201,9 @@ public:
         auto depth = i->depth;
 
         //  Then look backward to find the first declaration of
-        //  this name that is not deeper (in a nested cope)
-        for ( ; i != symbols.cbegin() && i->depth <= depth; --i ) {
-            depth = i->depth;
-            if (i->sym.index() == declaration) {
+        //  this name that is not deeper (in a nested scope)
+        for ( ; i != symbols.cbegin(); --i ) {
+            if (i->sym.index() == declaration && i->depth <= depth) {
                 auto const& decl = std::get<declaration>(i->sym);
                 if (decl.identifier && *decl.identifier == t) {
                     return &decl;
@@ -250,7 +249,7 @@ public:
                     o << sym.identifier->to_string(true);
                 }
 
-                if (sym.start && !sym.parameter && !sym.initializer) {
+                if (sym.start && !(sym.parameter && sym.parameter->pass != passing_style::out) && !sym.initializer) {
                     o << " *** UNINITIALIZED";
                 }
             }
@@ -319,7 +318,8 @@ public:
             -> declaration_sym const*
         {
             if (auto const* sym = std::get_if<declaration>(&s.sym)) {
-                if (sym->start && !sym->initializer && !sym->parameter) {
+                assert (sym);
+                if (sym->start && !sym->initializer && !(sym->parameter && sym->parameter->pass != passing_style::out)) {
                     assert (sym->declaration->is(object));
                     return sym;
                 }
@@ -369,23 +369,46 @@ public:
     }
 
 private:
-    //  Check that local variable *id is initialized before use on all paths
-    //  starting at the given position and depth in the symbol/scope table
+    //  Find the definite last uses for local variable *id starting at the
+    //  given position and depth in the symbol/scope table
     //
-    auto find_definite_last_uses(token const* id, int pos) -> void
+    auto find_definite_last_uses(token const* id, int pos) const -> void
     {
-        //  Scan forward to the end of this scope
-        //
         auto i = pos;
         auto depth = symbols[pos].depth;
-        while (i+1 < std::ssize(symbols) && symbols[i+1].depth >= depth) {
+
+        //  Maintain a stack of the depths of the most recently seen
+        //  selection statements, using the current depth-2 as a sentinel
+        auto selections = std::vector<int>{depth-2};
+
+        //  Scan forward to the end of this scope, keeping track of
+        //  the trailing nest of selection statements
+        while (i+1 < std::ssize(symbols) && symbols[i+1].depth >= depth)
+        {
+            assert (std::ssize(symbols) > 1);
+            if (symbols[i].sym.index() == symbol::selection) {
+                auto const& s = std::get<symbol::selection>(symbols[i].sym);
+                if (s.start) {
+                    selections.push_back(symbols[i].depth);
+                }
+                //else {
+                //    assert (symbols[i].depth-1 == selections.back());
+                //    selections.pop_back();
+                //}
+            }
             ++i;
         }
 
         //  i is now at the end of id's scope, so start scanning backwards
         //  until we find the first definite last use
-        for (; i > pos; --i)
+        for (auto found = false; i > pos; --i)
         {
+            //  Once we find something, don't continue back further
+            //  than the closest enclosing selection statement
+            if (found && symbols[i].depth <= selections.back()) {
+                break;
+            }
+
             if (symbols[i].sym.index() == identifier)
             {
                 auto const& sym = std::get<identifier>(symbols[i].sym);
@@ -394,13 +417,17 @@ private:
                 //  If we find a use of this identifier
                 if (*sym.identifier == *id) {
                     definite_last_uses.push_back( sym.identifier );
-                    break;
+                    found = true;
 
-                    
-                    
-                    //  TODO - look for more
-
-
+                    //  Pop any of the last branches that we're outside of
+                    while (symbols[i].depth <= selections.back()) {
+                        selections.pop_back();
+                        assert (!selections.empty());   // won't remove sentinel
+                    }
+                    //  Then skip over the earlier part of the current branch
+                    while (i > pos && symbols[i].depth > selections.back() + 1) {
+                        --i;
+                    }
                 }
             }
         }
@@ -411,14 +438,13 @@ private:
     //  starting at the given position and depth in the symbol/scope table
     // 
     //  TODO: After writing the first version of this, I realized that it could be
-    //        simplified a lot by representing the non-nested base case the same as
-    //        the others instead of as a special case. It's tempting to rewrite this
+    //        simplified a lot by using a sentinel value to represent the base case like
+    //        the others instead of as a special case. It's tempting to rewrite this now
     //        to do that cleanup, but the code is working and fully localized, so
-    //        rewriting it wouldn't give any benefit, and I need to resist the urge
-    //        to be distracted by goldplating when I could be implementing another
-    //        new feature.
+    //        rewriting it wouldn't give any benefit, and I need to resist the urge to
+    //        be distracted by goldplating when I could be implementing a new feature.
     //
-    auto ensure_definitely_initialized(token const* id, int pos, int depth) -> bool
+    auto ensure_definitely_initialized(token const* id, int pos, int depth) const -> bool
     {
         struct stack_entry{
             int pos;    // start of this selection statement
@@ -795,10 +821,10 @@ public:
         //  Otherwise it's just an identifier use (if it's outside the parameter list)
         else if (!inside_parameter_list)
         {
-            //  Put this into the table if it's a use of an uninitialized object in scope
+            //  Put this into the table if it's a use of an object in scope
             //  or it's a 'copy' parameter
             if (auto decl = get_declaration_of(t);
-                decl && !decl->initializer
+                decl
                 )
             {
                 symbols.emplace_back( scope_depth, identifier_sym( false, &t ) );

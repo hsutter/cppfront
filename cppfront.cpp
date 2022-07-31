@@ -456,7 +456,7 @@ public:
         in_definite_init = is_definite_initialization(n.identifier);
 
         if (!in_definite_init && !in_parameter_list) {
-            if (auto decl = sema.get_declaration_of(*n.identifier); decl && !decl->initializer) {
+            if (auto decl = sema.get_declaration_of(*n.identifier); decl && !decl->parameter && !decl->initializer) {
                 print( ".value()" );
             }
         }
