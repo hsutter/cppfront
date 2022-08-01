@@ -69,6 +69,7 @@ class cppfront
     source_position preempt_pos         = {};
 
     std::vector<parameter_declaration_list_node*> function_returns = {};
+    parameter_declaration_list_node single_anon; // hack for now to note single-anon-return type kind in this function_returns working list
 
 public:
     //-----------------------------------------------------------------------
@@ -554,11 +555,31 @@ public:
     auto emit(return_statement_node const& n) -> void
     {
         assert(n.identifier);
-        emit(*n.identifier);
+        emit(*n.identifier);    // print "return"
 
-        //std::vector<parameter_declaration_list_node*> function_returns = {};
-        assert (!function_returns.empty());
-        if (function_returns.back()) {
+        //  Return with expression == single anonymous return type
+        //
+        if (n.expression) {
+            emit(*n.expression);
+            if (function_returns.empty() || function_returns.back() != &single_anon) {
+                errors.emplace_back(
+                    n.position(),
+                    "return statement with expression must be in a function with a single anonymous return value"
+                );
+                return;
+            }
+        }
+
+        else if (!function_returns.empty() && function_returns.back() == &single_anon) {
+            errors.emplace_back(
+                n.position(),
+                "return statement must have an expression in a function with a single anonymous return value"
+            );
+        }
+
+        //  Return without expression == zero or named return values
+        //
+        else if (!function_returns.empty() && function_returns.back()) {
             ignore_alignment( true );
             print(" { ");
             auto& parameters = function_returns.back()->parameters;
@@ -892,23 +913,34 @@ public:
 
         print( " -> " );
 
-        if (!n.returns || std::ssize(n.returns->parameters) == 0) {
+        if (n.returns.index() == function_type_node::empty) {
             print( "void" );
         }
-        else if (std::ssize(n.returns->parameters) == 1) {
-            //  For a single return, get its declaration node from its type
-            auto& param   = n.returns->parameters.front();
-            assert(param && param->declaration);
-            auto& decl    = *param->declaration;
-            assert (decl.type.index() == declaration_node::object);
-            auto& id_expr = *std::get<declaration_node::object>(decl.type);
-
-            emit( id_expr );
-
-            if (param->pass == passing_style::forward) {
-                print("&");
-            }
+ 
+        else if (n.returns.index() == function_type_node::id) {
+            auto& r = std::get<function_type_node::id>(n.returns);
+            assert(r);
+            emit(*r);
         }
+
+        //else {
+        //    auto& r = std::get<function_type_node::list>(n.returns);
+        //    assert(r);
+        //    if (std::ssize(r->parameters) == 1) {
+        //        //  For a single return, get its declaration node from its type
+        //        auto& param   = r->parameters.front();
+        //        assert(param && param->declaration);
+        //        auto& decl    = *param->declaration;
+        //        assert (decl.type.index() == declaration_node::object);
+        //        auto& id_expr = *std::get<declaration_node::object>(decl.type);
+
+        //        emit( id_expr );
+
+        //        if (param->pass == passing_style::forward) {
+        //            print("&");
+        //        }
+        //    }
+        //}
         else {
             print( *ident );
             print( "__ret");
@@ -926,12 +958,16 @@ public:
         {
             auto& func = std::get<declaration_node::function>(n.type);
             assert(func);
-            if (func->returns && std::ssize(func->returns->parameters) >= 1) {
+
+            if (func->returns.index() == function_type_node::list) {
+                auto& r = std::get<function_type_node::list>(func->returns);
+                assert(r);
+                assert(std::ssize(r->parameters) > 0);
                 ignore_alignment( true, n.position().colno + 4 );
                 print( "struct ");
                 print( *n.identifier->identifier );
                 print( "__ret ");
-                emit(*func->returns, true);
+                emit(*r, true);
                 ignore_alignment( false );
             }
         }
@@ -955,11 +991,15 @@ public:
                 return;
             }
 
-            if (func->returns && std::ssize(func->returns->parameters) >= 1) {
-                function_returns.push_back(func->returns.get());
+            if (func->returns.index() == function_type_node::list) {
+                auto& r = std::get<function_type_node::list>(func->returns);
+                function_returns.push_back(r.get());
+            }
+            else if (func->returns.index() == function_type_node::id) {
+                function_returns.push_back(&single_anon);   // use special value as a note
             }
             else {
-                function_returns.push_back(nullptr);
+                function_returns.push_back(nullptr);        // no return type at all
             }
 
             //  Function body
@@ -968,9 +1008,10 @@ public:
             print( " " );
 
             auto function_return_locals = std::vector<std::string>{};
-            if (func->returns && std::ssize(func->returns->parameters) >= 1)
+            if (func->returns.index() == function_type_node::list)
             {
-                for (auto& param : func->returns->parameters)
+                auto& r = std::get<function_type_node::list>(func->returns);
+                for (auto& param : r->parameters)
                 {
                     assert(param && param->declaration);
                     auto& decl    = *param->declaration;
@@ -1022,6 +1063,10 @@ public:
 
         //  Object with initializer
         else if (n.is(declaration_node::object)) {
+
+            //  We're moving the type to the rhs, and the type could be quite long,
+            //  so don't bother trying to align to source colno for the rest of this line
+            add_pad_in_this_line(-100);
 
             auto& type = std::get<declaration_node::object>(n.type);
 
@@ -1143,7 +1188,7 @@ int main(int argc, char* argv[])
 {
     for (auto i = 1; i < argc; ++i) {
         cppfront c(argv[i]);
-        c.debug_print();
         c.lower_to_cpp1();
+        c.debug_print();
     }
 }

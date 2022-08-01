@@ -329,12 +329,12 @@ public:
 
         //  It's a local (incl. named return value or copy parameter
         //
-        auto is_local_variable_or_copy_param = [&](symbol const& s) 
+        auto is_copy_param = [&](symbol const& s) 
             -> declaration_sym const*
         {
             if (auto const* sym = std::get_if<declaration>(&s.sym)) {
                 if (sym->start && sym->declaration->is(object) && 
-                    (!sym->parameter || sym->parameter->pass == passing_style::copy))
+                    sym->parameter && sym->parameter->pass == passing_style::copy)
                 {
                     return sym;
                 }
@@ -356,10 +356,10 @@ public:
                     ensure_definitely_initialized(decl->identifier, sympos+1, symbols[sympos].depth);
             }
 
-            //  If this is a local variable or `copy` parameter,
-            //  identify and tag its definite last uses to `std::move` from them
+            //  If this is a `copy` parameter, identify and tag its definite last
+            //  uses to `std::move` from them
             //
-            if (auto decl = is_local_variable_or_copy_param(symbols[sympos])) {
+            if (auto decl = is_copy_param(symbols[sympos])) {
                 assert (decl->identifier);
                 find_definite_last_uses(decl->identifier, sympos);
             }

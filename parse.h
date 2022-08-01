@@ -482,6 +482,7 @@ struct selection_statement_node
 struct return_statement_node
 {
     token const*                     identifier;
+    std::unique_ptr<expression_node> expression;
 
     auto position() const -> source_position
     {
@@ -492,6 +493,9 @@ struct return_statement_node
     auto visit(auto& v, int depth) -> void
     {
         v.start(*this, depth);
+        if (expression) {
+            expression->visit(v, depth+1);
+        }
         v.end(*this, depth);
     }
 };
@@ -579,7 +583,13 @@ struct function_type_node
 {
     std::unique_ptr<parameter_declaration_list_node> parameters;
     bool throws = false;
-    std::unique_ptr<parameter_declaration_list_node> returns;
+
+    enum active { empty = 0, id, list };
+    std::variant<
+        std::monostate,
+        std::unique_ptr<id_expression_node>,
+        std::unique_ptr<parameter_declaration_list_node>
+    > returns;
 
     auto position() const -> source_position
     {
@@ -592,10 +602,18 @@ struct function_type_node
         v.start(*this, depth);
         assert(parameters);
         parameters->visit(v, depth+1);
-        if (returns) {
+
+        if (returns.index() == id) {
+            auto& r = std::get<id>(returns);
+            assert(r);
+            r->visit(v, depth+1);
+        }
+        else if (returns.index() == list) {
+            auto& r = std::get<list>(returns);
+            assert(r);
             //  Inform the visitor that this is a returns list
             v.start(function_returns_tag{}, depth);
-            returns->visit(v, depth+1);
+            r->visit(v, depth+1);
             v.end(function_returns_tag{}, depth);
         }
         v.end(*this, depth);
@@ -1402,7 +1420,17 @@ private:
         n->identifier = &curr();
         next();
 
-        //  Return with no expression
+        //  Optional return expression
+        if (curr().type() != lexeme::Semicolon) {
+            auto x = expression();
+            if (!x) {
+                error("invalid return expression");
+                return {};
+            }
+            n->expression = std::move(x);
+        }
+
+        //  Final semicolon
         if (curr().type() != lexeme::Semicolon) {
             error("missing ; after return");
             next();
@@ -1646,9 +1674,6 @@ private:
     //G
     auto function_type() -> std::unique_ptr<function_type_node> 
     {
-        //  Remember current position, because we need to look ahead
-        auto start_pos = pos;
-
         auto n = std::make_unique<function_type_node>();
 
         //  Parameters
@@ -1671,12 +1696,21 @@ private:
         next();
 
         //  Returns
-        auto returns_list = parameter_declaration_list(true);
-        if (!returns_list) {
-            pos = start_pos;    // backtrack
+        if (auto t = id_expression()) {
+            n->returns = std::move(t);
+        }
+        else if (auto returns_list = parameter_declaration_list(true)) {
+            if (std::ssize(returns_list->parameters) < 1) {
+                error("an explicit return value list cannot be empty");
+                return {};
+            }
+            n->returns = std::move(returns_list);
+        }
+        else {
+            error("missing function return after ->");
             return {};
         }
-        n->returns = std::move(returns_list);
+
         return n;
     }
 
@@ -1722,7 +1756,13 @@ private:
         //  Next is optionally = followed by an initializer
 
         //  If there is no =
-        if (curr().type() != lexeme::Assignment) {
+        if (curr().type() != lexeme::Assignment)
+        {
+            if (n->type.index() == declaration_node::function) {
+                error("missing = before function body");
+                return {};
+            }
+
             //  Then there may be a semicolon
             //  If there is a semicolon, eat it
             if (curr().type() == lexeme::Semicolon) {

@@ -36,12 +36,12 @@ struct source_line
     auto prefix() const -> std::string 
     {
         switch (cat) {
-        break;case category::empty:         return "  | ";
-        break;case category::preprocessor:  return "# | ";
-        break;case category::comment:       return "/ | ";
-        break;case category::import:        return "i | ";
-        break;case category::cpp1:          return "1 | ";
-        break;case category::cpp2:          return " 2| ";
+        break;case category::empty:         return "/*   */ ";
+        break;case category::preprocessor:  return "/* # */ ";
+        break;case category::comment:       return "/* / */ ";
+        break;case category::import:        return "/* i */ ";
+        break;case category::cpp1:          return "/* 1 */ ";
+        break;case category::cpp2:          return "/* 2 */ ";
         break;default: assert(!"illegal category"); abort();
         }
     }
