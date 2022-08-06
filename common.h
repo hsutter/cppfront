@@ -18,6 +18,7 @@
 #include <cassert>
 #include <iomanip>
 #include <compare>
+#include <algorithm>
 
 namespace cpp2 {
 
@@ -250,6 +251,8 @@ auto strip_path(std::string const& file) -> std::string
 
 class cmdline_processor
 {
+    bool help_requested = false;
+
     struct arg
     {
         int pos;
@@ -262,31 +265,70 @@ class cmdline_processor
     using callback = void (*)();
     struct flag
     {
-        std::string text;
+        std::string name;
+        std::string description;
         callback    handler;
+        std::string synonym;
 
-        flag(std::string_view t, callback h) : text{t}, handler{h} { }
+        flag(std::string_view n, std::string_view d, callback h, std::string_view s) 
+            : name{n}, description{d}, handler{h}, synonym{s}
+        { }
     };
     std::vector<flag> flags;
 
-    std::string banner;
-
     //  Define this in the main .cpp to avoid bringing <iostream> into the headers,
     //  so that we can't accidentally start depending on iostreams in the compiler body
-    static auto print(std::string_view) -> void;
+    static auto print(std::string_view, int width = 0) -> void;
 
 public:
-    auto add_flag(std::string_view text, callback handler) -> void {
-        flags.emplace_back( text, handler );
+    auto process_flags() -> void
+    {
+        print("cppfront 0.1.1 compiler\nCopyright (C) Herb Sutter\n");
+
+        constexpr auto processed = -1;
+        for (auto& arg : args) {
+            for (auto& flag : flags) {
+                if (arg.text == flag.name || 
+                    (!flag.synonym.empty() && arg.text == flag.synonym)
+                    )
+                {
+                    flag.handler();
+                    arg.pos = processed;
+                    break;
+                }
+            }
+            if (arg.pos != processed && arg.text.starts_with("-")) {
+                arg.pos = processed;
+                print("Unknown option: " + arg.text + " (try -help)\n");
+                help_requested = true;
+            }
+        }
+
+        std::erase_if( args, [=](auto& arg){ return arg.pos == processed; } );
     }
 
-    auto set_banner(std::string_view b) -> void {
-        banner = b;
+    auto print_help() -> void
+    {
+        std::sort(flags.begin(), flags.end(), [](auto& a, auto& b){ return a.name < b.name; });
+
+        help_requested = true;
+        print("\nUsage: cppfront [options] file ...\n\nOptions:\n");
+        for (auto& flag : flags) {
+            print("  ");
+            auto n = flag.name;
+            if (!flag.synonym.empty()) {
+                n += ", " + flag.synonym;
+            }
+            print(n, 15);
+            print(flag.description);
+            print("\n");
+        }
     }
 
-    auto print_banner() const -> void {
-        print(banner);
-    }
+    struct register_flag {
+        register_flag(std::string_view name, std::string_view description, callback handler, std::string_view synonym = {});
+    };
+    friend register_flag;
 
     auto set_args(int argc, char* argv[]) -> void {
         for (auto i = 1; i < argc; ++i) {
@@ -294,36 +336,31 @@ public:
         }
     }
 
-    auto process_flags() -> void {
-        constexpr auto processed = -1;
-        for (auto& arg : args) {
-            for (auto& flag : flags) {
-                if (arg.text == flag.text) {
-                    flag.handler();
-                    arg.pos = processed;
-                    break;
-                }
-            }
-        }
-
-        std::erase_if( args, [=](auto& arg){ return arg.pos == processed; } );
+    auto help_was_requested() -> bool {
+        return help_requested;
     }
 
-    auto get_remaining_args() -> std::vector<arg>& {
+    auto arguments() -> std::vector<arg>& {
         return args;
     }
 
-    struct register_flag {
-        register_flag(std::string_view text, callback handler);
-    };
-
 } cmdline;
 
-cmdline_processor::register_flag::register_flag(std::string_view text, callback handler) {
-    cmdline.add_flag( text, handler );
+cmdline_processor::register_flag::register_flag(std::string_view name, std::string_view description, callback handler, std::string_view synonym) {
+    cmdline.flags.emplace_back( name, description, handler, synonym );
 }
 
-
+static cmdline_processor::register_flag cmd_help   ( 
+    "-help",
+    "Print help",                
+    []{ cmdline.print_help(); },
+    "-?"
+);
+//static cmdline_processor::register_flag cmd_version( 
+//    "-version", 
+//    "Print version information", 
+//    []{ cmdline.print_version(); }
+//);
 
 }
 

@@ -15,8 +15,11 @@ namespace cpp2 {
 
 //  Defined out of line here just to avoid bringing <iostream> into the headers,
 //  so that we can't accidentally start depending on iostreams in the compiler body
-auto cmdline_processor::print(std::string_view s) -> void
+auto cmdline_processor::print(std::string_view s, int width) -> void
 {
+    if (width > 0) {
+        std::cout << std::setw(width) << std::left;
+    }
     std::cout << s;
 }
 
@@ -49,8 +52,11 @@ auto pad(int padding) -> std::string_view
 //-----------------------------------------------------------------------
 //
 static auto suppress_line_directives = false;
-static auto set_suppress_line_directives() -> void { suppress_line_directives = true; }
-static cmdline_processor::register_flag noline( "-no-line", set_suppress_line_directives );
+static cmdline_processor::register_flag cmd_noline( 
+    "-no-line", 
+    "Suppress #line directives in Cpp1 output", 
+    []{ suppress_line_directives = true; }
+);
 
 class positional_printer
 {
@@ -1492,20 +1498,17 @@ public:
 using namespace std;
 using namespace cpp2;
 
-int main(int argc, char* argv[]) 
+auto main(int argc, char* argv[]) -> int
 {
-    cmdline.set_banner("cppfront 0.1.1 compiler\nCopyright (C) Herb Sutter\n");
     cmdline.set_args(argc, argv);
     cmdline.process_flags();
 
-    cmdline.print_banner();
-
-    if (std::ssize(cmdline.get_remaining_args()) < 1) {
+    if (!cmdline.help_was_requested() && cmdline.arguments().empty()) {
         std::cout << "cppfront: error: no input files\n";
         return 0;
     }
 
-    for (auto& arg : cmdline.get_remaining_args()) {
+    for (auto& arg : cmdline.arguments()) {
         std::cout << arg.text << "\n";
         cppfront c(arg.text);
         c.lower_to_cpp1();
