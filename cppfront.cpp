@@ -483,7 +483,10 @@ class cppfront
     cpp2::tokens tokens;
     cpp2::parser parser;
     cpp2::sema   sema;
-    bool   source_loaded = true;
+    bool source_loaded = true;
+
+    bool last_postfix_expr_was_pointer = false;
+    bool bounds_safety_violation = false;
 
     //  For lowering
     //    
@@ -871,11 +874,42 @@ public:
     auto emit(postfix_expression_node const& n) -> void
     {
         assert(n.expr);
+        last_postfix_expr_was_pointer = false;
 
         //  Simple case: If there are no .ops, just emit the expression
         if (n.ops.empty()) {
             emit(*n.expr);
             return;
+        }
+
+        //  Check that this isn't pointer arithmentic
+        //      (initial partial implementation)
+        if (n.expr->expr.index() == primary_expression_node::id_expression)
+        {
+            auto& id = std::get<primary_expression_node::id_expression>(n.expr->expr);
+            assert(id);
+            if (id->id.index() == id_expression_node::unqualified)
+            {
+                auto& unqual = std::get<id_expression_node::unqualified>(id->id);
+                assert(unqual);
+                auto decl = sema.get_declaration_of(*unqual->identifier);
+                if (decl && decl->declaration && decl->declaration->pointer_declarator) {
+                    last_postfix_expr_was_pointer = true;
+                    if (*n.ops.front().op == "++" || *n.ops.front().op == "--") {
+                        errors.emplace_back(
+                            n.ops.front().op->position(),
+                            n.ops.front().op->to_string(true) + " - pointer arithmetic is illegal - use std::span or gsl::span instead"
+                        );
+                        bounds_safety_violation = true;
+                    }
+                    else if (*n.ops.front().op == "~") {
+                        errors.emplace_back(
+                            n.ops.front().op->position(),
+                            n.ops.front().op->to_string(true) + " - pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first"
+                        );
+                    }
+                }
+            }
         }
 
         //  Otherwise, we're going to have to potentially do some work to change
@@ -945,6 +979,18 @@ public:
     auto emit(binary_expression_node<Name,Term> const& n) -> void
     {
         assert(n.expr);
+
+        //  Check that this isn't pointer arithmentic
+        //      (initial partial implementation)
+        if (!n.terms.empty() && (*n.terms.front().op == "+" || *n.terms.front().op == "-")) {
+            if (last_postfix_expr_was_pointer) {
+                errors.emplace_back(
+                    n.terms.front().op->position(),
+                    n.terms.front().op->to_string(true) + " - pointer arithmetic is illegal - use std::span or gsl::span instead"
+                );
+                bounds_safety_violation = true;
+            }
+        }
 
         //  Handle is/as expressions
         //  For now, hack in just a single 'as'-cast
@@ -1375,6 +1421,9 @@ public:
         for (auto&& error : errors) {
             error.print(std::cerr, strip_path(sourcefile));
         }
+        if (bounds_safety_violation) {
+            std::cerr << "program violates bounds safety guarantee - see previous errors";
+        }
     }
 
     auto had_no_errors() -> bool
@@ -1438,20 +1487,23 @@ auto main(int argc, char* argv[]) -> int
     //  For each .cpp2 source file
     for (auto& arg : cmdline.arguments())
     {
-        std::cout << arg.text;
+        std::cout << arg.text << "...";
 
         //  Load + lex + parse + sema
         cppfront c(arg.text);
 
+        //  Generate Cpp1 (this may catch additional late errors)
+        c.lower_to_cpp1();
+
         //  If there were no errors, say so and generate Cpp1
         if (c.had_no_errors()) {
-            std::cout << " ... ok\n";
-            c.lower_to_cpp1();
+            std::cout << " ok\n";
         }
         //  Otherwise, print the errors
         else {
             std::cout << "\n";
             c.print_errors();
+            std::cout << "\n";
         }
 
         //  In any case, emit the debug information (during early development this is

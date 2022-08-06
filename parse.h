@@ -127,12 +127,7 @@ struct prefix_expression_node
 
 
 template<
-//#ifdef __clang__
-//        //  Odd, Clang doesn't support C++ NTTI in 2022
-//
-//#else
     String   Name,
-//#endif
     typename Term
 >
 struct binary_expression_node 

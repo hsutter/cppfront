@@ -309,7 +309,11 @@ public:
         //  Look for matches
         for (auto& arg : args) {
             for (auto& flag : flags) {
-                if (arg.text.starts_with(flag.name.substr(0, flag.unique_prefix))) {
+                if (
+                    arg.text.starts_with(flag.name.substr(0, flag.unique_prefix)) ||
+                    arg.text == flag.synonym
+                    )
+                {
                     flag.handler();
                     arg.pos = processed;
                     break;
@@ -367,6 +371,19 @@ public:
         return args;
     }
 
+    auto print_version() -> void {
+        print("All rights reserved\n");
+        print("\nSPDX-License-Identifier: CC-BY-NC-ND-4.0");
+        print("\n  No commercial use");
+        print("\n  No forks/derivatives");
+        print("\n");
+        print("\nNote: This is a hilariously incomplete personal project.");
+        print("\nIt's known to be incomplet and incorrekt, and it has lots of b");
+        print("\nad formAt ting. Absolutely no warranty - use at your own risk.");
+        print("\n");
+        help_requested = true;
+    }
+
 } cmdline;
 
 cmdline_processor::register_flag::register_flag(std::string_view name, std::string_view description, callback handler, std::string_view synonym) {
@@ -379,11 +396,12 @@ static cmdline_processor::register_flag cmd_help   (
     []{ cmdline.print_help(); },
     "-?"
 );
-//static cmdline_processor::register_flag cmd_version( 
-//    "-version", 
-//    "Print version information", 
-//    []{ cmdline.print_version(); }
-//);
+
+static cmdline_processor::register_flag cmd_version( 
+    "-version", 
+    "Print version information", 
+    []{ cmdline.print_version(); }
+);
 
 }
 
