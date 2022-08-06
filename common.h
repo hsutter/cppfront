@@ -266,6 +266,7 @@ class cmdline_processor
     struct flag
     {
         std::string name;
+        int         unique_prefix = 0;
         std::string description;
         callback    handler;
         std::string synonym;
@@ -286,12 +287,29 @@ public:
         print("cppfront 0.1.1 compiler\nCopyright (C) Herb Sutter\n");
 
         constexpr auto processed = -1;
-        for (auto& arg : args) {
-            for (auto& flag : flags) {
-                if (arg.text == flag.name || 
-                    (!flag.synonym.empty() && arg.text == flag.synonym)
+
+        //  Calculate the unique prefixes
+        for (auto flag1 = flags.begin(); flag1 != flags.end(); ++flag1) {
+            for (auto flag2 = flag1+1; flag2 != flags.end(); ++flag2) {
+                int i = 0;
+                while (
+                    i < std::ssize(flag1->name) && 
+                    i < std::ssize(flag2->name) &&
+                    flag1->name[i] == flag2->name[i]
                     )
                 {
+                    ++i;
+                }
+                //  Record that we found the unique prefix must be at least this long
+                flag1->unique_prefix = std::max( flag1->unique_prefix, i+1 );
+                flag2->unique_prefix = std::max( flag2->unique_prefix, i+1 );
+            }
+        }
+
+        //  Look for matches
+        for (auto& arg : args) {
+            for (auto& flag : flags) {
+                if (arg.text.starts_with(flag.name.substr(0, flag.unique_prefix))) {
                     flag.handler();
                     arg.pos = processed;
                     break;
@@ -315,7 +333,12 @@ public:
         print("\nUsage: cppfront [options] file ...\n\nOptions:\n");
         for (auto& flag : flags) {
             print("  ");
-            auto n = flag.name;
+            auto n = flag.name.substr(0, flag.unique_prefix);
+            if (flag.unique_prefix < flag.name.length()) {
+                n += "[";
+                n += flag.name.substr(flag.unique_prefix);
+                n += "]";
+            }
             if (!flag.synonym.empty()) {
                 n += ", " + flag.synonym;
             }

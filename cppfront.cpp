@@ -185,34 +185,18 @@ class positional_printer
                 //  For a line comment, start it at the right indentation and print it
                 //  with a newline end
                 if (comments[next_comment].kind == comment::comment_kind::line_comment) {
-                    //  Don't print comments in the declarations pass, to avoid duplication
-                    //if (declarations_only) {
-                    //    ++curr_pos.lineno;
-                    //}
-                    //else {
-                        print( pad( comments[next_comment].start.colno - curr_pos.colno + 1 ) );
-                        print( comments[next_comment].text );
-                        assert( comments[next_comment].text.find("\n") == std::string::npos );  // we shouldn't have newlines
-                        print("\n");
-                    //}
+                    print( pad( comments[next_comment].start.colno - curr_pos.colno + 1 ) );
+                    print( comments[next_comment].text );
+                    assert( comments[next_comment].text.find("\n") == std::string::npos );  // we shouldn't have newlines
+                    print("\n");
                 }
 
                 //  For a stream comment, pad out to its column (if we haven't passed it already)
                 //  and emit it there
                 else {
-                    //  Don't print comments in the declarations pass, to avoid duplication
-                    //if (declarations_only) {
-                    //    curr_pos.lineno += 
-                    //        std::count(
-                    //            comments[next_comment].text.begin(), 
-                    //            comments[next_comment].text.end(), 
-                    //            '\n');
-                    //}
-                    //else {
-                        print( pad( comments[next_comment].start.colno - curr_pos.colno ) );
-                        print( comments[next_comment].text );
-                        assert(curr_pos.lineno <= pos.lineno);  // we shouldn't have overshot
-                    //}
+                    print( pad( comments[next_comment].start.colno - curr_pos.colno ) );
+                    print( comments[next_comment].text );
+                    assert(curr_pos.lineno <= pos.lineno);  // we shouldn't have overshot
                 }
 
                 ++next_comment;
@@ -221,23 +205,8 @@ class positional_printer
             //  Otherwise, just print a blank line
             else {
                 print("\n");
- 
-                ////  Don't print multiple successive blank lines in the declarations pass, they're not needed
-                //if (declarations_only) {
-                //    curr_pos = {pos.lineno, 1};
-                //    break;
-                //}
             }
         }
-
-        ////  In case we emitted extra lines, such as for a multi return
-        ////  value structs, re-sync with the original source
-        //if (!ignore_align && ignore_align_lineno > 0) {
-        //    print_line_directive(pos.lineno);
-        //    ignore_align_lineno = 0;
-        //    //last_pos.lineno = pos.lineno;
-        //    //on_newline();
-        //}
     }
 
     //  Position ourselves as close to pos as possible,
@@ -581,9 +550,6 @@ public:
 
             //  Sema
             parser.visit( sema );
-
-            //debug_print();
-
             if (!sema.apply_local_rules()) {
                 errors.emplace_back(
                     source_position(-1, -1), 
@@ -1411,6 +1377,11 @@ public:
         }
     }
 
+    auto had_no_errors() -> bool
+    {
+        return errors.empty();
+    }
+
 
     //-----------------------------------------------------------------------
     //  debug_print
@@ -1447,6 +1418,13 @@ public:
 using namespace std;
 using namespace cpp2;
 
+static auto suppress_debug_output_files = false;
+static cmdline_processor::register_flag cmd_noline( 
+    "-no-debug", 
+    "Suppress debug output files (enabled by default during development)", 
+    []{ suppress_debug_output_files = true; }
+);
+
 auto main(int argc, char* argv[]) -> int
 {
     cmdline.set_args(argc, argv);
@@ -1457,11 +1435,29 @@ auto main(int argc, char* argv[]) -> int
         return 0;
     }
 
-    for (auto& arg : cmdline.arguments()) {
-        std::cout << arg.text << "\n";
+    //  For each .cpp2 source file
+    for (auto& arg : cmdline.arguments())
+    {
+        std::cout << arg.text;
+
+        //  Load + lex + parse + sema
         cppfront c(arg.text);
-        c.lower_to_cpp1();
-        c.print_errors();
-        c.debug_print();
+
+        //  If there were no errors, say so and generate Cpp1
+        if (c.had_no_errors()) {
+            std::cout << " ... ok\n";
+            c.lower_to_cpp1();
+        }
+        //  Otherwise, print the errors
+        else {
+            std::cout << "\n";
+            c.print_errors();
+        }
+
+        //  In any case, emit the debug information (during early development this is
+        //  on by default, later we'll flip the switch to turn it on instead of off)
+        if (!suppress_debug_output_files) {
+            c.debug_print();
+        }
     }
 }
