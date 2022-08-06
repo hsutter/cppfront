@@ -1783,6 +1783,8 @@ private:
     //G
     auto declaration(bool semicolon_required = true) -> std::unique_ptr<declaration_node> 
     {
+        auto deduced_type = false;
+
         if (done()) { return {}; }
 
         //  Remember current position, because we need to look ahead
@@ -1829,6 +1831,7 @@ private:
         else {
             n->type = std::make_unique<id_expression_node>();
             assert (n->type.index() == declaration_node::object);
+            deduced_type = true;
         }
 
         //  Next is optionally = followed by an initializer
@@ -1836,6 +1839,11 @@ private:
         //  If there is no =
         if (curr().type() != lexeme::Assignment)
         {
+            if (deduced_type) {
+                error("a deduced type must have an = initializer");
+                return {};
+            }
+
             if (n->type.index() == declaration_node::function) {
                 error("missing = before function body");
                 return {};

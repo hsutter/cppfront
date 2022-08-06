@@ -906,7 +906,6 @@ public:
     {
         assert(n.expr);
 
-        //-------------------------------------------------
         //  Simple case: If there are no .ops, just emit the expression
         if (n.ops.empty()) {
             emit(*n.expr);
@@ -915,91 +914,46 @@ public:
 
         //  Otherwise, we're going to have to potentially do some work to change
         //  some Cpp2 postfix operators to Cpp1 prefix operators, so let's set up...
-
-
-        //-------------------------------------------------
-        //  Working data
-
         auto print             = std::string{};
+        auto prefix            = std::string{};
         auto suffix            = std::string{};
         auto emitted_n         = false;
         auto last_was_prefixed = false;
-        auto all_prefix        = true;
 
-        auto stack             = std::vector<std::string>{};
+        for (auto i = n.ops.rbegin(); i != n.ops.rend(); ++i)
+        {
+            assert(i->op);
 
-        //-------------------------------------------------
-        //  Local helper functions
-
-        auto emit_as_prefixed = [&](std::string_view sv) -> void {
-            std::string s;
-            if (!all_prefix && !last_was_prefixed) { s += "("; }
-            s += sv;
-            stack.push_back(s);
-
-            if (!all_prefix && !last_was_prefixed) { suffix += ")"; }
-
-            last_was_prefixed = true;
-        };
-
-        auto flush_and_print = [&] () -> void {
-            for (auto i = std::rbegin(stack); i != std::rend(stack); ++i) {
-                print += *i;
-            }
-            stack = {};
-            if (!emitted_n) {
-                printer.emit_to_string(&print);
-                emit(*n.expr);
-                printer.emit_to_string();
-                emitted_n = true;
-            }
-            print += suffix;
-
-            printer.print_cpp2(print, n.position());
-
-            print  = "";
-            suffix = "";
-        };
-
-        auto op_switches_to_prefix = [&](auto const& op) -> bool {
-            return op == "--" || op == "++" || op == "*"  || op == "&"  || op == "~";
-        };
-
-        //-------------------------------------------------
-        //  Main general logic starts here for inverting postfix/prefix operators
-
-        for (auto const& x : n.ops) {
-            if (!op_switches_to_prefix(*x.op)) {
-                all_prefix = false;
-            }
-        }
-
-        for (auto const& x : n.ops) {
-            assert(x.op);
-
-            //  Handle the Cpp2 postfix operators to emit in Cpp1 as prefix
+            //  Handle the Cpp2 postfix operators that are prefix in Cpp1
             //
-            if (op_switches_to_prefix(*x.op)) {
-                emit_as_prefixed(*x.op);
+            if (*i->op == "--" || *i->op == "++" || *i->op == "*" || *i->op == "&" || *i->op == "~")
+            {
+                prefix += *i->op;
+                if (i+1 != n.ops.rend()) {
+                    prefix += "(";
+                    suffix = ")" + suffix;
+                }
             }
 
-            //  If we have a legit suffix operator, it's time to flush
+            //  Handle the suffix operators that remain suffix
             //
             else {
-                flush_and_print();
-
-                printer.print_cpp2( *x.op, x.op->position() );
-                if (x.expr_list) {
-                    emit(*x.expr_list);
+                suffix = i->op_close->to_string(true) + suffix;
+                if (i->expr_list) {
+                    auto print = std::string{};
+                    printer.emit_to_string(&print);
+                    emit(*i->expr_list);
+                    printer.emit_to_string();
+                    suffix = print + suffix;
                 }
-                assert(x.op_close);
-                printer.print_cpp2( *x.op_close, x.op_close->position() );
-
-                last_was_prefixed = false;
+                assert(i->op_close);
+                suffix = i->op->to_string(true) + suffix;
             }
         }
 
-        flush_and_print();
+        printer.print_cpp2(prefix, n.position());
+        emit(*n.expr);
+        printer.print_cpp2(suffix, n.position());
     }
 
 
@@ -1317,13 +1271,12 @@ public:
             }
         }
 
-        //  Common to functions and objects
-        printer.print_cpp2( "auto ", n.position() );
-        printer.print_cpp2( *n.identifier->identifier, n.identifier->position() );
-
         //  Function
         if (n.is(declaration_node::function))
         {
+            printer.print_cpp2( "auto ", n.position() );
+            printer.print_cpp2( *n.identifier->identifier, n.identifier->position() );
+
             auto& func = std::get<declaration_node::function>(n.type);
             assert(func);
 
@@ -1404,50 +1357,46 @@ public:
         }
 
         //  Object with initializer
-        else if (n.is(declaration_node::object)) {
-
-            //  We're moving the type to the rhs, and the type could be quite long,
-            //  so don't bother trying to align to source colno for the rest of this line
-            printer.add_pad_in_this_line(-100);
-
+        else if (n.is(declaration_node::object))
+        {
             auto& type = std::get<declaration_node::object>(n.type);
+
+            //  Emit "auto" for deduced types (of course)
+            if (type->id.index() == id_expression_node::empty) {
+                assert(n.initializer);
+                printer.print_cpp2("auto", n.position());
+            }
+            //  Otherwise, emit the type
+            else {
+                //  If there isn't an initializer, use cpp2::deferred_init<T>
+                if (!n.initializer) {
+                    printer.print_cpp2( "cpp2::deferred_init<", n.position() );
+                }
+                printer.preempt_position(n.position());
+                emit( *type );
+                if (n.pointer_declarator) {
+                    printer.print_cpp2("*", n.position());
+                }
+                //  one pointer is enough for now, pointer-to-function fun can be later
+                if (!n.initializer) {
+                    printer.print_cpp2( ">", n.position() );
+                }
+            }
+
+            printer.print_cpp2( " ", n.position());
+            printer.print_cpp2( *n.identifier->identifier, n.position() );
 
             //  If there's an initializer, emit it
             if (n.initializer)
             {
-                printer.print_cpp2( " = ", n.equal_sign );
-                if (type->id.index() != id_expression_node::empty) {
-                    if (n.pointer_declarator) {
-                        printer.print_cpp2("(", n.equal_sign);
-                    }
-                    emit( *type );
-                    if (n.pointer_declarator) {
-                        emit(*n.pointer_declarator);
-                        printer.print_cpp2(")", n.equal_sign);
-                    }
-                    printer.print_cpp2( " { ", n.equal_sign );
-                }
+                printer.add_pad_in_this_line(-100);
+                printer.print_cpp2( " = ", n.position() );
 
                 assert( n.initializer );
                 emit( *n.initializer, false );
 
-                if (type->id.index() != id_expression_node::empty) {
-                    printer.print_cpp2( " }", n.position() );
-                }
                 printer.print_cpp2( ";", n.position() );
             }
-
-            //  If not, use cpp2::deferred_init<T>, e.g.,
-            //    auto s = deferred_init<vector<int>>{};
-            else {
-                printer.print_cpp2( " = cpp2::deferred_init<", n.position() );
-                emit( *type );
-                if (n.pointer_declarator) {
-                    emit(*n.pointer_declarator);
-                }
-                printer.print_cpp2( ">{};", n.position() );
-            }
-
         }
     }
 
