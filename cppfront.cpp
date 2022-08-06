@@ -13,6 +13,14 @@
 
 namespace cpp2 {
 
+//  Defined out of line here just to avoid bringing <iostream> into the headers,
+//  so that we can't accidentally start depending on iostreams in the compiler body
+auto cmdline_processor::print(std::string_view s) -> void
+{
+    std::cout << s;
+}
+
+
 //-----------------------------------------------------------------------
 // 
 //  Stringingizing helpers
@@ -36,6 +44,455 @@ auto pad(int padding) -> std::string_view
 
 //-----------------------------------------------------------------------
 // 
+//  positional_printer: a Syntax 1 pretty printer
+// 
+//-----------------------------------------------------------------------
+//
+static auto suppress_line_directives = false;
+static auto set_suppress_line_directives() -> void { suppress_line_directives = true; }
+static cmdline_processor::register_flag noline( "-no-line", set_suppress_line_directives );
+
+class positional_printer
+{
+    //  Core information
+    std::ofstream               out       = {};     // Cpp1 syntax output file
+    std::vector<comment> const* pcomments = {};     // Cpp2 comments data
+
+    source_position curr_pos            = {};       // current (line,col) in output
+    int             next_comment        = 0;        // index of the next comment not yet printed
+    bool            last_was_cpp2       = false;
+
+    struct req_act_info {
+        colno_t requested;
+        colno_t offset;
+
+        req_act_info(colno_t r, colno_t o) : requested{r}, offset{o} { }
+    };
+    struct {
+        lineno_t line = {};
+        std::vector<req_act_info> requests = {};
+    } prev_line_info = {};
+
+    //  Position override information
+    source_position preempt_pos         = {};       // use this position instead of the next supplied one
+    int             pad_for_this_line   = 0;        // extra padding to add/subtract for this line only
+    bool            ignore_align        = false;
+    int             ignore_align_indent = 0;
+    lineno_t        ignore_align_lineno = 0;
+
+    //  Modal information
+    bool            declarations_only   = true;     // print declarations only in first pass
+    std::string*    emit_string_target  = nullptr;  // option to emit to string instead of out file
+
+
+    //-----------------------------------------------------------------------
+    //  Print text
+    //
+    auto print( std::string_view s ) -> void
+    {
+        //  If the caller is capturing this output to a string, emit to the
+        //  specified string instead and skip most positioning logic
+        if (emit_string_target) {
+            *emit_string_target += s;
+            return;
+        }
+
+        //  Otherwise, we'll actually print the string to the output file
+        //  and update our curr_pos position
+
+        //  Output the string
+        out << s;
+
+        //  Update curr_pos by finding how many line breaks s contained,
+        //  and where the last one was which determines our current colno
+        auto last_newline = std::string::npos;  // the last newline we found in the string
+        auto newline_pos  = 0;                  // the current newline we found in the string
+        while ((newline_pos = s.find('\n', newline_pos)) != std::string::npos)
+        {
+            //  For each line break we find, reset pad and inc current lineno
+            pad_for_this_line = 0;
+            ++curr_pos.lineno;
+            last_newline = newline_pos;
+            ++newline_pos;
+        }
+
+        //  Now also adjust the colno
+        if (last_newline != std::string::npos) {
+            //  If we found a newline, it's the distance from the last newline to EOL
+            curr_pos.colno = s.length() - last_newline;
+        }
+        else {
+            //  Else add the length of the string
+            curr_pos.colno += s.length();
+        }
+    }
+
+
+    //-----------------------------------------------------------------------
+    //  Internal helpers
+    
+    //  Start a new line if we're not in col 1 already
+    //
+    auto ensure_at_start_of_new_line() -> void
+    {
+        if (curr_pos.colno > 1) {
+            print( "\n" );
+            curr_pos.lineno++;
+            curr_pos.colno = 1;
+        }
+    }
+
+    //  Print a #line directive
+    //
+    auto print_line_directive( lineno_t line ) -> void
+    {
+        prev_line_info = { curr_pos.lineno, { } };
+        ensure_at_start_of_new_line();
+
+        //  Not using print() here because this is transparent to the curr_pos
+        if (!suppress_line_directives) {
+            out << "#line " << line << "\n";
+        }
+    }
+
+    //  Catch up with comment/blank lines
+    // 
+    auto flush_comments( source_position pos ) -> void
+    {
+        assert(pcomments);
+
+        //  For convenience
+        auto& comments = *pcomments;
+
+        //  Don't emit comments while in the first declarations-only pass
+        if (declarations_only) {
+            return;
+        }
+
+        //  Add unprinted comments and blank lines as needed to catch up vertically
+        //
+        while (curr_pos.lineno < pos.lineno)
+        {
+            //  If a comment goes on this line, print it
+            if (next_comment < std::ssize(comments) && comments[next_comment].start.lineno == curr_pos.lineno)
+            {
+                //  For a line comment, start it at the right indentation and print it
+                //  with a newline end
+                if (comments[next_comment].kind == comment::comment_kind::line_comment) {
+                    //  Don't print comments in the declarations pass, to avoid duplication
+                    //if (declarations_only) {
+                    //    ++curr_pos.lineno;
+                    //}
+                    //else {
+                        print( pad( comments[next_comment].start.colno - curr_pos.colno + 1 ) );
+                        print( comments[next_comment].text );
+                        assert( comments[next_comment].text.find("\n") == std::string::npos );  // we shouldn't have newlines
+                        print("\n");
+                    //}
+                }
+
+                //  For a stream comment, pad out to its column (if we haven't passed it already)
+                //  and emit it there
+                else {
+                    //  Don't print comments in the declarations pass, to avoid duplication
+                    //if (declarations_only) {
+                    //    curr_pos.lineno += 
+                    //        std::count(
+                    //            comments[next_comment].text.begin(), 
+                    //            comments[next_comment].text.end(), 
+                    //            '\n');
+                    //}
+                    //else {
+                        print( pad( comments[next_comment].start.colno - curr_pos.colno ) );
+                        print( comments[next_comment].text );
+                        assert(curr_pos.lineno <= pos.lineno);  // we shouldn't have overshot
+                    //}
+                }
+
+                ++next_comment;
+            }
+
+            //  Otherwise, just print a blank line
+            else {
+                print("\n");
+ 
+                ////  Don't print multiple successive blank lines in the declarations pass, they're not needed
+                //if (declarations_only) {
+                //    curr_pos = {pos.lineno, 1};
+                //    break;
+                //}
+            }
+        }
+
+        ////  In case we emitted extra lines, such as for a multi return
+        ////  value structs, re-sync with the original source
+        //if (!ignore_align && ignore_align_lineno > 0) {
+        //    print_line_directive(pos.lineno);
+        //    ignore_align_lineno = 0;
+        //    //last_pos.lineno = pos.lineno;
+        //    //on_newline();
+        //}
+    }
+
+    //  Position ourselves as close to pos as possible,
+    //  and catch up with displaying comments
+    //
+    auto align_to( source_position pos ) -> void
+    {
+        //  Ignoring this logic is used when we're generating new code sections,
+        //  such as return value structs
+        if (ignore_align) {
+            print( pad( ignore_align_indent - curr_pos.colno ) );
+            return;
+        }
+
+        //  Otherwise, we need to apply our usual alignment logic
+
+        //  Catch up with displaying comments
+        flush_comments( pos );
+
+        //  If we're not on the right line, move forward one line
+        if (curr_pos.lineno < pos.lineno) {
+            ensure_at_start_of_new_line();
+            assert (curr_pos.lineno <= pos.lineno);
+            curr_pos.lineno = pos.lineno;   // re-sync
+        }
+ 
+        //  Finally, align to the target column
+        pos.colno += pad_for_this_line;
+        print( pad( pos.colno - curr_pos.colno ) );
+    }
+
+
+public:
+    //-----------------------------------------------------------------------
+    //  Open
+    //
+    auto open(
+        std::string                 cpp1_filename,
+        std::vector<comment> const& comments
+    )
+        -> void
+    {
+        assert (!out.is_open() && !pcomments && "ICE: tried to call .open twice");
+        out.open(cpp1_filename);
+        pcomments = &comments;
+    }
+
+    auto is_open() -> bool {
+        if (out.is_open()) {
+            assert (pcomments && "ICE: if out.is_open, pcomments should also be set");
+        }
+        return out.is_open();
+    }
+
+
+    //-----------------------------------------------------------------------
+    //  Print extra text and don't track positions
+    //  Used for Cpp2 boundary comment and prelude
+    //
+    auto print_extra( std::string_view s ) -> void
+    {
+        assert (is_open() && "ICE: printer must be open before printing");
+        print( s );
+    }
+
+
+    //-----------------------------------------------------------------------
+    //  Print a Cpp1 line, which should be at lineno
+    //
+    auto print_cpp1( std::string_view s, lineno_t line ) -> void
+    {
+        assert (is_open() && "ICE: printer must be open before printing");
+
+        //  Keep track of whether the last thing we printed was Cpp2
+        last_was_cpp2 = false;
+
+        //  Always start a Cpp1 line on its own new line
+        ensure_at_start_of_new_line();
+
+        //  If we are out of sync with the current logical line number,
+        //  emit a #line directive to re-sync
+        if (curr_pos.lineno != line) {
+            print_line_directive( line );
+            curr_pos.lineno = line;
+        }
+
+        //  Print the line
+        assert (curr_pos.colno == 1);
+        print( s );
+        print( "\n" );
+    }
+
+
+    //-----------------------------------------------------------------------
+    //  Start a new Cpp2 section, which should start at lineno
+    //
+    auto start_cpp2(lineno_t line) -> void
+    {
+        assert (is_open() && "ICE: printer must be open before printing");
+
+        //  Because the blank/comment lines before a Cpp2 code section are part
+        //  of the Cpp2 section, and not printed in thedeclarations-only pass
+        if (!last_was_cpp2 && declarations_only) {
+            print ("\n");
+        }
+
+        //  Keep track of whether the last thing we printed was Cpp2
+        last_was_cpp2 = true;
+
+        //  Always start a Cpp2 section on its own new line
+        ensure_at_start_of_new_line();
+
+        //  If we are out of sync with the current logical line number,
+        //  emit a #line directive to re-sync
+        if (curr_pos.lineno != line) {
+            print_line_directive( line );
+            curr_pos.lineno = line;
+        }
+
+        assert (curr_pos.colno == 1);
+    }
+
+
+    //-----------------------------------------------------------------------
+    //  Print a Cpp2 item, which should be at pos
+    //
+    auto print_cpp2(std::string_view s, source_position pos) -> void
+    {
+        assert (is_open() && "ICE: printer must be open before printing");
+
+        //  Keep track of whether the last thing we printed was Cpp2
+        //  Note: We should have been switched to Cpp2 with a `start_cpp2` call
+        assert(last_was_cpp2 && "ICE: didn't call start_cpp2 to begin a Cpp2 section");
+        last_was_cpp2 = true;
+
+        //  Skip alignment work if we're emitting text to a string
+        if (!emit_string_target)
+        {
+            //  Remember where we are
+            auto last_pos = curr_pos;
+
+            //  We may want to adjust the position based on (1) a position preemption request
+            //  or else (2) to repeat a similar adjustment we discovered on the previous line
+            auto adjusted_pos = pos;
+
+            //  (1) See if there's a position preemption request, if so use it up
+            //      For now, the preempt position use cases are about overriding colno
+            //      and only on the same line. In the future, we might have more use cases.
+            if (preempt_pos != source_position{}) {
+                if (preempt_pos.lineno == pos.lineno) {
+                    adjusted_pos.colno = preempt_pos.colno;
+                }
+                preempt_pos = {};
+            }
+
+            //  (2) Otherwise, see if there's a previous line's offset to repeat
+            //      If we moved to a new line, then this is the first
+            //      non-comment non-whitespace text on the new line
+            else if (last_pos.lineno == pos.lineno-1) {
+                //  If the last line had a request for this colno, remember its actual offset
+                auto last_line_offset = -1;
+                for(auto i = 0; 
+                    i < std::ssize(prev_line_info.requests) && prev_line_info.requests[i].requested <= pos.colno;
+                    ++i
+                    )
+                {
+                    if (prev_line_info.requests[i].requested == pos.colno) {
+                        last_line_offset = prev_line_info.requests[i].offset;
+                        break;
+                    }
+                }
+
+                //  If there was one, apply the actual column number offset
+                if (last_line_offset > 0) {
+                    adjusted_pos.colno += last_line_offset;
+                }
+            }
+
+            //  If we're changing lines, start accumulating this new line's request/actual adjustment info
+            if (last_pos.lineno < adjusted_pos.lineno) {
+                prev_line_info = { curr_pos.lineno, { } };
+            }
+
+            align_to(adjusted_pos);
+
+            //  Remember the requested and actual offset columns for this item
+            prev_line_info.requests.push_back( req_act_info( pos.colno /*requested*/ , curr_pos.colno /*actual*/ - pos.colno ) );
+        }
+
+        print(s);
+    }
+
+
+    //-----------------------------------------------------------------------
+    //  Position override control functions
+    // 
+
+    //  Use this position instead of the next supplied one
+    //  Useful when Cpp1 syntax is emitted in a different order/verbosity
+    //  than Cpp2 such as with declarations
+    //
+    auto preempt_position(source_position pos) -> void
+    {
+        preempt_pos = pos;
+    }
+
+    //  Add (or, if negative, subtract) padding for the current line only
+    //
+    auto add_pad_in_this_line(colno_t extra) -> void
+    {
+        pad_for_this_line += extra;
+    }
+
+    //  Ignore position information, usually when emitting generated code
+    //  such as generated multi-return type structs
+    //
+    auto ignore_alignment(bool ignore, int indent = 0) -> void
+    {
+        //  We'll only ever call this in local non-nested true/false pairs.
+        //  If we ever want to generalize (support nesting, or make it non-brittle),
+        //  wrap this in a push/pop stack.
+        if (ignore) {
+            ignore_align        = true;
+            ignore_align_indent = indent;
+            ignore_align_lineno = curr_pos.lineno;      // push state
+        }
+        else {
+            ignore_align        = false;
+            ignore_align_indent = 0;
+            curr_pos.lineno     = ignore_align_lineno;  // pop state
+        }
+    }
+
+
+    //-----------------------------------------------------------------------
+    //  Modal state control functions
+    // 
+    
+    //  In the first pass we will print only declarations (the default)
+    //  For the second pass this function enables printing definitions
+    //
+    auto enable_definitions() -> void {
+        declarations_only = false;
+    }
+
+    auto doing_declarations_only() const -> bool {
+        return declarations_only;
+    }
+
+    //  Provide an option to store to a given string instead, which is
+    //  useful for capturing Cpp1-formatted output for generated code
+    //
+    auto emit_to_string( std::string* target = nullptr ) -> void {
+        emit_string_target = target;
+    }
+
+};
+
+
+//-----------------------------------------------------------------------
+// 
 //  cppfront: a compiler instance
 // 
 //-----------------------------------------------------------------------
@@ -47,26 +504,17 @@ class cppfront
 
     //  For building
     //
-    source source;
-    tokens tokens;
-    parser parser;
-    sema   sema;
+    cpp2::source source;
+    cpp2::tokens tokens;
+    cpp2::parser parser;
+    cpp2::sema   sema;
     bool   source_loaded = true;
 
     //  For lowering
     //    
-    bool            declarations_only   = true;  // print declarations only in first pass
-    bool            in_definite_init    = false;
-    bool            in_parameter_list   = false;
-    bool            ignore_align        = false;
-    int             ignore_align_indent = 0;
-    lineno_t        ignore_align_lineno = 0;
-    std::string*    emit_string_target  = nullptr;
-    std::ofstream   out                 = {};    // Cpp1 syntax output file
-    int             next_comment        = 0;     // index of the next comment not yet printed
-    int             pad_for_this_line   = 0;
-    source_position last_pos            = {};
-    source_position preempt_pos         = {};
+    positional_printer printer;
+    bool               in_definite_init    = false;
+    bool               in_parameter_list   = false;
 
     std::vector<parameter_declaration_list_node*> function_returns = {};
     parameter_declaration_list_node single_anon; // hack for now to note single-anon-return type kind in this function_returns working list
@@ -90,7 +538,7 @@ public:
         if (!sourcefile.ends_with(".cpp2"))
         {
             errors.emplace_back(
-                source_position{-1, -1}, 
+                source_position(-1, -1), 
                 "source filename must end with .cpp2: " + sourcefile
             );
         }
@@ -101,7 +549,7 @@ public:
         {
             if (errors.empty()) {
                 errors.emplace_back(
-                    source_position{-1, -1}, 
+                    source_position(-1, -1), 
                     "file not found: " + sourcefile
                 );
             }
@@ -119,7 +567,7 @@ public:
             for (auto const& [line, entry] : tokens.get_map()) {
                 if (!parser.parse(entry)) {
                     errors.emplace_back(
-                        source_position{line, 0}, 
+                        source_position(line, 0), 
                         "parse failed for section starting here"
                     );
                 }
@@ -132,199 +580,11 @@ public:
 
             if (!sema.apply_local_rules()) {
                 errors.emplace_back(
-                    source_position{-1, -1}, 
+                    source_position(-1, -1), 
                     "program violates initialization safety guarantee - see previous errors"
                 );
             }
         }
-    }
-
-
-    //-----------------------------------------------------------------------
-    //  In the first pass we will print only declarations (the default).
-    //  For the second pass this function enables printing definitions.
-    //
-    auto enable_definitions() -> void {
-        declarations_only = false;
-    }
-
-
-    //-----------------------------------------------------------------------
-    //  Printing helpers so we can track number of chars emitted so far in current line
-    //
-    auto emit_to_string( std::string* target = nullptr ) -> void {
-        emit_string_target = target;
-    }
-
-    auto print_line_directive(source_position pos) -> void {
-        if (last_pos.colno > 1) {
-            out << "\n";
-        }
-        out << "#line " << pos.lineno << "\n";
-    }
-
-    auto on_newline() -> void {
-        last_pos.colno    = 1;
-        pad_for_this_line = 0;
-    }
-
-    auto print(std::string_view s) -> void {
-        //  Option to emit everything to the specified string instead
-        if (emit_string_target) {
-            *emit_string_target += s;
-            return;
-        }
-
-        out << s;
-
-        auto last_newline = std::string::npos;
-        auto newline_pos  = 0;
-        while ((newline_pos = s.find('\n', newline_pos)) != std::string::npos) {
-            pad_for_this_line = 0;
-            ++last_pos.lineno;
-            on_newline();
-            last_newline = newline_pos;
-            ++newline_pos;
-        }
-
-        if (last_newline != std::string::npos) {
-            last_pos.colno = s.length() - last_newline;
-        }
-        else {
-            last_pos.colno += s.length();
-        }
-    }
-
-    auto preempt_position(source_position pos) -> void {
-        preempt_pos = pos;
-    }
-
-    auto ignore_alignment(bool ignore, int indent = 0) -> void {
-        //  We'll only ever call this in local non-nested true/false pairs.
-        //  If we ever want to generalize (support nesting, or make it non-brittle),
-        //  wrap this in a push/pop stack.
-        if (ignore) {
-            ignore_align        = true;
-            ignore_align_indent = indent;
-            ignore_align_lineno = last_pos.lineno;      // push state
-        }
-        else {
-            ignore_align        = false;
-            ignore_align_indent = 0;
-            last_pos.lineno     = ignore_align_lineno;  // pop state
-        }
-    }
-
-    auto add_pad_in_this_line(colno_t extra) -> void {
-        pad_for_this_line += extra;
-    }
-
-    auto print(std::string_view s, source_position pos) -> void {
-        //  For now, the preempt position use cases are about overriding colno
-        //  and only on the same line. In the future, we might have more use cases.
-        auto adjusted_pos = pos;
-        if (preempt_pos != source_position{} && preempt_pos.lineno == pos.lineno) {
-            adjusted_pos.colno = preempt_pos.colno;
-        }
-
-        align_to(adjusted_pos);
-        print(s);
-        preempt_pos = {};
-    }
-
-
-    //-----------------------------------------------------------------------
-    //  Catch up with comment/blank lines
-    // 
-    auto flush_comments( source_position pos ) -> void
-    {
-        auto& comments = tokens.get_comments(); // for readability
-
-        //  Add unprinted comments and blank lines as needed to catch up vertically
-        //
-        while (last_pos.lineno < pos.lineno)
-        {
-            //  If a comment goes on this line, print it
-            if (next_comment < std::ssize(comments) && comments[next_comment].start.lineno == last_pos.lineno)
-            {
-                //  For a line comment, start it at the right indentation and print it
-                //  with a newline end
-                if (comments[next_comment].kind == comment::comment_kind::line_comment) {
-                    //  Don't print comments in the declarations pass, to avoid duplication
-                    if (declarations_only) {
-                        ++last_pos.lineno;
-                    }
-                    else {
-                        print( pad( comments[next_comment].start.colno - last_pos.colno + 1 ) );
-                        print( comments[next_comment].text );
-                        assert( comments[next_comment].text.find("\n") == std::string::npos );  // we shouldn't have newlines
-                        print("\n");
-                    }
-                }
-
-                //  For a stream comment, pad out to its column (if we haven't passed it already)
-                //  and emit it there
-                else {
-                    //  Don't print comments in the declarations pass, to avoid duplication
-                    if (declarations_only) {
-                        last_pos.lineno += 
-                            std::count(
-                                comments[next_comment].text.begin(), 
-                                comments[next_comment].text.end(), 
-                                '\n');
-                    }
-                    else {
-                        print( pad( comments[next_comment].start.colno - last_pos.colno ) );
-                        print( comments[next_comment].text );
-                        assert(last_pos.lineno <= pos.lineno);  // we shouldn't have overshot
-                    }
-                }
-
-                ++next_comment;
-            }
-
-            //  Otherwise, just print a blank line
-            else {
-                print("\n");
- 
-                //  Don't print multiple successive blank lines in the declarations pass, they're not needed
-                if (declarations_only) {
-                    last_pos = {pos.lineno, 1};
-                    break;
-                }
-            }
-        }
-
-        //  In case we emitted extra lines, such as for a multi return
-        //  value structs, re-sync with the original source
-        if (!ignore_align && ignore_align_lineno > 0) {
-            print_line_directive(pos.lineno);
-            ignore_align_lineno = 0;
-            //last_pos.lineno = pos.lineno;
-            //on_newline();
-        }
-    }
-
-
-    //-----------------------------------------------------------------------
-    //  To position ourselves as close to the programmer's original location
-    //  as possible, and to catch up with displaying comments
-    //
-    auto align_to( source_position pos ) -> void
-    {
-        //  This is used when we're generating new code sections,
-        //  such as return value structs
-        if (ignore_align) {
-            print( pad( ignore_align_indent - last_pos.colno ) );
-            return;
-        }
-
-        flush_comments( pos );
-
-        //  Finally, align to the target column
-        //
-        pos.colno += pad_for_this_line;
-        print( pad( pos.colno - last_pos.colno ) );
     }
 
 
@@ -335,41 +595,66 @@ public:
     //
     auto lower_to_cpp1() -> void
     {
-        out.open( sourcefile.substr(0, std::ssize(sourcefile) - 1) );
+        //  Only lower to Cpp1 if we haven't already encountered errors
+        if (!errors.empty()) {
+            return;
+        }
+
+        //  Now we'll open the .cpp file - wait until 
+        printer.open(
+            sourcefile.substr(0, std::ssize(sourcefile) - 1),
+            tokens.get_comments()
+        );
+        printer.print_extra( "// -- Cpp2 support --\n" );
+        printer.print_extra( "#include \"cpp2util.h\"\n\n" );
+
+        auto map_iter = tokens.get_map().cbegin();
 
         //  First, echo the non-Cpp2 parts
         //
         auto cpp2_found    = false;
-        auto prev_line_cat = source_line::category::cpp1;
 
         for (lineno_t curr_lineno = 0; auto const& line : source.get_lines())
         {
             //  Skip dummy line we added to make 0-vs-1-based offsets readable
             if (curr_lineno != 0) {
 
-                //  If it's a non-Cpp2 line, emit it
+                //  If it's a Cpp1 line, emit it
                 if (line.cat != source_line::category::cpp2) {
-                    //  If the previous line was Cpp2, emit a #line directive
-                    if (prev_line_cat == source_line::category::cpp2) {
-                        out << "#line " << curr_lineno << "\n";
-                    }
-
-                    //  Emit the original line
-                    out << line.text << "\n";
+                    printer.print_cpp1( line.text, curr_lineno );
                 }
+
+                //  If it's a Cpp2 line...
                 else {
                     cpp2_found = true;
-                }
 
-                prev_line_cat = line.cat;
+                    //  We should be in a position to emit a set of Cpp2 declarations
+                    if (map_iter != tokens.get_map().cend() && map_iter->first /*line*/ <= curr_lineno)
+                    {
+                        //  We should be here only when we're at exactly the first line of a Cpp2 section
+                        assert (map_iter->first == curr_lineno);
+                        assert (!map_iter->second.empty());
+
+                        //  Get the parse tree for this section and emit each forward declaration
+                        auto decls = parser.get_parse_tree(map_iter->second);
+                        for (auto& decl : decls) {
+                            assert(decl);
+
+                            //  Treat each declaration as the start of a Cpp2 section (so we get #line)
+                            printer.start_cpp2( decl->position().lineno );
+                            emit(*decl);
+                        }
+                        ++map_iter;
+                    }
+                }
             }
             ++curr_lineno;
         }
 
         //  We can stop here if there's no Cpp2 code -- a file with no Cpp2
         //  should have perfect passthrough verifiable with diff, including
-        //  that we didn't misidentify anything as Cpp2 including in the
-        //  presence of nonstandard vendor extensions
+        //  that we didn't misidentify anything as Cpp2 (even in the
+        //  presence of nonstandard vendor extensions)
         //
         if (!cpp2_found) {
             return;
@@ -378,19 +663,31 @@ public:
         //  If there is Cpp2 code, we have more to do...
         //  Next, bring in the Cpp2 helpers
         //
-        out << "\n\n//=== Cpp2 ======================================================================"
-            << "\n\n#include \"cpp2util.h\"\n";
-
-        //  Next, emit the Cpp2 forward declarations
-        //
-        emit( parser.get_parse_tree() );  // starts at translation_unit_node
-
-        out << "\n//-------------------------------------------------------------------------------\n";
+        printer.print_extra( "\n//=== Cpp2 definitions ==========================================================\n\n" );
 
         //  Next, emit the Cpp2 definitions
         //
-        enable_definitions();
-        emit( parser.get_parse_tree() );  // starts at translation_unit_node
+        printer.enable_definitions();
+
+        for (auto& section : tokens.get_map())
+        {
+            assert (!section.second.empty());
+
+            //  Tell the printer that we're starting a Cpp2 section
+            //  This time, we use the actual first start line of the section which includes
+            //  the blank/comment lines at the beginning if any (whereas in the first pass
+            //  we used the line of the first Cpp2 token in the section to skip blanks/comments)
+            printer.start_cpp2( section.first /*lineno*/);
+
+            //  Get the parse tree for this section and emit each forward declaration
+            auto decls = parser.get_parse_tree(section.second);
+            for (auto& decl : decls) {
+                assert(decl);
+                emit(*decl);
+            }
+        }
+
+        //emit( parser.get_parse_tree() );  // starts at translation_unit_node
     }
 
 
@@ -422,19 +719,7 @@ public:
     //
     auto emit(token const& n) -> void
     {
-        if (n.type() == lexeme::StringLiteral) {
-            print("\"");
-            print(n, n.position());
-            print("\"");
-        }
-        else if (n.type() == lexeme::CharacterLiteral) {
-            print("\'");
-            print(n, n.position());
-            print("\'");
-        }
-        else {
-            print(n, n.position());
-        }
+        printer.print_cpp2(n, n.position());
 
         if (is_definite_initialization(&n)) {
             in_definite_init = true;
@@ -447,20 +732,20 @@ public:
     auto emit(unqualified_id_node const& n) -> void
     {
         if (is_definite_last_use(n.identifier)) {
-            print( "std::move(", n.position() );
-            print( *n.identifier );
-            print( ")" );
+            auto s = std::string("std::move(") + n.identifier->to_string(true) + ")";
+            printer.print_cpp2(s, n.position());
             return;
         }
 
-        print( *n.identifier, n.position() );
+        auto ident = n.identifier->to_string(true);
         in_definite_init = is_definite_initialization(n.identifier);
-
         if (!in_definite_init && !in_parameter_list) {
             if (auto decl = sema.get_declaration_of(*n.identifier); decl && !decl->parameter && !decl->initializer) {
-                print( ".value()" );
+                ident += ".value()";
             }
         }
+
+        printer.print_cpp2( ident, n.position() );
     }
 
 
@@ -468,17 +753,18 @@ public:
     //
     auto emit(qualified_id_node const& n) -> void
     {
+        auto ident = std::string{};
+
         for (bool first = true; auto const& id : n.ids)
         {
-            if (first) {
-                print( *id->identifier, id->identifier->position() );
-                first = false;
+            if (!first) {
+                ident += "::";
             }
-            else {
-                print( "::" );
-                print( *id->identifier );   // no position, we don't want to create gaps
-            }
+            first = false;
+            ident += id->identifier->to_string(true);
         }
+
+        printer.print_cpp2( ident, n.position() );
     }
 
 
@@ -500,19 +786,18 @@ public:
     ) 
         -> void
     {
-        print( "{", n.open_brace );
+        printer.print_cpp2( "{", n.open_brace );
 
         if (!function_ret_locals.empty()) {
-            ignore_alignment( true, function_indent + 4 );
+            printer.ignore_alignment( true, function_indent + 4 );
             auto pos = source_position{};
             if (!n.statements.empty()) {
                 pos = n.statements.front()->position();
             }
             for (auto& loc : function_ret_locals) {
-                print("\n");
-                print(loc, pos);
+                printer.print_cpp2("\n"+loc, pos);
             }
-            ignore_alignment( false );
+            printer.ignore_alignment( false );
         }
 
         for (auto const& x : n.statements) {
@@ -520,7 +805,7 @@ public:
             emit(*x);
         }
 
-        print( "}", n.close_brace );
+        printer.print_cpp2( "}", n.close_brace );
     }
 
 
@@ -531,20 +816,20 @@ public:
         assert(n.identifier);
         emit(*n.identifier);
 
-        print (" (");
-        add_pad_in_this_line(1);
+        printer.print_cpp2(" (", n.position());
+        printer.add_pad_in_this_line(1);
 
         assert(n.expression);
         emit(*n.expression);
 
-        print (") ");
-        add_pad_in_this_line(1);
+        printer.print_cpp2(") ", n.position());
+        printer.add_pad_in_this_line(1);
 
         assert(n.true_branch);
         emit(*n.true_branch);
 
         if (n.has_source_false_branch) {
-            print ("else ", n.else_pos);
+            printer.print_cpp2("else ", n.else_pos);
             emit(*n.false_branch);
         }
     }
@@ -555,7 +840,8 @@ public:
     auto emit(return_statement_node const& n) -> void
     {
         assert(n.identifier);
-        emit(*n.identifier);    // print "return"
+
+        auto stmt = n.identifier->to_string(true);    // "return"
 
         //  Return with expression == single anonymous return type
         //
@@ -580,22 +866,21 @@ public:
         //  Return without expression == zero or named return values
         //
         else if (!function_returns.empty() && function_returns.back()) {
-            ignore_alignment( true );
-            print(" { ");
+            stmt += " { ";
             auto& parameters = function_returns.back()->parameters;
             for (bool first = true; auto& param : parameters) {
                 if (!first) {
-                    print(", ");
+                    stmt += ", ";
                 }
                 first = false;
                 assert(param->declaration->identifier);
-                emit (*param->declaration->identifier);
+                stmt += param->declaration->identifier->identifier->to_string(true);
             }
-            print(" }");
-            ignore_alignment( false );
+            stmt += " }";
         }
 
-        print(";");
+        stmt += ";";
+        printer.print_cpp2(stmt, n.position());
     }
 
 
@@ -615,12 +900,30 @@ public:
     {
         assert(n.expr);
 
+        //-------------------------------------------------
+        //  Simple case: If there are no .ops, just emit the expression
+        if (n.ops.empty()) {
+            emit(*n.expr);
+            return;
+        }
+
+        //  Otherwise, we're going to have to potentially do some work to change
+        //  some Cpp2 postfix operators to Cpp1 prefix operators, so let's set up...
+
+
+        //-------------------------------------------------
+        //  Working data
+
+        auto print             = std::string{};
         auto suffix            = std::string{};
         auto emitted_n         = false;
         auto last_was_prefixed = false;
         auto all_prefix        = true;
 
-        std::vector<std::string> stack;
+        auto stack             = std::vector<std::string>{};
+
+        //-------------------------------------------------
+        //  Local helper functions
 
         auto emit_as_prefixed = [&](std::string_view sv) -> void {
             std::string s;
@@ -633,22 +936,31 @@ public:
             last_was_prefixed = true;
         };
 
-        auto flush = [&] () -> void {
+        auto flush_and_print = [&] () -> void {
             for (auto i = std::rbegin(stack); i != std::rend(stack); ++i) {
-                print(*i);
+                print += *i;
             }
             stack = {};
             if (!emitted_n) {
+                printer.emit_to_string(&print);
                 emit(*n.expr);
+                printer.emit_to_string();
                 emitted_n = true;
             }
-            print(suffix);
+            print += suffix;
+
+            printer.print_cpp2(print, n.position());
+
+            print  = "";
             suffix = "";
         };
 
         auto op_switches_to_prefix = [&](auto const& op) -> bool {
-            return op == "--" || op == "++" || op == "^"  || op == "&"  || op == "~";
+            return op == "--" || op == "++" || op == "*"  || op == "&"  || op == "~";
         };
+
+        //-------------------------------------------------
+        //  Main general logic starts here for inverting postfix/prefix operators
 
         for (auto const& x : n.ops) {
             if (!op_switches_to_prefix(*x.op)) {
@@ -656,38 +968,32 @@ public:
             }
         }
 
-        align_to(n.position());
-
         for (auto const& x : n.ops) {
             assert(x.op);
 
             //  Handle the Cpp2 postfix operators to emit in Cpp1 as prefix
             //
             if (op_switches_to_prefix(*x.op)) {
-                if (*x.op == "^") {
-                    emit_as_prefixed("*"); }
-                else {
-                    emit_as_prefixed(*x.op);
-                }
+                emit_as_prefixed(*x.op);
             }
 
             //  If we have a legit suffix operator, it's time to flush
             //
             else {
-                flush();
+                flush_and_print();
 
-                emit(*x.op);
+                printer.print_cpp2( *x.op, x.op->position() );
                 if (x.expr_list) {
                     emit(*x.expr_list);
-                    assert(x.op_close);
-                    emit(*x.op_close);
                 }
+                assert(x.op_close);
+                printer.print_cpp2( *x.op_close, x.op_close->position() );
 
                 last_was_prefixed = false;
             }
         }
 
-        flush();
+        flush_and_print();
     }
 
 
@@ -713,6 +1019,31 @@ public:
     auto emit(binary_expression_node<Name,Term> const& n) -> void
     {
         assert(n.expr);
+
+        //  Handle is/as expressions
+        //  For now, hack in just a single 'as'-cast
+        //  TODO: Generalize
+        if (!n.terms.empty() && *n.terms.front().op == "as") {
+            if (n.terms.size() > 1) {
+                errors.emplace_back(
+                    n.position(),
+                    "ALPHA TODO: this compiler is just starting to learn 'as' and only supports a single as-expression (no chaining with other is/as)"
+                );
+                return;
+            }
+
+            printer.print_cpp2("static_cast<", n.position());
+            printer.preempt_position(n.position());
+            emit(*n.terms.front().expr);
+            printer.print_cpp2(">(", n.position());
+            printer.preempt_position(n.position());
+            emit(*n.expr);
+            printer.print_cpp2(")", n.position());
+            return;
+        }
+
+        //  Handle non-is/as expressions  
+        //
         emit(*n.expr);
 
         for (auto const& x : n.terms) {
@@ -723,9 +1054,9 @@ public:
             //  assignment that's a definite initialization, change it to
             //  a .construct() call
             if (x.op->type() == lexeme::Assignment && in_definite_init) {
-                print( ".construct(" );
+                printer.print_cpp2( ".construct(", n.position() );
                 emit(*x.expr);
-                print( ")" );
+                printer.print_cpp2( ")", n.position() );
             }
             else {
                 emit(*x.op);
@@ -749,11 +1080,17 @@ public:
     //
     auto emit(expression_list_node const& n) -> void
     {
+        auto first = true;
         for (auto const& x : n.expressions) {
+            if (!first) {
+                printer.print_cpp2(", ", n.position());
+            }
+            first = false;
+
             if (x.pass != passing_style::in) {
                 assert(to_string_view(x.pass) == "out");
-                print("&");
-                add_pad_in_this_line(-3);
+                printer.print_cpp2("&", n.position());
+                printer.add_pad_in_this_line(-3);
             }
             assert(x.expr);
             emit(*x.expr);
@@ -768,16 +1105,16 @@ public:
         assert(n.expr);
 
         if (function_body) {
-            print("{ return ");
+            printer.print_cpp2("{ return ", n.position());
         }
 
         emit(*n.expr);
         if (n.has_semicolon && can_have_semicolon) {
-            print(";");
+            printer.print_cpp2(";", n.position());
         }
 
         if (function_body) {
-            print("}");
+            printer.print_cpp2("}", n.position());
         }
     }
 
@@ -815,36 +1152,36 @@ public:
         if (!returns)
         {
             switch (n.pass) {
-            using enum passing_style;
-            break;case in     : print ( "cpp2::in<",  n.position() );
-            break;case out    : print ( "cpp2::out<", n.position() );
+            break;case passing_style::in     : printer.print_cpp2( "cpp2::in<",  n.position() );
+            break;case passing_style::out    : printer.print_cpp2( "cpp2::out<", n.position() );
+            break;default: ;
             }
         }
 
-        preempt_position( n.position() );
+        printer.preempt_position( n.position() );
         emit( id_expr );
 
         //  Then any suffix
         if (!returns)
         {
             switch (n.pass) {
-            using enum passing_style;
-            break;case in     : print ( ">" );
-            break;case copy   : print ( " const" );
-            break;case inout  : print ( "&" );
-            break;case out    : print ( ">" );
-            break;case move   : print ( "&&" );
-            break;case forward: print ( "&&" ); assert(false); // TODO: support forward parameters
+            break;case passing_style::in     : printer.print_cpp2( ">",      n.position() );
+            break;case passing_style::copy   : printer.print_cpp2( " const", n.position() );
+            break;case passing_style::inout  : printer.print_cpp2( "&",      n.position() );
+            break;case passing_style::out    : printer.print_cpp2( ">",      n.position() );
+            break;case passing_style::move   : printer.print_cpp2( "&&",     n.position() );
+            break;case passing_style::forward: printer.print_cpp2( "&&",     n.position() ); assert(false); // TODO: support forward parameters
+            break;default: ;
             }
 
-            preempt_position( n.position() );
+            printer.preempt_position( n.position() );
         }
 
-        print( " " );
+        printer.print_cpp2( " ", n.declaration->identifier->position() );
         emit( *n.declaration->identifier );
 
         if (!returns && n.declaration->initializer) {
-            print ( " = " );
+            printer.print_cpp2( " = ", n.declaration->initializer->position() );
             emit(*n.declaration->initializer);
         }
 
@@ -868,32 +1205,32 @@ public:
         in_parameter_list = true;
 
         if (returns) {
-            print( "{\n" );
+            printer.print_cpp2( "{\n", n.position() );
         }
         else {
-            print( "(", n.pos_open_paren );
+            printer.print_cpp2( "(", n.pos_open_paren );
         }
 
         for (auto first = true; auto const& x : n.parameters) {
             if (!first && !returns) {
-                print( ", " );
+                printer.print_cpp2( ", ", x->position() );
             }
             assert(x);
             emit(*x, returns);
             first = false;
             if (returns) {
-                print( ";\n" );
+                printer.print_cpp2( ";\n", x->position() );
             }
         }
 
         if (returns) {
-            print( "};" );
+            printer.print_cpp2( "};", n.position() );
         }
         else {
             //  Position heuristic (aka hack): Avoid emitting extra whitespace before )
             //  beyond column 10
             auto col = std::min( n.pos_close_paren.colno, colno_t{10} );
-            print( ")", { n.pos_close_paren.lineno, col } );
+            printer.print_cpp2( ")", { n.pos_close_paren.lineno, col } );
         }
 
         in_parameter_list = false;
@@ -908,13 +1245,13 @@ public:
         emit(*n.parameters);
 
         if (!n.throws) {
-            print( " noexcept" );
+            printer.print_cpp2( " noexcept", n.position() );
         }
 
-        print( " -> " );
+        printer.print_cpp2( " -> ", n.position() );
 
         if (n.returns.index() == function_type_node::empty) {
-            print( "void" );
+            printer.print_cpp2( "void", n.position() );
         }
  
         else if (n.returns.index() == function_type_node::id) {
@@ -942,8 +1279,8 @@ public:
         //    }
         //}
         else {
-            print( *ident );
-            print( "__ret");
+            printer.print_cpp2( *ident, ident->position() );
+            printer.print_cpp2( "__ret", ident->position() );
         }
     }
 
@@ -954,7 +1291,7 @@ public:
     {
         //  If this is a function that has multiple return values,
         //  first we need to emit the struct that contains the returns
-        if (declarations_only && n.is(declaration_node::function)) 
+        if (printer.doing_declarations_only() && n.is(declaration_node::function)) 
         {
             auto& func = std::get<declaration_node::function>(n.type);
             assert(func);
@@ -963,18 +1300,20 @@ public:
                 auto& r = std::get<function_type_node::list>(func->returns);
                 assert(r);
                 assert(std::ssize(r->parameters) > 0);
-                ignore_alignment( true, n.position().colno + 4 );
-                print( "struct ");
-                print( *n.identifier->identifier );
-                print( "__ret ");
+                printer.ignore_alignment( true, n.position().colno );
+                printer.print_cpp2( "struct ", n.position() );
+                printer.ignore_alignment( true, n.position().colno + 4 );
+                printer.print_cpp2( *n.identifier->identifier, n.position() );
+                printer.print_cpp2( "__ret ", n.position() );
                 emit(*r, true);
-                ignore_alignment( false );
+                printer.print_cpp2( "\n", n.position() );
+                printer.ignore_alignment( false );
             }
         }
 
         //  Common to functions and objects
-        print( "auto ", n.position() );
-        print( *n.identifier->identifier );
+        printer.print_cpp2( "auto ", n.position() );
+        printer.print_cpp2( *n.identifier->identifier, n.identifier->position() );
 
         //  Function
         if (n.is(declaration_node::function))
@@ -984,10 +1323,8 @@ public:
 
             //  Function declaration
             emit( *func, n.identifier->identifier );
-            if (declarations_only) {
-                print( ";" );
-                last_pos = n.decl_end;
-                print("\n");
+            if (printer.doing_declarations_only()) {
+                printer.print_cpp2( ";\n", n.position() );
                 return;
             }
 
@@ -1004,8 +1341,7 @@ public:
 
             //  Function body
             assert( n.initializer );
-            preempt_position(n.equal_sign);
-            print( " " );
+            printer.print_cpp2( " ", n.equal_sign );
 
             auto function_return_locals = std::vector<std::string>{};
             if (func->returns.index() == function_type_node::list)
@@ -1034,8 +1370,8 @@ public:
                     if (decl.initializer)
                     {
                         std::string init;
-                        emit_to_string(&init);
-                        print ( " = " );
+                        printer.emit_to_string(&init);
+                        printer.print_cpp2 ( " = ", decl.initializer->position() );
                         if (decl.initializer->statement.index() != statement_node::expression) {
                             errors.emplace_back(
                                 decl.initializer->position(),
@@ -1047,7 +1383,7 @@ public:
                         assert(expr);
 
                         emit(*decl.initializer);
-                        emit_to_string();
+                        printer.emit_to_string();
 
                         loc += init;
                     }
@@ -1066,34 +1402,44 @@ public:
 
             //  We're moving the type to the rhs, and the type could be quite long,
             //  so don't bother trying to align to source colno for the rest of this line
-            add_pad_in_this_line(-100);
+            printer.add_pad_in_this_line(-100);
 
             auto& type = std::get<declaration_node::object>(n.type);
 
             //  If there's an initializer, emit it
             if (n.initializer)
             {
-                print( " = ", n.equal_sign );
+                printer.print_cpp2( " = ", n.equal_sign );
                 if (type->id.index() != id_expression_node::empty) {
+                    if (n.pointer_declarator) {
+                        printer.print_cpp2("(", n.equal_sign);
+                    }
                     emit( *type );
-                    print( " { ", n.equal_sign );
+                    if (n.pointer_declarator) {
+                        emit(*n.pointer_declarator);
+                        printer.print_cpp2(")", n.equal_sign);
+                    }
+                    printer.print_cpp2( " { ", n.equal_sign );
                 }
 
                 assert( n.initializer );
                 emit( *n.initializer, false );
 
-                if (!type->id.index() == id_expression_node::empty) {
-                    print( " }" );
+                if (type->id.index() != id_expression_node::empty) {
+                    printer.print_cpp2( " }", n.position() );
                 }
-                print( ";" );
+                printer.print_cpp2( ";", n.position() );
             }
 
             //  If not, use cpp2::deferred_init<T>, e.g.,
             //    auto s = deferred_init<vector<int>>{};
             else {
-                print( " = cpp2::deferred_init<" );
+                printer.print_cpp2( " = cpp2::deferred_init<", n.position() );
                 emit( *type );
-                print( ">{};" );
+                if (n.pointer_declarator) {
+                    emit(*n.pointer_declarator);
+                }
+                printer.print_cpp2( ">{};", n.position() );
             }
 
         }
@@ -1101,46 +1447,12 @@ public:
 
 
     //-----------------------------------------------------------------------
+    //  print_errors
     //
-    auto emit(translation_unit_node const& n) -> void
+    auto print_errors() -> void
     {
-        if (n.declarations.empty()) {
-            return;
-        }
-
-        //  Restart positioning info for this pass
-        //
-        auto curr_map_section = tokens.get_map().cbegin();
-        assert( curr_map_section != tokens.get_map().cend() );
-        assert( !curr_map_section->second.empty() );
-
-        next_comment = 0;
-        last_pos     = { curr_map_section->first, 0 };
-        print_line_directive( last_pos );
-
-        //  Emit each declaration
-        //
-        for (auto const& x : n.declarations)
-        {
-            //  If we're leaving the current Cpp2 code section, we need to
-            //  reanchor last_pos to be relative to the next section
-            //
-            if (curr_map_section != tokens.get_map().cend())
-            {
-                assert (std::ssize(curr_map_section->second) > 0);
-                if (last_pos.lineno > curr_map_section->second.back().position().lineno)
-                {
-                    if (++curr_map_section != tokens.get_map().cend()) {
-                        last_pos = { curr_map_section->first, 0 };
-                        print_line_directive( last_pos );
-                    }
-                }
-            }
-
-            //  And then emit this declaration
-            //
-            assert(x);
-            emit(*x);
+        for (auto&& error : errors) {
+            error.print(std::cerr, strip_path(sourcefile));
         }
     }
 
@@ -1150,10 +1462,6 @@ public:
     //
     auto debug_print() -> void
     {
-        for (auto&& error : errors) {
-            error.print(std::cerr, strip_path(sourcefile));
-        }
-
         //  Only create debug output files if we managed to load the source file.
         //
         if (source_loaded)
@@ -1186,9 +1494,22 @@ using namespace cpp2;
 
 int main(int argc, char* argv[]) 
 {
-    for (auto i = 1; i < argc; ++i) {
-        cppfront c(argv[i]);
+    cmdline.set_banner("cppfront 0.1.1 compiler\nCopyright (C) Herb Sutter\n");
+    cmdline.set_args(argc, argv);
+    cmdline.process_flags();
+
+    cmdline.print_banner();
+
+    if (std::ssize(cmdline.get_remaining_args()) < 1) {
+        std::cout << "cppfront: error: no input files\n";
+        return 0;
+    }
+
+    for (auto& arg : cmdline.get_remaining_args()) {
+        std::cout << arg.text << "\n";
+        cppfront c(arg.text);
         c.lower_to_cpp1();
+        c.print_errors();
         c.debug_print();
     }
 }

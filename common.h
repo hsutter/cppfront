@@ -17,6 +17,7 @@
 #include <cctype>
 #include <cassert>
 #include <iomanip>
+#include <compare>
 
 namespace cpp2 {
 
@@ -56,12 +57,8 @@ struct source_position
     lineno_t    lineno;     // one-based offset into program source
     colno_t     colno;      // one-based offset into line
 
-    source_position(
-        lineno_t l = 0,
-        colno_t  c = 0
-    )
-        : lineno{ l }
-        , colno{ c }
+    source_position(lineno_t l = 1, colno_t  c = 1 )
+        : lineno{ l }, colno{ c }
     {
     }
 
@@ -94,6 +91,10 @@ struct error
     source_position where;
     std::string     msg;
     bool            internal = false;
+
+    error( source_position w, std::string const& m, bool i = false )
+        : where{w}, msg{m}, internal{i}
+    { }
 
     auto print(auto& o, std::string const& file) const -> void 
     {
@@ -207,7 +208,7 @@ struct String
 
     auto operator<=>(String const&) const = default;
 
-    char value[N];
+    char value[N] = {};
 };
 
 
@@ -238,6 +239,90 @@ auto strip_path(std::string const& file) -> std::string
     }
     return {file, as<size_t>(i+1)};
 }
+
+
+//-----------------------------------------------------------------------
+// 
+//  Command line handling
+// 
+//-----------------------------------------------------------------------
+//
+
+class cmdline_processor
+{
+    struct arg
+    {
+        int pos;
+        std::string text;
+
+        arg(int p, char* t) : pos{p}, text{t} { }
+    };
+    std::vector<arg> args;
+
+    using callback = void (*)();
+    struct flag
+    {
+        std::string text;
+        callback    handler;
+
+        flag(std::string_view t, callback h) : text{t}, handler{h} { }
+    };
+    std::vector<flag> flags;
+
+    std::string banner;
+
+    //  Define this in the main .cpp to avoid bringing <iostream> into the headers,
+    //  so that we can't accidentally start depending on iostreams in the compiler body
+    static auto print(std::string_view) -> void;
+
+public:
+    auto add_flag(std::string_view text, callback handler) -> void {
+        flags.emplace_back( text, handler );
+    }
+
+    auto set_banner(std::string_view b) -> void {
+        banner = b;
+    }
+
+    auto print_banner() const -> void {
+        print(banner);
+    }
+
+    auto set_args(int argc, char* argv[]) -> void {
+        for (auto i = 1; i < argc; ++i) {
+            args.emplace_back( i, argv[i] );
+        }
+    }
+
+    auto process_flags() -> void {
+        constexpr auto processed = -1;
+        for (auto& arg : args) {
+            for (auto& flag : flags) {
+                if (arg.text == flag.text) {
+                    flag.handler();
+                    arg.pos = processed;
+                    break;
+                }
+            }
+        }
+
+        std::erase_if( args, [=](auto& arg){ return arg.pos == processed; } );
+    }
+
+    auto get_remaining_args() -> std::vector<arg>& {
+        return args;
+    }
+
+    struct register_flag {
+        register_flag(std::string_view text, callback handler);
+    };
+
+} cmdline;
+
+cmdline_processor::register_flag::register_flag(std::string_view text, callback handler) {
+    cmdline.add_flag( text, handler );
+}
+
 
 
 }

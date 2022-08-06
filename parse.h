@@ -28,29 +28,26 @@ namespace cpp2 {
 //G
 auto is_prefix_operator(lexeme l) -> bool
 { 
-    switch (l) {
-    break;case lexeme::Not:
-        return true;
-    }
-    return false;
+    return l == lexeme::Not;
 }
 
 
 //G postfix-operator:
-//G     one of  ++  --  ^  &  ~  $
+//G     one of  ++  --  *  &  ~  $
 //G
 auto is_postfix_operator(lexeme l)  -> bool
 { 
     switch (l) {
     break;case lexeme::PlusPlus:
           case lexeme::MinusMinus:
-          case lexeme::Caret:
+          case lexeme::Multiply:
           case lexeme::Ampersand:
           case lexeme::Tilde:
           case lexeme::Dollar:
         return true;
+    break;default:
+        return false;
     }
-    return false;
 }
 
 
@@ -68,12 +65,13 @@ auto is_assignment_operator(lexeme l) -> bool
           case lexeme::MinusEq:
           case lexeme::RightShiftEq:
           case lexeme::LeftShiftEq:
-          //case lexeme::AmpersandEq:
-          //case lexeme::CaretEq:
-          //case lexeme::PipeEq:
+          case lexeme::AmpersandEq:
+          case lexeme::CaretEq:
+          case lexeme::PipeEq:
         return true;
+    break;default:
+        return false;
     }
-    return false;
 }
 
 
@@ -130,7 +128,12 @@ struct prefix_expression_node
 
 
 template<
+//#ifdef __clang__
+//        //  Odd, Clang doesn't support C++ NTTI in 2022
+//
+//#else
     String   Name,
+//#endif
     typename Term
 >
 struct binary_expression_node 
@@ -172,10 +175,10 @@ using shift_expression_node          = binary_expression_node< "shift"          
 using compare_expression_node        = binary_expression_node< "compare"        , shift_expression_node          >;
 using relational_expression_node     = binary_expression_node< "relational"     , compare_expression_node        >;
 using equality_expression_node       = binary_expression_node< "equality"       , relational_expression_node     >;
-//using bit_and_expression_node        = binary_expression_node< "bit-and"        , equality_expression_node       >;
-//using bit_xor_expression_node        = binary_expression_node< "bit-xor"        , bit_and_expression_node        >;
-//using bit_or_expression_node         = binary_expression_node< "bit-or"         , bit_xor_expression_node        >;
-using logical_and_expression_node    = binary_expression_node< "logical-and"    , equality_expression_node       >;
+using bit_and_expression_node        = binary_expression_node< "bit-and"        , equality_expression_node       >;
+using bit_xor_expression_node        = binary_expression_node< "bit-xor"        , bit_and_expression_node        >;
+using bit_or_expression_node         = binary_expression_node< "bit-or"         , bit_xor_expression_node        >;
+using logical_and_expression_node    = binary_expression_node< "logical-and"    , bit_or_expression_node         >;
 using logical_or_expression_node     = binary_expression_node< "logical-or"     , logical_and_expression_node    >;
 using assignment_expression_node     = binary_expression_node< "assignment"     , logical_or_expression_node     >;
 
@@ -215,6 +218,8 @@ auto to_string_view(passing_style pass) -> std::string_view {
 
 struct expression_list_node
 {
+    source_position open_paren  = {};
+    source_position close_paren = {};
     struct term {
         passing_style                    pass = {}; // for `out`
         std::unique_ptr<expression_node> expr;
@@ -223,8 +228,13 @@ struct expression_list_node
 
     auto position() const -> source_position
     {
-        assert (std::ssize(expressions) > 0 && expressions.front().expr);
-        return expressions.front().expr->position();
+        //  Make sure this got set
+        assert (open_paren != source_position());
+        return open_paren;
+
+        //  TODO this could be removed now that we're tracking position via open_paren
+        //assert (std::ssize(expressions) > 0 && expressions.front().expr);
+        //return expressions.front().expr->position();
     }
 
     auto visit(auto& v, int depth) -> void
@@ -438,6 +448,8 @@ struct compound_statement_node
     source_position close_brace;
     std::vector<std::unique_ptr<statement_node>> statements;
 
+    compound_statement_node(source_position o = source_position{}) : open_brace{o} { }
+
     auto position() const -> source_position
     {
         return open_brace;
@@ -625,6 +637,8 @@ struct declaration_node
 {
     std::unique_ptr<unqualified_id_node> identifier;
 
+    token const* pointer_declarator = nullptr;
+
     enum active { function, object };
     std::variant<
         std::unique_ptr<function_type_node>,
@@ -651,10 +665,17 @@ struct declaration_node
     auto visit(auto& v, int depth) -> void
     {
         v.start(*this, depth);
+
         assert (identifier);
         identifier->visit(v, depth+1);
+
+        if (pointer_declarator) {
+            pointer_declarator->visit(v, depth+1);
+        }
+
         try_visit<function>(type, v, depth+1);
         try_visit<object  >(type, v, depth+1);
+
         if (initializer) {
             initializer->visit(v, depth+1);
         }
@@ -743,7 +764,7 @@ struct translation_unit_node
 //
 class parser 
 {
-    std::vector<error>& errors;
+    std::vector<cpp2::error>& errors;
 
     std::unique_ptr<translation_unit_node> parse_tree;
 
@@ -758,7 +779,7 @@ public:
     //  errors      error list
     //
     parser(
-        std::vector<error>& errors
+        std::vector<cpp2::error>& errors
     )
         : errors{ errors }
         , parse_tree{std::make_unique<translation_unit_node>()}
@@ -800,11 +821,41 @@ public:
 
     //-----------------------------------------------------------------------
     //  get_parse_tree
+    // 
+    //  Get the entire parse tree, from the root (translation_unit_node)
     //
     auto get_parse_tree() -> translation_unit_node&
     {
         assert (parse_tree);
         return *parse_tree;
+    }
+
+    //  Get a set of pointers to just the declarations in the given token map section
+    //
+    auto get_parse_tree(std::vector<token> const& tokens)
+        -> std::vector< declaration_node const* >
+    {
+        assert (parse_tree);
+        assert (!tokens.empty());
+        auto first_line = tokens.front().position().lineno;
+        auto last_line  = tokens.back().position().lineno;
+
+        auto ret = std::vector< declaration_node const* >{};
+        for (auto& decl : parse_tree->declarations)
+        {
+            assert(decl);
+
+            //  The grammar and the tokens are in lineno order, so we don't
+            //  need to look further once we pass the last lineno
+            if (decl->position().lineno > last_line) {
+                break;
+            }
+            if (decl->position().lineno >= first_line) {
+                ret.push_back( decl.get() );
+            }
+        }
+
+        return ret;
     }
 
 
@@ -903,20 +954,22 @@ private:
         }
 
         if (curr().type() == lexeme::LeftParen) {
+            auto open_paren = curr().position();
             next();
-            auto expr_list = expression_list();
+            auto expr_list = expression_list(open_paren);
             if (!expr_list) {
                 error("unexpected text - ( is not followed by an expression-list");
                 next();
                 return {};
             }
-            n->expr = std::move(expr_list);
             if (curr().type() != lexeme::RightParen) {
                 error("unexpected text - expression-list is not terminated by )");
                 next();
                 return {};
             }
+            expr_list->close_paren = curr().position();
             next();
+            n->expr = std::move(expr_list);
             return n;
         }
 
@@ -926,7 +979,7 @@ private:
 
     //G postfix-expression:
     //G     primary-expression
-    //G     postfix-expression postfix-operator
+    //G     postfix-expression postfix-operator     [Note: without whitespace before the operator]
     //G     postfix-expression [ expression-list ]
     //G     postfix-expression ( expression-list? )
     //GT     postfix-expression . id-expression
@@ -942,32 +995,40 @@ private:
             return {};
         }
 
-        while (is_postfix_operator(curr().type()) ||
-               curr().type() == lexeme::LeftBracket ||
-               curr().type() == lexeme::LeftParen ||
-               curr().type() == lexeme::Dot)
+        while (
+            //  Postfix operators must be lexically adjacent
+            (is_postfix_operator(curr().type())
+                && curr().position().lineno == peek(-1)->position().lineno
+                && curr().position().colno == peek(-1)->position().colno + peek(-1)->length()
+            ) ||
+            curr().type() == lexeme::LeftBracket ||
+            curr().type() == lexeme::LeftParen ||
+            curr().type() == lexeme::Dot
+            )
         {
-            auto term = postfix_expression_node::term(&curr());
+            auto term = postfix_expression_node::term{&curr()};
             next();
 
-            switch (term.op->type()) 
+            if (term.op->type() == lexeme::LeftBracket)
             {
-            break;case lexeme::LeftBracket:
-                term.expr_list = expression_list();
+                term.expr_list = expression_list(term.op->position());
                 if (!term.expr_list) {
                     error("subscript expression [ ] must not be empty");
                 }
                 if (curr().type() != lexeme::RightBracket) {
                     error("unexpected text - [ is not properly matched by ]");
                 }
+                term.expr_list->close_paren = curr().position();
                 term.op_close = &curr();
                 next();
-
-            break;case lexeme::LeftParen:
-                term.expr_list = expression_list();
+            }
+            else if (term.op->type() == lexeme::LeftParen)
+            {
+                term.expr_list = expression_list(term.op->position());
                 if (curr().type() != lexeme::RightParen) {
                     error("unexpected text - ( is not properly matched by )");
                 }
+                term.expr_list->close_paren = curr().position();
                 term.op_close = &curr();
                 next();
             }
@@ -1130,47 +1191,47 @@ private:
         );
     }
 
-    ////G bit-and-expression:
-    ////G     equality-expression
-    ////G     bit-and-expression & equality-expression
-    ////G
-    //auto bit_and_expression() {
-    //    return binary_expression<bit_and_expression_node> (
-    //        [](token const& t){ return t.type() == lexeme::Ampersand; },
-    //        [this]{ return equality_expression(); }
-    //    );
-    //}
+    //G bit-and-expression:
+    //G     equality-expression
+    //G     bit-and-expression & equality-expression
+    //G
+    auto bit_and_expression() {
+        return binary_expression<bit_and_expression_node> (
+            [](token const& t){ return t.type() == lexeme::Ampersand; },
+            [this]{ return equality_expression(); }
+        );
+    }
 
-    ////G bit-xor-expression:
-    ////G     bit-and-expression
-    ////G     bit-xor-expression & bit-and-expression
-    ////G
-    //auto bit_xor_expression() {
-    //    return binary_expression<bit_xor_expression_node> (
-    //        [](token const& t){ return t.type() == lexeme::Caret; },
-    //        [this]{ return bit_and_expression(); }
-    //    );
-    //}
+    //G bit-xor-expression:
+    //G     bit-and-expression
+    //G     bit-xor-expression & bit-and-expression
+    //G
+    auto bit_xor_expression() {
+        return binary_expression<bit_xor_expression_node> (
+            [](token const& t){ return t.type() == lexeme::Caret; },
+            [this]{ return bit_and_expression(); }
+        );
+    }
 
-    ////G bit-or-expression:
-    ////G     bit-xor-expression
-    ////G     bit-or-expression & bit-xor-expression
-    ////G
-    //auto bit_or_expression() {
-    //    return binary_expression<bit_or_expression_node> (
-    //        [](token const& t){ return t.type() == lexeme::LogicalOr; },
-    //        [this]{ return bit_xor_expression(); }
-    //    );
-    //}
+    //G bit-or-expression:
+    //G     bit-xor-expression
+    //G     bit-or-expression & bit-xor-expression
+    //G
+    auto bit_or_expression() {
+        return binary_expression<bit_or_expression_node> (
+            [](token const& t){ return t.type() == lexeme::LogicalOr; },
+            [this]{ return bit_xor_expression(); }
+        );
+    }
 
     //G logical-and-expression:
-    //G     bit-xor-expression
-    //G     logical-and-expression && bit-xor-expression
+    //G     bit-or-expression
+    //G     logical-and-expression && bit-or-expression
     //G
     auto logical_and_expression() {
         return binary_expression<logical_and_expression_node> (
             [](token const& t){ return t.type() == lexeme::LogicalAnd; },
-            [this]{ return equality_expression(); }
+            [this]{ return bit_or_expression(); }
         );
     }
 
@@ -1214,9 +1275,10 @@ private:
     //G     expression
     //G     expression-list , expression
     //G
-    auto expression_list() -> std::unique_ptr<expression_list_node> {
+    auto expression_list(source_position open_paren) -> std::unique_ptr<expression_list_node> {
         auto pass = passing_style::in;
         auto n = std::make_unique<expression_list_node>();
+        n->open_paren = open_paren;
 
         //  Remember current position, because we need to look ahead to see if there's an expression
         auto start_pos = pos;
@@ -1640,7 +1702,7 @@ private:
 
         auto param = std::make_unique<parameter_declaration_node>();
 
-        while (param = parameter_declaration(returns)) {
+        while ((param = parameter_declaration(returns)) != nullptr) {
             n->parameters.push_back( std::move(param) );
 
             if (curr().type() == lexeme::RightParen) { 
@@ -1740,14 +1802,31 @@ private:
         next();
 
         //  Next is an an optional type
+
+        //  It could be a function type, declaring a function
         if (auto t = function_type()) {
             n->type = std::move(t);
             assert (n->type.index() == declaration_node::function);
         }
+
+        //  Or a pointer to a type, declaring a pointer object
+        else if (curr().type() == lexeme::Multiply) {
+            n->pointer_declarator = &curr();
+            next();
+            if (auto t = id_expression()) {
+                n->type = std::move(t);
+                assert (n->type.index() == declaration_node::object);
+            }
+        }
+
+        //  Or just a type, declaring a non-pointer object
         else if (auto t = id_expression()) {
             n->type = std::move(t);
             assert (n->type.index() == declaration_node::object);
         }
+
+        //  Or nothing, declaring an object of deduced type,
+        //  which we'll represent using an empty id-expression
         else {
             n->type = std::make_unique<id_expression_node>();
             assert (n->type.index() == declaration_node::object);
@@ -1854,7 +1933,7 @@ class parse_tree_printer : printing_visitor
 {
     using printing_visitor::printing_visitor;
     
-    expression_list_node::term const* current_expression_list_term = nullptr;
+    std::vector<expression_list_node::term const*> current_expression_list_term = {};
 
 public:
     auto start(token const& n, int indent) -> void
@@ -1866,18 +1945,18 @@ public:
     {
         o << pre(indent) << "expression\n";
         //  If we are in an expression-list
-        if (current_expression_list_term) {
-            if (current_expression_list_term->pass == passing_style::out) {
+        if (!current_expression_list_term.empty()) {
+            if (current_expression_list_term.back()->pass == passing_style::out) {
                 o << pre(indent+1) << "out\n";
             }
-            ++current_expression_list_term;
+            ++current_expression_list_term.back();
         }
     }
 
     auto start(expression_list_node const& n, int indent) -> void
     {
         //  We're going to use the pointer as an iterator
-        current_expression_list_term = &n.expressions[0];
+        current_expression_list_term.push_back( &n.expressions[0] );
         o << pre(indent) << "expression-list\n";
     }
 
@@ -1885,8 +1964,9 @@ public:
     {
         //  If we're ending an expression list node, our pointer should be
         //  pointing to one past the end of the expressions
-        assert( current_expression_list_term == &n.expressions[0] + n.expressions.size() );
-        current_expression_list_term = nullptr;
+        assert( !current_expression_list_term.empty() );
+        assert( current_expression_list_term.back() == &n.expressions[0] + n.expressions.size());
+        current_expression_list_term.pop_back();
     }
 
     auto start(primary_expression_node const& n, int indent) -> void
@@ -1972,23 +2052,23 @@ public:
         o << pre(indent) << "parameter-declaration\n";
 
         o << pre(indent+1);
-        using enum passing_style;
         switch (n.pass) {
-        break;case in     : o << "in";
-        break;case copy   : o << "copy";
-        break;case inout  : o << "inout";
-        break;case out    : o << "out";
-        break;case move   : o << "move";
-        break;case forward: o << "forward";
+        break;case passing_style::in     : o << "in";
+        break;case passing_style::copy   : o << "copy";
+        break;case passing_style::inout  : o << "inout";
+        break;case passing_style::out    : o << "out";
+        break;case passing_style::move   : o << "move";
+        break;case passing_style::forward: o << "forward";
+        break;default: ;
         }
 
         o << pre(indent+1);
-        using enum parameter_declaration_node::modifier;
         switch (n.mod) {
-        break;case implicit  : o << "implicit";
-        break;case virtual_  : o << "virtual";
-        break;case override_ : o << "override";
-        break;case final_    : o << "final";
+        break;case parameter_declaration_node::modifier::implicit  : o << "implicit";
+        break;case parameter_declaration_node::modifier::virtual_  : o << "virtual";
+        break;case parameter_declaration_node::modifier::override_ : o << "override";
+        break;case parameter_declaration_node::modifier::final_    : o << "final";
+        break;default: ;
         }
         o << "\n";
 

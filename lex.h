@@ -12,6 +12,7 @@
 
 #include "load.h"
 #include <map>
+#include <climits>
 
 
 namespace cpp2 {
@@ -52,11 +53,11 @@ enum class lexeme : std::int8_t {
     Multiply,
     ModuloEq,
     Modulo,
-    //AmpersandEq,
+    AmpersandEq,
     Ampersand,
-    //CaretEq,
+    CaretEq,
     Caret,
-    //TildeEq,
+    TildeEq,
     Tilde,
     EqualComparison,
     Assignment,
@@ -122,11 +123,11 @@ auto as(lexeme l)
     break;case lexeme::Multiply:            return "Multiply";
     break;case lexeme::ModuloEq:            return "ModuloEq";
     break;case lexeme::Modulo:              return "Modulo";
-    //break;case lexeme::AmpersandEq:         return "AmpersandEq";
+    break;case lexeme::AmpersandEq:         return "AmpersandEq";
     break;case lexeme::Ampersand:           return "Ampersand";
-    //break;case lexeme::CaretEq:             return "CaretEq";
+    break;case lexeme::CaretEq:             return "CaretEq";
     break;case lexeme::Caret:               return "Caret";
-    //break;case lexeme::TildeEq:             return "TildeEq";
+    break;case lexeme::TildeEq:             return "TildeEq";
     break;case lexeme::Tilde:               return "Tilde";
     break;case lexeme::EqualComparison:     return "EqualComparison";
     break;case lexeme::Assignment:          return "Assignment";
@@ -189,6 +190,11 @@ public:
         return {start, (unsigned)count}; 
     }
 
+    auto operator== (token const& t) const -> bool
+    { 
+        return operator std::string_view() == t.operator std::string_view();
+    }
+
     auto operator== (std::string_view s) const -> bool
     { 
         return s == this->operator std::string_view(); 
@@ -211,6 +217,8 @@ public:
     }
 
     auto position() const -> source_position { return pos;      }
+
+    auto length  () const -> int             { return count;    }
 
     auto type    () const -> lexeme          { return lex_type; }
 
@@ -268,7 +276,7 @@ auto lex_line(
         tokens.push_back({
             &line[i],
             num,
-            {lineno, i+1},
+            source_position(lineno, i + 1),
             type
             });
         i += num-1;
@@ -321,7 +329,7 @@ auto lex_line(
             while (j <= 5 && is_hexadecimal_digit(peek(j + offset))) { ++j; }
             if (j == 6) { return j; }
             errors.emplace_back(
-                source_position{ lineno, i + offset },
+                source_position( lineno, i + offset ),
                 "invalid universal character name (\\u must"
                 " be followed by 4 hexadecimal digits)"
             );
@@ -331,7 +339,7 @@ auto lex_line(
             while (j <= 9 && is_hexadecimal_digit(peek(j+offset))) { ++j; }
             if (j == 10) { return j; }
             errors.emplace_back(
-                source_position{lineno, i+offset}, 
+                source_position(lineno, i+offset), 
                 "invalid universal character name (\\U must"
                     " be followed by 8 hexadecimal digits)"
             );
@@ -388,9 +396,9 @@ auto lex_line(
         const auto keys = std::regex(
             "^alignas|^alignof|^asm|^as|^auto|"
             "^bool|^break|"
-            "^case|^catch|^char|^char16_­t|^char32_­t|^char8_­t|^class|^co_­await|^co_­return|"
-            "^co_­yield|^concept|^const|^const_­cast|^consteval|^constexpr|^constinit|^continue|"
-            "^decltype|^default|^delete|^double|^do|^dynamic_­cast|"
+            "^case|^catch|^char|^char16_t|^char32_tt|^char8_t|^class|^co_await|^co_return|"
+            "^co_yield|^concept|^const|^const_cast|^consteval|^constexpr|^constinit|^continue|"
+            "^decltype|^default|^delete|^double|^do|^dynamic_cast|"
             "^else|^enum|^explicit|^export|^extern|"
             "^false|^float|^for|^friend|"
             "^goto|"
@@ -400,12 +408,12 @@ auto lex_line(
             "^namespace|^new|^noexcept|^nullptr|"
             "^operator|"
             "^private|^protected|^public|"
-            "^register|^reinterpret_­cast|^requires|^return|"
-            "^short|^signed|^sizeof|^static|^static_­assert|^static_­cast|^struct|^switch|"
-            "^template|^this|^thread_­local|^throws|^throw|^true|^try|^typedef|^typeid|^typename|"
+            "^register|^reinterpret_cast|^requires|^return|"
+            "^short|^signed|^sizeof|^static|^static_assert|^static_cast|^struct|^switch|"
+            "^template|^this|^thread_local|^throws|^throw|^true|^try|^typedef|^typeid|^typename|"
             "^union|^unsigned|^using|"
             "^virtual|^void|^volatile|"
-            "^wchar_­t|^while"
+            "^wchar_t|^while"
         );
 
         std::cmatch m;
@@ -448,7 +456,7 @@ auto lex_line(
                     comments.push_back({
                         comment::comment_kind::stream_comment,
                         current_comment_start,
-                        {lineno, i+2},
+                        source_position(lineno, i + 2),
                         current_comment
                         });
                     in_comment = false;
@@ -546,13 +554,13 @@ auto lex_line(
                 else if (peek1 == '=') { store(2, lexeme::PipeEq); }
                 else { store(1, lexeme::Pipe); }
 
-            //G     &&= && &
+            //G     &&= && &= &
             break;case '&': 
                 if (peek1 == '&') { 
                     if (peek2 == '=') { store(3, lexeme::LogicalAndEq); }
                     else { store(2, lexeme::LogicalAnd); }
                 }
-                //else if (peek1 == '=') { store(2, lexeme::AmpersandEq); }
+                else if (peek1 == '=') { store(2, lexeme::AmpersandEq); }
                 else { store(1, lexeme::Ampersand); }
 
             //  Next, all the other operators that have a compound assignment form
@@ -567,15 +575,15 @@ auto lex_line(
                 if (peek1 == '=') { store(2, lexeme::ModuloEq); }
                 else { store(1, lexeme::Modulo); }
 
-            ////G     ^= ^
-            //break;case '^': 
-            //    if (peek1 == '=') { store(2, lexeme::CaretEq); }
-            //    else { store(1, lexeme::Caret); }
+            //G     ^= ^
+            break;case '^': 
+                if (peek1 == '=') { store(2, lexeme::CaretEq); }
+                else { store(1, lexeme::Caret); }
 
-            ////G     ~= ~
-            //break;case '~': 
-            //    if (peek1 == '=') { store(2, lexeme::TildeEq); }
-            //    else { store(1, lexeme::Tilde); }
+            //G     ~= ~
+            break;case '~': 
+                if (peek1 == '=') { store(2, lexeme::TildeEq); }
+                else { store(1, lexeme::Tilde); }
 
             //G     == =
             break;case '=': 
@@ -599,13 +607,13 @@ auto lex_line(
 
             //  All the other single-character tokens
 
-            //G     ^ ~ { } ( ) [ ] ; , ? $
+            //G     { } ( ) [ ] ; , ? $
             //G
-            break;case '^': 
-                store(1, lexeme::Caret);
+            //break;case '^': 
+            //    store(1, lexeme::Caret);
 
-            break;case '~': 
-                store(1, lexeme::Tilde);
+            //break;case '~': 
+            //    store(1, lexeme::Tilde);
 
             break;case '{': 
                 store(1, lexeme::LeftBrace);
@@ -669,7 +677,7 @@ auto lex_line(
                     }
                     else {
                         errors.emplace_back(
-                            source_position{lineno, i}, 
+                            source_position(lineno, i), 
                             "binary literal cannot be empty (0B must be followed by binary digits)"
                         );
                         ++i;
@@ -682,7 +690,7 @@ auto lex_line(
                     }
                     else {
                         errors.emplace_back(
-                            source_position{lineno, i}, 
+                            source_position(lineno, i), 
                             "hexadecimal literal cannot be empty (0X must be followed by hexadecimal digits)"
                         );
                         ++i;
@@ -711,7 +719,7 @@ auto lex_line(
                         ++j;
                         if (!is_digit(peek(j))) {
                             errors.emplace_back(
-                                source_position{ lineno, i },
+                                source_position(lineno,i ),
                                 "floating point literal " + std::string(&line[i], j)
                                 + " fractional part cannot be empty (if floating point was intended, use .0)"
                             );
@@ -727,14 +735,12 @@ auto lex_line(
                     while (auto len = peek_is_sc_char(j, '\"')) { j += len; }
                     if (peek(j) != '\"') { 
                         errors.emplace_back(
-                            source_position{lineno, i},
+                            source_position(lineno, i),
                             "string literal \"" + std::string(&line[i+1],j) 
                                 + "\" is missing its closing \""
                         );
                     }
-                    ++i;
-                    store(j-1, lexeme::StringLiteral);
-                    ++i;
+                    store(j+1, lexeme::StringLiteral);
                 }
 
                 //G character-literal: { encoding-prefix }? ' { c-char }* '
@@ -745,18 +751,16 @@ auto lex_line(
                         j += len; 
                         if (peek(j) != '\'') { 
                             errors.emplace_back(
-                                source_position{lineno, i}, 
+                                source_position(lineno, i), 
                                 "character literal '" + std::string(&line[i+1],j) 
                                     + "' is missing its closing '"
                             ); 
                         }
-                        ++i;
-                        store(j-1, lexeme::CharacterLiteral);
-                        ++i;
+                        store(j+1, lexeme::CharacterLiteral);
                     }
                     else {
                         errors.emplace_back(
-                            source_position{lineno, i}, 
+                            source_position(lineno, i), 
                             "character literal is empty"
                         );
                     }
@@ -778,7 +782,7 @@ auto lex_line(
                 //
                 else if (!isspace(line[i])) {
                     errors.emplace_back(
-                        source_position{lineno, i}, 
+                        source_position(lineno, i), 
                         std::string("unexpected text '") + line[i] + "'"
                     );
                 }

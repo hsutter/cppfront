@@ -28,6 +28,20 @@ struct declaration_sym {
     statement_node const*             initializer = nullptr;
     parameter_declaration_node const* parameter = nullptr;
 
+    declaration_sym(
+        bool s = false,
+        declaration_node const*           decl  = nullptr,
+        token const*                      id    = nullptr,
+        statement_node const*             init  = nullptr,
+        parameter_declaration_node const* param = nullptr
+    )
+        : start{s}
+        , declaration{decl}
+        , identifier{id}
+        , initializer{init}
+        , parameter{param}
+    { }
+
     auto position() const -> source_position
     {
         assert (declaration);
@@ -38,6 +52,8 @@ struct declaration_sym {
 struct identifier_sym {
     bool assignment_to = false;
     token const* identifier = nullptr;
+
+    identifier_sym(bool a, token const* id) : assignment_to{a}, identifier{id} { }
 
     auto position() const -> source_position
     {
@@ -50,6 +66,8 @@ struct selection_sym {
     bool start = false;
     selection_statement_node const* selection = nullptr;
 
+    selection_sym(bool s, selection_statement_node const* sel) : start{s}, selection{sel} { }
+
     auto position() const -> source_position
     {
         assert (selection);
@@ -61,6 +79,10 @@ struct compound_sym {
     bool start = false;
     compound_statement_node const* compound = nullptr;
     bool is_true_branch;
+
+    compound_sym(bool s, compound_statement_node const* c, bool is_true)
+        : start{s}, compound{c}, is_true_branch{is_true}
+    { }
 
     auto position() const -> source_position
     {
@@ -161,8 +183,8 @@ auto is_definite_last_use(token const* t) -> bool
 //
 class sema
 {
-    using enum declaration_node::active;
-    using enum symbol::active;
+    //using enum declaration_node::active;
+    //using enum symbol::active;
 
 public:
     std::vector<error>& errors;
@@ -203,8 +225,8 @@ public:
         //  Then look backward to find the first declaration of
         //  this name that is not deeper (in a nested scope)
         for ( ; i != symbols.cbegin(); --i ) {
-            if (i->sym.index() == declaration && i->depth <= depth) {
-                auto const& decl = std::get<declaration>(i->sym);
+            if (i->sym.index() == symbol::active::declaration && i->depth <= depth) {
+                auto const& decl = std::get<symbol::active::declaration>(i->sym);
                 if (decl.identifier && *decl.identifier == t) {
                     return &decl;
                 }
@@ -224,11 +246,11 @@ public:
 
             switch (s.sym.index()) {
 
-            break;case declaration: {
-                auto const& sym = std::get<declaration>(s.sym);
+            break;case symbol::active::declaration: {
+                auto const& sym = std::get<symbol::active::declaration>(s.sym);
 
                 assert (sym.declaration);
-                if (sym.declaration->is(function)) {
+                if (sym.declaration->is(declaration_node::active::function)) {
                     if (sym.start) {
                         o << "function ";
                     }
@@ -236,7 +258,7 @@ public:
                         o << "/function";
                     }
                 }
-                else if (sym.declaration->is(object)) {
+                else if (sym.declaration->is(declaration_node::active::object)) {
                     if (sym.start) {
                         o << "var ";
                     }
@@ -254,8 +276,8 @@ public:
                 }
             }
 
-            break;case identifier: {
-                auto const& sym = std::get<identifier>(s.sym);
+            break;case symbol::active::identifier: {
+                auto const& sym = std::get<symbol::active::identifier>(s.sym);
                 assert (sym.identifier);
                 if (is_definite_last_use(sym.identifier)) {
                     o << "*** " << sym.identifier->position().to_string() 
@@ -275,16 +297,16 @@ public:
                 o << sym.identifier->to_string(true);
             }
 
-            break;case selection: {
-                auto const& sym = std::get<selection>(s.sym);
+            break;case symbol::active::selection: {
+                auto const& sym = std::get<symbol::active::selection>(s.sym);
                 if (!sym.start) {
                     o << "/";
                 }
                 o << "selection";
             }
 
-            break;case compound: {
-                auto const& sym = std::get<compound>(s.sym);
+            break;case symbol::active::compound: {
+                auto const& sym = std::get<symbol::active::compound>(s.sym);
                 if (!sym.start) {
                     o << "/";
                     --scope_depth;
@@ -317,10 +339,10 @@ public:
         auto is_uninitialized_variable_decl = [&](symbol const& s) 
             -> declaration_sym const*
         {
-            if (auto const* sym = std::get_if<declaration>(&s.sym)) {
+            if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
                 assert (sym);
                 if (sym->start && !sym->initializer && !(sym->parameter && sym->parameter->pass != passing_style::out)) {
-                    assert (sym->declaration->is(object));
+                    assert (sym->declaration->is(declaration_node::active::object));
                     return sym;
                 }
             }
@@ -332,8 +354,8 @@ public:
         auto is_copy_param = [&](symbol const& s) 
             -> declaration_sym const*
         {
-            if (auto const* sym = std::get_if<declaration>(&s.sym)) {
-                if (sym->start && sym->declaration->is(object) && 
+            if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
+                if (sym->start && sym->declaration->is(declaration_node::active::object) && 
                     sym->parameter && sym->parameter->pass == passing_style::copy)
                 {
                     return sym;
@@ -409,9 +431,9 @@ private:
                 break;
             }
 
-            if (symbols[i].sym.index() == identifier)
+            if (symbols[i].sym.index() == symbol::active::identifier)
             {
-                auto const& sym = std::get<identifier>(symbols[i].sym);
+                auto const& sym = std::get<symbol::active::identifier>(symbols[i].sym);
                 assert (sym.identifier);
 
                 //  If we find a use of this identifier
@@ -452,8 +474,12 @@ private:
             struct branch {
                 int  start;
                 bool result = false;
+
+                branch(int s, bool r) : start{s}, result{r} { }
             };
             std::vector<branch> branches;
+
+            stack_entry(int p) : pos{p} { }
 
             auto debug_print(std::ostream& o) const -> void 
             {
@@ -468,8 +494,8 @@ private:
         for ( ; pos < std::ssize(symbols) && symbols[pos].depth >= depth; ++pos) {
             switch (symbols[pos].sym.index()) {
 
-            break;case declaration: {
-                auto const& sym = std::get<declaration>(symbols[pos].sym);
+            break;case symbol::active::declaration: {
+                auto const& sym = std::get<symbol::active::declaration>(symbols[pos].sym);
                 if (sym.start && sym.identifier && *sym.identifier == *id) {
                     errors.emplace_back( 
                         sym.identifier->position(), 
@@ -479,8 +505,8 @@ private:
                 }
             }
 
-            break;case identifier: {
-                auto const& sym = std::get<identifier>(symbols[pos].sym);
+            break;case symbol::active::identifier: {
+                auto const& sym = std::get<symbol::active::identifier>(symbols[pos].sym);
                 assert (sym.identifier);
 
                 if (is_definite_initialization(sym.identifier)) {
@@ -567,8 +593,8 @@ private:
                 }
             }
 
-            break;case selection: {
-                auto const& sym = std::get<selection>(symbols[pos].sym);
+            break;case symbol::active::selection: {
+                auto const& sym = std::get<symbol::active::selection>(symbols[pos].sym);
 
                 //  If we're starting a new selection statement, add a stack entry for it
                 if (sym.start) {
@@ -636,8 +662,8 @@ private:
                             "local variable " + id->to_string(true)
                                     + " must be initialized on both branches or neither branch");
                         
-                        assert (symbols[selection_stack.back().pos].sym.index() == selection);
-                        auto const& sym = std::get<selection>(symbols[pos].sym);
+                        assert (symbols[selection_stack.back().pos].sym.index() == symbol::active::selection);
+                        auto const& sym = std::get<symbol::active::selection>(symbols[pos].sym);
                         errors.emplace_back( 
                             sym.selection->identifier->position(),
                             "\"" + sym.selection->identifier->to_string(true)
@@ -652,8 +678,8 @@ private:
                 }
             }
 
-            break;case compound: {
-                auto const& sym = std::get<compound>(symbols[pos].sym);
+            break;case symbol::active::compound: {
+                auto const& sym = std::get<symbol::active::compound>(symbols[pos].sym);
 
                 //  If we're in a selection 
                 if (std::ssize(selection_stack) > 0) {
@@ -688,7 +714,7 @@ public:
     //
     int  scope_depth = 0;
     bool started_assignment_expression = false;
-    expression_list_node::term const* current_expression_list_term = nullptr;
+    std::vector<expression_list_node::term const*> current_expression_list_term = {};
     bool is_out_expression     = false;
     bool inside_parameter_list = false;
     bool inside_returns_list   = false;
@@ -726,25 +752,25 @@ public:
         is_out_expression = false;
 
         //  If we are in an expression-list, remember whether this is an `out`
-        if (current_expression_list_term) {
-            if (current_expression_list_term->pass == passing_style::out) {
+        if (!current_expression_list_term.empty()) {
+            if (current_expression_list_term.back()->pass == passing_style::out) {
                 is_out_expression = true;
             }
-            ++current_expression_list_term;
+            ++current_expression_list_term.back();
         }
     }
 
     auto start(expression_list_node const& n, int indent) -> void
     {
         //  We're going to use the pointer as an iterator
-        current_expression_list_term = &n.expressions[0];
+        current_expression_list_term.push_back( &n.expressions[0] );
     }
 
     auto end(expression_list_node const& n, int indent) -> void
     {
         //  Unlike debug_print, here we don't assert that we visited all the
         //  expressions in the list because visiting them all is not always needed
-        current_expression_list_term = nullptr;
+        current_expression_list_term.pop_back();
     }
 
     auto start(function_returns_tag const&, int) -> void
@@ -771,7 +797,7 @@ public:
     {
         if (!inside_parameter_list || inside_out_parameter) {
             symbols.emplace_back( scope_depth, declaration_sym( false, &n, nullptr, nullptr, inside_out_parameter ) );
-            if (n.type.index() != object) {
+            if (n.type.index() != declaration_node::active::object) {
                 --scope_depth;
             }
         }
@@ -793,7 +819,7 @@ public:
             symbols.emplace_back( scope_depth, partial );
 
             assert (partial.declaration);
-            if (!partial.declaration->is(object)) {
+            if (!partial.declaration->is(declaration_node::active::object)) {
                 ++scope_depth;
             }
 

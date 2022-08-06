@@ -68,8 +68,6 @@ struct is_preprocessor_ret {
 auto is_preprocessor(std::string const& line, bool first_line) 
     -> is_preprocessor_ret
 {
-    auto i = 0;
-
     //  see if the first non-whitespace is #
     if (first_line && peek_first_non_whitespace(line) != '#') {
         return { false, false };
@@ -230,6 +228,7 @@ auto process_cpp_line(
         if (in_comment && !in_string_literal) {
             switch (line[i]) {
                 break;case '/': if (prev == '*') { in_comment = false; }
+                break;default: ;
             }
         }
 
@@ -253,7 +252,7 @@ auto process_cpp_line(
                             //  Might as well give a diagnostic in Cpp1 code since
                             //  we're relying on balanced { } to find Cpp2 code
                             errors.emplace_back(
-                                source_position{lineno, i},
+                                source_position(lineno, i),
                                 "closing } does not match a prior {"
                             ); 
                         }
@@ -267,6 +266,8 @@ auto process_cpp_line(
 
                 break;case '/': 
                     if (!in_string_literal && prev == '/') { in_comment = false; return r; }
+
+                break;default: ;
             }
         }
 
@@ -308,13 +309,14 @@ auto process_cpp2_line(
         if (in_comment) {
             switch (line[i]) {
             break;case '/': if (prev == '*') { in_comment = false; }
+            break;default: ;
             }
         }
 
         else {
             if (found_end && !isspace(line[i])) {
                 errors.emplace_back(
-                    source_position{lineno, i}, 
+                    source_position(lineno, i), 
                     std::string("unexpected text '")
                         + line[i]
                         + "' - after the closing ; or } of a definition, the rest"
@@ -329,7 +331,7 @@ auto process_cpp2_line(
             break;case '}':
                 if (std::ssize(brace_depth) < 1) {
                     errors.emplace_back(
-                        source_position{lineno, i}, 
+                        source_position(lineno, i), 
                         "closing } does not match a prior {"
                     ); 
                 }
@@ -348,6 +350,8 @@ auto process_cpp2_line(
 
             break;case '/': 
                 if (prev == '/') { in_comment = false; return false; }
+
+            break;default: ;
             }
         }
 
@@ -497,7 +501,7 @@ public:
         if (in.gcount() >= max_line_len-1)
         {
             errors.emplace_back(
-                source_position{lineno_t(std::ssize(lines)), 0}, 
+                source_position(lineno_t(std::ssize(lines)), 0), 
                 std::string("source line too long - length must be less than ") 
                     + std::to_string(max_line_len)
             );
@@ -509,7 +513,7 @@ public:
         if (!in.eof())
         {
             errors.emplace_back(
-                source_position{lineno_t(std::ssize(lines)), 0}, 
+                source_position(lineno_t(std::ssize(lines)), 0), 
                 std::string("unexpected error reading source lines - did not reach EOF")
             );
             return false;
@@ -523,7 +527,7 @@ public:
                 unmatched_brace_lines = std::to_string(line) + " " + unmatched_brace_lines;
             }
             errors.emplace_back(
-                source_position{lineno_t(std::ssize(lines)), 0}, 
+                source_position(lineno_t(std::ssize(lines)), 0), 
                 std::string("end of file reached with ") 
                     + std::to_string(std::ssize(brace_depth))
                     + " missing } to match earlier { on line"
@@ -559,13 +563,12 @@ public:
         }
     }
 
-    //  We don't intend to copy this type, so make it move-only
-    //  just to ensure there are no accidental copies
+    //  No copying
     //
     source(source const&)            = delete;
     source& operator=(source const&) = delete;
-    source(source&&)                 = default;
-    source& operator=(source&&)      = default;
+    source(source&&)                 = delete;
+    source& operator=(source&&)      = delete;
 };
 
 }
