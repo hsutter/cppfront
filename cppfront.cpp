@@ -556,7 +556,7 @@ public:
             if (!sema.apply_local_rules()) {
                 errors.emplace_back(
                     source_position(-1, -1), 
-                    "program violates initialization safety guarantee - see previous errors"
+                    "program violates initialization safety guarantee - see previous errors\n"
                 );
             }
         }
@@ -1422,7 +1422,7 @@ public:
             error.print(std::cerr, strip_path(sourcefile));
         }
         if (bounds_safety_violation) {
-            std::cerr << "program violates bounds safety guarantee - see previous errors";
+            std::cerr << "program violates bounds safety guarantee - see previous errors\n";
         }
     }
 
@@ -1479,7 +1479,11 @@ auto main(int argc, char* argv[]) -> int
     cmdline.set_args(argc, argv);
     cmdline.process_flags();
 
-    if (!cmdline.help_was_requested() && cmdline.arguments().empty()) {
+    if (cmdline.help_was_requested()) {
+        return 0;
+    }
+
+    if (cmdline.arguments().empty()) {
         std::cout << "cppfront: error: no input files\n";
         return 0;
     }
@@ -1497,7 +1501,7 @@ auto main(int argc, char* argv[]) -> int
 
         //  If there were no errors, say so and generate Cpp1
         if (c.had_no_errors()) {
-            std::cout << " ok\n";
+            std::cout << " ok\n\n";
         }
         //  Otherwise, print the errors
         else {

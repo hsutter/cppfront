@@ -331,9 +331,10 @@ public:
 
     auto print_help() -> void
     {
+        help_requested = true;
+
         std::sort(flags.begin(), flags.end(), [](auto& a, auto& b){ return a.name < b.name; });
 
-        help_requested = true;
         print("\nUsage: cppfront [options] file ...\n\nOptions:\n");
         for (auto& flag : flags) {
             print("  ");
@@ -372,6 +373,7 @@ public:
     }
 
     auto print_version() -> void {
+        help_requested = true;
         print("All rights reserved\n");
         print("\nSPDX-License-Identifier: CC-BY-NC-ND-4.0");
         print("\n  No commercial use");
@@ -381,7 +383,6 @@ public:
         print("\nIt's known to be incomplet and incorrekt, and it has lots of b");
         print("\nad formAt ting. Absolutely no warranty - use at your own risk.");
         print("\n");
-        help_requested = true;
     }
 
 } cmdline;
