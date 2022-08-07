@@ -96,6 +96,7 @@ class positional_printer
     bool            ignore_align        = false;
     int             ignore_align_indent = 0;
     lineno_t        ignore_align_lineno = 0;
+    bool            enable_indent_heuristic = true;
 
     //  Modal information
     bool            declarations_only   = true;     // print declarations only in first pass
@@ -390,9 +391,10 @@ public:
             //  (2) Otherwise, see if there's a previous line's offset to repeat
             //      If we moved to a new line, then this is the first
             //      non-comment non-whitespace text on the new line
-            else if (last_pos.lineno == pos.lineno-1) {
+            else if (last_pos.lineno == pos.lineno-1 && enable_indent_heuristic) {
                 //  If the last line had a request for this colno, remember its actual offset
-                auto last_line_offset = -1;
+                constexpr int sentinel = -100;
+                auto last_line_offset = sentinel;
                 for(auto i = 0; 
                     i < std::ssize(prev_line_info.requests) && prev_line_info.requests[i].requested <= pos.colno;
                     ++i
@@ -405,10 +407,11 @@ public:
                 }
 
                 //  If there was one, apply the actual column number offset
-                if (last_line_offset > 0) {
+                if (last_line_offset > sentinel) {
                     adjusted_pos.colno += last_line_offset;
                 }
             }
+            enable_indent_heuristic = true;
 
             //  If we're changing lines, start accumulating this new line's request/actual adjustment info
             if (last_pos.lineno < adjusted_pos.lineno) {
@@ -443,6 +446,12 @@ public:
     auto add_pad_in_this_line(colno_t extra) -> void
     {
         pad_for_this_line += extra;
+    }
+
+    //  Enable indent heuristic for just this line
+    //
+    auto disable_indent_heuristic_for_next_text() -> void {
+        enable_indent_heuristic = false;
     }
 
     //  Ignore position information, usually when emitting generated code
@@ -990,14 +999,20 @@ public:
             //
             if (*i->op == "--" || *i->op == "++" || *i->op == "*" || *i->op == "&" || *i->op == "~")
             {
-                prefix.emplace_back( "(", i->op->position() );
+                if (!last_was_prefixed || i+1 != n.ops.rend()) {    // omit some needless parens
+                    prefix.emplace_back( "(", i->op->position() );
+                }
                 prefix.emplace_back( i->op->to_string(true), i->op->position());
-                suffix.emplace_back( ")", i->op->position() );
+                if (!last_was_prefixed || i+1 != n.ops.rend()) {    // omit some needless parens
+                    suffix.emplace_back( ")", i->op->position() );
+                }
+                last_was_prefixed = true;
             }
 
             //  Handle the suffix operators that remain suffix
             //
             else {
+                last_was_prefixed = false;
                 suffix.emplace_back( i->op_close->to_string(true), i->op_close->position() );
                 if (i->expr_list) {
                     auto print = std::string{};
@@ -1167,6 +1182,7 @@ public:
     )
         -> void
     {
+        printer.disable_indent_heuristic_for_next_text();
         try_emit<statement_node::expression >(n.statement, can_have_semicolon, function_body);
         try_emit<statement_node::compound   >(n.statement, function_ret_locals, function_indent);
         try_emit<statement_node::selection  >(n.statement);
@@ -1467,12 +1483,12 @@ public:
             if (n.initializer)
             {
                 printer.add_pad_in_this_line(-100);
-                printer.print_cpp2( " = ", n.position() );
+                printer.print_cpp2( " ( ", n.position() );
 
                 assert( n.initializer );
                 emit( *n.initializer, false );
 
-                printer.print_cpp2( ";", n.position() );
+                printer.print_cpp2( " );", n.position() );
             }
         }
     }
