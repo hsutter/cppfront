@@ -307,11 +307,19 @@ public:
         }
 
         //  Look for matches
-        for (auto& arg : args) {
+        for (auto& arg : args)
+        {
+            //  The arg should never be empty, but we're going to do a [0]
+            //  subscript next so we should either check or assert
+            if (arg.text.empty()) {
+                continue;
+            }
             for (auto& flag : flags) {
-                if (
-                    arg.text.starts_with(flag.name.substr(0, flag.unique_prefix)) ||
-                    arg.text == flag.synonym
+                //  Allow a switch to start with either - or /
+                if (arg.text.starts_with("-" + flag.name.substr(0, flag.unique_prefix)) ||
+                    arg.text.starts_with("/" + flag.name.substr(0, flag.unique_prefix)) ||
+                    arg.text == "-" + flag.synonym ||
+                    arg.text == "/" + flag.synonym
                     )
                 {
                     flag.handler();
@@ -337,7 +345,7 @@ public:
 
         print("\nUsage: cppfront [options] file ...\n\nOptions:\n");
         for (auto& flag : flags) {
-            print("  ");
+            print("  -");
             auto n = flag.name.substr(0, flag.unique_prefix);
             if (flag.unique_prefix < flag.name.length()) {
                 n += "[";
@@ -345,7 +353,7 @@ public:
                 n += "]";
             }
             if (!flag.synonym.empty()) {
-                n += ", " + flag.synonym;
+                n += ", -" + flag.synonym;
             }
             print(n, 15);
             print(flag.description);
@@ -353,10 +361,12 @@ public:
         }
     }
 
+    auto add_flag(std::string_view name, std::string_view description, callback handler, std::string_view synonym) {
+        flags.emplace_back( name, description, handler, synonym );
+    }
     struct register_flag {
         register_flag(std::string_view name, std::string_view description, callback handler, std::string_view synonym = {});
     };
-    friend register_flag;
 
     auto set_args(int argc, char* argv[]) -> void {
         for (auto i = 1; i < argc; ++i) {
@@ -388,18 +398,18 @@ public:
 } cmdline;
 
 cmdline_processor::register_flag::register_flag(std::string_view name, std::string_view description, callback handler, std::string_view synonym) {
-    cmdline.flags.emplace_back( name, description, handler, synonym );
+    cmdline.add_flag( name, description, handler, synonym );
 }
 
 static cmdline_processor::register_flag cmd_help   ( 
-    "-help",
+    "help",
     "Print help",                
     []{ cmdline.print_help(); },
-    "-?"
+    "?"
 );
 
 static cmdline_processor::register_flag cmd_version( 
-    "-version", 
+    "version", 
     "Print version information", 
     []{ cmdline.print_version(); }
 );

@@ -9,6 +9,7 @@
 
 #include "sema.h"
 #include <iostream>
+#include <cstdio>
 
 
 namespace cpp2 {
@@ -51,17 +52,25 @@ auto pad(int padding) -> std::string_view
 // 
 //-----------------------------------------------------------------------
 //
-static auto suppress_line_directives = false;
+static auto flag_suppress_line_directives = false;
 static cmdline_processor::register_flag cmd_noline( 
-    "-no-line", 
+    "no-line", 
     "Suppress #line directives in Cpp1 output", 
-    []{ suppress_line_directives = true; }
+    []{ flag_suppress_line_directives = true; }
+);
+
+static auto flag_cpp2_only = false;
+static cmdline_processor::register_flag cmd_cpp2_only( 
+    "pure-cpp2", 
+    "Allow Cpp2 syntax only", 
+    []{ flag_cpp2_only = true; }
 );
 
 class positional_printer
 {
     //  Core information
     std::ofstream               out       = {};     // Cpp1 syntax output file
+    std::string                 filename  = {};
     std::vector<comment> const* pcomments = {};     // Cpp2 comments data
 
     source_position curr_pos            = {};       // current (line,col) in output
@@ -156,7 +165,7 @@ class positional_printer
         ensure_at_start_of_new_line();
 
         //  Not using print() here because this is transparent to the curr_pos
-        if (!suppress_line_directives) {
+        if (!flag_suppress_line_directives) {
             out << "#line " << line << "\n";
         }
     }
@@ -250,7 +259,8 @@ public:
         -> void
     {
         assert (!out.is_open() && !pcomments && "ICE: tried to call .open twice");
-        out.open(cpp1_filename);
+        filename = cpp1_filename;
+        out.open(filename);
         pcomments = &comments;
     }
 
@@ -259,6 +269,19 @@ public:
             assert (pcomments && "ICE: if out.is_open, pcomments should also be set");
         }
         return out.is_open();
+    }
+
+
+    //-----------------------------------------------------------------------
+    //  Abandon: close and delete
+    //
+    auto abandon() -> void
+    {
+        if (!out.is_open()) {
+            return;
+        }
+        out.close();
+        std::remove(filename.c_str());
     }
 
 
@@ -596,6 +619,23 @@ public:
 
                 //  If it's a Cpp1 line, emit it
                 if (line.cat != source_line::category::cpp2) {
+
+                    if (flag_cpp2_only && !line.text.empty()) {
+                        if (line.cat == source_line::category::preprocessor) {
+                            errors.emplace_back(
+                                source_position(curr_lineno, 1),
+                                "pure-cpp2 switch disables the preprocessor, including #include - use import instead (e.g., import std;)"
+                            );
+                        }
+                        else {
+                            errors.emplace_back(
+                                source_position(curr_lineno, 1),
+                                "pure-cpp2 switch disables Cpp1 syntax"
+                            );
+                        }
+                        return;
+                    }
+
                     printer.print_cpp1( line.text, curr_lineno );
                 }
 
@@ -1418,6 +1458,11 @@ public:
     //
     auto print_errors() -> void
     {
+        if (!errors.empty()) {
+            //  Delete the output file
+            printer.abandon();
+        }
+
         for (auto&& error : errors) {
             error.print(std::cerr, strip_path(sourcefile));
         }
@@ -1469,7 +1514,7 @@ using namespace cpp2;
 
 static auto suppress_debug_output_files = false;
 static cmdline_processor::register_flag cmd_noline( 
-    "-no-debug", 
+    "no-debug", 
     "Suppress debug output files (enabled by default during development)", 
     []{ suppress_debug_output_files = true; }
 );
