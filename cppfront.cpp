@@ -52,15 +52,17 @@ auto pad(int padding) -> std::string_view
 // 
 //-----------------------------------------------------------------------
 //
-static auto flag_suppress_line_directives = false;
+static auto flag_clean_cpp1 = false;
 static cmdline_processor::register_flag cmd_noline( 
-    "no-line", 
-    "Suppress #line directives in Cpp1 output", 
-    []{ flag_suppress_line_directives = true; }
+    1,
+    "clean-cpp1", 
+    "Emit clean Cpp1 without #line directives and other extras", 
+    []{ flag_clean_cpp1 = true; }
 );
 
 static auto flag_cpp2_only = false;
 static cmdline_processor::register_flag cmd_cpp2_only( 
+    1, 
     "pure-cpp2", 
     "Allow Cpp2 syntax only", 
     []{ flag_cpp2_only = true; }
@@ -165,7 +167,7 @@ class positional_printer
         ensure_at_start_of_new_line();
 
         //  Not using print() here because this is transparent to the curr_pos
-        if (!flag_suppress_line_directives) {
+        if (!flag_clean_cpp1) {
             out << "#line " << line << "\n";
         }
     }
@@ -527,11 +529,11 @@ public:
     //  filename    the source file to be processed
     //
     cppfront(std::string const& filename)
-        : sourcefile{filename}
-        , source{errors}
-        , tokens{errors}
-        , parser{errors}
-        , sema  {errors}
+        : sourcefile{ filename }
+        , source{ errors }
+        , tokens{ errors }
+        , parser{ errors }
+        , sema{ errors }
     {
         //  "Constraints enable creativity in the right directions"
         //  sort of applies here
@@ -539,7 +541,7 @@ public:
         if (!sourcefile.ends_with(".cpp2"))
         {
             errors.emplace_back(
-                source_position(-1, -1), 
+                source_position(-1, -1),
                 "source filename must end with .cpp2: " + sourcefile
             );
         }
@@ -550,7 +552,7 @@ public:
         {
             if (errors.empty()) {
                 errors.emplace_back(
-                    source_position(-1, -1), 
+                    source_position(-1, -1),
                     "file not found: " + sourcefile
                 );
             }
@@ -561,24 +563,24 @@ public:
         {
             //  Tokenize
             //
-            tokens.lex( source.get_lines() );
+            tokens.lex(source.get_lines());
 
             //  Parse
             //
             for (auto const& [line, entry] : tokens.get_map()) {
                 if (!parser.parse(entry)) {
                     errors.emplace_back(
-                        source_position(line, 0), 
+                        source_position(line, 0),
                         "parse failed for section starting here"
                     );
                 }
             }
 
             //  Sema
-            parser.visit( sema );
+            parser.visit(sema);
             if (!sema.apply_local_rules()) {
                 errors.emplace_back(
-                    source_position(-1, -1), 
+                    source_position(-1, -1),
                     "program violates initialization safety guarantee - see previous errors\n"
                 );
             }
@@ -598,13 +600,20 @@ public:
             return;
         }
 
-        //  Now we'll open the .cpp file - wait until 
+        //  Now we'll open the .cpp file
         printer.open(
             sourcefile.substr(0, std::ssize(sourcefile) - 1),
             tokens.get_comments()
         );
-        printer.print_extra( "// -- Cpp2 support --\n" );
-        printer.print_extra( "#include \"cpp2util.h\"\n\n" );
+
+        //  Only emit extra lines if we actually have Cpp2, because
+        //  we want pure-Cpp1 files to pass through with zero changes
+        if (source.has_cpp2()) {
+            if (!flag_clean_cpp1) {
+                printer.print_extra( "// -- Cpp2 support --\n" );
+            }
+            printer.print_extra( "#include \"cpp2util.h\"\n\n" );
+        }
 
         auto map_iter = tokens.get_map().cbegin();
 
@@ -618,9 +627,14 @@ public:
             if (curr_lineno != 0) {
 
                 //  If it's a Cpp1 line, emit it
-                if (line.cat != source_line::category::cpp2) {
-
-                    if (flag_cpp2_only && !line.text.empty()) {
+                if (line.cat != source_line::category::cpp2)
+                {
+                    if (flag_cpp2_only && 
+                        !line.text.empty() && 
+                        line.cat != source_line::category::comment &&
+                        line.cat != source_line::category::import
+                        )
+                    {
                         if (line.cat == source_line::category::preprocessor) {
                             errors.emplace_back(
                                 source_position(curr_lineno, 1),
@@ -678,7 +692,9 @@ public:
         //  If there is Cpp2 code, we have more to do...
         //  Next, bring in the Cpp2 helpers
         //
-        printer.print_extra( "\n//=== Cpp2 definitions ==========================================================\n\n" );
+        if (!flag_clean_cpp1) {
+            printer.print_extra( "\n//=== Cpp2 definitions ==========================================================\n\n" );
+        }
 
         //  Next, emit the Cpp2 definitions
         //
@@ -954,9 +970,15 @@ public:
 
         //  Otherwise, we're going to have to potentially do some work to change
         //  some Cpp2 postfix operators to Cpp1 prefix operators, so let's set up...
+        struct element {
+            std::string     text;
+            source_position pos;
+            element(std::string const& t, source_position p) : text{t}, pos{p} { }
+        };
+        auto prefix            = std::vector<element>{};
+        auto suffix            = std::vector<element>{};
+
         auto print             = std::string{};
-        auto prefix            = std::string{};
-        auto suffix            = std::string{};
         auto emitted_n         = false;
         auto last_was_prefixed = false;
 
@@ -968,32 +990,35 @@ public:
             //
             if (*i->op == "--" || *i->op == "++" || *i->op == "*" || *i->op == "&" || *i->op == "~")
             {
-                prefix += *i->op;
-                if (i+1 != n.ops.rend()) {
-                    prefix += "(";
-                    suffix = ")" + suffix;
-                }
+                prefix.emplace_back( "(", i->op->position() );
+                prefix.emplace_back( i->op->to_string(true), i->op->position());
+                suffix.emplace_back( ")", i->op->position() );
             }
 
             //  Handle the suffix operators that remain suffix
             //
             else {
-                suffix = i->op_close->to_string(true) + suffix;
+                suffix.emplace_back( i->op_close->to_string(true), i->op_close->position() );
                 if (i->expr_list) {
                     auto print = std::string{};
                     printer.emit_to_string(&print);
                     emit(*i->expr_list);
                     printer.emit_to_string();
-                    suffix = print + suffix;
+                    suffix.emplace_back( print, i->expr_list->position() );
                 }
                 assert(i->op_close);
-                suffix = i->op->to_string(true) + suffix;
+                suffix.emplace_back( i->op->to_string(true), i->op->position() );
             }
         }
 
-        printer.print_cpp2(prefix, n.position());
+        for (auto& e : prefix) {
+            printer.print_cpp2(e.text, n.position());
+        }
         emit(*n.expr);
-        printer.print_cpp2(suffix, n.position());
+        while (!suffix.empty()) {
+            printer.print_cpp2(suffix.back().text, suffix.back().pos);
+            suffix.pop_back();
+        }
     }
 
 
@@ -1500,6 +1525,22 @@ public:
             sema.debug_print  ( out_symbols    );
         }
     }
+
+    
+    //-----------------------------------------------------------------------
+    //  has_cpp1: pass through
+    //
+    auto has_cpp1() const -> bool {
+        return source.has_cpp1();
+    }
+
+    
+    //-----------------------------------------------------------------------
+    //  has_cpp2: pass through
+    //
+    auto has_cpp2() const -> bool {
+        return source.has_cpp2();
+    }
 };
 
 }
@@ -1514,6 +1555,7 @@ using namespace cpp2;
 
 static auto suppress_debug_output_files = false;
 static cmdline_processor::register_flag cmd_noline( 
+    3,
     "no-debug", 
     "Suppress debug output files (enabled by default during development)", 
     []{ suppress_debug_output_files = true; }
@@ -1534,7 +1576,7 @@ auto main(int argc, char* argv[]) -> int
     }
 
     //  For each .cpp2 source file
-    for (auto& arg : cmdline.arguments())
+    for (auto const& arg : cmdline.arguments())
     {
         std::cout << arg.text << "...";
 
@@ -1546,7 +1588,15 @@ auto main(int argc, char* argv[]) -> int
 
         //  If there were no errors, say so and generate Cpp1
         if (c.had_no_errors()) {
-            std::cout << " ok\n\n";
+            if (!c.has_cpp1()) {
+                std::cout << " ok (all Cpp2, passes safety checks)\n\n";
+            }
+            else if (c.has_cpp2()) {
+                std::cout << " ok (mixed Cpp1/Cpp2, Cpp2 code passes safety checks)\n\n";
+            }
+            else {
+                std::cout << " ok (all Cpp1)\n\n";
+            }
         }
         //  Otherwise, print the errors
         else {

@@ -265,14 +265,15 @@ class cmdline_processor
     using callback = void (*)();
     struct flag
     {
+        int         group = 0;
         std::string name;
         int         unique_prefix = 0;
         std::string description;
         callback    handler;
         std::string synonym;
 
-        flag(std::string_view n, std::string_view d, callback h, std::string_view s) 
-            : name{n}, description{d}, handler{h}, synonym{s}
+        flag(int g, std::string_view n, std::string_view d, callback h, std::string_view s) 
+            : group{g}, name{n}, description{d}, handler{h}, synonym{s}
         { }
     };
     std::vector<flag> flags;
@@ -341,10 +342,19 @@ public:
     {
         help_requested = true;
 
-        std::sort(flags.begin(), flags.end(), [](auto& a, auto& b){ return a.name < b.name; });
+        std::sort(
+            flags.begin(), 
+            flags.end(), 
+            [](auto& a, auto& b){ return a.group < b.group || (a.group == b.group && a.name < b.name); }
+        );
 
         print("\nUsage: cppfront [options] file ...\n\nOptions:\n");
+        int last_group = -1;
         for (auto& flag : flags) {
+            if (last_group != flag.group) {
+                print("\n");
+                last_group = flag.group;
+            }
             print("  -");
             auto n = flag.name.substr(0, flag.unique_prefix);
             if (flag.unique_prefix < flag.name.length()) {
@@ -361,11 +371,11 @@ public:
         }
     }
 
-    auto add_flag(std::string_view name, std::string_view description, callback handler, std::string_view synonym) {
-        flags.emplace_back( name, description, handler, synonym );
+    auto add_flag(int group, std::string_view name, std::string_view description, callback handler, std::string_view synonym) {
+        flags.emplace_back( group, name, description, handler, synonym );
     }
     struct register_flag {
-        register_flag(std::string_view name, std::string_view description, callback handler, std::string_view synonym = {});
+        register_flag(int group, std::string_view name, std::string_view description, callback handler, std::string_view synonym = {});
     };
 
     auto set_args(int argc, char* argv[]) -> void {
@@ -397,11 +407,12 @@ public:
 
 } cmdline;
 
-cmdline_processor::register_flag::register_flag(std::string_view name, std::string_view description, callback handler, std::string_view synonym) {
-    cmdline.add_flag( name, description, handler, synonym );
+cmdline_processor::register_flag::register_flag(int group, std::string_view name, std::string_view description, callback handler, std::string_view synonym) {
+    cmdline.add_flag( group, name, description, handler, synonym );
 }
 
 static cmdline_processor::register_flag cmd_help   ( 
+    0,
     "help",
     "Print help",                
     []{ cmdline.print_help(); },
@@ -409,6 +420,7 @@ static cmdline_processor::register_flag cmd_help   (
 );
 
 static cmdline_processor::register_flag cmd_version( 
+    0,
     "version", 
     "Print version information", 
     []{ cmdline.print_version(); }

@@ -372,6 +372,8 @@ class source
 {
     std::vector<error>&      errors;
     std::vector<source_line> lines;
+    bool                     cpp1_found = false;
+    bool                     cpp2_found = false;
 
     static const int max_line_len = 19'600;
     char buf[max_line_len];
@@ -389,6 +391,24 @@ public:
         , lines( 1 )        // extra blank to avoid off-by-one everywhere
         , buf{0}
     {
+    }
+
+
+    //-----------------------------------------------------------------------
+    //  has_cpp1: Returns true if this file has some Cpp1/preprocessor lines
+    //            (note: import lines don't count toward Cpp1 or Cpp2)
+    // 
+    auto has_cpp1() const -> bool {
+        return cpp1_found;
+    }
+
+
+    //-----------------------------------------------------------------------
+    //  has_cpp2: Returns true if this file has some Cpp2 lines
+    //            (note: import lines don't count toward Cpp1 or Cpp2)
+    // 
+    auto has_cpp2() const -> bool {
+        return cpp2_found;
     }
 
 
@@ -418,6 +438,7 @@ public:
             //
             if (auto pre = is_preprocessor(buf, true); pre.is_preprocessor)
             {
+                cpp1_found = true;
                 lines.push_back({ &buf[0], source_line::category::preprocessor });
                 while (pre.has_continuation && in.getline(&buf[0], max_line_len))
                 {
@@ -433,7 +454,9 @@ public:
                 //  Switch to cpp2 mode if we're not in a comment, not inside nested { },
                 //  and the line starts with "nonwhitespace :" but not "::"
                 //
-                if (!in_comment && std::ssize(brace_depth) == 0 && starts_with_identifier_colon(lines.back().text)) {
+                if (!in_comment && std::ssize(brace_depth) == 0 && starts_with_identifier_colon(lines.back().text))
+                {
+                    cpp2_found= true;
 
                     //  Mark this line, and preceding comment/blank source, as cpp2
                     lines.back().cat = source_line::category::cpp2;
@@ -465,7 +488,6 @@ public:
                     {
                         lines.push_back({ &buf[0], source_line::category::cpp2 });
                     }
-
                 }
 
                 //  Else still in Cpp1 code, but could be a comment, empty, or import
@@ -489,6 +511,9 @@ public:
                         }
                         else if (stats.empty_line) {
                             lines.back().cat = source_line::category::empty;
+                        }
+                        else {
+                            cpp1_found = true;
                         }
                     }
                 }

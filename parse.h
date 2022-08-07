@@ -1274,22 +1274,20 @@ private:
         auto n = std::make_unique<expression_list_node>();
         n->open_paren = open_paren;
 
-        //  Remember current position, because we need to look ahead to see if there's an expression
-        auto start_pos = pos;
-
         if (curr().type() == lexeme::Identifier && curr() == "out") {
             pass = passing_style::out;
             next();
         }
         auto x = expression();
+
+        //  If this is an empty expression_list, we're done
         if (!x) {
-            pos = start_pos;    // backtrack
-            return {};
+            return n;
         }
+
+        //  Otherwise remember the first expression
         n->expressions.push_back( { pass, std::move(x) } );
-
-        //  Now we have at least one expression, so see if there are more...
-
+        //  and see if there are more...
         while (curr().type() == lexeme::Comma) {
             next();
             pass = passing_style::in;
@@ -1958,7 +1956,12 @@ public:
     auto start(expression_list_node const& n, int indent) -> void
     {
         //  We're going to use the pointer as an iterator
-        current_expression_list_term.push_back( &n.expressions[0] );
+        if (!n.expressions.empty()) {
+            current_expression_list_term.push_back( &n.expressions[0] );
+        }
+        else {
+            current_expression_list_term.push_back( nullptr );
+        }
         o << pre(indent) << "expression-list\n";
     }
 
@@ -1966,8 +1969,13 @@ public:
     {
         //  If we're ending an expression list node, our pointer should be
         //  pointing to one past the end of the expressions
-        assert( !current_expression_list_term.empty() );
-        assert( current_expression_list_term.back() == &n.expressions[0] + n.expressions.size());
+        if (current_expression_list_term.back() == nullptr) {
+            assert(n.expressions.empty());
+        }
+        assert( 
+            current_expression_list_term.back() == nullptr ||
+            current_expression_list_term.back() == &n.expressions[0] + n.expressions.size()
+            );
         current_expression_list_term.pop_back();
     }
 

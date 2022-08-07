@@ -763,7 +763,12 @@ public:
     auto start(expression_list_node const& n, int indent) -> void
     {
         //  We're going to use the pointer as an iterator
-        current_expression_list_term.push_back( &n.expressions[0] );
+        if (!n.expressions.empty()) {
+            current_expression_list_term.push_back( &n.expressions[0] );
+        }
+        else {
+            current_expression_list_term.push_back( nullptr );
+        }
     }
 
     auto end(expression_list_node const& n, int indent) -> void

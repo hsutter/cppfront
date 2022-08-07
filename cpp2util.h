@@ -17,6 +17,10 @@
 #include <type_traits>
 #include <new>
 
+#ifdef _MSC_VER
+    #pragma warning(disable:5050)   // suppress spurious modules warning
+#endif
+
 
 namespace cpp2 {
 
