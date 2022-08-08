@@ -2,6 +2,14 @@
 //  Copyright (c) Herb Sutter
 //  SPDX-License-Identifier: CC-BY-NC-ND-4.0
 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 
 //===========================================================================
 //  cppfront
@@ -154,9 +162,10 @@ class positional_printer
     auto ensure_at_start_of_new_line() -> void
     {
         if (curr_pos.colno > 1) {
+            auto old_pos = curr_pos;
             print( "\n" );
-            curr_pos.lineno++;
-            curr_pos.colno = 1;
+            assert(curr_pos.lineno == old_pos.lineno+1);
+            assert(curr_pos.colno == 1);
         }
     }
 
@@ -999,11 +1008,11 @@ public:
             //
             if (*i->op == "--" || *i->op == "++" || *i->op == "*" || *i->op == "&" || *i->op == "~")
             {
-                if (!last_was_prefixed || i+1 != n.ops.rend()) {    // omit some needless parens
+                if (!last_was_prefixed && i+1 != n.ops.rend()) {    // omit some needless parens
                     prefix.emplace_back( "(", i->op->position() );
                 }
                 prefix.emplace_back( i->op->to_string(true), i->op->position());
-                if (!last_was_prefixed || i+1 != n.ops.rend()) {    // omit some needless parens
+                if (!last_was_prefixed && i+1 != n.ops.rend()) {    // omit some needless parens
                     suffix.emplace_back( ")", i->op->position() );
                 }
                 last_was_prefixed = true;
@@ -1264,10 +1273,15 @@ public:
             printer.print_cpp2( "(", n.pos_open_paren );
         }
 
+        //  So we don't get cute about text-aligning the first parameter when it's on a new line
+        printer.disable_indent_heuristic_for_next_text();
+
+        auto prev_pos = n.position();
         for (auto first = true; auto const& x : n.parameters) {
             if (!first && !returns) {
-                printer.print_cpp2( ", ", x->position() );
+                printer.print_cpp2( ", ", prev_pos );
             }
+            prev_pos = x->position();
             assert(x);
             emit(*x, returns);
             first = false;
