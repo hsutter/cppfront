@@ -969,14 +969,14 @@ public:
                 auto decl = sema.get_declaration_of(*unqual->identifier);
                 if (decl && decl->declaration && decl->declaration->pointer_declarator) {
                     last_postfix_expr_was_pointer = true;
-                    if (*n.ops.front().op == "++" || *n.ops.front().op == "--") {
+                    if (n.ops.front().op->type() == lexeme::PlusPlus || n.ops.front().op->type() == lexeme::MinusMinus) {
                         errors.emplace_back(
                             n.ops.front().op->position(),
                             n.ops.front().op->to_string(true) + " - pointer arithmetic is illegal - use std::span or gsl::span instead"
                         );
                         bounds_safety_violation = true;
                     }
-                    else if (*n.ops.front().op == "~") {
+                    else if (n.ops.front().op->type() == lexeme::Tilde) {
                         errors.emplace_back(
                             n.ops.front().op->position(),
                             n.ops.front().op->to_string(true) + " - pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first"
@@ -1006,7 +1006,12 @@ public:
 
             //  Handle the Cpp2 postfix operators that are prefix in Cpp1
             //
-            if (*i->op == "--" || *i->op == "++" || *i->op == "*" || *i->op == "&" || *i->op == "~")
+            if (i->op->type() == lexeme::MinusMinus || 
+                i->op->type() == lexeme::PlusPlus || 
+                i->op->type() == lexeme::Multiply || 
+                i->op->type() == lexeme::Ampersand || 
+                i->op->type() == lexeme::Tilde
+                )
             {
                 if (!last_was_prefixed && i+1 != n.ops.rend()) {    // omit some needless parens
                     prefix.emplace_back( "(", i->op->position() );
@@ -1042,7 +1047,11 @@ public:
 
         //  If this is an --, ++, or &, don't add std::move on the lhs
         //  even if this is a definite last use (only do that when an rvalue is okay)
-        if (*n.ops.front().op == "--" || *n.ops.front().op == "++" || *n.ops.front().op == "&") {
+        if (n.ops.front().op->type() == lexeme::MinusMinus || 
+            n.ops.front().op->type() == lexeme::PlusPlus || 
+            n.ops.front().op->type() == lexeme::Ampersand
+            )
+        {
             suppress_move_from_last_use = true;
         }
         emit(*n.expr);
@@ -1232,8 +1241,11 @@ public:
 
         auto const& id_expr = *std::get<declaration_node::object>(n.declaration->type);
 
+        auto unqid = std::get_if<id_expression_node::unqualified>(&id_expr.id);
+        auto is_wildcard = unqid && *(*unqid)->identifier == "_";
+
         //  First any prefix
-        if (!returns)
+        if (!returns && !is_wildcard)
         {
             switch (n.pass) {
             break;case passing_style::in     : printer.print_cpp2( "cpp2::in<",  n.position() );
@@ -1243,10 +1255,16 @@ public:
         }
 
         printer.preempt_position( n.position() );
-        emit( id_expr );
+
+        if (is_wildcard) {
+            printer.print_cpp2("auto", n.position());
+        }
+        else {
+            emit( id_expr );
+        }
 
         //  Then any suffix
-        if (!returns)
+        if (!returns && !is_wildcard)
         {
             switch (n.pass) {
             break;case passing_style::in     : printer.print_cpp2( ">",  n.position() );

@@ -873,16 +873,28 @@ private:
     //-----------------------------------------------------------------------
     //  Error reporting: Fed into the supplied this->error object
     // 
-    auto error(char const* msg) const -> void 
+    //  msg                 message to be printed
+    // 
+    //  include_curr_token  in this file (during parsing)_ we normally want
+    //                      to show the current token as the unexpected text
+    //                      we encountered, but some sema rules are applied
+    //                      early during parsing and for those it doesn't
+    //                      make sense to show the next token (e.g., when
+    //                      we detect and reject a "std::move" qualified-id,
+    //                      it's not relevant to add "at LeftParen: ("
+    //                      just because ( happens to be the next token)
+    // 
+    auto error(char const* msg, bool include_curr_token = true) const -> void 
     {
         assert (!done());
-        errors.emplace_back(
-            curr().position(), 
-            msg + std::string(" at ") + curr().to_string()
-        );
+        auto m = std::string{msg};
+        if (include_curr_token) {
+            m += std::string(" at ") + curr().to_string();
+        }
+        errors.emplace_back( curr().position(), m );
     }
     
-    auto error(std::string const& msg) const -> void 
+    auto error(std::string const& msg, bool include_curr_token = true) const -> void 
     { 
         error(msg.c_str()); 
     }
@@ -1349,13 +1361,18 @@ private:
     {
         auto n = std::make_unique<qualified_id_node>();
 
-        //  Remember current position, because we need to look ahead to the .
+        //  Remember current position, because we need to look ahead to the ::
         auto start_pos = pos;
         auto id = unqualified_id();
         if (!id || curr().type() != lexeme::Scope) {
             pos = start_pos;    // backtrack
             return {};
         }
+
+        //  Reject "std" :: "move" / "forward"
+        assert (id->identifier);
+        auto first_uid_was_std = (*id->identifier == "std");
+        auto first_time_through_loop = true;
 
         n->ids.push_back( std::move(id) );
 
@@ -1366,6 +1383,18 @@ private:
             if (!id) {
                 error("invalid text, :: should be followed by a nested name");
                 return {};
+            }
+            assert (id->identifier);
+            if (first_time_through_loop) {
+                if (*id->identifier == "move") {
+                    error("std::move is not needed in Cpp2 - use \"move\" parameters/arguments instead", false);
+                    return {};
+                }
+                else if (*id->identifier == "forward") {
+                    error("std::forward is not needed in Cpp2 - use \"forward\" parameters/arguments instead", false);
+                    return {};
+                }
+                first_time_through_loop = false;
             }
             n->ids.push_back( std::move(id) );
         }
