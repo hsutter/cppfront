@@ -357,14 +357,14 @@ public:
             return {};
         };
 
-        //  It's a local (incl. named return value or copy parameter
+        //  It's a local (incl. named return value or copy parameter)
         //
-        auto is_copy_param = [&](symbol const& s) 
+        auto is_potentially_movable_local = [&](symbol const& s) 
             -> declaration_sym const*
         {
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
                 if (sym->start && sym->declaration->is(declaration_node::active::object) && 
-                    sym->parameter && sym->parameter->pass == passing_style::copy)
+                    (!sym->parameter || sym->parameter->pass == passing_style::copy))
                 {
                     return sym;
                 }
@@ -386,10 +386,10 @@ public:
                     ensure_definitely_initialized(decl->identifier, sympos+1, symbols[sympos].depth);
             }
 
-            //  If this is a `copy` parameter, identify and tag its definite last
-            //  uses to `std::move` from them
+            //  If this is a `copy` parameter or a local variable,
+            //  identify and tag its definite last uses to `std::move` from them
             //
-            if (auto decl = is_copy_param(symbols[sympos])) {
+            if (auto decl = is_potentially_movable_local(symbols[sympos])) {
                 assert (decl->identifier);
                 find_definite_last_uses(decl->identifier, sympos);
             }

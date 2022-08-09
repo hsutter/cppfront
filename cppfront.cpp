@@ -526,16 +526,17 @@ class cppfront
     cpp2::tokens tokens;
     cpp2::parser parser;
     cpp2::sema   sema;
-    bool source_loaded = true;
 
-    bool last_postfix_expr_was_pointer = false;
-    bool bounds_safety_violation = false;
+    bool source_loaded                   = true;
+    bool last_postfix_expr_was_pointer   = false;
+    bool bounds_safety_violation         = false;
+    bool suppress_move_from_last_use     = false;
 
     //  For lowering
     //    
     positional_printer printer;
-    bool               in_definite_init    = false;
-    bool               in_parameter_list   = false;
+    bool               in_definite_init  = false;
+    bool               in_parameter_list = false;
 
     std::vector<parameter_declaration_list_node*> function_returns = {};
     parameter_declaration_list_node single_anon; // hack for now to note single-anon-return type kind in this function_returns working list
@@ -780,7 +781,7 @@ public:
     //
     auto emit(unqualified_id_node const& n) -> void
     {
-        if (is_definite_last_use(n.identifier)) {
+        if (is_definite_last_use(n.identifier) && !suppress_move_from_last_use) {
             auto s = std::string("std::move(") + n.identifier->to_string(true) + ")";
             printer.print_cpp2(s, n.position());
             return;
@@ -889,8 +890,7 @@ public:
     auto emit(return_statement_node const& n) -> void
     {
         assert(n.identifier);
-
-        auto stmt = n.identifier->to_string(true);    // "return"
+        emit(*n.identifier);    // "return"
 
         //  Return with expression == single anonymous return type
         //
@@ -915,7 +915,7 @@ public:
         //  Return without expression == zero or named return values
         //
         else if (!function_returns.empty() && function_returns.back()) {
-            stmt += " { ";
+            auto stmt = std::string(" { ");
             auto& parameters = function_returns.back()->parameters;
             for (bool first = true; auto& param : parameters) {
                 if (!first) {
@@ -926,10 +926,10 @@ public:
                 stmt += param->declaration->identifier->identifier->to_string(true);
             }
             stmt += " }";
+            printer.print_cpp2(stmt, n.position());
         }
 
-        stmt += ";";
-        printer.print_cpp2(stmt, n.position());
+        printer.print_cpp2(";", n.position());
     }
 
 
@@ -1035,10 +1035,20 @@ public:
             }
         }
 
+        //  Print the prefixes (in forward order)
         for (auto& e : prefix) {
             printer.print_cpp2(e.text, n.position());
         }
+
+        //  If this is an --, ++, or &, don't add std::move on the lhs
+        //  even if this is a definite last use (only do that when an rvalue is okay)
+        if (*n.ops.front().op == "--" || *n.ops.front().op == "++" || *n.ops.front().op == "&") {
+            suppress_move_from_last_use = true;
+        }
         emit(*n.expr);
+        suppress_move_from_last_use = false;
+
+        //  Print the suffixes (in reverse order)
         while (!suffix.empty()) {
             printer.print_cpp2(suffix.back().text, suffix.back().pos);
             suffix.pop_back();
@@ -1103,9 +1113,13 @@ public:
             return;
         }
 
-        //  Handle non-is/as expressions  
-        //
+        //  If this is an assignment expression, don't add std::move on the lhs
+        //  even if this is a definite last use (only do that when an rvalue is okay)
+        if (!n.terms.empty() && is_assignment_operator(n.terms.front().op->type())) {
+            suppress_move_from_last_use = true;
+        }
         emit(*n.expr);
+        suppress_move_from_last_use = false;
 
         for (auto const& x : n.terms) {
             assert(x.op);
@@ -1227,12 +1241,12 @@ public:
         if (!returns)
         {
             switch (n.pass) {
-            break;case passing_style::in     : printer.print_cpp2( ">",      n.position() );
-            break;case passing_style::copy   : printer.print_cpp2( " const", n.position() );
-            break;case passing_style::inout  : printer.print_cpp2( "&",      n.position() );
-            break;case passing_style::out    : printer.print_cpp2( ">",      n.position() );
-            break;case passing_style::move   : printer.print_cpp2( "&&",     n.position() );
-            break;case passing_style::forward: printer.print_cpp2( "&&",     n.position() ); assert(false); // TODO: support forward parameters
+            break;case passing_style::in     : printer.print_cpp2( ">",  n.position() );
+            break;case passing_style::copy   : printer.print_cpp2( "",   n.position() );
+            break;case passing_style::inout  : printer.print_cpp2( "&",  n.position() );
+            break;case passing_style::out    : printer.print_cpp2( ">",  n.position() );
+            break;case passing_style::move   : printer.print_cpp2( "&&", n.position() );
+            break;case passing_style::forward: assert(false); // TODO: support forward parameters
             break;default: ;
             }
 
