@@ -357,14 +357,14 @@ public:
             return {};
         };
 
-        //  It's a local (incl. named return value or copy parameter)
+        //  It's a local (incl. named return value or copy or move parameter)
         //
         auto is_potentially_movable_local = [&](symbol const& s) 
             -> declaration_sym const*
         {
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
                 if (sym->start && sym->declaration->is(declaration_node::active::object) && 
-                    (!sym->parameter || sym->parameter->pass == passing_style::copy))
+                    (!sym->parameter || sym->parameter->pass == passing_style::copy || sym->parameter->pass == passing_style::move))
                 {
                     return sym;
                 }
@@ -745,7 +745,7 @@ public:
             inside_out_parameter = &n;
         }
 
-        if (n.pass == passing_style::copy)
+        if (n.pass == passing_style::copy || n.pass == passing_style::move)
         {
             symbols.emplace_back( scope_depth, declaration_sym( true, n.declaration.get(), n.declaration->identifier->identifier, n.declaration->initializer.get(), &n));
         }

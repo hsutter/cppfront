@@ -128,6 +128,32 @@ public:
 };
 
 
+//-----------------------------------------------------------------------
+// 
+//  contract_group
+// 
+//-----------------------------------------------------------------------
+//
+class contract_group {
+public:
+    using handler = void (*)() noexcept;
+
+    constexpr contract_group  (handler h = nullptr)  : chandler(normalize(h)) { }
+    constexpr auto set_handler(handler h) -> handler { auto old = chandler; chandler = normalize(h); return old; }
+    constexpr auto get_handler() const    -> handler { return chandler; }
+    constexpr auto expects  (bool b)      -> void    { assertion(b); }
+    constexpr auto ensures  (bool b)      -> void    { assertion(b); }
+private:
+    constexpr auto assertion(bool b)      -> void    { if (!b) chandler(); }
+    constexpr auto normalize(handler h)   -> handler { return h ? h : []()noexcept{}; }
+    handler chandler;
+};
+
+auto inline Default = contract_group( &std::terminate );
+auto inline Bounds  = Default;
+auto inline Null    = Default;
+auto inline Testing = Default;
+
 }
 
 #endif

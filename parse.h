@@ -1286,6 +1286,10 @@ private:
             pass = passing_style::out;
             next();
         }
+        else if (curr().type() == lexeme::Identifier && curr() == "move") {
+            pass = passing_style::move;
+            next();
+        }
         auto x = expression();
 
         //  If this is an empty expression_list, we're done
@@ -1301,6 +1305,10 @@ private:
             pass = passing_style::in;
             if (curr().type() == lexeme::Identifier && curr() == "out") {
                 pass = passing_style::out;
+                next();
+            }
+            else if (curr().type() == lexeme::Identifier && curr() == "move") {
+                pass = passing_style::move;
                 next();
             }
             n->expressions.push_back( { pass, expression() } );
