@@ -508,6 +508,42 @@ struct selection_statement_node
 };
 
 
+struct iteration_statement_node
+{
+    token const*                                identifier;
+    std::unique_ptr<compound_statement_node>    statement;
+    std::unique_ptr<assignment_expression_node> next_expression;    // if used, else null
+    std::unique_ptr<logical_or_expression_node> condition;          // used for "do" and "while", else null
+    std::unique_ptr<id_expression_node>         loop_var;           // used for "for", else null
+    std::unique_ptr<id_expression_node>         range;              // used for "for", else null
+
+    auto position() const -> source_position
+    {
+        assert(identifier);
+        return identifier->position();
+    }
+
+    auto visit(auto& v, int depth) -> void
+    {
+        v.start(*this, depth);
+        assert(statement);
+        statement->visit(v, depth+1);
+        assert(next_expression);
+        next_expression->visit(v, depth+1);
+        if (condition) {
+            assert(!loop_var && !range);
+            condition->visit(v, depth+1);
+        }
+        else {
+            assert(loop_var && range);
+            loop_var->visit(v, depth+1);
+            range->visit(v, depth+1);
+        }
+        v.end(*this, depth);
+    }
+};
+
+
 struct return_statement_node
 {
     token const*                     identifier;
@@ -533,13 +569,14 @@ struct return_statement_node
 struct declaration_node;
 struct statement_node
 {
-    enum active { expression=0, compound, selection, declaration, return_ };
+    enum active { expression=0, compound, selection, declaration, return_, iteration };
     std::variant<
         std::unique_ptr<expression_statement_node>,
         std::unique_ptr<compound_statement_node>,
         std::unique_ptr<selection_statement_node>,
         std::unique_ptr<declaration_node>,
-        std::unique_ptr<return_statement_node>
+        std::unique_ptr<return_statement_node>,
+        std::unique_ptr<iteration_statement_node>
     > statement;
 
     auto position() const -> source_position;
@@ -1565,14 +1602,136 @@ private:
     }
 
 
+    //G iteration-statement:
+    //G     while logical-or-expression next-clause-opt compound-statement
+    //G     do compound-statement while logical-or-expression next-clause-opt ;
+    //G     for id-expression in id-expression next-clause-opt compound-statement
+    //G
+    //G next-clause:
+    //G     next assignment-expression 
+    //G
+    auto iteration_statement() -> std::unique_ptr<iteration_statement_node> 
+    {
+        if (curr().type() != lexeme::Keyword || 
+            (curr() != "while" && curr() != "do" && curr() != "for")
+            )
+        {
+            return {};
+        }
+
+        auto n = std::make_unique<iteration_statement_node>();
+        n->identifier = &curr();
+        next();
+
+        //-----------------------------------------------------------------
+        //  We'll do these same things in different orders,
+        //  so extract them into local functions...
+        auto handle_optional_next_clause = [&]() -> bool {
+            if (curr() != "next") {
+                return true; // absent next clause is okay
+            }
+            next(); // don't bother remembering "next" token, shouldn't need its position info
+            auto next = assignment_expression();
+            if (!next) {
+                error("invalid expression after \"next\"");
+                return false;
+            }
+            n->next_expression = std::move(next);
+            return true;
+        };
+
+        auto handle_logical_expression = [&]() -> bool {
+            auto x = logical_or_expression();
+            if (!x) {
+                error("a loop must have a valid conditional expression");
+                return false;
+            }
+            n->condition = std::move(x);
+            return true;
+        };
+        
+        auto handle_compound_statement = [&]() -> bool {
+            auto s = compound_statement();
+            if (!s) {
+                error("invalid \"while\" loop body");
+                return false;
+            }
+            n->statement= std::move(s);
+            return true;
+        };
+
+        auto handle_id_expression = [&]() -> std::unique_ptr<id_expression_node> {
+            auto e = id_expression();
+            if (!e) {
+                error("invalid expression");
+                return {};
+            }
+            return e;
+        };
+        //-----------------------------------------------------------------
+
+        //  Handle "while"
+        //
+        if (*n->identifier == "while")
+        {
+            if (!handle_logical_expression  ()) { return {}; }
+            if (!handle_optional_next_clause()) { return {}; }
+            if (!handle_compound_statement  ()) { return {}; }
+            return n;
+        }
+
+        //  Handle "do"
+        //
+        else if (*n->identifier == "do")
+        {
+            if (!handle_compound_statement  ()) { return {}; }
+            if (curr() != "while") {
+                error("\"do\" body must be followed by \"while\"");
+                return {};
+            }
+            next();
+            if (!handle_logical_expression  ()) { return {}; }
+            if (!handle_optional_next_clause()) { return {}; }
+            if (curr().type() != lexeme::Semicolon) {
+                error("missing ; after \"do/while\" loop condition");
+                next();
+                return {};
+            }
+            next();
+            return n;
+        }
+
+        //  Handle "for"
+        //
+        else if (*n->identifier == "for")
+        {
+            n->loop_var = handle_id_expression();
+            assert(n->loop_var);
+            if (curr() != "in") {
+                error("\"for\" loop variable expression must be followed by \"in\"");
+                return {};
+            }
+            next();
+            n->range = handle_id_expression();
+            assert(n->range);
+            if (!handle_optional_next_clause()) { return {}; }
+            if (!handle_compound_statement  ()) { return {}; }
+            return n;
+        }
+
+        assert(!"compiler bug: unexpected case");
+        return {};
+    }
+
+
     //G statement:
     //G     expression-statement
     //G     compound-statement
     //G     selection-statement
     //G     declaration-statement
     //G     return-statement
+    //G     iteration-statement
     // 
-    //GT     iteration-statement
     //GT     jump-statement
     //GT     try-block
     //G
@@ -1589,6 +1748,12 @@ private:
         else if (auto s = return_statement()) {
             n->statement = std::move(s);
             assert (n->statement.index() == statement_node::return_);
+            return n;
+        }
+
+        else if (auto s = iteration_statement()) {
+            n->statement = std::move(s);
+            assert (n->statement.index() == statement_node::iteration);
             return n;
         }
 

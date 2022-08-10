@@ -895,6 +895,87 @@ public:
 
     //-----------------------------------------------------------------------
     //
+    auto emit(iteration_statement_node const& n) -> void
+    {
+        assert(n.identifier);
+        assert(n.statement);
+
+        //  Handle while
+        //
+        if (*n.identifier == "while") {
+            assert(n.condition && !n.loop_var && !n.range);
+
+            //  We emit Cpp2 while loops as Cpp2 for loops if there's a "next" clause
+            if (!n.next_expression) {
+                printer.print_cpp2("while ( ", n.position());
+                emit(*n.condition);
+            }
+            else {
+                printer.print_cpp2("for ( ; ", n.position());
+                emit(*n.condition);
+                printer.print_cpp2("; ", n.position());
+                emit(*n.next_expression);
+            }
+            printer.print_cpp2(" ) ", n.position());
+            emit(*n.statement);
+            return;
+        }
+
+        //  Handle do
+        //
+        if (*n.identifier == "do") {
+            assert(n.condition && !n.loop_var && !n.range);
+
+            printer.print_cpp2("do ", n.position());
+            emit(*n.statement);
+            printer.print_cpp2(" while ( ", n.position());
+            emit(*n.condition);
+            if (n.next_expression) {    
+                //  Gotta say, this feels kind of nifty... short-circuit eval
+                //  and smuggling work into a condition via a lambda, O my...
+                printer.print_cpp2(" && [&]{ ", n.position());
+                emit(*n.next_expression);
+                printer.print_cpp2(" ; return true; }() ", n.position());
+            }
+            printer.print_cpp2(");", n.position());
+            return;
+        }
+
+        //  Handle for
+        //
+        if (*n.identifier == "for") {
+            assert(!n.condition && n.loop_var && n.range);
+
+            printer.print_cpp2("for ( auto&& ", n.position());
+            emit(*n.loop_var);
+            printer.print_cpp2(" : ", n.position());
+            emit(*n.range);
+            printer.print_cpp2(" ) ", n.position());
+
+            //  If there's a next-expression, smuggle it in via a nested do/while(false) loop
+            //  (nested "continue" will work, but "break" won't until we do extra work to implement
+            //  that using a flag and implementing "break" as "__for_break = true; continue;")
+            if (n.next_expression) {    
+                printer.print_cpp2(" { do ", n.position());
+            }
+
+            emit(*n.statement);
+
+            if (n.next_expression) {    
+                printer.print_cpp2(" while (false); ", n.position());
+                emit(*n.next_expression);
+                printer.print_cpp2("; }", n.position());
+            }
+
+            return;
+        }
+
+        assert(!"compiler bug: unexpected case");
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
     auto emit(return_statement_node const& n) -> void
     {
         assert(n.identifier);
@@ -1310,6 +1391,7 @@ public:
         try_emit<statement_node::selection  >(n.statement);
         try_emit<statement_node::declaration>(n.statement);
         try_emit<statement_node::return_    >(n.statement);
+        try_emit<statement_node::iteration  >(n.statement);
     }
 
 
