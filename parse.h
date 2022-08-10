@@ -356,20 +356,35 @@ struct unqualified_id_node
 
 struct qualified_id_node
 {
-    std::vector<std::unique_ptr<unqualified_id_node>> ids;
+    struct term {
+        token const* scope_op;
+        std::unique_ptr<unqualified_id_node> id = nullptr;
+
+        term( token const* o ) : scope_op{o} { }
+    };
+    std::vector<term> ids;
 
     auto position() const -> source_position
     {
-        assert (std::ssize(ids) > 0 && ids.front());
-        return ids.front()->position();
+        assert (!ids.empty());
+        if (ids.front().scope_op) {
+            return ids.front().scope_op->position();
+        }
+        else {
+            assert (ids.front().id);
+            return ids.front().id->position();
+        }
     }
 
     auto visit(auto& v, int depth) -> void
     {
         v.start(*this, depth);
         for (auto const& x : ids) {
-            assert(x);
-            x->visit(v, depth+1);
+            if (x.scope_op) {
+                x.scope_op->visit(v, depth+1);
+            }
+            assert(x.id);
+            x.id->visit(v, depth+1);
         }
         v.end(*this, depth);
     }
@@ -1344,54 +1359,68 @@ private:
 
     //G qualified-id:
     //G     nested-name-specifier unqualified-id
+    //G     member-name-specifier unqualified-id
     //G
-    //G nested-name-specifier
+    //G nested-name-specifier:
     //G     ::
     //G     unqualified-id ::
-    //GT     type-name ::
-    //GT     namespace-name ::
-    //GT     nested-name-specifier identifier ::
+    //G
+    //G member-name-specifier:
+    //G     unqualified-id .
     //G
     auto qualified_id() -> std::unique_ptr<qualified_id_node> 
     {
         auto n = std::make_unique<qualified_id_node>();
 
-        //  Remember current position, because we need to look ahead to the ::
+        auto term = qualified_id_node::term{nullptr};
+
+        //  Handle initial :: if present, else the first scope_op will be null
+        if (curr().type() == lexeme::Scope) {
+            term.scope_op = &curr();
+            next();
+        }
+
+        //  Remember current position, because we need to look ahead to the :: or .
         auto start_pos = pos;
-        auto id = unqualified_id();
-        if (!id || curr().type() != lexeme::Scope) {
+
+        //  If we don't get a first id, or if the next thing isn't :: or .,
+        //  back out and report unsuccessful
+        term.id = unqualified_id();
+        if (!term.id || (curr().type() != lexeme::Scope && curr().type() != lexeme::Dot)) {
             pos = start_pos;    // backtrack
             return {};
         }
 
         //  Reject "std" :: "move" / "forward"
-        assert (id->identifier);
-        auto first_uid_was_std = (*id->identifier == "std");
+        assert (term.id->identifier);
+        auto first_uid_was_std = (*term.id->identifier == "std");
         auto first_time_through_loop = true;
 
-        n->ids.push_back( std::move(id) );
+        n->ids.push_back( std::move(term) );
 
-        assert (curr().type() == lexeme::Scope);
-        while (curr().type() == lexeme::Scope) {
+        assert (curr().type() == lexeme::Scope || curr().type() == lexeme::Dot);
+        while (curr().type() == lexeme::Scope || curr().type() == lexeme::Dot)
+        {
+            auto term = qualified_id_node::term{ &curr() };
             next();
-            id = unqualified_id();
-            if (!id) {
+            term.id = unqualified_id();
+            if (!term.id) {
                 error("invalid text, :: should be followed by a nested name");
                 return {};
             }
-            assert (id->identifier);
+            assert (term.id->identifier);
             if (first_time_through_loop) {
-                if (*id->identifier == "move") {
+                if (*term.id->identifier == "move") {
                     error("std::move is not needed in Cpp2 - use \"move\" parameters/arguments instead", false);
                     return {};
                 }
-                else if (*id->identifier == "forward") {
+                else if (*term.id->identifier == "forward") {
                     error("std::forward is not needed in Cpp2 - use \"forward\" parameters/arguments instead", false);
                     return {};
                 }
                 first_time_through_loop = false;
             }
-            n->ids.push_back( std::move(id) );
+            n->ids.push_back( std::move(term) );
         }
 
         return n;

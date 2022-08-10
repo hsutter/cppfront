@@ -809,13 +809,12 @@ public:
     {
         auto ident = std::string{};
 
-        for (bool first = true; auto const& id : n.ids)
+        for (auto const& id : n.ids)
         {
-            if (!first) {
-                ident += "::";
+            if (id.scope_op) {
+                ident += id.scope_op->to_string(true);
             }
-            first = false;
-            ident += id->identifier->to_string(true);
+            ident += id.id->identifier->to_string(true);
         }
 
         printer.print_cpp2( ident, n.position() );
@@ -1616,12 +1615,12 @@ public:
 using namespace std;
 using namespace cpp2;
 
-static auto suppress_debug_output_files = false;
+static auto enable_debug_output_files = false;
 static cmdline_processor::register_flag cmd_noline( 
     3,
-    "no-debug", 
-    "Suppress debug output files (enabled by default during development)", 
-    []{ suppress_debug_output_files = true; }
+    "debug", 
+    "Emit debug output files (-source, -tokens, -parse, -symbols)", 
+    []{ enable_debug_output_files = true; }
 );
 
 auto main(int argc, char* argv[]) -> int
@@ -1670,7 +1669,7 @@ auto main(int argc, char* argv[]) -> int
 
         //  In any case, emit the debug information (during early development this is
         //  on by default, later we'll flip the switch to turn it on instead of off)
-        if (!suppress_debug_output_files) {
+        if (enable_debug_output_files) {
             c.debug_print();
         }
     }
