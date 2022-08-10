@@ -439,6 +439,7 @@ auto lex_line(
     {
         auto peek1 = peek(1);
         auto peek2 = peek(2);
+        auto peek3 = peek(3);
 
         //G encoding-prefix: one of
         //G     u8 u
@@ -598,10 +599,10 @@ auto lex_line(
                 if (peek1 == '=') { store(2, lexeme::EqualComparison); }
                 else { store(1, lexeme::Assignment); }
 
-            //G     != !
+            //G     !=
             break;case '!': 
                 if (peek1 == '=') { store(2, lexeme::NotEqualComparison); }
-                else { store(1, lexeme::Not); }
+                //else { store(1, lexeme::Not); }
 
             //G     ... .
             break;case '.': 
@@ -617,11 +618,6 @@ auto lex_line(
 
             //G     { } ( ) [ ] ; , ? $
             //G
-            //break;case '^': 
-            //    store(1, lexeme::Caret);
-
-            //break;case '~': 
-            //    store(1, lexeme::Tilde);
 
             break;case '{': 
                 store(1, lexeme::LeftBrace);
@@ -710,6 +706,10 @@ auto lex_line(
             // (this will be less kludgy to write with pattern matching)
             default:
 
+                if (line[i] == 'n' && peek1 == 'o' && peek2 == 't' && isspace(peek3)) {
+                    store(3, lexeme::Not);
+                }
+
                 //G decimal-literal:
                 //G     digit { ' | digit }*
                 //G     
@@ -717,7 +717,7 @@ auto lex_line(
                 //G     digit { ' | digit }* . digit { ' | digit }*
                 //GT TODO: full grammar
                 //G     
-                if (is_digit(line[i])) {
+                else if (is_digit(line[i])) {
                     auto j = 1;
                     while (is_separator_or(is_digit,peek(j))) { ++j; }
                     if (peek(j) != '.') {

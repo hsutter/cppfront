@@ -31,7 +31,7 @@ namespace cpp2 {
 //
 
 //G prefix-operator:
-//G     one of  !
+//G     one of  not
 //G
 auto is_prefix_operator(lexeme l) -> bool
 { 

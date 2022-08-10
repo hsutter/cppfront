@@ -538,8 +538,10 @@ class cppfront
     bool               in_definite_init  = false;
     bool               in_parameter_list = false;
 
+    std::string                                   function_return_name;
     std::vector<parameter_declaration_list_node*> function_returns = {};
-    parameter_declaration_list_node single_anon; // hack for now to note single-anon-return type kind in this function_returns working list
+    parameter_declaration_list_node               single_anon;  
+    //  special value - hack for now to note single-anon-return type kind in this function_returns working list
 
 public:
     //-----------------------------------------------------------------------
@@ -771,17 +773,17 @@ public:
     {
         printer.print_cpp2(n, n.position());
 
-        if (is_definite_initialization(&n)) {
-            in_definite_init = true;
-        }
+        in_definite_init = is_definite_initialization(&n);
     }
 
 
     //-----------------------------------------------------------------------
     //
-    auto emit(unqualified_id_node const& n) -> void
+    auto emit(unqualified_id_node const& n, bool in_synthesized_multi_return = false ) -> void
     {
-        bool add_std_move = is_definite_last_use(n.identifier) && !suppress_move_from_last_use;
+        bool add_std_move = 
+            in_synthesized_multi_return ||
+            (is_definite_last_use(n.identifier) && !suppress_move_from_last_use);
 
         if (add_std_move) {
             printer.print_cpp2("std::move(", n.position());
@@ -791,7 +793,10 @@ public:
         emit(*n.identifier);
 
         in_definite_init = is_definite_initialization(n.identifier);
-        if (!in_definite_init && !in_parameter_list) {
+        if (in_synthesized_multi_return) {
+            printer.print_cpp2(".value()", n.position());
+        }
+        else if (!in_definite_init && !in_parameter_list) {
             if (auto decl = sema.get_declaration_of(*n.identifier); decl && !decl->parameter && !decl->initializer) {
                 printer.print_cpp2(".value()", n.position());
             }
@@ -894,7 +899,7 @@ public:
     {
         assert(n.identifier);
         assert(*n.identifier == "return");
-        printer.print_cpp2(" return ", n.position());
+        printer.print_cpp2("return ", n.position());
 
         //  Return with expression == single anonymous return type
         //
@@ -919,6 +924,7 @@ public:
         //  Return without expression == zero or named return values
         //
         else if (!function_returns.empty() && function_returns.back()) {
+            //auto stmt = function_return_name + " { "; // we shouldn't need this with { } init
             auto stmt = std::string(" { ");
             auto& parameters = function_returns.back()->parameters;
             for (bool first = true; auto& param : parameters) {
@@ -927,7 +933,10 @@ public:
                 }
                 first = false;
                 assert(param->declaration->identifier);
-                stmt += param->declaration->identifier->identifier->to_string(true);
+                
+                printer.emit_to_string(&stmt);
+                emit(*param->declaration->identifier, true);
+                printer.emit_to_string();
             }
             stmt += " }";
             printer.print_cpp2(stmt, n.position());
@@ -1132,12 +1141,18 @@ public:
     //
     auto emit(prefix_expression_node const& n) -> void
     {
+        auto suffix = std::string{};
         for (auto const& x : n.ops) {
             assert(x);
-            emit(*x);
+            assert(x->type() == lexeme::Not);   // should be the only prefix operator
+            //emit(*x);
+            printer.add_pad_in_this_line(-3);
+            printer.print_cpp2("!(", n.position());
+            suffix += ")";
         }
         assert(n.expr);
         emit(*n.expr);
+        printer.print_cpp2(suffix, n.position());
     }
 
 
@@ -1255,12 +1270,15 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(expression_statement_node const& n, bool can_have_semicolon, bool function_body = false ) -> void
+    auto emit(expression_statement_node const& n, bool can_have_semicolon, bool function_body = false, bool function_void_ret = false ) -> void
     {
         assert(n.expr);
 
         if (function_body) {
-            printer.print_cpp2("{ return ", n.position());
+            printer.print_cpp2("{ ", n.position());
+            if (!function_void_ret) {
+                printer.print_cpp2("return ", n.position());
+            }
         }
 
         emit(*n.expr);
@@ -1280,13 +1298,14 @@ public:
         statement_node const&           n, 
         bool                            can_have_semicolon  = true, 
         bool                            function_body       = false,
+        bool                            function_void_ret   = false,
         std::vector<std::string> const& function_ret_locals = {},
         colno_t                         function_indent     = 1
     )
         -> void
     {
         printer.disable_indent_heuristic_for_next_text();
-        try_emit<statement_node::expression >(n.statement, can_have_semicolon, function_body);
+        try_emit<statement_node::expression >(n.statement, can_have_semicolon, function_body, function_void_ret);
         try_emit<statement_node::compound   >(n.statement, function_ret_locals, function_indent);
         try_emit<statement_node::selection  >(n.statement);
         try_emit<statement_node::declaration>(n.statement);
@@ -1432,8 +1451,12 @@ public:
         }
 
         else {
+            function_return_name = {};
+            printer.emit_to_string(&function_return_name);
             printer.print_cpp2( *ident, ident->position() );
             printer.print_cpp2( "__ret", ident->position() );
+            printer.emit_to_string();
+            printer.print_cpp2( function_return_name, ident->position() );
         }
     }
 
@@ -1502,21 +1525,26 @@ public:
             if (func->returns.index() == function_type_node::list)
             {
                 auto& r = std::get<function_type_node::list>(func->returns);
+                assert(r);
                 for (auto& param : r->parameters)
                 {
                     assert(param && param->declaration);
                     auto& decl    = *param->declaration;
+
                     assert(decl.type.index() == declaration_node::object);
-                    auto& id_expr = *std::get<declaration_node::object>(decl.type);
-                    assert(id_expr.id.index() == id_expression_node::unqualified);
-                    auto& type_id = std::get<id_expression_node::unqualified>(id_expr.id);
-                    assert(type_id);
+                    auto& id_expr = std::get<declaration_node::object>(decl.type);
+                    assert(id_expr);
 
                     auto loc = std::string{};
                     if (!decl.initializer) {
-                        loc += ("cpp2::deferred_init<");
+                        loc += ("    cpp2::deferred_init<");
                     }
-                    loc += ((std::string_view)*type_id->identifier);
+
+                    //  For convenience, just capture the id-expression as a string
+                    printer.emit_to_string(&loc);
+                    emit(*id_expr);
+                    printer.emit_to_string();
+
                     if (!decl.initializer) {
                         loc += (">");
                     }
@@ -1547,7 +1575,11 @@ public:
                 }
             }
 
-            emit( *n.initializer, true, true, function_return_locals, n.position().colno );
+            emit( 
+                *n.initializer, 
+                true, true, func->returns.index() == function_type_node::empty, 
+                function_return_locals, n.position().colno
+            );
 
             function_returns.pop_back();
         }
