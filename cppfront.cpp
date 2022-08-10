@@ -255,7 +255,7 @@ class positional_printer
         }
  
         //  Finally, align to the target column
-        pos.colno += pad_for_this_line;
+        pos.colno = std::max( 1, pos.colno + pad_for_this_line );
         print( pad( pos.colno - curr_pos.colno ) );
     }
 
@@ -990,6 +990,65 @@ public:
             }
         }
 
+        //  Check to see if it's just a function call,
+        //  and if so use this path to convert it to UFCS
+        if (std::ssize(n.ops) == 1 &&
+            n.ops.front().op->type() == lexeme::LeftParen &&
+            n.expr->expr.index() == primary_expression_node::id_expression
+            )
+        {
+            auto& id = std::get<primary_expression_node::id_expression>(n.expr->expr);
+            assert(id);
+            if (id->id.index() == id_expression_node::qualified)
+            {
+                auto& qual = std::get<id_expression_node::qualified>(id->id);
+                assert(qual);
+                if (std::ssize(qual->ids) > 1 &&
+                    qual->ids.back().scope_op->type() == lexeme::Dot
+                    )
+                {
+                    //  OK, we're in the UFCS syntax case... 
+
+                    //  For convenience, just capture the expression as a string
+                    //  which will be of the form "any::other.qualification.funcname"
+                    auto print = std::string{};
+                    printer.emit_to_string(&print);
+                    emit(*n.expr);
+                    printer.emit_to_string();
+
+                    //  Find the last . we already confirmed will be there
+                    //  between "any::other.qualification" and the final "funcname"
+                    auto pos_dot = print.rfind(".");
+                    assert(pos_dot != std::string::npos);
+
+                    //  If there are no additional arguments, use the CPP2_UFCS_0 version
+                    if (!n.ops.front().expr_list->expressions.empty()) {
+                        printer.print_cpp2("CPP2_UFCS(", n.position());
+                    }
+                    else {
+                        printer.print_cpp2("CPP2_UFCS_0(", n.position());
+                    }
+
+                    //  Make the "funcname" the first argument to CPP2_UFCS
+                    printer.print_cpp2(print.substr(pos_dot+1), n.position());
+                    printer.print_cpp2(", ", n.position());
+
+                    //  Then make the "any::other.qualification" the second argument
+                    printer.print_cpp2(print.substr(0,pos_dot), n.position());
+
+                    //  Then tack on any additional arguments
+                    if (!n.ops.front().expr_list->expressions.empty()) {
+                        printer.print_cpp2(", ", n.position());
+                        emit(*n.ops.front().expr_list);
+                    }
+                    printer.print_cpp2(")", n.position());
+
+                    //  And we're done. This path has handled this node, so return...
+                    return;
+                }
+            }
+        }
+
         //  Otherwise, we're going to have to potentially do some work to change
         //  some Cpp2 postfix operators to Cpp1 prefix operators, so let's set up...
         struct element {
@@ -1527,12 +1586,12 @@ public:
             if (n.initializer)
             {
                 printer.add_pad_in_this_line(-100);
-                printer.print_cpp2( " ( ", n.position() );
+                printer.print_cpp2( " { ", n.position() );
 
                 assert( n.initializer );
                 emit( *n.initializer, false );
 
-                printer.print_cpp2( " )", n.position() );
+                printer.print_cpp2( " }", n.position() );
             }
 
             printer.print_cpp2( "; ", n.position() );

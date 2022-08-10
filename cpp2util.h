@@ -49,9 +49,10 @@ using in =
 
 //-----------------------------------------------------------------------
 // 
-//  These are closely related...
+//  Initialization: These are closely related...
 // 
 //  deferred_init<T>    For deferred-initialized local or member variable
+//
 //  out<T>              For out parameter
 // 
 //-----------------------------------------------------------------------
@@ -153,6 +154,32 @@ auto inline Default = contract_group( &std::terminate );
 auto inline Bounds  = Default;
 auto inline Null    = Default;
 auto inline Testing = Default;
+
+
+//-----------------------------------------------------------------------
+// 
+//  CPP2_UFCS: Variadic macro generating a variadic lamba, oh my...
+// 
+//-----------------------------------------------------------------------
+//
+#define CPP2_UFCS(FUNCNAME,PARAM1,...) \
+[](auto&& obj, auto&& ...params) { \
+    if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); }) { \
+        return std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); \
+    } else { \
+        return FUNCNAME(std::forward<decltype(obj)>(obj), std::forward<decltype(params)>(params)...); \
+    } \
+}(PARAM1, __VA_ARGS__)
+
+#define CPP2_UFCS_0(FUNCNAME,PARAM1) \
+[](auto&& obj) { \
+    if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(); }) { \
+        return std::forward<decltype(obj)>(obj).FUNCNAME(); \
+    } else { \
+        return FUNCNAME(std::forward<decltype(obj)>(obj)); \
+    } \
+}(PARAM1)
+
 
 }
 
