@@ -540,7 +540,7 @@ private:
                             errors.emplace_back( 
                                 sym.identifier->position(), 
                                 "local variable " + sym.identifier->to_string(true)
-                                    + " is used in a general expression before it was initialized");
+                                    + " is used before it was initialized");
                         }
                         return sym.assignment_to;
                     }

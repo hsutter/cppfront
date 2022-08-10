@@ -781,21 +781,25 @@ public:
     //
     auto emit(unqualified_id_node const& n) -> void
     {
-        if (is_definite_last_use(n.identifier) && !suppress_move_from_last_use) {
-            auto s = std::string("std::move(") + n.identifier->to_string(true) + ")";
-            printer.print_cpp2(s, n.position());
-            return;
+        bool add_std_move = is_definite_last_use(n.identifier) && !suppress_move_from_last_use;
+
+        if (add_std_move) {
+            printer.print_cpp2("std::move(", n.position());
         }
 
-        auto ident = n.identifier->to_string(true);
+        assert(n.identifier);
+        emit(*n.identifier);
+
         in_definite_init = is_definite_initialization(n.identifier);
         if (!in_definite_init && !in_parameter_list) {
             if (auto decl = sema.get_declaration_of(*n.identifier); decl && !decl->parameter && !decl->initializer) {
-                ident += ".value()";
+                printer.print_cpp2(".value()", n.position());
             }
         }
 
-        printer.print_cpp2( ident, n.position() );
+        if (add_std_move) {
+            printer.print_cpp2(")", n.position());
+        }
     }
 
 
@@ -890,7 +894,8 @@ public:
     auto emit(return_statement_node const& n) -> void
     {
         assert(n.identifier);
-        emit(*n.identifier);    // "return"
+        assert(*n.identifier == "return");
+        printer.print_cpp2(" return ", n.position());
 
         //  Return with expression == single anonymous return type
         //
@@ -929,7 +934,7 @@ public:
             printer.print_cpp2(stmt, n.position());
         }
 
-        printer.print_cpp2(";", n.position());
+        printer.print_cpp2("; ", n.position());
     }
 
 
@@ -1352,6 +1357,7 @@ public:
         emit(*n.parameters);
 
         if (!n.throws) {
+            printer.add_pad_in_this_line(-25);
             printer.print_cpp2( " noexcept", n.position() );
         }
 
@@ -1367,24 +1373,6 @@ public:
             emit(*r);
         }
 
-        //else {
-        //    auto& r = std::get<function_type_node::list>(n.returns);
-        //    assert(r);
-        //    if (std::ssize(r->parameters) == 1) {
-        //        //  For a single return, get its declaration node from its type
-        //        auto& param   = r->parameters.front();
-        //        assert(param && param->declaration);
-        //        auto& decl    = *param->declaration;
-        //        assert (decl.type.index() == declaration_node::object);
-        //        auto& id_expr = *std::get<declaration_node::object>(decl.type);
-
-        //        emit( id_expr );
-
-        //        if (param->pass == passing_style::forward) {
-        //            print("&");
-        //        }
-        //    }
-        //}
         else {
             printer.print_cpp2( *ident, ident->position() );
             printer.print_cpp2( "__ret", ident->position() );
@@ -1421,11 +1409,14 @@ public:
         //  Function
         if (n.is(declaration_node::function))
         {
-            printer.print_cpp2( "auto ", n.position() );
-            printer.print_cpp2( *n.identifier->identifier, n.identifier->position() );
-
             auto& func = std::get<declaration_node::function>(n.type);
             assert(func);
+
+            if (func->returns.index() != function_type_node::empty) {
+                printer.print_cpp2( "[[nodiscard]] ", n.position() );
+            }
+            printer.print_cpp2( "auto ", n.position() );
+            printer.print_cpp2( *n.identifier->identifier, n.identifier->position() );
 
             //  Function declaration
             emit( *func, n.identifier->identifier );
@@ -1542,8 +1533,10 @@ public:
                 assert( n.initializer );
                 emit( *n.initializer, false );
 
-                printer.print_cpp2( " );", n.position() );
+                printer.print_cpp2( " )", n.position() );
             }
+
+            printer.print_cpp2( "; ", n.position() );
         }
     }
 

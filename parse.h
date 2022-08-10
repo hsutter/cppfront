@@ -940,7 +940,6 @@ private:
     //G     literal
     //G     ( expression-list )
     //G     id-expression
-    //GT     TODO
     //G
     auto primary_expression() 
         -> std::unique_ptr<primary_expression_node>
@@ -996,9 +995,6 @@ private:
     //G     postfix-expression postfix-operator     [Note: without whitespace before the operator]
     //G     postfix-expression [ expression-list ]
     //G     postfix-expression ( expression-list? )
-    //GT     postfix-expression . id-expression
-    //GT     typeid ( expression )
-    //GT     typeid ( type-id )
     //G
     auto postfix_expression() 
         -> std::unique_ptr<postfix_expression_node>
@@ -1059,7 +1055,6 @@ private:
     //G     postfix-expression
     //G     prefix-operator prefix-expression
     //GT     await-expression
-    //GT     sizeof prefix-expression
     //GT     sizeof ( type-id )
     //GT     sizeof ... ( identifier )
     //GT     alignof ( type-id )
@@ -1922,7 +1917,6 @@ private:
     //G
     //G translation-unit:
     //G     declaration-seq-opt
-    //GT    { global-module-fragment }?  module-declaration  { declaration }*  { private-module-fragment }?
     //
     auto translation_unit() -> std::unique_ptr<translation_unit_node> 
     {
