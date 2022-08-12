@@ -285,6 +285,7 @@ class cmdline_processor
         { }
     };
     std::vector<flag> flags;
+    int max_flag_length = 0;
 
     //  Define this in the main .cpp to avoid bringing <iostream> into the headers,
     //  so that we can't accidentally start depending on iostreams in the compiler body
@@ -373,7 +374,7 @@ public:
             if (!flag.synonym.empty()) {
                 n += ", -" + flag.synonym;
             }
-            print(n, 15);
+            print(n, max_flag_length + 3);
             print(flag.description);
             print("\n");
         }
@@ -381,6 +382,11 @@ public:
 
     auto add_flag(int group, std::string_view name, std::string_view description, callback handler, std::string_view synonym) {
         flags.emplace_back( group, name, description, handler, synonym );
+        if (max_flag_length < std::ssize(name)) {   
+            max_flag_length = std::ssize(name);     
+        }
+        // I know, std::max, I tried that first but writing this `if` was faster
+        // than figuring out what incantation std::max needed to actually compile
     }
     struct register_flag {
         register_flag(int group, std::string_view name, std::string_view description, callback handler, std::string_view synonym = {});

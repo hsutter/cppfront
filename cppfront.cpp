@@ -76,6 +76,14 @@ static cmdline_processor::register_flag cmd_cpp2_only(
     []{ flag_cpp2_only = true; }
 );
 
+static auto flag_safe_null_pointers = false;
+static cmdline_processor::register_flag cmd_safe_null_pointers( 
+    1, 
+    "safe-null-pointers", 
+    "Enable null dereference runtime contract checks", 
+    []{ flag_safe_null_pointers = true; }
+);
+
 class positional_printer
 {
     //  Core information
@@ -1170,6 +1178,15 @@ public:
                     prefix.emplace_back( "(", i->op->position() );
                 }
                 prefix.emplace_back( i->op->to_string(true), i->op->position());
+
+                //  Enable null checks
+                if (flag_safe_null_pointers && i->op->type() == lexeme::Multiply) {
+                    prefix.emplace_back( "cpp2::assert_not_null(", i->op->position() );
+                }
+                if (flag_safe_null_pointers && i->op->type() == lexeme::Multiply) {
+                    suffix.emplace_back( ")", i->op->position() );
+                }
+
                 if (!last_was_prefixed && i+1 != n.ops.rend()) {    // omit some needless parens
                     suffix.emplace_back( ")", i->op->position() );
                 }
@@ -1385,6 +1402,11 @@ public:
     )
         -> void
     {
+        //  TODO: If there's a let on this statement, generate a block scope
+        if (n.let) {
+
+        }
+
         printer.disable_indent_heuristic_for_next_text();
         try_emit<statement_node::expression >(n.statement, can_have_semicolon, function_body, function_void_ret);
         try_emit<statement_node::compound   >(n.statement, function_ret_locals, function_indent);

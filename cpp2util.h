@@ -150,10 +150,19 @@ private:
     handler chandler;
 };
 
-auto inline Default = contract_group( &std::terminate );
-auto inline Bounds  = Default;
-auto inline Null    = Default;
-auto inline Testing = Default;
+auto inline Default = contract_group( []()noexcept{assert(!"contract violation"); } /* or: &std::terminate */);
+auto inline Bounds  = contract_group( []()noexcept{assert(!"Bounds contract violation"); } );
+auto inline Null    = contract_group( []()noexcept{assert(!"Null contract violation"); } );
+auto inline Testing = contract_group( []()noexcept{assert(!"Testing contract violation"); } );
+
+//  Null pointer deref checking
+//
+auto assert_not_null(auto&& p) -> auto&& {
+    //  Checking against a default-constructed value should be fine for iterators too
+    //  TODO: validate this works for all pointerlike types
+    Null.expects(p != std::remove_cvref_t<decltype(p)>{});   
+    return std::forward<decltype(p)>(p);
+}
 
 
 //-----------------------------------------------------------------------

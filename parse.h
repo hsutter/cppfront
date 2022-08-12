@@ -567,8 +567,12 @@ struct return_statement_node
 
 
 struct declaration_node;
+struct parameter_declaration_list_node;
 struct statement_node
 {
+    token const*                                     let;
+    std::unique_ptr<parameter_declaration_list_node> let_params;
+
     enum active { expression=0, compound, selection, declaration, return_, iteration };
     std::variant<
         std::unique_ptr<expression_statement_node>,
@@ -581,16 +585,7 @@ struct statement_node
 
     auto position() const -> source_position;
 
-    auto visit(auto& v, int depth) -> void
-    {
-        v.start(*this, depth);
-        try_visit<expression >(statement, v, depth);
-        try_visit<compound   >(statement, v, depth);
-        try_visit<selection  >(statement, v, depth);
-        try_visit<declaration>(statement, v, depth);
-        try_visit<return_    >(statement, v, depth);
-        v.end(*this, depth);
-    }
+    auto visit(auto& v, int depth) -> void;
 };
 
 auto compound_statement_node::visit(auto& v, int depth) -> void
@@ -642,6 +637,23 @@ struct parameter_declaration_list_node
         v.end(*this, depth);
     }
 };
+
+auto statement_node::visit(auto& v, int depth) -> void
+{
+    v.start(*this, depth);
+    if (let) {
+        let->visit(v, depth+1);
+        assert(let_params);
+        let_params->visit(v, depth+1);
+    }
+    try_visit<expression >(statement, v, depth);
+    try_visit<compound   >(statement, v, depth);
+    try_visit<selection  >(statement, v, depth);
+    try_visit<declaration>(statement, v, depth);
+    try_visit<return_    >(statement, v, depth);
+    v.end(*this, depth);
+}
+
 
 struct function_returns_tag { };
 
@@ -1378,11 +1390,44 @@ private:
 
     //G unqualified-id:
     //G     identifier
+    //G     template-id
     //GT     operator-function-id
-    //GT     template-id
+    //G
+    //G template-id:
+    //G     identifier < template-argument-list-opt >
+    //G
+    //G template-argument-list:
+    //G     template-argument-list , template-argument
+    //G
+    //G template-argument:
+    //G     expression
+    //G     id-expression
     //G
     auto unqualified_id() -> std::unique_ptr<unqualified_id_node> 
     {
+        ////  Helper function to recognize legal operators that can be
+        ////  part of the qualifier. Note that a comma is allowed only
+        ////  if it is between < > in the indentifier (else it should be
+        ////  parsed as an expression-list where this is one id in the list)
+        //auto current_nested_Less_Greater_depth = 0;
+        //auto is_qualifier_op = [&](lexeme op) {
+        //    if (op == lexeme::Less) {
+        //        ++current_nested_Less_Greater_depth;
+        //    }
+        //    else if (op == lexeme::Greater) {
+        //        --current_nested_Less_Greater_depth;
+        //        assert(current_nested_Less_Greater_depth >= 0);
+        //    }
+        //    return 
+        //        op == lexeme::Scope   ||
+        //        op == lexeme::Dot;
+        //    //||
+        //    //    op == lexeme::Less    ||
+        //    //    op == lexeme::Greater ||
+        //    //    (op == lexeme::Comma && current_nested_Less_Greater_depth > 0);
+        //};
+
+
         if (curr().type() != lexeme::Identifier &&
             curr().type() != lexeme::Keyword)   // because of fundamental types like 'int' which are keywords
         {
@@ -1412,18 +1457,25 @@ private:
         auto term = qualified_id_node::term{nullptr};
 
         //  Handle initial :: if present, else the first scope_op will be null
+        //  Note :: is the only qualifier op that can appear
         if (curr().type() == lexeme::Scope) {
             term.scope_op = &curr();
             next();
         }
 
-        //  Remember current position, because we need to look ahead to the :: or .
+        //  Helper function to recognize legal operators that can be
+        //  part of the qualifier.
+        auto is_qualifier_op = [&](lexeme op) {
+            return op == lexeme::Scope || op == lexeme::Dot;
+        };
+
+        //  Remember current position, because we need to look ahead to the next qualifier op
         auto start_pos = pos;
 
         //  If we don't get a first id, or if the next thing isn't :: or .,
         //  back out and report unsuccessful
         term.id = unqualified_id();
-        if (!term.id || (curr().type() != lexeme::Scope && curr().type() != lexeme::Dot)) {
+        if (!term.id || !is_qualifier_op(curr().type())) {
             pos = start_pos;    // backtrack
             return {};
         }
@@ -1435,18 +1487,18 @@ private:
 
         n->ids.push_back( std::move(term) );
 
-        assert (curr().type() == lexeme::Scope || curr().type() == lexeme::Dot);
-        while (curr().type() == lexeme::Scope || curr().type() == lexeme::Dot)
+        assert (is_qualifier_op(curr().type()));
+        while (is_qualifier_op(curr().type()))
         {
             auto term = qualified_id_node::term{ &curr() };
             next();
             term.id = unqualified_id();
             if (!term.id) {
-                error("invalid text, :: should be followed by a nested name");
+                error("invalid text in qualified name");
                 return {};
             }
             assert (term.id->identifier);
-            if (first_time_through_loop) {
+            if (first_time_through_loop && term.scope_op->type() == lexeme::Scope) {
                 if (*term.id->identifier == "move") {
                     error("std::move is not needed in Cpp2 - use \"move\" parameters/arguments instead", false);
                     return {};
@@ -1731,6 +1783,7 @@ private:
     //G     declaration-statement
     //G     return-statement
     //G     iteration-statement
+    //G     let parameter-list statement
     // 
     //GT     jump-statement
     //GT     try-block
@@ -1738,6 +1791,21 @@ private:
     auto statement(bool semicolon_required) -> std::unique_ptr<statement_node> 
     {
         auto n = std::make_unique<statement_node>();
+
+        //  Handle optional "let" before any statement
+        if (curr() == "let" && peek(1) && *peek(1) == "(") {
+            n->let = &curr();
+            next(); // now on the open paren
+            if (auto params = parameter_declaration_list()) {
+                n->let_params = std::move(params);
+            }
+            else {
+                error("invalid parameter list after \"let\"");
+                return {};
+            }
+        }
+
+        //  Now handle the rest of the statement
 
         if (auto s = selection_statement()) {
             n->statement = std::move(s);
@@ -1985,7 +2053,14 @@ private:
 
         //  Returns
         if (auto t = id_expression()) {
-            n->returns = std::move(t);
+            auto is_void = false;
+            if (auto u = std::get_if<id_expression_node::unqualified>(&t->id)) {
+                assert ((*u)->identifier);
+                is_void = *(*u)->identifier == "void";
+            }
+            if (!is_void) {
+                n->returns = std::move(t);
+            }
         }
         else if (auto returns_list = parameter_declaration_list(true)) {
             if (std::ssize(returns_list->parameters) < 1) {
