@@ -1190,7 +1190,7 @@ public:
                 i->op->type() == lexeme::Tilde
                 )
             {
-                if (!last_was_prefixed && i+1 != n.ops.rend()) {    // omit some needless parens
+                if (!last_was_prefixed && i != n.ops.rbegin()) {    // omit some needless parens
                     prefix.emplace_back( "(", i->op->position() );
                 }
                 prefix.emplace_back( i->op->to_string(true), i->op->position());
@@ -1203,7 +1203,7 @@ public:
                     suffix.emplace_back( ")", i->op->position() );
                 }
 
-                if (!last_was_prefixed && i+1 != n.ops.rend()) {    // omit some needless parens
+                if (!last_was_prefixed && i != n.ops.rbegin()) {    // omit some needless parens
                     suffix.emplace_back( ")", i->op->position() );
                 }
                 last_was_prefixed = true;
