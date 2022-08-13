@@ -800,6 +800,20 @@ public:
         assert(n.identifier);
         emit(*n.identifier);
 
+        if (!n.template_args.empty()) {
+            printer.print_cpp2("<", n.open_angle);
+            auto first = true;
+            for (auto& a : n.template_args) {
+                if (!first) {
+                    printer.print_cpp2(",", a.comma);
+                }
+                first = false;
+                try_emit<unqualified_id_node::expression   >(a.arg);
+                try_emit<unqualified_id_node::id_expression>(a.arg);
+            }
+            printer.print_cpp2(">", n.close_angle);
+        }
+
         in_definite_init = is_definite_initialization(n.identifier);
         if (in_synthesized_multi_return) {
             printer.print_cpp2(".value()", n.position());
@@ -821,15 +835,17 @@ public:
     auto emit(qualified_id_node const& n) -> void
     {
         auto ident = std::string{};
+        printer.emit_to_string(&ident);
 
         for (auto const& id : n.ids)
         {
             if (id.scope_op) {
-                ident += id.scope_op->to_string(true);
+                emit(*id.scope_op);
             }
-            ident += id.id->identifier->to_string(true);
+            emit(*id.id);
         }
 
+        printer.emit_to_string();
         printer.print_cpp2( ident, n.position() );
     }
 
@@ -1716,7 +1732,9 @@ public:
             }
 
             printer.print_cpp2( " ", n.position());
-            printer.print_cpp2( *n.identifier->identifier, n.position() );
+            assert(n.identifier);
+            emit(*n.identifier);
+            //printer.print_cpp2( *n.identifier->identifier, n.position() );
 
             //  If there's an initializer, emit it
             if (n.initializer)

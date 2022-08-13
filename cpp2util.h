@@ -30,6 +30,9 @@
 #endif
 
 
+#define CPP2_TYPEOF(x)  std::remove_cvref_t<decltype(x)>
+#define CPP2_FORWARD(x) std::forward<decltype(x)>(x)
+
 namespace cpp2 {
 
 //-----------------------------------------------------------------------
@@ -160,7 +163,7 @@ auto inline Testing = contract_group( []()noexcept{assert(!"Testing contract vio
 auto assert_not_null(auto&& p) -> auto&& {
     //  Checking against a default-constructed value should be fine for iterators too
     //  TODO: validate this works for all pointerlike types
-    Null.expects(p != std::remove_cvref_t<decltype(p)>{});   
+    Null.expects(p != CPP2_TYPEOF(p){});
     return std::forward<decltype(p)>(p);
 }
 
@@ -173,19 +176,19 @@ auto assert_not_null(auto&& p) -> auto&& {
 //
 #define CPP2_UFCS(FUNCNAME,PARAM1,...) \
 [](auto&& obj, auto&& ...params) { \
-    if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); }) { \
-        return std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); \
+    if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); }) { \
+        return CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); \
     } else { \
-        return FUNCNAME(std::forward<decltype(obj)>(obj), std::forward<decltype(params)>(params)...); \
+        return FUNCNAME(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
     } \
 }(PARAM1, __VA_ARGS__)
 
 #define CPP2_UFCS_0(FUNCNAME,PARAM1) \
 [](auto&& obj) { \
-    if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(); }) { \
-        return std::forward<decltype(obj)>(obj).FUNCNAME(); \
+    if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(); }) { \
+        return CPP2_FORWARD(obj).FUNCNAME(); \
     } else { \
-        return FUNCNAME(std::forward<decltype(obj)>(obj)); \
+        return FUNCNAME(CPP2_FORWARD(obj)); \
     } \
 }(PARAM1)
 

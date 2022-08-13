@@ -334,6 +334,21 @@ struct unqualified_id_node
 {
     token const* identifier;
 
+    enum active { empty=0, expression, id_expression };
+
+    // These are used only if it's a template-id
+    source_position open_angle  = {};
+    source_position close_angle = {};
+    struct term {
+        source_position comma;
+        std::variant<
+            std::monostate,
+            std::unique_ptr<expression_node>,
+            std::unique_ptr<id_expression_node>
+        > arg;
+    };
+    std::vector<term> template_args;
+
     unqualified_id_node( token const* tok) 
         : identifier{ tok }
     {
@@ -350,6 +365,17 @@ struct unqualified_id_node
         v.start(*this, depth);
         assert (identifier);
         v.start(*identifier, depth+1);
+
+        if (!template_args.empty()) {
+            assert(open_angle  != source_position{});
+            assert(close_angle != source_position{});
+            assert(template_args.front().comma == source_position{});
+            for (auto& a : template_args) {
+                try_visit<   expression>(a.arg, v, depth+1);
+                try_visit<id_expression>(a.arg, v, depth+1);
+            }
+        }
+
         v.end(*this, depth);
     }
 };
@@ -1405,29 +1431,7 @@ private:
     //G
     auto unqualified_id() -> std::unique_ptr<unqualified_id_node> 
     {
-        ////  Helper function to recognize legal operators that can be
-        ////  part of the qualifier. Note that a comma is allowed only
-        ////  if it is between < > in the indentifier (else it should be
-        ////  parsed as an expression-list where this is one id in the list)
-        //auto current_nested_Less_Greater_depth = 0;
-        //auto is_qualifier_op = [&](lexeme op) {
-        //    if (op == lexeme::Less) {
-        //        ++current_nested_Less_Greater_depth;
-        //    }
-        //    else if (op == lexeme::Greater) {
-        //        --current_nested_Less_Greater_depth;
-        //        assert(current_nested_Less_Greater_depth >= 0);
-        //    }
-        //    return 
-        //        op == lexeme::Scope   ||
-        //        op == lexeme::Dot;
-        //    //||
-        //    //    op == lexeme::Less    ||
-        //    //    op == lexeme::Greater ||
-        //    //    (op == lexeme::Comma && current_nested_Less_Greater_depth > 0);
-        //};
-
-
+        //  Handle the identifier
         if (curr().type() != lexeme::Identifier &&
             curr().type() != lexeme::Keyword)   // because of fundamental types like 'int' which are keywords
         {
@@ -1435,6 +1439,57 @@ private:
         }
         auto n = std::make_unique<unqualified_id_node>( &curr() );
         next();
+
+        //  Handle the template-argument-list if there is one
+        if (curr().type() == lexeme::Less)
+        {
+            //  Remember current position, in case this < is isn't a template argument list
+            auto start_pos = pos;
+
+            //  And since we'll do this in two places, factor it into a local function
+            auto back_out_template_arg_list = [&]{
+                //  Aha, this wasn't a template argument list after all,
+                //  so back out just that part and return the identifier
+                n->open_angle = source_position{};
+                n->template_args.clear();
+                pos = start_pos;
+            };
+
+            n->open_angle = curr().position();
+            next();
+
+            unqualified_id_node::term term;
+
+            do {
+                if (auto i = id_expression()) {
+                    term.arg = std::move(i);
+                }
+                else if (auto e = expression()) {
+                    term.arg = std::move(e);
+                }
+                else {
+                    back_out_template_arg_list();
+                    return n;
+                }
+                n->template_args.push_back( std::move(term) );
+            }
+            //  Use the lambda trick to jam in a "next" clause
+            while (
+                curr().type() == lexeme::Comma && 
+                [&]{term.comma = curr().position(); return true;}()
+            );
+                //  When this is rewritten in Cpp2, it will be:
+                //      while curr().type() == lexeme::Comma
+                //      next  term.comma = curr().position();
+
+            if (curr().type() != lexeme::Greater) {
+                back_out_template_arg_list();
+                return n;
+            }
+            n->close_angle = curr().position();
+            next();
+        }
+
         return n;
     }
 
