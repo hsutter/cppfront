@@ -684,6 +684,36 @@ auto statement_node::visit(auto& v, int depth) -> void
 }
 
 
+struct contract_node
+{
+    source_position                             open_bracket;
+    token const*                                kind = {};
+    std::unique_ptr<id_expression_node>         group;
+    std::unique_ptr<logical_or_expression_node> condition;
+    token const*                                message = {};
+
+    contract_node( source_position pos ) : open_bracket{pos} { }
+
+    auto position() const -> source_position
+    {
+        return open_bracket;
+    }
+
+    auto visit(auto& v, int depth) -> void
+    {
+        v.start(*this, depth);
+        assert(kind);
+        kind->visit(v, depth+1);
+        if (group) {
+            group->visit(v, depth+1);
+        }
+        assert(condition);
+        condition->visit(v, depth+1);
+        v.end(*this, depth);
+    }
+};
+
+
 struct function_returns_tag { };
 
 struct function_type_node
@@ -697,6 +727,8 @@ struct function_type_node
         std::unique_ptr<id_expression_node>,
         std::unique_ptr<parameter_declaration_list_node>
     > returns;
+
+    std::vector<contract_node> contracts;
 
     auto position() const -> source_position
     {
@@ -982,7 +1014,7 @@ private:
         assert (!done());
         auto m = std::string{msg};
         if (include_curr_token) {
-            m += std::string(" at \"") + curr().to_string(true) + "\"";
+            m += std::string(" at '") + curr().to_string(true) + "'";
         }
         errors.emplace_back( curr().position(), m );
     }
@@ -1558,11 +1590,11 @@ private:
             assert (term.id->identifier);
             if (first_time_through_loop && term.scope_op->type() == lexeme::Scope) {
                 if (*term.id->identifier == "move") {
-                    error("std::move is not needed in Cpp2 - use \"move\" parameters/arguments instead", false);
+                    error("std::move is not needed in Cpp2 - use 'move' parameters/arguments instead", false);
                     return {};
                 }
                 else if (*term.id->identifier == "forward") {
-                    error("std::forward is not needed in Cpp2 - use \"forward\" parameters/arguments instead", false);
+                    error("std::forward is not needed in Cpp2 - use 'forward' parameters/arguments instead", false);
                     return {};
                 }
                 first_time_through_loop = false;
@@ -1743,7 +1775,7 @@ private:
             next(); // don't bother remembering "next" token, shouldn't need its position info
             auto next = assignment_expression();
             if (!next) {
-                error("invalid expression after \"next\"");
+                error("invalid expression after 'next'");
                 return false;
             }
             n->next_expression = std::move(next);
@@ -1763,7 +1795,7 @@ private:
         auto handle_compound_statement = [&]() -> bool {
             auto s = compound_statement();
             if (!s) {
-                error("invalid \"while\" loop body");
+                error("invalid while loop body");
                 return false;
             }
             n->statement= std::move(s);
@@ -1811,14 +1843,14 @@ private:
         {
             if (!handle_compound_statement  ()) { return {}; }
             if (curr() != "while") {
-                error("\"do\" body must be followed by \"while\"");
+                error("do loop body must be followed by 'while'");
                 return {};
             }
             next();
             if (!handle_logical_expression  ()) { return {}; }
             if (!handle_optional_next_clause()) { return {}; }
             if (curr().type() != lexeme::Semicolon) {
-                error("missing ; after \"do/while\" loop condition");
+                error("missing ; after do..while loop condition");
                 next();
                 return {};
             }
@@ -1832,7 +1864,7 @@ private:
         {
             if (!handle_loop_var())             { return {}; }
             if (curr() != "in") {
-                error("\"for\" loop variable expression must be followed by \"in\"");
+                error("'for' loop variable expression must be followed by 'in'");
                 return {};
             }
             next();
@@ -1872,7 +1904,7 @@ private:
                 n->let_params = std::move(params);
             }
             else {
-                error("invalid parameter list after \"let\"");
+                error("invalid parameter list after 'let'");
                 return {};
             }
         }
@@ -2093,12 +2125,79 @@ private:
     }
 
 
+    //G contract:
+    //G     [ contract-kind id-expression-opt : logical-or-expression ]
+    //G     [ contract-kind id-expression-opt : logical-or-expression , string-literal ]
+    //G
+    //G contract-kind: one of
+    //G     pre post assert
+    //G
+    auto contract() -> std::unique_ptr<contract_node>
+    {
+        //  If there's no [ then this isn't a contract
+        if (curr().type() != lexeme::LeftBracket) {
+            return {};
+        }
+
+        auto n = std::make_unique<contract_node>(curr().position());
+        next();
+
+        if (curr() != "pre" && curr() != "post" && curr() != "assert") {
+            error("[ begins a contract and must be followed by 'pre', 'post', or 'assert'");
+            return {};
+        }
+        next();
+
+        if (auto id = id_expression()) {
+            n->group = std::move(id);
+        }
+
+        if (curr().type() != lexeme::Colon) {
+            error("expected : before the contract condition");
+            return {};
+        }
+        next();
+
+        auto condition = logical_or_expression();
+        if (!condition) {
+            error("invalid contract condition");
+            return {};
+        }
+
+        //  Now check for the optional string message
+        if (curr().type() == lexeme::Comma) {
+            next();
+            if (curr().type() != lexeme::StringLiteral) {
+                error("expected contract message string");
+                return {};
+            }
+            n->message = &curr();
+            next();
+        }
+
+        if (curr().type() != lexeme::RightBracket) {
+            error("expected ] at the end of the contract");
+            return {};
+        }
+        next();
+
+        return n;
+    }
+
+
     //G function-type:
-    //G     parameter-declaration-list-opt throws-specifier-opt
-    //G     parameter-declaration-list-opt throws-specifier-opt -> parameter_declaration_list
+    //G     parameter-declaration-list throws-specifier-opt return-list-opt contract-seq-opt
     //G
     //G throws-specifier:
     //G     throws
+    //G
+    //G return-list:
+    //G     -> id-expression
+    //G     -> parameter_declaration_list
+    //G
+    //G contract-seq:
+    //G     contract
+    //G     contract-seq contract
     //G
     auto function_type() -> std::unique_ptr<function_type_node> 
     {
@@ -2144,6 +2243,10 @@ private:
         else {
             error("missing function return after ->");
             return {};
+        }
+
+        while (auto c = contract()) {
+            n->contracts.push_back( std::move(*c) );
         }
 
         return n;
@@ -2419,6 +2522,16 @@ public:
     auto start(return_statement_node const& n, int indent) -> void
     {
         o << pre(indent) << "return-statement\n";
+    }
+
+    auto start(contract_node const& n, int indent) -> void
+    {
+        o << pre(indent) << "contract\n";
+        assert(n.kind);
+        o << pre(indent+1) << "kind: " << std::string_view(*n.kind) << "\n";
+        if (n.message) {
+            o << pre(indent+1) << "message: " << std::string_view(*n.message) << "\n";
+        }
     }
 
     auto start(function_type_node const& n, int indent) -> void

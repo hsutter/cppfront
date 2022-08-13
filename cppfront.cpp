@@ -790,7 +790,12 @@ public:
     //
     auto emit(token const& n) -> void
     {
-        printer.print_cpp2(n, n.position());
+        if (n == "new") {
+            printer.print_cpp2("new_", n.position());
+        }
+        else {
+            printer.print_cpp2(n, n.position());
+        }
 
         in_definite_init = is_definite_initialization(&n);
     }
@@ -1570,6 +1575,18 @@ public:
         }
 
         in_parameter_list = false;
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
+    auto emit(contract_node const& n) -> void
+    {
+
+
+
+
+
     }
 
 
