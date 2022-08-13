@@ -25,8 +25,11 @@
 #include <type_traits>
 #include <new>
 #include <iostream>
-#include <source_location>
 #include <string_view>
+
+#ifdef CPP2_USE_SOURCE_LOCATION
+#include <source_location>
+#endif
 
 #ifdef _MSC_VER
     #pragma warning(disable:5050)   // suppress spurious modules warning
@@ -141,49 +144,77 @@ public:
 // 
 //-----------------------------------------------------------------------
 //
+
+#ifdef CPP2_USE_SOURCE_LOCATION
+    #define CPP2_SOURCE_LOCATION_PARAM              , std::source_location where
+    #define CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT , std::source_location where = std::source_location::current()
+    #define CPP2_SOURCE_LOCATION_PARAM_SOLO         std::source_location where
+    #define CPP2_SOURCE_LOCATION_PARAM_SOLO_ANON    std::source_location
+    #define CPP2_SOURCE_LOCATION_ARG                , where
+    #define CPP2_SOURCE_LOCATION_ARG_SOLO           where
+#else
+    #define CPP2_SOURCE_LOCATION_PARAM
+    #define CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT
+    #define CPP2_SOURCE_LOCATION_PARAM_SOLO
+    #define CPP2_SOURCE_LOCATION_PARAM_SOLO_ANON
+    #define CPP2_SOURCE_LOCATION_ARG
+    #define CPP2_SOURCE_LOCATION_ARG_SOLO
+#endif
+
+
 class contract_group {
 public:
-    using handler = void (*)(std::source_location) noexcept;
+    using handler = void (*)(CPP2_SOURCE_LOCATION_PARAM_SOLO_ANON) noexcept;
 
-    constexpr contract_group  (handler h = nullptr)  : chandler(normalize(h)) { }
-    constexpr auto set_handler(handler h) -> handler { auto old = chandler; chandler = normalize(h); return old; }
-    constexpr auto get_handler() const    -> handler { return chandler; }
-    constexpr auto expects  (bool b, std::source_location where = std::source_location::current())
-                                          -> void    { assertion(b, where); }
-    constexpr auto ensures  (bool b, std::source_location where = std::source_location::current())
-                                          -> void    { assertion(b, where); }
+    constexpr contract_group  (handler h = nullptr)  : reporter(h) { }
+    constexpr auto set_handler(handler h) -> handler { assert(h); auto old = reporter; reporter = h; return old; }
+    constexpr auto get_handler() const    -> handler { return reporter; }
+    constexpr auto expects  (bool b CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> void { assertion(b CPP2_SOURCE_LOCATION_ARG); }
+    constexpr auto ensures  (bool b CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> void { assertion(b CPP2_SOURCE_LOCATION_ARG); }
 private:
-    constexpr auto assertion(bool b, std::source_location where)
-                                          -> void    { if (!b) chandler(where); }
-    constexpr auto normalize(handler h)   -> handler { return h ? h : [](std::source_location)noexcept{}; }
-    handler chandler;
+    constexpr auto assertion(bool b CPP2_SOURCE_LOCATION_PARAM)              -> void { if (!b) reporter(CPP2_SOURCE_LOCATION_ARG_SOLO); }
+    handler reporter;
 };
 
-[[noreturn]] auto report_and_terminate(std::string_view msg, std::source_location where) noexcept  -> void {
-    std::cerr << where.file_name() << "2("
-              << where.line() << ":"
-              << where.column() << ") `"
-              << where.function_name() << "`: "
-              << msg << " violation\n";
+[[noreturn]] auto report_and_terminate(std::string_view msg CPP2_SOURCE_LOCATION_PARAM) noexcept -> void {
+    std::cerr
+#ifdef CPP2_USE_SOURCE_LOCATION
+        << where.file_name() << "2("
+        << where.line() << ") "
+        << where.function_name() << ": "
+#endif
+        << msg << " violation\n";
     std::terminate();
 }
 
-auto inline Default = contract_group( [](std::source_location where)noexcept{ report_and_terminate(""             , where); } );
-auto inline Bounds  = contract_group( [](std::source_location where)noexcept{ report_and_terminate("Bounds safety", where); } );
-auto inline Null    = contract_group( [](std::source_location where)noexcept{ report_and_terminate("Null safety"  , where); } );
-auto inline Testing = contract_group( [](std::source_location where)noexcept{ report_and_terminate("Testing"      , where); } );
+auto inline Default = contract_group( 
+    [](CPP2_SOURCE_LOCATION_PARAM_SOLO)noexcept { 
+        report_and_terminate(""              CPP2_SOURCE_LOCATION_ARG);
+    }
+);
+auto inline Bounds  = contract_group( 
+    [](CPP2_SOURCE_LOCATION_PARAM_SOLO)noexcept { 
+        report_and_terminate("Bounds safety" CPP2_SOURCE_LOCATION_ARG); 
+    } 
+);
+auto inline Null    = contract_group( 
+    [](CPP2_SOURCE_LOCATION_PARAM_SOLO)noexcept {
+        report_and_terminate("Null safety"   CPP2_SOURCE_LOCATION_ARG); 
+    } 
+);
+auto inline Testing = contract_group( 
+    [](CPP2_SOURCE_LOCATION_PARAM_SOLO)noexcept {
+        report_and_terminate("Testing"       CPP2_SOURCE_LOCATION_ARG); 
+    } 
+);
 
 //  Null pointer deref checking
 //
-auto assert_not_null(
-    auto&& p, 
-    std::source_location where = std::source_location::current()
-) 
-    -> auto&&
+auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
 {
     //  Checking against a default-constructed value should be fine for iterators too
     //  TODO: validate this works for all pointerlike types
-    Null.expects(p != CPP2_TYPEOF(p){}, where);
+    Null.expects(p != CPP2_TYPEOF(p){} CPP2_SOURCE_LOCATION_ARG);
     return std::forward<decltype(p)>(p);
 }
 

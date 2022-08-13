@@ -64,7 +64,7 @@ static auto flag_clean_cpp1 = false;
 static cmdline_processor::register_flag cmd_noline( 
     1,
     "clean-cpp1", 
-    "Emit clean Cpp1 without #line directives and other extras", 
+    "Emit clean Cpp1 without #line directives", 
     []{ flag_clean_cpp1 = true; }
 );
 
@@ -79,9 +79,17 @@ static cmdline_processor::register_flag cmd_cpp2_only(
 static auto flag_safe_null_pointers = false;
 static cmdline_processor::register_flag cmd_safe_null_pointers( 
     1, 
-    "safe-null-pointers", 
-    "Enable null dereference runtime contract checks", 
+    "null-checks", 
+    "Enable null safety contract checks", 
     []{ flag_safe_null_pointers = true; }
+);
+
+static auto flag_use_source_location = false;
+static cmdline_processor::register_flag cmd_enable_source_info( 
+    1, 
+    "add-source-info", 
+    "Enable source locations for contract checks", 
+    []{ flag_use_source_location = true; }
 );
 
 class positional_printer
@@ -640,6 +648,9 @@ public:
         if (source.has_cpp2()) {
             if (!flag_clean_cpp1) {
                 printer.print_extra( "// -- Cpp2 support --\n" );
+            }
+            if (flag_use_source_location) {
+                printer.print_extra( "#define CPP2_USE_SOURCE_LOCATION 1\n" );
             }
             printer.print_extra( "#include \"cpp2util.h\"\n\n" );
         }
@@ -1848,7 +1859,7 @@ static auto enable_debug_output_files = false;
 static cmdline_processor::register_flag cmd_noline( 
     3,
     "debug", 
-    "Emit debug output files (-source, -tokens, -parse, -symbols)", 
+    "Emit compiler debug output files", 
     []{ enable_debug_output_files = true; }
 );
 

@@ -385,8 +385,6 @@ public:
         if (max_flag_length < std::ssize(name)) {   
             max_flag_length = std::ssize(name);     
         }
-        // I know, std::max, I tried that first but writing this `if` was faster
-        // than figuring out what incantation std::max needed to actually compile
     }
     struct register_flag {
         register_flag(int group, std::string_view name, std::string_view description, callback handler, std::string_view synonym = {});
