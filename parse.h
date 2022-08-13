@@ -533,14 +533,14 @@ struct selection_statement_node
     }
 };
 
-
+struct parameter_declaration_node;
 struct iteration_statement_node
 {
     token const*                                identifier;
     std::unique_ptr<compound_statement_node>    statement;
     std::unique_ptr<assignment_expression_node> next_expression;    // if used, else null
     std::unique_ptr<logical_or_expression_node> condition;          // used for "do" and "while", else null
-    std::unique_ptr<id_expression_node>         loop_var;           // used for "for", else null
+    std::unique_ptr<parameter_declaration_node> loop_var;           // used for "for", else null
     std::unique_ptr<id_expression_node>         range;              // used for "for", else null
 
     auto position() const -> source_position
@@ -549,24 +549,7 @@ struct iteration_statement_node
         return identifier->position();
     }
 
-    auto visit(auto& v, int depth) -> void
-    {
-        v.start(*this, depth);
-        assert(statement);
-        statement->visit(v, depth+1);
-        assert(next_expression);
-        next_expression->visit(v, depth+1);
-        if (condition) {
-            assert(!loop_var && !range);
-            condition->visit(v, depth+1);
-        }
-        else {
-            assert(loop_var && range);
-            loop_var->visit(v, depth+1);
-            range->visit(v, depth+1);
-        }
-        v.end(*this, depth);
-    }
+    auto visit(auto& v, int depth) -> void;
 };
 
 
@@ -639,6 +622,26 @@ struct parameter_declaration_node
 
     auto visit(auto& v, int depth) -> void;
 };
+
+
+auto iteration_statement_node::visit(auto& v, int depth) -> void
+{
+    v.start(*this, depth);
+    assert(statement);
+    statement->visit(v, depth+1);
+    assert(next_expression);
+    next_expression->visit(v, depth+1);
+    if (condition) {
+        assert(!loop_var && !range);
+        condition->visit(v, depth+1);
+    }
+    else {
+        assert(loop_var && range);
+        loop_var->visit(v, depth+1);
+        range->visit(v, depth+1);
+    }
+    v.end(*this, depth);
+}
 
 
 struct parameter_declaration_list_node
@@ -979,7 +982,7 @@ private:
         assert (!done());
         auto m = std::string{msg};
         if (include_curr_token) {
-            m += std::string(" at ") + curr().to_string();
+            m += std::string(" at \"") + curr().to_string(true) + "\"";
         }
         errors.emplace_back( curr().position(), m );
     }
@@ -1712,7 +1715,7 @@ private:
     //G iteration-statement:
     //G     while logical-or-expression next-clause-opt compound-statement
     //G     do compound-statement while logical-or-expression next-clause-opt ;
-    //G     for id-expression in id-expression next-clause-opt compound-statement
+    //G     for parameter_declaration_node in id-expression next-clause-opt compound-statement
     //G
     //G next-clause:
     //G     next assignment-expression 
@@ -1767,6 +1770,21 @@ private:
             return true;
         };
 
+        auto handle_loop_var = [&]() -> bool {
+            auto p = parameter_declaration();
+            if (!p) {
+                error("invalid loop scope parameter");
+                return false;
+            }
+            //  For now only allow in and inout -- later we'll allow more
+            else if (p->pass != passing_style::in && p->pass != passing_style::inout) {
+                error("(temporary alpha limitation) loop scope parameter must be in or inout");
+                return false;
+            }
+            n->loop_var = std::move(p);;
+            return true;
+        };
+
         auto handle_id_expression = [&]() -> std::unique_ptr<id_expression_node> {
             auto e = id_expression();
             if (!e) {
@@ -1812,8 +1830,7 @@ private:
         //
         else if (*n->identifier == "for")
         {
-            n->loop_var = handle_id_expression();
-            assert(n->loop_var);
+            if (!handle_loop_var())             { return {}; }
             if (curr() != "in") {
                 error("\"for\" loop variable expression must be followed by \"in\"");
                 return {};

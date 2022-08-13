@@ -24,6 +24,9 @@
 #include <exception>
 #include <type_traits>
 #include <new>
+#include <iostream>
+#include <source_location>
+#include <string_view>
 
 #ifdef _MSC_VER
     #pragma warning(disable:5050)   // suppress spurious modules warning
@@ -140,30 +143,47 @@ public:
 //
 class contract_group {
 public:
-    using handler = void (*)() noexcept;
+    using handler = void (*)(std::source_location) noexcept;
 
     constexpr contract_group  (handler h = nullptr)  : chandler(normalize(h)) { }
     constexpr auto set_handler(handler h) -> handler { auto old = chandler; chandler = normalize(h); return old; }
     constexpr auto get_handler() const    -> handler { return chandler; }
-    constexpr auto expects  (bool b)      -> void    { assertion(b); }
-    constexpr auto ensures  (bool b)      -> void    { assertion(b); }
+    constexpr auto expects  (bool b, std::source_location where = std::source_location::current())
+                                          -> void    { assertion(b, where); }
+    constexpr auto ensures  (bool b, std::source_location where = std::source_location::current())
+                                          -> void    { assertion(b, where); }
 private:
-    constexpr auto assertion(bool b)      -> void    { if (!b) chandler(); }
-    constexpr auto normalize(handler h)   -> handler { return h ? h : []()noexcept{}; }
+    constexpr auto assertion(bool b, std::source_location where)
+                                          -> void    { if (!b) chandler(where); }
+    constexpr auto normalize(handler h)   -> handler { return h ? h : [](std::source_location)noexcept{}; }
     handler chandler;
 };
 
-auto inline Default = contract_group( []()noexcept{assert(!"contract violation"); } /* or: &std::terminate */);
-auto inline Bounds  = contract_group( []()noexcept{assert(!"Bounds contract violation"); } );
-auto inline Null    = contract_group( []()noexcept{assert(!"Null contract violation"); } );
-auto inline Testing = contract_group( []()noexcept{assert(!"Testing contract violation"); } );
+[[noreturn]] auto report_and_terminate(std::string_view msg, std::source_location where) noexcept  -> void {
+    std::cerr << where.file_name() << "2("
+              << where.line() << ":"
+              << where.column() << ") `"
+              << where.function_name() << "`: "
+              << msg << " violation\n";
+    std::terminate();
+}
+
+auto inline Default = contract_group( [](std::source_location where)noexcept{ report_and_terminate(""             , where); } );
+auto inline Bounds  = contract_group( [](std::source_location where)noexcept{ report_and_terminate("Bounds safety", where); } );
+auto inline Null    = contract_group( [](std::source_location where)noexcept{ report_and_terminate("Null safety"  , where); } );
+auto inline Testing = contract_group( [](std::source_location where)noexcept{ report_and_terminate("Testing"      , where); } );
 
 //  Null pointer deref checking
 //
-auto assert_not_null(auto&& p) -> auto&& {
+auto assert_not_null(
+    auto&& p, 
+    std::source_location where = std::source_location::current()
+) 
+    -> auto&&
+{
     //  Checking against a default-constructed value should be fine for iterators too
     //  TODO: validate this works for all pointerlike types
-    Null.expects(p != CPP2_TYPEOF(p){});
+    Null.expects(p != CPP2_TYPEOF(p){}, where);
     return std::forward<decltype(p)>(p);
 }
 

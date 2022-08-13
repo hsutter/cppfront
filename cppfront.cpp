@@ -970,7 +970,7 @@ public:
         if (*n.identifier == "for") {
             assert(!n.condition && n.loop_var && n.range);
 
-            printer.print_cpp2("for ( auto&& ", n.position());
+            printer.print_cpp2("for ( ", n.position());
             emit(*n.loop_var);
             printer.print_cpp2(" : ", n.position());
             emit(*n.range);
@@ -1299,7 +1299,7 @@ public:
             if (n.terms.size() > 1) {
                 errors.emplace_back(
                     n.position(),
-                    "ALPHA TODO: this compiler is just starting to learn 'as' and only supports a single as-expression (no chaining with other is/as)"
+                    "(temporary alpha limitation) this compiler is just starting to learn 'as' and only supports a single as-expression (no chaining with other is/as)"
                 );
                 return;
             }
@@ -1437,6 +1437,14 @@ public:
     //
     auto emit(parameter_declaration_node const& n, bool returns = false) -> void
     {
+        if (n.pass == passing_style::forward) {
+            errors.emplace_back(
+                n.position(),
+                "(temporary alpha limitation) forward parameters are not yet supported"
+            );
+            return;
+        }
+
         //  Can't declare functions as parameters -- only pointers to functions which are objects
         assert( n.declaration );
         assert( n.declaration->is(declaration_node::object) );
@@ -1459,7 +1467,15 @@ public:
         printer.preempt_position( n.position() );
 
         if (is_wildcard) {
-            printer.print_cpp2("auto", n.position());
+            switch (n.pass) {
+            break;case passing_style::in     : printer.print_cpp2( "auto const&", n.position() );
+            break;case passing_style::copy   : printer.print_cpp2( "auto",        n.position() );
+            break;case passing_style::inout  : printer.print_cpp2( "auto&",       n.position() );
+            break;case passing_style::out    : printer.print_cpp2( "auto&",       n.position() ); // TODO: support out<auto> via rewrite to template
+            break;case passing_style::move   : printer.print_cpp2( "auto&&", n.position() );
+            break;case passing_style::forward: assert(false); // TODO: support forward parameters
+            break;default: ;
+            }
         }
         else {
             emit( id_expr );
