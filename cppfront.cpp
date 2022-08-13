@@ -1705,7 +1705,7 @@ public:
         }
 
         //  Object with initializer
-        else if (n.is(declaration_node::object))
+        else if (!printer.doing_declarations_only() && n.is(declaration_node::object))
         {
             auto& type = std::get<declaration_node::object>(n.type);
 
