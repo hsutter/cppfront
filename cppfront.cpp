@@ -1588,15 +1588,36 @@ public:
     {
         assert (n.kind);
         if (*n.kind == "assert") {
-            printer.preempt_position(n.position());
+
+            //  Emit the contract group name (defaults to cpp2::Default)
+            //
             if (n.group) {
-                emit(*n.group);
+                //  If this is one of Cpp2's predefined contract groups,
+                //  make it convenient to use without cpp2:: qualification
+                if (auto uid = std::get_if<id_expression_node::unqualified>(&n.group->id)) {
+                    assert (*uid && (**uid).identifier);
+                    if (
+                        *(**uid).identifier == "Default" ||
+                        *(**uid).identifier == "Bounds" ||
+                        *(**uid).identifier == "Null" ||
+                        *(**uid).identifier == "Testing"
+                        )
+                    {
+                        printer.print_cpp2("cpp2::", n.position());
+                    }
+                }
+
+                printer.preempt_position(n.position());
                 printer.add_pad_in_this_line(-20);
+                emit(*n.group);
             }
             else {
-                printer.print_cpp2("Default", n.position());
+                printer.print_cpp2("cpp2::Default", n.position());
                 printer.add_pad_in_this_line(-8);
             }
+
+            //  And invoke .expect() on that contract group
+            //
             printer.print_cpp2(".expects(", n.position());
             assert(n.condition);
             emit (*n.condition);

@@ -2160,20 +2160,26 @@ private:
 
 
     //G contract:
-    //G     [ contract-kind id-expression-opt : logical-or-expression ]
-    //G     [ contract-kind id-expression-opt : logical-or-expression , string-literal ]
+    //G     [ [ contract-kind id-expression-opt : logical-or-expression ] ]
+    //G     [ [ contract-kind id-expression-opt : logical-or-expression , string-literal ] ]
     //G
     //G contract-kind: one of
     //G     pre post assert
     //G
     auto contract() -> std::unique_ptr<contract_node>
     {
-        //  If there's no [ then this isn't a contract
-        if (curr().type() != lexeme::LeftBracket) {
+        //  Note: For now I'm using [[ ]] mainly so that existing Cpp1 syntax highlighters
+        //        don't get confused... I initially implemented single [ ], but my editor's
+        //        default Cpp1 highlighter didn't colorize the following multiline // 
+        //        comment as a comment
+
+        //  If there's no [ [ then this isn't a contract
+        if (curr().type() != lexeme::LeftBracket || !peek(1) || peek(1)->type() != lexeme::LeftBracket) {
             return {};
         }
 
         auto n = std::make_unique<contract_node>(curr().position());
+        next();
         next();
 
         if (curr() != "pre" && curr() != "post" && curr() != "assert") {
@@ -2211,10 +2217,11 @@ private:
             next();
         }
 
-        if (curr().type() != lexeme::RightBracket) {
-            error("expected ] at the end of the contract");
+        if (curr().type() != lexeme::RightBracket || !peek(1) || peek(1)->type() != lexeme::RightBracket) {
+            error("expected ]] at the end of the contract");
             return {};
         }
+        next();
         next();
 
         return n;

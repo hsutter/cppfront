@@ -27,6 +27,8 @@
 #include <iostream>
 #include <string_view>
 
+
+//  If this compiler doesn't support source location info yet, disable it
 #ifndef __cpp_lib_source_location
 #undef CPP2_USE_SOURCE_LOCATION
 #endif
@@ -34,8 +36,9 @@
 #include <source_location>
 #endif
 
+//  Suppress spurious modules warning
 #ifdef _MSC_VER
-    #pragma warning(disable:5050)   // suppress spurious modules warning
+    #pragma warning(disable:5050)
 #endif
 
 
