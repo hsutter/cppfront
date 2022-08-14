@@ -124,7 +124,7 @@ class positional_printer
 
     //  Modal information
     bool            declarations_only   = true;     // print declarations only in first pass
-    std::string*    emit_string_target  = nullptr;  // option to emit to string instead of out file
+    std::vector<std::string*> emit_string_targets;  // option to emit to string instead of out file
 
 
     //-----------------------------------------------------------------------
@@ -134,8 +134,8 @@ class positional_printer
     {
         //  If the caller is capturing this output to a string, emit to the
         //  specified string instead and skip most positioning logic
-        if (emit_string_target) {
-            *emit_string_target += s;
+        if (!emit_string_targets.empty()) {
+            *emit_string_targets.back() += s;
             return;
         }
 
@@ -394,7 +394,7 @@ public:
         last_was_cpp2 = true;
 
         //  Skip alignment work if we're emitting text to a string
-        if (!emit_string_target)
+        if (emit_string_targets.empty())
         {
             //  Remember where we are
             auto last_pos = curr_pos;
@@ -523,7 +523,12 @@ public:
     //  useful for capturing Cpp1-formatted output for generated code
     //
     auto emit_to_string( std::string* target = nullptr ) -> void {
-        emit_string_target = target;
+        if (target) {
+            emit_string_targets.push_back( target );
+        }
+        else {
+            emit_string_targets.pop_back();
+        }
     }
 
 };
@@ -839,7 +844,10 @@ public:
             printer.print_cpp2(".value()", n.position());
         }
         else if (!in_definite_init && !in_parameter_list) {
-            if (auto decl = sema.get_declaration_of(*n.identifier); decl && !decl->parameter && !decl->initializer) {
+            if (auto decl = sema.get_declaration_of(*n.identifier); 
+                decl && !decl->parameter && !decl->initializer && decl->identifier != n.identifier
+                )
+            {
                 printer.print_cpp2(".value()", n.position());
             }
         }
@@ -1141,7 +1149,7 @@ public:
             {
                 auto& qual = std::get<id_expression_node::qualified>(id->id);
                 assert(qual);
-                if (std::ssize(qual->ids) > 1 &&
+                if (std::ssize(qual->ids) == 2 &&
                     qual->ids.back().scope_op->type() == lexeme::Dot
                     )
                 {

@@ -45,7 +45,29 @@
 #define CPP2_TYPEOF(x)  std::remove_cvref_t<decltype(x)>
 #define CPP2_FORWARD(x) std::forward<decltype(x)>(x)
 
+
 namespace cpp2 {
+
+//-----------------------------------------------------------------------
+// 
+//  Arena objects for std::allocators
+// 
+//-----------------------------------------------------------------------
+//
+struct {
+    template<typename T, typename... Args>
+    [[nodiscard]] auto new_(auto ...args) const -> std::unique_ptr<T> {
+        return std::make_unique<T>(CPP2_FORWARD(args)...);
+    }
+} unique;
+
+struct {
+    template<typename T, typename... Args>
+    [[nodiscard]] auto new_(auto ...args) const -> std::unique_ptr<T> {
+        return std::make_shared<T>(CPP2_FORWARD(args)...);
+    }
+} shared;
+
 
 //-----------------------------------------------------------------------
 // 
@@ -88,8 +110,8 @@ public:
    ~deferred_init() noexcept       { if (init) t.~T(); }
     auto value()    noexcept -> T& { assert(init);  return t; }
 
-    auto construct     (auto ...args) -> void { assert(!init);  new (&t) T(args...);  init = true; }
-    auto construct_list(auto ...args) -> void { assert(!init);  new (&t) T{args...};  init = true; }
+    auto construct     (auto ...args) -> void { assert(!init);  new (&t) T(CPP2_FORWARD(args)...);  init = true; }
+    auto construct_list(auto ...args) -> void { assert(!init);  new (&t) T{CPP2_FORWARD(args)...};  init = true; }
 };
 
 template<typename T>
