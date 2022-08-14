@@ -575,6 +575,36 @@ struct return_statement_node
 };
 
 
+struct contract_node
+{
+    source_position                             open_bracket;
+    token const*                                kind = {};
+    std::unique_ptr<id_expression_node>         group;
+    std::unique_ptr<logical_or_expression_node> condition;
+    token const*                                message = {};
+
+    contract_node( source_position pos ) : open_bracket{pos} { }
+
+    auto position() const -> source_position
+    {
+        return open_bracket;
+    }
+
+    auto visit(auto& v, int depth) -> void
+    {
+        v.start(*this, depth);
+        assert(kind);
+        kind->visit(v, depth+1);
+        if (group) {
+            group->visit(v, depth+1);
+        }
+        assert(condition);
+        condition->visit(v, depth+1);
+        v.end(*this, depth);
+    }
+};
+
+
 struct declaration_node;
 struct parameter_declaration_list_node;
 struct statement_node
@@ -582,14 +612,15 @@ struct statement_node
     token const*                                     let;
     std::unique_ptr<parameter_declaration_list_node> let_params;
 
-    enum active { expression=0, compound, selection, declaration, return_, iteration };
+    enum active { expression=0, compound, selection, declaration, return_, iteration, contract };
     std::variant<
         std::unique_ptr<expression_statement_node>,
         std::unique_ptr<compound_statement_node>,
         std::unique_ptr<selection_statement_node>,
         std::unique_ptr<declaration_node>,
         std::unique_ptr<return_statement_node>,
-        std::unique_ptr<iteration_statement_node>
+        std::unique_ptr<iteration_statement_node>,
+        std::unique_ptr<contract_node>
     > statement;
 
     auto position() const -> source_position;
@@ -682,36 +713,6 @@ auto statement_node::visit(auto& v, int depth) -> void
     try_visit<return_    >(statement, v, depth);
     v.end(*this, depth);
 }
-
-
-struct contract_node
-{
-    source_position                             open_bracket;
-    token const*                                kind = {};
-    std::unique_ptr<id_expression_node>         group;
-    std::unique_ptr<logical_or_expression_node> condition;
-    token const*                                message = {};
-
-    contract_node( source_position pos ) : open_bracket{pos} { }
-
-    auto position() const -> source_position
-    {
-        return open_bracket;
-    }
-
-    auto visit(auto& v, int depth) -> void
-    {
-        v.start(*this, depth);
-        assert(kind);
-        kind->visit(v, depth+1);
-        if (group) {
-            group->visit(v, depth+1);
-        }
-        assert(condition);
-        condition->visit(v, depth+1);
-        v.end(*this, depth);
-    }
-};
 
 
 struct function_returns_tag { };
@@ -834,6 +835,24 @@ auto statement_node::position() const -> source_position
 
     break;case declaration: {
         auto const& s = std::get<declaration>(statement);
+        assert (s);
+        return s->position();
+    }
+
+    break;case return_: {
+        auto const& s = std::get<return_>(statement);
+        assert (s);
+        return s->position();
+    }
+
+    break;case iteration: {
+        auto const& s = std::get<iteration>(statement);
+        assert (s);
+        return s->position();
+    }
+
+    break;case contract: {
+        auto const& s = std::get<contract>(statement);
         assert (s);
         return s->position();
     }
@@ -1947,6 +1966,12 @@ private:
             return n;
         }
 
+        else if (auto s = contract()) {
+            n->statement = std::move(s);
+            assert (n->statement.index() == statement_node::contract);
+            return n;
+        }
+
         else {
             //next();
             return {};
@@ -2146,6 +2171,7 @@ private:
             error("[ begins a contract and must be followed by 'pre', 'post', or 'assert'");
             return {};
         }
+        n->kind = &curr();
         next();
 
         if (auto id = id_expression()) {
@@ -2163,6 +2189,7 @@ private:
             error("invalid contract condition");
             return {};
         }
+        n->condition = std::move(condition);
 
         //  Now check for the optional string message
         if (curr().type() == lexeme::Comma) {

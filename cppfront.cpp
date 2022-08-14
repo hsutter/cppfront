@@ -1446,6 +1446,7 @@ public:
         try_emit<statement_node::declaration>(n.statement);
         try_emit<statement_node::return_    >(n.statement);
         try_emit<statement_node::iteration  >(n.statement);
+        try_emit<statement_node::contract   >(n.statement);
     }
 
 
@@ -1582,8 +1583,28 @@ public:
     //
     auto emit(contract_node const& n) -> void
     {
+        assert (n.kind);
+        if (*n.kind == "assert") {
+            printer.preempt_position(n.position());
+            if (n.group) {
+                emit(*n.group);
+                printer.add_pad_in_this_line(-20);
+            }
+            else {
+                printer.print_cpp2("Default", n.position());
+                printer.add_pad_in_this_line(-8);
+            }
+            printer.print_cpp2(".expects(", n.position());
+            assert(n.condition);
+            emit (*n.condition);
+            printer.print_cpp2(");", n.position());
+        }
 
 
+
+        //  TODO: pre and post
+
+        //  TODO: pass the message through
 
 
 
