@@ -175,10 +175,8 @@ public:
     constexpr contract_group  (handler h = nullptr)  : reporter(h) { }
     constexpr auto set_handler(handler h) -> handler { assert(h); auto old = reporter; reporter = h; return old; }
     constexpr auto get_handler() const    -> handler { return reporter; }
-    constexpr auto expects  (bool b CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> void { assertion(b CPP2_SOURCE_LOCATION_ARG); }
-    constexpr auto ensures  (bool b CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> void { assertion(b CPP2_SOURCE_LOCATION_ARG); }
+    constexpr auto expects    (bool b CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> void { if (!b) reporter(CPP2_SOURCE_LOCATION_ARG_SOLO); }
 private:
-    constexpr auto assertion(bool b CPP2_SOURCE_LOCATION_PARAM)              -> void { if (!b) reporter(CPP2_SOURCE_LOCATION_ARG_SOLO); }
     handler reporter;
 };
 

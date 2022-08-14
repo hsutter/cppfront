@@ -495,7 +495,11 @@ public:
         else {
             ignore_align        = false;
             ignore_align_indent = 0;
-            curr_pos.lineno     = ignore_align_lineno;  // pop state
+            if (ignore_align_lineno != curr_pos.lineno) {
+                ensure_at_start_of_new_line();
+                print_line_directive(ignore_align_lineno+1);
+            }
+            curr_pos.lineno     = ignore_align_lineno+1;  // pop state
         }
     }
 
@@ -893,7 +897,8 @@ public:
                 pos = n.statements.front()->position();
             }
             for (auto& loc : function_ret_locals) {
-                printer.print_cpp2("\n"+loc, pos);
+                printer.print_cpp2("\n", pos);
+                printer.print_cpp2(loc, pos);
             }
             printer.ignore_alignment( false );
         }
@@ -1587,46 +1592,42 @@ public:
     auto emit(contract_node const& n) -> void
     {
         assert (n.kind);
-        if (*n.kind == "assert") {
 
-            //  Emit the contract group name (defaults to cpp2::Default)
-            //
-            if (n.group) {
-                //  If this is one of Cpp2's predefined contract groups,
-                //  make it convenient to use without cpp2:: qualification
-                if (auto uid = std::get_if<id_expression_node::unqualified>(&n.group->id)) {
-                    assert (*uid && (**uid).identifier);
-                    if (
-                        *(**uid).identifier == "Default" ||
-                        *(**uid).identifier == "Bounds" ||
-                        *(**uid).identifier == "Null" ||
-                        *(**uid).identifier == "Testing"
-                        )
-                    {
-                        printer.print_cpp2("cpp2::", n.position());
-                    }
+        //  Emit the contract group name (defaults to cpp2::Default)
+        //
+        if (n.group) {
+            //  If this is one of Cpp2's predefined contract groups,
+            //  make it convenient to use without cpp2:: qualification
+            if (auto uid = std::get_if<id_expression_node::unqualified>(&n.group->id)) {
+                assert (*uid && (**uid).identifier);
+                if (
+                    *(**uid).identifier == "Default" ||
+                    *(**uid).identifier == "Bounds" ||
+                    *(**uid).identifier == "Null" ||
+                    *(**uid).identifier == "Testing"
+                    )
+                {
+                    printer.print_cpp2("cpp2::", n.position());
                 }
-
-                printer.preempt_position(n.position());
-                printer.add_pad_in_this_line(-20);
-                emit(*n.group);
-            }
-            else {
-                printer.print_cpp2("cpp2::Default", n.position());
-                printer.add_pad_in_this_line(-8);
             }
 
-            //  And invoke .expect() on that contract group
-            //
-            printer.print_cpp2(".expects(", n.position());
-            assert(n.condition);
-            emit (*n.condition);
-            printer.print_cpp2(");", n.position());
+            printer.preempt_position(n.position());
+            printer.add_pad_in_this_line(-20);
+            emit(*n.group);
+        }
+        else {
+            printer.print_cpp2("cpp2::Default", n.position());
+            printer.add_pad_in_this_line(-8);
         }
 
+        //  And invoke .expects on that contract group
+        //
+        printer.print_cpp2(".expects(", n.position());
+        assert(n.condition);
+        emit (*n.condition);
+        printer.print_cpp2(");", n.position());
 
 
-        //  TODO: pre and post
 
         //  TODO: pass the message through
 
@@ -1728,7 +1729,6 @@ public:
 
             //  Function body
             assert( n.initializer );
-            printer.print_cpp2( " ", n.equal_sign );
 
             auto function_return_locals = std::vector<std::string>{};
 
@@ -1740,7 +1740,7 @@ public:
                     emit(c);
                 }
                 printer.emit_to_string();
-                function_return_locals.push_back( std::move(print) );
+                function_return_locals.push_back(print);
             }
 
             if (func->returns.index() == function_type_node::list)
@@ -1796,6 +1796,7 @@ public:
                 }
             }
 
+            printer.preempt_position( n.equal_sign );
             emit( 
                 *n.initializer, 
                 true, true, func->returns.index() == function_type_node::empty, 
