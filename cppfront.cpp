@@ -647,7 +647,7 @@ public:
         //  we want pure-Cpp1 files to pass through with zero changes
         if (source.has_cpp2()) {
             if (!flag_clean_cpp1) {
-                printer.print_extra( "// -- Cpp2 support --\n" );
+                printer.print_extra( "// ----- Cpp2 support -----\n" );
             }
             if (flag_use_source_location) {
                 printer.print_extra( "#define CPP2_USE_SOURCE_LOCATION 1\n" );

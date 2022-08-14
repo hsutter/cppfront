@@ -27,6 +27,9 @@
 #include <iostream>
 #include <string_view>
 
+#ifndef __cpp_lib_source_location
+#undef CPP2_USE_SOURCE_LOCATION
+#endif
 #ifdef CPP2_USE_SOURCE_LOCATION
 #include <source_location>
 #endif
