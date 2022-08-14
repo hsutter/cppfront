@@ -533,15 +533,18 @@ struct selection_statement_node
     }
 };
 
+struct declaration_node;
 struct parameter_declaration_node;
 struct iteration_statement_node
 {
     token const*                                identifier;
-    std::unique_ptr<compound_statement_node>    statement;
     std::unique_ptr<assignment_expression_node> next_expression;    // if used, else null
     std::unique_ptr<logical_or_expression_node> condition;          // used for "do" and "while", else null
-    std::unique_ptr<parameter_declaration_node> loop_var;           // used for "for", else null
-    std::unique_ptr<id_expression_node>         range;              // used for "for", else null
+    std::unique_ptr<compound_statement_node>    statement;          // used for "do" and "while", else null
+    std::unique_ptr<expression_node>            range;              // used for "for", else null
+    std::unique_ptr<declaration_node>           body;               // used for "for", else null
+
+    auto get_for_parameter() const -> parameter_declaration_node const*;
 
     auto position() const -> source_position
     {
@@ -605,7 +608,6 @@ struct contract_node
 };
 
 
-struct declaration_node;
 struct parameter_declaration_list_node;
 struct statement_node
 {
@@ -653,26 +655,6 @@ struct parameter_declaration_node
 
     auto visit(auto& v, int depth) -> void;
 };
-
-
-auto iteration_statement_node::visit(auto& v, int depth) -> void
-{
-    v.start(*this, depth);
-    assert(statement);
-    statement->visit(v, depth+1);
-    assert(next_expression);
-    next_expression->visit(v, depth+1);
-    if (condition) {
-        assert(!loop_var && !range);
-        condition->visit(v, depth+1);
-    }
-    else {
-        assert(loop_var && range);
-        loop_var->visit(v, depth+1);
-        range->visit(v, depth+1);
-    }
-    v.end(*this, depth);
-}
 
 
 struct parameter_declaration_list_node
@@ -810,6 +792,34 @@ struct declaration_node
         v.end(*this, depth);
     }
 };
+
+
+auto iteration_statement_node::get_for_parameter() const -> parameter_declaration_node const* {
+    assert(*identifier == "for");
+    auto func = std::get_if<declaration_node::function>(&body->type);
+    assert(func && *func && std::ssize((**func).parameters->parameters) == 1);
+    return (**func).parameters->parameters[0].get();
+}
+
+auto iteration_statement_node::visit(auto& v, int depth) -> void
+{
+    v.start(*this, depth);
+    assert(statement);
+    statement->visit(v, depth+1);
+    assert(next_expression);
+    next_expression->visit(v, depth+1);
+    if (condition) {
+        assert(!range && !body);
+        condition->visit(v, depth+1);
+    }
+    else {
+        assert(range && body);
+        range->visit(v, depth+1);
+        body->visit(v, depth+1);
+    }
+    v.end(*this, depth);
+}
+
 
 auto statement_node::position() const -> source_position
 {
@@ -1766,7 +1776,7 @@ private:
     //G iteration-statement:
     //G     while logical-or-expression next-clause-opt compound-statement
     //G     do compound-statement while logical-or-expression next-clause-opt ;
-    //G     for parameter_declaration_node in id-expression next-clause-opt compound-statement
+    //G     for each of expression next-clause-opt do unnamed-declaration
     //G
     //G next-clause:
     //G     next assignment-expression 
@@ -1820,30 +1830,6 @@ private:
             n->statement= std::move(s);
             return true;
         };
-
-        auto handle_loop_var = [&]() -> bool {
-            auto p = parameter_declaration();
-            if (!p) {
-                error("invalid loop scope parameter");
-                return false;
-            }
-            //  For now only allow in and inout -- later we'll allow more
-            else if (p->pass != passing_style::in && p->pass != passing_style::inout) {
-                error("(temporary alpha limitation) loop scope parameter must be in or inout");
-                return false;
-            }
-            n->loop_var = std::move(p);;
-            return true;
-        };
-
-        auto handle_id_expression = [&]() -> std::unique_ptr<id_expression_node> {
-            auto e = id_expression();
-            if (!e) {
-                error("invalid expression");
-                return {};
-            }
-            return e;
-        };
         //-----------------------------------------------------------------
 
         //  Handle "while"
@@ -1881,16 +1867,35 @@ private:
         //
         else if (*n->identifier == "for")
         {
-            if (!handle_loop_var())             { return {}; }
-            if (curr() != "in") {
-                error("'for' loop variable expression must be followed by 'in'");
+            if (curr() != "each" || !peek(1) || *peek(1) != "of") {
+                error("'for' must be followed by 'each of'");
                 return {};
             }
             next();
-            n->range = handle_id_expression();
-            assert(n->range);
+            next();
+
+            n->range = expression();
+            if (!n->range) {
+                error("expected valid expression after 'for each of'");
+                return {};
+            }
+
             if (!handle_optional_next_clause()) { return {}; }
-            if (!handle_compound_statement  ()) { return {}; }
+
+            if (curr() != "do") {
+                error("'for each of' must be followed by 'do'");
+                return {};
+            }
+            next();
+
+            n->body = unnamed_declaration(false);
+            auto func = n->body ? std::get_if<declaration_node::function>(&n->body->type) : nullptr;
+            if (!n->body || n->body->identifier || !func || !*func || std::ssize((**func).parameters->parameters) != 1)
+            {
+                error("for..do loop body must be an unnamed function taking a single parameter");
+                return {};
+            }
+
             return n;
         }
 
@@ -1967,6 +1972,10 @@ private:
         }
 
         else if (auto s = contract()) {
+            if (*s->kind != "assert") {
+                error("only 'assert' contracts are allowed at statement scope");
+                return {};
+            }
             n->statement = std::move(s);
             assert (n->statement.index() == statement_node::contract);
             return n;
@@ -2273,6 +2282,10 @@ private:
         }
 
         while (auto c = contract()) {
+            if (*c->kind != "pre" && *c->kind != "post") {
+                error("only 'pre' and 'post' contracts are allowed on functions");
+                return {};
+            }
             n->contracts.push_back( std::move(*c) );
         }
 
@@ -2280,31 +2293,25 @@ private:
     }
 
 
-    //G declaration:
-    //G     identifier : function-type = statement
-    //G     identifier : id-expression-opt = statement
-    //G     identifier : id-expression
+    //G unnamed-declaration:
+    //G     : function-type = statement
+    //G     : id-expression-opt = statement
+    //G     : id-expression
     //G
-    auto declaration(bool semicolon_required = true) -> std::unique_ptr<declaration_node> 
+    auto unnamed_declaration(bool semicolon_required = true) -> std::unique_ptr<declaration_node> 
     {
         auto deduced_type = false;
 
-        if (done()) { return {}; }
-
-        //  Remember current position, because we need to look ahead
-        auto start_pos = pos;
-
-        auto n = std::make_unique<declaration_node>();
-        if (!(n->identifier = unqualified_id())) {
-            return {};
-        }
-
         //  The next token must be :
         if (curr().type() != lexeme::Colon) {
-            pos = start_pos;    // backtrack
             return {};
         }
         next();
+
+        auto n = std::make_unique<declaration_node>();
+
+        //  Remember current position, because we need to look ahead
+        auto start_pos = pos;
 
         //  Next is an an optional type
 
@@ -2378,6 +2385,32 @@ private:
         }
 
         n->decl_end = peek(-1)->position();
+        return n;
+    }
+
+
+    //G declaration:
+    //G     identifier unnamed-declaration
+    //G
+    auto declaration(bool semicolon_required = true) -> std::unique_ptr<declaration_node> 
+    {
+        if (done()) { return {}; }
+
+        //  Remember current position, because we need to look ahead
+        auto start_pos = pos;
+
+        auto id = unqualified_id();
+        if (!id) {
+            return {};
+        }
+
+        auto n = unnamed_declaration(semicolon_required);
+        if (!n) {
+            pos = start_pos;    // backtrack
+            return {};
+        }
+
+        n->identifier = std::move(id);
         return n;
     }
 

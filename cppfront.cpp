@@ -938,12 +938,11 @@ public:
     auto emit(iteration_statement_node const& n) -> void
     {
         assert(n.identifier);
-        assert(n.statement);
 
         //  Handle while
         //
         if (*n.identifier == "while") {
-            assert(n.condition && !n.loop_var && !n.range);
+            assert(n.condition && n.statement && !n.range && !n.body);
 
             //  We emit Cpp2 while loops as Cpp2 for loops if there's a "next" clause
             if (!n.next_expression) {
@@ -964,7 +963,7 @@ public:
         //  Handle do
         //
         if (*n.identifier == "do") {
-            assert(n.condition && !n.loop_var && !n.range);
+            assert(n.condition && n.statement && !n.range && !n.body);
 
             printer.print_cpp2("do ", n.position());
             emit(*n.statement);
@@ -984,13 +983,16 @@ public:
         //  Handle for
         //
         if (*n.identifier == "for") {
-            assert(!n.condition && n.loop_var && n.range);
+            assert(!n.condition && !n.statement && n.range && n.body);
 
-            printer.print_cpp2("for ( ", n.position());
-            emit(*n.loop_var);
-            printer.print_cpp2(" : ", n.position());
+            //  TODO: break n.range into subexpressions and lifetime-extend
+            //        each subexpression, because that's the right thing to do
+            //  For now, just use a for-scope auto&&
+            printer.print_cpp2("for ( auto&& range = ", n.position());
             emit(*n.range);
-            printer.print_cpp2(" ) ", n.position());
+            printer.print_cpp2(";  ", n.position());
+            emit(*n.get_for_parameter());
+            printer.print_cpp2(" : range ) ", n.position());
 
             //  If there's a next-expression, smuggle it in via a nested do/while(false) loop
             //  (nested "continue" will work, but "break" won't until we do extra work to implement
@@ -999,7 +1001,8 @@ public:
                 printer.print_cpp2(" { do ", n.position());
             }
 
-            emit(*n.statement);
+            assert(n.body->initializer);
+            emit(*n.body->initializer);
 
             if (n.next_expression) {    
                 printer.print_cpp2(" while (false); ", n.position());
@@ -1707,6 +1710,18 @@ public:
             printer.print_cpp2( " ", n.equal_sign );
 
             auto function_return_locals = std::vector<std::string>{};
+
+            if (!func->contracts.empty())
+            {
+                auto print = std::string();
+                printer.emit_to_string(&print);
+                for (auto&& c : func->contracts) {
+                    emit(c);
+                }
+                printer.emit_to_string();
+                function_return_locals.push_back( std::move(print) );
+            }
+
             if (func->returns.index() == function_type_node::list)
             {
                 auto& r = std::get<function_type_node::list>(func->returns);
