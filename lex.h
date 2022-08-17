@@ -406,7 +406,7 @@ auto lex_line(
             "^bool\\s|^break\\s|"
             "^case\\s|^catch\\s|^char\\s|^char16_t\\s|^char32_t\\s|^char8_t\\s|^class\\s|^co_await\\s|^co_return\\s|"
             "^co_yield\\s|^concept\\s|^const\\s|^const_cast\\s|^consteval\\s|^constexpr\\s|^constinit\\s|^continue\\s|"
-            "^decltype\\s|^default\\s|^delete\\s|^double\\s|^do\\s|^dynamic_cast\\s|"
+            "^decltype\\s|^default\\s|^double\\s|^do\\s|^dynamic_cast\\s|"
             "^else\\s|^enum\\s|^explicit\\s|^export\\s|^extern\\s|"
             "^false\\s|^float\\s|^for\\s|^friend\\s|"
             "^goto\\s|"
@@ -419,7 +419,7 @@ auto lex_line(
             "^register\\s|^reinterpret_cast\\s|^requires\\s|^return\\s|"
             "^short\\s|^signed\\s|^sizeof\\s|^static\\s|^static_assert\\s|^static_cast\\s|^struct\\s|^switch\\s|"
             "^template\\s|^this\\s|^thread_local\\s|^throws\\s|^throw\\s|^true\\s|^try\\s|^typedef\\s|^typeid\\s|^typename\\s|"
-            "^union\\s|^unsigned\\s|^using\\s|"
+            "^unsigned\\s|^using\\s|"
             "^virtual\\s|^void\\s|^volatile\\s|"
             "^wchar_t\\s|^while\\s"
         );
@@ -786,6 +786,18 @@ auto lex_line(
                 //
                 else if (auto j = starts_with_identifier({&line[i], std::size(line)-i})) {
                     store(j, lexeme::Identifier);
+                    if (tokens.back() == "union") {
+                        errors.emplace_back(
+                            source_position(lineno, i), 
+                            "unsafe 'union's are not supported in Cpp2 - use std::variant instead"
+                        );
+                    }
+                    if (tokens.back() == "delete") {
+                        errors.emplace_back(
+                            source_position(lineno, i), 
+                            "'delete' and owning raw pointers are not supported in Cpp2 - use unique.new<T>, shared.new<T>, or gc.new<T> instead (in that order)"
+                        );
+                    }
                 }
 
                 //  Anything else should be whitespace

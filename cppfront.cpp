@@ -659,7 +659,10 @@ public:
                 printer.print_extra( "// ----- Cpp2 support -----\n" );
             }
             if (flag_use_source_location) {
-                printer.print_extra( "#define CPP2_USE_SOURCE_LOCATION 1\n" );
+                printer.print_extra( "#define CPP2_USE_SOURCE_LOCATION Yes\n" );
+            }
+            if (flag_cpp2_only) {
+                printer.print_extra( "#define CPP2_USE_MODULES         Yes\n" );
             }
             printer.print_extra( "#include \"cpp2util.h\"\n\n" );
         }
@@ -687,7 +690,7 @@ public:
                         if (line.cat == source_line::category::preprocessor) {
                             errors.emplace_back(
                                 source_position(curr_lineno, 1),
-                                "pure-cpp2 switch disables the preprocessor, including #include - use import instead (e.g., import std;)"
+                                "pure-cpp2 switch disables the preprocessor, including #include - use import instead (note: 'import std;' is implicit in -pure-cpp2)"
                             );
                         }
                         else {
@@ -890,21 +893,22 @@ public:
     //-----------------------------------------------------------------------
     //
     auto emit(
-        compound_statement_node const&  n, 
-        std::vector<std::string> const& function_ret_locals = {},
-        colno_t                         function_indent     = 1
+        compound_statement_node  const&  n, 
+        std::vector<std::string> const& function_prolog = {},
+        std::vector<std::string> const& function_epilog = {},
+        colno_t                         function_indent = 1
     ) 
         -> void
     {
         printer.print_cpp2( "{", n.open_brace );
 
-        if (!function_ret_locals.empty()) {
+        if (!function_prolog.empty()) {
             printer.ignore_alignment( true, function_indent + 4 );
             auto pos = source_position{};
             if (!n.statements.empty()) {
                 pos = n.statements.front()->position();
             }
-            for (auto& loc : function_ret_locals) {
+            for (auto& loc : function_prolog) {
                 printer.print_cpp2("\n", pos);
                 printer.print_cpp2(loc, pos);
             }
@@ -914,6 +918,19 @@ public:
         for (auto const& x : n.statements) {
             assert(x);
             emit(*x);
+        }
+
+        if (!function_epilog.empty()) {
+            printer.ignore_alignment( true, function_indent + 4 );
+            auto pos = source_position{};
+            if (!n.statements.empty()) {
+                pos = n.statements.front()->position();
+            }
+            for (auto& loc : function_epilog) {
+                printer.print_cpp2("\n", pos);
+                printer.print_cpp2(loc, pos);
+            }
+            printer.ignore_alignment( false );
         }
 
         printer.print_cpp2( "}", n.close_brace );
@@ -959,13 +976,14 @@ public:
 
             //  We emit Cpp2 while loops as Cpp2 for loops if there's a "next" clause
             if (!n.next_expression) {
-                printer.print_cpp2("while ( ", n.position());
+                printer.print_cpp2("while( ", n.position());
                 emit(*n.condition);
             }
             else {
-                printer.print_cpp2("for ( ; ", n.position());
+                printer.print_cpp2("for( ; ", n.position());
                 emit(*n.condition);
                 printer.print_cpp2("; ", n.position());
+                printer.add_pad_in_this_line(-10);
                 emit(*n.next_expression);
             }
             printer.print_cpp2(" ) ", n.position());
@@ -1001,11 +1019,13 @@ public:
             //  TODO: break n.range into subexpressions and lifetime-extend
             //        each subexpression, because that's the right thing to do
             //  For now, just use a for-scope auto&&
-            printer.print_cpp2("for ( auto&& range = ", n.position());
+            //  Also: using the name 'cpp2_range' for now because '__range' is reserved
+            //        and common enough that it might clash with existing impls
+            printer.print_cpp2("for ( auto&& cpp2_range = ", n.position());
             emit(*n.range);
             printer.print_cpp2(";  ", n.position());
             emit(*n.get_for_parameter());
-            printer.print_cpp2(" : range ) ", n.position());
+            printer.print_cpp2(" : cpp2_range ) ", n.position());
 
             //  If there's a next-expression, smuggle it in via a nested do/while(false) loop
             //  (nested "continue" will work, but "break" won't until we do extra work to implement
@@ -1117,6 +1137,8 @@ public:
                 auto& unqual = std::get<id_expression_node::unqualified>(id->id);
                 assert(unqual);
                 auto decl = sema.get_declaration_of(*unqual->identifier);
+                //  TODO: Generalize this -- for now we detect only cases of the form "p: *int = ...;"
+                //        We don't recognize pointer types that are deduced, multi-level, or from Cpp1
                 if (decl && decl->declaration && decl->declaration->pointer_declarator) {
                     last_postfix_expr_was_pointer = true;
                     if (n.ops.front().op->type() == lexeme::PlusPlus || n.ops.front().op->type() == lexeme::MinusMinus) {
@@ -1421,7 +1443,7 @@ public:
         assert(n.expr);
 
         if (function_body) {
-            printer.print_cpp2("{ ", n.position());
+            printer.print_cpp2(" { ", n.position());
             if (!function_void_ret) {
                 printer.print_cpp2("return ", n.position());
             }
@@ -1433,7 +1455,7 @@ public:
         }
 
         if (function_body) {
-            printer.print_cpp2("}", n.position());
+            printer.print_cpp2(" }", n.position());
         }
     }
 
@@ -1442,22 +1464,25 @@ public:
     //
     auto emit(
         statement_node const&           n, 
-        bool                            can_have_semicolon  = true, 
-        bool                            function_body       = false,
-        bool                            function_void_ret   = false,
-        std::vector<std::string> const& function_ret_locals = {},
-        colno_t                         function_indent     = 1
+        bool                            can_have_semicolon = true, 
+        bool                            function_body      = false,
+        bool                            function_void_ret  = false,
+        std::vector<std::string> const& function_prolog    = {},
+        std::vector<std::string> const& function_epilog    = {},
+        colno_t                         function_indent    = 1
     )
         -> void
     {
         //  TODO: If there's a let on this statement, generate a block scope
         if (n.let) {
 
+            //  TODO
+
         }
 
         printer.disable_indent_heuristic_for_next_text();
         try_emit<statement_node::expression >(n.statement, can_have_semicolon, function_body, function_void_ret);
-        try_emit<statement_node::compound   >(n.statement, function_ret_locals, function_indent);
+        try_emit<statement_node::compound   >(n.statement, function_prolog, function_epilog, function_indent);
         try_emit<statement_node::selection  >(n.statement);
         try_emit<statement_node::declaration>(n.statement);
         try_emit<statement_node::return_    >(n.statement);
@@ -1739,6 +1764,7 @@ public:
             assert( n.initializer );
 
             auto function_return_locals = std::vector<std::string>{};
+            auto function_epilog        = std::vector<std::string>{};
 
             if (!func->contracts.empty())
             {
@@ -1804,11 +1830,13 @@ public:
                 }
             }
 
+            //function_epilog.push_back("/*EPILOG-TEST*/");
+
             printer.preempt_position( n.equal_sign );
             emit( 
                 *n.initializer, 
                 true, true, func->returns.index() == function_type_node::empty, 
-                function_return_locals, n.position().colno
+                function_return_locals, function_epilog, n.position().colno
             );
 
             function_returns.pop_back();

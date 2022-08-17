@@ -1776,7 +1776,7 @@ private:
     //G iteration-statement:
     //G     while logical-or-expression next-clause-opt compound-statement
     //G     do compound-statement while logical-or-expression next-clause-opt ;
-    //G     for each of expression next-clause-opt do unnamed-declaration
+    //G     for expression next-clause-opt do unnamed-declaration
     //G
     //G next-clause:
     //G     next assignment-expression 
@@ -1867,16 +1867,9 @@ private:
         //
         else if (*n->identifier == "for")
         {
-            if (curr() != "each" || !peek(1) || *peek(1) != "of") {
-                error("'for' must be followed by 'each of'");
-                return {};
-            }
-            next();
-            next();
-
             n->range = expression();
             if (!n->range) {
-                error("expected valid expression after 'for each of'");
+                error("expected valid range expression after 'for'");
                 return {};
             }
 
@@ -1890,9 +1883,12 @@ private:
 
             n->body = unnamed_declaration(false);
             auto func = n->body ? std::get_if<declaration_node::function>(&n->body->type) : nullptr;
-            if (!n->body || n->body->identifier || !func || !*func || std::ssize((**func).parameters->parameters) != 1)
+            if (!n->body || n->body->identifier || !func || !*func || 
+                std::ssize((**func).parameters->parameters) != 1 ||
+                (**func).returns.index() != function_type_node::empty
+                )
             {
-                error("for..do loop body must be an unnamed function taking a single parameter");
+                error("for..do loop body must be an unnamed function taking a single parameter and return nothing", false);
                 return {};
             }
 
