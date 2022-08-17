@@ -1744,7 +1744,7 @@ private:
     //G
     auto return_statement() -> std::unique_ptr<return_statement_node> 
     {
-        if (curr().type() != lexeme::Keyword || curr() != "return") {
+        if (curr().type() != lexeme::Identifier || curr() != "return") {
             return {};
         }
         auto n = std::make_unique<return_statement_node>();

@@ -82,6 +82,11 @@ struct {
     }
 } shared;
 
+template<typename T, typename... Args>
+[[nodiscard]] auto new_(auto ...args) -> std::unique_ptr<T> {
+    return std::make_unique<T>(CPP2_FORWARD(args)...);
+}
+
 
 //-----------------------------------------------------------------------
 // 
