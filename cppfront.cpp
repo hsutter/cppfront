@@ -411,6 +411,7 @@ public:
                     adjusted_pos.colno = preempt_pos.colno;
                 }
                 preempt_pos = {};
+                assert (preempt_pos == source_position{});
             }
 
             //  (2) Otherwise, see if there's a previous line's offset to repeat
@@ -568,6 +569,12 @@ class cppfront
     parameter_declaration_list_node               single_anon;  
     //  special value - hack for now to note single-anon-return type kind in this function_returns working list
 
+    struct text_with_pos{
+        std::string     text;
+        source_position pos;
+        text_with_pos(std::string const& t, source_position p) : text{t}, pos{p} { }
+    };
+
 public:
     //-----------------------------------------------------------------------
     //  Constructor
@@ -613,21 +620,30 @@ public:
 
             //  Parse
             //
-            for (auto const& [line, entry] : tokens.get_map()) {
-                if (!parser.parse(entry)) {
+            try
+            {
+                for (auto const& [line, entry] : tokens.get_map()) {
+                    if (!parser.parse(entry)) {
+                        errors.emplace_back(
+                            source_position(line, 0),
+                            "parse failed for section starting here"
+                        );
+                    }
+                }
+
+                //  Sema
+                parser.visit(sema);
+                if (!sema.apply_local_rules()) {
                     errors.emplace_back(
-                        source_position(line, 0),
-                        "parse failed for section starting here"
+                        source_position(-1, -1),
+                        "program violates initialization safety guarantee - see previous errors\n"
                     );
                 }
             }
-
-            //  Sema
-            parser.visit(sema);
-            if (!sema.apply_local_rules()) {
+            catch (std::runtime_error& e) {
                 errors.emplace_back(
                     source_position(-1, -1),
-                    "program violates initialization safety guarantee - see previous errors\n"
+                    "unexpected text or end-of-file - see previous errors\n"
                 );
             }
         }
@@ -671,13 +687,16 @@ public:
 
         //  First, echo the non-Cpp2 parts
         //
-        auto cpp2_found    = false;
+        auto cpp2_found = false;
 
-        for (lineno_t curr_lineno = 0; auto const& line : source.get_lines())
+        for (
+            lineno_t curr_lineno = 0; 
+            auto const& line : source.get_lines()
+            )
         {
             //  Skip dummy line we added to make 0-vs-1-based offsets readable
-            if (curr_lineno != 0) {
-
+            if (curr_lineno != 0)
+            {
                 //  If it's a Cpp1 line, emit it
                 if (line.cat != source_line::category::cpp2)
                 {
@@ -769,8 +788,6 @@ public:
                 emit(*decl);
             }
         }
-
-        //emit( parser.get_parse_tree() );  // starts at translation_unit_node
     }
 
 
@@ -1056,7 +1073,7 @@ public:
     {
         assert(n.identifier);
         assert(*n.identifier == "return");
-        printer.print_cpp2("return ", n.position());
+        printer.print_cpp2("return", n.position());
 
         //  Return with expression == single anonymous return type
         //
@@ -1219,13 +1236,8 @@ public:
 
         //  Otherwise, we're going to have to potentially do some work to change
         //  some Cpp2 postfix operators to Cpp1 prefix operators, so let's set up...
-        struct element {
-            std::string     text;
-            source_position pos;
-            element(std::string const& t, source_position p) : text{t}, pos{p} { }
-        };
-        auto prefix            = std::vector<element>{};
-        auto suffix            = std::vector<element>{};
+        auto prefix            = std::vector<text_with_pos>{};
+        auto suffix            = std::vector<text_with_pos>{};
 
         auto print             = std::string{};
         auto emitted_n         = false;
@@ -1359,10 +1371,10 @@ public:
             }
 
             printer.print_cpp2("static_cast<", n.position());
-            printer.preempt_position(n.position());
+            //printer.preempt_position(n.position());
             emit(*n.terms.front().expr);
             printer.print_cpp2(">(", n.position());
-            printer.preempt_position(n.position());
+            //printer.preempt_position(n.position());
             emit(*n.expr);
             printer.print_cpp2(")", n.position());
             return;
@@ -1408,29 +1420,39 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(expression_list_node const& n) -> void
+    auto emit(expression_list_node const& n, std::vector<text_with_pos>* as_text = nullptr) -> void
     {
+        auto print = [&](std::string const& text, source_position pos) {
+            if (as_text) {
+                as_text->emplace_back( text, pos );
+            }
+            else {
+                printer.print_cpp2( text, pos );
+
+            }
+        };
+
         auto first = true;
         for (auto const& x : n.expressions) {
             if (!first) {
-                printer.print_cpp2(", ", n.position());
+                print(", ", n.position());
             }
             first = false;
 
             if (x.pass != passing_style::in) {
                 assert(to_string_view(x.pass) == "out" || to_string_view(x.pass) == "move");
                 if (to_string_view(x.pass) == "out") {
-                    printer.print_cpp2("&", n.position());
+                    print("&", n.position());
                 }
                 else if (to_string_view(x.pass) == "move") {
-                    printer.print_cpp2("std::move(", n.position());
+                    print("std::move(", n.position());
                 }
-                printer.add_pad_in_this_line(-3);
+                //printer.add_pad_in_this_line(-3);
             }
             assert(x.expr);
             emit(*x.expr);
             if (to_string_view(x.pass) == "move") {
-                printer.print_cpp2(")", n.position());
+                print(")", n.position());
             }
         }
     }
@@ -1635,8 +1657,9 @@ public:
                 assert (*uid && (**uid).identifier);
                 if (
                     *(**uid).identifier == "Default" ||
-                    *(**uid).identifier == "Bounds" ||
-                    *(**uid).identifier == "Null" ||
+                    *(**uid).identifier == "Bounds"  ||
+                    *(**uid).identifier == "Null"    ||
+                    *(**uid).identifier == "Type"    ||
                     *(**uid).identifier == "Testing"
                     )
                 {
@@ -1658,14 +1681,10 @@ public:
         printer.print_cpp2(".expects(", n.position());
         assert(n.condition);
         emit (*n.condition);
+        printer.print_cpp2(", ", n.position());
+        assert (n.message);
+        emit (*n.message);
         printer.print_cpp2(");", n.position());
-
-
-
-        //  TODO: pass the message through
-
-
-
     }
 
 

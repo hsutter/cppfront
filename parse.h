@@ -1040,7 +1040,6 @@ private:
     // 
     auto error(char const* msg, bool include_curr_token = true) const -> void 
     {
-        assert (!done());
         auto m = std::string{msg};
         if (include_curr_token) {
             m += std::string(" at '") + curr().to_string(true) + "'";
@@ -1059,7 +1058,10 @@ private:
     // 
     auto curr() const -> token const& 
     {
-        assert (!done());
+        if (done()) {
+            throw std::runtime_error("unexpected end of source file");
+        }
+
         return (*tokens_)[pos];
     }
 
@@ -1744,22 +1746,27 @@ private:
     //G
     auto return_statement() -> std::unique_ptr<return_statement_node> 
     {
-        if (curr().type() != lexeme::Identifier || curr() != "return") {
+        if (curr().type() != lexeme::Keyword || curr() != "return") {
             return {};
         }
+
         auto n = std::make_unique<return_statement_node>();
         n->identifier = &curr();
         next();
 
-        //  Optional return expression
-        if (curr().type() != lexeme::Semicolon) {
-            auto x = expression();
-            if (!x) {
-                error("invalid return expression");
-                return {};
-            }
-            n->expression = std::move(x);
+        //  If there's no optional return expression, we're done
+        if (curr().type() == lexeme::Semicolon) {
+            next();
+            return n;
         }
+
+        //  Handle the return expression
+        auto x = expression();
+        if (!x) {
+            error("invalid return expression");
+            return {};
+        }
+        n->expression = std::move(x);
 
         //  Final semicolon
         if (curr().type() != lexeme::Semicolon) {
@@ -2255,35 +2262,35 @@ private:
             next();
         }
 
-        //  If there's no -> then we're done
-        if (curr().type() != lexeme::Arrow) {
-            return n;
-        }
-        next();
+        //  Optional returns
+        if (curr().type() == lexeme::Arrow)
+        {
+            next();
 
-        //  Returns
-        if (auto t = id_expression()) {
-            auto is_void = false;
-            if (auto u = std::get_if<id_expression_node::unqualified>(&t->id)) {
-                assert ((*u)->identifier);
-                is_void = *(*u)->identifier == "void";
+            if (auto t = id_expression()) {
+                auto is_void = false;
+                if (auto u = std::get_if<id_expression_node::unqualified>(&t->id)) {
+                    assert ((*u)->identifier);
+                    is_void = *(*u)->identifier == "void";
+                }
+                if (!is_void) {
+                    n->returns = std::move(t);
+                }
             }
-            if (!is_void) {
-                n->returns = std::move(t);
+            else if (auto returns_list = parameter_declaration_list(true)) {
+                if (std::ssize(returns_list->parameters) < 1) {
+                    error("an explicit return value list cannot be empty");
+                    return {};
+                }
+                n->returns = std::move(returns_list);
             }
-        }
-        else if (auto returns_list = parameter_declaration_list(true)) {
-            if (std::ssize(returns_list->parameters) < 1) {
-                error("an explicit return value list cannot be empty");
+            else {
+                error("missing function return after ->");
                 return {};
             }
-            n->returns = std::move(returns_list);
-        }
-        else {
-            error("missing function return after ->");
-            return {};
         }
 
+        //  Pre/post conditions
         while (auto c = contract()) {
             if (*c->kind != "pre" && *c->kind != "post") {
                 error("only 'pre' and 'post' contracts are allowed on functions");

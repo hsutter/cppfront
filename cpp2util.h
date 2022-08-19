@@ -196,60 +196,70 @@ public:
     #define CPP2_SOURCE_LOCATION_PARAM              , std::source_location where
     #define CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT , std::source_location where = std::source_location::current()
     #define CPP2_SOURCE_LOCATION_PARAM_SOLO         std::source_location where
-    #define CPP2_SOURCE_LOCATION_PARAM_SOLO_ANON    std::source_location
+    //#define CPP2_SOURCE_LOCATION_PARAM_SOLO_ANON    std::source_location
     #define CPP2_SOURCE_LOCATION_ARG                , where
-    #define CPP2_SOURCE_LOCATION_ARG_SOLO           where
+    //#define CPP2_SOURCE_LOCATION_ARG_SOLO           where
 #else
     #define CPP2_SOURCE_LOCATION_PARAM
     #define CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT
     #define CPP2_SOURCE_LOCATION_PARAM_SOLO
-    #define CPP2_SOURCE_LOCATION_PARAM_SOLO_ANON
+    //#define CPP2_SOURCE_LOCATION_PARAM_SOLO_ANON
     #define CPP2_SOURCE_LOCATION_ARG
-    #define CPP2_SOURCE_LOCATION_ARG_SOLO
+    //#define CPP2_SOURCE_LOCATION_ARG_SOLO
 #endif
 
 
 class contract_group {
 public:
-    using handler = void (*)(CPP2_SOURCE_LOCATION_PARAM_SOLO_ANON) noexcept;
+    using handler = void (*)(const char* msg CPP2_SOURCE_LOCATION_PARAM) noexcept;
 
     constexpr contract_group  (handler h = nullptr)  : reporter(h) { }
     constexpr auto set_handler(handler h) -> handler { assert(h); auto old = reporter; reporter = h; return old; }
     constexpr auto get_handler() const    -> handler { return reporter; }
-    constexpr auto expects    (bool b CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> void { if (!b) reporter(CPP2_SOURCE_LOCATION_ARG_SOLO); }
+    constexpr auto expects    (bool b, const char* msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
+                                          -> void { if (!b) reporter(msg CPP2_SOURCE_LOCATION_ARG); }
 private:
     handler reporter;
 };
 
-[[noreturn]] auto report_and_terminate(std::string_view msg CPP2_SOURCE_LOCATION_PARAM) noexcept -> void {
+[[noreturn]] auto report_and_terminate(std::string_view group, const char* msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) noexcept -> void {
     std::cerr
 #ifdef CPP2_USE_SOURCE_LOCATION
         << where.file_name() << "2("
         << where.line() << ") "
         << where.function_name() << ": "
 #endif
-        << msg << " violation\n";
+        << group << " violation";
+    if (msg[0] != '\0') {
+        std::cerr << ": " << msg;
+    }
+    std::cerr << "\n";
     std::terminate();
 }
 
 auto inline Default = contract_group( 
-    [](CPP2_SOURCE_LOCATION_PARAM_SOLO)noexcept { 
-        report_and_terminate(""              CPP2_SOURCE_LOCATION_ARG);
+    [](const char* msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+        report_and_terminate("Contract",      msg CPP2_SOURCE_LOCATION_ARG);
     }
 );
 auto inline Bounds  = contract_group( 
-    [](CPP2_SOURCE_LOCATION_PARAM_SOLO)noexcept { 
-        report_and_terminate("Bounds safety" CPP2_SOURCE_LOCATION_ARG); 
+    [](const char* msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+        report_and_terminate("Bounds safety", msg CPP2_SOURCE_LOCATION_ARG);
     } 
 );
 auto inline Null    = contract_group( 
-    [](CPP2_SOURCE_LOCATION_PARAM_SOLO)noexcept {
-        report_and_terminate("Null safety"   CPP2_SOURCE_LOCATION_ARG); 
+    [](const char* msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+        report_and_terminate("Null safety",   msg CPP2_SOURCE_LOCATION_ARG);
+    } 
+);
+auto inline Type    = contract_group( 
+    [](const char* msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+        report_and_terminate("Type safety",   msg CPP2_SOURCE_LOCATION_ARG);
     } 
 );
 auto inline Testing = contract_group( 
-    [](CPP2_SOURCE_LOCATION_PARAM_SOLO)noexcept {
-        report_and_terminate("Testing"       CPP2_SOURCE_LOCATION_ARG); 
+    [](const char* msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+        report_and_terminate("Testing",       msg CPP2_SOURCE_LOCATION_ARG);
     } 
 );
 

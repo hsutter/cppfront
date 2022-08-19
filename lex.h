@@ -400,34 +400,41 @@ auto lex_line(
     { 
         //  Cpp2 has a smaller set of the Cpp1 globally reserved keywords, but we continue to
         //  reserve all the ones Cpp1 has both for compatibility and to not give up a keyword
+        //  Some keywords like "delete" and "union" are not in this list because we reject them elsewhere
         //  Cpp2 also adds a couple, notably "is" and "as"
         const auto keys = std::regex(
-            "^alignas\\s|^alignof\\s|^asm\\s|^as\\s|^auto\\s|"
-            "^bool\\s|^break\\s|"
-            "^case\\s|^catch\\s|^char\\s|^char16_t\\s|^char32_t\\s|^char8_t\\s|^class\\s|^co_await\\s|^co_return\\s|"
-            "^co_yield\\s|^concept\\s|^const\\s|^const_cast\\s|^consteval\\s|^constexpr\\s|^constinit\\s|^continue\\s|"
-            "^decltype\\s|^default\\s|^double\\s|^do\\s|^dynamic_cast\\s|"
-            "^else\\s|^enum\\s|^explicit\\s|^export\\s|^extern\\s|"
-            "^false\\s|^float\\s|^for\\s|^friend\\s|"
-            "^goto\\s|"
-            "^if\\s|^import\\s|^inline\\s|^int\\s|^is\\s|"
-            "^long\\s|"
-            "^module\\s|^mutable\\s|"
-            "^namespace\\s|^new\\s|^noexcept\\s|^nullptr\\s|"
-            "^operator\\s|"
-            "^private\\s|^protected\\s|^public\\s|"
-            "^register\\s|^reinterpret_cast\\s|^requires\\s|^return\\s|"
-            "^short\\s|^signed\\s|^sizeof\\s|^static\\s|^static_assert\\s|^static_cast\\s|^struct\\s|^switch\\s|"
-            "^template\\s|^this\\s|^thread_local\\s|^throws\\s|^throw\\s|^true\\s|^try\\s|^typedef\\s|^typeid\\s|^typename\\s|"
-            "^unsigned\\s|^using\\s|"
-            "^virtual\\s|^void\\s|^volatile\\s|"
-            "^wchar_t\\s|^while\\s"
+            "^alignas|^alignof|^asm|^as|^auto|"
+            "^bool|^break|"
+            "^case|^catch|^char|^char16_t|^char32_t|^char8_t|^class|^co_await|^co_return|"
+            "^co_yield|^concept|^const|^const_cast|^consteval|^constexpr|^constinit|^continue|"
+            "^decltype|^default|^double|^do|^dynamic_cast|"
+            "^else|^enum|^explicit|^export|^extern|"
+            "^false|^float|^for|^friend|"
+            "^goto|"
+            "^if|^import|^inline|^int|^is|"
+            "^long|"
+            "^module|^mutable|"
+            "^namespace|^new|^noexcept|^nullptr|"
+            "^operator|"
+            "^private|^protected|^public|"
+            "^register|^reinterpret_cast|^requires|^return|"
+            "^short|^signed|^sizeof|^static|^static_assert|^static_cast|^struct|^switch|"
+            "^template|^this|^thread_local|^throws|^throw|^true|^try|^typedef|^typeid|^typename|"
+            "^unsigned|^using|"
+            "^virtual|^void|^volatile|"
+            "^wchar_t|^while"
         );
 
         std::cmatch m;
         if (std::regex_search(&line[i], m, keys)) {
             assert (m.position(0) == 0);
-            return (int)(m[0].length()-1);
+            //  If we matched and what's next is EOL or a non-identifier char, we matched!
+            if (i+m[0].length() == line.length() ||             // EOL
+                !is_identifier_continue(line[i+m[0].length()])  // non-identifier char
+                )
+            {
+                return (int)(m[0].length());;
+            }
         }
         return 0;
     };
@@ -795,7 +802,11 @@ auto lex_line(
                     if (tokens.back() == "delete") {
                         errors.emplace_back(
                             source_position(lineno, i), 
-                            "'delete' and owning raw pointers are not supported in Cpp2 - use unique.new<T>, shared.new<T>, or gc.new<T> instead (in that order)"
+                            "'delete' and owning raw pointers are not supported in Cpp2"
+                        );
+                        errors.emplace_back(
+                            source_position(lineno, i), 
+                            "  - use unique.new<T>, shared.new<T>, or gc.new<T> instead (in that order)"
                         );
                     }
                 }
