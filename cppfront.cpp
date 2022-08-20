@@ -845,6 +845,11 @@ public:
         assert(n.identifier);
         emit(*n.identifier);
 
+        if (n.const_qualifier) {
+            printer.print_cpp2(" ", n.const_qualifier->position());
+            emit(*n.const_qualifier);
+        }
+
         if (!n.template_args.empty()) {
             printer.print_cpp2("<", n.open_angle);
             auto first = true;
@@ -1559,6 +1564,10 @@ public:
         }
         else {
             emit( id_expr );
+            if (n.declaration->pointer_declarator) {
+                printer.print_cpp2(" ", n.declaration->pointer_declarator->position());
+                emit(*n.declaration->pointer_declarator);
+            }
         }
 
         //  Then any suffix
@@ -1682,8 +1691,12 @@ public:
         assert(n.condition);
         emit (*n.condition);
         printer.print_cpp2(", ", n.position());
-        assert (n.message);
-        emit (*n.message);
+        if (n.message) {
+            emit (*n.message);
+        }
+        else {
+            printer.print_cpp2("\"\"", n.position());
+        }
         printer.print_cpp2(");", n.position());
     }
 
@@ -1861,7 +1874,7 @@ public:
             function_returns.pop_back();
         }
 
-        //  Object with initializer
+        //  Object with optional initializer
         else if (!printer.doing_declarations_only() && n.is(declaration_node::object))
         {
             auto& type = std::get<declaration_node::object>(n.type);

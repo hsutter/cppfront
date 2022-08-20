@@ -196,33 +196,33 @@ public:
     #define CPP2_SOURCE_LOCATION_PARAM              , std::source_location where
     #define CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT , std::source_location where = std::source_location::current()
     #define CPP2_SOURCE_LOCATION_PARAM_SOLO         std::source_location where
-    //#define CPP2_SOURCE_LOCATION_PARAM_SOLO_ANON    std::source_location
     #define CPP2_SOURCE_LOCATION_ARG                , where
-    //#define CPP2_SOURCE_LOCATION_ARG_SOLO           where
 #else
     #define CPP2_SOURCE_LOCATION_PARAM
     #define CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT
     #define CPP2_SOURCE_LOCATION_PARAM_SOLO
-    //#define CPP2_SOURCE_LOCATION_PARAM_SOLO_ANON
     #define CPP2_SOURCE_LOCATION_ARG
-    //#define CPP2_SOURCE_LOCATION_ARG_SOLO
 #endif
 
+//  For C++23: make this std::string_view and drop the macro
+//      Before C++23 std::string_view was not guaranteed to be trivially copyable,
+//      and so in<T> will pass it by const& and really it should be by value
+#define CPP2_MESSAGE_PARAM  char const*
 
 class contract_group {
 public:
-    using handler = void (*)(const char* msg CPP2_SOURCE_LOCATION_PARAM) noexcept;
+    using handler = void (*)(CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM) noexcept;
 
     constexpr contract_group  (handler h = nullptr)  : reporter(h) { }
     constexpr auto set_handler(handler h) -> handler { assert(h); auto old = reporter; reporter = h; return old; }
     constexpr auto get_handler() const    -> handler { return reporter; }
-    constexpr auto expects    (bool b, const char* msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
+    constexpr auto expects    (bool b, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
                                           -> void { if (!b) reporter(msg CPP2_SOURCE_LOCATION_ARG); }
 private:
     handler reporter;
 };
 
-[[noreturn]] auto report_and_terminate(std::string_view group, const char* msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) noexcept -> void {
+[[noreturn]] auto report_and_terminate(std::string_view group, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) noexcept -> void {
     std::cerr
 #ifdef CPP2_USE_SOURCE_LOCATION
         << where.file_name() << "2("
@@ -238,27 +238,27 @@ private:
 }
 
 auto inline Default = contract_group( 
-    [](const char* msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
         report_and_terminate("Contract",      msg CPP2_SOURCE_LOCATION_ARG);
     }
 );
 auto inline Bounds  = contract_group( 
-    [](const char* msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
         report_and_terminate("Bounds safety", msg CPP2_SOURCE_LOCATION_ARG);
     } 
 );
 auto inline Null    = contract_group( 
-    [](const char* msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
         report_and_terminate("Null safety",   msg CPP2_SOURCE_LOCATION_ARG);
     } 
 );
 auto inline Type    = contract_group( 
-    [](const char* msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
         report_and_terminate("Type safety",   msg CPP2_SOURCE_LOCATION_ARG);
     } 
 );
 auto inline Testing = contract_group( 
-    [](const char* msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
         report_and_terminate("Testing",       msg CPP2_SOURCE_LOCATION_ARG);
     } 
 );

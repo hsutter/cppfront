@@ -332,7 +332,8 @@ auto prefix_expression_node::visit(auto& v, int depth) -> void
 
 struct unqualified_id_node
 {
-    token const* identifier;
+    token const* const_qualifier = {};  // optional
+    token const* identifier      = {};  // required
 
     enum active { empty=0, expression, id_expression };
 
@@ -349,11 +350,6 @@ struct unqualified_id_node
     };
     std::vector<term> template_args;
 
-    unqualified_id_node( token const* tok) 
-        : identifier{ tok }
-    {
-    }
-
     auto position() const -> source_position
     {
         assert (identifier);
@@ -363,6 +359,9 @@ struct unqualified_id_node
     auto visit(auto& v, int depth) -> void
     {
         v.start(*this, depth);
+        if (const_qualifier) {
+            v.start(*const_qualifier, depth+1);
+        }
         assert (identifier);
         v.start(*identifier, depth+1);
 
@@ -1481,8 +1480,8 @@ private:
 
 
     //G unqualified-id:
-    //G     identifier
-    //G     template-id
+    //G     const-opt identifier
+    //G     const-opt template-id
     //GT     operator-function-id
     //G
     //G template-id:
@@ -1499,11 +1498,19 @@ private:
     {
         //  Handle the identifier
         if (curr().type() != lexeme::Identifier &&
-            curr().type() != lexeme::Keyword)   // because of fundamental types like 'int' which are keywords
+            curr().type() != lexeme::Keyword)   // 'const', and fundamental types that are keywords
         {
             return {};
         }
-        auto n = std::make_unique<unqualified_id_node>( &curr() );
+
+        auto n = std::make_unique<unqualified_id_node>();
+
+        if (curr().type() == lexeme::Keyword && curr() == "const") {
+            n->const_qualifier = &curr();
+            next();
+        }
+
+        n->identifier =  &curr();
         next();
 
         //  Handle the template-argument-list if there is one
