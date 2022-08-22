@@ -39,6 +39,7 @@ import std.threading;
 #include <string_view>
 #include <iostream>
 #include <cassert>
+#include <variant>
 #endif
 
 
@@ -297,6 +298,96 @@ auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
         return FUNCNAME(CPP2_FORWARD(obj)); \
     } \
 }(PARAM1)
+
+
+
+/*
+//-----------------------------------------------------------------------
+// 
+//  is and as
+// 
+//-----------------------------------------------------------------------
+//
+#include <cstddef>
+#include <iostream>
+#include <cassert>
+
+#define typeof(x) std::remove_cvref_t<decltype(x)>
+
+
+//-------------------------------------------------------------------------------------------------------------
+//  Built-in is
+//
+template<typename T, typename X>
+auto is( X const& x ) {
+    return false;
+}
+
+template<typename T, typename X>
+    requires std::is_same_v<T, X>
+auto is( X const& x ) {
+    return true;
+}
+
+
+
+//-------------------------------------------------------------------------------------------------------------
+//  variant is and as
+//
+template<typename... Ts>
+constexpr auto operator_is( std::variant<Ts...> const& x ) {
+    return x.index();
+}
+template<size_t I, typename... Ts>
+constexpr auto operator_as( std::variant<Ts...> const& x ) -> auto&& {
+    return std::get<I>( x );
+}
+
+template<typename T, typename... Ts>
+auto is( std::variant<Ts...> const& x ) {
+    if constexpr (std::is_same_v< typeof(operator_as<0>(x)), T >) if (x.index() == 0) return true;
+    if constexpr (std::is_same_v< typeof(operator_as<1>(x)), T >) if (x.index() == 1) return true;
+    if constexpr (std::is_same_v< typeof(operator_as<2>(x)), T >) if (x.index() == 2) return true;
+    return false;
+}
+
+template<typename T, typename... Ts>
+auto as( std::variant<Ts...> const& x ) {
+    if constexpr (std::is_same_v< typeof(operator_as<0>(x)), T >) if (x.index() == 0) return operator_as<0>(x);
+    if constexpr (std::is_same_v< typeof(operator_as<1>(x)), T >) if (x.index() == 1) return operator_as<1>(x);
+    if constexpr (std::is_same_v< typeof(operator_as<2>(x)), T >) if (x.index() == 2) return operator_as<2>(x);
+    throw std::bad_variant_access();
+}
+
+//=============================================================================================================
+
+int main() {
+    std::cout << "1 is int == " << is<int>(1) << "\n";
+    std::cout << "1.1 is int == " << is<int>(1.1) << "\n";
+
+
+    std::variant<int, int, float> v;
+
+    v.emplace<0>(42);
+    std::cout << "v.index() == " << v.index() << "\n";
+    std::cout << "v is int = " << (is<int>(v) ? "true" : "false") << "\n";
+    std::cout << "  -> v as int == " << as<int>(v) << "\n";
+    std::cout << "v is float = " << (is<float>(v) ? "true" : "false") << "\n\n";
+
+    v.emplace<1>(84);
+    std::cout << "v.index() == " << v.index() << "\n";
+    std::cout << "v is int = " << (is<int>(v) ? "true" : "false") << "\n";
+    std::cout << "  -> v as int == " << as<int>(v) << "\n";
+    std::cout << "v is float = " << (is<float>(v) ? "true" : "false") << "\n\n";
+
+    v.emplace<2>(3.14159);
+    std::cout << "v.index() == " << v.index() << "\n";
+    std::cout << "v is int = " << (is<int>(v) ? "true" : "false") << "\n";
+    std::cout << "v is float = " << (is<float>(v) ? "true" : "false") << "\n";
+    std::cout << "  -> v as float == " << as<float>(v) << "\n";
+}
+
+*/
 
 
 }

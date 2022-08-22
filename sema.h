@@ -100,7 +100,7 @@ struct compound_sym {
 };
 
 struct symbol {
-    int depth = -1;
+    int  depth = -1;
 
     enum active { declaration=0, identifier, selection, compound };
     std::variant <
@@ -110,10 +110,12 @@ struct symbol {
         compound_sym
     > sym;
 
-    symbol(int depth, declaration_sym const& sym) : depth{depth}, sym{sym} { }
-    symbol(int depth, identifier_sym  const& sym) : depth{depth}, sym{sym} { }
-    symbol(int depth, selection_sym   const& sym) : depth{depth}, sym{sym} { }
-    symbol(int depth, compound_sym    const& sym) : depth{depth}, sym{sym} { }
+    bool start = true;
+
+    symbol(int depth, declaration_sym const& sym) : depth{depth}, sym{sym}, start{sym.start} { }
+    symbol(int depth, identifier_sym  const& sym) : depth{depth}, sym{sym}                   { }
+    symbol(int depth, selection_sym   const& sym) : depth{depth}, sym{sym}, start{sym.start} { }
+    symbol(int depth, compound_sym    const& sym) : depth{depth}, sym{sym}, start{sym.start} { }
 
     auto position() const -> source_position
     {
@@ -195,11 +197,11 @@ class sema
     //using enum symbol::active;
 
 public:
-    std::vector<error>& errors;
-    std::vector<symbol> symbols;
-    declaration_sym     partial;
+    std::vector<error>&          errors;
+    std::vector<symbol>          symbols;
+    std::vector<declaration_sym> partial_decl_stack;;
 
-    std::vector<selection_statement_node   const*> active_selections;
+    std::vector<selection_statement_node const*> active_selections;
      
 public:
     //-----------------------------------------------------------------------
@@ -224,7 +226,7 @@ public:
             ++i;
         }
 
-        if (i == symbols.cend()) {
+        while (i == symbols.cend() || !i->start) {
             --i;
         }
 
@@ -800,11 +802,8 @@ public:
 
     auto start(declaration_node const& n, int) -> void
     {
-        //  We're starting a new declaration, so there shouldn't be a
-        //  partial one for which we haven't visited the identifier yet
-        assert (!partial.declaration);
         if (!inside_parameter_list || inside_out_parameter) {
-            partial = { true, &n, nullptr, n.initializer.get(), inside_out_parameter };
+            partial_decl_stack.emplace_back(true, &n, nullptr, n.initializer.get(), inside_out_parameter);
         }
     }
 
@@ -815,6 +814,7 @@ public:
             if (n.type.index() != declaration_node::active::object) {
                 --scope_depth;
             }
+            partial_decl_stack.pop_back();
         }
     }
 
@@ -828,17 +828,15 @@ public:
         //  If this is the first identifier since we started a new decl,
         //  then it's the declaration's identifier name, so finish
         //  recognizing the decl and store it now that we have all the info
-        if (partial.declaration)
+        if (!partial_decl_stack.empty() && !partial_decl_stack.back().identifier)
         {
-            partial.identifier = &t;
-            symbols.emplace_back( scope_depth, partial );
+            partial_decl_stack.back().identifier = &t;
+            symbols.emplace_back( scope_depth, partial_decl_stack.back() );
 
-            assert (partial.declaration);
-            if (!partial.declaration->is(declaration_node::active::object)) {
+            assert (partial_decl_stack.back().declaration);
+            if (!partial_decl_stack.back().declaration->is(declaration_node::active::object)) {
                 ++scope_depth;
             }
-
-            partial = {};
         }
 
         //  If this is the first identifier since we started a new assignment,

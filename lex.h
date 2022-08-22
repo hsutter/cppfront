@@ -793,6 +793,12 @@ auto lex_line(
                 //
                 else if (auto j = starts_with_identifier({&line[i], std::size(line)-i})) {
                     store(j, lexeme::Identifier);
+                    if (tokens.back() == "NULL") {
+                        errors.emplace_back(
+                            source_position(lineno, i), 
+                            "'NULL' is not supported in Cpp2 - for a local pointer variable, leave it uninitialized instead, and set it to a non-null value when you have one"
+                        );
+                    }
                     if (tokens.back() == "union") {
                         errors.emplace_back(
                             source_position(lineno, i), 

@@ -555,7 +555,7 @@ class cppfront
 
     bool source_loaded                   = true;
     bool last_postfix_expr_was_pointer   = false;
-    bool bounds_safety_violation         = false;
+    bool violates_bounds_safety         = false;
     bool suppress_move_from_last_use     = false;
 
     //  For lowering
@@ -643,8 +643,14 @@ public:
             catch (std::runtime_error& e) {
                 errors.emplace_back(
                     source_position(-1, -1),
-                    "unexpected text or end-of-file - see previous errors\n"
+                    e.what()
                 );
+                if (violates_lifetime_safety) {
+                    errors.emplace_back(
+                        source_position(-1, -1),
+                        "program violates lifetime safety guarantee - see previous errors"
+                    );
+                }
             }
         }
     }
@@ -1142,12 +1148,6 @@ public:
         assert(n.expr);
         last_postfix_expr_was_pointer = false;
 
-        //  Simple case: If there are no .ops, just emit the expression
-        if (n.ops.empty()) {
-            emit(*n.expr);
-            return;
-        }
-
         //  Check that this isn't pointer arithmentic
         //      (initial partial implementation)
         if (n.expr->expr.index() == primary_expression_node::id_expression)
@@ -1163,21 +1163,30 @@ public:
                 //        We don't recognize pointer types that are deduced, multi-level, or from Cpp1
                 if (decl && decl->declaration && decl->declaration->pointer_declarator) {
                     last_postfix_expr_was_pointer = true;
-                    if (n.ops.front().op->type() == lexeme::PlusPlus || n.ops.front().op->type() == lexeme::MinusMinus) {
-                        errors.emplace_back(
-                            n.ops.front().op->position(),
-                            n.ops.front().op->to_string(true) + " - pointer arithmetic is illegal - use std::span or gsl::span instead"
-                        );
-                        bounds_safety_violation = true;
-                    }
-                    else if (n.ops.front().op->type() == lexeme::Tilde) {
-                        errors.emplace_back(
-                            n.ops.front().op->position(),
-                            n.ops.front().op->to_string(true) + " - pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first"
-                        );
+                    if (!n.ops.empty())
+                    {
+                        if (n.ops.front().op->type() == lexeme::PlusPlus || n.ops.front().op->type() == lexeme::MinusMinus) {
+                            errors.emplace_back(
+                                n.ops.front().op->position(),
+                                n.ops.front().op->to_string(true) + " - pointer arithmetic is illegal - use std::span or gsl::span instead"
+                            );
+                            violates_bounds_safety = true;
+                        }
+                        else if (n.ops.front().op->type() == lexeme::Tilde) {
+                            errors.emplace_back(
+                                n.ops.front().op->position(),
+                                n.ops.front().op->to_string(true) + " - pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first"
+                            );
+                        }
                     }
                 }
             }
+        }
+
+        //  Simple case: If there are no .ops, just emit the expression
+        if (n.ops.empty()) {
+            emit(*n.expr);
+            return;
         }
 
         //  Check to see if it's just a function call,
@@ -1351,18 +1360,6 @@ public:
     {
         assert(n.expr);
 
-        //  Check that this isn't pointer arithmentic
-        //      (initial partial implementation)
-        if (!n.terms.empty() && (*n.terms.front().op == "+" || *n.terms.front().op == "-")) {
-            if (last_postfix_expr_was_pointer) {
-                errors.emplace_back(
-                    n.terms.front().op->position(),
-                    n.terms.front().op->to_string(true) + " - pointer arithmetic is illegal - use std::span or gsl::span instead"
-                );
-                bounds_safety_violation = true;
-            }
-        }
-
         //  Handle is/as expressions
         //  For now, hack in just a single 'as'-cast
         //  TODO: Generalize
@@ -1392,6 +1389,36 @@ public:
         }
         emit(*n.expr);
         suppress_move_from_last_use = false;
+
+        //  Check that this isn't an illegal pointer operation
+        //      (initial partial implementation)
+        if (!n.terms.empty() && last_postfix_expr_was_pointer)
+        {
+            auto rhs_post = n.get_second_postfix_expression_node();
+            assert(rhs_post && rhs_post->expr);
+            auto rhs_tok = rhs_post->expr->get_token();
+            if (is_assignment_operator(n.terms.front().op->type()) && rhs_tok &&
+                (*rhs_tok == "nullptr" || is_digit(((std::string_view)*rhs_tok)[0]))
+                )
+            {
+                errors.emplace_back(
+                    n.terms.front().op->position(),
+                    n.terms.front().op->to_string(true) + " - pointer assignment from null or integer is illegal"
+                );
+                violates_lifetime_safety = true;
+            }
+            else if (
+                *n.terms.front().op == "+" || *n.terms.front().op == "+=" || 
+                *n.terms.front().op == "-" || *n.terms.front().op == "-="
+                )
+            {
+                errors.emplace_back(
+                    n.terms.front().op->position(),
+                    n.terms.front().op->to_string(true) + " - pointer arithmetic is illegal - use std::span or gsl::span instead"
+                );
+                violates_bounds_safety = true;
+            }
+        } 
 
         for (auto const& x : n.terms) {
             assert(x.op);
@@ -1936,7 +1963,10 @@ public:
         for (auto&& error : errors) {
             error.print(std::cerr, strip_path(sourcefile));
         }
-        if (bounds_safety_violation) {
+        if (violates_lifetime_safety) {
+            std::cerr << "program violates lifetime safety guarantee - see previous errors\n";
+        }
+        if (violates_bounds_safety) {
             std::cerr << "program violates bounds safety guarantee - see previous errors\n";
         }
     }

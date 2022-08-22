@@ -26,6 +26,8 @@
 
 namespace cpp2 {
 
+auto violates_lifetime_safety = false;
+
 //-----------------------------------------------------------------------
 //  Operator categorization
 //
@@ -117,6 +119,7 @@ struct primary_expression_node
         std::unique_ptr<id_expression_node>
     > expr;
 
+    auto get_token() -> token const*;
     auto position() const -> source_position;
     auto visit(auto& v, int depth) -> void;
 };
@@ -128,6 +131,11 @@ struct prefix_expression_node
 {
     std::vector<token const*> ops;
     std::unique_ptr<postfix_expression_node> expr;
+
+    auto get_postfix_expression_node() const -> postfix_expression_node const* {
+        assert(expr);
+        return expr.get();
+    }
 
     auto position() const -> source_position;
     auto visit(auto& v, int depth) -> void;
@@ -148,6 +156,22 @@ struct binary_expression_node
         std::unique_ptr<Term> expr;
     };
     std::vector<term> terms;
+
+    //  Get left-hand postfix-expression
+    auto get_postfix_expression_node() const -> postfix_expression_node const* {
+        assert(expr);
+        return expr->get_postfix_expression_node();
+    }
+
+    //  Get first right-hand postfix-expression, if there is one
+    auto get_second_postfix_expression_node() const -> postfix_expression_node const* {
+        if (!terms.empty()) {
+            assert(terms.front().expr);
+            return terms.front().expr->get_postfix_expression_node();
+        }
+        //  else
+        return {};
+    }
 
     auto position() const -> source_position
     {
@@ -350,6 +374,11 @@ struct unqualified_id_node
     };
     std::vector<term> template_args;
 
+    auto get_token() -> token const* {
+        assert (identifier);
+        return identifier;
+    }
+
     auto position() const -> source_position
     {
         assert (identifier);
@@ -426,6 +455,14 @@ struct id_expression_node
         std::unique_ptr<unqualified_id_node>
     > id;
 
+    auto get_token() -> token const* {
+        if (id.index() == unqualified) {
+            return std::get<unqualified>(id)->get_token();
+        }
+        // else
+        return {};
+    }
+
     auto position() const -> source_position
     {
         return pos;
@@ -440,6 +477,18 @@ struct id_expression_node
     }
 };
 
+
+auto primary_expression_node::get_token() -> token const*
+{
+    if (expr.index() == identifier) {
+        return std::get<identifier>(expr);
+    }
+    else if (expr.index() == id_expression) {
+        return std::get<id_expression>(expr)->get_token();
+    }
+    // else
+    return {};
+}
 
 auto primary_expression_node::position() const -> source_position
 {
@@ -692,6 +741,8 @@ auto statement_node::visit(auto& v, int depth) -> void
     try_visit<selection  >(statement, v, depth);
     try_visit<declaration>(statement, v, depth);
     try_visit<return_    >(statement, v, depth);
+    try_visit<iteration  >(statement, v, depth);
+    try_visit<contract   >(statement, v, depth);
     v.end(*this, depth);
 }
 
@@ -744,6 +795,7 @@ struct function_type_node
 
 struct declaration_node
 {
+    source_position pos;
     std::unique_ptr<unqualified_id_node> identifier;
 
     token const* pointer_declarator = nullptr;
@@ -767,19 +819,18 @@ struct declaration_node
 
     auto position() const -> source_position
     {
-        assert (identifier);
-        return identifier->position();
+        if (identifier) {
+            return identifier->position();
+        }
+        return pos;
     }
 
     auto visit(auto& v, int depth) -> void
     {
         v.start(*this, depth);
 
-        assert (identifier);
-        identifier->visit(v, depth+1);
-
-        if (pointer_declarator) {
-            pointer_declarator->visit(v, depth+1);
+        if (identifier) {
+            identifier->visit(v, depth+1);
         }
 
         try_visit<function>(type, v, depth+1);
@@ -803,10 +854,12 @@ auto iteration_statement_node::get_for_parameter() const -> parameter_declaratio
 auto iteration_statement_node::visit(auto& v, int depth) -> void
 {
     v.start(*this, depth);
-    assert(statement);
-    statement->visit(v, depth+1);
-    assert(next_expression);
-    next_expression->visit(v, depth+1);
+    if (statement) {
+        statement->visit(v, depth+1);
+    }
+    if (next_expression) {
+        next_expression->visit(v, depth+1);
+    }
     if (condition) {
         assert(!range && !body);
         condition->visit(v, depth+1);
@@ -1041,7 +1094,7 @@ private:
     {
         auto m = std::string{msg};
         if (include_curr_token) {
-            m += std::string(" at '") + curr().to_string(true) + "'";
+            m += std::string(" (at '") + curr().to_string(true) + "')";
         }
         errors.emplace_back( curr().position(), m );
     }
@@ -1895,7 +1948,7 @@ private:
             }
             next();
 
-            n->body = unnamed_declaration(false);
+            n->body = unnamed_declaration(curr().position(), false);
             auto func = n->body ? std::get_if<declaration_node::function>(&n->body->type) : nullptr;
             if (!n->body || n->body->identifier || !func || !*func || 
                 std::ssize((**func).parameters->parameters) != 1 ||
@@ -2315,7 +2368,7 @@ private:
     //G     : id-expression-opt = statement
     //G     : id-expression
     //G
-    auto unnamed_declaration(bool semicolon_required = true) -> std::unique_ptr<declaration_node> 
+    auto unnamed_declaration(source_position pos, bool semicolon_required = true) -> std::unique_ptr<declaration_node> 
     {
         auto deduced_type = false;
 
@@ -2326,6 +2379,7 @@ private:
         next();
 
         auto n = std::make_unique<declaration_node>();
+        n->pos = pos;
 
         //  Remember current position, because we need to look ahead
         auto start_pos = pos;
@@ -2394,6 +2448,18 @@ private:
             n->equal_sign = curr().position();
             next();
 
+            if (n->pointer_declarator) {
+                if (curr() == "nullptr" ||
+                    isdigit(std::string_view(curr())[0]) ||
+                    (curr() == "(" && peek(1) && *peek(1) == ")")
+                    )
+                {
+                    error("pointer cannot be initialized to null or int - leave it uninitialized and then set it to a non-null value when you have one");
+                    violates_lifetime_safety = true;
+                    throw std::runtime_error("null initialization detected");
+                }
+            }
+
             if (!(n->initializer = statement(semicolon_required))) {
                 error("ill-formed initializer");
                 next();
@@ -2421,7 +2487,7 @@ private:
             return {};
         }
 
-        auto n = unnamed_declaration(semicolon_required);
+        auto n = unnamed_declaration(start_pos, semicolon_required);
         if (!n) {
             pos = start_pos;    // backtrack
             return {};
@@ -2599,6 +2665,13 @@ public:
     auto start(return_statement_node const& n, int indent) -> void
     {
         o << pre(indent) << "return-statement\n";
+    }
+
+    auto start(iteration_statement_node const& n, int indent) -> void
+    {
+        o << pre(indent) << "iteration-statement\n";
+        assert(n.identifier);
+        o << pre(indent+1) << "identifier: " << std::string_view(*n.identifier) << "\n";
     }
 
     auto start(contract_node const& n, int indent) -> void
