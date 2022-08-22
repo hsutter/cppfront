@@ -826,7 +826,7 @@ public:
     auto emit(token const& n) -> void
     {
         if (n == "new") {
-            printer.print_cpp2("new_", n.position());
+            printer.print_cpp2("cpp2_new", n.position());
         }
         else {
             printer.print_cpp2(n, n.position());
@@ -893,6 +893,16 @@ public:
     //
     auto emit(qualified_id_node const& n) -> void
     {
+        //  Implicit "cpp2::" qualification of "unique.new" and "shared.new"
+        if (n.ids.size() == 2 &&
+            (*n.ids[0].id->identifier == "unique" || *n.ids[0].id->identifier == "shared") &&
+            *n.ids[1].scope_op == "." &&
+            *n.ids[1].id->identifier == "new"
+            )
+        {
+            printer.print_cpp2("cpp2::", n.position());
+        }
+
         auto ident = std::string{};
         printer.emit_to_string(&ident);
 

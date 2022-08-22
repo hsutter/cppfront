@@ -71,20 +71,20 @@ namespace cpp2 {
 //
 struct {
     template<typename T, typename... Args>
-    [[nodiscard]] auto new_(auto ...args) const -> std::unique_ptr<T> {
+    [[nodiscard]] auto cpp2_new(auto ...args) const -> std::unique_ptr<T> {
         return std::make_unique<T>(CPP2_FORWARD(args)...);
     }
 } unique;
 
 struct {
     template<typename T, typename... Args>
-    [[nodiscard]] auto new_(auto ...args) const -> std::unique_ptr<T> {
+    [[nodiscard]] auto cpp2_new(auto ...args) const -> std::shared_ptr<T> {
         return std::make_shared<T>(CPP2_FORWARD(args)...);
     }
 } shared;
 
 template<typename T, typename... Args>
-[[nodiscard]] auto new_(auto ...args) -> std::unique_ptr<T> {
+[[nodiscard]] auto cpp2_new(auto ...args) -> std::unique_ptr<T> {
     return std::make_unique<T>(CPP2_FORWARD(args)...);
 }
 
@@ -389,7 +389,9 @@ int main() {
 
 */
 
-
 }
+
+using cpp2::cpp2_new;
+
 
 #endif
