@@ -40,6 +40,7 @@ import std.threading;
 #include <iostream>
 #include <cassert>
 #include <variant>
+#include <cstddef>
 #endif
 
 
@@ -72,20 +73,20 @@ namespace cpp2 {
 struct {
     template<typename T, typename... Args>
     [[nodiscard]] auto cpp2_new(auto ...args) const -> std::unique_ptr<T> {
-        return std::make_unique<T>(CPP2_FORWARD(args)...);
+        return std::make_unique<T>(std::forward<decltype(args)>(args)...);
     }
 } unique;
 
 struct {
     template<typename T, typename... Args>
     [[nodiscard]] auto cpp2_new(auto ...args) const -> std::shared_ptr<T> {
-        return std::make_shared<T>(CPP2_FORWARD(args)...);
+        return std::make_shared<T>(std::forward<decltype(args)>(args)...);
     }
 } shared;
 
 template<typename T, typename... Args>
 [[nodiscard]] auto cpp2_new(auto ...args) -> std::unique_ptr<T> {
-    return std::make_unique<T>(CPP2_FORWARD(args)...);
+    return std::make_unique<T>(std::forward<decltype(args)>(args)...);
 }
 
 
@@ -130,8 +131,8 @@ public:
    ~deferred_init() noexcept       { if (init) t.~T(); }
     auto value()    noexcept -> T& { assert(init);  return t; }
 
-    auto construct     (auto ...args) -> void { assert(!init);  new (&t) T(CPP2_FORWARD(args)...);  init = true; }
-    auto construct_list(auto ...args) -> void { assert(!init);  new (&t) T{CPP2_FORWARD(args)...};  init = true; }
+    auto construct     (auto ...args) -> void { assert(!init);  new (&t) T(std::forward<decltype(args)>(args)...);  init = true; }
+    auto construct_list(auto ...args) -> void { assert(!init);  new (&t) T{std::forward<decltype(args)>(args)...};  init = true; }
 };
 
 template<typename T>
@@ -270,7 +271,7 @@ auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
 {
     //  Checking against a default-constructed value should be fine for iterators too
     //  TODO: validate this works for all pointerlike types
-    Null.expects(p != CPP2_TYPEOF(p){} CPP2_SOURCE_LOCATION_ARG);
+    Null.expects(p != CPP2_TYPEOF(p){}, "dynamic null dereference attempt detected" CPP2_SOURCE_LOCATION_ARG);
     return std::forward<decltype(p)>(p);
 }
 
@@ -283,56 +284,103 @@ auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
 //
 #define CPP2_UFCS(FUNCNAME,PARAM1,...) \
 [](auto&& obj, auto&& ...params) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); }) { \
-        return CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); \
+    if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); }) { \
+        return std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); \
     } else { \
-        return FUNCNAME(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+        return FUNCNAME(std::forward<decltype(obj)>(obj), std::forward<decltype(params)>(params)...); \
     } \
 }(PARAM1, __VA_ARGS__)
 
 #define CPP2_UFCS_0(FUNCNAME,PARAM1) \
 [](auto&& obj) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(); }) { \
-        return CPP2_FORWARD(obj).FUNCNAME(); \
+    if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(); }) { \
+        return std::forward<decltype(obj)>(obj).FUNCNAME(); \
     } else { \
-        return FUNCNAME(CPP2_FORWARD(obj)); \
+        return FUNCNAME(std::forward<decltype(obj)>(obj)); \
     } \
 }(PARAM1)
 
 
-
-/*
 //-----------------------------------------------------------------------
 // 
 //  is and as
 // 
 //-----------------------------------------------------------------------
 //
-#include <cstddef>
-#include <iostream>
-#include <cassert>
-
-#define typeof(x) std::remove_cvref_t<decltype(x)>
-
-
 //-------------------------------------------------------------------------------------------------------------
-//  Built-in is
+//  Built-in is (partial)
 //
-template<typename T, typename X>
-auto is( X const& x ) {
+
+//  For use when returning "no such thing", such as
+//  when customizing is/as for std::variant
+static std::nullptr_t nonesuch = nullptr;
+
+template< typename C, typename X >
+auto is( X const& ) -> bool {
     return false;
 }
 
-template<typename T, typename X>
-    requires std::is_same_v<T, X>
-auto is( X const& x ) {
+template< typename C, typename X >
+    requires std::is_same_v<C, X>
+auto is( X const& ) -> bool {
     return true;
 }
 
+template< typename C, typename X >
+    requires (std::is_base_of_v<C, X> && !std::is_same_v<C,X>)
+auto is( X const& ) -> bool {
+    return true;
+}
+
+template< typename C, typename X >
+    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
+auto is( X const& x ) -> bool {
+    return dynamic_cast<C const*>(&x) != nullptr;
+}
+
+template< typename C, typename X >
+    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
+auto is( X const* x ) -> bool {
+    return dynamic_cast<C const&>(x) != nullptr;
+}
 
 
 //-------------------------------------------------------------------------------------------------------------
-//  variant is and as
+//  Built-in as (partial)
+//
+template< typename C, typename X >
+    requires std::is_base_of_v<C, X>
+auto as( X&& x ) -> C&& {
+    return std::forward<X>(x);
+}
+
+template< typename C, typename X >
+    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
+auto as( X& x ) -> C& {
+    return dynamic_cast<C&>(x);
+}
+
+template< typename C, typename X >
+    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
+auto as( X const& x ) -> C const& {
+    return dynamic_cast<C const&>(x);
+}
+
+template< typename C, typename X >
+    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
+auto as( X* x ) -> C* {
+    return dynamic_cast<C*>(x);
+}
+
+template< typename C, typename X >
+    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
+auto as( X const* x ) -> C const* {
+    return dynamic_cast<C const*>(x);
+}
+
+
+//-------------------------------------------------------------------------------------------------------------
+//  std::variant is and as
 //
 template<typename... Ts>
 constexpr auto operator_is( std::variant<Ts...> const& x ) {
@@ -340,25 +388,46 @@ constexpr auto operator_is( std::variant<Ts...> const& x ) {
 }
 template<size_t I, typename... Ts>
 constexpr auto operator_as( std::variant<Ts...> const& x ) -> auto&& {
-    return std::get<I>( x );
+    if constexpr (I < std::variant_size_v<std::variant<Ts...>>) {
+        return std::get<I>( x );
+    }
+    else {
+        return nonesuch;
+    }
 }
 
 template<typename T, typename... Ts>
 auto is( std::variant<Ts...> const& x ) {
-    if constexpr (std::is_same_v< typeof(operator_as<0>(x)), T >) if (x.index() == 0) return true;
-    if constexpr (std::is_same_v< typeof(operator_as<1>(x)), T >) if (x.index() == 1) return true;
-    if constexpr (std::is_same_v< typeof(operator_as<2>(x)), T >) if (x.index() == 2) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<0>(x)), T >) if (x.index() == 0) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<1>(x)), T >) if (x.index() == 1) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<2>(x)), T >) if (x.index() == 2) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<3>(x)), T >) if (x.index() == 3) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<4>(x)), T >) if (x.index() == 4) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<5>(x)), T >) if (x.index() == 5) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<6>(x)), T >) if (x.index() == 6) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<7>(x)), T >) if (x.index() == 7) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<8>(x)), T >) if (x.index() == 8) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<9>(x)), T >) if (x.index() == 9) return true;
     return false;
 }
 
 template<typename T, typename... Ts>
 auto as( std::variant<Ts...> const& x ) {
-    if constexpr (std::is_same_v< typeof(operator_as<0>(x)), T >) if (x.index() == 0) return operator_as<0>(x);
-    if constexpr (std::is_same_v< typeof(operator_as<1>(x)), T >) if (x.index() == 1) return operator_as<1>(x);
-    if constexpr (std::is_same_v< typeof(operator_as<2>(x)), T >) if (x.index() == 2) return operator_as<2>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<0>(x)), T >) if (x.index() == 0) return operator_as<0>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<1>(x)), T >) if (x.index() == 1) return operator_as<1>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<2>(x)), T >) if (x.index() == 2) return operator_as<2>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<3>(x)), T >) if (x.index() == 3) return operator_as<3>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<4>(x)), T >) if (x.index() == 4) return operator_as<4>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<5>(x)), T >) if (x.index() == 5) return operator_as<5>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<6>(x)), T >) if (x.index() == 6) return operator_as<2>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<7>(x)), T >) if (x.index() == 7) return operator_as<3>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<8>(x)), T >) if (x.index() == 8) return operator_as<4>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<9>(x)), T >) if (x.index() == 9) return operator_as<5>(x);
     throw std::bad_variant_access();
 }
 
+
+/*
 //=============================================================================================================
 
 int main() {
@@ -393,5 +462,21 @@ int main() {
 
 using cpp2::cpp2_new;
 
+
+namespace gsl {
+
+//-----------------------------------------------------------------------
+// 
+//  An implementation of GSL's narrow_cast
+// 
+//-----------------------------------------------------------------------
+//
+template<typename To, typename From>
+constexpr auto narrow_cast(From&& from) noexcept -> To
+{
+    return static_cast<To>(std::forward<From>(from));
+}
+
+}
 
 #endif

@@ -1160,7 +1160,7 @@ public:
 
         //  Check that this isn't pointer arithmentic
         //      (initial partial implementation)
-        if (n.expr->expr.index() == primary_expression_node::id_expression)
+        if (n.ops.empty() && n.expr->expr.index() == primary_expression_node::id_expression)
         {
             auto& id = std::get<primary_expression_node::id_expression>(n.expr->expr);
             assert(id);
@@ -1199,7 +1199,7 @@ public:
             return;
         }
 
-        //  Check to see if it's just a function call,
+        //  Check to see if it's just a function call with "." syntax,
         //  and if so use this path to convert it to UFCS
         if (std::ssize(n.ops) == 1 &&
             n.ops.front().op->type() == lexeme::LeftParen &&
@@ -1213,7 +1213,8 @@ public:
                 auto& qual = std::get<id_expression_node::qualified>(id->id);
                 assert(qual);
                 if (std::ssize(qual->ids) == 2 &&
-                    qual->ids.back().scope_op->type() == lexeme::Dot
+                    qual->ids.back().scope_op->type() == lexeme::Dot &&
+                    qual->ids.back().id->get_token()
                     )
                 {
                     //  OK, we're in the UFCS syntax case... 
@@ -1373,6 +1374,25 @@ public:
         //  Handle is/as expressions
         //  For now, hack in just a single 'as'-cast
         //  TODO: Generalize
+        if (!n.terms.empty() && *n.terms.front().op == "is") {
+            if (n.terms.size() > 1) {
+                errors.emplace_back(
+                    n.position(),
+                    "(temporary alpha limitation) this compiler is just starting to learn 'is' and only supports a single is-expression (no chaining with other is/as)"
+                );
+                return;
+            }
+
+            printer.print_cpp2("cpp2::is<", n.position());
+            //printer.preempt_position(n.position());
+            emit(*n.terms.front().expr);
+            printer.print_cpp2(">(", n.position());
+            //printer.preempt_position(n.position());
+            emit(*n.expr);
+            printer.print_cpp2(")", n.position());
+            return;
+        }
+
         if (!n.terms.empty() && *n.terms.front().op == "as") {
             if (n.terms.size() > 1) {
                 errors.emplace_back(
@@ -1382,7 +1402,7 @@ public:
                 return;
             }
 
-            printer.print_cpp2("static_cast<", n.position());
+            printer.print_cpp2("cpp2::as<", n.position());
             //printer.preempt_position(n.position());
             emit(*n.terms.front().expr);
             printer.print_cpp2(">(", n.position());

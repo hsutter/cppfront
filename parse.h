@@ -375,8 +375,12 @@ struct unqualified_id_node
     std::vector<term> template_args;
 
     auto get_token() -> token const* {
-        assert (identifier);
-        return identifier;
+        if (template_args.empty()) {
+            assert (identifier);
+            return identifier;
+        }
+        // else
+        return {};
     }
 
     auto position() const -> source_position
@@ -1389,11 +1393,19 @@ private:
     //G     relational-expression <= compare-expression
     //G     relational-expression >= compare-expression
     //G
-    auto relational_expression() {
-        return binary_expression<relational_expression_node> (
-            [](token const& t){ return t.type() == lexeme::Less || t.type() == lexeme::LessEq || t.type() == lexeme::Greater || t.type() == lexeme::GreaterEq; },
-            [this]{ return compare_expression(); }
-        );
+    auto relational_expression(bool allow_relational_comparison = true) {
+        if (allow_relational_comparison) {
+            return binary_expression<relational_expression_node> (
+                [](token const& t){ return t.type() == lexeme::Less || t.type() == lexeme::LessEq || t.type() == lexeme::Greater || t.type() == lexeme::GreaterEq; },
+                [this]{ return compare_expression(); }
+            );
+        }
+        else {
+            return binary_expression<relational_expression_node> (
+                [](token const& t){ return false; },
+                [this]{ return compare_expression(); }
+            );
+        }
     }
 
     //G equality-expression:
@@ -1401,10 +1413,10 @@ private:
     //G     equality-expression == relational-expression
     //G     equality-expression != relational-expression
     //G
-    auto equality_expression() {
+    auto equality_expression(bool allow_relational_comparison = true) {
         return binary_expression<equality_expression_node> (
             [](token const& t){ return t.type() == lexeme::EqualComparison || t.type() == lexeme::NotEqualComparison; },
-            [this]{ return relational_expression(); }
+            [=,this]{ return relational_expression(allow_relational_comparison); }
         );
     }
 
@@ -1412,10 +1424,10 @@ private:
     //G     equality-expression
     //G     bit-and-expression & equality-expression
     //G
-    auto bit_and_expression() {
+    auto bit_and_expression(bool allow_relational_comparison = true) {
         return binary_expression<bit_and_expression_node> (
             [](token const& t){ return t.type() == lexeme::Ampersand; },
-            [this]{ return equality_expression(); }
+            [=,this]{ return equality_expression(allow_relational_comparison); }
         );
     }
 
@@ -1423,10 +1435,10 @@ private:
     //G     bit-and-expression
     //G     bit-xor-expression & bit-and-expression
     //G
-    auto bit_xor_expression() {
+    auto bit_xor_expression(bool allow_relational_comparison = true) {
         return binary_expression<bit_xor_expression_node> (
             [](token const& t){ return t.type() == lexeme::Caret; },
-            [this]{ return bit_and_expression(); }
+            [=,this]{ return bit_and_expression(allow_relational_comparison); }
         );
     }
 
@@ -1434,10 +1446,10 @@ private:
     //G     bit-xor-expression
     //G     bit-or-expression & bit-xor-expression
     //G
-    auto bit_or_expression() {
+    auto bit_or_expression(bool allow_relational_comparison = true) {
         return binary_expression<bit_or_expression_node> (
             [](token const& t){ return t.type() == lexeme::LogicalOr; },
-            [this]{ return bit_xor_expression(); }
+            [=,this]{ return bit_xor_expression(allow_relational_comparison); }
         );
     }
 
@@ -1445,10 +1457,10 @@ private:
     //G     bit-or-expression
     //G     logical-and-expression && bit-or-expression
     //G
-    auto logical_and_expression() {
+    auto logical_and_expression(bool allow_relational_comparison = true) {
         return binary_expression<logical_and_expression_node> (
             [](token const& t){ return t.type() == lexeme::LogicalAnd; },
-            [this]{ return bit_or_expression(); }
+            [=,this]{ return bit_or_expression(allow_relational_comparison); }
         );
     }
 
@@ -1458,10 +1470,10 @@ private:
     //G     logical-and-expression
     //G     logical-or-expression || logical-and-expression
     //G
-    auto logical_or_expression() {
+    auto logical_or_expression(bool allow_relational_comparison = true) {
         return binary_expression<logical_or_expression_node> (
             [](token const& t){ return t.type() == lexeme::LogicalOr; },
-            [this]{ return logical_and_expression(); }
+            [=,this]{ return logical_and_expression(allow_relational_comparison); }
         );
     }
 
@@ -1469,10 +1481,10 @@ private:
     //G     logical-or-expression
     //G     assignment-expression assignment-operator assignment-expression
     //G
-    auto assignment_expression() -> std::unique_ptr<assignment_expression_node> {
+    auto assignment_expression(bool allow_relational_comparison = true) -> std::unique_ptr<assignment_expression_node> {
         return binary_expression<assignment_expression_node> (
             [](token const& t){ return is_assignment_operator(t.type()); },
-            [this]{ return logical_or_expression(); }
+            [=,this]{ return logical_or_expression(allow_relational_comparison); }
         );
     }
 
@@ -1480,9 +1492,9 @@ private:
     //G     assignment-expression
     //GT    try expression
     //G
-    auto expression() -> std::unique_ptr<expression_node> {
+    auto expression(bool allow_relational_comparison = true) -> std::unique_ptr<expression_node> {
         auto n = std::make_unique<expression_node>();
-        if (!(n->expr = assignment_expression())) {
+        if (!(n->expr = assignment_expression(allow_relational_comparison))) {
             return {};
         }
         return n;
@@ -1590,7 +1602,7 @@ private:
                 if (auto i = id_expression()) {
                     term.arg = std::move(i);
                 }
-                else if (auto e = expression()) {
+                else if (auto e = expression(false)) {  // disallow relational comparisons in template args
                     term.arg = std::move(e);
                 }
                 else {
@@ -1602,7 +1614,7 @@ private:
             //  Use the lambda trick to jam in a "next" clause
             while (
                 curr().type() == lexeme::Comma && 
-                [&]{term.comma = curr().position(); return true;}()
+                [&]{term.comma = curr().position(); next(); return true;}()
             );
                 //  When this is rewritten in Cpp2, it will be:
                 //      while curr().type() == lexeme::Comma
