@@ -1160,7 +1160,7 @@ public:
 
         //  Check that this isn't pointer arithmentic
         //      (initial partial implementation)
-        if (n.ops.empty() && n.expr->expr.index() == primary_expression_node::id_expression)
+        if (n.expr->expr.index() == primary_expression_node::id_expression)
         {
             auto& id = std::get<primary_expression_node::id_expression>(n.expr->expr);
             assert(id);
@@ -1172,8 +1172,10 @@ public:
                 //  TODO: Generalize this -- for now we detect only cases of the form "p: *int = ...;"
                 //        We don't recognize pointer types that are deduced, multi-level, or from Cpp1
                 if (decl && decl->declaration && decl->declaration->pointer_declarator) {
-                    last_postfix_expr_was_pointer = true;
-                    if (!n.ops.empty())
+                    if (n.ops.empty()) {
+                        last_postfix_expr_was_pointer = true;
+                    }
+                    else
                     {
                         if (n.ops.front().op->type() == lexeme::PlusPlus || n.ops.front().op->type() == lexeme::MinusMinus) {
                             errors.emplace_back(
