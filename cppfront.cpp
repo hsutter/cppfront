@@ -194,7 +194,7 @@ class positional_printer
 
         //  Not using print() here because this is transparent to the curr_pos
         if (!flag_clean_cpp1) {
-            out << "#line " << line << "\n";
+            out << "#line " << line << " \"" << filename << "2\"\n";
         }
     }
 
@@ -555,7 +555,8 @@ class cppfront
 
     bool source_loaded                   = true;
     bool last_postfix_expr_was_pointer   = false;
-    bool violates_bounds_safety         = false;
+    bool violates_bounds_safety          = false;
+    bool violates_initialization_safety  = false;
     bool suppress_move_from_last_use     = false;
 
     //  For lowering
@@ -634,10 +635,7 @@ public:
                 //  Sema
                 parser.visit(sema);
                 if (!sema.apply_local_rules()) {
-                    errors.emplace_back(
-                        source_position(-1, -1),
-                        "program violates initialization safety guarantee - see previous errors\n"
-                    );
+                    violates_initialization_safety = true;
                 }
             }
             catch (std::runtime_error& e) {
@@ -645,12 +643,6 @@ public:
                     source_position(-1, -1),
                     e.what()
                 );
-                if (violates_lifetime_safety) {
-                    errors.emplace_back(
-                        source_position(-1, -1),
-                        "program violates lifetime safety guarantee - see previous errors"
-                    );
-                }
             }
         }
     }
@@ -1177,7 +1169,10 @@ public:
                     }
                     else
                     {
-                        if (n.ops.front().op->type() == lexeme::PlusPlus || n.ops.front().op->type() == lexeme::MinusMinus) {
+                        if (n.ops.front().op->type() == lexeme::PlusPlus || 
+                            n.ops.front().op->type() == lexeme::MinusMinus ||
+                            n.ops.front().op->type() == lexeme::LeftBracket
+                            ) {
                             errors.emplace_back(
                                 n.ops.front().op->position(),
                                 n.ops.front().op->to_string(true) + " - pointer arithmetic is illegal - use std::span or gsl::span instead"
@@ -1203,62 +1198,42 @@ public:
 
         //  Check to see if it's just a function call with "." syntax,
         //  and if so use this path to convert it to UFCS
-        if (std::ssize(n.ops) == 1 &&
-            n.ops.front().op->type() == lexeme::LeftParen &&
-            n.expr->expr.index() == primary_expression_node::id_expression
+        if (n.expr->get_token() &&                      //  if the base expression is a single token
+            std::ssize(n.ops) == 2 &&                   //  and we're of the form: 
+            n.ops[0].op->type() == lexeme::Dot &&       //       token . id-expr ( expr-list )
+            n.ops[1].op->type() == lexeme::LeftParen
             )
         {
-            auto& id = std::get<primary_expression_node::id_expression>(n.expr->expr);
-            assert(id);
-            if (id->id.index() == id_expression_node::qualified)
-            {
-                auto& qual = std::get<id_expression_node::qualified>(id->id);
-                assert(qual);
-                if (std::ssize(qual->ids) == 2 &&
-                    qual->ids.back().scope_op->type() == lexeme::Dot &&
-                    qual->ids.back().id->get_token()
-                    )
-                {
-                    //  OK, we're in the UFCS syntax case... 
+            //  The . has its id_expr
+            assert (n.ops[0].id_expr);
 
-                    //  For convenience, just capture the expression as a string
-                    //  which will be of the form "any::other.qualification.funcname"
-                    auto print = std::string{};
-                    printer.emit_to_string(&print);
-                    emit(*n.expr);
-                    printer.emit_to_string();
+            //  The ( has its expr_list and op_close
+            assert (n.ops[1].expr_list && n.ops[1].op_close);
 
-                    //  Find the last . we already confirmed will be there
-                    //  between "any::other.qualification" and the final "funcname"
-                    auto pos_dot = print.rfind(".");
-                    assert(pos_dot != std::string::npos);
-
-                    //  If there are no additional arguments, use the CPP2_UFCS_0 version
-                    if (!n.ops.front().expr_list->expressions.empty()) {
-                        printer.print_cpp2("CPP2_UFCS(", n.position());
-                    }
-                    else {
-                        printer.print_cpp2("CPP2_UFCS_0(", n.position());
-                    }
-
-                    //  Make the "funcname" the first argument to CPP2_UFCS
-                    printer.print_cpp2(print.substr(pos_dot+1), n.position());
-                    printer.print_cpp2(", ", n.position());
-
-                    //  Then make the "any::other.qualification" the second argument
-                    printer.print_cpp2(print.substr(0,pos_dot), n.position());
-
-                    //  Then tack on any additional arguments
-                    if (!n.ops.front().expr_list->expressions.empty()) {
-                        printer.print_cpp2(", ", n.position());
-                        emit(*n.ops.front().expr_list);
-                    }
-                    printer.print_cpp2(")", n.position());
-
-                    //  And we're done. This path has handled this node, so return...
-                    return;
-                }
+            //  If there are no additional arguments, use the CPP2_UFCS_0 version
+            if (!n.ops[1].expr_list->expressions.empty()) {
+                printer.print_cpp2("CPP2_UFCS(", n.position());
             }
+            else {
+                printer.print_cpp2("CPP2_UFCS_0(", n.position());
+            }
+
+            //  Make the "funcname" the first argument to CPP2_UFCS
+            emit(*n.ops[0].id_expr);
+            printer.print_cpp2(", ", n.position());
+
+            //  Then make the base expression the second argument
+            emit(*n.expr);
+
+            //  Then tack on any additional arguments
+            if (!n.ops[1].expr_list->expressions.empty()) {
+                printer.print_cpp2(", ", n.position());
+                emit(*n.ops[1].expr_list);
+            }
+            printer.print_cpp2(")", n.position());
+
+            //  And we're done. This path has handled this node, so return...
+            return;
         }
 
         //  Otherwise, we're going to have to potentially do some work to change
@@ -1306,7 +1281,16 @@ public:
             //
             else {
                 last_was_prefixed = false;
-                suffix.emplace_back( i->op_close->to_string(true), i->op_close->position() );
+                if (i->op_close) {
+                    suffix.emplace_back( i->op_close->to_string(true), i->op_close->position() );
+                } 
+                if (i->id_expr) {
+                    auto print = std::string{};
+                    printer.emit_to_string(&print);
+                    emit(*i->id_expr);
+                    printer.emit_to_string();
+                    suffix.emplace_back( print, i->id_expr->position() );
+                }
                 if (i->expr_list) {
                     auto print = std::string{};
                     printer.emit_to_string(&print);
@@ -1314,7 +1298,7 @@ public:
                     printer.emit_to_string();
                     suffix.emplace_back( print, i->expr_list->position() );
                 }
-                assert(i->op_close);
+                assert(i->op);
                 suffix.emplace_back( i->op->to_string(true), i->op->position() );
             }
         }
@@ -1996,10 +1980,13 @@ public:
             error.print(std::cerr, strip_path(sourcefile));
         }
         if (violates_lifetime_safety) {
-            std::cerr << "program violates lifetime safety guarantee - see previous errors\n";
+            std::cerr << "  ==> program violates lifetime safety guarantee - see previous errors\n";
         }
         if (violates_bounds_safety) {
-            std::cerr << "program violates bounds safety guarantee - see previous errors\n";
+            std::cerr << "  ==> program violates bounds safety guarantee - see previous errors\n";
+        }
+        if (violates_initialization_safety) {
+            std::cerr << "  ==> program violates initialization safety guarantee - see previous errors\n";
         }
     }
 

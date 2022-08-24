@@ -304,6 +304,9 @@ struct postfix_expression_node
     {
         token const* op;
 
+        //  This is used if *op is . - can be null
+        std::unique_ptr<id_expression_node> id_expr;
+
         //  These are used if *op is [ or ( - can be null
         std::unique_ptr<expression_list_node> expr_list;
         token const* op_close;
@@ -324,6 +327,9 @@ struct postfix_expression_node
         for (auto const& x : ops) {
             assert (x.op);
             v.start(*x.op, depth+1);
+            if (x.id_expr) {
+                x.id_expr->visit(v, depth+1);
+            }
             if (x.expr_list) {
                 x.expr_list->visit(v, depth+1);
             }
@@ -1207,6 +1213,7 @@ private:
     //G     postfix-expression postfix-operator     [Note: without whitespace before the operator]
     //G     postfix-expression [ expression-list ]
     //G     postfix-expression ( expression-list? )
+    //G     postfix-expression . id-expression
     //G
     auto postfix_expression() 
         -> std::unique_ptr<postfix_expression_node>
@@ -1254,8 +1261,14 @@ private:
                 term.op_close = &curr();
                 next();
             }
-
-            // TODO: lexeme::Dot
+            else if (term.op->type() == lexeme::Dot)
+            {
+                term.id_expr = id_expression();
+                if (!term.id_expr) {
+                    error("'.' must be followed by a valid member name");
+                    return {};
+                }
+            }
 
             n->ops.push_back( std::move(term) );
         }
@@ -1650,25 +1663,18 @@ private:
         auto term = qualified_id_node::term{nullptr};
 
         //  Handle initial :: if present, else the first scope_op will be null
-        //  Note :: is the only qualifier op that can appear
         if (curr().type() == lexeme::Scope) {
             term.scope_op = &curr();
             next();
         }
 
-        //  Helper function to recognize legal operators that can be
-        //  part of the qualifier.
-        auto is_qualifier_op = [&](lexeme op) {
-            return op == lexeme::Scope || op == lexeme::Dot;
-        };
-
-        //  Remember current position, because we need to look ahead to the next qualifier op
+        //  Remember current position, because we need to look ahead to the next ::
         auto start_pos = pos;
 
         //  If we don't get a first id, or if the next thing isn't :: or .,
         //  back out and report unsuccessful
         term.id = unqualified_id();
-        if (!term.id || !is_qualifier_op(curr().type())) {
+        if (!term.id || curr().type() != lexeme::Scope) {
             pos = start_pos;    // backtrack
             return {};
         }
@@ -1680,8 +1686,8 @@ private:
 
         n->ids.push_back( std::move(term) );
 
-        assert (is_qualifier_op(curr().type()));
-        while (is_qualifier_op(curr().type()))
+        assert (curr().type() == lexeme::Scope);
+        while (curr().type() == lexeme::Scope)
         {
             auto term = qualified_id_node::term{ &curr() };
             next();
