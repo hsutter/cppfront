@@ -40,6 +40,8 @@ import std.threading;
 #include <iostream>
 #include <cassert>
 #include <variant>
+#include <any>
+#include <optional>
 #include <cstddef>
 #endif
 
@@ -427,38 +429,36 @@ auto as( std::variant<Ts...> const& x ) {
 }
 
 
-/*
-//=============================================================================================================
+//-------------------------------------------------------------------------------------------------------------
+//  std::any is and as
+//
+template<typename T>
+constexpr auto is( std::any const& x ) -> bool
+    { return x.type() == typeid(T); }
 
-int main() {
-    std::cout << "1 is int == " << is<int>(1) << "\n";
-    std::cout << "1.1 is int == " << is<int>(1.1) << "\n";
+template<typename T>  requires (!std::is_reference_v<T>)
+constexpr auto as( std::any const& x ) -> T
+    { return std::any_cast<T>( x ); }
 
 
-    std::variant<int, int, float> v;
+//-------------------------------------------------------------------------------------------------------------
+//  std::optional is and as
+//
+template<typename T>
+constexpr auto is( std::optional<T> const& x ) -> bool
+    { return x.has_value(); }
 
-    v.emplace<0>(42);
-    std::cout << "v.index() == " << v.index() << "\n";
-    std::cout << "v is int = " << (is<int>(v) ? "true" : "false") << "\n";
-    std::cout << "  -> v as int == " << as<int>(v) << "\n";
-    std::cout << "v is float = " << (is<float>(v) ? "true" : "false") << "\n\n";
+template<typename T, typename U>
+    requires !std::is_same_v<T,U>
+constexpr auto is( std::optional<U> const& x ) -> bool
+    { return false; }
 
-    v.emplace<1>(84);
-    std::cout << "v.index() == " << v.index() << "\n";
-    std::cout << "v is int = " << (is<int>(v) ? "true" : "false") << "\n";
-    std::cout << "  -> v as int == " << as<int>(v) << "\n";
-    std::cout << "v is float = " << (is<float>(v) ? "true" : "false") << "\n\n";
-
-    v.emplace<2>(3.14159);
-    std::cout << "v.index() == " << v.index() << "\n";
-    std::cout << "v is int = " << (is<int>(v) ? "true" : "false") << "\n";
-    std::cout << "v is float = " << (is<float>(v) ? "true" : "false") << "\n";
-    std::cout << "  -> v as float == " << as<float>(v) << "\n";
-}
-
-*/
+template<typename T>
+constexpr auto as( std::optional<T> const& x ) -> auto&&
+    { return x.value(); }
 
 }
+
 
 using cpp2::cpp2_new;
 
