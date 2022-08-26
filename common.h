@@ -59,7 +59,7 @@ struct source_line
 
 
 using lineno_t = int32_t;
-using colno_t  = int16_t;
+using colno_t  = int32_t;   // not int16_t... encountered >80,000 char line during testing
 
 struct source_position
 {

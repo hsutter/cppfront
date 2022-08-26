@@ -245,7 +245,7 @@ auto process_cpp_line(
             switch (line[i]) {
                 break;case '\"':
                     //  If this isn't an escaped quote, toggle string literal state
-                    if (!in_comment && prev != '\\' && prev != '\'') {
+                    if (!in_comment && prev != '\\' && (in_string_literal || prev != '\'')) {
                         in_string_literal = !in_string_literal;
                     }
 
@@ -383,7 +383,9 @@ class source
     bool                     cpp1_found = false;
     bool                     cpp2_found = false;
 
-    static const int max_line_len = 19'600;
+    static const int max_line_len = 90'000;
+        //  do not reduce this - I encountered an 80,556-char
+        //  line in real world code during testing
     char buf[max_line_len];
 
 public:
@@ -529,7 +531,7 @@ public:
             }
         }
 
-        //  Because I encountered a 19,518-character line in real world code during testing
+        //  Because I encountered very long lines in real-world code during testing
         //
         if (in.gcount() >= max_line_len-1)
         {
