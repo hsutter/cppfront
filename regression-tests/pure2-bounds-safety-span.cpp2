@@ -1,0 +1,16 @@
+
+main: () -> int
+= {
+    words: std::vector<std::string> = ( "decorated", "hello", "world" );
+
+    s: std::span<std::string> = words;
+
+    i := 0;
+    while i < s.ssize() next i++ {
+        print_and_decorate( s[i] );
+    }
+}
+
+print_and_decorate: (thing:_) =
+    std::cout << ">> " << thing << "\n";
+
