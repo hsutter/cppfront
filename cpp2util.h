@@ -449,7 +449,7 @@ constexpr auto is( std::optional<T> const& x ) -> bool
     { return x.has_value(); }
 
 template<typename T, typename U>
-    requires !std::is_same_v<T,U>
+    requires (!std::is_same_v<T,U>)
 constexpr auto is( std::optional<U> const& x ) -> bool
     { return false; }
 

@@ -1,0 +1,21 @@
+
+main: () -> int
+= {
+    words: std::vector<std::string> = ( "decorated", "hello", "world" );
+
+    first: *std::string = words.front()&;
+    last : *std::string = words.back()&;
+
+    while first <= last {
+        print_and_decorate(first*);
+        first++;    // unsafe
+        first + 1;
+        first[1];
+        first~;
+        delete first;
+    }
+}
+
+print_and_decorate: (thing:_) =
+    std::cout << ">> " << thing << "\n";
+

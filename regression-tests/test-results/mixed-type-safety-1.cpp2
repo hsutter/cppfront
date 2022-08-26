@@ -1,0 +1,36 @@
+#include <iostream>
+#include <string>
+#include <variant>
+#include <any>
+#include <optional>
+
+class Shape { public: virtual ~Shape() { } };
+class Circle : public Shape { };
+class Square : public Shape { };
+
+//--- printing helpers -----------------
+
+print: ( msg: std::string, x: _ ) =
+    std::cout << msg << x << "\n";
+
+print: ( msg: std::string, b: bool ) =
+{
+    bmsg: * const char;
+    if b { bmsg = "true";  }
+    else { bmsg = "false"; }
+    std::cout << msg << bmsg << "\n";
+}
+
+//--- examples -------------------------
+
+main: () -> int = 
+{
+    print( "1.1 is int? ", 1.1 is int );
+    print( "1   is int? ", 1   is int );
+
+    c := new<Circle>();     // safe by construction
+    s : * Shape = c.get();  // safe by Lifetime
+    print("\ns* is Shape?  ", s* is Shape  );
+    print(  "s* is Circle? ", s* is Circle );
+    print(  "s* is Square? ", s* is Square );
+}
