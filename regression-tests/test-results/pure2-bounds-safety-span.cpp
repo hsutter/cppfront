@@ -26,5 +26,5 @@ auto print_and_decorate(auto const& thing) -> void;
     }
 }
 
-auto print_and_decorate(auto const& thing) -> void
-     { std::cout<<">> "<< thing << "\n"; }
+auto print_and_decorate(auto const& thing) -> void { 
+    std::cout << ">> " << thing << "\n"; }

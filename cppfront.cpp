@@ -1541,12 +1541,12 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(expression_statement_node const& n, bool can_have_semicolon, bool function_body = false, bool function_void_ret = false ) -> void
+    auto emit(expression_statement_node const& n, bool can_have_semicolon, source_position function_body_start = {}, bool function_void_ret = false ) -> void
     {
         assert(n.expr);
 
-        if (function_body) {
-            printer.print_cpp2(" { ", n.position());
+        if (function_body_start != source_position{}) {
+            printer.print_cpp2(" { ", function_body_start);
             if (!function_void_ret) {
                 printer.print_cpp2("return ", n.position());
             }
@@ -1557,7 +1557,7 @@ public:
             printer.print_cpp2(";", n.position());
         }
 
-        if (function_body) {
+        if (function_body_start != source_position{}) {
             printer.print_cpp2(" }", n.position());
         }
     }
@@ -1567,12 +1567,12 @@ public:
     //
     auto emit(
         statement_node const&           n, 
-        bool                            can_have_semicolon = true, 
-        bool                            function_body      = false,
-        bool                            function_void_ret  = false,
-        std::vector<std::string> const& function_prolog    = {},
-        std::vector<std::string> const& function_epilog    = {},
-        colno_t                         function_indent    = 1
+        bool                            can_have_semicolon  = true, 
+        source_position                 function_body_start = {},
+        bool                            function_void_ret   = false,
+        std::vector<std::string> const& function_prolog     = {},
+        std::vector<std::string> const& function_epilog     = {},
+        colno_t                         function_indent     = 1
     )
         -> void
     {
@@ -1584,7 +1584,7 @@ public:
         }
 
         printer.disable_indent_heuristic_for_next_text();
-        try_emit<statement_node::expression >(n.statement, can_have_semicolon, function_body, function_void_ret);
+        try_emit<statement_node::expression >(n.statement, can_have_semicolon, function_body_start, function_void_ret);
         try_emit<statement_node::compound   >(n.statement, function_prolog, function_epilog, function_indent);
         try_emit<statement_node::selection  >(n.statement);
         try_emit<statement_node::declaration>(n.statement);
@@ -1943,9 +1943,9 @@ public:
             //function_epilog.push_back("/*EPILOG-TEST*/");
 
             printer.preempt_position( n.equal_sign );
-            emit( 
+            emit(  
                 *n.initializer, 
-                true, true, func->returns.index() == function_type_node::empty, 
+                true, func->position(), func->returns.index() == function_type_node::empty,
                 function_return_locals, function_epilog, n.position().colno
             );
 

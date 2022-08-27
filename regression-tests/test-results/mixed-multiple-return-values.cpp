@@ -45,5 +45,5 @@ int main() {
     return { std::move(i.value()), std::move(s.value()) }; 
 }
 
-auto print(cpp2::in<std::string> name, auto const& value) -> void
-     { std::cout<< name << " is " << value << "\n"; }
+auto print(cpp2::in<std::string> name, auto const& value) -> void { 
+      std::cout << name << " is " << value << "\n"; }

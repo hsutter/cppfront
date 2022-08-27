@@ -25,8 +25,8 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
 
 //--- printing helpers -----------------
 
-auto print(cpp2::in<std::string> msg, auto const& x) -> void
-     { std::cout<<msg<< x << "\n"; }
+auto print(cpp2::in<std::string> msg, auto const& x) -> void { 
+    std::cout << msg << x << "\n"; }
 
 auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void
 {

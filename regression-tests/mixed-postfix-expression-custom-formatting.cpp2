@@ -1,0 +1,12 @@
+
+test: (a:_) -> std::string = {
+    return call( a,
+        b(c)*++, "hello", /* polite
+                          greeting
+                          goes here */ " there",
+        d::e( f*.g()++, // because f is foobar
+              h.i(),
+              j(k,l) )
+        );
+}
+

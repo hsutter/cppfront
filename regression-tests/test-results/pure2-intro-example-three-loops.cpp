@@ -16,8 +16,8 @@ auto decorate_and_print(auto& thing) -> void;
 
 #line 1 "pure2-intro-example-three-loops.cpp2"
 
-auto print(auto const& thing) -> void
-     { std::cout<<">> "<< thing << "\n"; }
+auto print(auto const& thing) -> void { 
+    std::cout << ">> " << thing << "\n"; }
 
 auto decorate_and_print(auto& thing) -> void{
     thing = "[" + thing + "]";
