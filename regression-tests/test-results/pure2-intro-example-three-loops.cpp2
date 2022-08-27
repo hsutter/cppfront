@@ -1,0 +1,29 @@
+
+print: (thing:_) = 
+    std::cout << ">> " << thing << "\n";
+
+decorate_and_print: (inout thing:_) = { 
+    thing = "[" + thing + "]";
+    print(thing);
+}
+
+main: () -> int = {
+    words: std::vector<std::string> =
+        ( "hello", "big", "world" );
+    view: std::span<std::string> = words;
+
+    i := new<int>(0);
+    while i* < view.size() next i*++ {
+        print( view[i*] );
+    }
+
+    do {
+        std::cout << std::setw(4) << "**";
+    } while i* > 1 next i*--;
+
+    std::cout << "\n";
+    for words do: (inout word:_) =
+        decorate_and_print(word);
+
+}
+

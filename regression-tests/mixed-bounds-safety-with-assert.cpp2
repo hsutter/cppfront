@@ -1,0 +1,22 @@
+
+main: () -> int = {
+    v: std::vector<int> = (1, 2, 3, 4, 5);
+    print_subrange(v, 1, 13);
+}
+
+print_subrange: (rng:_, start:int, end:int) = {
+    [[assert Bounds: 0 <= start]]
+    [[assert Bounds: end <= rng.size()]]
+
+    count := 0;
+    for  rng 
+    next count++ 
+    do:  (i:_) =
+        if start <= count && count <= end {
+            std::cout << i << "\n";
+        }
+}
+
+#include <vector>
+#include <span>
+#include <iostream>

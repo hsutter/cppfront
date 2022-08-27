@@ -1,0 +1,28 @@
+
+#include <string>
+#include <iostream>
+#include <ctime>
+
+f: () -> (i: int, s: std::string) = {
+    //  note: i and s are uninitialized!
+
+    i = 10;
+
+    if std::time(nullptr)%2 == 0 {
+        s = "xyzzy";
+    }
+    else {
+        s = "plugh";
+    }
+
+    return;
+}
+
+print: (name: std::string, value:_) 
+    = std::cout << name << " is " << value << "\n";
+
+int main() {
+    auto [a,b] = f();
+    print("a", a);
+    print("b", b);
+}

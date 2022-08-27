@@ -1,0 +1,13 @@
+
+main: () -> int
+= {
+    v: std::vector<int> = (1, 2, 3, 4, 5);
+    counter := 42;
+    for v  next counter *= 2  do: (i:_) = {
+        std::cout << i << " " << counter << "\n";
+    }
+}
+
+#include <vector>
+#include <span>
+#include <iostream>

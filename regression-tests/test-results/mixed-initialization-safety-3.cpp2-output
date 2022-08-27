@@ -1,0 +1,4 @@
+cppfront 0.1.1 compiler
+Copyright (C) Herb Sutter
+mixed-initialization-safety-3.cpp2... ok (mixed Cpp1/Cpp2, Cpp2 code passes safety checks)
+
