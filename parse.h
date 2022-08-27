@@ -244,8 +244,9 @@ auto to_string_view(passing_style pass) -> std::string_view {
 
 struct expression_list_node
 {
-    source_position open_paren  = {};
+    source_position open_paren  = {};   // TODO: these should probably be in primary_expression_node
     source_position close_paren = {};
+
     struct term {
         passing_style                    pass = {}; // for `out`
         std::unique_ptr<expression_node> expr;
