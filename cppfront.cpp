@@ -92,6 +92,14 @@ static cmdline_processor::register_flag cmd_enable_source_info(
     []{ flag_use_source_location = true; }
 );
 
+
+struct text_with_pos{
+    std::string     text;
+    source_position pos;
+    text_with_pos(std::string const& t, source_position p) : text{t}, pos{p} { }
+};
+
+
 class positional_printer
 {
     //  Core information
@@ -125,17 +133,24 @@ class positional_printer
     //  Modal information
     bool            declarations_only   = true;     // print declarations only in first pass
     std::vector<std::string*> emit_string_targets;  // option to emit to string instead of out file
-
+    std::vector<std::vector<text_with_pos>*> emit_text_chunks_targets; // similar for vector<text_pos>
 
     //-----------------------------------------------------------------------
     //  Print text
     //
-    auto print( std::string_view s ) -> void
+    auto print( std::string_view s, source_position pos = source_position{}) -> void
     {
         //  If the caller is capturing this output to a string, emit to the
         //  specified string instead and skip most positioning logic
         if (!emit_string_targets.empty()) {
             *emit_string_targets.back() += s;
+            return;
+        }
+
+        //  If the caller is capturing this output to a vector of chunks,
+        //  similarly emit to that
+        if (!emit_text_chunks_targets.empty()) {
+            emit_text_chunks_targets.back()->insert( emit_text_chunks_targets.back()->begin(), text_with_pos(std::string(s), pos) );
             return;
         }
 
@@ -394,7 +409,7 @@ public:
         last_was_cpp2 = true;
 
         //  Skip alignment work if we're emitting text to a string
-        if (emit_string_targets.empty())
+        if (emit_string_targets.empty() && emit_text_chunks_targets.empty())
         {
             //  Remember where we are
             auto last_pos = curr_pos;
@@ -450,7 +465,7 @@ public:
             prev_line_info.requests.push_back( req_act_info( pos.colno /*requested*/ , curr_pos.colno /*actual*/ - pos.colno ) );
         }
 
-        print(s);
+        print(s, pos);
     }
 
 
@@ -532,6 +547,19 @@ public:
         }
     }
 
+    //  Provide an option to store to a vector<text_with_pos>, which is
+    //  useful for postfix expression which have to mix unwrapping operators
+    //  with emitting sub-elements such as expression lists
+    //
+    auto emit_to_text_chunks( std::vector<text_with_pos>* target = nullptr ) -> void {
+        if (target) {
+            emit_text_chunks_targets.push_back( target );
+        }
+        else {
+            emit_text_chunks_targets.pop_back();
+        }
+    }
+
 };
 
 
@@ -569,12 +597,6 @@ class cppfront
     std::vector<parameter_declaration_list_node*> function_returns = {};
     parameter_declaration_list_node               single_anon;  
     //  special value - hack for now to note single-anon-return type kind in this function_returns working list
-
-    struct text_with_pos{
-        std::string     text;
-        source_position pos;
-        text_with_pos(std::string const& t, source_position p) : text{t}, pos{p} { }
-    };
 
 public:
     //-----------------------------------------------------------------------
@@ -785,6 +807,15 @@ public:
                 assert(decl);
                 emit(*decl);
             }
+        }
+
+        if (source.has_cpp2()) {
+            //  Always make sure the last line ends with a newline
+            //  (not really necessary but makes some tools quieter)
+            //  -- but only if there's any Cpp2, otherwise don't
+            //  because passing through all-Cpp1 code should always
+            //  remain diff-identical
+            printer.print_extra("\n");
         }
     }
 
@@ -1145,7 +1176,9 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(postfix_expression_node const& n) -> void
+    auto emit(postfix_expression_node& n) -> void   
+        // note: parameter is deliberately not const because we may adjust
+        //       token column positions when moving operators to prefix notation
     {
         assert(n.expr);
         last_postfix_expr_was_pointer = false;
@@ -1241,7 +1274,6 @@ public:
         auto prefix            = std::vector<text_with_pos>{};
         auto suffix            = std::vector<text_with_pos>{};
 
-        auto print             = std::string{};
         auto emitted_n         = false;
         auto last_was_prefixed = false;
 
@@ -1258,6 +1290,9 @@ public:
                 i->op->type() == lexeme::Tilde
                 )
             {
+                adjust_remaining_token_columns_on_this_line_visitor v(i->op->position(), 0 - i->op->length());
+                n.visit(v, 0);
+
                 if (!last_was_prefixed && i != n.ops.rbegin()) {    // omit some needless parens
                     prefix.emplace_back( "(", i->op->position() );
                 }
@@ -1292,11 +1327,13 @@ public:
                     suffix.emplace_back( print, i->id_expr->position() );
                 }
                 if (i->expr_list) {
-                    auto print = std::string{};
-                    printer.emit_to_string(&print);
+                    auto text = std::vector<text_with_pos>{};
+                    printer.emit_to_text_chunks(&text);
                     emit(*i->expr_list);
-                    printer.emit_to_string();
-                    suffix.emplace_back( print, i->expr_list->position() );
+                    printer.emit_to_text_chunks();
+                    for (auto&& e: text) {
+                        suffix.push_back(e);
+                    }
                 }
                 assert(i->op);
                 suffix.emplace_back( i->op->to_string(true), i->op->position() );
@@ -1476,19 +1513,25 @@ public:
                 printer.print_cpp2(", ", n.position());
             }
             first = false;
+            auto offset = 0;
 
             if (x.pass != passing_style::in) {
                 assert(to_string_view(x.pass) == "out" || to_string_view(x.pass) == "move");
                 if (to_string_view(x.pass) == "out") {
                     printer.print_cpp2("&", n.position());
+                    offset = -3;   // because we're replacing "out " (followed by at least one space) with "&"
                 }
                 else if (to_string_view(x.pass) == "move") {
                     printer.print_cpp2("std::move(", n.position());
+                    offset = 6;    // because we're replacing "move " (followed by at least one space) with "std::move("
                 }
-                //printer.add_pad_in_this_line(-3);
             }
+
             assert(x.expr);
+            adjust_remaining_token_columns_on_this_line_visitor v(x.expr->position(), offset);
+            x.expr->visit(v, 0);
             emit(*x.expr);
+
             if (to_string_view(x.pass) == "move") {
                 printer.print_cpp2(")", n.position());
             }
@@ -1741,10 +1784,12 @@ public:
         assert(n.parameters);
         emit(*n.parameters);
 
-        if (!n.throws) {
-            printer.add_pad_in_this_line(-25);
-            printer.print_cpp2( " noexcept", n.position() );
-        }
+        //  Add implicit noexcept when we implement proper EH
+        //  to handle calling Cpp1 code that throws
+        //if (!n.throws) {
+        //    printer.add_pad_in_this_line(-25);
+        //    printer.print_cpp2( " noexcept", n.position() );
+        //}
 
         printer.print_cpp2( " -> ", n.position() );
 

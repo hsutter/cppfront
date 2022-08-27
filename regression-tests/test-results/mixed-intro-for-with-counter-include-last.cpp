@@ -3,7 +3,7 @@
 
 
 #line 2 "mixed-intro-for-with-counter-include-last.cpp2"
-[[nodiscard]] auto main() noexcept -> int;
+[[nodiscard]] auto main() -> int;
 #line 10 "mixed-intro-for-with-counter-include-last.cpp2"
 
 #include <vector>
@@ -14,7 +14,7 @@
 
 #line 1 "mixed-intro-for-with-counter-include-last.cpp2"
 
-[[nodiscard]] auto main() noexcept -> int
+[[nodiscard]] auto main() -> int
 {
     std::vector<int> v { 1, 2, 3, 4, 5 }; 
     auto counter { 42 }; 

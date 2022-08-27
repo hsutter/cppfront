@@ -224,6 +224,11 @@ public:
         return o << std::string_view(t); 
     }
 
+    auto position_col_shift( colno_t offset ) -> void { 
+        assert (pos.colno + offset > 0);
+        pos.colno += offset;
+    }
+
     auto position() const -> source_position { return pos;      }
 
     auto length  () const -> int             { return count;    }

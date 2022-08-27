@@ -6,27 +6,27 @@
 #include <string>
 #include <cstdlib>
 
-auto copy_from(auto x) noexcept -> void;
+auto copy_from(auto x) -> void;
 #line 7 "mixed-parameter-passing.cpp2"
 auto parameter_styles(
     cpp2::in<std::string> a, 
     std::string b, 
     std::string& c, 
     std::string&& d
-    ) noexcept -> void;
+    )              -> void;
 
 //=== Cpp2 definitions ==========================================================
 
 #line 4 "mixed-parameter-passing.cpp2"
 
-auto copy_from(auto x) noexcept -> void{}
+auto copy_from(auto x) -> void{}
 
 auto parameter_styles(
     cpp2::in<std::string> a, // "in" is default
     std::string b, 
     std::string& c, 
     std::string&& d
-    ) noexcept -> void
+    )              -> void
 {
     int z { 12 }; 
 

@@ -2778,6 +2778,52 @@ public:
 };
 
 
+//-----------------------------------------------------------------------
+// 
+//  Visitor for moving tokens that are to the right on the same line
+//  and shifting their positions left 'n' spaces - used only at the
+//  end when lowering to Cpp1, as a convenient way to adjust for other
+//  positions shifts we create (e.g., moving some operators to prefix
+//  notation, or inserting "std::move" prefixes)
+// 
+//-----------------------------------------------------------------------
+//
+class adjust_remaining_token_columns_on_this_line_visitor
+{
+    source_position line_to_adjust_pos;
+    colno_t         col_offset;
+
+public:
+    adjust_remaining_token_columns_on_this_line_visitor(
+        source_position start_pos,
+        colno_t offset
+    )
+        : line_to_adjust_pos{start_pos}
+        , col_offset{offset}
+    { }
+
+    auto start(token& n, int indent) -> void
+    {
+        if (n.position().lineno == line_to_adjust_pos.lineno &&
+            n.position().colno >= line_to_adjust_pos.colno
+            )
+        {
+            n.position_col_shift(col_offset);
+        }
+    }
+
+    auto start(auto const&, int indent) -> void
+    {
+        //  Ignore other node types
+    }
+
+    auto end(auto const&, int indent) -> void
+    {
+        //  Ignore other node types
+    }
+};
+
+
 }
 
 #endif

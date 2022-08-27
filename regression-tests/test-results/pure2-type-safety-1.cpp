@@ -4,11 +4,11 @@
 
 
 #line 2 "pure2-type-safety-1.cpp2"
-[[nodiscard]] auto main() noexcept -> int;
+[[nodiscard]] auto main() -> int;
 #line 24 "pure2-type-safety-1.cpp2"
-auto test_generic(auto const& x) noexcept -> void;
+auto test_generic(auto const& x) -> void;
 #line 30 "pure2-type-safety-1.cpp2"
-auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) noexcept -> void;
+auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
 #line 36 "pure2-type-safety-1.cpp2"
 
 
@@ -16,7 +16,7 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) noexcept -> void;
 
 #line 1 "pure2-type-safety-1.cpp2"
 
-[[nodiscard]] auto main() noexcept -> int
+[[nodiscard]] auto main() -> int
 {
     std::variant<int,double> v { 42.0 }; 
     std::any a { "xyzzy" }; 
@@ -38,13 +38,13 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) noexcept -> void;
     test_generic(o);
 }
 
-auto test_generic(auto const& x) noexcept -> void{
+auto test_generic(auto const& x) -> void{
     std::string msg { typeid(x).name() }; 
     msg += " is int? ";
-    print(msg, cpp2::is<int>(x));
+    print( msg, cpp2::is<int>(x));
 }
 
-auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) noexcept -> void{
+auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void{
     cpp2::deferred_init<char const*> bmsg; 
     if (b) { bmsg.construct("true");}
     else { bmsg.construct("false");}

@@ -12,9 +12,9 @@ struct f__ret {
     std::string s;
     };
 #line 7 "mixed-multiple-return-values.cpp2"
-[[nodiscard]] auto f() noexcept -> f__ret;
+[[nodiscard]] auto f() -> f__ret;
 #line 21 "mixed-multiple-return-values.cpp2"
-auto print(cpp2::in<std::string> name, auto const& value) noexcept -> void;
+auto print(cpp2::in<std::string> name, auto const& value) -> void;
 #line 23 "mixed-multiple-return-values.cpp2"
 
 int main() {
@@ -27,7 +27,7 @@ int main() {
 
 #line 5 "mixed-multiple-return-values.cpp2"
 
-[[nodiscard]] auto f() noexcept -> f__ret{
+[[nodiscard]] auto f() -> f__ret  {
         cpp2::deferred_init<int> i;
         cpp2::deferred_init<std::string> s;
 #line 7 "mixed-multiple-return-values.cpp2"
@@ -45,5 +45,5 @@ int main() {
     return { std::move(i.value()), std::move(s.value()) }; 
 }
 
-auto print(cpp2::in<std::string> name, auto const& value) noexcept -> void
+auto print(cpp2::in<std::string> name, auto const& value) -> void
      { std::cout<< name << " is " << value << "\n"; }
