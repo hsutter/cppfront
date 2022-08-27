@@ -1468,39 +1468,29 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(expression_list_node const& n, std::vector<text_with_pos>* as_text = nullptr) -> void
+    auto emit(expression_list_node const& n) -> void
     {
-        auto print = [&](std::string const& text, source_position pos) {
-            if (as_text) {
-                as_text->emplace_back( text, pos );
-            }
-            else {
-                printer.print_cpp2( text, pos );
-
-            }
-        };
-
         auto first = true;
         for (auto const& x : n.expressions) {
             if (!first) {
-                print(", ", n.position());
+                printer.print_cpp2(", ", n.position());
             }
             first = false;
 
             if (x.pass != passing_style::in) {
                 assert(to_string_view(x.pass) == "out" || to_string_view(x.pass) == "move");
                 if (to_string_view(x.pass) == "out") {
-                    print("&", n.position());
+                    printer.print_cpp2("&", n.position());
                 }
                 else if (to_string_view(x.pass) == "move") {
-                    print("std::move(", n.position());
+                    printer.print_cpp2("std::move(", n.position());
                 }
                 //printer.add_pad_in_this_line(-3);
             }
             assert(x.expr);
             emit(*x.expr);
             if (to_string_view(x.pass) == "move") {
-                print(")", n.position());
+                printer.print_cpp2(")", n.position());
             }
         }
     }

@@ -1254,8 +1254,13 @@ private:
             else if (term.op->type() == lexeme::LeftParen)
             {
                 term.expr_list = expression_list(term.op->position());
+                if (!term.expr_list) {
+                    error("( is not followed by a valid expression list");
+                    return {};
+                }
                 if (curr().type() != lexeme::RightParen) {
                     error("unexpected text - ( is not properly matched by )");
+                    return {};
                 }
                 term.expr_list->close_paren = curr().position();
                 term.op_close = &curr();
@@ -1551,7 +1556,12 @@ private:
                 pass = passing_style::move;
                 next();
             }
-            n->expressions.push_back( { pass, expression() } );
+            auto expr = expression();
+            if (!expr) {
+                error("invalid text in expression list");
+                return {};
+            }
+            n->expressions.push_back( { pass, std::move(expr) } );
         }
         return n;
     }
