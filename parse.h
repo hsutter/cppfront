@@ -108,15 +108,17 @@ auto try_visit(auto& variant, auto& visitor, int depth) -> void {
 
 struct expression_list_node;
 struct id_expression_node;
+struct declaration_node;
 
 struct primary_expression_node
 {
-    enum active { empty=0, identifier, expression_list, id_expression };
+    enum active { empty=0, identifier, expression_list, id_expression, declaration };
     std::variant<
         std::monostate,
         token const*,
         std::unique_ptr<expression_list_node>,
-        std::unique_ptr<id_expression_node>
+        std::unique_ptr<id_expression_node>,
+        std::unique_ptr<declaration_node>
     > expr;
 
     auto get_token() -> token const*;
@@ -489,59 +491,6 @@ struct id_expression_node
 };
 
 
-auto primary_expression_node::get_token() -> token const*
-{
-    if (expr.index() == identifier) {
-        return std::get<identifier>(expr);
-    }
-    else if (expr.index() == id_expression) {
-        return std::get<id_expression>(expr)->get_token();
-    }
-    // else
-    return {};
-}
-
-auto primary_expression_node::position() const -> source_position
-{
-    switch (expr.index())
-    {
-    break;case empty:
-        return { 0, 0 };
-
-    break;case identifier: {
-        auto const& s = std::get<identifier>(expr);
-        assert (s);
-        return s->position();
-    }
-
-    break;case expression_list: {
-        auto const& s = std::get<expression_list>(expr);
-        assert (s);
-        return s->position();
-    }
-
-    break;case id_expression: {
-        auto const& s = std::get<id_expression>(expr);
-        assert (s);
-        return s->position();
-    }
-
-    break;default:
-        assert (!"illegal primary_expression_node state");
-        return { 0, 0 };
-    }
-}
-
-auto primary_expression_node::visit(auto& v, int depth) -> void
-{
-    v.start(*this, depth);
-    try_visit<identifier     >(expr, v, depth);
-    try_visit<expression_list>(expr, v, depth);
-    try_visit<id_expression  >(expr, v, depth);
-    v.end(*this, depth);
-}
-
-
 struct statement_node;
 
 struct compound_statement_node
@@ -592,7 +541,6 @@ struct selection_statement_node
     }
 };
 
-struct declaration_node;
 struct parameter_declaration_node;
 struct iteration_statement_node
 {
@@ -853,6 +801,65 @@ struct declaration_node
         v.end(*this, depth);
     }
 };
+
+auto primary_expression_node::get_token() -> token const*
+{
+    if (expr.index() == identifier) {
+        return std::get<identifier>(expr);
+    }
+    else if (expr.index() == id_expression) {
+        return std::get<id_expression>(expr)->get_token();
+    }
+    // else (because we're deliberately ignoring the other options)
+    return {};
+}
+
+auto primary_expression_node::position() const -> source_position
+{
+    switch (expr.index())
+    {
+    break;case empty:
+        return { 0, 0 };
+
+    break;case identifier: {
+        auto const& s = std::get<identifier>(expr);
+        assert (s);
+        return s->position();
+    }
+
+    break;case expression_list: {
+        auto const& s = std::get<expression_list>(expr);
+        assert (s);
+        return s->position();
+    }
+
+    break;case id_expression: {
+        auto const& s = std::get<id_expression>(expr);
+        assert (s);
+        return s->position();
+    }
+
+    break;case declaration: {
+        auto const& s = std::get<declaration>(expr);
+        assert (s);
+        return s->position();
+    }
+
+    break;default:
+        assert (!"illegal primary_expression_node state");
+        return { 0, 0 };
+    }
+}
+
+auto primary_expression_node::visit(auto& v, int depth) -> void
+{
+    v.start(*this, depth);
+    try_visit<identifier     >(expr, v, depth);
+    try_visit<expression_list>(expr, v, depth);
+    try_visit<id_expression  >(expr, v, depth);
+    try_visit<declaration    >(expr, v, depth);
+    v.end(*this, depth);
+}
 
 
 auto iteration_statement_node::get_for_parameter() const -> parameter_declaration_node const* {
@@ -1159,6 +1166,7 @@ private:
     //G     literal
     //G     ( expression-list )
     //G     id-expression
+    //G     unnamed-declaration
     //G
     auto primary_expression() 
         -> std::unique_ptr<primary_expression_node>
@@ -1202,6 +1210,12 @@ private:
             expr_list->close_paren = curr().position();
             next();
             n->expr = std::move(expr_list);
+            return n;
+        }
+
+        auto decl = unnamed_declaration(curr().position());
+        if (decl) {
+            n->expr = std::move(decl);
             return n;
         }
 

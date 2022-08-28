@@ -249,7 +249,6 @@ private:
 };
 
 static_assert (CHAR_BIT == 8);
-//static_assert (sizeof(token) <= 16);    // token fits in 128 bits
 
 
 //-----------------------------------------------------------------------
