@@ -810,7 +810,8 @@ auto primary_expression_node::get_token() -> token const*
     else if (expr.index() == id_expression) {
         return std::get<id_expression>(expr)->get_token();
     }
-    // else (because we're deliberately ignoring the other options)
+    // else (because we're deliberately ignoring the other
+    //       options which are more than a single token)
     return {};
 }
 
@@ -1215,6 +1216,25 @@ private:
 
         auto decl = unnamed_declaration(curr().position());
         if (decl) {
+            assert (!decl->identifier && "ICE: declaration should have been unnamed");
+            if (!decl->is(declaration_node::function)) {
+                error("an unnamed declaration at expression scope must be a function");
+                next();
+                return {};
+            }
+            auto& func = std::get<declaration_node::function>(decl->type);
+            assert(func);
+            if (func->returns.index() == function_type_node::list) {
+                error("an unnamed function at expression scope currently cannot return multiple values");
+                next();
+                return {};
+            }
+            if (!func->contracts.empty()) {
+                error("an unnamed function at expression scope currently cannot have contracts");
+                next();
+                return {};
+            }
+
             n->expr = std::move(decl);
             return n;
         }

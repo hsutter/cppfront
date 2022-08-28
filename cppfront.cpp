@@ -1171,6 +1171,16 @@ public:
         try_emit<primary_expression_node::identifier     >(n.expr);
         try_emit<primary_expression_node::expression_list>(n.expr);
         try_emit<primary_expression_node::id_expression  >(n.expr);
+
+        if (n.expr.index() == primary_expression_node::declaration)
+        {
+            auto& decl = std::get<primary_expression_node::declaration>(n.expr);
+            
+            //  the usual non-null assertion, plus it should be an anonymous function
+            assert(decl && !decl->identifier && decl->is(declaration_node::function));
+
+            emit(*decl, "[&]");
+        }
     }
 
 
@@ -1816,7 +1826,7 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(declaration_node const& n) -> void
+    auto emit(declaration_node const& n, std::string const& in_expression_intro = "") -> void
     {
         //  If this is a function that has multiple return values,
         //  first we need to emit the struct that contains the returns
@@ -1846,11 +1856,18 @@ public:
             auto& func = std::get<declaration_node::function>(n.type);
             assert(func);
 
-            if (func->returns.index() != function_type_node::empty) {
-                printer.print_cpp2( "[[nodiscard]] ", n.position() );
+            //  If this is at expression scope, we can't emit "[[nodiscard]] auto name"
+            //  so print the provided intro instead, which will be a lambda-capture-list
+            if (in_expression_intro != "") {
+                printer.print_cpp2(in_expression_intro, n.position());
             }
-            printer.print_cpp2( "auto ", n.position() );
-            printer.print_cpp2( *n.identifier->identifier, n.identifier->position() );
+            else {
+                if (func->returns.index() != function_type_node::empty) {
+                    printer.print_cpp2( "[[nodiscard]] ", n.position() );
+                }
+                printer.print_cpp2( "auto ", n.position() );
+                printer.print_cpp2( *n.identifier->identifier, n.identifier->position() );
+            }
 
             //  Function declaration
             emit( *func, n.identifier->identifier );
