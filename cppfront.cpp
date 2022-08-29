@@ -1117,7 +1117,7 @@ public:
     {
         assert(n.identifier);
         assert(*n.identifier == "return");
-        printer.print_cpp2("return", n.position());
+        printer.print_cpp2("return ", n.position());
 
         //  Return with expression == single anonymous return type
         //
@@ -1594,8 +1594,21 @@ public:
         }
 
         printer.disable_indent_heuristic_for_next_text();
-        try_emit<statement_node::expression >(n.statement, can_have_semicolon, function_body_start, function_void_ret);
+
         try_emit<statement_node::compound   >(n.statement, function_prolog, function_epilog, function_indent);
+
+        //  NOTE: Reset preemption here because
+        //  - for compound statements written as "= { ... }", we want to keep the
+        //    preempted position which moves the { to where the = was
+        //  - but for other statement types, we want to get rid of any leftover
+        //    preemption (ideally there wouldn't be any, but sometimes there is
+        //    and it should not apply to what we're about to emit)
+        printer.preempt_position({});
+        //  This only has a whitespace effect in the generated Cpp1 code, but it's
+        //  aesthetic and aesthetics are important in this case -- we want to keep
+        //  the original source's personal whitespace formatting style as much as we can
+
+        try_emit<statement_node::expression >(n.statement, can_have_semicolon, function_body_start, function_void_ret);
         try_emit<statement_node::selection  >(n.statement);
         try_emit<statement_node::declaration>(n.statement);
         try_emit<statement_node::return_    >(n.statement);
@@ -1801,21 +1814,24 @@ public:
         //    printer.print_cpp2( " noexcept", n.position() );
         //}
 
-        printer.print_cpp2( " -> ", n.position() );
-
         if (n.returns.index() == function_type_node::empty) {
-            printer.print_cpp2( "void", n.position() );
+            if (ident) {
+                printer.print_cpp2( " -> void", n.position() );
+            }
         }
  
         else if (n.returns.index() == function_type_node::id) {
+            printer.print_cpp2( " -> ", n.position() );
             auto& r = std::get<function_type_node::id>(n.returns);
             assert(r);
             emit(*r);
         }
 
         else {
+            printer.print_cpp2( " -> ", n.position() );
             function_return_name = {};
             printer.emit_to_string(&function_return_name);
+            assert(ident);
             printer.print_cpp2( *ident, ident->position() );
             printer.print_cpp2( "__ret", ident->position() );
             printer.emit_to_string();
@@ -1859,18 +1875,21 @@ public:
             //  If this is at expression scope, we can't emit "[[nodiscard]] auto name"
             //  so print the provided intro instead, which will be a lambda-capture-list
             if (in_expression_intro != "") {
+                assert (!n.identifier);
                 printer.print_cpp2(in_expression_intro, n.position());
+                emit( *func, nullptr );
             }
             else {
+                assert (n.identifier);
                 if (func->returns.index() != function_type_node::empty) {
                     printer.print_cpp2( "[[nodiscard]] ", n.position() );
                 }
                 printer.print_cpp2( "auto ", n.position() );
                 printer.print_cpp2( *n.identifier->identifier, n.identifier->position() );
+                emit( *func, n.identifier->identifier );
             }
 
             //  Function declaration
-            emit( *func, n.identifier->identifier );
             if (printer.doing_declarations_only()) {
                 printer.print_cpp2( ";\n", n.position() );
                 return;
@@ -1962,7 +1981,7 @@ public:
             printer.preempt_position( n.equal_sign );
             emit(  
                 *n.initializer, 
-                true, func->position(), func->returns.index() == function_type_node::empty,
+                true, func->position(), n.identifier && func->returns.index() == function_type_node::empty,
                 function_return_locals, function_epilog, n.position().colno
             );
 

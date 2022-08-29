@@ -341,6 +341,10 @@ struct postfix_expression_node
     }
 };
 
+struct capture {
+    postfix_expression_node const* capture_expr;
+};
+
 auto prefix_expression_node::position() const -> source_position
 {
     if (std::ssize(ops) > 0) {
@@ -1253,6 +1257,8 @@ private:
     auto postfix_expression() 
         -> std::unique_ptr<postfix_expression_node>
     {
+        auto found_capture = false;
+
         auto n = std::make_unique<postfix_expression_node>();
         n->expr = primary_expression();
         if (!(n->expr)) {
@@ -1260,8 +1266,8 @@ private:
         }
 
         while (
-            //  Postfix operators must be lexically adjacent
             (is_postfix_operator(curr().type())
+                //  Postfix operators must be lexically adjacent
                 && curr().position().lineno == peek(-1)->position().lineno
                 && curr().position().colno == peek(-1)->position().colno + peek(-1)->length()
             ) ||
@@ -1270,6 +1276,13 @@ private:
             curr().type() == lexeme::Dot
             )
         {
+            if (curr().type() == lexeme::Dollar) {
+                if (found_capture) {
+                    error("$ (capture) can appear at most once in a single postfix-expression");
+                }
+                found_capture = true;
+            }
+
             auto term = postfix_expression_node::term{&curr()};
             next();
 
@@ -1794,7 +1807,18 @@ private:
             return {};
         }
 
-        if (semicolon_required && curr().type() != lexeme::Semicolon) {
+        if (semicolon_required && curr().type() != lexeme::Semicolon && 
+            peek(-1)->type() != lexeme::Semicolon
+                //  this last peek(-1)-condition is a hack (? or is it just
+                //  maybe elegant? I'm torn) so that code like
+                //
+                //      callback := :(inout x:_) = x += "suffix"; ;
+                // 
+                //  doesn't need the redundant semicolon at the end of a decl...
+                //  there's probably a cleaner way to do it, but this works and
+                //  it doesn't destabilize any regression tests
+            )
+        {
             error("expression-statement does not end with semicolon");
             return {};
         }

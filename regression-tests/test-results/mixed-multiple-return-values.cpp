@@ -42,7 +42,7 @@ int main() {
         s.construct("plugh");
     }
 
-    return { std::move(i.value()), std::move(s.value()) }; 
+    return  { std::move(i.value()), std::move(s.value()) }; 
 }
 
 auto print(cpp2::in<std::string> name, auto const& value) -> void { 
