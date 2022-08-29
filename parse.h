@@ -344,6 +344,7 @@ struct postfix_expression_node
 struct capture {
     postfix_expression_node const* capture_expr;
 };
+using capture_group = std::vector<capture>;
 
 auto prefix_expression_node::position() const -> source_position
 {
@@ -596,6 +597,7 @@ struct contract_node
     std::unique_ptr<id_expression_node>         group;
     std::unique_ptr<logical_or_expression_node> condition;
     token const*                                message = {};
+    capture_group                               captures;
 
     contract_node( source_position pos ) : open_bracket{pos} { }
 
@@ -607,13 +609,17 @@ struct contract_node
     auto visit(auto& v, int depth) -> void
     {
         v.start(*this, depth);
+
         assert(kind);
         kind->visit(v, depth+1);
+
         if (group) {
             group->visit(v, depth+1);
         }
+
         assert(condition);
         condition->visit(v, depth+1);
+
         v.end(*this, depth);
     }
 };
@@ -772,6 +778,7 @@ struct declaration_node
     source_position equal_sign = {};
     source_position decl_end   = {};
     std::unique_ptr<statement_node> initializer;
+    capture_group              captures;
 
     //  Shorthand for common query
     //
@@ -802,6 +809,7 @@ struct declaration_node
         if (initializer) {
             initializer->visit(v, depth+1);
         }
+
         v.end(*this, depth);
     }
 };
@@ -998,6 +1006,23 @@ class parser
     std::vector<cpp2::error>& errors;
 
     std::unique_ptr<translation_unit_node> parse_tree;
+
+    //  Keep a stack of current capture groups (contracts/decls still being parsed)
+    std::vector<capture_group*> current_capture_groups;
+
+    struct capture_groups_stack_guard {
+        parser* pars;
+        capture_groups_stack_guard(parser* p, capture_group* cg) 
+            : pars{p} 
+        { 
+            assert(p);
+            assert(cg);
+            pars->current_capture_groups.push_back(cg);
+        }
+        ~capture_groups_stack_guard() { 
+            pars->current_capture_groups.pop_back();
+        }
+    };
 
     //  Used only for the duration of each parse() call
     std::vector<token> const* tokens_ = nullptr;
@@ -2319,9 +2344,9 @@ private:
     auto contract() -> std::unique_ptr<contract_node>
     {
         //  Note: For now I'm using [[ ]] mainly so that existing Cpp1 syntax highlighters
-        //        don't get confused... I initially implemented single [ ], but my editor's
-        //        default Cpp1 highlighter didn't colorize the following multiline // 
-        //        comment as a comment
+        //        don't get confused... I initially implemented single [ ], but then
+        //        my editor's default Cpp1 highlighter didn't colorize the following
+        //        multiline // comment correctly as a comment
 
         //  If there's no [ [ then this isn't a contract
         if (curr().type() != lexeme::LeftBracket || !peek(1) || peek(1)->type() != lexeme::LeftBracket) {
@@ -2329,6 +2354,7 @@ private:
         }
 
         auto n = std::make_unique<contract_node>(curr().position());
+        auto guard = capture_groups_stack_guard(this, &n->captures);
         next();
         next();
 
@@ -2467,6 +2493,7 @@ private:
 
         auto n = std::make_unique<declaration_node>();
         n->pos = pos;
+        auto guard = capture_groups_stack_guard(this, &n->captures);
 
         //  Remember current position, because we need to look ahead
         auto start_pos = pos;
@@ -2769,6 +2796,9 @@ public:
         if (n.message) {
             o << pre(indent+1) << "message: " << std::string_view(*n.message) << "\n";
         }
+        if (!n.captures.empty()) {
+            o << pre(indent+1) << "captures: " << n.captures.size() << "\n";
+        }
     }
 
     auto start(function_type_node const& n, int indent) -> void
@@ -2785,6 +2815,9 @@ public:
     auto start(declaration_node const& n, int indent) -> void
     {
         o << pre(indent) << "declaration\n";
+        if (!n.captures.empty()) {
+            o << pre(indent+1) << "captures: " << n.captures.size() << "\n";
+        }
     }
 
     auto start(parameter_declaration_node const& n, int indent) -> void
