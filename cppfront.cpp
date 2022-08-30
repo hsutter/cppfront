@@ -1179,14 +1179,28 @@ public:
             //  the usual non-null assertion, plus it should be an anonymous function
             assert(decl && !decl->identifier && decl->is(declaration_node::function));
 
-            emit(*decl, "[&]");
+            auto lambda_intro = std::string("[");
+            printer.emit_to_string(&lambda_intro);
+            auto num = 0;
+            for (auto& cap : decl->captures)
+            {
+                if (num != 0) { // not first
+                    lambda_intro += ", ";
+                }
+                printer.print_cpp2("_"+std::to_string(num)+" = ", n.position());
+                emit(*cap.capture_expr, true);
+                ++num;
+            }
+            printer.emit_to_string();
+            lambda_intro += "]";
+            emit(*decl, lambda_intro);
         }
     }
 
 
     //-----------------------------------------------------------------------
     //
-    auto emit(postfix_expression_node& n) -> void   
+    auto emit(postfix_expression_node& n, bool for_lambda_capture = false) -> void   
         // note: parameter is deliberately not const because we may adjust
         //       token column positions when moving operators to prefix notation
     {
@@ -1236,6 +1250,24 @@ public:
         //  Simple case: If there are no .ops, just emit the expression
         if (n.ops.empty()) {
             emit(*n.expr);
+            return;
+        }
+
+        //  Check to see if it's a capture expression that contains $,
+        //  and if we're not capturing the expression for the lambda
+        //  introducer replace it with the capture name
+        if (n.cap_grp && !for_lambda_capture) {
+            //  Look in the capture group to see which capture # we are
+            auto mynum = 0;
+            for (auto cap : *n.cap_grp) {
+                if (cap.capture_expr == &n) {
+                    break;
+                }
+                ++mynum;
+            }
+            assert (mynum < n.cap_grp->size());
+            //  And then emit that capture number
+            printer.print_cpp2("_"+std::to_string(mynum), n.position());
             return;
         }
 
@@ -1320,6 +1352,12 @@ public:
                     suffix.emplace_back( ")", i->op->position() );
                 }
                 last_was_prefixed = true;
+            }
+
+            //  Stop when we see $
+            //
+            else if (i->op->type() == lexeme::Dollar) {
+                break;
             }
 
             //  Handle the suffix operators that remain suffix

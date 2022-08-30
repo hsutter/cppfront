@@ -299,6 +299,11 @@ struct expression_statement_node
 };
 
 
+struct capture {
+    postfix_expression_node* capture_expr;
+};
+using capture_group = std::vector<capture>;
+
 struct postfix_expression_node
 {
     std::unique_ptr<primary_expression_node> expr;
@@ -315,6 +320,7 @@ struct postfix_expression_node
         token const* op_close;
     };
     std::vector<term> ops;
+    capture_group* cap_grp = {};
 
     auto position() const -> source_position
     {
@@ -340,11 +346,6 @@ struct postfix_expression_node
         v.end(*this, depth);
     }
 };
-
-struct capture {
-    postfix_expression_node const* capture_expr;
-};
-using capture_group = std::vector<capture>;
 
 auto prefix_expression_node::position() const -> source_position
 {
@@ -1282,8 +1283,6 @@ private:
     auto postfix_expression() 
         -> std::unique_ptr<postfix_expression_node>
     {
-        auto found_capture = false;
-
         auto n = std::make_unique<postfix_expression_node>();
         n->expr = primary_expression();
         if (!(n->expr)) {
@@ -1302,10 +1301,11 @@ private:
             )
         {
             if (curr().type() == lexeme::Dollar) {
-                if (found_capture) {
+                if (n->cap_grp) {
                     error("$ (capture) can appear at most once in a single postfix-expression");
                 }
-                found_capture = true;
+                n->cap_grp = current_capture_groups.back();
+                n->cap_grp->push_back({n.get()});
             }
 
             auto term = postfix_expression_node::term{&curr()};
@@ -1350,6 +1350,26 @@ private:
 
             n->ops.push_back( std::move(term) );
         }
+
+        //  For now require that the capture be not in the middle
+        //  of the postfix-expression
+        if (n->cap_grp) {
+            assert(n->ops.size() > 0);
+            //  Either $ or $& must be last
+            if (n->ops[n->ops.size() - 1].op->type() == lexeme::Dollar ||
+                (n->ops.size() > 1 &&
+                    n->ops[n->ops.size() - 2].op->type() == lexeme::Dollar &&
+                    n->ops[n->ops.size() - 1].op->type() == lexeme::Ampersand)
+                )
+            {
+                // ok
+            }
+            else {
+                error("$ or $& capture must be the lst operators in a postfix-expression - to add other operations use parentheses (e.g., (x$).f()");
+                return {};
+            }
+        }
+
         return n;
     }
 
