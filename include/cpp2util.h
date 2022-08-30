@@ -463,6 +463,13 @@ constexpr auto as( std::optional<T> const& x ) -> auto&&
 using cpp2::cpp2_new;
 
 
+//-----------------------------------------------------------------------
+// 
+//  A partial implementation of GSL features Cpp2 relies on,
+//  to keep this a standalone header without non-std dependencies
+// 
+//-----------------------------------------------------------------------
+//
 namespace gsl {
 
 //-----------------------------------------------------------------------
@@ -475,6 +482,46 @@ template<typename To, typename From>
 constexpr auto narrow_cast(From&& from) noexcept -> To
 {
     return static_cast<To>(std::forward<From>(from));
+}
+
+
+//-----------------------------------------------------------------------
+// 
+//  An implementation of GSL's final_action and finally
+//  (based on a PR I contributed to Microsoft GSL)
+// 
+//  final_action ensures something is run at the end of a scope
+// 
+//  finally is a convenience function to generate a final_action
+// 
+//-----------------------------------------------------------------------
+//
+template <class F>
+class final_action
+{
+public:
+    template <class FF>
+    explicit final_action(FF&& ff) noexcept : f{std::forward<FF>(ff)} { }
+
+    ~final_action() noexcept { if (invoke) f(); }
+
+    final_action(final_action&& other) noexcept
+        : f(std::move(other.f)), invoke(std::exchange(other.invoke, false))
+    { }
+
+    final_action(const final_action& rhs) = delete;
+    void operator=(const final_action&)   = delete;
+    void operator=(final_action&& other)  = delete;
+
+private:
+    F f;
+    bool invoke = true;
+};
+
+template <class F>
+[[nodiscard]] auto finally(F&& f) noexcept
+{
+    return final_action<F>{std::forward<F>(f)};
 }
 
 }
