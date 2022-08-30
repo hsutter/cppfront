@@ -1305,6 +1305,9 @@ private:
                 if (n->cap_grp) {
                     error("$ (capture) can appear at most once in a single postfix-expression");
                 }
+                if (current_capture_groups.empty()) {
+                    error("$ (capture) cannot appear here - it must appear in an anonymous expression function, a postcondition, or an interpolated string literal");
+                }
                 n->cap_grp = current_capture_groups.back();
                 n->cap_grp->push_back({n.get()});
             }
@@ -1350,25 +1353,6 @@ private:
             }
 
             n->ops.push_back( std::move(term) );
-        }
-
-        //  For now require that the capture be not in the middle
-        //  of the postfix-expression
-        if (n->cap_grp) {
-            assert(n->ops.size() > 0);
-            //  Either $ or $& must be last
-            if (n->ops[n->ops.size() - 1].op->type() == lexeme::Dollar ||
-                (n->ops.size() > 1 &&
-                    n->ops[n->ops.size() - 2].op->type() == lexeme::Dollar &&
-                    n->ops[n->ops.size() - 1].op->type() == lexeme::Ampersand)
-                )
-            {
-                // ok
-            }
-            else {
-                error("$ or $& capture must be the lst operators in a postfix-expression - to add other operations use parentheses (e.g., (x$).f()");
-                return {};
-            }
         }
 
         return n;

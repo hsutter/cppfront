@@ -1276,8 +1276,9 @@ public:
         //  Check to see if it's a capture expression that contains $,
         //  and if we're not capturing the expression for the lambda
         //  introducer replace it with the capture name
-        if (n.cap_grp && !for_lambda_capture) {
-
+        auto captured_part = std::string{};
+        if (n.cap_grp && !for_lambda_capture)
+        {
             //  First stringize ourselves so that we compare equal against
             //  the first *cap_grp .str that matches us (which is what the
             //  lambda introducer generator used to create a lambda capture)
@@ -1296,8 +1297,7 @@ public:
             }
             assert (mynum < n.cap_grp->size());
             //  And then emit that capture number
-            printer.print_cpp2("_"+std::to_string(mynum), n.position());
-            return;
+            captured_part += "_" + std::to_string(mynum);
         }
 
         //  Check to see if it's just a function call with "." syntax,
@@ -1347,10 +1347,30 @@ public:
 
         auto emitted_n         = false;
         auto last_was_prefixed = false;
+        auto saw_dollar        = false;
 
         for (auto i = n.ops.rbegin(); i != n.ops.rend(); ++i)
         {
             assert(i->op);
+
+            //  If we already captured a part as a _## lambda capture,
+            //  skip the part of this expression before the $ symbol
+            //
+            if (!captured_part.empty()) {
+                if (i->op->type() == lexeme::Dollar) {
+                    break;
+                }
+            }
+            //  Else skip the part of this expression after the $ symbol
+            else if (for_lambda_capture) {
+                if (i->op->type() == lexeme::Dollar) {
+                    saw_dollar = true;
+                    continue;
+                }
+                if (!saw_dollar) {
+                    continue;
+                }
+            }
 
             //  Handle the Cpp2 postfix operators that are prefix in Cpp1
             //
@@ -1381,12 +1401,6 @@ public:
                     suffix.emplace_back( ")", i->op->position() );
                 }
                 last_was_prefixed = true;
-            }
-
-            //  Stop when we see $
-            //
-            else if (i->op->type() == lexeme::Dollar) {
-                break;
             }
 
             //  Handle the suffix operators that remain suffix
@@ -1431,7 +1445,14 @@ public:
         {
             suppress_move_from_last_use = true;
         }
-        emit(*n.expr);
+
+        //  Now print the core expression -- or the captured_part in its place
+        if (captured_part.empty()) {
+            emit(*n.expr);
+        }
+        else {
+            printer.print_cpp2(captured_part, n.position());
+        }
         suppress_move_from_last_use = false;
 
         //  Print the suffixes (in reverse order)
