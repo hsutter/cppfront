@@ -21,9 +21,9 @@
     std::span view { vec }; 
 
     std::ranges::for_each
-        ( view, [](auto const& x){std::cout<<x<<"\n";});
+        ( view, [](auto const& x){std::cout << x << "\n";});
 
-    auto callback { [](auto& x) { return x+="-ish"; } }; 
+    auto callback { [](auto& x) { return x += "-ish"; } }; 
     std::ranges::for_each( view, callback );
 
     for ( auto&& cpp2_range = view;  auto const& str : cpp2_range ) 

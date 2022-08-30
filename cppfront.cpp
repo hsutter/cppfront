@@ -1176,19 +1176,39 @@ public:
         {
             auto& decl = std::get<primary_expression_node::declaration>(n.expr);
             
-            //  the usual non-null assertion, plus it should be an anonymous function
+            //  The usual non-null assertion, plus it should be an anonymous function
             assert(decl && !decl->identifier && decl->is(declaration_node::function));
 
-            auto lambda_intro = std::string("[");
-            printer.emit_to_string(&lambda_intro);
-            auto num = 0;
+            //  First calculate the stringized version of each capture expression
+            //  This will let us compare and de-duplicate repeated capture expressions
             for (auto& cap : decl->captures)
             {
-                if (num != 0) { // not first
-                    lambda_intro += ", ";
-                }
-                printer.print_cpp2("_"+std::to_string(num)+" = ", n.position());
+                printer.emit_to_string(&cap.str);
                 emit(*cap.capture_expr, true);
+                printer.emit_to_string();
+            }
+
+            //  Then build the capture list, ignoring duplicated expressions
+            auto lambda_intro = std::string("[");
+            printer.emit_to_string(&lambda_intro);
+
+            auto num = 0;
+            auto handled = std::vector<std::string>{};
+            for (auto& cap : decl->captures)
+            {
+                //  If we haven't handled a capture that looks like this one
+                if (std::find(handled.begin(), handled.end(), cap.str) == handled.end())
+                {
+                    //  Remember it
+                    handled.push_back(cap.str);
+
+                    //  And handle it
+                    if (num != 0) { // not first
+                        lambda_intro += ", ";
+                    }
+                    printer.print_cpp2("_"+std::to_string(num)+" = ", n.position());
+                    emit(*cap.capture_expr, true);
+                }
                 ++num;
             }
             printer.emit_to_string();
@@ -1257,10 +1277,19 @@ public:
         //  and if we're not capturing the expression for the lambda
         //  introducer replace it with the capture name
         if (n.cap_grp && !for_lambda_capture) {
+
+            //  First stringize ourselves so that we compare equal against
+            //  the first *cap_grp .str that matches us (which is what the
+            //  lambda introducer generator used to create a lambda capture)
+            auto my_str = std::string{};
+            printer.emit_to_string(&my_str);
+            emit(n, true);  // reentrant, but not in this 'if' because for_lambda_capture == true
+            printer.emit_to_string();
+
             //  Look in the capture group to see which capture # we are
             auto mynum = 0;
             for (auto cap : *n.cap_grp) {
-                if (cap.capture_expr == &n) {
+                if (cap.str == my_str) {
                     break;
                 }
                 ++mynum;
@@ -1534,7 +1563,9 @@ public:
                 printer.print_cpp2( ")", n.position() );
             }
             else {
+                printer.print_cpp2(" ", n.position());
                 emit(*x.op);
+                printer.print_cpp2(" ", n.position());
                 emit(*x.expr);
             }
 

@@ -35,7 +35,7 @@ int main() {
 
     i.construct(10);
 
-    if (std::time(nullptr)%2 == 0) {
+    if (std::time(nullptr) % 2 == 0) {
         s.construct("xyzzy");
     }
     else {

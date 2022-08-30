@@ -30,13 +30,13 @@ auto decorate_and_print(auto& thing) -> void{
     std::span<std::string> view { words }; 
 
     auto i { cpp2_new<int>(0) }; 
-    for( ; *i< CPP2_UFCS_0(size, view); ++*i ) {
+    for( ; *i < CPP2_UFCS_0(size, view); ++*i ) {
         print( view[*i] );
     }
 
     do {
         std::cout << std::setw(4) << "**";
-    } while ( *i>1 && [&]{ --*i ; return true; }() );
+    } while ( *i > 1 && [&]{ --*i ; return true; }() );
 
     std::cout << "\n";
     for ( auto&& cpp2_range = words;  auto& word : cpp2_range ) 

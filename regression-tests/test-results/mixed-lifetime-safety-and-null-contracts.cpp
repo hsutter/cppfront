@@ -35,6 +35,6 @@ auto try_pointer_stuff() -> void{
 }
 
 auto call_my_framework(cpp2::in<char const *> msg) -> void { 
-    std::cout
-        << "sending error to my framework... ["
+    std::cout 
+        << "sending error to my framework... [" 
         << msg << "]\n"; }

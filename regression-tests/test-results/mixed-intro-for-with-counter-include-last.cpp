@@ -20,5 +20,5 @@
     auto counter { 42 }; 
     for ( auto&& cpp2_range = v;   auto const& i : cpp2_range )  { do {
         std::cout << i << " " << counter << "\n";
-    } while (false); counter*=2; }
+    } while (false); counter *= 2; }
 }

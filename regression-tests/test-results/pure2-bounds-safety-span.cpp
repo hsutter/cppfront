@@ -21,7 +21,7 @@ auto print_and_decorate(auto const& thing) -> void;
     std::span<std::string> s { words }; 
 
     auto i { 0 }; 
-    for( ; i< CPP2_UFCS_0(ssize, s); ++i ) {
+    for( ; i < CPP2_UFCS_0(ssize, s); ++i ) {
         print_and_decorate( s[i] );
     }
 }

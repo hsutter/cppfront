@@ -30,7 +30,7 @@ auto println(auto const& x, auto const& len) -> void;
 }
 
 auto println(auto const& x, auto const& len) -> void { 
-    std::cout
-        << ">> " << x
-        << " - length "
+    std::cout 
+        << ">> " << x 
+        << " - length " 
         << len << "\n"; }

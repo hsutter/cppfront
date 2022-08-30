@@ -22,7 +22,7 @@ auto print_and_decorate(auto const& thing) -> void;
     cpp2::deferred_init<int*> p; 
 
     // ... more code ...
-    if (std::rand()%2) {
+    if (std::rand() % 2) {
         p.construct(&y);
     }
     else {

@@ -33,7 +33,7 @@ auto parameter_styles(
     ++z;
     b += "plugh";
 
-    if (std::rand()%2) {
+    if (std::rand() % 2) {
         ++z;
         copy_from(std::move(b));// definite last use
     }
@@ -47,7 +47,7 @@ auto parameter_styles(
 
     copy_from(z);
 
-    if (std::time(nullptr)%2 == 0) {
+    if (std::time(nullptr) % 2 == 0) {
         copy_from(z);
     }
 
