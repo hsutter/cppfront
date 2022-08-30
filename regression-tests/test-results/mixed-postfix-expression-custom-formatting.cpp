@@ -19,5 +19,5 @@
         d::e( ++(*f).g(), // because f is foobar
               CPP2_UFCS_0(i, h), 
               j(k, l))
-        )  ; 
+        ); 
 }

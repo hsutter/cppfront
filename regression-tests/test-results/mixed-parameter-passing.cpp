@@ -13,7 +13,7 @@ auto parameter_styles(
     std::string b, 
     std::string& c, 
     std::string&& d
-    )              -> void;
+    ) -> void;
 
 //=== Cpp2 definitions ==========================================================
 
@@ -26,7 +26,7 @@ auto parameter_styles(
     std::string b, 
     std::string& c, 
     std::string&& d
-    )              -> void
+    ) -> void
 {
     int z { 12 }; 
 

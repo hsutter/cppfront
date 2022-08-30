@@ -12,7 +12,7 @@ auto fill(
     cpp2::out<std::string> x, 
     cpp2::in<std::string> value, 
     cpp2::in<int> count
-    )  -> void;
+    ) -> void;
 #line 26 "mixed-initialization-safety-3.cpp2"
 auto print_decorated(auto const& x) -> void;
 #line 28 "mixed-initialization-safety-3.cpp2"
@@ -37,7 +37,7 @@ auto fill(
     cpp2::out<std::string> x, 
     cpp2::in<std::string> value, 
     cpp2::in<int> count
-    )  -> void
+    ) -> void
 
 {   
     cpp2::Default.expects(CPP2_UFCS_0(size, value) >= count, "fill: value must contain at least count elements");

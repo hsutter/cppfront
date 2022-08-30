@@ -23,7 +23,7 @@
     std::string y { "\n" }; 
     std::ranges::for_each( view, [_0 = (&y)](auto const& x){
         std::cout << (*_0 ).c_str() << x << *_0;
-    }                            );
+    } );
 
     auto callback { [](auto& x) { return x += "-ish"; } }; 
     std::ranges::for_each( view, callback );

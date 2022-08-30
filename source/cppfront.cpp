@@ -286,8 +286,10 @@ class positional_printer
         }
  
         //  Finally, align to the target column
-        pos.colno = std::max( 1, pos.colno + pad_for_this_line );
-        print( pad( pos.colno - curr_pos.colno ) );
+        if (curr_pos.lineno == pos.lineno) {
+            pos.colno = std::max( 1, pos.colno + pad_for_this_line );
+            print( pad( pos.colno - curr_pos.colno ) );
+        }
     }
 
 
