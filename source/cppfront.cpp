@@ -1317,12 +1317,30 @@ public:
 
         //  Check to see if it's just a function call with "." syntax,
         //  and if so use this path to convert it to UFCS
-        if (n.expr->get_token() &&                      //  if the base expression is a single token
-            std::ssize(n.ops) == 2 &&                   //  and we're of the form: 
+        if (// there's a single-token expression followed by . and (
+            n.expr->get_token() &&                      //  if the base expression is a single token
+            std::ssize(n.ops) >= 2 &&                   //  and we're of the form: 
             n.ops[0].op->type() == lexeme::Dot &&       //       token . id-expr ( expr-list )
-            n.ops[1].op->type() == lexeme::LeftParen
+            n.ops[1].op->type() == lexeme::LeftParen &&
+            // and either there's nothing after that, or there's just a $ after that
+            (
+                //for_lambda_capture &&
+                //(
+                std::ssize(n.ops) == 2 || 
+                (std::ssize(n.ops) == 3 && n.ops[2].op->type() == lexeme::Dollar)
+                //)
+            )
             )
         {
+            //  If we already replaced this with a capture (which contains the UFCS
+            //  work already done when the capture was computed), emit the capture
+            if (!captured_part.empty()) {
+                printer.print_cpp2(captured_part, n.position());
+                return;
+            }
+
+            //  Otherwise, do the UFCS work...
+
             //  The . has its id_expr
             assert (n.ops[0].id_expr);
 

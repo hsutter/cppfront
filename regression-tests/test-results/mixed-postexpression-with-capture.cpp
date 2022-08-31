@@ -28,7 +28,7 @@ auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void
 
 
 {   
-    cpp2::Default.expects(0 <= where && where <= CPP2_UFCS_0(ssize, vec), "");auto final16_5 = gsl::finally([_0 = vec.size()]{cpp2::Default.expects(CPP2_UFCS_0(size, vec) == _0 + 1, "");} );
+    cpp2::Default.expects(0 <= where && where <= CPP2_UFCS_0(ssize, vec), "");auto final16_5 = gsl::finally([_0 = CPP2_UFCS_0(size, vec)]{cpp2::Default.expects(CPP2_UFCS_0(size, vec) == _0 + 1, "");} );
 #line 18 "mixed-postexpression-with-capture.cpp2"
     CPP2_UFCS(push_back, vec, val);
 }
