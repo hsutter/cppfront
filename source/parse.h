@@ -1245,7 +1245,7 @@ private:
             return n;
         }
 
-        auto decl = unnamed_declaration(curr().position());
+        auto decl = unnamed_declaration(curr().position(), true, true);   // captures are allowed
         if (decl) {
             assert (!decl->identifier && "ICE: declaration should have been unnamed");
             if (!decl->is(declaration_node::function)) {
@@ -1305,9 +1305,11 @@ private:
                 //  cap_grp must not already be set, or this is a multi-$ postfix-expression
                 if (n->cap_grp) {
                     error("$ (capture) can appear at most once in a single postfix-expression");
+                    return {};
                 }
                 if (current_capture_groups.empty()) {
                     error("$ (capture) cannot appear here - it must appear in an anonymous expression function, a postcondition, or an interpolated string literal");
+                    return {};
                 }
                 n->cap_grp = current_capture_groups.back();
                 n->cap_grp->push_back({n.get()});
@@ -1321,9 +1323,11 @@ private:
                 term.expr_list = expression_list(term.op->position());
                 if (!term.expr_list) {
                     error("subscript expression [ ] must not be empty");
+                    return {};
                 }
                 if (curr().type() != lexeme::RightBracket) {
                     error("unexpected text - [ is not properly matched by ]");
+                    return {};
                 }
                 term.expr_list->close_paren = curr().position();
                 term.op_close = &curr();
@@ -2066,7 +2070,7 @@ private:
             }
             next();
 
-            n->body = unnamed_declaration(curr().position(), false);
+            n->body = unnamed_declaration(curr().position());
             auto func = n->body ? std::get_if<declaration_node::function>(&n->body->type) : nullptr;
             if (!n->body || n->body->identifier || !func || !*func || 
                 std::ssize((**func).parameters->parameters) != 1 ||
@@ -2500,7 +2504,7 @@ private:
     //G     : id-expression-opt = statement
     //G     : id-expression
     //G
-    auto unnamed_declaration(source_position pos, bool semicolon_required = true) -> std::unique_ptr<declaration_node> 
+    auto unnamed_declaration(source_position pos, bool semicolon_required = true, bool captures_allowed = false) -> std::unique_ptr<declaration_node> 
     {
         auto deduced_type = false;
 
@@ -2512,7 +2516,11 @@ private:
 
         auto n = std::make_unique<declaration_node>();
         n->pos = pos;
-        auto guard = capture_groups_stack_guard(this, &n->captures);
+        auto guard = 
+            captures_allowed
+            ? make_unique<capture_groups_stack_guard>(this, &n->captures)
+            : std::unique_ptr<capture_groups_stack_guard>()
+            ;
 
         //  Remember current position, because we need to look ahead
         auto start_pos = pos;

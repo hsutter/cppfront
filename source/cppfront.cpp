@@ -1312,7 +1312,7 @@ public:
                 }
                 ++mynum;
             }
-            assert (mynum < n.cap_grp->size());
+            assert (mynum < n.cap_grp->size() && "could not find this postfix-expression in capture group");
             //  And then emit that capture number
             captured_part += "_" + std::to_string(mynum);
         }
