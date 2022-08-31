@@ -963,7 +963,9 @@ public:
     ) 
         -> void
     {
-        printer.print_cpp2( "{", n.open_brace );
+        auto pos = n.open_brace;
+        pos.lineno -= std::ssize(function_prolog);
+        printer.print_cpp2( "{", pos );
 
         if (!function_prolog.empty()) {
             printer.ignore_alignment( true, function_indent + 4 );
@@ -1324,11 +1326,8 @@ public:
             n.ops[1].op->type() == lexeme::LeftParen &&
             // and either there's nothing after that, or there's just a $ after that
             (
-                //for_lambda_capture &&
-                //(
                 std::ssize(n.ops) == 2 || 
                 (std::ssize(n.ops) == 3 && n.ops[2].op->type() == lexeme::Dollar)
-                //)
             )
             )
         {
@@ -2056,13 +2055,10 @@ public:
             auto function_return_locals = std::vector<std::string>{};
             auto function_epilog        = std::vector<std::string>{};
 
-            if (!func->contracts.empty())
-            {
+            for (auto&& c : func->contracts) {
                 auto print = std::string();
                 printer.emit_to_string(&print);
-                for (auto&& c : func->contracts) {
-                    emit(*c);
-                }
+                emit(*c);
                 printer.emit_to_string();
                 function_return_locals.push_back(print);
             }

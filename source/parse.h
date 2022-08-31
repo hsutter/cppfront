@@ -2097,7 +2097,8 @@ private:
     //GT     jump-statement
     //GT     try-block
     //G
-    auto statement(bool semicolon_required) -> std::unique_ptr<statement_node> 
+    auto statement(bool semicolon_required, source_position equal_sign = source_position{})
+        -> std::unique_ptr<statement_node>
     {
         auto n = std::make_unique<statement_node>();
 
@@ -2134,7 +2135,7 @@ private:
             return n;
         }
 
-        else if (auto s = compound_statement()) {
+        else if (auto s = compound_statement(equal_sign)) {
             n->statement = std::move(s);
             assert (n->statement.index() == statement_node::compound);
             return n;
@@ -2176,16 +2177,28 @@ private:
     //G     statement
     //G     statement-seq statement
     //G
-    auto compound_statement() -> std::unique_ptr<compound_statement_node> 
+    auto compound_statement(source_position equal_sign = source_position{}) 
+        -> std::unique_ptr<compound_statement_node>
     {
         if (curr().type() != lexeme::LeftBrace) {
             return {};
         }
 
         auto n = std::make_unique<compound_statement_node>();
-        n->open_brace = curr().position();
+
+        //  In the case where this is a declaration initializer with
+        //      = {
+        //  on the same line, we want to remember our start position 
+        //  as where the = was, not where the { was
+        if (equal_sign.lineno == curr().position().lineno) {
+            n->open_brace = equal_sign;
+        }
+        else {
+            n->open_brace = curr().position();
+        }
         next();
         auto s = std::unique_ptr<statement_node>();
+
 
         while (curr().type() != lexeme::RightBrace) {
             auto s = statement(true);
@@ -2580,7 +2593,7 @@ private:
                 }
             }
 
-            if (!(n->initializer = statement(semicolon_required))) {
+            if (!(n->initializer = statement(semicolon_required, n->equal_sign))) {
                 error("ill-formed initializer");
                 next();
                 return {};

@@ -36,6 +36,7 @@ import std.threading;
 #include <type_traits>
 #include <new>
 #include <memory>
+#include <string>
 #include <string_view>
 #include <iostream>
 #include <cassert>
@@ -456,6 +457,34 @@ constexpr auto is( std::optional<U> const& x ) -> bool
 template<typename T>
 constexpr auto as( std::optional<T> const& x ) -> auto&&
     { return x.value(); }
+
+
+//-----------------------------------------------------------------------
+// 
+//  to_string for string interpolation
+// 
+//-----------------------------------------------------------------------
+//
+template<typename T>
+auto to_string(T const& t) -> std::string
+    requires requires { std::to_string(t); }
+{
+    return std::to_string(t);
+}
+
+auto to_string(std::string const& s) -> std::string const&
+{
+    return s;
+}
+
+template<typename T>
+auto to_string(std::optional<T> const& o) -> std::string {
+    if (o.has_value()) {
+        return std::to_string(o.value());
+    }
+    return "nullopt";
+}
+
 
 }
 

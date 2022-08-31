@@ -27,7 +27,7 @@ int main() {
 
 #line 5 "mixed-multiple-return-values.cpp2"
 
-[[nodiscard]] auto f() -> f__ret  {
+[[nodiscard]] auto f() -> f__ret{
         cpp2::deferred_init<int> i;
         cpp2::deferred_init<std::string> s;
 #line 7 "mixed-multiple-return-values.cpp2"
