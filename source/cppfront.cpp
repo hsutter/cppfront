@@ -1168,6 +1168,50 @@ public:
 
     //-----------------------------------------------------------------------
     //
+    auto build_capture_lambda_intro_for( capture_group& captures, source_position pos ) -> std::string
+    {
+        //  First calculate the stringized version of each capture expression
+        //  This will let us compare and de-duplicate repeated capture expressions
+        for (auto& cap : captures)
+        {
+            assert(cap.capture_expr->cap_grp == &captures);
+            printer.emit_to_string(&cap.str);
+            emit(*cap.capture_expr, true);
+            printer.emit_to_string();
+        }
+
+        //  Then build the capture list, ignoring duplicated expressions
+        auto lambda_intro = std::string("[");
+        printer.emit_to_string(&lambda_intro);
+
+        auto num = 0;
+        auto handled = std::vector<std::string>{};
+        for (auto& cap : captures)
+        {
+            //  If we haven't handled a capture that looks like this one
+            if (std::find(handled.begin(), handled.end(), cap.str) == handled.end())
+            {
+                //  Remember it
+                handled.push_back(cap.str);
+
+                //  And handle it
+                if (num != 0) { // not first
+                    lambda_intro += ", ";
+                }
+                printer.print_cpp2("_"+std::to_string(num)+" = ", pos);
+                emit(*cap.capture_expr, true);
+            }
+            ++num;
+        }
+        printer.emit_to_string();
+        lambda_intro += "]";
+
+        return lambda_intro;
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
     auto emit(primary_expression_node const& n) -> void
     {
         try_emit<primary_expression_node::identifier     >(n.expr);
@@ -1181,40 +1225,8 @@ public:
             //  The usual non-null assertion, plus it should be an anonymous function
             assert(decl && !decl->identifier && decl->is(declaration_node::function));
 
-            //  First calculate the stringized version of each capture expression
-            //  This will let us compare and de-duplicate repeated capture expressions
-            for (auto& cap : decl->captures)
-            {
-                printer.emit_to_string(&cap.str);
-                emit(*cap.capture_expr, true);
-                printer.emit_to_string();
-            }
+            auto lambda_intro = build_capture_lambda_intro_for(decl->captures, n.position());
 
-            //  Then build the capture list, ignoring duplicated expressions
-            auto lambda_intro = std::string("[");
-            printer.emit_to_string(&lambda_intro);
-
-            auto num = 0;
-            auto handled = std::vector<std::string>{};
-            for (auto& cap : decl->captures)
-            {
-                //  If we haven't handled a capture that looks like this one
-                if (std::find(handled.begin(), handled.end(), cap.str) == handled.end())
-                {
-                    //  Remember it
-                    handled.push_back(cap.str);
-
-                    //  And handle it
-                    if (num != 0) { // not first
-                        lambda_intro += ", ";
-                    }
-                    printer.print_cpp2("_"+std::to_string(num)+" = ", n.position());
-                    emit(*cap.capture_expr, true);
-                }
-                ++num;
-            }
-            printer.emit_to_string();
-            lambda_intro += "]";
             emit(*decl, lambda_intro);
         }
     }
@@ -1223,8 +1235,9 @@ public:
     //-----------------------------------------------------------------------
     //
     auto emit(postfix_expression_node& n, bool for_lambda_capture = false) -> void   
-        // note: parameter is deliberately not const because we may adjust
-        //       token column positions when moving operators to prefix notation
+        // note: parameter is deliberately not const because we we will fill
+        //       in the capture .str information, and we may also adjust token
+        //       column positions when moving operators to prefix notation
     {
         assert(n.expr);
         last_postfix_expr_was_pointer = false;
@@ -1844,9 +1857,23 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(contract_node const& n) -> void
+    auto emit(contract_node& n) -> void
+        // note: parameter is deliberately not const because we will fill
+        //       in the capture .str information
     {
         assert (n.kind);
+
+        //  For a postcondition, we'll wrap it in a final_action lambda
+        //
+        if (*n.kind == "post") {
+            auto lambda_intro = build_capture_lambda_intro_for(n.captures, n.position());
+            printer.print_cpp2( 
+                "auto final" + std::to_string(n.position().lineno) + "_" + 
+                    std::to_string(n.position().colno) + " = gsl::finally(" + 
+                    lambda_intro + "{",
+                n.position()
+            );
+        }
 
         //  Emit the contract group name (defaults to cpp2::Default)
         //
@@ -1889,6 +1916,13 @@ public:
             printer.print_cpp2("\"\"", n.position());
         }
         printer.print_cpp2(");", n.position());
+
+        //  For a postcondition, close out the final_action lambda
+        //
+        if (*n.kind == "post") {
+            printer.print_cpp2( "} );", n.position()
+            );
+        }
     }
 
 
@@ -2009,7 +2043,7 @@ public:
                 auto print = std::string();
                 printer.emit_to_string(&print);
                 for (auto&& c : func->contracts) {
-                    emit(c);
+                    emit(*c);
                 }
                 printer.emit_to_string();
                 function_return_locals.push_back(print);

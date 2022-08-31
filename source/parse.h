@@ -732,7 +732,7 @@ struct function_type_node
         std::unique_ptr<parameter_declaration_list_node>
     > returns;
 
-    std::vector<contract_node> contracts;
+    std::vector<std::unique_ptr<contract_node>> contracts;
 
     auto position() const -> source_position
     {
@@ -777,10 +777,10 @@ struct declaration_node
         std::unique_ptr<id_expression_node>
     > type;
 
-    source_position equal_sign = {};
-    source_position decl_end   = {};
+    source_position                 equal_sign = {};
+    source_position                 decl_end   = {};
     std::unique_ptr<statement_node> initializer;
-    capture_group              captures;
+    capture_group                   captures;
 
     //  Shorthand for common query
     //
@@ -1302,6 +1302,7 @@ private:
             )
         {
             if (curr().type() == lexeme::Dollar) {
+                //  cap_grp must not already be set, or this is a multi-$ postfix-expression
                 if (n->cap_grp) {
                     error("$ (capture) can appear at most once in a single postfix-expression");
                 }
@@ -2474,7 +2475,7 @@ private:
                 error("only 'pre' and 'post' contracts are allowed on functions");
                 return {};
             }
-            n->contracts.push_back( std::move(*c) );
+            n->contracts.push_back( std::move(c) );
         }
 
         return n;
