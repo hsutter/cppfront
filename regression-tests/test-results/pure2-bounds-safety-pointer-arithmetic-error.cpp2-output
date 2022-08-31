@@ -1,5 +1,3 @@
-cppfront 0.1.1 compiler
-Copyright (C) Herb Sutter
 pure2-bounds-safety-pointer-arithmetic-error.cpp2...
 pure2-bounds-safety-pointer-arithmetic-error.cpp2(15,13): error: 'delete' and owning raw pointers are not supported in Cpp2
 pure2-bounds-safety-pointer-arithmetic-error.cpp2(15,13): error:   - use unique.new<T>, shared.new<T>, or gc.new<T> instead (in that order)

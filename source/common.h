@@ -294,8 +294,6 @@ class cmdline_processor
 public:
     auto process_flags() -> void
     {
-        print("cppfront 0.1.1 compiler\nCopyright (C) Herb Sutter\n");
-
         constexpr auto processed = -1;
 
         //  Calculate the unique prefixes
@@ -337,7 +335,7 @@ public:
                     break;
                 }
             }
-            if (arg.pos != processed && arg.text.starts_with("-")) {
+            if (arg.pos != processed && (arg.text.starts_with("-") || arg.text.starts_with("/"))) {
                 arg.pos = processed;
                 print("Unknown option: " + arg.text + " (try -help)\n");
                 help_requested = true;
@@ -406,6 +404,7 @@ public:
 
     auto print_version() -> void {
         help_requested = true;
+        print("cppfront 0.1.1 compiler\nCopyright (C) Herb Sutter\n");
         print("All rights reserved\n");
         print("\nSPDX-License-Identifier: CC-BY-NC-ND-4.0");
         print("\n  No commercial use");

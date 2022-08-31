@@ -1,5 +1,3 @@
-cppfront 0.1.1 compiler
-Copyright (C) Herb Sutter
 mixed-lifetime-safety-pointer-init-2.cpp2...
 mixed-lifetime-safety-pointer-init-2.cpp2(7,5): error: local variable p must be initialized on both branches or neither branch
 mixed-lifetime-safety-pointer-init-2.cpp2(10,5): error: "if" initializes p on:
