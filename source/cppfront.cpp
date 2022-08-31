@@ -2119,6 +2119,12 @@ public:
             //function_epilog.push_back("/*EPILOG-TEST*/");
 
             printer.preempt_position( n.equal_sign );
+
+            // TODO: something like this to get rid of extra blank lines
+            //       inside the start of bodies of functions that have
+            //       multiple contracts
+            //printer.skip_lines( std::ssize(function_return_locals) );
+
             emit(  
                 *n.initializer, 
                 true, func->position(), n.identifier && func->returns.index() == function_type_node::empty,
