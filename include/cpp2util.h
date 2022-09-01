@@ -550,7 +550,7 @@ private:
 template <class F>
 [[nodiscard]] auto finally(F&& f) noexcept
 {
-    return final_action<std::remove_reference_t<F>>{std::forward<F>(f)};
+    return final_action<std::remove_cvref_t<F>>{std::forward<F>(f)};
 }
 
 }
