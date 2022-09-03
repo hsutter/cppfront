@@ -461,6 +461,54 @@ constexpr auto as( std::optional<T> const& x ) -> auto&&
 
 //-----------------------------------------------------------------------
 // 
+//  A variation of GSL's final_action_success and finally to run only on success
+//  (based on a PR I contributed to Microsoft GSL)
+// 
+//  final_action_success_success ensures something is run at the end of a scope
+//      if no exception is thrown
+// 
+//  finally_success is a convenience function to make a final_action_success_success
+// 
+//-----------------------------------------------------------------------
+//
+ 
+template <class F>
+class final_action_success
+{
+public:
+    explicit final_action_success(const F& ff) noexcept : f{ff} { }
+    explicit final_action_success(F&& ff) noexcept : f{std::move(ff)} { }
+
+    ~final_action_success() noexcept
+    {
+        if (invoke && ecount == std::uncaught_exceptions()) {
+            f();
+        }
+    }
+
+    final_action_success(final_action_success&& other) noexcept
+        : f(std::move(other.f)), invoke(std::exchange(other.invoke, false))
+    { }
+
+    final_action_success(const final_action_success&)   = delete;
+    void operator=(const final_action_success&) = delete;
+    void operator=(final_action_success&&)      = delete;
+
+private:
+    F f;
+    int  ecount = std::uncaught_exceptions();
+    bool invoke = true;
+};
+
+template <class F>
+[[nodiscard]] auto finally_success(F&& f) noexcept
+{
+    return final_action_success<std::remove_cvref_t<F>>{std::forward<F>(f)};
+}
+
+
+//-----------------------------------------------------------------------
+// 
 //  to_string for string interpolation
 // 
 //-----------------------------------------------------------------------
@@ -482,7 +530,7 @@ auto to_string(std::optional<T> const& o) -> std::string {
     if (o.has_value()) {
         return std::to_string(o.value());
     }
-    return "nullopt";
+    return "(empty)";
 }
 
 
@@ -511,46 +559,6 @@ template<typename To, typename From>
 constexpr auto narrow_cast(From&& from) noexcept -> To
 {
     return static_cast<To>(std::forward<From>(from));
-}
-
-
-//-----------------------------------------------------------------------
-// 
-//  An implementation of GSL's final_action and finally
-//  (based on a PR I contributed to Microsoft GSL)
-// 
-//  final_action ensures something is run at the end of a scope
-// 
-//  finally is a convenience function to generate a final_action
-// 
-//-----------------------------------------------------------------------
-//
-template <class F>
-class final_action
-{
-public:
-    explicit final_action(const F& ff) noexcept : f{ff} { }
-    explicit final_action(F&& ff) noexcept : f{std::move(ff)} { }
-
-    ~final_action() noexcept { if (invoke) f(); }
-
-    final_action(final_action&& other) noexcept
-        : f(std::move(other.f)), invoke(std::exchange(other.invoke, false))
-    { }
-
-    final_action(const final_action&)   = delete;
-    void operator=(const final_action&) = delete;
-    void operator=(final_action&&)      = delete;
-
-private:
-    F f;
-    bool invoke = true;
-};
-
-template <class F>
-[[nodiscard]] auto finally(F&& f) noexcept
-{
-    return final_action<std::remove_cvref_t<F>>{std::forward<F>(f)};
 }
 
 }

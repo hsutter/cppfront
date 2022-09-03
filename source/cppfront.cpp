@@ -848,10 +848,124 @@ public:
 
     //-----------------------------------------------------------------------
     //
+    //  A StringLiteral could include captures
+    //
+    auto expand_string_literal(token const& n) -> std::string
+    {
+        assert(n.type() == lexeme::StringLiteral);
+
+        auto text = std::string_view(n);
+        auto length = n.length();
+        assert (std::ssize(text) == length);
+
+        assert(length >= 2);
+        assert(text.back() == '"');
+
+        auto pos = 0;
+        auto ret = std::string{};   // the return string we're going to build
+        auto current_start = 0;     // the current offset before which the string has been into ret
+
+        //  Skip prefix to first non-" character
+        while (pos < length && text[pos] != '"') {
+            ++pos;
+        }
+        assert(pos < length && text[pos] == '"');
+        ++pos;
+
+        //  Now we're on the first character of the string itself
+        for ( ; pos < length && text[pos] != '"'; ++pos)
+        {
+            //  Find the next )$
+            if (text[pos] == '$' && text[pos-1] == ')')
+            {
+                //  Scan back to find the matching (
+                auto paren_depth = 1;
+                auto open = pos - 2;
+                for( ; text[open] != '"'; --open)
+                {
+                    if (text[open] == ')') {
+                        ++paren_depth;
+                    }
+                    else if (text[open] == '(') {
+                        --paren_depth;
+                        if (paren_depth == 0) {
+                            break;
+                        }
+                    }
+                    else if (
+                        (text[open] == '-' && text[open - 1] == '-') ||
+                        (text[open] == '-' && text[open - 1] == '-')
+                        )
+                    {
+                        errors.emplace_back(
+                            source_position( n.position().lineno, n.position().colno + pos ),
+                            "a string interpolation expression may not contain ++ or --"
+                        );
+                        return "";
+                    }
+                    else if (
+                        (text[open] == '*' && !isspace(text[open - 1])) ||
+                        (text[open] == '&' && !isspace(text[open - 1])) ||
+                        (text[open] == '!' && !isspace(text[open - 1]))
+                        )
+                    {
+                        errors.emplace_back(
+                            source_position( n.position().lineno, n.position().colno + pos ),
+                            "a string interpolation expression may not contain unary *, &, or ~ (if you meant binary, add a space before the operator)"
+                        );
+                        return "";
+                    }
+                }
+                if (text[open] == '"')
+                {
+                    errors.emplace_back(
+                        source_position( n.position().lineno, n.position().colno + pos ),
+                        "no matching ( for string interpolation ending in )$"
+                    );
+                    return "";
+                }
+                assert (text[open] == '(');
+
+                //  'open' is now at the matching (
+
+                //  Put the next non-interpolated chunk straight into ret
+                if (current_start > 0) {
+                    ret += '"';
+                }
+                ret += text.substr(current_start, open - current_start);
+                ret += '"';
+
+                //  Then put interpolated chunk into ret
+                ret += " + cpp2::to_string";
+                ret += text.substr(open, pos - open);
+                ret += " + ";
+
+                current_start = pos+1;
+            }
+        }
+
+        //  Now we should be on the the final " closing the string
+        assert(pos == length-1 && text[pos] == '"');
+
+        //  Put the final non-interpolated chunk straight into ret
+        if (current_start > 0) {
+            ret += '"';
+        }
+        ret += text.substr(current_start);
+
+        return ret;
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
     auto emit(token const& n) -> void
     {
         if (n == "new") {
             printer.print_cpp2("cpp2_new", n.position());
+        }
+        else if (n.type() == lexeme::StringLiteral) {
+            printer.print_cpp2( expand_string_literal(n), n.position() );
         }
         else {
             printer.print_cpp2(n, n.position());
@@ -1880,13 +1994,13 @@ public:
     {
         assert (n.kind);
 
-        //  For a postcondition, we'll wrap it in a final_action lambda
+        //  For a postcondition, we'll wrap it in a final_action_success lambda
         //
         if (*n.kind == "post") {
             auto lambda_intro = build_capture_lambda_intro_for(n.captures, n.position());
             printer.print_cpp2( 
-                "auto final" + std::to_string(n.position().lineno) + "_" + 
-                    std::to_string(n.position().colno) + " = gsl::finally(" + 
+                "auto post_" + std::to_string(n.position().lineno) + "_" + 
+                    std::to_string(n.position().colno) + " = cpp2::finally_success(" + 
                     lambda_intro + "{",
                 n.position()
             );
@@ -1934,7 +2048,7 @@ public:
         }
         printer.print_cpp2(");", n.position());
 
-        //  For a postcondition, close out the final_action lambda
+        //  For a postcondition, close out the final_action_success lambda
         //
         if (*n.kind == "post") {
             printer.print_cpp2( "} );", n.position()
