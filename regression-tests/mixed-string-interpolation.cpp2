@@ -1,0 +1,10 @@
+#include <iostream>
+
+main: () -> int = {
+    a := 2;
+    b: std::optional<int> = ();
+    std::cout << "a = (a)$, b = (b)$\n";
+
+    b = 42;
+    std::cout << "a^2 + b = (a * a + b.value())$\n";
+}

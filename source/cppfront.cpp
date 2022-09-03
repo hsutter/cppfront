@@ -78,15 +78,23 @@ static cmdline_processor::register_flag cmd_cpp2_only(
 
 static auto flag_safe_null_pointers = false;
 static cmdline_processor::register_flag cmd_safe_null_pointers( 
-    1, 
+    2, 
     "null-checks", 
     "Enable null safety contract checks", 
     []{ flag_safe_null_pointers = true; }
 );
 
+static auto flag_safe_subscripts = false;
+static cmdline_processor::register_flag cmd_safe_subscripts( 
+    2, 
+    "subscript-checks", 
+    "Enable subscript bounds safety contract checks", 
+    []{ flag_safe_subscripts = true; }
+);
+
 static auto flag_use_source_location = false;
 static cmdline_processor::register_flag cmd_enable_source_info( 
-    1, 
+    2, 
     "add-source-info", 
     "Enable source locations for contract checks", 
     []{ flag_use_source_location = true; }
@@ -1535,7 +1543,7 @@ public:
                 }
                 prefix.emplace_back( i->op->to_string(true), i->op->position());
 
-                //  Enable null checks
+                //  Enable null dereference checks
                 if (flag_safe_null_pointers && i->op->type() == lexeme::Multiply) {
                     prefix.emplace_back( "cpp2::assert_not_null(", i->op->position() );
                 }
@@ -1552,10 +1560,17 @@ public:
             //  Handle the suffix operators that remain suffix
             //
             else {
+                assert(i->op);
                 last_was_prefixed = false;
-                if (i->op_close) {
+
+                //  Enable subscript bounds checks
+                if (flag_safe_subscripts && i->op->type() == lexeme::LeftBracket) {
+                    suffix.emplace_back( ")", i->op->position() );
+                }
+                else if (i->op_close) {
                     suffix.emplace_back( i->op_close->to_string(true), i->op_close->position() );
                 } 
+
                 if (i->id_expr) {
                     auto print = std::string{};
                     printer.emit_to_string(&print);
@@ -1563,6 +1578,7 @@ public:
                     printer.emit_to_string();
                     suffix.emplace_back( print, i->id_expr->position() );
                 }
+
                 if (i->expr_list) {
                     auto text = std::vector<text_with_pos>{};
                     printer.emit_to_text_chunks(&text);
@@ -1572,8 +1588,15 @@ public:
                         suffix.push_back(e);
                     }
                 }
-                assert(i->op);
-                suffix.emplace_back( i->op->to_string(true), i->op->position() );
+
+                //  Enable subscript bounds checks
+                if (flag_safe_subscripts && i->op->type() == lexeme::LeftBracket) {
+                    prefix.emplace_back( "cpp2::assert_in_bounds(", i->op->position() );
+                    suffix.emplace_back( ", ", i->op->position() );
+                }
+                else {
+                    suffix.emplace_back( i->op->to_string(true), i->op->position() );
+                }
             }
         }
 
@@ -2380,7 +2403,7 @@ using namespace cpp2;
 
 static auto enable_debug_output_files = false;
 static cmdline_processor::register_flag cmd_noline( 
-    3,
+    9,
     "debug", 
     "Emit compiler debug output files", 
     []{ enable_debug_output_files = true; }

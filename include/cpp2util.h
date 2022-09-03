@@ -230,7 +230,7 @@ private:
 [[noreturn]] auto report_and_terminate(std::string_view group, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) noexcept -> void {
     std::cerr
 #ifdef CPP2_USE_SOURCE_LOCATION
-        << where.file_name() << "2("
+        << where.file_name() << "("
         << where.line() << ") "
         << where.function_name() << ": "
 #endif
@@ -273,9 +273,25 @@ auto inline Testing = contract_group(
 auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
 {
     //  Checking against a default-constructed value should be fine for iterators too
-    //  TODO: validate this works for all pointerlike types
     Null.expects(p != CPP2_TYPEOF(p){}, "dynamic null dereference attempt detected" CPP2_SOURCE_LOCATION_ARG);
     return std::forward<decltype(p)>(p);
+}
+
+//  Subscript bounds checking
+//
+auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
+    requires (std::is_integral_v<std::remove_cvref_t<decltype(arg)>> &&
+             requires { x[arg]; })
+{
+    Bounds.expects(0 <= arg && arg < std::ssize(x), "out of bounds access attempt detected" CPP2_SOURCE_LOCATION_ARG);
+    return std::forward<decltype(x)>(x) [ std::forward<decltype(arg)>(arg) ];
+}
+
+auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
+    requires (!(std::is_integral_v<std::remove_cvref_t<decltype(arg)>> &&
+             requires { x[arg]; }))
+{
+    return std::forward<decltype(x)>(x) [ std::forward<decltype(arg)>(arg) ];
 }
 
 
