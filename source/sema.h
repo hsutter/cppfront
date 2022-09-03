@@ -168,20 +168,30 @@ auto is_definite_initialization(token const* t) -> bool
 
 
 //  Keep a list of all token*'s found that are definite last uses
-//  for a local variable or copy parameter x, which we will rewrite
-//  to move from the variable.
+//  for a local variable or copy or forward parameter x, which we
+//  will rewrite to move or forward from the variable.
 //
-std::vector<token const*> definite_last_uses;
+struct last_use {
+    token const* t;
+    bool is_forward;
+    last_use( token const* t_, bool is_forward_ = false ) : t{t_}, is_forward{is_forward_} { }
+    bool operator==(last_use const& other) { return t == other.t; }
+};
+std::vector<last_use> definite_last_uses;
 
-auto is_definite_last_use(token const* t) -> bool
+auto is_definite_last_use(token const* t) -> last_use const*
 {
-    return
-        std::find(
+    auto iter = std::find(
             definite_last_uses.begin(),
             definite_last_uses.end(),
             t
-            )
-        != definite_last_uses.end();
+            );
+    if (iter != definite_last_uses.end()) {
+        return &*iter;
+    }
+    else {
+        return {};
+    }
 }
 
 
@@ -289,9 +299,11 @@ public:
             break;case symbol::active::identifier: {
                 auto const& sym = std::get<symbol::active::identifier>(s.sym);
                 assert (sym.identifier);
-                if (is_definite_last_use(sym.identifier)) {
+                if (auto use = is_definite_last_use(sym.identifier)) {
                     o << "*** " << sym.identifier->position().to_string() 
-                      << " DEFINITE LAST USE OF ";
+                      << " DEFINITE LAST "
+                      << (use->is_forward ? "FORWARDING" : "POTENTIALLY MOVING")
+                      << "USE OF ";
                 }
 
                 if (is_definite_initialization(sym.identifier)) {
@@ -359,14 +371,19 @@ public:
             return {};
         };
 
-        //  It's a local (incl. named return value or copy or move parameter)
+        //  It's a local (incl. named return value or copy or move or forward parameter)
         //
         auto is_potentially_movable_local = [&](symbol const& s) 
             -> declaration_sym const*
         {
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
                 if (sym->start && sym->declaration->is(declaration_node::active::object) && 
-                    sym->parameter && (sym->parameter->pass == passing_style::copy || sym->parameter->pass == passing_style::move))
+                    sym->parameter && 
+                        (sym->parameter->pass == passing_style::copy || 
+                         sym->parameter->pass == passing_style::move ||
+                         sym->parameter->pass == passing_style::forward
+                        )
+                    )
                     // TODO: Extend move-from-last-use to locals once we can reliably detect rvalue-friendly contexts
                     //(!sym->parameter || sym->parameter->pass == passing_style::copy || sym->parameter->pass == passing_style::move))
                 {
@@ -390,12 +407,12 @@ public:
                     ensure_definitely_initialized(decl->identifier, sympos+1, symbols[sympos].depth);
             }
 
-            //  If this is a `copy` parameter or a local variable,
+            //  If this is a copy, move, or forward parameter or a local variable,
             //  identify and tag its definite last uses to `std::move` from them
             //
             if (auto decl = is_potentially_movable_local(symbols[sympos])) {
                 assert (decl->identifier);
-                find_definite_last_uses(decl->identifier, sympos);
+                find_definite_last_uses(decl->identifier, sympos, decl->parameter->pass == passing_style::forward);
             }
         }
 
@@ -406,7 +423,7 @@ private:
     //  Find the definite last uses for local variable *id starting at the
     //  given position and depth in the symbol/scope table
     //
-    auto find_definite_last_uses(token const* id, int pos) const -> void
+    auto find_definite_last_uses(token const* id, int pos, bool is_forward) const -> void
     {
         auto i = pos;
         auto depth = symbols[pos].depth;
@@ -450,7 +467,7 @@ private:
 
                 //  If we find a use of this identifier
                 if (*sym.identifier == *id) {
-                    definite_last_uses.push_back( sym.identifier );
+                    definite_last_uses.emplace_back( sym.identifier, is_forward );
                     found = true;
 
                     //  Pop any of the last branches that we're outside of
@@ -749,7 +766,7 @@ public:
             inside_out_parameter = &n;
         }
 
-        if (n.pass == passing_style::copy || n.pass == passing_style::move)
+        if (n.pass == passing_style::copy || n.pass == passing_style::move || n.pass == passing_style::forward)
         {
             symbols.emplace_back( scope_depth, declaration_sym( true, n.declaration.get(), n.declaration->identifier->identifier, n.declaration->initializer.get(), &n));
         }

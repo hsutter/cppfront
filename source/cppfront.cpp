@@ -604,9 +604,10 @@ class cppfront
     bool               in_parameter_list = false;
 
     std::string                                   function_return_name;
-    std::vector<parameter_declaration_list_node*> function_returns = {};
+    std::vector<parameter_declaration_list_node*> function_returns;
     parameter_declaration_list_node               single_anon;  
-    //  special value - hack for now to note single-anon-return type kind in this function_returns working list
+        //  special value - hack for now to note single-anon-return type kind in this function_returns working list
+    std::vector<std::string>                      function_requires_conditions;
 
 public:
     //-----------------------------------------------------------------------
@@ -987,12 +988,20 @@ public:
     //
     auto emit(unqualified_id_node const& n, bool in_synthesized_multi_return = false ) -> void
     {
+        auto last_use = is_definite_last_use(n.identifier);
+
+        bool add_std_forward =
+            last_use && last_use->is_forward;
+
         bool add_std_move = 
-            in_synthesized_multi_return ||
-            (is_definite_last_use(n.identifier) && !suppress_move_from_last_use);
+            !add_std_forward &&
+            (in_synthesized_multi_return || (last_use && !suppress_move_from_last_use));
 
         if (add_std_move) {
             printer.print_cpp2("std::move(", n.position());
+        }
+        if (add_std_forward) {
+            printer.print_cpp2("CPP2_FORWARD(", n.position());
         }
 
         assert(n.identifier);
@@ -1030,7 +1039,7 @@ public:
             }
         }
 
-        if (add_std_move) {
+        if (add_std_move || add_std_forward) {
             printer.print_cpp2(")", n.position());
         }
     }
@@ -1428,7 +1437,7 @@ public:
 
             //  Look in the capture group to see which capture # we are
             auto mynum = 0;
-            for (auto cap : *n.cap_grp) {
+            for (auto const& cap : *n.cap_grp) {
                 if (cap.str == my_str) {
                     break;
                 }
@@ -1664,7 +1673,8 @@ public:
         //  Handle is/as expressions
         //  For now, hack in just a single 'as'-cast
         //  TODO: Generalize
-        if (!n.terms.empty() && *n.terms.front().op == "is") {
+        if (!n.terms.empty() && *n.terms.front().op == "is")
+        {
             if (n.terms.size() > 1) {
                 errors.emplace_back(
                     n.position(),
@@ -1683,7 +1693,8 @@ public:
             return;
         }
 
-        if (!n.terms.empty() && *n.terms.front().op == "as") {
+        if (!n.terms.empty() && *n.terms.front().op == "as")
+        {
             if (n.terms.size() > 1) {
                 errors.emplace_back(
                     n.position(),
@@ -1880,14 +1891,6 @@ public:
     //
     auto emit(parameter_declaration_node const& n, bool returns = false) -> void
     {
-        if (n.pass == passing_style::forward) {
-            errors.emplace_back(
-                n.position(),
-                "(temporary alpha limitation) forward parameters are not yet supported"
-            );
-            return;
-        }
-
         //  Can't declare functions as parameters -- only pointers to functions which are objects
         assert( n.declaration );
         assert( n.declaration->is(declaration_node::object) );
@@ -1914,11 +1917,25 @@ public:
             break;case passing_style::in     : printer.print_cpp2( "auto const&", n.position() );
             break;case passing_style::copy   : printer.print_cpp2( "auto",        n.position() );
             break;case passing_style::inout  : printer.print_cpp2( "auto&",       n.position() );
-            break;case passing_style::out    : printer.print_cpp2( "auto&",       n.position() ); // TODO: support out<auto> via rewrite to template
-            break;case passing_style::move   : printer.print_cpp2( "auto&&", n.position() );
-            break;case passing_style::forward: assert(false); // TODO: support forward parameters
+            break;case passing_style::out    : printer.print_cpp2( "auto&",       n.position() ); // TODO: support out<auto> via rewrite to template param
+            break;case passing_style::move   : printer.print_cpp2( "auto&&",      n.position() );
+            break;case passing_style::forward: printer.print_cpp2( "auto&&",      n.position() );
             break;default: ;
             }
+        }
+        else if (n.pass == passing_style::forward) {
+            printer.print_cpp2("auto", n.position());
+
+            auto name = n.declaration->identifier->get_token();
+            assert(name);
+            auto req = std::string{ "std::is_same_v<CPP2_TYPEOF(" };
+            req += *name;
+            req += "), ";
+            printer.emit_to_string(&req);
+            emit( id_expr );
+            printer.emit_to_string();
+            req += ">";
+            function_requires_conditions.push_back(req);
         }
         else {
             emit( id_expr );
@@ -1937,7 +1954,7 @@ public:
             break;case passing_style::inout  : printer.print_cpp2( "&",  n.position() );
             break;case passing_style::out    : printer.print_cpp2( ">",  n.position() );
             break;case passing_style::move   : printer.print_cpp2( "&&", n.position() );
-            break;case passing_style::forward: assert(false); // TODO: support forward parameters
+            break;case passing_style::forward: printer.print_cpp2( "&&", n.position() );
             break;default: ;
             }
 
@@ -2149,6 +2166,10 @@ public:
         //  Function
         if (n.is(declaration_node::function))
         {
+            //  Start fresh (there may be one spurious leftover
+            //  requires-condition created during the declarations pass)
+            function_requires_conditions = {};
+
             auto& func = std::get<declaration_node::function>(n.type);
             assert(func);
 
@@ -2261,6 +2282,18 @@ public:
             //       inside the start of bodies of functions that have
             //       multiple contracts
             //printer.skip_lines( std::ssize(function_return_locals) );
+
+            //  If processing the parameters generated any requires conditions,
+            //  emit them here
+            if (!function_requires_conditions.empty()) {
+                printer.ignore_alignment( true, n.position().colno + 4 );
+                printer.print_extra("\n");
+                for (auto const& req : function_requires_conditions) {
+                    printer.print_extra("requires " + req);
+                }
+                function_requires_conditions = {};
+                printer.ignore_alignment( false );
+            }
 
             emit(  
                 *n.initializer, 

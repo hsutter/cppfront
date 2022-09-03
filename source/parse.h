@@ -1408,7 +1408,7 @@ private:
         auto n = std::make_unique<Binary>();
         if ( (n->expr = term()) ) {
             while (is_valid_op(curr())) {
-                typename Binary::term t;
+                typename Binary::term t{};
                 t.op = &curr();
                 next();
 
