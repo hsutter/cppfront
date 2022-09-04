@@ -890,6 +890,10 @@ public:
                 //  Scan back to find the matching (
                 auto paren_depth = 1;
                 auto open = pos - 2;
+                
+                //  "next" in the string is the "last" one encountered in the backwards scan
+                auto last_nonwhitespace = '\0';
+
                 for( ; text[open] != '"'; --open)
                 {
                     if (text[open] == ')') {
@@ -902,7 +906,7 @@ public:
                         }
                     }
                     else if (
-                        (text[open] == '-' && text[open - 1] == '-') ||
+                        (text[open] == '+' && text[open - 1] == '+') ||
                         (text[open] == '-' && text[open - 1] == '-')
                         )
                     {
@@ -913,16 +917,20 @@ public:
                         return "";
                     }
                     else if (
-                        (text[open] == '*' && !isspace(text[open - 1])) ||
-                        (text[open] == '&' && !isspace(text[open - 1])) ||
-                        (text[open] == '!' && !isspace(text[open - 1]))
+                        (text[open] == '*' || text[open] == '&' || text[open] == '~') &&
+                        !isspace(text[open - 1]) &&
+                        !isalnum(last_nonwhitespace) && last_nonwhitespace != '('
                         )
                     {
                         errors.emplace_back(
                             source_position( n.position().lineno, n.position().colno + pos ),
-                            "a string interpolation expression may not contain unary *, &, or ~ (if you meant binary, add a space before the operator)"
+                            "a string interpolation expression may not contain unary & * or ~"
                         );
                         return "";
+                    }
+
+                    if (!std::isspace(text[open])) {
+                        last_nonwhitespace = text[open];
                     }
                 }
                 if (text[open] == '"')

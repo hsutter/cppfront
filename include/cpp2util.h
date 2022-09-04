@@ -549,6 +549,10 @@ auto to_string(std::optional<T> const& o) -> std::string {
     return "(empty)";
 }
 
+auto to_string(...) -> std::string {
+    return "(customize me - no cpp2::to_string overload exists for this type)";
+}
+
 
 }
 

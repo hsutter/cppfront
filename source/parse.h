@@ -1301,6 +1301,13 @@ private:
             curr().type() == lexeme::Dot
             )
         {
+            //  * & and ~ can't be a unary operator if followed by ( or identifier
+            if ((curr().type() == lexeme::Multiply || curr().type() == lexeme::Ampersand || curr().type() == lexeme::Tilde) &&
+                (peek(1)->type() == lexeme::LeftParen || peek(1)->type() == lexeme::Identifier))
+            {
+                break;
+            }
+
             if (curr().type() == lexeme::Dollar) {
                 //  cap_grp must not already be set, or this is a multi-$ postfix-expression
                 if (n->cap_grp) {
