@@ -21,38 +21,38 @@
 #define __CPP2_UTIL
 
 #ifdef CPP2_USE_MODULES
-//  Note: When C++23 "import std;" is available, we will swich to that here
-//  In the meantime, this is what works on MSVC which is the only compiler
-//  I've been able to get access to that implements modules enough to demo
-//  (but we'll have more full-C++20 compilers soon!)
-import std.core;
-import std.regex;
-import std.filesystem;
-import std.memory;
-import std.threading;
-#define assert(x) { if(!x) std::terminate(); }
+    //  Note: When C++23 "import std;" is available, we will swich to that here
+    //  In the meantime, this is what works on MSVC which is the only compiler
+    //  I've been able to get access to that implements modules enough to demo
+    //  (but we'll have more full-C++20 compilers soon!)
+    import std.core;
+    import std.regex;
+    import std.filesystem;
+    import std.memory;
+    import std.threading;
+    #define assert(x) { if(!(x)) std::terminate(); }
 #else
-#include <exception>
-#include <type_traits>
-#include <new>
-#include <memory>
-#include <string>
-#include <string_view>
-#include <iostream>
-#include <cassert>
-#include <variant>
-#include <any>
-#include <optional>
-#include <cstddef>
+    #include <exception>
+    #include <type_traits>
+    #include <new>
+    #include <memory>
+    #include <string>
+    #include <string_view>
+    #include <iostream>
+    #include <cassert>
+    #include <variant>
+    #include <any>
+    #include <optional>
+    #include <cstddef>
 #endif
 
 
 //  If this compiler doesn't support source location info yet, disable it
 #if !defined(__cpp_lib_source_location) && !defined(CPP2_USE_MODULES)
-#undef CPP2_USE_SOURCE_LOCATION
+    #undef CPP2_USE_SOURCE_LOCATION
 #endif
 #if defined(CPP2_USE_SOURCE_LOCATION) && !defined(CPP2_USE_MODULES)
-#include <source_location>
+    #include <source_location>
 #endif
 
 //  Suppress spurious modules warning
