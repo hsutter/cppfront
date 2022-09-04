@@ -48,10 +48,10 @@ import std.threading;
 
 
 //  If this compiler doesn't support source location info yet, disable it
-#ifndef __cpp_lib_source_location
+#if !defined(__cpp_lib_source_location) && !defined(CPP2_USE_MODULES)
 #undef CPP2_USE_SOURCE_LOCATION
 #endif
-#ifdef CPP2_USE_SOURCE_LOCATION
+#if defined(CPP2_USE_SOURCE_LOCATION) && !defined(CPP2_USE_MODULES)
 #include <source_location>
 #endif
 
