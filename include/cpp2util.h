@@ -216,7 +216,7 @@ public:
 
 class contract_group {
 public:
-    using handler = void (*)(CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM) noexcept;
+    using handler = void (*)(CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM);
 
     constexpr contract_group  (handler h = nullptr)  : reporter(h) { }
     constexpr auto set_handler(handler h) -> handler { assert(h); auto old = reporter; reporter = h; return old; }
