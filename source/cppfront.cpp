@@ -1040,7 +1040,13 @@ public:
         }
         else if (!in_definite_init && !in_parameter_list) {
             if (auto decl = sema.get_declaration_of(*n.identifier); 
-                decl && decl->identifier != n.identifier && !decl->parameter && !decl->initializer
+                decl && 
+                //  note pointer equality: if we're not in the actual declaration of n.identifier
+                decl->identifier != n.identifier &&
+                //  and this variable was uninitialized
+                !decl->initializer &&
+                //  and it's either a non-parameter or an out parameter
+                (!decl->parameter || (decl->parameter && decl->parameter->pass == passing_style::out))
                 )
             {
                 printer.print_cpp2(".value()", n.position());
