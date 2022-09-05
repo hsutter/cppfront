@@ -280,16 +280,16 @@ auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
 //  Subscript bounds checking
 //
 auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
-    requires (std::is_integral_v<std::remove_cvref_t<decltype(arg)>> &&
-             requires { x[arg]; })
+    requires (std::is_integral_v<CPP2_TYPEOF(arg)> &&
+             requires { std::ssize(x); x[arg]; })
 {
     Bounds.expects(0 <= arg && arg < std::ssize(x), "out of bounds access attempt detected" CPP2_SOURCE_LOCATION_ARG);
     return std::forward<decltype(x)>(x) [ std::forward<decltype(arg)>(arg) ];
 }
 
 auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
-    requires (!(std::is_integral_v<std::remove_cvref_t<decltype(arg)>> &&
-             requires { x[arg]; }))
+    requires (!(std::is_integral_v<CPP2_TYPEOF(arg)> &&
+             requires { std::ssize(x); x[arg]; }))
 {
     return std::forward<decltype(x)>(x) [ std::forward<decltype(arg)>(arg) ];
 }
