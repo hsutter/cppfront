@@ -1040,7 +1040,7 @@ public:
         }
         else if (!in_definite_init && !in_parameter_list) {
             if (auto decl = sema.get_declaration_of(*n.identifier); 
-                decl && !decl->parameter && !decl->initializer && decl->identifier != n.identifier
+                decl && decl->identifier != n.identifier && !decl->parameter && !decl->initializer
                 )
             {
                 printer.print_cpp2(".value()", n.position());
