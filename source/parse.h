@@ -109,16 +109,18 @@ auto try_visit(auto& variant, auto& visitor, int depth) -> void {
 struct expression_list_node;
 struct id_expression_node;
 struct declaration_node;
+struct inspect_expression_node;
 
 struct primary_expression_node
 {
-    enum active { empty=0, identifier, expression_list, id_expression, declaration };
+    enum active { empty=0, identifier, expression_list, id_expression, declaration, inspect };
     std::variant<
         std::monostate,
         token const*,
         std::unique_ptr<expression_list_node>,
         std::unique_ptr<id_expression_node>,
-        std::unique_ptr<declaration_node>
+        std::unique_ptr<declaration_node>,
+        std::unique_ptr<inspect_expression_node>
     > expr;
 
     auto get_token() -> token const*;
@@ -592,6 +594,54 @@ struct return_statement_node
 };
 
 
+struct alternative_node
+{
+    token const*                        identifier;
+    std::unique_ptr<id_expression_node> id_expression;
+    source_position                     equal_sign;
+    std::unique_ptr<statement_node>     statement;
+
+    auto position() const -> source_position
+    {
+        assert(identifier);
+        return identifier->position();
+    }
+
+    auto visit(auto& v, int depth) -> void;
+};
+
+
+struct inspect_expression_node
+{
+    bool                                     is_constexpr = false;
+    token const*                             identifier;
+    std::unique_ptr<expression_node>         expression;
+    source_position                          open_brace;
+    source_position                          close_brace;
+
+    std::vector<std::unique_ptr<alternative_node>> alternatives;
+
+    auto position() const -> source_position
+    {
+        assert(identifier);
+        return identifier->position();
+    }
+
+    auto visit(auto& v, int depth) -> void
+    {
+        v.start(*this, depth);
+        assert (identifier);
+        v.start(*identifier, depth+1);
+        assert (expression);
+        expression->visit(v, depth+1);
+        for (auto&& alt : alternatives) {
+            alt->visit(v, depth+1);
+        }
+        v.end(*this, depth);
+    }
+};
+
+
 struct contract_node
 {
     source_position                             open_bracket;
@@ -633,7 +683,7 @@ struct statement_node
     token const*                                     let;
     std::unique_ptr<parameter_declaration_list_node> let_params;
 
-    enum active { expression=0, compound, selection, declaration, return_, iteration, contract };
+    enum active { expression=0, compound, selection, declaration, return_, iteration, contract, inspect };
     std::variant<
         std::unique_ptr<expression_statement_node>,
         std::unique_ptr<compound_statement_node>,
@@ -641,13 +691,26 @@ struct statement_node
         std::unique_ptr<declaration_node>,
         std::unique_ptr<return_statement_node>,
         std::unique_ptr<iteration_statement_node>,
-        std::unique_ptr<contract_node>
+        std::unique_ptr<contract_node>,
+        std::unique_ptr<inspect_expression_node>
     > statement;
 
     auto position() const -> source_position;
 
     auto visit(auto& v, int depth) -> void;
 };
+
+auto alternative_node::visit(auto& v, int depth) -> void
+{
+    v.start(*this, depth);
+    assert (identifier);
+    v.start(*identifier, depth+1);
+    assert (id_expression);
+    id_expression->visit(v, depth+1);
+    assert (statement);
+    statement->visit(v, depth+1);
+    v.end(*this, depth);
+}
 
 auto compound_statement_node::visit(auto& v, int depth) -> void
 {
@@ -714,6 +777,7 @@ auto statement_node::visit(auto& v, int depth) -> void
     try_visit<return_    >(statement, v, depth);
     try_visit<iteration  >(statement, v, depth);
     try_visit<contract   >(statement, v, depth);
+    try_visit<inspect    >(statement, v, depth);
     v.end(*this, depth);
 }
 
@@ -860,6 +924,12 @@ auto primary_expression_node::position() const -> source_position
         return s->position();
     }
 
+    break;case inspect: {
+        auto const& i = std::get<inspect>(expr);
+        assert (i);
+        return i->position();
+    }
+
     break;default:
         assert (!"illegal primary_expression_node state");
         return { 0, 0 };
@@ -873,6 +943,7 @@ auto primary_expression_node::visit(auto& v, int depth) -> void
     try_visit<expression_list>(expr, v, depth);
     try_visit<id_expression  >(expr, v, depth);
     try_visit<declaration    >(expr, v, depth);
+    try_visit<inspect        >(expr, v, depth);
     v.end(*this, depth);
 }
 
@@ -1199,11 +1270,18 @@ private:
     //G     ( expression-list )
     //G     id-expression
     //G     unnamed-declaration
+    //G     inspect-expression
     //G
     auto primary_expression() 
         -> std::unique_ptr<primary_expression_node>
     {
         auto n = std::make_unique<primary_expression_node>();
+
+        if (auto inspect = inspect_expression())
+        {
+            n->expr = std::move(inspect);
+            return n;
+        }
 
         if (auto id = id_expression()) {
             n->expr = std::move(id);
@@ -1225,7 +1303,8 @@ private:
             return n;
         }
 
-        if (curr().type() == lexeme::LeftParen) {
+        if (curr().type() == lexeme::LeftParen)
+        {
             auto open_paren = curr().position();
             next();
             auto expr_list = expression_list(open_paren);
@@ -1245,8 +1324,8 @@ private:
             return n;
         }
 
-        auto decl = unnamed_declaration(curr().position(), true, true);   // captures are allowed
-        if (decl) {
+        if (auto decl = unnamed_declaration(curr().position(), true, true)) // captures are allowed
+        {
             assert (!decl->identifier && "ICE: declaration should have been unnamed");
             if (!decl->is(declaration_node::function)) {
                 error("an unnamed declaration at expression scope must be a function");
@@ -1433,7 +1512,7 @@ private:
     //G is-as-expression:
     //G     prefix-expression 
     //GT    is-as-expression is-expression-constraint
-    //GT    is-as-expression as-constraint
+    //GT    is-as-expression as-type-cast
     //GT    type-id is-type-constraint
     //G
     auto is_as_expression() {
@@ -1875,7 +1954,6 @@ private:
     //G selection-statement:
     //G     if constexpr-opt expression compound-statement
     //G     if constexpr-opt expression compound-statement else compound-statement
-    //GT     switch expression compound-statement
     //G
     auto selection_statement() -> std::unique_ptr<selection_statement_node> 
     {
@@ -2084,7 +2162,7 @@ private:
                 (**func).returns.index() != function_type_node::empty
                 )
             {
-                error("for..do loop body must be an unnamed function taking a single parameter and return nothing", false);
+                error("for..do loop body must be an unnamed function taking a single parameter and returning nothing", false);
                 return {};
             }
 
@@ -2096,6 +2174,104 @@ private:
     }
 
 
+    //G alternative:
+    //G     is-expression-constraint = statement
+    //G
+    //G is-expression-constraint
+    //G     is id-expression
+    //G
+    auto alternative() -> std::unique_ptr<alternative_node> 
+    {
+        //  Initial partial implementation: Just "is id-expression"
+        //  (note: that covers "_" as an unqualified-id)
+        if (curr() != "is") {
+            return {};
+        }
+
+        auto n = std::make_unique<alternative_node>();
+        n->identifier = &curr();
+        next();
+
+        if (auto id = id_expression()) {
+            n->id_expression = std::move(id);
+        }
+        else {
+            error("expected id-expression after 'is' in inspect alternative");
+            return {};
+        }
+
+        if (curr().type() != lexeme::Assignment) {
+            error("expected = at start of inspect alternative body");
+            return {};
+        }
+        n->equal_sign = curr().position();
+        next();
+
+        if (auto s = statement(true, n->equal_sign)) {
+            n->statement = std::move(s);
+        }
+        else {
+            error("expected statement after = in inspect alternative");
+            return {};
+        }
+
+        return n;
+    }
+
+
+    //G inspect-expression:
+    //G     inspect constexpr-opt expression { alternative-seq-opt }
+    //G
+    //G alternative-seq:
+    //G     alternative
+    //G     alternative-seq alternative
+    //G
+    auto inspect_expression() -> std::unique_ptr<inspect_expression_node> 
+    {
+        if (curr() != "inspect") {
+            return {};
+        }
+
+        auto n = std::make_unique<inspect_expression_node>();
+        n->identifier = &curr();
+        next();
+
+        if (curr().type() == lexeme::Keyword && curr() == "constexpr") {
+            n->is_constexpr = true;
+            next();
+        }
+
+        if (auto e = expression()) {
+            n->expression = std::move(e);
+        }
+        else {
+            error("invalid inspect expression");
+            return {};
+        }
+
+        if (curr().type() != lexeme::LeftBrace) {
+            error("expected { at start of inspect body");
+            return {};
+        }
+        n->open_brace = curr().position();
+        next();
+
+        while (curr().type() != lexeme::RightBrace) {
+            auto a = alternative();
+            if (!a) {
+                error("invalid alternative in inspect");
+                return {};
+            }
+            n->alternatives.push_back( std::move(a) );
+        }
+
+        n->close_brace = curr().position();
+
+        next();
+        return n;
+    }
+
+
     //G statement:
     //G     expression-statement
     //G     compound-statement
@@ -2103,6 +2279,7 @@ private:
     //G     declaration-statement
     //G     return-statement
     //G     iteration-statement
+    //G     inspect-expression
     //G     let parameter-list statement
     // 
     //GT     jump-statement
@@ -2131,6 +2308,12 @@ private:
         if (auto s = selection_statement()) {
             n->statement = std::move(s);
             assert (n->statement.index() == statement_node::selection);
+            return n;
+        }
+
+        else if (auto i = inspect_expression()) {
+            n->statement = std::move(i);
+            assert (n->statement.index() == statement_node::inspect);
             return n;
         }
 
@@ -2807,6 +2990,17 @@ public:
     auto start(selection_statement_node const& n, int indent) -> void
     {
         o << pre(indent) << "selection-statement\n";
+        o << pre(indent+1) << "is_constexpr: " << as<std::string>(n.is_constexpr) << "\n";
+    }
+
+    auto start(alternative_node const& n, int indent) -> void
+    {
+        o << pre(indent) << "alternative\n";
+    }
+
+    auto start(inspect_expression_node const& n, int indent) -> void
+    {
+        o << pre(indent) << "inspect-expression\n";
         o << pre(indent+1) << "is_constexpr: " << as<std::string>(n.is_constexpr) << "\n";
     }
 
