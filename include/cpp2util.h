@@ -31,6 +31,11 @@
     import std.memory;
     import std.threading;
     #define assert(x) { if(!(x)) std::terminate(); }
+
+    //  Suppress spurious modules warning
+    #ifdef _MSC_VER
+        #pragma warning(disable:5050)
+    #endif
 #else
     #include <exception>
     #include <type_traits>
@@ -44,20 +49,14 @@
     #include <any>
     #include <optional>
     #include <cstddef>
-#endif
 
-
-//  If this compiler doesn't support source location info yet, disable it
-#if !defined(__cpp_lib_source_location) && !defined(CPP2_USE_MODULES)
-    #undef CPP2_USE_SOURCE_LOCATION
-#endif
-#if defined(CPP2_USE_SOURCE_LOCATION) && !defined(CPP2_USE_MODULES)
-    #include <source_location>
-#endif
-
-//  Suppress spurious modules warning
-#ifdef _MSC_VER
-    #pragma warning(disable:5050)
+    //  If this compiler doesn't support <source_location> yet, disable it
+    #if !defined(__cpp_lib_source_location)
+        #undef CPP2_USE_SOURCE_LOCATION
+    #endif
+    #if defined(CPP2_USE_SOURCE_LOCATION)
+        #include <source_location>
+    #endif
 #endif
 
 
