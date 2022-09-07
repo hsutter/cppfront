@@ -54,7 +54,7 @@ An alternative syntax would be a cleanly demarcated "bubble of new code" that wo
 - remove unsafe parts that are already superseded (e.g., no unsafe `union`s or pointer arithmetic);
 - have type and memory safety by default, by making the [C++ Core Guidelines safety profiles](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#S-profile) we already have the default and required;
 - eliminate 90% of the guidance we have to teach about today's complex language (e.g., by eliminating special cases, and refactoring the language into a smaller number of regular composable features); and
-- make it easy to write a parser (e.g., having a context-free grammar and order-independent semantics.
+- make it easy to write a parser (e.g., having a context-free grammar and order-independent semantics).
    
 This repo is an experiment to try to develop a proof of concept that evolution along these lines may be possible. For example, this repo's `parse.h` is a standalone context-free parser that is growing month by month as I implement more of the "syntax #2" experiment.
 
