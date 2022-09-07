@@ -43,9 +43,13 @@ I want to encourage us to look for ways to push the boundaries to bring C++ itse
 I want us to aim for major C++ evolution directed toward things that will make us better C++ programmers — not programmers of something else.
 
     
-## 2) This is about a specific goal: See if we can make C++ **10x safer, simpler, and more toolable** if we had a "syntax #2" alternative syntax for C++
+## 2) This is about a specific goal
+    
+My specific goal is: See if we can make C++ **10x safer, simpler, and more toolable** if we had a "syntax #2" alternative syntax for C++, within which we are completely free to improve **semantics** free of any backward source compatibility restrictions?
+    
+> **Important disclaimer: Please do not make the mistake of focusing on syntax, or thinking 'Herb wants to make syntax pretty.' That is a mistake.** The syntax is not the important thing — yes, we should make it clean too, and yes, it's the most visible thing. **The important thing is the semantics** — the syntax is just the gateway into the new space where can (finally) fix the semantics. If this project was just about 'making the syntax prettier' it would be a total waste of time and I wouldn't spend any time on it.
 
-<image align="right" width="300" src="https://user-images.githubusercontent.com/1801526/188898468-17e5ce70-d417-48d6-b204-ad9e4caa30ed.png"> An alternative syntax would be a cleanly demarcated "bubble of new code" that would let us do things that we can never do in today's syntax without breaking the world, such as to:
+<image align="right" width="400" src="https://user-images.githubusercontent.com/1801526/188898468-17e5ce70-d417-48d6-b204-ad9e4caa30ed.png"> An alternative syntax would be a cleanly demarcated "bubble of new code" that would let us do things that we can never do in today's syntax without breaking the world, such as to:
 
 - fix defaults (e.g., make `[[nodiscard]]` the default);
 - double down on modern C++ (e.g., make C++20 modules and C++23 `import std;` the default);
