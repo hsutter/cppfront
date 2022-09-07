@@ -60,6 +60,48 @@ This repo is an experiment to try to develop a proof of concept that evolution a
 
 > **Important disclaimer: Please do not make the mistake of focusing on syntax, or thinking 'Herb wants to make syntax pretty.' That is _so_ not the point.** The syntax is not the important thing — yes, we should make it clean too, and yes, it's the most visible thing. **The important thing is the semantics** — the syntax is just the gateway into a new open space where can (finally) fix the semantics. If this project were just about 'making the syntax prettier' it would be a total waste of time. I'm not interested in wasting my time on 'just lipstick,' I want to solve semantic problems so I can write C++ code more safely and conveniently myself on my own future projects.
 
+# How do I build cppfront?
+
+<image align="right" width="120" src="https://user-images.githubusercontent.com/1801526/188906112-ef377a79-b6a9-4a30-b318-10b51d8ea934.png">
+Cppfront builds with any major C++20 compiler.
+
+MSVC build instructions:
+
+    cl cppfront.cpp -std:c++20 -EHsc
+
+GCC build instructions:
+
+    g++-10 cppfront.cpp -std=c++20 
+    
+Clang build instructions:
+
+    clang++-12 cppfront.cpp -std=c++20
+
+That's it. There are no outside dependencies (no YACC/Bison/...), no build scripts (no CMake/Bazel/...). I started cppfront with just a blank editor and the C++ standard library, and have stuck to that so far. The parser is custom hand-written code, so is everything else, and all the code in this repo is my own (including a small function that is also in the Microsoft GSL implementation because I contributed it there too).
+
+# How do I build my `.cpp2` file?
+
+Just run
+
+    cppfront your.cpp2
+
+then run it through any major C++20 compiler after putting `/cppfront/include` in the path so it can find `cpp2util.h`.
+
+MSVC would be:
+
+    cl your.cpp -std:c++20 -EHsc
+
+GCC would be:
+
+    g++-10 your.cpp -std=c++20 
+    
+Clang would be:
+
+    clang++-12 you.cpp -std=c++20
+
+That's it. 
+
+
 # Where's the documentation?
 
 For now I'm not posting a lot of written documentation because that would imply this project is intended for others to use — if it someday becomes ready for that, I'll post more docs.
