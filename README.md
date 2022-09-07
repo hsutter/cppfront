@@ -58,7 +58,7 @@ An alternative syntax would be a cleanly demarcated "bubble of new code" that wo
    
 This repo is an experiment to try to develop a proof of concept that evolution along these lines may be possible. For example, this repo's `parse.h` is a standalone context-free parser that is growing month by month as I implement more of the "syntax #2" experiment.
 
-> **Important disclaimer: Please do not make the mistake of focusing on syntax, or thinking 'Herb wants to make syntax pretty.' That is _so_ not the point.** The syntax is not the important thing — yes, we should make it clean too, and yes, it's the most visible thing. **The important thing is the semantics** — the syntax is just the gateway into a new open space where can (finally) fix the semantics. If this project were just about 'making the syntax prettier' it would be a total waste of time. I'm not interested in wasting my time on 'just lipstick,' I want to solve semantic problems so I can write C++ code more safely and conveniently myself on my own future projects.
+> **Important disclaimer: Please do not make the mistake of focusing on syntax, or thinking 'Herb wants to make syntax pretty.' That is _so_ not the point.** The syntax is not the important thing — yes, we should make it clean too, and yes, it's the most visible thing. **The important thing is the semantics** — the syntax is just the gateway into a new open space where can (finally) fix the semantics. I'm not interested in wasting time on 'just making the syntax prettier,' I want to solve semantic problems so I can write C++ code more safely and conveniently myself on my own future projects.
 
 # How do I build cppfront?
 
