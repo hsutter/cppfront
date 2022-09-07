@@ -1,6 +1,6 @@
 # cppfront
 
-An experimental C++ Syntax 2 -> Syntax 1 transpiler
+A personal experimental C++ Syntax 2 -> Syntax 1 transpiler
 
 Copyright (c) Herb Sutter
 
