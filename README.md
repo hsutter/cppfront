@@ -10,7 +10,7 @@ See [License](LICENSE)
 
 # What is this project?
 
-This a personal project for my own use and experimentation, to learn some things, prove out some concepts, and share some ideas. As parts may work out, I'll continue to bring those results to ISO C++ as proposals: I did most of this design work in 2015-16, and since then every evolution proposal paper I've brought to ISO C++, and every conference talk I've given, has come from this work and just been presented as a standalone proposal under today's syntax, to help validate and refine that part of the design. This is a step to bring them together under an alternative 'syntax 2' for C++, that will let us make broader coordinated improvements free of concerns about breaking any existing code.
+This a personal project for my own use and experimentation, to learn some things, prove out some concepts, and share some ideas. As parts may work out, I'll continue to bring those results to ISO C++ as proposals: I did most of this design work in 2015-16, and since then every evolution proposal paper I've brought to ISO C++, and every conference talk I've given, has come from this work and just been presented as a standalone proposal under today's syntax, to help validate and refine that part of the design. This cppfront compiler is a step to bring them together under an alternative 'syntax 2' for C++, that will let us make broader coordinated improvements free of concerns about breaking any existing code.
 
 I'm sharing this work because I hope to start a conversation about what could be possible _**within C++**_’s own evolution to rejuvenate C++. The compiler is currently still hilariously incomplete (e.g., as of this writing, there's no support for classes!). Don't contemplate any real use yet. :)
 
