@@ -32,7 +32,7 @@ You know what I mean? I want "C++, the fun and cool parts" without "C++, the dir
     
 We've already been improving C++'s safety and ergonomics with every ISO C++ release, but they have been "10%" improvements. We haven't been able to do a "10x" improvement primarily because we have to keep 100% syntax backward compatibility.
 
-What if we could have our compatibility cake, and eat it too -- by having:
+What if we could have our compatibility cake, and eat it too — by having:
 
 - 100% seamless **link compatibility always** (no marshaling, no interop, no generating 'compatibility modules' to import/export C++ code to/from a different world); and
     
@@ -55,7 +55,7 @@ This repo is an experiment to try to develop a proof of concept that evolution a
 
 # Where's the documentation?
 
-For now I'm not posting a lot of written documentation because that would imply this project is intended for others to use -- if it someday becomes ready for that, I'll post more docs.
+For now I'm not posting a lot of written documentation because that would imply this project is intended for others to use — if it someday becomes ready for that, I'll post more docs.
 
 Here's where to find out more about my 'syntax #2' experiment:
 
