@@ -51,8 +51,8 @@ An alternative syntax would be a cleanly demarcated "bubble of new code" that wo
 
 - fix defaults (e.g., make `[[nodiscard]]` the default);
 - double down on modern C++ (e.g., make C++20 modules and C++23 `import std;` the default);
-- remove unsafe parts that are already superseded (e.g., no unsafe `union`s or pointer arithmetic);
-- have type and memory safety by default, by making the [C++ Core Guidelines safety profiles](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#S-profile) we already have the default and required;
+- remove unsafe parts that are already superseded (e.g., no unsafe `union` or pointer arithmetic);
+- have type and memory safety by default (e.g., make the [C++ Core Guidelines safety profiles](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#S-profile) the default and required);
 - eliminate 90% of the guidance we have to teach about today's complex language (e.g., by eliminating special cases, and refactoring the language into a smaller number of regular composable features); and
 - make it easy to write a parser (e.g., having a context-free grammar and order-independent semantics).
    
