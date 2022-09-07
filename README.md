@@ -77,7 +77,7 @@ Just run `cppfront your.cpp2`, then run the generated `your.cpp` through any maj
 
 - MSVC would be: `cl your.cpp -std:c++20 -EHsc`
 - GCC would be: `g++-10 your.cpp -std=c++20`
-- Clang would be: `clang++-12 you.cpp -std=c++20`
+- Clang would be: `clang++-12 your.cpp -std=c++20`
 
 That's it. 
 
