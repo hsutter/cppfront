@@ -20,9 +20,11 @@ This is one of many experiments going on across the industry looking at ways to 
 
 <image align="right" width="150" src="https://user-images.githubusercontent.com/1801526/188887745-23e0c3a0-3ea7-4589-993c-f54fe662b107.png"> I love ISO C++. I want to keep writing code in C++... just nicer:
     
-    - with less ceremony to remember;
-    - with fewer safety gotchas; and
-    - with the same level of tool support other languages enjoy.
+- with less ceremony to remember;
+
+- with fewer safety gotchas; and
+
+- with the same level of tool support other languages enjoy.
 
 You know... I want "C++, the fun parts" without "C++, the tedious/dangerous parts." (I have a similar view of most major cities.)
     
@@ -30,9 +32,9 @@ We've already been improving C++'s safety and ergonomics with every ISO C++ rele
 
 What if we could have our compatibility cake, and eat it too -- by having:
 
-    - 100% seamless **link compatibility always** (no marshaling, no interop, no generating 'compatibility modules' to import/export C++ code to/from a different world); and
+- 100% seamless **link compatibility always** (no marshaling, no interop, no generating 'compatibility modules' to import/export C++ code to/from a different world); and
     
-    - 100% seamless **backward source compatibility always available**, including 100% SFINAE and macro compatibility, **but only pay for it when we use it**... that is, apply C++'s familiar "zero-overhead principle" also to backward source compatibilty?
+- 100% seamless **backward source compatibility always available**, including 100% SFINAE and macro compatibility, **but only pay for it when we use it**... that is, apply C++'s familiar "zero-overhead principle" also to backward source compatibilty?
 
 I want to encourage us to look for ways to push the boundaries to bring C++ itself forward and double down on C++ — not to switch to something else. I want us to aim for major C++ evolution directed toward things that will make us better C++ programmers — not programmers of something else.
 
@@ -40,12 +42,12 @@ I want to encourage us to look for ways to push the boundaries to bring C++ itse
 
 An alternative syntax would be a cleanly demarcated "bubble of new code" that would let us do things that we can never do in today's syntax without breaking the world, such as to:
 
-   - fix defaults (e.g., make `[[nodiscard]]` the default);
-   - double down on modern C++ (e.g., make C++20 modules and C++23 `import std;` the default);
-   - remove unsafe parts that are already superseded (e.g., no unsafe `union`s or pointer arithmetic);
-   - have type and memory safety by default, by making the [C++ Core Guidelines safety profiles](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#S-profile) we already have the default and required;
-   - eliminate 90% of the guidance we have to teach about today's complex language (e.g., by eliminating special cases, and refactoring the language into a smaller number of regular composable features); and
-   - make it easy to write a parser (e.g., having a context-free grammar and order-independent semantics.
+- fix defaults (e.g., make `[[nodiscard]]` the default);
+- double down on modern C++ (e.g., make C++20 modules and C++23 `import std;` the default);
+- remove unsafe parts that are already superseded (e.g., no unsafe `union`s or pointer arithmetic);
+- have type and memory safety by default, by making the [C++ Core Guidelines safety profiles](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#S-profile) we already have the default and required;
+- eliminate 90% of the guidance we have to teach about today's complex language (e.g., by eliminating special cases, and refactoring the language into a smaller number of regular composable features); and
+- make it easy to write a parser (e.g., having a context-free grammar and order-independent semantics.
    
 This repo is an experiment to try to develop a proof of concept that evolution along these lines may be possible. For example, this repo's `parse.h` is a standalone context-free parser that is growing month by month as I implement more of the "syntax #2" experiment.
 
