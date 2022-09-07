@@ -28,7 +28,7 @@ This is one of many experiments going on across the industry looking at ways to 
 
 - with the same level of tool support other languages enjoy.
 
-You know what I mean? I want "C++, the fun and cool parts" without "C++, the dirty and dangerous parts." (I have a similar view of most major cities.)
+Know what I mean? I want "C++, the powerful and expressive parts" without "C++, the cumbersome and dangerous parts." That C++ is a fun language. I want that.
     
 We've already been improving C++'s safety and ergonomics with every ISO C++ release, but they have been "10%" improvements. We haven't been able to do a **"10x"** improvement primarily because we have to keep 100% syntax backward compatibility.
 
