@@ -10,7 +10,7 @@ See [License](LICENSE)
 
 # What is this project?
 
-I'm sharing this work because I hope to start a conversation about what could be possible _**within C++**_’s own evolution to rejuvenate C++. For now this is my personal project for my own use and experimentation, to learn some things, proof out some concepts, and share some ideas. It's currently still hilariously incomplete (e.g., as of this writing, there's no support for classes! I just started implementing a basic `inspect` statement along the lines I [presented at CppCon 2021](https://www.youtube.com/watch?v=raB_289NxBk) and in [P2392](https://wg21.link/p2392)).
+I'm sharing this work because I hope to start a conversation about what could be possible _**within C++**_’s own evolution to rejuvenate C++. For now this is my personal project for my own use and experimentation, to learn some things, proof out some concepts, and share some ideas. It's currently still hilariously incomplete (e.g., as of this writing, there's no support for classes(!) — last night I just started implementing a basic `inspect` statement along the lines I [presented at CppCon 2021](https://www.youtube.com/watch?v=raB_289NxBk) and in [P2392](https://wg21.link/p2392)). This is a work in progress, that will keep growing or will fail, and either way will generate data... this is how experiments work.
 
 I'm sharing this to show my work, and to try to get others thinking about what could be possible if C++ could evolve in this kind of direction.
 
