@@ -56,9 +56,9 @@ An alternative syntax would be a cleanly demarcated "bubble of new code" that wo
 - eliminate 90% of the guidance we have to teach about today's complex language (e.g., by eliminating special cases, and refactoring the language into a smaller number of regular composable features); and
 - make it easy to write a parser (e.g., having a context-free grammar and order-independent semantics).
    
-This repo is an experiment to try to develop a proof of concept that evolution along these lines may be possible. For example, this repo's `parse.h` is a standalone context-free parser that is growing month by month as I implement more of the "syntax #2" experiment.
+The cppfront compiler is an experiment to try to develop a proof of concept that evolution along these lines may be possible. For example, this repo's `parse.h` is a standalone context-free parser that is growing month by month as I implement more of the "syntax #2" experiment.
 
-> **Important disclaimer: Please do not make the mistake of focusing on syntax, or thinking 'Herb wants to make syntax pretty.' That is _so_ not the point.** The syntax is not the important thing — yes, we should make it clean too, and yes, it's the most visible thing. **The important thing is the semantics** — the syntax is just the gateway into a new open space where can (finally) fix the semantics. I'm not interested in wasting time on 'just making the syntax prettier,' I want to solve semantic problems so I can write C++ code more safely and conveniently myself on my own future projects.
+> **Important disclaimer: This isn't about making syntax pretty, it's about fixing semantics.** The syntax is just the gateway (and we should paint it a nice color too), but the real payoff is getting access to the new open space beyond where can (finally) fix the semantics.
 
 # How do I build cppfront?
 
