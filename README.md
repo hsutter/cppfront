@@ -30,7 +30,7 @@ So I want to keep writing code in C++... just "nicer":
 
 You know what I mean? I want "C++, the fun and cool parts" without "C++, the dirty and dangerous parts." (I have a similar view of most major cities.)
     
-We've already been improving C++'s safety and ergonomics with every ISO C++ release, but they have been "10%" improvements. We haven't been able to do a "10x" improvement primarily because we have to keep 100% syntax backward compatibility.
+We've already been improving C++'s safety and ergonomics with every ISO C++ release, but they have been "10%" improvements. We haven't been able to do a **"10x"** improvement primarily because we have to keep 100% syntax backward compatibility.
 
 What if we could have our compatibility cake, and eat it too — by having:
 
@@ -45,7 +45,7 @@ I want us to aim for major C++ evolution directed toward things that will make u
     
 ## 2) This is about a specific goal
     
-<image align="right" width="400" src="https://user-images.githubusercontent.com/1801526/188898468-17e5ce70-d417-48d6-b204-ad9e4caa30ed.png"> My specific goal is: See if we can make C++ **10x safer, simpler, and more toolable** if we had a "syntax #2" alternative syntax for C++, within which we are completely free to improve **semantics** free of any backward source compatibility restrictions?
+<image align="right" width="400" src="https://user-images.githubusercontent.com/1801526/188898468-17e5ce70-d417-48d6-b204-ad9e4caa30ed.png"> My specific goal is to explore the question: Can we make C++ **10x safer, simpler, and more toolable** if we had a "syntax #2" alternative syntax for C++, within which we are completely free to improve **semantics** free of any backward source compatibility restrictions?
     
 > **Important disclaimer: Please do not make the mistake of focusing on syntax, or thinking 'Herb wants to make syntax pretty.' That is _so_ not the point.** The syntax is not the important thing — yes, we should make it clean too, and yes, it's the most visible thing. **The important thing is the semantics** — the syntax is just the gateway into the new space where can (finally) fix the semantics. If this project was just about 'making the syntax prettier' it would be a total waste of time. I'm not interested in wasting my time on only-lipstick, I want to solve semantic problems so I can use C++ more safety and conveniently on my own future projects.
 
