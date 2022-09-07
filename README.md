@@ -10,11 +10,13 @@ See [License](LICENSE)
 
 # What is this project?
 
-I'm sharing this work because I hope to start a conversation about what could be possible _**within C++**_’s own evolution to rejuvenate C++. For now this is my personal project for my own use and experimentation, to learn some things, proof out some concepts, and share some ideas. It's hilariously incomplete (e.g., no classes!). I'm sharing it to show my work, and to try to get others thinking about what could be possible by this kind of direction.
+I'm sharing this work because I hope to start a conversation about what could be possible _**within C++**_’s own evolution to rejuvenate C++. For now this is my personal project for my own use and experimentation, to learn some things, proof out some concepts, and share some ideas. It's currently still hilariously incomplete (e.g., as of this writing, there's no support for classes! I just started implementing a basic `inspect` statement along the lines I [presented at CppCon 2021](https://www.youtube.com/watch?v=raB_289NxBk) and in [P2392](https://wg21.link/p2392)).
 
-This is one of many experiments going on across the industry looking at ways to accomplish a major C++ evolution. What's different is two things...
+I'm sharing this to show my work, and to try to get others thinking about what could be possible by this kind of direction.
 
-## 1) This is about C++, not about something else.
+This is one of many experiments going on across the industry looking at ways to accomplish a major C++ evolution. What makes this experiment different from the others? Two main things...
+
+## 1) This is about C++, not about something else... including as always seamless (no-marshal no-thunk no-bridging) interop with all of today's ISO C++ and tomorrow's further-evolved C++.
 
 <image align="right" width="150" src="https://user-images.githubusercontent.com/1801526/188887745-23e0c3a0-3ea7-4589-993c-f54fe662b107.png"> I love ISO C++. I want to keep writing code in C++... just nicer, with less ceremony to remember, fewer safety mistakes, and the same level of tool support other languages enjoy.
 
@@ -22,9 +24,9 @@ We've already been improving C++'s safety and ergonomics with every ISO C++ rele
 
 What if we could have our compatibility cake, and eat it too -- by having:
 
-    - 100% seamless _link compatibility always_, and
+    - 100% seamless **link compatibility always**, and
     
-    - 100% seamless _backward source compatibility always available_, but only pay for it when we use it... that is, apply C++'s familiar "zero-overhead principle" also to backward source compatibilty?
+    - 100% seamless **backward source compatibility always available**, including 100% SFINAE and macro compatibility, **but only pay for it when we use it**... that is, apply C++'s familiar "zero-overhead principle" also to backward source compatibilty?
 
 I want to encourage us to look for ways to push the boundaries to bring C++ itself forward and double down on C++ — not to switch to something else. I want us to aim for major C++ evolution directed toward things that will make us better C++ programmers — not programmers of something else.
 
