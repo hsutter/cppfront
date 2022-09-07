@@ -12,7 +12,7 @@ See [License](LICENSE)
 
 I'm sharing this work because I hope to start a conversation about what could be possible _**within C++**_’s own evolution to rejuvenate C++. For now this is my personal project for my own use and experimentation, to learn some things, proof out some concepts, and share some ideas. It's currently still hilariously incomplete (e.g., as of this writing, there's no support for classes! I just started implementing a basic `inspect` statement along the lines I [presented at CppCon 2021](https://www.youtube.com/watch?v=raB_289NxBk) and in [P2392](https://wg21.link/p2392)).
 
-I'm sharing this to show my work, and to try to get others thinking about what could be possible by this kind of direction.
+I'm sharing this to show my work, and to try to get others thinking about what could be possible if C++ could evolve in this kind of direction.
 
 This is one of many experiments going on across the industry looking at ways to accomplish a major C++ evolution. What makes this experiment different from the others? Two main things...
 
