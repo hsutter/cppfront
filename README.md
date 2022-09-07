@@ -18,7 +18,7 @@ This is one of many experiments going on across the industry looking at ways to 
 
 ## 1) This is about C++, not about something else.
 
-<image align="right" width="150" src="https://user-images.githubusercontent.com/1801526/188887745-23e0c3a0-3ea7-4589-993c-f54fe662b107.png"> I love ISO C++. I want to keep writing code in C++... "just nicer":
+<image align="right" width="150" src="https://user-images.githubusercontent.com/1801526/188887745-23e0c3a0-3ea7-4589-993c-f54fe662b107.png"> I love ISO C++. I want to keep writing code in C++... just "nicer":
     
 - with less ceremony to remember;
 
@@ -26,7 +26,7 @@ This is one of many experiments going on across the industry looking at ways to 
 
 - with the same level of tool support other languages enjoy.
 
-You know... I want "C++, the fun parts" without "C++, the tedious/dangerous parts." (I have a similar view of most major cities.)
+You know what I mean? I want "C++, the fun and cool parts" without "C++, the dirty and dangerous parts." (I have a similar view of most major cities.)
     
 We've already been improving C++'s safety and ergonomics with every ISO C++ release, but they have been "10%" improvements. We haven't been able to do a "10x" improvement primarily because we have to keep 100% syntax backward compatibility.
 
