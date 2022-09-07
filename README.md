@@ -16,7 +16,7 @@ I'm sharing this to show my work, and to try to get others thinking about what c
 
 This is one of many experiments going on across the industry looking at ways to accomplish a major C++ evolution. What makes this experiment different from the others? Two main things...
 
-## 1) This is about C++, not about something else.
+## 1) This is about C++, not about something else
 
 <image align="right" width="150" src="https://user-images.githubusercontent.com/1801526/188887745-23e0c3a0-3ea7-4589-993c-f54fe662b107.png"> I love ISO C++. It's the best tool in the world today for me to write the programs I want and need.
     
@@ -42,9 +42,10 @@ I want to encourage us to look for ways to push the boundaries to bring C++ itse
     
 I want us to aim for major C++ evolution directed toward things that will make us better C++ programmers — not programmers of something else.
 
-## 2) This is about a specific goal: See if we can make C++ **10x safer, simpler, and more toolable** if we had a "syntax #2" alternative syntax for C++.
+    
+## 2) This is about a specific goal: See if we can make C++ **10x safer, simpler, and more toolable** if we had a "syntax #2" alternative syntax for C++
 
-An alternative syntax would be a cleanly demarcated "bubble of new code" that would let us do things that we can never do in today's syntax without breaking the world, such as to:
+<image align="right" width="300" src="https://user-images.githubusercontent.com/1801526/188898468-17e5ce70-d417-48d6-b204-ad9e4caa30ed.png"> An alternative syntax would be a cleanly demarcated "bubble of new code" that would let us do things that we can never do in today's syntax without breaking the world, such as to:
 
 - fix defaults (e.g., make `[[nodiscard]]` the default);
 - double down on modern C++ (e.g., make C++20 modules and C++23 `import std;` the default);
@@ -61,7 +62,7 @@ For now I'm not posting a lot of written documentation because that would imply 
 
 Here's where to find out more about my 'syntax #2' experiment:
 
-- **My CppCon 2022 talk** [link coming soon] - this is the primary documentation right now
-- The [cppfront regression tests](https://github.com/hsutter/cppfront/tree/main/regression-tests/test-results) which show dozens of `.cpp2` files and the `.cpp` file each one is translated to - each filename briefly describes the language features the test demonstrates (e.g., contracts, parameter passing, bounds safety, `is` queries and `as` casts, generalized value capture including in "lambdas" and string interpolation)
+- **My CppCon 2022 talk** [link coming soon] — this is the primary documentation right now.
+- The [cppfront regression tests](https://github.com/hsutter/cppfront/tree/main/regression-tests/test-results) which show dozens of `.cpp2` files and the `.cpp` file each one is translated to - each filename briefly describes the language features the test demonstrates (e.g., contracts, parameter passing, bounds safety, `is` queries and `as` casts, generalized value capture including in "lambdas" and string interpolation).
 
 I'll add a few overview examples here soon...
