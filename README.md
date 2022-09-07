@@ -47,8 +47,6 @@ I want us to aim for major C++ evolution directed toward things that will make u
     
 <image align="right" width="400" src="https://user-images.githubusercontent.com/1801526/188898468-17e5ce70-d417-48d6-b204-ad9e4caa30ed.png"> My specific goal is to explore the question: Can we make C++ **10x safer, simpler, and more toolable** if we had a "syntax #2" alternative syntax for C++, within which we are completely free to improve **semantics** free of any backward source compatibility restrictions?
     
-> **Important disclaimer: Please do not make the mistake of focusing on syntax, or thinking 'Herb wants to make syntax pretty.' That is _so_ not the point.** The syntax is not the important thing — yes, we should make it clean too, and yes, it's the most visible thing. **The important thing is the semantics** — the syntax is just the gateway into a new open space where can (finally) fix the semantics. If this project were just about 'making the syntax prettier' it would be a total waste of time. I'm not interested in wasting my time on 'just lipstick,' I want to solve semantic problems so I can write C++ code more safely and conveniently myself on my own future projects.
-
 An alternative syntax would be a cleanly demarcated "bubble of new code" that would let us do things that we can never do in today's syntax without breaking the world, such as to:
 
 - fix defaults (e.g., make `[[nodiscard]]` the default);
@@ -59,6 +57,8 @@ An alternative syntax would be a cleanly demarcated "bubble of new code" that wo
 - make it easy to write a parser (e.g., having a context-free grammar and order-independent semantics.
    
 This repo is an experiment to try to develop a proof of concept that evolution along these lines may be possible. For example, this repo's `parse.h` is a standalone context-free parser that is growing month by month as I implement more of the "syntax #2" experiment.
+
+> **Important disclaimer: Please do not make the mistake of focusing on syntax, or thinking 'Herb wants to make syntax pretty.' That is _so_ not the point.** The syntax is not the important thing — yes, we should make it clean too, and yes, it's the most visible thing. **The important thing is the semantics** — the syntax is just the gateway into a new open space where can (finally) fix the semantics. If this project were just about 'making the syntax prettier' it would be a total waste of time. I'm not interested in wasting my time on 'just lipstick,' I want to solve semantic problems so I can write C++ code more safely and conveniently myself on my own future projects.
 
 # Where's the documentation?
 
