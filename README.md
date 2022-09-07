@@ -38,7 +38,9 @@ What if we could have our compatibility cake, and eat it too — by having:
     
 - 100% seamless **backward source compatibility always available**, including 100% SFINAE and macro compatibility, **but only pay for it when we use it**... that is, apply C++'s familiar "zero-overhead principle" also to backward source compatibilty?
 
-I want to encourage us to look for ways to push the boundaries to bring C++ itself forward and double down on C++ — not to switch to something else. I want us to aim for major C++ evolution directed toward things that will make us better C++ programmers — not programmers of something else.
+I want to encourage us to look for ways to push the boundaries to bring C++ itself forward and double down on C++ — not to switch to something else.
+    
+I want us to aim for major C++ evolution directed toward things that will make us better C++ programmers — not programmers of something else.
 
 ## 2) This is about a specific goal: See if we can make C++ **10x safer, simpler, and more toolable** if we had a "syntax #2" alternative syntax for C++.
 
@@ -59,7 +61,7 @@ For now I'm not posting a lot of written documentation because that would imply 
 
 Here's where to find out more about my 'syntax #2' experiment:
 
-    - **My CppCon 2022 talk** [link coming soon] - this is the primary documentation right now
-    - The [cppfront regression tests](https://github.com/hsutter/cppfront/tree/main/regression-tests/test-results) which show dozens of `.cpp2` files and the `.cpp` file each one is translated to - each filename briefly describes the language features the test demonstrates (e.g., contracts, parameter passing, bounds safety, `is` queries and `as` casts, generalized value capture including in "lambdas" and string interpolation)
+- **My CppCon 2022 talk** [link coming soon] - this is the primary documentation right now
+- The [cppfront regression tests](https://github.com/hsutter/cppfront/tree/main/regression-tests/test-results) which show dozens of `.cpp2` files and the `.cpp` file each one is translated to - each filename briefly describes the language features the test demonstrates (e.g., contracts, parameter passing, bounds safety, `is` queries and `as` casts, generalized value capture including in "lambdas" and string interpolation)
 
 I'll add a few overview examples here soon...
