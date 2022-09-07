@@ -109,6 +109,6 @@ For now I'm not posting a lot of written documentation because that would imply 
 Here's where to find out more about my 'syntax #2' experiment:
 
 - **My CppCon 2022 talk** [link coming soon] — this is the primary documentation right now.
-- The [cppfront regression tests](https://github.com/hsutter/cppfront/tree/main/regression-tests/test-results) which show dozens of `.cpp2` files and the `.cpp` file each one is translated to - each filename briefly describes the language features the test demonstrates (e.g., contracts, parameter passing, bounds safety, `is` queries and `as` casts, generalized value capture including in "lambdas" and string interpolation).
+- The [cppfront regression tests](https://github.com/hsutter/cppfront/tree/main/regression-tests/test-results) which show dozens of `.cpp2` files and the `.cpp` file each one is translated to. Each filename briefly describes the language features the test demonstrates (e.g., contracts, parameter passing, bounds safety, `is` queries and `as` casts, generalized value capture including in "lambdas" and string interpolation).
 
 I'll add a few overview examples here soon...
