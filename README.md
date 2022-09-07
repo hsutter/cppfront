@@ -34,7 +34,7 @@ We've already been improving C++'s safety and ergonomics with every ISO C++ rele
 
 What if we could have our compatibility cake, and eat it too — by having:
 
-- 100% seamless **link compatibility always** (no marshaling, no thunks, no wrappers, no generated 'compatibility modules' to import/export C++ code to/from a different world); and
+- 100% seamless **link compatibility always** (no marshaling, no thunks, no wrappers, no generated 'compatibility modules' to import/export C++ code from/to a different world); and
     
 - 100% seamless **backward source compatibility always available**, including 100% SFINAE and macro compatibility, **but only pay for it when we use it**... that is, apply C++'s familiar "zero-overhead principle" also to backward source compatibilty?
 
