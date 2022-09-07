@@ -18,7 +18,9 @@ This is one of many experiments going on across the industry looking at ways to 
 
 ## 1) This is about C++, not about something else.
 
-<image align="right" width="150" src="https://user-images.githubusercontent.com/1801526/188887745-23e0c3a0-3ea7-4589-993c-f54fe662b107.png"> I love ISO C++. I want to keep writing code in C++... just "nicer":
+<image align="right" width="150" src="https://user-images.githubusercontent.com/1801526/188887745-23e0c3a0-3ea7-4589-993c-f54fe662b107.png"> I love ISO C++. It's the best tool in the world today for me to write the programs I want and need.
+    
+So I want to keep writing code in C++... just "nicer":
     
 - with less ceremony to remember;
 
