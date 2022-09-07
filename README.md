@@ -58,46 +58,26 @@ An alternative syntax would be a cleanly demarcated "bubble of new code" that wo
    
 The cppfront compiler is an experiment to try to develop a proof of concept that evolution along these lines may be possible. For example, this repo's `parse.h` is a standalone context-free parser that is growing month by month as I implement more of the "syntax #2" experiment.
 
-> **Important disclaimer: This isn't about making syntax pretty, it's about fixing semantics.** The syntax is just the gateway (and we should paint it a nice color too), but the real payoff is getting access to the new open space beyond where can (finally) fix the semantics.
+> **Important disclaimer: This isn't about a pretty syntax, it's about fixing semantics.** The real payoff is getting access to a new open space in C++ that's free of backward source compatibility constraints where can (finally) fix semantics as we see fit. The additional syntax is just a gateway to get to that space -- and a gate should also look nice, but the gate is the route, it's not itself not the goal.
 
 # How do I build cppfront?
 
 <image align="right" width="120" src="https://user-images.githubusercontent.com/1801526/188906112-ef377a79-b6a9-4a30-b318-10b51d8ea934.png">
 Cppfront builds with any major C++20 compiler.
-
-MSVC build instructions:
-
-    cl cppfront.cpp -std:c++20 -EHsc
-
-GCC build instructions:
-
-    g++-10 cppfront.cpp -std=c++20 
     
-Clang build instructions:
-
-    clang++-12 cppfront.cpp -std=c++20
+- MSVC build instructions: `cl cppfront.cpp -std:c++20 -EHsc`
+- GCC build instructions: `g++-10 cppfront.cpp -std=c++20`
+- Clang build instructions: `clang++-12 cppfront.cpp -std=c++20`
 
 That's it. There are no outside dependencies (no YACC/Bison/...), no build scripts (no CMake/Bazel/...). I started cppfront with just a blank editor and the C++ standard library, and have stuck to that so far. The parser is custom hand-written code, so is everything else, and all the code in this repo is my own (including a small function that is also in the Microsoft GSL implementation because I contributed it there too).
 
 # How do I build my `.cpp2` file?
 
-Just run
+Just run `cppfront your.cpp2`, then run the generated `your.cpp` through any major C++20 compiler after putting `/cppfront/include` in the path so it can find `cpp2util.h`.
 
-    cppfront your.cpp2
-
-then run it through any major C++20 compiler after putting `/cppfront/include` in the path so it can find `cpp2util.h`.
-
-MSVC would be:
-
-    cl your.cpp -std:c++20 -EHsc
-
-GCC would be:
-
-    g++-10 your.cpp -std=c++20 
-    
-Clang would be:
-
-    clang++-12 you.cpp -std=c++20
+- MSVC would be: `cl your.cpp -std:c++20 -EHsc`
+- GCC would be: `g++-10 your.cpp -std=c++20`
+- Clang would be: `clang++-12 you.cpp -std=c++20`
 
 That's it. 
 
