@@ -412,7 +412,7 @@ public:
         print("\n");
         print("\nNote: This is a hilariously incomplete personal project.");
         print("\nIt's known to be incomplet and incorrekt, and it has lots of b");
-        print("\nad formAt ting. Absolutely no warranty - use at your own risk.");
+        print("\nad formAt ting. Absolutely no warranty - try at your own risk.");
         print("\n");
     }
 

@@ -331,23 +331,7 @@ struct postfix_expression_node
         return expr->position();
     }
 
-    auto visit(auto& v, int depth) -> void
-    {
-        v.start(*this, depth);
-        assert (expr);
-        expr->visit(v, depth+1);
-        for (auto const& x : ops) {
-            assert (x.op);
-            v.start(*x.op, depth+1);
-            if (x.id_expr) {
-                x.id_expr->visit(v, depth+1);
-            }
-            if (x.expr_list) {
-                x.expr_list->visit(v, depth+1);
-            }
-        }
-        v.end(*this, depth);
-    }
+    auto visit(auto& v, int depth) -> void;
 };
 
 auto prefix_expression_node::position() const -> source_position
@@ -499,6 +483,23 @@ struct id_expression_node
     }
 };
 
+auto postfix_expression_node::visit(auto& v, int depth) -> void
+{
+    v.start(*this, depth);
+    assert (expr);
+    expr->visit(v, depth+1);
+    for (auto const& x : ops) {
+        assert (x.op);
+        v.start(*x.op, depth+1);
+        if (x.id_expr) {
+            x.id_expr->visit(v, depth+1);
+        }
+        if (x.expr_list) {
+            x.expr_list->visit(v, depth+1);
+        }
+    }
+    v.end(*this, depth);
+}
 
 struct statement_node;
 
