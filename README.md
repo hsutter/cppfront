@@ -4,7 +4,7 @@
 
 See [License](LICENSE)
 
-Cppfront is a personal experimental compiler from an experimental C++ 'syntax 2' -> today's 'syntax 1.' It's aimed at exploring whether there's a way we can evolve C++ itself to become 10x simpler, safer, and more toolable, if we had an alternate C++ syntax which would be free of backward source compatibility constraints.
+Cppfront is a personal experimental compiler from an experimental C++ 'syntax 2' to today's 'syntax 1.' The goal is to explore whether there's a way we can evolve C++ itself to become 10x simpler, safer, and more toolable, if we had an alternate C++ syntax that would be a "bubble of new code that doesn't exist today," free of backward source compatibility constraints and where we could make arbitrary improvements (e.g., change defaults, remove unsafe parts, make the language context-free and order-independent).
 
 I'm sharing this work because I hope to start a public conversation about what could be possible _**within C++**_’s own evolution to rejuvenate C++, now that we have C++20 and soon C++23 to build upon. This compiler is currently still hilariously incomplete (e.g., as of this writing, there's no support for classes!). Don't contemplate any real use yet. :) And this is my own project; I am not speaking for any company or for the ISO C++ committee, though whenever parts of this do pan out I intend to keep bringing them to ISO C++ as evolution proposals.
 
@@ -12,6 +12,7 @@ I'm sharing this work because I hope to start a public conversation about what c
 
 ## What is this project?
 
+<image align="right" width="320" src="https://user-images.githubusercontent.com/1801526/189231387-368c0090-8784-48fa-9f73-80ccda1c3c8a.png">
 This a personal project for my own use and experimentation, to learn some things, prove out some concepts, and share some ideas. As parts may work out, I'll continue to bring those results to ISO C++ as proposals: I did most of this design work in 2015-16, and since then every evolution proposal paper I've brought to ISO C++, and every conference talk I've given, has come from this work — just presented as a standalone proposal under today's syntax to help validate and refine one part of the design, then  another, then another. This cppfront compiler is a step to bring them together under an alternative 'syntax 2' for C++, that will let me try out broader coordinated improvements free of concerns about breaking any existing code.
 
 This is one of many experiments going on across the industry looking at ways to accomplish a major C++ evolution. Several of those other experiments' designers have seen this 'syntax 2' work privately over the past 5-6 years, and if they found parts of this useful in their own experiments then I think that's great, we should learn from each other and learn together.
