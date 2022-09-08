@@ -69,7 +69,9 @@ Cppfront builds with any major C++20 compiler.
 - GCC build instructions: `g++-10 cppfront.cpp -std=c++20 -o cppfront`
 - Clang build instructions: `clang++-12 cppfront.cpp -std=c++20 -o cppfront`
 
-That's it. There are no outside dependencies (no YACC/Bison/...), no build scripts (no CMake/Bazel/...). I started cppfront with just a blank editor and the C++ standard library, and have stuck to that so far. The parser is custom hand-written code, so is everything else, and all the code in this repo is my own (including a small function that is also in the Microsoft GSL implementation because I contributed it there too).
+That's it.
+
+There are no outside dependencies (no YACC/Bison/...), no build scripts (no CMake/Bazel/...). I started cppfront with just a blank editor and the C++ standard library, and have stuck to that so far. The parser is custom hand-written code, so is everything else, and all the code in this repo is my own (including a small function that is also in the Microsoft GSL implementation because I contributed it there too).
 
 # How do I build my `.cpp2` file?
 
