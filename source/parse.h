@@ -1277,7 +1277,7 @@ private:
     {
         auto n = std::make_unique<primary_expression_node>();
 
-        if (auto inspect = inspect_expression())
+        if (auto inspect = inspect_expression(true))
         {
             n->expr = std::move(inspect);
             return n;
@@ -2226,7 +2226,7 @@ private:
     //G     alternative
     //G     alternative-seq alternative
     //G
-    auto inspect_expression() -> std::unique_ptr<inspect_expression_node> 
+    auto inspect_expression(bool is_expression) -> std::unique_ptr<inspect_expression_node> 
     {
         if (curr() != "inspect") {
             return {};
@@ -2262,12 +2262,22 @@ private:
                 error("invalid alternative in inspect");
                 return {};
             }
+            if (is_expression && a->statement->statement.index() != statement_node::expression) {
+                error("an inspect expression alternative must be just an expression "
+                    "(not a braced block) that will be used as the value of the inspect expression");
+                return {};
+            }
             n->alternatives.push_back( std::move(a) );
         }
 
         n->close_brace = curr().position();
-
         next();
+
+        if (n->alternatives.empty()) {
+            error("inspect body cannot be empty - add at least one alternative");
+            return {};
+        }
+
         return n;
     }
 
@@ -2311,7 +2321,7 @@ private:
             return n;
         }
 
-        else if (auto i = inspect_expression()) {
+        else if (auto i = inspect_expression(false)) {
             n->statement = std::move(i);
             assert (n->statement.index() == statement_node::inspect);
             return n;

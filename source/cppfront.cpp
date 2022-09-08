@@ -1149,6 +1149,83 @@ public:
 
     //-----------------------------------------------------------------------
     //
+    auto emit(inspect_expression_node const& n, bool is_expression) -> void
+    {
+        if (is_expression) {
+            printer.print_cpp2("[&]", n.position());
+        }
+        printer.print_cpp2("{ auto&& __expr = ", n.position());
+
+        assert(n.expression);
+        emit(*n.expression);
+        printer.print_cpp2(";", n.position());
+
+        auto constexpr_qualifier = std::string{};
+        if (n.is_constexpr) {
+            constexpr_qualifier = "constexpr ";
+        }
+
+        assert(n.identifier && *n.identifier == "inspect");
+
+        assert(!n.alternatives.empty());
+        auto found_wildcard = false;
+        for (auto first = true; auto&& alt : n.alternatives)
+        {
+            assert(alt);
+            if (!first) {
+                printer.print_cpp2("else ", alt->position());
+            }
+            first = false;
+
+            auto id = std::string{};
+            printer.emit_to_string(&id);
+            assert(alt->id_expression);
+            emit(*alt->id_expression);
+            printer.emit_to_string();
+
+            if (*alt->identifier == "is")
+            {
+                if (id == "_") {
+                    found_wildcard = true;
+                }
+                else {
+                    printer.print_cpp2("if " + constexpr_qualifier + "(cpp2::is<" + id + ">(__expr)) ", alt->position());
+                }
+
+                if (is_expression) {
+                    assert(alt->statement->statement.index() == statement_node::expression);
+                    printer.print_cpp2("return ", alt->position());
+                }
+
+                emit(*alt->statement);
+
+                if (is_expression) {
+                    printer.print_cpp2(";", alt->position());
+                }
+            }
+            else {
+                errors.emplace_back(
+                    alt->position(),
+                    "(temporary alpha limitation) cppfront is still learning 'inspect' - only simple 'is' alternatives are currently supported"
+                );
+                return;
+            }
+        }
+
+        if (is_expression && !found_wildcard) {
+            errors.emplace_back(
+                n.position(),
+                "an inspect expression must have an `is _` match-anything wildcard alternative"
+            );
+            return;
+        }
+
+        printer.print_cpp2("}\n", n.close_brace);
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
     auto emit(selection_statement_node const& n) -> void
     {
         assert(n.identifier);
@@ -1364,6 +1441,7 @@ public:
         try_emit<primary_expression_node::identifier     >(n.expr);
         try_emit<primary_expression_node::expression_list>(n.expr);
         try_emit<primary_expression_node::id_expression  >(n.expr);
+        try_emit<primary_expression_node::inspect        >(n.expr, true);
 
         if (n.expr.index() == primary_expression_node::declaration)
         {
@@ -1898,6 +1976,7 @@ public:
         try_emit<statement_node::return_    >(n.statement);
         try_emit<statement_node::iteration  >(n.statement);
         try_emit<statement_node::contract   >(n.statement);
+        try_emit<statement_node::inspect    >(n.statement, false);
     }
 
 
