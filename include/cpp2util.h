@@ -366,6 +366,17 @@ auto is( X const* x ) -> bool {
 //-------------------------------------------------------------------------------------------------------------
 //  Built-in as (partial)
 //
+template< typename C >
+auto as(...) -> auto {
+    return nonesuch;
+}
+
+template< typename C, typename X >
+    requires std::is_same_v<C, X>
+auto as( X const& x ) -> auto&& {
+    return x;
+}
+
 template< typename C, typename X >
     requires std::is_base_of_v<C, X>
 auto as( X&& x ) -> C&& {
@@ -448,29 +459,28 @@ auto as( std::variant<Ts...> const& x ) {
 //-------------------------------------------------------------------------------------------------------------
 //  std::any is and as
 //
-template<typename T>
-constexpr auto is( std::any const& x ) -> bool
+template<typename T, typename X>
+    requires std::is_same_v<X,std::any>
+constexpr auto is( X const& x ) -> bool
     { return x.type() == typeid(T); }
 
-template<typename T>  requires (!std::is_reference_v<T>)
-constexpr auto as( std::any const& x ) -> T
+template<typename T, typename X>
+    requires (!std::is_reference_v<T> && std::is_same_v<X,std::any>)
+constexpr auto as( X const& x ) -> T
     { return std::any_cast<T>( x ); }
 
 
 //-------------------------------------------------------------------------------------------------------------
 //  std::optional is and as
 //
-template<typename T>
-constexpr auto is( std::optional<T> const& x ) -> bool
+template<typename T, typename X>
+    requires std::is_same_v<X,std::optional<T>>
+constexpr auto is( X const& x ) -> bool
     { return x.has_value(); }
 
-template<typename T, typename U>
-    requires (!std::is_same_v<T,U>)
-constexpr auto is( std::optional<U> const& x ) -> bool
-    { return false; }
-
-template<typename T>
-constexpr auto as( std::optional<T> const& x ) -> auto&&
+template<typename T, typename X>
+    requires std::is_same_v<X,std::optional<T>>
+constexpr auto as( X const& x ) -> auto&&
     { return x.value(); }
 
 
