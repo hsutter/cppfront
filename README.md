@@ -1,10 +1,10 @@
 # cppfront
 
-Copyright (c) Herb Sutter
+<image align="right" width="320" src="https://user-images.githubusercontent.com/1801526/189203090-bbf2eea0-83e5-4962-b2da-f81224152dcb.png"> Copyright (c) Herb Sutter
 
 See [License](LICENSE)
 
-<image align="right" width="320" src="https://user-images.githubusercontent.com/1801526/189203090-bbf2eea0-83e5-4962-b2da-f81224152dcb.png"> Cppfront is a personal experimental compiler from an experimental C++ 'syntax 2' -> today's 'syntax 1.' It's aimed at exploring whether there's a way we can evolve C++ itself to become 10x simpler, safer, and more toolable, if we had an alternate C++ syntax which would be free of backward source compatibility constraints.
+Cppfront is a personal experimental compiler from an experimental C++ 'syntax 2' -> today's 'syntax 1.' It's aimed at exploring whether there's a way we can evolve C++ itself to become 10x simpler, safer, and more toolable, if we had an alternate C++ syntax which would be free of backward source compatibility constraints.
 
 I'm sharing this work because I hope to start a public conversation about what could be possible _**within C++**_’s own evolution to rejuvenate C++, now that we have C++20 and soon C++23 to build upon. This compiler is currently still hilariously incomplete (e.g., as of this writing, there's no support for classes!). Don't contemplate any real use yet. :) And this is my own project; I am not speaking for any company or for the ISO C++ committee, though whenever parts of this do pan out I intend to keep bringing them to ISO C++ as evolution proposals.
 
