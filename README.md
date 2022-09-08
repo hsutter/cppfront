@@ -6,24 +6,21 @@ See [License](LICENSE)
 
 Cppfront is a personal experimental compiler from an experimental C++ 'syntax 2' to today's 'syntax 1.' The goal is to explore whether there's a way we can evolve C++ itself to become 10x simpler, safer, and more toolable, if we had an alternate C++ syntax that would be a "bubble of new code that doesn't exist today," free of backward source compatibility constraints and where we could make arbitrary improvements (e.g., change defaults, remove unsafe parts, make the language context-free and order-independent).
 
-I'm sharing this work because I hope to start a public conversation about what could be possible _**within C++**_’s own evolution to rejuvenate C++, now that we have C++20 and soon C++23 to build upon. This compiler is currently still hilariously incomplete (e.g., as of this writing, there's no support for classes!). Don't contemplate any real use yet. :) And this is my own project; I am not speaking for any company or for the ISO C++ committee, though whenever parts of this do pan out I intend to keep bringing them to ISO C++ as evolution proposals.
+I'm sharing this work because I hope to start a conversation about what could be possible _**within C++**_’s own evolution to rejuvenate C++, now that we have C++20 and soon C++23 to build upon. This compiler is currently still hilariously incomplete (e.g., as of this writing, there's no support for classes!). Don't contemplate any real use yet. :) And this is my own project; I am not speaking for any company or for the ISO C++ committee, though whenever parts of this do pan out I intend to keep bringing them to ISO C++ as evolution proposals.
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
 
 ## What is this project?
 
-<image align="right" width="320" src="https://user-images.githubusercontent.com/1801526/189231387-368c0090-8784-48fa-9f73-80ccda1c3c8a.png">
-This a personal project for my own use and experimentation, to learn some things, prove out some concepts, and share some ideas. As parts may work out, I'll continue to bring those results to ISO C++ as proposals: I did most of this design work in 2015-16, and since then every evolution proposal paper I've brought to ISO C++, and every conference talk I've given, has come from this work — just presented as a standalone proposal under today's syntax to help validate and refine one part of the design, then  another, then another. This cppfront compiler is a step to bring them together under an alternative 'syntax 2' for C++, that will let me try out broader coordinated improvements free of concerns about breaking any existing code.
+<image align="right" width="320" src="https://user-images.githubusercontent.com/1801526/189234171-188a5ef5-3cdf-4139-b907-2ca6c9036110.png"> This a personal project for my own use and experimentation, to learn some things, prove out some concepts, and share some ideas. As parts may work out, I'll continue to bring those results to ISO C++ as proposals: I did most of this design work in 2015-16, and since then every evolution proposal paper I've brought to ISO C++, and every conference talk I've given, has come from this work — just presented as a standalone proposal under today's syntax to help validate and refine one part of the design, then  another, then another. This cppfront compiler is another step to prototype them together and under an alternative 'syntax 2' for C++, that will let me try out broader coordinated improvements free of concerns about breaking any existing code.
 
-This is one of many experiments going on across the industry looking at ways to accomplish a major C++ evolution. Several of those other experiments' designers have seen this 'syntax 2' work privately over the past 5-6 years, and if they found parts of this useful in their own experiments then I think that's great, we should learn from each other and learn together.
+This is one of many experiments going on across the industry looking at ways to accomplish a major C++ evolution. Several of those other experiments' designers have seen this 'syntax 2' work privately since 2016, and if they found parts of this useful in their own experiments then I think that's great, we should learn from each other and I look forward to seeing how their experiments work out too.
     
-What makes this experiment different from the others? Two main things...
+<image align="right" width="150" src="https://user-images.githubusercontent.com/1801526/188887745-23e0c3a0-3ea7-4589-993c-f54fe662b107.png"> What makes this experiment different from the others? Two main things...
 
 ### 1) This is about C++, not about something else
 
-<image align="right" width="150" src="https://user-images.githubusercontent.com/1801526/188887745-23e0c3a0-3ea7-4589-993c-f54fe662b107.png"> For me, ISO C++ is the best tool in the world today to write the programs I want and need.
-    
-**I want to keep writing code in C++... just "nicer":**
+For me, ISO C++ is the best tool in the world today to write the programs I want and need. I want to keep writing code in C++... just "nicer":
     
 - with less ceremony to remember;
 
@@ -48,20 +45,21 @@ I want us to aim for major C++ evolution directed toward things that will make u
     
 ### 2) This is about improving safety, simplicity, and toolability, not about random drive-by improvements
     
-<image align="right" width="320" src="https://user-images.githubusercontent.com/1801526/188898468-17e5ce70-d417-48d6-b204-ad9e4caa30ed.png"> My specific goal is to explore the question: Can we make C++ **10x safer, simpler, and more toolable** if we had a "syntax #2" alternative syntax for C++, within which we are completely free to improve **semantics** free of any backward source compatibility restrictions? We want each proposed improvement address a known C++ pain point, and in a measurable way (e.g., reduce a class of CVEs (vulnerabilities) by some quantifiable %, reduce the amount of guidance we have to teach by some quantifiable %).
+<image align="right" width="320" src="https://user-images.githubusercontent.com/1801526/189236486-0b5a4892-42c8-4486-9722-bb60a5df8c7e.png"> My specific goal is to explore the question: Can we make C++ **10x safer, simpler, and more toolable** if C++ had an alternative "syntax #2," within which we could be completely free to **improve semantics** by applying 30 years' worth of C++ language experience without any backward source compatibility constraints? We want each proposed improvement to address a known C++ pain point, and in a measurable way (e.g., reduce a class of CVEs (vulnerabilities) by some quantifiable %, reduce the amount of guidance we have to teach by some quantifiable %).
     
 An alternative syntax would be a cleanly demarcated "bubble of new code" that would let us do things that we can never do in today's syntax without breaking the world, such as to:
 
 - fix defaults (e.g., make `[[nodiscard]]` the default);
 - double down on modern C++ (e.g., make C++20 modules and C++23 `import std;` the default);
-- remove unsafe parts that are already superseded (e.g., no unsafe `union` or pointer arithmetic);
+- remove unsafe parts that are already superseded (e.g., no unsafe `union` or pointer arithmetic, use `std::variant` and `std::span` instead as we already teach);
 - have type and memory safety by default (e.g., make the [C++ Core Guidelines safety profiles](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#S-profile) the default and required);
-- eliminate 90% of the guidance we have to teach about today's complex language (e.g., by eliminating special cases, and refactoring the language into a smaller number of regular composable features); and
-- make it easy to write a parser (e.g., having a context-free grammar and order-independent semantics).
+- eliminate 90% of the guidance we have to teach about today's complex language (e.g., make common guidance the language default, eliminate irregular special cases through generalization, refactor the language into a smaller number of regular composable features);
+- make it easy to write a parser (e.g., having a context-free grammar); and
+- make it easy to write refactoring and other tools (e.g., order-independent semantics).
    
 The cppfront compiler is an experiment to try to develop a proof of concept that evolution along these lines may be possible. For example, this repo's `parse.h` is a standalone context-free parser that is growing month by month as I implement more of the "syntax #2" experiment.
 
-> **Important disclaimer: This isn't about a pretty syntax, it's about fixing semantics.** The real payoff is getting access to a new open space in C++ that's free of backward source compatibility constraints where can (finally) fix semantics as we see fit. The additional syntax is just a gateway to get to that space -- and a gate should also look nice, but the gate is the route, it's not itself not the goal.
+> **Important disclaimer: This isn't about a pretty syntax, it's about fixing semantics.** The real payoff is getting access to a new open space in C++ that's free of backward source compatibility constraints where can (finally) fix semantics as we see fit. The additional syntax is just a gateway to get to that space — and a gate should also look nice, but the gate is the route, it's not itself not the goal.
 
 ## How do I build cppfront?
 
@@ -94,6 +92,6 @@ For now I'm not posting a lot of written documentation because that would imply 
 Here's where to find out more about my 'syntax #2' experiment:
 
 - **My CppCon 2022 talk** [link coming soon] — this is the primary documentation right now. See also every talk I've given and paper I've written since 2015, each of which details an individual part of this design experiment, but presented in today's C++ syntax as a standalone C++ evolution proposal.
-- The [cppfront regression tests](https://github.com/hsutter/cppfront/tree/main/regression-tests/test-results) which show dozens of `.cpp2` files and the `.cpp` file each one is translated to. Each filename briefly describes the language features the test demonstrates (e.g., contracts, parameter passing, bounds safety, type-safe `is` queries and `as` casts, initialization safety, and generalized value capture including in function expressions (fka 'lambda functions'), postconditions, and string interpolation).
+- **The [cppfront regression tests](https://github.com/hsutter/cppfront/tree/main/regression-tests/test-results)** which show dozens of working examples, each with a`.cpp2` file and the `.cpp` file it is translated to. Each filename briefly describes the language features the test demonstrates (e.g., contracts, parameter passing, bounds safety, type-safe `is` queries and `as` casts, initialization safety, and generalized value capture including in function expressions ('lambdas'), postconditions, and string interpolation).
 
 I'll add a few overview examples here soon...
