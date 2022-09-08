@@ -1,6 +1,6 @@
 # cppfront
 
-A personal experimental C++ Syntax 2 -> Syntax 1 compiler
+<image align="right" width="320" src="https://user-images.githubusercontent.com/1801526/189203090-bbf2eea0-83e5-4962-b2da-f81224152dcb.png"> A personal experimental C++ Syntax 2 -> Syntax 1 compiler, aimed at exploring whether there's a way we can evolve C++ itself to become 10x simpler, safer, and more toolable.
 
 Copyright (c) Herb Sutter
 
@@ -10,7 +10,6 @@ See [License](LICENSE)
 
 # What is this project?
 
-<image align="right" width="320" src="https://user-images.githubusercontent.com/1801526/189203090-bbf2eea0-83e5-4962-b2da-f81224152dcb.png">
 This a personal project for my own use and experimentation, to learn some things, prove out some concepts, and share some ideas. As parts may work out, I'll continue to bring those results to ISO C++ as proposals: I did most of this design work in 2015-16, and since then every evolution proposal paper I've brought to ISO C++, and every conference talk I've given, has come from this work and just been presented as a standalone proposal under today's syntax, to help validate and refine that part of the design. This cppfront compiler is a step to bring them together under an alternative 'syntax 2' for C++, that will let me try out broader coordinated improvements free of concerns about breaking any existing code.
 
 I'm sharing this work because I hope to start a conversation about what could be possible _**within C++**_’s own evolution to rejuvenate C++. This compiler is currently still hilariously incomplete (e.g., as of this writing, there's no support for classes!). Don't contemplate any real use yet. :)
