@@ -18,7 +18,7 @@ This is one of many experiments going on across the industry looking at ways to 
     
 <image align="right" width="150" src="https://user-images.githubusercontent.com/1801526/188887745-23e0c3a0-3ea7-4589-993c-f54fe662b107.png"> What makes this experiment different from the others? Two main things...
 
-### 1) This is about C++20/23/..., not about something else
+### 1) This is about C++20/23/... — not about something else
 
 For me, ISO C++ is the best tool in the world today to write the programs I want and need. I want to keep writing code in C++... just "nicer":
     
@@ -43,7 +43,7 @@ I want to encourage us to look for ways to push the boundaries to bring C++ itse
 I want us to aim for major C++ evolution directed toward things that will make us better C++ programmers — not programmers of something else.
 
     
-### 2) This is about improving safety, simplicity, and toolability, not about random drive-by improvements
+### 2) This is about improvements to safety, simplicity, and toolability — not about green-field design or random drive-by improvements
     
 <image align="right" width="320" src="https://user-images.githubusercontent.com/1801526/189236486-0b5a4892-42c8-4486-9722-bb60a5df8c7e.png"> My specific goal is to explore the question: Can we make C++ **10x safer, simpler, and more toolable** if C++ had an alternative "syntax #2," within which we could be completely free to **improve semantics** by applying 30 years' worth of C++ language experience without any backward source compatibility constraints? We want each proposed improvement to address a known C++ pain point, and in a measurable way (e.g., reduce a class of CVEs (vulnerabilities) by some quantifiable %, reduce the amount of guidance we have to teach by some quantifiable %).
     
