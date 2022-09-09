@@ -90,7 +90,9 @@ Just run `cppfront your.cpp2`, then run the generated `your.cpp` through any maj
 - GCC would be: `g++-10 your.cpp -std=c++20`
 - Clang would be: `clang++-12 your.cpp -std=c++20`
 
-That's it. 
+That's it.
+    
+Of course, if your code wants to use features that are under additional switches provided by your compiler, then you'll need to add those switches. For example, if you're using post-C++20 features you may need to specify `-std=c++2a` or `-std:c++latest`, if you're using OpenMP you may need to specify something like `/openmp` or `-fopenmp`, and so forth. This especially comes up in mixed Cpp1/Cpp2 source files, because of course the Cpp1 code can use anything your C++ compiler understands, including nonstandard extensions, `#pragmas`, etc.
 
 
 ## Where's the documentation?
