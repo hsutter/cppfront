@@ -16,11 +16,11 @@ I'm sharing this work because I hope to start a conversation about what could be
 
 This is one of many experiments going on across the industry looking at ways to accomplish a major C++ evolution. Several of those other experiments' designers have seen this 'syntax 2' work privately since 2016, and if they found parts of this useful in their own experiments then I think that's great, we should learn from each other and I look forward to seeing how their experiments work out too.
     
-<image align="right" width="150" src="https://user-images.githubusercontent.com/1801526/188887745-23e0c3a0-3ea7-4589-993c-f54fe662b107.png"> What makes this experiment different from the others? Two main things...
+What makes this experiment different from the others? Two main things...
 
 ### 1) This is about C++20/23/... — not about something else
 
-For me, ISO C++ is the best tool in the world today to write the programs I want and need. I want to keep writing code in C++... just "nicer":
+<image align="right" width="150" src="https://user-images.githubusercontent.com/1801526/188887745-23e0c3a0-3ea7-4589-993c-f54fe662b107.png"> For me, ISO C++ is the best tool in the world today to write the programs I want and need. I want to keep writing code in C++... just "nicer":
     
 - with less ceremony to remember;
 
