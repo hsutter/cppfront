@@ -54,10 +54,10 @@ An alternative syntax would be a cleanly demarcated "bubble of new code" that wo
 - remove unsafe parts that are already superseded (e.g., no unsafe `union` or pointer arithmetic, use `std::variant` and `std::span` instead as we already teach);
 - have type and memory safety by default (e.g., make the [C++ Core Guidelines safety profiles](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#S-profile) the default and required);
 - eliminate 90% of the guidance we have to teach about today's complex language (e.g., make common guidance the language default, eliminate irregular special cases through generalization, refactor the language into a smaller number of regular composable features);
-- make it easy to write a parser (e.g., having a context-free grammar); and
-- make it easy to write refactoring and other tools (e.g., order-independent semantics).
+- make it easy to write a parser (e.g., have a context-free grammar); and
+- make it easy to write refactoring and other tools (e.g., have order-independent semantics).
    
-The cppfront compiler is an experiment to try to develop a proof of concept that evolution along these lines may be possible. For example, this repo's `parse.h` is a standalone context-free parser that is growing month by month as I implement more of the "syntax #2" experiment.
+The cppfront compiler is an experiment to try to develop a proof of concept that evolution along these lines may be possible. For example, this repo's `parse.h` is a standalone context-free parser that is growing month by month as I implement more of the "syntax #2" experiment, and I hope for it to become a standalone context-free parser for a flavor of C++ that has full parity with the expressive power of today's C++.
 
 > **Important disclaimer: This isn't about a pretty syntax, it's about fixing semantics.** The real payoff is getting access to a new open space in C++ that's free of backward source compatibility constraints where can (finally) fix semantics as we see fit. The additional syntax is just a gateway to get to that space — and a gate should also look nice, but the gate is the route, it's not itself not the goal.
 
