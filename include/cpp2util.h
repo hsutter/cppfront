@@ -20,22 +20,159 @@
 #ifndef __CPP2_UTIL
 #define __CPP2_UTIL
 
+//  If the cppfront user requested -pure-cpp2, this will be set
+//  and we should be using modules only
 #ifdef CPP2_USE_MODULES
-    //  Note: When C++23 "import std;" is available, we will swich to that here
-    //  In the meantime, this is what works on MSVC which is the only compiler
-    //  I've been able to get access to that implements modules enough to demo
-    //  (but we'll have more full-C++20 compilers soon!)
-    import std.core;
-    import std.regex;
-    import std.filesystem;
-    import std.memory;
-    import std.threading;
-    #define assert(x) { if(!(x)) std::terminate(); }
 
-    //  Suppress spurious modules warning
-    #ifdef _MSC_VER
-        #pragma warning(disable:5050)
+    //  If we have real modules, use those the best we can
+    //  as implementations are still underway
+    #ifdef __cpp_modules
+
+        #ifndef _MSC_VER
+            //  This is the ideal -- note that we just voted "import std;"
+            //  into draft C++23 in late July 2022, so implementers haven't 
+            //  had time to catch up yet. As of this writing (September 2022)
+            //  no compiler will take this path yet, but they're on the way...
+            import std;
+        #else // MSVC
+            //  Note: When C++23 "import std;" is available, we will switch to that here
+            //  In the meantime, this is what works on MSVC which is the only compiler
+            //  I've been able to get access to that implements modules enough to demo
+            //  (but we'll have more full-C++20 compilers soon!)
+            import std.core;
+            import std.regex;
+            import std.filesystem;
+            import std.memory;
+            import std.threading;
+
+            //  Suppress spurious MSVC modules warning
+            #pragma warning(disable:5050)
+        #endif
+
+    //  Otherwise, "fake it till you make it"... include (nearly) all the
+    //  standard headers, with a feature test #ifdef for each header that
+    //  isn't yet supported by all of { VS 2022, g++-10, clang++-12 }
+    //  ... this should approximate "import std;" on those compilers
+    #else
+        #include <concepts>
+        #ifdef __cpp_lib_coroutine
+            #include <coroutine>
+        #endif
+        #include <any>
+        #include <bitset>
+        #include <chrono>
+        #include <compare>
+        #include <csetjmp>
+        #include <csignal>
+        #include <cstdarg>
+        #include <cstddef>
+        #include <cstdlib>
+        #include <ctime>
+        #include <functional>
+        #include <initializer_list>
+        #include <optional>
+        #ifdef __cpp_lib_source_location
+            #include <source_location>
+        #endif
+        #include <tuple>
+        #include <type_traits>
+        #include <typeindex>
+        #include <typeinfo>
+        #include <utility>
+        #include <variant>
+        #include <version>
+        #include <memory>
+        #include <memory_resource>
+        #include <new>
+        #include <scoped_allocator>
+        #include <cfloat>
+        #include <cinttypes>
+        #include <climits>
+        #include <cstdint>
+        #include <limits>
+        #include <cassert>
+        #include <cerrno>
+        #include <exception>
+        #include <stdexcept>
+        #include <system_error>
+        #include <cctype>
+        #include <charconv>
+        #include <cstring>
+        #include <cuchar>
+        #include <cwchar>
+        #include <cwctype>
+        #ifdef __cpp_lib_format
+            #include <format>
+        #endif
+        #include <string>
+        #include <string_view>
+        #include <array>
+        #include <deque>
+        #include <forward_list>
+        #include <list>
+        #include <map>
+        #include <queue>
+        #include <set>
+        #include <span>
+        #include <stack>
+        #include <unordered_map>
+        #include <unordered_set>
+        #include <vector>
+        #include <iterator>
+        #include <ranges>
+        #include <algorithm>
+        #include <execution>
+        #include <bit>
+        #include <cfenv>
+        #include <cmath>
+        #include <complex>
+        #include <numbers>
+        #include <numeric>
+        #include <random>
+        #include <ratio>
+        #include <valarray>
+        #include <clocale>
+        #include <codecvt>
+        #include <locale>
+        #include <cstdio>
+        #include <fstream>
+        #include <iomanip>
+        #include <ios>
+        #include <iosfwd>
+        #include <iostream>
+        #include <istream>
+        #include <ostream>
+        #ifdef __cpp_lib_spanstream
+            #include <spanstream>
+        #endif
+        #include <sstream>
+        #include <streambuf>
+        #ifdef __cpp_lib_syncstream
+            #include <syncstream>
+        #endif
+        #include <filesystem>
+        #include <regex>
+        #include <atomic>
+        #ifdef __cpp_lib_barrier
+            #include <barrier>
+        #endif
+        #include <condition_variable>
+        #include <future>
+        #ifdef __cpp_lib_latch
+            #include <latch>
+        #endif
+        #include <mutex>
+        #ifdef __cpp_lib_semaphore
+            #include <semaphore>
+        #endif
+        #include <shared_mutex>
+        #include <stop_token>
+        #include <thread>
+        #include <iso646.h>
     #endif
+
+//  Otherwise, we're not in -pure-cpp2 and so just #include
+//  what we need in this header to make this self-contained
 #else
     #include <exception>
     #include <type_traits>
@@ -44,7 +181,6 @@
     #include <string>
     #include <string_view>
     #include <iostream>
-    #include <cassert>
     #include <variant>
     #include <any>
     #include <optional>
@@ -68,7 +204,123 @@ namespace cpp2 {
 
 //-----------------------------------------------------------------------
 // 
+//  contract_group
+// 
+//-----------------------------------------------------------------------
+//
+
+#ifdef CPP2_USE_SOURCE_LOCATION
+    #define CPP2_SOURCE_LOCATION_PARAM              , std::source_location where
+    #define CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT , std::source_location where = std::source_location::current()
+    #define CPP2_SOURCE_LOCATION_PARAM_SOLO         std::source_location where
+    #define CPP2_SOURCE_LOCATION_ARG                , where
+#else
+    #define CPP2_SOURCE_LOCATION_PARAM
+    #define CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT
+    #define CPP2_SOURCE_LOCATION_PARAM_SOLO
+    #define CPP2_SOURCE_LOCATION_ARG
+#endif
+
+//  For C++23: make this std::string_view and drop the macro
+//      Before C++23 std::string_view was not guaranteed to be trivially copyable,
+//      and so in<T> will pass it by const& and really it should be by value
+#define CPP2_MESSAGE_PARAM  char const*
+
+class contract_group {
+public:
+    using handler = void (*)(CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM);
+
+    constexpr contract_group  (handler h = nullptr)  : reporter(h) { }
+    constexpr auto set_handler(handler h) -> handler;
+    constexpr auto get_handler() const    -> handler { return reporter; }
+    constexpr auto expects    (bool b, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
+                                          -> void { if (!b) reporter(msg CPP2_SOURCE_LOCATION_ARG); }
+private:
+    handler reporter;
+};
+
+[[noreturn]] auto report_and_terminate(std::string_view group, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) noexcept -> void {
+    std::cerr
+#ifdef CPP2_USE_SOURCE_LOCATION
+        << where.file_name() << "("
+        << where.line() << ") "
+        << where.function_name() << ": "
+#endif
+        << group << " violation";
+    if (msg[0] != '\0') {
+        std::cerr << ": " << msg;
+    }
+    std::cerr << "\n";
+    std::terminate();
+}
+
+auto inline Default = contract_group( 
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+        report_and_terminate("Contract",      msg CPP2_SOURCE_LOCATION_ARG);
+    }
+);
+auto inline Bounds  = contract_group( 
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+        report_and_terminate("Bounds safety", msg CPP2_SOURCE_LOCATION_ARG);
+    } 
+);
+auto inline Null    = contract_group( 
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+        report_and_terminate("Null safety",   msg CPP2_SOURCE_LOCATION_ARG);
+    } 
+);
+auto inline Type    = contract_group( 
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+        report_and_terminate("Type safety",   msg CPP2_SOURCE_LOCATION_ARG);
+    } 
+);
+auto inline Testing = contract_group( 
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+        report_and_terminate("Testing",       msg CPP2_SOURCE_LOCATION_ARG);
+    } 
+);
+
+constexpr auto contract_group::set_handler(handler h) -> handler {
+    Default.expects(h);
+    auto old = reporter;
+    reporter = h;
+    return old;
+}
+
+
+//  Null pointer deref checking
+//
+auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
+{
+    //  Checking against a default-constructed value should be fine for iterators too
+    Null.expects(p != CPP2_TYPEOF(p){}, "dynamic null dereference attempt detected" CPP2_SOURCE_LOCATION_ARG);
+    return std::forward<decltype(p)>(p);
+}
+
+//  Subscript bounds checking
+//
+auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
+    requires (std::is_integral_v<CPP2_TYPEOF(arg)> &&
+             requires { std::ssize(x); x[arg]; })
+{
+    Bounds.expects(0 <= arg && arg < std::ssize(x), "out of bounds access attempt detected" CPP2_SOURCE_LOCATION_ARG);
+    return std::forward<decltype(x)>(x) [ std::forward<decltype(arg)>(arg) ];
+}
+
+auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
+    requires (!(std::is_integral_v<CPP2_TYPEOF(arg)> &&
+             requires { std::ssize(x); x[arg]; }))
+{
+    return std::forward<decltype(x)>(x) [ std::forward<decltype(arg)>(arg) ];
+}
+
+
+//-----------------------------------------------------------------------
+// 
 //  Arena objects for std::allocators
+// 
+//  Note: cppfront translates "new" to "cpp2_new", so in Cpp2 code
+//        these are invoked by simply "unique.new<T>" etc.
 // 
 //-----------------------------------------------------------------------
 //
@@ -131,10 +383,10 @@ class deferred_init {
 public:
     deferred_init() noexcept       : i {0} { }
    ~deferred_init() noexcept       { if (init) t.~T(); }
-    auto value()    noexcept -> T& { assert(init);  return t; }
+    auto value()    noexcept -> T& { Default.expects(init);  return t; }
 
-    auto construct     (auto ...args) -> void { assert(!init);  new (&t) T(std::forward<decltype(args)>(args)...);  init = true; }
-    auto construct_list(auto ...args) -> void { assert(!init);  new (&t) T{std::forward<decltype(args)>(args)...};  init = true; }
+    auto construct     (auto ...args) -> void { Default.expects(!init);  new (&t) T(std::forward<decltype(args)>(args)...);  init = true; }
+    auto construct_list(auto ...args) -> void { Default.expects(!init);  new (&t) T{std::forward<decltype(args)>(args)...};  init = true; }
 };
 
 template<typename T>
@@ -156,7 +408,7 @@ public:
     //  then leave it in the same state on exit (strong guarantee)
     ~out() {
         if (called_construct && uncaught_count != std::uncaught_exceptions()) {
-            assert (!has_t);
+            Default.expects(!has_t);
             dt->value().~T();
         }
     }
@@ -187,111 +439,6 @@ public:
         }
     }
 };
-
-
-//-----------------------------------------------------------------------
-// 
-//  contract_group
-// 
-//-----------------------------------------------------------------------
-//
-
-#ifdef CPP2_USE_SOURCE_LOCATION
-    #define CPP2_SOURCE_LOCATION_PARAM              , std::source_location where
-    #define CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT , std::source_location where = std::source_location::current()
-    #define CPP2_SOURCE_LOCATION_PARAM_SOLO         std::source_location where
-    #define CPP2_SOURCE_LOCATION_ARG                , where
-#else
-    #define CPP2_SOURCE_LOCATION_PARAM
-    #define CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT
-    #define CPP2_SOURCE_LOCATION_PARAM_SOLO
-    #define CPP2_SOURCE_LOCATION_ARG
-#endif
-
-//  For C++23: make this std::string_view and drop the macro
-//      Before C++23 std::string_view was not guaranteed to be trivially copyable,
-//      and so in<T> will pass it by const& and really it should be by value
-#define CPP2_MESSAGE_PARAM  char const*
-
-class contract_group {
-public:
-    using handler = void (*)(CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM);
-
-    constexpr contract_group  (handler h = nullptr)  : reporter(h) { }
-    constexpr auto set_handler(handler h) -> handler { assert(h); auto old = reporter; reporter = h; return old; }
-    constexpr auto get_handler() const    -> handler { return reporter; }
-    constexpr auto expects    (bool b, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
-                                          -> void { if (!b) reporter(msg CPP2_SOURCE_LOCATION_ARG); }
-private:
-    handler reporter;
-};
-
-[[noreturn]] auto report_and_terminate(std::string_view group, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) noexcept -> void {
-    std::cerr
-#ifdef CPP2_USE_SOURCE_LOCATION
-        << where.file_name() << "("
-        << where.line() << ") "
-        << where.function_name() << ": "
-#endif
-        << group << " violation";
-    if (msg[0] != '\0') {
-        std::cerr << ": " << msg;
-    }
-    std::cerr << "\n";
-    std::terminate();
-}
-
-auto inline Default = contract_group( 
-    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
-        report_and_terminate("Contract",      msg CPP2_SOURCE_LOCATION_ARG);
-    }
-);
-auto inline Bounds  = contract_group( 
-    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
-        report_and_terminate("Bounds safety", msg CPP2_SOURCE_LOCATION_ARG);
-    } 
-);
-auto inline Null    = contract_group( 
-    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
-        report_and_terminate("Null safety",   msg CPP2_SOURCE_LOCATION_ARG);
-    } 
-);
-auto inline Type    = contract_group( 
-    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
-        report_and_terminate("Type safety",   msg CPP2_SOURCE_LOCATION_ARG);
-    } 
-);
-auto inline Testing = contract_group( 
-    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
-        report_and_terminate("Testing",       msg CPP2_SOURCE_LOCATION_ARG);
-    } 
-);
-
-//  Null pointer deref checking
-//
-auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
-{
-    //  Checking against a default-constructed value should be fine for iterators too
-    Null.expects(p != CPP2_TYPEOF(p){}, "dynamic null dereference attempt detected" CPP2_SOURCE_LOCATION_ARG);
-    return std::forward<decltype(p)>(p);
-}
-
-//  Subscript bounds checking
-//
-auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
-    requires (std::is_integral_v<CPP2_TYPEOF(arg)> &&
-             requires { std::ssize(x); x[arg]; })
-{
-    Bounds.expects(0 <= arg && arg < std::ssize(x), "out of bounds access attempt detected" CPP2_SOURCE_LOCATION_ARG);
-    return std::forward<decltype(x)>(x) [ std::forward<decltype(arg)>(arg) ];
-}
-
-auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
-    requires (!(std::is_integral_v<CPP2_TYPEOF(arg)> &&
-             requires { std::ssize(x); x[arg]; }))
-{
-    return std::forward<decltype(x)>(x) [ std::forward<decltype(arg)>(arg) ];
-}
 
 
 //-----------------------------------------------------------------------
