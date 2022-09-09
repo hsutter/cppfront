@@ -66,15 +66,23 @@ The cppfront compiler is an experiment to try to develop a proof of concept that
 <image align="right" width="120" src="https://user-images.githubusercontent.com/1801526/188906112-ef377a79-b6a9-4a30-b318-10b51d8ea934.png">
 Cppfront builds with any major C++20 compiler.
     
-- MSVC build instructions: `cl cppfront.cpp -std:c++20 -EHsc`
-- GCC build instructions: `g++-10 cppfront.cpp -std=c++20 -o cppfront`
-- Clang build instructions: `clang++-12 cppfront.cpp -std=c++20 -o cppfront`
+#### MSVC build instructions
+    
+    cl cppfront.cpp -std:c++20 -EHsc
+    
+#### GCC build instructions
+    
+    g++-10 cppfront.cpp -std=c++20 -o cppfront
+    
+#### Clang build instructions
+    
+    clang++-12 cppfront.cpp -std=c++20 -o cppfront
 
 That's it.
 
 There are no outside dependencies (no YACC/Bison/...), no build scripts (no CMake/Bazel/...). I started cppfront with just a blank editor and the C++ standard library, and have stuck to that so far. The parser is custom hand-written code, so is everything else, and all the code in this repo is my own (including a small function that is also in the Microsoft GSL implementation because I contributed it there too).
 
-# How do I build my `.cpp2` file?
+## How do I build my `.cpp2` file?
 
 Just run `cppfront your.cpp2`, then run the generated `your.cpp` through any major C++20 compiler after putting `/cppfront/include` in the path so it can find `cpp2util.h`.
 
