@@ -15,6 +15,8 @@ I'm sharing this work because I hope to start a conversation about what could be
 ### History
 
 <image align="right" width="320" src="https://user-images.githubusercontent.com/1801526/189241726-db92ae64-2b2f-4463-a0c3-87794062da9c.png"> I did most of the 'syntax 2' design work in 2015-16. Since then, every evolution proposal paper I've brought to ISO C++, and every conference talk I've given, has come from this work — just presented as a standalone proposal under today's syntax, usually with a separate standalone prototype implementation, to help validate and refine one part of the design, then another, then another.
+    
+For a list of papers and conference talks that have come from this work, see below.
 
 I started writing this cppfront compiler in mid-2021 as another step to prototype all the parts together as a whole as originally intended, now includeing the alternative 'syntax 2' for C++ that enables their full designs including otherwise-breaking changes. This step is to let me try out the full set of coordinated improvements in one place, and free of concerns about breaking any existing code.
 
@@ -110,4 +112,11 @@ Here's where to find out more about my 'syntax #2' experiment:
 - **My CppCon 2022 talk** [link coming soon] — this is the primary documentation right now. See also every talk I've given and paper I've written since 2015, each of which details an individual part of this design experiment, but presented in today's C++ syntax as a standalone C++ evolution proposal.
 - **The [cppfront regression tests](https://github.com/hsutter/cppfront/tree/main/regression-tests/test-results)** which show dozens of working examples, each with a`.cpp2` file and the `.cpp` file it is translated to. Each filename briefly describes the language features the test demonstrates (e.g., contracts, parameter passing, bounds safety, type-safe `is` queries and `as` casts, initialization safety, and generalized value capture including in function expressions ('lambdas'), postconditions, and string interpolation).
 
-I'll add a few overview examples here soon...
+All of the ISO C++ papers and CppCon conference talks I've given since 2015 have been derived from this work, bringing individual parts of the 'syntax 2' experiment as standalone proposals in today's syntax to validate that the committee and community agreed with the problem to be solved and the solution direction, and to further flesh out each part individually. Most of the details in the following papers and talks are still current with only incremental updates, apart from the specific syntax of course:
+    
+### Lifetime safety
+    
+    - [CppCon 2015: "Writing good C++14... by default"](https://youtu.be/hEx5DNLWGgA) particularly [from 29:00 onward](https://youtu.be/hEx5DNLWGgA?t=1757) shows the Lifetime analysis with live demos in a Visual Studio prototype
+    - [CppCon 2018: "Thoughts on a more powerful _and_ simpler C++ (#5 of N)](https://youtu.be/80BZxujhY38)
+       - [the section starting at 18:00](https://youtu.be/80BZxujhY38?t=1097) is an update on the Lifework work with live demos in a Clang prototype
+       - [the final part starting at 1:28](https://youtu.be/80BZxujhY38?t=5307) which shows the Lifetime and Metaclasses proposals working hand-in-hand (this is one of the few places before cppfront where the same compiler has contained prototypes of multiple 'syntax 2'-derived features so I could show how they build on each other when used together)
