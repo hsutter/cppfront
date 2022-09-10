@@ -116,7 +116,16 @@ All of the ISO C++ papers and CppCon conference talks I've given since 2015 have
     
 ### Lifetime safety
     
-    - [CppCon 2015: "Writing good C++14... by default"](https://youtu.be/hEx5DNLWGgA) particularly [from 29:00 onward](https://youtu.be/hEx5DNLWGgA?t=1757) shows the Lifetime analysis with live demos in a Visual Studio prototype
-    - [CppCon 2018: "Thoughts on a more powerful _and_ simpler C++ (#5 of N)](https://youtu.be/80BZxujhY38)
-       - [the section starting at 18:00](https://youtu.be/80BZxujhY38?t=1097) is an update on the Lifework work with live demos in a Clang prototype
-       - [the final part starting at 1:28](https://youtu.be/80BZxujhY38?t=5307) which shows the Lifetime and Metaclasses proposals working hand-in-hand (this is one of the few places before cppfront where the same compiler has contained prototypes of multiple 'syntax 2'-derived features so I could show how they build on each other when used together)
+- [**CppCon 2015**: "Writing good C++14... _by default_"](https://youtu.be/hEx5DNLWGgA) particularly [from 29:00 onward](https://youtu.be/hEx5DNLWGgA?t=1757) shows the Lifetime analysis with live demos in a Visual Studio prototype
+- [**CppCon 2018**: "Thoughts on a more powerful _and_ simpler C++ (#5 of N)](https://youtu.be/80BZxujhY38)
+    - [the section starting at 18:00](https://youtu.be/80BZxujhY38?t=1097) is an update on the Lifetime status with live demos in a Clang prototype
+    - [the final part starting at 1:28](https://youtu.be/80BZxujhY38?t=5307) which shows the Lifetime and Metaclasses proposals working hand-in-hand (this is one of the few places before cppfront where the same compiler has contained prototypes of multiple 'syntax 2'-derived features so I could show how they build on each other when used together)
+- [**C++ Core Guidelines**: Lifetime safety profile](https://github.com/isocpp/CppCoreGuidelines/blob/master/docs/Lifetime.pdf) is this static analysis adopted by the C++ Core Guidelines
+- [**P1179**: Lifetime Safety: Preventing common dangling](https://wg21.link/p1179) is the same analysis in the WG 21 paper list
+
+Much of this Lifetime analysis has been implemented and shipped in Visual Studio and in CLion, and initial small parts have been implemented and shipped in Clang. The implementations have exposed bugs in shipping code that were not caught before. My experiment in 'syntax 2' is to make these safety rules the default and mandatory. (Note: Most of this is not yet implemented in cppfront.)
+    
+### Garbage-collected memory arena
+
+- [**CppCon 2016**: "Leak-freedom in C++... _by default_"](https://www.youtube.com/watch?v=JfmTagWcqoE) particularly [from 59:00 onward](https://youtu.be/JfmTagWcqoE?t=3558) where I show the strawman prototype I wrote of a tracing garbage-collection memory arena
+- [**GCPP**: "gcpp: Deferred and unordered destruction"](https://github.com/hsutter/gcpp) is the GitHub prototype I wrote
