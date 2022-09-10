@@ -18,7 +18,7 @@ I'm sharing this work because I hope to start a conversation about what could be
     
 For a list of papers and conference talks that have come from this work, see below.
 
-I started writing this cppfront compiler in mid-2021 as another step to prototype all the parts together as a whole as originally intended, now includeing the alternative 'syntax 2' for C++ that enables their full designs including otherwise-breaking changes. This step is to let me try out the full set of coordinated improvements in one place, and free of concerns about breaking any existing code.
+I started writing this cppfront compiler in mid-2021 as another step to prototype all the parts together as a whole as originally intended, now including the alternative 'syntax 2' for C++ that enables their full designs including otherwise-breaking changes. This step is to let me try out the full set of coordinated improvements in one place, and free of concerns about breaking any existing code.
 
 ## What's different?
 
@@ -105,7 +105,7 @@ Of course, if your code wants to use features that are under additional switches
 
 ## Where's the documentation?
 
-For now I'm not posting a lot of written documentation because that would imply this project is intended for others to use — if it someday becomes ready for that, I'll post more docs.
+For now, I'm not posting a lot of written documentation because that would imply this project is intended for others to use — if it someday becomes ready for that, I'll post more docs.
 
 Here's where to find out more about my 'syntax #2' experiment:
 
@@ -172,7 +172,7 @@ I want to again thank Andrew Sutton and his colleagues Wyatt Childers and Jennif
 - [**CppCon 2019**: "De-fragmenting C++: Making exceptions and RTTI more affordable and usable ("Simplifying C++" #6 of N)](https://www.youtube.com/watch?v=ARYP83yNAWk)
 - [**P0709**: Zero-overhead deterministic exceptions: Throwing values](https://wg21.link/p0709)
 
-I'll just say that when I brought this to the ISO C++ committee, I was amazed that in the Library subgroups a repeated reaction to some (not all) of the library-focused suggestions was "yup, that's a direction we've already decided we want the standard library to move toward..." Except possibly for `<=>` comparisons, this is the only time in my 25 years in WG 21 that I've made a proposal to the committee where I expected to have to do a lot of selling and suddenly had the feeling that I was pushing hard on a open door. (Disclaimer: In the Language subgroups there was more resistance, particularly to make sure pointers to functions would not be bifurcated in the type system. I believe I have an answer to that (thanks to input from Ville Voutilainen in particular), but I still need to prototype it in cppfront, and it still needs to be brought back to the committee to see if they find the results acceptable. There's real work still ahead and a possibility it might not pan out as expected... that's why we use the word "experiment.")
+I'll just say that when I brought this to the ISO C++ committee, I was amazed that in the Library subgroups a repeated reaction to some (not all) of the library-focused suggestions was "yup, that's a direction we've already decided we want the standard library to move toward..." Except possibly for `<=>` comparisons, this is the only time in my 25 years in WG 21 that I've made a proposal to the committee where I expected to have to do a lot of selling and suddenly had the feeling that I was pushing hard on an open door. (Disclaimer: In the Language subgroups there was more resistance, particularly to make sure pointers to functions would not be bifurcated in the type system. I believe I have an answer to that (thanks to input from Ville Voutilainen in particular), but I still need to prototype it in cppfront, and it still needs to be brought back to the committee to see if they find the results acceptable. There's real work still ahead and a possibility it might not pan out as expected... that's why we use the word "experiment.")
 
 Note: Besides `<=>`, this is the other of the Cpp2-derived proposals that has not yet been implemented, and implementation experience is important before standardizing something like this. I hope to gain experience with it in cppfront, though this will be the trickiest part of this work to implement in a Cpp2->Cpp1 compiler like cppfront because it needs to be coordinated with stack unwinding details deep inside the existing C++ compiler and the platform ABI; I think it's doable, but I realize I have work ahead of me here.
     
@@ -198,7 +198,7 @@ Like spaceship `<=>` comparisons, I brought this work to the committee because t
     
 Cppfront currently has basic support for `is` and `as`, including for dynamic typing in the language (subsuming "dynamic_cast" downcasts) and the standard library's `std::variant`, `std::optional`, and `std::any`. Just before CppCon I also implemented very basic `inspect` statements and expressions, and I plan to continue fleshing them out. (Side note: This is one of the places I'm really glad to have C++20 as a baseline, because implementing `inspect` expressions and getting the type system right would have been nearly impossible without C++14 generic lambdas, C++17 `if constexpr`, and C++20 concepts `requires` tests. Which might give away the implementation strategy I chose... :) )
     
-I still need to validate the `is` and `as` implementations with more cases (I'm sure there are still some that break that I need to fix), flesh out allowing `is` and `as` in `requires`-clauses to constrain templates (as shown in the paper), and non-basic `inspect` pattern matchinng examples.
+I still need to validate the `is` and `as` implementations with more cases (I'm sure there are still some that break that I need to fix), flesh out allowing `is` and `as` in `requires`-clauses to constrain templates (as shown in the paper), and non-basic `inspect` pattern matching examples.
 
 ### 2022: CppCon 2022 talk and cppfront
     
@@ -213,7 +213,7 @@ I think this diagram is important because it attempts to write down how design d
     
 ![image](https://user-images.githubusercontent.com/1801526/189503047-0b0a4f0f-c5e7-42b2-a17d-37d80bef3970.png)
 
-I haven't updated this since 2016, but it's still a pretty up-to-date roadmap of the major parts of Cpp2. Today's cppfront implements roughly the top-left part of this roadmap, and I plan fore more to follow.
+I haven't updated this since 2016, but it's still a pretty up-to-date roadmap of the major parts of Cpp2. Today's cppfront implements roughly the top-left part of this roadmap, and I plan for more to follow.
     
 I hope you enjoy reading about this personal experiment, and I hope that it might at least start a conversation about what we can do _**within C++**_'s own evolution to make C++ 10x simpler, safer, and more toolable.
     
