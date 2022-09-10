@@ -183,6 +183,17 @@ Note: Besides `<=>`, this is the other of the Cpp2-derived proposals that has no
 - [**d0708**: "Parameter passing -> guaranteed unified initialization and value setting](https://github.com/hsutter/708/blob/main/708.pdf) goes into more details than I had time for in the talk, in the second half of the paper (note: this is a "d"-draft paper I haven't formally brought to ISO C++, because during the pandemic I didn't bring any updates to my major papers as I think those major proposals are best considered when the committee can meet in person)
 - [**Github.com/hsutter/708**](https://github.com/hsutter/708) is a repo with the paper and demo examples as used in the talk
     
-The only change in cppfront is that I've split `in` into `in` (now the whitespace default in 'syntax 2') and `copy`, and implemented automatic-move-from-last-use for `copy` paramters. This is actually consistent with, and rediscovering, what we already teach today, including in my [CppCon 2014 talk at 55:17](https://youtu.be/xnqTKD8uD64?t=3317) where the parameter passing section already distinguishes "in" vs. "in+copy" parameters. _Plus ça change, plus c'est la même chose..._
+The only change in cppfront is that I've split `in` into `in` (now the whitespace default in 'syntax 2') and `copy`, and implemented automatic-move-from-last-use for `copy` parameters. This is actually consistent with, and rediscovering, what we already teach today, including in my [CppCon 2014 talk at 55:17](https://youtu.be/xnqTKD8uD64?t=3317) where the parameter passing section already distinguishes "in" vs. "in+copy" parameters. _Plus ça change, plus c'est la même chose..._
 
 This is basically all implemented in cppfront, except not the unified `operator=` experiment since I haven't implemented classes yet in 'syntax 2.'
+
+### `is`, `as`, and pattern matching
+
+- [**CppCon 2021: "Extending and simplifying C++: Thoughts on pattern matching using `is` and `as`"](https://www.youtube.com/watch?v=raB_289NxBk)
+- [**P2392**: Pattern matching using `is` and `as`](https://wg21.link/p2392) is the ISO C++ committee paper
+
+Like spaceship `<=>` comparisons, I brought this work to the committee because the committee was actively considering pattern matching proposals, and I had a design in my back pocket and so I asked if they would like to see it and they said yes, so I contributed it. This proposal is actually much more about having a general consistent type query (`is`) and a general consistent type cast (`as`) throughout the language, not just in pattern matching `inspect` statements, and then seeing how it could make the pattern matching also nice to use as well as make its usefulness broadly available instead of just inside `inspect`.
+    
+Cppfront currently has basic support for `is` and `as`, including for dynamic typing in the language (subsuming "dynamic_cast" downcasts) and the standard library's `std::variant`, `std::optional`, and `std::any`. Just before CppCon I also implemented very basic `inspect` statements and expressions, and I plan to continue fleshing them out. (Side note: This is one of the places I'm really glad to have C++20 as a baseline, because implementing `inspect` expressions and getting the type system right would have been nearly impossible without C++14 generic lambdas, C++17 `if constexpr`, and C++20 concepts `requires` tests. Which might give away the implementation strategy I chose... :) )
+    
+I still need to validate the `is` and `as` implementations with more cases (I'm sure there are still some that break that I need to fix), flesh out allowing `is` and `as` in `requires`-clauses to constrain templates (as shown in the paper), and non-basic `inspect` pattern matchinng examples.
