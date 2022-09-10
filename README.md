@@ -120,12 +120,12 @@ Here is a list of those papers and talks, in the order that I brought each indiv
     
 ### 2015: Lifetime safety
     
-- [**CppCon 2015**: "Writing good C++14... _by default_"](https://youtu.be/hEx5DNLWGgA) particularly [from 29:00 onward](https://youtu.be/hEx5DNLWGgA?t=1757) shows the Lifetime analysis with live demos in a Visual Studio prototype
-- [**CppCon 2018**: "Thoughts on a more powerful _and_ simpler C++ (#5 of N)](https://youtu.be/80BZxujhY38)
-    - [the section starting at 18:00](https://youtu.be/80BZxujhY38?t=1097) is an update on the Lifetime status with live demos in a Clang prototype
-    - [the final part starting at 1:28](https://youtu.be/80BZxujhY38?t=5307) shows the Lifetime and Metaclasses proposals working hand-in-hand (this is one of the few places before cppfront where the same compiler has contained prototypes of multiple 'syntax 2'-derived features so I could show how they build on each other when used together)
-- [**C++ Core Guidelines**: Lifetime safety profile](https://github.com/isocpp/CppCoreGuidelines/blob/master/docs/Lifetime.pdf) is this static analysis adopted by the C++ Core Guidelines
-- [**P1179**: Lifetime Safety: Preventing common dangling](https://wg21.link/p1179) is the same analysis in the WG 21 paper list
+- [**CppCon 2015**: "Writing good C++14... _by default_"](https://youtu.be/hEx5DNLWGgA) particularly [from 29:00 onward](https://youtu.be/hEx5DNLWGgA?t=1757) shows the Lifetime analysis with live demos in a Visual Studio prototype.
+- [**CppCon 2018**: "Thoughts on a more powerful _and_ simpler C++ (#5 of N)](https://youtu.be/80BZxujhY38):
+    - [The section starting at 18:00](https://youtu.be/80BZxujhY38?t=1097) is an update on the Lifetime status with live demos in a Clang prototype.
+    - [The final part starting at 1:28](https://youtu.be/80BZxujhY38?t=5307) shows the Lifetime and Metaclasses proposals working hand-in-hand. This is one of the few places before cppfront where the same compiler has contained prototypes of multiple 'syntax 2'-derived features so I could show how they build on each other when used together.
+- [**C++ Core Guidelines**: Lifetime safety profile](https://github.com/isocpp/CppCoreGuidelines/blob/master/docs/Lifetime.pdf) is this static analysis adopted by the C++ Core Guidelines.
+- [**P1179**: Lifetime Safety: Preventing common dangling](https://wg21.link/p1179) is the same analysis in the WG 21 paper list.
 
 Much of this Lifetime analysis has been implemented and shipped in Visual Studio and in CLion, and initial small parts have been implemented and shipped in Clang. The implementations have exposed bugs in shipping code that were not caught before. My experiment in 'syntax 2' is to make these safety rules the default and mandatory. (Note: Most of this is not yet implemented in cppfront.)
     
@@ -133,15 +133,15 @@ I want to again thank many people, including especially Matthias Gehre, Gabor Ho
     
 ### 2016: Garbage-collected memory arena
 
-- [**CppCon 2016**: "Leak-freedom in C++... _by default_"](https://www.youtube.com/watch?v=JfmTagWcqoE) particularly [from 59:00 onward](https://youtu.be/JfmTagWcqoE?t=3558) where I show the strawman prototype I wrote of a tracing garbage-collection memory arena
-- [**GCPP**: "gcpp: Deferred and unordered destruction"](https://github.com/hsutter/gcpp) is the GitHub prototype I wrote
+- [**CppCon 2016**: "Leak-freedom in C++... _by default_"](https://www.youtube.com/watch?v=JfmTagWcqoE) particularly [from 59:00 onward](https://youtu.be/JfmTagWcqoE?t=3558) where I show the strawman prototype I wrote of a tracing garbage-collection memory arena.
+- [**GCPP**: "gcpp: Deferred and unordered destruction"](https://github.com/hsutter/gcpp) is the GitHub prototype I wrote.
 
 I welcome a real GC expert to collaborate with on bringing this forward to become a "real" usable tracing GC memory arena that C++ code can opt into. As always, we still prefer scopes first (no tracking needed), and if that's not sufficient then `unique_ptr` (minimal tracking needed), then if that's not sufficient `shared_ptr` (more tracking needed), and then if that's not sufficient this tracing GC arena (suitable for cases where the existing smart pointers aren't enough, such as when you really cannot statically know enough about lifetimes to use the existing smart pointers).
 
 ### 2017: Spaceship operator for comparisons, `<=>`
     
-- [**CppCon 2017 (just the intro, first 6 minutes)**: "Meta: Thoughts on generative C++"](https://www.youtube.com/watch?v=4AfRAVcThyA)
-- [**P0515**: Consistent comparison](https://wg21.link/p0515) is the proposal in today's syntax that I proposed, and was adopted, for C++20
+- [**CppCon 2017 (just the intro, first 6 minutes)**: "Meta: Thoughts on generative C++"](https://www.youtube.com/watch?v=4AfRAVcThyA).
+- [**P0515**: Consistent comparison](https://wg21.link/p0515) is the proposal in today's syntax that I proposed, and was adopted, for C++20.
 
 This is the first feature from my Cpp2 work that is now in the ISO C++ standard as part of C++20, and with legacy comparison interoperability improvements in C++23. I had not initially been planning to make this one an ISO C++ proposal yet, but after C++17 shipped the committee continued actively discussing ways to improve comparisons, so since I had a design in my back pocket I submitted it as a proposal and, to my surprise, it was approved in a single meeting. (But see the notes about bug fixes, two paragraphs below.)
     
@@ -151,12 +151,12 @@ This is also the only feature from the Cpp2 work that I proposed without first h
 
 ### 2017: Reflection, generation, and metaclasses
     
-- [**ACCU 2017**: "Thoughts on metaclasses"](https://www.youtube.com/watch?v=6nsyX37nsRs) is the first talk I gave about this
-- [**CppCon 2017**: "Meta: Thoughts on generative C++"](https://www.youtube.com/watch?v=4AfRAVcThyA) from after the intro, [from 6:00 onward](https://youtu.be/4AfRAVcThyA?t=393)
-- [**CppCon 2018**: "Thoughts on a more powerful _and_ simpler C++ ("Simplifying C++" #5 of N)](https://youtu.be/80BZxujhY38)
-    - [the section starting at 51:00](https://youtu.be/80BZxujhY38?t=1097) is an update on the Metaclasses status with live demos in a Clang prototype
-    - [the final part starting at 1:28](https://youtu.be/80BZxujhY38?t=5307) shows the Lifetime and Metaclasses proposals working hand-in-hand (this is one of the few places before cppfront where the same compiler has contained prototypes of multiple 'syntax 2'-derived features so I could show how they build on each other when used together)
-- [**P0707**: Metaclass functions: Generative C++](https://wg21.link/p0707)
+- [**ACCU 2017**: "Thoughts on metaclasses"](https://www.youtube.com/watch?v=6nsyX37nsRs) is the first talk I gave about this.
+- [**CppCon 2017**: "Meta: Thoughts on generative C++"](https://www.youtube.com/watch?v=4AfRAVcThyA) from after the intro, [from 6:00 onward](https://youtu.be/4AfRAVcThyA?t=393).
+- [**CppCon 2018**: "Thoughts on a more powerful _and_ simpler C++ ("Simplifying C++" #5 of N)](https://youtu.be/80BZxujhY38):
+    - [The section starting at 51:00](https://youtu.be/80BZxujhY38?t=1097) is an update on the Metaclasses status with live demos in a Clang prototype.
+    - (repeating the Lifetime section bullet above) [The final part starting at 1:28](https://youtu.be/80BZxujhY38?t=5307) shows the Lifetime and Metaclasses proposals working hand-in-hand. This is one of the few places before cppfront where the same compiler has contained prototypes of multiple 'syntax 2'-derived features so I could show how they build on each other when used together.
+- [**P0707**: Metaclass functions: Generative C++](https://wg21.link/p0707) is the paper I brought to the ISO C++ committee.
 
 The ACCU talk started with something I've never done before: A live mini-"usability study" with unprepared subjects in front of a live audience. (It was not a proper usability study because of conference talk constraints; for example, to save time I allowed myself to use some leading questions. In a real usability study you wouldn't do that.) The reason I did this was because I had already run this design (and parameter passing, below) through actual usability studies with C++ programmers and saw how they consistently reacted to it, and I wanted the ACCU audience to see what I had already seen, namely how real C++ developers who have never seen it before react to it, and how quickly they can understand and learn it. This was a totally legit demonstration... the audience members who came on-stage really had never seen it before and I had never spoken with them about it before.
     
@@ -168,9 +168,9 @@ I want to again thank Andrew Sutton and his colleagues Wyatt Childers and Jennif
     
 ### 2019: Zero-overhead deterministic exceptions: Throwing values
 
-- [**ACCU 2019**: "De-fragmenting C++: Making exceptions more affordable and usable](https://www.youtube.com/watch?v=os7cqJ5qlzo)
-- [**CppCon 2019**: "De-fragmenting C++: Making exceptions and RTTI more affordable and usable ("Simplifying C++" #6 of N)](https://www.youtube.com/watch?v=ARYP83yNAWk)
-- [**P0709**: Zero-overhead deterministic exceptions: Throwing values](https://wg21.link/p0709)
+- [**ACCU 2019**: "De-fragmenting C++: Making exceptions more affordable and usable](https://www.youtube.com/watch?v=os7cqJ5qlzo).
+- [**CppCon 2019**: "De-fragmenting C++: Making exceptions and RTTI more affordable and usable ("Simplifying C++" #6 of N)](https://www.youtube.com/watch?v=ARYP83yNAWk).
+- [**P0709**: Zero-overhead deterministic exceptions: Throwing values](https://wg21.link/p0709).
 
 I'll just say that when I brought this to the ISO C++ committee, I was amazed that in the Library subgroups a repeated reaction to some (not all) of the library-focused suggestions was "yup, that's a direction we've already decided we want the standard library to move toward..." Except possibly for `<=>` comparisons, this is the only time in my 25 years in WG 21 that I've made a proposal to the committee where I expected to have to do a lot of selling and suddenly had the feeling that I was pushing hard on an open door. (Disclaimer: In the Language subgroups there was more resistance, particularly to make sure pointers to functions would not be bifurcated in the type system. I believe I have an answer to that (thanks to input from Ville Voutilainen in particular), but I still need to prototype it in cppfront, and it still needs to be brought back to the committee to see if they find the results acceptable. There's real work still ahead and a possibility it might not pan out as expected... that's why we use the word "experiment.")
 
@@ -178,22 +178,34 @@ Note: Besides `<=>`, this is the other of the Cpp2-derived proposals that has no
     
 ### 2020: Parameter passing
     
-- **ACCU autumn 2019**: "Quantifying accidental complexity: An empirical look at teaching and using C++" was my first public talk about this, but a "beta" version that was not recorded; you can find the description [here](https://accu.org/conf-previous/2019_autumn/sessions/#XQuantifyingAccidentalComplexityAnEmpiricalLookatTeachingandUsingC)
-- [**CppCon 2020**: "Quantifying accidental complexity: An empirical look at teaching and using C++"](https://www.youtube.com/watch?v=6lurOCdaj0Y)
-    - The first half of the talk is about how to be rigorous and actually measure that we're making improvements, including to measure the percentage of today's C++ guidance is about parameter passing and initialization
-    - The second half of the talk is about `in`, `inout`, `out`, `move`, and `forward`
-- [**d0708**: "Parameter passing -> guaranteed unified initialization and value setting](https://github.com/hsutter/708/blob/main/708.pdf) goes into more details than I had time for in the talk, in the second half of the paper (note: this is a "d"-draft paper I haven't formally brought to ISO C++, because during the pandemic I didn't bring any updates to my major papers as I think those major proposals are best considered when the committee can meet in person)
-- [**Github.com/hsutter/708**](https://github.com/hsutter/708) is a repo with the paper and demo examples as used in the talk
+- **ACCU autumn 2019**: "Quantifying accidental complexity: An empirical look at teaching and using C++" was my first public talk about this, but a "beta" version that was not recorded; you can find the description [here](https://accu.org/conf-previous/2019_autumn/sessions/#XQuantifyingAccidentalComplexityAnEmpiricalLookatTeachingandUsingC).
+- [**CppCon 2020**: "Quantifying accidental complexity: An empirical look at teaching and using C++"](https://www.youtube.com/watch?v=6lurOCdaj0Y):
+    - The first half of the talk is about how to be rigorous and actually measure that we're making improvements, including to measure the percentage of today's C++ guidance is about parameter passing and initialization.
+    - The second half of the talk is about `in`, `inout`, `out`, `move`, and `forward`.
+- [**d0708**: "Parameter passing -> guaranteed unified initialization and value setting](https://github.com/hsutter/708/blob/main/708.pdf) goes into more details than I had time for in the talk, in the second half of the paper (note: this is a "d"-draft paper I haven't formally brought to ISO C++, because during the pandemic I didn't bring any updates to my major papers as I think those major proposals are best considered when the committee can meet in person).
+- [**Github.com/hsutter/708**](https://github.com/hsutter/708) is a repo with the paper and demo examples as used in the talk.
 - [**P2064**: "Assumptions"](https://wg21.link/p2064) is also related to this work, because this work includes a contracts design, and assumptions ought to be separate from that. This paper was making the technical argument why assumptions and assertions (contracts) are different things.
     
 The only change in cppfront is that I've split `in` into `in` (now the whitespace default in 'syntax 2') and `copy`, and implemented automatic-move-from-last-use for `copy` parameters. This is actually consistent with, and rediscovering, what we already teach today, including in my [CppCon 2014 talk at 55:17](https://youtu.be/xnqTKD8uD64?t=3317) where the parameter passing section already distinguishes "in" vs. "in+copy" parameters. _Plus ça change, plus c'est la même chose..._
 
 This is basically all implemented in cppfront, except not the unified `operator=` experiment since I haven't implemented classes yet in 'syntax 2.'
 
+### 2020: "Bridge to NewThingia"
+
+In 2020 I also started socializing the ideas of:
+  
+- How do you answer "why is your thing different when others that look like it have all failed"? I had specifically in mind "why is 'syntax 2' different when Cyclone, CCured, and many other efforts to make C or C++ safer have all failed"... the answer is that none of them have tried having seamless C++ compatibility, which goes hand-in-hand with evolving C++ itself (not designing something else and then trying to build a bridge later).
+- What does it take to be adoptable, including to enable incremental adoption? I had specifically in mind seamless compatibility (without which you always lose 10 years; see the talk for examples) and avoiding the Python 2/3 problem.
+
+The talk was "Bridge to NewThingia," presented at:
+    
+- [**DevAroundTheSun**: "Bridge to Newthingia"](https://herbsutter.com/2020/06/14/talk-video-available-bridge-to-newthingia-devaroundthesun/), an initial 26-minute version of the talk that I gave in the early months of the pandemic.
+- [**C++ on Sea**: "Bridge to NewThingia"](https://www.youtube.com/watch?v=BF3qw1ObUyo) which especially [at the end starting near 48:00](https://youtu.be/BF3qw1ObUyo?t=2883) had a slide that directly tackled the "C++ major evolution" scenario, and laid out what I think it would take to have credible answers to the key questions.
+    
 ### 2021: `is`, `as`, and pattern matching
 
-- [**CppCon 2021: "Extending and simplifying C++: Thoughts on pattern matching using `is` and `as`"](https://www.youtube.com/watch?v=raB_289NxBk)
-- [**P2392**: Pattern matching using `is` and `as`](https://wg21.link/p2392) is the ISO C++ committee paper
+- [**CppCon 2021: "Extending and simplifying C++: Thoughts on pattern matching using `is` and `as`"](https://www.youtube.com/watch?v=raB_289NxBk).
+- [**P2392**: Pattern matching using `is` and `as`](https://wg21.link/p2392) is the ISO C++ committee paper.
 
 Like spaceship `<=>` comparisons, I brought this work to the committee because the committee was actively considering pattern matching proposals, and I had a design in my back pocket and so I asked if they would like to see it and they said yes, so I contributed it. This proposal is actually much more about having a general consistent type query (`is`) and a general consistent type cast (`as`) throughout the language, not just in pattern matching `inspect` statements, and then seeing how it could make the pattern matching also nice to use as well as make its usefulness broadly available instead of just inside `inspect`.
     
@@ -203,10 +215,10 @@ I still need to validate the `is` and `as` implementations with more cases (I'm 
 
 ### 2022: CppCon 2022 talk and cppfront
     
-- **CppCon 2022**: "Can C++ be 10x simpler & safer?" (link coming soon)
-- This repo
+- **CppCon 2022**: "Can C++ be 10x simpler & safer?" (link coming soon).
+- This repo.
     
-## Epilog: 2016 roadmap diagram
+# Epilog: 2016 roadmap diagram
     
 Finally, let me show you a diagram I made in 2016. A few words have changed, and some of the topics aren't mentioned (e.g, `<=>` was added after this), but it has remained amazingly stable and is still recognizably a roadmap of Cpp2's design approach today.
     
