@@ -134,7 +134,7 @@ I want to again thank many people, including especially Matthias Gehre, Gabor Ho
 ### 2016: Garbage-collected memory arena
 
 - [**CppCon 2016**: "Leak-freedom in C++... _by default_"](https://www.youtube.com/watch?v=JfmTagWcqoE) particularly [from 59:00 onward](https://youtu.be/JfmTagWcqoE?t=3558) where I show the strawman prototype I wrote of a tracing garbage-collection memory arena.
-- [**GCPP**: "gcpp: Deferred and unordered destruction"](https://github.com/hsutter/gcpp) is the GitHub prototype I wrote.
+- [**Github.com/hsutter/gcpp**: "gcpp: Deferred and unordered destruction"](https://github.com/hsutter/gcpp) is the GitHub prototype I wrote.
 
 I welcome a real GC expert to collaborate with on bringing this forward to become a "real" usable tracing GC memory arena that C++ code can opt into. As always, we still prefer scopes first (no tracking needed), and if that's not sufficient then `unique_ptr` (minimal tracking needed), then if that's not sufficient `shared_ptr` (more tracking needed), and then if that's not sufficient this tracing GC arena (suitable for cases where the existing smart pointers aren't enough, such as when you really cannot statically know enough about lifetimes to use the existing smart pointers).
 
@@ -182,7 +182,7 @@ Note: Besides `<=>`, this is the other of the Cpp2-derived proposals that has no
 - [**CppCon 2020**: "Quantifying accidental complexity: An empirical look at teaching and using C++"](https://www.youtube.com/watch?v=6lurOCdaj0Y):
     - The first half of the talk is about how to be rigorous and actually measure that we're making improvements, including to measure the percentage of today's C++ guidance is about parameter passing and initialization.
     - The second half of the talk is about `in`, `inout`, `out`, `move`, and `forward`.
-- [**d0708**: "Parameter passing -> guaranteed unified initialization and value setting](https://github.com/hsutter/708/blob/main/708.pdf) goes into more details than I had time for in the talk, in the second half of the paper (note: this is a "d"-draft paper I haven't formally brought to ISO C++, because during the pandemic I didn't bring any updates to my major papers as I think those major proposals are best considered when the committee can meet in person).
+- [**d0708**: "Parameter passing -> guaranteed unified initialization and value setting](https://github.com/hsutter/708/blob/main/708.pdf) goes into more details than I had time for in the talk, in the second half of the paper. Note: this is a "d"-draft paper I haven't formally brought to ISO C++, because during the pandemic I didn't bring any updates to my major papers as I think those major proposals are best considered when the committee can meet in person.
 - [**Github.com/hsutter/708**](https://github.com/hsutter/708) is a repo with the paper and demo examples as used in the talk.
 - [**P2064**: "Assumptions"](https://wg21.link/p2064) is also related to this work, because this work includes a contracts design, and assumptions ought to be separate from that. This paper was making the technical argument why assumptions and assertions (contracts) are different things.
     
