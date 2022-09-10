@@ -205,3 +205,15 @@ I still need to validate the `is` and `as` implementations with more cases (I'm 
 - **CppCon 2022**: "Can C++ be 10x simpler & safer?" (link coming soon)
 - This repo
     
+## Epilog: 2016 roadmap diagram
+    
+Finally, let me show you a diagram I made in 2016. A few words have changed, and some of the topics aren't mentioned (e.g, `<=>` was added after this), but it has remained amazingly stable and is still recognizably a roadmap of Cpp2's design approach today.
+    
+I think this diagram is important because it attempts to write down how design decisions lead to each other and support each other... Cpp2 is not a gaggle of unrelated fixes, it is an attempt to do a coordinated refactoring of C++ so that it is still C++ but, as Bjarne said, simplified "through generalization" into a smaller number of regular and combinable features, so we can remove special cases and duplications and confusions.
+    
+![image](https://user-images.githubusercontent.com/1801526/189503047-0b0a4f0f-c5e7-42b2-a17d-37d80bef3970.png)
+
+I haven't updated this since 2016, but it's still a pretty up-to-date roadmap of the major parts of Cpp2. Today's cppfront implements roughly the top-left part of this roadmap, and I plan fore more to follow.
+    
+I hope you enjoy reading about this personal experiment, and I hope that it might at least start a conversation about what we can do _**within C++**_'s own evolution to make C++ 10x simpler, safer, and more toolable.
+    
