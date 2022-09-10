@@ -184,6 +184,7 @@ Note: Besides `<=>`, this is the other of the Cpp2-derived proposals that has no
     - The second half of the talk is about `in`, `inout`, `out`, `move`, and `forward`
 - [**d0708**: "Parameter passing -> guaranteed unified initialization and value setting](https://github.com/hsutter/708/blob/main/708.pdf) goes into more details than I had time for in the talk, in the second half of the paper (note: this is a "d"-draft paper I haven't formally brought to ISO C++, because during the pandemic I didn't bring any updates to my major papers as I think those major proposals are best considered when the committee can meet in person)
 - [**Github.com/hsutter/708**](https://github.com/hsutter/708) is a repo with the paper and demo examples as used in the talk
+- [**P2064**: "Assumptions"](https://wg21.link/p2064) is also related to this work, because this work includes a contracts design, and assumptions ought to be separate from that. This paper was making the technical argument why assumptions and assertions (contracts) are different things.
     
 The only change in cppfront is that I've split `in` into `in` (now the whitespace default in 'syntax 2') and `copy`, and implemented automatic-move-from-last-use for `copy` parameters. This is actually consistent with, and rediscovering, what we already teach today, including in my [CppCon 2014 talk at 55:17](https://youtu.be/xnqTKD8uD64?t=3317) where the parameter passing section already distinguishes "in" vs. "in+copy" parameters. _Plus ça change, plus c'est la même chose..._
 
