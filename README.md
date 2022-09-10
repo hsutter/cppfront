@@ -222,7 +222,7 @@ I still need to validate the `is` and `as` implementations with more cases (I'm 
     
 Finally, let me show you a diagram I made in 2016. A few words have changed, and some of the topics aren't mentioned (e.g, `<=>` was added after this), but it has remained amazingly stable and is still recognizably a roadmap of Cpp2's design approach today.
     
-I think this diagram is important because it attempts to write down how design decisions lead to each other and support each other... Cpp2 is not a gaggle of unrelated fixes, it is an attempt to do a coordinated refactoring of C++ so that it is still C++ but, "simplified through generalization" into a smaller number of regular and combinable features, so we can remove special cases and duplications and confusions. That's almost a direct quote of how Bjarne Stroustrup put in in ACM History of Programming Language III (and other places)... the exact quote is:
+I think this diagram is important because it attempts to write down how design decisions lead to each other and support each other... Cpp2 is not a gaggle of unrelated fixes, it is an attempt to do a coordinated refactoring of C++ so that it is still C++ but, "simplified through generalization" into a smaller number of regular and combinable features, so we can remove special cases and duplications and confusions. That's almost a direct quote of how Bjarne Stroustrup put in the _ACM History of Programming Languages III_ (and other places)... the exact quote is:
     
 > "**10% the size of C++** in definition and similar in front-end compiler size. ... **Most of the simplification would come from generalization.**" (B. Stroustrup, ACM HOPL-III, 2007; emphasis added)
 
