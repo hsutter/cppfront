@@ -204,7 +204,7 @@ The talk was "Bridge to NewThingia," presented at:
     
 ### 2021: `is`, `as`, and pattern matching
 
-- [**CppCon 2021: "Extending and simplifying C++: Thoughts on pattern matching using `is` and `as`"](https://www.youtube.com/watch?v=raB_289NxBk).
+- [**CppCon 2021**: "Extending and simplifying C++: Thoughts on pattern matching using `is` and `as`"](https://www.youtube.com/watch?v=raB_289NxBk).
 - [**P2392**: Pattern matching using `is` and `as`](https://wg21.link/p2392) is the ISO C++ committee paper.
 
 Like spaceship `<=>` comparisons, I brought this work to the committee because the committee was actively considering pattern matching proposals, and I had a design in my back pocket and so I asked if they would like to see it and they said yes, so I contributed it. This proposal is actually much more about having a general consistent type query (`is`) and a general consistent type cast (`as`) throughout the language, not just in pattern matching `inspect` statements, and then seeing how it could make the pattern matching also nice to use as well as make its usefulness broadly available instead of just inside `inspect`.
