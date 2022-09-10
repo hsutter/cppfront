@@ -228,5 +228,5 @@ I think this diagram is important because it attempts to write down how design d
 
 I haven't updated this since 2016, but it shows many of the talks and papers that have come since then from this work, and it's still a pretty up-to-date roadmap of the major parts of Cpp2. Today's cppfront implements roughly the top-left part of this roadmap, and I plan for more to follow.
     
-I hope you enjoy reading about this personal experiment, and I hope that it might at least start a conversation about what we can do _**within C++**_'s own evolution to make C++ 10x simpler, safer, and more toolable.
+I hope you enjoy reading about this personal experiment, and I hope that it might at least start a conversation about what could be possible _**within C++**_'s own evolution to make C++ 10x simpler, safer, and more toolable.
     
