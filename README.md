@@ -112,13 +112,13 @@ Here's where to find out more about my 'syntax #2' experiment:
 - **My CppCon 2022 talk** [link coming soon] — this is the primary documentation right now. See also every talk I've given and paper I've written since 2015, each of which details an individual part of this design experiment, but presented in today's C++ syntax as a standalone C++ evolution proposal.
 - **The [cppfront regression tests](https://github.com/hsutter/cppfront/tree/main/regression-tests/test-results)** which show dozens of working examples, each with a`.cpp2` file and the `.cpp` file it is translated to. Each filename briefly describes the language features the test demonstrates (e.g., contracts, parameter passing, bounds safety, type-safe `is` queries and `as` casts, initialization safety, and generalized value capture including in function expressions ('lambdas'), postconditions, and string interpolation).
     
-### List of my papers and talks since 2015 (all from this work, but presented in today's syntax)
+## List of my papers and talks since 2015 (all from this work, but presented in today's syntax)
 
 All of the ISO C++ papers and CppCon conference talks I've given since 2015 have been derived from this work. I've spent the last seven years bringing each individual experimental design improvement of the 'syntax 2' experiment as a standalone proposal in today's syntax, to validate that the committee and community agreed with the problem to be solved and the solution direction, and to further flesh out each part individually... thanks very much to all of you who have given valuable feedback!
     
 Here is a list of those papers and talks, in the order that I brought each individual design forward. Most of the details in the following papers and talks are still current with only incremental updates, apart from the specific syntax of course.
     
-#### Lifetime safety
+### Lifetime safety
     
 - [**CppCon 2015**: "Writing good C++14... _by default_"](https://youtu.be/hEx5DNLWGgA) particularly [from 29:00 onward](https://youtu.be/hEx5DNLWGgA?t=1757) shows the Lifetime analysis with live demos in a Visual Studio prototype
 - [**CppCon 2018**: "Thoughts on a more powerful _and_ simpler C++ (#5 of N)](https://youtu.be/80BZxujhY38)
@@ -129,14 +129,14 @@ Here is a list of those papers and talks, in the order that I brought each indiv
 
 Much of this Lifetime analysis has been implemented and shipped in Visual Studio and in CLion, and initial small parts have been implemented and shipped in Clang. The implementations have exposed bugs in shipping code that were not caught before. My experiment in 'syntax 2' is to make these safety rules the default and mandatory. (Note: Most of this is not yet implemented in cppfront.)
     
-#### Garbage-collected memory arena
+### Garbage-collected memory arena
 
 - [**CppCon 2016**: "Leak-freedom in C++... _by default_"](https://www.youtube.com/watch?v=JfmTagWcqoE) particularly [from 59:00 onward](https://youtu.be/JfmTagWcqoE?t=3558) where I show the strawman prototype I wrote of a tracing garbage-collection memory arena
 - [**GCPP**: "gcpp: Deferred and unordered destruction"](https://github.com/hsutter/gcpp) is the GitHub prototype I wrote
 
 I welcome a real GC expert to collaborate with on bringing this forward to become a "real" usable tracing GC memory arena that C++ code can opt into. As always, we still prefer scopes first (no tracking needed), and if that's not sufficient then `unique_ptr` (minimal tracking needed), then if that's not sufficient `shared_ptr` (more tracking needed), and then if that's not sufficient this tracing GC arena (suitable for cases where the existing smart pointers aren't enough, such as when you really cannot statically know enough about lifetimes to use the existing smart pointers).
 
-#### Spaceship operator for comparisons, `<=>`
+### Spaceship operator for comparisons, `<=>`
     
 - [**CppCon 2017 (just the intro, first 6 minutes)**: "Meta: Thoughts on generative C++"](https://www.youtube.com/watch?v=4AfRAVcThyA)
 - [**P0515**: Consistent comparison](https://wg21.link/p0515) is the proposal in today's syntax that I proposed, and was adopted, for C++20
@@ -147,11 +147,11 @@ This is the only feature in the history of ISO C++ where we _added_ a feature to
     
 This is also the only feature from the Cpp2 work that I proposed without first having a prototype implementation, and so the proposal had bugs in two main areas that were discovered and fixed later: Keeping the `==` optimization, which was known but in the initial proposal was easy to lose accidentally; and smoother interoperation with existing pre-`<=>` types (which is important because there are _a lot_ of those). Thank you again to everyone who helped land this in the Standard in C++20 and improved in C++23, including: Walter Brown, Lawrence Crowl, Cameron DaCamara, Gabriel Dos Reis, Jens Maurer, Barry Revzin, Richard Smith, and David Stone. This shows the importance of prototype experience.
 
-#### Reflection, generation, and metaclasses
+### Reflection, generation, and metaclasses
     
 - [**ACCU 2017**: "Thoughts on metaclasses"](https://www.youtube.com/watch?v=6nsyX37nsRs) is the first talk I gave about this
 - [**CppCon 2017**: "Meta: Thoughts on generative C++"](https://www.youtube.com/watch?v=4AfRAVcThyA) from after the intro, [from 6:00 onward](https://youtu.be/4AfRAVcThyA?t=393)
-- [**CppCon 2018**: "Thoughts on a more powerful _and_ simpler C++ (#5 of N)](https://youtu.be/80BZxujhY38)
+- [**CppCon 2018**: "Thoughts on a more powerful _and_ simpler C++ ("Simplifying C++" #5 of N)](https://youtu.be/80BZxujhY38)
     - [the section starting at 51:00](https://youtu.be/80BZxujhY38?t=1097) is an update on the Metaclasses status with live demos in a Clang prototype
     - [the final part starting at 1:28](https://youtu.be/80BZxujhY38?t=5307) shows the Lifetime and Metaclasses proposals working hand-in-hand (this is one of the few places before cppfront where the same compiler has contained prototypes of multiple 'syntax 2'-derived features so I could show how they build on each other when used together)
 - [**P0707**: Metaclass functions: Generative C++](https://wg21.link/p0707)
@@ -160,4 +160,11 @@ The ACCU talk started with something I've never done before: A live mini-"usabil
     
 cppfront does not yet have 'syntax 2' user-defined types (classes) or metaclases. I look forward to starting to implement this in cppfront over the fall and winter... wish me luck! I anticipate that using the AST that cppfront has, which is much closer to a parse tree than a bound tree, is ideal for most metaclass applications which really are about "automating writing code"... some of what has made previous metaclass prototypes difficult was that they were working on fully bound trees which meant they had to remove work already done, whereas my original design of metaclasses was much closer to the source code level and that's what I aim to (try to) implement.
 
-    
+### Zero-overhead deterministic exceptions: Throwing values
+
+- [**CppCon 2019**: "De-fragmenting C++: Making exceptions and RTTI more affordable and usable ("Simplifying C++" #6 of N)](https://www.youtube.com/watch?v=ARYP83yNAWk)
+- [**P0709**: Zero-overhead deterministic exceptions: Throwing values](https://wg21.link/p0709)
+
+I'll just say that when I brought this to the ISO C++ committee, I was amazed that in the Library subgroups a repeated reaction to some (not all) of the library-focused suggestions was "yup, that's a direction we've already decided we want the standard library to move toward..." Except possibly for `<=>` comparisons, this is the only time in my 25 years in WG 21 that I've made a proposal to the committee where I expected to have to do a lot of selling and suddenly had the feeling that I was pushing hard on a open door. (Disclaimer: In the Language subgroups there was more resistance, particularly to make sure pointers to functions would not be bifurcated in the type system. I believe I have an answer to that (thanks to input from Ville Voutilainen in particular), but I still need to prototype it in cppfront, and it still needs to be brought back to the committee to see if they find the results acceptable. There's real work still ahead and a possibility it might not pan out as expected... that's why we use the word "experiment.")
+
+   
