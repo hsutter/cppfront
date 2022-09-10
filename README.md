@@ -118,7 +118,7 @@ All of the ISO C++ papers and CppCon conference talks I've given since 2015 have
     
 Here is a list of those papers and talks, in the order that I brought each individual design forward. Most of the details in the following papers and talks are still current with only incremental updates, apart from the specific syntax of course.
     
-### Lifetime safety
+### 2015: Lifetime safety
     
 - [**CppCon 2015**: "Writing good C++14... _by default_"](https://youtu.be/hEx5DNLWGgA) particularly [from 29:00 onward](https://youtu.be/hEx5DNLWGgA?t=1757) shows the Lifetime analysis with live demos in a Visual Studio prototype
 - [**CppCon 2018**: "Thoughts on a more powerful _and_ simpler C++ (#5 of N)](https://youtu.be/80BZxujhY38)
@@ -131,14 +131,14 @@ Much of this Lifetime analysis has been implemented and shipped in Visual Studio
     
 I want to again thank many people, including Sunny Chattergee, Daniel Frampton, Matthias Gehre, Gabor Horvath, Neil MacIntosh, Kyle Reed, and more for their help in specifying and implementing the Lifetime static analysis design.
     
-### Garbage-collected memory arena
+### 2016: Garbage-collected memory arena
 
 - [**CppCon 2016**: "Leak-freedom in C++... _by default_"](https://www.youtube.com/watch?v=JfmTagWcqoE) particularly [from 59:00 onward](https://youtu.be/JfmTagWcqoE?t=3558) where I show the strawman prototype I wrote of a tracing garbage-collection memory arena
 - [**GCPP**: "gcpp: Deferred and unordered destruction"](https://github.com/hsutter/gcpp) is the GitHub prototype I wrote
 
 I welcome a real GC expert to collaborate with on bringing this forward to become a "real" usable tracing GC memory arena that C++ code can opt into. As always, we still prefer scopes first (no tracking needed), and if that's not sufficient then `unique_ptr` (minimal tracking needed), then if that's not sufficient `shared_ptr` (more tracking needed), and then if that's not sufficient this tracing GC arena (suitable for cases where the existing smart pointers aren't enough, such as when you really cannot statically know enough about lifetimes to use the existing smart pointers).
 
-### Spaceship operator for comparisons, `<=>`
+### 2017: Spaceship operator for comparisons, `<=>`
     
 - [**CppCon 2017 (just the intro, first 6 minutes)**: "Meta: Thoughts on generative C++"](https://www.youtube.com/watch?v=4AfRAVcThyA)
 - [**P0515**: Consistent comparison](https://wg21.link/p0515) is the proposal in today's syntax that I proposed, and was adopted, for C++20
@@ -149,7 +149,7 @@ This is the only feature in the history of ISO C++ where we _added_ a feature to
     
 This is also the only feature from the Cpp2 work that I proposed without first having a prototype implementation, and so the proposal had bugs in two main areas that were discovered and fixed later: Keeping the `==` optimization, which was known but in the initial proposal was easy to lose accidentally; and smoother interoperation with existing pre-`<=>` types (which is important because there are _a lot_ of those). Thank you again to everyone who helped land this in the Standard in C++20 and improved in C++23, including: Walter Brown, Lawrence Crowl, Cameron DaCamara, Gabriel Dos Reis, Jens Maurer, Barry Revzin, Richard Smith, and David Stone. This shows the importance of prototype experience.
 
-### Reflection, generation, and metaclasses
+### 2017: Reflection, generation, and metaclasses
     
 - [**ACCU 2017**: "Thoughts on metaclasses"](https://www.youtube.com/watch?v=6nsyX37nsRs) is the first talk I gave about this
 - [**CppCon 2017**: "Meta: Thoughts on generative C++"](https://www.youtube.com/watch?v=4AfRAVcThyA) from after the intro, [from 6:00 onward](https://youtu.be/4AfRAVcThyA?t=393)
@@ -164,7 +164,9 @@ cppfront does not yet have 'syntax 2' user-defined types (classes) or metaclases
     
 I want to again thank Andrew Sutton and his colleagues Wyatt Childers and Jennifer Yao for their help in implementing the prototypes of this proposal, and everyone else who contributed feedback on the design.
 
-### Zero-overhead deterministic exceptions: Throwing values
+### 2018: Updates to Lifetime and Metaclasses (see above)
+    
+### 2019: Zero-overhead deterministic exceptions: Throwing values
 
 - [**ACCU 2019**: "De-fragmenting C++: Making exceptions more affordable and usable](https://www.youtube.com/watch?v=os7cqJ5qlzo)
 - [**CppCon 2019**: "De-fragmenting C++: Making exceptions and RTTI more affordable and usable ("Simplifying C++" #6 of N)](https://www.youtube.com/watch?v=ARYP83yNAWk)
@@ -174,7 +176,7 @@ I'll just say that when I brought this to the ISO C++ committee, I was amazed th
 
 Note: Besides `<=>`, this is the other of the Cpp2-derived proposals that has not yet been implemented, and implementation experience is important before standardizing something like this. I hope to gain experience with it in cppfront, though this will be the trickiest part of this work to implement in a Cpp2->Cpp1 compiler like cppfront because it needs to be coordinated with stack unwinding details deep inside the existing C++ compiler and the platform ABI; I think it's doable, but I realize I have work ahead of me here.
     
-### Parameter passing
+### 2020: Parameter passing
     
 - **ACCU autumn 2019**: "Quantifying accidental complexity: An empirical look at teaching and using C++" was my first public talk about this, but a "beta" version that was not recorded; you can find the description [here](https://accu.org/conf-previous/2019_autumn/sessions/#XQuantifyingAccidentalComplexityAnEmpiricalLookatTeachingandUsingC)
 - [**CppCon 2020**: "Quantifying accidental complexity: An empirical look at teaching and using C++"](https://www.youtube.com/watch?v=6lurOCdaj0Y)
@@ -187,7 +189,7 @@ The only change in cppfront is that I've split `in` into `in` (now the whitespac
 
 This is basically all implemented in cppfront, except not the unified `operator=` experiment since I haven't implemented classes yet in 'syntax 2.'
 
-### `is`, `as`, and pattern matching
+### 2021: `is`, `as`, and pattern matching
 
 - [**CppCon 2021: "Extending and simplifying C++: Thoughts on pattern matching using `is` and `as`"](https://www.youtube.com/watch?v=raB_289NxBk)
 - [**P2392**: Pattern matching using `is` and `as`](https://wg21.link/p2392) is the ISO C++ committee paper
@@ -197,3 +199,9 @@ Like spaceship `<=>` comparisons, I brought this work to the committee because t
 Cppfront currently has basic support for `is` and `as`, including for dynamic typing in the language (subsuming "dynamic_cast" downcasts) and the standard library's `std::variant`, `std::optional`, and `std::any`. Just before CppCon I also implemented very basic `inspect` statements and expressions, and I plan to continue fleshing them out. (Side note: This is one of the places I'm really glad to have C++20 as a baseline, because implementing `inspect` expressions and getting the type system right would have been nearly impossible without C++14 generic lambdas, C++17 `if constexpr`, and C++20 concepts `requires` tests. Which might give away the implementation strategy I chose... :) )
     
 I still need to validate the `is` and `as` implementations with more cases (I'm sure there are still some that break that I need to fix), flesh out allowing `is` and `as` in `requires`-clauses to constrain templates (as shown in the paper), and non-basic `inspect` pattern matchinng examples.
+
+### 2022: CppCon 2022 talk and cppfront
+    
+- **CppCon 2022**: "Can C++ be 10x simpler & safer?" (link coming soon)
+- This repo
+    
