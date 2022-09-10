@@ -17,7 +17,7 @@ auto print_an_int(auto const& x) -> void{
               << " value is ";
     { auto&& __expr = x;
         if (cpp2::is<int>(__expr)) std::cout << cpp2::as<int>(x);
-        else     std::cout << "not an int";
+        else std::cout << "not an int";
     }
     std::cout << "\n";
 }

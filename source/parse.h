@@ -617,6 +617,7 @@ struct inspect_expression_node
     bool                                     is_constexpr = false;
     token const*                             identifier;
     std::unique_ptr<expression_node>         expression;
+    std::unique_ptr<id_expression_node>      result_type;
     source_position                          open_brace;
     source_position                          close_brace;
 
@@ -635,6 +636,9 @@ struct inspect_expression_node
         v.start(*identifier, depth+1);
         assert (expression);
         expression->visit(v, depth+1);
+        if (result_type) {
+            result_type->visit(v, depth+1);
+        }
         for (auto&& alt : alternatives) {
             alt->visit(v, depth+1);
         }
@@ -2222,6 +2226,7 @@ private:
 
     //G inspect-expression:
     //G     inspect constexpr-opt expression { alternative-seq-opt }
+    //G     inspect constexpr-opt expression -> id-expression { alternative-seq-opt }
     //G
     //G alternative-seq:
     //G     alternative
@@ -2237,7 +2242,7 @@ private:
         n->identifier = &curr();
         next();
 
-        if (curr().type() == lexeme::Keyword && curr() == "constexpr") {
+        if (curr() == "constexpr") {
             n->is_constexpr = true;
             next();
         }
@@ -2250,6 +2255,32 @@ private:
             return {};
         }
 
+        //  Handle the optional explicit return type
+        if (curr().type() == lexeme::Arrow)
+        {
+            if (!is_expression) {
+                error("an inspect statement cannot have an explicit return type (whereas an inspect expression must have one)");
+                return {};
+            }
+            next();
+            if (curr().type() == lexeme::LeftParen) {
+                error("multiple/named returns are not currently allowed for inspect");
+                return {};
+            }
+
+            auto id = id_expression();
+            if (!id) {
+                error("expected a valid inspect return type after ->");
+                return {};
+            }
+            n->result_type = std::move(id);
+        }
+        else if (is_expression) {
+            error("an inspect expression must have an explicit '-> result_type'");
+            return {};
+        }
+
+        //  Now do the inspect body
         if (curr().type() != lexeme::LeftBrace) {
             error("expected { at start of inspect body");
             return {};
@@ -2257,7 +2288,8 @@ private:
         n->open_brace = curr().position();
         next();
 
-        while (curr().type() != lexeme::RightBrace) {
+        while (curr().type() != lexeme::RightBrace)
+        {
             auto a = alternative();
             if (!a) {
                 error("invalid alternative in inspect");

@@ -139,26 +139,35 @@ class positional_printer
     bool            enable_indent_heuristic = true;
 
     //  Modal information
-    bool            declarations_only   = true;     // print declarations only in first pass
-    std::vector<std::string*> emit_string_targets;  // option to emit to string instead of out file
-    std::vector<std::vector<text_with_pos>*> emit_text_chunks_targets; // similar for vector<text_pos>
+    bool            declarations_only   = true;     // print only declarations in the first pass
+
+    std::vector<std::string*>                emit_string_targets;       // option to emit to string instead of out file
+    std::vector<std::vector<text_with_pos>*> emit_text_chunks_targets;  // similar for vector<text_pos>
+
+    enum class target_type { string, chunks };
+    std::vector<target_type>                 emit_target_stack;         // to interleave them sensibly
 
     //-----------------------------------------------------------------------
     //  Print text
     //
     auto print( std::string_view s, source_position pos = source_position{}) -> void
     {
-        //  If the caller is capturing this output to a string, emit to the
-        //  specified string instead and skip most positioning logic
-        if (!emit_string_targets.empty()) {
-            *emit_string_targets.back() += s;
-            return;
-        }
+        //  If the caller is capturing this output, emit to the
+        //  current target instead and skip most positioning logic
+        if (!emit_target_stack.empty())
+        {
+            //  If capturing to a string, emit to the specified string
+            if (emit_target_stack.back() == target_type::string) {
+                assert(!emit_string_targets.empty());
+                *emit_string_targets.back() += s;
+            }
 
-        //  If the caller is capturing this output to a vector of chunks,
-        //  similarly emit to that
-        if (!emit_text_chunks_targets.empty()) {
-            emit_text_chunks_targets.back()->insert( emit_text_chunks_targets.back()->begin(), text_with_pos(std::string(s), pos) );
+            //  If capturing to a vector of chunks, emit to that
+            else {
+                assert(!emit_text_chunks_targets.empty());
+                emit_text_chunks_targets.back()->insert( emit_text_chunks_targets.back()->begin(), text_with_pos(std::string(s), pos) );
+            }
+
             return;
         }
 
@@ -418,8 +427,8 @@ public:
         assert(last_was_cpp2 && "ICE: didn't call start_cpp2 to begin a Cpp2 section");
         last_was_cpp2 = true;
 
-        //  Skip alignment work if we're emitting text to a string
-        if (emit_string_targets.empty() && emit_text_chunks_targets.empty())
+        //  Skip alignment work if we're capturing emitted text
+        if (emit_target_stack.empty())
         {
             //  Remember where we are
             auto last_pos = curr_pos;
@@ -551,9 +560,11 @@ public:
     auto emit_to_string( std::string* target = nullptr ) -> void {
         if (target) {
             emit_string_targets.push_back( target );
+            emit_target_stack.push_back(target_type::string);
         }
         else {
             emit_string_targets.pop_back();
+            emit_target_stack.pop_back();
         }
     }
 
@@ -564,9 +575,11 @@ public:
     auto emit_to_text_chunks( std::vector<text_with_pos>* target = nullptr ) -> void {
         if (target) {
             emit_text_chunks_targets.push_back( target );
+            emit_target_stack.push_back(target_type::chunks);
         }
         else {
             emit_text_chunks_targets.pop_back();
+            emit_target_stack.pop_back();
         }
     }
 
@@ -1151,24 +1164,32 @@ public:
     //
     auto emit(inspect_expression_node const& n, bool is_expression) -> void
     {
-        if (is_expression) {
-            printer.print_cpp2("[&]", n.position());
-        }
-        printer.print_cpp2("{ auto&& __expr = ", n.position());
-
-        assert(n.expression);
-        emit(*n.expression);
-        printer.print_cpp2(";", n.position());
-
         auto constexpr_qualifier = std::string{};
         if (n.is_constexpr) {
             constexpr_qualifier = "constexpr ";
         }
 
+        //  If this is an expression, it will have an explicit result type,
+        //  and we need to start the lambda that we'll immediately invoke
+        auto result_type = std::string{};
+        if (is_expression) {
+            assert(n.result_type);
+            printer.emit_to_string(&result_type);
+            emit(*n.result_type);
+            printer.emit_to_string();
+            printer.print_cpp2("[&] () -> " + result_type + " ", n.position());
+        }
+        printer.print_cpp2("{ " + constexpr_qualifier + "auto&& __expr = ", n.position());
+
+        assert(n.expression);
+        emit(*n.expression);
+        printer.print_cpp2(";", n.position());
+
         assert(n.identifier && *n.identifier == "inspect");
 
         assert(!n.alternatives.empty());
         auto found_wildcard = false;
+
         for (auto first = true; auto&& alt : n.alternatives)
         {
             assert(alt);
@@ -1185,23 +1206,45 @@ public:
 
             if (*alt->identifier == "is")
             {
+                //  Stringize the expression-statement now...
+                auto statement = std::string{};
+                printer.emit_to_string(&statement);
+                emit(*alt->statement);
+                printer.emit_to_string();
+                //  ... and jettison the final ; for an expression-statement
+                while (!statement.empty() && (statement.back() == ';' || isspace(statement.back()))) {
+                    statement.pop_back();
+                }
+
+                //  If this is an inspect-expression, we'll have to wrap each alternative
+                //  in an 'if constexpr' so that its type is ignored for mismatches with
+                //  the inspect-expression's type
+                auto return_prefix = std::string{};
+                auto return_suffix = std::string{";"};   // use this to tack the ; back on in the alternative body
+                if (is_expression) {
+                    return_prefix = "{ if constexpr( requires{" + statement + ";} ) if constexpr( std::is_same_v<" + result_type + ", CPP2_TYPEOF(" + statement + ")> ) return ";
+                    return_suffix += " }";
+                }
+
                 if (id == "_") {
                     found_wildcard = true;
+                    if (is_expression) {
+                        printer.print_cpp2("return ", alt->position());
+                    }
                 }
                 else {
-                    printer.print_cpp2("if " + constexpr_qualifier + "(cpp2::is<" + id + ">(__expr)) ", alt->position());
+                    printer.print_cpp2("if " + constexpr_qualifier + "(cpp2::is<" + id + ">(__expr)) " + return_prefix, alt->position());
                 }
 
-                if (is_expression) {
+                printer.print_cpp2(statement, alt->position());
+
+                if (is_expression && id != "_") {
                     assert(alt->statement->statement.index() == statement_node::expression);
-                    printer.print_cpp2("return ", alt->position());
+                    printer.print_cpp2("; else return " + result_type + "{}", alt->position());
+                    printer.print_cpp2("; else return " + result_type + "{}", alt->position());
                 }
 
-                emit(*alt->statement);
-
-                if (is_expression) {
-                    printer.print_cpp2(";", alt->position());
-                }
+                printer.print_cpp2(return_suffix, alt->position());
             }
             else {
                 errors.emplace_back(
@@ -1212,15 +1255,24 @@ public:
             }
         }
 
-        if (is_expression && !found_wildcard) {
-            errors.emplace_back(
-                n.position(),
-                "an inspect expression must have an `is _` match-anything wildcard alternative"
-            );
-            return;
+        if (is_expression) {
+            if (!found_wildcard) {
+                errors.emplace_back(
+                    n.position(),
+                    "an inspect expression must have an `is _` match-anything wildcard alternative"
+                );
+                return;
+            }
+        }
+        else {
+            printer.print_cpp2("}", n.close_brace);
         }
 
-        printer.print_cpp2("}\n", n.close_brace);
+        //  If this is an expression, finally actually invoke the lambda
+        if (is_expression) {
+            printer.print_cpp2("()", n.close_brace);
+        }
+        printer.print_cpp2("\n", n.close_brace);
     }
 
 
@@ -1741,7 +1793,6 @@ public:
         for (auto const& x : n.ops) {
             assert(x);
             assert(x->type() == lexeme::Not);   // should be the only prefix operator
-            //emit(*x);
             printer.add_pad_in_this_line(-3);
             printer.print_cpp2("!(", n.position());
             suffix += ")";
@@ -1763,7 +1814,6 @@ public:
         assert(n.expr);
 
         //  Handle is/as expressions
-        //  For now, hack in just a single 'as'-cast
         //  TODO: Generalize
         if (!n.terms.empty() && *n.terms.front().op == "is")
         {
@@ -1776,11 +1826,11 @@ public:
             }
 
             printer.print_cpp2("cpp2::is<", n.position());
-            //printer.preempt_position(n.position());
             emit(*n.terms.front().expr);
             printer.print_cpp2(">(", n.position());
-            //printer.preempt_position(n.position());
+
             emit(*n.expr);
+
             printer.print_cpp2(")", n.position());
             return;
         }
@@ -1796,11 +1846,11 @@ public:
             }
 
             printer.print_cpp2("cpp2::as<", n.position());
-            //printer.preempt_position(n.position());
             emit(*n.terms.front().expr);
             printer.print_cpp2(">(", n.position());
-            //printer.preempt_position(n.position());
+
             emit(*n.expr);
+
             printer.print_cpp2(")", n.position());
             return;
         }
