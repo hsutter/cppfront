@@ -8,7 +8,7 @@ See [License](LICENSE)
 
 Cppfront is a personal experimental compiler from an experimental C++ 'syntax 2' to today's 'syntax 1,' to learn some things, prove out some concepts, and share some ideas.
 
-The goal is to explore whether there's a way we can evolve C++ itself to become 10x simpler, safer, and more toolable. If we had an alternate C++ syntax, it would give us a "bubble of new code that doesn't exist today" where we could make arbitrary improvements (e.g., change defaults, remove unsafe parts, make the language context-free and order-independent, and generally apply 30 years' worth of learnings), free of backward source compatibility constraints.
+The goal is to explore whether there's a way we can evolve C++ itself to become 10x simpler, safer, and more toolable. If we had an alternate C++ syntax, it would give us a "bubble of new code that doesn't exist today" where we could make arbitrary improvements (e.g., change defaults, remove unsafe parts, make the language context-free and order-independent, and generally apply 30 years' worth of learnings), free of backward source compatibility constraints. I think of it as an attempt at "directed evolution."
 
 I'm sharing this work because I hope to start a conversation about what could be possible _**within C++**_’s own evolution to rejuvenate C++, now that we have C++20 and soon C++23 to build upon. This compiler is currently still hilariously incomplete, so don't contemplate any real use yet. :) For example, as of this writing, syntax 2 doesn't yet support writing classes, though you can still write those using today's syntax (both syntaxes can be used within the same source file and seamlessly interoperate). And this is my own project; I am not speaking for any company or for the ISO C++ committee, though whenever parts of this do pan out I intend to keep bringing them to ISO C++ as evolution proposals.
 
@@ -123,7 +123,7 @@ Here is a list of those papers and talks, in the order that I brought each indiv
 - [**CppCon 2015**: "Writing good C++14... _by default_"](https://youtu.be/hEx5DNLWGgA) particularly [from 29:00 onward](https://youtu.be/hEx5DNLWGgA?t=1757) shows the Lifetime analysis with live demos in a Visual Studio prototype
 - [**CppCon 2018**: "Thoughts on a more powerful _and_ simpler C++ (#5 of N)](https://youtu.be/80BZxujhY38)
     - [the section starting at 18:00](https://youtu.be/80BZxujhY38?t=1097) is an update on the Lifetime status with live demos in a Clang prototype
-    - [the final part starting at 1:28](https://youtu.be/80BZxujhY38?t=5307) which shows the Lifetime and Metaclasses proposals working hand-in-hand (this is one of the few places before cppfront where the same compiler has contained prototypes of multiple 'syntax 2'-derived features so I could show how they build on each other when used together)
+    - [the final part starting at 1:28](https://youtu.be/80BZxujhY38?t=5307) shows the Lifetime and Metaclasses proposals working hand-in-hand (this is one of the few places before cppfront where the same compiler has contained prototypes of multiple 'syntax 2'-derived features so I could show how they build on each other when used together)
 - [**C++ Core Guidelines**: Lifetime safety profile](https://github.com/isocpp/CppCoreGuidelines/blob/master/docs/Lifetime.pdf) is this static analysis adopted by the C++ Core Guidelines
 - [**P1179**: Lifetime Safety: Preventing common dangling](https://wg21.link/p1179) is the same analysis in the WG 21 paper list
 
@@ -139,12 +139,25 @@ I welcome a real GC expert to collaborate with on bringing this forward to becom
 #### Spaceship operator for comparisons, `<=>`
     
 - [**CppCon 2017 (just the intro, first 6 minutes)**: "Meta: Thoughts on generative C++"](https://www.youtube.com/watch?v=4AfRAVcThyA)
-- [**P0515**: Consistent comparison](https://wg21.link/p0515)
+- [**P0515**: Consistent comparison](https://wg21.link/p0515) is the proposal in today's syntax that I proposed, and was adopted, for C++20
+
+This is the first feature from my Cpp2 work that is now in the ISO C++ standard as part of C++20, and with legacy comparison interoperability improvements in C++23. I had not initially been planning to make this one an ISO C++ proposal yet, but after C++17 shipped the committee continued actively discussing ways to improve comparisons, so since I had a design in my back pocket I submitted it as a proposal and, to my surprise, it was approved in a single meeting. (But see the notes about bug fixes, two paragraphs below.)
     
-This is the first feature from my Cpp2 work that is now in the ISO C++ standard, as part of C++20.
-    
-It is also the only feature in the history of ISO C++ where we _added_ a feature to ISO C++ that made the whole standard _smaller_: It took about 10 pages of core language wording to specify, but it was also applied throughout the standard library which reduced the C++ standard library's specification by about 25 pages. I take this as a data point that it is possible to simplify C++ by thoughtfully adding the right kinds of features.
+This is the only feature in the history of ISO C++ where we _added_ a feature to ISO C++ that made the whole standard _smaller_: It took about a dozen pages of core language wording to specify, but it was also applied throughout the standard library which reduced the C++ standard library's specification by about twice that many pages because we removed something like hundreds of comparison operators. I take this as a data point that validates the core hypothesis of 'syntax 2,' that it is possible to simplify today's C++ code (even the standard library's own specification) by thoughtfully adding the right kinds of features to the language.
     
 This is also the only feature from the Cpp2 work that I proposed without first having a prototype implementation, and so the proposal had bugs in two main areas that were discovered and fixed later: Keeping the `==` optimization, which was known but in the initial proposal was easy to lose accidentally; and smoother interoperation with existing pre-`<=>` types (which is important because there are _a lot_ of those). Thank you again to everyone who helped land this in the Standard in C++20 and improved in C++23, including: Walter Brown, Lawrence Crowl, Cameron DaCamara, Gabriel Dos Reis, Jens Maurer, Barry Revzin, Richard Smith, and David Stone. This shows the importance of prototype experience.
+
+#### Reflection, generation, and metaclasses
+    
+- [**ACCU 2017**: "Thoughts on metaclasses"](https://www.youtube.com/watch?v=6nsyX37nsRs) is the first talk I gave about this
+- [**CppCon 2017**: "Meta: Thoughts on generative C++"](https://www.youtube.com/watch?v=4AfRAVcThyA) from after the intro, [from 6:00 onward](https://youtu.be/4AfRAVcThyA?t=393)
+- [**CppCon 2018**: "Thoughts on a more powerful _and_ simpler C++ (#5 of N)](https://youtu.be/80BZxujhY38)
+    - [the section starting at 51:00](https://youtu.be/80BZxujhY38?t=1097) is an update on the Metaclasses status with live demos in a Clang prototype
+    - [the final part starting at 1:28](https://youtu.be/80BZxujhY38?t=5307) shows the Lifetime and Metaclasses proposals working hand-in-hand (this is one of the few places before cppfront where the same compiler has contained prototypes of multiple 'syntax 2'-derived features so I could show how they build on each other when used together)
+- [**P0707**: Metaclass functions: Generative C++](https://wg21.link/p0707)
+
+The ACCU talk started with something I've never done before: A live mini-"usability study" with unprepared subjects in front of a live audience. (It was not a proper usability study because of conference talk constraints; for example, to save time I allowed myself to use some leading questions. In a real usability study you wouldn't do that.) The reason I did this was because I had already run this design (and parameter passing, below) through actual usability studies with C++ programmers and saw how they consistently reacted to it, and I wanted the ACCU audience to see what I had already seen, namely how real C++ developers who have never seen it before react to it, and how quickly they can understand and learn it. This was a totally legit demonstration... the audience members who came on-stage really had never seen it before and I had never spoken with them about it before.
+    
+cppfront does not yet have 'syntax 2' user-defined types (classes) or metaclases. I look forward to starting to implement this in cppfront over the fall and winter... wish me luck! I anticipate that using the AST that cppfront has, which is much closer to a parse tree than a bound tree, is ideal for most metaclass applications which really are about "automating writing code"... some of what has made previous metaclass prototypes difficult was that they were working on fully bound trees which meant they had to remove work already done, whereas my original design of metaclasses was much closer to the source code level and that's what I aim to (try to) implement.
 
     
