@@ -1,0 +1,16 @@
+main: () -> int = {
+    print_an_int("syzygy");
+    print_an_int(1);
+    print_an_int(1.1);
+}
+
+print_an_int: ( x: _ ) = {
+    std::cout
+        << std::setw(30) << typeid(x).name() 
+        << " value is "
+        << inspect x -> std::string {
+            is int = std::to_string(x as int);
+            is _   = "not an int";
+        }
+        << "\n";
+}
