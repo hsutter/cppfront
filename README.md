@@ -129,6 +129,8 @@ Here is a list of those papers and talks, in the order that I brought each indiv
 
 Much of this Lifetime analysis has been implemented and shipped in Visual Studio and in CLion, and initial small parts have been implemented and shipped in Clang. The implementations have exposed bugs in shipping code that were not caught before. My experiment in 'syntax 2' is to make these safety rules the default and mandatory. (Note: Most of this is not yet implemented in cppfront.)
     
+I want to again thank many people, including Sunny Chattergee, Daniel Frampton, Matthias Gehre, Gabor Horvath, Neil MacIntosh, Kyle Reed, and more for their help in specifying and implementing the Lifetime static analysis design.
+    
 ### Garbage-collected memory arena
 
 - [**CppCon 2016**: "Leak-freedom in C++... _by default_"](https://www.youtube.com/watch?v=JfmTagWcqoE) particularly [from 59:00 onward](https://youtu.be/JfmTagWcqoE?t=3558) where I show the strawman prototype I wrote of a tracing garbage-collection memory arena
@@ -159,12 +161,28 @@ This is also the only feature from the Cpp2 work that I proposed without first h
 The ACCU talk started with something I've never done before: A live mini-"usability study" with unprepared subjects in front of a live audience. (It was not a proper usability study because of conference talk constraints; for example, to save time I allowed myself to use some leading questions. In a real usability study you wouldn't do that.) The reason I did this was because I had already run this design (and parameter passing, below) through actual usability studies with C++ programmers and saw how they consistently reacted to it, and I wanted the ACCU audience to see what I had already seen, namely how real C++ developers who have never seen it before react to it, and how quickly they can understand and learn it. This was a totally legit demonstration... the audience members who came on-stage really had never seen it before and I had never spoken with them about it before.
     
 cppfront does not yet have 'syntax 2' user-defined types (classes) or metaclases. I look forward to starting to implement this in cppfront over the fall and winter... wish me luck! I anticipate that using the AST that cppfront has, which is much closer to a parse tree than a bound tree, is ideal for most metaclass applications which really are about "automating writing code"... some of what has made previous metaclass prototypes difficult was that they were working on fully bound trees which meant they had to remove work already done, whereas my original design of metaclasses was much closer to the source code level and that's what I aim to (try to) implement.
+    
+I want to again thank Andrew Sutton and his colleagues Wyatt Childers and Jennifer Yao for their help in implementing the prototypes of this proposal, and everyone else who contributed feedback on the design.
 
 ### Zero-overhead deterministic exceptions: Throwing values
 
+- [**ACCU 2019**: "De-fragmenting C++: Making exceptions more affordable and usable](https://www.youtube.com/watch?v=os7cqJ5qlzo)
 - [**CppCon 2019**: "De-fragmenting C++: Making exceptions and RTTI more affordable and usable ("Simplifying C++" #6 of N)](https://www.youtube.com/watch?v=ARYP83yNAWk)
 - [**P0709**: Zero-overhead deterministic exceptions: Throwing values](https://wg21.link/p0709)
 
 I'll just say that when I brought this to the ISO C++ committee, I was amazed that in the Library subgroups a repeated reaction to some (not all) of the library-focused suggestions was "yup, that's a direction we've already decided we want the standard library to move toward..." Except possibly for `<=>` comparisons, this is the only time in my 25 years in WG 21 that I've made a proposal to the committee where I expected to have to do a lot of selling and suddenly had the feeling that I was pushing hard on a open door. (Disclaimer: In the Language subgroups there was more resistance, particularly to make sure pointers to functions would not be bifurcated in the type system. I believe I have an answer to that (thanks to input from Ville Voutilainen in particular), but I still need to prototype it in cppfront, and it still needs to be brought back to the committee to see if they find the results acceptable. There's real work still ahead and a possibility it might not pan out as expected... that's why we use the word "experiment.")
 
-   
+Note: Besides `<=>`, this is the other of the Cpp2-derived proposals that has not yet been implemented, and implementation experience is important before standardizing something like this. I hope to gain experience with it in cppfront, though this will be the trickiest part of this work to implement in a Cpp2->Cpp1 compiler like cppfront because it needs to be coordinated with stack unwinding details deep inside the existing C++ compiler and the platform ABI; I think it's doable, but I realize I have work ahead of me here.
+    
+### Parameter passing
+    
+- **ACCU autumn 2019**: "Quantifying accidental complexity: An empirical look at teaching and using C++" was my first public talk about this, but a "beta" version that was not recorded; you can find the description [here](https://accu.org/conf-previous/2019_autumn/sessions/#XQuantifyingAccidentalComplexityAnEmpiricalLookatTeachingandUsingC)
+- [**CppCon 2020**: "Quantifying accidental complexity: An empirical look at teaching and using C++"](https://www.youtube.com/watch?v=6lurOCdaj0Y)
+    - The first half of the talk is about how to be rigorous and actually measure that we're making improvements, including to measure the percentage of today's C++ guidance is about parameter passing and initialization
+    - The second half of the talk is about `in`, `inout`, `out`, `move`, and `forward`
+- [**d0708**: "Parameter passing -> guaranteed unified initialization and value setting](https://github.com/hsutter/708/blob/main/708.pdf) goes into more details than I had time for in the talk, in the second half of the paper (note: this is a "d"-draft paper I haven't formally brought to ISO C++, because during the pandemic I didn't bring any updates to my major papers as I think those major proposals are best considered when the committee can meet in person)
+- [**Github.com/hsutter/708**](https://github.com/hsutter/708) is a repo with the paper and demo examples as used in the talk
+    
+The only change in cppfront is that I've split `in` into `in` (now the whitespace default in 'syntax 2') and `copy`, and implemented automatic-move-from-last-use for `copy` paramters. This is actually consistent with, and rediscovering, what we already teach today, including in my [CppCon 2014 talk at 55:17](https://youtu.be/xnqTKD8uD64?t=3317) where the parameter passing section already distinguishes "in" vs. "in+copy" parameters. _Plus ça change, plus c'est la même chose..._
+
+This is basically all implemented in cppfront, except not the unified `operator=` experiment since I haven't implemented classes yet in 'syntax 2.'
