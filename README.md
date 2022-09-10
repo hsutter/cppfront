@@ -129,7 +129,7 @@ Here is a list of those papers and talks, in the order that I brought each indiv
 
 Much of this Lifetime analysis has been implemented and shipped in Visual Studio and in CLion, and initial small parts have been implemented and shipped in Clang. The implementations have exposed bugs in shipping code that were not caught before. My experiment in 'syntax 2' is to make these safety rules the default and mandatory. (Note: Most of this is not yet implemented in cppfront.)
     
-I want to again thank many people, including Sunny Chattergee, Daniel Frampton, Matthias Gehre, Gabor Horvath, Neil MacIntosh, Kyle Reed, and more for their help in specifying and implementing the Lifetime static analysis design.
+I want to again thank many people, including especially Matthias Gehre, Gabor Horvath, Neil MacIntosh, and Kyle Reed for their help in implementing the Lifetime static analysis design in Visual Studio and a Clang fork, and to all of the following for their input and feedback on the specification: Andrei Alexandrescu, Steve Carroll, Pavel Curtis, Gabriel Dos Reis, Joe Duffy, Daniel Frampton, Anna Gringauze, Chris Hawblitzel, Nicolai Josuttis, Leif Kornstaedt, Aaron Lahman, Ryan McDougall, Nathan Myers, Gor Nishanov, Andrew Pardoe, Jared Parsons, Dave Sielaff, Richard Smith, Jim Springfield, and Bjarne Stroustrup.
     
 ### 2016: Garbage-collected memory arena
 
