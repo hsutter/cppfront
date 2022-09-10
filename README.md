@@ -111,10 +111,14 @@ Here's where to find out more about my 'syntax #2' experiment:
 
 - **My CppCon 2022 talk** [link coming soon] — this is the primary documentation right now. See also every talk I've given and paper I've written since 2015, each of which details an individual part of this design experiment, but presented in today's C++ syntax as a standalone C++ evolution proposal.
 - **The [cppfront regression tests](https://github.com/hsutter/cppfront/tree/main/regression-tests/test-results)** which show dozens of working examples, each with a`.cpp2` file and the `.cpp` file it is translated to. Each filename briefly describes the language features the test demonstrates (e.g., contracts, parameter passing, bounds safety, type-safe `is` queries and `as` casts, initialization safety, and generalized value capture including in function expressions ('lambdas'), postconditions, and string interpolation).
-
-All of the ISO C++ papers and CppCon conference talks I've given since 2015 have been derived from this work, bringing individual parts of the 'syntax 2' experiment as standalone proposals in today's syntax to validate that the committee and community agreed with the problem to be solved and the solution direction, and to further flesh out each part individually. Most of the details in the following papers and talks are still current with only incremental updates, apart from the specific syntax of course:
     
-### Lifetime safety
+### List of my papers and talks since 2015 (all from this work, but presented in today's syntax)
+
+All of the ISO C++ papers and CppCon conference talks I've given since 2015 have been derived from this work. I've spent the last seven years bringing each individual experimental design improvement of the 'syntax 2' experiment as a standalone proposal in today's syntax, to validate that the committee and community agreed with the problem to be solved and the solution direction, and to further flesh out each part individually... thanks very much to all of you who have given valuable feedback!
+    
+Here is a list of those papers and talks, in the order that I brought each individual design forward. Most of the details in the following papers and talks are still current with only incremental updates, apart from the specific syntax of course.
+    
+#### Lifetime safety
     
 - [**CppCon 2015**: "Writing good C++14... _by default_"](https://youtu.be/hEx5DNLWGgA) particularly [from 29:00 onward](https://youtu.be/hEx5DNLWGgA?t=1757) shows the Lifetime analysis with live demos in a Visual Studio prototype
 - [**CppCon 2018**: "Thoughts on a more powerful _and_ simpler C++ (#5 of N)](https://youtu.be/80BZxujhY38)
@@ -125,7 +129,22 @@ All of the ISO C++ papers and CppCon conference talks I've given since 2015 have
 
 Much of this Lifetime analysis has been implemented and shipped in Visual Studio and in CLion, and initial small parts have been implemented and shipped in Clang. The implementations have exposed bugs in shipping code that were not caught before. My experiment in 'syntax 2' is to make these safety rules the default and mandatory. (Note: Most of this is not yet implemented in cppfront.)
     
-### Garbage-collected memory arena
+#### Garbage-collected memory arena
 
 - [**CppCon 2016**: "Leak-freedom in C++... _by default_"](https://www.youtube.com/watch?v=JfmTagWcqoE) particularly [from 59:00 onward](https://youtu.be/JfmTagWcqoE?t=3558) where I show the strawman prototype I wrote of a tracing garbage-collection memory arena
 - [**GCPP**: "gcpp: Deferred and unordered destruction"](https://github.com/hsutter/gcpp) is the GitHub prototype I wrote
+
+I welcome a real GC expert to collaborate with on bringing this forward to become a "real" usable tracing GC memory arena that C++ code can opt into. As always, we still prefer scopes first (no tracking needed), and if that's not sufficient then `unique_ptr` (minimal tracking needed), then if that's not sufficient `shared_ptr` (more tracking needed), and then if that's not sufficient this tracing GC arena (suitable for cases where the existing smart pointers aren't enough, such as when you really cannot statically know enough about lifetimes to use the existing smart pointers).
+
+#### Spaceship operator for comparisons, `<=>`
+    
+- [**CppCon 2017 (just the intro, first 6 minutes)**: "Meta: Thoughts on generative C++"](https://www.youtube.com/watch?v=4AfRAVcThyA)
+- [**P0515**: Consistent comparison](https://wg21.link/p0515)
+    
+This is the first feature from my Cpp2 work that is now in the ISO C++ standard, as part of C++20.
+    
+It is also the only feature in the history of ISO C++ where we _added_ a feature to ISO C++ that made the whole standard _smaller_: It took about 10 pages of core language wording to specify, but it was also applied throughout the standard library which reduced the C++ standard library's specification by about 25 pages. I take this as a data point that it is possible to simplify C++ by thoughtfully adding the right kinds of features.
+    
+This is also the only feature from the Cpp2 work that I proposed without first having a prototype implementation, and so the proposal had bugs in two main areas that were discovered and fixed later: Keeping the `==` optimization, which was known but in the initial proposal was easy to lose accidentally; and smoother interoperation with existing pre-`<=>` types (which is important because there are _a lot_ of those). Thank you again to everyone who helped land this in the Standard in C++20 and improved in C++23, including: Walter Brown, Lawrence Crowl, Cameron DaCamara, Gabriel Dos Reis, Jens Maurer, Barry Revzin, Richard Smith, and David Stone. This shows the importance of prototype experience.
+
+    
