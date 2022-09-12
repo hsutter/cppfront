@@ -667,8 +667,8 @@ auto lex_line(
             //G     character-literal
             //G     floating-point-literal
             //G     string-literal
-            //GT     boolean-literal
-            //GT     pointer-literal
+            //GTODO     boolean-literal
+            //GTODO     pointer-literal
             //G
             //G integer-literal:
             //G     binary-literal
@@ -728,7 +728,7 @@ auto lex_line(
                 //G     
                 //G floating-point-literal:
                 //G     digit { ' | digit }* . digit { ' | digit }*
-                //GT TODO: full grammar
+                //GTODO TODO: full grammar
                 //G     
                 else if (is_digit(line[i])) {
                     auto j = 1;

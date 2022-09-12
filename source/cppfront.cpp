@@ -1192,7 +1192,7 @@ public:
 
         for (auto first = true; auto&& alt : n.alternatives)
         {
-            assert(alt);
+            assert(alt && alt->is_as_keyword);
             if (!first) {
                 printer.print_cpp2("else ", alt->position());
             }
@@ -1204,7 +1204,10 @@ public:
             emit(*alt->id_expression);
             printer.emit_to_string();
 
-            if (*alt->identifier == "is")
+            assert (*alt->is_as_keyword == "is" || *alt->is_as_keyword == "as");
+            // TODO: pick up 'as' next, for now just do 'is'
+
+            if (*alt->is_as_keyword == "is")
             {
                 //  Stringize the expression-statement now...
                 auto statement = std::string{};

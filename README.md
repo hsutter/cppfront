@@ -128,7 +128,7 @@ For now, I'm not posting a lot of written documentation because that would imply
 
 Here's where to find out more about my 'syntax #2' experiment:
 
-- **My CppCon 2022 talk** [link coming soon] — this is the primary documentation right now. See also every talk I've given and paper I've written since 2015, each of which details an individual part of this design experiment, but presented in today's C++ syntax as a standalone C++ evolution proposal.
+- **My CppCon 2022 talk, "C++ simplicity, safety, and toolability: Can C++ be 10x simpler and safer ...?**" [link coming soon] — this is the primary documentation right now. See also every talk I've given and paper I've written since 2015, each of which details an individual part of this design experiment, but presented in today's C++ syntax as a standalone C++ evolution proposal.
 - **The [cppfront regression tests](https://github.com/hsutter/cppfront/tree/main/regression-tests/test-results)** which show dozens of working examples, each with a`.cpp2` file and the `.cpp` file it is translated to. Each filename briefly describes the language features the test demonstrates (e.g., contracts, parameter passing, bounds safety, type-safe `is` queries and `as` casts, initialization safety, and generalized value capture including in function expressions ('lambdas'), postconditions, and string interpolation).
     
 ## List of my papers and talks since 2015 (all from this work, but presented in today's syntax)
@@ -233,8 +233,8 @@ Cppfront currently has basic support for `is` and `as`, including for dynamic ty
 I still need to validate the `is` and `as` implementations with more cases (I'm sure there are still some that break that I need to fix), flesh out allowing `is` and `as` in `requires`-clauses to constrain templates (as shown in the paper), and non-basic `inspect` pattern matching examples.
 
 ### 2022: CppCon 2022 talk and cppfront
-    
-- **CppCon 2022**: "Can C++ be 10x simpler & safer?" (link coming soon).
+
+- **CppCon 2022**: "C++ simplicity, safety, and toolability: Can C++ be 10x simpler and safer ...?" [link coming soon]
 - This repo.
     
 # Epilog: 2016 roadmap diagram

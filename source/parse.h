@@ -597,15 +597,16 @@ struct return_statement_node
 
 struct alternative_node
 {
-    token const*                        identifier;
-    std::unique_ptr<id_expression_node> id_expression;
-    source_position                     equal_sign;
-    std::unique_ptr<statement_node>     statement;
+    std::unique_ptr<unqualified_id_node> name;
+    token const*                         is_as_keyword;
+    std::unique_ptr<id_expression_node>  id_expression;
+    source_position                      equal_sign;
+    std::unique_ptr<statement_node>      statement;
 
     auto position() const -> source_position
     {
-        assert(identifier);
-        return identifier->position();
+        assert(is_as_keyword);
+        return is_as_keyword->position();
     }
 
     auto visit(auto& v, int depth) -> void;
@@ -708,8 +709,11 @@ struct statement_node
 auto alternative_node::visit(auto& v, int depth) -> void
 {
     v.start(*this, depth);
-    assert (identifier);
-    v.start(*identifier, depth+1);
+    if (name) {
+        v.start(*name, depth+1);
+    }
+    assert (is_as_keyword);
+    v.start(*is_as_keyword, depth+1);
     assert (id_expression);
     id_expression->visit(v, depth+1);
     assert (statement);
@@ -1458,11 +1462,11 @@ private:
     //G prefix-expression:
     //G     postfix-expression
     //G     prefix-operator prefix-expression
-    //GT     await-expression
-    //GT     sizeof ( type-id )
-    //GT     sizeof ... ( identifier )
-    //GT     alignof ( type-id )
-    //GT     throws-expression
+    //GTODO     await-expression
+    //GTODO     sizeof ( type-id )
+    //GTODO     sizeof ... ( identifier )
+    //GTODO     alignof ( type-id )
+    //GTODO     throws-expression
     //G
     auto prefix_expression() 
         -> std::unique_ptr<prefix_expression_node>
@@ -1516,9 +1520,9 @@ private:
 
     //G is-as-expression:
     //G     prefix-expression 
-    //GT    is-as-expression is-expression-constraint
-    //GT    is-as-expression as-type-cast
-    //GT    type-id is-type-constraint
+    //GTODO    is-as-expression is-expression-constraint
+    //GTODO    is-as-expression as-type-cast
+    //GTODO    type-id is-type-constraint
     //G
     auto is_as_expression() {
         return binary_expression<is_as_expression_node> (
@@ -1682,7 +1686,7 @@ private:
 
     //G  expression:                // eliminated condition: - use expression:
     //G     assignment-expression
-    //GT    try expression
+    //GTODO    try expression
     //G
     auto expression(bool allow_relational_comparison = true) -> std::unique_ptr<expression_node> {
         auto n = std::make_unique<expression_node>();
@@ -1744,7 +1748,7 @@ private:
     //G unqualified-id:
     //G     const-opt identifier
     //G     const-opt template-id
-    //GT     operator-function-id
+    //GTODO     operator-function-id
     //G
     //G template-id:
     //G     identifier < template-argument-list-opt >
@@ -2180,21 +2184,46 @@ private:
 
 
     //G alternative:
-    //G     is-expression-constraint = statement
+    //G     alt-name-opt is-type-constraint = statement
+    //G     alt-name-opt as-type-cast = statement
+    //GTODO    alt-name-opt is-expression-constraint = statement
     //G
-    //G is-expression-constraint
+    //G is-type-constraint
     //G     is id-expression
+    //G
+    //G as-type-cast
+    //G     as id-expression
+    //G
+    //G alt-name:
+    //G     unqualified-id :
     //G
     auto alternative() -> std::unique_ptr<alternative_node> 
     {
-        //  Initial partial implementation: Just "is id-expression"
-        //  (note: that covers "_" as an unqualified-id)
-        if (curr() != "is") {
+        auto n = std::make_unique<alternative_node>();
+
+        ////  Check for an optional name (just one unqualified-id, no decomposition yet)
+        //if (curr() != "is" && curr() != "as") {
+        //    if (auto id = unqualified_id()) {
+        //        n->name = std::move(id);
+        //    }
+        //    else {
+        //        error("expected unqualified-id, 'is', or 'as' to start an inspect alternative");
+        //        return {};
+        //    }
+        //    if (curr().type() != lexeme::Colon) {
+        //        error("expected : after the introduced name in an inspect alternative");
+        //        return {};
+        //    }
+        //    next();
+        //}
+        
+        //  Now we should be as "is" or "as"
+        //  (initial partial implementation, just "is/as id-expression")
+        if (curr() != "is" && curr() != "as") {
             return {};
         }
 
-        auto n = std::make_unique<alternative_node>();
-        n->identifier = &curr();
+        n->is_as_keyword = &curr();
         next();
 
         if (auto id = id_expression()) {
@@ -2325,8 +2354,8 @@ private:
     //G     inspect-expression
     //G     let parameter-list statement
     // 
-    //GT     jump-statement
-    //GT     try-block
+    //GTODO     jump-statement
+    //GTODO     try-block
     //G
     auto statement(bool semicolon_required, source_position equal_sign = source_position{})
         -> std::unique_ptr<statement_node>
