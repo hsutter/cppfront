@@ -6,13 +6,24 @@ See [License](LICENSE)
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
 
-Cppfront is a personal experimental compiler from an experimental C++ 'syntax 2' to today's 'syntax 1,' to learn some things, prove out some concepts, and share some ideas.
+Cppfront is a personal experimental compiler from an experimental C++ 'syntax 2' to today's 'syntax 1,' to learn some things, prove out some concepts, and share some ideas. This README summarizes:
 
-The goal is to explore whether there's a way we can evolve C++ itself to become 10x simpler, safer, and more toolable. If we had an alternate C++ syntax, it would give us a "bubble of new code that doesn't exist today" where we could make arbitrary improvements (e.g., change defaults, remove unsafe parts, make the language context-free and order-independent, and generally apply 30 years' worth of learnings), free of backward source compatibility constraints. I think of it as an attempt at a "directed evolution" aiming for a cohesive set of coordinated improvements to achieve specific goals.
+- [Motivation and goals](#motivation-and-goals)
+- [History 2015-present](#history-2015-present)
+- [What's different about this experiment?](#whats-different-about-this-experiment)
+- [How do I build cppfront?](#how-do-i-build-cppfront)
+- [How do I build my `.cpp2` file?](#how-do-i-build-my-cpp2-file)
+- [Where's the documentation?](#wheres-the-documentation)
+- [List of my papers and talks since 2015 (all from this work, but presented in today's syntax)](#list-of-my-papers-and-talks-since-2015-all-from-this-work-but-presented-in-todays-syntax)
+- [Epilog: 2016 roadmap diagram](#epilog-2016-roadmap-diagram)
+
+### Motivation and goals
+
+My goal is to explore whether there's a way we can evolve C++ itself to become 10x simpler, safer, and more toolable. If we had an alternate C++ syntax, it would give us a "bubble of new code that doesn't exist today" where we could make arbitrary improvements (e.g., change defaults, remove unsafe parts, make the language context-free and order-independent, and generally apply 30 years' worth of learnings), free of backward source compatibility constraints. We could then use that space to design a "directed evolution" aiming for a cohesive set of coordinated improvements to achieve specific goals.
 
 I'm sharing this work because I hope to start a conversation about what could be possible _**within C++**_’s own evolution to rejuvenate C++, now that we have C++20 and soon C++23 to build upon. This compiler is currently still hilariously incomplete, so don't contemplate any real use yet. :) For example, as of this writing, syntax 2 doesn't yet support writing classes, though you can still write those using today's syntax (both syntaxes can be used within the same source file and seamlessly interoperate). And this is my own project; I am not speaking for any company or for the ISO C++ committee, though whenever parts of this do pan out I intend to keep bringing them to ISO C++ as evolution proposals.
 
-### History
+### History 2015-present
 
 <image align="right" width="320" src="https://user-images.githubusercontent.com/1801526/189241726-db92ae64-2b2f-4463-a0c3-87794062da9c.png"> I did most of the 'syntax 2' design work in 2015-16. Since then, every evolution proposal paper I've brought to ISO C++, and every conference talk I've given, has come from this work — just presented as a standalone proposal under today's syntax, usually with a separate standalone prototype implementation, to help validate and refine one part of the design, then another, then another.
     
@@ -20,9 +31,9 @@ For a list of papers and conference talks that have come from this work, see bel
 
 I started writing this cppfront compiler in mid-2021 as another step to prototype all the parts together as a whole as originally intended, now including the alternative 'syntax 2' for C++ that enables their full designs including otherwise-breaking changes. This step is to let me try out the full set of coordinated improvements in one place, and free of concerns about breaking any existing code.
 
-## What's different?
+## What's different about this experiment?
 
-This is one of many experiments going on across the industry looking at ways to accomplish a major C++ evolution. Several of those other experiments' designers have seen this 'syntax 2' work privately since 2016, and if they found parts of this useful in their own experiments then I think that's great, we should learn from each other and I look forward to seeing how their experiments work out too.
+This is one of many experiments going on across the industry looking at ways to accomplish a major C++ evolution. Several of those other experiments' designers have seen this 'syntax 2' work privately since 2016, and if they've found parts of this useful in their own experiments then I think that's great, we should learn from each other and I look forward to seeing how their experiments work out too.
     
 What makes this experiment different from the others? Two main things...
 
@@ -30,13 +41,13 @@ What makes this experiment different from the others? Two main things...
 
 <image align="right" width="150" src="https://user-images.githubusercontent.com/1801526/188887745-23e0c3a0-3ea7-4589-993c-f54fe662b107.png"> For me, ISO C++ is the best tool in the world today to write the programs I want and need. I want to keep writing code in C++... just "nicer":
     
-- with less ceremony to remember;
+- with less complexity to remember;
 
 - with fewer safety gotchas; and
 
 - with the same level of tool support other languages enjoy.
 
-If you're a C++ programmer, you may know what I mean... I want "C++, the powerful and expressive parts" without "C++, the cumbersome and dangerous parts." That C++ is an awesome language. More like that please.
+If you're a C++ programmer, this might resonate with you... I want "C++, the powerful and expressive parts" without "C++, the cumbersome and dangerous parts." That C++ is an awesome language. More like that please.
     
 We've already been improving C++'s safety and ergonomics with every ISO C++ release, but they have been "10%" improvements. We haven't been able to do a **"10x"** improvement primarily because we have to keep 100% syntax backward compatibility.
 
@@ -44,7 +55,13 @@ What if we could have our compatibility cake, and eat it too — by having:
 
 - 100% seamless **link compatibility always** (no marshaling, no thunks, no wrappers, no generated 'compatibility modules' to import/export C++ code from/to a different world); and
     
-- 100% seamless **backward source compatibility always available**, including 100% SFINAE and macro compatibility, **but only pay for it when we use it**... that is, apply C++'s familiar "zero-overhead principle" also to backward source compatibility?
+- 100% seamless **backward source compatibility always _available_**, including 100% SFINAE and macro compatibility, **but only pay for it when we use it**... that is, apply C++'s familiar "zero-overhead principle" also to backward source compatibility?
+
+What does this mean in practice in cppfront? That you have two option always available:
+
+- _Write mixed syntax 1 and syntax 2 in the same source file._ This gives you perfect backward source compatibility with all existing code, but you're writing in effectively a 10% larger language (because syntax 2 aims to be about 10% the size and complexity of today syntax 1). Cppfront translates only the parts you wrote in syntax 2, and passes through the syntax 1 parts unchanged, to generate your syntax 1 output file.
+
+- _Write only syntax 2 in a particular source file._ This gives you a whole source file that aims to let you program in a 10x simpler C++, where code is type-safe and memory-safe by construction (and in the future ideally with faster builds and better tooling tuned for the simpler language, if this project succeeds). You still have seamless interoperability with all C++ code via module `import,` but not via `#include` because that's part of the text preprocessor which is eliminated in pure syntax 2; you can still use `#include` and everything else in syntax 1, so to use those things just write a mixed 1/2 source file, and so you pay for it only if you do use it.
 
 I want to encourage us to look for ways to push the boundaries to bring C++ itself forward and double down on C++ — not to switch to something else.
     
@@ -68,6 +85,8 @@ An alternative syntax would be a cleanly demarcated "bubble of new code" that wo
 The cppfront compiler is an experiment to try to develop a proof of concept that evolution along these lines may be possible. For example, this repo's `parse.h` is a standalone context-free parser that is growing month by month as I implement more of the "syntax #2" experiment, and I hope for it to become a standalone context-free parser for a flavor of C++ that has full parity with the expressive power of today's C++.
 
 > **Important disclaimer: This isn't about 'just a pretty syntax,' it's about fixing semantics.** The unambiguous alternative syntax is just a means to an end, a gateway that lets us access a new open space beyond it — and sure, if we build a gate, then the gate ought to look nice too, so we build it with good boards and paint it nice colors. But the gate is the doorway, the portal, not the goal... the real payoff is gaining access to that new open space in C++ that's free of backward source compatibility constraints where we can (finally) fix semantics — order-independence, great defaults, regular composable semantic meanings — as we see fit. 
+
+Scores of people have given valuable feedback and many are listed below, but I specifically want to thank Bjarne Stroustrup, Mads Torgersen, Anders Hejlsberg, Tim Sweeney, Joe Duffy, Andrew Sutton, Gabriel Dos Reis, Gor Nishanov, Chris McKinsey, Daniel Frampton, Jared Parsons, Walter Bright, and Andrei Alexandrescu for their help and valuable feedback on this work over the years — especially when they disagreed with me. Dave Abrahams, David Sankel, Lee Howes, Nathan Sidwell, Pavel Curtis, and others also contributed valuable feedback broadly; I apologize for the names I have forgotten. Many more people are listed below for their help with specific parts of the design and those proposals/prototypes. Thank you all, again.
 
 ## How do I build cppfront?
 
@@ -123,13 +142,13 @@ Here is a list of those papers and talks, in the order that I brought each indiv
 - [**CppCon 2015**: "Writing good C++14... _by default_"](https://youtu.be/hEx5DNLWGgA) particularly [from 29:00 onward](https://youtu.be/hEx5DNLWGgA?t=1757) shows the Lifetime analysis with live demos in a Visual Studio prototype.
 - [**CppCon 2018**: "Thoughts on a more powerful _and_ simpler C++ (#5 of N)](https://youtu.be/80BZxujhY38):
     - [The section starting at 18:00](https://youtu.be/80BZxujhY38?t=1097) is an update on the Lifetime status with live demos in a Clang prototype.
-    - [The final part starting at 1:28](https://youtu.be/80BZxujhY38?t=5307) shows the Lifetime and Metaclasses proposals working hand-in-hand. This is one of the few places before cppfront where the same compiler has contained prototypes of multiple 'syntax 2'-derived features so I could show how they build on each other when used together.
+    - [The final part starting at 1:28:00](https://youtu.be/80BZxujhY38?t=5307) shows the Lifetime and Metaclasses proposals working hand-in-hand. This is one of the few places before cppfront where the same compiler has contained prototypes of multiple 'syntax 2'-derived features so I could show how they build on each other when used together.
 - [**C++ Core Guidelines**: Lifetime safety profile](https://github.com/isocpp/CppCoreGuidelines/blob/master/docs/Lifetime.pdf) is this static analysis adopted by the C++ Core Guidelines.
 - [**P1179**: Lifetime Safety: Preventing common dangling](https://wg21.link/p1179) is the same analysis in the WG 21 paper list.
 
-Much of this Lifetime analysis has been implemented and shipped in Visual Studio and in CLion, and initial small parts have been implemented and shipped in Clang. The implementations have exposed bugs in shipping code that were not caught before. My experiment in 'syntax 2' is to make these safety rules the default and mandatory. (Note: Most of this is not yet implemented in cppfront.)
+Much of this Lifetime analysis has been implemented and shipped in Visual Studio and in CLion, and initial small parts have been upstreamed and shipped in Clang. The implementations have exposed bugs in existing C++ code that were not caught before. My experiment in 'syntax 2' is to make these safety rules the default and mandatory. (Note: Most of this is not yet implemented in cppfront.)
     
-I want to again thank many people, including especially Matthias Gehre, Gabor Horvath, Neil MacIntosh, and Kyle Reed for their help in implementing the Lifetime static analysis design in Visual Studio and a Clang fork, and to all of the following for their input and feedback on the specification: Andrei Alexandrescu, Steve Carroll, Pavel Curtis, Gabriel Dos Reis, Joe Duffy, Daniel Frampton, Anna Gringauze, Chris Hawblitzel, Nicolai Josuttis, Ellie Kornstaedt, Aaron Lahman, Ryan McDougall, Nathan Myers, Gor Nishanov, Andrew Pardoe, Jared Parsons, Dave Sielaff, Richard Smith, Jim Springfield, and Bjarne Stroustrup.
+I want to again thank many people, including especially Matthias Gehre, Gabor Horvath, Neil MacIntosh, and Kyle Reed for their help in implementing the Lifetime static analysis design in Visual Studio and a Clang fork. Thanks also to all of the following for their input and feedback on the specification: Andrei Alexandrescu, Steve Carroll, Pavel Curtis, Gabriel Dos Reis, Joe Duffy, Daniel Frampton, Anna Gringauze, Chris Hawblitzel, Nicolai Josuttis, Ellie Kornstaedt, Aaron Lahman, Ryan McDougall, Nathan Myers, Gor Nishanov, Andrew Pardoe, Jared Parsons, Dave Sielaff, Richard Smith, Jim Springfield, and Bjarne Stroustrup.
     
 ### 2016: Garbage-collected memory arena
 
@@ -162,7 +181,7 @@ The ACCU talk started with something I've never done before: A live mini-"usabil
     
 cppfront does not yet have 'syntax 2' user-defined types (classes) or metaclasses. I look forward to starting to implement this in cppfront over the fall and winter... wish me luck! I anticipate that using the AST that cppfront has, which is much closer to a parse tree than a bound tree, is ideal for most metaclass applications which really are about a mental model of "generating source code"... some of what has made previous metaclass prototypes difficult was that they were working on fully bound trees which meant they had to remove work already done, whereas my original design of metaclasses was much closer to the source code level and that's what I aim to (try to) implement.
     
-I want to again thank Andrew Sutton and his colleagues Wyatt Childers and Jennifer Yao for their help in implementing the prototypes of this proposal, and everyone else who contributed feedback on the design.
+I want to again thank Andrew Sutton and his colleagues Wyatt Childers and Jennifer Yao for their help in implementing the Clang-based prototypes of this proposal, and everyone else who contributed feedback on the design.
 
 ### 2018: Updates to Lifetime and Metaclasses (see above)
     
@@ -180,11 +199,11 @@ Note: Besides `<=>`, this is the other of the Cpp2-derived proposals that has no
     
 - **ACCU autumn 2019**: "Quantifying accidental complexity: An empirical look at teaching and using C++" was my first public talk about this, but a "beta" version that was not recorded; you can find the description [here](https://accu.org/conf-previous/2019_autumn/sessions/#XQuantifyingAccidentalComplexityAnEmpiricalLookatTeachingandUsingC).
 - [**CppCon 2020**: "Quantifying accidental complexity: An empirical look at teaching and using C++"](https://www.youtube.com/watch?v=6lurOCdaj0Y):
-    - The first half of the talk is about how to be rigorous and actually measure that we're making improvements, including to measure the percentage of today's C++ guidance is about parameter passing and initialization.
+    - The first half of the talk is about how to be rigorous and actually measure that we're making improvements, including to measure the percentage of today's C++ guidance that is about parameter passing and initialization.
     - The second half of the talk is about `in`, `inout`, `out`, `move`, and `forward`.
 - [**d0708**: "Parameter passing -> guaranteed unified initialization and value setting](https://github.com/hsutter/708/blob/main/708.pdf) goes into more details than I had time for in the talk, in the second half of the paper. Note: this is a "d"-draft paper I haven't formally brought to ISO C++, because during the pandemic I didn't bring any updates to my major papers as I think those major proposals are best considered when the committee can meet in person.
 - [**Github.com/hsutter/708**](https://github.com/hsutter/708) is a repo with the paper and demo examples as used in the talk.
-- [**P2064**: "Assumptions"](https://wg21.link/p2064) is also related to this work, because this work includes a contracts design, and assumptions ought to be separate from that. This paper was making the technical argument why assumptions and assertions (contracts) are different things.
+- [**P2064**: "Assumptions"](https://wg21.link/p2064) is also related to this 'syntax 2' work, because this work includes a contracts design, and assumptions ought to be separate from that. This paper was making the technical argument why assumptions and assertions (contracts) are different things.
     
 The only change in cppfront is that I've split `in` into `in` (now the whitespace default in 'syntax 2') and `copy`, and implemented automatic-move-from-last-use for `copy` parameters. This is actually consistent with, and rediscovering, what we already teach today, including in my [CppCon 2014 talk at 55:17](https://youtu.be/xnqTKD8uD64?t=3317) where the parameter passing section already distinguishes "in" vs. "in+copy" parameters. _Plus ça change, plus c'est la même chose..._
 
@@ -199,7 +218,7 @@ In 2020 I also started socializing the ideas of:
 
 The talk was "Bridge to NewThingia," presented at:
     
-- [**DevAroundTheSun**: "Bridge to Newthingia"](https://herbsutter.com/2020/06/14/talk-video-available-bridge-to-newthingia-devaroundthesun/), an initial 26-minute version of the talk that I gave in the early months of the pandemic.
+- [**DevAroundTheSun**: "Bridge to Newthingia"](https://herbsutter.com/2020/06/14/talk-video-available-bridge-to-newthingia-devaroundthesun/), an initial 26-minute version of the talk that I gave in the early months of the pandemic lockdowns.
 - [**C++ on Sea**: "Bridge to NewThingia"](https://www.youtube.com/watch?v=BF3qw1ObUyo) which especially [at the end starting near 48:00](https://youtu.be/BF3qw1ObUyo?t=2883) had a slide that directly tackled the "C++ major evolution" scenario, and laid out what I think it would take to have credible answers to the key questions.
     
 ### 2021: `is`, `as`, and pattern matching
@@ -209,7 +228,7 @@ The talk was "Bridge to NewThingia," presented at:
 
 Like spaceship `<=>` comparisons, I brought this work to the committee because the committee was actively considering pattern matching proposals, and I had a design in my back pocket and so I asked if they would like to see it and they said yes, so I contributed it. This proposal is actually much more about having a general consistent type query (`is`) and a general consistent type cast (`as`) throughout the language, not just in pattern matching `inspect` statements, and then seeing how it could make the pattern matching also nice to use as well as make its usefulness broadly available instead of just inside `inspect`.
     
-Cppfront currently has basic support for `is` and `as`, including for dynamic typing in the language (subsuming "dynamic_cast" downcasts) and the standard library's `std::variant`, `std::optional`, and `std::any`. Just before CppCon I also implemented very basic `inspect` statements and expressions, and I plan to continue fleshing them out. (Side note: This is one of the places I'm really glad to have C++20 as a baseline, because implementing `inspect` expressions and getting the type system right would have been nearly impossible without C++14 generic lambdas, C++17 `if constexpr`, and C++20 concepts `requires` tests. Which might give away the implementation strategy I chose... :) )
+Cppfront currently has basic support for `is` and `as`, including for dynamic typing in the language (subsuming "dynamic_cast" downcasts) and the standard library's `std::variant`, `std::optional`, and `std::any`. Just before CppCon 2022 I also implemented very basic `inspect` statements and expressions, and I plan to continue fleshing them out. (Side note: This is one of the places where I'm really glad to have C++20 as a baseline, because implementing `inspect` expressions and getting the types right would have been nearly impossible without C++14 generic lambdas, C++17 `if constexpr`, and C++20 concepts `requires` tests. Which might give away the implementation strategy I chose... :) )
     
 I still need to validate the `is` and `as` implementations with more cases (I'm sure there are still some that break that I need to fix), flesh out allowing `is` and `as` in `requires`-clauses to constrain templates (as shown in the paper), and non-basic `inspect` pattern matching examples.
 
@@ -220,9 +239,9 @@ I still need to validate the `is` and `as` implementations with more cases (I'm 
     
 # Epilog: 2016 roadmap diagram
     
-Finally, let me show you a diagram I made in 2016. A few words have changed, and some of the topics aren't mentioned (e.g, `<=>` was added after this), but it has remained amazingly stable and is still recognizably a roadmap of Cpp2's design approach today.
+Finally, let me show you a diagram I made in early 2016. A few words have changed, and some of the topics aren't mentioned (e.g, `<=>` was added after this), but it has remained amazingly stable and is still recognizably a roadmap of Cpp2's design approach today.
     
-I think this diagram is important because it attempts to write down how design decisions lead to each other and support each other... Cpp2 is not a gaggle of unrelated fixes, it is an attempt to do a coordinated refactoring of C++ so that it is still C++ but, "simplified through generalization" into a smaller number of regular and combinable features, so we can remove special cases and duplications and confusions. That's almost a direct quote of how Bjarne Stroustrup stated it in the _ACM History of Programming Languages III_ (among other places):
+I think this diagram is important because it attempts to write down how design decisions lead to each other and support each other... Cpp2 is not a gaggle of unrelated fixes, it is an attempt to do a coordinated refactoring of C++ so that it is still C++, but "simplified through generalization" into a smaller number of regular and combinable features, so we can remove special cases and duplications and confusions. That's almost a direct quote of how Bjarne Stroustrup stated it in the _ACM History of Programming Languages III_ (among other places):
     
 > "**10% the size of C++** in definition and similar in front-end compiler size. ... **Most of the simplification would come from generalization.**" (B. Stroustrup, ACM HOPL-III, 2007; emphasis added)
 
