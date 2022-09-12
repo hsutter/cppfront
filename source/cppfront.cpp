@@ -895,7 +895,7 @@ public:
         ++pos;
 
         //  Now we're on the first character of the string itself
-        for ( ; pos < length && text[pos] != '"'; ++pos)
+        for ( ; pos < length && (text[pos] != '"' || text[pos-1] == '\\'); ++pos)
         {
             //  Find the next )$
             if (text[pos] == '$' && text[pos-1] == ')')
@@ -907,7 +907,7 @@ public:
                 //  "next" in the string is the "last" one encountered in the backwards scan
                 auto last_nonwhitespace = '\0';
 
-                for( ; text[open] != '"'; --open)
+                for( ; text[open] != '"' || text[open-1] != '\\'; --open)
                 {
                     if (text[open] == ')') {
                         ++paren_depth;
@@ -1222,7 +1222,7 @@ public:
                 auto return_prefix = std::string{};
                 auto return_suffix = std::string{";"};   // use this to tack the ; back on in the alternative body
                 if (is_expression) {
-                    return_prefix = "{ if constexpr( requires{" + statement + ";} ) if constexpr( std::is_same_v<" + result_type + ", CPP2_TYPEOF(" + statement + ")> ) return ";
+                    return_prefix = "{ if constexpr( requires{" + statement + ";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(" + statement + ")," + result_type + "> ) return ";
                     return_suffix += " }";
                 }
 

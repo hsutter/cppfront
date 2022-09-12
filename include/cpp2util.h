@@ -525,6 +525,13 @@ auto as( X const& x ) -> auto&& {
 }
 
 template< typename C, typename X >
+auto as( X const& x ) -> auto 
+    requires (!std::is_same_v<C, X> && requires { C{x}; })
+{
+    return C{x};
+}
+
+template< typename C, typename X >
     requires std::is_base_of_v<C, X>
 auto as( X&& x ) -> C&& {
     return std::forward<X>(x);
