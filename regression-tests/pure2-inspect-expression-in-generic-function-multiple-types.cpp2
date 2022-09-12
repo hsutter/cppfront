@@ -1,0 +1,30 @@
+main: () -> int = {
+    v: std::variant<int, double> = 42.0;
+    a: std::any = "xyzzy" as std::string;
+    o: std::optional<int> = ();
+
+    test_generic(3.14);
+    test_generic(v);
+    test_generic(a);
+    test_generic(o);
+
+    v = 1;
+    a = 2;
+    o = 3;
+    test_generic(42);
+    test_generic(v);
+    test_generic(a);
+    test_generic(o);
+}
+
+test_generic: ( x: _ ) = {
+    std::cout
+        << std::setw(30) << typeid(x).name() 
+        << " value is "
+        << inspect x -> std::string {
+            is int = "integer " + std::to_string(x as int);
+            is std::string = '"' + x as std::string + '"';
+            is _   = "not an int or string";
+        }
+        << "\n";
+}
