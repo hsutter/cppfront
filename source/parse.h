@@ -1949,7 +1949,7 @@ private:
                 //  it doesn't destabilize any regression tests
             )
         {
-            error("expression-statement does not end with semicolon");
+            error("expected ; at end of statement");
             return {};
         }
         if (curr().type() == lexeme::Semicolon) {
@@ -2264,6 +2264,14 @@ private:
     auto inspect_expression(bool is_expression) -> std::unique_ptr<inspect_expression_node> 
     {
         if (curr() != "inspect") {
+            return {};
+        }
+
+        if (!is_expression) {
+            errors.emplace_back(
+                curr().position(),
+                "(temporary alpha limitation) cppfront is still learning 'inspect' - only inspect expressions are currently supported"
+            );
             return {};
         }
 

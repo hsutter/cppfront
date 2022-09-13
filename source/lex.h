@@ -728,7 +728,7 @@ auto lex_line(
                 //G     
                 //G floating-point-literal:
                 //G     digit { ' | digit }* . digit { ' | digit }*
-                //GTODO TODO: full grammar
+                //GTODO full grammar
                 //G     
                 else if (is_digit(line[i])) {
                     auto j = 1;
