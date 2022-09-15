@@ -20,6 +20,11 @@
 #ifndef __CPP2_UTIL
 #define __CPP2_UTIL
 
+//  If this implementation doesn't support source_location yet, disable it
+#if !defined(_MSC_VER) && !defined(__cpp_lib_source_location)
+    #undef CPP2_USE_SOURCE_LOCATION
+#endif
+
 //  If the cppfront user requested -pure-cpp2, this will be set
 //  and we should be using modules only
 #ifdef CPP2_USE_MODULES
@@ -186,10 +191,6 @@
     #include <optional>
     #include <cstddef>
 
-    //  If this compiler doesn't support <source_location> yet, disable it
-    #if !defined(__cpp_lib_source_location)
-        #undef CPP2_USE_SOURCE_LOCATION
-    #endif
     #if defined(CPP2_USE_SOURCE_LOCATION)
         #include <source_location>
     #endif
