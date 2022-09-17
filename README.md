@@ -4,7 +4,7 @@
 
 See [License](LICENSE)
 
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CONTRIBUTING.md)
 
 Cppfront is a personal experimental compiler from an experimental C++ 'syntax 2' to today's 'syntax 1,' to learn some things, prove out some concepts, and share some ideas. This README summarizes:
 
