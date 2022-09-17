@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <vector>
 
 main: () -> int = {
     vec: std::vector<std::string> 

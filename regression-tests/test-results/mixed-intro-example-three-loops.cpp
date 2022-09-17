@@ -3,12 +3,13 @@
 #include <vector>
 #include <string>
 #include <span>
+#include <memory>
 
-auto print(auto const& thing) -> void { 
+auto print(auto const& thing) -> void {
     std::cout << ">> " << thing << "\n";
 }
 
-auto decorate_and_print(auto& thing) -> void { 
+auto decorate_and_print(auto& thing) -> void {
     thing = "[" + thing + "]";
     print(thing);
 }
