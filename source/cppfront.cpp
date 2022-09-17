@@ -34,16 +34,16 @@ auto cmdline_processor::print(std::string_view s, int width) -> void
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  Stringingizing helpers
-// 
+//
 //-----------------------------------------------------------------------
 
 auto pad(int padding) -> std::string_view
 {
     static std::string indent_str = std::string( 1024, ' ' );    // "1K should be enough for everyone"
 
-    if (padding < 1) { 
+    if (padding < 1) {
         return "";
     }
 
@@ -55,48 +55,48 @@ auto pad(int padding) -> std::string_view
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  positional_printer: a Syntax 1 pretty printer
-// 
+//
 //-----------------------------------------------------------------------
 //
 static auto flag_clean_cpp1 = false;
-static cmdline_processor::register_flag cmd_noline( 
+static cmdline_processor::register_flag cmd_noline(
     1,
-    "clean-cpp1", 
-    "Emit clean Cpp1 without #line directives", 
+    "clean-cpp1",
+    "Emit clean Cpp1 without #line directives",
     []{ flag_clean_cpp1 = true; }
 );
 
 static auto flag_cpp2_only = false;
-static cmdline_processor::register_flag cmd_cpp2_only( 
-    1, 
-    "pure-cpp2", 
-    "Allow Cpp2 syntax only", 
+static cmdline_processor::register_flag cmd_cpp2_only(
+    1,
+    "pure-cpp2",
+    "Allow Cpp2 syntax only",
     []{ flag_cpp2_only = true; }
 );
 
 static auto flag_safe_null_pointers = false;
-static cmdline_processor::register_flag cmd_safe_null_pointers( 
-    2, 
-    "null-checks", 
-    "Enable null safety contract checks", 
+static cmdline_processor::register_flag cmd_safe_null_pointers(
+    2,
+    "null-checks",
+    "Enable null safety contract checks",
     []{ flag_safe_null_pointers = true; }
 );
 
 static auto flag_safe_subscripts = false;
-static cmdline_processor::register_flag cmd_safe_subscripts( 
-    2, 
-    "subscript-checks", 
-    "Enable subscript bounds safety contract checks", 
+static cmdline_processor::register_flag cmd_safe_subscripts(
+    2,
+    "subscript-checks",
+    "Enable subscript bounds safety contract checks",
     []{ flag_safe_subscripts = true; }
 );
 
 static auto flag_use_source_location = false;
-static cmdline_processor::register_flag cmd_enable_source_info( 
-    2, 
-    "add-source-info", 
-    "Enable source locations for contract checks", 
+static cmdline_processor::register_flag cmd_enable_source_info(
+    2,
+    "add-source-info",
+    "Enable source locations for contract checks",
     []{ flag_use_source_location = true; }
 );
 
@@ -204,7 +204,7 @@ class positional_printer
 
     //-----------------------------------------------------------------------
     //  Internal helpers
-    
+
     //  Start a new line if we're not in col 1 already
     //
     auto ensure_at_start_of_new_line() -> void
@@ -231,7 +231,7 @@ class positional_printer
     }
 
     //  Catch up with comment/blank lines
-    // 
+    //
     auto flush_comments( source_position pos ) -> void
     {
         assert(pcomments);
@@ -301,7 +301,7 @@ class positional_printer
             assert (curr_pos.lineno <= pos.lineno);
             curr_pos.lineno = pos.lineno;   // re-sync
         }
- 
+
         //  Finally, align to the target column
         if (curr_pos.lineno == pos.lineno) {
             pos.colno = std::max( 1, pos.colno + pad_for_this_line );
@@ -455,7 +455,7 @@ public:
                 //  If the last line had a request for this colno, remember its actual offset
                 constexpr int sentinel = -100;
                 auto last_line_offset = sentinel;
-                for(auto i = 0; 
+                for(auto i = 0;
                     i < std::ssize(prev_line_info.requests) && prev_line_info.requests[i].requested <= pos.colno;
                     ++i
                     )
@@ -490,7 +490,7 @@ public:
 
     //-----------------------------------------------------------------------
     //  Position override control functions
-    // 
+    //
 
     //  Use this position instead of the next supplied one
     //  Useful when Cpp1 syntax is emitted in a different order/verbosity
@@ -541,8 +541,8 @@ public:
 
     //-----------------------------------------------------------------------
     //  Modal state control functions
-    // 
-    
+    //
+
     //  In the first pass we will print only declarations (the default)
     //  For the second pass this function enables printing definitions
     //
@@ -587,9 +587,9 @@ public:
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  cppfront: a compiler instance
-// 
+//
 //-----------------------------------------------------------------------
 //
 class cppfront
@@ -611,21 +611,21 @@ class cppfront
     bool suppress_move_from_last_use     = false;
 
     //  For lowering
-    //    
+    //
     positional_printer printer;
     bool               in_definite_init  = false;
     bool               in_parameter_list = false;
 
     std::string                                   function_return_name;
     std::vector<parameter_declaration_list_node*> function_returns;
-    parameter_declaration_list_node               single_anon;  
+    parameter_declaration_list_node               single_anon;
         //  special value - hack for now to note single-anon-return type kind in this function_returns working list
     std::vector<std::string>                      function_requires_conditions;
 
 public:
     //-----------------------------------------------------------------------
     //  Constructor
-    // 
+    //
     //  filename    the source file to be processed
     //
     cppfront(std::string const& filename)
@@ -696,7 +696,7 @@ public:
 
     //-----------------------------------------------------------------------
     //  lower_to_cpp1
-    // 
+    //
     //  Emits the target file with the last '2' stripped -> .cpp
     //
     auto lower_to_cpp1() -> void
@@ -734,7 +734,7 @@ public:
         auto cpp2_found = false;
 
         for (
-            lineno_t curr_lineno = 0; 
+            lineno_t curr_lineno = 0;
             auto const& line : source.get_lines()
             )
         {
@@ -744,8 +744,8 @@ public:
                 //  If it's a Cpp1 line, emit it
                 if (line.cat != source_line::category::cpp2)
                 {
-                    if (flag_cpp2_only && 
-                        !line.text.empty() && 
+                    if (flag_cpp2_only &&
+                        !line.text.empty() &&
                         line.cat != source_line::category::comment &&
                         line.cat != source_line::category::import
                         )
@@ -847,14 +847,14 @@ public:
     //-----------------------------------------------------------------------
     //
     //  emit() functions - each emits a kind of node
-    // 
+    //
     //  The body often mirrors the node's visit() function, unless customization
     //  is needed where Cpp1 and Cpp2 have different grammar orders
     //
 
     //-----------------------------------------------------------------------
     //  try_emit
-    // 
+    //
     //  Helper to emit whatever is in a variant where each
     //  alternative is a smart pointer
     //
@@ -903,7 +903,7 @@ public:
                 //  Scan back to find the matching (
                 auto paren_depth = 1;
                 auto open = pos - 2;
-                
+
                 //  "next" in the string is the "last" one encountered in the backwards scan
                 auto last_nonwhitespace = '\0';
 
@@ -1014,7 +1014,7 @@ public:
         bool add_std_forward =
             last_use && last_use->is_forward;
 
-        bool add_std_move = 
+        bool add_std_move =
             !add_std_forward &&
             (in_synthesized_multi_return || (last_use && !suppress_move_from_last_use));
 
@@ -1052,8 +1052,8 @@ public:
             printer.print_cpp2(".value()", n.position());
         }
         else if (!in_definite_init && !in_parameter_list) {
-            if (auto decl = sema.get_declaration_of(*n.identifier); 
-                decl && 
+            if (auto decl = sema.get_declaration_of(*n.identifier);
+                decl &&
                 //  note pointer equality: if we're not in the actual declaration of n.identifier
                 decl->identifier != n.identifier &&
                 //  and this variable was uninitialized
@@ -1114,11 +1114,11 @@ public:
     //-----------------------------------------------------------------------
     //
     auto emit(
-        compound_statement_node  const&  n, 
+        compound_statement_node  const&  n,
         std::vector<std::string> const& function_prolog = {},
         std::vector<std::string> const& function_epilog = {},
         colno_t                         function_indent = 1
-    ) 
+    )
         -> void
     {
         auto pos = n.open_brace;
@@ -1342,7 +1342,7 @@ public:
             emit(*n.statement);
             printer.print_cpp2(" while ( ", n.position());
             emit(*n.condition);
-            if (n.next_expression) {    
+            if (n.next_expression) {
                 //  Gotta say, this feels kind of nifty... short-circuit eval
                 //  and smuggling work into a condition via a lambda, O my...
                 printer.print_cpp2(" && [&]{ ", n.position());
@@ -1372,14 +1372,14 @@ public:
             //  If there's a next-expression, smuggle it in via a nested do/while(false) loop
             //  (nested "continue" will work, but "break" won't until we do extra work to implement
             //  that using a flag and implementing "break" as "__for_break = true; continue;")
-            if (n.next_expression) {    
+            if (n.next_expression) {
                 printer.print_cpp2(" { do ", n.position());
             }
 
             assert(n.body->initializer);
             emit(*n.body->initializer);
 
-            if (n.next_expression) {    
+            if (n.next_expression) {
                 printer.print_cpp2(" while (false); ", n.position());
                 emit(*n.next_expression);
                 printer.print_cpp2("; }", n.position());
@@ -1432,7 +1432,7 @@ public:
                 }
                 first = false;
                 assert(param->declaration->identifier);
-                
+
                 printer.emit_to_string(&stmt);
                 emit(*param->declaration->identifier, true);
                 printer.emit_to_string();
@@ -1501,7 +1501,7 @@ public:
         if (n.expr.index() == primary_expression_node::declaration)
         {
             auto& decl = std::get<primary_expression_node::declaration>(n.expr);
-            
+
             //  The usual non-null assertion, plus it should be an anonymous function
             assert(decl && !decl->identifier && decl->is(declaration_node::function));
 
@@ -1514,7 +1514,7 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(postfix_expression_node& n, bool for_lambda_capture = false) -> void   
+    auto emit(postfix_expression_node& n, bool for_lambda_capture = false) -> void
         // note: parameter is deliberately not const because we we will fill
         //       in the capture .str information, and we may also adjust token
         //       column positions when moving operators to prefix notation
@@ -1541,7 +1541,7 @@ public:
                     }
                     else
                     {
-                        if (n.ops.front().op->type() == lexeme::PlusPlus || 
+                        if (n.ops.front().op->type() == lexeme::PlusPlus ||
                             n.ops.front().op->type() == lexeme::MinusMinus ||
                             n.ops.front().op->type() == lexeme::LeftBracket
                             ) {
@@ -1599,12 +1599,12 @@ public:
         //  and if so use this path to convert it to UFCS
         if (// there's a single-token expression followed by . and (
             n.expr->get_token() &&                      //  if the base expression is a single token
-            std::ssize(n.ops) >= 2 &&                   //  and we're of the form: 
+            std::ssize(n.ops) >= 2 &&                   //  and we're of the form:
             n.ops[0].op->type() == lexeme::Dot &&       //       token . id-expr ( expr-list )
             n.ops[1].op->type() == lexeme::LeftParen &&
             // and either there's nothing after that, or there's just a $ after that
             (
-                std::ssize(n.ops) == 2 || 
+                std::ssize(n.ops) == 2 ||
                 (std::ssize(n.ops) == 3 && n.ops[2].op->type() == lexeme::Dollar)
             )
             )
@@ -1684,10 +1684,10 @@ public:
 
             //  Handle the Cpp2 postfix operators that are prefix in Cpp1
             //
-            if (i->op->type() == lexeme::MinusMinus || 
-                i->op->type() == lexeme::PlusPlus || 
-                i->op->type() == lexeme::Multiply || 
-                i->op->type() == lexeme::Ampersand || 
+            if (i->op->type() == lexeme::MinusMinus ||
+                i->op->type() == lexeme::PlusPlus ||
+                i->op->type() == lexeme::Multiply ||
+                i->op->type() == lexeme::Ampersand ||
                 i->op->type() == lexeme::Tilde
                 )
             {
@@ -1725,7 +1725,7 @@ public:
                 }
                 else if (i->op_close) {
                     suffix.emplace_back( i->op_close->to_string(true), i->op_close->position() );
-                } 
+                }
 
                 if (i->id_expr) {
                     auto print = std::string{};
@@ -1763,8 +1763,8 @@ public:
 
         //  If this is an --, ++, or &, don't add std::move on the lhs
         //  even if this is a definite last use (only do that when an rvalue is okay)
-        if (n.ops.front().op->type() == lexeme::MinusMinus || 
-            n.ops.front().op->type() == lexeme::PlusPlus || 
+        if (n.ops.front().op->type() == lexeme::MinusMinus ||
+            n.ops.front().op->type() == lexeme::PlusPlus ||
             n.ops.front().op->type() == lexeme::Ampersand
             )
         {
@@ -1884,7 +1884,7 @@ public:
                 violates_lifetime_safety = true;
             }
             else if (
-                *n.terms.front().op == "+" || *n.terms.front().op == "+=" || 
+                *n.terms.front().op == "+" || *n.terms.front().op == "+=" ||
                 *n.terms.front().op == "-" || *n.terms.front().op == "-="
                 )
             {
@@ -1894,7 +1894,7 @@ public:
                 );
                 violates_bounds_safety = true;
             }
-        } 
+        }
 
         for (auto const& x : n.terms) {
             assert(x.op);
@@ -1991,8 +1991,8 @@ public:
     //-----------------------------------------------------------------------
     //
     auto emit(
-        statement_node const&           n, 
-        bool                            can_have_semicolon  = true, 
+        statement_node const&           n,
+        bool                            can_have_semicolon  = true,
         source_position                 function_body_start = {},
         bool                            function_void_ret   = false,
         std::vector<std::string> const& function_prolog     = {},
@@ -2184,9 +2184,9 @@ public:
         //
         if (*n.kind == "post") {
             auto lambda_intro = build_capture_lambda_intro_for(n.captures, n.position());
-            printer.print_cpp2( 
-                "auto post_" + std::to_string(n.position().lineno) + "_" + 
-                    std::to_string(n.position().colno) + " = cpp2::finally_success(" + 
+            printer.print_cpp2(
+                "auto post_" + std::to_string(n.position().lineno) + "_" +
+                    std::to_string(n.position().colno) + " = cpp2::finally_success(" +
                     lambda_intro + "{",
                 n.position()
             );
@@ -2262,7 +2262,7 @@ public:
                 printer.print_cpp2( " -> void", n.position() );
             }
         }
- 
+
         else if (n.returns.index() == function_type_node::id) {
             printer.print_cpp2( " -> ", n.position() );
             auto& r = std::get<function_type_node::id>(n.returns);
@@ -2289,7 +2289,7 @@ public:
     {
         //  If this is a function that has multiple return values,
         //  first we need to emit the struct that contains the returns
-        if (printer.doing_declarations_only() && n.is(declaration_node::function)) 
+        if (printer.doing_declarations_only() && n.is(declaration_node::function))
         {
             auto& func = std::get<declaration_node::function>(n.type);
             assert(func);
@@ -2441,8 +2441,8 @@ public:
                 printer.ignore_alignment( false );
             }
 
-            emit(  
-                *n.initializer, 
+            emit(
+                *n.initializer,
                 true, func->position(), n.identifier && func->returns.index() == function_type_node::empty,
                 function_return_locals, function_epilog, n.position().colno
             );
@@ -2553,7 +2553,7 @@ public:
         }
     }
 
-    
+
     //-----------------------------------------------------------------------
     //  has_cpp1: pass through
     //
@@ -2561,7 +2561,7 @@ public:
         return source.has_cpp1();
     }
 
-    
+
     //-----------------------------------------------------------------------
     //  has_cpp2: pass through
     //
@@ -2581,10 +2581,10 @@ using namespace std;
 using namespace cpp2;
 
 static auto enable_debug_output_files = false;
-static cmdline_processor::register_flag cmd_noline( 
+static cmdline_processor::register_flag cmd_noline(
     9,
-    "debug", 
-    "Emit compiler debug output files", 
+    "debug",
+    "Emit compiler debug output files",
     []{ enable_debug_output_files = true; }
 );
 
