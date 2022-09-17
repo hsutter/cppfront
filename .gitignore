@@ -1,4 +1,3 @@
-
 *.vcxproj
 *.filters
 *.recipe
@@ -22,3 +21,5 @@
 *.vsidx
 *.lock
 .editorconfig
+build/
+*local/

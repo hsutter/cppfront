@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 3.23)
+project(test-case)
+
+if (WIN32)
+    set(CMAKE_OBJECT_PATH_MAX 260)
+endif ()
+
+find_package(cppfront REQUIRED)
+
+add_executable(test-case "@ARG_SOURCE@")
+target_compile_options(
+    test-case
+    PRIVATE
+    "$<$<CXX_COMPILER_ID:MSVC>:/experimental:module>"
+)
