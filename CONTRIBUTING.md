@@ -1,15 +1,11 @@
 
 ## Contributing to cppfront
 
-cppfront is the sole personal project of Herb Sutter.
+cppfront is an personal experimental project of Herb Sutter.
 
-NO commercial use. NO forks/derivatives.
+At this time,  the license is limited to no commercial use and no distributed forks/derivatives.
 
-Please DO NOT open issues or submit PRs on this repo at this time.
 
-The following is for the future when I may accept PRs.
-
- 
 ## Contributor License Agreement
 By contributing content to cppfront (i.e., submitting a pull request for inclusion in this repository):
 - You warrant that your material is original, or you have the right to contribute it.

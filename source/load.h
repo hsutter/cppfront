@@ -30,7 +30,7 @@ namespace cpp2 {
 
 //---------------------------------------------------------------------------
 //  move_next: advances i as long as p(line[i]) is true or the end of line
-// 
+//
 //  line    current line being processed
 //  i       current index
 //  p       predicate to apply
@@ -46,7 +46,7 @@ auto move_next(std::string const& line, int& i, auto p) -> bool
 
 //---------------------------------------------------------------------------
 //  peek_first_non_whitespace: returns the first non-whitespace char in line
-// 
+//
 //  line    current line being processed
 //
 auto peek_first_non_whitespace(std::string const& line) -> char
@@ -65,15 +65,15 @@ auto peek_first_non_whitespace(std::string const& line) -> char
 //---------------------------------------------------------------------------
 //  is_preprocessor: returns whether this is a preprocessor line starting
 //  with #, and whether it will be followed by another preprocessor line
-// 
+//
 //  line        current line being processed
 //  first_line  whether this is supposed to be the first line (start with #)
 //
-struct is_preprocessor_ret { 
-    bool is_preprocessor; 
-    bool has_continuation; 
+struct is_preprocessor_ret {
+    bool is_preprocessor;
+    bool has_continuation;
 };
-auto is_preprocessor(std::string const& line, bool first_line) 
+auto is_preprocessor(std::string const& line, bool first_line)
     -> is_preprocessor_ret
 {
     //  see if the first non-whitespace is #
@@ -88,7 +88,7 @@ auto is_preprocessor(std::string const& line, bool first_line)
 
 //---------------------------------------------------------------------------
 //  starts_with_import: returns whether the line starts with "import"
-// 
+//
 //  line    current line being processed
 //
 auto starts_with_import(std::string const& line) -> bool
@@ -108,7 +108,7 @@ auto starts_with_import(std::string const& line) -> bool
 
 //---------------------------------------------------------------------------
 //  starts_with_whitespace_slash_slash: is this a "// comment" line
-// 
+//
 //  line    current line being processed
 //
 auto starts_with_whitespace_slash_slash(std::string const& line) -> bool
@@ -126,10 +126,10 @@ auto starts_with_whitespace_slash_slash(std::string const& line) -> bool
 
 //---------------------------------------------------------------------------
 //  starts_with_whitespace_slash_star_and_no_star_slash: is this a "/* comment" line
-// 
+//
 //  line    current line being processed
 //
-auto starts_with_whitespace_slash_star_and_no_star_slash(std::string const& line) 
+auto starts_with_whitespace_slash_star_and_no_star_slash(std::string const& line)
     -> bool
 {
     auto i = 0;
@@ -151,7 +151,7 @@ auto starts_with_whitespace_slash_star_and_no_star_slash(std::string const& line
 //---------------------------------------------------------------------------
 //  starts_with_identifier_colon: returns whether the line starts with an
 //  identifier followed by one colon (not ::)
-// 
+//
 //  line    current line being processed
 //
 auto starts_with_identifier_colon(std::string const& line) -> bool
@@ -165,8 +165,8 @@ auto starts_with_identifier_colon(std::string const& line) -> bool
 
     //  find identifier
     auto j = starts_with_identifier({&line[i], std::size(line)-i});
-    if (j == 0) { 
-        return false; 
+    if (j == 0) {
+        return false;
     }
     i += j;
 
@@ -188,21 +188,21 @@ auto starts_with_identifier_colon(std::string const& line) -> bool
 
 //---------------------------------------------------------------------------
 //  process_cpp_line: just enough to know what to skip over
-// 
+//
 //  line                current line being processed
 //  in_comment          track whether we're in a comment
 //  in_string_literal   track whether we're in a string literal
 //
-struct process_line_ret { 
-    bool all_comment_line; 
-    bool empty_line; 
+struct process_line_ret {
+    bool all_comment_line;
+    bool empty_line;
 };
 auto process_cpp_line(
-    std::string const&  line, 
-    bool&               in_comment, 
+    std::string const&  line,
+    bool&               in_comment,
     bool&               in_string_literal,
     std::vector<int>&   brace_depth,
-    lineno_t            lineno, 
+    lineno_t            lineno,
     std::vector<error>& errors
 )
     -> process_line_ret
@@ -262,7 +262,7 @@ auto process_cpp_line(
                             errors.emplace_back(
                                 source_position(lineno, i),
                                 "closing } does not match a prior {"
-                            ); 
+                            );
                         }
                         else {
                             brace_depth.pop_back();
@@ -272,7 +272,7 @@ auto process_cpp_line(
                 break;case '*':
                     if (!in_string_literal && prev == '/') { in_comment = true; }
 
-                break;case '/': 
+                break;case '/':
                     if (!in_string_literal && prev == '/') { in_comment = false; return r; }
 
                 break;default: ;
@@ -292,19 +292,19 @@ auto process_cpp_line(
 //          - if ; we're done
 //          - if { find matching }
 //      - then there must be nothing else on the last line
-//  
+//
 //  line        current line being processed
 //  in_comment  whether this line begins inside a multi-line comment
 //
 //  Returns:    whether additional lines should be inspected
 //
 auto process_cpp2_line(
-    std::string const&  line, 
-    bool&               in_comment, 
-    std::vector<int>&   brace_depth, 
+    std::string const&  line,
+    bool&               in_comment,
+    std::vector<int>&   brace_depth,
     bool&               found_semi,
     bool&               found_openbrace,
-    lineno_t            lineno, 
+    lineno_t            lineno,
     std::vector<error>& errors
 )
     -> bool
@@ -324,12 +324,12 @@ auto process_cpp2_line(
         else {
             if (found_end && !isspace(line[i])) {
                 errors.emplace_back(
-                    source_position(lineno, i), 
+                    source_position(lineno, i),
                     std::string("unexpected text '")
                         + line[i]
                         + "' - after the closing ; or } of a definition, the rest"
                           " of the line should contain only whitespace or comments"
-                ); 
+                );
             }
 
             switch (line[i]) {
@@ -339,9 +339,9 @@ auto process_cpp2_line(
             break;case '}':
                 if (std::ssize(brace_depth) < 1) {
                     errors.emplace_back(
-                        source_position(lineno, i), 
+                        source_position(lineno, i),
                         "closing } does not match a prior {"
-                    ); 
+                    );
                 }
                 else {
                     brace_depth.pop_back();
@@ -356,7 +356,7 @@ auto process_cpp2_line(
             break;case '*':
                 if (prev == '/') { in_comment = true; }
 
-            break;case '/': 
+            break;case '/':
                 if (prev == '/') { in_comment = false; return false; }
 
             break;default: ;
@@ -371,12 +371,12 @@ auto process_cpp2_line(
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  source: Represents a program source file
-// 
+//
 //-----------------------------------------------------------------------
 //
-class source 
+class source
 {
     std::vector<error>&      errors;
     std::vector<source_line> lines;
@@ -391,7 +391,7 @@ class source
 public:
     //-----------------------------------------------------------------------
     //  Constructor
-    // 
+    //
     //  errors      error list
     //
     source(
@@ -407,7 +407,7 @@ public:
     //-----------------------------------------------------------------------
     //  has_cpp1: Returns true if this file has some Cpp1/preprocessor lines
     //            (note: import lines don't count toward Cpp1 or Cpp2)
-    // 
+    //
     auto has_cpp1() const -> bool {
         return cpp1_found;
     }
@@ -416,7 +416,7 @@ public:
     //-----------------------------------------------------------------------
     //  has_cpp2: Returns true if this file has some Cpp2 lines
     //            (note: import lines don't count toward Cpp1 or Cpp2)
-    // 
+    //
     auto has_cpp2() const -> bool {
         return cpp2_found;
     }
@@ -428,8 +428,8 @@ public:
     //  filename                the source file to be loaded
     //  source                  program textual representation
     //
-    auto load( 
-        std::string const&  filename 
+    auto load(
+        std::string const&  filename
     )
         -> bool
     {
@@ -485,12 +485,12 @@ public:
                     auto found_openbrace = false;
                     while (
                         !process_cpp2_line(
-                            lines.back().text, 
-                            in_comment, 
-                            brace_depth, 
-                            found_semi, 
-                            found_openbrace, 
-                            std::ssize(lines)-1, 
+                            lines.back().text,
+                            in_comment,
+                            brace_depth,
+                            found_semi,
+                            found_openbrace,
+                            std::ssize(lines)-1,
                             errors
                         )
                         && in.getline(&buf[0], max_line_len)
@@ -509,10 +509,10 @@ public:
                     }
                     else {
                         auto stats = process_cpp_line(
-                            lines.back().text, 
-                            in_comment, 
+                            lines.back().text,
+                            in_comment,
                             in_string_literal,
-                            brace_depth, 
+                            brace_depth,
                             std::ssize(lines) - 1,
                             errors
                         );
@@ -536,8 +536,8 @@ public:
         if (in.gcount() >= max_line_len-1)
         {
             errors.emplace_back(
-                source_position(lineno_t(std::ssize(lines)), 0), 
-                std::string("source line too long - length must be less than ") 
+                source_position(lineno_t(std::ssize(lines)), 0),
+                std::string("source line too long - length must be less than ")
                     + std::to_string(max_line_len)
             );
             return false;
@@ -548,7 +548,7 @@ public:
         if (!in.eof())
         {
             errors.emplace_back(
-                source_position(lineno_t(std::ssize(lines)), 0), 
+                source_position(lineno_t(std::ssize(lines)), 0),
                 std::string("unexpected error reading source lines - did not reach EOF")
             );
             return false;
@@ -562,8 +562,8 @@ public:
                 unmatched_brace_lines = std::to_string(line) + " " + unmatched_brace_lines;
             }
             errors.emplace_back(
-                source_position(lineno_t(std::ssize(lines)), 0), 
-                std::string("end of file reached with ") 
+                source_position(lineno_t(std::ssize(lines)), 0),
+                std::string("end of file reached with ")
                     + std::to_string(std::ssize(brace_depth))
                     + " missing } to match earlier { on line"
                     + (std::size(brace_depth)>1 ? "s " : " " )
@@ -578,7 +578,7 @@ public:
     //-----------------------------------------------------------------------
     //  get_lines: Access the source lines
     //
-    auto get_lines() const -> std::vector<source_line> const& 
+    auto get_lines() const -> std::vector<source_line> const&
     {
         return lines;
     }
@@ -587,7 +587,7 @@ public:
     //-----------------------------------------------------------------------
     //  debug_print
     //
-    auto debug_print(std::ostream& o) const -> void 
+    auto debug_print(std::ostream& o) const -> void
     {
         for (auto lineno = 0; auto const& line : lines) {
             //  Skip dummy first entry

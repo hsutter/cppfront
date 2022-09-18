@@ -36,7 +36,7 @@ auto violates_lifetime_safety = false;
 //G     one of  not
 //G
 auto is_prefix_operator(lexeme l) -> bool
-{ 
+{
     return l == lexeme::Not;
 }
 
@@ -45,7 +45,7 @@ auto is_prefix_operator(lexeme l) -> bool
 //G     one of  ++  --  *  &  ~  $
 //G
 auto is_postfix_operator(lexeme l)  -> bool
-{ 
+{
     switch (l) {
     break;case lexeme::PlusPlus:
           case lexeme::MinusMinus:
@@ -64,7 +64,7 @@ auto is_postfix_operator(lexeme l)  -> bool
 //G     one of  = *= /= %= += -= >>= <<=
 //G
 auto is_assignment_operator(lexeme l) -> bool
-{ 
+{
     switch (l) {
     break;case lexeme::Assignment:
           case lexeme::MultiplyEq:
@@ -85,15 +85,15 @@ auto is_assignment_operator(lexeme l) -> bool
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  Parse tree node types
-// 
+//
 //-----------------------------------------------------------------------
 //
 
 //-----------------------------------------------------------------------
 //  try_emit
-// 
+//
 //  Helper to visit whatever is in a variant where each
 //  alternative is a smart pointer
 //
@@ -150,7 +150,7 @@ template<
     String   Name,
     typename Term
 >
-struct binary_expression_node 
+struct binary_expression_node
 {
     std::unique_ptr<Term> expr;
 
@@ -311,7 +311,7 @@ struct postfix_expression_node
 {
     std::unique_ptr<primary_expression_node> expr;
 
-    struct term 
+    struct term
     {
         token const* op;
 
@@ -1078,12 +1078,12 @@ struct translation_unit_node
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  parser: parses a section of Cpp2 code
-// 
+//
 //-----------------------------------------------------------------------
 //
-class parser 
+class parser
 {
     std::vector<cpp2::error>& errors;
 
@@ -1094,14 +1094,14 @@ class parser
 
     struct capture_groups_stack_guard {
         parser* pars;
-        capture_groups_stack_guard(parser* p, capture_group* cg) 
-            : pars{p} 
-        { 
+        capture_groups_stack_guard(parser* p, capture_group* cg)
+            : pars{p}
+        {
             assert(p);
             assert(cg);
             pars->current_capture_groups.push_back(cg);
         }
-        ~capture_groups_stack_guard() { 
+        ~capture_groups_stack_guard() {
             pars->current_capture_groups.pop_back();
         }
     };
@@ -1113,7 +1113,7 @@ class parser
 public:
     //-----------------------------------------------------------------------
     //  Constructor
-    // 
+    //
     //  errors      error list
     //
     parser(
@@ -1126,9 +1126,9 @@ public:
 
     //-----------------------------------------------------------------------
     //  parse
-    // 
+    //
     //  tokens      input tokens for this section of Cpp2 source code
-    // 
+    //
     //  Each call parses this section's worth of tokens and adds the
     //  result to the stored parse tree. Call this repeatedly for the Cpp2
     //  sections in a TU to build the whole TU's parse tree
@@ -1159,7 +1159,7 @@ public:
 
     //-----------------------------------------------------------------------
     //  get_parse_tree
-    // 
+    //
     //  Get the entire parse tree, from the root (translation_unit_node)
     //
     auto get_parse_tree() -> translation_unit_node&
@@ -1200,7 +1200,7 @@ public:
     //-----------------------------------------------------------------------
     //  visit
     //
-    auto visit(auto& v) -> void 
+    auto visit(auto& v) -> void
     {
         parse_tree->visit(v, 0);
     }
@@ -1208,9 +1208,9 @@ public:
 private:
     //-----------------------------------------------------------------------
     //  Error reporting: Fed into the supplied this->error object
-    // 
+    //
     //  msg                 message to be printed
-    // 
+    //
     //  include_curr_token  in this file (during parsing)_ we normally want
     //                      to show the current token as the unexpected text
     //                      we encountered, but some sema rules are applied
@@ -1219,8 +1219,8 @@ private:
     //                      we detect and reject a "std::move" qualified-id,
     //                      it's not relevant to add "at LeftParen: ("
     //                      just because ( happens to be the next token)
-    // 
-    auto error(char const* msg, bool include_curr_token = true) const -> void 
+    //
+    auto error(char const* msg, bool include_curr_token = true) const -> void
     {
         auto m = std::string{msg};
         if (include_curr_token) {
@@ -1228,17 +1228,17 @@ private:
         }
         errors.emplace_back( curr().position(), m );
     }
-    
-    auto error(std::string const& msg, bool include_curr_token = true) const -> void 
-    { 
-        error(msg.c_str()); 
+
+    auto error(std::string const& msg, bool include_curr_token = true) const -> void
+    {
+        error(msg.c_str());
     }
 
 
     //-----------------------------------------------------------------------
     //  Token navigation: Only these functions should access this->token_
-    // 
-    auto curr() const -> token const& 
+    //
+    auto curr() const -> token const&
     {
         if (done()) {
             throw std::runtime_error("unexpected end of source file");
@@ -1247,7 +1247,7 @@ private:
         return (*tokens_)[pos];
     }
 
-    auto peek(int num) const -> token const* 
+    auto peek(int num) const -> token const*
     {
         assert (tokens_);
         if (pos + num >= 0 && pos + num < std::ssize(*tokens_)) {
@@ -1256,14 +1256,14 @@ private:
         return {};
     }
 
-    auto done() const -> bool 
+    auto done() const -> bool
     {
         assert (tokens_);
         assert (pos <= std::ssize(*tokens_));
         return pos == std::ssize(*tokens_);
     }
 
-    auto next(int num = 1) -> void 
+    auto next(int num = 1) -> void
     {
         assert (tokens_);
         pos = std::min( pos+num, as<int>(std::ssize(*tokens_)) );
@@ -1272,7 +1272,7 @@ private:
 
     //-----------------------------------------------------------------------
     //  Parsers for unary expressions
-    // 
+    //
 
     //G primary-expression:
     //G     literal
@@ -1281,7 +1281,7 @@ private:
     //G     unnamed-declaration
     //G     inspect-expression
     //G
-    auto primary_expression() 
+    auto primary_expression()
         -> std::unique_ptr<primary_expression_node>
     {
         auto n = std::make_unique<primary_expression_node>();
@@ -1305,7 +1305,7 @@ private:
             curr().type() == lexeme::BinaryLiteral ||
             curr().type() == lexeme::HexadecimalLiteral ||
             curr().type() == lexeme::Keyword
-            ) 
+            )
         {
             n->expr = &curr();
             next();
@@ -1369,7 +1369,7 @@ private:
     //G     postfix-expression ( expression-list? )
     //G     postfix-expression . id-expression
     //G
-    auto postfix_expression() 
+    auto postfix_expression()
         -> std::unique_ptr<postfix_expression_node>
     {
         auto n = std::make_unique<postfix_expression_node>();
@@ -1468,7 +1468,7 @@ private:
     //GTODO     alignof ( type-id )
     //GTODO     throws-expression
     //G
-    auto prefix_expression() 
+    auto prefix_expression()
         -> std::unique_ptr<prefix_expression_node>
     {
         auto n = std::make_unique<prefix_expression_node>();
@@ -1484,7 +1484,7 @@ private:
 
     //-----------------------------------------------------------------------
     //  Parsers for binary expressions
-    // 
+    //
 
     //  The general /*binary*/-expression:
     //     /*term*/-expression { { /* operators at this predecence level */ } /*term*/-expression }*
@@ -1498,7 +1498,7 @@ private:
         IsValidOp is_valid_op,
         TermFunc  term
     )
-        -> std::unique_ptr<Binary> 
+        -> std::unique_ptr<Binary>
     {
         auto n = std::make_unique<Binary>();
         if ( (n->expr = term()) ) {
@@ -1519,14 +1519,14 @@ private:
     }
 
     //G is-as-expression:
-    //G     prefix-expression 
+    //G     prefix-expression
     //GTODO    is-as-expression is-expression-constraint
     //GTODO    is-as-expression as-type-cast
     //GTODO    type-id is-type-constraint
     //G
     auto is_as_expression() {
         return binary_expression<is_as_expression_node> (
-            [](token const& t){ 
+            [](token const& t){
                 std::string_view s{t};
                 return t.type() == lexeme::Keyword && (s == "is" || s == "as");
             },
@@ -1535,7 +1535,7 @@ private:
     }
 
     //G multiplicative-expression:
-    //G     is-as-expression 
+    //G     is-as-expression
     //G     multiplicative-expression * is-as-expression
     //G     multiplicative-expression / is-as-expression
     //G     multiplicative-expression % is-as-expression
@@ -1560,9 +1560,9 @@ private:
     }
 
     //G shift-expression:
-    //G     additive-expression 
-    //G     shift-expression << additive-expression 
-    //G     shift-expression >> additive-expression 
+    //G     additive-expression
+    //G     shift-expression << additive-expression
+    //G     shift-expression >> additive-expression
     //G
     auto shift_expression() {
         return binary_expression<shift_expression_node> (
@@ -1572,7 +1572,7 @@ private:
     }
 
     //G compare-expression:
-    //G     shift-expression 
+    //G     shift-expression
     //G     compare-expression <=> shift-expression
     //G
     auto compare_expression() {
@@ -1760,7 +1760,7 @@ private:
     //G     expression
     //G     id-expression
     //G
-    auto unqualified_id() -> std::unique_ptr<unqualified_id_node> 
+    auto unqualified_id() -> std::unique_ptr<unqualified_id_node>
     {
         //  Handle the identifier
         if (curr().type() != lexeme::Identifier &&
@@ -1814,7 +1814,7 @@ private:
             }
             //  Use the lambda trick to jam in a "next" clause
             while (
-                curr().type() == lexeme::Comma && 
+                curr().type() == lexeme::Comma &&
                 [&]{term.comma = curr().position(); next(); return true;}()
             );
                 //  When this is rewritten in Cpp2, it will be:
@@ -1844,7 +1844,7 @@ private:
     //G member-name-specifier:
     //G     unqualified-id .
     //G
-    auto qualified_id() -> std::unique_ptr<qualified_id_node> 
+    auto qualified_id() -> std::unique_ptr<qualified_id_node>
     {
         auto n = std::make_unique<qualified_id_node>();
 
@@ -1907,7 +1907,7 @@ private:
     //G     unqualified-id
     //G     qualified-id
     //G
-    auto id_expression() -> std::unique_ptr<id_expression_node> 
+    auto id_expression() -> std::unique_ptr<id_expression_node>
     {
         auto n = std::make_unique<id_expression_node>();
         if (auto id = qualified_id()) {
@@ -1930,20 +1930,20 @@ private:
     //G     expression ;
     //G     expression
     //G
-    auto expression_statement(bool semicolon_required) -> std::unique_ptr<expression_statement_node> 
+    auto expression_statement(bool semicolon_required) -> std::unique_ptr<expression_statement_node>
     {
         auto n = std::make_unique<expression_statement_node>();
         if (!(n->expr = expression())) {
             return {};
         }
 
-        if (semicolon_required && curr().type() != lexeme::Semicolon && 
+        if (semicolon_required && curr().type() != lexeme::Semicolon &&
             peek(-1)->type() != lexeme::Semicolon
                 //  this last peek(-1)-condition is a hack (? or is it just
                 //  maybe elegant? I'm torn) so that code like
                 //
                 //      callback := :(inout x:_) = x += "suffix"; ;
-                // 
+                //
                 //  doesn't need the redundant semicolon at the end of a decl...
                 //  there's probably a cleaner way to do it, but this works and
                 //  it doesn't destabilize any regression tests
@@ -1964,7 +1964,7 @@ private:
     //G     if constexpr-opt expression compound-statement
     //G     if constexpr-opt expression compound-statement else compound-statement
     //G
-    auto selection_statement() -> std::unique_ptr<selection_statement_node> 
+    auto selection_statement() -> std::unique_ptr<selection_statement_node>
     {
         if (curr().type() != lexeme::Keyword || curr() != "if") {
             return {};
@@ -1997,7 +1997,7 @@ private:
         if (curr().type() != lexeme::Keyword || curr() != "else") {
             //  Add empty else branch to simplify processing elsewhere
             //  Note: Position (0,0) signifies it's implicit (no source location)
-            n->false_branch = 
+            n->false_branch =
                 std::make_unique<compound_statement_node>( source_position(0,0) );
         }
         else {
@@ -2020,7 +2020,7 @@ private:
     //G return-statement:
     //G     return expression-opt ;
     //G
-    auto return_statement() -> std::unique_ptr<return_statement_node> 
+    auto return_statement() -> std::unique_ptr<return_statement_node>
     {
         if (curr().type() != lexeme::Keyword || curr() != "return") {
             return {};
@@ -2062,11 +2062,11 @@ private:
     //G     for expression next-clause-opt do unnamed-declaration
     //G
     //G next-clause:
-    //G     next assignment-expression 
+    //G     next assignment-expression
     //G
-    auto iteration_statement() -> std::unique_ptr<iteration_statement_node> 
+    auto iteration_statement() -> std::unique_ptr<iteration_statement_node>
     {
-        if (curr().type() != lexeme::Keyword || 
+        if (curr().type() != lexeme::Keyword ||
             (curr() != "while" && curr() != "do" && curr() != "for")
             )
         {
@@ -2103,7 +2103,7 @@ private:
             n->condition = std::move(x);
             return true;
         };
-        
+
         auto handle_compound_statement = [&]() -> bool {
             auto s = compound_statement();
             if (!s) {
@@ -2166,7 +2166,7 @@ private:
 
             n->body = unnamed_declaration(curr().position());
             auto func = n->body ? std::get_if<declaration_node::function>(&n->body->type) : nullptr;
-            if (!n->body || n->body->identifier || !func || !*func || 
+            if (!n->body || n->body->identifier || !func || !*func ||
                 std::ssize((**func).parameters->parameters) != 1 ||
                 (**func).returns.index() != function_type_node::empty
                 )
@@ -2197,7 +2197,7 @@ private:
     //G alt-name:
     //G     unqualified-id :
     //G
-    auto alternative() -> std::unique_ptr<alternative_node> 
+    auto alternative() -> std::unique_ptr<alternative_node>
     {
         auto n = std::make_unique<alternative_node>();
 
@@ -2216,7 +2216,7 @@ private:
         //    }
         //    next();
         //}
-        
+
         //  Now we should be as "is" or "as"
         //  (initial partial implementation, just "is/as id-expression")
         if (curr() != "is" && curr() != "as") {
@@ -2261,7 +2261,7 @@ private:
     //G     alternative
     //G     alternative-seq alternative
     //G
-    auto inspect_expression(bool is_expression) -> std::unique_ptr<inspect_expression_node> 
+    auto inspect_expression(bool is_expression) -> std::unique_ptr<inspect_expression_node>
     {
         if (curr() != "inspect") {
             return {};
@@ -2361,7 +2361,7 @@ private:
     //G     iteration-statement
     //G     inspect-expression
     //G     let parameter-list statement
-    // 
+    //
     //GTODO     jump-statement
     //GTODO     try-block
     //G
@@ -2451,7 +2451,7 @@ private:
     //G     statement
     //G     statement-seq statement
     //G
-    auto compound_statement(source_position equal_sign = source_position{}) 
+    auto compound_statement(source_position equal_sign = source_position{})
         -> std::unique_ptr<compound_statement_node>
     {
         if (curr().type() != lexeme::LeftBrace) {
@@ -2462,7 +2462,7 @@ private:
 
         //  In the case where this is a declaration initializer with
         //      = {
-        //  on the same line, we want to remember our start position 
+        //  on the same line, we want to remember our start position
         //  as where the = was, not where the { was
         if (equal_sign.lineno == curr().position().lineno) {
             n->open_brace = equal_sign;
@@ -2503,14 +2503,14 @@ private:
     //G
     auto parameter_declaration(
         bool returns = false
-    ) 
-        -> std::unique_ptr<parameter_declaration_node> 
+    )
+        -> std::unique_ptr<parameter_declaration_node>
     {
         auto n = std::make_unique<parameter_declaration_node>();
         n->pass = returns ? passing_style::out : passing_style::in;
         n->pos  = curr().position();
 
-        if (curr().type() == lexeme::Identifier) { 
+        if (curr().type() == lexeme::Identifier) {
             if (curr() == "in") {
                 if (returns) {
                     error("a return value cannot be 'in'");
@@ -2553,7 +2553,7 @@ private:
             }
         }
 
-        if (curr().type() == lexeme::Identifier) { 
+        if (curr().type() == lexeme::Identifier) {
             if (curr() == "implicit") {
                 n->mod = parameter_declaration_node::modifier::implicit;
                 next();
@@ -2590,7 +2590,7 @@ private:
     auto parameter_declaration_list(
         bool returns = false
     )
-        -> std::unique_ptr<parameter_declaration_list_node> 
+        -> std::unique_ptr<parameter_declaration_list_node>
     {
         if (curr().type() != lexeme::LeftParen) {
             return {};
@@ -2605,17 +2605,17 @@ private:
         while ((param = parameter_declaration(returns)) != nullptr) {
             n->parameters.push_back( std::move(param) );
 
-            if (curr().type() == lexeme::RightParen) { 
+            if (curr().type() == lexeme::RightParen) {
                 break;
             }
-            else if (curr().type() != lexeme::Comma) { 
+            else if (curr().type() != lexeme::Comma) {
                 error("expected , in parameter list");
                 return {};
             }
             next();
         }
 
-        if (curr().type() != lexeme::RightParen) { 
+        if (curr().type() != lexeme::RightParen) {
             error("invalid parameter list");
             next();
             return {};
@@ -2711,7 +2711,7 @@ private:
     //G     contract
     //G     contract-seq contract
     //G
-    auto function_type() -> std::unique_ptr<function_type_node> 
+    auto function_type() -> std::unique_ptr<function_type_node>
     {
         auto n = std::make_unique<function_type_node>();
 
@@ -2774,7 +2774,7 @@ private:
     //G     : id-expression-opt = statement
     //G     : id-expression
     //G
-    auto unnamed_declaration(source_position pos, bool semicolon_required = true, bool captures_allowed = false) -> std::unique_ptr<declaration_node> 
+    auto unnamed_declaration(source_position pos, bool semicolon_required = true, bool captures_allowed = false) -> std::unique_ptr<declaration_node>
     {
         auto deduced_type = false;
 
@@ -2786,7 +2786,7 @@ private:
 
         auto n = std::make_unique<declaration_node>();
         n->pos = pos;
-        auto guard = 
+        auto guard =
             captures_allowed
             ? make_unique<capture_groups_stack_guard>(this, &n->captures)
             : std::unique_ptr<capture_groups_stack_guard>()
@@ -2886,7 +2886,7 @@ private:
     //G declaration:
     //G     identifier unnamed-declaration
     //G
-    auto declaration(bool semicolon_required = true) -> std::unique_ptr<declaration_node> 
+    auto declaration(bool semicolon_required = true) -> std::unique_ptr<declaration_node>
     {
         if (done()) { return {}; }
 
@@ -2916,7 +2916,7 @@ private:
     //G translation-unit:
     //G     declaration-seq-opt
     //
-    auto translation_unit() -> std::unique_ptr<translation_unit_node> 
+    auto translation_unit() -> std::unique_ptr<translation_unit_node>
     {
         auto n = std::make_unique<translation_unit_node>();
         for (auto d = declaration(); d; d = declaration()) {
@@ -2929,9 +2929,9 @@ private:
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  Common parts for printing visitors
-// 
+//
 //-----------------------------------------------------------------------
 //
 struct printing_visitor
@@ -2961,15 +2961,15 @@ struct printing_visitor
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  Visitor for printing a parse tree
-// 
+//
 //-----------------------------------------------------------------------
 //
 class parse_tree_printer : printing_visitor
 {
     using printing_visitor::printing_visitor;
-    
+
     std::vector<expression_list_node::term const*> current_expression_list_term = {};
 
 public:
@@ -3009,7 +3009,7 @@ public:
         if (current_expression_list_term.back() == nullptr) {
             assert(n.expressions.empty());
         }
-        assert( 
+        assert(
             current_expression_list_term.back() == nullptr ||
             current_expression_list_term.back() == &n.expressions[0] + n.expressions.size()
             );
@@ -3179,13 +3179,13 @@ public:
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  Visitor for moving tokens that are to the right on the same line
 //  and shifting their positions left 'n' spaces - used only at the
 //  end when lowering to Cpp1, as a convenient way to adjust for other
 //  positions shifts we create (e.g., moving some operators to prefix
 //  notation, or inserting "std::move" prefixes)
-// 
+//
 //-----------------------------------------------------------------------
 //
 class adjust_remaining_token_columns_on_this_line_visitor

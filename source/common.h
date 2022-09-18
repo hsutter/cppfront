@@ -31,9 +31,9 @@
 namespace cpp2 {
 
 //-----------------------------------------------------------------------
-// 
+//
 //  source_line: represents a source code line
-// 
+//
 //-----------------------------------------------------------------------
 //
 struct source_line
@@ -43,7 +43,7 @@ struct source_line
     enum class category { empty, preprocessor, comment, import, cpp1, cpp2 }
         cat = category::empty;
 
-    auto prefix() const -> std::string 
+    auto prefix() const -> std::string
     {
         switch (cat) {
         break;case category::empty:         return "/*   */ ";
@@ -90,12 +90,12 @@ struct comment
 };
 
 //-----------------------------------------------------------------------
-// 
+//
 //  error: represents a user-readable error message
-// 
+//
 //-----------------------------------------------------------------------
 //
-struct error 
+struct error
 {
     source_position where;
     std::string     msg;
@@ -105,10 +105,10 @@ struct error
         : where{w}, msg{m}, internal{i}
     { }
 
-    auto print(auto& o, std::string const& file) const -> void 
+    auto print(auto& o, std::string const& file) const -> void
     {
         o << file ;
-        if (where.lineno > 0) { 
+        if (where.lineno > 0) {
             o << "("<< (where.lineno);
             if (where.colno >= 0) {
                 o << "," << where.colno;
@@ -125,9 +125,9 @@ struct error
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  Digit classification, with '\'' digit separators
-// 
+//
 //-----------------------------------------------------------------------
 //
 
@@ -135,39 +135,39 @@ struct error
 //G     0 1
 //G
 auto is_binary_digit(char c) -> bool
-{ 
-    return c == '0' || c == '1'; 
+{
+    return c == '0' || c == '1';
 }
 
 //G hexadecimal-digit: one of
 //G     0 1 2 3 4 5 6 7 8 9 A B C D E F
-//G     
+//G
 auto is_hexadecimal_digit(char c) -> bool
-{ 
+{
     return isxdigit(c);
 }
 
 //G digit: one of
 //G     0 1 2 3 4 5 6 7 8 9
-//G     
+//G
 auto is_digit(char c) -> bool
-{ 
-    return isdigit(c); 
+{
+    return isdigit(c);
 }
 
 //G nondigit: { a..z | A..Z | _ }
 //G
 auto is_nondigit(char c) -> bool
-{ 
-    return isalpha(c) || c == '_'; 
+{
+    return isalpha(c) || c == '_';
 };
 
 //G identifier-start:
 //G     nondigit
 //G
 auto is_identifier_start(char c) -> bool
-{ 
-    return is_nondigit(c); 
+{
+    return is_nondigit(c);
 }
 
 //G identifier-continue:
@@ -175,14 +175,14 @@ auto is_identifier_start(char c) -> bool
 //G     nondigit
 //G
 auto is_identifier_continue(char c) -> bool
-{ 
-    return is_digit(c) || is_nondigit(c); 
+{
+    return is_digit(c) || is_nondigit(c);
 }
 
 //G identifier: identifier-start { identifier-continue }*
 //G
 auto starts_with_identifier(std::string_view s) -> int
-{ 
+{
     if (is_identifier_start(s[0])) {
         auto j = 1;
         while (j < std::ssize(s) && is_identifier_continue(s[j])) { ++j; }
@@ -195,20 +195,20 @@ auto starts_with_identifier(std::string_view s) -> int
 //  Example:    is_separator_or( is_binary_digit (c) )
 //
 auto is_separator_or(auto pred, char c) -> bool
-{ 
-    return c == '\'' || pred(c); 
+{
+    return c == '\'' || pred(c);
 }
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  String: A helper workaround for passing a string literal as a
 //  template argument
 //
 //-----------------------------------------------------------------------
 //
 template<size_t N>
-struct String 
+struct String
 {
     constexpr String(const char (&str)[N])
     {
@@ -251,9 +251,9 @@ auto strip_path(std::string const& file) -> std::string
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  Command line handling
-// 
+//
 //-----------------------------------------------------------------------
 //
 
@@ -280,7 +280,7 @@ class cmdline_processor
         callback    handler;
         std::string synonym;
 
-        flag(int g, std::string_view n, std::string_view d, callback h, std::string_view s) 
+        flag(int g, std::string_view n, std::string_view d, callback h, std::string_view s)
             : group{g}, name{n}, description{d}, handler{h}, synonym{s}
         { }
     };
@@ -301,7 +301,7 @@ public:
             for (auto flag2 = flag1+1; flag2 != flags.end(); ++flag2) {
                 int i = 0;
                 while (
-                    i < std::ssize(flag1->name) && 
+                    i < std::ssize(flag1->name) &&
                     i < std::ssize(flag2->name) &&
                     flag1->name[i] == flag2->name[i]
                     )
@@ -350,8 +350,8 @@ public:
         help_requested = true;
 
         std::sort(
-            flags.begin(), 
-            flags.end(), 
+            flags.begin(),
+            flags.end(),
             [](auto& a, auto& b){ return a.group < b.group || (a.group == b.group && a.name < b.name); }
         );
 
@@ -380,8 +380,8 @@ public:
 
     auto add_flag(int group, std::string_view name, std::string_view description, callback handler, std::string_view synonym) {
         flags.emplace_back( group, name, description, handler, synonym );
-        if (max_flag_length < std::ssize(name)) {   
-            max_flag_length = std::ssize(name);     
+        if (max_flag_length < std::ssize(name)) {
+            max_flag_length = std::ssize(name);
         }
     }
     struct register_flag {
@@ -422,18 +422,18 @@ cmdline_processor::register_flag::register_flag(int group, std::string_view name
     cmdline.add_flag( group, name, description, handler, synonym );
 }
 
-static cmdline_processor::register_flag cmd_help   ( 
+static cmdline_processor::register_flag cmd_help   (
     0,
     "help",
-    "Print help",                
+    "Print help",
     []{ cmdline.print_help(); },
     "?"
 );
 
-static cmdline_processor::register_flag cmd_version( 
+static cmdline_processor::register_flag cmd_version(
     0,
-    "version", 
-    "Print version information", 
+    "version",
+    "Print version information",
     []{ cmdline.print_version(); }
 );
 

@@ -26,9 +26,9 @@
 namespace cpp2 {
 
 //-----------------------------------------------------------------------
-// 
+//
 //  lexeme: represents the type of a token
-// 
+//
 //-----------------------------------------------------------------------
 //
 
@@ -169,19 +169,19 @@ auto as(lexeme l)
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  token: represents a single token
-// 
+//
 //     Note: by reference, thge test into the program's source lines
-// 
+//
 //-----------------------------------------------------------------------
 //
-class token 
+class token
 {
 public:
-    token( 
-        char const*     start, 
-        auto            count, 
+    token(
+        char const*     start,
+        auto            count,
         source_position pos,
         lexeme          type
     )
@@ -192,24 +192,24 @@ public:
     {
     }
 
-    operator std::string_view() const 
-    { 
+    operator std::string_view() const
+    {
         assert (start);
-        return {start, (unsigned)count}; 
+        return {start, (unsigned)count};
     }
 
     auto operator== (token const& t) const -> bool
-    { 
+    {
         return operator std::string_view() == t.operator std::string_view();
     }
 
     auto operator== (std::string_view s) const -> bool
-    { 
-        return s == this->operator std::string_view(); 
+    {
+        return s == this->operator std::string_view();
     }
 
-    auto to_string( bool text_only = false ) const -> std::string 
-    { 
+    auto to_string( bool text_only = false ) const -> std::string
+    {
         auto text = std::string{start, (unsigned)count};
         if (text_only) {
             return text;
@@ -220,11 +220,11 @@ public:
     }
 
     friend auto operator<< (auto& o, token const& t) -> auto&
-    { 
-        return o << std::string_view(t); 
+    {
+        return o << std::string_view(t);
     }
 
-    auto position_col_shift( colno_t offset ) -> void { 
+    auto position_col_shift( colno_t offset ) -> void {
         assert (pos.colno + offset > 0);
         pos.colno += offset;
     }
@@ -283,7 +283,7 @@ auto lex_line(
     //
     auto peek = [&](int num) {  return (i+num < std::ssize(line)) ? line[i+num] : '\0';  };
 
-    auto store = [&](int16_t num, lexeme type) 
+    auto store = [&](int16_t num, lexeme type)
     {
         tokens.push_back({
             &line[i],
@@ -316,9 +316,9 @@ auto lex_line(
     //G
     auto peek_is_hexadecimal_escape_sequence = [&](int offset)
     {
-        if (peek(  offset) == '\\' && 
-            peek(1+offset) == 'x'  && 
-            is_hexadecimal_digit(peek(2+offset))) 
+        if (peek(  offset) == '\\' &&
+            peek(1+offset) == 'x'  &&
+            is_hexadecimal_digit(peek(2+offset)))
         {
             auto j = 3;
             while (peek(j+offset) && is_hexadecimal_digit(peek(j+offset)))
@@ -334,7 +334,7 @@ auto lex_line(
     //G     \u { hexadecimal-digit }4
     //G     \U { hexadecimal-digit }8
     //G
-    auto peek_is_universal_character_name = [&](colno_t offset) 
+    auto peek_is_universal_character_name = [&](colno_t offset)
     {
         if (peek(offset) == '\\' && peek(1 + offset) == 'u') {
             auto j = 2;
@@ -351,7 +351,7 @@ auto lex_line(
             while (j <= 9 && is_hexadecimal_digit(peek(j+offset))) { ++j; }
             if (j == 10) { return j; }
             errors.emplace_back(
-                source_position(lineno, i+offset), 
+                source_position(lineno, i+offset),
                 "invalid universal character name (\\U must"
                     " be followed by 8 hexadecimal digits)"
             );
@@ -363,8 +363,8 @@ auto lex_line(
     //G     hexadecimal-escape-sequence
     //G     simple-escape-sequence
     //G
-    auto peek_is_escape_sequence = [&](int offset) 
-    { 
+    auto peek_is_escape_sequence = [&](int offset)
+    {
         if (auto h = peek_is_hexadecimal_escape_sequence(offset)) { return h; }
         return peek_is_simple_escape_sequence(offset);
     };
@@ -374,7 +374,7 @@ auto lex_line(
     //G     escape-sequence
     //G     basic-s-char
     //G
-    //G basic-s-char: 
+    //G basic-s-char:
     //G     any member of the basic source character set except " \ or new-line
     //G
     //G c-char:
@@ -382,11 +382,11 @@ auto lex_line(
     //G     escape-sequence
     //G     basic-c-char
     //G
-    //G basic-c-char: 
+    //G basic-c-char:
     //G     any member of the basic source character set except ' \ or new-line
     //G
-    auto peek_is_sc_char = [&](int offset, char quote) 
-    { 
+    auto peek_is_sc_char = [&](int offset, char quote)
+    {
         if (auto u = peek_is_universal_character_name(offset))
             { return u; }
         if (auto e = peek_is_escape_sequence(offset))
@@ -400,8 +400,8 @@ auto lex_line(
     //G     any Cpp1-and-Cpp2 keyword
     //G     one of: import module export is as
     //G
-    auto peek_is_keyword = [&]() 
-    { 
+    auto peek_is_keyword = [&]()
+    {
         //  Cpp2 has a smaller set of the Cpp1 globally reserved keywords, but we continue to
         //  reserve all the ones Cpp1 has both for compatibility and to not give up a keyword
         //  Some keywords like "delete" and "union" are not in this list because we reject them elsewhere
@@ -446,7 +446,7 @@ auto lex_line(
     //
     //-----------------------------------------------------
 
-    for ( ; i < ssize(line); ++i) 
+    for ( ; i < ssize(line); ++i)
     {
         auto peek1 = peek(1);
         auto peek2 = peek(2);
@@ -455,7 +455,7 @@ auto lex_line(
         //G encoding-prefix: one of
         //G     u8 u
         //G
-        auto is_encoding_prefix_and = [&](char next) { 
+        auto is_encoding_prefix_and = [&](char next) {
             if (line[i] == next)                        { return 1; }
             else if (line[i] == 'u') {
                 if (peek1 == next)                      { return 2; }
@@ -492,7 +492,7 @@ auto lex_line(
         else {
             //G token:
             //G     identifier
-            //G     keyword 
+            //G     keyword
             //G     literal
             //G     operator-or-punctuator
             //G
@@ -507,7 +507,7 @@ auto lex_line(
 
             //      /* and // comment starts
             //G     /= /
-            break;case '/': 
+            break;case '/':
                 if (peek1 == '*') {
                     current_comment = "/*";
                     current_comment_start = source_position(lineno, i+1);
@@ -533,11 +533,11 @@ auto lex_line(
 
             //G     <<= << <=> <= <
             break;case '<':
-                if (peek1 == '<') { 
+                if (peek1 == '<') {
                     if (peek2 == '=') { store(3, lexeme::LeftShiftEq); }
                     else { store(2, lexeme::LeftShift); }
                 }
-                else if (peek1 == '=') { 
+                else if (peek1 == '=') {
                     if (peek2 == '>') { store(3, lexeme::Spaceship); }
                     else { store(2, lexeme::LessEq); }
                 }
@@ -546,11 +546,11 @@ auto lex_line(
             ////G     >>= >> >= >
             //G     >= >
             break;case '>':
-                //if (peek1 == '>') { 
+                //if (peek1 == '>') {
                 //    if (peek2 == '=') { store(3, lexeme::RightShiftEq); }
                 //    else { store(2, lexeme::RightShift); }
                 //}
-                //else 
+                //else
                 if (peek1 == '=') { store(2, lexeme::GreaterEq); }
                 else { store(1, lexeme::Greater); }
 
@@ -569,7 +569,7 @@ auto lex_line(
 
             //G     ||= || |= |
             break;case '|':
-                if (peek1 == '|') { 
+                if (peek1 == '|') {
                     if (peek2 == '=') { store(3, lexeme::LogicalOrEq); }
                     else { store(2, lexeme::LogicalOr); }
                 }
@@ -577,8 +577,8 @@ auto lex_line(
                 else { store(1, lexeme::Pipe); }
 
             //G     &&= && &= &
-            break;case '&': 
-                if (peek1 == '&') { 
+            break;case '&':
+                if (peek1 == '&') {
                     if (peek2 == '=') { store(3, lexeme::LogicalAndEq); }
                     else { store(2, lexeme::LogicalAnd); }
                 }
@@ -588,42 +588,42 @@ auto lex_line(
             //  Next, all the other operators that have a compound assignment form
 
             //G     *= *
-            break;case '*': 
+            break;case '*':
                 if (peek1 == '=') { store(2, lexeme::MultiplyEq); }
                 else { store(1, lexeme::Multiply); }
 
             //G     %= %
-            break;case '%': 
+            break;case '%':
                 if (peek1 == '=') { store(2, lexeme::ModuloEq); }
                 else { store(1, lexeme::Modulo); }
 
             //G     ^= ^
-            break;case '^': 
+            break;case '^':
                 if (peek1 == '=') { store(2, lexeme::CaretEq); }
                 else { store(1, lexeme::Caret); }
 
             //G     ~= ~
-            break;case '~': 
+            break;case '~':
                 if (peek1 == '=') { store(2, lexeme::TildeEq); }
                 else { store(1, lexeme::Tilde); }
 
             //G     == =
-            break;case '=': 
+            break;case '=':
                 if (peek1 == '=') { store(2, lexeme::EqualComparison); }
                 else { store(1, lexeme::Assignment); }
 
             //G     !=
-            break;case '!': 
+            break;case '!':
                 if (peek1 == '=') { store(2, lexeme::NotEqualComparison); }
                 //else { store(1, lexeme::Not); }
 
             //G     ... .
-            break;case '.': 
+            break;case '.':
                 if (peek1 == '.' && peek2 == '.') { store(3, lexeme::Ellipsis); }
                 else { store(1, lexeme::Dot); }
 
             //G     :: :
-            break;case ':': 
+            break;case ':':
                 if (peek1 == ':') { store(2, lexeme::Scope); }
                 else { store(1, lexeme::Colon); }
 
@@ -632,19 +632,19 @@ auto lex_line(
             //G     { } ( ) [ ] ; , ? $
             //G
 
-            break;case '{': 
+            break;case '{':
                 store(1, lexeme::LeftBrace);
 
-            break;case '}': 
+            break;case '}':
                 store(1, lexeme::RightBrace);
 
-            break;case '(': 
+            break;case '(':
                 store(1, lexeme::LeftParen);
 
             break;case ')':
                 store(1, lexeme::RightParen);
 
-            break;case '[': 
+            break;case '[':
                 store(1, lexeme::LeftBracket);
 
             break;case ']':
@@ -694,7 +694,7 @@ auto lex_line(
                     }
                     else {
                         errors.emplace_back(
-                            source_position(lineno, i), 
+                            source_position(lineno, i),
                             "binary literal cannot be empty (0B must be followed by binary digits)"
                         );
                         ++i;
@@ -707,7 +707,7 @@ auto lex_line(
                     }
                     else {
                         errors.emplace_back(
-                            source_position(lineno, i), 
+                            source_position(lineno, i),
                             "hexadecimal literal cannot be empty (0X must be followed by hexadecimal digits)"
                         );
                         ++i;
@@ -725,11 +725,11 @@ auto lex_line(
 
                 //G decimal-literal:
                 //G     digit { ' | digit }*
-                //G     
+                //G
                 //G floating-point-literal:
                 //G     digit { ' | digit }* . digit { ' | digit }*
                 //GTODO full grammar
-                //G     
+                //G
                 else if (is_digit(line[i])) {
                     auto j = 1;
                     while (is_separator_or(is_digit,peek(j))) { ++j; }
@@ -754,10 +754,10 @@ auto lex_line(
                 //G
                 else if (auto j = is_encoding_prefix_and('\"')) {
                     while (auto len = peek_is_sc_char(j, '\"')) { j += len; }
-                    if (peek(j) != '\"') { 
+                    if (peek(j) != '\"') {
                         errors.emplace_back(
                             source_position(lineno, i),
-                            "string literal \"" + std::string(&line[i+1],j) 
+                            "string literal \"" + std::string(&line[i+1],j)
                                 + "\" is missing its closing \""
                         );
                     }
@@ -768,20 +768,20 @@ auto lex_line(
                 //G
                 else if (auto j = is_encoding_prefix_and('\'')) {
                     auto len = peek_is_sc_char(j, '\'');
-                    if (len > 0) { 
-                        j += len; 
-                        if (peek(j) != '\'') { 
+                    if (len > 0) {
+                        j += len;
+                        if (peek(j) != '\'') {
                             errors.emplace_back(
-                                source_position(lineno, i), 
-                                "character literal '" + std::string(&line[i+1],j) 
+                                source_position(lineno, i),
+                                "character literal '" + std::string(&line[i+1],j)
                                     + "' is missing its closing '"
-                            ); 
+                            );
                         }
                         store(j+1, lexeme::CharacterLiteral);
                     }
                     else {
                         errors.emplace_back(
-                            source_position(lineno, i), 
+                            source_position(lineno, i),
                             "character literal is empty"
                         );
                     }
@@ -799,23 +799,23 @@ auto lex_line(
                     store(j, lexeme::Identifier);
                     if (tokens.back() == "NULL") {
                         errors.emplace_back(
-                            source_position(lineno, i), 
+                            source_position(lineno, i),
                             "'NULL' is not supported in Cpp2 - for a local pointer variable, leave it uninitialized instead, and set it to a non-null value when you have one"
                         );
                     }
                     if (tokens.back() == "union") {
                         errors.emplace_back(
-                            source_position(lineno, i), 
+                            source_position(lineno, i),
                             "unsafe 'union's are not supported in Cpp2 - use std::variant instead"
                         );
                     }
                     if (tokens.back() == "delete") {
                         errors.emplace_back(
-                            source_position(lineno, i), 
+                            source_position(lineno, i),
                             "'delete' and owning raw pointers are not supported in Cpp2"
                         );
                         errors.emplace_back(
-                            source_position(lineno, i), 
+                            source_position(lineno, i),
                             "  - use unique.new<T>, shared.new<T>, or gc.new<T> instead (in that order)"
                         );
                     }
@@ -825,7 +825,7 @@ auto lex_line(
                 //
                 else if (!isspace(line[i])) {
                     errors.emplace_back(
-                        source_position(lineno, i), 
+                        source_position(lineno, i),
                         std::string("unexpected text '") + line[i] + "'"
                     );
                 }
@@ -844,13 +844,13 @@ END:
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  tokens: a map of the tokens of a source file
-// 
+//
 //-----------------------------------------------------------------------
 //
 
-class tokens 
+class tokens
 {
     std::vector<error>& errors;
 
@@ -858,7 +858,7 @@ class tokens
     std::map<lineno_t, std::vector<token>> grammar_map;
 
     //  All comment tokens go here, which are applied in the lexer
-    // 
+    //
     //  We could put all the tokens in the same map, but that would mean the
     //  parsing logic would have to remember to skip comments everywhere...
     //  simpler to keep comments separate, at the smaller cost of traversing
@@ -868,7 +868,7 @@ class tokens
 public:
     //-----------------------------------------------------------------------
     //  Constructor
-    // 
+    //
     //  errors      error list
     //
     tokens(
@@ -884,7 +884,7 @@ public:
     //
     //  lines       tagged source lines
     //
-    auto lex( 
+    auto lex(
         std::vector<source_line> const& lines
     )
         -> void
@@ -909,9 +909,9 @@ public:
             auto current_comment = std::string{};
             auto current_comment_start = source_position{};
 
-            for ( 
-                ; 
-                line != std::end(lines) && line->cat == source_line::category::cpp2; 
+            for (
+                ;
+                line != std::end(lines) && line->cat == source_line::category::cpp2;
                 ++line, ++lineno
                 )
             {
@@ -925,11 +925,11 @@ public:
         }
     }
 
-        
+
     //-----------------------------------------------------------------------
     //  get_map: Access the token map
     //
-    auto get_map() const -> auto const& 
+    auto get_map() const -> auto const&
     {
         return grammar_map;
     }
@@ -938,7 +938,7 @@ public:
     //-----------------------------------------------------------------------
     //  get_comments: Access the comment list
     //
-    auto get_comments() const -> auto const& 
+    auto get_comments() const -> auto const&
     {
         return comments;
     }
@@ -947,14 +947,14 @@ public:
     //-----------------------------------------------------------------------
     //  debug_print
     //
-    auto debug_print(std::ostream& o) const -> void 
+    auto debug_print(std::ostream& o) const -> void
     {
         for (auto const& [lineno, entry] : grammar_map) {
 
             o << "--- Section starting at line " << lineno << "\n";
             for (auto const& token : entry) {
                 o << "    " << token << " (" << token.position().lineno
-                    << "," << token.position().colno << ") " 
+                    << "," << token.position().colno << ") "
                     << as<std::string>(token.type()) << "\n";
             }
 

@@ -35,7 +35,7 @@
 
         #ifndef _MSC_VER
             //  This is the ideal -- note that we just voted "import std;"
-            //  into draft C++23 in late July 2022, so implementers haven't 
+            //  into draft C++23 in late July 2022, so implementers haven't
             //  had time to catch up yet. As of this writing (September 2022)
             //  no compiler will take this path yet, but they're on the way...
             import std;
@@ -204,9 +204,9 @@
 namespace cpp2 {
 
 //-----------------------------------------------------------------------
-// 
+//
 //  contract_group
-// 
+//
 //-----------------------------------------------------------------------
 //
 
@@ -255,30 +255,30 @@ private:
     std::terminate();
 }
 
-auto inline Default = contract_group( 
-    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+auto inline Default = contract_group(
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
         report_and_terminate("Contract",      msg CPP2_SOURCE_LOCATION_ARG);
     }
 );
-auto inline Bounds  = contract_group( 
-    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+auto inline Bounds  = contract_group(
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
         report_and_terminate("Bounds safety", msg CPP2_SOURCE_LOCATION_ARG);
-    } 
+    }
 );
-auto inline Null    = contract_group( 
-    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+auto inline Null    = contract_group(
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
         report_and_terminate("Null safety",   msg CPP2_SOURCE_LOCATION_ARG);
-    } 
+    }
 );
-auto inline Type    = contract_group( 
-    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+auto inline Type    = contract_group(
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
         report_and_terminate("Type safety",   msg CPP2_SOURCE_LOCATION_ARG);
-    } 
+    }
 );
-auto inline Testing = contract_group( 
-    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept { 
+auto inline Testing = contract_group(
+    [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
         report_and_terminate("Testing",       msg CPP2_SOURCE_LOCATION_ARG);
-    } 
+    }
 );
 
 constexpr auto contract_group::set_handler(handler h) -> handler {
@@ -317,12 +317,12 @@ auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAU
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  Arena objects for std::allocators
-// 
+//
 //  Note: cppfront translates "new" to "cpp2_new", so in Cpp2 code
 //        these are invoked by simply "unique.new<T>" etc.
-// 
+//
 //-----------------------------------------------------------------------
 //
 struct {
@@ -346,13 +346,13 @@ template<typename T, typename... Args>
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  in<T>       For "in" parameter
-// 
+//
 //-----------------------------------------------------------------------
 //
 template<typename T>
-using in = 
+using in =
     std::conditional_t <
         sizeof(T) < 2*sizeof(void*) && std::is_trivially_copy_constructible_v<T>,
         T const,
@@ -361,19 +361,19 @@ using in =
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  Initialization: These are closely related...
-// 
+//
 //  deferred_init<T>    For deferred-initialized local or member variable
 //
 //  out<T>              For out parameter
-// 
+//
 //-----------------------------------------------------------------------
 //
 template<typename T>
 class deferred_init {
     bool init = false;
-    union { 
+    union {
         int i;
         T t;
     };
@@ -414,7 +414,7 @@ public:
         }
     }
 
-    auto construct     (auto ...args) -> void { 
+    auto construct     (auto ...args) -> void {
         if (has_t) {
             *t = T(args...);
         }
@@ -427,7 +427,7 @@ public:
         }
     }
 
-    auto construct_list(auto ...args) -> void { 
+    auto construct_list(auto ...args) -> void {
         if (has_t) {
             *t = T{args...};
         }
@@ -443,9 +443,9 @@ public:
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  CPP2_UFCS: Variadic macro generating a variadic lamba, oh my...
-// 
+//
 //-----------------------------------------------------------------------
 //
 #define CPP2_UFCS(FUNCNAME,PARAM1,...) \
@@ -468,9 +468,9 @@ public:
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  is and as
-// 
+//
 //-----------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------------------------------------------
@@ -526,7 +526,7 @@ auto as( X const& x ) -> auto&& {
 }
 
 template< typename C, typename X >
-auto as( X const& x ) -> auto 
+auto as( X const& x ) -> auto
     requires (!std::is_same_v<C, X> && requires { C{x}; })
 {
     return C{x};
@@ -640,18 +640,18 @@ constexpr auto as( X const& x ) -> auto&&
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  A variation of GSL's final_action_success and finally to run only on success
 //  (based on a PR I contributed to Microsoft GSL)
-// 
+//
 //  final_action_success_success ensures something is run at the end of a scope
 //      if no exception is thrown
-// 
+//
 //  finally_success is a convenience function to make a final_action_success_success
-// 
+//
 //-----------------------------------------------------------------------
 //
- 
+
 template <class F>
 class final_action_success
 {
@@ -688,9 +688,9 @@ template <class F>
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  to_string for string interpolation
-// 
+//
 //-----------------------------------------------------------------------
 //
 template<typename T>
@@ -725,18 +725,18 @@ using cpp2::cpp2_new;
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  A partial implementation of GSL features Cpp2 relies on,
 //  to keep this a standalone header without non-std dependencies
-// 
+//
 //-----------------------------------------------------------------------
 //
 namespace gsl {
 
 //-----------------------------------------------------------------------
-// 
+//
 //  An implementation of GSL's narrow_cast
-// 
+//
 //-----------------------------------------------------------------------
 //
 template<typename To, typename From>

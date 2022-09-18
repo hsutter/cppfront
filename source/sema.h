@@ -24,9 +24,9 @@
 namespace cpp2 {
 
 //-----------------------------------------------------------------------
-// 
+//
 //  Symbol/scope table
-// 
+//
 //-----------------------------------------------------------------------
 //
 struct declaration_sym {
@@ -196,9 +196,9 @@ auto is_definite_last_use(token const* t) -> last_use const*
 
 
 //-----------------------------------------------------------------------
-// 
+//
 //  sema: Semantic analysis
-// 
+//
 //-----------------------------------------------------------------------
 //
 class sema
@@ -212,11 +212,11 @@ public:
     std::vector<declaration_sym> partial_decl_stack;;
 
     std::vector<selection_statement_node const*> active_selections;
-     
+
 public:
     //-----------------------------------------------------------------------
     //  Constructor
-    // 
+    //
     //  errors      error list
     //
     sema(
@@ -300,14 +300,14 @@ public:
                 auto const& sym = std::get<symbol::active::identifier>(s.sym);
                 assert (sym.identifier);
                 if (auto use = is_definite_last_use(sym.identifier)) {
-                    o << "*** " << sym.identifier->position().to_string() 
+                    o << "*** " << sym.identifier->position().to_string()
                       << " DEFINITE LAST "
                       << (use->is_forward ? "FORWARDING" : "POTENTIALLY MOVING")
                       << "USE OF ";
                 }
 
                 if (is_definite_initialization(sym.identifier)) {
-                    o << "*** " << sym.identifier->position().to_string() 
+                    o << "*** " << sym.identifier->position().to_string()
                       << " DEFINITE INITIALIZATION OF ";
                 }
                 else if (sym.assignment_to) {
@@ -358,7 +358,7 @@ public:
         //  It's an uninitialized variable (incl. named return values) if it's
         //  a variable with no initializer and that isn't a parameter
         //
-        auto is_uninitialized_variable_decl = [&](symbol const& s) 
+        auto is_uninitialized_variable_decl = [&](symbol const& s)
             -> declaration_sym const*
         {
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
@@ -373,13 +373,13 @@ public:
 
         //  It's a local (incl. named return value or copy or move or forward parameter)
         //
-        auto is_potentially_movable_local = [&](symbol const& s) 
+        auto is_potentially_movable_local = [&](symbol const& s)
             -> declaration_sym const*
         {
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
-                if (sym->start && sym->declaration->is(declaration_node::active::object) && 
-                    sym->parameter && 
-                        (sym->parameter->pass == passing_style::copy || 
+                if (sym->start && sym->declaration->is(declaration_node::active::object) &&
+                    sym->parameter &&
+                        (sym->parameter->pass == passing_style::copy ||
                          sym->parameter->pass == passing_style::move ||
                          sym->parameter->pass == passing_style::forward
                         )
@@ -403,7 +403,7 @@ public:
             //
             if (auto decl = is_uninitialized_variable_decl(symbols[sympos])) {
                 assert (decl->identifier && !decl->initializer);
-                ret = ret && 
+                ret = ret &&
                     ensure_definitely_initialized(decl->identifier, sympos+1, symbols[sympos].depth);
             }
 
@@ -487,7 +487,7 @@ private:
 
     //  Check that local variable *id is initialized before use on all paths
     //  starting at the given position and depth in the symbol/scope table
-    // 
+    //
     //  TODO: After writing the first version of this, I realized that it could be
     //        simplified a lot by using a sentinel value to represent the base case like
     //        the others instead of as a special case. It's tempting to rewrite this now
@@ -510,7 +510,7 @@ private:
 
             stack_entry(int p) : pos{p} { }
 
-            auto debug_print(std::ostream& o) const -> void 
+            auto debug_print(std::ostream& o) const -> void
             {
                 o << "Stack entry: " << pos << "\n";
                 for (auto const& e : branches) {
@@ -526,8 +526,8 @@ private:
             break;case symbol::active::declaration: {
                 auto const& sym = std::get<symbol::active::declaration>(symbols[pos].sym);
                 if (sym.start && sym.identifier && *sym.identifier == *id) {
-                    errors.emplace_back( 
-                        sym.identifier->position(), 
+                    errors.emplace_back(
+                        sym.identifier->position(),
                         "local variable" + sym.identifier->to_string(true)
                             + " cannot have the same name as an uninitialized"
                               " variable in the same function");
@@ -539,8 +539,8 @@ private:
                 assert (sym.identifier);
 
                 if (is_definite_initialization(sym.identifier)) {
-                    errors.emplace_back( 
-                        sym.identifier->position(), 
+                    errors.emplace_back(
+                        sym.identifier->position(),
                         "local variable " + id->to_string(true)
                             + " must be initialized before " + sym.identifier->to_string(true)
                             + " (local variables must be initialized in the order they are declared)"
@@ -558,8 +558,8 @@ private:
                             definite_initializations.push_back( sym.identifier );
                         }
                         else {
-                            errors.emplace_back( 
-                                sym.identifier->position(), 
+                            errors.emplace_back(
+                                sym.identifier->position(),
                                 "local variable " + sym.identifier->to_string(true)
                                     + " is used before it was initialized");
                         }
@@ -576,8 +576,8 @@ private:
                                 definite_initializations.push_back( sym.identifier );
                             }
                             else {
-                                errors.emplace_back( 
-                                    sym.identifier->position(), 
+                                errors.emplace_back(
+                                    sym.identifier->position(),
                                     "local variable " + sym.identifier->to_string(true)
                                         + " is used in a condition before it was initialized");
                             }
@@ -604,8 +604,8 @@ private:
                             definite_initializations.push_back( sym.identifier );
                         }
                         else {
-                            errors.emplace_back( 
-                                sym.identifier->position(), 
+                            errors.emplace_back(
+                                sym.identifier->position(),
                                 "local variable " + sym.identifier->to_string(true)
                                     + " is used in a branch before it was initialized");
                         }
@@ -644,7 +644,7 @@ private:
                         //  If this is not an implicit 'else' branch (i.e., if lineno > 0)
                         if (symbols[b.start].position().lineno > 0) {
                             (b.result ? true_branches : false_branches)
-                                += "\n  branch starting at line " 
+                                += "\n  branch starting at line "
                                     + std::to_string(symbols[b.start].position().lineno);
                         }
                         else {
@@ -652,7 +652,7 @@ private:
                                 += "\n  implicit else branch";
                         }
                     }
-                    
+
                     //  If none of the branches was true
                     if (true_branches.length() == 0)
                     {
@@ -686,17 +686,17 @@ private:
                     //  Else we found a missing initializion, report it and return false
                     else
                     {
-                        errors.emplace_back( 
-                            id->position(), 
+                        errors.emplace_back(
+                            id->position(),
                             "local variable " + id->to_string(true)
                                     + " must be initialized on both branches or neither branch");
-                        
+
                         assert (symbols[selection_stack.back().pos].sym.index() == symbol::active::selection);
                         auto const& sym = std::get<symbol::active::selection>(symbols[pos].sym);
-                        errors.emplace_back( 
+                        errors.emplace_back(
                             sym.selection->identifier->position(),
                             "\"" + sym.selection->identifier->to_string(true)
-                                + "\" initializes " + id->to_string(true) 
+                                + "\" initializes " + id->to_string(true)
                                 + " on:" + true_branches
                                 + "\nbut not on:" + false_branches
                         );
@@ -710,11 +710,11 @@ private:
             break;case symbol::active::compound: {
                 auto const& sym = std::get<symbol::active::compound>(symbols[pos].sym);
 
-                //  If we're in a selection 
+                //  If we're in a selection
                 if (std::ssize(selection_stack) > 0) {
                     //  If this is a compound start with the current selection's depth
                     //  plus one, it's the start of one of the branches of that selection
-                    if (sym.start && 
+                    if (sym.start &&
                         symbols[pos].depth == symbols[selection_stack.back().pos].depth+1
                         )
                     {
@@ -729,9 +729,9 @@ private:
 
         }
 
-        errors.emplace_back( 
-            id->position(), 
-            id->to_string(true) 
+        errors.emplace_back(
+            id->position(),
+            id->to_string(true)
             + " - variable must be initialized on every branch path");
         return false;
     }
