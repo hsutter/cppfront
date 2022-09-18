@@ -21,3 +21,4 @@
 *.opendb
 *.vsidx
 *.lock
+.editorconfig
