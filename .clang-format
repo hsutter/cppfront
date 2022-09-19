@@ -1,0 +1,129 @@
+# Common settings
+BasedOnStyle:  WebKit
+TabWidth:        4
+IndentWidth:     4
+UseTab:          Always
+ColumnLimit: 100
+
+---
+Language: Cpp
+
+
+AccessModifierOffset: -4
+AlignAfterOpenBracket: "DontAlign"
+AlignArrayOfStructures: "Right"
+AlignConsecutiveAssignments: "Consecutive"
+AlignConsecutiveBitFields: "Consecutive"
+AlignConsecutiveDeclarations: false
+AlignConsecutiveMacros: "Consecutive"
+AlignEscapedNewlines: "Right"
+AlignOperands: "Align"
+AlignTrailingComments: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: "Empty"
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: "AllIfsAndElse"
+AllowShortLambdasOnASingleLine: "All"
+AllowShortLoopsOnASingleLine: true
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakTemplateDeclarations: "Yes"
+BinPackArguments: false
+BinPackParameters: false
+BitFieldColonSpacing: "Both"
+
+# Configure each individual brace in BraceWrapping
+BreakBeforeBraces: Custom
+# Control of individual brace wrapping cases
+BraceWrapping: {
+    AfterCaseLabel: 'true'
+    AfterClass: 'true'
+    AfterControlStatement: 'Always'
+    AfterEnum : 'true'
+    AfterFunction : 'true'
+    AfterNamespace : 'true'
+    AfterStruct : 'true'
+    AfterUnion : 'true'
+    AfterExternBlock: 'true'
+    BeforeCatch : 'false'
+    BeforeElse : 'false'
+    BeforeLambdaBody : 'true'
+    BeforeWhile : 'false'
+    IndentBraces : 'false'
+    SplitEmptyFunction : 'false'
+    SplitEmptyRecord : 'false'
+    SplitEmptyNamespace : 'false'
+}
+
+BreakAfterJavaFieldAnnotations: true
+BreakBeforeBinaryOperators: "None"
+BreakBeforeConceptDeclarations : true
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: "AfterColon"
+BreakInheritanceList: 'AfterComma'
+BreakStringLiterals: true
+CommentPragmas:  '^ IWYU pragma:'
+CompactNamespaces: false
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+Cpp11BracedListStyle: false
+DeriveLineEnding: true
+DerivePointerAlignment: false
+EmptyLineAfterAccessModifier: 'Always'
+EmptyLineBeforeAccessModifier: 'Always'
+FixNamespaceComments: false
+ForEachMacros:   [ foreach, Q_FOREACH, BOOST_FOREACH, RANGES_FOR ]
+IfMacros: ['IF']
+IncludeBlocks : 'Regroup'
+IndentAccessModifiers : false
+IndentCaseBlocks : false
+IndentCaseLabels: false
+IndentExternBlock : "AfterExternBlock"
+IndentGotoLabels: true
+IndentPPDirectives : None
+IndentWrappedFunctionNames: false
+KeepEmptyLinesAtTheStartOfBlocks : false
+LambdaBodyIndentation : 'Signature'
+NamespaceIndentation: 'All'
+PackConstructorInitializers : 'NextLine'
+
+PenaltyBreakBeforeFirstCallParameter: 19
+PenaltyBreakComment: 300
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakString: 1000
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 60
+
+ReferenceAlignment : 'Left'
+ReflowComments : true
+RemoveBracesLLVM : false
+SeparateDefinitionBlocks : 'Leave'
+SortIncludes: 'CaseInsensitive'
+SortUsingDeclarations : true
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot : false
+SpaceAfterTemplateKeyword : false
+SpaceBeforeAssignmentOperators : true
+SpaceBeforeCaseColon : true
+SpaceBeforeCtorInitializerColon : true
+SpaceBeforeInheritanceColon : true
+SpaceBeforeParens : Never
+SpaceBeforeRangeBasedForLoopColon: false
+SpaceBeforeSquareBrackets : false
+SpaceInEmptyBlock : false
+SpaceInEmptyParentheses : false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles : Never
+SpacesInCStyleCastParentheses : false
+SpacesInConditionalStatement : false
+SpacesInContainerLiterals : true
+SpacesInParentheses: false
+SpacesInSquareBrackets : false
+Standard : Latest
+PointerAlignment: Left
+KeepEmptyLinesAtTheStartOfBlocks: true
+MacroBlockBegin: ''
+MacroBlockEnd:   ''
+MaxEmptyLinesToKeep: 1

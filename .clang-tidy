@@ -1,0 +1,53 @@
+---
+
+Checks: >
+  -*,
+  bugprone-*,
+  google-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -google-readability-namespace-comments,
+  -google-runtime-int,
+  -google-runtime-references,
+  -misc-non-private-member-variables-in-classes,
+  -readability-named-parameter,
+  -readability-braces-around-statements,
+  -readability-magic-numbers
+
+WarningsAsErrors: "*"
+FormatStyle: file
+
+CheckOptions:
+  - { key: readability-identifier-naming.NamespaceCase,                     value: lower_case }
+  - { key: readability-identifier-naming.ClassCase,                         value: CamelCase  }
+  - { key: readability-identifier-naming.StructCase,                        value: CamelCase  }
+  - { key: readability-identifier-naming.TemplateParameterCase,             value: CamelCase  }
+  - { key: readability-identifier-naming.FunctionCase,                      value: CamelCase  }
+  - { key: readability-identifier-naming.VariableCase,                      value: lower_case }
+  - { key: readability-identifier-naming.PrivateMemberSuffix,               value: _          }
+  - { key: readability-identifier-naming.ProtectedMemberSuffix,             value: _          }
+  - { key: readability-identifier-naming.MacroDefinitionCase,               value: UPPER_CASE }
+  - { key: readability-identifier-naming.EnumConstantCase,                  value: CamelCase }
+  - { key: readability-identifier-naming.EnumConstantPrefix,                value: k         }
+  - { key: readability-identifier-naming.ConstexprVariableCase,             value: CamelCase }
+  - { key: readability-identifier-naming.ConstexprVariablePrefix,           value: k         }
+  - { key: readability-identifier-naming.GlobalConstantCase,                value: CamelCase }
+  - { key: readability-identifier-naming.GlobalConstantPrefix,              value: k         }
+  - { key: readability-identifier-naming.MemberConstantCase,                value: CamelCase }
+  - { key: readability-identifier-naming.MemberConstantPrefix,              value: k         }
+  - { key: readability-identifier-naming.StaticConstantCase,                value: CamelCase }
+  - { key: readability-identifier-naming.StaticConstantPrefix,              value: k         }
+  - { key: cert-dcl16-c.NewSuffixes,                                        value: 'L;LL;LU;LLU' }
+  - { key: cert-oop54-cpp.WarnOnlyIfThisHasSuspiciousField,                 value: '0' }
+  - { key: cppcoreguidelines-explicit-virtual-functions.IgnoreDestructors,  value: '1' }
+  - { key: google-readability-braces-around-statements.ShortStatementLines, value:           '1'}
+  - { key: google-readability-function-size.StatementThreshold,             value:           '800'}
+  - { key: google-readability-namespace-comments.ShortNamespaceLines,       value:           '10'}
+  - { key: google-readability-namespace-comments.SpacesBeforeComments,      value:           '2'}
+  - { key: modernize-loop-convert.MaxCopySize,                              value:           '16'}
+  - { key: modernize-loop-convert.MinConfidence,                            value:           reasonable}
+  - { key: modernize-loop-convert.NamingStyle,                              value:           CamelCase}
+  - { key: modernize-use-nullptr.NullMacros,                                value:           'NULL'}
