@@ -322,10 +322,19 @@ public:
             if (arg.text.empty()) {
                 continue;
             }
+
+            //  Provide a way to ignore the rest of the command line
+            //  for the purpose of looking for switches
+            if (arg.text == "--") {
+                arg.pos = processed;
+                break;
+            }
+
             for (auto& flag : flags) {
+                auto length_to_match = std::max(flag.unique_prefix, as<int>(arg.text.length())-1);
                 //  Allow a switch to start with either - or /
-                if (arg.text.starts_with("-" + flag.name.substr(0, flag.unique_prefix)) ||
-                    arg.text.starts_with("/" + flag.name.substr(0, flag.unique_prefix)) ||
+                if (arg.text.starts_with("-" + flag.name.substr(0, length_to_match)) ||
+                    arg.text.starts_with("/" + flag.name.substr(0, length_to_match)) ||
                     arg.text == "-" + flag.synonym ||
                     arg.text == "/" + flag.synonym
                     )
@@ -335,11 +344,15 @@ public:
                     break;
                 }
             }
-            if (arg.pos != processed && (arg.text.starts_with("-") || arg.text.starts_with("/"))) {
-                arg.pos = processed;
-                print("Unknown option: " + arg.text + " (try -help)\n");
-                help_requested = true;
-            }
+
+            // For now comment this out to try leaving unmatched switches alone, so that
+            // Unix absolute filenames work... and in case an absolute filename collides
+            // with a legit switch name, also added "--" above... let's see how this works
+            //if (arg.pos != processed && (arg.text.starts_with("-") || arg.text.starts_with("/"))) {
+            //    arg.pos = processed;
+            //    print("Unknown option: " + arg.text + " (try -help)\n");
+            //    help_requested = true;
+            //}
         }
 
         std::erase_if( args, [=](auto& arg){ return arg.pos == processed; } );
