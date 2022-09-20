@@ -1,0 +1,22 @@
+cmake_minimum_required(VERSION 3.2)
+project(cppfront)
+
+set(SRC_FILES 
+	source/cppfront.cpp
+)
+
+set(HEADER_FILES	
+	source/common.h
+	source/lex.h
+	source/load.h
+	source/parse.h
+	source/sema.h
+	include/cpp2util.h
+)
+
+add_executable(${PROJECT_NAME} ${SRC_FILES} ${HEADER_FILES})
+target_include_directories(${PROJECT_NAME} PUBLIC include)
+
+# Tests are yet to be added
+# not exactly sure on how to do it yet
+# as it is author compuer dependent
