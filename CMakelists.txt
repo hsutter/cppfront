@@ -19,4 +19,4 @@ target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 # Tests are yet to be added
 # not exactly sure on how to do it yet
-# as it is author compuer dependent
+# as it is author computer dependent
