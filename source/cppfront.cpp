@@ -226,13 +226,8 @@ class positional_printer
 
         //  Not using print() here because this is transparent to the curr_pos
         if (!flag_clean_cpp1) {
-            out << "#line " << line << " \"";
-            for (auto c : filename)
-            {
-               if (c == '\\') out << "\\\\";
-               else out << c;
-            }
-            out << "2\"\n";
+            const std::string filename2 = filename + '2';
+            out << "#line " << line << ' ' << std::quoted(filename2) << '\n';
         }
     }
 
