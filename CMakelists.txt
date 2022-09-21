@@ -34,7 +34,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC "include")
 # cppfront/build/bin/Release -> cppfront/build/bin/${CMAKE_BUILD_TYPE}
 # ! Regression Tests are being called but the copy of the files are not happening
 # not exactly sure why.
-if(WIN32)
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                    COMMAND cmd /c ${CMAKE_REGRESSION_TESTS_DIRECTORY}/run-tests.bat)
-endif()
+# if(WIN32)
+#     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+#                     COMMAND cmd /c ${CMAKE_REGRESSION_TESTS_DIRECTORY}/run-tests.bat)
+# endif()
+# Bad approach
+
