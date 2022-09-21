@@ -9,7 +9,7 @@ project "cppfront"
 	cppdialect "C++latest"
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
-    files { "source/*.cpp", "source/*.h", "include/*.h" }
+    files { "source/*.cpp", "source/*.h", "include/*.h", "*.*", "passthrough-tests/*.*", "regression-tests/**" }
 
 	filter "configurations:Debug"
 		runtime "Debug"
