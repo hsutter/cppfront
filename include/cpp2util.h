@@ -386,8 +386,8 @@ public:
    ~deferred_init() noexcept       { if (init) t.~T(); }
     auto value()    noexcept -> T& { Default.expects(init);  return t; }
 
-    auto construct     (auto ...args) -> void { Default.expects(!init);  new (&t) T(std::forward<decltype(args)>(args)...);  init = true; }
-    auto construct_list(auto ...args) -> void { Default.expects(!init);  new (&t) T{std::forward<decltype(args)>(args)...};  init = true; }
+    auto construct     (auto&& ...args) -> void { Default.expects(!init);  new (&t) T(std::forward<decltype(args)>(args)...);  init = true; }
+    auto construct_list(auto&& ...args) -> void { Default.expects(!init);  new (&t) T{std::forward<decltype(args)>(args)...};  init = true; }
 };
 
 template<typename T>
