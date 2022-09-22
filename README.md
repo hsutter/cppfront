@@ -97,7 +97,7 @@ I'm not posting much documentation because that would imply this project is inte
 
 To learn more, please see:
 
-- **My CppCon 2022 talk, "Can C++ be 10x simpler and safer ...?**" [link coming soon]
+- [**My CppCon 2022 talk, "Can C++ be 10x simpler and safer ...?**"](https://www.youtube.com/watch?v=ELeZAKCN4tY)
 - **The [cppfront regression tests](https://github.com/hsutter/cppfront/tree/main/regression-tests/test-results)** which show dozens of working examples, each with a`.cpp2` file and the `.cpp` file it is translated to. Each filename briefly describes the language features the test demonstrates (e.g., contracts, parameter passing, bounds safety, type-safe `is` queries and `as` casts, initialization safety, and generalized value capture including in function expressions ('lambdas'), postconditions, and string interpolation).
 - The list of papers and talks below.
 
@@ -184,7 +184,7 @@ This is partly implemented in cppfront. There is basic support for `is` and `as`
 
 ### 2022: CppCon 2022 talk and cppfront
 
-- **CppCon 2022**: "C++ simplicity, safety, and toolability: Can C++ be 10x simpler and safer ...?" [link coming soon]
+- [**CppCon 2022: "Can C++ be 10x simpler and safer ...?**"](https://www.youtube.com/watch?v=ELeZAKCN4tY)
 - This repo.
 
 # Epilog: 2016 roadmap diagram
