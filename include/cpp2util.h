@@ -88,8 +88,10 @@
         #include <utility>
         #include <variant>
         #include <memory>
-        #ifdef __cpp_lib_memory_resource
+        #if __has_include(<memory_resource>)
             #include <memory_resource>
+        #elif __has_include(<experimental/memory_resource>)
+            #include <experimental/memory_resource>
         #endif
         #include <new>
         #include <scoped_allocator>
@@ -106,7 +108,9 @@
         #include <cctype>
         #include <charconv>
         #include <cstring>
-        #include <cuchar>
+        #if __has_include(<cuchar>)
+            #include <cuchar>
+        #endif
         #include <cwchar>
         #include <cwctype>
         #ifdef __cpp_lib_format
@@ -174,7 +178,9 @@
             #include <semaphore>
         #endif
         #include <shared_mutex>
-        #include <stop_token>
+        #if __has_include(<stop_token>)
+            #include <stop_token>
+        #endif
         #include <thread>
         #include <iso646.h>
     #endif
