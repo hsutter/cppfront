@@ -1,6 +1,6 @@
 # cppfront
 
-<image align="right" width="320" src="https://user-images.githubusercontent.com/1801526/189203090-bbf2eea0-83e5-4962-b2da-f81224152dcb.png"> Copyright (c) Herb Sutter
+<image align="right" width="320" src="https://user-images.githubusercontent.com/1801526/192037760-90c68098-a72d-4111-accf-5a5a682e2b6e.png"> Copyright (c) Herb Sutter
 
 See [License](LICENSE)
 
