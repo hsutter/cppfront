@@ -461,6 +461,10 @@ public:
 [](auto&& obj, auto&& ...params) { \
     if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); }) { \
         return std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); \
+    } else if constexpr ( requires{ FUNCNAME(std::forward<decltype(obj)>(obj), std::forward<decltype(params)>(params)...); }){ \
+        return FUNCNAME(std::forward<decltype(obj)>(obj), std::forward<decltype(params)>(params)...); \
+    } else if constexpr (requires{ FUNCNAME(std::forward<decltype(obj.get())>(obj.get()),std::forward<decltype(params)>(params)...); }) { \
+        return FUNCNAME(std::forward<decltype(obj.get())>(obj.get()), std::forward<decltype(params)>(params)...); \
     } else { \
         return FUNCNAME(std::forward<decltype(obj)>(obj), std::forward<decltype(params)>(params)...); \
     } \
@@ -470,6 +474,10 @@ public:
 [](auto&& obj) { \
     if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(); }) { \
         return std::forward<decltype(obj)>(obj).FUNCNAME(); \
+    } else if constexpr ( requires{ FUNCNAME(std::forward<decltype(obj)>(obj)); }) { \
+        return FUNCNAME(std::forward<decltype(obj)>(obj)); \
+    } else if constexpr (requires{ FUNCNAME(std::forward<decltype(obj.get())>(obj.get())); }) { \
+        return FUNCNAME(std::forward<decltype(obj.get())>(obj.get())); \
     } else { \
         return FUNCNAME(std::forward<decltype(obj)>(obj)); \
     } \
