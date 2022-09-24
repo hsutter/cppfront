@@ -481,6 +481,10 @@ public:
 //  when customizing is/as for std::variant
 static std::nullptr_t nonesuch = nullptr;
 
+//  For designating "holds no value" -- used only with is, not as
+//  TODO: Does this really warrant a new synonym? Perhaps "is void" is enough
+using empty = void;
+
 template< typename C, typename X >
 auto is( X const& ) -> bool {
     return false;
@@ -508,6 +512,12 @@ template< typename C, typename X >
     requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
 auto is( X const* x ) -> bool {
     return dynamic_cast<C const&>(x) != nullptr;
+}
+
+template< typename C, typename X >
+    requires (requires (X x) { *x; X(); } && std::is_same_v<C, empty>)
+auto is( X const& x ) -> bool {
+    return x == X();
 }
 
 
@@ -570,6 +580,7 @@ template<typename... Ts>
 constexpr auto operator_is( std::variant<Ts...> const& x ) {
     return x.index();
 }
+
 template<size_t I, typename... Ts>
 constexpr auto operator_as( std::variant<Ts...> const& x ) -> auto&& {
     if constexpr (I < std::variant_size_v<std::variant<Ts...>>) {
@@ -579,6 +590,10 @@ constexpr auto operator_as( std::variant<Ts...> const& x ) -> auto&& {
         return nonesuch;
     }
 }
+
+//  A helper for is...
+template <class T, class... Ts>
+inline constexpr auto is_any = std::disjunction_v<std::is_same<T, Ts>...> {};
 
 template<typename T, typename... Ts>
 auto is( std::variant<Ts...> const& x ) {
@@ -592,6 +607,11 @@ auto is( std::variant<Ts...> const& x ) {
     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<7>(x)), T >) if (x.index() == 7) return true;
     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<8>(x)), T >) if (x.index() == 8) return true;
     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<9>(x)), T >) if (x.index() == 9) return true;
+    if constexpr (std::is_same_v< T, empty > ) {
+        if (x.valueless_by_exception()) return true;
+        //  Need to guard this with is_any otherwise the get_if is illegal
+        if constexpr (is_any<std::monostate, Ts...>) return std::get_if<std::monostate>(&x) != nullptr;
+    }
     return false;
 }
 
@@ -615,9 +635,14 @@ auto as( std::variant<Ts...> const& x ) {
 //  std::any is and as
 //
 template<typename T, typename X>
-    requires (std::is_same_v<X,std::any> && !std::is_same_v<T,std::any>)
+    requires (std::is_same_v<X,std::any> && !std::is_same_v<T,std::any> && !std::is_same_v<T,empty>)
 constexpr auto is( X const& x ) -> bool
     { return x.type() == typeid(T); }
+
+template<typename T, typename X>
+    requires (std::is_same_v<X,std::any> && std::is_same_v<T,empty>)
+constexpr auto is( X const& x ) -> bool
+    { return !x.has_value(); }
 
 template<typename T, typename X>
     requires (!std::is_reference_v<T> && std::is_same_v<X,std::any> && !std::is_same_v<T,std::any>)
@@ -632,6 +657,11 @@ template<typename T, typename X>
     requires std::is_same_v<X,std::optional<T>>
 constexpr auto is( X const& x ) -> bool
     { return x.has_value(); }
+
+template<typename T, typename U>
+    requires std::is_same_v<T,empty>
+constexpr auto is( std::optional<U> const& x ) -> bool
+    { return !x.has_value(); }
 
 template<typename T, typename X>
     requires std::is_same_v<X,std::optional<T>>

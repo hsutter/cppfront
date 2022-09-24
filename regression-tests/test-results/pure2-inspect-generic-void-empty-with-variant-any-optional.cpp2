@@ -1,0 +1,26 @@
+
+main: () -> int = {
+    p: std::unique_ptr<int> = ();
+    i: std::vector<int>::iterator = ();
+    v: std::variant<std::monostate, int, std::string> = ();
+    a: std::any = ();
+    o: std::optional<std::string> = ();
+
+    std::cout << "\nAll these cases satisfy \"VOYDE AND EMPTIE\"\n";
+
+    test_generic(p);
+    test_generic(i);
+    test_generic(v);
+    test_generic(a);
+    test_generic(o);
+}
+
+test_generic: ( x: _ ) = {
+    std::cout
+        << "\n" << typeid(x).name() << "\n    ..."
+        << inspect x -> std::string {
+            is void = " VOYDE AND EMPTIE";
+            is _   = " no match";
+        }
+        << "\n";
+}
