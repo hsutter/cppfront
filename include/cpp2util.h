@@ -373,21 +373,20 @@ using in =
 template<typename T>
 class deferred_init {
     bool init = false;
-    union {
-        int i;
-        T t;
-    };
+    std::aligned_storage<sizeof(T), alignof(T)> data;
+
+    auto t() -> T& { return *std::launder(reinterpret_cast<T*>(&data)); }
 
     template<typename U>
     friend class out;
 
 public:
-    deferred_init() noexcept       : i {0} { }
-   ~deferred_init() noexcept       { if (init) t.~T(); }
-    auto value()    noexcept -> T& { Default.expects(init);  return t; }
+    deferred_init() noexcept       { }
+   ~deferred_init() noexcept       { if (init) t().~T(); }
+    auto value()    noexcept -> T& { Default.expects(init);  return t(); }
 
-    auto construct     (auto ...args) -> void { Default.expects(!init);  new (&t) T(std::forward<decltype(args)>(args)...);  init = true; }
-    auto construct_list(auto ...args) -> void { Default.expects(!init);  new (&t) T{std::forward<decltype(args)>(args)...};  init = true; }
+    auto construct     (auto&& ...args) -> void { Default.expects(!init);  new (&data) T(std::forward<decltype(args)>(args)...);  init = true; }
+    auto construct_list(auto&& ...args) -> void { Default.expects(!init);  new (&data) T{std::forward<decltype(args)>(args)...};  init = true; }
 };
 
 template<typename T>
