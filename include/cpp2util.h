@@ -615,12 +615,12 @@ auto as( std::variant<Ts...> const& x ) {
 //  std::any is and as
 //
 template<typename T, typename X>
-    requires std::is_same_v<X,std::any>
+    requires (std::is_same_v<X,std::any> && !std::is_same_v<T,std::any>)
 constexpr auto is( X const& x ) -> bool
     { return x.type() == typeid(T); }
 
 template<typename T, typename X>
-    requires (!std::is_reference_v<T> && std::is_same_v<X,std::any>)
+    requires (!std::is_reference_v<T> && std::is_same_v<X,std::any> && !std::is_same_v<T,std::any>)
 constexpr auto as( X const& x ) -> T
     { return std::any_cast<T>( x ); }
 
