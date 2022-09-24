@@ -1,10 +1,10 @@
 # cppfront
 
-<image align="right" width="320" src="https://user-images.githubusercontent.com/1801526/189203090-bbf2eea0-83e5-4962-b2da-f81224152dcb.png"> Copyright (c) Herb Sutter
+<image align="right" width="320" src="https://user-images.githubusercontent.com/1801526/192037760-90c68098-a72d-4111-accf-5a5a682e2b6e.png"> Copyright (c) Herb Sutter
 
 See [License](LICENSE)
 
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
 Cppfront is a experimental compiler from a potential C++ 'syntax 2' (Cpp2) to today's 'syntax 1' (Cpp1), to learn some things, prove out some concepts, and share some ideas. This compiler is a work in progress and currently hilariously incomplete... basic functions work, classes will be next, then metaclasses and lightweight exceptions.
 
@@ -97,7 +97,7 @@ I'm not posting much documentation because that would imply this project is inte
 
 To learn more, please see:
 
-- **My CppCon 2022 talk, "Can C++ be 10x simpler and safer ...?**" [link coming soon]
+- [**My CppCon 2022 talk, "Can C++ be 10x simpler and safer ...?**"](https://www.youtube.com/watch?v=ELeZAKCN4tY)
 - **The [cppfront regression tests](https://github.com/hsutter/cppfront/tree/main/regression-tests/test-results)** which show dozens of working examples, each with a`.cpp2` file and the `.cpp` file it is translated to. Each filename briefly describes the language features the test demonstrates (e.g., contracts, parameter passing, bounds safety, type-safe `is` queries and `as` casts, initialization safety, and generalized value capture including in function expressions ('lambdas'), postconditions, and string interpolation).
 - The list of papers and talks below.
 
@@ -184,7 +184,7 @@ This is partly implemented in cppfront. There is basic support for `is` and `as`
 
 ### 2022: CppCon 2022 talk and cppfront
 
-- **CppCon 2022**: "C++ simplicity, safety, and toolability: Can C++ be 10x simpler and safer ...?" [link coming soon]
+- [**CppCon 2022: "Can C++ be 10x simpler and safer ...?**"](https://www.youtube.com/watch?v=ELeZAKCN4tY)
 - This repo.
 
 # Epilog: 2016 roadmap diagram
