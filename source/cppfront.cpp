@@ -1692,10 +1692,18 @@ public:
 
             //  Otherwise, do the UFCS work...
 
+            auto find_id_of_a_last = [](auto& ops, auto op){
+                for (int i = std::ssize(ops)-1; i>0; --i) {
+                    if (ops[i].op->type() == op)
+                        return i;
+                }
+                return 0;
+            };
+
             //  If method are chained we need to go from the last to the first
             //  token.a(a-expr-list).b(b-expr-list).c(c-expr-list) will be tranformed to:
             //  CPP2_UFCS(c, CPP2_UFCS(b, CPP2_UFCS(a,token, a-expr-list), b-expr-list), c-expr-list )
-            for (auto i = std::ssize(n.ops)-1; i > 0; i -= 2)
+            for (auto i = find_id_of_a_last(n.ops, lexeme::LeftParen); i > 0; i -= 2)
             {
                 //  The . has its id_expr
                 assert (n.ops[i-1].id_expr);
@@ -1723,7 +1731,7 @@ public:
             }
 
             //  expr-list need to be added in reversed order then CPP2_UFCS macros
-            for (auto i = 0; i < std::ssize(n.ops); i += 2) {
+            for (auto i = 0; i < find_id_of_a_last(n.ops, lexeme::LeftParen); i += 2) {
                 //  Then make the base expression the second argument - only needed on the most nested call
                 if (i == 0) {
                     emit(*n.expr);

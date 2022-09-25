@@ -1,0 +1,28 @@
+#include <vector>
+
+add: (in v : _, in a : int) -> auto = {
+    cv := v;
+    for cv do :(inout e : _) = {
+        e += a;
+    }
+    return cv;
+}
+
+dbl: (in v : _) -> auto = {
+    cv := v;
+    for cv do :(inout e : _) = {
+        e *= 2;
+    }
+    return cv;
+}
+
+main: () -> int = {
+
+    v : std::vector<int> = (1,2,3,4,5,6,7,8,9,10);
+
+    for v.dbl().add(1).dbl() do :(in e : _) = {
+        std::cout << e << ", ";
+    }
+
+    std::cout << std::endl;
+}
