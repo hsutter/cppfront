@@ -593,7 +593,7 @@ constexpr auto operator_as( std::variant<Ts...> const& x ) -> auto&& {
 
 //  A helper for is...
 template <class T, class... Ts>
-inline constexpr auto is_any = std::disjunction_v<std::is_same<T, Ts>...> {};
+inline constexpr auto is_any = std::disjunction_v<std::is_same<T, Ts>...>;
 
 template<typename T, typename... Ts>
 auto is( std::variant<Ts...> const& x ) {
