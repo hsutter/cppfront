@@ -5,19 +5,22 @@
 
 #include <string>
 #include <cstdlib>
+#include <ctime>
 
 auto copy_from(auto x) -> void;
-#line 7 "mixed-parameter-passing.cpp2"
+#line 8 "mixed-parameter-passing.cpp2"
 auto parameter_styles(
     cpp2::in<std::string> a, 
     std::string b, 
     std::string& c, 
     std::string&& d
     ) -> void;
+#line 40 "mixed-parameter-passing.cpp2"
+[[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 4 "mixed-parameter-passing.cpp2"
+#line 5 "mixed-parameter-passing.cpp2"
 
 auto copy_from(auto x) -> void{}
 
@@ -52,3 +55,5 @@ auto parameter_styles(
     }
 
 }
+
+[[nodiscard]] auto main() -> int{}

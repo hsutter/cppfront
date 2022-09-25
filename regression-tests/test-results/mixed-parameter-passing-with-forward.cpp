@@ -5,9 +5,10 @@
 
 #include <string>
 #include <cstdlib>
+#include <ctime>
 
 auto copy_from(auto x) -> void;
-#line 7 "mixed-parameter-passing-with-forward.cpp2"
+#line 8 "mixed-parameter-passing-with-forward.cpp2"
 auto parameter_styles(
     cpp2::in<std::string> a, 
     std::string b, 
@@ -15,10 +16,12 @@ auto parameter_styles(
     std::string&& d, 
     auto&&  e
     ) -> void;
+#line 42 "mixed-parameter-passing-with-forward.cpp2"
+[[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 4 "mixed-parameter-passing-with-forward.cpp2"
+#line 5 "mixed-parameter-passing-with-forward.cpp2"
 
 auto copy_from(auto x) -> void{}
 
@@ -30,7 +33,7 @@ auto parameter_styles(
     auto&&  e
     ) -> void
 requires std::is_same_v<CPP2_TYPEOF(e), std::string>
-#line 14 "mixed-parameter-passing-with-forward.cpp2"
+#line 15 "mixed-parameter-passing-with-forward.cpp2"
 {
     int z { 12 }; 
 
@@ -57,3 +60,5 @@ requires std::is_same_v<CPP2_TYPEOF(e), std::string>
     }
 
 }
+
+[[nodiscard]] auto main() -> int{}
