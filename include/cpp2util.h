@@ -21,6 +21,7 @@
 #define __CPP2_UTIL
 
 //  If this implementation doesn't support source_location yet, disable it
+//  TODO: technically this test should have <version> included first, but GEFN
 #if !defined(_MSC_VER) && !defined(__cpp_lib_source_location)
     #undef CPP2_USE_SOURCE_LOCATION
 #endif
@@ -59,6 +60,7 @@
     //  isn't yet supported by all of { VS 2022, g++-10, clang++-12 }
     //  ... this should approximate "import std;" on those compilers
     #else
+        #include <version>
         #include <concepts>
         #ifdef __cpp_lib_coroutine
             #include <coroutine>
@@ -85,9 +87,10 @@
         #include <typeinfo>
         #include <utility>
         #include <variant>
-        #include <version>
         #include <memory>
-        #include <memory_resource>
+        #ifdef __cpp_lib_memory_resource
+            #include <memory_resource>
+        #endif
         #include <new>
         #include <scoped_allocator>
         #include <cfloat>
