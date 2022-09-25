@@ -1667,7 +1667,7 @@ public:
             captured_part += "_" + std::to_string(mynum);
         }
 
-        //  Check to see if it's just a function call with "." syntax,
+        //  Check to see if it's just a function call with "." syntax (potentially chained with other methods),
         //  and if so use this path to convert it to UFCS
         if (// there's a single-token expression followed by . and (
             n.expr->get_token() &&                      //  if the base expression is a single token
@@ -1675,9 +1675,11 @@ public:
             n.ops[0].op->type() == lexeme::Dot &&       //       token . id-expr ( expr-list )
             n.ops[1].op->type() == lexeme::LeftParen &&
             // and either there's nothing after that, or there's just a $ after that
+            // or there is mathod chaining started
             (
                 std::ssize(n.ops) == 2 ||
-                (std::ssize(n.ops) == 3 && n.ops[2].op->type() == lexeme::Dollar)
+                (std::ssize(n.ops) == 3 && n.ops[2].op->type() == lexeme::Dollar) ||
+                (std::ssize(n.ops)  > 3 && n.ops[2].op->type() == lexeme::Dot) // fsajdak: chaining identification 
             )
             )
         {
@@ -1690,44 +1692,52 @@ public:
 
             //  Otherwise, do the UFCS work...
 
-            //  The . has its id_expr
-            assert (n.ops[0].id_expr);
+            //  If method are chained we need to go from the last to the first
+            //  token.a(a-expr-list).b(b-expr-list).c(c-expr-list) will be tranformed to:
+            //  CPP2_UFCS(c, CPP2_UFCS(b, CPP2_UFCS(a,token, a-expr-list), b-expr-list), c-expr-list )
+            for (auto i = std::ssize(n.ops)-1; i > 0; i -= 2)
+            {
+                //  The . has its id_expr
+                assert (n.ops[i-1].id_expr);
 
-            //  The ( has its expr_list and op_close
-            assert (n.ops[1].expr_list && n.ops[1].op_close);
+                //  The ( has its expr_list and op_close
+                assert (n.ops[i].expr_list && n.ops[i].op_close);
 
-            //--------------------------------------------------------------------
-            //  TODO: When MSVC supports __VA_OPT__ in standard mode without the
-            //        experimental /Zc:preprocessor switch, use this single line
-            //        instead of the dual lines below that special-case _0 args
-            //  AND:  Make the similarly noted change in cpp2util.h
-            //
-            //printer.print_cpp2("CPP2_UFCS(", n.position());
+                //--------------------------------------------------------------------
+                //  TODO: When MSVC supports __VA_OPT__ in standard mode without the
+                //        experimental /Zc:preprocessor switch, use this single line
+                //        instead of the dual lines below that special-case _0 args
+                //  AND:  Make the similarly noted change in cpp2util.h
+                //
+                //printer.print_cpp2("CPP2_UFCS(", n.position());
 
-            //  If there are no additional arguments, use the CPP2_UFCS_0 version
-            if (!n.ops[1].expr_list->expressions.empty()) {
-                printer.print_cpp2("CPP2_UFCS(", n.position());
-            }
-            else {
-                printer.print_cpp2("CPP2_UFCS_0(", n.position());
-            }
-            //--------------------------------------------------------------------
-
-            //  Make the "funcname" the first argument to CPP2_UFCS
-            emit(*n.ops[0].id_expr);
-            printer.print_cpp2(", ", n.position());
-
-            //  Then make the base expression the second argument
-            emit(*n.expr);
-
-            //  Then tack on any additional arguments
-            if (!n.ops[1].expr_list->expressions.empty()) {
+                //  If there are no additional arguments, use the CPP2_UFCS_0 version
+                if (!n.ops[i].expr_list->expressions.empty()) {
+                    printer.print_cpp2("CPP2_UFCS(", n.position());
+                }
+                else {
+                    printer.print_cpp2("CPP2_UFCS_0(", n.position());
+                }
+                emit(*n.ops[i-1].id_expr);
                 printer.print_cpp2(", ", n.position());
-                push_need_expression_list_parens(false);
-                emit(*n.ops[1].expr_list);
-                pop_need_expression_list_parens();
             }
-            printer.print_cpp2(")", n.position());
+
+            //  expr-list need to be added in reversed order then CPP2_UFCS macros
+            for (auto i = 0; i < std::ssize(n.ops); i += 2) {
+                //  Then make the base expression the second argument - only needed on the most nested call
+                if (i == 0) {
+                    emit(*n.expr);
+                }
+
+                //  Then tack on any additional arguments
+                if (!n.ops[(i+1)].expr_list->expressions.empty()) {
+                    printer.print_cpp2(", ", n.position());
+                    push_need_expression_list_parens(false);
+                    emit(*n.ops[(i+1)].expr_list);
+                    pop_need_expression_list_parens();
+                }
+                printer.print_cpp2(")", n.position());
+            }
 
             //  And we're done. This path has handled this node, so return...
             return;
