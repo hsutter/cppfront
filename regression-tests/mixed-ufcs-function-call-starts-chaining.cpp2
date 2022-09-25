@@ -1,0 +1,48 @@
+#include <vector>
+#include <memory>
+
+template <typename T, typename D>
+struct scope_exit {
+    scope_exit(T v, D d) 
+        : value(v)
+        , deleter(d)
+    {
+    }
+
+    ~scope_exit() {
+        deleter(value);
+    }
+
+    operator T&() { return value; }
+
+    scope_exit(const scope_exit&) = delete;
+    scope_exit& operator=(const scope_exit&) = delete;
+    scope_exit(scope_exit&& rhs) noexcept : value(std::move(rhs.value)), deleter(std::move(rhs.deleter)) {}
+    scope_exit& operator=(scope_exit&& rhs) noexcept {
+        value = std::move(rhs.value);
+        deleter = std::move(rhs.deleter);
+        return *this;
+    }
+
+private:
+    T value;
+    D deleter; 
+};
+
+template <typename T, typename D>
+auto on_scope_exit(T&& v, D&& d) {
+    return scope_exit(std::forward<T>(v),std::forward<D>(d));
+}
+
+main: () -> int = {
+
+    fopen("variable2.txt", "w").on_scope_exit(:(e:_) = {
+        e.fprintf("you can handle smart_ptrs without changing behaviour of UFCS");
+        e.fclose();
+    });
+
+    m := fopen("manual.txt", "w");
+    m.fprintf("Manual handling still works");
+    m.fclose();
+
+}
