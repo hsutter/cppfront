@@ -5,39 +5,63 @@ project(
     VERSION 0.1.0
 )
 
+##
+# Project options
+
 option(
     CPPFRONT_INSTALL_RULES "Enable install rules for cppfront" "${PROJECT_IS_TOP_LEVEL}"
 )
 
-add_executable(cppfront source/cppfront.cpp)
-add_executable(cppfront::cppfront ALIAS cppfront)
-target_compile_features(cppfront PRIVATE cxx_std_20)
+##
+# Target definition for cppfront executable
+
+add_executable(cppfront_cppfront source/cppfront.cpp)
+add_executable(cppfront::cppfront ALIAS cppfront_cppfront)
+set_target_properties(
+    cppfront_cppfront
+    PROPERTIES
+    OUTPUT_NAME cppfront
+    EXPORT_NAME cppfront
+)
+
+target_compile_features(cppfront_cppfront PRIVATE cxx_std_20)
 target_sources(
-    cppfront
+    cppfront_cppfront
     PRIVATE
     FILE_SET HEADERS
     BASE_DIRS source
     FILES source/common.h source/lex.h source/load.h source/parse.h source/sema.h
 )
 
-add_library(cpp2util INTERFACE)
-add_library(cppfront::cpp2util ALIAS cpp2util)
-target_compile_features(cpp2util INTERFACE cxx_std_20)
+##
+# Target definition for cpp2util runtime library
+
+add_library(cppfront_cpp2util INTERFACE)
+add_library(cppfront::cpp2util ALIAS cppfront_cpp2util)
+set_target_properties(cppfront_cpp2util PROPERTIES EXPORT_NAME cpp2util)
+
+target_compile_features(cppfront_cpp2util INTERFACE cxx_std_20)
 target_include_directories(
-    cpp2util INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    cppfront_cpp2util INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
 )
 target_sources(
-    cpp2util
+    cppfront_cpp2util
     INTERFACE
     FILE_SET HEADERS
     BASE_DIRS include
     FILES include/cpp2util.h
 )
 
+##
+# Enable cpp2 autodetection for add_subdirectory users
+
 if (NOT PROJECT_IS_TOP_LEVEL)
     get_directory_property(_CPPFRONT_MAGIC_DIR PARENT_DIRECTORY)
     include(cmake/CppfrontHelpers.cmake)
 endif ()
+
+##
+# Installation and CMake packaging logic
 
 if (CPPFRONT_INSTALL_RULES)
     include(GNUInstallDirs)
@@ -56,7 +80,7 @@ if (CPPFRONT_INSTALL_RULES)
     # dependent)
 
     install(
-        TARGETS cppfront
+        TARGETS cppfront_cppfront
         EXPORT cppfront-exe-targets
         COMPONENT cppfront
     )
@@ -94,7 +118,7 @@ if (CPPFRONT_INSTALL_RULES)
     # which are platform-independent
 
     install(
-        TARGETS cpp2util
+        TARGETS cppfront_cpp2util
         EXPORT cppfront-targets
         FILE_SET HEADERS
         COMPONENT cppfront
