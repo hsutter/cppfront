@@ -8,9 +8,27 @@ project(
 ##
 # Project options
 
-option(
-    CPPFRONT_INSTALL_RULES "Enable install rules for cppfront" "${PROJECT_IS_TOP_LEVEL}"
+include(CMakeDependentOption)
+
+cmake_dependent_option(
+    CPPFRONT_INSTALL_RULES "Include install rules for cppfront" "${PROJECT_IS_TOP_LEVEL}"
+    "NOT CMAKE_SKIP_INSTALL_RULES" OFF
 )
+
+cmake_dependent_option(
+    CPPFRONT_NO_SYSTEM "Do not mark cpp2 runtime headers as SYSTEM" OFF
+    "NOT PROJECT_IS_TOP_LEVEL" ON
+)
+mark_as_advanced(CPPFRONT_NO_SYSTEM)
+
+##
+# Compute option-derived constants
+
+if (CPPFRONT_NO_SYSTEM)
+    set(_cppfront_SYSTEM "")
+else ()
+    set(_cppfront_SYSTEM SYSTEM)
+endif ()
 
 ##
 # Target definition for cppfront executable
@@ -42,7 +60,7 @@ set_target_properties(cppfront_cpp2util PROPERTIES EXPORT_NAME cpp2util)
 
 target_compile_features(cppfront_cpp2util INTERFACE cxx_std_20)
 target_include_directories(
-    cppfront_cpp2util INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    cppfront_cpp2util ${_cppfront_SYSTEM} INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
 )
 target_sources(
     cppfront_cpp2util
