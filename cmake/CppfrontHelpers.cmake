@@ -54,6 +54,15 @@ function(_cppfront_generate_source src out)
     set("${out}" "${out_file}" PARENT_SCOPE)
 endfunction()
 
+function(cppfront_generate_cpp srcs)
+    set(cpp2srcs "")
+    foreach (src IN LISTS ARGN)
+        _cppfront_generate_source("${src}" cpp2)
+        list(APPEND cpp2srcs "${cpp2}")
+    endforeach ()
+    set("${srcs}" "${cpp2srcs}" PARENT_SCOPE)
+endfunction()
+
 function(cppfront_enable)
     cmake_parse_arguments(PARSE_ARGV 0 ARG "" "" "TARGETS")
 
@@ -63,24 +72,22 @@ function(cppfront_enable)
 
         if (sources)
             target_link_libraries("${tgt}" PRIVATE cppfront::cpp2util)
+            cppfront_generate_cpp(cpp1sources ${sources})
+            target_sources("${tgt}" PRIVATE ${cpp1sources})
         endif ()
-
-        foreach (src IN LISTS sources)
-            _cppfront_generate_source("${src}" out_path)
-            target_sources("${tgt}" PRIVATE "${out_path}")
-        endforeach ()
     endforeach ()
 endfunction()
 
-function(_cppfront_enable_dir)
-    get_property(targets DIRECTORY . PROPERTY BUILDSYSTEM_TARGETS)
-    cppfront_enable(TARGETS ${targets})
-endfunction()
-
 if (NOT CPPFRONT_NO_MAGIC)
+    function(_cppfront_enable_dir)
+        get_property(targets DIRECTORY . PROPERTY BUILDSYSTEM_TARGETS)
+        cppfront_enable(TARGETS ${targets})
+    endfunction()
+
     if (NOT _CPPFRONT_MAGIC_DIR)
         set(_CPPFRONT_MAGIC_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
     endif ()
+
     message(VERBOSE "Enabling cppfront for all targets in ${_CPPFRONT_MAGIC_DIR}")
     cmake_language(DEFER DIRECTORY "${_CPPFRONT_MAGIC_DIR}" CALL _cppfront_enable_dir)
 endif ()
