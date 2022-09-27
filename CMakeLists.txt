@@ -49,6 +49,8 @@ if (CPPFRONT_INSTALL_RULES)
     set(CPPFRONT_INSTALL_EXE_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/cppfront-exe"
         CACHE STRING "Install location for cppfront's platform-specific CMake files")
 
+    mark_as_advanced(CPPFRONT_INSTALL_CMAKEDIR CPPFRONT_INSTALL_EXE_CMAKEDIR)
+
     ##
     # Install rules for cppfront executable (which is naturally platform
     # dependent)

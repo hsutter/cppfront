@@ -42,5 +42,5 @@ jobs:
       - name: Build regression tests
         run: cmake --build build/regression-tests --config Release
       - name: Run regression tests
-        run: ctest --output-on-failure -C Release -j 4
+        run: ctest --output-on-failure -C Release -j 2
         working-directory: build/regression-tests
