@@ -226,7 +226,7 @@ class positional_printer
 
         //  Not using print() here because this is transparent to the curr_pos
         if (!flag_clean_cpp1) {
-            out << "#line " << line << " \"" << filename << "2\"\n";
+            out << "#line " << line << " " << std::quoted(filename + "2") << "\n";
         }
     }
 
