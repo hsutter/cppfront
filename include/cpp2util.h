@@ -194,6 +194,7 @@
     #include <optional>
     #include <cstddef>
     #include <utility>
+    #include <cstdio>
 
     #if defined(CPP2_USE_SOURCE_LOCATION)
         #include <source_location>
@@ -679,7 +680,7 @@ constexpr auto as( X const& x ) -> auto&&
 //  A variation of GSL's final_action_success and finally to run only on success
 //  (based on a PR I contributed to Microsoft GSL)
 //
-//  final_action_success_success ensures something is run at the end of a scope
+//  final_action_success ensures something is run at the end of a scope
 //      if no exception is thrown
 //
 //  finally_success is a convenience function to make a final_action_success_success
@@ -705,9 +706,9 @@ public:
         : f(std::move(other.f)), invoke(std::exchange(other.invoke, false))
     { }
 
-    final_action_success(const final_action_success&)   = delete;
-    void operator=(const final_action_success&) = delete;
-    void operator=(final_action_success&&)      = delete;
+    final_action_success(final_action_success const&) = delete;
+    void operator=      (final_action_success const&) = delete;
+    void operator=      (final_action_success&&)      = delete;
 
 private:
     F f;
@@ -750,6 +751,42 @@ auto to_string(std::optional<T> const& o) -> std::string {
 
 auto to_string(...) -> std::string {
     return "(customize me - no cpp2::to_string overload exists for this type)";
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  Speculative: RAII wrapping for the C standard library
+//
+//  As part of embracing compatibility while also reducing what we have to
+//  teach and learn about C++ (which includes the C standard library), I
+//  want to see if we can improve use of the C standard library from Cpp2
+//  code... UFCS is a big part of that, and then RAII destructors is
+//  another that goes hand in hand with that, hence this section...
+//
+//-----------------------------------------------------------------------
+//
+template<typename T>
+class c_raii {
+    T t;
+    void (*dtor)(void*);
+public:
+    template<typename D>
+    c_raii( T t_, D d )
+        : t{ t_ }
+        , dtor{ [](void* x) { (D)(x); } }
+    { }
+
+    ~c_raii() { dtor(t); }
+
+    operator T&() { return t; }
+
+    c_raii(c_raii const&)           = delete;
+    auto operator=(c_raii const&) = delete;
+};
+
+auto fopen( const char* filename, const char* mode ) {
+    return c_raii( std::fopen(filename, mode), &fclose );
 }
 
 
