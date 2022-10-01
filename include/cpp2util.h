@@ -174,7 +174,9 @@
             #include <semaphore>
         #endif
         #include <shared_mutex>
-        #include <stop_token>
+        #ifdef __cpp_lib_jthread
+            #include <stop_token>
+        #endif
         #include <thread>
         #include <iso646.h>
     #endif
