@@ -766,6 +766,9 @@ inline auto to_string(Range const& rng) -> std::string
                && !std::is_convertible_v<Range, std::string>
              );
 
+template <typename... Ts>
+inline auto to_string(std::variant<Ts...> const& v) -> std::string;
+
 template<typename T>
 inline auto to_string(std::optional<T> const& o) -> std::string {
     if (o.has_value()) {
@@ -813,6 +816,14 @@ inline auto to_string(Range const& rng) -> std::string
     }
 
     return out + "}";
+}
+
+template <typename... Ts>
+inline auto to_string(std::variant<Ts...> const& v) -> std::string
+{
+    return std::visit([](auto&& arg) -> std::string {
+        return cpp2::to_string(arg);
+    }, v);
 }
 
 inline auto to_string(...) -> std::string {

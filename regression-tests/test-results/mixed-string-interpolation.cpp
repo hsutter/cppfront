@@ -9,6 +9,7 @@
 #include <vector>
 #include <map>
 #include <unordered_set>
+#include <variant>
 
 const char carr[] = "carray test";
 
@@ -16,7 +17,7 @@ const char carr[] = "carray test";
 
 //=== Cpp2 definitions ==========================================================
 
-#line 10 "mixed-string-interpolation.cpp2"
+#line 11 "mixed-string-interpolation.cpp2"
 
 [[nodiscard]] auto main() -> int{
     auto a { 2 }; 
@@ -62,4 +63,13 @@ const char carr[] = "carray test";
 
     std::vector mix { std::optional(std::make_tuple(v, m, us)) }; 
     std::cout << "mix = " + cpp2::to_string(mix) + "\n";
+
+    std::variant<int,std::string,std::vector<int>> vv {  }; 
+    std::cout << "vv = " + cpp2::to_string(vv) + "\n";
+    vv = 1;
+    std::cout << "vv = " + cpp2::to_string(vv) + "\n";
+    vv = "string";
+    std::cout << "vv = " + cpp2::to_string(vv) + "\n";
+    vv = v;
+    std::cout << "vv = " + cpp2::to_string(vv) + "\n";
 }

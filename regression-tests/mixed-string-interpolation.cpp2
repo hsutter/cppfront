@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <unordered_set>
+#include <variant>
 
 const char carr[] = "carray test";
 
@@ -52,4 +53,13 @@ main: () -> int = {
 
     mix : std::vector = (std::optional(std::make_tuple(v,m,us)));
     std::cout << "mix = (mix)$\n";
+
+    vv : std::variant<int, std::string, std::vector<int>> = ();
+    std::cout << "vv = (vv)$\n";
+    vv = 1;
+    std::cout << "vv = (vv)$\n";
+    vv = "string";
+    std::cout << "vv = (vv)$\n";
+    vv = v;
+    std::cout << "vv = (vv)$\n";
 }
