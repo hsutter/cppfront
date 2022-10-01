@@ -6,6 +6,9 @@
 #include <string_view>
 #include <utility> // std::pair
 #include <tuple>
+#include <vector>
+#include <map>
+#include <unordered_set>
 
 const char carr[] = "carray test";
 
@@ -13,7 +16,7 @@ const char carr[] = "carray test";
 
 //=== Cpp2 definitions ==========================================================
 
-#line 7 "mixed-string-interpolation.cpp2"
+#line 10 "mixed-string-interpolation.cpp2"
 
 [[nodiscard]] auto main() -> int{
     auto a { 2 }; 
@@ -44,4 +47,19 @@ const char carr[] = "carray test";
     std::cout << "t = " + cpp2::to_string(t) + "\n";
     std::get<2>(t) = std::make_tuple(2022, 10, 1);
     std::cout << "t = " + cpp2::to_string(t) + "\n";
+
+    std::vector<int> v { 1, 2, 3, 4, 5 }; 
+    std::cout << "v = " + cpp2::to_string(v) + "\n";
+
+    std::map<std::string,int> m { std::pair("A", 1), std::pair("B", 2), std::pair("C", 3) }; 
+    std::cout << "m = " + cpp2::to_string(m) + "\n";
+
+    std::unordered_set<int> us { 1, 2, 3, 2, 3, 4, 5, 2, 3, 1, 2, 3, 4, 5 }; 
+    std::cout << "us = " + cpp2::to_string(us) + "\n";
+
+    std::unordered_multiset<int> ums { 1, 2, 3, 2, 3, 4, 5, 2, 3, 1, 2, 3, 4, 5 }; 
+    std::cout << "ums = " + cpp2::to_string(ums) + "\n";
+
+    std::vector mix { std::optional(std::make_tuple(v, m, us)) }; 
+    std::cout << "mix = " + cpp2::to_string(mix) + "\n";
 }

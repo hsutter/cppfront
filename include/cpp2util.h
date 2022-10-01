@@ -759,6 +759,13 @@ inline auto to_string(std::pair<T,U> const& p) -> std::string;
 template < typename... Ts>
 inline auto to_string(std::tuple<Ts...> const& t) -> std::string;
 
+template <typename Range>
+inline auto to_string(Range const& rng) -> std::string
+    requires ( requires { std::begin(rng); std::end(rng); }
+               && !std::is_convertible_v<Range, std::string_view>
+               && !std::is_convertible_v<Range, std::string>
+             );
+
 template<typename T>
 inline auto to_string(std::optional<T> const& o) -> std::string {
     if (o.has_value()) {
@@ -786,6 +793,26 @@ inline auto to_string(std::tuple<Ts...> const& t) -> std::string
         out += ")";
         return out;
     }
+}
+
+template <typename Range>
+inline auto to_string(Range const& rng) -> std::string
+    requires ( requires { std::begin(rng); std::end(rng); }
+               && !std::is_convertible_v<Range, std::string_view>
+               && !std::is_convertible_v<Range, std::string>
+             )
+{
+    auto it = std::begin(rng);
+    const auto end = std::end(rng);
+
+    if (it == end) return "{}";
+
+    std::string out = "{" + cpp2::to_string(*it);
+    for(++it; it != end; ++it) {
+        out += ", " + cpp2::to_string(*it);
+    }
+
+    return out + "}";
 }
 
 inline auto to_string(...) -> std::string {

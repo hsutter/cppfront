@@ -2,6 +2,9 @@
 #include <string_view>
 #include <utility> // std::pair
 #include <tuple>
+#include <vector>
+#include <map>
+#include <unordered_set>
 
 const char carr[] = "carray test";
 
@@ -34,4 +37,19 @@ main: () -> int = {
     std::cout << "t = (t)$\n";
     std::get<2>(t) = std::make_tuple(2022,10,1);
     std::cout << "t = (t)$\n";
+
+    v : std::vector<int> = (1,2,3,4,5);
+    std::cout << "v = (v)$\n";
+
+    m : std::map<std::string, int> = (std::pair("A", 1), std::pair("B", 2), std::pair("C", 3));
+    std::cout << "m = (m)$\n";
+
+    us : std::unordered_set<int> = (1,2,3,2,3,4,5,2,3,1,2,3,4,5);
+    std::cout << "us = (us)$\n";
+
+    ums : std::unordered_multiset<int> = (1,2,3,2,3,4,5,2,3,1,2,3,4,5);
+    std::cout << "ums = (ums)$\n";
+
+    mix : std::vector = (std::optional(std::make_tuple(v,m,us)));
+    std::cout << "mix = (mix)$\n";
 }
