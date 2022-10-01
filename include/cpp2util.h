@@ -746,6 +746,14 @@ inline auto to_string(std::string const& s) -> std::string const&
 }
 
 template<typename T>
+inline auto to_string(T const& sv) -> std::string
+    requires (std::is_convertible_v<T, std::string_view> 
+              && !std::is_convertible_v<T, const char*>)
+{
+    return std::string{sv};
+}
+
+template<typename T>
 inline auto to_string(std::optional<T> const& o) -> std::string {
     if (o.has_value()) {
         return cpp2::to_string(o.value());

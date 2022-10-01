@@ -1,4 +1,7 @@
 #include <iostream>
+#include <string_view>
+
+const char carr[] = "carray test";
 
 main: () -> int = {
     a := 2;
@@ -8,6 +11,13 @@ main: () -> int = {
     b = 42;
     std::cout << "a^2 + b = (a * a + b.value())$\n";
 
-    os: std::optional<std::string> = "testing";
-    std::cout << "os = (os)$\n";
+    std::cout << "carr = (carr)$\n";    
+
+    sv : std::string_view = "SV works!";
+    std::cout << "sv = (sv)$\n";
+  
+    osv : std::optional<std::string_view> = ();
+    std::cout << "osv = (osv)$\n";
+    osv = "It works, too";
+    std::cout << "osv = (osv)$\n";
 }
