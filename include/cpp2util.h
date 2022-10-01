@@ -384,7 +384,7 @@ using in =
 template<typename T>
 class deferred_init {
     bool init = false;
-    std::aligned_storage<sizeof(T), alignof(T)> data;
+    std::aligned_storage<sizeof(T), alignof(T)> data; // or: alignas(T) std::byte data[sizeof(T)];
 
     auto t() -> T& { return *std::launder(reinterpret_cast<T*>(&data)); }
 
