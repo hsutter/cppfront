@@ -4,6 +4,7 @@
 #line 1 "mixed-string-interpolation.cpp2"
 #include <iostream>
 #include <string_view>
+#include <utility> // std::pair
 
 const char carr[] = "carray test";
 
@@ -11,7 +12,7 @@ const char carr[] = "carray test";
 
 //=== Cpp2 definitions ==========================================================
 
-#line 5 "mixed-string-interpolation.cpp2"
+#line 6 "mixed-string-interpolation.cpp2"
 
 [[nodiscard]] auto main() -> int{
     auto a { 2 }; 
@@ -30,4 +31,9 @@ const char carr[] = "carray test";
     std::cout << "osv = " + cpp2::to_string(osv) + "\n";
     osv = "It works, too";
     std::cout << "osv = " + cpp2::to_string(osv) + "\n";
+
+    std::pair<std::string_view,std::optional<std::string>> p { "first", std::nullopt }; 
+    std::cout << "p = " + cpp2::to_string(p) + "\n";
+    p.second = "second";
+    std::cout << "p = " + cpp2::to_string(p) + "\n";
 }

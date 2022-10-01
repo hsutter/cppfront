@@ -753,12 +753,21 @@ inline auto to_string(T const& sv) -> std::string
     return std::string{sv};
 }
 
+template < typename T, typename U>
+inline auto to_string(std::pair<T,U> const& p) -> std::string;
+
 template<typename T>
 inline auto to_string(std::optional<T> const& o) -> std::string {
     if (o.has_value()) {
         return cpp2::to_string(o.value());
     }
     return "(empty)";
+}
+
+template < typename T, typename U>
+inline auto to_string(std::pair<T,U> const& p) -> std::string
+{
+    return "(" + cpp2::to_string(p.first) + ", " + cpp2::to_string(p.second) + ")";
 }
 
 inline auto to_string(...) -> std::string {

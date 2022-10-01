@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string_view>
+#include <utility> // std::pair
 
 const char carr[] = "carray test";
 
@@ -20,4 +21,9 @@ main: () -> int = {
     std::cout << "osv = (osv)$\n";
     osv = "It works, too";
     std::cout << "osv = (osv)$\n";
+
+    p : std::pair<std::string_view, std::optional<std::string>> = ("first", std::nullopt);
+    std::cout << "p = (p)$\n";
+    p.second = "second";
+    std::cout << "p = (p)$\n";
 }
