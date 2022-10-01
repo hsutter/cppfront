@@ -748,7 +748,7 @@ inline auto to_string(std::string const& s) -> std::string const&
 template<typename T>
 inline auto to_string(std::optional<T> const& o) -> std::string {
     if (o.has_value()) {
-        return std::to_string(o.value());
+        return cpp2::to_string(o.value());
     }
     return "(empty)";
 }

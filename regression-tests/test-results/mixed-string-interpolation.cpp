@@ -17,4 +17,7 @@
 
     b = 42;
     std::cout << "a^2 + b = " + cpp2::to_string(a * a + b.value()) + "\n";
+
+    std::optional<std::string> os { "testing" }; 
+    std::cout << "os = " + cpp2::to_string(os) + "\n";
 }
