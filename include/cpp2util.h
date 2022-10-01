@@ -106,7 +106,9 @@
         #include <cctype>
         #include <charconv>
         #include <cstring>
-        #include <cuchar>
+        #if __has_include(<cuchar>)
+            #include <cuchar>
+        #endif
         #include <cwchar>
         #include <cwctype>
         #ifdef __cpp_lib_format
@@ -777,7 +779,7 @@ public:
     template<typename D>
     c_raii( T t_, D d )
         : t{ t_ }
-        , dtor{ [](void* x) { (D)(x); } }
+        , dtor{ [](void* x) { (void)(D)(x); } }
     { }
 
     ~c_raii() { if (dtor) dtor(t); }
