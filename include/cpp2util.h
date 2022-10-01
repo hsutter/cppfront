@@ -702,8 +702,8 @@ public:
         }
     }
 
-    final_action_success(final_action_success&& other) noexcept
-        : f(std::move(other.f)), invoke(std::exchange(other.invoke, false))
+    final_action_success(final_action_success&& that) noexcept
+        : f(std::move(that.f)), invoke(std::exchange(that.invoke, false))
     { }
 
     final_action_success(final_action_success const&) = delete;
@@ -760,9 +760,10 @@ auto to_string(...) -> std::string {
 //
 //  As part of embracing compatibility while also reducing what we have to
 //  teach and learn about C++ (which includes the C standard library), I
-//  want to see if we can improve use of the C standard library from Cpp2
-//  code... UFCS is a big part of that, and then RAII destructors is
+//  was curious to see if we can improve use of the C standard library
+//  from Cpp2 code... UFCS is a part of that, and then RAII destructors is
 //  another that goes hand in hand with that, hence this section...
+//  but see caveat note at the end.
 //
 //-----------------------------------------------------------------------
 //
@@ -777,17 +778,33 @@ public:
         , dtor{ [](void* x) { (D)(x); } }
     { }
 
-    ~c_raii() { dtor(t); }
+    ~c_raii() { if (dtor) dtor(t); }
 
     operator T&() { return t; }
 
-    c_raii(c_raii const&)           = delete;
+    c_raii(c_raii const&)         = delete;
     auto operator=(c_raii const&) = delete;
+    c_raii(c_raii&& that)         : t  {std::move(that.t)}, dtor  {that.dtor} { that.dtor = nullptr; }
+    auto operator=(c_raii&& that) { t = std::move(that.t);  dtor = that.dtor;   that.dtor = nullptr; }
 };
 
 auto fopen( const char* filename, const char* mode ) {
-    return c_raii( std::fopen(filename, mode), &fclose );
+    auto x = std::fopen(filename, mode);
+    if (!x) {
+        throw std::make_error_condition(std::errc::no_such_file_or_directory);
+    }
+    return c_raii( x, &fclose );
 }
+
+//  Caveat: There's little else in the C stdlib that allocates a resource...
+//
+//      malloc          is already wrapped like this via std::unique_ptr, which
+//                        typically uses malloc or gets memory from the same pool
+//      thrd_create     std::jthread is better
+//
+//  ... is that it? I don't think it's useful to provide a c_raii just for fopen,
+//  but perhaps c_raii may be useful for bringing forward third-party C code too,
+//  with cpp2::fopen as a starting example.
 
 
 }

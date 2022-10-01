@@ -175,7 +175,7 @@ struct last_use {
     token const* t;
     bool is_forward;
     last_use( token const* t_, bool is_forward_ = false ) : t{t_}, is_forward{is_forward_} { }
-    bool operator==(last_use const& other) { return t == other.t; }
+    bool operator==(last_use const& that) { return t == that.t; }
 };
 std::vector<last_use> definite_last_uses;
 
