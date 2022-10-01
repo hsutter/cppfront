@@ -756,6 +756,9 @@ inline auto to_string(T const& sv) -> std::string
 template < typename T, typename U>
 inline auto to_string(std::pair<T,U> const& p) -> std::string;
 
+template < typename... Ts>
+inline auto to_string(std::tuple<Ts...> const& t) -> std::string;
+
 template<typename T>
 inline auto to_string(std::optional<T> const& o) -> std::string {
     if (o.has_value()) {
@@ -768,6 +771,21 @@ template < typename T, typename U>
 inline auto to_string(std::pair<T,U> const& p) -> std::string
 {
     return "(" + cpp2::to_string(p.first) + ", " + cpp2::to_string(p.second) + ")";
+}
+
+template < typename... Ts>
+inline auto to_string(std::tuple<Ts...> const& t) -> std::string
+{
+    if constexpr (sizeof...(Ts) == 0) {
+        return "()";
+    } else {
+        std::string out = "(" + cpp2::to_string(std::get<0>(t));
+        std::apply([&out](auto&&, auto&&... args) {
+            ((out += ", " + cpp2::to_string(args)), ...);
+        }, t);
+        out += ")";
+        return out;
+    }
 }
 
 inline auto to_string(...) -> std::string {

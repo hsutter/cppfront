@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string_view>
 #include <utility> // std::pair
+#include <tuple>
 
 const char carr[] = "carray test";
 
@@ -26,4 +27,11 @@ main: () -> int = {
     std::cout << "p = (p)$\n";
     p.second = "second";
     std::cout << "p = (p)$\n";
+
+    t : std::tuple<double, std::optional<std::pair<std::string_view, int>>, std::optional<std::tuple<int, int, int>>> = (3.14, std::nullopt, std::nullopt);
+    std::cout << "t = (t)$\n";
+    std::get<1>(t) = std::pair(std::string_view("answer"), 42);
+    std::cout << "t = (t)$\n";
+    std::get<2>(t) = std::make_tuple(2022,10,1);
+    std::cout << "t = (t)$\n";
 }

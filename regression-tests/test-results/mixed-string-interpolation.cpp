@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string_view>
 #include <utility> // std::pair
+#include <tuple>
 
 const char carr[] = "carray test";
 
@@ -12,7 +13,7 @@ const char carr[] = "carray test";
 
 //=== Cpp2 definitions ==========================================================
 
-#line 6 "mixed-string-interpolation.cpp2"
+#line 7 "mixed-string-interpolation.cpp2"
 
 [[nodiscard]] auto main() -> int{
     auto a { 2 }; 
@@ -36,4 +37,11 @@ const char carr[] = "carray test";
     std::cout << "p = " + cpp2::to_string(p) + "\n";
     p.second = "second";
     std::cout << "p = " + cpp2::to_string(p) + "\n";
+
+    std::tuple<double,std::optional<std::pair<std::string_view,int>>,std::optional<std::tuple<int,int,int>>> t { 3.14, std::nullopt, std::nullopt }; 
+    std::cout << "t = " + cpp2::to_string(t) + "\n";
+    std::get<1>(t) = std::pair(std::string_view("answer"), 42);
+    std::cout << "t = " + cpp2::to_string(t) + "\n";
+    std::get<2>(t) = std::make_tuple(2022, 10, 1);
+    std::cout << "t = " + cpp2::to_string(t) + "\n";
 }
