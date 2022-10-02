@@ -14,7 +14,7 @@ assignees: ''
 
 **Will your feature suggestion eliminate X% of security vulnerabilities of a given kind in current C++ code?** If yes, please be specific about the classes of bugs that would go away, with an example or two (especially a link to a real CVE or two).
 
-**Will your feature suggestion eliminate X% of current C++ guidance literature?"** If yes, please be specific about what things we would no longer need to teach/learn or that would be simplified and how, with an example or two (especially a link to a real "Effective C++" or "C++ Core Guidelines" guideline or two). For ideas, you can refer to [my CppCon 2020 talk starting at 10:31[(https://youtu.be/6lurOCdaj0Y?t=631) where I summarize a categorized breakdown based on over 600 C++ guidance literature rules I cataloged and analyzed.
+**Will your feature suggestion eliminate X% of current C++ guidance literature?"** If yes, please be specific about what things we would no longer need to teach/learn or that would be simplified and how, with an example or two (especially a link to a real "Effective C++" or "C++ Core Guidelines" guideline or two). For ideas, you can refer to [my CppCon 2020 talk starting at 10:31](https://youtu.be/6lurOCdaj0Y?t=631) where I summarize a categorized breakdown based on over 600 C++ guidance literature rules I cataloged and analyzed.
 
 **Describe alternatives you've considered.**
 There's nearly always more than one way to improve something. What other options did you consider? Why is the one you're suggesting better than those?
