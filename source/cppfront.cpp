@@ -1624,13 +1624,7 @@ public:
             //  The ( has its expr_list and op_close
             assert (n.ops[1].expr_list && n.ops[1].op_close);
 
-            //  If there are no additional arguments, use the CPP2_UFCS_0 version
-            if (!n.ops[1].expr_list->expressions.empty()) {
-                printer.print_cpp2("CPP2_UFCS(", n.position());
-            }
-            else {
-                printer.print_cpp2("CPP2_UFCS_0(", n.position());
-            }
+            printer.print_cpp2("CPP2_UFCS(", n.position());
 
             //  Make the "funcname" the first argument to CPP2_UFCS
             emit(*n.ops[0].id_expr);
