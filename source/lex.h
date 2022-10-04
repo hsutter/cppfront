@@ -32,7 +32,34 @@ namespace cpp2 {
 //-----------------------------------------------------------------------
 //
 
-enum class lexeme : std::int8_t {
+#define CPP2_ADD_PARENS ()
+
+#define CPP2_SWITCHCASE(N) break; case N: return #N;
+
+// CPP2_EXPAND scans macro 1024 times that allows to create a enum that contains 1024 values
+#define CPP2_EXPAND(...) CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(CPP2_E(__VA_ARGS__))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+#define CPP2_E(...) __VA_ARGS__
+#define CPP2_FOR_EACH(MACRO, ...) __VA_OPT__(CPP2_EXPAND(CPP2_FOR_EACH_n(MACRO, __VA_ARGS__)))
+#define CPP2_FOR_EACH_n(MACRO, PARAM1, ...) MACRO(PARAM1) __VA_OPT__(CPP2_REPEAT_FOR_EACH CPP2_ADD_PARENS (MACRO, __VA_ARGS__))
+#define CPP2_REPEAT_FOR_EACH() CPP2_FOR_EACH_n
+
+#define CPP2_MAKE_ENUM(ENUMNAME, ...) \
+enum class ENUMNAME : std::int8_t { \
+__VA_ARGS__ \
+}; \
+\
+template<typename T> \
+    requires std::is_same_v<T, std::string> \
+auto as(ENUMNAME l) \
+{ \
+    using enum ENUMNAME;\
+    switch (l) { \
+    CPP2_FOR_EACH(CPP2_SWITCHCASE, __VA_ARGS__) \
+    break; default: return "INTERNAL-ERROR";\
+    };\
+}
+
+CPP2_MAKE_ENUM(lexeme,
     SlashEq,
     Slash,
     LeftShiftEq,
@@ -93,80 +120,16 @@ enum class lexeme : std::int8_t {
     CharacterLiteral,
     Keyword,
     Identifier
-};
+);
 
-//  TODO: Remove the duplication above/below with a variadic macro,
-//        but for now it's simpler just to write it out
-
-template<typename T>
-    requires std::is_same_v<T, std::string>
-auto as(lexeme l)
-{
-    switch (l) {
-    break;case lexeme::SlashEq:             return "SlashEq";
-    break;case lexeme::Slash:               return "Slash";
-    break;case lexeme::LeftShiftEq:         return "LeftShiftEq";
-    break;case lexeme::LeftShift:           return "LeftShift";
-    break;case lexeme::Spaceship:           return "Spaceship";
-    break;case lexeme::LessEq:              return "LessEq";
-    break;case lexeme::Less:                return "Less";
-    break;case lexeme::RightShiftEq:        return "RightShiftEq";
-//    break;case lexeme::RightShift:          return "RightShift";
-    break;case lexeme::GreaterEq:           return "GreaterEq";
-    break;case lexeme::Greater:             return "Greater";
-    break;case lexeme::PlusPlus:            return "PlusPlus";
-    break;case lexeme::PlusEq:              return "PlusEq";
-    break;case lexeme::Plus:                return "Plus";
-    break;case lexeme::MinusMinus:          return "MinusMinus";
-    break;case lexeme::MinusEq:             return "MinusEq";
-    break;case lexeme::Arrow:               return "Arrow";
-    break;case lexeme::Minus:               return "Minus";
-    break;case lexeme::LogicalOrEq:         return "LogicalOrEq";
-    break;case lexeme::LogicalOr:           return "LogicalOr";
-    break;case lexeme::PipeEq:              return "PipeEq";
-    break;case lexeme::Pipe:                return "Pipe";
-    break;case lexeme::LogicalAndEq:        return "LogicalAndEq";
-    break;case lexeme::LogicalAnd:          return "LogicalAnd";
-    break;case lexeme::MultiplyEq:          return "MultiplyEq";
-    break;case lexeme::Multiply:            return "Multiply";
-    break;case lexeme::ModuloEq:            return "ModuloEq";
-    break;case lexeme::Modulo:              return "Modulo";
-    break;case lexeme::AmpersandEq:         return "AmpersandEq";
-    break;case lexeme::Ampersand:           return "Ampersand";
-    break;case lexeme::CaretEq:             return "CaretEq";
-    break;case lexeme::Caret:               return "Caret";
-    break;case lexeme::TildeEq:             return "TildeEq";
-    break;case lexeme::Tilde:               return "Tilde";
-    break;case lexeme::EqualComparison:     return "EqualComparison";
-    break;case lexeme::Assignment:          return "Assignment";
-    break;case lexeme::NotEqualComparison:  return "NotEqualComparison";
-    break;case lexeme::Not:                 return "Not";
-    break;case lexeme::LeftBrace:           return "LeftBrace";
-    break;case lexeme::RightBrace:          return "RightBrace";
-    break;case lexeme::LeftParen:           return "LeftParen";
-    break;case lexeme::RightParen:          return "RightParen";
-    break;case lexeme::LeftBracket:         return "LeftBracket";
-    break;case lexeme::RightBracket:        return "RightBracket";
-    break;case lexeme::Scope:               return "Scope";
-    break;case lexeme::Colon:               return "Colon";
-    break;case lexeme::Semicolon:           return "Semicolon";
-    break;case lexeme::Comma:               return "Comma";
-    break;case lexeme::Dot:                 return "Dot";
-    break;case lexeme::Ellipsis:            return "Ellipsis";
-    break;case lexeme::QuestionMark:        return "QuestionMark";
-    break;case lexeme::Dollar:              return "Dollar";
-    break;case lexeme::FloatLiteral:        return "FloatLiteral";
-    break;case lexeme::BinaryLiteral:       return "BinaryLiteral";
-    break;case lexeme::DecimalLiteral:      return "DecimalLiteral";
-    break;case lexeme::HexadecimalLiteral:  return "HexadecimalLiteral";
-    break;case lexeme::StringLiteral:       return "StringLiteral";
-    break;case lexeme::CharacterLiteral:    return "CharacterLiteral";
-    break;case lexeme::Keyword:             return "Keyword";
-    break;case lexeme::Identifier:          return "Identifier";
-    break;default:                          return "INTERNAL-ERROR";
-    }
-};
-
+#undef CPP2_ADD_PARENS
+#undef CPP2_SWITCHCASE
+#undef CPP2_EXPAND
+#undef CPP2_E
+#undef CPP2_FOR_EACH
+#undef CPP2_FOR_EACH_n
+#undef CPP2_REPEAT_FOR_EACH
+#undef CPP2_MAKE_ENUM
 
 //-----------------------------------------------------------------------
 //
