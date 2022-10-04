@@ -1,6 +1,9 @@
 
+#include <algorithm>
+#include <vector>
+
 main: () -> int = {
-    vec: std::vector<std::string> 
+    vec: std::vector<std::string>
             = ("hello", "2022");
 
     y: std::string = "\n";
@@ -13,7 +16,7 @@ main: () -> int = {
 
 vec: std::vector<int> = ();
 
-insert_at: (where: int, val: int) 
+insert_at: (where: int, val: int)
     [[pre:  0 <= where && where <= vec.ssize()]]
     [[post: vec.ssize() == vec.ssize()$ + 1]]
 = {
