@@ -249,7 +249,7 @@ private:
     handler reporter;
 };
 
-[[noreturn]] auto report_and_terminate(std::string_view group, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) noexcept -> void {
+[[noreturn]] inline auto report_and_terminate(std::string_view group, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) noexcept -> void {
     std::cerr
 #ifdef CPP2_USE_SOURCE_LOCATION
         << where.file_name() << "("
@@ -734,26 +734,26 @@ template <class F>
 //-----------------------------------------------------------------------
 //
 template<typename T>
-auto to_string(T const& t) -> std::string
+inline auto to_string(T const& t) -> std::string
     requires requires { std::to_string(t); }
 {
     return std::to_string(t);
 }
 
-auto to_string(std::string const& s) -> std::string const&
+inline auto to_string(std::string const& s) -> std::string const&
 {
     return s;
 }
 
 template<typename T>
-auto to_string(std::optional<T> const& o) -> std::string {
+inline auto to_string(std::optional<T> const& o) -> std::string {
     if (o.has_value()) {
         return std::to_string(o.value());
     }
     return "(empty)";
 }
 
-auto to_string(...) -> std::string {
+inline auto to_string(...) -> std::string {
     return "(customize me - no cpp2::to_string overload exists for this type)";
 }
 
@@ -792,7 +792,7 @@ public:
     auto operator=(c_raii&& that) { t = std::move(that.t);  dtor = that.dtor;   that.dtor = nullptr; }
 };
 
-auto fopen( const char* filename, const char* mode ) {
+inline auto fopen( const char* filename, const char* mode ) {
     auto x = std::fopen(filename, mode);
     if (!x) {
         throw std::make_error_condition(std::errc::no_such_file_or_directory);
