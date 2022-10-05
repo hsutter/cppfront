@@ -15,7 +15,7 @@ auto null_from_cpp1() -> int* { return nullptr; }
 
 auto try_pointer_stuff() -> void;
 #line 21 "mixed-lifetime-safety-and-null-contracts.cpp2"
-auto call_my_framework(cpp2::in<char const *> msg) -> void;
+auto call_my_framework(cpp2::in<const char *> msg) -> void;
 
 //=== Cpp2 definitions ==========================================================
 
@@ -34,7 +34,7 @@ auto try_pointer_stuff() -> void{
                 // to show -n
 }
 
-auto call_my_framework(cpp2::in<char const *> msg) -> void { 
+auto call_my_framework(cpp2::in<const char *> msg) -> void { 
     std::cout 
         << "sending error to my framework... [" 
         << msg << "]\n"; }

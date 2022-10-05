@@ -1030,13 +1030,13 @@ public:
             printer.print_cpp2("CPP2_FORWARD(", n.position());
         }
 
+        if (n.const_qualifier) {
+            emit(*n.const_qualifier);
+            printer.print_cpp2(" ", n.const_qualifier->position());
+        }
+
         assert(n.identifier);
         emit(*n.identifier);
-
-        if (n.const_qualifier) {
-            printer.print_cpp2(" ", n.const_qualifier->position());
-            emit(*n.const_qualifier);
-        }
 
         if (!n.template_args.empty()) {
             printer.print_cpp2("<", n.open_angle);

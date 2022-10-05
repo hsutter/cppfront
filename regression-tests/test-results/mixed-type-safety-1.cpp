@@ -30,7 +30,7 @@ auto print(cpp2::in<std::string> msg, auto const& x) -> void {
 
 auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void
 {
-    cpp2::deferred_init<char const*> bmsg; 
+    cpp2::deferred_init<const char*> bmsg; 
     if (b) { bmsg.construct("true");}
     else { bmsg.construct("false");}
     std::cout << msg << bmsg.value() << "\n";
