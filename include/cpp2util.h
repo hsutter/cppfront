@@ -458,6 +458,23 @@ public:
 //
 //-----------------------------------------------------------------------
 //
+
+//--------------------------------------------------------------------
+//  TODO: When MSVC supports __VA_OPT__ in standard mode without the
+//        experimental /Zc:preprocessor switch, use this single macro
+//        instead of the dual macros below that special-case _0 args
+//  AND:  Make the similarly noted change in cppfront.cpp
+//
+//#define CPP2_UFCS(FUNCNAME,PARAM1,...) \
+//[](auto&& obj __VA_OPT__(, auto&& ...params) ) { \
+//    if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(__VA_OPT__(std::forward<decltype(params)>(params)...)); }) { \
+//        return std::forward<decltype(obj)>(obj).FUNCNAME(__VA_OPT__(std::forward<decltype(params)>(params)...)); \
+//    } else { \
+//        return FUNCNAME(std::forward<decltype(obj)>(obj) __VA_OPT__(, std::forward<decltype(params)>(params)...)); \
+//    } \
+//}(PARAM1 __VA_OPT__(, __VA_ARGS__) )
+
+
 #define CPP2_UFCS(FUNCNAME,PARAM1,...) \
 [](auto&& obj, auto&& ...params) { \
     if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); }) { \
@@ -475,6 +492,7 @@ public:
         return FUNCNAME(std::forward<decltype(obj)>(obj)); \
     } \
 }(PARAM1)
+//--------------------------------------------------------------------
 
 
 //-----------------------------------------------------------------------
