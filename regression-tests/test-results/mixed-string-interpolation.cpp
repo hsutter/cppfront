@@ -3,12 +3,15 @@
 
 #line 1 "mixed-string-interpolation.cpp2"
 #include <iostream>
+#include <string_view>
+#include <utility>
+#include <tuple>
 
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 2 "mixed-string-interpolation.cpp2"
+#line 5 "mixed-string-interpolation.cpp2"
 
 [[nodiscard]] auto main() -> int{
     auto a { 2 }; 
@@ -17,4 +20,29 @@
 
     b = 42;
     std::cout << "a^2 + b = " + cpp2::to_string(a * a + b.value()) + "\n";
+
+    std::string_view sv { "my string_view" }; 
+    std::cout << "sv = " + cpp2::to_string(sv) + "\n";
+
+    std::optional<std::string_view> osv {  }; 
+    std::cout << "osv = " + cpp2::to_string(osv) + "\n";
+    osv = "string literal bound to optional string_view";
+    std::cout << "osv = " + cpp2::to_string(osv) + "\n";
+
+    std::variant<std::monostate,std::string,double> var {  }; 
+    std::cout << "var = " + cpp2::to_string(var) + "\n";
+    var = "abracadabra";
+    std::cout << "var = " + cpp2::to_string(var) + "\n";
+    var = 2.71828;
+    std::cout << "var = " + cpp2::to_string(var) + "\n";
+
+    std::pair<int,double> mypair { 12, 3.4 }; 
+    std::cout << "mypair = " + cpp2::to_string(mypair) + "\n";
+
+    std::tuple<int> tup1 { 12 }; 
+    std::tuple<int,double> tup2 { 12, 3.4 }; 
+    std::tuple<int,double,std::string> tup3 { 12, 3.4, "456" }; 
+    std::cout << "tup1 = " + cpp2::to_string(tup1) + "\n";
+    std::cout << "tup2 = " + cpp2::to_string(tup2) + "\n";
+    std::cout << "tup3 = " + cpp2::to_string(tup3) + "\n";
 }

@@ -764,11 +764,55 @@ inline auto to_string(std::string const& s) -> std::string const&
 }
 
 template<typename T>
+inline auto to_string(T const& sv) -> std::string
+    requires (std::is_convertible_v<T, std::string_view> 
+              && !std::is_convertible_v<T, const char*>)
+{
+    return std::string{sv};
+}
+
+template<typename T>
 inline auto to_string(std::optional<T> const& o) -> std::string {
     if (o.has_value()) {
-        return std::to_string(o.value());
+        return cpp2::to_string(o.value());
     }
     return "(empty)";
+}
+
+template <typename... Ts>
+inline auto to_string(std::variant<Ts...> const& v) -> std::string
+{
+    if (v.valueless_by_exception()) return "(empty)";
+    //  Need to guard this with is_any otherwise the get_if is illegal
+    if constexpr (is_any<std::monostate, Ts...>) if (std::get_if<std::monostate>(&v) != nullptr) return "(empty)";
+
+    return std::visit([](auto&& arg) -> std::string {
+        if constexpr (requires { cpp2::to_string(arg); }) {
+            return cpp2::to_string(arg);
+        }
+        return "";
+    }, v);
+}
+
+template < typename T, typename U>
+inline auto to_string(std::pair<T,U> const& p) -> std::string
+{
+    return "(" + cpp2::to_string(p.first) + ", " + cpp2::to_string(p.second) + ")";
+}
+
+template < typename... Ts>
+inline auto to_string(std::tuple<Ts...> const& t) -> std::string
+{
+    if constexpr (sizeof...(Ts) == 0) {
+        return "()";
+    } else {
+        std::string out = "(" + cpp2::to_string(std::get<0>(t));
+        std::apply([&out](auto&&, auto&&... args) {
+            ((out += ", " + cpp2::to_string(args)), ...);
+        }, t);
+        out += ")";
+        return out;
+    }
 }
 
 inline auto to_string(...) -> std::string {

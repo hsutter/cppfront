@@ -1,4 +1,7 @@
 #include <iostream>
+#include <string_view>
+#include <utility>
+#include <tuple>
 
 main: () -> int = {
     a := 2;
@@ -7,4 +10,29 @@ main: () -> int = {
 
     b = 42;
     std::cout << "a^2 + b = (a * a + b.value())$\n";
+
+    sv: std::string_view = "my string_view";
+    std::cout << "sv = (sv)$\n";
+
+    osv: std::optional<std::string_view> = ();
+    std::cout << "osv = (osv)$\n";
+    osv = "string literal bound to optional string_view";
+    std::cout << "osv = (osv)$\n";
+
+    var: std::variant<std::monostate, std::string, double> = ();
+    std::cout << "var = (var)$\n";
+    var = "abracadabra";
+    std::cout << "var = (var)$\n";
+    var = 2.71828;
+    std::cout << "var = (var)$\n";
+
+    mypair: std::pair<int, double> = (12, 3.4);
+    std::cout << "mypair = (mypair)$\n";
+
+    tup1: std::tuple<int> = (12);
+    tup2: std::tuple<int, double> = (12, 3.4);
+    tup3: std::tuple<int, double, std::string> = (12, 3.4, "456");
+    std::cout << "tup1 = (tup1)$\n";
+    std::cout << "tup2 = (tup2)$\n";
+    std::cout << "tup3 = (tup3)$\n";
 }
