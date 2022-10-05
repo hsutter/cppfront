@@ -1007,7 +1007,12 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(unqualified_id_node const& n, bool in_synthesized_multi_return = false ) -> void
+    auto emit(
+        unqualified_id_node const& n,
+        bool in_synthesized_multi_return = false,
+        bool is_local_name = true
+    )
+        -> void
     {
         auto last_use = is_definite_last_use(n.identifier);
 
@@ -1053,6 +1058,7 @@ public:
         }
         else if (!in_definite_init && !in_parameter_list) {
             if (auto decl = sema.get_declaration_of(*n.identifier);
+                is_local_name &&
                 decl &&
                 //  note pointer equality: if we're not in the actual declaration of n.identifier
                 decl->identifier != n.identifier &&
@@ -1104,10 +1110,10 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(id_expression_node const& n) -> void
+    auto emit(id_expression_node const& n, bool is_local_name = true) -> void
     {
         try_emit<id_expression_node::qualified  >(n.id);
-        try_emit<id_expression_node::unqualified>(n.id);
+        try_emit<id_expression_node::unqualified>(n.id, false, is_local_name);
     }
 
 
@@ -1730,7 +1736,7 @@ public:
                 if (i->id_expr) {
                     auto print = std::string{};
                     printer.emit_to_string(&print);
-                    emit(*i->id_expr);
+                    emit(*i->id_expr, false /*not a local name*/);
                     printer.emit_to_string();
                     suffix.emplace_back( print, i->id_expr->position() );
                 }

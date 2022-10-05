@@ -244,12 +244,23 @@ public:
 
         //  Then look backward to find the first declaration of
         //  this name that is not deeper (in a nested scope)
-        for ( ; i != symbols.cbegin(); --i ) {
-            if (i->sym.index() == symbol::active::declaration && i->depth <= depth) {
+        for ( ; i != symbols.cbegin(); --i )
+        {
+            if (i->sym.index() == symbol::active::declaration && i->depth <= depth)
+            {
                 auto const& decl = std::get<symbol::active::declaration>(i->sym);
+
+                //  Don't look beyond the current function
+                assert(decl.declaration);
+                if (decl.declaration->type.index() == declaration_node::function) {
+                    return nullptr;
+                }
+
+                //  If the name matches, this is it
                 if (decl.identifier && *decl.identifier == t) {
                     return &decl;
                 }
+                depth = i->depth;
             }
         }
 
