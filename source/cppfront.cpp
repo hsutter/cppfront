@@ -100,6 +100,15 @@ static cmdline_processor::register_flag cmd_enable_source_info(
     []{ flag_use_source_location = true; }
 );
 
+static auto flag_cpp1_filename = std::string{};
+static cmdline_processor::register_flag cmd_cpp1_filename(
+    2,
+    "output",
+    "Output filename (default is *.cpp)",
+    nullptr,
+    [](std::string const& name) { flag_cpp1_filename = name; }
+);
+
 
 struct text_with_pos{
     std::string     text;
@@ -707,10 +716,21 @@ public:
         }
 
         //  Now we'll open the .cpp file
+        auto cpp1_filename = sourcefile.substr(0, std::ssize(sourcefile) - 1);
+        if (!flag_cpp1_filename.empty()) {
+            cpp1_filename = flag_cpp1_filename; // use override if present
+        }
         printer.open(
-            sourcefile.substr(0, std::ssize(sourcefile) - 1),
+            cpp1_filename,
             tokens.get_comments()
         );
+        if (!printer.is_open()) {
+            errors.emplace_back(
+                source_position{},
+                "could not open output file " + cpp1_filename
+            );
+            return;
+        }
 
         //  Only emit extra lines if we actually have Cpp2, because
         //  we want pure-Cpp1 files to pass through with zero changes

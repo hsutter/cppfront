@@ -270,18 +270,20 @@ class cmdline_processor
     };
     std::vector<arg> args;
 
-    using callback = void (*)();
+    using callback0 = void (*)();
+    using callback1 = void (*)(std::string const&);
     struct flag
     {
         int         group = 0;
         std::string name;
         int         unique_prefix = 0;
         std::string description;
-        callback    handler;
+        callback0   handler0;
+        callback1   handler1;
         std::string synonym;
 
-        flag(int g, std::string_view n, std::string_view d, callback h, std::string_view s)
-            : group{g}, name{n}, description{d}, handler{h}, synonym{s}
+        flag(int g, std::string_view n, std::string_view d, callback0 h0, callback1 h1, std::string_view s)
+            : group{g}, name{n}, description{d}, handler0{h0}, handler1{h1}, synonym{s}
         { }
     };
     std::vector<flag> flags;
@@ -315,32 +317,49 @@ public:
         }
 
         //  Look for matches
-        for (auto& arg : args)
+        for (auto arg = args.begin(); arg != args.end(); ++arg)
         {
             //  The arg should never be empty, but we're going to do a [0]
             //  subscript next so we should either check or assert
-            if (arg.text.empty()) {
+            if (arg->text.empty()) {
                 continue;
             }
 
             //  Provide a way to ignore the rest of the command line
             //  for the purpose of looking for switches
-            if (arg.text == "--") {
-                arg.pos = processed;
+            if (arg->text == "--") {
+                arg->pos = processed;
                 break;
             }
 
             for (auto& flag : flags) {
-                auto length_to_match = std::max(flag.unique_prefix, as<int>(arg.text.length())-1);
+                auto length_to_match = std::max(flag.unique_prefix, as<int>(arg->text.length())-1);
                 //  Allow a switch to start with either - or /
-                if (arg.text.starts_with("-" + flag.name.substr(0, length_to_match)) ||
-                    arg.text.starts_with("/" + flag.name.substr(0, length_to_match)) ||
-                    arg.text == "-" + flag.synonym ||
-                    arg.text == "/" + flag.synonym
+                if (arg->text.starts_with("-" + flag.name.substr(0, length_to_match)) ||
+                    arg->text.starts_with("/" + flag.name.substr(0, length_to_match)) ||
+                    arg->text == "-" + flag.synonym ||
+                    arg->text == "/" + flag.synonym
                     )
                 {
-                    flag.handler();
-                    arg.pos = processed;
+                    assert(flag.handler0 || flag.handler1);
+
+                    //  If this is a standalone switch, just process it
+                    if (flag.handler0) {
+                        flag.handler0();
+                    }
+
+                    //  Else this is a switch that takes the next arg as its value, so pass that
+                    else {
+                        if (arg+1 == args.end()) {
+                            print("Missing argument to option " + arg->text + " (try -help)\n");
+                            help_requested = true;
+                        }
+                        arg->pos = processed;
+                        ++arg;  // move to next argument, which is the argument to this switch
+                        flag.handler1(arg->text);
+                    }
+
+                    arg->pos = processed;
                     break;
                 }
             }
@@ -348,9 +367,9 @@ public:
             // For now comment this out to try leaving unmatched switches alone, so that
             // Unix absolute filenames work... and in case an absolute filename collides
             // with a legit switch name, also added "--" above... let's see how this works
-            //if (arg.pos != processed && (arg.text.starts_with("-") || arg.text.starts_with("/"))) {
-            //    arg.pos = processed;
-            //    print("Unknown option: " + arg.text + " (try -help)\n");
+            //if (arg->pos != processed && (arg->text.starts_with("-") || arg->text.starts_with("/"))) {
+            //    arg->pos = processed;
+            //    print("Unknown option: " + arg->text + " (try -help)\n");
             //    help_requested = true;
             //}
         }
@@ -391,14 +410,14 @@ public:
         }
     }
 
-    auto add_flag(int group, std::string_view name, std::string_view description, callback handler, std::string_view synonym) {
-        flags.emplace_back( group, name, description, handler, synonym );
+    auto add_flag(int group, std::string_view name, std::string_view description, callback0 handler0, callback1 handler1, std::string_view synonym) {
+        flags.emplace_back( group, name, description, handler0, handler1, synonym );
         if (max_flag_length < std::ssize(name)) {
             max_flag_length = std::ssize(name);
         }
     }
     struct register_flag {
-        register_flag(int group, std::string_view name, std::string_view description, callback handler, std::string_view synonym = {});
+        register_flag(int group, std::string_view name, std::string_view description, callback0 handler0, callback1 handler1 = nullptr, std::string_view synonym = {});
     };
 
     auto set_args(int argc, char* argv[]) -> void {
@@ -431,8 +450,8 @@ public:
 
 } cmdline;
 
-cmdline_processor::register_flag::register_flag(int group, std::string_view name, std::string_view description, callback handler, std::string_view synonym) {
-    cmdline.add_flag( group, name, description, handler, synonym );
+cmdline_processor::register_flag::register_flag(int group, std::string_view name, std::string_view description, callback0 handler0, callback1 handler1, std::string_view synonym) {
+    cmdline.add_flag( group, name, description, handler0, handler1, synonym );
 }
 
 static cmdline_processor::register_flag cmd_help   (
@@ -440,6 +459,7 @@ static cmdline_processor::register_flag cmd_help   (
     "help",
     "Print help",
     []{ cmdline.print_help(); },
+    nullptr,
     "?"
 );
 
