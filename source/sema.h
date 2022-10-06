@@ -842,6 +842,9 @@ public:
             if (n.type.index() != declaration_node::active::object) {
                 --scope_depth;
             }
+            if(n.type.index() == declaration_node::active::function && n.identifier && *(n.identifier->identifier) == "main") {
+                handle_function_main(*std::get<declaration_node::function>(n.type));
+            }
             partial_decl_stack.pop_back();
         }
     }
@@ -958,6 +961,29 @@ public:
     auto end(auto const&, int indent) -> void
     {
         //  Ignore other node types
+    }
+private:
+    auto handle_function_main(function_type_node& func) -> void
+    {
+        func.is_main = true;
+
+        if (!func.parameters->parameters.empty()) {
+            errors.emplace_back(func.position(), "the function main should have no parameters");
+        }
+
+        switch (func.returns.index()) {
+            break; case function_type_node::id: {
+                auto &r = std::get<function_type_node::id>(func.returns);
+                if (*r->get_token() != "int") {
+                    errors.emplace_back(r->get_token()->position(),
+                                    "return type of main is " + std::string(*r->get_token()) + " instead of int");
+                }
+            }
+            break; case function_type_node::empty:
+                errors.emplace_back(func.position(), "main has not return type specified");
+            break; case function_type_node::list:
+                errors.emplace_back(func.position(), "main cannot return a list");
+        }
     }
 };
 

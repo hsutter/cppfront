@@ -4,7 +4,6 @@
 
 
 #line 2 "pure2-type-safety-1.cpp2"
-[[nodiscard]] auto main() -> int;
 #line 24 "pure2-type-safety-1.cpp2"
 auto test_generic(auto const& x) -> void;
 #line 30 "pure2-type-safety-1.cpp2"
@@ -16,7 +15,7 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
 
 #line 1 "pure2-type-safety-1.cpp2"
 
-[[nodiscard]] auto main() -> int
+auto main() -> int
 {
     std::variant<int,double> v { 42.0 }; 
     std::any a { "xyzzy" }; 

@@ -4,14 +4,13 @@
 
 
 #line 1 "pure2-inspect-expression-with-as-in-generic-function.cpp2"
-[[nodiscard]] auto main() -> int;
 #line 7 "pure2-inspect-expression-with-as-in-generic-function.cpp2"
 auto print_an_int(auto const& x) -> void;
 
 //=== Cpp2 definitions ==========================================================
 
 #line 1 "pure2-inspect-expression-with-as-in-generic-function.cpp2"
-[[nodiscard]] auto main() -> int{
+auto main() -> int{
     print_an_int("syzygy");
     print_an_int(1);
     print_an_int(1.1);

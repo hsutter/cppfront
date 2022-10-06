@@ -4,7 +4,6 @@
 
 
 #line 2 "pure2-hello.cpp2"
-[[nodiscard]] auto main() -> int;
 #line 6 "pure2-hello.cpp2"
 [[nodiscard]] auto name() -> std::string;
 #line 12 "pure2-hello.cpp2"
@@ -14,7 +13,7 @@ auto decorate(std::string& s) -> void;
 
 #line 1 "pure2-hello.cpp2"
 
-[[nodiscard]] auto main() -> int{
+auto main() -> int{
     std::cout << "Hello " << name() << "\n";
 }
 

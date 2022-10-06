@@ -4,14 +4,13 @@
 
 
 #line 1 "pure2-inspect-expression-in-generic-function-multiple-types.cpp2"
-[[nodiscard]] auto main() -> int;
 #line 20 "pure2-inspect-expression-in-generic-function-multiple-types.cpp2"
 auto test_generic(auto const& x) -> void;
 
 //=== Cpp2 definitions ==========================================================
 
 #line 1 "pure2-inspect-expression-in-generic-function-multiple-types.cpp2"
-[[nodiscard]] auto main() -> int{
+auto main() -> int{
     std::variant<int,double> v { 42.0 }; 
     std::any a { cpp2::as<std::string>("xyzzy") }; 
     std::optional<int> o {  }; 

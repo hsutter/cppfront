@@ -17,7 +17,6 @@ auto parameter_styles(
     auto&&  e
     ) -> void;
 #line 42 "mixed-parameter-passing-with-forward.cpp2"
-[[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
@@ -61,4 +60,4 @@ requires std::is_same_v<CPP2_TYPEOF(e), std::string>
 
 }
 
-[[nodiscard]] auto main() -> int{}
+auto main() -> int{ }

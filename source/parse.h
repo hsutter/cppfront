@@ -804,6 +804,7 @@ struct function_type_node
 {
     std::unique_ptr<parameter_declaration_list_node> parameters;
     bool throws = false;
+    bool is_main = false;
 
     enum active { empty = 0, id, list };
     std::variant<

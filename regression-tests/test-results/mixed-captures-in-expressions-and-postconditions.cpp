@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <vector>
 
-[[nodiscard]] auto main() -> int;
 #line 17 "mixed-captures-in-expressions-and-postconditions.cpp2"
 #line 19 "mixed-captures-in-expressions-and-postconditions.cpp2"
 auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void;
@@ -15,7 +14,7 @@ auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void;
 
 #line 4 "mixed-captures-in-expressions-and-postconditions.cpp2"
 
-[[nodiscard]] auto main() -> int{
+auto main() -> int{
     std::vector<std::string> vec { 
                "hello", "2022" }; 
 

@@ -8,13 +8,12 @@
 #include <algorithm>
 #include <iostream>
 
-[[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
 #line 6 "mixed-function-expression-and-std-for-each.cpp2"
 
-[[nodiscard]] auto main() -> int{
+auto main() -> int{
     std::vector<std::string> vec { 
                "hello", "2022" }; 
     std::span view { vec }; 

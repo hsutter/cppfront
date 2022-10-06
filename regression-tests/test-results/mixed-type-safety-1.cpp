@@ -17,7 +17,6 @@ auto print(cpp2::in<std::string> msg, auto const& x) -> void;
 #line 16 "mixed-type-safety-1.cpp2"
 auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
 #line 26 "mixed-type-safety-1.cpp2"
-[[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
@@ -38,7 +37,7 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void
 
 //--- examples -------------------------
 
-[[nodiscard]] auto main() -> int
+auto main() -> int
 {
     print( "1.1 is int? ", cpp2::is<int>(1.1));
     print( "1   is int? ", cpp2::is<int>(1));

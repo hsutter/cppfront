@@ -7,7 +7,6 @@ auto call(auto const& v, auto const& w, auto const& x, auto const& y, auto const
 #line 4 "mixed-postfix-expression-custom-formatting.cpp2"
 [[nodiscard]] auto test(auto const& a) -> std::string;
 #line 15 "mixed-postfix-expression-custom-formatting.cpp2"
-[[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
@@ -26,4 +25,4 @@ auto call(auto const& v, auto const& w, auto const& x, auto const& y, auto const
         ); 
 }
 
-[[nodiscard]] auto main() -> int{}
+auto main() -> int{ }

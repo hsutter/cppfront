@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <iostream>
 
-[[nodiscard]] auto main() -> int;
 #line 12 "mixed-postexpression-with-capture.cpp2"
 #line 14 "mixed-postexpression-with-capture.cpp2"
 auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void;
@@ -18,7 +17,7 @@ auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void;
 
 #line 7 "mixed-postexpression-with-capture.cpp2"
 
-[[nodiscard]] auto main() -> int{
+auto main() -> int{
     insert_at( 0, 42 );
 }
 

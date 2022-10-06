@@ -16,7 +16,6 @@ auto parameter_styles(
     std::string&& d
     ) -> void;
 #line 40 "mixed-parameter-passing.cpp2"
-[[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
@@ -56,4 +55,4 @@ auto parameter_styles(
 
 }
 
-[[nodiscard]] auto main() -> int{}
+auto main() -> int{ }

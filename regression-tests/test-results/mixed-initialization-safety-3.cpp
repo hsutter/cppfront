@@ -6,7 +6,6 @@
 #include <vector>
 #include <ctime>
 
-[[nodiscard]] auto main() -> int;
 #line 16 "mixed-initialization-safety-3.cpp2"
 auto fill(
     cpp2::out<std::string> x, 
@@ -22,7 +21,7 @@ auto print_decorated(auto const& x) -> void;
 
 #line 4 "mixed-initialization-safety-3.cpp2"
 
-[[nodiscard]] auto main() -> int{
+auto main() -> int{
     cpp2::deferred_init<std::string> x; // note: uninitialized!
 
     if (flip_a_coin()) {

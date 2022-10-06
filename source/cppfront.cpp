@@ -2357,6 +2357,10 @@ public:
 
             auto& func = std::get<declaration_node::function>(n.type);
             assert(func);
+            if (printer.doing_declarations_only() && func->is_main) {
+                // main doesn't need a forward declaration.
+                return;
+            }
 
             //  If this is at expression scope, we can't emit "[[nodiscard]] auto name"
             //  so print the provided intro instead, which will be a lambda-capture-list
@@ -2367,7 +2371,7 @@ public:
             }
             else {
                 assert (n.identifier);
-                if (func->returns.index() != function_type_node::empty) {
+                if (func->returns.index() != function_type_node::empty && !func->is_main) {
                     printer.print_cpp2( "[[nodiscard]] ", n.position() );
                 }
                 printer.print_cpp2( "auto ", n.position() );

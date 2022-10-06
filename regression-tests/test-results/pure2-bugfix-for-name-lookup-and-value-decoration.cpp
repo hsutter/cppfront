@@ -10,7 +10,6 @@ struct vals__ret {
 #line 2 "pure2-bugfix-for-name-lookup-and-value-decoration.cpp2"
 [[nodiscard]] auto vals() -> vals__ret;
 #line 6 "pure2-bugfix-for-name-lookup-and-value-decoration.cpp2"
-[[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
@@ -22,7 +21,7 @@ struct vals__ret {
     return  { std::move(i.value()) }; 
 }
 
-[[nodiscard]] auto main() -> int{
+auto main() -> int{
     auto v { vals() }; 
     v.i;
 }

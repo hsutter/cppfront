@@ -4,7 +4,6 @@
 
 
 #line 2 "pure2-bounds-safety-span.cpp2"
-[[nodiscard]] auto main() -> int;
 #line 14 "pure2-bounds-safety-span.cpp2"
 auto print_and_decorate(auto const& thing) -> void;
 #line 16 "pure2-bounds-safety-span.cpp2"
@@ -14,7 +13,7 @@ auto print_and_decorate(auto const& thing) -> void;
 
 #line 1 "pure2-bounds-safety-span.cpp2"
 
-[[nodiscard]] auto main() -> int
+auto main() -> int
 {
     std::vector<std::string> words { "decorated", "hello", "world" }; 
 

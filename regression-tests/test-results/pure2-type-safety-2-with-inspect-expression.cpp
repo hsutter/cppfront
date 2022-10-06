@@ -4,14 +4,13 @@
 
 
 #line 1 "pure2-type-safety-2-with-inspect-expression.cpp2"
-[[nodiscard]] auto main() -> int;
 #line 20 "pure2-type-safety-2-with-inspect-expression.cpp2"
 auto test_generic(auto const& x) -> void;
 
 //=== Cpp2 definitions ==========================================================
 
 #line 1 "pure2-type-safety-2-with-inspect-expression.cpp2"
-[[nodiscard]] auto main() -> int{
+auto main() -> int{
     std::variant<int,double> v { 42.0 }; 
     std::any a { "xyzzy" }; 
     std::optional<int> o {  }; 

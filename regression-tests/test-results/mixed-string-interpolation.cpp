@@ -9,13 +9,12 @@
 
 struct custom_struct_with_no_stringize_customization { } custom;
 
-[[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
 #line 7 "mixed-string-interpolation.cpp2"
 
-[[nodiscard]] auto main() -> int{
+auto main() -> int{
     auto a { 2 }; 
     std::optional<int> b {  }; 
     std::cout << "a = " + cpp2::to_string(a) + ", b = " + cpp2::to_string(b) + "\n";

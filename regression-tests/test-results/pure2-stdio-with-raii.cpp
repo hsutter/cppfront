@@ -4,7 +4,6 @@
 
 
 #line 4 "pure2-stdio-with-raii.cpp2"
-[[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
@@ -12,7 +11,7 @@
 
 //  "A better C than C" ... ?
 //
-[[nodiscard]] auto main() -> int{
+auto main() -> int{
     std::string s { "Freddy" }; 
     auto myfile { cpp2::fopen("xyzzy", "w") }; 
     CPP2_UFCS(fprintf, myfile, "Hello %s with UFCS!", CPP2_UFCS_0(c_str, s));

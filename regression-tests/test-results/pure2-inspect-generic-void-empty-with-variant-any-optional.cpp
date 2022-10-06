@@ -4,7 +4,6 @@
 
 
 #line 2 "pure2-inspect-generic-void-empty-with-variant-any-optional.cpp2"
-[[nodiscard]] auto main() -> int;
 #line 18 "pure2-inspect-generic-void-empty-with-variant-any-optional.cpp2"
 auto test_generic(auto const& x) -> void;
 
@@ -12,7 +11,7 @@ auto test_generic(auto const& x) -> void;
 
 #line 1 "pure2-inspect-generic-void-empty-with-variant-any-optional.cpp2"
 
-[[nodiscard]] auto main() -> int{
+auto main() -> int{
     std::unique_ptr<int> p {  }; 
     std::vector<int>::iterator i {  }; 
     std::variant<std::monostate,int,std::string> v {  }; 
