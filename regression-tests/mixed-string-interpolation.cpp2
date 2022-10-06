@@ -3,6 +3,8 @@
 #include <utility>
 #include <tuple>
 
+struct custom_struct_with_no_stringize_customization { } custom;
+
 main: () -> int = {
     a := 2;
     b: std::optional<int> = ();
@@ -35,4 +37,15 @@ main: () -> int = {
     std::cout << "tup1 = (tup1)$\n";
     std::cout << "tup2 = (tup2)$\n";
     std::cout << "tup3 = (tup3)$\n";
+
+    p: std::pair<std::string_view, std::optional<std::string>> = ("first", std::nullopt);
+    std::cout << "p = (p)$\n";
+
+    t: std::tuple<double, std::optional<std::pair<std::string_view, int>>, std::optional<std::tuple<int, int, int>>> = (3.14, std::nullopt, std::nullopt);
+    std::cout << "t = (t)$\n";
+
+    vv: std::variant<int, std::string, std::pair<int, double> > = ();
+    std::cout << "vv = (vv)$\n";
+
+    std::cout << "custom = (custom)$\n";
 }

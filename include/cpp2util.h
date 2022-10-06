@@ -751,6 +751,10 @@ template <class F>
 //
 //-----------------------------------------------------------------------
 //
+inline auto to_string(...) -> std::string {
+    return "(customize me - no cpp2::to_string overload exists for this type)";
+}
+
 template<typename T>
 inline auto to_string(T const& t) -> std::string
     requires requires { std::to_string(t); }
@@ -822,10 +826,6 @@ inline auto to_string(std::tuple<Ts...> const& t) -> std::string
         out += ")";
         return out;
     }
-}
-
-inline auto to_string(...) -> std::string {
-    return "(customize me - no cpp2::to_string overload exists for this type)";
 }
 
 

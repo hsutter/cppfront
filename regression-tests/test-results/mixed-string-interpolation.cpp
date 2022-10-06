@@ -7,11 +7,13 @@
 #include <utility>
 #include <tuple>
 
+struct custom_struct_with_no_stringize_customization { } custom;
+
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 5 "mixed-string-interpolation.cpp2"
+#line 7 "mixed-string-interpolation.cpp2"
 
 [[nodiscard]] auto main() -> int{
     auto a { 2 }; 
@@ -45,4 +47,15 @@
     std::cout << "tup1 = " + cpp2::to_string(tup1) + "\n";
     std::cout << "tup2 = " + cpp2::to_string(tup2) + "\n";
     std::cout << "tup3 = " + cpp2::to_string(tup3) + "\n";
+
+    std::pair<std::string_view,std::optional<std::string>> p { "first", std::nullopt }; 
+    std::cout << "p = " + cpp2::to_string(p) + "\n";
+
+    std::tuple<double,std::optional<std::pair<std::string_view,int>>,std::optional<std::tuple<int,int,int>>> t { 3.14, std::nullopt, std::nullopt }; 
+    std::cout << "t = " + cpp2::to_string(t) + "\n";
+
+    std::variant<int,std::string,std::pair<int,double>> vv {  }; 
+    std::cout << "vv = " + cpp2::to_string(vv) + "\n";
+
+    std::cout << "custom = " + cpp2::to_string(custom) + "\n";
 }
