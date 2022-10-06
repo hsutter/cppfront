@@ -771,6 +771,15 @@ inline auto to_string(T const& sv) -> std::string
     return std::string{sv};
 }
 
+template <typename... Ts>
+inline auto to_string(std::variant<Ts...> const& v) -> std::string;
+
+template < typename T, typename U>
+inline auto to_string(std::pair<T,U> const& p) -> std::string;
+
+template < typename... Ts>
+inline auto to_string(std::tuple<Ts...> const& t) -> std::string;
+
 template<typename T>
 inline auto to_string(std::optional<T> const& o) -> std::string {
     if (o.has_value()) {
