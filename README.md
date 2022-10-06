@@ -83,6 +83,10 @@ Cppfront builds with any major C++20 compiler.
 
     clang++-12 cppfront.cpp -std=c++20 -o cppfront
 
+### CMake support
+
+    Alternatively the code can be build using CMake. The build directory will contain the regression test scripts.
+
 ## How do I build my `.cpp2` file?
 
 Run `cppfront your.cpp2`, then run the generated `your.cpp` through any major C++20 compiler after putting `/cppfront/include` in the path so it can find `cpp2util.h`.

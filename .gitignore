@@ -16,9 +16,11 @@
 *.sln
 *.exe
 *.txt
+!CMakeLists.txt
 *.db-shm
 *.db-wal
 *.opendb
 *.vsidx
 *.lock
 .editorconfig
+/build

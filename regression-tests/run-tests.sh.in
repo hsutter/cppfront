@@ -1,0 +1,23 @@
+#!/bin/sh
+
+set -e
+
+cp @CMAKE_SOURCE_DIR@/regression-tests/*.cpp2 .
+count=0
+
+for f in mixed-*.cpp2
+do
+    echo Starting cppfront $f
+    $<TARGET_FILE:cppfront> $f > $f.output 2>&1
+    rm $f
+    count=$((count+1))
+done
+
+for f in pure2-*.cpp2
+do
+    echo Starting cppfront $f -p
+    $<TARGET_FILE:cppfront> $f -p > $f.output 2>&1
+    rm $f
+    count=$((count+1))
+done
+echo Done: $count tests
