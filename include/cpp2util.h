@@ -800,10 +800,7 @@ inline auto to_string(std::variant<Ts...> const& v) -> std::string
     if constexpr (is_any<std::monostate, Ts...>) if (std::get_if<std::monostate>(&v) != nullptr) return "(empty)";
 
     return std::visit([](auto&& arg) -> std::string {
-        if constexpr (requires { cpp2::to_string(arg); }) {
-            return cpp2::to_string(arg);
-        }
-        return "";
+        return cpp2::to_string(arg);
     }, v);
 }
 

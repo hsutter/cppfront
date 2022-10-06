@@ -46,6 +46,8 @@ main: () -> int = {
 
     vv: std::variant<int, std::string, std::pair<int, double> > = ();
     std::cout << "vv = (vv)$\n";
+    vv = std::make_pair(1,2.3);
+    std::cout << "vv = (vv)$\n";
 
     std::cout << "custom = (custom)$\n";
 }

@@ -56,6 +56,8 @@ struct custom_struct_with_no_stringize_customization { } custom;
 
     std::variant<int,std::string,std::pair<int,double>> vv {  }; 
     std::cout << "vv = " + cpp2::to_string(vv) + "\n";
+    vv = std::make_pair(1, 2.3);
+    std::cout << "vv = " + cpp2::to_string(vv) + "\n";
 
     std::cout << "custom = " + cpp2::to_string(custom) + "\n";
 }
