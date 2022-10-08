@@ -121,6 +121,7 @@ class positional_printer
 {
     //  Core information
     std::ofstream               out       = {};     // Cpp1 syntax output file
+    std::string                 cpp2source = {};
     std::string                 filename  = {};
     std::vector<comment> const* pcomments = {};     // Cpp2 comments data
 
@@ -235,7 +236,7 @@ class positional_printer
 
         //  Not using print() here because this is transparent to the curr_pos
         if (!flag_clean_cpp1) {
-            out << "#line " << line << " " << std::quoted(filename + "2") << "\n";
+            out << "#line " << line << " " << std::quoted(cpp2source) << "\n";
         }
     }
 
@@ -324,12 +325,14 @@ public:
     //  Open
     //
     auto open(
+        std::string                 cpp2_filename,
         std::string                 cpp1_filename,
         std::vector<comment> const& comments
     )
         -> void
     {
         assert (!out.is_open() && !pcomments && "ICE: tried to call .open twice");
+        cpp2source = cpp2_filename;
         filename = cpp1_filename;
         out.open(filename);
         pcomments = &comments;
@@ -721,6 +724,7 @@ public:
             cpp1_filename = flag_cpp1_filename; // use override if present
         }
         printer.open(
+            sourcefile,
             cpp1_filename,
             tokens.get_comments()
         );
