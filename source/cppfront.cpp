@@ -1830,10 +1830,14 @@ public:
         auto suffix = std::string{};
         for (auto const& x : n.ops) {
             assert(x);
-            assert(x->type() == lexeme::Not);   // should be the only prefix operator
-            printer.add_pad_in_this_line(-3);
-            printer.print_cpp2("!(", n.position());
-            suffix += ")";
+            if (x->type() == lexeme::Not) {
+                printer.print_cpp2("!(", n.position());
+                printer.add_pad_in_this_line(-3);
+                suffix += ")";
+            }
+            else {
+                printer.print_cpp2(*x, x->position());
+            }
         }
         assert(n.expr);
         emit(*n.expr);

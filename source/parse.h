@@ -37,7 +37,14 @@ auto violates_lifetime_safety = false;
 //G
 auto is_prefix_operator(lexeme l) -> bool
 {
-    return l == lexeme::Not;
+    switch (l) {
+    break;case lexeme::Not:
+          case lexeme::Minus:
+          case lexeme::Plus:
+        return true;
+    break;default:
+        return false;
+    }
 }
 
 
@@ -1389,9 +1396,10 @@ private:
             curr().type() == lexeme::Dot
             )
         {
-            //  * & and ~ can't be a unary operator if followed by ( or identifier
-            if ((curr().type() == lexeme::Multiply || curr().type() == lexeme::Ampersand || curr().type() == lexeme::Tilde) &&
-                (peek(1)->type() == lexeme::LeftParen || peek(1)->type() == lexeme::Identifier))
+            //  * and & can't be a unary operator if followed by a (, identifier, or literal
+            if ((curr().type() == lexeme::Multiply || curr().type() == lexeme::Ampersand) &&
+                peek(1) &&
+                (peek(1)->type() == lexeme::LeftParen || peek(1)->type() == lexeme::Identifier || is_literal(peek(1)->type())))
             {
                 break;
             }

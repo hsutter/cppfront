@@ -95,6 +95,18 @@ enum class lexeme : std::int8_t {
     Identifier
 };
 
+auto is_literal(lexeme l) {
+    switch (l) {
+    break;case lexeme::FloatLiteral:        
+          case lexeme::BinaryLiteral:       
+          case lexeme::DecimalLiteral:      
+          case lexeme::HexadecimalLiteral:  
+          case lexeme::StringLiteral:       
+          case lexeme::CharacterLiteral:    return true;
+    break;default:                          return false;
+    }
+}
+
 //  TODO: Remove the duplication above/below with a variadic macro,
 //        but for now it's simpler just to write it out
 
