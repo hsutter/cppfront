@@ -1,4 +1,4 @@
-main: () -> int = {
+main: () = {
     v: std::variant<int, double> = 42.0;
     a: std::any = "xyzzy" as std::string;
     o: std::optional<int> = ();

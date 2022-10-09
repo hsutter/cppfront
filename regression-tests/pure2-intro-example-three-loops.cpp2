@@ -7,7 +7,7 @@ decorate_and_print: (inout thing:_) = {
     print(thing);
 }
 
-main: () -> int = {
+main: () = {
     words: std::vector<std::string> =
         ( "hello", "big", "world" );
     view: std::span<std::string> = words;

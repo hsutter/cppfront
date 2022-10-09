@@ -12,7 +12,7 @@ auto println(auto const& x, auto const& len) -> void;
 //=== Cpp2 definitions ==========================================================
 
 #line 1 "pure2-intro-example-hello-2022.cpp2"
-auto main() -> int{
+auto cpp2__main() -> void{
     std::vector<std::string> vec { 
                "hello", "2022" }; 
     std::span view { vec }; 
@@ -22,7 +22,7 @@ auto main() -> int{
         println(str, len);
     }
 }
-
+CPP2_MAIN_VOID_NO_ARGS
 [[nodiscard]] auto decorate(auto& thing) -> int{
     thing = "[" + thing + "]";
     return CPP2_UFCS_0(ssize, thing); 

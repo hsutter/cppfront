@@ -37,7 +37,7 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void
 
 //--- examples -------------------------
 
-auto main() -> int
+auto cpp2__main() -> void
 {
     print( "1.1 is int? ", cpp2::is<int>(1.1));
     print( "1   is int? ", cpp2::is<int>(1));
@@ -48,3 +48,5 @@ auto main() -> int
     print(  "s* is Circle? ", cpp2::is<Circle>(*s));
     print(  "s* is Square? ", cpp2::is<Square>(*s));
 }
+CPP2_MAIN_VOID_NO_ARGS
+

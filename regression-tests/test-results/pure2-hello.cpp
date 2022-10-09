@@ -13,10 +13,10 @@ auto decorate(std::string& s) -> void;
 
 #line 1 "pure2-hello.cpp2"
 
-auto main() -> int{
+auto cpp2__main() -> void{
     std::cout << "Hello " << name() << "\n";
 }
-
+CPP2_MAIN_VOID_NO_ARGS
 [[nodiscard]] auto name() -> std::string{
     std::string s { "world" }; 
     decorate(s);

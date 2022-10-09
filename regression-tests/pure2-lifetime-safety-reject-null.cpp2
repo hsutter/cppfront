@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-main: () -> int
+main: ()
 = {
     words: std::vector<std::string> = ( "decorated", "hello", "world" );
 

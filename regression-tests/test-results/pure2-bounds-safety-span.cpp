@@ -13,7 +13,7 @@ auto print_and_decorate(auto const& thing) -> void;
 
 #line 1 "pure2-bounds-safety-span.cpp2"
 
-auto main() -> int
+auto cpp2__main() -> void
 {
     std::vector<std::string> words { "decorated", "hello", "world" }; 
 
@@ -24,6 +24,6 @@ auto main() -> int
         print_and_decorate( s[i] );
     }
 }
-
+CPP2_MAIN_VOID_NO_ARGS
 auto print_and_decorate(auto const& thing) -> void { 
     std::cout << ">> " << thing << "\n"; }

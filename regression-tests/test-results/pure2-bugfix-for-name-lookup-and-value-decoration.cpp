@@ -21,7 +21,9 @@ struct vals__ret {
     return  { std::move(i.value()) }; 
 }
 
-auto main() -> int{
+auto cpp2__main() -> void{
     auto v { vals() }; 
     v.i;
 }
+CPP2_MAIN_VOID_NO_ARGS
+

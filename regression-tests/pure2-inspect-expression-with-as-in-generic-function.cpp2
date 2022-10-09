@@ -1,4 +1,4 @@
-main: () -> int = {
+main: () = {
     print_an_int("syzygy");
     print_an_int(1);
     print_an_int(1.1);

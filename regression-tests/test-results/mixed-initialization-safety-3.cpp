@@ -21,7 +21,7 @@ auto print_decorated(auto const& x) -> void;
 
 #line 4 "mixed-initialization-safety-3.cpp2"
 
-auto main() -> int{
+auto cpp2__main() -> void{
     cpp2::deferred_init<std::string> x; // note: uninitialized!
 
     if (flip_a_coin()) {
@@ -31,7 +31,7 @@ auto main() -> int{
     }
     print_decorated(x.value());
 }
-
+CPP2_MAIN_VOID_NO_ARGS
 auto fill(
     cpp2::out<std::string> x, 
     cpp2::in<std::string> value, 

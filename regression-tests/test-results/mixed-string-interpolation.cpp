@@ -14,7 +14,7 @@ struct custom_struct_with_no_stringize_customization { } custom;
 
 #line 7 "mixed-string-interpolation.cpp2"
 
-auto main() -> int{
+auto cpp2__main() -> void{
     auto a { 2 }; 
     std::optional<int> b {  }; 
     std::cout << "a = " + cpp2::to_string(a) + ", b = " + cpp2::to_string(b) + "\n";
@@ -60,3 +60,5 @@ auto main() -> int{
 
     std::cout << "custom = " + cpp2::to_string(custom) + "\n";
 }
+CPP2_MAIN_VOID_NO_ARGS
+

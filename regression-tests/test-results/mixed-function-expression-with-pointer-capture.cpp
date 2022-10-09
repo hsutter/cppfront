@@ -14,7 +14,7 @@
 
 #line 7 "mixed-function-expression-with-pointer-capture.cpp2"
 
-auto main() -> int{
+auto cpp2__main() -> void{
     std::vector<std::string> vec { 
                "hello", "2023" }; 
     std::span view { vec }; 
@@ -30,3 +30,5 @@ auto main() -> int{
     for ( auto&& cpp2_range = view;  auto const& str : cpp2_range ) 
         std::cout << str << "\n";
 }
+CPP2_MAIN_VOID_NO_ARGS
+

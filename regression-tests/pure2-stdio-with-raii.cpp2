@@ -1,7 +1,7 @@
 
 //  "A better C than C" ... ?
 //
-main: () -> int = {
+main: () = {
     s: std::string = "Freddy";
     myfile := cpp2::fopen("xyzzy", "w");
     myfile.fprintf( "Hello %s with UFCS!", s.c_str() );

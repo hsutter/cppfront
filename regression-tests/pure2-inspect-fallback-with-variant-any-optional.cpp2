@@ -1,5 +1,5 @@
 
-main: () -> int = {
+main: () = {
     v: std::variant<int, std::string> = "xyzzy" as std::string;
     a: std::any = "xyzzy" as std::string;
     o: std::optional<std::string> = "xyzzy" as std::string;

@@ -39,4 +39,4 @@ parameter_styles: (
 
 }
 
-main: () -> int = { }
+main: () = { }

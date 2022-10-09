@@ -14,7 +14,7 @@ auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void;
 
 #line 4 "mixed-captures-in-expressions-and-postconditions.cpp2"
 
-auto main() -> int{
+auto cpp2__main() -> void{
     std::vector<std::string> vec { 
                "hello", "2022" }; 
 
@@ -25,7 +25,7 @@ auto main() -> int{
     y = "-ish\n";
     std::ranges::for_each( vec, callback );
 }
-
+CPP2_MAIN_VOID_NO_ARGS
 std::vector<int> vec {  }; 
 
 auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void

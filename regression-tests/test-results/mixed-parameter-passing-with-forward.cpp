@@ -60,4 +60,6 @@ requires std::is_same_v<CPP2_TYPEOF(e), std::string>
 
 }
 
-auto main() -> int{ }
+auto cpp2__main() -> void{}
+CPP2_MAIN_VOID_NO_ARGS
+

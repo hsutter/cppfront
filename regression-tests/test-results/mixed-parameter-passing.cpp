@@ -55,4 +55,6 @@ auto parameter_styles(
 
 }
 
-auto main() -> int{ }
+auto cpp2__main() -> void{}
+CPP2_MAIN_VOID_NO_ARGS
+

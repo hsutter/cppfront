@@ -10,12 +10,12 @@ auto print_an_int(auto const& x) -> void;
 //=== Cpp2 definitions ==========================================================
 
 #line 1 "pure2-inspect-expression-with-as-in-generic-function.cpp2"
-auto main() -> int{
+auto cpp2__main() -> void{
     print_an_int("syzygy");
     print_an_int(1);
     print_an_int(1.1);
 }
-
+CPP2_MAIN_VOID_NO_ARGS
 auto print_an_int(auto const& x) -> void{
     std::cout 
         << std::setw(30) << typeid(x).name() 

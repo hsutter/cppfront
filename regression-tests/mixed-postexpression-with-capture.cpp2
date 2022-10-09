@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <iostream>
 
-main: () -> int = {
+main: () = {
     insert_at( 0, 42 );
 }
 

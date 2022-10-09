@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-main: () -> int = {
+main: () = {
     cpp2::Null.set_handler(call_my_framework&);
     try_pointer_stuff();
     std::cout << "done\n";

@@ -199,6 +199,9 @@
     #include <cstddef>
     #include <utility>
     #include <cstdio>
+    #include <vector>
+    #include <string_view>
+    #include <span>
 
     #if defined(CPP2_USE_SOURCE_LOCATION)
         #include <source_location>
@@ -297,7 +300,6 @@ constexpr auto contract_group::set_handler(handler h) -> handler {
     return old;
 }
 
-
 //  Null pointer deref checking
 //
 auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
@@ -325,7 +327,6 @@ auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAU
 {
     return std::forward<decltype(x)>(x) [ std::forward<decltype(arg)>(arg) ];
 }
-
 
 //-----------------------------------------------------------------------
 //
@@ -825,6 +826,41 @@ inline auto to_string(std::tuple<Ts...> const& t) -> std::string
     }
 }
 
+// Helper to convert the arguments of main to safer type.
+inline auto convert_main_args(int argc, char** argv) -> std::vector<std::string_view>
+{
+    std::vector<std::string_view> args;
+    for (int i = 0; i < argc; ++i) {
+        args.push_back(argv[i]);
+    }
+    args.shrink_to_fit();
+    return args;
+}
+
+#define CPP2_MAIN_VOID_NO_ARGS \
+    int main() { \
+        cpp2__main(); \
+        return 0; \
+    }
+
+#define CPP2_MAIN_INT_NO_ARGS \
+    int main() { \
+        return cpp2__main(); \
+    }
+
+#define CPP2_MAIN_VOID_ARGS \
+    int main(int argc, char** argv) { \
+        auto args = cpp2::convert_main_args(argc, argv); \
+        cpp2__main(std::span{args}); \
+        return 0; \
+    }
+
+#define CPP2_MAIN_INT_ARGS \
+    int main(int argc, char** argv) { \
+        auto args = cpp2::convert_main_args(argc, argv); \
+        return cpp2__main(std::span{args}); \
+    }
+
 
 //-----------------------------------------------------------------------
 //
@@ -880,7 +916,6 @@ inline auto fopen( const char* filename, const char* mode ) {
 
 
 }
-
 
 using cpp2::cpp2_new;
 

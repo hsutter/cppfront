@@ -963,12 +963,124 @@ public:
         //  Ignore other node types
     }
 private:
+
+    // An AST matcher to match the expected type of the parameter of cpp2's main.
+    //
+    // The expected type is std::span<std::string_view>, which has the following AST:
+    //  0  id-expression
+    //  1    qualified-id
+    //  2      unqualified-id
+    //  3        Identifier: std
+    //  4      Scope: ::
+    //  5      unqualified-id
+    //  6        Identifier: span
+    //  7          id-expression
+    //  8            qualified-id
+    //  9              unqualified-id
+    // 10                Identifier: std
+    // 11              Scope: ::
+    // 12              unqualified-id
+    // 13                Identifier: string_view
+    //
+    // Note this is a customized matcher since there is no generic matcher.
+    class ast_matcher_main_parameter
+    {
+        int index = 0;
+        bool valid = true;
+    public:
+        auto matched() const -> bool { return valid && index == 14; }
+
+        auto start(const id_expression_node& n, int) -> void
+        {
+            switch(index++) {
+                break; case 0:
+                break; case 7:
+                break; default:
+                    valid = false;
+            }
+        }
+
+        auto start(const qualified_id_node& n, int) -> void
+        {
+            switch(index++) {
+                break; case 1:
+                break; case 8:
+                break; default:
+                    valid = false;
+            }
+        }
+
+        auto start(const unqualified_id_node& n, int) -> void
+        {
+            switch(index++) {
+                break; case 2:
+                break; case 5:
+                break; case 9:
+                break; case 12:
+                break; default:
+                    valid = false;
+            }
+        }
+
+        auto start(const token& t, int) -> void
+        {
+            switch(index++) {
+                break;case 3: case 10:
+                     valid |= t.type() == lexeme::Identifier && t == "std";
+                break;case 4: case 11:
+                     valid |= t.type() == lexeme::Scope;
+                break;case 6:
+                     valid |= t.type() == lexeme::Identifier && t == "span";
+                break;case 13:
+                     valid |= t.type() == lexeme::Identifier && t == "string_view";
+                break;default:
+                    valid = false;
+            }
+        }
+
+        auto start(auto const & n, int) -> void
+        {
+            // Unexpected type.
+            valid = false;
+        }
+
+        auto end(auto const &, int) -> void
+        {
+            // The validation is done in the start function.
+        }
+    };
+
+    auto is_valid_parameter_main(parameter_declaration_node& p) -> bool
+    {
+        if(p.pass != passing_style::move) {
+            return false;
+        }
+        if(p.mod != parameter_declaration_node:: modifier::none) {
+            return false;
+        }
+        auto& d = *p.declaration;
+        assert(d.type.index() == declaration_node::object);
+
+        ast_matcher_main_parameter m;
+        std::get<std::unique_ptr<id_expression_node>>(d.type)->visit(m, 0);
+        return m.matched();
+    }
+
     auto handle_function_main(function_type_node& func) -> void
     {
         func.is_main = true;
 
         if (!func.parameters->parameters.empty()) {
-            errors.emplace_back(func.position(), "the function main should have no parameters");
+            if (func.parameters->parameters.size() == 1) {
+                if(!is_valid_parameter_main(*func.parameters->parameters.front())) {
+                    errors.emplace_back(func.position(),
+                                        "the function main has one argument but it has the wrong signature");
+                }
+            } else {
+                errors.emplace_back(func.position(), "the function main may only have one parameter, but it has " +
+                                                         std::to_string(func.parameters->parameters.size()) +
+                                                         " parameters");
+            }
         }
 
         switch (func.returns.index()) {
@@ -980,7 +1092,7 @@ private:
                 }
             }
             break; case function_type_node::empty:
-                errors.emplace_back(func.position(), "main has not return type specified");
+                /* DO NOTHING */
             break; case function_type_node::list:
                 errors.emplace_back(func.position(), "main cannot return a list");
         }

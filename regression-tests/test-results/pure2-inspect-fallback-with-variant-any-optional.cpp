@@ -11,7 +11,7 @@ auto test_generic(auto const& x) -> void;
 
 #line 1 "pure2-inspect-fallback-with-variant-any-optional.cpp2"
 
-auto main() -> int{
+auto cpp2__main() -> void{
     std::variant<int,std::string> v { cpp2::as<std::string>("xyzzy") }; 
     std::any a { cpp2::as<std::string>("xyzzy") }; 
     std::optional<std::string> o { cpp2::as<std::string>("xyzzy") }; 
@@ -22,7 +22,7 @@ auto main() -> int{
     test_generic(a);
     test_generic(o);
 }
-
+CPP2_MAIN_VOID_NO_ARGS
 auto test_generic(auto const& x) -> void{
     std::cout 
         << "\n" << typeid(x).name() << "\n    ..." 

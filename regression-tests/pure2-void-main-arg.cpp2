@@ -1,0 +1,3 @@
+main: (move args :std::span<std::string_view>) = {
+    for args do: (arg: _) = std::cout << arg << '\n';
+}

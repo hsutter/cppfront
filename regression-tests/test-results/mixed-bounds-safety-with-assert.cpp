@@ -15,11 +15,11 @@ auto print_subrange(auto const& rng, cpp2::in<int> start, cpp2::in<int> end) -> 
 
 #line 1 "mixed-bounds-safety-with-assert.cpp2"
 
-auto main() -> int{
+auto cpp2__main() -> void{
     std::vector<int> v { 1, 2, 3, 4, 5 }; 
     print_subrange(v, 1, 13);
 }
-
+CPP2_MAIN_VOID_NO_ARGS
 auto print_subrange(auto const& rng, cpp2::in<int> start, cpp2::in<int> end) -> void{
     cpp2::Bounds.expects(0 <= start, "");
     cpp2::Bounds.expects(end <= CPP2_UFCS_0(size, rng), "");

@@ -13,7 +13,7 @@
 
 #line 6 "mixed-function-expression-and-std-for-each.cpp2"
 
-auto main() -> int{
+auto cpp2__main() -> void{
     std::vector<std::string> vec { 
                "hello", "2022" }; 
     std::span view { vec }; 
@@ -37,3 +37,5 @@ auto main() -> int{
         std::cout << str << "\n";
     }
 }
+CPP2_MAIN_VOID_NO_ARGS
+

@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <iostream>
 
-main: () -> int = {
+main: () = {
     vec: std::vector<std::string> 
             = ("hello", "2023");
     view: std::span = vec;

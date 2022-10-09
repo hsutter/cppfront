@@ -15,14 +15,14 @@ auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> vo
 
 #line 1 "mixed-bounds-safety-with-assert-2.cpp2"
 
-auto main() -> int{
+auto cpp2__main() -> void{
     std::vector<int> v { 1, 2, 3, 4, 5 }; 
     add_42_to_subrange(v, 1, 3);
 
     for ( auto&& cpp2_range = v;  auto const& i : cpp2_range ) 
         std::cout << i << "\n";
 }
-
+CPP2_MAIN_VOID_NO_ARGS
 auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> void
 {
     cpp2::Bounds.expects(0 <= start, "");

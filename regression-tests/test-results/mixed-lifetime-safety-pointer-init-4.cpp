@@ -15,7 +15,7 @@ auto print_and_decorate(auto const& thing) -> void;
 
 #line 4 "mixed-lifetime-safety-pointer-init-4.cpp2"
 
-auto main() -> int{
+auto cpp2__main() -> void{
     int x { 42 }; 
     int y { 43 }; 
     cpp2::deferred_init<int*> p; 
@@ -30,6 +30,6 @@ auto main() -> int{
 
     print_and_decorate( *p.value());
 }
-
+CPP2_MAIN_VOID_NO_ARGS
 auto print_and_decorate(auto const& thing) -> void { 
     std::cout << ">> " << thing << "\n"; }

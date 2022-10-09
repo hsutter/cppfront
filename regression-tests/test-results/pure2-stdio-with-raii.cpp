@@ -11,8 +11,10 @@
 
 //  "A better C than C" ... ?
 //
-auto main() -> int{
+auto cpp2__main() -> void{
     std::string s { "Freddy" }; 
     auto myfile { cpp2::fopen("xyzzy", "w") }; 
     CPP2_UFCS(fprintf, myfile, "Hello %s with UFCS!", CPP2_UFCS_0(c_str, s));
 }
+CPP2_MAIN_VOID_NO_ARGS
+

@@ -2,7 +2,7 @@
 #include <vector>
 #include <ctime>
 
-main: () -> int = {
+main: () = {
     x: std::string;         // note: uninitialized!
 
     if flip_a_coin() {

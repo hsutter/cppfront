@@ -2371,12 +2371,16 @@ public:
             }
             else {
                 assert (n.identifier);
-                if (func->returns.index() != function_type_node::empty && !func->is_main) {
+                if (func->returns.index() != function_type_node::empty) {
                     printer.print_cpp2( "[[nodiscard]] ", n.position() );
                 }
                 printer.print_cpp2( "auto ", n.position() );
-                printer.print_cpp2( *n.identifier->identifier, n.identifier->position() );
-                emit( *func, n.identifier->identifier );
+                if (func->is_main) {
+                    printer.print_cpp2("cpp2__main", n.identifier->position());
+                } else {
+                    printer.print_cpp2(*n.identifier->identifier, n.identifier->position());
+                }
+                emit(*func, n.identifier->identifier);
             }
 
             //  Function declaration
@@ -2490,6 +2494,11 @@ public:
                 function_return_locals, function_epilog, n.position().colno
             );
 
+            if (func->is_main) {
+                std::string ret = func->returns.index() != function_type_node::empty ? "INT" : "VOID";
+                std::string args = func->parameters->parameters.empty() ? "NO_ARGS" : "ARGS";
+                printer.print_cpp2("\nCPP2_MAIN_" + ret + '_' + args + '\n', func->position());
+            }
             function_returns.pop_back();
         }
 

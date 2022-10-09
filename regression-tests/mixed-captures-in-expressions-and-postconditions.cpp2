@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <vector>
 
-main: () -> int = {
+main: () = {
     vec: std::vector<std::string>
             = ("hello", "2022");
 

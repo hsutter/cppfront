@@ -10,7 +10,7 @@ auto test_generic(auto const& x) -> void;
 //=== Cpp2 definitions ==========================================================
 
 #line 1 "pure2-type-safety-2-with-inspect-expression.cpp2"
-auto main() -> int{
+auto cpp2__main() -> void{
     std::variant<int,double> v { 42.0 }; 
     std::any a { "xyzzy" }; 
     std::optional<int> o {  }; 
@@ -28,7 +28,7 @@ auto main() -> int{
     test_generic(a);
     test_generic(o);
 }
-
+CPP2_MAIN_VOID_NO_ARGS
 auto test_generic(auto const& x) -> void{
     std::cout 
         << std::setw(30) << typeid(x).name() 

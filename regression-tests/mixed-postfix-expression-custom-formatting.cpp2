@@ -12,4 +12,4 @@ test: (a:_) -> std::string = {
         );
 }
 
-main: () -> int = { }
+main: () = { }

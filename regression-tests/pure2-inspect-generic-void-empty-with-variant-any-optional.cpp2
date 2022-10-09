@@ -1,5 +1,5 @@
 
-main: () -> int = {
+main: () = {
     p: std::unique_ptr<int> = ();
     i: std::vector<int>::iterator = ();
     v: std::variant<std::monostate, int, std::string> = ();

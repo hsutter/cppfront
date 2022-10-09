@@ -23,7 +23,7 @@ print: ( msg: std::string, b: bool ) =
 
 //--- examples -------------------------
 
-main: () -> int = 
+main: () =
 {
     print( "1.1 is int? ", 1.1 is int );
     print( "1   is int? ", 1   is int );

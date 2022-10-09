@@ -3,7 +3,7 @@ vals: () -> (i : int) = {
     return;
 }
 
-main: () -> int = {
+main: () = {
     v := vals();
     v.i;
 }

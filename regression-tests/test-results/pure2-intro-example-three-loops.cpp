@@ -23,7 +23,7 @@ auto decorate_and_print(auto& thing) -> void{
     print(thing);
 }
 
-auto main() -> int{
+auto cpp2__main() -> void{
     std::vector<std::string> words { 
           "hello", "big", "world" }; 
     std::span<std::string> view { words }; 
@@ -42,3 +42,5 @@ auto main() -> int{
         decorate_and_print(word);
 
 }
+CPP2_MAIN_VOID_NO_ARGS
+

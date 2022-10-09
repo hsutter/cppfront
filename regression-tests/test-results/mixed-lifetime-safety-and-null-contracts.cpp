@@ -20,11 +20,12 @@ auto call_my_framework(cpp2::in<const char *> msg) -> void;
 
 #line 5 "mixed-lifetime-safety-and-null-contracts.cpp2"
 
-auto main() -> int{
+auto cpp2__main() -> void{
     cpp2::Null.set_handler(&call_my_framework);
     try_pointer_stuff();
     std::cout << "done\n";
 }
+CPP2_MAIN_VOID_NO_ARGS
 #line 14 "mixed-lifetime-safety-and-null-contracts.cpp2"
 
 auto try_pointer_stuff() -> void{

@@ -11,7 +11,7 @@ auto test_generic(auto const& x) -> void;
 
 #line 1 "pure2-inspect-generic-void-empty-with-variant-any-optional.cpp2"
 
-auto main() -> int{
+auto cpp2__main() -> void{
     std::unique_ptr<int> p {  }; 
     std::vector<int>::iterator i {  }; 
     std::variant<std::monostate,int,std::string> v {  }; 
@@ -26,7 +26,7 @@ auto main() -> int{
     test_generic(a);
     test_generic(o);
 }
-
+CPP2_MAIN_VOID_NO_ARGS
 auto test_generic(auto const& x) -> void{
     std::cout 
         << "\n" << typeid(x).name() << "\n    ..." 

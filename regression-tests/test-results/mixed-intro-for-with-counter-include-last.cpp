@@ -13,7 +13,7 @@
 
 #line 1 "mixed-intro-for-with-counter-include-last.cpp2"
 
-auto main() -> int
+auto cpp2__main() -> void
 {
     std::vector<int> v { 1, 2, 3, 4, 5 }; 
     auto counter { 42 }; 
@@ -21,3 +21,5 @@ auto main() -> int
         std::cout << i << " " << counter << "\n";
     } while (false); counter *= 2; }
 }
+CPP2_MAIN_VOID_NO_ARGS
+

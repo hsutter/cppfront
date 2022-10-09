@@ -15,7 +15,7 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
 
 #line 1 "pure2-type-safety-1.cpp2"
 
-auto main() -> int
+auto cpp2__main() -> void
 {
     std::variant<int,double> v { 42.0 }; 
     std::any a { "xyzzy" }; 
@@ -36,7 +36,7 @@ auto main() -> int
     test_generic(a);
     test_generic(o);
 }
-
+CPP2_MAIN_VOID_NO_ARGS
 auto test_generic(auto const& x) -> void{
     std::string msg { typeid(x).name() }; 
     msg += " is int? ";

@@ -16,7 +16,7 @@ fill: (
     x = value.substr(0, count);
 }
 
-main: () -> int =
+main: () =
 {
     x: std::string;         // note: uninitialized!
 

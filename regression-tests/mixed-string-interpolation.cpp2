@@ -5,7 +5,7 @@
 
 struct custom_struct_with_no_stringize_customization { } custom;
 
-main: () -> int = {
+main: () = {
     a := 2;
     b: std::optional<int> = ();
     std::cout << "a = (a)$, b = (b)$\n";
