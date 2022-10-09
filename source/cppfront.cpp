@@ -631,6 +631,15 @@ class cppfront
         //  special value - hack for now to note single-anon-return type kind in this function_returns working list
     std::vector<std::string>                      function_requires_conditions;
 
+    std::vector<bool>                             need_expression_list_parens = { true };
+    auto push_need_expression_list_parens( bool b ) -> void { need_expression_list_parens.push_back(b);            }
+    auto pop_need_expression_list_parens()          -> void { assert(std::ssize(need_expression_list_parens) > 1);
+                                                              need_expression_list_parens.pop_back();              }
+    auto should_add_expression_list_parens()        -> bool { assert(!need_expression_list_parens.empty());
+                                                              return need_expression_list_parens.back();           }
+    auto consumed_expression_list_parens()          -> void { if( std::ssize(need_expression_list_parens) > 1 )
+                                                                  need_expression_list_parens.back() = false;      }
+
 public:
     //-----------------------------------------------------------------------
     //  Constructor
@@ -1677,7 +1686,9 @@ public:
             //  Then tack on any additional arguments
             if (!n.ops[1].expr_list->expressions.empty()) {
                 printer.print_cpp2(", ", n.position());
+                push_need_expression_list_parens(false);
                 emit(*n.ops[1].expr_list);
+                pop_need_expression_list_parens();
             }
             printer.print_cpp2(")", n.position());
 
@@ -1773,7 +1784,9 @@ public:
                 if (i->expr_list) {
                     auto text = std::vector<text_with_pos>{};
                     printer.emit_to_text_chunks(&text);
+                    push_need_expression_list_parens(false);
                     emit(*i->expr_list);
+                    pop_need_expression_list_parens();
                     printer.emit_to_text_chunks();
                     for (auto&& e: text) {
                         suffix.push_back(e);
@@ -1971,6 +1984,10 @@ public:
     //
     auto emit(expression_list_node const& n) -> void
     {
+        if (should_add_expression_list_parens() && !n.expressions.empty()) {
+            printer.print_cpp2("(", n.position());
+        }
+
         auto first = true;
         for (auto const& x : n.expressions) {
             if (!first) {
@@ -2000,6 +2017,12 @@ public:
                 printer.print_cpp2(")", n.position());
             }
         }
+
+        if (should_add_expression_list_parens() && !n.expressions.empty()) {
+            printer.print_cpp2(")", n.position());
+        }
+        //  We want to consume only one of these
+        consumed_expression_list_parens();
     }
 
 
@@ -2519,7 +2542,6 @@ public:
             printer.print_cpp2( " ", n.position());
             assert(n.identifier);
             emit(*n.identifier);
-            //printer.print_cpp2( *n.identifier->identifier, n.position() );
 
             //  If there's an initializer, emit it
             if (n.initializer)
@@ -2527,8 +2549,10 @@ public:
                 printer.add_pad_in_this_line(-100);
                 printer.print_cpp2( " { ", n.position() );
 
+                push_need_expression_list_parens(false);
                 assert( n.initializer );
                 emit( *n.initializer, false );
+                pop_need_expression_list_parens();
 
                 printer.print_cpp2( " }", n.position() );
             }

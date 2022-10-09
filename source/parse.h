@@ -255,11 +255,11 @@ auto to_string_view(passing_style pass) -> std::string_view {
 
 struct expression_list_node
 {
-    source_position open_paren  = {};   // TODO: these should probably be in primary_expression_node
+    source_position open_paren  = {};
     source_position close_paren = {};
 
     struct term {
-        passing_style                    pass = {}; // for `out`
+        passing_style                    pass = {};
         std::unique_ptr<expression_node> expr;
     };
     std::vector< term > expressions;
@@ -269,10 +269,6 @@ struct expression_list_node
         //  Make sure this got set
         assert (open_paren != source_position());
         return open_paren;
-
-        //  TODO this could be removed now that we're tracking position via open_paren
-        //assert (std::ssize(expressions) > 0 && expressions.front().expr);
-        //return expressions.front().expr->position();
     }
 
     auto visit(auto& v, int depth) -> void
@@ -1765,8 +1761,8 @@ private:
     //G     template-argument-list , template-argument
     //G
     //G template-argument:
-    //G     expression
     //G     id-expression
+    //G     expression
     //G
     auto unqualified_id() -> std::unique_ptr<unqualified_id_node>
     {
@@ -2480,7 +2476,6 @@ private:
         }
         next();
         auto s = std::unique_ptr<statement_node>();
-
 
         while (curr().type() != lexeme::RightBrace) {
             auto s = statement(true);

@@ -1,0 +1,10 @@
+#include <vector>
+
+template<bool>
+auto f(auto, auto) -> void { }
+
+main: () -> int = {
+    v : std::vector<int> = ( 1, 2, 3 );
+    std::cout << (1+2)*(3+v[0]);
+    f<(1>2)>(3,4);
+}
