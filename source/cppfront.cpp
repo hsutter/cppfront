@@ -120,13 +120,14 @@ struct text_with_pos{
 class positional_printer
 {
     //  Core information
-    std::ofstream               out       = {};     // Cpp1 syntax output file
-    std::string                 filename  = {};
-    std::vector<comment> const* pcomments = {};     // Cpp2 comments data
+    std::ofstream               out           = {}; // Cpp1 syntax output file
+    std::string                 cpp2_filename = {};
+    std::string                 cpp1_filename = {};
+    std::vector<comment> const* pcomments     = {}; // Cpp2 comments data
 
-    source_position curr_pos            = {};       // current (line,col) in output
-    int             next_comment        = 0;        // index of the next comment not yet printed
-    bool            last_was_cpp2       = false;
+    source_position curr_pos                  = {}; // current (line,col) in output
+    int             next_comment              = 0;  // index of the next comment not yet printed
+    bool            last_was_cpp2             = false;
 
     struct req_act_info {
         colno_t requested;
@@ -235,7 +236,7 @@ class positional_printer
 
         //  Not using print() here because this is transparent to the curr_pos
         if (!flag_clean_cpp1) {
-            out << "#line " << line << " " << std::quoted(filename + "2") << "\n";
+            out << "#line " << line << " " << std::quoted(cpp2_filename) << "\n";
         }
     }
 
@@ -324,14 +325,16 @@ public:
     //  Open
     //
     auto open(
-        std::string                 cpp1_filename,
+        std::string                 cpp2_filename_,
+        std::string                 cpp1_filename_,
         std::vector<comment> const& comments
     )
         -> void
     {
+        cpp2_filename = cpp2_filename_;
         assert (!out.is_open() && !pcomments && "ICE: tried to call .open twice");
-        filename = cpp1_filename;
-        out.open(filename);
+        cpp1_filename = cpp1_filename_;
+        out.open(cpp1_filename);
         pcomments = &comments;
     }
 
@@ -352,7 +355,7 @@ public:
             return;
         }
         out.close();
-        std::remove(filename.c_str());
+        std::remove(cpp1_filename.c_str());
     }
 
 
@@ -730,6 +733,7 @@ public:
             cpp1_filename = flag_cpp1_filename; // use override if present
         }
         printer.open(
+            sourcefile,
             cpp1_filename,
             tokens.get_comments()
         );
