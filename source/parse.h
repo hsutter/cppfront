@@ -2357,14 +2357,15 @@ private:
 
 
     //G statement:
-    //G     expression-statement
-    //G     compound-statement
+    //G     let parameter-list statement
     //G     selection-statement
-    //G     declaration-statement
+    //G     inspect-expression
     //G     return-statement
     //G     iteration-statement
-    //G     inspect-expression
-    //G     let parameter-list statement
+    //G     compound-statement
+    //G     declaration-statement
+    //G     expression-statement
+    //G     contract
     //
     //GTODO     jump-statement
     //GTODO     try-block
