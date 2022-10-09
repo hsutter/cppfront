@@ -1761,8 +1761,8 @@ private:
     //G     template-argument-list , template-argument
     //G
     //G template-argument:
-    //G     id-expression
     //G     expression
+    //G     id-expression
     //G
     auto unqualified_id() -> std::unique_ptr<unqualified_id_node>
     {
@@ -1804,11 +1804,11 @@ private:
             unqualified_id_node::term term;
 
             do {
-                if (auto i = id_expression()) {
-                    term.arg = std::move(i);
-                }
-                else if (auto e = expression(false)) {  // disallow relational comparisons in template args
+                if (auto e = expression(false)) {   // disallow unparenthesized relational comparisons in template args
                     term.arg = std::move(e);
+                }
+                else if (auto i = id_expression()) {
+                    term.arg = std::move(i);
                 }
                 else {
                     back_out_template_arg_list();
