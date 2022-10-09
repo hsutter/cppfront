@@ -627,7 +627,7 @@ auto lex_line(
             //G     !=
             break;case '!':
                 if (peek1 == '=') { store(2, lexeme::NotEqualComparison); }
-                //else { store(1, lexeme::Not); }
+                else { store(1, lexeme::Not); }
 
             //G     ... .
             break;case '.':
