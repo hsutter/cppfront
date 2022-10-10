@@ -1980,7 +1980,9 @@ public:
     auto emit(expression_node const& n) -> void
     {
         assert(n.expr);
+        push_need_expression_list_parens(true);
         emit(*n.expr);
+        pop_need_expression_list_parens();
     }
 
 
