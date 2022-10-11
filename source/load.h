@@ -203,6 +203,7 @@ auto process_cpp_line(
     bool&               in_comment,
     bool&               in_string_literal,
     bool&               in_raw_string_literal,
+    std::string&        d_char_sequence,
     std::vector<int>&   brace_depth,
     lineno_t            lineno,
     std::vector<error>& errors
@@ -242,8 +243,11 @@ auto process_cpp_line(
             }
         }
         else if (in_raw_string_literal) {
+            auto d_char_seq_len = d_char_sequence.size();
             switch (line[i]) {
-                break;case '\"': if (prev == ')') { in_raw_string_literal = false; }
+                break;case '\"': if ( i > d_char_seq_len && peek(-d_char_seq_len-1) == ')') { 
+                    in_raw_string_literal = (d_char_sequence != line.substr(i-d_char_seq_len, d_char_seq_len)); 
+                }
                 break;default: ;
             }
         }
@@ -252,9 +256,14 @@ auto process_cpp_line(
             r.all_rawstring_line = false;
             switch (line[i]) {
                 break;case 'R':
-                    if (!in_comment && !in_string_literal && !in_raw_string_literal && peek(1) == '"' && peek(2) == '(') {
-                        in_raw_string_literal = true;
+                    if (!in_comment && !in_string_literal && !in_raw_string_literal && peek(1) == '"') {
                         i+=2;
+                        if (i < ssize(line) - 1) {
+                            if (auto paren_pos = line.find("(", i); paren_pos != std::string::npos) {
+                                d_char_sequence = line.substr(i, paren_pos-i);
+                                in_raw_string_literal = true;
+                            }
+                        }
                     }
                     
                 break;case '\"':
@@ -453,6 +462,8 @@ public:
         auto in_comment        = false;
         auto in_string_literal = false;
         auto in_raw_string_literal = false;
+        std::string d_char_sequence;
+
         auto brace_depth = std::vector<int>();
 
         while (in.getline(&buf[0], max_line_len)) {
@@ -522,6 +533,7 @@ public:
                             in_comment,
                             in_string_literal,
                             in_raw_string_literal,
+                            d_char_sequence,
                             brace_depth,
                             std::ssize(lines) - 1,
                             errors
