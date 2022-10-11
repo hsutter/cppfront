@@ -257,6 +257,7 @@ struct expression_list_node
 {
     source_position open_paren  = {};
     source_position close_paren = {};
+    bool inside_initializer     = false;
 
     struct term {
         passing_style                    pass = {};
@@ -1317,9 +1318,10 @@ private:
 
         if (curr().type() == lexeme::LeftParen)
         {
+            bool inside_initializer = (peek(-1)->type() == lexeme::Assignment);
             auto open_paren = curr().position();
             next();
-            auto expr_list = expression_list(open_paren);
+            auto expr_list = expression_list(open_paren, inside_initializer);
             if (!expr_list) {
                 error("unexpected text - ( is not followed by an expression-list");
                 next();
@@ -1704,10 +1706,11 @@ private:
     //G     expression
     //G     expression-list , expression
     //G
-    auto expression_list(source_position open_paren) -> std::unique_ptr<expression_list_node> {
+    auto expression_list(source_position open_paren, bool inside_initializer = false) -> std::unique_ptr<expression_list_node> {
         auto pass = passing_style::in;
         auto n = std::make_unique<expression_list_node>();
         n->open_paren = open_paren;
+        n->inside_initializer = inside_initializer;
 
         if (curr().type() == lexeme::Identifier && curr() == "out") {
             pass = passing_style::out;
