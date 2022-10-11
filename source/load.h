@@ -459,8 +459,8 @@ public:
             return false;
         }
 
-        auto in_comment        = false;
-        auto in_string_literal = false;
+        auto in_comment            = false;
+        auto in_string_literal     = false;
         auto in_raw_string_literal = false;
         std::string d_char_sequence;
 
