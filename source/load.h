@@ -243,13 +243,12 @@ auto process_cpp_line(
             }
         }
         else if (in_raw_string_literal) {
-            auto d_char_seq_len = d_char_sequence.size();
-            switch (line[i]) {
-                break;case '\"': if ( i > d_char_seq_len && peek(-d_char_seq_len-1) == ')') { 
-                    in_raw_string_literal = (d_char_sequence != line.substr(i-d_char_seq_len, d_char_seq_len)); 
-                }
-                break;default: ;
+            auto end_pos = line.find(d_char_sequence, i);
+            if (end_pos == std::string::npos) {
+                return r;
             }
+            in_raw_string_literal = false;
+            i = end_pos+d_char_sequence.size()-1;
         }
         else {
             r.all_comment_line = false;
@@ -260,7 +259,7 @@ auto process_cpp_line(
                         i+=2;
                         if (i < ssize(line) - 1) {
                             if (auto paren_pos = line.find("(", i); paren_pos != std::string::npos) {
-                                d_char_sequence = line.substr(i, paren_pos-i);
+                                d_char_sequence = ")"+line.substr(i, paren_pos-i)+"\"";
                                 in_raw_string_literal = true;
                             }
                         }
