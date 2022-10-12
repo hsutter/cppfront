@@ -203,7 +203,7 @@ auto process_cpp_line(
     bool&               in_comment,
     bool&               in_string_literal,
     bool&               in_raw_string_literal,
-    std::string&        d_char_sequence,
+    std::string&        raw_string_closing_seq,
     std::vector<int>&   brace_depth,
     lineno_t            lineno,
     std::vector<error>& errors
@@ -243,12 +243,12 @@ auto process_cpp_line(
             }
         }
         else if (in_raw_string_literal) {
-            auto end_pos = line.find(d_char_sequence, i);
+            auto end_pos = line.find(raw_string_closing_seq, i);
             if (end_pos == std::string::npos) {
                 return r;
             }
             in_raw_string_literal = false;
-            i = end_pos+d_char_sequence.size()-1;
+            i = end_pos+raw_string_closing_seq.size()-1;
         }
         else {
             r.all_comment_line = false;
@@ -259,7 +259,7 @@ auto process_cpp_line(
                         i+=2;
                         if (i < ssize(line) - 1) {
                             if (auto paren_pos = line.find("(", i); paren_pos != std::string::npos) {
-                                d_char_sequence = ")"+line.substr(i, paren_pos-i)+"\"";
+                                raw_string_closing_seq = ")"+line.substr(i, paren_pos-i)+"\"";
                                 in_raw_string_literal = true;
                             }
                         }
@@ -461,7 +461,7 @@ public:
         auto in_comment            = false;
         auto in_string_literal     = false;
         auto in_raw_string_literal = false;
-        std::string d_char_sequence;
+        std::string raw_string_closing_seq;
 
         auto brace_depth = std::vector<int>();
 
@@ -532,7 +532,7 @@ public:
                             in_comment,
                             in_string_literal,
                             in_raw_string_literal,
-                            d_char_sequence,
+                            raw_string_closing_seq,
                             brace_depth,
                             std::ssize(lines) - 1,
                             errors
