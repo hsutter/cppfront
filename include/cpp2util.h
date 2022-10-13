@@ -548,6 +548,14 @@ auto is( X const& x ) -> bool {
     return x == X();
 }
 
+template< auto value, typename X >
+auto is( X const& x ) -> bool {
+    if constexpr (std::is_convertible_v<decltype(value),X>) {
+        return x == value;
+    } else {
+        return false;
+    }
+}
 
 //-------------------------------------------------------------------------------------------------------------
 //  Built-in as (partial)
