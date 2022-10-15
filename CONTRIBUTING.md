@@ -1,12 +1,7 @@
 
-## Contributing to cppfront
+This is the contributor license agreement. If you are looking for the usage license, see here: [usage license](https://github.com/hsutter/cppfront/blob/main/LICENSE)
 
-cppfront is a personal experimental project of Herb Sutter.
-
-At this time, the license is limited to non-commercial use and no distributed forks/derivatives please.
-
-
-## Contributor License Agreement
+## cppfront Contributor License Agreement
 
 By contributing content to cppfront (i.e., submitting a pull request for inclusion in this repository):
 - You warrant that your material is original, or you have the right to contribute it.
