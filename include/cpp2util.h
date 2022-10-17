@@ -615,6 +615,94 @@ auto is( X const& x ) -> bool {
     return x == X();
 }
 
+//-------------------------------------------------------------------------------------------------------------
+//  Built-in is (literals)
+//
+
+template< auto value, typename X, typename V = CPP2_TYPEOF(value)>
+    // This requires are needed for gcc compiler to avoid ambiguity when value is double
+    requires (
+        (std::floating_point<V> && !std::floating_point<X>) ||
+        (std::integral<V> && !std::integral<X>) ||
+        (std::is_enum_v<V> && !std::is_same_v<V, X> )
+    )
+constexpr auto is( X const& x ) -> bool {
+    return false;
+}
+
+template< auto value, typename X >
+    requires (std::is_enum_v<CPP2_TYPEOF(value)> && std::is_same_v<X,CPP2_TYPEOF(value)>)
+constexpr auto is( X const& x ) -> bool {
+    return x == value;
+}
+
+template< auto value, typename X >
+    requires std::integral<CPP2_TYPEOF(value)> && std::integral<X>
+constexpr auto is( X const& x ) -> bool {
+    return x == value;
+}
+
+// Workaroud for lack of support for floating point template argument by clang and MSVC
+struct double_wrapper {
+    double value = {};
+
+    template <typename T>
+        requires std::is_floating_point_v<T>
+    constexpr double_wrapper(T d) : value(d) {}
+
+    constexpr operator double() const {
+        return value;
+    }
+
+    template <typename T>
+    constexpr bool operator==(T rhs) const {
+        return value == rhs;
+    }
+};
+
+// This is needed to solve some issue with clang - probably clang bug.
+// Without it clang is not able to match with default specialisation:
+// template< auto value, typename X > auto is( X const& x ) -> bool;
+#if defined(__clang__)
+
+template< double_wrapper value, typename X >
+constexpr auto is( X const& x ) -> bool {
+    if constexpr (std::is_floating_point_v<X>)
+        return x == value;
+    else
+        return false;
+}
+
+#else
+
+template< double_wrapper value, typename X >
+    requires std::is_floating_point_v<X>
+constexpr auto is( X const& x ) -> bool {
+        return x == value;
+}
+
+#endif
+
+template <auto N>
+struct cstring_wrapper {
+    char cs[N];
+
+    constexpr cstring_wrapper(const char (&s)[N]) noexcept {
+        std::copy(s, s+N, cs);
+    }
+
+    constexpr bool operator==(const std::string_view& sv) const noexcept {
+        return std::equal(cs, cs+N-1, sv.begin(), sv.end()); // N-1 as sv is not null-terminated
+    }
+};
+
+template< cstring_wrapper value, typename X >
+constexpr auto is( X const& x ) -> bool {
+    if constexpr (std::is_convertible_v<X, std::string_view>)
+        return value == x;
+    else
+        return false;
+}
 
 //-------------------------------------------------------------------------------------------------------------
 //  Built-in as (partial)
