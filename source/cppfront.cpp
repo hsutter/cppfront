@@ -1980,7 +1980,9 @@ public:
     auto emit(expression_node const& n) -> void
     {
         assert(n.expr);
+        push_need_expression_list_parens(true);
         emit(*n.expr);
+        pop_need_expression_list_parens();
     }
 
 
@@ -1988,7 +1990,7 @@ public:
     //
     auto emit(expression_list_node const& n) -> void
     {
-        if (should_add_expression_list_parens() && !n.expressions.empty()) {
+        if (should_add_expression_list_parens() && !n.expressions.empty() && !n.inside_initializer) {
             printer.print_cpp2("(", n.position());
         }
 
@@ -2022,7 +2024,7 @@ public:
             }
         }
 
-        if (should_add_expression_list_parens() && !n.expressions.empty()) {
+        if (should_add_expression_list_parens() && !n.expressions.empty() && !n.inside_initializer) {
             printer.print_cpp2(")", n.position());
         }
         //  We want to consume only one of these
