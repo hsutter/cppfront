@@ -871,6 +871,26 @@ template<typename T, typename U>
 constexpr auto is( std::optional<U> const& x ) -> bool
     { return !x.has_value(); }
 
+template<auto value, typename T>
+constexpr auto is_impl( std::optional<T> const& x ) -> bool {
+    if ( x.has_value() )
+        return cpp2::is<value>(x.value());
+    else
+        return false;
+}
+
+template<auto value, typename T>
+constexpr auto is( std::optional<T> const& x ) -> bool
+    { return cpp2::is_impl<value>(x); }
+
+template<cstring_wrapper value, typename T>
+constexpr auto is( std::optional<T> const& x ) -> bool
+    { return cpp2::is_impl<value>(x); }
+
+template<double_wrapper value, typename T>
+constexpr auto is( std::optional<T> const& x ) -> bool
+    { return cpp2::is_impl<value>(x); }
+
 template<typename T, typename X>
     requires std::is_same_v<X,std::optional<T>>
 constexpr auto as( X const& x ) -> auto&&
