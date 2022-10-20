@@ -653,57 +653,38 @@ auto as( X const* x ) -> C const* {
 //-------------------------------------------------------------------------------------------------------------
 //  std::variant is and as
 //
-template<typename... Ts>
-constexpr auto operator_is( std::variant<Ts...> const& x ) {
-    return x.index();
-}
-
-template<size_t I, typename... Ts>
-constexpr auto operator_as( std::variant<Ts...> const& x ) -> auto&& {
-    if constexpr (I < std::variant_size_v<std::variant<Ts...>>) {
-        return std::get<I>( x );
-    }
-    else {
-        return nonesuch;
-    }
-}
 
 //  A helper for is...
 template <class T, class... Ts>
 inline constexpr auto is_any = std::disjunction_v<std::is_same<T, Ts>...>;
 
+template <typename T, typename... Types>
+inline constexpr std::ptrdiff_t count_t = ( std::ptrdiff_t{std::is_same_v<T, Types>} + ... );
+
 template<typename T, typename... Ts>
-auto is( std::variant<Ts...> const& x ) {
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<0>(x)), T >) if (x.index() == 0) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<1>(x)), T >) if (x.index() == 1) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<2>(x)), T >) if (x.index() == 2) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<3>(x)), T >) if (x.index() == 3) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<4>(x)), T >) if (x.index() == 4) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<5>(x)), T >) if (x.index() == 5) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<6>(x)), T >) if (x.index() == 6) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<7>(x)), T >) if (x.index() == 7) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<8>(x)), T >) if (x.index() == 8) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<9>(x)), T >) if (x.index() == 9) return true;
-    if constexpr (std::is_same_v< T, empty > ) {
-        if (x.valueless_by_exception()) return true;
-        //  Need to guard this with is_any otherwise the get_if is illegal
-        if constexpr (is_any<std::monostate, Ts...>) return std::get_if<std::monostate>(&x) != nullptr;
+constexpr auto is( std::variant<Ts...> const& x ) {
+    if constexpr (std::is_same_v< T, empty >) {
+        if constexpr (is_any<std::monostate, Ts...>) {
+            return std::holds_alternative<std::monostate>(x);
+        } else {
+            return x.valueless_by_exception();
+        }
+    } else {
+        // std::holds_alternative is ill-formed if T does not appear exactly once in Ts
+        if constexpr (count_t<T, Ts...> == 1) {
+            return std::holds_alternative<T>(x);
+        }
+        return false;
     }
-    return false;
 }
 
 template<typename T, typename... Ts>
-auto as( std::variant<Ts...> const& x ) {
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<0>(x)), T >) if (x.index() == 0) return operator_as<0>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<1>(x)), T >) if (x.index() == 1) return operator_as<1>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<2>(x)), T >) if (x.index() == 2) return operator_as<2>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<3>(x)), T >) if (x.index() == 3) return operator_as<3>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<4>(x)), T >) if (x.index() == 4) return operator_as<4>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<5>(x)), T >) if (x.index() == 5) return operator_as<5>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<6>(x)), T >) if (x.index() == 6) return operator_as<6>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<7>(x)), T >) if (x.index() == 7) return operator_as<7>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<8>(x)), T >) if (x.index() == 8) return operator_as<8>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<9>(x)), T >) if (x.index() == 9) return operator_as<9>(x);
+constexpr auto as( std::variant<Ts...> const& x ) {
+    // std::holds_alternative is ill-formed if T does not appear exactly once in Ts
+    if constexpr (count_t<T, Ts...> == 1) {
+        if (std::holds_alternative<T>(x))
+            return std::get<T>(x);
+    }
     throw std::bad_variant_access();
 }
 
