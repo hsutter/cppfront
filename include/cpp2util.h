@@ -813,6 +813,31 @@ auto as( std::variant<Ts...> const& x ) {
     throw std::bad_variant_access();
 }
 
+template< auto value, typename... Ts >
+constexpr auto is_impl( std::variant<Ts...> const& v ) -> bool {
+    if (v.valueless_by_exception()) return false;
+    //  Need to guard this with is_any otherwise the holds_alternative is illegal
+    if constexpr (is_any<std::monostate, Ts...>) if (std::holds_alternative<std::monostate>(v)) return false;
+
+    return std::visit([](auto&& arg) -> bool {
+        return cpp2::is<value>(CPP2_FORWARD(arg));
+    }, v);
+}
+
+template< auto value, typename... Ts >
+constexpr auto is( std::variant<Ts...> const& v ) -> bool {
+    return cpp2::is_impl<value>(v);
+}
+
+template< cstring_wrapper value, typename... Ts >
+constexpr auto is( std::variant<Ts...> const& v ) -> bool {
+    return cpp2::is_impl<value>(v);
+}
+
+template< double_wrapper value, typename... Ts >
+constexpr auto is( std::variant<Ts...> const& v ) -> bool {
+    return cpp2::is_impl<value>(v);
+}
 
 //-------------------------------------------------------------------------------------------------------------
 //  std::any is and as
