@@ -13,7 +13,7 @@ Cppfront is a experimental compiler from a potential C++ 'syntax 2' (Cpp2) to to
 - [How do I build cppfront?](#how-do-i-build-cppfront)
 - [How do I build my `.cpp2` file?](#how-do-i-build-my-cpp2-file)
 - [Where's the documentation?](#wheres-the-documentation)
-- [Papers and talks derived from this work (presented in today's syntax)](#papers-and-talks-derived-from-this-work-presented-in-today's-syntax)
+- [Papers and talks derived from this work (presented in today's syntax)](#papers-and-talks-derived-from-this-work-presented-in-todays-syntax)
 - [Epilog: 2016 roadmap diagram](#epilog-2016-roadmap-diagram)
 
 ## Goals and history
