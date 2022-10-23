@@ -668,6 +668,7 @@ struct alternative_node
     source_position                      equal_sign;
     std::unique_ptr<statement_node>      statement;
     token const*                         literal;
+    std::unique_ptr<expression_list_node> expr;
 
     auto position() const -> source_position
     {
@@ -2357,6 +2358,25 @@ private:
         else {
             error("expected id-expression or literal after 'is' in inspect alternative");
             return {};
+        }
+
+        if (curr().type() == lexeme::LeftParen) {
+            auto open_paren = curr().position();
+            next();
+            auto expr_list = expression_list(open_paren);
+            if (!expr_list) {
+                error("unexpected text - ( is not followed by an expression-list");
+                next();
+                return {};
+            }
+            if (curr().type() != lexeme::RightParen) {
+                error("unexpected text - expression-list is not terminated by )");
+                next();
+                return {};
+            }
+            expr_list->close_paren = curr().position();
+            next();
+            n->expr = std::move(expr_list);
         }
 
         if (curr().type() != lexeme::Assignment) {

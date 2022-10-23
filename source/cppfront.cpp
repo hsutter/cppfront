@@ -1283,10 +1283,16 @@ public:
             auto id = std::string{};
             printer.emit_to_string(&id);
             assert(alt->id_expression || alt->literal);
-            if (alt->id_expression)
+            if (alt->id_expression) {
                 emit(*alt->id_expression);
-            else if (alt->literal)
+                if (alt->expr) {
+                    push_need_expression_list_parens(true);
+                    emit(*alt->expr);
+                    pop_need_expression_list_parens();
+                }
+            } else if (alt->literal) {
                 emit(*alt->literal);
+            }
             printer.emit_to_string();
 
             assert (*alt->is_as_keyword == "is" || *alt->is_as_keyword == "as");
