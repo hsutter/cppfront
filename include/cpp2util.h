@@ -704,6 +704,31 @@ constexpr auto is( X const& x ) -> bool {
         return false;
 }
 
+template <typename F, typename Capture = std::monostate>
+    requires (
+        requires { &F::operator(); }
+    )
+struct lambda_wrapper {
+    F f;
+    Capture capture;
+
+    constexpr lambda_wrapper(F f, Capture capture = {})
+    : f{f}, capture{capture} {}
+
+    template <typename X>
+    auto operator()(X&& x) const {
+        if constexpr (std::is_same_v<Capture, std::monostate>)
+            return f(std::forward<X>(x));
+        else
+            return f(std::forward<X>(x), capture);
+    }
+};
+
+template< lambda_wrapper value, typename X >
+constexpr auto is( X const& x ) -> bool {
+    return value(x);
+}
+
 //-------------------------------------------------------------------------------------------------------------
 //  Built-in as (partial)
 //
