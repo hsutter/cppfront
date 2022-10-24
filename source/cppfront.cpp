@@ -1071,6 +1071,10 @@ public:
         assert(n.identifier);
         emit(*n.identifier);
 
+        for (auto _ : n.pointer_declarators) {
+            printer.print_cpp2("*", n.position());
+        }
+
         if (!n.template_args.empty()) {
             printer.print_cpp2("<", n.open_angle);
             auto first = true;
@@ -1572,9 +1576,19 @@ public:
                 auto& unqual = std::get<id_expression_node::unqualified>(id->id);
                 assert(unqual);
                 auto decl = sema.get_local_declaration_of(*unqual->identifier);
-                //  TODO: Generalize this -- for now we detect only cases of the form "p: *int = ...;"
-                //        We don't recognize pointer types that are deduced, multi-level, or from Cpp1
-                if (decl && decl->declaration && decl->declaration->pointer_declarator) {
+
+                bool is_pointer = false;
+                if (decl && decl->declaration) {
+                    if (auto* obj_id_expr = std::get_if<declaration_node::object>(&decl->declaration->type)) {
+                        if (auto* unqual = std::get_if<id_expression_node::unqualified>(&(*obj_id_expr)->id)){
+                            is_pointer = !(*unqual)->pointer_declarators.empty();
+                        }
+                    }
+                }
+
+                //  TODO: Generalize this -- for now we detect only multi-level cases of the form "p: ***int = ...;"
+                //        We don't recognize pointer types that are deduced or from Cpp1
+                if (!unqual->pointer_declarators.empty() || is_pointer) {
                     if (n.ops.empty()) {
                         last_postfix_expr_was_pointer = true;
                     }
@@ -2155,10 +2169,6 @@ public:
         }
         else {
             emit( id_expr );
-            if (n.declaration->pointer_declarator) {
-                printer.print_cpp2(" ", n.declaration->pointer_declarator->position());
-                emit(*n.declaration->pointer_declarator);
-            }
         }
 
         //  Then any suffix
@@ -2538,9 +2548,6 @@ public:
                 }
                 printer.preempt_position(n.position());
                 emit( *type );
-                if (n.pointer_declarator) {
-                    printer.print_cpp2("*", n.position());
-                }
                 //  one pointer is enough for now, pointer-to-function fun can be later
                 if (!n.initializer) {
                     printer.print_cpp2( ">", n.position() );

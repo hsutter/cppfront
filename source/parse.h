@@ -364,6 +364,7 @@ struct unqualified_id_node
 {
     token const* const_qualifier = {};  // optional
     token const* identifier      = {};  // required
+    std::vector<token const*> pointer_declarators = {}; // optional
 
     enum active { empty=0, expression, id_expression };
 
@@ -845,8 +846,6 @@ struct declaration_node
 {
     source_position pos;
     std::unique_ptr<unqualified_id_node> identifier;
-
-    token const* pointer_declarator = nullptr;
 
     enum active { function, object };
     std::variant<
@@ -1771,12 +1770,18 @@ private:
     {
         //  Handle the identifier
         if (curr().type() != lexeme::Identifier &&
-            curr().type() != lexeme::Keyword)   // 'const', and fundamental types that are keywords
+            curr().type() != lexeme::Keyword && // 'const', and fundamental types that are keywords
+            curr().type() != lexeme::Multiply ) // pointer declarators
         {
             return {};
         }
 
         auto n = std::make_unique<unqualified_id_node>();
+
+        while (curr().type() == lexeme::Multiply) {
+            n->pointer_declarators.push_back(&curr());
+            next();
+        }
 
         if (curr().type() == lexeme::Keyword && curr() == "const") {
             n->const_qualifier = &curr();
@@ -2784,6 +2789,7 @@ private:
     auto unnamed_declaration(source_position pos, bool semicolon_required = true, bool captures_allowed = false) -> std::unique_ptr<declaration_node>
     {
         auto deduced_type = false;
+        auto pointer_declaration = false;
 
         //  The next token must be :
         if (curr().type() != lexeme::Colon) {
@@ -2809,19 +2815,11 @@ private:
             n->type = std::move(t);
             assert (n->type.index() == declaration_node::function);
         }
-
-        //  Or a pointer to a type, declaring a pointer object
-        else if (curr().type() == lexeme::Multiply) {
-            n->pointer_declarator = &curr();
-            next();
-            if (auto t = id_expression()) {
-                n->type = std::move(t);
-                assert (n->type.index() == declaration_node::object);
-            }
-        }
-
         //  Or just a type, declaring a non-pointer object
         else if (auto t = id_expression()) {
+            if(auto* unqual = std::get_if<id_expression_node::unqualified>(&t->id)) {
+                pointer_declaration = !(*unqual)->pointer_declarators.empty();
+            }
             n->type = std::move(t);
             assert (n->type.index() == declaration_node::object);
         }
@@ -2866,7 +2864,7 @@ private:
             n->equal_sign = curr().position();
             next();
 
-            if (n->pointer_declarator) {
+            if (pointer_declaration) {
                 if (curr() == "nullptr" ||
                     isdigit(std::string_view(curr())[0]) ||
                     (curr() == "(" && peek(1) && *peek(1) == ")")
