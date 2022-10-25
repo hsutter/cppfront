@@ -1557,6 +1557,32 @@ public:
 
     //-----------------------------------------------------------------------
     //
+    auto is_it_pointer_declaration(declaration_sym const* decl, int deref_cnt = 0, int addr_cnt = 0) -> bool {
+        if (!decl || !decl->declaration)
+            return false;
+        if (addr_cnt>deref_cnt)
+            return true;
+
+        if (decl->declaration->dereference) {
+            auto deref = sema.get_local_declaration_of(*decl->declaration->dereference);
+            return is_it_pointer_declaration(deref, deref_cnt+decl->declaration->dereference_cnt, addr_cnt);
+        } else if (decl->declaration->address_of) {
+            auto addr = sema.get_local_declaration_of(*decl->declaration->address_of);
+            return is_it_pointer_declaration(addr, deref_cnt, addr_cnt+1);
+        }
+
+        int pointer_declarators_cnt = 0;
+        if (auto* obj_id_expr = std::get_if<declaration_node::object>(&decl->declaration->type)) {
+            if (auto* unqual = std::get_if<id_expression_node::unqualified>(&(*obj_id_expr)->id)){
+                pointer_declarators_cnt = std::ssize((*unqual)->pointer_declarators);
+            }
+        }
+
+        return (pointer_declarators_cnt + addr_cnt - deref_cnt) > 0;
+    };
+
+    //-----------------------------------------------------------------------
+    //
     auto emit(postfix_expression_node& n, bool for_lambda_capture = false) -> void
         // note: parameter is deliberately not const because we we will fill
         //       in the capture .str information, and we may also adjust token
@@ -1588,7 +1614,7 @@ public:
 
                 //  TODO: Generalize this -- for now we detect only multi-level cases of the form "p: ***int = ...;"
                 //        We don't recognize pointer types that are deduced or from Cpp1
-                if (!unqual->pointer_declarators.empty() || is_pointer) {
+                if (is_it_pointer_declaration(decl) || !unqual->pointer_declarators.empty() || is_pointer) {
                     if (n.ops.empty()) {
                         last_postfix_expr_was_pointer = true;
                     }

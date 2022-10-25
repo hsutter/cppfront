@@ -847,6 +847,10 @@ struct declaration_node
     source_position pos;
     std::unique_ptr<unqualified_id_node> identifier;
 
+    token const* dereference = nullptr;
+    int dereference_cnt = 0;
+    token const* address_of  = nullptr;
+
     enum active { function, object };
     std::variant<
         std::unique_ptr<function_type_node>,
@@ -2873,6 +2877,19 @@ private:
                     error("pointer cannot be initialized to null or int - leave it uninitialized and then set it to a non-null value when you have one");
                     violates_lifetime_safety = true;
                     throw std::runtime_error("null initialization detected");
+                }
+            }
+
+            if (deduced_type) {
+                if (peek(1)->type() == lexeme::Ampersand) {
+                    n->address_of  = &curr();
+                } 
+                else if (peek(1)->type() == lexeme::Multiply) {
+                    n->dereference = &curr();
+                    n->dereference_cnt = 1;
+                    while(peek(n->dereference_cnt+1)->type() == lexeme::Multiply) {
+                        n->dereference_cnt += 1;
+                    }
                 }
             }
 

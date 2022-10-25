@@ -1,0 +1,9 @@
+pure2-deduced-pointers.cpp2...
+pure2-deduced-pointers.cpp2(6,8): error: = - pointer assignment from null or integer is illegal
+pure2-deduced-pointers.cpp2(9,9): error: = - pointer assignment from null or integer is illegal
+pure2-deduced-pointers.cpp2(12,9): error: = - pointer assignment from null or integer is illegal
+pure2-deduced-pointers.cpp2(13,9): error: += - pointer assignment from null or integer is illegal
+pure2-deduced-pointers.cpp2(17,9): error: = - pointer assignment from null or integer is illegal
+pure2-deduced-pointers.cpp2(21,9): error: = - pointer assignment from null or integer is illegal
+  ==> program violates lifetime safety guarantee - see previous errors
+
