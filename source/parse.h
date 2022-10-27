@@ -693,6 +693,7 @@ struct statement_node
 {
     token const*                                     let;
     std::unique_ptr<parameter_declaration_list_node> let_params;
+    token const*                                     suspicious_initialization = nullptr;
 
     enum active { expression=0, compound, selection, declaration, return_, iteration, contract, inspect };
     std::variant<
@@ -2880,6 +2881,8 @@ private:
                 }
             }
 
+            token const* suspicious_initialization  = nullptr;
+
             if (deduced_type) {
                 if (peek(1)->type() == lexeme::Ampersand) {
                     n->address_of  = &curr();
@@ -2890,6 +2893,10 @@ private:
                     while(peek(n->dereference_cnt+1)->type() == lexeme::Multiply) {
                         n->dereference_cnt += 1;
                     }
+                } 
+                else if ((peek(1)->type() == lexeme::LeftParen && curr().type() != lexeme::Colon)
+                            || curr().type() == lexeme::Identifier ) {
+                    suspicious_initialization = &curr();
                 }
             }
 
@@ -2897,6 +2904,8 @@ private:
                 error("ill-formed initializer");
                 next();
                 return {};
+            } else {
+                n->initializer->suspicious_initialization = suspicious_initialization;
             }
         }
 

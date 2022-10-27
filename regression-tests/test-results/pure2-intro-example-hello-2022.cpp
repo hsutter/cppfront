@@ -19,7 +19,7 @@ auto println(auto const& x, auto const& len) -> void;
     std::span view { vec }; 
 
     for ( auto&& cpp2_range = view;  auto& str : cpp2_range ) {
-        auto len { decorate(str) }; 
+        auto len { cpp2::safety_check(decorate(str)) }; 
         println(str, len);
     }
 }

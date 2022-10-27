@@ -203,6 +203,7 @@
     #include <cstddef>
     #include <utility>
     #include <cstdio>
+    #include <span>
 
     #if defined(CPP2_USE_SOURCE_LOCATION)
         #include <source_location>
@@ -498,6 +499,135 @@ public:
 }(PARAM1)
 //--------------------------------------------------------------------
 
+//-----------------------------------------------------------------------
+//
+//  cpp2::safety_check() ensures that cpp1 pointers are also covered by safetychecks
+//
+//-----------------------------------------------------------------------
+//
+template <typename... Ts>
+inline constexpr auto program_violates_lifetime_safety_guarantee = sizeof...(Ts) < 0;
+
+template <typename T>
+    requires std::is_pointer_v<T>
+class safetychecked_pointer {
+    T ptr;
+public:
+
+    constexpr safetychecked_pointer(T ptr) : ptr{ptr} {}
+
+    constexpr operator T&() noexcept { return ptr; }
+
+    template <typename... Ts> void operator+  () const {static_assert(program_violates_lifetime_safety_guarantee<Ts...>, "pointer arithmetic is illegal - use std::span or gsl::span instead");}
+    template <typename... Ts> void operator-  () const {static_assert(program_violates_lifetime_safety_guarantee<Ts...>, "pointer arithmetic is illegal - use std::span or gsl::span instead");}
+    template <typename X> void operator+  (X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer arithmetic is illegal - use std::span or gsl::span instead");}
+    template <typename X> void operator-  (X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer arithmetic is illegal - use std::span or gsl::span instead");}
+    template <typename X> void operator*  (X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer arithmetic is illegal - use std::span or gsl::span instead");}
+    template <typename X> void operator/  (X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer arithmetic is illegal - use std::span or gsl::span instead");}
+    template <typename X> void operator%  (X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first");}
+    template <typename X> void operator^  (X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first");}
+    template <typename X> void operator&  (X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first");}
+    template <typename X> void operator|  (X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first");}
+
+    template <typename... Ts> void operator++ (Ts...) const {static_assert(program_violates_lifetime_safety_guarantee<Ts...>, "pointer arithmetic is illegal - use std::span or gsl::span instead");}
+    template <typename... Ts> void operator-- (Ts...) const {static_assert(program_violates_lifetime_safety_guarantee<Ts...>, "pointer arithmetic is illegal - use std::span or gsl::span instead");}
+    template <typename... Ts> void operator[] (Ts...) const {static_assert(program_violates_lifetime_safety_guarantee<Ts...>, "pointer arithmetic is illegal - use std::span or gsl::span instead");}
+    template <typename X> void operator+= (X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer arithmetic is illegal - use std::span or gsl::span instead");}
+    template <typename X> void operator-= (X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer arithmetic is illegal - use std::span or gsl::span instead");}
+    template <typename X> void operator*= (X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer arithmetic is illegal - use std::span or gsl::span instead");}
+    template <typename X> void operator/= (X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer arithmetic is illegal - use std::span or gsl::span instead");}
+
+    template <typename... Ts> void operator~  ()  const {static_assert(program_violates_lifetime_safety_guarantee<Ts...>, "pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first");}
+    template <typename    X > void operator%= (X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first");}
+    template <typename    X > void operator^= (X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first");}
+    template <typename    X > void operator&= (X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first");}
+    template <typename    X > void operator|= (X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first");}
+    template <typename    X > void operator<<=(X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first");}
+    template <typename    X > void operator>>=(X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first");}
+    template <typename    X > void operator<< (X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first");}
+    template <typename    X > void operator>> (X) const {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first");}
+
+    template <typename X > friend void operator+ (X, const safetychecked_pointer&)  {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer arithmetic is illegal - use std::span or gsl::span instead");}
+    template <typename X > friend void operator- (X, const safetychecked_pointer&)  {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer arithmetic is illegal - use std::span or gsl::span instead");}
+    template <typename X > friend void operator* (X, const safetychecked_pointer&)  {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer arithmetic is illegal - use std::span or gsl::span instead");}
+    template <typename X > friend void operator/ (X, const safetychecked_pointer&)  {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer arithmetic is illegal - use std::span or gsl::span instead");}
+    template <typename X > friend void operator% (X, const safetychecked_pointer&)  {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first");}
+    template <typename X > friend void operator^ (X, const safetychecked_pointer&)  {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first");}
+    template <typename X > friend void operator& (X, const safetychecked_pointer&)  {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first");}
+    template <typename X > friend void operator| (X, const safetychecked_pointer&)  {static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first");}
+
+
+    template <typename X>
+        requires (std::is_same_v<T,X> || std::is_base_of_v<T, X>)
+    constexpr safetychecked_pointer& operator=(X lhs) noexcept {
+        ptr = lhs;
+        return *this;
+    }
+
+    template <typename X>
+        requires std::is_same_v<std::nullptr_t,X>
+    constexpr void operator=(X lhs) noexcept { static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer assignment from null is illegal"); }
+
+    template <typename X>
+        requires std::is_integral_v<X>
+    constexpr void operator=(X lhs) noexcept { static_assert(program_violates_lifetime_safety_guarantee<X>, "pointer assignment from integer is illegal"); }
+
+    bool operator!() const { return !ptr; }
+
+    constexpr safetychecked_pointer<T*> operator&() noexcept { return &ptr; }
+
+    constexpr auto operator*() noexcept {
+        if constexpr (std::is_pointer_v<CPP2_TYPEOF(*ptr)>) {
+            return safetychecked_pointer<CPP2_TYPEOF(*ptr)>(*ptr);
+        } else {
+            return *ptr;
+        }
+    }
+
+    constexpr T operator->() const noexcept { return ptr; }
+};
+
+template <typename X>
+    requires ( !std::is_pointer_v<std::remove_cvref_t<X>>
+               && std::is_copy_constructible_v<X> )
+inline constexpr auto safety_check(X const& x) {
+    return x;
+}
+
+template <typename R, typename... Args>
+inline constexpr auto safety_check(R (&x)(Args...)) {
+    return x;
+}
+
+template <typename X>
+    requires std::is_rvalue_reference_v<X>
+inline constexpr decltype(auto) safety_check(X&& x) {
+    return std::forward<X>(x);
+}
+
+template <typename X>
+    requires (std::is_pointer_v<std::remove_cvref_t<X>> && !std::is_bounded_array_v<X>)
+inline constexpr auto safety_check(X const& x) {
+    return safetychecked_pointer(x);
+}
+
+template <typename X>
+    requires (!std::is_pointer_v<std::remove_cvref_t<X>> && !std::is_function_v<X> && !std::is_bounded_array_v<X>)
+inline constexpr auto& safety_check(X& x) {
+    return x;
+}
+
+template <typename X>
+    requires (!std::is_copy_constructible_v<X>)
+inline constexpr auto safety_check(X&& x) {
+    return std::forward<X>(x);
+}
+
+template <typename X>
+    requires std::is_bounded_array_v<X>
+inline constexpr auto safety_check(X const& x) {
+    return std::span(x);
+}
 
 //-----------------------------------------------------------------------
 //

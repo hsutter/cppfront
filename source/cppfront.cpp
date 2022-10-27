@@ -621,6 +621,7 @@ class cppfront
     bool violates_bounds_safety          = false;
     bool violates_initialization_safety  = false;
     bool suppress_move_from_last_use     = false;
+    bool needs_safetycheck               = false;
 
     //  For lowering
     //
@@ -1091,7 +1092,7 @@ public:
 
         in_definite_init = is_definite_initialization(n.identifier);
         if (!in_definite_init && !in_parameter_list) {
-            if (auto decl = sema.get_local_declaration_of(*n.identifier);
+            if (auto decl = sema.get_declaration_of(*n.identifier);
                 is_local_name &&
                 decl &&
                 //  note pointer equality: if we're not in the actual declaration of n.identifier
@@ -1564,10 +1565,10 @@ public:
             return true;
 
         if (decl->declaration->dereference) {
-            auto deref = sema.get_local_declaration_of(*decl->declaration->dereference);
+            auto deref = sema.get_declaration_of(*decl->declaration->dereference);
             return is_it_pointer_declaration(deref, deref_cnt+decl->declaration->dereference_cnt, addr_cnt);
         } else if (decl->declaration->address_of) {
-            auto addr = sema.get_local_declaration_of(*decl->declaration->address_of);
+            auto addr = sema.get_declaration_of(*decl->declaration->address_of);
             return is_it_pointer_declaration(addr, deref_cnt, addr_cnt+1);
         }
 
@@ -1590,6 +1591,7 @@ public:
     {
         assert(n.expr);
         last_postfix_expr_was_pointer = false;
+        bool add_safetycheck = false;
 
         //  Check that this isn't pointer arithmentic
         //      (initial partial implementation)
@@ -1601,7 +1603,7 @@ public:
             {
                 auto& unqual = std::get<id_expression_node::unqualified>(id->id);
                 assert(unqual);
-                auto decl = sema.get_local_declaration_of(*unqual->identifier);
+                auto decl = sema.get_declaration_of(*unqual->identifier, true);
 
                 bool is_pointer = false;
                 if (decl && decl->declaration) {
@@ -1612,8 +1614,8 @@ public:
                     }
                 }
 
-                //  TODO: Generalize this -- for now we detect only multi-level cases of the form "p: ***int = ...;"
-                //        We don't recognize pointer types that are deduced or from Cpp1
+                // if initialized by something suspicious (that we have no information about) we need to add cpp1 safety checks
+                add_safetycheck = !decl && needs_safetycheck;
                 if (is_it_pointer_declaration(decl) || !unqual->pointer_declarators.empty() || is_pointer) {
                     if (n.ops.empty()) {
                         last_postfix_expr_was_pointer = true;
@@ -1639,6 +1641,16 @@ public:
                     }
                 }
             }
+        }
+
+        std::shared_ptr<void> _on_return;
+
+        if (add_safetycheck) {
+            needs_safetycheck = false;
+            printer.print_cpp2("cpp2::safety_check(", n.position());
+            _on_return = [](auto l) { return std::shared_ptr<void>(nullptr, l); }([&](auto){
+                printer.print_cpp2(")", n.position());
+            });
         }
 
         //  Simple case: If there are no .ops, just emit the expression
@@ -2592,7 +2604,9 @@ public:
 
                 push_need_expression_list_parens(false);
                 assert( n.initializer );
+                needs_safetycheck = n.initializer->suspicious_initialization;
                 emit( *n.initializer, false );
+                needs_safetycheck = false;
                 pop_need_expression_list_parens();
 
                 printer.print_cpp2( " }", n.position() );
