@@ -291,7 +291,7 @@ auto inline Testing = contract_group(
 );
 
 constexpr auto contract_group::set_handler(handler h) -> handler {
-    Default.expects(h);
+    Default.expects(h != nullptr);
     auto old = reporter;
     reporter = h;
     return old;
@@ -850,19 +850,19 @@ public:
         , dtor{ [](void* x) { (void)(D)(x); } }
     { }
 
-    ~c_raii() { if (dtor) dtor(t); }
+    ~c_raii() { if (dtor != nullptr) dtor(t); }
 
     operator T&() { return t; }
 
     c_raii(c_raii const&)         = delete;
     auto operator=(c_raii const&) = delete;
-    c_raii(c_raii&& that)         : t  {std::move(that.t)}, dtor  {that.dtor} { that.dtor = nullptr; }
-    auto operator=(c_raii&& that) { t = std::move(that.t);  dtor = that.dtor;   that.dtor = nullptr; }
+    c_raii(c_raii&& that)         noexcept : t  {std::move(that.t)}, dtor  {that.dtor} { that.dtor = nullptr; }
+    auto operator=(c_raii&& that) noexcept { t = std::move(that.t);  dtor = that.dtor;   that.dtor = nullptr; }
 };
 
 inline auto fopen( const char* filename, const char* mode ) {
-    auto x = std::fopen(filename, mode);
-    if (!x) {
+    auto* x = std::fopen(filename, mode);
+    if (x == nullptr) {
         throw std::make_error_condition(std::errc::no_such_file_or_directory);
     }
     return c_raii( x, &fclose );
