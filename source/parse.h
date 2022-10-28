@@ -808,6 +808,7 @@ struct function_type_node
         std::unique_ptr<id_expression_node>,
         std::unique_ptr<parameter_declaration_list_node>
     > returns;
+    std::vector<token const*> returns_pointer_declarators;
 
     std::vector<std::unique_ptr<contract_node>> contracts;
 
@@ -2739,6 +2740,13 @@ private:
         if (curr().type() == lexeme::Arrow)
         {
             next();
+
+            if (curr().type() == lexeme::Multiply) {
+                while (curr().type() == lexeme::Multiply) {
+                    n->returns_pointer_declarators.push_back(&curr());
+                    next();
+                }
+            }
 
             if (auto t = id_expression()) {
                 auto is_void = false;

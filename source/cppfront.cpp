@@ -2338,6 +2338,9 @@ public:
             auto& r = std::get<function_type_node::id>(n.returns);
             assert(r);
             emit(*r);
+            for (auto _ : n.returns_pointer_declarators) {
+                printer.print_cpp2("*", n.position());
+            }
         }
 
         else {
