@@ -539,7 +539,7 @@ private:
                 if (sym.start && sym.identifier && *sym.identifier == *id) {
                     errors.emplace_back(
                         sym.identifier->position(),
-                        "local variable" + sym.identifier->to_string(true)
+                        "local variable " + sym.identifier->to_string(true)
                             + " cannot have the same name as an uninitialized"
                               " variable in the same function");
                 }
