@@ -291,7 +291,7 @@ auto inline Testing = contract_group(
 );
 
 constexpr auto contract_group::set_handler(handler h) -> handler {
-    Default.expects(h != nullptr);
+    Default.expects(h);
     auto old = reporter;
     reporter = h;
     return old;
@@ -850,7 +850,7 @@ public:
         , dtor{ [](void* x) { (void)(D)(x); } }
     { }
 
-    ~c_raii() { if (dtor != nullptr) dtor(t); }
+    ~c_raii() { if (dtor) dtor(t); }
 
     operator T&() { return t; }
 
@@ -862,7 +862,7 @@ public:
 
 inline auto fopen( const char* filename, const char* mode ) {
     auto* x = std::fopen(filename, mode);
-    if (x == nullptr) {
+    if (!x) {
         throw std::make_error_condition(std::errc::no_such_file_or_directory);
     }
     return c_raii( x, &fclose );
