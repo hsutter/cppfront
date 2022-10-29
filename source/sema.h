@@ -244,11 +244,11 @@ public:
 
         //  Then look backward to find the first declaration of
         //  this name that is not deeper (in a nested scope)
-        for ( ; i != symbols.cbegin(); --i )
+        for (auto ri = std::make_reverse_iterator(i+1); ri != symbols.crend(); ++ri )
         {
-            if (i->sym.index() == symbol::active::declaration && i->depth <= depth)
+            if (ri->sym.index() == symbol::active::declaration && ri->depth <= depth)
             {
-                auto const& decl = std::get<symbol::active::declaration>(i->sym);
+                auto const& decl = std::get<symbol::active::declaration>(ri->sym);
 
                 assert(decl.declaration);
                 if (
@@ -261,7 +261,7 @@ public:
                 if (decl.identifier && *decl.identifier == t) {
                     return &decl;
                 }
-                depth = i->depth;
+                depth = ri->depth;
             }
         }
 
