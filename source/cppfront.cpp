@@ -1568,6 +1568,37 @@ public:
         if (!decl || !decl->declaration)
             return addr_cnt > deref_cnt;
 
+        // if it is a function check if it returns pointer type
+        if (auto* fun = std::get_if<declaration_node::function>(&decl->declaration->type)) {
+            if (auto* ret_id_expr = std::get_if<function_type_node::id>(&(*fun)->returns)) {
+                if (auto* unqual = std::get_if<id_expression_node::unqualified>(&(*ret_id_expr)->id)){
+                    return is_it_pointer_declaration(*unqual, deref_cnt, addr_cnt);
+                }
+            }
+        }
+
+        // if it is an object declaration check if we declare an pointer type
+        if (auto* obj_id_expr = std::get_if<declaration_node::object>(&decl->declaration->type)) {
+            if (auto* unqual = std::get_if<id_expression_node::unqualified>(&(*obj_id_expr)->id)){
+                return is_it_pointer_declaration(*unqual, deref_cnt, addr_cnt);
+            }
+        }
+
+        // if we initialize an object with a function check if it is initialized with a pointer type
+        if (decl->initializer && decl->initializer->suspicious_initialization) {
+            auto init_decl = sema.get_declaration_of(*decl->initializer->suspicious_initialization, true);
+            if (init_decl && init_decl->declaration) {
+                if (auto* fun = std::get_if<declaration_node::function>(&init_decl->declaration->type)) {
+                    if (auto* ret_id_expr = std::get_if<function_type_node::id>(&(*fun)->returns)) {
+                        if (auto* unqual = std::get_if<id_expression_node::unqualified>(&(*ret_id_expr)->id)){
+                            return is_it_pointer_declaration(*unqual, deref_cnt, addr_cnt);
+                        }
+                    }
+                }
+            }
+        }
+
+        // deduce if it is a pointer type based on number of dereferences and address of operations
         if (decl->declaration->dereference) {
             auto deref = sema.get_declaration_of(*decl->declaration->dereference, true);
             assert(deref && deref->declaration);
@@ -1604,18 +1635,9 @@ public:
                 assert(unqual);
                 auto decl = sema.get_declaration_of(*unqual->identifier, true);
 
-                bool is_pointer = false;
-                if (decl && decl->declaration) {
-                    if (auto* obj_id_expr = std::get_if<declaration_node::object>(&decl->declaration->type)) {
-                        if (auto* unqual = std::get_if<id_expression_node::unqualified>(&(*obj_id_expr)->id)){
-                            is_pointer = !(*unqual)->pointer_declarators.empty();
-                        }
-                    }
-                }
-
                 // if initialized by something suspicious (that we have no information about) we need to add cpp1 safety checks
                 add_safetycheck = !decl && needs_safetycheck;
-                if (is_it_pointer_declaration(unqual) || !unqual->pointer_declarators.empty() || is_pointer) {
+                if (is_it_pointer_declaration(unqual)) {
                     if (n.ops.empty()) {
                         last_postfix_expr_was_pointer = true;
                     }

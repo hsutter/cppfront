@@ -1,3 +1,7 @@
+fun: (inout i:int) -> *int = {
+    return i&;
+}
+
 main: (argc : int, argv : **char) -> int = {
     a:     int = 2;
     pa:   *int = a&;
@@ -19,6 +23,9 @@ main: (argc : int, argv : **char) -> int = {
     pppa := ppa&;
     pa5 := pppa**;
     pa5 = 0;  // caught
+
+    ff := fun(a);
+    ff = 0; // caught?
 
     return a*pa**ppa**; // 8
 }
