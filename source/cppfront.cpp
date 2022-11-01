@@ -1558,28 +1558,27 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto is_it_pointer_declaration(declaration_sym const* decl, int deref_cnt = 0, int addr_cnt = 0) -> bool {
-        if (!decl || !decl->declaration)
+    auto is_it_pointer_declaration(std::unique_ptr<unqualified_id_node> const & unqual, int deref_cnt = 0, int addr_cnt = 0) -> bool {
+        if (!unqual)
             return false;
-        if (addr_cnt>deref_cnt)
+        if (!unqual->pointer_declarators.empty())
             return true;
+        auto decl = sema.get_declaration_of(*unqual->identifier, true);
+
+        if (!decl || !decl->declaration)
+            return addr_cnt > deref_cnt;
 
         if (decl->declaration->dereference) {
-            auto deref = sema.get_declaration_of(*decl->declaration->dereference);
-            return is_it_pointer_declaration(deref, deref_cnt+decl->declaration->dereference_cnt, addr_cnt);
+            auto deref = sema.get_declaration_of(*decl->declaration->dereference, true);
+            assert(deref && deref->declaration);
+            return is_it_pointer_declaration(deref->declaration->identifier, deref_cnt+decl->declaration->dereference_cnt, addr_cnt);
         } else if (decl->declaration->address_of) {
-            auto addr = sema.get_declaration_of(*decl->declaration->address_of);
-            return is_it_pointer_declaration(addr, deref_cnt, addr_cnt+1);
+            auto addr = sema.get_declaration_of(*decl->declaration->address_of, true);
+            assert(addr && addr->declaration);
+            return is_it_pointer_declaration(addr->declaration->identifier, deref_cnt, addr_cnt+1);
         }
 
-        int pointer_declarators_cnt = 0;
-        if (auto* obj_id_expr = std::get_if<declaration_node::object>(&decl->declaration->type)) {
-            if (auto* unqual = std::get_if<id_expression_node::unqualified>(&(*obj_id_expr)->id)){
-                pointer_declarators_cnt = std::ssize((*unqual)->pointer_declarators);
-            }
-        }
-
-        return (pointer_declarators_cnt + addr_cnt - deref_cnt) > 0;
+        return (std::ssize(unqual->pointer_declarators) + addr_cnt - deref_cnt) > 0;
     };
 
     //-----------------------------------------------------------------------
@@ -1616,26 +1615,32 @@ public:
 
                 // if initialized by something suspicious (that we have no information about) we need to add cpp1 safety checks
                 add_safetycheck = !decl && needs_safetycheck;
-                if (is_it_pointer_declaration(decl) || !unqual->pointer_declarators.empty() || is_pointer) {
+                if (is_it_pointer_declaration(unqual) || !unqual->pointer_declarators.empty() || is_pointer) {
                     if (n.ops.empty()) {
                         last_postfix_expr_was_pointer = true;
                     }
                     else
                     {
-                        if (n.ops.front().op->type() == lexeme::PlusPlus ||
-                            n.ops.front().op->type() == lexeme::MinusMinus ||
-                            n.ops.front().op->type() == lexeme::LeftBracket
-                            ) {
+                        auto op = [&](){
+                            if (n.ops.size() >= 2 && n.ops[0].op->type() == lexeme::LeftParen) {
+                                return n.ops[1].op;
+                            } else {
+                                return n.ops.front().op;
+                            }
+                        }();
+                        if (op->type() == lexeme::PlusPlus ||
+                            op->type() == lexeme::MinusMinus ||
+                            op->type() == lexeme::LeftBracket) {
                             errors.emplace_back(
-                                n.ops.front().op->position(),
-                                n.ops.front().op->to_string(true) + " - pointer arithmetic is illegal - use std::span or gsl::span instead"
+                                op->position(),
+                                op->to_string(true) + " - pointer arithmetic is illegal - use std::span or gsl::span instead"
                             );
                             violates_bounds_safety = true;
                         }
-                        else if (n.ops.front().op->type() == lexeme::Tilde) {
+                        else if (op->type() == lexeme::Tilde) {
                             errors.emplace_back(
-                                n.ops.front().op->position(),
-                                n.ops.front().op->to_string(true) + " - pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first"
+                                op->position(),
+                                op->to_string(true) + " - pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first"
                             );
                         }
                     }
@@ -1646,7 +1651,6 @@ public:
         std::shared_ptr<void> _on_return;
 
         if (add_safetycheck) {
-            needs_safetycheck = false;
             printer.print_cpp2("cpp2::safety_check(", n.position());
             _on_return = [](auto l) { return std::shared_ptr<void>(nullptr, l); }([&](auto){
                 printer.print_cpp2(")", n.position());
