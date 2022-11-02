@@ -1857,7 +1857,9 @@ public:
             }
         }
         assert(n.expr);
+        push_need_expression_list_parens(true);
         emit(*n.expr);
+        pop_need_expression_list_parens();
         printer.print_cpp2(suffix, n.position());
     }
 
