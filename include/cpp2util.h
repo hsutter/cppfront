@@ -578,6 +578,35 @@ static nonesuch_ nonesuch;
 using empty = void;
 
 
+//  Templates
+//
+template <template <typename...> class C, typename... Ts>
+constexpr auto is(C< Ts...> const& ) -> bool {
+    return true;
+}
+
+#if defined(_MSC_VER)
+    template <template <typename, typename...> class C, typename T>
+    constexpr auto is( T const& ) -> bool {
+        return false;
+    }
+#else
+    template <template <typename...> class C, typename T>
+    constexpr auto is( T const& ) -> bool {
+        return false;
+    }
+#endif
+
+template <template <typename,auto> class C, typename T, auto V>
+constexpr auto is( C<T, V> const& ) -> bool {
+    return true;
+}
+
+template <template <typename,auto> class C, typename T>
+constexpr auto is( T const& ) -> bool {
+    return false;
+}
+
 //  Types
 //
 template< typename C, typename X >
