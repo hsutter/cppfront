@@ -253,6 +253,7 @@ public:
                 assert(decl.declaration);
                 if (
                     decl.declaration->type.index() == declaration_node::function //  Don't look beyond the current function
+                    && decl.declaration->identifier // nullptr if lambda
                 ) {
                     return nullptr;
                 }
