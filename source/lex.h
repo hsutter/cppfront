@@ -445,8 +445,8 @@ auto lex_line(
         if (std::regex_search(&line[i], m, keys)) {
             assert (m.position(0) == 0);
             //  If we matched and what's next is EOL or a non-identifier char, we matched!
-            if (i+m[0].length() == line.length() ||             // EOL
-                !is_identifier_continue(line[i+m[0].length()])  // non-identifier char
+            if (i+m[0].length() == static_cast<ssize_t>(line.length()) ||    // EOL
+                !is_identifier_continue(line[i+m[0].length()])               // non-identifier char
                 )
             {
                 return (int)(m[0].length());;
@@ -726,6 +726,7 @@ auto lex_line(
                     }
                 }
             }
+            [[fallthrough]];
 
             // NO BREAK: we want 0 to fall through to numeric literal case
             // (this will be less kludgy to write with pattern matching)
