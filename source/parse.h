@@ -248,7 +248,7 @@ auto to_string_view(passing_style pass) -> std::string_view {
     break;case passing_style::out    : return "out";
     break;case passing_style::move   : return "move";
     break;case passing_style::forward: return "forward";
-    break;default:                     return "INVALID passing_tyle";
+    break;default:                     return "INVALID passing_style";
     }
 
 }
