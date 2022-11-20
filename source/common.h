@@ -396,7 +396,7 @@ public:
             }
             print("  -");
             auto n = flag.name.substr(0, flag.unique_prefix);
-            if (flag.unique_prefix < flag.name.length()) {
+            if (flag.unique_prefix < std::ssize(flag.name)) {
                 n += "[";
                 n += flag.name.substr(flag.unique_prefix);
                 n += "]";

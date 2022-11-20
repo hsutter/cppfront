@@ -1876,7 +1876,6 @@ private:
 
         //  Reject "std" :: "move" / "forward"
         assert (term.id->identifier);
-        auto first_uid_was_std = (*term.id->identifier == "std");
         auto first_time_through_loop = true;
 
         n->ids.push_back( std::move(term) );
@@ -2798,9 +2797,6 @@ private:
             ? make_unique<capture_groups_stack_guard>(this, &n->captures)
             : std::unique_ptr<capture_groups_stack_guard>()
             ;
-
-        //  Remember current position, because we need to look ahead
-        auto start_pos = pos;
 
         //  Next is an an optional type
 

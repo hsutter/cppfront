@@ -445,7 +445,7 @@ auto lex_line(
         if (std::regex_search(&line[i], m, keys)) {
             assert (m.position(0) == 0);
             //  If we matched and what's next is EOL or a non-identifier char, we matched!
-            if (i+m[0].length() == line.length() ||             // EOL
+            if (i+m[0].length() == std::ssize(line) ||          // EOL
                 !is_identifier_continue(line[i+m[0].length()])  // non-identifier char
                 )
             {

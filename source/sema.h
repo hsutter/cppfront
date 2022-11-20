@@ -209,7 +209,7 @@ class sema
 public:
     std::vector<error>&          errors;
     std::vector<symbol>          symbols;
-    std::vector<declaration_sym> partial_decl_stack;;
+    std::vector<declaration_sym> partial_decl_stack;
 
     std::vector<selection_statement_node const*> active_selections;
 
