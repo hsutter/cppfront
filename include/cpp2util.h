@@ -338,20 +338,20 @@ auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAU
 //
 struct {
     template<typename T>
-    [[nodiscard]] auto cpp2_new(auto ...args) const -> std::unique_ptr<T> {
+    [[nodiscard]] auto cpp2_new(auto&& ...args) const -> std::unique_ptr<T> {
         return std::make_unique<T>(std::forward<decltype(args)>(args)...);
     }
 } unique;
 
 struct {
     template<typename T>
-    [[nodiscard]] auto cpp2_new(auto ...args) const -> std::shared_ptr<T> {
+    [[nodiscard]] auto cpp2_new(auto&& ...args) const -> std::shared_ptr<T> {
         return std::make_shared<T>(std::forward<decltype(args)>(args)...);
     }
 } shared;
 
 template<typename T>
-[[nodiscard]] auto cpp2_new(auto ...args) -> std::unique_ptr<T> {
+[[nodiscard]] auto cpp2_new(auto&& ...args) -> std::unique_ptr<T> {
     return std::make_unique<T>(std::forward<decltype(args)>(args)...);
 }
 
