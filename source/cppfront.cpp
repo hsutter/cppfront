@@ -20,7 +20,7 @@
 #include <cstdio>
 
 #ifdef __cpp_lib_format
-#include <format>
+    #include <format>
 #endif
 
 namespace cpp2 {
@@ -923,9 +923,9 @@ public:
         auto ret = std::string{};   // the return string we're going to build or the format string
         auto current_start = 0;     // the current offset before which the string has been into ret
 
-#ifdef __cpp_lib_format
+        #ifdef __cpp_lib_format
 	    auto fmt_args = std::string{};  // arguments for std::format
-#endif
+        #endif
 
         //  Skip prefix to first non-" character
         while (pos < length && text[pos] != '"') {
@@ -1005,17 +1005,17 @@ public:
                 ret += text.substr(current_start, open - current_start);
                 ret += '"';
 
-#ifdef __cpp_lib_format
+                #ifdef __cpp_lib_format
                 //  Assemble the std::format format string and arguments
                 fmt_args += ", ";
                 fmt_args += text.substr(open, pos - open);
                 ret      += "  \"{}\"  ";
-#else
+                #else
                 //  Then put interpolated chunk into ret
                 ret += " + cpp2::to_string";
                 ret += text.substr(open, pos - open);
                 ret += " + ";
-#endif
+                #endif
 
                 current_start = pos+1;
             }
@@ -1030,12 +1030,12 @@ public:
         }
         ret += text.substr(current_start);
 
-#ifdef __cpp_lib_format
+        #ifdef __cpp_lib_format
         // If we have a format string, use std::format to obtain the result
         if (!fmt_args.empty()) {
             return "std::format(" + ret + fmt_args + ")";
         }
-#endif
+        #endif
 
         return ret;
     }
