@@ -193,6 +193,9 @@
     #include <string>
     #include <string_view>
     #include <iostream>
+    #ifdef __cpp_lib_format
+        #include <format>
+    #endif
     #include <variant>
     #include <any>
     #include <optional>
