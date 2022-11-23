@@ -758,6 +758,18 @@ inline auto to_string(...) -> std::string {
     return "(customize me - no cpp2::to_string overload exists for this type)";
 }
 
+#ifdef __cpp_lib_format
+
+// Use std::format if no specialization of std::to_string is available
+template<typename T>
+inline auto to_string(T const& t) -> std::string
+    requires (requires { !std::to_string(t) } && requires { std::format("{}", t); })
+{
+    return std::format("{}", t);
+}
+
+#endif
+
 template<typename T>
 inline auto to_string(T const& t) -> std::string
     requires requires { std::to_string(t); }
