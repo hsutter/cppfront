@@ -763,7 +763,7 @@ inline auto to_string(...) -> std::string {
 // Use std::format if no specialization of std::to_string is available
 template<typename T>
 inline auto to_string(T const& t) -> std::string
-    requires (requires { !std::to_string(t) } && requires { std::format("{}", t); })
+    requires (!requires { std::to_string(t); } && requires { std::format("{}", t); })
 {
     return std::format("{}", t);
 }
