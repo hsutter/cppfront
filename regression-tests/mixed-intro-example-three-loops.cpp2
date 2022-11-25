@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <span>
+#include <memory>
 
 auto print(auto const& thing) -> void { 
     std::cout << ">> " << thing << "\n";
