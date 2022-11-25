@@ -2670,10 +2670,11 @@ auto main(int argc, char* argv[]) -> int
 
     if (cmdline.arguments().empty()) {
         std::cout << "cppfront: error: no input files\n";
-        return 0;
+        return EXIT_FAILURE;
     }
 
     //  For each .cpp2 source file
+    int exit_status = EXIT_SUCCESS;
     for (auto const& arg : cmdline.arguments())
     {
         std::cout << arg.text << "...";
@@ -2701,6 +2702,7 @@ auto main(int argc, char* argv[]) -> int
             std::cout << "\n";
             c.print_errors();
             std::cout << "\n";
+            exit_status = EXIT_FAILURE;
         }
 
         //  In any case, emit the debug information (during early development this is
@@ -2709,4 +2711,5 @@ auto main(int argc, char* argv[]) -> int
             c.debug_print();
         }
     }
+    return exit_status;
 }
