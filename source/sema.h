@@ -250,9 +250,10 @@ public:
             {
                 auto const& decl = std::get<symbol::active::declaration>(i->sym);
 
-                //  Don't look beyond the current function
                 assert(decl.declaration);
-                if (decl.declaration->type.index() == declaration_node::function) {
+                if (
+                    decl.declaration->type.index() == declaration_node::function //  Don't look beyond the current function
+                ) {
                     return nullptr;
                 }
 
