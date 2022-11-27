@@ -2665,7 +2665,7 @@ auto main(int argc, char* argv[]) -> int
     cmdline.process_flags();
 
     if (cmdline.help_was_requested()) {
-        return 0;
+        return EXIT_SUCCESS;
     }
 
     if (cmdline.arguments().empty()) {
