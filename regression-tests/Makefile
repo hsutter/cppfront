@@ -16,7 +16,7 @@ NEGATIVE_TESTS = negative_tests
 
 BATS = $(shell which bats)
 ifeq (, $(BATS))
-	$(error "The 'bats' executble was not found. Try running: sudo apt-get install bats")
+$(error "The 'bats' executble was not found. Try running: sudo apt-get install bats")
 endif
 
 all:
