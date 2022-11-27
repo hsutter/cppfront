@@ -43,7 +43,16 @@
 #include <cuchar>
 #include <cwchar>
 #include <cwctype>
+#ifdef __cpp_lib_format
 #include <format>
+// The following should be done in an #elifdef for C++23.
+#else
+  #ifdef __linux__
+  #include <fmt/format.h>
+  #else
+  #include <format>
+  #endif
+#endif
 #include <string>
 #include <string_view>
 #include <array>

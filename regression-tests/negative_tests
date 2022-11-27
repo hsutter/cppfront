@@ -1,0 +1,7 @@
+mixed-initialization-safety-1 1
+mixed-initialization-safety-2 1
+mixed-lifetime-safety-pointer-init-2 1
+mixed-lifetime-safety-pointer-init-3 1
+pure2-bounds-safety-pointer-arithmetic-error 1
+pure2-lifetime-safety-pointer-init-1 1
+pure2-lifetime-safety-reject-null 1

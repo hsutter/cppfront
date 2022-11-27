@@ -1,0 +1,5 @@
+#!/usr/bin/env bats
+
+@test "${TEST_NAME}" {
+    diff -s -Z ${TEST_NAME}.cpp2 ${TEST_NAME}.cpp
+}

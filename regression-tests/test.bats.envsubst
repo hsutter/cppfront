@@ -1,0 +1,10 @@
+#!/usr/bin/env bats
+
+@test "${TEST_NAME}" {
+    run ${CPPFRONT} ${CPPFRONT_FLAGS} ${TEST_NAME}.cpp2
+    echo ${DOLLAR}output > ${RESULTS_DIR}/${TEST_NAME}.cpp2.output
+    if [ "${DOLLAR}status" -ne ${STATUS} ]; then
+        return 1
+    fi
+}
+
