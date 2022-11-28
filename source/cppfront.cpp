@@ -1264,7 +1264,7 @@ public:
                 auto return_prefix = std::string{};
                 auto return_suffix = std::string{";"};   // use this to tack the ; back on in the alternative body
                 if (is_expression) {
-                    return_prefix = "{ if constexpr( requires{" + statement + ";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(" + statement + ")," + result_type + "> ) return ";
+                    return_prefix = "{ if constexpr( requires{" + statement + ";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((" + statement + "))," + result_type + "> ) return ";
                     return_suffix += " }";
                 }
 
