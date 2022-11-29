@@ -1,0 +1,21 @@
+name: CI
+
+on: [pull_request]
+
+jobs:
+  verify-pr-linux:
+    name: 'Verify that merging PR #${{ github.event.number }} causes no regression (Linux)'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Run regression tests using GCC 10
+      run: |
+        cd regression-tests
+        bash run-tests.sh g++-10
+
+    - name: Run regression tests using Clang 12
+      run: |
+        cd regression-tests
+        bash run-tests.sh clang++-12
