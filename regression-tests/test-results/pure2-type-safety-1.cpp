@@ -39,7 +39,7 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
 }
 
 auto test_generic(auto const& x) -> void{
-    std::string msg { typeid(x).name() }; 
+    std::string msg { CPP2_UFCS_0(name, typeid(x)) }; 
     msg += " is int? ";
     print( msg, cpp2::is<int>(x));
 }

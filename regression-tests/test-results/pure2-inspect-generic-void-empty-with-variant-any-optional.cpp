@@ -30,7 +30,7 @@ auto test_generic(auto const& x) -> void;
 
 auto test_generic(auto const& x) -> void{
     std::cout 
-        << "\n" << typeid(x).name() << "\n    ..." 
+        << "\n" << CPP2_UFCS_0(name, typeid(x)) << "\n    ..." 
         << [&] () -> std::string { auto&& __expr = x;
             if (cpp2::is<void>(__expr)) { if constexpr( requires{" VOYDE AND EMPTIE";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((" VOYDE AND EMPTIE")),std::string> ) return " VOYDE AND EMPTIE"; else return std::string{}; else return std::string{}; }
             else return " no match"; }
