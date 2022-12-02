@@ -226,8 +226,9 @@ public:
     {
     }
 
-
-    auto get_declaration_of(token const& t) -> declaration_sym const*
+    //  Get the declaration of t within the same function
+    //
+    auto get_local_declaration_of(token const& t) -> declaration_sym const*
     {
         //  First find the position the query is coming from
         //  and remember its depth
@@ -244,11 +245,12 @@ public:
 
         //  Then look backward to find the first declaration of
         //  this name that is not deeper (in a nested scope)
-        for ( ; i != symbols.cbegin(); --i )
+        //  and is in the same function
+        for (auto ri = std::make_reverse_iterator(i+1); ri != symbols.crend(); ++ri )
         {
-            if (i->sym.index() == symbol::active::declaration && i->depth <= depth)
+            if (ri->sym.index() == symbol::active::declaration && ri->depth <= depth)
             {
-                auto const& decl = std::get<symbol::active::declaration>(i->sym);
+                auto const& decl = std::get<symbol::active::declaration>(ri->sym);
 
                 //  Don't look beyond the current function
                 assert(decl.declaration);
@@ -260,7 +262,7 @@ public:
                 if (decl.identifier && *decl.identifier == t) {
                     return &decl;
                 }
-                depth = i->depth;
+                depth = ri->depth;
             }
         }
 
@@ -890,7 +892,7 @@ public:
         {
             //  Put this into the table if it's a use of an object in scope
             //  or it's a 'copy' parameter
-            if (auto decl = get_declaration_of(t);
+            if (auto decl = get_local_declaration_of(t);
                 decl
                 )
             {

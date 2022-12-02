@@ -1090,7 +1090,7 @@ public:
             printer.print_cpp2(".value()", n.position());
         }
         else if (!in_definite_init && !in_parameter_list) {
-            if (auto decl = sema.get_declaration_of(*n.identifier);
+            if (auto decl = sema.get_local_declaration_of(*n.identifier);
                 is_local_name &&
                 decl &&
                 //  note pointer equality: if we're not in the actual declaration of n.identifier
@@ -1571,7 +1571,7 @@ public:
             {
                 auto& unqual = std::get<id_expression_node::unqualified>(id->id);
                 assert(unqual);
-                auto decl = sema.get_declaration_of(*unqual->identifier);
+                auto decl = sema.get_local_declaration_of(*unqual->identifier);
                 //  TODO: Generalize this -- for now we detect only cases of the form "p: *int = ...;"
                 //        We don't recognize pointer types that are deduced, multi-level, or from Cpp1
                 if (decl && decl->declaration && decl->declaration->pointer_declarator) {
