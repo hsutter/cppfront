@@ -403,7 +403,7 @@ auto lex_line(
             { return u; }
         if (auto e = peek_is_escape_sequence(offset))
             { return e; }
-        if (peek(offset) != quote && peek(offset) != '\\')
+        if (peek(offset) && peek(offset) != quote && peek(offset) != '\\')
             { return 1; }
         return 0;
     };
