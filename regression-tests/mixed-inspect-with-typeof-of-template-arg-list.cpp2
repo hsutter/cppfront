@@ -1,0 +1,16 @@
+
+template <int i, int j>
+auto calc() {
+    return i + j;
+}
+
+fun: (v : _) -> int = {
+    return inspect v -> int {
+        is int  = calc<1,2>();
+        is _ = 0;
+    };
+}
+
+main: () -> int = {
+    return fun(42);
+}
