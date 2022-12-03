@@ -1,8 +1,0 @@
-mixed-initialization-safety-2.cpp2...
-mixed-initialization-safety-2.cpp2(21,5): error: local variable x must be initialized on both branches or neither branch
-mixed-initialization-safety-2.cpp2(23,5): error: "if" initializes x on:
-  branch starting at line 23
-but not on:
-  branch starting at line 26
-  ==> program violates initialization safety guarantee - see previous errors
-

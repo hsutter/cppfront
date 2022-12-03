@@ -1,0 +1,5 @@
+pure2-lifetime-safety-reject-null-error.cpp2...
+pure2-lifetime-safety-reject-null-error.cpp2(10,15): error: pointer cannot be initialized to null or int - leave it uninitialized and then set it to a non-null value when you have one (at 'nullptr')
+pure2-lifetime-safety-reject-null-error.cpp2: error: null initialization detected
+  ==> program violates lifetime safety guarantee - see previous errors
+

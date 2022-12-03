@@ -1,4 +1,0 @@
-mixed-lifetime-safety-pointer-init-3.cpp2...
-mixed-lifetime-safety-pointer-init-3.cpp2(11,11): error: = - pointer assignment from null or integer is illegal
-  ==> program violates lifetime safety guarantee - see previous errors
-

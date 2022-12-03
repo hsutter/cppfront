@@ -1,4 +1,0 @@
-mixed-lifetime-safety-pointer-init-1.cpp2...
-mixed-lifetime-safety-pointer-init-1.cpp2(17,25): error: local variable p is used before it was initialized
-  ==> program violates initialization safety guarantee - see previous errors
-

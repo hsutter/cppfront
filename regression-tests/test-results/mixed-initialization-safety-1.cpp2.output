@@ -1,4 +1,0 @@
-mixed-initialization-safety-1.cpp2...
-mixed-initialization-safety-1.cpp2(30,21): error: local variable x is used before it was initialized
-  ==> program violates initialization safety guarantee - see previous errors
-
