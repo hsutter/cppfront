@@ -226,7 +226,7 @@ public:
     {
     }
 
-    //  Get the declaration of t within the same function
+    //  Get the declaration of t within the same named function
     //
     auto get_local_declaration_of(token const& t) -> declaration_sym const*
     {
@@ -252,9 +252,12 @@ public:
             {
                 auto const& decl = std::get<symbol::active::declaration>(ri->sym);
 
-                //  Don't look beyond the current function
+                //  Don't look beyond the start of the current named (has identifier) function
+                //  (an unnamed function is ok to look beyond)
                 assert(decl.declaration);
-                if (decl.declaration->type.index() == declaration_node::function) {
+                if (decl.declaration->type.index() == declaration_node::function &&
+                    decl.declaration->identifier)
+                {
                     return nullptr;
                 }
 

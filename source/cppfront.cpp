@@ -1086,15 +1086,12 @@ public:
         }
 
         in_definite_init = is_definite_initialization(n.identifier);
-        if (in_synthesized_multi_return) {
-            printer.print_cpp2(".value()", n.position());
-        }
-        else if (!in_definite_init && !in_parameter_list) {
+        if (!in_definite_init && !in_parameter_list) {
             if (auto decl = sema.get_local_declaration_of(*n.identifier);
                 is_local_name &&
                 decl &&
                 //  note pointer equality: if we're not in the actual declaration of n.identifier
-                decl->identifier != n.identifier &&
+                (in_synthesized_multi_return || decl->identifier != n.identifier) &&
                 //  and this variable was uninitialized
                 !decl->initializer &&
                 //  and it's either a non-parameter or an out parameter
@@ -1103,6 +1100,9 @@ public:
             {
                 printer.print_cpp2(".value()", n.position());
             }
+        }
+        else if (in_synthesized_multi_return) {
+            printer.print_cpp2(".value()", n.position());
         }
 
         if (add_std_move || add_std_forward) {
