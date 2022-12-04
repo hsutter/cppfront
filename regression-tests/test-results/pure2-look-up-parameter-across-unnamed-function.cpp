@@ -15,6 +15,8 @@ struct g__ret {
     };
 #line 9 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 [[nodiscard]] auto g() -> g__ret;
+#line 15 "pure2-look-up-parameter-across-unnamed-function.cpp2"
+[[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
@@ -35,4 +37,8 @@ struct g__ret {
     auto pred { [](auto const& e) -> bool{return e == 1; } }; 
     ri.value() = 42;
     return  { std::move(ri.value()) }; 
+}
+
+[[nodiscard]] auto main() -> int{
+    std::cout << f().ri + g().ri << "\n";
 }

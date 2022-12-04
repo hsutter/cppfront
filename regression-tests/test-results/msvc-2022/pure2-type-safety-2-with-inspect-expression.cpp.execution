@@ -1,0 +1,8 @@
+                        double value is not an int
+class std::variant<int,double> value is not an int
+                class std::any value is not an int
+      class std::optional<int> value is not an int
+                           int value is 42
+class std::variant<int,double> value is 1
+                class std::any value is 2
+      class std::optional<int> value is 3

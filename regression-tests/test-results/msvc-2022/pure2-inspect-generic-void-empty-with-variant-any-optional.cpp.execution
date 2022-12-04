@@ -1,0 +1,17 @@
+
+All these cases satisfy "VOYDE AND EMPTIE"
+
+class std::unique_ptr<int,struct std::default_delete<int> >
+    ... VOYDE AND EMPTIE
+
+class std::_Vector_iterator<class std::_Vector_val<struct std::_Simple_types<int> > >
+    ... VOYDE AND EMPTIE
+
+class std::variant<struct std::monostate,int,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > >
+    ... VOYDE AND EMPTIE
+
+class std::any
+    ... VOYDE AND EMPTIE
+
+class std::optional<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > >
+    ... VOYDE AND EMPTIE

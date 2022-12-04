@@ -11,3 +11,7 @@ g: () -> (ri : int) = {
     ri = 42;
     return;
 }
+
+main: ()->int = {
+    std::cout << f().ri + g().ri << "\n";
+}

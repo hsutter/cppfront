@@ -1,0 +1,3 @@
+                char const [7] value is not an int
+                           int value is 1
+                        double value is not an int
