@@ -17,7 +17,7 @@ fill: (
     out x: std::string,
     value: std::string,
     count: int
-    ) 
+    )
     [[pre: value.size() >= count, "fill: value must contain at least count elements"]]
 = {
     x = value.substr(0, count);
@@ -25,4 +25,4 @@ fill: (
 
 print_decorated: (x:_) = std::cout << ">> [" << x << "]\n";
 
-flip_a_coin: () -> bool = std::time(nullptr) % 2 == 0;
+flip_a_coin: () -> bool = std::rand() % 2 == 0;

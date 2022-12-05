@@ -12,6 +12,7 @@
 #line 3 "mixed-bounds-check.cpp2"
 
 [[nodiscard]] auto main() -> int{
-    std::vector v { 1, 2, 3, 4, 5 }; 
+    std::vector v { 1, 2, 3, 4, 5, -999 }; 
+    CPP2_UFCS_0(pop_back, v);
     std::cout << v[5] << "\n";
 }

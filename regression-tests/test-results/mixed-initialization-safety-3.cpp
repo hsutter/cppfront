@@ -47,4 +47,4 @@ auto fill(
 
 auto print_decorated(auto const& x) -> void { std::cout << ">> [" << x << "]\n"; }
 
-[[nodiscard]] auto flip_a_coin() -> bool { return std::time(nullptr) % 2 == 0; }
+[[nodiscard]] auto flip_a_coin() -> bool { return std::rand() % 2 == 0; }

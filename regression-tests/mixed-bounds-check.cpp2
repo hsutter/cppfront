@@ -2,6 +2,7 @@
 #include <vector>
 
 main: () -> int = {
-    v : std::vector = (1, 2, 3, 4, 5);
+    v : std::vector = (1, 2, 3, 4, 5, -999);
+    v.pop_back();
     std::cout << v[5] << "\n";
 }
