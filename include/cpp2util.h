@@ -131,7 +131,9 @@
         #include <iterator>
         #include <ranges>
         #include <algorithm>
-        #if defined(__GNUC__) && __GNUC__ < 11
+        // GCC sometime after version 10 got a dependency on linking TBB if <execution> is
+        // included, so let's not pull in that header in our "import std;" simulation mode
+        #if not defined(__GNUC__) || __GNUC__ < 11
             #include <execution>
         #endif
         #include <bit>
