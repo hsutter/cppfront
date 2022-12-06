@@ -352,7 +352,7 @@ struct {
 
 template<typename T>
 [[nodiscard]] auto cpp2_new(auto&& ...args) -> std::unique_ptr<T> {
-    return std::make_unique<T>(std::forward<decltype(args)>(args)...);
+    return unique.cpp2_new<T>(std::forward<decltype(args)>(args)...);
 }
 
 
