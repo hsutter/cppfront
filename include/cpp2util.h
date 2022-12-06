@@ -131,7 +131,9 @@
         #include <iterator>
         #include <ranges>
         #include <algorithm>
-        #include <execution>
+        #if defined(__GNUC__) && __GNUC__ < 11
+            #include <execution>
+        #endif
         #include <bit>
         #include <cfenv>
         #include <cmath>
