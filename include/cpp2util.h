@@ -131,9 +131,9 @@
         #include <iterator>
         #include <ranges>
         #include <algorithm>
-        // GCC sometime after version 10 got a dependency on linking TBB if <execution> is
+        // libstdc++ sometime after GCC 10 got a dependency on linking TBB if <execution> is
         // included, so let's not pull in that header in our "import std;" simulation mode
-        #if defined(__clang__) || not defined(__GNUC__) || __GNUC__ < 11
+        #if not defined(__GLIBCXX__) || __GLIBCXX__ < 20210101
             #include <execution>
         #endif
         #include <bit>
