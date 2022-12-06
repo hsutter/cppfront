@@ -8,7 +8,7 @@ f: () -> (i: int, s: std::string) = {
 
     i = 10;
 
-    if std::time(nullptr)%2 == 0 {
+    if std::rand()%2 == 0 {
         s = "xyzzy";
     }
     else {
@@ -18,7 +18,7 @@ f: () -> (i: int, s: std::string) = {
     return;
 }
 
-print: (name: std::string, value:_) 
+print: (name: std::string, value:_)
     = std::cout << name << " is " << value << "\n";
 
 int main() {

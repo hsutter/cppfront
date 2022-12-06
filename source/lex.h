@@ -449,7 +449,7 @@ auto lex_line(
                 !is_identifier_continue(line[i+m[0].length()])  // non-identifier char
                 )
             {
-                return (int)(m[0].length());;
+                return (int)(m[0].length());
             }
         }
         return 0;
