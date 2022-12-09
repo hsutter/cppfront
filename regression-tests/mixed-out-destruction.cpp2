@@ -19,16 +19,16 @@ struct C {
 
 //-------------------------------------------------------
 // 0x: Test one level of out and immediate throw
-f00: ()         = { c:C="f00";  x: X;  f01(out x); }
-f01: (out x: X) = { c:C="f01";  x=();  throw_1();  }
+f00: ()         throws = { c:C="f00";  x: X;  f01(out x); }
+f01: (out x: X) throws = { c:C="f01";  x=();  throw_1();  }
 
 //-------------------------------------------------------
 // 1x: Test multiple levels of out and intermediate throw
-f10: ()         = { c:C="f10";  x: X;  f11(out x); }
-f11: (out x: X) = { c:C="f11";         f12(out x); }
-f12: (out x: X) = { c:C="f12";         f13(out x);  throw_1(); }
-f13: (out x: X) = { c:C="f13";         f14(out x); }
-f14: (out x: X) = { c:C="f14";  x=();  }
+f10: ()         throws = { c:C="f10";  x: X;  f11(out x); }
+f11: (out x: X) throws = { c:C="f11";         f12(out x); }
+f12: (out x: X) throws = { c:C="f12";         f13(out x);  throw_1(); }
+f13: (out x: X) throws = { c:C="f13";         f14(out x); }
+f14: (out x: X) throws = { c:C="f14";  x=();  }
 
 int main() {
     C c("main");
