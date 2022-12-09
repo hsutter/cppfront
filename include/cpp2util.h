@@ -131,11 +131,6 @@
         #include <iterator>
         #include <ranges>
         #include <algorithm>
-        // libstdc++ sometime after GCC 10 got a dependency on linking TBB if <execution> is
-        // included, so let's not pull in that header in our "import std;" simulation mode
-        #if not defined(__GLIBCXX__) || __GLIBCXX__ < 20210101
-            #include <execution>
-        #endif
         #include <bit>
         #include <cfenv>
         #include <cmath>
@@ -185,6 +180,15 @@
         #endif
         #include <thread>
         #include <iso646.h>
+
+        // libstdc++ currently has a dependency on linking TBB if <execution> is
+        // included, and TBB seems to be not automatically installed and linkable
+        // on some GCC installations, so let's not pull in that little-used header
+        // in our -pure-cpp2 "import std;" simulation mode... if you need this,
+        // use mixed mode (not -pure-cpp2) and #include all the headers you need
+        // including this one
+        // 
+        // #include <execution>
     #endif
 
 //  Otherwise, we're not in -pure-cpp2 and so just #include
@@ -395,9 +399,11 @@ class deferred_init {
     template<typename U>
     friend class out;
 
+    auto destroy() -> void         { if (init) { t().~T(); }  init = false; }
+
 public:
     deferred_init() noexcept       { }
-   ~deferred_init() noexcept       { if (init) t().~T(); }
+   ~deferred_init() noexcept       { destroy(); }
     auto value()    noexcept -> T& { Default.expects(init);  return t(); }
 
     auto construct     (auto&& ...args) -> void { Default.expects(!init);  new (&data) T(std::forward<decltype(args)>(args)...);  init = true; }
@@ -411,46 +417,79 @@ class out {
         T* t;
         deferred_init<T>* dt;
     };
-    int  uncaught_count   = std::uncaught_exceptions();
+    out<T>* ot = nullptr;
     bool has_t;
-    bool called_construct = false;
+
+    //  Each out in a chain contains its own uncaught_count ...
+    int  uncaught_count   = std::uncaught_exceptions();
+    //  ... but all in a chain share the topmost called_construct_
+    bool called_construct_ = false;
 
 public:
-    out(T* t)                 noexcept : t{t},   has_t{true}  { }
-    out(deferred_init<T>* dt) noexcept : dt{dt}, has_t{false} { }
+    out(T*                 t) noexcept :  t{ t}, has_t{true}      { Default.expects( t); }
+    out(deferred_init<T>* dt) noexcept : dt{dt}, has_t{false}     { Default.expects(dt); }
+    out(out<T>*           ot) noexcept : ot{ot}, has_t{ot->has_t} { Default.expects(ot);
+        if (has_t) {  t = ot->t;  }
+        else       { dt = ot->dt; }
+    }
+
+    auto called_construct() -> bool& {
+        if (ot) { return ot->called_construct(); }
+        else    { return called_construct_; }
+    }
 
     //  In the case of an exception, if the parameter was uninitialized
     //  then leave it in the same state on exit (strong guarantee)
     ~out() {
-        if (called_construct && uncaught_count != std::uncaught_exceptions()) {
+        if (called_construct() && uncaught_count != std::uncaught_exceptions()) {
             Default.expects(!has_t);
-            dt->value().~T();
+            dt->destroy();
+            called_construct() = false;
         }
     }
 
-    auto construct     (auto ...args) -> void {
+    auto construct(auto&& ...args) -> void {
         if (has_t) {
-            *t = T(args...);
-        }
-        else if (dt->init) {
-            dt->value() = T(args...);
+            Default.expects( t );
+            *t = T(std::forward<decltype(args)>(args)...);
         }
         else {
-            dt->construct(args...);
-            called_construct = true;
+            Default.expects( dt );
+            if (dt->init) {
+                dt->value() = T(std::forward<decltype(args)>(args)...);
+            }
+            else {
+                dt->construct(std::forward<decltype(args)>(args)...);
+                called_construct() = true;
+            }
         }
     }
 
-    auto construct_list(auto ...args) -> void {
+    auto construct_list(auto&& ...args) -> void {
         if (has_t) {
-            *t = T{args...};
-        }
-        else if (dt->init) {
-            dt->value() = T{args...};
+            Default.expects( t );
+            *t = T{std::forward<decltype(args)>(args)...};
         }
         else {
-            dt->construct_list(args...);
-            called_construct = true;
+            Default.expects( dt );
+            if (dt->init) {
+                dt->value() = T{std::forward<decltype(args)>(args)...};
+            }
+            else {
+                dt->construct_list(std::forward<decltype(args)>(args)...);
+                called_construct() = true;
+            }
+        }
+    }
+
+    auto value() noexcept -> T& {
+        if (has_t) {
+            Default.expects( t );
+            return *t;
+        }
+        else {
+            Default.expects( dt );
+            return dt->value();
         }
     }
 };
@@ -860,8 +899,8 @@ public:
 
     c_raii(c_raii const&)         = delete;
     auto operator=(c_raii const&) = delete;
-    c_raii(c_raii&& that)         : t  {std::move(that.t)}, dtor  {that.dtor} { that.dtor = nullptr; }
-    auto operator=(c_raii&& that) { t = std::move(that.t);  dtor = that.dtor;   that.dtor = nullptr; }
+    c_raii(c_raii&& that)         noexcept : t  {std::move(that.t)}, dtor  {that.dtor} { that.dtor = nullptr; }
+    auto operator=(c_raii&& that) noexcept { t = std::move(that.t);  dtor = that.dtor;   that.dtor = nullptr; }
 };
 
 inline auto fopen( const char* filename, const char* mode ) {
