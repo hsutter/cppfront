@@ -362,7 +362,6 @@ auto prefix_expression_node::visit(auto& v, int depth) -> void
 
 struct unqualified_id_node
 {
-    token const* const_qualifier = {};  // optional
     token const* identifier      = {};  // required
 
     enum active { empty=0, expression, id_expression };
@@ -398,9 +397,6 @@ struct unqualified_id_node
     auto visit(auto& v, int depth) -> void
     {
         v.start(*this, depth);
-        if (const_qualifier) {
-            v.start(*const_qualifier, depth+1);
-        }
         assert (identifier);
         v.start(*identifier, depth+1);
 
@@ -450,6 +446,44 @@ struct qualified_id_node
             assert(x.id);
             x.id->visit(v, depth+1);
         }
+        v.end(*this, depth);
+    }
+};
+
+struct type_id_node
+{
+    source_position pos;
+
+    token const* const_qualifier = {};  // optional
+
+    enum active { empty=0, qualified, unqualified };
+    std::variant<
+        std::monostate,
+        std::unique_ptr<qualified_id_node>,
+        std::unique_ptr<unqualified_id_node>
+    > id;
+
+    auto get_token() -> token const* {
+        if (id.index() == unqualified) {
+            return std::get<unqualified>(id)->get_token();
+        }
+        // else
+        return {};
+    }
+
+    auto position() const -> source_position
+    {
+        return pos;
+    }
+
+    auto visit(auto& v, int depth) -> void
+    {
+        v.start(*this, depth);
+        if (const_qualifier) {
+            v.start(*const_qualifier, depth+1);
+        }
+        try_visit<qualified  >(id, v, depth);
+        try_visit<unqualified>(id, v, depth);
         v.end(*this, depth);
     }
 };
@@ -622,7 +656,7 @@ struct inspect_expression_node
     bool                                     is_constexpr = false;
     token const*                             identifier;
     std::unique_ptr<expression_node>         expression;
-    std::unique_ptr<id_expression_node>      result_type;
+    std::unique_ptr<type_id_node>            result_type;
     source_position                          open_brace;
     source_position                          close_brace;
 
@@ -851,7 +885,7 @@ struct declaration_node
     enum active { function, object };
     std::variant<
         std::unique_ptr<function_type_node>,
-        std::unique_ptr<id_expression_node>
+        std::unique_ptr<type_id_node>
     > type;
 
     source_position                 equal_sign = {};
@@ -1752,9 +1786,38 @@ private:
     }
 
 
+    //G type-id:
+    //G     const-opt unqualified-id
+    //G     const-opt qualified-id
+    //G
+    auto type_id() -> std::unique_ptr<type_id_node>
+    {
+        auto n = std::make_unique<type_id_node>();
+
+        if (curr().type() == lexeme::Keyword && curr() == "const") {
+            n->const_qualifier = &curr();
+            next();
+        }
+
+        if (auto id = qualified_id()) {
+            n->pos = id->position();
+            n->id  = std::move(id);
+            assert (n->id.index() == id_expression_node::qualified);
+            return n;
+        }
+        if (auto id = unqualified_id()) {
+            n->pos = id->position();
+            n->id  = std::move(id);
+            assert (n->id.index() == id_expression_node::unqualified);
+            return n;
+        }
+        return {};
+    }
+
+
     //G unqualified-id:
-    //G     const-opt identifier
-    //G     const-opt template-id
+    //G     identifier
+    //G     template-id
     //GTODO     operator-function-id
     //G
     //G template-id:
@@ -1777,11 +1840,6 @@ private:
         }
 
         auto n = std::make_unique<unqualified_id_node>();
-
-        if (curr().type() == lexeme::Keyword && curr() == "const") {
-            n->const_qualifier = &curr();
-            next();
-        }
 
         n->identifier =  &curr();
         next();
@@ -2262,7 +2320,7 @@ private:
 
     //G inspect-expression:
     //G     inspect constexpr-opt expression { alternative-seq-opt }
-    //G     inspect constexpr-opt expression -> id-expression { alternative-seq-opt }
+    //G     inspect constexpr-opt expression -> type-id { alternative-seq-opt }
     //G
     //G alternative-seq:
     //G     alternative
@@ -2312,12 +2370,12 @@ private:
                 return {};
             }
 
-            auto id = id_expression();
-            if (!id) {
+            auto type = type_id();
+            if (!type) {
                 error("expected a valid inspect return type after ->");
                 return {};
             }
-            n->result_type = std::move(id);
+            n->result_type = std::move(type);
         }
         else if (is_expression) {
             error("an inspect expression must have an explicit '-> result_type'");
@@ -2778,8 +2836,8 @@ private:
 
     //G unnamed-declaration:
     //G     : function-type = statement
-    //G     : id-expression-opt = statement
-    //G     : id-expression
+    //G     : type-id-opt = statement
+    //G     : type-id
     //G
     auto unnamed_declaration(source_position pos, bool semicolon_required = true, bool captures_allowed = false) -> std::unique_ptr<declaration_node>
     {
@@ -2814,22 +2872,22 @@ private:
         else if (curr().type() == lexeme::Multiply) {
             n->pointer_declarator = &curr();
             next();
-            if (auto t = id_expression()) {
+            if (auto t = type_id()) {
                 n->type = std::move(t);
                 assert (n->type.index() == declaration_node::object);
             }
         }
 
         //  Or just a type, declaring a non-pointer object
-        else if (auto t = id_expression()) {
+        else if (auto t = type_id()) {
             n->type = std::move(t);
             assert (n->type.index() == declaration_node::object);
         }
 
         //  Or nothing, declaring an object of deduced type,
-        //  which we'll represent using an empty id-expression
+        //  which we'll represent using an empty type-id
         else {
-            n->type = std::make_unique<id_expression_node>();
+            n->type = std::make_unique<type_id_node>();
             assert (n->type.index() == declaration_node::object);
             deduced_type = true;
         }
@@ -3057,6 +3115,11 @@ public:
     auto start(qualified_id_node const& n, int indent) -> void
     {
         o << pre(indent) << "qualified-id\n";
+    }
+
+    auto start(type_id_node const& n, int indent) -> void
+    {
+        o << pre(indent) << "type-id\n";
     }
 
     auto start(id_expression_node const& n, int indent) -> void

@@ -1063,11 +1063,6 @@ public:
             printer.print_cpp2("CPP2_FORWARD(", n.position());
         }
 
-        if (n.const_qualifier) {
-            emit(*n.const_qualifier);
-            printer.print_cpp2(" ", n.const_qualifier->position());
-        }
-
         assert(n.identifier);
         emit(*n.identifier);
 
@@ -1138,6 +1133,20 @@ public:
 
         printer.emit_to_string();
         printer.print_cpp2( ident, n.position() );
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
+    auto emit(type_id_node const& n) -> void
+    {
+        if (n.const_qualifier) {
+            emit(*n.const_qualifier);
+            printer.print_cpp2(" ", n.const_qualifier->position());
+        }
+
+        try_emit<type_id_node::qualified  >(n.id);
+        try_emit<type_id_node::unqualified>(n.id, false, false);
     }
 
 
@@ -2111,9 +2120,9 @@ public:
         assert( n.declaration );
         assert( n.declaration->is(declaration_node::object) );
 
-        auto const& id_expr = *std::get<declaration_node::object>(n.declaration->type);
+        auto const& type_id = *std::get<declaration_node::object>(n.declaration->type);
 
-        auto unqid = std::get_if<id_expression_node::unqualified>(&id_expr.id);
+        auto unqid = std::get_if<type_id_node::unqualified>(&type_id.id);
         auto is_wildcard = unqid && *(*unqid)->identifier == "_";
 
         //  First any prefix
@@ -2148,13 +2157,13 @@ public:
             req += *name;
             req += "), ";
             printer.emit_to_string(&req);
-            emit( id_expr );
+            emit( type_id );
             printer.emit_to_string();
             req += ">";
             function_requires_conditions.push_back(req);
         }
         else {
-            emit( id_expr );
+            emit( type_id );
             if (n.declaration->pointer_declarator) {
                 printer.print_cpp2(" ", n.declaration->pointer_declarator->position());
                 emit(*n.declaration->pointer_declarator);
@@ -2526,7 +2535,7 @@ public:
             auto& type = std::get<declaration_node::object>(n.type);
 
             //  Emit "auto" for deduced types (of course)
-            if (type->id.index() == id_expression_node::empty) {
+            if (type->id.index() == type_id_node::empty) {
                 assert(n.initializer);
                 printer.print_cpp2("auto", n.position());
             }
