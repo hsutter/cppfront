@@ -574,13 +574,19 @@ auto is( X const& ) -> bool {
 }
 
 template< typename C, typename X >
-    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
+    requires (
+        ( std::is_base_of_v<X, C> || 
+          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>) 
+        ) && !std::is_same_v<C,X>)
 auto is( X const& x ) -> bool {
     return dynamic_cast<C const*>(&x) != nullptr;
 }
 
 template< typename C, typename X >
-    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
+    requires (
+        ( std::is_base_of_v<X, C> || 
+          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>) 
+        ) && !std::is_same_v<C,X>)
 auto is( X const* x ) -> bool {
     return dynamic_cast<C const*>(x) != nullptr;
 }
