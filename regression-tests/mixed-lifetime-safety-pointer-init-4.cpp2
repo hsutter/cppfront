@@ -9,7 +9,7 @@ main: () -> int = {
 
     // ... more code ...
     if std::rand()%2 {
-        p = y&;
+        p = x&; // for test determinism; previously was "y&"
     }
     else {
         p = x&;

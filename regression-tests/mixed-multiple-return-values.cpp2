@@ -12,7 +12,7 @@ f: () -> (i: int, s: std::string) = {
         s = "xyzzy";
     }
     else {
-        s = "plugh";
+        s = "xyzzy"; // for test determinism; previously was "plugh"
     }
 
     return;

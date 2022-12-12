@@ -39,7 +39,7 @@ int main() {
         s.construct("xyzzy");
     }
     else {
-        s.construct("plugh");
+        s.construct("xyzzy");// for test determinism; previously was "plugh"
     }
 
     return  { std::move(i.value()), std::move(s.value()) }; 

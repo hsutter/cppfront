@@ -23,7 +23,7 @@ auto print_and_decorate(auto const& thing) -> void;
 
     // ... more code ...
     if (std::rand() % 2) {
-        p.construct(&y);
+        p.construct(&x);// for test determinism; previously was "y&"
     }
     else {
         p.construct(&x);
