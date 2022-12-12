@@ -30,7 +30,7 @@ auto call_my_framework(cpp2::in<const char *> msg) -> void;
 
 auto try_pointer_stuff() -> void{
     int* p { null_from_cpp1() }; 
-    *p = 42;    // deliberate null dereference
+    *cpp2::assert_not_null(p) = 42;// deliberate null dereference
                 // to show -n
 }
 

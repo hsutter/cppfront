@@ -17,10 +17,10 @@ auto call(auto const& v, auto const& w, auto const& x, auto const& y, auto const
 
 [[nodiscard]] auto test(auto const& a) -> std::string{
     return call( a, 
-        ++*a.b(a.c), "hello", /* polite
+        ++*cpp2::assert_not_null(a.b(a.c)), "hello", /* polite
                           greeting
                           goes here */ " there", 
-        a.d.e( ++(*a.f).g(), // because f is foobar
+        a.d.e( ++(*cpp2::assert_not_null(a.f)).g(), // because f is foobar
               a.h.i(), 
               CPP2_UFCS(j, a, a.k, a.l))
         ); 

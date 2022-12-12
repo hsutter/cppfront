@@ -22,7 +22,7 @@ auto print_and_decorate(auto const& thing) -> void;
 
     auto i { 0 }; 
     for( ; i < CPP2_UFCS_0(ssize, s); ++i ) {
-        print_and_decorate( s[i] );
+        print_and_decorate( cpp2::assert_in_bounds(s, i));
     }
 }
 

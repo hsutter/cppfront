@@ -20,7 +20,7 @@ auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void;
                "hello", "2022" }; 
 
     std::string y { "\n" }; 
-    auto callback { [_0 = (&y)](auto const& x){std::cout << x << *_0;} }; 
+    auto callback { [_0 = (&y)](auto const& x){std::cout << x << *cpp2::assert_not_null(_0);} }; 
 
     std::ranges::for_each( vec, callback );
     y = "-ish\n";
