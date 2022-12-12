@@ -1,0 +1,11 @@
+
+All these cases satisfy "matches std::string"
+
+St7variantIJiNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEE
+    ... matches std::string
+
+St3any
+    ... matches std::string
+
+St8optionalINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEE
+    ... matches std::string
