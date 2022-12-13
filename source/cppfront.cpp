@@ -960,7 +960,7 @@ public:
                             source_position( n.position().lineno, n.position().colno + pos ),
                             "a string interpolation expression may not contain ++ or --"
                         );
-                        return "";
+                        return {};
                     }
                     else if (
                         (text[open] == '*' || text[open] == '&' || text[open] == '~') &&
@@ -972,7 +972,7 @@ public:
                             source_position( n.position().lineno, n.position().colno + pos ),
                             "a string interpolation expression may not contain unary & * or ~"
                         );
-                        return "";
+                        return {};
                     }
 
                     if (!std::isspace(text[open])) {
@@ -985,7 +985,7 @@ public:
                         source_position( n.position().lineno, n.position().colno + pos ),
                         "no matching ( for string interpolation ending in )$"
                     );
-                    return "";
+                    return {};
                 }
                 assert (text[open] == '(');
 
@@ -2363,7 +2363,7 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(declaration_node const& n, std::string const& in_expression_intro = "") -> void
+    auto emit(declaration_node const& n, std::string const& in_expression_intro = {}) -> void
     {
         //  If this is a function that has multiple return values,
         //  first we need to emit the struct that contains the returns

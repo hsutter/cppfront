@@ -306,7 +306,7 @@ struct expression_statement_node
 
 struct capture {
     postfix_expression_node* capture_expr;
-    std::string              str = "";
+    std::string              str = {};
 };
 using capture_group = std::vector<capture>;
 
