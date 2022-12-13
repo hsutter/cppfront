@@ -661,6 +661,9 @@ inline constexpr auto is_any = std::disjunction_v<std::is_same<T, Ts>...>;
 template <typename T, typename... Types>
 inline constexpr std::ptrdiff_t count_t = ( std::ptrdiff_t{std::is_same_v<T, Types>} + ... );
 
+template <typename... Types>
+inline constexpr bool ill_formed_variant = sizeof...(Types) < 0;
+
 template<typename T, typename... Ts>
 constexpr auto is( std::variant<Ts...> const& x ) {
     if constexpr (std::is_same_v< T, empty >) {
@@ -671,7 +674,10 @@ constexpr auto is( std::variant<Ts...> const& x ) {
         }
     } else {
         // std::holds_alternative is ill-formed if T does not appear exactly once in Ts
-        if constexpr (count_t<T, Ts...> == 1) {
+        if constexpr (count_t<T, Ts...> > 1) {
+            static_assert(ill_formed_variant<T,Ts...>, "Checking variant is ill-formed - T appears more then once");
+        }
+        else if constexpr (count_t<T, Ts...> == 1) {
             return std::holds_alternative<T>(x);
         }
         return false;
@@ -681,7 +687,10 @@ constexpr auto is( std::variant<Ts...> const& x ) {
 template<typename T, typename... Ts>
 constexpr auto as( std::variant<Ts...> const& x ) {
     // std::holds_alternative is ill-formed if T does not appear exactly once in Ts
-    if constexpr (count_t<T, Ts...> == 1) {
+    if constexpr (count_t<T, Ts...> > 1) {
+        static_assert(ill_formed_variant<T,Ts...>, "Casting variant is ill-formed - T appears more then once");
+    }
+    else if constexpr (count_t<T, Ts...> == 1) {
         if (std::holds_alternative<T>(x))
             return std::get<T>(x);
     }
