@@ -6,14 +6,14 @@ See [License](LICENSE)
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
-Cppfront is a experimental compiler from a potential C++ 'syntax 2' (Cpp2) to today's 'syntax 1' (Cpp1), to learn some things, prove out some concepts, and share some ideas. This compiler is a work in progress and currently hilariously incomplete... basic functions work, classes will be next, then metaclasses and lightweight exceptions.
+Cppfront is an experimental compiler from a potential C++ 'syntax 2' (Cpp2) to today's 'syntax 1' (Cpp1), to learn some things, prove out some concepts, and share some ideas. This compiler is a work in progress and currently hilariously incomplete... basic functions work, classes will be next, then metaclasses and lightweight exceptions.
 
 - [Goals and history](#goals-and-history)
 - [What's different about this experiment?](#whats-different-about-this-experiment)
 - [How do I build cppfront?](#how-do-i-build-cppfront)
 - [How do I build my `.cpp2` file?](#how-do-i-build-my-cpp2-file)
 - [Where's the documentation?](#wheres-the-documentation)
-- [Papers and talks derived from this work (presented in today's syntax)](#papers-and-talks-derived-from-this-work-presented-in-today's-syntax)
+- [Papers and talks derived from this work (presented in todays syntax)](#papers-and-talks-derived-from-this-work-presented-in-today's-syntax)
 - [Epilog: 2016 roadmap diagram](#epilog-2016-roadmap-diagram)
 
 ## Goals and history
@@ -97,7 +97,7 @@ I'm not posting much documentation because that would imply this project is inte
 
 To learn more, please see:
 
-- [**My CppCon 2022 talk, "Can C++ be 10x simpler and safer ...?**"](https://www.youtube.com/watch?v=ELeZAKCN4tY)
+- [**My CppCon 2022 talk, "Can C++ be 10x simpler and safer ...?"**](https://www.youtube.com/watch?v=ELeZAKCN4tY)
 - **The [cppfront regression tests](https://github.com/hsutter/cppfront/tree/main/regression-tests)** which show dozens of working examples, each with a`.cpp2` file. In the `/test-results/` subdirectory you can see the `.cpp` file that each is translated to. Each filename briefly describes the language features the test demonstrates (e.g., contracts, parameter passing, bounds safety, type-safe `is` queries and `as` casts, initialization safety, and generalized value capture including in function expressions ('lambdas'), postconditions, and string interpolation).
 - The list of papers and talks below.
 
@@ -184,7 +184,7 @@ This is partly implemented in cppfront. There is basic support for `is` and `as`
 
 ### 2022: CppCon 2022 talk and cppfront
 
-- [**CppCon 2022: "Can C++ be 10x simpler and safer ...?**"](https://www.youtube.com/watch?v=ELeZAKCN4tY)
+- [**CppCon 2022: "Can C++ be 10x simpler and safer ...?"**](https://www.youtube.com/watch?v=ELeZAKCN4tY)
 - This repo.
 
 # Epilog: 2016 roadmap diagram
