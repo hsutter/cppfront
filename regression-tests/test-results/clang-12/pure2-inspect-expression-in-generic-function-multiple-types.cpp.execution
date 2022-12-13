@@ -1,0 +1,8 @@
+                             d value is not an int or string
+              St7variantIJidEE value is not an int or string
+                        St3any value is "xyzzy"
+                St8optionalIiE value is not an int or string
+                             i value is integer 42
+              St7variantIJidEE value is integer 1
+                        St3any value is integer 2
+                St8optionalIiE value is integer 3

@@ -1,0 +1,9 @@
+                              d is int? false
+               St7variantIJidEE is int? false
+                         St3any is int? false
+                 St8optionalIiE is int? false
+
+                              i is int? true
+               St7variantIJidEE is int? true
+                         St3any is int? true
+                 St8optionalIiE is int? true
