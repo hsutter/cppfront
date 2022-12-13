@@ -13,7 +13,7 @@ Cppfront is an experimental compiler from a potential C++ 'syntax 2' (Cpp2) to t
 - [How do I build cppfront?](#how-do-i-build-cppfront)
 - [How do I build my `.cpp2` file?](#how-do-i-build-my-cpp2-file)
 - [Where's the documentation?](#wheres-the-documentation)
-- [Papers and talks derived from this work (presented in todays syntax)](#papers-and-talks-derived-from-this-work-presented-in-today's-syntax)
+- [Papers and talks derived from this work (presented in today's syntax)](#papers-and-talks-derived-from-this-work-presented-in-current-syntax)
 - [Epilog: 2016 roadmap diagram](#epilog-2016-roadmap-diagram)
 
 ## Goals and history
@@ -101,7 +101,7 @@ To learn more, please see:
 - **The [cppfront regression tests](https://github.com/hsutter/cppfront/tree/main/regression-tests)** which show dozens of working examples, each with a`.cpp2` file. In the `/test-results/` subdirectory you can see the `.cpp` file that each is translated to. Each filename briefly describes the language features the test demonstrates (e.g., contracts, parameter passing, bounds safety, type-safe `is` queries and `as` casts, initialization safety, and generalized value capture including in function expressions ('lambdas'), postconditions, and string interpolation).
 - The list of papers and talks below.
 
-## Papers and talks derived from this work (presented in today's syntax)
+## Papers and talks derived from this work (presented in current syntax)
 
 Here are the ISO C++ papers and CppCon conference talks I've given since 2015 that have been derived from this work, in the order that I brought each piece forward. Most of the details in the materials below are still current with only incremental updates, apart from the specific syntax of course.
 
