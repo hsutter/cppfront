@@ -11,6 +11,12 @@
 // THE SOFTWARE.
 
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4456)
+#endif
+//#include "../include/cpp2util.h"
+
+
 //===========================================================================
 //  Common types
 //===========================================================================
@@ -396,7 +402,7 @@ public:
             }
             print("  -");
             auto n = flag.name.substr(0, flag.unique_prefix);
-            if (flag.unique_prefix < flag.name.length()) {
+            if (flag.unique_prefix < std::ssize(flag.name)) {
                 n += "[";
                 n += flag.name.substr(flag.unique_prefix);
                 n += "]";

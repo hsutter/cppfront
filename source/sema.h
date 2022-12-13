@@ -792,7 +792,7 @@ public:
         inside_out_parameter = {};
     }
 
-    auto start(expression_node const& n, int indent) -> void
+    auto start(expression_node const&, int) -> void
     {
         is_out_expression = false;
 
@@ -805,7 +805,7 @@ public:
         }
     }
 
-    auto start(expression_list_node const& n, int indent) -> void
+    auto start(expression_list_node const& n, int) -> void
     {
         //  We're going to use the pointer as an iterator
         if (!n.expressions.empty()) {
@@ -816,7 +816,7 @@ public:
         }
     }
 
-    auto end(expression_list_node const& n, int indent) -> void
+    auto end(expression_list_node const&, int) -> void
     {
         //  Unlike debug_print, here we don't assert that we visited all the
         //  expressions in the list because visiting them all is not always needed
@@ -911,7 +911,7 @@ public:
         ++scope_depth;
     }
 
-    auto end(selection_statement_node const& n, int) -> void
+    auto end(selection_statement_node const&, int) -> void
     {
         symbols.emplace_back( scope_depth, selection_sym{ false, active_selections.back() } );
         active_selections.pop_back();
@@ -955,12 +955,12 @@ public:
         }
     }
 
-    auto start(auto const&, int indent) -> void
+    auto start(auto const&, int) -> void
     {
         //  Ignore other node types
     }
 
-    auto end(auto const&, int indent) -> void
+    auto end(auto const&, int) -> void
     {
         //  Ignore other node types
     }

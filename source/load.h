@@ -302,8 +302,6 @@ auto process_cpp2_line(
     std::string const&  line,
     bool&               in_comment,
     std::vector<int>&   brace_depth,
-    bool&               found_semi,
-    bool&               found_openbrace,
     lineno_t            lineno,
     std::vector<error>& errors
 )
@@ -481,15 +479,11 @@ public:
                     }
 
                     //  Find the end of the definition:
-                    auto found_semi = false;
-                    auto found_openbrace = false;
                     while (
                         !process_cpp2_line(
                             lines.back().text,
                             in_comment,
                             brace_depth,
-                            found_semi,
-                            found_openbrace,
                             std::ssize(lines)-1,
                             errors
                         )

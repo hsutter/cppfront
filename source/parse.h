@@ -882,7 +882,7 @@ struct declaration_node
 
     token const* pointer_declarator = nullptr;
 
-    enum active { function, object };
+    enum active : std::uint8_t { function, object };
     std::variant<
         std::unique_ptr<function_type_node>,
         std::unique_ptr<type_id_node>
@@ -1267,7 +1267,7 @@ private:
         errors.emplace_back( curr().position(), m );
     }
 
-    auto error(std::string const& msg, bool include_curr_token = true) const -> void
+    auto error(std::string const& msg, bool = true) const -> void
     {
         error(msg.c_str());
     }
@@ -1638,7 +1638,7 @@ private:
         }
         else {
             return binary_expression<relational_expression_node> (
-                [](token const& t){ return false; },
+                [](token const&){ return false; },
                 [this]{ return compare_expression(); }
             );
         }
@@ -1950,7 +1950,7 @@ private:
                 return {};
             }
             assert (term.id->identifier);
-            if (first_time_through_loop && term.scope_op->type() == lexeme::Scope) {
+            if (first_time_through_loop && first_uid_was_std && term.scope_op->type() == lexeme::Scope) {
                 if (*term.id->identifier == "move") {
                     error("std::move is not needed in Cpp2 - use 'move' parameters/arguments instead", false);
                     return {};
@@ -2839,7 +2839,7 @@ private:
     //G     : type-id-opt = statement
     //G     : type-id
     //G
-    auto unnamed_declaration(source_position pos, bool semicolon_required = true, bool captures_allowed = false) -> std::unique_ptr<declaration_node>
+    auto unnamed_declaration(source_position start, bool semicolon_required = true, bool captures_allowed = false) -> std::unique_ptr<declaration_node>
     {
         auto deduced_type = false;
 
@@ -2850,15 +2850,12 @@ private:
         next();
 
         auto n = std::make_unique<declaration_node>();
-        n->pos = pos;
+        n->pos = start;
         auto guard =
             captures_allowed
             ? make_unique<capture_groups_stack_guard>(this, &n->captures)
             : std::unique_ptr<capture_groups_stack_guard>()
             ;
-
-        //  Remember current position, because we need to look ahead
-        auto start_pos = pos;
 
         //  Next is an an optional type
 
@@ -3043,7 +3040,7 @@ public:
         o << pre(indent) << n.to_string() << "\n";
     }
 
-    auto start(expression_node const& n, int indent) -> void
+    auto start(expression_node const&, int indent) -> void
     {
         o << pre(indent) << "expression\n";
         //  If we are in an expression-list
@@ -3067,7 +3064,7 @@ public:
         o << pre(indent) << "expression-list\n";
     }
 
-    auto end(expression_list_node const& n, int indent) -> void
+    auto end(expression_list_node const& n, int) -> void
     {
         //  If we're ending an expression list node, our pointer should be
         //  pointing to one past the end of the expressions
@@ -3081,58 +3078,58 @@ public:
         current_expression_list_term.pop_back();
     }
 
-    auto start(primary_expression_node const& n, int indent) -> void
+    auto start(primary_expression_node const&, int indent) -> void
     {
         o << pre(indent) << "primary-expression\n";
     }
 
-    auto start(prefix_expression_node const& n, int indent) -> void
+    auto start(prefix_expression_node const&, int indent) -> void
     {
         o << pre(indent) << "prefix-expression\n";
     }
 
     template<String Name, typename Term>
-    auto start(binary_expression_node<Name, Term> const& n, int indent) -> void
+    auto start(binary_expression_node<Name, Term> const&, int indent) -> void
     {
         o << pre(indent) << Name.value << "-expression\n";
     }
 
-    auto start(expression_statement_node const& n, int indent) -> void
+    auto start(expression_statement_node const&, int indent) -> void
     {
         o << pre(indent) << "expression-statement\n";
     }
 
-    auto start(postfix_expression_node const& n, int indent) -> void
+    auto start(postfix_expression_node const&, int indent) -> void
     {
         o << pre(indent) << "postfix-expression\n";
     }
 
-    auto start(unqualified_id_node const& n, int indent) -> void
+    auto start(unqualified_id_node const&, int indent) -> void
     {
         o << pre(indent) << "unqualified-id\n";
     }
 
-    auto start(qualified_id_node const& n, int indent) -> void
+    auto start(qualified_id_node const&, int indent) -> void
     {
         o << pre(indent) << "qualified-id\n";
     }
 
-    auto start(type_id_node const& n, int indent) -> void
+    auto start(type_id_node const&, int indent) -> void
     {
         o << pre(indent) << "type-id\n";
     }
 
-    auto start(id_expression_node const& n, int indent) -> void
+    auto start(id_expression_node const&, int indent) -> void
     {
         o << pre(indent) << "id-expression\n";
     }
 
-    auto start(statement_node const& n, int indent) -> void
+    auto start(statement_node const&, int indent) -> void
     {
         o << pre(indent) << "statement\n";
     }
 
-    auto start(compound_statement_node const& n, int indent) -> void
+    auto start(compound_statement_node const&, int indent) -> void
     {
         o << pre(indent) << "compound-statement\n";
     }
@@ -3143,7 +3140,7 @@ public:
         o << pre(indent+1) << "is_constexpr: " << as<std::string>(n.is_constexpr) << "\n";
     }
 
-    auto start(alternative_node const& n, int indent) -> void
+    auto start(alternative_node const&, int indent) -> void
     {
         o << pre(indent) << "alternative\n";
     }
@@ -3154,7 +3151,7 @@ public:
         o << pre(indent+1) << "is_constexpr: " << as<std::string>(n.is_constexpr) << "\n";
     }
 
-    auto start(return_statement_node const& n, int indent) -> void
+    auto start(return_statement_node const&, int indent) -> void
     {
         o << pre(indent) << "return-statement\n";
     }
@@ -3185,7 +3182,7 @@ public:
         o << pre(indent+1) << "throws: " << as<std::string>(n.throws) << "\n";
     }
 
-    auto start(function_returns_tag const& n, int indent) -> void
+    auto start(function_returns_tag const&, int indent) -> void
     {
         o << pre(indent) << "function returns\n";
     }
@@ -3226,12 +3223,12 @@ public:
         assert( n.declaration );
     }
 
-    auto start(parameter_declaration_list_node const& n, int indent) -> void
+    auto start(parameter_declaration_list_node const&, int indent) -> void
     {
         o << pre(indent) << "parameter-declaration-list\n";
     }
 
-    auto start(translation_unit_node const& n, int indent) -> void
+    auto start(translation_unit_node const&, int indent) -> void
     {
         o << pre(indent) << "translation-unit\n";
     }
@@ -3241,7 +3238,7 @@ public:
         o << pre(indent) << "UNRECOGNIZED -- FIXME\n";
     }
 
-    auto end(auto const&, int indent) -> void
+    auto end(auto const&, int) -> void
     {
         //  Ignore other node types
     }
@@ -3272,7 +3269,7 @@ public:
         , col_offset{offset}
     { }
 
-    auto start(token& n, int indent) -> void
+    auto start(token& n, int) -> void
     {
         if (n.position().lineno == line_to_adjust_pos.lineno &&
             n.position().colno >= line_to_adjust_pos.colno
@@ -3282,12 +3279,12 @@ public:
         }
     }
 
-    auto start(auto const&, int indent) -> void
+    auto start(auto const&, int) -> void
     {
         //  Ignore other node types
     }
 
-    auto end(auto const&, int indent) -> void
+    auto end(auto const&, int) -> void
     {
         //  Ignore other node types
     }

@@ -190,7 +190,7 @@ class positional_printer
         //  Update curr_pos by finding how many line breaks s contained,
         //  and where the last one was which determines our current colno
         auto last_newline = std::string::npos;  // the last newline we found in the string
-        auto newline_pos  = 0;                  // the current newline we found in the string
+        auto newline_pos  = std::size_t(0);     // the current newline we found in the string
         while ((newline_pos = s.find('\n', newline_pos)) != std::string::npos)
         {
             //  For each line break we find, reset pad and inc current lineno
@@ -1638,7 +1638,7 @@ public:
                 }
                 ++mynum;
             }
-            assert (mynum < n.cap_grp->size() && "could not find this postfix-expression in capture group");
+            assert (mynum < std::ssize(*n.cap_grp) && "could not find this postfix-expression in capture group");
             //  And then emit that capture number
             captured_part += "_" + std::to_string(mynum);
         }
@@ -1714,7 +1714,6 @@ public:
         auto prefix            = std::vector<text_with_pos>{};
         auto suffix            = std::vector<text_with_pos>{};
 
-        auto emitted_n         = false;
         auto last_was_prefixed = false;
         auto saw_dollar        = false;
 
