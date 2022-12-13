@@ -248,9 +248,8 @@ auto to_string_view(passing_style pass) -> std::string_view {
     break;case passing_style::out    : return "out";
     break;case passing_style::move   : return "move";
     break;case passing_style::forward: return "forward";
-    break;default:                     return "INVALID passing_tyle";
+    break;default:                     return "INVALID passing_style";
     }
-
 }
 
 struct expression_list_node
@@ -307,7 +306,7 @@ struct expression_statement_node
 
 struct capture {
     postfix_expression_node* capture_expr;
-    std::string              str;
+    std::string              str = "";
 };
 using capture_group = std::vector<capture>;
 
@@ -320,11 +319,11 @@ struct postfix_expression_node
         token const* op;
 
         //  This is used if *op is . - can be null
-        std::unique_ptr<id_expression_node> id_expr;
+        std::unique_ptr<id_expression_node> id_expr = nullptr;
 
         //  These are used if *op is [ or ( - can be null
-        std::unique_ptr<expression_list_node> expr_list;
-        token const* op_close;
+        std::unique_ptr<expression_list_node> expr_list = nullptr;
+        token const* op_close = nullptr;;
     };
     std::vector<term> ops;
     capture_group* cap_grp = {};

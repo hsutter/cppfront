@@ -726,6 +726,7 @@ auto lex_line(
                     }
                 }
             }
+            [[fallthrough]];
 
             // NO BREAK: we want 0 to fall through to numeric literal case
             // (this will be less kludgy to write with pattern matching)
