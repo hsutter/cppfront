@@ -20,6 +20,7 @@
 
 #include "parse.h"
 
+#include <span>
 
 namespace cpp2 {
 
@@ -759,7 +760,7 @@ public:
     //
     int  scope_depth = 0;
     bool started_assignment_expression = false;
-    std::vector<expression_list_node::term const*> current_expression_list_term = {};
+    std::vector<std::span<expression_list_node::term const>> current_expression_list_term = {};
     bool is_out_expression     = false;
     bool inside_parameter_list = false;
     bool inside_returns_list   = false;
@@ -798,22 +799,18 @@ public:
 
         //  If we are in an expression-list, remember whether this is an `out`
         if (!current_expression_list_term.empty()) {
-            if (current_expression_list_term.back()->pass == passing_style::out) {
-                is_out_expression = true;
+            if (auto& expr_list = current_expression_list_term.back(); !expr_list.empty()) {
+                if (expr_list.front().pass == passing_style::out) {
+                    is_out_expression = true;
+                }
+                expr_list = expr_list.subspan(1);
             }
-            ++current_expression_list_term.back();
         }
     }
 
     auto start(expression_list_node const& n, int) -> void
     {
-        //  We're going to use the pointer as an iterator
-        if (!n.expressions.empty()) {
-            current_expression_list_term.push_back( &n.expressions[0] );
-        }
-        else {
-            current_expression_list_term.push_back( nullptr );
-        }
+        current_expression_list_term.push_back( n.expressions );
     }
 
     auto end(expression_list_node const&, int) -> void
