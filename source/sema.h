@@ -759,7 +759,6 @@ public:
     //
     int  scope_depth = 0;
     bool started_assignment_expression = false;
-    std::vector<expression_list_node::term const*> current_expression_list_term = {};
     bool is_out_expression     = false;
     bool inside_parameter_list = false;
     bool inside_returns_list   = false;
@@ -792,35 +791,9 @@ public:
         inside_out_parameter = {};
     }
 
-    auto start(expression_node const&, int) -> void
+    auto start(expression_list_node::term const&n, int indent) -> void
     {
-        is_out_expression = false;
-
-        //  If we are in an expression-list, remember whether this is an `out`
-        if (!current_expression_list_term.empty()) {
-            if (current_expression_list_term.back()->pass == passing_style::out) {
-                is_out_expression = true;
-            }
-            ++current_expression_list_term.back();
-        }
-    }
-
-    auto start(expression_list_node const& n, int) -> void
-    {
-        //  We're going to use the pointer as an iterator
-        if (!n.expressions.empty()) {
-            current_expression_list_term.push_back( &n.expressions[0] );
-        }
-        else {
-            current_expression_list_term.push_back( nullptr );
-        }
-    }
-
-    auto end(expression_list_node const&, int) -> void
-    {
-        //  Unlike debug_print, here we don't assert that we visited all the
-        //  expressions in the list because visiting them all is not always needed
-        current_expression_list_term.pop_back();
+        is_out_expression = (n.pass == passing_style::out);
     }
 
     auto start(function_returns_tag const&, int) -> void

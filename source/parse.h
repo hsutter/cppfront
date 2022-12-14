@@ -261,6 +261,14 @@ struct expression_list_node
     struct term {
         passing_style                    pass = {};
         std::unique_ptr<expression_node> expr;
+
+        auto visit(auto& v, int depth) -> void
+        {
+            v.start(*this, depth);
+            assert(expr);
+            expr->visit(v, depth+1);
+            v.end(*this, depth);
+        }
     };
     std::vector< term > expressions;
 
@@ -274,9 +282,8 @@ struct expression_list_node
     auto visit(auto& v, int depth) -> void
     {
         v.start(*this, depth);
-        for (auto const& x : expressions) {
-            assert(x.expr);
-            x.expr->visit(v, depth+1);
+        for (auto& x : expressions) {
+            x.visit(v, depth+1);
         }
         v.end(*this, depth);
     }
@@ -3031,8 +3038,6 @@ class parse_tree_printer : printing_visitor
 {
     using printing_visitor::printing_visitor;
 
-    std::vector<expression_list_node::term const*> current_expression_list_term = {};
-
 public:
     auto start(token const& n, int indent) -> void
     {
@@ -3042,39 +3047,19 @@ public:
     auto start(expression_node const&, int indent) -> void
     {
         o << pre(indent) << "expression\n";
-        //  If we are in an expression-list
-        if (!current_expression_list_term.empty()) {
-            if (current_expression_list_term.back()->pass == passing_style::out) {
-                o << pre(indent+1) << "out\n";
-            }
-            ++current_expression_list_term.back();
+    }
+
+    auto start(expression_list_node::term const&n, int indent) -> void
+    {
+        o << pre(indent) << "expression-list term\n";
+        if (n.pass == passing_style::out) {
+            o << pre(indent+1) << "out\n";
         }
     }
 
-    auto start(expression_list_node const& n, int indent) -> void
+    auto start(expression_list_node const&, int indent) -> void
     {
-        //  We're going to use the pointer as an iterator
-        if (!n.expressions.empty()) {
-            current_expression_list_term.push_back( &n.expressions[0] );
-        }
-        else {
-            current_expression_list_term.push_back( nullptr );
-        }
         o << pre(indent) << "expression-list\n";
-    }
-
-    auto end(expression_list_node const& n, int) -> void
-    {
-        //  If we're ending an expression list node, our pointer should be
-        //  pointing to one past the end of the expressions
-        if (current_expression_list_term.back() == nullptr) {
-            assert(n.expressions.empty());
-        }
-        assert(
-            current_expression_list_term.back() == nullptr ||
-            current_expression_list_term.back() == &n.expressions[0] + n.expressions.size()
-            );
-        current_expression_list_term.pop_back();
     }
 
     auto start(primary_expression_node const&, int indent) -> void
