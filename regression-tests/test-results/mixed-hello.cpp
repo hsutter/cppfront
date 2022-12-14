@@ -29,3 +29,4 @@ auto main() -> int {
 auto decorate(std::string& s) -> void{
     s = "[" + s + "]";
 }
+

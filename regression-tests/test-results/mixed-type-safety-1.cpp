@@ -49,3 +49,4 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void
     print(  "s* is Circle? ", cpp2::is<Circle>(*cpp2::assert_not_null(s)));
     print(  "s* is Square? ", cpp2::is<Square>(*cpp2::assert_not_null(s)));
 }
+

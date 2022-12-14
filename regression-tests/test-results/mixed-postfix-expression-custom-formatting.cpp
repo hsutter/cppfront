@@ -27,3 +27,4 @@ auto call(auto const& v, auto const& w, auto const& x, auto const& y, auto const
 }
 
 [[nodiscard]] auto main() -> int{}
+

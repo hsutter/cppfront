@@ -61,3 +61,4 @@ struct custom_struct_with_no_stringize_customization { } custom;
 
     std::cout << "custom = " + cpp2::to_string(custom) + "\n";
 }
+

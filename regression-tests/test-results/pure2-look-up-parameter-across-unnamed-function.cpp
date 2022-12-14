@@ -42,3 +42,4 @@ struct g__ret {
 [[nodiscard]] auto main() -> int{
     std::cout << f().ri + g().ri << "\n";
 }
+

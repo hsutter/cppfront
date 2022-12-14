@@ -54,3 +54,4 @@ auto f11(cpp2::out<X> x) -> void{C c { "f11" }; f12(&x);}
 auto f12(cpp2::out<X> x) -> void{C c { "f12" }; f13(&x);throw_1();}
 auto f13(cpp2::out<X> x) -> void{C c { "f13" }; f14(&x);}
 auto f14(cpp2::out<X> x) -> void{C c { "f14" }; x.construct();}
+

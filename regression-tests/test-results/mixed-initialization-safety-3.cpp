@@ -49,3 +49,4 @@ auto print_decorated(auto const& x) -> void { std::cout << ">> [" << x << "]\n";
 
 // for test determinism, force "xyzzy" branch
 [[nodiscard]] auto flip_a_coin() -> bool { return true; }
+

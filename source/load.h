@@ -320,16 +320,6 @@ auto process_cpp2_line(
         }
 
         else {
-            if (found_end && !isspace(line[i])) {
-                errors.emplace_back(
-                    source_position(lineno, i),
-                    std::string("unexpected text '")
-                        + line[i]
-                        + "' - after the closing ; or } of a definition, the rest"
-                          " of the line should contain only whitespace or comments"
-                );
-            }
-
             switch (line[i]) {
             break;case '{':
                 brace_depth.push_back(lineno);
@@ -352,7 +342,17 @@ auto process_cpp2_line(
                 if (std::ssize(brace_depth) == 0) { found_end = true; }
 
             break;case '*':
-                if (prev == '/') { in_comment = true; }
+                if (prev == '/') {
+                    in_comment = true;
+                    if (found_end) {
+                        errors.emplace_back(
+                            source_position(lineno, i),
+                            std::string("alpha limitation:"
+                                " after the closing ; or } of a definition, the rest"
+                                " of the line cannot begin a /*...*/ comment")
+                        );
+                    }
+                }
 
             break;case '/':
                 if (prev == '/') { in_comment = false; return false; }

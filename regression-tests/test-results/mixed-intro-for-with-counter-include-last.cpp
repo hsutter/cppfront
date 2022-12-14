@@ -22,3 +22,4 @@
         std::cout << i << " " << counter << "\n";
     } while (false); counter *= 2; }
 }
+

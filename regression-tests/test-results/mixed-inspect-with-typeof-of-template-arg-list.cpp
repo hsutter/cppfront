@@ -26,3 +26,4 @@ auto calc() {
 [[nodiscard]] auto main() -> int{
     return fun(42); 
 }
+

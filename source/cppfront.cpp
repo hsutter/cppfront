@@ -128,6 +128,7 @@ class positional_printer
     source_position curr_pos                  = {}; // current (line,col) in output
     int             next_comment              = 0;  // index of the next comment not yet printed
     bool            last_was_cpp2             = false;
+    bool            source_has_cpp2           = false;
 
     struct req_act_info {
         colno_t requested;
@@ -156,6 +157,7 @@ class positional_printer
 
     enum class target_type { string, chunks };
     std::vector<target_type>                 emit_target_stack;         // to interleave them sensibly
+
 
     //-----------------------------------------------------------------------
     //  Print text
@@ -244,7 +246,9 @@ class positional_printer
     //
     auto flush_comments( source_position pos ) -> void
     {
-        assert(pcomments);
+        if (!pcomments) {
+            return;
+        }
 
         //  For convenience
         auto& comments = *pcomments;
@@ -259,6 +263,7 @@ class positional_printer
         while (curr_pos.lineno < pos.lineno)
         {
             //  If a comment goes on this line, print it
+            assert( next_comment >= std::ssize(comments) || comments[next_comment].start.lineno >= curr_pos.lineno );
             if (next_comment < std::ssize(comments) && comments[next_comment].start.lineno == curr_pos.lineno)
             {
                 //  For a line comment, start it at the right indentation and print it
@@ -322,15 +327,33 @@ class positional_printer
 
 public:
     //-----------------------------------------------------------------------
+    //  Destructor
+    //
+    ~positional_printer() {
+        flush_comments( {curr_pos.lineno+1, 1} );
+
+        if (is_open() && source_has_cpp2) {
+            //  Always make sure the last line ends with a newline
+            //  (not really necessary but makes some tools quieter)
+            //  -- but only if there's any Cpp2, otherwise don't
+            //  because passing through all-Cpp1 code should always
+            //  remain diff-identical
+            print_extra("\n");
+        }
+    }
+
+    //-----------------------------------------------------------------------
     //  Open
     //
     auto open(
         std::string                 cpp2_filename_,
         std::string                 cpp1_filename_,
-        std::vector<comment> const& comments
+        std::vector<comment> const& comments,
+        bool                        has_cpp2
     )
         -> void
     {
+        source_has_cpp2 = has_cpp2;
         cpp2_filename = cpp2_filename_;
         assert (!out.is_open() && !pcomments && "ICE: tried to call .open twice");
         cpp1_filename = cpp1_filename_;
@@ -361,7 +384,7 @@ public:
 
     //-----------------------------------------------------------------------
     //  Print extra text and don't track positions
-    //  Used for Cpp2 boundary comment and prelude
+    //  Used for Cpp2 boundary comment and prelude and final newline
     //
     auto print_extra( std::string_view s ) -> void
     {
@@ -735,7 +758,8 @@ public:
         printer.open(
             sourcefile,
             cpp1_filename,
-            tokens.get_comments()
+            tokens.get_comments(),
+            source.has_cpp2()
         );
         if (!printer.is_open()) {
             errors.emplace_back(
@@ -864,15 +888,6 @@ public:
                 assert(decl);
                 emit(*decl);
             }
-        }
-
-        if (source.has_cpp2()) {
-            //  Always make sure the last line ends with a newline
-            //  (not really necessary but makes some tools quieter)
-            //  -- but only if there's any Cpp2, otherwise don't
-            //  because passing through all-Cpp1 code should always
-            //  remain diff-identical
-            printer.print_extra("\n");
         }
     }
 

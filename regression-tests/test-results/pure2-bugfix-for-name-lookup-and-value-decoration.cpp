@@ -26,3 +26,4 @@ struct vals__ret {
     auto v { vals() }; 
     v.i;
 }
+

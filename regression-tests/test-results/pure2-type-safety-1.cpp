@@ -50,3 +50,4 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void{
     else { bmsg.construct("false");}
     std::cout << std::setw(40) << msg << bmsg.value() << "\n";
 }
+

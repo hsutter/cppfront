@@ -41,3 +41,4 @@ auto test_generic(auto const& x) -> void{
         ()
         << "\n";
 }
+

@@ -27,3 +27,4 @@ auto decorate(std::string& s) -> void;
 auto decorate(std::string& s) -> void{
     s = "[" + s + "]";
 }
+
