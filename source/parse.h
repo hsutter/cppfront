@@ -2805,14 +2805,7 @@ private:
             next();
 
             if (auto t = id_expression()) {
-                auto is_void = false;
-                if (auto u = std::get_if<id_expression_node::unqualified>(&t->id)) {
-                    assert ((*u)->identifier);
-                    is_void = *(*u)->identifier == "void";
-                }
-                if (!is_void) {
-                    n->returns = std::move(t);
-                }
+                n->returns = std::move(t);
             }
             else if (auto returns_list = parameter_declaration_list(true)) {
                 if (std::ssize(returns_list->parameters) < 1) {
