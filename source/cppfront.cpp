@@ -1032,11 +1032,10 @@ public:
         ret += text.substr(current_start);
 
         //  Trim any stray "" pieces
-        auto match = std::string::size_type{};
-        while ((match = ret.find("\"\" + ", match)) != ret.npos) {
-            ret.replace(match, 5, "");
+        if (ret.starts_with("\"\" + ")) {
+            ret.replace(0, 5, "");
         }
-        match = 0;
+        auto match = std::string::size_type{};
         while ((match = ret.find(" + \"\"", match)) != ret.npos) {
             ret.replace(match, 5, "");
         }
