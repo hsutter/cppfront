@@ -46,7 +46,7 @@ struct source_line
 {
     std::string text;
 
-    enum class category { empty, preprocessor, comment, import, cpp1, cpp2 }
+    enum class category { empty, preprocessor, comment, import, cpp1, cpp2, rawstring }
         cat = category::empty;
 
     auto prefix() const -> std::string
@@ -58,6 +58,7 @@ struct source_line
         break;case category::import:        return "/* i */ ";
         break;case category::cpp1:          return "/* 1 */ ";
         break;case category::cpp2:          return "/* 2 */ ";
+        break;case category::rawstring:     return "/* R */ ";
         break;default: assert(!"illegal category"); abort();
         }
     }

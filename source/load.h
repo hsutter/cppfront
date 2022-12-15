@@ -196,27 +196,30 @@ auto starts_with_identifier_colon(std::string const& line) -> bool
 struct process_line_ret {
     bool all_comment_line;
     bool empty_line;
+    bool all_rawstring_line;
 };
 auto process_cpp_line(
     std::string const&  line,
     bool&               in_comment,
     bool&               in_string_literal,
+    bool&               in_raw_string_literal,
+    std::string&        raw_string_closing_seq,
     std::vector<int>&   brace_depth,
     lineno_t            lineno,
     std::vector<error>& errors
 )
     -> process_line_ret
 {
-    if (!in_comment && !in_string_literal && starts_with_whitespace_slash_slash(line)) {
-        return { true, false };
+    if (!in_comment && !in_string_literal && !in_raw_string_literal && starts_with_whitespace_slash_slash(line)) {
+        return { true, false, false };
     }
 
-    if (!in_comment && !in_string_literal && starts_with_whitespace_slash_star_and_no_star_slash(line)) {
+    if (!in_comment && !in_string_literal && !in_raw_string_literal && starts_with_whitespace_slash_star_and_no_star_slash(line)) {
         in_comment = true;
-        return { true, false };
+        return { true, false, false };
     }
 
-    struct process_line_ret r { in_comment, true };
+    struct process_line_ret r { in_comment, true , in_raw_string_literal};
 
     auto prev = ' ';
     for (auto i = colno_t{0}; i < ssize(line); ++i)
@@ -225,7 +228,7 @@ auto process_cpp_line(
         //  Note: in_literal is for { and } and so doesn't have to work for escaped ' characters
         //
         auto peek       = [&](int num) {  return (i+num < std::ssize(line)) ? line[i+num] : '\0';  };
-        auto in_literal = [&]()        {  return in_string_literal || (prev == '\'' && peek(1) == '\'');  };
+        auto in_literal = [&]()        {  return in_string_literal || in_raw_string_literal || (prev == '\'' && peek(1) == '\'');  };
 
         //  Process this source character
         //
@@ -233,19 +236,38 @@ auto process_cpp_line(
             r.empty_line = false;
         }
 
-        if (in_comment && !in_string_literal) {
+        if (in_comment && !in_string_literal && !in_raw_string_literal) {
             switch (line[i]) {
                 break;case '/': if (prev == '*') { in_comment = false; }
                 break;default: ;
             }
         }
-
+        else if (in_raw_string_literal) {
+            auto end_pos = line.find(raw_string_closing_seq, i);
+            if (end_pos == std::string::npos) {
+                return r;
+            }
+            in_raw_string_literal = false;
+            i = end_pos+raw_string_closing_seq.size()-1;
+        }
         else {
             r.all_comment_line = false;
+            r.all_rawstring_line = false;
             switch (line[i]) {
+                break;case 'R':
+                    if (!in_comment && !in_string_literal && !in_raw_string_literal && peek(1) == '"') {
+                        i+=2;
+                        if (i < ssize(line) - 1) {
+                            if (auto paren_pos = line.find("(", i); paren_pos != std::string::npos) {
+                                raw_string_closing_seq = ")"+line.substr(i, paren_pos-i)+"\"";
+                                in_raw_string_literal = true;
+                            }
+                        }
+                    }
+                    
                 break;case '\"':
                     //  If this isn't an escaped quote, toggle string literal state
-                    if (!in_comment && prev != '\\' && (in_string_literal || prev != '\'')) {
+                    if (!in_comment && prev != '\\' && (in_string_literal || prev != '\'') && !in_raw_string_literal) {
                         in_string_literal = !in_string_literal;
                     }
 
@@ -270,10 +292,10 @@ auto process_cpp_line(
                     }
 
                 break;case '*':
-                    if (!in_string_literal && prev == '/') { in_comment = true; }
+                    if (!in_string_literal && !in_raw_string_literal && prev == '/') { in_comment = true; }
 
                 break;case '/':
-                    if (!in_string_literal && prev == '/') { in_comment = false; return r; }
+                    if (!in_string_literal  && !in_raw_string_literal && prev == '/') { in_comment = false; return r; }
 
                 break;default: ;
             }
@@ -436,8 +458,11 @@ public:
             return false;
         }
 
-        auto in_comment        = false;
-        auto in_string_literal = false;
+        auto in_comment            = false;
+        auto in_string_literal     = false;
+        auto in_raw_string_literal = false;
+        std::string raw_string_closing_seq;
+
         auto brace_depth = std::vector<int>();
 
         while (in.getline(&buf[0], max_line_len)) {
@@ -462,7 +487,7 @@ public:
                 //  Switch to cpp2 mode if we're not in a comment, not inside nested { },
                 //  and the line starts with "nonwhitespace :" but not "::"
                 //
-                if (!in_comment && std::ssize(brace_depth) == 0 && starts_with_identifier_colon(lines.back().text))
+                if (!in_comment && !in_raw_string_literal && std::ssize(brace_depth) == 0 && starts_with_identifier_colon(lines.back().text))
                 {
                     cpp2_found= true;
 
@@ -506,12 +531,17 @@ public:
                             lines.back().text,
                             in_comment,
                             in_string_literal,
+                            in_raw_string_literal,
+                            raw_string_closing_seq,
                             brace_depth,
                             std::ssize(lines) - 1,
                             errors
                         );
                         if (stats.all_comment_line) {
                             lines.back().cat = source_line::category::comment;
+                        }
+                        else if (stats.all_rawstring_line) {
+                            lines.back().cat = source_line::category::rawstring;
                         }
                         else if (stats.empty_line) {
                             lines.back().cat = source_line::category::empty;
