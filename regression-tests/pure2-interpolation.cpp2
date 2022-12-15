@@ -1,0 +1,14 @@
+
+main: ()->int = {
+    x := 0;
+    std::cout << "g(x)$g(x)$g"  << "\n";
+    std::cout << "(x)$g(x)$g"   << "\n";
+    std::cout << "(x)$g(x)$"    << "\n";
+    std::cout << "(x)$(x)$"     << "\n";
+    std::cout << "\"(x)$\""     << "\n";
+    std::cout << "\"(x)$"       << "\n";
+    std::cout << "\""           << "\n";
+    std::cout << ""             << "\n";
+    std::cout << "pl(ug$h"      << "\n";
+    std::cout << "(x)$pl(ug$h"  << "\n";
+}

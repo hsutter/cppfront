@@ -933,7 +933,6 @@ public:
 
         auto pos = 0;
         auto ret = std::string{};   // the return string we're going to build
-        auto current_start = 0;     // the current offset before which the string has been into ret
 
         //  Skip prefix to first non-" character
         while (pos < length && text[pos] != '"') {
@@ -941,9 +940,18 @@ public:
         }
         assert(pos < length && text[pos] == '"');
         ++pos;
+        auto current_start = pos;   // the current offset before which the string has been into ret
+        auto first         = true;
+
+        auto add_plus = [&]{
+            if (!first) {
+                ret += " + ";
+            }
+            first = false;
+        };
 
         //  Now we're on the first character of the string itself
-        for ( ; pos < length && (text[pos] != '"' || text[pos-1] == '\\'); ++pos)
+        for ( ; pos < length && (text[pos] != '"' || text[pos-1] == '\\'); ++pos )
         {
             //  Find the next )$
             if (text[pos] == '$' && text[pos-1] == ')')
@@ -955,7 +963,7 @@ public:
                 //  "next" in the string is the "last" one encountered in the backwards scan
                 auto last_nonwhitespace = '\0';
 
-                for( ; text[open] != '"' || text[open-1] != '\\'; --open)
+                for( ; text[open] != '"' || (open > current_start && text[open-1] != '\\'); --open)
                 {
                     if (text[open] == ')') {
                         ++paren_depth;
@@ -1006,17 +1014,18 @@ public:
 
                 //  'open' is now at the matching (
 
-                //  Put the next non-interpolated chunk straight into ret
-                if (current_start > 0) {
+                //  Put the next non-empty non-interpolated chunk straight into ret
+                if (open != current_start) {
+                    add_plus();
+                    ret += '"';
+                    ret += text.substr(current_start, open - current_start);
                     ret += '"';
                 }
-                ret += text.substr(current_start, open - current_start);
-                ret += '"';
 
                 //  Then put interpolated chunk into ret
-                ret += " + cpp2::to_string";
+                add_plus();
+                ret += "cpp2::to_string";
                 ret += text.substr(open, pos - open);
-                ret += " + ";
 
                 current_start = pos+1;
             }
@@ -1026,18 +1035,10 @@ public:
         assert(pos == length-1 && text[pos] == '"');
 
         //  Put the final non-interpolated chunk straight into ret
-        if (current_start > 0) {
+        if (first || current_start < std::ssize(text)-1) {
+            add_plus();
             ret += '"';
-        }
-        ret += text.substr(current_start);
-
-        //  Trim any stray "" pieces
-        if (ret.starts_with("\"\" + ")) {
-            ret.replace(0, 5, "");
-        }
-        auto match = std::string::size_type{};
-        while ((match = ret.find(" + \"\"", match)) != ret.npos) {
-            ret.replace(match, 5, "");
+            ret += text.substr(current_start);
         }
 
         return ret;

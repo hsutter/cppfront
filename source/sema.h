@@ -791,7 +791,7 @@ public:
         inside_out_parameter = {};
     }
 
-    auto start(expression_list_node::term const&n, int indent) -> void
+    auto start(expression_list_node::term const&n, int) -> void
     {
         is_out_expression = (n.pass == passing_style::out);
     }
