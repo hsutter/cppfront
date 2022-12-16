@@ -888,18 +888,17 @@ inline auto to_string(std::tuple<Ts...> const& t) -> std::string
 //
 //-----------------------------------------------------------------------
 //
-template<typename T>
+template<typename T, typename D>
 class c_raii {
     T t;
-    void (*dtor)(void*);
+    D dtor;
 public:
-    template<typename D>
     c_raii( T t_, D d )
         : t{ t_ }
-        , dtor{ [](void* x) { (void)(D)(x); } }
+        , dtor{ d }
     { }
 
-    ~c_raii() { if (dtor) dtor(t); }
+    ~c_raii() { dtor(t); }
 
     operator T&() { return t; }
 
