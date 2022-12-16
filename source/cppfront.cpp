@@ -657,6 +657,7 @@ class cppfront
         //  special value - hack for now to note single-anon-return type kind in this function_returns working list
     std::vector<std::string>                      function_requires_conditions;
 
+    std::vector<bool>                             in_non_rvalue_context   = { false };
     std::vector<bool>                             need_expression_list_parens = { true };
     auto push_need_expression_list_parens( bool b ) -> void { need_expression_list_parens.push_back(b);            }
     auto pop_need_expression_list_parens()          -> void { assert(std::ssize(need_expression_list_parens) > 1);
@@ -1075,11 +1076,13 @@ public:
         auto last_use = is_definite_last_use(n.identifier);
 
         bool add_std_forward =
-            last_use && last_use->is_forward;
+            last_use && last_use->is_forward &&
+            !in_non_rvalue_context.back();
 
         bool add_std_move =
             !add_std_forward &&
-            (in_synthesized_multi_return || (last_use && !suppress_move_from_last_use));
+            (in_synthesized_multi_return || (last_use && !suppress_move_from_last_use)) &&
+            !in_non_rvalue_context.back();
 
         if (add_std_move) {
             printer.print_cpp2("std::move(", n.position());
@@ -1383,6 +1386,7 @@ public:
     auto emit(iteration_statement_node const& n) -> void
     {
         assert(n.identifier);
+        in_non_rvalue_context.push_back(true);
 
         //  Handle while
         //
@@ -1403,6 +1407,8 @@ public:
             }
             printer.print_cpp2(" ) ", n.position());
             emit(*n.statement);
+
+            in_non_rvalue_context.pop_back();
             return;
         }
 
@@ -1423,6 +1429,8 @@ public:
                 printer.print_cpp2(" ; return true; }() ", n.position());
             }
             printer.print_cpp2(");", n.position());
+
+            in_non_rvalue_context.pop_back();
             return;
         }
 
@@ -1458,6 +1466,7 @@ public:
                 printer.print_cpp2("; }", n.position());
             }
 
+            in_non_rvalue_context.pop_back();
             return;
         }
 
@@ -2039,10 +2048,12 @@ public:
             }
             first = false;
             auto offset = 0;
+            auto is_out = false;
 
             if (x.pass != passing_style::in) {
                 assert(to_string_view(x.pass) == "out" || to_string_view(x.pass) == "move");
                 if (to_string_view(x.pass) == "out") {
+                    is_out = true;
                     printer.print_cpp2("&", n.position());
                     offset = -3;   // because we're replacing "out " (followed by at least one space) with "&"
                 }
@@ -2052,10 +2063,18 @@ public:
                 }
             }
 
+            if (is_out) {
+                in_non_rvalue_context.push_back(true);
+            }
+
             assert(x.expr);
             adjust_remaining_token_columns_on_this_line_visitor v(x.expr->position(), offset);
             x.expr->visit(v, 0);
             emit(*x.expr);
+
+            if (is_out) {
+                in_non_rvalue_context.pop_back();
+            }
 
             if (to_string_view(x.pass) == "move") {
                 printer.print_cpp2(")", n.position());
@@ -2590,6 +2609,7 @@ public:
             //  If there's an initializer, emit it
             if (n.initializer)
             {
+                in_non_rvalue_context.push_back(true);
                 printer.add_pad_in_this_line(-100);
                 printer.print_cpp2( " { ", n.position() );
 
@@ -2599,6 +2619,7 @@ public:
                 pop_need_expression_list_parens();
 
                 printer.print_cpp2( " }", n.position() );
+                in_non_rvalue_context.pop_back();
             }
 
             printer.print_cpp2( "; ", n.position() );

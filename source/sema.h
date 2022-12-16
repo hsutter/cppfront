@@ -394,8 +394,8 @@ public:
         {
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
                 if (sym->start && sym->declaration->is(declaration_node::active::object) &&
-                    sym->parameter &&
-                        (sym->parameter->pass == passing_style::copy ||
+                    (!sym->parameter ||
+                        sym->parameter->pass == passing_style::copy ||
                          sym->parameter->pass == passing_style::move ||
                          sym->parameter->pass == passing_style::forward
                         )
@@ -428,7 +428,7 @@ public:
             //
             if (auto decl = is_potentially_movable_local(symbols[sympos])) {
                 assert (decl->identifier);
-                find_definite_last_uses(decl->identifier, sympos, decl->parameter->pass == passing_style::forward);
+                find_definite_last_uses(decl->identifier, sympos, decl->parameter && decl->parameter->pass == passing_style::forward);
             }
         }
 

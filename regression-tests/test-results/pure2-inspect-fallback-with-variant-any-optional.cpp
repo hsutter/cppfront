@@ -19,9 +19,9 @@ auto test_generic(auto const& x, auto const& msg) -> void;
 
     std::cout << "\nAll these cases satisfy \"matches std::string\"\n";
 
-    test_generic(v, "variant<int, int, string>");
-    test_generic(a, "string");
-    test_generic(o, "optional<string>");
+    test_generic(std::move(v), "variant<int, int, string>");
+    test_generic(std::move(a), "string");
+    test_generic(std::move(o), "optional<string>");
 }
 
 auto test_generic(auto const& x, auto const& msg) -> void{

@@ -17,7 +17,7 @@ constexpr int a = 1;
 
 [[nodiscard]] auto main() -> int{
     std::vector<int> v { 1, 2, 3 }; 
-    std::cout << (1 + 2) * (3 + cpp2::assert_in_bounds(v, 0));
+    std::cout << (1 + 2) * (3 + cpp2::assert_in_bounds(std::move(v), 0));
     f<(1 > 2)>(3, 4);
     f< a + a>(5, 6);
 }

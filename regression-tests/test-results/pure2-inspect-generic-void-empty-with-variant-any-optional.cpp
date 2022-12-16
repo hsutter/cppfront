@@ -21,11 +21,11 @@ auto test_generic(auto const& x, auto const& msg) -> void;
 
     std::cout << "\nAll these cases satisfy \"VOYDE AND EMPTIE\"\n";
 
-    test_generic(p, "unique_ptr");
-    test_generic(i, "vector<int>::iterator");
-    test_generic(v, "variant<monostate, int, int, string>");
-    test_generic(a, "any");
-    test_generic(o, "optional<string>");
+    test_generic(std::move(p), "unique_ptr");
+    test_generic(std::move(i), "vector<int>::iterator");
+    test_generic(std::move(v), "variant<monostate, int, int, string>");
+    test_generic(std::move(a), "any");
+    test_generic(std::move(o), "optional<string>");
 }
 
 auto test_generic(auto const& x, auto const& msg) -> void{

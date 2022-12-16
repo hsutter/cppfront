@@ -33,20 +33,20 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
     a = 2;
     o = 3;
     test_generic(42,   "int");
-    test_generic(v,    "variant<int, int, double>");
-    test_generic(a,    "any");
-    test_generic(o,    "optional<int>");
+    test_generic(std::move(v), "variant<int, int, double>");
+    test_generic(std::move(a), "any");
+    test_generic(std::move(o), "optional<int>");
 }
 
 auto test_generic(auto const& x, auto const& msg) -> void{
     std::string msgx { msg }; 
-    print( msgx + " is int? ", cpp2::is<int>(x));
+    print( std::move(msgx) + " is int? ", cpp2::is<int>(x));
 }
 
 auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void{
     cpp2::deferred_init<const char*> bmsg; 
     if (b) { bmsg.construct("true");}
     else { bmsg.construct("false");}
-    std::cout << std::setw(40) << msg << bmsg.value() << "\n";
+    std::cout << std::setw(40) << msg << std::move(bmsg.value()) << "\n";
 }
 

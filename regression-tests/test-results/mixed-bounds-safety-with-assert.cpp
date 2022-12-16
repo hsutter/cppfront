@@ -18,7 +18,7 @@ auto print_subrange(auto const& rng, cpp2::in<int> start, cpp2::in<int> end) -> 
 
 [[nodiscard]] auto main() -> int{
     std::vector<int> v { 1, 2, 3, 4, 5 }; 
-    print_subrange(v, 1, 13);
+    print_subrange(std::move(v), 1, 13);
 }
 
 auto print_subrange(auto const& rng, cpp2::in<int> start, cpp2::in<int> end) -> void{

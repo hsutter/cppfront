@@ -17,7 +17,7 @@
 [[nodiscard]] auto main() -> int{
     std::string s { "Fred" }; 
     auto myfile { fopen("xyzzy", "w") }; 
-    CPP2_UFCS(fprintf, myfile, "Hello %s with UFCS!", CPP2_UFCS_0(c_str, s));
-    CPP2_UFCS_0(fclose, myfile);
+    CPP2_UFCS(fprintf, myfile, "Hello %s with UFCS!", CPP2_UFCS_0(c_str, std::move(s)));
+    CPP2_UFCS_0(fclose, std::move(myfile));
 }
 

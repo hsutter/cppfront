@@ -24,7 +24,7 @@
         ( view, [](auto const& x){std::cout << x << "\n";});
 
     auto callback { [](auto& x) { return x += "-ish"; } }; 
-    std::ranges::for_each( view, callback );
+    std::ranges::for_each( view, std::move(callback));
 
     for ( auto&& cpp2_range = view;  auto const& str : cpp2_range ) 
         std::cout << str << "\n";

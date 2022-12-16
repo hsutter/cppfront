@@ -30,7 +30,7 @@ auto print_decorated(auto const& x) -> void;
     } else {
         fill(&    x, "plugh", 40 ); // note: constructs x!
     }
-    print_decorated(x.value());
+    print_decorated(std::move(x.value()));
 }
 
 auto fill(

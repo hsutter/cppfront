@@ -24,6 +24,6 @@ struct vals__ret {
 
 [[nodiscard]] auto main() -> int{
     auto v { vals() }; 
-    v.i;
+    std::move(v).i;
 }
 

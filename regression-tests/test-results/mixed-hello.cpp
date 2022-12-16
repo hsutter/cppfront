@@ -23,7 +23,7 @@ auto main() -> int {
 [[nodiscard]] auto name() -> std::string{
     std::string s { "world" }; 
     decorate(s);
-    return s; 
+    return std::move(s); 
 }
 
 auto decorate(std::string& s) -> void{

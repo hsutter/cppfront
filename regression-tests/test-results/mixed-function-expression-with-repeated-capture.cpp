@@ -22,10 +22,10 @@
 
     auto y { "\n" }; 
     std::ranges::for_each
-        ( view, [_0 = y](auto const& x){std::cout << _0 << x << _0;});
+        ( view, [_0 = y, _1 = std::move(y)](auto const& x){std::cout << _0 << x << _1;});
 
     auto callback { [](auto& x) { return x += "-ish"; } }; 
-    std::ranges::for_each( view, callback );
+    std::ranges::for_each( view, std::move(callback));
 
     for ( auto&& cpp2_range = view;  auto const& str : cpp2_range ) 
         std::cout << str << "\n";

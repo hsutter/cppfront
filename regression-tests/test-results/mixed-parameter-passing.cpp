@@ -51,7 +51,7 @@ auto parameter_styles(
     copy_from(z);
 
     if (std::time(nullptr) % 2 == 0) {
-        copy_from(z);
+        copy_from(std::move(z));
     }
 
 }

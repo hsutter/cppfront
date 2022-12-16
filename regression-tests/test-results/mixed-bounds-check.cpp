@@ -14,6 +14,6 @@
 [[nodiscard]] auto main() -> int{
     std::vector v { 1, 2, 3, 4, 5, -999 }; 
     CPP2_UFCS_0(pop_back, v);
-    std::cout << cpp2::assert_in_bounds(v, 5) << "\n";
+    std::cout << cpp2::assert_in_bounds(std::move(v), 5) << "\n";
 }
 

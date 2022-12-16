@@ -29,7 +29,7 @@ auto print_and_decorate(auto const& thing) -> void;
         p.construct(&x);
     }
 
-    print_and_decorate( *cpp2::assert_not_null(p.value()));
+    print_and_decorate( *cpp2::assert_not_null(std::move(p.value())));
 }
 
 auto print_and_decorate(auto const& thing) -> void { 

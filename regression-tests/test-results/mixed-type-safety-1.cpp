@@ -33,7 +33,7 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void
     cpp2::deferred_init<const char*> bmsg; 
     if (b) { bmsg.construct("true");}
     else { bmsg.construct("false");}
-    std::cout << msg << bmsg.value() << "\n";
+    std::cout << msg << std::move(bmsg.value()) << "\n";
 }
 
 //--- examples -------------------------
@@ -47,6 +47,6 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void
     Shape* s { CPP2_UFCS_0(get, c) }; // safe by Lifetime
     print("\ns* is Shape?  ", cpp2::is<Shape>(*cpp2::assert_not_null(s)));
     print(  "s* is Circle? ", cpp2::is<Circle>(*cpp2::assert_not_null(s)));
-    print(  "s* is Square? ", cpp2::is<Square>(*cpp2::assert_not_null(s)));
+    print(  "s* is Square? ", cpp2::is<Square>(*cpp2::assert_not_null(std::move(s))));
 }
 

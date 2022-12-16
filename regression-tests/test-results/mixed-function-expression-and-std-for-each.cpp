@@ -31,7 +31,7 @@
     std::for_each(
         CPP2_UFCS_0(begin, view), 
         CPP2_UFCS_0(end, view), 
-        callback
+        std::move(callback)
     );
 
     for ( auto&& cpp2_range = view;  auto const& str : cpp2_range ) {
