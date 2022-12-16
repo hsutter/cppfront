@@ -1,25 +1,25 @@
 main: () -> int = {
-    v: std::variant<int, double> = 42.0;
+    v: std::variant<int, double, int> = 42.0;
     a: std::any = "xyzzy";
     o: std::optional<int> = ();
 
-    test_generic(3.14);
-    test_generic(v);
-    test_generic(a);
-    test_generic(o);
+    test_generic(3.14, "double");
+    test_generic(v,    "variant<int, double, int>");
+    test_generic(a,    "any");
+    test_generic(o,    "optional<int>");
 
-    v = 1;
+    v.emplace<2>(1);
     a = 2;
     o = 3;
-    test_generic(42);
-    test_generic(v);
-    test_generic(a);
-    test_generic(o);
+    test_generic(42,   "int");
+    test_generic(v,    "variant<int, double, int>");
+    test_generic(a,    "any");
+    test_generic(o,    "optional<int>");
 }
 
-test_generic: ( x: _ ) = {
+test_generic: ( x: _, msg: _ ) = {
     std::cout
-        << std::setw(30) << typeid(x).name() 
+        << std::setw(30) << msg
         << " value is "
         << inspect x -> std::string {
             is int = std::to_string(x as int);

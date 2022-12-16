@@ -6,7 +6,7 @@ main: () -> int = {
 
 print_an_int: ( x: _ ) = {
     std::cout
-        << std::setw(30) << typeid(x).name() 
+        << std::setw(30) << cpp2::to_string(x)
         << " value is "
         << inspect x -> std::string {
             is int = std::to_string(x as int);

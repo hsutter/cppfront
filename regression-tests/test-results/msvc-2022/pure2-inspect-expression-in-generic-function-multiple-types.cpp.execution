@@ -1,8 +1,8 @@
                         double value is not an int or string
-class std::variant<int,double> value is not an int or string
-                class std::any value is "xyzzy"
-      class std::optional<int> value is not an int or string
+     variant<int, int, double> value is not an int or string
+                           any value is "xyzzy"
+                 optional<int> value is not an int or string
                            int value is integer 42
-class std::variant<int,double> value is integer 1
-                class std::any value is integer 2
-      class std::optional<int> value is integer 3
+     variant<int, int, double> value is integer 1
+                           any value is integer 2
+                 optional<int> value is integer 3

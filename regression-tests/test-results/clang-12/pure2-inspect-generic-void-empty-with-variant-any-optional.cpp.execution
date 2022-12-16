@@ -1,17 +1,17 @@
 
 All these cases satisfy "VOYDE AND EMPTIE"
 
-St10unique_ptrIiSt14default_deleteIiEE
+unique_ptr
     ... VOYDE AND EMPTIE
 
-N9__gnu_cxx17__normal_iteratorIPiSt6vectorIiSaIiEEEE
+vector<int>::iterator
     ... VOYDE AND EMPTIE
 
-St7variantIJSt9monostateiNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEE
+variant<monostate, int, int, string>
     ... VOYDE AND EMPTIE
 
-St3any
+any
     ... VOYDE AND EMPTIE
 
-St8optionalINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEE
+optional<string>
     ... VOYDE AND EMPTIE

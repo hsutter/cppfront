@@ -2,22 +2,22 @@
 main: () -> int = {
     p: std::unique_ptr<int> = ();
     i: std::vector<int>::iterator = ();
-    v: std::variant<std::monostate, int, std::string> = ();
+    v: std::variant<std::monostate, int, int, std::string> = ();
     a: std::any = ();
     o: std::optional<std::string> = ();
 
     std::cout << "\nAll these cases satisfy \"VOYDE AND EMPTIE\"\n";
 
-    test_generic(p);
-    test_generic(i);
-    test_generic(v);
-    test_generic(a);
-    test_generic(o);
+    test_generic(p, "unique_ptr");
+    test_generic(i, "vector<int>::iterator");
+    test_generic(v, "variant<monostate, int, int, string>");
+    test_generic(a, "any");
+    test_generic(o, "optional<string>");
 }
 
-test_generic: ( x: _ ) = {
+test_generic: ( x: _, msg: _ ) = {
     std::cout
-        << "\n" << typeid(x).name() << "\n    ..."
+        << "\n" << msg << "\n    ..."
         << inspect x -> std::string {
             is void = " VOYDE AND EMPTIE";
             is _   = " no match";

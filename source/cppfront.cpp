@@ -1705,13 +1705,16 @@ public:
             //
             //printer.print_cpp2("CPP2_UFCS(", n.position());
 
-            //  If there are no additional arguments, use the CPP2_UFCS_0 version
-            if (!n.ops[1].expr_list->expressions.empty()) {
-                printer.print_cpp2("CPP2_UFCS(", n.position());
+            auto ufcs_string = std::string("CPP2_UFCS");
+            //  If we can get the id-expr's token, then the unqualified-id has no template args
+            if (n.ops[0].id_expr->get_token() == nullptr) {
+                ufcs_string += "_TEMPLATE";
             }
-            else {
-                printer.print_cpp2("CPP2_UFCS_0(", n.position());
+            //  If there are no additional arguments, use the _0 version
+            if (n.ops[1].expr_list->expressions.empty()) {
+                ufcs_string += "_0";
             }
+            printer.print_cpp2(ufcs_string+"(", n.position());
             //--------------------------------------------------------------------
 
             //  Make the "funcname" the first argument to CPP2_UFCS

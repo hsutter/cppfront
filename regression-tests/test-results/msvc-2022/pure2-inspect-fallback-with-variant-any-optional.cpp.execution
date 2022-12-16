@@ -1,11 +1,11 @@
 
 All these cases satisfy "matches std::string"
 
-class std::variant<int,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > >
+variant<int, int, string>
     ... matches std::string
 
-class std::any
+string
     ... matches std::string
 
-class std::optional<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > >
+optional<string>
     ... matches std::string

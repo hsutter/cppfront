@@ -1,19 +1,19 @@
 
 main: () -> int = {
-    v: std::variant<int, std::string> = "xyzzy" as std::string;
+    v: std::variant<int, int, std::string> = "xyzzy" as std::string;
     a: std::any = "xyzzy" as std::string;
     o: std::optional<std::string> = "xyzzy" as std::string;
 
     std::cout << "\nAll these cases satisfy \"matches std::string\"\n";
 
-    test_generic(v);
-    test_generic(a);
-    test_generic(o);
+    test_generic(v, "variant<int, int, string>");
+    test_generic(a, "string");
+    test_generic(o, "optional<string>");
 }
 
-test_generic: ( x: _ ) = {
+test_generic: ( x: _, msg: _ ) = {
     std::cout
-        << "\n" << typeid(x).name() << "\n    ..."
+        << "\n" << msg << "\n    ..."
         << inspect x -> std::string {
             is std::string = " matches std::string";
             is std::variant<int, std::string> = " matches std::variant<int, std::string>";

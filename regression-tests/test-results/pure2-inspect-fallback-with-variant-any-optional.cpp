@@ -6,27 +6,27 @@
 #line 2 "pure2-inspect-fallback-with-variant-any-optional.cpp2"
 [[nodiscard]] auto main() -> int;
 #line 14 "pure2-inspect-fallback-with-variant-any-optional.cpp2"
-auto test_generic(auto const& x) -> void;
+auto test_generic(auto const& x, auto const& msg) -> void;
 
 //=== Cpp2 definitions ==========================================================
 
 #line 1 "pure2-inspect-fallback-with-variant-any-optional.cpp2"
 
 [[nodiscard]] auto main() -> int{
-    std::variant<int,std::string> v { cpp2::as<std::string>("xyzzy") }; 
+    std::variant<int,int,std::string> v { cpp2::as<std::string>("xyzzy") }; 
     std::any a { cpp2::as<std::string>("xyzzy") }; 
     std::optional<std::string> o { cpp2::as<std::string>("xyzzy") }; 
 
     std::cout << "\nAll these cases satisfy \"matches std::string\"\n";
 
-    test_generic(v);
-    test_generic(a);
-    test_generic(o);
+    test_generic(v, "variant<int, int, string>");
+    test_generic(a, "string");
+    test_generic(o, "optional<string>");
 }
 
-auto test_generic(auto const& x) -> void{
+auto test_generic(auto const& x, auto const& msg) -> void{
     std::cout 
-        << "\n" << typeid(x).name() << "\n    ..." 
+        << "\n" << msg << "\n    ..." 
         << [&] () -> std::string { auto&& __expr = x;
             if (cpp2::is<std::string>(__expr)) { if constexpr( requires{" matches std::string";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((" matches std::string")),std::string> ) return " matches std::string"; else return std::string{}; else return std::string{}; }
             else if (cpp2::is<std::variant<int,std::string>>(__expr)) { if constexpr( requires{" matches std::variant<int, std::string>";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((" matches std::variant<int, std::string>")),std::string> ) return " matches std::variant<int, std::string>"; else return std::string{}; else return std::string{}; }
