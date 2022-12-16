@@ -395,13 +395,11 @@ public:
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
                 if (sym->start && sym->declaration->is(declaration_node::active::object) &&
                     (!sym->parameter ||
-                        sym->parameter->pass == passing_style::copy ||
-                         sym->parameter->pass == passing_style::move ||
-                         sym->parameter->pass == passing_style::forward
-                        )
+                     sym->parameter->pass == passing_style::copy ||
+                     sym->parameter->pass == passing_style::move ||
+                     sym->parameter->pass == passing_style::forward
                     )
-                    // TODO: Extend move-from-last-use to locals once we can reliably detect rvalue-friendly contexts
-                    //(!sym->parameter || sym->parameter->pass == passing_style::copy || sym->parameter->pass == passing_style::move))
+                   )
                 {
                     return sym;
                 }
