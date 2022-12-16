@@ -130,6 +130,7 @@ struct primary_expression_node
         std::unique_ptr<inspect_expression_node>
     > expr;
 
+    auto template_args_count() -> int;
     auto get_token() -> token const*;
     auto position() const -> source_position;
     auto visit(auto& v, int depth) -> void;
@@ -385,6 +386,10 @@ struct unqualified_id_node
     };
     std::vector<term> template_args;
 
+    auto template_args_count() -> int {
+        return std::ssize(template_args);
+    }
+
     auto get_token() -> token const* {
         if (template_args.empty()) {
             assert (identifier);
@@ -469,6 +474,14 @@ struct type_id_node
         std::unique_ptr<unqualified_id_node>
     > id;
 
+    auto template_args_count() -> int {
+        if (id.index() == unqualified) {
+            return std::get<unqualified>(id)->template_args_count();
+        }
+        // else
+        return 0;
+    }
+
     auto get_token() -> token const* {
         if (id.index() == unqualified) {
             return std::get<unqualified>(id)->get_token();
@@ -504,6 +517,14 @@ struct id_expression_node
         std::unique_ptr<qualified_id_node>,
         std::unique_ptr<unqualified_id_node>
     > id;
+
+    auto template_args_count() -> int {
+        if (id.index() == unqualified) {
+            return std::get<unqualified>(id)->template_args_count();
+        }
+        // else
+        return 0;
+    }
 
     auto get_token() -> token const* {
         if (id.index() == unqualified) {
@@ -932,6 +953,14 @@ struct declaration_node
         v.end(*this, depth);
     }
 };
+
+auto primary_expression_node::template_args_count() -> int {
+    if (expr.index() == id_expression) {
+        return std::get<id_expression>(expr)->template_args_count();
+    }
+    // else
+    return 0;
+}
 
 auto primary_expression_node::get_token() -> token const*
 {

@@ -1684,6 +1684,9 @@ public:
             std::ssize(n.ops) >= 2 &&                   //  and we're of the form:
             n.ops[0].op->type() == lexeme::Dot &&       //       token . id-expr ( expr-list )
             n.ops[1].op->type() == lexeme::LeftParen &&
+            // alpha limitation: if it's a function call with more than one template argument (e.g., x.f<1,2>())
+            //                   the UFCS* macros can't handle that right now, so don't UFCS-size it
+            n.ops[0].id_expr->template_args_count() < 2 &&
             // and either there's nothing after that, or there's just a $ after that
             (
                 std::ssize(n.ops) == 2 ||
@@ -1715,8 +1718,7 @@ public:
             //printer.print_cpp2("CPP2_UFCS(", n.position());
 
             auto ufcs_string = std::string("CPP2_UFCS");
-            //  If we can get the id-expr's token, then the unqualified-id has no template args
-            if (n.ops[0].id_expr->get_token() == nullptr) {
+            if (n.ops[0].id_expr->template_args_count() > 0) {
                 ufcs_string += "_TEMPLATE";
             }
             //  If there are no additional arguments, use the _0 version
