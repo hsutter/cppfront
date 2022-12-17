@@ -288,9 +288,10 @@ class cmdline_processor
         callback0   handler0;
         callback1   handler1;
         std::string synonym;
+        bool        opt_out;
 
-        flag(int g, std::string_view n, std::string_view d, callback0 h0, callback1 h1, std::string_view s)
-            : group{g}, name{n}, description{d}, handler0{h0}, handler1{h1}, synonym{s}
+        flag(int g, std::string_view n, std::string_view d, callback0 h0, callback1 h1, std::string_view s, bool o)
+            : group{g}, name{n}, description{d}, handler0{h0}, handler1{h1}, synonym{s}, opt_out{o}
         { }
     };
     std::vector<flag> flags;
@@ -341,6 +342,10 @@ public:
 
             for (auto& flag : flags) {
                 auto length_to_match = std::max(flag.unique_prefix, as<int>(arg->text.length())-1);
+                if (flag.opt_out && arg->text.ends_with("-")) {
+                    length_to_match = std::max(flag.unique_prefix, as<int>(arg->text.length())-2);
+                }
+
                 //  Allow a switch to start with either - or /
                 if (arg->text.starts_with("-" + flag.name.substr(0, length_to_match)) ||
                     arg->text.starts_with("/" + flag.name.substr(0, length_to_match)) ||
@@ -355,30 +360,28 @@ public:
                         flag.handler0();
                     }
 
-                    //  Else this is a switch that takes the next arg as its value, so pass that
+                    //  Else
                     else {
-                        if (arg+1 == args.end()) {
-                            print("Missing argument to option " + arg->text + " (try -help)\n");
-                            help_requested = true;
+                        //  If this is a switch that could be suffixed with "-" to opt out
+                        if (flag.opt_out) {
+                            flag.handler1( arg->text.ends_with("-") ? "-" : "" );
                         }
-                        arg->pos = processed;
-                        ++arg;  // move to next argument, which is the argument to this switch
-                        flag.handler1(arg->text);
+                        //  Else this is a switch that takes the next arg as its value, so pass that
+                        else {
+                            if (arg+1 == args.end()) {
+                                print("Missing argument to option " + arg->text + " (try -help)\n");
+                                help_requested = true;
+                            }
+                            arg->pos = processed;
+                            ++arg;  // move to next argument, which is the argument to this switch
+                            flag.handler1(arg->text);
+                        }
                     }
 
                     arg->pos = processed;
                     break;
                 }
             }
-
-            // For now comment this out to try leaving unmatched switches alone, so that
-            // Unix absolute filenames work... and in case an absolute filename collides
-            // with a legit switch name, also added "--" above... let's see how this works
-            //if (arg->pos != processed && (arg->text.starts_with("-") || arg->text.starts_with("/"))) {
-            //    arg->pos = processed;
-            //    print("Unknown option: " + arg->text + " (try -help)\n");
-            //    help_requested = true;
-            //}
         }
 
         std::erase_if( args, [=](auto& arg){ return arg.pos == processed; } );
@@ -408,6 +411,9 @@ public:
                 n += flag.name.substr(flag.unique_prefix);
                 n += "]";
             }
+            if (flag.opt_out) {
+                n += "[-]";
+            }
             if (!flag.synonym.empty()) {
                 n += ", -" + flag.synonym;
             }
@@ -417,14 +423,16 @@ public:
         }
     }
 
-    auto add_flag(int group, std::string_view name, std::string_view description, callback0 handler0, callback1 handler1, std::string_view synonym) {
-        flags.emplace_back( group, name, description, handler0, handler1, synonym );
-        if (max_flag_length < std::ssize(name)) {
-            max_flag_length = std::ssize(name);
+    auto add_flag(int group, std::string_view name, std::string_view description, callback0 handler0, callback1 handler1, std::string_view synonym, bool opt_out) {
+        flags.emplace_back( group, name, description, handler0, handler1, synonym, opt_out );
+        auto length = std::ssize(name);
+        if (opt_out) { length += 3; }   // space to print "[-]"
+        if (max_flag_length < length) {
+            max_flag_length = length;
         }
     }
     struct register_flag {
-        register_flag(int group, std::string_view name, std::string_view description, callback0 handler0, callback1 handler1 = nullptr, std::string_view synonym = {});
+        register_flag(int group, std::string_view name, std::string_view description, callback0 handler0, callback1 handler1 = nullptr, std::string_view synonym = {}, bool opt_out = false);
     };
 
     auto set_args(int argc, char* argv[]) -> void {
@@ -457,8 +465,16 @@ public:
 
 } cmdline;
 
-cmdline_processor::register_flag::register_flag(int group, std::string_view name, std::string_view description, callback0 handler0, callback1 handler1, std::string_view synonym) {
-    cmdline.add_flag( group, name, description, handler0, handler1, synonym );
+cmdline_processor::register_flag::register_flag(
+    int              group,
+    std::string_view name,
+    std::string_view description,
+    callback0        handler0,
+    callback1        handler1,
+    std::string_view synonym,
+    bool             opt_out
+) {
+    cmdline.add_flag( group, name, description, handler0, handler1, synonym, opt_out );
 }
 
 static cmdline_processor::register_flag cmd_help   (

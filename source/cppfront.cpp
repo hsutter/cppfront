@@ -76,20 +76,26 @@ static cmdline_processor::register_flag cmd_cpp2_only(
     []{ flag_cpp2_only = true; }
 );
 
-static auto flag_safe_null_pointers = false;
+static auto flag_safe_null_pointers = true;
 static cmdline_processor::register_flag cmd_safe_null_pointers(
     2,
     "null-checks",
-    "Enable null safety contract checks",
-    []{ flag_safe_null_pointers = true; }
+    "Null safety checks (on by default, - to disable)",
+    nullptr,
+    [](std::string const& opt){ flag_safe_null_pointers = opt.empty(); },
+    {},
+    true
 );
 
-static auto flag_safe_subscripts = false;
+static auto flag_safe_subscripts = true;
 static cmdline_processor::register_flag cmd_safe_subscripts(
     2,
     "subscript-checks",
-    "Enable subscript bounds safety contract checks",
-    []{ flag_safe_subscripts = true; }
+    "Subscript safety checks (on by default, - to disable)",
+    nullptr,
+    [](std::string const& opt){ flag_safe_subscripts = opt.empty(); },
+    {},
+    true
 );
 
 static auto flag_use_source_location = false;
