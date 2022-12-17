@@ -2134,13 +2134,6 @@ public:
     )
         -> void
     {
-        //  TODO: If there's a let on this statement, generate a block scope
-        if (n.let) {
-
-            //  TODO
-
-        }
-
         printer.disable_indent_heuristic_for_next_text();
 
         try_emit<statement_node::compound   >(n.statement, function_prolog, function_epilog, function_indent);

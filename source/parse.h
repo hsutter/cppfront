@@ -751,9 +751,6 @@ struct contract_node
 struct parameter_declaration_list_node;
 struct statement_node
 {
-    token const*                                     let;
-    std::unique_ptr<parameter_declaration_list_node> let_params;
-
     enum active { expression=0, compound, selection, declaration, return_, iteration, contract, inspect };
     std::variant<
         std::unique_ptr<expression_statement_node>,
@@ -839,11 +836,6 @@ struct parameter_declaration_list_node
 auto statement_node::visit(auto& v, int depth) -> void
 {
     v.start(*this, depth);
-    if (let) {
-        let->visit(v, depth+1);
-        assert(let_params);
-        let_params->visit(v, depth+1);
-    }
     try_visit<expression >(statement, v, depth);
     try_visit<compound   >(statement, v, depth);
     try_visit<selection  >(statement, v, depth);
@@ -2470,19 +2462,6 @@ private:
         -> std::unique_ptr<statement_node>
     {
         auto n = std::make_unique<statement_node>();
-
-        //  Handle optional "let" before any statement
-        if (curr() == "let" && peek(1) && *peek(1) == "(") {
-            n->let = &curr();
-            next(); // now on the open paren
-            if (auto params = parameter_declaration_list()) {
-                n->let_params = std::move(params);
-            }
-            else {
-                error("invalid parameter list after 'let'");
-                return {};
-            }
-        }
 
         //  Now handle the rest of the statement
 
