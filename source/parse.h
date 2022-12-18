@@ -1361,11 +1361,11 @@ private:
     //
 
     //G primary-expression:
+    //G     inspect-expression
+    //G     id-expression
     //G     literal
     //G     ( expression-list )
-    //G     id-expression
     //G     unnamed-declaration
-    //G     inspect-expression
     //G
     auto primary_expression()
         -> std::unique_ptr<primary_expression_node>
@@ -2017,8 +2017,8 @@ private:
 
 
     //G id-expression
-    //G     unqualified-id
     //G     qualified-id
+    //G     unqualified-id
     //G
     auto id_expression() -> std::unique_ptr<id_expression_node>
     {
