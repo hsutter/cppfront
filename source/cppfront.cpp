@@ -2104,6 +2104,14 @@ public:
         assert(n.expr);
 
         if (function_body_start != source_position{}) {
+            if (!function_returns.empty() && function_returns.back() != nullptr && function_returns.back() != &single_anon) {
+                errors.emplace_back(
+                    n.position(),
+                    "a function with named return value(s) must have a full { } body"
+                );
+                return;
+            }
+
             printer.print_cpp2(" { ", function_body_start);
             if (!function_void_ret) {
                 printer.print_cpp2("return ", n.position());
