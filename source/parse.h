@@ -912,6 +912,10 @@ struct declaration_node
     std::unique_ptr<statement_node> initializer;
     capture_group                   captures;
 
+    declaration_node*               parent_scope = nullptr;
+
+    declaration_node(declaration_node* parent) : parent_scope{parent} { }
+
     //  Shorthand for common query
     //
     auto is(active a) const
@@ -1168,6 +1172,23 @@ class parser
         }
         ~capture_groups_stack_guard() {
             pars->current_capture_groups.pop_back();
+        }
+    };
+
+    //  Keep a stack of currently active declarations (still being parsed)
+    std::vector<declaration_node*> current_declarations = { nullptr };
+
+    struct current_declarations_stack_guard {
+        parser* pars;
+        current_declarations_stack_guard(parser* p, declaration_node* decl)
+            : pars{p}
+        {
+            assert(p);
+            assert(decl);
+            pars->current_declarations.push_back(decl);
+        }
+        ~current_declarations_stack_guard() {
+            pars->current_declarations.pop_back();
         }
     };
 
@@ -2856,13 +2877,15 @@ private:
         }
         next();
 
-        auto n = std::make_unique<declaration_node>();
+        auto n = std::make_unique<declaration_node>( current_declarations.back() );
         n->pos = start;
         auto guard =
             captures_allowed
             ? make_unique<capture_groups_stack_guard>(this, &n->captures)
             : std::unique_ptr<capture_groups_stack_guard>()
             ;
+
+        auto guard2 = current_declarations_stack_guard(this, n.get());
 
         //  Next is an an optional type
 

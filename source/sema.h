@@ -319,7 +319,7 @@ public:
                     o << "*** " << sym.identifier->position().to_string()
                       << " DEFINITE LAST "
                       << (use->is_forward ? "FORWARDING" : "POTENTIALLY MOVING")
-                      << "USE OF ";
+                      << " USE OF ";
                 }
 
                 if (is_definite_initialization(sym.identifier)) {
@@ -372,7 +372,7 @@ public:
         //  Helpers for readability
 
         //  It's an uninitialized variable (incl. named return values) if it's
-        //  a variable with no initializer and that isn't a parameter
+        //  a local variable with no initializer and that isn't a parameter
         //
         auto is_uninitialized_variable_decl = [&](symbol const& s)
             -> declaration_sym const*
@@ -381,7 +381,13 @@ public:
                 assert (sym);
                 if (sym->start && !sym->initializer && !(sym->parameter && sym->parameter->pass != passing_style::out)) {
                     assert (sym->declaration->is(declaration_node::active::object));
-                    return sym;
+                    //  Must be in function scope
+                    if (sym->declaration->parent_scope && sym->declaration->parent_scope->is(declaration_node::function)) {
+                        return sym;
+                    }
+                    else {
+                        return {};
+                    }
                 }
             }
             return {};
@@ -401,7 +407,13 @@ public:
                     )
                    )
                 {
-                    return sym;
+                    //  Must be in function scope
+                    if (sym->declaration->parent_scope && sym->declaration->parent_scope->is(declaration_node::function)) {
+                        return sym;
+                    }
+                    else {
+                        return {};
+                    }
                 }
             }
             return {};

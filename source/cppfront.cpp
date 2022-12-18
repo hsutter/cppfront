@@ -2598,7 +2598,16 @@ public:
             else {
                 //  If there isn't an initializer, use cpp2::deferred_init<T>
                 if (!n.initializer) {
-                    printer.print_cpp2( "cpp2::deferred_init<", n.position() );
+                    if (n.parent_scope && n.parent_scope->is(declaration_node::function)) {
+                        printer.print_cpp2( "cpp2::deferred_init<", n.position() );
+                    }
+                    else {
+                        errors.emplace_back(
+                            n.position(),
+                            "a non-local object must have an initializer"
+                        );
+                        return;
+                    }
                 }
                 printer.preempt_position(n.position());
                 emit( *type );
