@@ -2045,8 +2045,14 @@ public:
     //
     auto emit(expression_list_node const& n) -> void
     {
-        if (should_add_expression_list_parens() && !n.expressions.empty() && !n.inside_initializer) {
-            printer.print_cpp2("(", n.position());
+        auto add_parens = should_add_expression_list_parens() && !n.inside_initializer;
+        if (add_parens) {
+            if (n.expressions.empty()) {
+                printer.print_cpp2( "{", n.position());
+            }
+            else {
+                printer.print_cpp2( "(", n.position());
+            }
         }
 
         auto first = true;
@@ -2089,8 +2095,13 @@ public:
             }
         }
 
-        if (should_add_expression_list_parens() && !n.expressions.empty() && !n.inside_initializer) {
-            printer.print_cpp2(")", n.position());
+        if (add_parens) {
+            if (n.expressions.empty()) {
+                printer.print_cpp2( "}", n.position());
+            }
+            else {
+                printer.print_cpp2( ")", n.position());
+            }
         }
         //  We want to consume only one of these
         consumed_expression_list_parens();
