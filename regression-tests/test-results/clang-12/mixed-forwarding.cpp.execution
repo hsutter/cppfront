@@ -1,0 +1,8 @@
++X 1
++X 2
+copy X 1
+move X 2
++X 3
++X 4
+move X 3
+move X 4

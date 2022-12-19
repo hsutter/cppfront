@@ -2065,7 +2065,11 @@ public:
             auto is_out = false;
 
             if (x.pass != passing_style::in) {
-                assert(to_string_view(x.pass) == "out" || to_string_view(x.pass) == "move");
+                assert(
+                    to_string_view(x.pass) == "out"  ||
+                    to_string_view(x.pass) == "move" ||
+                    to_string_view(x.pass) == "forward"
+                );
                 if (to_string_view(x.pass) == "out") {
                     is_out = true;
                     printer.print_cpp2("&", n.position());
@@ -2074,6 +2078,10 @@ public:
                 else if (to_string_view(x.pass) == "move") {
                     printer.print_cpp2("std::move(", n.position());
                     offset = 6;    // because we're replacing "move " (followed by at least one space) with "std::move("
+                }
+                else if (to_string_view(x.pass) == "forward") {
+                    printer.print_cpp2("CPP2_FORWARD(", n.position());
+                    offset = 10;   // because we're replacing "forward " (followed by at least one space) with "CPP2_FORWARD("
                 }
             }
 
@@ -2090,7 +2098,7 @@ public:
                 in_non_rvalue_context.pop_back();
             }
 
-            if (to_string_view(x.pass) == "move") {
+            if (to_string_view(x.pass) == "move" || to_string_view(x.pass) == "forward") {
                 printer.print_cpp2(")", n.position());
             }
         }

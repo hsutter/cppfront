@@ -1802,6 +1802,10 @@ private:
             pass = passing_style::move;
             next();
         }
+        else if (curr().type() == lexeme::Identifier && curr() == "forward") {
+            pass = passing_style::forward;
+            next();
+        }
         auto x = expression();
 
         //  If this is an empty expression_list, we're done
