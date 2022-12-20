@@ -1789,10 +1789,7 @@ public:
             }
             // Going backwards if we found Dot and there is args variable
             // it means that it should be handled by UFCS
-            else if( i->op->type() == lexeme::Dot && args
-                        // don't use UFCS for methods with more than one template argument
-                        && i->id_expr && i->id_expr->template_args_count() < 2
-                    )
+            else if( i->op->type() == lexeme::Dot && args )
             {
                 auto funcname = print_to_string(*i->id_expr);
 
@@ -1805,8 +1802,14 @@ public:
                 //printer.print_cpp2("CPP2_UFCS(", n.position());
 
                 auto ufcs_string = std::string("CPP2_UFCS");
+
                 if (i->id_expr->template_args_count() > 0) {
                     ufcs_string += "_TEMPLATE";
+                    // we need to replace "fun<int,long,double>" to "fun, (<int,long,double>)" to be able to generate
+                    // from obj.fun<int, long, double>(1,2) this CPP2_UFCS_TEMPLATE(fun, (<int,long, double>), obj, 1, 2)
+                    auto split = funcname.find('<'); assert(split != std::string::npos);
+                    funcname.insert(split, ", (");
+                    funcname += ')';
                 }
                 //  If there are no additional arguments, use the _0 version
                 if (args.value().empty()) {
