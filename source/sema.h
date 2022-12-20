@@ -34,7 +34,7 @@ struct declaration_sym {
     declaration_node const*           declaration = nullptr;
     token const*                      identifier  = nullptr;
     statement_node const*             initializer = nullptr;
-    parameter_declaration_node const* parameter = nullptr;
+    parameter_declaration_node const* parameter   = nullptr;
 
     declaration_sym(
         bool s = false,

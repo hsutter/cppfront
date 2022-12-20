@@ -8,22 +8,28 @@ struct X {
     X(X &&     that) : i{that.i} { std::cout << "move X " << i << "\n"; }
 };
 
-discard: (copy x:_) = { }
+copy_from: (copy x:_) = { }
 
+use: (x:_) = {}
+
+// invoking each of these with an rvalue std::pair argument ...
 apply_implicit_forward: (forward t: std::pair<X, X>) = {
-    discard(t.first);
-    discard(t.second);
+    copy_from(t.first);             // copies
+    copy_from(t.second);            // moves
 }
-
 apply_explicit_forward: (forward t: std::pair<X, X>) = {
-    discard(forward t.first);
-    discard(forward t.second);
+    copy_from(forward t.first);     // moves
+    copy_from(forward t.second);    // moves
 }
 
 main: ()->int = {
     t1: std::pair<X,X> = (1,2);
     apply_implicit_forward(t1);
+    use(t1);
+    apply_implicit_forward(t1);
 
     t2: std::pair<X,X> = (3,4);
+    apply_explicit_forward(t2);
+    use(t2);
     apply_explicit_forward(t2);
 }

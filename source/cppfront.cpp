@@ -645,11 +645,17 @@ class cppfront
     cpp2::parser parser;
     cpp2::sema   sema;
 
-    bool source_loaded                   = true;
-    bool last_postfix_expr_was_pointer   = false;
-    bool violates_bounds_safety          = false;
-    bool violates_initialization_safety  = false;
-    bool suppress_move_from_last_use     = false;
+    bool source_loaded                  = true;
+    bool last_postfix_expr_was_pointer  = false;
+    bool violates_bounds_safety         = false;
+    bool violates_initialization_safety = false;
+    bool suppress_move_from_last_use    = false;
+
+    struct arg_info {
+        passing_style pass  = passing_style::in;
+        token const*  token = nullptr;
+    };
+    std::vector<arg_info> current_args  = { {} };
 
     //  For lowering
     //
@@ -1090,11 +1096,17 @@ public:
             (in_synthesized_multi_return || (last_use && !suppress_move_from_last_use)) &&
             !in_non_rvalue_context.back();
 
+        //  For an explicit 'forward' apply forwarding to correct identifier
+        assert (!current_args.empty());
+        if (current_args.back().pass == passing_style::forward) {
+            add_std_forward = current_args.back().token == n.identifier;
+        }
+
         if (add_std_move) {
             printer.print_cpp2("std::move(", n.position());
         }
         if (add_std_forward) {
-            printer.print_cpp2("CPP2_FORWARD(", n.position());
+            printer.print_cpp2("CPP2_FORWARD(", {n.position().lineno, n.position().colno - 8});
         }
 
         assert(n.identifier);
@@ -1610,6 +1622,23 @@ public:
         assert(n.expr);
         last_postfix_expr_was_pointer = false;
 
+        //  Ensure that forwarding postfix-expressions start with a forwarded parameter name
+        //
+        assert (!current_args.empty());
+        if (current_args.back().pass == passing_style::forward)
+        {
+            assert (n.expr->get_token());
+            assert (!current_args.back().token);
+            current_args.back().token = n.expr->get_token();
+            auto decl = sema.get_local_declaration_of(*current_args.back().token);
+            if (!(decl && decl->parameter && decl->parameter->pass == passing_style::forward)) {
+                errors.emplace_back(
+                    n.position(),
+                    n.expr->get_token()->to_string(true) + " is not a forwarding parameter name"
+                );
+            }
+        }
+
         //  Check that this isn't pointer arithmentic
         //      (initial partial implementation)
         if (n.expr->expr.index() == primary_expression_node::id_expression)
@@ -2066,22 +2095,18 @@ public:
 
             if (x.pass != passing_style::in) {
                 assert(
-                    to_string_view(x.pass) == "out"  ||
-                    to_string_view(x.pass) == "move" ||
-                    to_string_view(x.pass) == "forward"
+                    x.pass == passing_style::out ||
+                    x.pass == passing_style::move ||
+                    x.pass == passing_style::forward
                 );
-                if (to_string_view(x.pass) == "out") {
+                if (x.pass == passing_style::out) {
                     is_out = true;
                     printer.print_cpp2("&", n.position());
                     offset = -3;   // because we're replacing "out " (followed by at least one space) with "&"
                 }
-                else if (to_string_view(x.pass) == "move") {
+                else if (x.pass == passing_style::move) {
                     printer.print_cpp2("std::move(", n.position());
                     offset = 6;    // because we're replacing "move " (followed by at least one space) with "std::move("
-                }
-                else if (to_string_view(x.pass) == "forward") {
-                    printer.print_cpp2("CPP2_FORWARD(", n.position());
-                    offset = 10;   // because we're replacing "forward " (followed by at least one space) with "CPP2_FORWARD("
                 }
             }
 
@@ -2091,14 +2116,16 @@ public:
 
             assert(x.expr);
             adjust_remaining_token_columns_on_this_line_visitor v(x.expr->position(), offset);
+            current_args.push_back( {x.pass} );
             x.expr->visit(v, 0);
             emit(*x.expr);
+            current_args.pop_back();
 
             if (is_out) {
                 in_non_rvalue_context.pop_back();
             }
 
-            if (to_string_view(x.pass) == "move" || to_string_view(x.pass) == "forward") {
+            if (x.pass == passing_style::move) {
                 printer.print_cpp2(")", n.position());
             }
         }
