@@ -187,6 +187,183 @@ auto starts_with_identifier_colon(std::string const& line) -> bool
 
 
 //---------------------------------------------------------------------------
+//  braces_tracker: to track brace depth
+//
+//  Normally we don't emit diagnostics for Cpp1 code, but we do for a
+//  brace mismatch since we're relying on balanced { } to find Cpp2 code
+//
+class braces_tracker
+{
+    //  to track preprocessor #if brace depth and brace counts
+    //
+    class pre_if_depth_info
+    {
+        int  if_net_braces   = 0;
+        bool found_else      = false;
+        int  else_net_braces = 0;
+
+    public:
+        auto found_open_brace() -> void {
+            if (!found_else) { ++if_net_braces;   }
+            else             { ++else_net_braces; }
+        }
+
+        auto found_close_brace() -> void {
+            if (!found_else) { --if_net_braces;   }
+            else             { --else_net_braces; }
+        }
+
+        auto found_preprocessor_else() -> void {
+            assert (!found_else);
+            found_else = true;
+        }
+
+        //  If the "if" and "else" branches opened/closed the same net number
+        //  of unbalanced braces, they were double-counted in the brace
+        //  matching and to try to keep going we can apply this adjustment
+        auto braces_to_ignore() -> int {
+            if (if_net_braces >= 0 && if_net_braces == else_net_braces) {
+                return if_net_braces;
+            }
+            else {
+                return 0;
+            }
+        }
+    };
+    std::vector<pre_if_depth_info> preprocessor = { {} };  // sentinel
+    std::vector<lineno_t>          open_braces;
+    std::vector<error>&            errors;
+
+public:
+    braces_tracker( std::vector<error>& errors ) : errors{errors} { }
+
+    //  --- Brace matching functions - { and }
+
+    auto found_open_brace(lineno_t lineno) -> void {
+        assert(std::ssize(preprocessor) > 0);
+        open_braces.push_back(lineno);
+        preprocessor.back().found_open_brace();
+    }
+
+    auto found_close_brace(source_position pos) -> void {
+        assert(std::ssize(preprocessor) > 0);
+
+        if (std::ssize(open_braces) < 1) {
+            errors.emplace_back(
+                pos,
+                "closing } does not match a prior {"
+            );
+        }
+        else {
+            open_braces.pop_back();
+        }
+
+        preprocessor.back().found_close_brace();
+    }
+
+    auto found_eof(source_position pos) const -> void {
+        //  Emit diagnostic if braces didn't match
+        //
+        if (current_depth() != 0) {
+            std::string unmatched_brace_lines;
+            for (auto i = 0; i < std::ssize(open_braces); ++i) {
+                if (i > 0 && std::size(open_braces)>2)       { unmatched_brace_lines += ","; };
+                if (i > 0 && i == std::ssize(open_braces)-1) { unmatched_brace_lines += " and"; };
+                unmatched_brace_lines += " " + std::to_string(open_braces[i]);
+            }
+            errors.emplace_back(
+                pos,
+                std::string("end of file reached with ")
+                + std::to_string(current_depth())
+                + " missing } to match earlier { on line"
+                + (current_depth() > 1 ? "s" : "")
+                + unmatched_brace_lines
+            );
+        }
+    }
+
+    auto current_depth() const -> int {
+        return std::ssize(open_braces);
+    }
+
+    //  --- Preprocessor matching functions - #if/#else/#endif
+
+    //  Entering an #if
+    auto found_pre_if() -> void {
+        assert(std::ssize(preprocessor) > 0);
+        preprocessor.push_back({});
+    }
+
+    //  Encountered an #else
+    auto found_pre_else() -> void {
+        assert(std::ssize(preprocessor) > 1);
+        preprocessor.back().found_preprocessor_else();
+    }
+
+    //  Exiting an #endif
+    auto found_pre_endif() -> void {
+        assert(std::ssize(preprocessor) > 1);
+
+        //  If the #if/#else/#endif introduced the same net number of braces,
+        //  then we will have recorded that number too many open braces, and
+        //  braces_to_ignore() will be the positive number of those net open braces
+        //  that this loop will now throw away
+        for (auto i = 0; i < preprocessor.back().braces_to_ignore(); ++i) {
+            found_close_brace( source_position{} );
+        }
+
+        preprocessor.pop_back();
+    }
+};
+
+
+//---------------------------------------------------------------------------
+//  starts_with_whitespace_slash_slash: is this a "// comment" line
+//
+//  line    current line being processed
+//
+enum class preprocessor_conditional {
+    none = 0, pre_if, pre_else, pre_endif
+};
+auto starts_with_preprocessor_if_else_endif(
+    std::string const& line
+)
+    -> preprocessor_conditional
+{
+    auto i = 0;
+
+    //  find first non-whitespace character
+    if (!move_next(line, i, isspace)) {
+        return preprocessor_conditional::none;
+    }
+
+    //  if it's not #, this isn't an #if/#else/#endif
+    if (line[i] != '#') {
+        return preprocessor_conditional::none;
+    }
+
+    //  find next non-whitespace character
+    ++i;
+    if (!move_next(line, i, isspace)) {
+        return preprocessor_conditional::none;
+    }
+
+    if (line.substr(i).starts_with("if")) {
+        return preprocessor_conditional::pre_if;
+    }
+    else if (line.substr(i).starts_with("else")) {
+        return preprocessor_conditional::pre_else;
+    }
+    else if (line.substr(i).starts_with("endif")) {
+        return preprocessor_conditional::pre_endif;
+    }
+    else {
+        return preprocessor_conditional::none;
+    }
+}
+
+
+//---------------------------------------------------------------------------
 //  process_cpp_line: just enough to know what to skip over
 //
 //  line                current line being processed
@@ -204,19 +381,20 @@ auto process_cpp_line(
     bool&               in_string_literal,
     bool&               in_raw_string_literal,
     std::string&        raw_string_closing_seq,
-    std::vector<int>&   brace_depth,
+    braces_tracker&     braces,
     lineno_t            lineno,
     std::vector<error>& errors
 )
     -> process_line_ret
 {
-    if (!in_comment && !in_string_literal && !in_raw_string_literal && starts_with_whitespace_slash_slash(line)) {
-        return { true, false, false };
-    }
-
-    if (!in_comment && !in_string_literal && !in_raw_string_literal && starts_with_whitespace_slash_star_and_no_star_slash(line)) {
-        in_comment = true;
-        return { true, false, false };
+    if (!in_comment && !in_string_literal && !in_raw_string_literal) {
+        if (starts_with_whitespace_slash_slash(line)) {
+            return { true, false, false };
+        }
+        else if (starts_with_whitespace_slash_star_and_no_star_slash(line)) {
+            in_comment = true;
+            return { true, false, false };
+        }
     }
 
     struct process_line_ret r { in_comment, true , in_raw_string_literal};
@@ -273,22 +451,12 @@ auto process_cpp_line(
 
                 break;case '{':
                     if (!in_literal()) {
-                        brace_depth.push_back(lineno);
+                        braces.found_open_brace(lineno);
                     }
 
                 break;case '}':
                     if (!in_literal()) {
-                        if (std::ssize(brace_depth) < 1) {
-                            //  Might as well give a diagnostic in Cpp1 code since
-                            //  we're relying on balanced { } to find Cpp2 code
-                            errors.emplace_back(
-                                source_position(lineno, i),
-                                "closing } does not match a prior {"
-                            );
-                        }
-                        else {
-                            brace_depth.pop_back();
-                        }
+                        braces.found_close_brace(source_position(lineno, i));
                     }
 
                 break;case '*':
@@ -323,7 +491,7 @@ auto process_cpp_line(
 auto process_cpp2_line(
     std::string const&  line,
     bool&               in_comment,
-    std::vector<int>&   brace_depth,
+    braces_tracker&     braces,
     lineno_t            lineno,
     std::vector<error>& errors
 )
@@ -344,24 +512,16 @@ auto process_cpp2_line(
         else {
             switch (line[i]) {
             break;case '{':
-                brace_depth.push_back(lineno);
+                braces.found_open_brace(lineno);
 
             break;case '}':
-                if (std::ssize(brace_depth) < 1) {
-                    errors.emplace_back(
-                        source_position(lineno, i),
-                        "closing } does not match a prior {"
-                    );
-                }
-                else {
-                    brace_depth.pop_back();
-                    if (std::ssize(brace_depth) < 1) {
-                        found_end = true;
-                    }
+                braces.found_close_brace( source_position(lineno, i) );
+                if (braces.current_depth() < 1) {
+                    found_end = true;
                 }
 
             break;case ';':
-                if (std::ssize(brace_depth) == 0) { found_end = true; }
+                if (braces.current_depth() < 1) { found_end = true; }
 
             break;case '*':
                 if (prev == '/') {
@@ -463,7 +623,23 @@ public:
         auto in_raw_string_literal = false;
         std::string raw_string_closing_seq;
 
-        auto brace_depth = std::vector<int>();
+        auto braces = braces_tracker(errors);
+
+        auto add_preprocessor_line = [&] {
+            lines.push_back({ &buf[0], source_line::category::preprocessor });
+            if (auto pre = starts_with_preprocessor_if_else_endif(lines.back().text);
+                        pre != preprocessor_conditional::none
+                ) {
+                switch (pre) {
+                break;case preprocessor_conditional::pre_if:
+                    braces.found_pre_if();
+                break;case preprocessor_conditional::pre_else:
+                    braces.found_pre_else();
+                break;case preprocessor_conditional::pre_endif:
+                    braces.found_pre_endif();
+                }
+            }
+        };
 
         while (in.getline(&buf[0], max_line_len)) {
 
@@ -472,10 +648,12 @@ public:
             if (auto pre = is_preprocessor(buf, true); pre.is_preprocessor)
             {
                 cpp1_found = true;
-                lines.push_back({ &buf[0], source_line::category::preprocessor });
+                //lines.push_back({ &buf[0], source_line::category::preprocessor });
+                add_preprocessor_line();
                 while (pre.has_continuation && in.getline(&buf[0], max_line_len))
                 {
-                    lines.push_back({ &buf[0], source_line::category::preprocessor });
+                    //lines.push_back({ &buf[0], source_line::category::preprocessor });
+                    add_preprocessor_line();
                     pre = is_preprocessor(buf, false);
                 }
             }
@@ -487,7 +665,9 @@ public:
                 //  Switch to cpp2 mode if we're not in a comment, not inside nested { },
                 //  and the line starts with "nonwhitespace :" but not "::"
                 //
-                if (!in_comment && !in_raw_string_literal && std::ssize(brace_depth) == 0 && starts_with_identifier_colon(lines.back().text))
+                if (!in_comment && !in_raw_string_literal &&
+                    braces.current_depth() < 1 &&
+                    starts_with_identifier_colon(lines.back().text))
                 {
                     cpp2_found= true;
 
@@ -508,7 +688,7 @@ public:
                         !process_cpp2_line(
                             lines.back().text,
                             in_comment,
-                            brace_depth,
+                            braces,
                             std::ssize(lines)-1,
                             errors
                         )
@@ -533,7 +713,7 @@ public:
                             in_string_literal,
                             in_raw_string_literal,
                             raw_string_closing_seq,
-                            brace_depth,
+                            braces,
                             std::ssize(lines) - 1,
                             errors
                         );
@@ -578,22 +758,7 @@ public:
             return false;
         }
 
-        //  Emit diagnostic if braces didn't match
-        //
-        if (std::ssize(brace_depth) != 0) {
-            std::string unmatched_brace_lines;
-            for (auto line : brace_depth) {
-                unmatched_brace_lines = std::to_string(line) + " " + unmatched_brace_lines;
-            }
-            errors.emplace_back(
-                source_position(lineno_t(std::ssize(lines)), 0),
-                std::string("end of file reached with ")
-                    + std::to_string(std::ssize(brace_depth))
-                    + " missing } to match earlier { on line"
-                    + (std::size(brace_depth)>1 ? "s " : " " )
-                    + unmatched_brace_lines
-            );
-        }
+        braces.found_eof( source_position(lineno_t(std::ssize(lines)), 0) );
 
         return true;
     }
