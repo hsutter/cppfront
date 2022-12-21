@@ -1294,8 +1294,14 @@ public:
 
             auto id = std::string{};
             printer.emit_to_string(&id);
-            assert(alt->id_expression);
-            emit(*alt->id_expression);
+
+            if (alt->type_id) {
+                emit(*alt->type_id);
+            }
+            else {
+                assert(alt->value);
+                emit(*alt->value);
+            }
             printer.emit_to_string();
 
             assert (*alt->is_as_keyword == "is" || *alt->is_as_keyword == "as");
@@ -1330,7 +1336,15 @@ public:
                     }
                 }
                 else {
-                    printer.print_cpp2("if " + constexpr_qualifier + "(cpp2::is<" + id + ">(__expr)) " + return_prefix, alt->position());
+                    printer.print_cpp2("if " + constexpr_qualifier, alt->position());
+                    if (alt->type_id) {
+                        printer.print_cpp2("(cpp2::is<" + id + ">(__expr)) ", alt->position());
+                    }
+                    else {
+                        assert (alt->value);
+                        printer.print_cpp2("(cpp2::is(__expr, " + id + ")) ", alt->position());
+                    }
+                    printer.print_cpp2(return_prefix, alt->position());
                 }
 
                 printer.print_cpp2(statement, alt->position());

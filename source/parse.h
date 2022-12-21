@@ -664,7 +664,11 @@ struct alternative_node
 {
     std::unique_ptr<unqualified_id_node> name;
     token const*                         is_as_keyword;
-    std::unique_ptr<id_expression_node>  id_expression;
+
+    //  One of these will be used
+    std::unique_ptr<type_id_node>            type_id;
+    std::unique_ptr<postfix_expression_node> value;
+
     source_position                      equal_sign;
     std::unique_ptr<statement_node>      statement;
 
@@ -776,8 +780,13 @@ auto alternative_node::visit(auto& v, int depth) -> void
     }
     assert (is_as_keyword);
     v.start(*is_as_keyword, depth+1);
-    assert (id_expression);
-    id_expression->visit(v, depth+1);
+    if (type_id) {
+        type_id->visit(v, depth+1);
+    }
+    else {
+        assert (value);
+        value->visit(v, depth+1);
+    }
     assert (statement);
     statement->visit(v, depth+1);
     v.end(*this, depth);
@@ -1785,7 +1794,7 @@ private:
     }
 
     //G expression-list:
-    //G     expression
+    //G     parameter-direction-opt expression
     //G     expression-list , expression
     //G
     auto expression_list(source_position open_paren, bool inside_initializer = false) -> std::unique_ptr<expression_list_node> {
@@ -2302,11 +2311,15 @@ private:
 
     //G alternative:
     //G     alt-name-opt is-type-constraint = statement
+    //G     alt-name-opt is-value-constraint = statement
     //G     alt-name-opt as-type-cast = statement
     //GTODO    alt-name-opt is-expression-constraint = statement
     //G
     //G is-type-constraint
-    //G     is id-expression
+    //G     is type-id
+    //G
+    //G is-value-constraint
+    //G     is postfix-expression
     //G
     //G as-type-cast
     //G     as id-expression
@@ -2343,11 +2356,14 @@ private:
         n->is_as_keyword = &curr();
         next();
 
-        if (auto id = id_expression()) {
-            n->id_expression = std::move(id);
+        if (auto id = type_id()) {
+            n->type_id = std::move(id);
+        }
+        else if (auto e = postfix_expression()) {
+            n->value = std::move(e);
         }
         else {
-            error("expected id-expression after 'is' in inspect alternative");
+            error("expected type-id or value after 'is' in inspect alternative");
             return {};
         }
 

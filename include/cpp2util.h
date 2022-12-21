@@ -617,6 +617,23 @@ auto is( X const& x ) -> bool {
 
 
 //-------------------------------------------------------------------------------------------------------------
+//  Built-in is (values)
+//
+
+inline constexpr auto is( auto const& x, auto const& value ) -> bool
+    requires requires{ x == value; }
+{
+    return x == value;
+}
+
+inline constexpr auto is( auto const& x, auto const& value ) -> bool
+    requires (!requires{ x == value; })
+{
+    return false;
+}
+
+
+//-------------------------------------------------------------------------------------------------------------
 //  Built-in as (partial)
 //
 template< typename C >

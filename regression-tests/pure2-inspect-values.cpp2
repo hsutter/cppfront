@@ -1,0 +1,18 @@
+main: ()->int = {
+    test(42);
+    test(3.14);
+    test(0);
+    test(-42);
+    test("xyzzy" as std::string);
+}
+
+test: (x:_) = {
+    forty_two := 42;
+    std::cout << inspect x -> std::string {
+        is 0           = "zero";
+        is (forty_two) = "the answer";
+        is int         = "integer " + cpp2::to_string(x);
+        is std::string = x;
+        is _           = "(no match)";
+    } << "\n";
+}
