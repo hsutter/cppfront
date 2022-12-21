@@ -903,29 +903,27 @@ public:
 
     auto start(compound_statement_node const& n, int) -> void
     {
-        if (!active_selections.empty()) {
-            assert (active_selections.back());
-            if (active_selections.back()->true_branch.get() == &n) {
-                symbols.emplace_back( scope_depth, compound_sym{ true, &n, true } );
+        symbols.emplace_back(
+            scope_depth,
+            compound_sym{
+                true,
+                &n,
+                !active_selections.empty() && active_selections.back()->true_branch.get() == &n
             }
-            else if (active_selections.back()->false_branch.get() == &n) {
-                symbols.emplace_back( scope_depth, compound_sym{ true, &n, false } );
-            }
-        }
+        );
         ++scope_depth;
     }
 
     auto end(compound_statement_node const& n, int) -> void
     {
-        if (!active_selections.empty()) {
-            assert (active_selections.back());
-            if (active_selections.back()->true_branch.get() == &n) {
-                symbols.emplace_back( scope_depth, compound_sym{ false, &n, true } );
+        symbols.emplace_back(
+            scope_depth,
+            compound_sym{
+                false,
+                &n,
+                !active_selections.empty() && active_selections.back()->true_branch.get() == &n
             }
-            else if (active_selections.back()->false_branch.get() == &n) {
-                symbols.emplace_back( scope_depth, compound_sym{ false, &n, false } );
-            }
-        }
+        );
         --scope_depth;
     }
 
