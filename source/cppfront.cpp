@@ -652,8 +652,8 @@ class cppfront
     bool suppress_move_from_last_use    = false;
 
     struct arg_info {
-        passing_style pass  = passing_style::in;
-        token const*  token = nullptr;
+        passing_style pass   = passing_style::in;
+        token const*  ptoken = nullptr;
     };
     std::vector<arg_info> current_args  = { {} };
 
@@ -1099,7 +1099,7 @@ public:
         //  For an explicit 'forward' apply forwarding to correct identifier
         assert (!current_args.empty());
         if (current_args.back().pass == passing_style::forward) {
-            add_std_forward = current_args.back().token == n.identifier;
+            add_std_forward = current_args.back().ptoken == n.identifier;
         }
 
         if (add_std_move) {
@@ -1628,9 +1628,9 @@ public:
         if (current_args.back().pass == passing_style::forward)
         {
             assert (n.expr->get_token());
-            assert (!current_args.back().token);
-            current_args.back().token = n.expr->get_token();
-            auto decl = sema.get_local_declaration_of(*current_args.back().token);
+            assert (!current_args.back().ptoken);
+            current_args.back().ptoken = n.expr->get_token();
+            auto decl = sema.get_local_declaration_of(*current_args.back().ptoken);
             if (!(decl && decl->parameter && decl->parameter->pass == passing_style::forward)) {
                 errors.emplace_back(
                     n.position(),

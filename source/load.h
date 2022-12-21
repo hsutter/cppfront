@@ -382,8 +382,7 @@ auto process_cpp_line(
     bool&               in_raw_string_literal,
     std::string&        raw_string_closing_seq,
     braces_tracker&     braces,
-    lineno_t            lineno,
-    std::vector<error>& errors
+    lineno_t            lineno
 )
     -> process_line_ret
 {
@@ -637,6 +636,8 @@ public:
                     braces.found_pre_else();
                 break;case preprocessor_conditional::pre_endif:
                     braces.found_pre_endif();
+                break;default:
+                    assert(false);
                 }
             }
         };
@@ -714,8 +715,7 @@ public:
                             in_raw_string_literal,
                             raw_string_closing_seq,
                             braces,
-                            std::ssize(lines) - 1,
-                            errors
+                            std::ssize(lines) - 1
                         );
                         if (stats.all_comment_line) {
                             lines.back().cat = source_line::category::comment;
