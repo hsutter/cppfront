@@ -1,9 +1,23 @@
 main: ()->int = {
-    test(42);
-    test(3.14);
+    v: std::variant<double, std::string, double> = ();
+    test(v);
+    v = "rev dodgson";
+    test(v);
+
+    o: std::optional<int> = ();
+    test(o);
+    o = 42;
+    test(o);
+
+    a: std::any = 0;
+    test(a);
+    a = "plugh" as std::string;
+    test(a);
+
     test(0);
     test(-42);
     test("xyzzy" as std::string);
+    test(3.14);
 }
 
 test: (x:_) = {
@@ -12,7 +26,7 @@ test: (x:_) = {
         is 0           = "zero";
         is (forty_two) = "the answer";
         is int         = "integer " + cpp2::to_string(x);
-        is std::string = x;
+        is std::string = x as std::string;
         is _           = "(no match)";
     } << "\n";
 }

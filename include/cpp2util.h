@@ -568,7 +568,10 @@ public:
 
 //  For use when returning "no such thing", such as
 //  when customizing is/as for std::variant
-static std::nullptr_t nonesuch = nullptr;
+struct nonesuch_ {
+    auto operator==(auto const&) -> bool { return false; }
+};
+static nonesuch_ nonesuch;
 
 //  For designating "holds no value" -- used only with is, not as
 //  TODO: Does this really warrant a new synonym? Perhaps "is void" is enough
@@ -619,17 +622,10 @@ auto is( X const& x ) -> bool {
 //-------------------------------------------------------------------------------------------------------------
 //  Built-in is (values)
 //
-
 inline constexpr auto is( auto const& x, auto const& value ) -> bool
     requires requires{ x == value; }
 {
     return x == value;
-}
-
-inline constexpr auto is( auto const& x, auto const& value ) -> bool
-    requires (!requires{ x == value; })
-{
-    return false;
 }
 
 
@@ -637,7 +633,7 @@ inline constexpr auto is( auto const& x, auto const& value ) -> bool
 //  Built-in as (partial)
 //
 template< typename C >
-auto as(...) -> auto {
+auto as(auto const&) -> auto {
     return nonesuch;
 }
 
@@ -693,6 +689,32 @@ constexpr auto operator_is( std::variant<Ts...> const& x ) {
     return x.index();
 }
 
+template<typename... Ts>
+constexpr auto is( std::variant<Ts...> const& x, auto const& value ) -> bool
+{
+    if constexpr (requires{ operator_as< 0>(x) == value; }) if (x.index() ==  0) return operator_as< 0>(x) == value;;
+    if constexpr (requires{ operator_as< 1>(x) == value; }) if (x.index() ==  1) return operator_as< 1>(x) == value;;
+    if constexpr (requires{ operator_as< 2>(x) == value; }) if (x.index() ==  2) return operator_as< 2>(x) == value;;
+    if constexpr (requires{ operator_as< 3>(x) == value; }) if (x.index() ==  3) return operator_as< 3>(x) == value;;
+    if constexpr (requires{ operator_as< 4>(x) == value; }) if (x.index() ==  4) return operator_as< 4>(x) == value;;
+    if constexpr (requires{ operator_as< 5>(x) == value; }) if (x.index() ==  5) return operator_as< 5>(x) == value;;
+    if constexpr (requires{ operator_as< 6>(x) == value; }) if (x.index() ==  6) return operator_as< 6>(x) == value;;
+    if constexpr (requires{ operator_as< 7>(x) == value; }) if (x.index() ==  7) return operator_as< 7>(x) == value;;
+    if constexpr (requires{ operator_as< 8>(x) == value; }) if (x.index() ==  8) return operator_as< 8>(x) == value;;
+    if constexpr (requires{ operator_as< 9>(x) == value; }) if (x.index() ==  9) return operator_as< 9>(x) == value;;
+    if constexpr (requires{ operator_as<10>(x) == value; }) if (x.index() == 10) return operator_as<10>(x) == value;;
+    if constexpr (requires{ operator_as<11>(x) == value; }) if (x.index() == 11) return operator_as<11>(x) == value;;
+    if constexpr (requires{ operator_as<12>(x) == value; }) if (x.index() == 12) return operator_as<12>(x) == value;;
+    if constexpr (requires{ operator_as<13>(x) == value; }) if (x.index() == 13) return operator_as<13>(x) == value;;
+    if constexpr (requires{ operator_as<14>(x) == value; }) if (x.index() == 14) return operator_as<14>(x) == value;;
+    if constexpr (requires{ operator_as<15>(x) == value; }) if (x.index() == 15) return operator_as<15>(x) == value;;
+    if constexpr (requires{ operator_as<16>(x) == value; }) if (x.index() == 16) return operator_as<16>(x) == value;;
+    if constexpr (requires{ operator_as<17>(x) == value; }) if (x.index() == 17) return operator_as<17>(x) == value;;
+    if constexpr (requires{ operator_as<18>(x) == value; }) if (x.index() == 18) return operator_as<18>(x) == value;;
+    if constexpr (requires{ operator_as<19>(x) == value; }) if (x.index() == 19) return operator_as<19>(x) == value;;
+    return false;
+}
+
 template<size_t I, typename... Ts>
 constexpr auto operator_as( std::variant<Ts...> const& x ) -> auto&& {
     if constexpr (I < std::variant_size_v<std::variant<Ts...>>) {
@@ -709,16 +731,26 @@ inline constexpr auto is_any = std::disjunction_v<std::is_same<T, Ts>...>;
 
 template<typename T, typename... Ts>
 auto is( std::variant<Ts...> const& x ) {
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<0>(x)), T >) if (x.index() == 0) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<1>(x)), T >) if (x.index() == 1) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<2>(x)), T >) if (x.index() == 2) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<3>(x)), T >) if (x.index() == 3) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<4>(x)), T >) if (x.index() == 4) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<5>(x)), T >) if (x.index() == 5) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<6>(x)), T >) if (x.index() == 6) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<7>(x)), T >) if (x.index() == 7) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<8>(x)), T >) if (x.index() == 8) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<9>(x)), T >) if (x.index() == 9) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) if (x.index() ==  0) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 1>(x)), T >) if (x.index() ==  1) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 2>(x)), T >) if (x.index() ==  2) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 3>(x)), T >) if (x.index() ==  3) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 4>(x)), T >) if (x.index() ==  4) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 5>(x)), T >) if (x.index() ==  5) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 6>(x)), T >) if (x.index() ==  6) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 7>(x)), T >) if (x.index() ==  7) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 8>(x)), T >) if (x.index() ==  8) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 9>(x)), T >) if (x.index() ==  9) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<10>(x)), T >) if (x.index() == 10) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<11>(x)), T >) if (x.index() == 11) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<12>(x)), T >) if (x.index() == 12) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<13>(x)), T >) if (x.index() == 13) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<14>(x)), T >) if (x.index() == 14) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<15>(x)), T >) if (x.index() == 15) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<16>(x)), T >) if (x.index() == 16) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) if (x.index() == 17) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) if (x.index() == 18) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<19>(x)), T >) if (x.index() == 19) return true;
     if constexpr (std::is_same_v< T, empty > ) {
         if (x.valueless_by_exception()) return true;
         //  Need to guard this with is_any otherwise the get_if is illegal
@@ -729,16 +761,26 @@ auto is( std::variant<Ts...> const& x ) {
 
 template<typename T, typename... Ts>
 auto as( std::variant<Ts...> const& x ) {
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<0>(x)), T >) if (x.index() == 0) return operator_as<0>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<1>(x)), T >) if (x.index() == 1) return operator_as<1>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<2>(x)), T >) if (x.index() == 2) return operator_as<2>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<3>(x)), T >) if (x.index() == 3) return operator_as<3>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<4>(x)), T >) if (x.index() == 4) return operator_as<4>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<5>(x)), T >) if (x.index() == 5) return operator_as<5>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<6>(x)), T >) if (x.index() == 6) return operator_as<6>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<7>(x)), T >) if (x.index() == 7) return operator_as<7>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<8>(x)), T >) if (x.index() == 8) return operator_as<8>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<9>(x)), T >) if (x.index() == 9) return operator_as<9>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) if (x.index() ==  0) return operator_as<0>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 1>(x)), T >) if (x.index() ==  1) return operator_as<1>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 2>(x)), T >) if (x.index() ==  2) return operator_as<2>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 3>(x)), T >) if (x.index() ==  3) return operator_as<3>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 4>(x)), T >) if (x.index() ==  4) return operator_as<4>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 5>(x)), T >) if (x.index() ==  5) return operator_as<5>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 6>(x)), T >) if (x.index() ==  6) return operator_as<6>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 7>(x)), T >) if (x.index() ==  7) return operator_as<7>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 8>(x)), T >) if (x.index() ==  8) return operator_as<8>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 9>(x)), T >) if (x.index() ==  9) return operator_as<9>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<10>(x)), T >) if (x.index() == 10) return operator_as<0>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<11>(x)), T >) if (x.index() == 11) return operator_as<1>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<12>(x)), T >) if (x.index() == 12) return operator_as<2>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<13>(x)), T >) if (x.index() == 13) return operator_as<3>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<14>(x)), T >) if (x.index() == 14) return operator_as<4>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<15>(x)), T >) if (x.index() == 15) return operator_as<5>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<16>(x)), T >) if (x.index() == 16) return operator_as<6>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) if (x.index() == 17) return operator_as<7>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) if (x.index() == 18) return operator_as<8>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<19>(x)), T >) if (x.index() == 19) return operator_as<9>(x);
     throw std::bad_variant_access();
 }
 
@@ -755,6 +797,12 @@ template<typename T, typename X>
     requires (std::is_same_v<X,std::any> && std::is_same_v<T,empty>)
 constexpr auto is( X const& x ) -> bool
     { return !x.has_value(); }
+
+constexpr auto is( std::any const& x, auto const& value ) -> bool
+{
+    auto pvalue = std::any_cast<CPP2_TYPEOF(value)>(&x);
+    return pvalue && *pvalue == value;
+}
 
 template<typename T, typename X>
     requires (!std::is_reference_v<T> && std::is_same_v<X,std::any> && !std::is_same_v<T,std::any>)
@@ -774,6 +822,20 @@ template<typename T, typename U>
     requires std::is_same_v<T,empty>
 constexpr auto is( std::optional<U> const& x ) -> bool
     { return !x.has_value(); }
+
+template<typename T>
+constexpr auto is( std::optional<T> const& x, auto const& value ) -> bool
+    requires requires{ x.value() == value; }
+{
+    return x.has_value() && x.value() == value;
+}
+
+template<typename T>
+constexpr auto is( std::optional<T> const& x, auto const& value ) -> bool
+    requires (!requires{ x.value() == value; })
+{
+    return false;
+}
 
 template<typename T, typename X>
     requires std::is_same_v<X,std::optional<T>>
@@ -839,11 +901,20 @@ inline auto to_string(...) -> std::string {
     return "(customize me - no cpp2::to_string overload exists for this type)";
 }
 
+inline auto to_string(std::any const&) -> std::string {
+    return "std::any";
+}
+
 template<typename T>
 inline auto to_string(T const& t) -> std::string
     requires requires { std::to_string(t); }
 {
     return std::to_string(t);
+}
+
+inline auto to_string(char const* s) -> std::string
+{
+    return std::string{s};
 }
 
 inline auto to_string(std::string const& s) -> std::string const&
