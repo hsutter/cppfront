@@ -1,0 +1,7 @@
+mixed-function-expression-with-pointer-capture.cpp2:14:18: error: no member named 'for_each' in namespace 'std::ranges'
+    std::ranges::for_each( view, [_0 = (&y)](auto const& x){
+    ~~~~~~~~~~~~~^
+mixed-function-expression-with-pointer-capture.cpp2:19:18: error: no member named 'for_each' in namespace 'std::ranges'
+    std::ranges::for_each( view, std::move(callback));
+    ~~~~~~~~~~~~~^
+2 errors generated.
