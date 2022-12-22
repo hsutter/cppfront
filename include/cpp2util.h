@@ -1097,8 +1097,6 @@ public:
 
     c_raii(c_raii const&)         = delete;
     auto operator=(c_raii const&) = delete;
-    c_raii(c_raii&& that)         noexcept : t  {std::move(that.t)}, dtor  {that.dtor} { that.dtor = nullptr; }
-    auto operator=(c_raii&& that) noexcept { t = std::move(that.t);  dtor = that.dtor;   that.dtor = nullptr; }
 };
 
 inline auto fopen( const char* filename, const char* mode ) {

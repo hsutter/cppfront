@@ -2486,7 +2486,6 @@ private:
 
 
     //G statement:
-    //G     let parameter-list statement
     //G     selection-statement
     //G     inspect-expression
     //G     return-statement
