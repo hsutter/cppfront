@@ -308,7 +308,7 @@ constexpr auto contract_group::set_handler(handler h) -> handler {
 
 //  Null pointer deref checking
 //
-auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
+auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
 {
     //  NOTE: This "!= T{}" test may or may not work for STL iterators. The standard
     //        doesn't guarantee that using == and != will reliably report whether an
@@ -319,7 +319,7 @@ auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
 
 //  Subscript bounds checking
 //
-auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
+auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
     requires (std::is_integral_v<CPP2_TYPEOF(arg)> &&
              requires { std::ssize(x); x[arg]; })
 {
@@ -327,7 +327,7 @@ auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAU
     return std::forward<decltype(x)>(x) [ std::forward<decltype(arg)>(arg) ];
 }
 
-auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto&&
+auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
     requires (!(std::is_integral_v<CPP2_TYPEOF(arg)> &&
              requires { std::ssize(x); x[arg]; }))
 {
@@ -652,7 +652,7 @@ auto as(auto const&) -> auto {
 
 template< typename C, typename X >
     requires std::is_same_v<C, X>
-auto as( X const& x ) -> auto&& {
+auto as( X const& x ) -> decltype(auto) {
     return x;
 }
 
@@ -769,7 +769,7 @@ constexpr auto is( std::variant<Ts...> const& x, auto const& value ) -> bool
 //  as
 //
 template<size_t I, typename... Ts>
-constexpr auto operator_as( std::variant<Ts...> const& x ) -> auto&& {
+constexpr auto operator_as( std::variant<Ts...> const& x ) -> decltype(auto) {
     if constexpr (I < std::variant_size_v<std::variant<Ts...>>) {
         return std::get<I>( x );
     }
@@ -926,7 +926,7 @@ constexpr auto is( std::optional<T> const& x, auto const& value ) -> bool
 //
 template<typename T, typename X>
     requires std::is_same_v<X,std::optional<T>>
-constexpr auto as( X const& x ) -> auto&&
+constexpr auto as( X const& x ) -> decltype(auto)
     { return x.value(); }
 
 
