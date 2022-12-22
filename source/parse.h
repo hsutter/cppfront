@@ -867,7 +867,7 @@ struct function_type_node
     enum active { empty = 0, id, list };
     std::variant<
         std::monostate,
-        std::unique_ptr<id_expression_node>,
+        std::unique_ptr<type_id_node>,
         std::unique_ptr<parameter_declaration_list_node>
     > returns;
 
@@ -2824,7 +2824,7 @@ private:
     //G     throws
     //G
     //G return-list:
-    //G     -> id-expression
+    //G     -> type-id
     //G     -> parameter_declaration_list
     //G
     //G contract-seq:
@@ -2853,7 +2853,7 @@ private:
         {
             next();
 
-            if (auto t = id_expression()) {
+            if (auto t = type_id()) {
                 n->returns = std::move(t);
             }
             else if (auto returns_list = parameter_declaration_list(true)) {

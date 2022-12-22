@@ -563,7 +563,7 @@ public:
 //-----------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------------------------------------------
-//  Built-in is (partial)
+//  Built-in is
 //
 
 //  For use when returning "no such thing", such as
@@ -577,6 +577,9 @@ static nonesuch_ nonesuch;
 //  TODO: Does this really warrant a new synonym? Perhaps "is void" is enough
 using empty = void;
 
+
+//  Types
+//
 template< typename C, typename X >
 auto is( X const& ) -> bool {
     return false;
@@ -619,18 +622,28 @@ auto is( X const& x ) -> bool {
 }
 
 
-//-------------------------------------------------------------------------------------------------------------
-//  Built-in is (values)
+//  Values
 //
 inline constexpr auto is( auto const& x, auto const& value ) -> bool
-    requires requires{ x == value; }
 {
-    return x == value;
+    //  Predicate case
+    if constexpr (requires{ bool{ value(x) }; }) {
+        return value(x);
+    }
+    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
+        return false;
+    }
+
+    //  Value case
+    else if constexpr (requires{ bool{x == value}; }) {
+        return x == value;
+    }
+    return false;
 }
 
 
 //-------------------------------------------------------------------------------------------------------------
-//  Built-in as (partial)
+//  Built-in as
 //
 template< typename C >
 auto as(auto const&) -> auto {
@@ -684,37 +697,77 @@ auto as( X const* x ) -> C const* {
 //-------------------------------------------------------------------------------------------------------------
 //  std::variant is and as
 //
+
+//  is Type
+//
 template<typename... Ts>
 constexpr auto operator_is( std::variant<Ts...> const& x ) {
     return x.index();
 }
 
+template<typename T, typename... Ts>
+auto is( std::variant<Ts...> const& x );
+
+
+//  is Value
+//
 template<typename... Ts>
 constexpr auto is( std::variant<Ts...> const& x, auto const& value ) -> bool
 {
-    if constexpr (requires{ operator_as< 0>(x) == value; }) if (x.index() ==  0) return operator_as< 0>(x) == value;;
-    if constexpr (requires{ operator_as< 1>(x) == value; }) if (x.index() ==  1) return operator_as< 1>(x) == value;;
-    if constexpr (requires{ operator_as< 2>(x) == value; }) if (x.index() ==  2) return operator_as< 2>(x) == value;;
-    if constexpr (requires{ operator_as< 3>(x) == value; }) if (x.index() ==  3) return operator_as< 3>(x) == value;;
-    if constexpr (requires{ operator_as< 4>(x) == value; }) if (x.index() ==  4) return operator_as< 4>(x) == value;;
-    if constexpr (requires{ operator_as< 5>(x) == value; }) if (x.index() ==  5) return operator_as< 5>(x) == value;;
-    if constexpr (requires{ operator_as< 6>(x) == value; }) if (x.index() ==  6) return operator_as< 6>(x) == value;;
-    if constexpr (requires{ operator_as< 7>(x) == value; }) if (x.index() ==  7) return operator_as< 7>(x) == value;;
-    if constexpr (requires{ operator_as< 8>(x) == value; }) if (x.index() ==  8) return operator_as< 8>(x) == value;;
-    if constexpr (requires{ operator_as< 9>(x) == value; }) if (x.index() ==  9) return operator_as< 9>(x) == value;;
-    if constexpr (requires{ operator_as<10>(x) == value; }) if (x.index() == 10) return operator_as<10>(x) == value;;
-    if constexpr (requires{ operator_as<11>(x) == value; }) if (x.index() == 11) return operator_as<11>(x) == value;;
-    if constexpr (requires{ operator_as<12>(x) == value; }) if (x.index() == 12) return operator_as<12>(x) == value;;
-    if constexpr (requires{ operator_as<13>(x) == value; }) if (x.index() == 13) return operator_as<13>(x) == value;;
-    if constexpr (requires{ operator_as<14>(x) == value; }) if (x.index() == 14) return operator_as<14>(x) == value;;
-    if constexpr (requires{ operator_as<15>(x) == value; }) if (x.index() == 15) return operator_as<15>(x) == value;;
-    if constexpr (requires{ operator_as<16>(x) == value; }) if (x.index() == 16) return operator_as<16>(x) == value;;
-    if constexpr (requires{ operator_as<17>(x) == value; }) if (x.index() == 17) return operator_as<17>(x) == value;;
-    if constexpr (requires{ operator_as<18>(x) == value; }) if (x.index() == 18) return operator_as<18>(x) == value;;
-    if constexpr (requires{ operator_as<19>(x) == value; }) if (x.index() == 19) return operator_as<19>(x) == value;;
+    //  Predicate case
+    if constexpr      (requires{ bool{ value(operator_as< 0>(x)) }; }) { if (x.index() ==  0) return value(operator_as< 0>(x)); }
+    else if constexpr (requires{ bool{ value(operator_as< 1>(x)) }; }) { if (x.index() ==  1) return value(operator_as< 1>(x)); }
+    else if constexpr (requires{ bool{ value(operator_as< 2>(x)) }; }) { if (x.index() ==  2) return value(operator_as< 2>(x)); }
+    else if constexpr (requires{ bool{ value(operator_as< 3>(x)) }; }) { if (x.index() ==  3) return value(operator_as< 3>(x)); }
+    else if constexpr (requires{ bool{ value(operator_as< 4>(x)) }; }) { if (x.index() ==  4) return value(operator_as< 4>(x)); }
+    else if constexpr (requires{ bool{ value(operator_as< 5>(x)) }; }) { if (x.index() ==  5) return value(operator_as< 5>(x)); }
+    else if constexpr (requires{ bool{ value(operator_as< 6>(x)) }; }) { if (x.index() ==  6) return value(operator_as< 6>(x)); }
+    else if constexpr (requires{ bool{ value(operator_as< 7>(x)) }; }) { if (x.index() ==  7) return value(operator_as< 7>(x)); }
+    else if constexpr (requires{ bool{ value(operator_as< 8>(x)) }; }) { if (x.index() ==  8) return value(operator_as< 8>(x)); }
+    else if constexpr (requires{ bool{ value(operator_as< 9>(x)) }; }) { if (x.index() ==  9) return value(operator_as< 9>(x)); }
+    else if constexpr (requires{ bool{ value(operator_as<10>(x)) }; }) { if (x.index() == 10) return value(operator_as<10>(x)); }
+    else if constexpr (requires{ bool{ value(operator_as<11>(x)) }; }) { if (x.index() == 11) return value(operator_as<11>(x)); }
+    else if constexpr (requires{ bool{ value(operator_as<12>(x)) }; }) { if (x.index() == 12) return value(operator_as<12>(x)); }
+    else if constexpr (requires{ bool{ value(operator_as<13>(x)) }; }) { if (x.index() == 13) return value(operator_as<13>(x)); }
+    else if constexpr (requires{ bool{ value(operator_as<14>(x)) }; }) { if (x.index() == 14) return value(operator_as<14>(x)); }
+    else if constexpr (requires{ bool{ value(operator_as<15>(x)) }; }) { if (x.index() == 15) return value(operator_as<15>(x)); }
+    else if constexpr (requires{ bool{ value(operator_as<16>(x)) }; }) { if (x.index() == 16) return value(operator_as<16>(x)); }
+    else if constexpr (requires{ bool{ value(operator_as<17>(x)) }; }) { if (x.index() == 17) return value(operator_as<17>(x)); }
+    else if constexpr (requires{ bool{ value(operator_as<18>(x)) }; }) { if (x.index() == 18) return value(operator_as<18>(x)); }
+    else if constexpr (requires{ bool{ value(operator_as<19>(x)) }; }) { if (x.index() == 19) return value(operator_as<19>(x)); }
+    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
+        return false;
+    }
+
+    //  Value case
+    else {
+        if constexpr (requires{ bool{ operator_as< 0>(x) == value }; }) { if (x.index() ==  0) return operator_as< 0>(x) == value; }
+        if constexpr (requires{ bool{ operator_as< 1>(x) == value }; }) { if (x.index() ==  1) return operator_as< 1>(x) == value; }
+        if constexpr (requires{ bool{ operator_as< 2>(x) == value }; }) { if (x.index() ==  2) return operator_as< 2>(x) == value; }
+        if constexpr (requires{ bool{ operator_as< 3>(x) == value }; }) { if (x.index() ==  3) return operator_as< 3>(x) == value; }
+        if constexpr (requires{ bool{ operator_as< 4>(x) == value }; }) { if (x.index() ==  4) return operator_as< 4>(x) == value; }
+        if constexpr (requires{ bool{ operator_as< 5>(x) == value }; }) { if (x.index() ==  5) return operator_as< 5>(x) == value; }
+        if constexpr (requires{ bool{ operator_as< 6>(x) == value }; }) { if (x.index() ==  6) return operator_as< 6>(x) == value; }
+        if constexpr (requires{ bool{ operator_as< 7>(x) == value }; }) { if (x.index() ==  7) return operator_as< 7>(x) == value; }
+        if constexpr (requires{ bool{ operator_as< 8>(x) == value }; }) { if (x.index() ==  8) return operator_as< 8>(x) == value; }
+        if constexpr (requires{ bool{ operator_as< 9>(x) == value }; }) { if (x.index() ==  9) return operator_as< 9>(x) == value; }
+        if constexpr (requires{ bool{ operator_as<10>(x) == value }; }) { if (x.index() == 10) return operator_as<10>(x) == value; }
+        if constexpr (requires{ bool{ operator_as<11>(x) == value }; }) { if (x.index() == 11) return operator_as<11>(x) == value; }
+        if constexpr (requires{ bool{ operator_as<12>(x) == value }; }) { if (x.index() == 12) return operator_as<12>(x) == value; }
+        if constexpr (requires{ bool{ operator_as<13>(x) == value }; }) { if (x.index() == 13) return operator_as<13>(x) == value; }
+        if constexpr (requires{ bool{ operator_as<14>(x) == value }; }) { if (x.index() == 14) return operator_as<14>(x) == value; }
+        if constexpr (requires{ bool{ operator_as<15>(x) == value }; }) { if (x.index() == 15) return operator_as<15>(x) == value; }
+        if constexpr (requires{ bool{ operator_as<16>(x) == value }; }) { if (x.index() == 16) return operator_as<16>(x) == value; }
+        if constexpr (requires{ bool{ operator_as<17>(x) == value }; }) { if (x.index() == 17) return operator_as<17>(x) == value; }
+        if constexpr (requires{ bool{ operator_as<18>(x) == value }; }) { if (x.index() == 18) return operator_as<18>(x) == value; }
+        if constexpr (requires{ bool{ operator_as<19>(x) == value }; }) { if (x.index() == 19) return operator_as<19>(x) == value; }
+    }
     return false;
 }
 
+
+//  as
+//
 template<size_t I, typename... Ts>
 constexpr auto operator_as( std::variant<Ts...> const& x ) -> auto&& {
     if constexpr (I < std::variant_size_v<std::variant<Ts...>>) {
@@ -725,32 +778,31 @@ constexpr auto operator_as( std::variant<Ts...> const& x ) -> auto&& {
     }
 }
 
-//  A helper for is...
 template <class T, class... Ts>
 inline constexpr auto is_any = std::disjunction_v<std::is_same<T, Ts>...>;
 
 template<typename T, typename... Ts>
 auto is( std::variant<Ts...> const& x ) {
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) if (x.index() ==  0) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 1>(x)), T >) if (x.index() ==  1) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 2>(x)), T >) if (x.index() ==  2) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 3>(x)), T >) if (x.index() ==  3) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 4>(x)), T >) if (x.index() ==  4) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 5>(x)), T >) if (x.index() ==  5) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 6>(x)), T >) if (x.index() ==  6) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 7>(x)), T >) if (x.index() ==  7) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 8>(x)), T >) if (x.index() ==  8) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 9>(x)), T >) if (x.index() ==  9) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<10>(x)), T >) if (x.index() == 10) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<11>(x)), T >) if (x.index() == 11) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<12>(x)), T >) if (x.index() == 12) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<13>(x)), T >) if (x.index() == 13) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<14>(x)), T >) if (x.index() == 14) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<15>(x)), T >) if (x.index() == 15) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<16>(x)), T >) if (x.index() == 16) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) if (x.index() == 17) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) if (x.index() == 18) return true;
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<19>(x)), T >) if (x.index() == 19) return true;
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) { if (x.index() ==  0) return true; }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 1>(x)), T >) { if (x.index() ==  1) return true; }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 2>(x)), T >) { if (x.index() ==  2) return true; }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 3>(x)), T >) { if (x.index() ==  3) return true; }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 4>(x)), T >) { if (x.index() ==  4) return true; }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 5>(x)), T >) { if (x.index() ==  5) return true; }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 6>(x)), T >) { if (x.index() ==  6) return true; }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 7>(x)), T >) { if (x.index() ==  7) return true; }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 8>(x)), T >) { if (x.index() ==  8) return true; }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 9>(x)), T >) { if (x.index() ==  9) return true; }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<10>(x)), T >) { if (x.index() == 10) return true; }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<11>(x)), T >) { if (x.index() == 11) return true; }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<12>(x)), T >) { if (x.index() == 12) return true; }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<13>(x)), T >) { if (x.index() == 13) return true; }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<14>(x)), T >) { if (x.index() == 14) return true; }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<15>(x)), T >) { if (x.index() == 15) return true; }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<16>(x)), T >) { if (x.index() == 16) return true; }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) { if (x.index() == 17) return true; }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) { if (x.index() == 18) return true; }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<19>(x)), T >) { if (x.index() == 19) return true; }
     if constexpr (std::is_same_v< T, empty > ) {
         if (x.valueless_by_exception()) return true;
         //  Need to guard this with is_any otherwise the get_if is illegal
@@ -761,32 +813,35 @@ auto is( std::variant<Ts...> const& x ) {
 
 template<typename T, typename... Ts>
 auto as( std::variant<Ts...> const& x ) {
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) if (x.index() ==  0) return operator_as<0>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 1>(x)), T >) if (x.index() ==  1) return operator_as<1>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 2>(x)), T >) if (x.index() ==  2) return operator_as<2>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 3>(x)), T >) if (x.index() ==  3) return operator_as<3>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 4>(x)), T >) if (x.index() ==  4) return operator_as<4>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 5>(x)), T >) if (x.index() ==  5) return operator_as<5>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 6>(x)), T >) if (x.index() ==  6) return operator_as<6>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 7>(x)), T >) if (x.index() ==  7) return operator_as<7>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 8>(x)), T >) if (x.index() ==  8) return operator_as<8>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 9>(x)), T >) if (x.index() ==  9) return operator_as<9>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<10>(x)), T >) if (x.index() == 10) return operator_as<0>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<11>(x)), T >) if (x.index() == 11) return operator_as<1>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<12>(x)), T >) if (x.index() == 12) return operator_as<2>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<13>(x)), T >) if (x.index() == 13) return operator_as<3>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<14>(x)), T >) if (x.index() == 14) return operator_as<4>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<15>(x)), T >) if (x.index() == 15) return operator_as<5>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<16>(x)), T >) if (x.index() == 16) return operator_as<6>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) if (x.index() == 17) return operator_as<7>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) if (x.index() == 18) return operator_as<8>(x);
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<19>(x)), T >) if (x.index() == 19) return operator_as<9>(x);
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) { if (x.index() ==  0) return operator_as<0>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 1>(x)), T >) { if (x.index() ==  1) return operator_as<1>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 2>(x)), T >) { if (x.index() ==  2) return operator_as<2>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 3>(x)), T >) { if (x.index() ==  3) return operator_as<3>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 4>(x)), T >) { if (x.index() ==  4) return operator_as<4>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 5>(x)), T >) { if (x.index() ==  5) return operator_as<5>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 6>(x)), T >) { if (x.index() ==  6) return operator_as<6>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 7>(x)), T >) { if (x.index() ==  7) return operator_as<7>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 8>(x)), T >) { if (x.index() ==  8) return operator_as<8>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 9>(x)), T >) { if (x.index() ==  9) return operator_as<9>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<10>(x)), T >) { if (x.index() == 10) return operator_as<0>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<11>(x)), T >) { if (x.index() == 11) return operator_as<1>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<12>(x)), T >) { if (x.index() == 12) return operator_as<2>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<13>(x)), T >) { if (x.index() == 13) return operator_as<3>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<14>(x)), T >) { if (x.index() == 14) return operator_as<4>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<15>(x)), T >) { if (x.index() == 15) return operator_as<5>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<16>(x)), T >) { if (x.index() == 16) return operator_as<6>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) { if (x.index() == 17) return operator_as<7>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) { if (x.index() == 18) return operator_as<8>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<19>(x)), T >) { if (x.index() == 19) return operator_as<9>(x); }
     throw std::bad_variant_access();
 }
 
 
 //-------------------------------------------------------------------------------------------------------------
 //  std::any is and as
+//
+
+//  is Type
 //
 template<typename T, typename X>
     requires (std::is_same_v<X,std::any> && !std::is_same_v<T,std::any> && !std::is_same_v<T,empty>)
@@ -798,12 +853,31 @@ template<typename T, typename X>
 constexpr auto is( X const& x ) -> bool
     { return !x.has_value(); }
 
-constexpr auto is( std::any const& x, auto const& value ) -> bool
+
+//  is Value
+//
+inline constexpr auto is( std::any const& x, auto const& value ) -> bool
 {
-    auto pvalue = std::any_cast<CPP2_TYPEOF(value)>(&x);
-    return pvalue && *pvalue == value;
+    //  Predicate case
+    if constexpr (requires{ bool{ value(x) }; }) {
+        return value(x);
+    }
+    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
+        return false;
+    }
+
+    //  Value case
+    else if constexpr (requires{ bool{ *std::any_cast<CPP2_TYPEOF(value)>(&x) == value }; }) {
+        auto pvalue = std::any_cast<CPP2_TYPEOF(value)>(&x);
+        return pvalue && *pvalue == value;
+    }
+    //  else
+    return false;
 }
 
+
+//  as
+//
 template<typename T, typename X>
     requires (!std::is_reference_v<T> && std::is_same_v<X,std::any> && !std::is_same_v<T,std::any>)
 constexpr auto as( X const& x ) -> T
@@ -812,6 +886,9 @@ constexpr auto as( X const& x ) -> T
 
 //-------------------------------------------------------------------------------------------------------------
 //  std::optional is and as
+//
+
+//  is Type
 //
 template<typename T, typename X>
     requires std::is_same_v<X,std::optional<T>>
@@ -823,20 +900,30 @@ template<typename T, typename U>
 constexpr auto is( std::optional<U> const& x ) -> bool
     { return !x.has_value(); }
 
-template<typename T>
-constexpr auto is( std::optional<T> const& x, auto const& value ) -> bool
-    requires requires{ x.value() == value; }
-{
-    return x.has_value() && x.value() == value;
-}
 
+//  is Value
+//
 template<typename T>
 constexpr auto is( std::optional<T> const& x, auto const& value ) -> bool
-    requires (!requires{ x.value() == value; })
 {
+    //  Predicate case
+    if constexpr (requires{ bool{ value(x) }; }) {
+        return value(x);
+    }
+    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
+        return false;
+    }
+
+    //  Value case
+    else if constexpr (requires{ bool{ x.value() == value }; }) {
+        return x.has_value() && x.value() == value;
+    }
     return false;
 }
 
+
+//  as
+//
 template<typename T, typename X>
     requires std::is_same_v<X,std::optional<T>>
 constexpr auto as( X const& x ) -> auto&&
