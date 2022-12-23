@@ -1383,7 +1383,7 @@ public:
         if (is_expression) {
             printer.print_cpp2("()", n.close_brace);
         }
-        printer.print_cpp2("\n", n.close_brace);
+        //printer.print_cpp2("\n", n.close_brace);
     }
 
 
@@ -1972,24 +1972,59 @@ public:
 
         //  Handle is/as expressions
         //  TODO: Generalize
-        if (!n.terms.empty() && *n.terms.front().op == "is")
+
+        //  If this is an is_as_expression_node
+        //
+        if constexpr (std::is_same_v<is_as_expression_node const&, decltype(n)>)
         {
-            if (n.terms.size() > 1) {
-                errors.emplace_back(
-                    n.position(),
-                    "(temporary alpha limitation) this compiler is just starting to learn 'is' and only supports a single is-expression (no chaining with other is/as)"
-                );
+            if (!n.terms.empty() && *n.terms.front().op == "is")
+            {
+                if (n.terms.size() > 1) {
+                    errors.emplace_back(
+                        n.position(),
+                        "(temporary alpha limitation) this compiler is just starting to learn 'is' and only supports a single is-expression (no chaining with other is/as)"
+                    );
+                    return;
+                }
+
+                //  The term will be a prefix_expression_node
+                auto prefix_expr = n.terms.front().expr.get();
+                assert (prefix_expr);
+                static_assert (std::is_same_v<prefix_expression_node*, decltype(prefix_expr)>);
+
+                //  In the future we'll distinguish type_id better, but for now
+                //  "identifier or id_expression w/o ops" works well enough
+                //
+                //  If it's "is type", emit "cpp2::is<type>(expr)"
+                if (prefix_expr->ops.empty() &&         // no prefix ops
+                    prefix_expr->expr->ops.empty() &&   // no postfix ops
+                    (prefix_expr->expr->expr->expr.index() == primary_expression_node::identifier ||
+                     prefix_expr->expr->expr->expr.index() == primary_expression_node::id_expression
+                     )
+                    )
+                {
+                    printer.print_cpp2("cpp2::is<", n.position());
+                    emit(*n.terms.front().expr);
+                    printer.print_cpp2(">(", n.position());
+
+                    emit(*n.expr);
+
+                    printer.print_cpp2(")", n.position());
+                }
+                //  Else it's "is value", emit "cpp2::is(expr, value)"
+                else
+                {
+                    printer.print_cpp2("cpp2::is(", n.position());
+
+                    emit(*n.expr);
+
+                    printer.print_cpp2(", ", n.position());
+                    emit(*n.terms.front().expr);
+                    printer.print_cpp2(")", n.position());
+                }
+
                 return;
             }
-
-            printer.print_cpp2("cpp2::is<", n.position());
-            emit(*n.terms.front().expr);
-            printer.print_cpp2(">(", n.position());
-
-            emit(*n.expr);
-
-            printer.print_cpp2(")", n.position());
-            return;
         }
 
         if (!n.terms.empty() && *n.terms.front().op == "as")

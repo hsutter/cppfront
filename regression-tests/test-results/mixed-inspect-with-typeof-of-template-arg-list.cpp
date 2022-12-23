@@ -20,8 +20,8 @@ auto calc() {
     return [&] () -> int { auto&& __expr = v;
         if (cpp2::is<int>(__expr)) { if constexpr( requires{calc<1,2>();} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((calc<1,2>())),int> ) return calc<1,2>(); else return int{}; else return int{}; }
         else return 0; }
-    ()
-; }
+    (); 
+}
 
 [[nodiscard]] auto main() -> int{
     return fun(42); 
