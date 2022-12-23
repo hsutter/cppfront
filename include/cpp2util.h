@@ -698,6 +698,19 @@ auto as( X const* x ) -> C const* {
 //  std::variant is and as
 //
 
+//  Common internal helper
+//
+template<size_t I, typename... Ts>
+constexpr auto operator_as( std::variant<Ts...> const& x ) -> decltype(auto) {
+    if constexpr (I < std::variant_size_v<std::variant<Ts...>>) {
+        return std::get<I>( x );
+    }
+    else {
+        return nonesuch;
+    }
+}
+
+
 //  is Type
 //
 template<typename... Ts>
@@ -768,16 +781,6 @@ constexpr auto is( std::variant<Ts...> const& x, auto const& value ) -> bool
 
 //  as
 //
-template<size_t I, typename... Ts>
-constexpr auto operator_as( std::variant<Ts...> const& x ) -> decltype(auto) {
-    if constexpr (I < std::variant_size_v<std::variant<Ts...>>) {
-        return std::get<I>( x );
-    }
-    else {
-        return nonesuch;
-    }
-}
-
 template <class T, class... Ts>
 inline constexpr auto is_any = std::disjunction_v<std::is_same<T, Ts>...>;
 
