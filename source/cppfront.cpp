@@ -1383,7 +1383,6 @@ public:
         if (is_expression) {
             printer.print_cpp2("()", n.close_brace);
         }
-        //printer.print_cpp2("\n", n.close_brace);
     }
 
 
@@ -1992,8 +1991,8 @@ public:
                 assert (prefix_expr);
                 static_assert (std::is_same_v<prefix_expression_node*, decltype(prefix_expr)>);
 
-                //  In the future we'll distinguish type_id better, but for now
-                //  "identifier or id_expression w/o ops" works well enough
+                //  Hack: In the future we'll distinguish type_id better, but for now
+                //        "identifier or id_expression w/o ops" works well enough
                 //
                 //  If it's "is type", emit "cpp2::is<type>(expr)"
                 if (prefix_expr->ops.empty() &&         // no prefix ops
