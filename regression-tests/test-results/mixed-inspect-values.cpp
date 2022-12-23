@@ -47,8 +47,8 @@ auto test(auto const& x) -> void{
     std::cout << [&] () -> std::string { auto&& __expr = x;
         if (cpp2::is(__expr, 0)) { if constexpr( requires{"zero";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("zero")),std::string> ) return "zero"; else return std::string{}; else return std::string{}; }
         else if (cpp2::is(__expr, (in(1, 2)))) { if constexpr( requires{"1 or 2";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("1 or 2")),std::string> ) return "1 or 2"; else return std::string{}; else return std::string{}; }
-        else if (cpp2::is(__expr, in_2_3)) { if constexpr( requires{"3";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("3")),std::string> ) return "3"; else return std::string{}; else return std::string{}; }
-        else if (cpp2::is(__expr, std::move(forty_two))) { if constexpr( requires{"the answer";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("the answer")),std::string> ) return "the answer"; else return std::string{}; else return std::string{}; }
+        else if (cpp2::is(__expr, (in_2_3))) { if constexpr( requires{"3";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("3")),std::string> ) return "3"; else return std::string{}; else return std::string{}; }
+        else if (cpp2::is(__expr, (std::move(forty_two)))) { if constexpr( requires{"the answer";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("the answer")),std::string> ) return "the answer"; else return std::string{}; else return std::string{}; }
         else if (cpp2::is<int>(__expr)) { if constexpr( requires{"integer " + cpp2::to_string(x);} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("integer " + cpp2::to_string(x))),std::string> ) return "integer " + cpp2::to_string(x); else return std::string{}; else return std::string{}; }
         else if (cpp2::is<std::string>(__expr)) { if constexpr( requires{cpp2::as<std::string>(x);} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((cpp2::as<std::string>(x))),std::string> ) return cpp2::as<std::string>(x); else return std::string{}; else return std::string{}; }
         else return "(no match)"; }
