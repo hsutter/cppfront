@@ -1789,6 +1789,7 @@ public:
                 assert(i->op_close);
                 auto local_args = text_chunks_with_parens_position{{}, i->op->position(), i->op_close->position()};
 
+                assert (i->expr_list);
                 if (!i->expr_list->expressions.empty()) {
                     local_args.text_chunks = print_to_text_chunks(*i->expr_list);
                 } 
