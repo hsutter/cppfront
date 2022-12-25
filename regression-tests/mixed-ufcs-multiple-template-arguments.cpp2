@@ -19,5 +19,4 @@ main: () -> int = {
 
     x: X = test_string;
     std::cout << x.substr<4,8>() << "\n";
-        // for now this should not be UFCS-ized because of the multiple template arguments
 }

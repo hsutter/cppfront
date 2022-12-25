@@ -1547,7 +1547,7 @@ private:
                     return {};
                 }
                 n->cap_grp = current_capture_groups.back();
-                n->cap_grp->add({n.get()});
+                n->cap_grp->add(n.get());
             }
 
             auto term = postfix_expression_node::term{&curr()};

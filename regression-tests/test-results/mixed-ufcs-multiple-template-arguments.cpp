@@ -29,6 +29,5 @@ struct X {
 
     X x { test_string }; 
     std::cout << CPP2_UFCS_TEMPLATE_0(substr, (<4,8>), std::move(x)) << "\n";
-        // for now this should not be UFCS-ized because of the multiple template arguments
 }
 

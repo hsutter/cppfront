@@ -22,7 +22,7 @@
 
     std::string y { "\n" }; 
     std::ranges::for_each( view, [_0 = (&y)](auto const& x){
-        std::cout << (*cpp2::assert_not_null((_0))).c_str() << x << *cpp2::assert_not_null(_0);
+        std::cout << CPP2_UFCS_0(c_str, (*cpp2::assert_not_null((_0)))) << x << *cpp2::assert_not_null(_0);
     } );
 
     auto callback { [](auto& x) { return x += "-ish"; } }; 
