@@ -767,11 +767,12 @@ public:
     //-----------------------------------------------------------------------
     //  Visitor functions
     //
-    int  scope_depth = 0;
+    int  scope_depth                   = 0;
     bool started_assignment_expression = false;
-    bool is_out_expression     = false;
-    bool inside_parameter_list = false;
-    bool inside_returns_list   = false;
+    bool started_postfix_expression    = false;
+    bool is_out_expression             = false;
+    bool inside_parameter_list         = false;
+    bool inside_returns_list           = false;
     parameter_declaration_node const* inside_out_parameter = {};
 
     auto start(parameter_declaration_list_node const&, int) -> void {
@@ -873,16 +874,21 @@ public:
             is_out_expression = false;
         }
 
-        //  Otherwise it's just an identifier use (if it's outside the parameter list)
-        else if (!inside_parameter_list)
+        //  Otherwise it's just an identifier use (if it's outside the parameter list) and
+        //  it's the first identifier of a postfix_expressions (not a member name or something else)
+        else if (started_postfix_expression)
         {
-            //  Put this into the table if it's a use of an object in scope
-            //  or it's a 'copy' parameter
-            if (auto decl = get_local_declaration_of(t);
-                decl
-                )
+            started_postfix_expression = false;
+            if (!inside_parameter_list)
             {
-                symbols.emplace_back( scope_depth, identifier_sym( false, &t ) );
+                //  Put this into the table if it's a use of an object in scope
+                //  or it's a 'copy' parameter
+                if (auto decl = get_local_declaration_of(t);
+                    decl
+                    )
+                {
+                    symbols.emplace_back( scope_depth, identifier_sym( false, &t ) );
+                }
             }
         }
     }
@@ -934,6 +940,10 @@ public:
                 started_assignment_expression = true;
             }
         }
+    }
+
+    auto start(postfix_expression_node const&, int) {
+        started_postfix_expression = true;
     }
 
     auto start(auto const&, int) -> void

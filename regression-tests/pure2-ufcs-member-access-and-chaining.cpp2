@@ -1,0 +1,33 @@
+main: () -> int = {
+    i := 42;
+    i.ufcs();
+
+    j := fun();
+    j.i.ufcs();
+
+    fun().i.ufcs();
+
+    k := fun().i;
+    k.ufcs();
+
+    get_i(j).ufcs();
+
+    get_i(fun()).ufcs();
+
+    res := int(42).ufcs();
+
+    int(j.i).ufcs();
+}
+
+ufcs: (i:int) -> int = {
+    return i+2;
+}
+
+fun: () -> (i:int) = {
+    i = 42;
+    return;
+}
+
+get_i: (r:_) -> int = {
+    return r.i;
+}
