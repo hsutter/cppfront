@@ -315,8 +315,20 @@ struct expression_statement_node
 struct capture {
     postfix_expression_node* capture_expr;
     std::string              str = {};
+    auto operator==(postfix_expression_node* p) { return capture_expr == p; }
 };
-using capture_group = std::vector<capture>;
+
+struct capture_group {
+    std::vector<capture> members;
+
+    auto add(postfix_expression_node* p) -> void {
+        members.push_back({p});
+    }
+
+    auto remove(postfix_expression_node* p) -> void;
+
+    ~capture_group();
+};
 
 struct postfix_expression_node
 {
@@ -336,6 +348,12 @@ struct postfix_expression_node
     std::vector<term> ops;
     capture_group* cap_grp = {};
 
+    ~postfix_expression_node() {
+        if (cap_grp) {
+            cap_grp->remove(this);
+        }
+    }
+
     auto position() const -> source_position
     {
         assert (expr);
@@ -344,6 +362,25 @@ struct postfix_expression_node
 
     auto visit(auto& v, int depth) -> void;
 };
+
+auto capture_group::remove(postfix_expression_node* p) -> void {
+    p->cap_grp = nullptr;
+    auto old_size = members.size();
+    std::erase(members, p);
+    assert (members.size() == old_size-1);
+}
+
+capture_group::~capture_group() {
+    assert (members.empty());
+    //  We shouldn't need to do this:
+    //      while (!members.empty()) {
+    //          remove(members.front().capture_expr);
+    //      }
+    //  if the capture_group outlives the tree of things that can point to it
+    //   => each node with a capture_group should declare it as the first member
+    //      before any other node that could own a postfix_expression that could
+    //      point back up to that capture_group
+}
 
 auto prefix_expression_node::position() const -> source_position
 {
@@ -719,12 +756,15 @@ struct inspect_expression_node
 
 struct contract_node
 {
+    //  Declared first, because it should outlive any owned
+    //  postfix_expressions that could refer to it
+    capture_group captures;
+
     source_position                             open_bracket;
     token const*                                kind = {};
     std::unique_ptr<id_expression_node>         group;
     std::unique_ptr<logical_or_expression_node> condition;
     token const*                                message = {};
-    capture_group                               captures;
 
     contract_node( source_position pos ) : open_bracket{pos} { }
 
@@ -905,6 +945,10 @@ struct function_type_node
 
 struct declaration_node
 {
+    //  Declared first, because it should outlive any owned
+    //  postfix_expressions that could refer to it
+    capture_group captures;
+
     source_position pos;
     std::unique_ptr<unqualified_id_node> identifier;
 
@@ -919,7 +963,6 @@ struct declaration_node
     source_position                 equal_sign = {};
     source_position                 decl_end   = {};
     std::unique_ptr<statement_node> initializer;
-    capture_group                   captures;
 
     declaration_node*               parent_scope = nullptr;
 
@@ -1504,7 +1547,7 @@ private:
                     return {};
                 }
                 n->cap_grp = current_capture_groups.back();
-                n->cap_grp->push_back({n.get()});
+                n->cap_grp->add({n.get()});
             }
 
             auto term = postfix_expression_node::term{&curr()};
@@ -2900,7 +2943,7 @@ private:
         n->pos = start;
         auto guard =
             captures_allowed
-            ? make_unique<capture_groups_stack_guard>(this, &n->captures)
+            ? std::make_unique<capture_groups_stack_guard>(this, &n->captures)
             : std::unique_ptr<capture_groups_stack_guard>()
             ;
 
@@ -3198,8 +3241,8 @@ public:
         if (n.message) {
             o << pre(indent+1) << "message: " << std::string_view(*n.message) << "\n";
         }
-        if (!n.captures.empty()) {
-            o << pre(indent+1) << "captures: " << n.captures.size() << "\n";
+        if (!n.captures.members.empty()) {
+            o << pre(indent+1) << "captures: " << n.captures.members.size() << "\n";
         }
     }
 
@@ -3217,8 +3260,8 @@ public:
     auto start(declaration_node const& n, int indent) -> void
     {
         o << pre(indent) << "declaration\n";
-        if (!n.captures.empty()) {
-            o << pre(indent+1) << "captures: " << n.captures.size() << "\n";
+        if (!n.captures.members.empty()) {
+            o << pre(indent+1) << "captures: " << n.captures.members.size() << "\n";
         }
     }
 

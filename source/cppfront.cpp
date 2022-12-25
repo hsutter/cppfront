@@ -1564,7 +1564,7 @@ public:
     {
         //  First calculate the stringized version of each capture expression
         //  This will let us compare and de-duplicate repeated capture expressions
-        for (auto& cap : captures)
+        for (auto& cap : captures.members)
         {
             assert(cap.capture_expr->cap_grp == &captures);
             printer.emit_to_string(&cap.str);
@@ -1578,7 +1578,7 @@ public:
 
         auto num = 0;
         auto handled = std::vector<std::string>{};
-        for (auto& cap : captures)
+        for (auto& cap : captures.members)
         {
             //  If we haven't handled a capture that looks like this one
             if (std::find(handled.begin(), handled.end(), cap.str) == handled.end())
@@ -1714,13 +1714,13 @@ public:
 
             //  Look in the capture group to see which capture # we are
             auto mynum = 0;
-            for (auto const& cap : *n.cap_grp) {
+            for (auto const& cap : n.cap_grp->members) {
                 if (cap.str == my_str) {
                     break;
                 }
                 ++mynum;
             }
-            assert (mynum < std::ssize(*n.cap_grp) && "could not find this postfix-expression in capture group");
+            assert (mynum < std::ssize(n.cap_grp->members) && "could not find this postfix-expression in capture group");
             //  And then emit that capture number
             captured_part += "_" + std::to_string(mynum);
         }
