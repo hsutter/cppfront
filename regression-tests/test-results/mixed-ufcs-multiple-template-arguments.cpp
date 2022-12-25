@@ -28,7 +28,7 @@ struct X {
     std::cout << substr<4,8>(test_string) << "\n";
 
     X x { test_string }; 
-    std::cout << std::move(x).substr<4,8>() << "\n";
+    std::cout << CPP2_UFCS_TEMPLATE_0(substr, (<4,8>), std::move(x)) << "\n";
         // for now this should not be UFCS-ized because of the multiple template arguments
 }
 
