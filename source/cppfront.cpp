@@ -18,7 +18,7 @@
 #include "sema.h"
 #include <iostream>
 #include <cstdio>
-
+#include <optional>
 
 namespace cpp2 {
 
@@ -1734,7 +1734,13 @@ public:
         auto last_was_prefixed = false;
         auto saw_dollar        = false;
 
-        auto args = std::optional<std::vector<text_with_pos>>{};
+        struct text_chunks_with_parens_position {
+            std::vector<text_with_pos> text_chunks;
+            cpp2::source_position open_pos;
+            cpp2::source_position close_pos;
+        };
+
+        auto args = std::optional<text_chunks_with_parens_position>{};
 
         auto print_to_string = [&](auto& i, auto... args) {
             auto print = std::string{};
@@ -1780,12 +1786,15 @@ public:
             // expr_list is emited to args variable for future use
             if (i->op->type() == lexeme::LeftParen) {
 
-                args.emplace();
+                assert(i->op);
+                assert(i->op_close);
+                auto local_args = text_chunks_with_parens_position{{}, i->op->position(), i->op_close->position()};
 
                 if (!i->expr_list->expressions.empty()) {
-                    args.emplace(print_to_text_chunks(*i->expr_list));
+                    local_args.text_chunks = print_to_text_chunks(*i->expr_list);
                 } 
                 
+                args.emplace(std::move(local_args));
             }
             // Going backwards if we found Dot and there is args variable
             // it means that it should be handled by UFCS
@@ -1809,17 +1818,18 @@ public:
                     // from obj.fun<int, long, double>(1,2) this CPP2_UFCS_TEMPLATE(fun, (<int,long, double>), obj, 1, 2)
                     auto split = funcname.find('<'); assert(split != std::string::npos);
                     funcname.insert(split, ", (");
+                    assert(funcname.back() == '>');
                     funcname += ')';
                 }
                 //  If there are no additional arguments, use the _0 version
-                if (args.value().empty()) {
+                if (args.value().text_chunks.empty()) {
                     ufcs_string += "_0";
                 }
 
                 prefix.emplace_back(ufcs_string + "(" + funcname + ", ", i->op->position() );
-                suffix.emplace_back(")", i->op->position() );
-                if (!args.value().empty()) {
-                    for (auto&& e: args.value()) {
+                suffix.emplace_back(")", args.value().close_pos );
+                if (!args.value().text_chunks.empty()) {
+                    for (auto&& e: args.value().text_chunks) {
                         suffix.push_back(e);
                     }
                     suffix.emplace_back(", ", i->op->position());
@@ -1876,12 +1886,12 @@ public:
 
                     if (args) {
                         // if args are stored it means that this is function or method
-                        // that is not handled by UFCS e.g. that has more than one template argument
-                        suffix.emplace_back(")", n.position());
-                        for (auto&& e: args.value()) {
+                        // that is not handled by UFCS and args need to be printed
+                        suffix.emplace_back(")", args.value().close_pos);
+                        for (auto&& e: args.value().text_chunks) {
                             suffix.push_back(e);
                         }
-                        suffix.emplace_back("(", n.position());
+                        suffix.emplace_back("(", args.value().open_pos);
                         args.reset();
                     }
 
@@ -1937,11 +1947,11 @@ public:
             // if after printing core expression args is defined
             // it means that the chaining started by function call
             // we need to print its arguments
-            suffix.emplace_back(")", n.position());
-            for (auto&& e: args.value()) {
+            suffix.emplace_back(")", args.value().close_pos);
+            for (auto&& e: args.value().text_chunks) {
                 suffix.push_back(e);
             }
-            suffix.emplace_back("(", n.position());
+            suffix.emplace_back("(", args.value().open_pos);
             args.reset();
         }
 
