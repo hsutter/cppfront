@@ -18,7 +18,7 @@
 #include "sema.h"
 #include <iostream>
 #include <cstdio>
-
+#include <optional>
 
 namespace cpp2 {
 
@@ -1725,77 +1725,6 @@ public:
             captured_part += "_" + std::to_string(mynum);
         }
 
-        //  Check to see if it's just a function call with "." syntax,
-        //  and if so use this path to convert it to UFCS
-        if (// there's a single-token expression followed by . and (
-            n.expr->get_token() &&                      //  if the base expression is a single token
-            std::ssize(n.ops) >= 2 &&                   //  and we're of the form:
-            n.ops[0].op->type() == lexeme::Dot &&       //       token . id-expr ( expr-list )
-            n.ops[1].op->type() == lexeme::LeftParen &&
-            // alpha limitation: if it's a function call with more than one template argument (e.g., x.f<1,2>())
-            //                   the UFCS* macros can't handle that right now, so don't UFCS-size it
-            n.ops[0].id_expr->template_args_count() < 2 &&
-            // and either there's nothing after that, or there's just a $ after that
-            (
-                std::ssize(n.ops) == 2 ||
-                (std::ssize(n.ops) == 3 && n.ops[2].op->type() == lexeme::Dollar)
-            )
-            )
-        {
-            //  If we already replaced this with a capture (which contains the UFCS
-            //  work already done when the capture was computed), emit the capture
-            if (!captured_part.empty()) {
-                printer.print_cpp2(captured_part, n.position());
-                return;
-            }
-
-            //  Otherwise, do the UFCS work...
-
-            //  The . has its id_expr
-            assert (n.ops[0].id_expr);
-
-            //  The ( has its expr_list and op_close
-            assert (n.ops[1].expr_list && n.ops[1].op_close);
-
-            //--------------------------------------------------------------------
-            //  TODO: When MSVC supports __VA_OPT__ in standard mode without the
-            //        experimental /Zc:preprocessor switch, use this single line
-            //        instead of the dual lines below that special-case _0 args
-            //  AND:  Make the similarly noted change in cpp2util.h
-            //
-            //printer.print_cpp2("CPP2_UFCS(", n.position());
-
-            auto ufcs_string = std::string("CPP2_UFCS");
-            if (n.ops[0].id_expr->template_args_count() > 0) {
-                ufcs_string += "_TEMPLATE";
-            }
-            //  If there are no additional arguments, use the _0 version
-            if (n.ops[1].expr_list->expressions.empty()) {
-                ufcs_string += "_0";
-            }
-            printer.print_cpp2(ufcs_string+"(", n.position());
-            //--------------------------------------------------------------------
-
-            //  Make the "funcname" the first argument to CPP2_UFCS
-            emit(*n.ops[0].id_expr);
-            printer.print_cpp2(", ", n.position());
-
-            //  Then make the base expression the second argument
-            emit(*n.expr);
-
-            //  Then tack on any additional arguments
-            if (!n.ops[1].expr_list->expressions.empty()) {
-                printer.print_cpp2(", ", n.position());
-                push_need_expression_list_parens(false);
-                emit(*n.ops[1].expr_list);
-                pop_need_expression_list_parens();
-            }
-            printer.print_cpp2(")", n.position());
-
-            //  And we're done. This path has handled this node, so return...
-            return;
-        }
-
         //  Otherwise, we're going to have to potentially do some work to change
         //  some Cpp2 postfix operators to Cpp1 prefix operators, so let's set up...
         auto prefix            = std::vector<text_with_pos>{};
@@ -1803,6 +1732,31 @@ public:
 
         auto last_was_prefixed = false;
         auto saw_dollar        = false;
+
+        struct text_chunks_with_parens_position {
+            std::vector<text_with_pos> text_chunks;
+            cpp2::source_position open_pos;
+            cpp2::source_position close_pos;
+        };
+
+        auto args = std::optional<text_chunks_with_parens_position>{};
+
+        auto print_to_string = [&](auto& i, auto... args) {
+            auto print = std::string{};
+            printer.emit_to_string(&print);
+            emit(i, args...);
+            printer.emit_to_string();
+            return print;
+        };
+        auto print_to_text_chunks = [&](auto& i, auto... args) {
+            auto text = std::vector<text_with_pos>{};
+            printer.emit_to_text_chunks(&text);
+            push_need_expression_list_parens(false);
+            emit(i, args...);
+            pop_need_expression_list_parens();
+            printer.emit_to_text_chunks();
+            return text;
+        };
 
         for (auto i = n.ops.rbegin(); i != n.ops.rend(); ++i)
         {
@@ -1827,9 +1781,64 @@ public:
                 }
             }
 
+            // Going backwards if we found LeftParen it might be UFCS
+            // expr_list is emited to args variable for future use
+            if (i->op->type() == lexeme::LeftParen) {
+
+                assert(i->op);
+                assert(i->op_close);
+                auto local_args = text_chunks_with_parens_position{{}, i->op->position(), i->op_close->position()};
+
+                if (!i->expr_list->expressions.empty()) {
+                    local_args.text_chunks = print_to_text_chunks(*i->expr_list);
+                } 
+                
+                args.emplace(std::move(local_args));
+            }
+            // Going backwards if we found Dot and there is args variable
+            // it means that it should be handled by UFCS
+            else if( i->op->type() == lexeme::Dot && args )
+            {
+                auto funcname = print_to_string(*i->id_expr);
+
+                //--------------------------------------------------------------------
+                //  TODO: When MSVC supports __VA_OPT__ in standard mode without the
+                //        experimental /Zc:preprocessor switch, use this single line
+                //        instead of the dual lines below that special-case _0 args
+                //  AND:  Make the similarly noted change in cpp2util.h
+                //
+                //printer.print_cpp2("CPP2_UFCS(", n.position());
+
+                auto ufcs_string = std::string("CPP2_UFCS");
+
+                if (i->id_expr->template_args_count() > 0) {
+                    ufcs_string += "_TEMPLATE";
+                    // we need to replace "fun<int,long,double>" to "fun, (<int,long,double>)" to be able to generate
+                    // from obj.fun<int, long, double>(1,2) this CPP2_UFCS_TEMPLATE(fun, (<int,long, double>), obj, 1, 2)
+                    auto split = funcname.find('<'); assert(split != std::string::npos);
+                    funcname.insert(split, ", (");
+                    assert(funcname.back() == '>');
+                    funcname += ')';
+                }
+                //  If there are no additional arguments, use the _0 version
+                if (args.value().text_chunks.empty()) {
+                    ufcs_string += "_0";
+                }
+
+                prefix.emplace_back(ufcs_string + "(" + funcname + ", ", i->op->position() );
+                suffix.emplace_back(")", args.value().close_pos );
+                if (!args.value().text_chunks.empty()) {
+                    for (auto&& e: args.value().text_chunks) {
+                        suffix.push_back(e);
+                    }
+                    suffix.emplace_back(", ", i->op->position());
+                }
+                args.reset();
+            }
+
             //  Handle the Cpp2 postfix operators that are prefix in Cpp1
             //
-            if (i->op->type() == lexeme::MinusMinus ||
+            else if (i->op->type() == lexeme::MinusMinus ||
                 i->op->type() == lexeme::PlusPlus ||
                 i->op->type() == lexeme::Multiply ||
                 i->op->type() == lexeme::Ampersand ||
@@ -1873,21 +1882,25 @@ public:
                 }
 
                 if (i->id_expr) {
-                    auto print = std::string{};
-                    printer.emit_to_string(&print);
-                    emit(*i->id_expr, false /*not a local name*/);
-                    printer.emit_to_string();
+
+                    if (args) {
+                        // if args are stored it means that this is function or method
+                        // that is not handled by UFCS and args need to be printed
+                        suffix.emplace_back(")", args.value().close_pos);
+                        for (auto&& e: args.value().text_chunks) {
+                            suffix.push_back(e);
+                        }
+                        suffix.emplace_back("(", args.value().open_pos);
+                        args.reset();
+                    }
+
+                    auto print = print_to_string(*i->id_expr, false /*not a local name*/);
                     suffix.emplace_back( print, i->id_expr->position() );
                 }
 
                 if (i->expr_list) {
-                    auto text = std::vector<text_with_pos>{};
-                    printer.emit_to_text_chunks(&text);
-                    push_need_expression_list_parens(false);
-                    emit(*i->expr_list);
-                    pop_need_expression_list_parens();
-                    printer.emit_to_text_chunks();
-                    for (auto&& e: text) {
+                    auto text = print_to_text_chunks(*i->expr_list);
+                    for (auto&& e: text) { 
                         suffix.push_back(e);
                     }
                 }
@@ -1902,6 +1915,8 @@ public:
                 }
             }
         }
+
+
 
         //  Print the prefixes (in forward order)
         for (auto& e : prefix) {
@@ -1926,6 +1941,18 @@ public:
             printer.print_cpp2(captured_part, n.position());
         }
         suppress_move_from_last_use = false;
+
+        if (args) {
+            // if after printing core expression args is defined
+            // it means that the chaining started by function call
+            // we need to print its arguments
+            suffix.emplace_back(")", args.value().close_pos);
+            for (auto&& e: args.value().text_chunks) {
+                suffix.push_back(e);
+            }
+            suffix.emplace_back("(", args.value().open_pos);
+            args.reset();
+        }
 
         //  Print the suffixes (in reverse order)
         while (!suffix.empty()) {

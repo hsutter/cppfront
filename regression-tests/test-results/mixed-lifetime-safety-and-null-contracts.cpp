@@ -22,7 +22,7 @@ auto call_my_framework(cpp2::in<const char *> msg) -> void;
 #line 5 "mixed-lifetime-safety-and-null-contracts.cpp2"
 
 [[nodiscard]] auto main() -> int{
-    cpp2::Null.set_handler(&call_my_framework);
+    CPP2_UFCS(set_handler, cpp2::Null, &call_my_framework);
     try_pointer_stuff();
     std::cout << "done\n";
 }

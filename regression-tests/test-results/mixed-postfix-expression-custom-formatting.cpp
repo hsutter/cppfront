@@ -17,11 +17,11 @@ auto call(auto const& v, auto const& w, auto const& x, auto const& y, auto const
 
 [[nodiscard]] auto test(auto const& a) -> std::string{
     return call( a, 
-        ++*cpp2::assert_not_null(a.b(a.c)), "hello", /* polite
+        ++*cpp2::assert_not_null(CPP2_UFCS(b, a, a.c)), "hello", /* polite
                           greeting
                           goes here */ " there", 
-        a.d.e( ++(*cpp2::assert_not_null(a.f)).g(), // because f is foobar
-              a.h.i(), 
+        CPP2_UFCS(e, a.d, ++CPP2_UFCS_0(g, *cpp2::assert_not_null(a.f)), // because f is foobar
+              CPP2_UFCS_0(i, a.h), 
               CPP2_UFCS(j, a, a.k, a.l))
         ); 
 }

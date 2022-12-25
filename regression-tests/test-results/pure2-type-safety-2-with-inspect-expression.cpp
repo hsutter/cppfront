@@ -21,7 +21,7 @@ auto test_generic(auto const& x, auto const& msg) -> void;
     test_generic(a,    "any");
     test_generic(o,    "optional<int>");
 
-    CPP2_UFCS_TEMPLATE(emplace<2>, v, 1);
+    CPP2_UFCS_TEMPLATE(emplace, (<2>), v, 1);
     a = 2;
     o = 3;
     test_generic(42,   "int");

@@ -29,7 +29,7 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
 
     std::cout << "\n";
 
-    CPP2_UFCS_TEMPLATE(emplace<1>, v, 1);
+    CPP2_UFCS_TEMPLATE(emplace, (<1>), v, 1);
     a = 2;
     o = 3;
     test_generic(42,   "int");

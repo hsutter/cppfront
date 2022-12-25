@@ -536,21 +536,23 @@ public:
     } \
 }(PARAM1)
 
-#define CPP2_UFCS_TEMPLATE(FUNCNAME,PARAM1,...) \
+#define CPP2_UFCS_REMPARENS(...) __VA_ARGS__
+
+#define CPP2_UFCS_TEMPLATE(FUNCNAME,TEMPARGS,PARAM1,...) \
 [](auto&& obj, auto&& ...params) { \
-    if constexpr (requires{ std::forward<decltype(obj)>(obj).template FUNCNAME(std::forward<decltype(params)>(params)...); }) { \
-        return std::forward<decltype(obj)>(obj).template FUNCNAME(std::forward<decltype(params)>(params)...); \
+    if constexpr (requires{ std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(params)>(params)...); }) { \
+        return std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(params)>(params)...); \
     } else { \
-        return FUNCNAME(std::forward<decltype(obj)>(obj), std::forward<decltype(params)>(params)...); \
+        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(obj)>(obj), std::forward<decltype(params)>(params)...); \
     } \
 }(PARAM1, __VA_ARGS__)
 
-#define CPP2_UFCS_TEMPLATE_0(FUNCNAME,PARAM1) \
+#define CPP2_UFCS_TEMPLATE_0(FUNCNAME,TEMPARGS,PARAM1) \
 [](auto&& obj) { \
-    if constexpr (requires{ std::forward<decltype(obj)>(obj).template FUNCNAME(); }) { \
-        return std::forward<decltype(obj)>(obj).template FUNCNAME(); \
+    if constexpr (requires{ std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); }) { \
+        return std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
     } else { \
-        return FUNCNAME(std::forward<decltype(obj)>(obj)); \
+        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(obj)>(obj)); \
     } \
 }(PARAM1)
 //--------------------------------------------------------------------
