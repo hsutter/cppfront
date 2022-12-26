@@ -2,7 +2,7 @@
 f: () -> (ri : int = 0) = {
     pred := :(e:_) -> bool = { return e == 1; };
     ri = 42;
-    return;
+    // "return;" is implicit"
 }
 
 g: () -> (ri : int) = {

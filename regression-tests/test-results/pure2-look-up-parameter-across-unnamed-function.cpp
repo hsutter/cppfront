@@ -27,7 +27,7 @@ struct g__ret {
 #line 3 "pure2-look-up-parameter-across-unnamed-function.cpp2"
     auto pred { [](auto const& e) -> bool{return e == 1; } }; 
     ri = 42;
-    return  { std::move(ri) }; 
+    return  { std::move(ri) }; // "return;" is implicit"
 }
 
 [[nodiscard]] auto g() -> g__ret{

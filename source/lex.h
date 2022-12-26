@@ -21,6 +21,7 @@
 #include "load.h"
 #include <map>
 #include <climits>
+#include <deque>
 
 
 namespace cpp2 {
@@ -199,6 +200,18 @@ public:
     )
       : start   {start}
       , count   {int16_t(count)}
+      , pos     {pos  }
+      , lex_type{type }
+    {
+    }
+
+    token(
+        char const*     sz,
+        source_position pos,
+        lexeme          type
+    )
+      : start   {sz}
+      , count   {as<int16_t>(std::strlen(sz))}
       , pos     {pos  }
       , lex_type{type }
     {
@@ -867,16 +880,19 @@ class tokens
 {
     std::vector<error>& errors;
 
-    //  All non-comment tokens go here, which will be parsed in the parser
+    //  All non-comment source tokens go here, which will be parsed in the parser
     std::map<lineno_t, std::vector<token>> grammar_map;
 
-    //  All comment tokens go here, which are applied in the lexer
+    //  All comment source tokens go here, which are applied in the lexer
     //
     //  We could put all the tokens in the same map, but that would mean the
     //  parsing logic would have to remember to skip comments everywhere...
     //  simpler to keep comments separate, at the smaller cost of traversing
     //  a second token stream when lowering to Cpp1 to re-interleave comments
     std::vector<comment> comments;
+
+    //  All generated tokens go here
+    std::deque<token> generated_tokens;
 
 public:
     //-----------------------------------------------------------------------
@@ -954,6 +970,15 @@ public:
     auto get_comments() const -> auto const&
     {
         return comments;
+    }
+
+
+    //-----------------------------------------------------------------------
+    //  get_generated: Access the generated tokens
+    //
+    auto get_generated() -> auto&
+    {
+        return generated_tokens;
     }
 
 

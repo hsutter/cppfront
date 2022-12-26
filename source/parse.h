@@ -1250,7 +1250,8 @@ class parser
     };
 
     //  Used only for the duration of each parse() call
-    std::vector<token> const* tokens_ = nullptr;
+    std::vector<token> const* tokens_           = nullptr;
+    std::deque<token> *       generated_tokens_ = nullptr;
     int pos = 0;
 
 public:
@@ -1277,12 +1278,14 @@ public:
     //  sections in a TU to build the whole TU's parse tree
     //
     auto parse(
-        std::vector<token> const& tokens
+        std::vector<token> const& tokens,
+        std::deque<token>&        generated_tokens
     )
         -> bool
     {
         //  Generate parse tree for this section as if a standalone TU
         tokens_ = &tokens;
+        generated_tokens_ = &generated_tokens;
         pos     = 0;
         auto tu = translation_unit();
 
@@ -3039,6 +3042,31 @@ private:
                 error("ill-formed initializer");
                 next();
                 return {};
+            }
+        }
+
+        //  If this is a function with a list of multiple/named return values
+        if (auto func = std::get_if<declaration_node::function>(&n->type);
+            func && (*func)->returns.index() == function_type_node::list)
+        {
+            assert (n->initializer && n->initializer->statement.index() == statement_node::compound);
+            auto& body = std::get<statement_node::compound>(n->initializer->statement);
+
+            //  If the function body's end doesn't already have "return" as the last statement
+            //  then generate "return;" as the last statement
+            if (body->statements.empty() || body->statements.back()->statement.index() != statement_node::return_)
+            {
+                auto pos = body->statements.back()->position();
+                ++pos.lineno;
+                generated_tokens_->emplace_back( "return", pos, lexeme::Keyword);
+
+                auto ret = std::make_unique<return_statement_node>();
+                ret->identifier = &generated_tokens_->back();
+
+                auto stmt = std::make_unique<statement_node>();
+                stmt->statement = std::move(ret);
+
+                body->statements.push_back(std::move(stmt));
             }
         }
 

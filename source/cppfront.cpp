@@ -727,7 +727,7 @@ public:
             try
             {
                 for (auto const& [line, entry] : tokens.get_map()) {
-                    if (!parser.parse(entry)) {
+                    if (!parser.parse(entry, tokens.get_generated())) {
                         errors.emplace_back(
                             source_position(line, 0),
                             "parse failed for section starting here"
