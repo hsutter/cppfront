@@ -404,6 +404,8 @@ auto prefix_expression_node::visit(auto& v, int depth) -> void
 }
 
 
+struct template_args_tag { };
+
 struct unqualified_id_node
 {
     token const* identifier      = {};  // required
@@ -449,6 +451,8 @@ struct unqualified_id_node
         v.start(*identifier, depth+1);
 
         if (!template_args.empty()) {
+            //  Inform the visitor that this is a template args list
+            v.start(template_args_tag{}, depth);
             assert(open_angle  != source_position{});
             assert(close_angle != source_position{});
             assert(template_args.front().comma == source_position{});
@@ -456,6 +460,7 @@ struct unqualified_id_node
                 try_visit<   expression>(a.arg, v, depth+1);
                 try_visit<id_expression>(a.arg, v, depth+1);
             }
+            v.end(template_args_tag{}, depth);
         }
 
         v.end(*this, depth);
@@ -3255,6 +3260,11 @@ public:
     auto start(function_returns_tag const&, int indent) -> void
     {
         o << pre(indent) << "function returns\n";
+    }
+
+    auto start(template_args_tag const&, int indent) -> void
+    {
+        o << pre(indent) << "template arguments\n";
     }
 
     auto start(declaration_node const& n, int indent) -> void
