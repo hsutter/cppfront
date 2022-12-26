@@ -2743,6 +2743,11 @@ private:
             return {};
         }
 
+        if (!returns && n->declaration->initializer) {
+            error("Cpp2 is currently exploring the path of not allowing default arguments - use overloading instead", false);
+            return {};
+        }
+
         return n;
     }
 
