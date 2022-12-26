@@ -2982,6 +2982,10 @@ private:
 
         //  Or just a type, declaring a non-pointer object
         else if (auto t = type_id()) {
+            if (auto id = t->get_token(); id && *id == "namespace") {
+                error("alpha limitation: namespaces are not yet supported", false);
+                return {};
+            }
             n->type = std::move(t);
             assert (n->type.index() == declaration_node::object);
         }
