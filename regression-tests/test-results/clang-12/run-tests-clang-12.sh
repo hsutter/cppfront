@@ -9,7 +9,7 @@ clang++-12 --version > clang-version.output 2>&1
 for f in *.cpp
 do
     printf "Starting clang++-12 %s\n" "$f"
-    clang++-12 -I/mnt/c/GitHub/cppfront/include -std=c++20 -pthread -o test.exe $f > $f.output 2>&1
+    clang++-12 -I../../../include -std=c++20 -pthread -o test.exe $f > $f.output 2>&1
     rm -f $f
     let count=count+1
     if test -f "test.exe"; then
