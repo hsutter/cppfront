@@ -9,7 +9,7 @@ g++-10 --version > gcc-version.output 2>&1
 for f in *.cpp
 do
     printf "Starting g++-10 %s\n" "$f"
-    g++-10 -I/mnt/c/GitHub/cppfront/include -std=c++20 -pthread -o test.exe $f > $f.output 2>&1
+    g++-10 -I../../../include -std=c++20 -pthread -o test.exe $f > $f.output 2>&1
     rm -f $f
     let count=count+1
     if test -f "test.exe"; then
