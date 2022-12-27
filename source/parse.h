@@ -1651,24 +1651,54 @@ private:
     //
     template<
         typename Binary,
-        typename IsValidOp,
+        typename ValidateOp,
         typename TermFunc
     >
     auto binary_expression(
-        IsValidOp is_valid_op,
-        TermFunc  term
+        ValidateOp validate_op,
+        TermFunc   term
     )
         -> std::unique_ptr<Binary>
     {
         auto n = std::make_unique<Binary>();
-        if ( (n->expr = term()) ) {
-            while (is_valid_op(curr())) {
+        if ( (n->expr = term()) )
+        {
+            while (true)
+            {
                 typename Binary::term t{};
-                t.op = &curr();
-                next();
 
+                //  Most of these predicates only look at the current token and return
+                //  true/false == whether this is a valid operator for this production
+                if constexpr( requires{ bool{ validate_op(curr()) }; } ) {
+                    if (!validate_op(curr())) {
+                        break;
+                    }
+                    t.op = &curr();
+                    next();
+                }
+
+                //  But for shift-expression we may synthesize >> from > >
+                //  which will return a token* == a valid operator for this production
+                //  (possibly a synthesized new token) or nullptr otherwise
+                else if constexpr( requires{ validate_op(curr(), *peek(1)); } ) {
+                    if (peek(1) == nullptr || (t.op = validate_op(curr(), *peek(1))) == nullptr) {
+                        break;
+                    }
+                    //  If we didn't consume the next token, we consumed the next two
+                    if (t.op != &curr()) {
+                        next();
+                    }
+                    next();
+                }
+
+                //  And it shouldn't be anything else
+                else {
+                    assert (false && "ICE: validate_op should take one token and return bool, or two tokens and return token const* ");
+                }
+
+                //  At this point we have a valid t.op, so try to parse the next term
                 if ( !(t.expr = term()) ) {
-                    error("invalid expression after " + peek(-1)->to_string());
+                    error("invalid expression after " + peek(-1)->to_string(true));
                     return n;
                 }
                 n->terms.push_back( std::move(t) );
@@ -1724,21 +1754,41 @@ private:
     //G     shift-expression << additive-expression
     //G     shift-expression >> additive-expression
     //G
-    auto shift_expression() {
-        return binary_expression<shift_expression_node> (
-            [](token const& t){ return t.type() == lexeme::LeftShift || t.type() == lexeme::RightShift; },
-            [this]{ return additive_expression(); }
-        );
+    auto shift_expression(bool allow_angle_operators = true) {
+        if (allow_angle_operators) {
+            return binary_expression<shift_expression_node> (
+                [this](token const& t, token const& next) -> token const* {
+                    if (t.type() == lexeme::LeftShift) {
+                        return &t;
+                    }
+                    if (t.type() == lexeme::Greater &&
+                        next.type() == lexeme::Greater &&
+                        t.position() == source_position{ next.position().lineno, next.position().colno-1 }
+                        ) {
+                        generated_tokens_->emplace_back( ">>", t.position(), lexeme::RightShift);
+                        return &generated_tokens_->back();
+                    }
+                    return nullptr;
+                },
+                [this]{ return additive_expression(); }
+            );
+        }
+        else {
+            return binary_expression<shift_expression_node> (
+                [](token const&, token const&) -> token const* { return nullptr; },
+                [this]{ return additive_expression(); }
+            );
+        }
     }
 
     //G compare-expression:
     //G     shift-expression
     //G     compare-expression <=> shift-expression
     //G
-    auto compare_expression() {
+    auto compare_expression(bool allow_angle_operators = true) {
         return binary_expression<compare_expression_node> (
             [](token const& t){ return t.type() == lexeme::Spaceship; },
-            [this]{ return shift_expression(); }
+            [=,this]{ return shift_expression(allow_angle_operators); }
         );
     }
 
@@ -1749,17 +1799,26 @@ private:
     //G     relational-expression <= compare-expression
     //G     relational-expression >= compare-expression
     //G
-    auto relational_expression(bool allow_relational_comparison = true) {
-        if (allow_relational_comparison) {
+    auto relational_expression(bool allow_angle_operators = true) {
+        if (allow_angle_operators) {
             return binary_expression<relational_expression_node> (
-                [](token const& t){ return t.type() == lexeme::Less || t.type() == lexeme::LessEq || t.type() == lexeme::Greater || t.type() == lexeme::GreaterEq; },
-                [this]{ return compare_expression(); }
+                [](token const& t, token const& next) -> token const* {
+                    if (t.type() == lexeme::Less ||
+                        t.type() == lexeme::LessEq ||
+                        (t.type() == lexeme::Greater && next.type() != lexeme::GreaterEq) ||
+                        t.type() == lexeme::GreaterEq
+                        ) {
+                        return &t;
+                    }
+                    return nullptr;
+                },
+                [=,this]{ return compare_expression(allow_angle_operators); }
             );
         }
         else {
             return binary_expression<relational_expression_node> (
-                [](token const&){ return false; },
-                [this]{ return compare_expression(); }
+                [](token const&, token const&) -> token const* { return nullptr; },
+                [=,this]{ return compare_expression(allow_angle_operators); }
             );
         }
     }
@@ -1769,10 +1828,10 @@ private:
     //G     equality-expression == relational-expression
     //G     equality-expression != relational-expression
     //G
-    auto equality_expression(bool allow_relational_comparison = true) {
+    auto equality_expression(bool allow_angle_operators = true) {
         return binary_expression<equality_expression_node> (
             [](token const& t){ return t.type() == lexeme::EqualComparison || t.type() == lexeme::NotEqualComparison; },
-            [=,this]{ return relational_expression(allow_relational_comparison); }
+            [=,this]{ return relational_expression(allow_angle_operators); }
         );
     }
 
@@ -1780,10 +1839,10 @@ private:
     //G     equality-expression
     //G     bit-and-expression & equality-expression
     //G
-    auto bit_and_expression(bool allow_relational_comparison = true) {
+    auto bit_and_expression(bool allow_angle_operators = true) {
         return binary_expression<bit_and_expression_node> (
             [](token const& t){ return t.type() == lexeme::Ampersand; },
-            [=,this]{ return equality_expression(allow_relational_comparison); }
+            [=,this]{ return equality_expression(allow_angle_operators); }
         );
     }
 
@@ -1791,10 +1850,10 @@ private:
     //G     bit-and-expression
     //G     bit-xor-expression & bit-and-expression
     //G
-    auto bit_xor_expression(bool allow_relational_comparison = true) {
+    auto bit_xor_expression(bool allow_angle_operators = true) {
         return binary_expression<bit_xor_expression_node> (
             [](token const& t){ return t.type() == lexeme::Caret; },
-            [=,this]{ return bit_and_expression(allow_relational_comparison); }
+            [=,this]{ return bit_and_expression(allow_angle_operators); }
         );
     }
 
@@ -1802,10 +1861,10 @@ private:
     //G     bit-xor-expression
     //G     bit-or-expression & bit-xor-expression
     //G
-    auto bit_or_expression(bool allow_relational_comparison = true) {
+    auto bit_or_expression(bool allow_angle_operators = true) {
         return binary_expression<bit_or_expression_node> (
             [](token const& t){ return t.type() == lexeme::LogicalOr; },
-            [=,this]{ return bit_xor_expression(allow_relational_comparison); }
+            [=,this]{ return bit_xor_expression(allow_angle_operators); }
         );
     }
 
@@ -1813,10 +1872,10 @@ private:
     //G     bit-or-expression
     //G     logical-and-expression && bit-or-expression
     //G
-    auto logical_and_expression(bool allow_relational_comparison = true) {
+    auto logical_and_expression(bool allow_angle_operators = true) {
         return binary_expression<logical_and_expression_node> (
             [](token const& t){ return t.type() == lexeme::LogicalAnd; },
-            [=,this]{ return bit_or_expression(allow_relational_comparison); }
+            [=,this]{ return bit_or_expression(allow_angle_operators); }
         );
     }
 
@@ -1826,10 +1885,10 @@ private:
     //G     logical-and-expression
     //G     logical-or-expression || logical-and-expression
     //G
-    auto logical_or_expression(bool allow_relational_comparison = true) {
+    auto logical_or_expression(bool allow_angle_operators = true) {
         return binary_expression<logical_or_expression_node> (
             [](token const& t){ return t.type() == lexeme::LogicalOr; },
-            [=,this]{ return logical_and_expression(allow_relational_comparison); }
+            [=,this]{ return logical_and_expression(allow_angle_operators); }
         );
     }
 
@@ -1837,20 +1896,44 @@ private:
     //G     logical-or-expression
     //G     assignment-expression assignment-operator assignment-expression
     //G
-    auto assignment_expression(bool allow_relational_comparison = true) -> std::unique_ptr<assignment_expression_node> {
-        return binary_expression<assignment_expression_node> (
-            [](token const& t){ return is_assignment_operator(t.type()); },
-            [=,this]{ return logical_or_expression(allow_relational_comparison); }
-        );
+    auto assignment_expression(bool allow_angle_operators = true) -> std::unique_ptr<assignment_expression_node> {
+        //return binary_expression<assignment_expression_node> (
+        //    [](token const& t){ return is_assignment_operator(t.type()); },
+        //    [=,this]{ return logical_or_expression(allow_angle_operators); }
+        //);
+        if (allow_angle_operators) {
+            return binary_expression<assignment_expression_node> (
+                [this](token const& t, token const& next) -> token const* {
+                    if (is_assignment_operator(t.type())) {
+                        return &t;
+                    }
+                    if (t.type() == lexeme::Greater &&
+                        next.type() == lexeme::GreaterEq &&
+                        t.position() == source_position{ next.position().lineno, next.position().colno-1 }
+                        ) {
+                        generated_tokens_->emplace_back( ">>=", t.position(), lexeme::RightShiftEq);
+                        return &generated_tokens_->back();
+                    }
+                    return nullptr;
+                },
+                [=,this]{ return logical_or_expression(allow_angle_operators); }
+            );
+        }
+        else {
+            return binary_expression<assignment_expression_node> (
+                [](token const&, token const&) -> token const* { return nullptr; },
+                [=,this]{ return logical_or_expression(allow_angle_operators); }
+            );
+        }
     }
 
     //G  expression:                // eliminated condition: - use expression:
     //G     assignment-expression
     //GTODO    try expression
     //G
-    auto expression(bool allow_relational_comparison = true) -> std::unique_ptr<expression_node> {
+    auto expression(bool allow_angle_operators = true) -> std::unique_ptr<expression_node> {
         auto n = std::make_unique<expression_node>();
-        if (!(n->expr = assignment_expression(allow_relational_comparison))) {
+        if (!(n->expr = assignment_expression(allow_angle_operators))) {
             return {};
         }
         return n;

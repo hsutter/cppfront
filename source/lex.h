@@ -124,7 +124,7 @@ auto as(lexeme l)
     break;case lexeme::LessEq:              return "LessEq";
     break;case lexeme::Less:                return "Less";
     break;case lexeme::RightShiftEq:        return "RightShiftEq";
-//    break;case lexeme::RightShift:          return "RightShift";
+    break;case lexeme::RightShift:          return "RightShift";
     break;case lexeme::GreaterEq:           return "GreaterEq";
     break;case lexeme::Greater:             return "Greater";
     break;case lexeme::PlusPlus:            return "PlusPlus";
@@ -568,14 +568,20 @@ auto lex_line(
                 }
                 else { store(1, lexeme::Less); }
 
+            //  Note: It's deliberate that >> and >>= are not source tokens,
+            //        they will be synthesized from > > and > >= where legal
             ////G     >>= >> >= >
             //G     >= >
             break;case '>':
+                //---------------------------------------------------------
+                //  Do not uncomment, see above Note
+                //
                 //if (peek1 == '>') {
                 //    if (peek2 == '=') { store(3, lexeme::RightShiftEq); }
                 //    else { store(2, lexeme::RightShift); }
                 //}
                 //else
+                //---------------------------------------------------------
                 if (peek1 == '=') { store(2, lexeme::GreaterEq); }
                 else { store(1, lexeme::Greater); }
 

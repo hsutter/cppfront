@@ -1,0 +1,9 @@
+f: (a:int, b:int) -> int = {
+    x := a;
+    x >>= b * 2;
+    return x >> 1;
+}
+
+main: () -> int = {
+    std::cout << f(32,1) << "\n";
+}
