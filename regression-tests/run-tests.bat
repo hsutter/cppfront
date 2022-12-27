@@ -7,13 +7,13 @@ copy ..\*.cpp2 .
 set count=0
 for %%f in (mixed-*.cpp2) do (
     echo Starting cppfront.exe %%f
-    C:\GitHub\cppfront\x64\Debug\cppfront.exe -n -s %%f > %%f.output 2>&1
+    cppfront.exe -n -s %%f > %%f.output 2>&1
     del %%f
     set /a count+=1
 )
 for %%f in (pure2-*.cpp2) do (
     echo Starting cppfront.exe %%f -p
-    C:\GitHub\cppfront\x64\Debug\cppfront.exe -n -s -p %%f > %%f.output 2>&1
+    cppfront.exe -n -s -p %%f > %%f.output 2>&1
     del %%f
     set /a count+=1
 )
