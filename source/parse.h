@@ -1375,9 +1375,9 @@ private:
         errors.emplace_back( curr().position(), m );
     }
 
-    auto error(std::string const& msg, bool = true) const -> void
+    auto error(std::string const& msg, bool include_curr_token = true) const -> void
     {
-        error(msg.c_str());
+        error(msg.c_str(), include_curr_token);
     }
 
 
@@ -1536,11 +1536,23 @@ private:
             curr().type() == lexeme::Dot
             )
         {
-            //  * and & can't be a unary operator if followed by a (, identifier, or literal
-            if ((curr().type() == lexeme::Multiply || curr().type() == lexeme::Ampersand) &&
+            //  these can't be unary operators if followed by a (, identifier, or literal
+            if ((curr().type() == lexeme::Multiply  || curr().type() == lexeme::Ampersand || curr().type() == lexeme::Tilde) &&
                 peek(1) &&
                 (peek(1)->type() == lexeme::LeftParen || peek(1)->type() == lexeme::Identifier || is_literal(peek(1)->type())))
             {
+                auto op  = curr().to_string(true);
+                auto msg = "postfix unary " + op;
+                if      (curr().type() == lexeme::Multiply ) { op += " (dereference)"         ; }
+                else if (curr().type() == lexeme::Ampersand) { op += " (address-of)"          ; }
+                else if (curr().type() == lexeme::Tilde    ) { op += " (unary bit-complement)"; }
+                msg += " cannot be immediately followed by a (, identifier, or literal - add whitespace before "
+                    + op + " here if you meant binary " + op;
+                if      (curr().type() == lexeme::Multiply ) { op += " (multiplication)"      ; }
+                else if (curr().type() == lexeme::Ampersand) { op += " (bitwise and)"         ; }
+                else if (curr().type() == lexeme::Tilde    ) { op += " (binarybit-complement)"; }
+
+                error(msg, false);
                 break;
             }
 
