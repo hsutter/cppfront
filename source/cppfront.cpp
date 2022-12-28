@@ -1741,18 +1741,18 @@ public:
 
         auto args = std::optional<text_chunks_with_parens_position>{};
 
-        auto print_to_string = [&](auto& i, auto... args) {
+        auto print_to_string = [&](auto& i, auto... more) {
             auto print = std::string{};
             printer.emit_to_string(&print);
-            emit(i, args...);
+            emit(i, more...);
             printer.emit_to_string();
             return print;
         };
-        auto print_to_text_chunks = [&](auto& i, auto... args) {
+        auto print_to_text_chunks = [&](auto& i, auto... more) {
             auto text = std::vector<text_with_pos>{};
             printer.emit_to_text_chunks(&text);
             push_need_expression_list_parens(false);
-            emit(i, args...);
+            emit(i, more...);
             pop_need_expression_list_parens();
             printer.emit_to_text_chunks();
             return text;
@@ -1802,14 +1802,6 @@ public:
             {
                 auto funcname = print_to_string(*i->id_expr);
 
-                //--------------------------------------------------------------------
-                //  TODO: When MSVC supports __VA_OPT__ in standard mode without the
-                //        experimental /Zc:preprocessor switch, use this single line
-                //        instead of the dual lines below that special-case _0 args
-                //  AND:  Make the similarly noted change in cpp2util.h
-                //
-                //printer.print_cpp2("CPP2_UFCS(", n.position());
-
                 auto ufcs_string = std::string("CPP2_UFCS");
 
                 if (i->id_expr->template_args_count() > 0) {
@@ -1826,7 +1818,7 @@ public:
                     ufcs_string += "_0";
                 }
 
-                prefix.emplace_back(ufcs_string + "(" + funcname + ", ", i->op->position() );
+                prefix.emplace_back(ufcs_string + "(" + funcname + ", ", args.value().open_pos );
                 suffix.emplace_back(")", args.value().close_pos );
                 if (!args.value().text_chunks.empty()) {
                     for (auto&& e: args.value().text_chunks) {
@@ -1916,8 +1908,6 @@ public:
                 }
             }
         }
-
-
 
         //  Print the prefixes (in forward order)
         for (auto& e : prefix) {
