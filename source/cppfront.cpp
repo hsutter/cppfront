@@ -115,6 +115,13 @@ static cmdline_processor::register_flag cmd_cpp1_filename(
     [](std::string const& name) { flag_cpp1_filename = name; }
 );
 
+static auto flag_stdout = false;
+static cmdline_processor::register_flag cmd_stdout(
+        2,
+        "emit",
+        "Emit to stdout, disables -output option",
+        []{ flag_stdout = true; }
+);
 
 struct text_with_pos{
     std::string     text;
@@ -126,7 +133,8 @@ struct text_with_pos{
 class positional_printer
 {
     //  Core information
-    std::ofstream               out           = {}; // Cpp1 syntax output file
+    std::ostringstream          out           = {}; // Cpp1 syntax output file
+    std::ofstream               file_out      = {}; // Cpp1 syntax output file
     std::string                 cpp2_filename = {};
     std::string                 cpp1_filename = {};
     std::vector<comment> const* pcomments     = {}; // Cpp2 comments data
@@ -163,7 +171,6 @@ class positional_printer
 
     enum class target_type { string, chunks };
     std::vector<target_type>                 emit_target_stack;         // to interleave them sensibly
-
 
     //-----------------------------------------------------------------------
     //  Print text
@@ -346,6 +353,8 @@ public:
             //  remain diff-identical
             print_extra("\n");
         }
+
+        cpp1_filename.empty() ? std::cout<<out.str() : file_out<<out.str();
     }
 
     //-----------------------------------------------------------------------
@@ -361,17 +370,17 @@ public:
     {
         source_has_cpp2 = has_cpp2;
         cpp2_filename = cpp2_filename_;
-        assert (!out.is_open() && !pcomments && "ICE: tried to call .open twice");
+        assert (!file_out.is_open() && !pcomments && "ICE: tried to call .open twice");
         cpp1_filename = cpp1_filename_;
-        out.open(cpp1_filename);
+        if (!cpp1_filename.empty()) file_out.open(cpp1_filename);
         pcomments = &comments;
     }
 
     auto is_open() -> bool {
-        if (out.is_open()) {
+        if (file_out.is_open() || cpp1_filename.empty()) {
             assert (pcomments && "ICE: if out.is_open, pcomments should also be set");
         }
-        return out.is_open();
+        return file_out.is_open() || cpp1_filename.empty();
     }
 
 
@@ -380,10 +389,10 @@ public:
     //
     auto abandon() -> void
     {
-        if (!out.is_open()) {
+        if (!file_out.is_open()) {
             return;
         }
-        out.close();
+        file_out.close();
         std::remove(cpp1_filename.c_str());
     }
 
@@ -768,6 +777,11 @@ public:
         if (!flag_cpp1_filename.empty()) {
             cpp1_filename = flag_cpp1_filename; // use override if present
         }
+
+        if (flag_stdout) {
+            cpp1_filename = "";
+        }
+
         printer.open(
             sourcefile,
             cpp1_filename,
@@ -2858,7 +2872,7 @@ auto main(int argc, char* argv[]) -> int
     }
 
     if (cmdline.arguments().empty()) {
-        std::cout << "cppfront: error: no input files\n";
+        std::cerr << "cppfront: error: no input files\n";
         return EXIT_FAILURE;
     }
 
@@ -2866,7 +2880,7 @@ auto main(int argc, char* argv[]) -> int
     int exit_status = EXIT_SUCCESS;
     for (auto const& arg : cmdline.arguments())
     {
-        std::cout << arg.text << "...";
+        if (!flag_stdout) std::cout << arg.text << "...";
 
         //  Load + lex + parse + sema
         cppfront c(arg.text);
@@ -2877,20 +2891,20 @@ auto main(int argc, char* argv[]) -> int
         //  If there were no errors, say so and generate Cpp1
         if (c.had_no_errors()) {
             if (!c.has_cpp1()) {
-                std::cout << " ok (all Cpp2, passes safety checks)\n\n";
+                if (!flag_stdout) std::cout << " ok (all Cpp2, passes safety checks)\n\n";
             }
             else if (c.has_cpp2()) {
-                std::cout << " ok (mixed Cpp1/Cpp2, Cpp2 code passes safety checks)\n\n";
+                if (!flag_stdout) std::cout << " ok (mixed Cpp1/Cpp2, Cpp2 code passes safety checks)\n\n";
             }
             else {
-                std::cout << " ok (all Cpp1)\n\n";
+                if (!flag_stdout) std::cout << " ok (all Cpp1)\n\n";
             }
         }
         //  Otherwise, print the errors
         else {
-            std::cout << "\n";
+            std::cerr << "\n";
             c.print_errors();
-            std::cout << "\n";
+            std::cerr << "\n";
             exit_status = EXIT_FAILURE;
         }
 
