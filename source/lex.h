@@ -22,6 +22,7 @@
 #include <map>
 #include <climits>
 #include <deque>
+#include <cstring>
 
 
 namespace cpp2 {
