@@ -3,9 +3,9 @@
 
 #line 1 "mixed-multiple-return-values.cpp2"
 
-#include <string>
 #include <iostream>
-#include <ctime>
+#include <random>
+#include <string>
 
 struct f__ret {
     int i;
@@ -13,9 +13,9 @@ struct f__ret {
     };
 #line 7 "mixed-multiple-return-values.cpp2"
 [[nodiscard]] auto f() -> f__ret;
-#line 21 "mixed-multiple-return-values.cpp2"
+#line 22 "mixed-multiple-return-values.cpp2"
 auto print(cpp2::in<std::string> name, auto const& value) -> void;
-#line 23 "mixed-multiple-return-values.cpp2"
+#line 24 "mixed-multiple-return-values.cpp2"
 
 int main() {
     auto [a,b] = f();
@@ -35,11 +35,12 @@ int main() {
 
     i.construct(10);
 
-    if (std::rand() % 2 == 0) {
+    // the standard mandates that std::mt19937()() == 3499211612
+    if (std::mt19937()() % 2 == 0) {
         s.construct("xyzzy");
     }
     else {
-        s.construct("xyzzy");// for test determinism; previously was "plugh"
+        s.construct("plugh");
     }
 
     return  { std::move(i.value()), std::move(s.value()) }; 

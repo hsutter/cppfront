@@ -1,6 +1,6 @@
 
-#include <cstdlib>
 #include <iostream>
+#include <random>
 
 main: () -> int = {
     x: int = 42;
@@ -8,8 +8,9 @@ main: () -> int = {
     p: *int;
 
     // ... more code ...
-    if std::rand()%2 {
-        p = x&; // for test determinism; previously was "y&"
+    // the standard mandates that std::mt19937()() == 3499211612
+    if std::mt19937()()%2 == 1 {
+        p = y&;
     }
     else {
         p = x&;

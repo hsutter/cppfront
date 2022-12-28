@@ -1,18 +1,19 @@
 
-#include <string>
 #include <iostream>
-#include <ctime>
+#include <random>
+#include <string>
 
 f: () -> (i: int, s: std::string) = {
     //  note: i and s are uninitialized!
 
     i = 10;
 
-    if std::rand()%2 == 0 {
+    // the standard mandates that std::mt19937()() == 3499211612
+    if std::mt19937()()%2 == 0 {
         s = "xyzzy";
     }
     else {
-        s = "xyzzy"; // for test determinism; previously was "plugh"
+        s = "plugh";
     }
 
     return;

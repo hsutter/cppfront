@@ -3,9 +3,9 @@
 
 #line 1 "mixed-parameter-passing-with-forward.cpp2"
 
+#include <chrono>
+#include <random>
 #include <string>
-#include <cstdlib>
-#include <ctime>
 
 auto copy_from(auto x) -> void;
 #line 8 "mixed-parameter-passing-with-forward.cpp2"
@@ -16,7 +16,7 @@ auto parameter_styles(
     std::string&& d, 
     auto&&  e
     ) -> void;
-#line 42 "mixed-parameter-passing-with-forward.cpp2"
+#line 43 "mixed-parameter-passing-with-forward.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
@@ -40,7 +40,8 @@ requires std::is_same_v<CPP2_TYPEOF(e), std::string>
     ++z;
     b += "plugh";
 
-    if (std::rand() % 2) {
+    // the standard mandates that std::mt19937()() == 3499211612
+    if (std::mt19937()() % 2) {
         ++z;
         copy_from(std::move(b));// definite last use
     }
@@ -55,7 +56,7 @@ requires std::is_same_v<CPP2_TYPEOF(e), std::string>
 
     copy_from(z);
 
-    if (std::time(nullptr) % 2 == 0) {
+    if (CPP2_UFCS_0(count, CPP2_UFCS_0(time_since_epoch, std::chrono::system_clock::now())) % 2 == 0) {
         copy_from(std::move(z));
     }
 

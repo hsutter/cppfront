@@ -3,13 +3,13 @@
 
 #line 1 "mixed-lifetime-safety-pointer-init-4.cpp2"
 
-#include <cstdlib>
 #include <iostream>
+#include <random>
 
 [[nodiscard]] auto main() -> int;
-#line 21 "mixed-lifetime-safety-pointer-init-4.cpp2"
+#line 22 "mixed-lifetime-safety-pointer-init-4.cpp2"
 auto print_and_decorate(auto const& thing) -> void;
-#line 23 "mixed-lifetime-safety-pointer-init-4.cpp2"
+#line 24 "mixed-lifetime-safety-pointer-init-4.cpp2"
 
 
 //=== Cpp2 definitions ==========================================================
@@ -22,8 +22,9 @@ auto print_and_decorate(auto const& thing) -> void;
     cpp2::deferred_init<int*> p; 
 
     // ... more code ...
-    if (std::rand() % 2) {
-        p.construct(&x);// for test determinism; previously was "y&"
+    // the standard mandates that std::mt19937()() == 3499211612
+    if (std::mt19937()() % 2 == 1) {
+        p.construct(&y);
     }
     else {
         p.construct(&x);

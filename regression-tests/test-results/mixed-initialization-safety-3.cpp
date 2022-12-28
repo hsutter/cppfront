@@ -2,9 +2,9 @@
 #include "cpp2util.h"
 
 #line 1 "mixed-initialization-safety-3.cpp2"
+#include <random>
 #include <string>
 #include <vector>
-#include <ctime>
 
 [[nodiscard]] auto main() -> int;
 #line 16 "mixed-initialization-safety-3.cpp2"
@@ -15,7 +15,7 @@ auto fill(
     ) -> void;
 #line 26 "mixed-initialization-safety-3.cpp2"
 auto print_decorated(auto const& x) -> void;
-#line 29 "mixed-initialization-safety-3.cpp2"
+#line 30 "mixed-initialization-safety-3.cpp2"
 [[nodiscard]] auto flip_a_coin() -> bool;
 
 //=== Cpp2 definitions ==========================================================
@@ -48,5 +48,6 @@ auto fill(
 auto print_decorated(auto const& x) -> void { std::cout << ">> [" << x << "]\n"; }
 
 // for test determinism, force "xyzzy" branch
-[[nodiscard]] auto flip_a_coin() -> bool { return true; }
+// the standard mandates that std::mt19937()() == 3499211612
+[[nodiscard]] auto flip_a_coin() -> bool { return std::mt19937()() % 2 == 0; }
 
