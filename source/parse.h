@@ -3144,15 +3144,26 @@ private:
             }
         }
 
-        //  If this is a function with a list of multiple/named return values
+        //  If this is an object with an initializer, the initializer must be an expression
+        if (
+            n->is(declaration_node::object) &&
+            n->initializer &&
+            n->initializer->statement.index() != statement_node::expression
+            )
+        {
+            error("an object initializer must be an expression", false);
+            return {};
+        }
+
+        //  If this is a function with a list of multiple/named return values,
+        //  and the function body's end doesn't already have "return" as the
+        //  last statement, then generate "return;" as the last statement
         if (auto func = std::get_if<declaration_node::function>(&n->type);
             func && (*func)->returns.index() == function_type_node::list)
         {
             assert (n->initializer && n->initializer->statement.index() == statement_node::compound);
             auto& body = std::get<statement_node::compound>(n->initializer->statement);
 
-            //  If the function body's end doesn't already have "return" as the last statement
-            //  then generate "return;" as the last statement
             if (body->statements.empty() || body->statements.back()->statement.index() != statement_node::return_)
             {
                 auto pos = body->statements.back()->position();
