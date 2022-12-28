@@ -1,0 +1,5 @@
+
+main: () -> int = {
+    std::cout << std::hash<int>()(0) << std::endl;
+    return 0;
+}

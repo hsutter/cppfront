@@ -1741,6 +1741,17 @@ public:
 
         auto args = std::optional<text_chunks_with_parens_position>{};
 
+        auto flush_args = [&] {
+            if (args) {
+                suffix.emplace_back(")", args.value().close_pos);
+                for (auto&& e: args.value().text_chunks) {
+                    suffix.push_back(e);
+                }
+                suffix.emplace_back("(", args.value().open_pos);
+                args.reset();
+            }
+        };
+
         auto print_to_string = [&](auto& i, auto... more) {
             auto print = std::string{};
             printer.emit_to_string(&print);
@@ -1793,7 +1804,8 @@ public:
                 if (!i->expr_list->expressions.empty()) {
                     local_args.text_chunks = print_to_text_chunks(*i->expr_list);
                 } 
-                
+
+                flush_args();
                 args.emplace(std::move(local_args));
             }
             // Going backwards if we found Dot and there is args variable
@@ -1933,17 +1945,7 @@ public:
         }
         suppress_move_from_last_use = false;
 
-        if (args) {
-            // if after printing core expression args is defined
-            // it means that the chaining started by function call
-            // we need to print its arguments
-            suffix.emplace_back(")", args.value().close_pos);
-            for (auto&& e: args.value().text_chunks) {
-                suffix.push_back(e);
-            }
-            suffix.emplace_back("(", args.value().open_pos);
-            args.reset();
-        }
+        flush_args();
 
         //  Print the suffixes (in reverse order)
         while (!suffix.empty()) {
