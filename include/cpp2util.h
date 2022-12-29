@@ -501,8 +501,14 @@ public:
 //
 //-----------------------------------------------------------------------
 //
+#ifdef _MSC_VER
+    #define CPP2_FORCE_INLINE [[msvc::forceinline]]
+#else
+    #define CPP2_FORCE_INLINE __attribute__((always_inline))
+#endif
+
 #define CPP2_UFCS(FUNCNAME,PARAM1,...) \
-[](auto&& obj, auto&& ...params) { \
+[](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE { \
     if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); }) { \
         return std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); \
     } else { \
@@ -511,7 +517,7 @@ public:
 }(PARAM1, __VA_ARGS__)
 
 #define CPP2_UFCS_0(FUNCNAME,PARAM1) \
-[](auto&& obj) { \
+[](auto&& obj) CPP2_FORCE_INLINE { \
     if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(); }) { \
         return std::forward<decltype(obj)>(obj).FUNCNAME(); \
     } else { \
@@ -522,7 +528,7 @@ public:
 #define CPP2_UFCS_REMPARENS(...) __VA_ARGS__
 
 #define CPP2_UFCS_TEMPLATE(FUNCNAME,TEMPARGS,PARAM1,...) \
-[](auto&& obj, auto&& ...params) { \
+[](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE { \
     if constexpr (requires{ std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(params)>(params)...); }) { \
         return std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(params)>(params)...); \
     } else { \
@@ -531,7 +537,7 @@ public:
 }(PARAM1, __VA_ARGS__)
 
 #define CPP2_UFCS_TEMPLATE_0(FUNCNAME,TEMPARGS,PARAM1) \
-[](auto&& obj) { \
+[](auto&& obj) CPP2_FORCE_INLINE { \
     if constexpr (requires{ std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); }) { \
         return std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
     } else { \
