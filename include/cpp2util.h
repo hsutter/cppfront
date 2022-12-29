@@ -1178,11 +1178,13 @@ constexpr auto as( ) -> decltype(auto)
 
 //-----------------------------------------------------------------------
 //
-template<typename T, typename X>
-    requires std::is_same_v<X,std::optional<T>>
-constexpr auto as( X const& x ) -> decltype(auto)
-    { return x.value(); }
+//  Unsafe narrow cast
 
+template <typename C, typename X>
+auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
+{
+    return static_cast<C>(std::forward<X>(x));
+}
 
 //-----------------------------------------------------------------------
 //
