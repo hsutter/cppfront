@@ -208,6 +208,7 @@
     #include <utility>
     #include <cstdio>
     #include <cstdint>
+    #include <cmath>
 
     #if defined(CPP2_USE_SOURCE_LOCATION)
         #include <source_location>
@@ -721,9 +722,22 @@ inline constexpr auto is( auto const& x, auto const& value ) -> bool
 //-------------------------------------------------------------------------------------------------------------
 //  Built-in as
 //
-template< typename C >
-auto as(auto const&) -> auto {
-    return nonesuch;
+template <typename... Ts>
+inline constexpr auto program_violates_type_safety_guarantee = sizeof...(Ts) < 0;
+
+template <typename O>
+inline constexpr bool is_optional_v = requires{ typename O::value_type; requires std::same_as<std::optional<typename O::value_type>, O>;}; 
+
+template< typename C, typename T >
+auto as(T const& t) -> auto {
+    if constexpr (is_optional_v<C>) {
+        return C{};
+    } else if constexpr (is_optional_v<T>) {
+        static_assert(program_violates_type_safety_guarantee<C, T>, "No safe 'as' cast from optional");
+    }
+    else {
+        static_assert(program_violates_type_safety_guarantee<C, T>, "No safe 'as' cast available please use optional cast `as std::optional<T>` or `unsafe_narrow<T>()`");
+    }
 }
 
 template< typename C, typename X >
@@ -734,7 +748,7 @@ auto as( X const& x ) -> decltype(auto) {
 
 template< typename C, typename X >
 auto as( X const& x ) -> auto
-    requires (!std::is_same_v<C, X> && requires { C{x}; })
+    requires (!is_optional_v<C> && !std::is_same_v<C, X> && requires { C{x}; })
 {
     return C{x};
 }
@@ -744,31 +758,6 @@ template< typename C, typename X >
 auto as( X&& x ) -> C&& {
     return std::forward<X>(x);
 }
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
-auto as( X& x ) -> C& {
-    return dynamic_cast<C&>(x);
-}
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
-auto as( X const& x ) -> C const& {
-    return dynamic_cast<C const&>(x);
-}
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
-auto as( X* x ) -> C* {
-    return dynamic_cast<C*>(x);
-}
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
-auto as( X const* x ) -> C const* {
-    return dynamic_cast<C const*>(x);
-}
-
 
 //-------------------------------------------------------------------------------------------------------------
 //  std::variant is and as
@@ -890,8 +879,10 @@ auto is( std::variant<Ts...> const& x ) {
     return false;
 }
 
-template<typename T, typename... Ts>
-auto as( std::variant<Ts...> const& x ) {
+template< typename O, typename X, typename... Ts >
+    requires is_optional_v<O>
+auto as( std::variant<Ts...> const& x ) -> O {
+    using T = typename O::value_type;
     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) { if (x.index() ==  0) return operator_as<0>(x); }
     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 1>(x)), T >) { if (x.index() ==  1) return operator_as<1>(x); }
     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 2>(x)), T >) { if (x.index() ==  2) return operator_as<2>(x); }
@@ -912,7 +903,7 @@ auto as( std::variant<Ts...> const& x ) {
     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) { if (x.index() == 17) return operator_as<7>(x); }
     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) { if (x.index() == 18) return operator_as<8>(x); }
     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<19>(x)), T >) { if (x.index() == 19) return operator_as<9>(x); }
-    throw std::bad_variant_access();
+    return O{};
 }
 
 
@@ -957,10 +948,16 @@ inline constexpr auto is( std::any const& x, auto const& value ) -> bool
 
 //  as
 //
-template<typename T, typename X>
-    requires (!std::is_reference_v<T> && std::is_same_v<X,std::any> && !std::is_same_v<T,std::any>)
-constexpr auto as( X const& x ) -> T
-    { return std::any_cast<T>( x ); }
+template< typename O, typename X, typename T = typename O::value_type>
+    requires (is_optional_v<O> && std::is_same_v<X, std::any> && !std::is_same_v<T,std::any>)
+constexpr auto as( X const& x ) -> O
+    { 
+        try {
+            return std::any_cast<T>( x ); 
+        } catch (...) {
+            return O{};
+        }
+    }
 
 
 //-------------------------------------------------------------------------------------------------------------
@@ -1001,7 +998,140 @@ constexpr auto is( std::optional<T> const& x, auto const& value ) -> bool
 }
 
 
-//  as
+//-------------------------------------------------------------------------------------------------------------
+//  Optional as
+//
+
+template< typename O, typename X, typename C = typename O::value_type >
+    requires ( is_optional_v<O>
+               && std::is_arithmetic_v<C> && std::is_arithmetic_v<X>
+             )
+auto as( const X& x ) -> auto
+{
+    constexpr const bool is_different_signedness = (std::is_signed_v<C> != std::is_signed_v<X>);
+    const C value = static_cast<C>(x);
+    auto is_equal_after_casting = false;
+    if constexpr (std::is_floating_point_v<C> || std::is_floating_point_v<X>) {
+        is_equal_after_casting = std::fabs(static_cast<X>(value) - x) < std::numeric_limits<C>::epsilon();
+    } else {
+        is_equal_after_casting = static_cast<X>(value) == x;
+    }
+
+    if ( !is_equal_after_casting || (is_different_signedness && ((value < C{}) != (x < X{}))))
+    {
+        return O{};
+    }
+
+    return O{value};
+}
+
+template< typename O, typename X, typename C = typename O::value_type >
+auto as( X& x ) -> O
+    requires (is_optional_v<O> && !std::is_same_v<X, std::any> && !is_optional_v<X>
+              && !std::is_arithmetic_v<X> && !std::is_arithmetic_v<C>
+              && !std::is_pointer_v<C> && !std::is_pointer_v<X>
+             )
+{
+    if constexpr ( 
+        std::is_base_of_v<X, C>
+        || (std::is_polymorphic_v<X> && std::is_polymorphic_v<C>)
+    ) {
+        if (auto* ptr = dynamic_cast<C*>(&x); ptr) {
+            return O{*ptr};
+        }
+    }
+    else if constexpr ( requires { C{x}; } ) {
+        return O{x};
+    }
+
+    return O{};
+}
+
+template< typename O, typename X, typename C = typename O::value_type >
+auto as( X const& x ) -> O
+    requires (is_optional_v<O> && !std::is_same_v<X, std::any> && !is_optional_v<X>
+              && !std::is_arithmetic_v<X> && !std::is_arithmetic_v<C>
+              && !std::is_pointer_v<C> && !std::is_pointer_v<X>
+             )
+{
+    if constexpr ( 
+        std::is_base_of_v<X, C>
+        || (std::is_polymorphic_v<X> && std::is_polymorphic_v<C>)
+    ) {
+        if (auto* ptr = dynamic_cast<C const*>(&x); ptr) {
+            return O{*ptr};
+        }
+    }
+    else if constexpr ( requires { C{x}; } ) {
+        return O{x};
+    }
+
+    return O{};
+}
+
+template< typename O, typename X, typename C = typename O::value_type >
+auto as( X const* x ) -> O
+    requires (is_optional_v<O> 
+              && !std::is_arithmetic_v<X> && !std::is_arithmetic_v<C>
+             )
+{
+    if constexpr ( std::is_pointer_v<C> ) {
+        using T = std::remove_pointer_t<C>;
+        if constexpr ( 
+            std::is_base_of_v<X, T>
+            || (std::is_polymorphic_v<X> && std::is_polymorphic_v<T>)
+        ) {
+
+            if (auto* ptr = dynamic_cast<C>(x); ptr) {
+                return O{ptr};
+            }
+        }
+        return O{};
+    }
+    else if constexpr ( requires { C{x}; } ) {
+        return O{x};
+    } else {
+        return O{};
+    }
+}
+
+template< typename O, typename X, typename C = typename O::value_type >
+auto as( X* x ) -> O
+    requires (is_optional_v<O> 
+              && !std::is_arithmetic_v<X> && !std::is_arithmetic_v<C>
+             )
+{
+    if constexpr ( std::is_pointer_v<C> ) {
+        using T = std::remove_pointer_t<C>;
+        if constexpr ( 
+            std::is_base_of_v<X, T>
+            || (std::is_polymorphic_v<X> && std::is_polymorphic_v<T>)
+        ) {
+
+            if (auto* ptr = dynamic_cast<C>(x); ptr) {
+                return O{ptr};
+            }
+        }
+        return O{};
+    }
+    else if constexpr ( requires { C{x}; } ) {
+        return O{x};
+    } else {
+        return O{};
+    }
+}
+
+// optional as optional
+template< typename O, typename X >
+    requires ( is_optional_v<O> && is_optional_v<X> && !std::is_same_v<O, X>)
+auto as( const X& x ) -> auto
+{
+    if (x.has_value()) {
+        return as<O>(x.value());
+    } else {
+        return O{};
+    }
+}
 //
 template<typename T, typename X>
     requires std::is_same_v<X,std::optional<T>>
