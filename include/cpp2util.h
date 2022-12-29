@@ -740,6 +740,21 @@ auto as(T const& t) -> auto {
     }
 }
 
+template< typename C, auto x, typename X >
+inline constexpr bool is_castable_v = std::is_arithmetic_v<C>
+                                        && std::is_arithmetic_v<X>
+                                        && !(static_cast<X>(static_cast<C>(x)) != x || ((std::is_signed_v<C> != std::is_signed_v<X>) && ((static_cast<C>(x) < C{}) != (x < X{}))));
+
+template< typename C, auto x, typename X>
+inline constexpr auto as() -> auto
+{
+    if constexpr ( is_castable_v<C, x, X> ) {
+        return static_cast<C>(X(x));
+    } else {
+        static_assert(program_violates_type_safety_guarantee<C, X>, "No safe 'as' cast available please use optional cast `as std::optional<T>` or `unsafe_narrow<T>()`");
+    }
+}
+
 template< typename C, typename X >
     requires std::is_same_v<C, X>
 auto as( X const& x ) -> decltype(auto) {
@@ -1132,6 +1147,24 @@ auto as( const X& x ) -> auto
         return O{};
     }
 }
+
+// for literals - compile-time cast
+template< typename O, auto x, typename X, typename C = typename O::value_type >
+    requires (is_optional_v<O> && std::is_arithmetic_v<C> && std::is_arithmetic_v<X>)
+inline constexpr auto as() -> O
+{
+    if constexpr ( is_castable_v<C, x, X> ) {
+        return O{static_cast<C>(X(x))};
+    } else {
+        return O{};
+    }
+}
+
+template<typename T, auto x>
+constexpr auto as( ) -> decltype(auto)
+    { return as<T, x, decltype(x)>();  }
+
+//-----------------------------------------------------------------------
 //
 template<typename T, typename X>
     requires std::is_same_v<X,std::optional<T>>
