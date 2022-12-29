@@ -351,7 +351,7 @@ struct {
     }
 } unique;
 
-struct {
+[[maybe_unused]] struct {
     template<typename T>
     [[nodiscard]] auto cpp2_new(auto&& ...args) const -> std::shared_ptr<T> {
         return std::make_shared<T>(std::forward<decltype(args)>(args)...);
@@ -1123,7 +1123,19 @@ public:
 };
 
 inline auto fopen( const char* filename, const char* mode ) {
+
+    //  Suppress annoying deprecation warning about fopen
+    #ifdef _MSC_VER
+        #pragma warning( push )
+        #pragma warning( disable : 4996 )
+    #endif
+
     auto x = std::fopen(filename, mode);
+
+    #ifdef _MSC_VER
+        #pragma warning( pop )
+    #endif
+
     if (!x) {
         throw std::make_error_condition(std::errc::no_such_file_or_directory);
     }

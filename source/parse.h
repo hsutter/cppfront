@@ -3287,9 +3287,9 @@ private:
 
             if (body->statements.empty() || body->statements.back()->statement.index() != statement_node::return_)
             {
-                auto pos = body->statements.back()->position();
-                ++pos.lineno;
-                generated_tokens_->emplace_back( "return", pos, lexeme::Keyword);
+                auto last_pos = body->statements.back()->position();
+                ++last_pos.lineno;
+                generated_tokens_->emplace_back( "return", last_pos, lexeme::Keyword);
 
                 auto ret = std::make_unique<return_statement_node>();
                 ret->identifier = &generated_tokens_->back();
