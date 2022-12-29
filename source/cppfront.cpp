@@ -1186,13 +1186,13 @@ public:
     //
     auto emit(type_id_node const& n) -> void
     {
-        if (n.const_qualifier) {
-            emit(*n.const_qualifier);
-            printer.print_cpp2(" ", n.const_qualifier->position());
-        }
-
         try_emit<type_id_node::qualified  >(n.id);
         try_emit<type_id_node::unqualified>(n.id, false, false);
+
+        for (auto i = n.pc_qualifiers.rbegin(); i != n.pc_qualifiers.rend(); ++i) {
+            if ((**i) == "const") { printer.print_cpp2(" ", n.position()); }
+            emit(**i);
+        }
     }
 
 
@@ -1665,27 +1665,29 @@ public:
                 auto decl = sema.get_local_declaration_of(*unqual->identifier);
                 //  TODO: Generalize this -- for now we detect only cases of the form "p: *int = ...;"
                 //        We don't recognize pointer types that are deduced, multi-level, or from Cpp1
-                if (decl && decl->declaration && decl->declaration->pointer_declarator) {
-                    if (n.ops.empty()) {
-                        last_postfix_expr_was_pointer = true;
-                    }
-                    else
-                    {
-                        if (n.ops.front().op->type() == lexeme::PlusPlus ||
-                            n.ops.front().op->type() == lexeme::MinusMinus ||
-                            n.ops.front().op->type() == lexeme::LeftBracket
-                            ) {
-                            errors.emplace_back(
-                                n.ops.front().op->position(),
-                                n.ops.front().op->to_string(true) + " - pointer arithmetic is illegal - use std::span or gsl::span instead"
-                            );
-                            violates_bounds_safety = true;
+                if (decl) {
+                    if (auto t = std::get_if<declaration_node::object>(&decl->declaration->type); t && (*t)->is_pointer_qualified()) {
+                        if (n.ops.empty()) {
+                            last_postfix_expr_was_pointer = true;
                         }
-                        else if (n.ops.front().op->type() == lexeme::Tilde) {
-                            errors.emplace_back(
-                                n.ops.front().op->position(),
-                                n.ops.front().op->to_string(true) + " - pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first"
-                            );
+                        else
+                        {
+                            if (n.ops.front().op->type() == lexeme::PlusPlus ||
+                                n.ops.front().op->type() == lexeme::MinusMinus ||
+                                n.ops.front().op->type() == lexeme::LeftBracket
+                                ) {
+                                errors.emplace_back(
+                                    n.ops.front().op->position(),
+                                    n.ops.front().op->to_string(true) + " - pointer arithmetic is illegal - use std::span or gsl::span instead"
+                                );
+                                violates_bounds_safety = true;
+                            }
+                            else if (n.ops.front().op->type() == lexeme::Tilde) {
+                                errors.emplace_back(
+                                    n.ops.front().op->position(),
+                                    n.ops.front().op->to_string(true) + " - pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first"
+                                );
+                            }
                         }
                     }
                 }
@@ -2333,10 +2335,6 @@ public:
         }
         else {
             emit( type_id );
-            if (n.declaration->pointer_declarator) {
-                printer.print_cpp2(" ", n.declaration->pointer_declarator->position());
-                emit(*n.declaration->pointer_declarator);
-            }
         }
 
         //  Then any suffix
@@ -2725,9 +2723,6 @@ public:
                 }
                 printer.preempt_position(n.position());
                 emit( *type );
-                if (n.pointer_declarator) {
-                    printer.print_cpp2("*", n.position());
-                }
                 //  one pointer is enough for now, pointer-to-function fun can be later
                 if (!n.initializer) {
                     printer.print_cpp2( ">", n.position() );

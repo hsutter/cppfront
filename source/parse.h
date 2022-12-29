@@ -507,7 +507,7 @@ struct type_id_node
 {
     source_position pos;
 
-    token const* const_qualifier = {};  // optional
+    std::vector<token const*> pc_qualifiers;
 
     enum active { empty=0, qualified, unqualified };
     std::variant<
@@ -515,6 +515,15 @@ struct type_id_node
         std::unique_ptr<qualified_id_node>,
         std::unique_ptr<unqualified_id_node>
     > id;
+
+    auto is_pointer_qualified() -> bool {
+        for (auto q : pc_qualifiers) {
+            if (q->type() == lexeme::Multiply) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     auto template_args_count() -> int {
         if (id.index() == unqualified) {
@@ -540,8 +549,8 @@ struct type_id_node
     auto visit(auto& v, int depth) -> void
     {
         v.start(*this, depth);
-        if (const_qualifier) {
-            v.start(*const_qualifier, depth+1);
+        for (auto q : pc_qualifiers) {
+            v.start(*q, depth+1);
         }
         try_visit<qualified  >(id, v, depth);
         try_visit<unqualified>(id, v, depth);
@@ -956,8 +965,6 @@ struct declaration_node
 
     source_position pos;
     std::unique_ptr<unqualified_id_node> identifier;
-
-    token const* pointer_declarator = nullptr;
 
     enum active : std::uint8_t { function, object };
     std::variant<
@@ -1710,9 +1717,9 @@ private:
 
     //G is-as-expression:
     //G     prefix-expression
-    //GTODO    is-as-expression is-expression-constraint
-    //GTODO    is-as-expression as-type-cast
-    //GTODO    type-id is-type-constraint
+    //G     type-id is-type-constraint
+    //G     is-as-expression is-expression-constraint
+    //GTODO     is-as-expression as-type-cast
     //G
     auto is_as_expression() {
         return binary_expression<is_as_expression_node> (
@@ -1994,15 +2001,27 @@ private:
 
 
     //G type-id:
-    //G     const-opt unqualified-id
-    //G     const-opt qualified-id
+    //G     type-qualifier-seq-opt qualified-id
+    //G     type-qualifier-seq-opt unqualified-id
+    //G
+    //G type-qualifier-seq:
+    //G     type-qualifier
+    //G     type-qualifier-seq type-qualifier
+    //G
+    //G type-qualifier:
+    //G     const
+    //G     *
     //G
     auto type_id() -> std::unique_ptr<type_id_node>
     {
         auto n = std::make_unique<type_id_node>();
 
-        if (curr().type() == lexeme::Keyword && curr() == "const") {
-            n->const_qualifier = &curr();
+        while (
+            (curr().type() == lexeme::Keyword && curr() == "const") ||
+            curr().type() == lexeme::Multiply
+            )
+        {
+            n->pc_qualifiers.push_back( &curr() );
             next();
         }
 
@@ -2034,6 +2053,7 @@ private:
     //G     template-argument-list , template-argument
     //G
     //G template-argument:
+    //G     # note: < > << >> are not allowed in expressions until new ( is opened
     //G     expression
     //G     id-expression
     //G
@@ -3065,16 +3085,6 @@ private:
             assert (n->type.index() == declaration_node::function);
         }
 
-        //  Or a pointer to a type, declaring a pointer object
-        else if (curr().type() == lexeme::Multiply) {
-            n->pointer_declarator = &curr();
-            next();
-            if (auto t = type_id()) {
-                n->type = std::move(t);
-                assert (n->type.index() == declaration_node::object);
-            }
-        }
-
         //  Or just a type, declaring a non-pointer object
         else if (auto t = type_id()) {
             if (auto id = t->get_token(); id && *id == "namespace") {
@@ -3125,7 +3135,7 @@ private:
             n->equal_sign = curr().position();
             next();
 
-            if (n->pointer_declarator) {
+            if (auto t = std::get_if<declaration_node::object>(&n->type); t && (*t)->is_pointer_qualified()) {
                 if (curr() == "nullptr" ||
                     isdigit(std::string_view(curr())[0]) ||
                     (curr() == "(" && peek(1) && *peek(1) == ")")
