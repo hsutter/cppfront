@@ -133,7 +133,7 @@ struct text_with_pos{
 class positional_printer
 {
     //  Core information
-    std::ostringstream          out           = {}; // Cpp1 syntax output file
+    std::ostringstream          out           = {}; // Cpp1 syntax output buffer
     std::ofstream               file_out      = {}; // Cpp1 syntax output file
     std::string                 cpp2_filename = {};
     std::string                 cpp1_filename = {};
@@ -2880,7 +2880,8 @@ auto main(int argc, char* argv[]) -> int
     int exit_status = EXIT_SUCCESS;
     for (auto const& arg : cmdline.arguments())
     {
-        if (!flag_stdout) std::cout << arg.text << "...";
+        if (flag_stdout) std::cout<<"// cppfront ";
+        std::cout << arg.text << "...";
 
         //  Load + lex + parse + sema
         cppfront c(arg.text);
@@ -2891,13 +2892,13 @@ auto main(int argc, char* argv[]) -> int
         //  If there were no errors, say so and generate Cpp1
         if (c.had_no_errors()) {
             if (!c.has_cpp1()) {
-                if (!flag_stdout) std::cout << " ok (all Cpp2, passes safety checks)\n\n";
+                std::cout << " ok (all Cpp2, passes safety checks)\n\n";
             }
             else if (c.has_cpp2()) {
-                if (!flag_stdout) std::cout << " ok (mixed Cpp1/Cpp2, Cpp2 code passes safety checks)\n\n";
+                std::cout << " ok (mixed Cpp1/Cpp2, Cpp2 code passes safety checks)\n\n";
             }
             else {
-                if (!flag_stdout) std::cout << " ok (all Cpp1)\n\n";
+                std::cout << " ok (all Cpp1)\n\n";
             }
         }
         //  Otherwise, print the errors
