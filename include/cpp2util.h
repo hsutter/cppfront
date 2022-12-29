@@ -1160,6 +1160,18 @@ inline constexpr auto as() -> O
     }
 }
 
+template< typename IsChecked, typename C, typename X >
+auto inspect_as( X&& x ) -> auto
+{
+    using T = std::remove_cvref_t<X>;
+
+    if constexpr (is_optional_v<C> ) {
+        return as<C, T>(std::forward<X>(x));
+    } else {
+        return as<std::optional<C>, T>(std::forward<X>(x)).value();
+    }
+}
+
 template<typename T, auto x>
 constexpr auto as( ) -> decltype(auto)
     { return as<T, x, decltype(x)>();  }

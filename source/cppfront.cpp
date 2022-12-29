@@ -1335,13 +1335,39 @@ public:
                     statement.pop_back();
                 }
 
+                auto replace_all = [](std::string inout, std::string_view what, std::string_view with){
+                    for (std::string::size_type pos{};
+                        inout.npos != (pos = inout.find(what.data(), pos, what.length()));
+                        pos += with.length()) {
+                        inout.replace(pos, what.length(), with.data(), with.length());
+                    }
+                    return inout;
+                };
+
+                auto is_statement_type = [&]() -> std::string {
+                    if (!is_expression) return {};
+                    auto statement = std::string{};
+                    printer.emit_to_string(&statement);
+                    if (alt->type_id) {
+                        emit(*alt->type_id);
+                    } else if (alt->value) {
+                        printer.print_cpp2("CPP2_TYPEOF((", alt->position());
+                        emit(*alt->value);
+                        printer.print_cpp2("))", alt->position());
+                    }
+                    printer.emit_to_string();
+                    return statement;
+                }();
+
+                auto internal_statement = replace_all(statement, "cpp2::as<", "cpp2::inspect_as<" + (is_statement_type.empty() ? "" : is_statement_type + ", "));
+
                 //  If this is an inspect-expression, we'll have to wrap each alternative
                 //  in an 'if constexpr' so that its type is ignored for mismatches with
                 //  the inspect-expression's type
                 auto return_prefix = std::string{};
                 auto return_suffix = std::string{";"};   // use this to tack the ; back on in the alternative body
                 if (is_expression) {
-                    return_prefix = "{ if constexpr( requires{" + statement + ";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((" + statement + "))," + result_type + "> ) return ";
+                    return_prefix = "{ if constexpr( requires{" + internal_statement + ";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((" + internal_statement + "))," + result_type + "> ) return ";
                     return_suffix += " }";
                 }
 
@@ -1363,7 +1389,7 @@ public:
                     printer.print_cpp2(return_prefix, alt->position());
                 }
 
-                printer.print_cpp2(statement, alt->position());
+                printer.print_cpp2(internal_statement, alt->position());
 
                 if (is_expression && id != "_") {
                     assert(alt->statement->statement.index() == statement_node::expression);
