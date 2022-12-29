@@ -432,7 +432,7 @@ public:
         }
     }
     struct register_flag {
-        register_flag(int group, std::string_view name, std::string_view description, callback0 handler0, callback1 handler1 = nullptr, std::string_view synonym = {}, bool opt_out = false);
+        register_flag(int group, std::string_view name, std::string_view description, callback0 handler0, callback1 handler1 = {}, std::string_view synonym = {}, bool opt_out = false);
     };
 
     auto set_args(int argc, char* argv[]) -> void {

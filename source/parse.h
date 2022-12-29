@@ -206,7 +206,8 @@ struct binary_expression_node
     }
 };
 
-using is_as_expression_node          = binary_expression_node< "is-as"          , prefix_expression_node         >;
+struct is_as_expression_node;
+
 using multiplicative_expression_node = binary_expression_node< "multiplicative" , is_as_expression_node          >;
 using additive_expression_node       = binary_expression_node< "additive"       , multiplicative_expression_node >;
 using shift_expression_node          = binary_expression_node< "shift"          , additive_expression_node       >;
@@ -339,11 +340,11 @@ struct postfix_expression_node
         token const* op;
 
         //  This is used if *op is . - can be null
-        std::unique_ptr<id_expression_node> id_expr = nullptr;
+        std::unique_ptr<id_expression_node> id_expr = {};
 
         //  These are used if *op is [ or ( - can be null
-        std::unique_ptr<expression_list_node> expr_list = nullptr;
-        token const* op_close = nullptr;;
+        std::unique_ptr<expression_list_node> expr_list = {};
+        token const* op_close = {};
     };
     std::vector<term> ops;
     capture_group* cap_grp = {};
@@ -364,7 +365,7 @@ struct postfix_expression_node
 };
 
 auto capture_group::remove(postfix_expression_node* p) -> void {
-    p->cap_grp = nullptr;
+    p->cap_grp = {};
     auto old_size = members.size();
     std::erase(members, p);
     assert (members.size() == old_size-1);
@@ -404,13 +405,15 @@ auto prefix_expression_node::visit(auto& v, int depth) -> void
 }
 
 
+struct type_id_node;
+
 struct template_args_tag { };
 
 struct unqualified_id_node
 {
     token const* identifier      = {};  // required
 
-    enum active { empty=0, expression, id_expression };
+    enum active { empty=0, expression, type_id };
 
     // These are used only if it's a template-id
     source_position open_angle  = {};
@@ -420,7 +423,7 @@ struct unqualified_id_node
         std::variant<
             std::monostate,
             std::unique_ptr<expression_node>,
-            std::unique_ptr<id_expression_node>
+            std::unique_ptr<type_id_node>
         > arg;
     };
     std::vector<term> template_args;
@@ -457,8 +460,8 @@ struct unqualified_id_node
             assert(close_angle != source_position{});
             assert(template_args.front().comma == source_position{});
             for (auto& a : template_args) {
-                try_visit<   expression>(a.arg, v, depth+1);
-                try_visit<id_expression>(a.arg, v, depth+1);
+                try_visit<expression>(a.arg, v, depth+1);
+                try_visit<type_id   >(a.arg, v, depth+1);
             }
             v.end(template_args_tag{}, depth);
         }
@@ -471,7 +474,7 @@ struct qualified_id_node
 {
     struct term {
         token const* scope_op;
-        std::unique_ptr<unqualified_id_node> id = nullptr;
+        std::unique_ptr<unqualified_id_node> id = {};
 
         term( token const* o ) : scope_op{o} { }
     };
@@ -509,11 +512,12 @@ struct type_id_node
 
     std::vector<token const*> pc_qualifiers;
 
-    enum active { empty=0, qualified, unqualified };
+    enum active { empty=0, qualified, unqualified, keyword };
     std::variant<
         std::monostate,
         std::unique_ptr<qualified_id_node>,
-        std::unique_ptr<unqualified_id_node>
+        std::unique_ptr<unqualified_id_node>,
+        token const*
     > id;
 
     auto is_pointer_qualified() -> bool {
@@ -554,6 +558,53 @@ struct type_id_node
         }
         try_visit<qualified  >(id, v, depth);
         try_visit<unqualified>(id, v, depth);
+        try_visit<keyword    >(id, v, depth);
+        v.end(*this, depth);
+    }
+};
+
+struct is_as_expression_node
+{
+    std::unique_ptr<prefix_expression_node> expr;
+
+    struct term
+    {
+        token const* op = {};
+
+        //  This is used if *op is a type - can be null
+        std::unique_ptr<type_id_node> type = {};
+
+        //  This is used if *op is an expression - can be null
+        std::unique_ptr<expression_node> expr = {};
+    };
+    std::vector<term> ops;
+
+    auto get_postfix_expression_node() const -> postfix_expression_node const* {
+        assert(expr);
+        return expr->get_postfix_expression_node();
+    }
+
+    auto position() const -> source_position
+    {
+        assert (expr);
+        return expr->position();
+    }
+
+    auto visit(auto& v, int depth) -> void
+    {
+        v.start(*this, depth);
+        assert (expr);
+        expr->visit(v, depth+1);
+        for (auto const& x : ops) {
+            assert (x.op);
+            v.start(*x.op, depth+1);
+            if (x.type) {
+                x.type->visit(v, depth+1);
+            }
+            if (x.expr) {
+                x.expr->visit(v, depth+1);
+            }
+        }
         v.end(*this, depth);
     }
 };
@@ -976,7 +1027,7 @@ struct declaration_node
     source_position                 decl_end   = {};
     std::unique_ptr<statement_node> initializer;
 
-    declaration_node*               parent_scope = nullptr;
+    declaration_node*               parent_scope = {};
 
     declaration_node(declaration_node* parent) : parent_scope{parent} { }
 
@@ -1257,8 +1308,8 @@ class parser
     };
 
     //  Used only for the duration of each parse() call
-    std::vector<token> const* tokens_           = nullptr;
-    std::deque<token> *       generated_tokens_ = nullptr;
+    std::vector<token> const* tokens_           = {};
+    std::deque<token> *       generated_tokens_ = {};
     int pos = 0;
 
 public:
@@ -1456,8 +1507,7 @@ private:
             curr().type() == lexeme::StringLiteral ||
             curr().type() == lexeme::CharacterLiteral ||
             curr().type() == lexeme::BinaryLiteral ||
-            curr().type() == lexeme::HexadecimalLiteral ||
-            curr().type() == lexeme::Keyword
+            curr().type() == lexeme::HexadecimalLiteral
             )
         {
             n->expr = &curr();
@@ -1713,22 +1763,6 @@ private:
             return n;
         }
         return {};
-    }
-
-    //G is-as-expression:
-    //G     prefix-expression
-    //G     type-id is-type-constraint
-    //G     is-as-expression is-expression-constraint
-    //GTODO     is-as-expression as-type-cast
-    //G
-    auto is_as_expression() {
-        return binary_expression<is_as_expression_node> (
-            [](token const& t){
-                std::string_view s{t};
-                return t.type() == lexeme::Keyword && (s == "is" || s == "as");
-            },
-            [this]{ return prefix_expression(); }
-        );
     }
 
     //G multiplicative-expression:
@@ -2021,6 +2055,10 @@ private:
             curr().type() == lexeme::Multiply
             )
         {
+            if (curr() == "const" && !n->pc_qualifiers.empty() && *n->pc_qualifiers.back() == "const") {
+                error("consecutive 'const' not allowed");
+                return {};
+            }
             n->pc_qualifiers.push_back( &curr() );
             next();
         }
@@ -2028,16 +2066,101 @@ private:
         if (auto id = qualified_id()) {
             n->pos = id->position();
             n->id  = std::move(id);
-            assert (n->id.index() == id_expression_node::qualified);
+            assert (n->id.index() == type_id_node::qualified);
             return n;
         }
         if (auto id = unqualified_id()) {
             n->pos = id->position();
             n->id  = std::move(id);
-            assert (n->id.index() == id_expression_node::unqualified);
+            assert (n->id.index() == type_id_node::unqualified);
+            return n;
+        }
+        if (curr().type() == lexeme::Keyword) {
+            n->pos = curr().position();
+            n->id  = &curr();
+            next();
+            assert (n->id.index() == type_id_node::keyword);
             return n;
         }
         return {};
+    }
+
+
+    //G is-as-expression:
+    //G     prefix-expression
+    //G     is-as-expression is-type-constraint
+    //G     is-as-expression is-value-constraint
+    //G     is-as-expression as-type-cast
+    //GTODO     type-id is-type-constraint
+    //G
+    //G is-type-constraint
+    //G     is type-id
+    //G
+    //G is-value-constraint
+    //G     is expression
+    //G
+    //G as-type-cast
+    //G     as type-id
+    //G
+    auto is_as_expression()
+        -> std::unique_ptr<is_as_expression_node>
+    {
+        auto n = std::make_unique<is_as_expression_node>();
+        n->expr = prefix_expression();
+        if (!(n->expr)) {
+            return {};
+        }
+
+        auto is_found = false;
+        auto as_found = false;
+
+        while (curr() == "is" || curr() == "as")
+        {
+            if (curr() == "is") {
+                if (is_found) {
+                    error("repeated 'is' are not allowed");
+                    return {};
+                }
+                is_found = true;
+            }
+            else {
+                as_found = true;
+            }
+
+            if (is_found && as_found) {
+                error("mixed 'is' and 'as' are not allowed");
+                return {};
+            }
+
+            auto term = is_as_expression_node::term{};
+            term.op = &curr();
+            next();
+
+            if ((term.type = type_id()) != nullptr) {
+                ;
+            }
+            else if ((term.expr = expression()) != nullptr) {
+                ;
+            }
+
+            if (*term.op == "as" && term.expr) {
+                error("'as' must be followed by a type-id, not an expression", false);
+                return {};
+            }
+            if (!term.type && !term.expr) {
+                if (*term.op == "is") {
+                    error( "'is' must be followed by a type-id or an expression", false);
+                }
+                else {
+                    error( "'as' must be followed by a type-id", false);
+                }
+                return {};
+            }
+
+            n->ops.push_back( std::move(term) );
+        }
+
+        return n;
     }
 
 
@@ -2060,9 +2183,7 @@ private:
     auto unqualified_id() -> std::unique_ptr<unqualified_id_node>
     {
         //  Handle the identifier
-        if (curr().type() != lexeme::Identifier &&
-            curr().type() != lexeme::Keyword)   // 'const', and fundamental types that are keywords
-        {
+        if (curr().type() != lexeme::Identifier) {
             return {};
         }
 
@@ -2095,7 +2216,7 @@ private:
                 if (auto e = expression(false)) {   // disallow unparenthesized relational comparisons in template args
                     term.arg = std::move(e);
                 }
-                else if (auto i = id_expression()) {
+                else if (auto i = type_id()) {
                     term.arg = std::move(i);
                 }
                 else {
@@ -2479,16 +2600,6 @@ private:
     //G     alt-name-opt is-type-constraint = statement
     //G     alt-name-opt is-value-constraint = statement
     //G     alt-name-opt as-type-cast = statement
-    //GTODO    alt-name-opt is-expression-constraint = statement
-    //G
-    //G is-type-constraint
-    //G     is type-id
-    //G
-    //G is-value-constraint
-    //G     is postfix-expression
-    //G
-    //G as-type-cast
-    //G     as id-expression
     //G
     //G alt-name:
     //G     unqualified-id :
@@ -3088,7 +3199,7 @@ private:
         //  Or just a type, declaring a non-pointer object
         else if (auto t = type_id()) {
             if (auto id = t->get_token(); id && *id == "namespace") {
-                error("alpha limitation: namespaces are not yet supported", false);
+                error("(temporary alpha limitation) namespaces are not yet supported", false);
                 return {};
             }
             n->type = std::move(t);

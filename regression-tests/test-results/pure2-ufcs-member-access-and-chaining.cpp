@@ -35,9 +35,9 @@ struct fun__ret {
 
     CPP2_UFCS_0(ufcs, get_i(fun()));
 
-    auto res { CPP2_UFCS_0(ufcs, int(42)) }; 
+    auto res { CPP2_UFCS_0(ufcs, 42) }; 
 
-    CPP2_UFCS_0(ufcs, int(std::move(j).i));
+    CPP2_UFCS_0(ufcs, (std::move(j).i));
 }
 
 [[nodiscard]] auto ufcs(cpp2::in<int> i) -> int{

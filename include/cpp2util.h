@@ -248,7 +248,7 @@ class contract_group {
 public:
     using handler = void (*)(CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM);
 
-    constexpr contract_group  (handler h = nullptr)  : reporter(h) { }
+    constexpr contract_group  (handler h = {})  : reporter(h) { }
     constexpr auto set_handler(handler h) -> handler;
     constexpr auto get_handler() const    -> handler { return reporter; }
     constexpr auto expects    (bool b, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
@@ -417,7 +417,7 @@ class out {
         T* t;
         deferred_init<T>* dt;
     };
-    out<T>* ot = nullptr;
+    out<T>* ot = {};
     bool has_t;
 
     //  Each out in a chain contains its own uncaught_count ...
