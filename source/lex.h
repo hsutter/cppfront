@@ -94,6 +94,7 @@ enum class lexeme : std::int8_t {
     StringLiteral,
     CharacterLiteral,
     Keyword,
+    Cpp1MultiKeyword,
     Identifier
 };
 
@@ -176,6 +177,7 @@ auto as(lexeme l)
     break;case lexeme::StringLiteral:       return "StringLiteral";
     break;case lexeme::CharacterLiteral:    return "CharacterLiteral";
     break;case lexeme::Keyword:             return "Keyword";
+    break;case lexeme::Cpp1MultiKeyword:    return "Cpp1MultiKeyword";
     break;case lexeme::Identifier:          return "Identifier";
     break;default:                          return "INTERNAL-ERROR";
     }
@@ -301,6 +303,11 @@ auto lex_line(
 )
     -> bool
 {
+    //  A stable place to store additional text for source tokens that are merged
+    //  into a whitespace-containing token (to merge the Cpp1 multi-token keywords)
+    //  -- this isn't about tokens generated later, that's tokens::generated_tokens
+    static auto generated_text = std::deque<std::string>{};
+
     auto original_size = std::ssize(tokens);
 
     auto i = colno_t{0};
@@ -426,37 +433,9 @@ auto lex_line(
     //G     any Cpp1-and-Cpp2 keyword
     //G     one of: import module export is as
     //G
-    auto peek_is_keyword = [&]()
-    {
-        //  Cpp2 has a smaller set of the Cpp1 globally reserved keywords, but we continue to
-        //  reserve all the ones Cpp1 has both for compatibility and to not give up a keyword
-        //  Some keywords like "delete" and "union" are not in this list because we reject them elsewhere
-        //  Cpp2 also adds a couple, notably "is" and "as"
-        const auto keys = std::regex(
-            "^alignas|^alignof|^asm|^as|^auto|"
-            "^bool|^break|"
-            "^case|^catch|^char|^char16_t|^char32_t|^char8_t|^class|^co_await|^co_return|"
-            "^co_yield|^concept|^const|^const_cast|^consteval|^constexpr|^constinit|^continue|"
-            "^decltype|^default|^double|^do|^dynamic_cast|"
-            "^else|^enum|^explicit|^export|^extern|"
-            "^float|^for|^friend|"
-            "^goto|"
-            "^if|^import|^inline|^int|^is|"
-            "^long|"
-            "^module|^mutable|"
-            "^namespace|^noexcept|"
-            "^operator|"
-            "^private|^protected|^public|"
-            "^register|^reinterpret_cast|^requires|^return|"
-            "^short|^signed|^sizeof|^static|^static_assert|^static_cast|^struct|^switch|"
-            "^template|^this|^thread_local|^throws|^throw|^try|^typedef|^typeid|^typename|"
-            "^unsigned|^using|"
-            "^virtual|^void|^volatile|"
-            "^wchar_t|^while"
-        );
-
+    auto do_is_keyword = [&](std::regex const& r) {
         std::cmatch m;
-        if (std::regex_search(&line[i], m, keys)) {
+        if (std::regex_search(&line[i], m, r)) {
             assert (m.position(0) == 0);
             //  If we matched and what's next is EOL or a non-identifier char, we matched!
             if (i+m[0].length() == std::ssize(line) ||          // EOL
@@ -469,11 +448,101 @@ auto lex_line(
         return 0;
     };
 
+    auto peek_is_keyword = [&]()
+    {
+        //  Cpp2 has a smaller set of the Cpp1 globally reserved keywords, but we continue to
+        //  reserve all the ones Cpp1 has both for compatibility and to not give up a keyword
+        //  Some keywords like "delete" and "union" are not in this list because we reject them elsewhere
+        //  Cpp2 also adds a couple, notably "is" and "as"
+        const auto keys = std::regex(
+            "^alignas|^alignof|^asm|^as|^auto|"
+            "^bool|^break|"
+            "^case|^catch|^char16_t|^char32_t|^char8_t|^char|^class|^co_await|^co_return|"
+            "^co_yield|^concept|^const_cast|^consteval|^constexpr|^constinit|^const|^continue|"
+            "^decltype|^default|^double|^do|^dynamic_cast|"
+            "^else|^enum|^explicit|^export|^extern|"
+            "^float|^for|^friend|"
+            "^goto|"
+            "^if|^import|^inline|^int|^is|"
+            "^long|"
+            "^module|^mutable|"
+            "^namespace|^noexcept|"
+            "^operator|"
+            "^private|^protected|^public|"
+            "^register|^reinterpret_cast|^requires|^return|"
+            "^short|^signed|^sizeof|^static_assert|^static_cast|^static|^struct|^switch|"
+            "^template|^this|^thread_local|^throws|^throw|^try|^typedef|^typeid|^typename|"
+            "^unsigned|^using|"
+            "^virtual|^void|^volatile|"
+            "^wchar_t|^while"
+        );
+
+        return do_is_keyword(keys);
+    };
+
+    auto peek_is_cpp1_multi_token_fundamental_keyword = [&]()
+    {
+        const auto multi_keys = std::regex(
+            "^char16_t|^char32_t|^char8_t|^char|^double|^float|^int|^long|^short|^signed|^unsigned"
+        );
+        return do_is_keyword(multi_keys);
+    };
+
+    auto merge_cpp1_multi_token_fundamental_type_names = [&]()
+    {
+        //  If the last token is a non-Cpp1MultiKeyword, we might be at the end
+        //  of a sequence of Cpp1MultiKeyword tokens that need to be merged
+
+        //  First, check the last token... only proceed if it is NOT one of those
+        auto i = std::ssize(tokens)-1;
+        if (i < 0 || tokens[i].type() == lexeme::Cpp1MultiKeyword) {
+            return;
+        }
+
+        //  Next, check the two tokens before that... only proceed if they ARE those
+        --i;
+        if (i < 0 || tokens[i].type() != lexeme::Cpp1MultiKeyword) {
+            return;
+        }
+
+        //  OK, we have found the end of a sequence of 1 or more Cpp1MultiKeywords, so
+        //  replace them with a single synthesized token that contains all their text
+        // 
+        //  Note: It's intentional that this is a kind of token that can contain whitespace
+
+        //  Remember the last (non-Cpp1MultiKeyword) token so we can put it back
+        auto last_token = tokens.back();
+        tokens.pop_back();
+
+        assert(tokens.back().type() == lexeme::Cpp1MultiKeyword);
+        auto pos = tokens.back().position();
+        generated_text.push_back( tokens.back().to_string(true) );
+        tokens.pop_back();
+
+        while( !tokens.empty() && tokens.back().type() == lexeme::Cpp1MultiKeyword) {
+            generated_text.back() = tokens.back().to_string(true) + " " + generated_text.back();
+            pos = tokens.back().position();
+            tokens.pop_back();
+        }
+
+        tokens.push_back({
+            &generated_text.back()[0],
+            std::ssize(generated_text.back()),
+            pos,
+            lexeme::Keyword
+            });
+
+        tokens.push_back(last_token);
+    };
+
+
     //
     //-----------------------------------------------------
 
     for ( ; i < ssize(line); ++i)
     {
+        merge_cpp1_multi_token_fundamental_type_names();
+
         auto peek1 = peek(1);
         auto peek2 = peek(2);
         auto peek3 = peek(3);
@@ -820,7 +889,13 @@ auto lex_line(
                     }
                 }
 
-                //  Keyword
+                //  Cpp2 multi-token fundamental type keyword
+                //
+                else if (auto j = peek_is_cpp1_multi_token_fundamental_keyword()) {
+                    store(j, lexeme::Cpp1MultiKeyword);
+                }
+
+                //  Other keyword
                 //
                 else if (auto j = peek_is_keyword()) {
                     store(j, lexeme::Keyword);
@@ -898,7 +973,7 @@ class tokens
     //  a second token stream when lowering to Cpp1 to re-interleave comments
     std::vector<comment> comments;
 
-    //  All generated tokens go here
+    //  A stable place to store additional tokens that are synthesized later
     std::deque<token> generated_tokens;
 
 public:

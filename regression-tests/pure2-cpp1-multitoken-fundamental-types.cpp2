@@ -1,0 +1,9 @@
+
+main: (argc: int, argv: **char) -> int = {
+    a: signed short int       = 1;
+    b: short int signed       = 2;
+    c: long long unsigned int = 3;
+    d: long double            = 4.0;
+    e: unsigned char          = '5';
+    std::cout << "(a * b + c / d - e)$\n";
+}
