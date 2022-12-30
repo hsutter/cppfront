@@ -354,7 +354,11 @@ public:
             print_extra("\n");
         }
 
-        cpp1_filename.empty() ? std::cout<<out.str() : file_out<<out.str();
+        if (is_stdout_output()) {
+            std::cout << out.str();
+        } else {
+            file_out << out.str();
+        }
     }
 
     //-----------------------------------------------------------------------
@@ -372,17 +376,20 @@ public:
         cpp2_filename = cpp2_filename_;
         assert (!file_out.is_open() && !pcomments && "ICE: tried to call .open twice");
         cpp1_filename = cpp1_filename_;
-        if (!cpp1_filename.empty()) file_out.open(cpp1_filename);
+        if (!is_stdout_output()) file_out.open(cpp1_filename);
         pcomments = &comments;
     }
 
     auto is_open() -> bool {
-        if (file_out.is_open() || cpp1_filename.empty()) {
+        if (file_out.is_open() || is_stdout_output()) {
             assert (pcomments && "ICE: if out.is_open, pcomments should also be set");
         }
-        return file_out.is_open() || cpp1_filename.empty();
+        return file_out.is_open() || is_stdout_output();
     }
 
+    auto is_stdout_output() -> bool {
+        return cpp1_filename.empty();
+    }
 
     //-----------------------------------------------------------------------
     //  Abandon: close and delete
