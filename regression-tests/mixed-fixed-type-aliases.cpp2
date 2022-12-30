@@ -1,0 +1,21 @@
+#include <typeinfo>
+#include <iostream>
+
+namespace my {
+    using u16 = float;
+}
+
+test: (x:_) = {
+    std::cout
+        << std::boolalpha
+        << std::is_floating_point_v<CPP2_TYPEOF(x)>
+        << "\n";
+}
+
+main: (argc: int, argv: **char) -> int = {
+    y: my::u16 = 42;
+    test(y);
+
+    z: u16 = 42;
+    test(z);
+}

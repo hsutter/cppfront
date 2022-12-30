@@ -1068,8 +1068,14 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(token const& n) -> void
+    auto emit(token const& n, bool is_qualified = false) -> void
     {
+        //  Implicit "cpp2::" qualification of Cpp2 fixed-width type aliases
+        if (!is_qualified && n.type() == lexeme::Cpp2FixedType)
+        {
+            printer.print_cpp2("cpp2::", n.position());
+        }
+
         if (n == "new") {
             printer.print_cpp2("cpp2_new", n.position());
         }
@@ -1089,7 +1095,8 @@ public:
     auto emit(
         unqualified_id_node const& n,
         bool in_synthesized_multi_return = false,
-        bool is_local_name = true
+        bool is_local_name = true,
+        bool is_qualified = false
     )
         -> void
     {
@@ -1118,7 +1125,7 @@ public:
         }
 
         assert(n.identifier);
-        emit(*n.identifier);
+        emit(*n.identifier, is_qualified);  // inform the identifier if we know this is qualified
 
         if (!n.template_args.empty()) {
             printer.print_cpp2("<", n.open_angle);
@@ -1182,7 +1189,7 @@ public:
             if (id.scope_op) {
                 emit(*id.scope_op);
             }
-            emit(*id.id);
+            emit(*id.id, false, true, true);    // inform the unqualified-id that it's qualified
         }
 
         printer.emit_to_string();
@@ -1194,8 +1201,8 @@ public:
     //
     auto emit(type_id_node const& n) -> void
     {
-        try_emit<type_id_node::qualified  >(n.id);
         try_emit<type_id_node::unqualified>(n.id, false, false);
+        try_emit<type_id_node::qualified  >(n.id);
         try_emit<type_id_node::keyword    >(n.id);
 
         for (auto i = n.pc_qualifiers.rbegin(); i != n.pc_qualifiers.rend(); ++i) {

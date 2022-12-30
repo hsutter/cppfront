@@ -95,6 +95,7 @@ enum class lexeme : std::int8_t {
     CharacterLiteral,
     Keyword,
     Cpp1MultiKeyword,
+    Cpp2FixedType,
     Identifier
 };
 
@@ -178,6 +179,7 @@ auto as(lexeme l)
     break;case lexeme::CharacterLiteral:    return "CharacterLiteral";
     break;case lexeme::Keyword:             return "Keyword";
     break;case lexeme::Cpp1MultiKeyword:    return "Cpp1MultiKeyword";
+    break;case lexeme::Cpp2FixedType:       return "Cpp2FixedType";
     break;case lexeme::Identifier:          return "Identifier";
     break;default:                          return "INTERNAL-ERROR";
     }
@@ -475,6 +477,17 @@ auto lex_line(
             "^unsigned|^using|"
             "^virtual|^void|^volatile|"
             "^wchar_t|^while"
+        );
+
+        return do_is_keyword(keys);
+    };
+
+    auto peek_is_cpp2_fundamental_type_keyword = [&]()
+    {
+        const auto keys = std::regex(
+            "^i8_fast|^i16_fast|^i32_fast|^i64_fast|^u8_fast|^u16_fast|^u32_fast|^u64_fast|"
+            "^i8_least|^i16_least|^i32_least|^i64_least|^u8_least|^u16_least|^u32_least|^u64_least|"
+            "^i8|^i16|^i32|^i64|^u8|^u16|^u32|^u64"
         );
 
         return do_is_keyword(keys);
@@ -889,10 +902,16 @@ auto lex_line(
                     }
                 }
 
-                //  Cpp2 multi-token fundamental type keyword
+                //  Cpp1 multi-token fundamental type keyword
                 //
                 else if (auto j = peek_is_cpp1_multi_token_fundamental_keyword()) {
                     store(j, lexeme::Cpp1MultiKeyword);
+                }
+
+                //  Cpp2 fixed-width type alias keyword
+                //
+                else if (auto j = peek_is_cpp2_fundamental_type_keyword()) {
+                    store(j, lexeme::Cpp2FixedType);
                 }
 
                 //  Other keyword

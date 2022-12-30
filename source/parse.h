@@ -2075,7 +2075,7 @@ private:
             assert (n->id.index() == type_id_node::unqualified);
             return n;
         }
-        if (curr().type() == lexeme::Keyword) {
+        if (curr().type() == lexeme::Keyword || curr().type() == lexeme::Cpp2FixedType) {
             n->pos = curr().position();
             n->id  = &curr();
             next();
@@ -2178,12 +2178,17 @@ private:
     //G template-argument:
     //G     # note: < > << >> are not allowed in expressions until new ( is opened
     //G     expression
-    //G     id-expression
+    //G     type-id
     //G
     auto unqualified_id() -> std::unique_ptr<unqualified_id_node>
     {
         //  Handle the identifier
-        if (curr().type() != lexeme::Identifier) {
+        if (
+            curr().type() != lexeme::Identifier &&
+            curr().type() != lexeme::Keyword    &&
+            curr().type() != lexeme::Cpp2FixedType
+            )
+        {
             return {};
         }
 
