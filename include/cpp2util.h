@@ -20,6 +20,26 @@
 #ifndef __CPP2_UTIL
 #define __CPP2_UTIL
 
+#if __EXCEPTIONS
+    #define CPP2_EXCEPTIONS
+#endif
+
+#ifdef __RTTI
+    #define CPP2_RTTI
+#endif
+
+#if defined CPP2_EXCEPTIONS
+    #if defined CPP2_THROW
+        #error "Do not redefine CPP2_THROW when using cpp2 with exceptions enabled."
+    #endif
+    #define CPP2_THROW(DESC,EXCEPTION) throw EXCEPTION
+#else
+    #if !defined CPP2_THROW
+        // TODO: This should call a utility function that prints DESC and a backtrace.
+        #define CPP2_THROW(DESC,EXCEPTION) std::terminate()
+    #endif
+#endif
+
 //  If this implementation doesn't support source_location yet, disable it
 //  TODO: technically this test should have <version> included first, but GEFN
 #if !defined(_MSC_VER) && !defined(__cpp_lib_source_location)
@@ -987,20 +1007,21 @@ auto as( std::variant<Ts...> const& x ) {
     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) { if (x.index() == 17) return operator_as<7>(x); }
     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) { if (x.index() == 18) return operator_as<8>(x); }
     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<19>(x)), T >) { if (x.index() == 19) return operator_as<9>(x); }
-    throw std::bad_variant_access();
+    CPP2_THROW("std::bad_variant_access", std::bad_variant_access());
 }
 
 
 //-------------------------------------------------------------------------------------------------------------
 //  std::any is and as
 //
-
+#ifdef CPP2_RTTI
 //  is Type
 //
 template<typename T, typename X>
     requires (std::is_same_v<X,std::any> && !std::is_same_v<T,std::any> && !std::is_same_v<T,empty>)
 constexpr auto is( X const& x ) -> bool
     { return x.type() == typeid(T); }
+#endif
 
 template<typename T, typename X>
     requires (std::is_same_v<X,std::any> && std::is_same_v<T,empty>)
@@ -1273,7 +1294,7 @@ inline auto fopen( const char* filename, const char* mode ) {
     #endif
 
     if (!x) {
-        throw std::make_error_condition(std::errc::no_such_file_or_directory);
+        CPP2_THROW("std::errc::no_such_file_or_directory", std::make_error_condition(std::errc::no_such_file_or_directory));
     }
     return c_raii( x, &fclose );
 }
