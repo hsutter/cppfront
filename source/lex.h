@@ -350,7 +350,7 @@ auto lex_line(
 
         //  OK, we have found the end of a sequence of 1 or more Cpp1MultiKeywords, so
         //  replace them with a single synthesized token that contains all their text
-        // 
+        //
         //  Note: It's intentional that this is a kind of token that can contain whitespace
 
         //  Remember the last (non-Cpp1MultiKeyword) token so we can put it back
@@ -969,31 +969,63 @@ auto lex_line(
                     store(3, lexeme::Not);
                 }
 
+                //G
                 //G decimal-literal:
-                //G     digit
-                //G     decimal-literal digit
-                //G     decimal-literal ''' digit
+                //G     digit [uU][lL][lL]
+                //G     decimal-literal digit [uU][lL][lL]
+                //G     decimal-literal ''' digit [uU][lL][lL]
                 //G
                 //G floating-point-literal:
-                //G     digit { ' | digit }* . digit { ' | digit }*
-                //GTODO full grammar
+                //G     digit { ' | digit }* (. digit { ' | digit }*)? ([eE][-+]?digit { ' | digit }*) [fFlL]
+                //G
+                //G TODO full grammar & refactor to utility functions with their
+                //G      own unit test rather than inline everything here
                 //G
                 else if (is_digit(line[i])) {
                     auto j = 1;
                     while (is_separator_or(is_digit,peek(j))) { ++j; }
-                    if (peek(j) != '.') {
+                    if (peek(j) != '.' &&
+                        peek(j) != 'f' && peek(j) != 'F' &&
+                        peek(j) != 'e' && peek(j) != 'E')
+                    {
+                        // cf: https://en.cppreference.com/w/cpp/language/integer_literal
+                        //
+                        // TODO: This dumbly slurps the suffixs
+                        // ull/ULL. Suffix parsing should move to a utility
+                        // and be error checked. Best would be to slurp all
+                        // [a-zA-Z] and then validate against a list of
+                        // allowed suffixes. Ideally handle the C++23 size
+                        // suffixes aswell.
+                        if (peek(j) == 'u' || peek(j) == 'U') ++j;
+                        if (peek(j) == 'l' || peek(j) == 'L') ++j;
+                        if (peek(j) == 'l' || peek(j) == 'L') ++j;
                         store(j, lexeme::DecimalLiteral);
                     }
                     else {
-                        ++j;
-                        if (!is_digit(peek(j))) {
-                            errors.emplace_back(
-                                source_position(lineno,i ),
-                                "floating point literal " + std::string(&line[i], j)
-                                + " fractional part cannot be empty (if floating point was intended, use .0)"
-                            );
+                        // cf: https://en.cppreference.com/w/cpp/language/floating_literal
+
+                        // slurps the digits after '.'
+                        if (peek(j) == '.') {
+                            ++j;
+                            while (is_separator_or(is_digit,peek(j))) {
+                                ++j;
+                            }
                         }
-                        while (is_separator_or(is_digit,peek(j))) { ++j; }
+
+                        // slurp the exponential form marker
+                        if (peek(j) == 'e' || peek(j) == 'E') {
+                            ++j;
+                            if (peek(j) == '-' || peek(j) == '+') { ++j; }
+                            while (is_separator_or(is_digit,peek(j))) { ++j; }
+                        }
+
+                        // TODO: This dumbly slurps the suffixes fF or
+                        // lL. Suffix parsing should move to a utility and be
+                        // error checked. Best would be to slurp all [a-zA-Z]
+                        // and then validate against a list of allowed
+                        // suffixes. Ideally handle the C++23 suffixes aswell.
+                        if (peek(j) == 'f' || peek(j) == 'F') ++j;
+                        else if (peek(j) == 'l' || peek(j) == 'L') ++j;
                         store(j, lexeme::FloatLiteral);
                     }
                 }
