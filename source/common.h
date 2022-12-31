@@ -256,6 +256,17 @@ auto strip_path(std::string const& file) -> std::string
     return {file, as<size_t>(i+1)};
 }
 
+//-----------------------------------------------------------------------
+//
+//  stdout detect helper
+//
+//-----------------------------------------------------------------------
+//
+auto is_filename_stdout(std::string_view filename) -> bool
+{
+    return filename == "stdout";
+}
+
 
 //-----------------------------------------------------------------------
 //

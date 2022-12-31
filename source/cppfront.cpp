@@ -53,7 +53,6 @@ auto pad(int padding) -> std::string_view
     };
 }
 
-
 //-----------------------------------------------------------------------
 //
 //  positional_printer: a Syntax 1 pretty printer
@@ -115,14 +114,6 @@ static cmdline_processor::register_flag cmd_cpp1_filename(
     [](std::string const& name) { flag_cpp1_filename = name; }
 );
 
-static auto flag_stdout = false;
-static cmdline_processor::register_flag cmd_stdout(
-        2,
-        "emit",
-        "Emit to stdout, disables -output option",
-        []{ flag_stdout = true; }
-);
-
 struct text_with_pos{
     std::string     text;
     source_position pos;
@@ -133,7 +124,7 @@ struct text_with_pos{
 class positional_printer
 {
     //  Core information
-    std::ostringstream          out           = {}; // Cpp1 syntax output buffer
+    std::stringstream           out           = {}; // Cpp1 syntax output buffer
     std::ofstream               file_out      = {}; // Cpp1 syntax output file
     std::string                 cpp2_filename = {};
     std::string                 cpp1_filename = {};
@@ -388,7 +379,7 @@ public:
     }
 
     auto is_stdout_output() -> bool {
-        return cpp1_filename.empty();
+        return ::cpp2::is_filename_stdout(cpp1_filename);
     }
 
     //-----------------------------------------------------------------------
@@ -783,10 +774,6 @@ public:
         auto cpp1_filename = sourcefile.substr(0, std::ssize(sourcefile) - 1);
         if (!flag_cpp1_filename.empty()) {
             cpp1_filename = flag_cpp1_filename; // use override if present
-        }
-
-        if (flag_stdout) {
-            cpp1_filename = "";
         }
 
         printer.open(
@@ -2882,7 +2869,7 @@ auto main(int argc, char* argv[]) -> int
     int exit_status = EXIT_SUCCESS;
     for (auto const& arg : cmdline.arguments())
     {
-        if (flag_stdout) std::cout<<"// cppfront ";
+        if (is_filename_stdout(arg.text)) std::cout << "// cppfront ";
         std::cout << arg.text << "...";
 
         //  Load + lex + parse + sema
