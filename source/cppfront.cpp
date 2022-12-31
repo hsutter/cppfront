@@ -53,6 +53,7 @@ auto pad(int padding) -> std::string_view
     };
 }
 
+
 //-----------------------------------------------------------------------
 //
 //  positional_printer: a Syntax 1 pretty printer
@@ -114,6 +115,7 @@ static cmdline_processor::register_flag cmd_cpp1_filename(
     [](std::string const& name) { flag_cpp1_filename = name; }
 );
 
+
 struct text_with_pos{
     std::string     text;
     source_position pos;
@@ -162,6 +164,7 @@ class positional_printer
 
     enum class target_type { string, chunks };
     std::vector<target_type>                 emit_target_stack;         // to interleave them sensibly
+
 
     //-----------------------------------------------------------------------
     //  Print text
@@ -775,7 +778,6 @@ public:
         if (!flag_cpp1_filename.empty()) {
             cpp1_filename = flag_cpp1_filename; // use override if present
         }
-
         printer.open(
             sourcefile,
             cpp1_filename,
