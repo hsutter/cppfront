@@ -2869,7 +2869,7 @@ auto main(int argc, char* argv[]) -> int
     int exit_status = EXIT_SUCCESS;
     for (auto const& arg : cmdline.arguments())
     {
-        if (is_filename_stdout(arg.text)) std::cout << "// cppfront ";
+        if (is_filename_stdout(flag_cpp1_filename)) std::cout << "// cppfront ";
         std::cout << arg.text << "...";
 
         //  Load + lex + parse + sema
