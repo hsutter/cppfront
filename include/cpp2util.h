@@ -207,6 +207,7 @@
     #include <cstddef>
     #include <utility>
     #include <cstdio>
+    #include <cstdint>
 
     #if defined(CPP2_USE_SOURCE_LOCATION)
         #include <source_location>
@@ -219,6 +220,43 @@
 
 
 namespace cpp2 {
+
+//-----------------------------------------------------------------------
+//
+//  Convenience names for fixed-width integer types
+//
+//  Note: De jure, some of these are optional per the C and C++ standards
+//        De facto, all of these are supported in all implementations I know of
+//
+//-----------------------------------------------------------------------
+//
+using i8        = std::int8_t        ;
+using i16       = std::int16_t       ;
+using i32       = std::int32_t       ;
+using i64       = std::int64_t       ;
+using u8        = std::uint8_t       ;
+using u16       = std::uint16_t      ;
+using u32       = std::uint32_t      ;
+using u64       = std::uint64_t      ;
+
+using i8_fast   = std::int_fast8_t   ;
+using i16_fast  = std::int_fast16_t  ;
+using i32_fast  = std::int_fast32_t  ;
+using i64_fast  = std::int_fast64_t  ;
+using u8_fast   = std::uint_fast8_t  ;
+using u16_fast  = std::uint_fast16_t ;
+using u32_fast  = std::uint_fast32_t ;
+using u64_fast  = std::uint_fast64_t ;
+
+using i8_small  = std::int_least8_t  ;
+using i16_small = std::int_least16_t ;
+using i32_small = std::int_least32_t ;
+using i64_small = std::int_least64_t ;
+using u8_small  = std::uint_least8_t ;
+using u16_small = std::uint_least16_t;
+using u32_small = std::uint_least32_t;
+using u64_small = std::uint_least64_t;
+
 
 //-----------------------------------------------------------------------
 //
@@ -248,7 +286,7 @@ class contract_group {
 public:
     using handler = void (*)(CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM);
 
-    constexpr contract_group  (handler h = nullptr)  : reporter(h) { }
+    constexpr contract_group  (handler h = {})  : reporter(h) { }
     constexpr auto set_handler(handler h) -> handler;
     constexpr auto get_handler() const    -> handler { return reporter; }
     constexpr auto expects    (bool b, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
@@ -351,7 +389,7 @@ struct {
     }
 } unique;
 
-struct {
+[[maybe_unused]] struct {
     template<typename T>
     [[nodiscard]] auto cpp2_new(auto&& ...args) const -> std::shared_ptr<T> {
         return std::make_shared<T>(std::forward<decltype(args)>(args)...);
@@ -417,7 +455,7 @@ class out {
         T* t;
         deferred_init<T>* dt;
     };
-    out<T>* ot = nullptr;
+    out<T>* ot = {};
     bool has_t;
 
     //  Each out in a chain contains its own uncaught_count ...
@@ -501,8 +539,14 @@ public:
 //
 //-----------------------------------------------------------------------
 //
+#ifdef _MSC_VER
+    #define CPP2_FORCE_INLINE [[msvc::forceinline]]
+#else
+    #define CPP2_FORCE_INLINE __attribute__((always_inline))
+#endif
+
 #define CPP2_UFCS(FUNCNAME,PARAM1,...) \
-[](auto&& obj, auto&& ...params) { \
+[](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE { \
     if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); }) { \
         return std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); \
     } else { \
@@ -511,7 +555,7 @@ public:
 }(PARAM1, __VA_ARGS__)
 
 #define CPP2_UFCS_0(FUNCNAME,PARAM1) \
-[](auto&& obj) { \
+[](auto&& obj) CPP2_FORCE_INLINE { \
     if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(); }) { \
         return std::forward<decltype(obj)>(obj).FUNCNAME(); \
     } else { \
@@ -522,7 +566,7 @@ public:
 #define CPP2_UFCS_REMPARENS(...) __VA_ARGS__
 
 #define CPP2_UFCS_TEMPLATE(FUNCNAME,TEMPARGS,PARAM1,...) \
-[](auto&& obj, auto&& ...params) { \
+[](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE { \
     if constexpr (requires{ std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(params)>(params)...); }) { \
         return std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(params)>(params)...); \
     } else { \
@@ -531,7 +575,7 @@ public:
 }(PARAM1, __VA_ARGS__)
 
 #define CPP2_UFCS_TEMPLATE_0(FUNCNAME,TEMPARGS,PARAM1) \
-[](auto&& obj) { \
+[](auto&& obj) CPP2_FORCE_INLINE { \
     if constexpr (requires{ std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); }) { \
         return std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
     } else { \
@@ -1117,7 +1161,19 @@ public:
 };
 
 inline auto fopen( const char* filename, const char* mode ) {
+
+    //  Suppress annoying deprecation warning about fopen
+    #ifdef _MSC_VER
+        #pragma warning( push )
+        #pragma warning( disable : 4996 )
+    #endif
+
     auto x = std::fopen(filename, mode);
+
+    #ifdef _MSC_VER
+        #pragma warning( pop )
+    #endif
+
     if (!x) {
         throw std::make_error_condition(std::errc::no_such_file_or_directory);
     }

@@ -14,9 +14,9 @@ main: () -> int = {
 
     get_i(fun()).ufcs();
 
-    res := int(42).ufcs();
+    res := (42).ufcs();
 
-    int(j.i).ufcs();
+    (j.i).ufcs();
 }
 
 ufcs: (i:int) -> int = {

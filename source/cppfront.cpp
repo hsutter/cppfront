@@ -608,7 +608,7 @@ public:
     //  Provide an option to store to a given string instead, which is
     //  useful for capturing Cpp1-formatted output for generated code
     //
-    auto emit_to_string( std::string* target = nullptr ) -> void {
+    auto emit_to_string( std::string* target = {} ) -> void {
         if (target) {
             emit_string_targets.push_back( target );
             emit_target_stack.push_back(target_type::string);
@@ -623,7 +623,7 @@ public:
     //  useful for postfix expression which have to mix unwrapping operators
     //  with emitting sub-elements such as expression lists
     //
-    auto emit_to_text_chunks( std::vector<text_with_pos>* target = nullptr ) -> void {
+    auto emit_to_text_chunks( std::vector<text_with_pos>* target = {} ) -> void {
         if (target) {
             emit_text_chunks_targets.push_back( target );
             emit_target_stack.push_back(target_type::chunks);
@@ -663,7 +663,7 @@ class cppfront
 
     struct arg_info {
         passing_style pass   = passing_style::in;
-        token const*  ptoken = nullptr;
+        token const*  ptoken = {};
     };
     std::vector<arg_info> current_args  = { {} };
 
@@ -923,6 +923,14 @@ public:
     //  is needed where Cpp1 and Cpp2 have different grammar orders
     //
 
+    auto print_to_string(auto& i, auto... more) -> std::string {
+        auto print = std::string{};
+        printer.emit_to_string(&print);
+        emit(i, more...);
+        printer.emit_to_string();
+        return print;
+    };
+
     //-----------------------------------------------------------------------
     //  try_emit
     //
@@ -1070,8 +1078,14 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(token const& n) -> void
+    auto emit(token const& n, bool is_qualified = false) -> void
     {
+        //  Implicit "cpp2::" qualification of Cpp2 fixed-width type aliases
+        if (!is_qualified && n.type() == lexeme::Cpp2FixedType)
+        {
+            printer.print_cpp2("cpp2::", n.position());
+        }
+
         if (n == "new") {
             printer.print_cpp2("cpp2_new", n.position());
         }
@@ -1091,7 +1105,8 @@ public:
     auto emit(
         unqualified_id_node const& n,
         bool in_synthesized_multi_return = false,
-        bool is_local_name = true
+        bool is_local_name = true,
+        bool is_qualified = false
     )
         -> void
     {
@@ -1120,7 +1135,7 @@ public:
         }
 
         assert(n.identifier);
-        emit(*n.identifier);
+        emit(*n.identifier, is_qualified);  // inform the identifier if we know this is qualified
 
         if (!n.template_args.empty()) {
             printer.print_cpp2("<", n.open_angle);
@@ -1130,8 +1145,8 @@ public:
                     printer.print_cpp2(",", a.comma);
                 }
                 first = false;
-                try_emit<unqualified_id_node::expression   >(a.arg);
-                try_emit<unqualified_id_node::id_expression>(a.arg);
+                try_emit<unqualified_id_node::expression>(a.arg);
+                try_emit<unqualified_id_node::type_id   >(a.arg);
             }
             printer.print_cpp2(">", n.close_angle);
         }
@@ -1184,7 +1199,7 @@ public:
             if (id.scope_op) {
                 emit(*id.scope_op);
             }
-            emit(*id.id);
+            emit(*id.id, false, true, true);    // inform the unqualified-id that it's qualified
         }
 
         printer.emit_to_string();
@@ -1196,8 +1211,9 @@ public:
     //
     auto emit(type_id_node const& n) -> void
     {
-        try_emit<type_id_node::qualified  >(n.id);
         try_emit<type_id_node::unqualified>(n.id, false, false);
+        try_emit<type_id_node::qualified  >(n.id);
+        try_emit<type_id_node::keyword    >(n.id);
 
         for (auto i = n.pc_qualifiers.rbegin(); i != n.pc_qualifiers.rend(); ++i) {
             if ((**i) == "const") { printer.print_cpp2(" ", n.position()); }
@@ -1764,13 +1780,6 @@ public:
             }
         };
 
-        auto print_to_string = [&](auto& i, auto... more) {
-            auto print = std::string{};
-            printer.emit_to_string(&print);
-            emit(i, more...);
-            printer.emit_to_string();
-            return print;
-        };
         auto print_to_text_chunks = [&](auto& i, auto... more) {
             auto text = std::vector<text_with_pos>{};
             printer.emit_to_text_chunks(&text);
@@ -1993,6 +2002,36 @@ public:
 
     //-----------------------------------------------------------------------
     //
+    auto emit(is_as_expression_node const& n) -> void
+    {
+        std::string prefix = {};
+        std::string suffix = {};
+
+        for (auto i = n.ops.rbegin(); i != n.ops.rend(); ++i)
+        {
+            //  If it's "ISORAS type", emit "cpp2::ISORAS<type>(expr)"
+            if (i->type)
+            {
+                prefix += "cpp2::" + i->op->to_string(true) + "<" + print_to_string(*i->type) + ">(";
+                suffix = ")" + suffix;
+            }
+            //  Else it's "is value", emit "cpp2::is(expr, value)"
+            else
+            {
+                assert(i->expr);
+                prefix += "cpp2::" + i->op->to_string(true) + "(";
+                suffix = ", " + print_to_string(*i->expr) + ")" + suffix;
+            }
+        }
+
+        printer.print_cpp2(prefix, n.position());
+        emit(*n.expr);
+        printer.print_cpp2(suffix, n.position());
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
     template<
         String   Name,
         typename Term
@@ -2000,83 +2039,6 @@ public:
     auto emit(binary_expression_node<Name,Term> const& n) -> void
     {
         assert(n.expr);
-
-        //  Handle is/as expressions
-        //  TODO: Generalize
-
-        //  If this is an is_as_expression_node
-        //
-        if constexpr (std::is_same_v<is_as_expression_node const&, decltype(n)>)
-        {
-            if (!n.terms.empty() && *n.terms.front().op == "is")
-            {
-                if (n.terms.size() > 1) {
-                    errors.emplace_back(
-                        n.position(),
-                        "(temporary alpha limitation) this compiler is just starting to learn 'is' and only supports a single is-expression (no chaining with other is/as)"
-                    );
-                    return;
-                }
-
-                //  The term will be a prefix_expression_node
-                auto prefix_expr = n.terms.front().expr.get();
-                assert (prefix_expr);
-                static_assert (std::is_same_v<prefix_expression_node*, decltype(prefix_expr)>);
-
-                //  Hack: In the future we'll distinguish type_id better, but for now
-                //        "identifier or id_expression w/o ops" works well enough
-                //
-                //  If it's "is type", emit "cpp2::is<type>(expr)"
-                if (prefix_expr->ops.empty() &&         // no prefix ops
-                    prefix_expr->expr->ops.empty() &&   // no postfix ops
-                    (prefix_expr->expr->expr->expr.index() == primary_expression_node::identifier ||
-                     prefix_expr->expr->expr->expr.index() == primary_expression_node::id_expression
-                     )
-                    )
-                {
-                    printer.print_cpp2("cpp2::is<", n.position());
-                    emit(*n.terms.front().expr);
-                    printer.print_cpp2(">(", n.position());
-
-                    emit(*n.expr);
-
-                    printer.print_cpp2(")", n.position());
-                }
-                //  Else it's "is value", emit "cpp2::is(expr, value)"
-                else
-                {
-                    printer.print_cpp2("cpp2::is(", n.position());
-
-                    emit(*n.expr);
-
-                    printer.print_cpp2(", ", n.position());
-                    emit(*n.terms.front().expr);
-                    printer.print_cpp2(")", n.position());
-                }
-
-                return;
-            }
-        }
-
-        if (!n.terms.empty() && *n.terms.front().op == "as")
-        {
-            if (n.terms.size() > 1) {
-                errors.emplace_back(
-                    n.position(),
-                    "(temporary alpha limitation) this compiler is just starting to learn 'as' and only supports a single as-expression (no chaining with other is/as)"
-                );
-                return;
-            }
-
-            printer.print_cpp2("cpp2::as<", n.position());
-            emit(*n.terms.front().expr);
-            printer.print_cpp2(">(", n.position());
-
-            emit(*n.expr);
-
-            printer.print_cpp2(")", n.position());
-            return;
-        }
 
         //  If this is an assignment expression, don't add std::move on the lhs
         //  even if this is a definite last use (only do that when an rvalue is okay)

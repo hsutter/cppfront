@@ -2,7 +2,7 @@
 #include <iostream>
 #include <vector>
 
-constexpr auto less_then = [](int value) {
+constexpr auto less_than = [](int value) {
     return [=](auto x) { return x < value;};
 };
 
@@ -20,16 +20,16 @@ main: () -> int = {
     i := 15;
 
     std::cout << inspect i -> std::string {
-        is (less_then(10)) = "i less than 10";
+        is (less_than(10)) = "i less than 10";
         is (in(11,20)) = "i is between 11 and 20";
         is _ = "i is out of our interest";
     } << std::endl;
 
-    if i is less_then(20) {
+    if i is (less_than(20)) {
         std::cout << "less than 20" << std::endl;
     }
 
-    if i is in(10,30) {
+    if i is (in(10,30)) {
         std::cout << "i is between 10 and 30" << std::endl;
     }
 

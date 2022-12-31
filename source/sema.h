@@ -31,17 +31,17 @@ namespace cpp2 {
 //
 struct declaration_sym {
     bool start = false;
-    declaration_node const*           declaration = nullptr;
-    token const*                      identifier  = nullptr;
-    statement_node const*             initializer = nullptr;
-    parameter_declaration_node const* parameter   = nullptr;
+    declaration_node const*           declaration = {};
+    token const*                      identifier  = {};
+    statement_node const*             initializer = {};
+    parameter_declaration_node const* parameter   = {};
 
     declaration_sym(
         bool s = false,
-        declaration_node const*           decl  = nullptr,
-        token const*                      id    = nullptr,
-        statement_node const*             init  = nullptr,
-        parameter_declaration_node const* param = nullptr
+        declaration_node const*           decl  = {},
+        token const*                      id    = {},
+        statement_node const*             init  = {},
+        parameter_declaration_node const* param = {}
     )
         : start{s}
         , declaration{decl}
@@ -59,7 +59,7 @@ struct declaration_sym {
 
 struct identifier_sym {
     bool assignment_to = false;
-    token const* identifier = nullptr;
+    token const* identifier = {};
 
     identifier_sym(bool a, token const* id) : assignment_to{a}, identifier{id} { }
 
@@ -72,7 +72,7 @@ struct identifier_sym {
 
 struct selection_sym {
     bool start = false;
-    selection_statement_node const* selection = nullptr;
+    selection_statement_node const* selection = {};
 
     selection_sym(bool s, selection_statement_node const* sel) : start{s}, selection{sel} { }
 
@@ -85,7 +85,7 @@ struct selection_sym {
 
 struct compound_sym {
     bool start = false;
-    compound_statement_node const* compound = nullptr;
+    compound_statement_node const* compound = {};
     bool is_true_branch;
 
     compound_sym(bool s, compound_statement_node const* c, bool is_true)
