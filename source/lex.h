@@ -350,13 +350,34 @@ auto lex_line(
 
         assert(tokens.back().type() == lexeme::Cpp1MultiKeyword);
         auto pos = tokens.back().position();
-        generated_text.push_back( tokens.back().to_string(true) );
-        tokens.pop_back();
 
-        while( !tokens.empty() && tokens.back().type() == lexeme::Cpp1MultiKeyword) {
-            generated_text.back() = tokens.back().to_string(true) + " " + generated_text.back();
+        auto num_merged_tokens = 0;
+        auto is_char           = 0;
+        auto is_short          = 0;
+        auto is_int            = 0;
+        auto is_long           = 0;
+        auto is_double         = 0;
+        auto is_signed         = 0;
+        auto is_unsigned       = 0;
+        generated_text.push_back( "" );
+        while( !tokens.empty() && tokens.back().type() == lexeme::Cpp1MultiKeyword)
+        {
+            auto text = tokens.back().to_string(true);
+            if (text == "char"    ) { ++is_char    ; }
+            if (text == "short"   ) { ++is_short   ; }
+            if (text == "int"     ) { ++is_int     ; }
+            if (text == "long"    ) { ++is_long    ; }
+            if (text == "double"  ) { ++is_double  ; }
+            if (text == "signed"  ) { ++is_signed  ; }
+            if (text == "unsigned") { ++is_unsigned; }
+
+            if (num_merged_tokens > 0) {
+                generated_text.back() = " " + generated_text.back();
+            }
+            generated_text.back() = text + generated_text.back();
             pos = tokens.back().position();
             tokens.pop_back();
+            ++num_merged_tokens;
         }
 
         tokens.push_back({
@@ -365,6 +386,37 @@ auto lex_line(
             pos,
             lexeme::Keyword
             });
+
+        if (num_merged_tokens > 1)
+        {
+            auto alt = std::string{};
+            if      (is_char      &&  is_signed)   { alt = "'i8' (usually best) or '__schar'"; }
+            else if (is_char      &&  is_unsigned) { alt = "'u8' (usually best) or '__uchar'"; }
+            else if (is_short     && !is_unsigned) { alt = "'short'"      ; }
+            else if (is_short     &&  is_unsigned) { alt = "'ushort'"     ; }
+            else if (is_long == 1 && !is_unsigned) { alt = "'long'"       ; }
+            else if (is_long == 1 &&  is_unsigned) { alt = "'ulong'"      ; }
+            else if (is_long >  1 && !is_unsigned) { alt = "'longlong'"   ; }
+            else if (is_long >  1 &&  is_unsigned) { alt = "'ulonglong'"  ; }
+            else if (is_int       && !is_unsigned) { alt = "'int'"        ; }
+            else if (is_int       &&  is_unsigned) { alt = "'uint'"       ; }
+            else if (is_double    &&  is_long)     { alt = "'longdouble'" ; }
+
+            if (std::ssize(alt) > 0) {
+                errors.emplace_back(
+                    pos,
+                    "'" + tokens.back().to_string(true) + "' - did you mean " + alt + "?"
+                );
+            }
+            errors.emplace_back(
+                pos,
+                "'" + tokens.back().to_string(true) + "' is an old-style C/C++ multi-word keyword type\n"
+                "    - most such types should be used only for interoperability with older code\n"
+                "    - using those when you need them is fine, but name them with these short names instead:\n"
+                "        ushort, uint, ulong, longlong, ulonglong, __schar, __uchar\n"
+                "    - see also cpp2util.h > \"Convenience names for integer types\""
+            );
+        }
 
         tokens.push_back(last_token);
     };
