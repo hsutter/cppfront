@@ -154,6 +154,77 @@ auto starts_with_whitespace_slash_star_and_no_star_slash(std::string const& line
 //
 //  line    current line being processed
 //
+auto starts_with_operator(std::string_view s) -> int
+{
+    if (s.starts_with("operator"))
+    {
+        auto j = 8;
+
+        //  skip any spaces
+        while (j < std::ssize(s) && isspace(s[j])) { ++j; }
+        if (j >= std::ssize(s)) {
+            return 0;
+        }
+
+        auto c1 = [&]{ if (j   < std::ssize(s)) { return s[j  ]; } return '\0'; }();
+        auto c2 = [&]{ if (j+1 < std::ssize(s)) { return s[j+1]; } return '\0'; }();
+        auto c3 = [&]{ if (j+2 < std::ssize(s)) { return s[j+2]; } return '\0'; }();
+
+        switch (c1)
+        {
+            //  /= /
+            //  == =
+            //  ! !=
+            //  *= *
+            //  %= %
+            //  ^= ^
+            //  ~= ~
+        break;case '/':
+              case '=':
+              case '!':
+            if (c2 == '=') { return j+2; }
+            return j+1;
+
+            //  ++ += +
+        break;case '+':
+            if (c2 == '=' || c2 == '+') { return j+2; }
+            return j+1;
+
+            //  -- -= -> -
+        break;case '-':
+            if (c2 == '=' || c2 == '-' || c2 == '>') { return j+2; }
+            return j+1;
+
+            //  ||= || |= |
+            //  &&= && &= &
+        break;case '|':
+              case '&':
+            if (c2 == c1 && c3 == '=') { return j+3; }
+            if (c2 == c1) { return j+2; }
+            return j+1;
+
+            //  >>= >> >= >
+        break;case '>':
+            if (c2 == '>' && c3 == '=') { return j + 3; }
+            if (c2 == '>' || c2 == '=') { return j + 2; }
+            return j+1;
+
+            //  <<= << <=> <= <
+        break;case '<':
+            if (c2 == '<' && c3 == '=') { return j + 3; }
+            if (c2 == '=' && c3 == '>') { return j + 3; }
+            if (c2 == '<' || c2 == '=') { return j + 2; }
+            return j+1;
+
+        break;default:
+            ;
+        }
+    }
+
+    return 0;
+}
+
+
 auto starts_with_identifier_colon(std::string const& line) -> bool
 {
     auto i = 0;
@@ -163,8 +234,14 @@ auto starts_with_identifier_colon(std::string const& line) -> bool
         return false;
     }
 
-    //  find identifier
-    auto j = starts_with_identifier({&line[i], std::size(line)-i});
+    //  see if it's an "operator @" name
+    auto s = std::string_view( &line[i], std::ssize(line) - i );
+    auto j = starts_with_operator(s);
+    //  else see if it's a single identifier
+    if (j == 0) {
+        j = starts_with_identifier(s);
+    }
+    //  if it's neither, bail
     if (j == 0) {
         return false;
     }

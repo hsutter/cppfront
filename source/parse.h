@@ -33,7 +33,7 @@ auto violates_lifetime_safety = false;
 //
 
 //G prefix-operator:
-//G     one of  not
+//G     one of  '!'
 //G
 auto is_prefix_operator(lexeme l) -> bool
 {
@@ -49,7 +49,7 @@ auto is_prefix_operator(lexeme l) -> bool
 
 
 //G postfix-operator:
-//G     one of  ++  --  *  &  ~  $
+//G     one of  '++' '--' '*' '&' '~' '$'
 //G
 auto is_postfix_operator(lexeme l)  -> bool
 {
@@ -68,7 +68,7 @@ auto is_postfix_operator(lexeme l)  -> bool
 
 
 //G assignment-operator:
-//G     one of  = *= /= %= += -= >>= <<=
+//G     one of  '=' '*=' '/=' '%=' '+=' '-=' '>>=' '<<='
 //G
 auto is_assignment_operator(lexeme l) -> bool
 {
@@ -1482,7 +1482,7 @@ private:
     //G     inspect-expression
     //G     id-expression
     //G     literal
-    //G     ( expression-list )
+    //G     '(' expression-list ')'
     //G     unnamed-declaration
     //G
     auto primary_expression()
@@ -1569,9 +1569,9 @@ private:
     //G postfix-expression:
     //G     primary-expression
     //G     postfix-expression postfix-operator     [Note: without whitespace before the operator]
-    //G     postfix-expression [ expression-list ]
-    //G     postfix-expression ( expression-list? )
-    //G     postfix-expression . id-expression
+    //G     postfix-expression '[' expression-list ']'
+    //G     postfix-expression '(' expression-list-opt ')'
+    //G     postfix-expression '.' id-expression
     //G
     auto postfix_expression()
         -> std::unique_ptr<postfix_expression_node>
@@ -1680,9 +1680,9 @@ private:
     //G     postfix-expression
     //G     prefix-operator prefix-expression
     //GTODO     await-expression
-    //GTODO     sizeof ( type-id )
-    //GTODO     sizeof ... ( identifier )
-    //GTODO     alignof ( type-id )
+    //GTODO     'sizeof' '(' type-id ')'
+    //GTODO     'sizeof' '...' ( identifier ')'
+    //GTODO     'alignof' '(' type-id ')'
     //GTODO     throws-expression
     //G
     auto prefix_expression()
@@ -1767,9 +1767,9 @@ private:
 
     //G multiplicative-expression:
     //G     is-as-expression
-    //G     multiplicative-expression * is-as-expression
-    //G     multiplicative-expression / is-as-expression
-    //G     multiplicative-expression % is-as-expression
+    //G     multiplicative-expression '*' is-as-expression
+    //G     multiplicative-expression '/' is-as-expression
+    //G     multiplicative-expression '%' is-as-expression
     //G
     auto multiplicative_expression() {
         return binary_expression<multiplicative_expression_node> (
@@ -1780,8 +1780,8 @@ private:
 
     //G additive-expression:
     //G     multiplicative-expression
-    //G     additive-expression + multiplicative-expression
-    //G     additive-expression - multiplicative-expression
+    //G     additive-expression '+' multiplicative-expression
+    //G     additive-expression '-' multiplicative-expression
     //G
     auto additive_expression() {
         return binary_expression<additive_expression_node> (
@@ -1792,8 +1792,8 @@ private:
 
     //G shift-expression:
     //G     additive-expression
-    //G     shift-expression << additive-expression
-    //G     shift-expression >> additive-expression
+    //G     shift-expression '<<' additive-expression
+    //G     shift-expression '>>' additive-expression
     //G
     auto shift_expression(bool allow_angle_operators = true) {
         if (allow_angle_operators) {
@@ -1824,7 +1824,7 @@ private:
 
     //G compare-expression:
     //G     shift-expression
-    //G     compare-expression <=> shift-expression
+    //G     compare-expression '<=>' shift-expression
     //G
     auto compare_expression(bool allow_angle_operators = true) {
         return binary_expression<compare_expression_node> (
@@ -1835,10 +1835,10 @@ private:
 
     //G relational-expression:
     //G     compare-expression
-    //G     relational-expression <  compare-expression
-    //G     relational-expression >  compare-expression
-    //G     relational-expression <= compare-expression
-    //G     relational-expression >= compare-expression
+    //G     relational-expression '<'  compare-expression
+    //G     relational-expression '>'  compare-expression
+    //G     relational-expression '<=' compare-expression
+    //G     relational-expression '>=' compare-expression
     //G
     auto relational_expression(bool allow_angle_operators = true) {
         if (allow_angle_operators) {
@@ -1866,8 +1866,8 @@ private:
 
     //G equality-expression:
     //G     relational-expression
-    //G     equality-expression == relational-expression
-    //G     equality-expression != relational-expression
+    //G     equality-expression '==' relational-expression
+    //G     equality-expression '!=' relational-expression
     //G
     auto equality_expression(bool allow_angle_operators = true) {
         return binary_expression<equality_expression_node> (
@@ -1878,7 +1878,7 @@ private:
 
     //G bit-and-expression:
     //G     equality-expression
-    //G     bit-and-expression & equality-expression
+    //G     bit-and-expression '&' equality-expression
     //G
     auto bit_and_expression(bool allow_angle_operators = true) {
         return binary_expression<bit_and_expression_node> (
@@ -1889,7 +1889,7 @@ private:
 
     //G bit-xor-expression:
     //G     bit-and-expression
-    //G     bit-xor-expression & bit-and-expression
+    //G     bit-xor-expression '&' bit-and-expression
     //G
     auto bit_xor_expression(bool allow_angle_operators = true) {
         return binary_expression<bit_xor_expression_node> (
@@ -1900,7 +1900,7 @@ private:
 
     //G bit-or-expression:
     //G     bit-xor-expression
-    //G     bit-or-expression & bit-xor-expression
+    //G     bit-or-expression '&' bit-xor-expression
     //G
     auto bit_or_expression(bool allow_angle_operators = true) {
         return binary_expression<bit_or_expression_node> (
@@ -1911,7 +1911,7 @@ private:
 
     //G logical-and-expression:
     //G     bit-or-expression
-    //G     logical-and-expression && bit-or-expression
+    //G     logical-and-expression '&&' bit-or-expression
     //G
     auto logical_and_expression(bool allow_angle_operators = true) {
         return binary_expression<logical_and_expression_node> (
@@ -1924,7 +1924,7 @@ private:
     //  conditional-expression: // don't need intermediate production, just use:
     //G logical-or-expression:
     //G     logical-and-expression
-    //G     logical-or-expression || logical-and-expression
+    //G     logical-or-expression '||' logical-and-expression
     //G
     auto logical_or_expression(bool allow_angle_operators = true) {
         return binary_expression<logical_or_expression_node> (
@@ -1982,7 +1982,7 @@ private:
 
     //G expression-list:
     //G     parameter-direction-opt expression
-    //G     expression-list , expression
+    //G     expression-list ',' expression
     //G
     auto expression_list(source_position open_paren, bool inside_initializer = false) -> std::unique_ptr<expression_list_node> {
         auto pass = passing_style::in;
@@ -2043,8 +2043,8 @@ private:
     //G     type-qualifier-seq type-qualifier
     //G
     //G type-qualifier:
-    //G     const
-    //G     *
+    //G     'const'
+    //G     '*'
     //G
     auto type_id() -> std::unique_ptr<type_id_node>
     {
@@ -2094,13 +2094,13 @@ private:
     //GTODO     type-id is-type-constraint
     //G
     //G is-type-constraint
-    //G     is type-id
+    //G     'is' type-id
     //G
     //G is-value-constraint
-    //G     is expression
+    //G     'is' expression
     //G
     //G as-type-cast
-    //G     as type-id
+    //G     'as' type-id
     //G
     auto is_as_expression()
         -> std::unique_ptr<is_as_expression_node>
@@ -2170,10 +2170,10 @@ private:
     //GTODO     operator-function-id
     //G
     //G template-id:
-    //G     identifier < template-argument-list-opt >
+    //G     identifier '<' template-argument-list-opt '>'
     //G
     //G template-argument-list:
-    //G     template-argument-list , template-argument
+    //G     template-argument-list ',' template-argument
     //G
     //G template-argument:
     //G     # note: < > << >> are not allowed in expressions until new ( is opened
@@ -2256,11 +2256,11 @@ private:
     //G     member-name-specifier unqualified-id
     //G
     //G nested-name-specifier:
-    //G     ::
-    //G     unqualified-id ::
+    //G     '::'
+    //G     unqualified-id '::'
     //G
     //G member-name-specifier:
-    //G     unqualified-id .
+    //G     unqualified-id '.'
     //G
     auto qualified_id() -> std::unique_ptr<qualified_id_node>
     {
@@ -2345,7 +2345,7 @@ private:
 
 
     //G expression-statement:
-    //G     expression ;
+    //G     expression ';'
     //G     expression
     //G
     auto expression_statement(bool semicolon_required) -> std::unique_ptr<expression_statement_node>
@@ -2379,8 +2379,8 @@ private:
 
 
     //G selection-statement:
-    //G     if constexpr-opt expression compound-statement
-    //G     if constexpr-opt expression compound-statement else compound-statement
+    //G     'if' 'constexpr'-opt expression compound-statement
+    //G     'if' 'constexpr'-opt expression compound-statement 'else' compound-statement
     //G
     auto selection_statement() -> std::unique_ptr<selection_statement_node>
     {
@@ -2436,7 +2436,7 @@ private:
 
 
     //G return-statement:
-    //G     return expression-opt ;
+    //G     return expression-opt ';'
     //G
     auto return_statement() -> std::unique_ptr<return_statement_node>
     {
@@ -2475,12 +2475,12 @@ private:
 
 
     //G iteration-statement:
-    //G     while logical-or-expression next-clause-opt compound-statement
-    //G     do compound-statement while logical-or-expression next-clause-opt ;
-    //G     for expression next-clause-opt do unnamed-declaration
+    //G     'while' logical-or-expression next-clause-opt compound-statement
+    //G     'do' compound-statement 'while' logical-or-expression next-clause-opt ';'
+    //G     'for' expression next-clause-opt 'do' unnamed-declaration
     //G
     //G next-clause:
-    //G     next assignment-expression
+    //G     'next' assignment-expression
     //G
     auto iteration_statement() -> std::unique_ptr<iteration_statement_node>
     {
@@ -2602,9 +2602,9 @@ private:
 
 
     //G alternative:
-    //G     alt-name-opt is-type-constraint = statement
-    //G     alt-name-opt is-value-constraint = statement
-    //G     alt-name-opt as-type-cast = statement
+    //G     alt-name-opt is-type-constraint '=' statement
+    //G     alt-name-opt is-value-constraint '=' statement
+    //G     alt-name-opt as-type-cast '=' statement
     //G
     //G alt-name:
     //G     unqualified-id :
@@ -2612,22 +2612,6 @@ private:
     auto alternative() -> std::unique_ptr<alternative_node>
     {
         auto n = std::make_unique<alternative_node>();
-
-        ////  Check for an optional name (just one unqualified-id, no decomposition yet)
-        //if (curr() != "is" && curr() != "as") {
-        //    if (auto id = unqualified_id()) {
-        //        n->name = std::move(id);
-        //    }
-        //    else {
-        //        error("expected unqualified-id, 'is', or 'as' to start an inspect alternative");
-        //        return {};
-        //    }
-        //    if (curr().type() != lexeme::Colon) {
-        //        error("expected : after the introduced name in an inspect alternative");
-        //        return {};
-        //    }
-        //    next();
-        //}
 
         //  Now we should be as "is" or "as"
         //  (initial partial implementation, just "is/as id-expression")
@@ -2669,8 +2653,8 @@ private:
 
 
     //G inspect-expression:
-    //G     inspect constexpr-opt expression { alternative-seq-opt }
-    //G     inspect constexpr-opt expression -> type-id { alternative-seq-opt }
+    //G     'inspect' 'constexpr'-opt expression '{' alternative-seq-opt '}'
+    //G     'inspect' 'constexpr'-opt expression '->' type-id '{' alternative-seq-opt '}'
     //G
     //G alternative-seq:
     //G     alternative
@@ -2847,7 +2831,7 @@ private:
 
 
     //G compound-statement:
-    //G     { statement-seq-opt }
+    //G     '{' statement-seq-opt '}'
     //G
     //G statement-seq:
     //G     statement
@@ -2894,13 +2878,13 @@ private:
     //G     parameter-direction-opt declaration
     //G
     //G parameter-direction: one of
-    //G     in copy inout out move forward
+    //G     'in' 'copy' 'inout' 'out' 'move' 'forward'
     //G
     //G this-specifier:
-    //G     implicit
-    //G     virtual
-    //G     override
-    //G     final
+    //G     'implicit'
+    //G     'virtual'
+    //G     'override'
+    //G     'final'
     //G
     auto parameter_declaration(
         bool returns = false
@@ -2987,11 +2971,11 @@ private:
 
 
     //G parameter-declaration-list
-    //G     ( parameter-declaration-seq-opt )
+    //G     '(' parameter-declaration-seq-opt ')'
     //G
     //G parameter-declaration-seq:
     //G     parameter-declaration
-    //G     parameter-declaration-seq , parameter-declaration
+    //G     parameter-declaration-seq ',' parameter-declaration
     //G
     auto parameter_declaration_list(
         bool returns = false
@@ -3034,11 +3018,11 @@ private:
 
 
     //G contract:
-    //G     [ [ contract-kind id-expression-opt : logical-or-expression ] ]
-    //G     [ [ contract-kind id-expression-opt : logical-or-expression , string-literal ] ]
+    //G     '[' '[' contract-kind id-expression-opt ':' logical-or-expression ']' ']'
+    //G     '[' '[' contract-kind id-expression-opt ':' logical-or-expression ',' string-literal ']' ']'
     //G
     //G contract-kind: one of
-    //G     pre post assert
+    //G     'pre' 'post' 'assert'
     //G
     auto contract() -> std::unique_ptr<contract_node>
     {
@@ -3107,11 +3091,11 @@ private:
     //G     parameter-declaration-list throws-specifier-opt return-list-opt contract-seq-opt
     //G
     //G throws-specifier:
-    //G     throws
+    //G     'throws'
     //G
     //G return-list:
-    //G     -> type-id
-    //G     -> parameter_declaration_list
+    //G     '->' type-id
+    //G     '->' parameter_declaration_list
     //G
     //G contract-seq:
     //G     contract
@@ -3169,9 +3153,9 @@ private:
 
 
     //G unnamed-declaration:
-    //G     : function-type = statement
-    //G     : type-id-opt = statement
-    //G     : type-id
+    //G     ':' function-type '=' statement
+    //G     ':' type-id-opt '=' statement
+    //G     ':' type-id
     //G
     auto unnamed_declaration(source_position start, bool semicolon_required = true, bool captures_allowed = false) -> std::unique_ptr<declaration_node>
     {

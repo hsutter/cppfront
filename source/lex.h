@@ -186,6 +186,12 @@ auto as(lexeme l)
 };
 
 
+auto is_operator(lexeme l) -> bool
+{
+    return l <= lexeme::Not;
+}
+
+
 //-----------------------------------------------------------------------
 //
 //  token: represents a single token
@@ -314,6 +320,108 @@ auto lex_line(
 
     auto i = colno_t{0};
 
+    //  Token merging helpers
+    //
+    auto merge_cpp1_multi_token_fundamental_type_names = [&]()
+    {
+        //  If the last token is a non-Cpp1MultiKeyword, we might be at the end
+        //  of a sequence of Cpp1MultiKeyword tokens that need to be merged
+
+        //  First, check the last token... only proceed if it is NOT one of those
+        auto i = std::ssize(tokens)-1;
+        if (i < 0 || tokens[i].type() == lexeme::Cpp1MultiKeyword) {
+            return;
+        }
+
+        //  Next, check the two tokens before that... only proceed if they ARE those
+        --i;
+        if (i < 0 || tokens[i].type() != lexeme::Cpp1MultiKeyword) {
+            return;
+        }
+
+        //  OK, we have found the end of a sequence of 1 or more Cpp1MultiKeywords, so
+        //  replace them with a single synthesized token that contains all their text
+        // 
+        //  Note: It's intentional that this is a kind of token that can contain whitespace
+
+        //  Remember the last (non-Cpp1MultiKeyword) token so we can put it back
+        auto last_token = tokens.back();
+        tokens.pop_back();
+
+        assert(tokens.back().type() == lexeme::Cpp1MultiKeyword);
+        auto pos = tokens.back().position();
+        generated_text.push_back( tokens.back().to_string(true) );
+        tokens.pop_back();
+
+        while( !tokens.empty() && tokens.back().type() == lexeme::Cpp1MultiKeyword) {
+            generated_text.back() = tokens.back().to_string(true) + " " + generated_text.back();
+            pos = tokens.back().position();
+            tokens.pop_back();
+        }
+
+        tokens.push_back({
+            &generated_text.back()[0],
+            std::ssize(generated_text.back()),
+            pos,
+            lexeme::Keyword
+            });
+
+        tokens.push_back(last_token);
+    };
+
+    auto merge_operator_function_names = [&]()
+    {
+        auto i = std::ssize(tokens)-1;
+
+        //  If the third-to-last token is "operator", we may need to
+        //  merge an "operator@" name into a single identifier token
+
+        if (i >= 2 && tokens[i-2] == "operator") {
+
+            //  If the tokens after "operator" are ">" and without whitespace one of ">=" ">" "="
+            if (tokens[i-1].type() == lexeme::Greater &&
+                (tokens[i-1].position() == source_position{tokens[i].position().lineno, tokens[i].position().colno-1}) &&
+                (tokens[i].type() == lexeme::GreaterEq || tokens[i].type() == lexeme::Greater || tokens[i].type() == lexeme::Assignment))
+            {
+                //  Merge all three tokens into an identifier
+                generated_text.push_back( "operator" + tokens[i-1].to_string(true) + tokens[i].to_string(true) );
+                tokens.pop_back();
+                tokens.pop_back();
+                auto pos = tokens.back().position();
+                tokens.pop_back();
+                tokens.push_back({
+                    &generated_text.back()[0],
+                    std::ssize(generated_text.back()),
+                    pos,
+                    lexeme::Identifier
+                    });
+            }
+
+            //  Else if token after "operator" is an operator symbol
+            else if (is_operator(tokens[i-1].type()))
+            {
+                //  Merge just "operator" + the symbol into an identifier,
+                generated_text.push_back( "operator" + tokens[i-1].to_string(true) );
+                //  and preserve the last token separately
+                auto last_token = tokens.back();
+
+                tokens.pop_back();
+                tokens.pop_back();
+                auto pos = tokens.back().position();
+                tokens.pop_back();
+                tokens.push_back({
+                    &generated_text.back()[0],
+                    std::ssize(generated_text.back()),
+                    pos,
+                    lexeme::Identifier
+                    });
+                tokens.push_back(last_token);
+            }
+
+        }
+    };
+
+
     //  Local helper functions for readability
     //
     auto peek = [&](int num) {  return (i+num < std::ssize(line)) ? line[i+num] : '\0';  };
@@ -327,14 +435,18 @@ auto lex_line(
             type
             });
         i += num-1;
+
+        merge_cpp1_multi_token_fundamental_type_names();
+        merge_operator_function_names();
     };
+
 
     //-----------------------------------------------------
     //  These functions return the length of sequence if
     //  present at the current location, else 0
 
     //G simple-escape-sequence:
-    //G     \ { any member of the basic character set except u, U, or x }
+    //G     '\' { any member of the basic character set except u, U, or x }
     //G
     auto peek_is_simple_escape_sequence = [&](int offset) {
         auto peek1 = peek(offset);
@@ -347,7 +459,8 @@ auto lex_line(
     };
 
     //G hexadecimal-escape-sequence:
-    //G     \x {hexadecimal-digit}+
+    //G     '\x' hexadecimal-digit
+    //G     hexadecimal-escape-sequence hexadecimal-digit
     //G
     auto peek_is_hexadecimal_escape_sequence = [&](int offset)
     {
@@ -366,8 +479,8 @@ auto lex_line(
     };
 
     //G universal-character-name:
-    //G     \u { hexadecimal-digit }4
-    //G     \U { hexadecimal-digit }8
+    //G     '\u' hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit
+    //G     '\U' hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit
     //G
     auto peek_is_universal_character_name = [&](colno_t offset)
     {
@@ -410,7 +523,7 @@ auto lex_line(
     //G     basic-s-char
     //G
     //G basic-s-char:
-    //G     any member of the basic source character set except " \ or new-line
+    //G     any member of the basic source character set except '"' '\' or new-line
     //G
     //G c-char:
     //G     universal-character-name
@@ -418,7 +531,7 @@ auto lex_line(
     //G     basic-c-char
     //G
     //G basic-c-char:
-    //G     any member of the basic source character set except ' \ or new-line
+    //G     any member of the basic source character set except ''' '\' or new-line
     //G
     auto peek_is_sc_char = [&](int offset, char quote)
     {
@@ -433,7 +546,7 @@ auto lex_line(
 
     //G keyword:
     //G     any Cpp1-and-Cpp2 keyword
-    //G     one of: import module export is as
+    //G     one of: 'import' 'module' 'export' 'is' 'as'
     //G
     auto do_is_keyword = [&](std::regex const& r) {
         std::cmatch m;
@@ -501,67 +614,17 @@ auto lex_line(
         return do_is_keyword(multi_keys);
     };
 
-    auto merge_cpp1_multi_token_fundamental_type_names = [&]()
-    {
-        //  If the last token is a non-Cpp1MultiKeyword, we might be at the end
-        //  of a sequence of Cpp1MultiKeyword tokens that need to be merged
-
-        //  First, check the last token... only proceed if it is NOT one of those
-        auto i = std::ssize(tokens)-1;
-        if (i < 0 || tokens[i].type() == lexeme::Cpp1MultiKeyword) {
-            return;
-        }
-
-        //  Next, check the two tokens before that... only proceed if they ARE those
-        --i;
-        if (i < 0 || tokens[i].type() != lexeme::Cpp1MultiKeyword) {
-            return;
-        }
-
-        //  OK, we have found the end of a sequence of 1 or more Cpp1MultiKeywords, so
-        //  replace them with a single synthesized token that contains all their text
-        // 
-        //  Note: It's intentional that this is a kind of token that can contain whitespace
-
-        //  Remember the last (non-Cpp1MultiKeyword) token so we can put it back
-        auto last_token = tokens.back();
-        tokens.pop_back();
-
-        assert(tokens.back().type() == lexeme::Cpp1MultiKeyword);
-        auto pos = tokens.back().position();
-        generated_text.push_back( tokens.back().to_string(true) );
-        tokens.pop_back();
-
-        while( !tokens.empty() && tokens.back().type() == lexeme::Cpp1MultiKeyword) {
-            generated_text.back() = tokens.back().to_string(true) + " " + generated_text.back();
-            pos = tokens.back().position();
-            tokens.pop_back();
-        }
-
-        tokens.push_back({
-            &generated_text.back()[0],
-            std::ssize(generated_text.back()),
-            pos,
-            lexeme::Keyword
-            });
-
-        tokens.push_back(last_token);
-    };
-
-
     //
     //-----------------------------------------------------
 
     for ( ; i < ssize(line); ++i)
     {
-        merge_cpp1_multi_token_fundamental_type_names();
-
         auto peek1 = peek(1);
         auto peek2 = peek(2);
         auto peek3 = peek(3);
 
         //G encoding-prefix: one of
-        //G     u8 u
+        //G     'u8' 'u'
         //G
         auto is_encoding_prefix_and = [&](char next) {
             if (line[i] == next)                        { return 1; }
@@ -604,7 +667,11 @@ auto lex_line(
             //G     literal
             //G     operator-or-punctuator
             //G
-            //G operator-or-punctuator: one of
+            //G operator-or-punctuator:
+            //G     operator
+            //G     punctuator
+            //G
+            //G operator: one of
 
             switch (line[i]) {
 
@@ -614,7 +681,7 @@ auto lex_line(
             //  even if we may not keep their meanings for built-in types)
 
             //      /* and // comment starts
-            //G     /= /
+            //G     '/=' '/'
             break;case '/':
                 if (peek1 == '*') {
                     current_comment = "/*";
@@ -639,7 +706,7 @@ auto lex_line(
                     store(1, lexeme::Slash);
                 }
 
-            //G     <<= << <=> <= <
+            //G     '<<=' '<<' '<=>' '<=' '<'
             break;case '<':
                 if (peek1 == '<') {
                     if (peek2 == '=') { store(3, lexeme::LeftShiftEq); }
@@ -651,10 +718,8 @@ auto lex_line(
                 }
                 else { store(1, lexeme::Less); }
 
-            //  Note: It's deliberate that >> and >>= are not source tokens,
-            //        they will be synthesized from > > and > >= where legal
-            ////G     >>= >> >= >
-            //G     >= >
+            //  Note: >> and >>= are not source tokens, they are synthesized from > > and > >= where legal
+            //G     '>>=' '>>' '>=' '>'
             break;case '>':
                 //---------------------------------------------------------
                 //  Do not uncomment, see above Note
@@ -668,20 +733,20 @@ auto lex_line(
                 if (peek1 == '=') { store(2, lexeme::GreaterEq); }
                 else { store(1, lexeme::Greater); }
 
-            //G     ++ += +
+            //G     '++' '+=' '+'
             break;case '+':
                 if (peek1 == '+') { store(2, lexeme::PlusPlus); }
                 else if (peek1 == '=') { store(2, lexeme::PlusEq); }
                 else { store(1, lexeme::Plus); }
 
-            //G     -- -= -> -
+            //G     '--' '-=' '->' '-'
             break;case '-':
                 if (peek1 == '-') { store(2, lexeme::MinusMinus); }
                 else if (peek1 == '=') { store(2, lexeme::MinusEq); }
                 else if (peek1 == '>') { store(2, lexeme::Arrow); }
                 else { store(1, lexeme::Minus); }
 
-            //G     ||= || |= |
+            //G     '||=' '||' '|=' '|'
             break;case '|':
                 if (peek1 == '|') {
                     if (peek2 == '=') { store(3, lexeme::LogicalOrEq); }
@@ -690,7 +755,7 @@ auto lex_line(
                 else if (peek1 == '=') { store(2, lexeme::PipeEq); }
                 else { store(1, lexeme::Pipe); }
 
-            //G     &&= && &= &
+            //G     '&&=' '&&' '&=' '&'
             break;case '&':
                 if (peek1 == '&') {
                     if (peek2 == '=') { store(3, lexeme::LogicalAndEq); }
@@ -701,49 +766,51 @@ auto lex_line(
 
             //  Next, all the other operators that have a compound assignment form
 
-            //G     *= *
+            //G     '*=' '*'
             break;case '*':
                 if (peek1 == '=') { store(2, lexeme::MultiplyEq); }
                 else { store(1, lexeme::Multiply); }
 
-            //G     %= %
+            //G     '%=' '%'
             break;case '%':
                 if (peek1 == '=') { store(2, lexeme::ModuloEq); }
                 else { store(1, lexeme::Modulo); }
 
-            //G     ^= ^
+            //G     '^=' '^'
             break;case '^':
                 if (peek1 == '=') { store(2, lexeme::CaretEq); }
                 else { store(1, lexeme::Caret); }
 
-            //G     ~= ~
+            //G     '~=' '~'
             break;case '~':
                 if (peek1 == '=') { store(2, lexeme::TildeEq); }
                 else { store(1, lexeme::Tilde); }
 
-            //G     == =
+            //G     '==' '='
             break;case '=':
                 if (peek1 == '=') { store(2, lexeme::EqualComparison); }
                 else { store(1, lexeme::Assignment); }
 
-            //G     !=
+            //G     '!=' '!'
             break;case '!':
                 if (peek1 == '=') { store(2, lexeme::NotEqualComparison); }
                 else { store(1, lexeme::Not); }
 
-            //G     ... .
+            //G
+            //G punctuator: one of
+            //G     '...' '.'
             break;case '.':
                 if (peek1 == '.' && peek2 == '.') { store(3, lexeme::Ellipsis); }
                 else { store(1, lexeme::Dot); }
 
-            //G     :: :
+            //G     '::' ':'
             break;case ':':
                 if (peek1 == ':') { store(2, lexeme::Scope); }
                 else { store(1, lexeme::Colon); }
 
             //  All the other single-character tokens
 
-            //G     { } ( ) [ ] ; , ? $
+            //G     '{' '}' '(' ')' '[' ']' ';' ',' '?' '$'
             //G
 
             break;case '{':
@@ -776,6 +843,7 @@ auto lex_line(
             break;case '$':
                 store(1, lexeme::Dollar);
 
+            //G
             //G literal:
             //G     integer-literal
             //G     character-literal
@@ -790,14 +858,16 @@ auto lex_line(
             //G     decimal-literal
             //G
             //G binary-literal:
-            //G     0b binary-digit
-            //G     0B binary-digit
-            //G     binary-literal { ' | binary-digit }*
+            //G     '0b' binary-digit
+            //G     '0B' binary-digit
+            //G     binary-literal binary-digit
+            //G     binary-literal ''' binary-digit
             //G
             //G hexadecimal-literal:
-            //G     0x hexadecimal-digit
-            //G     0X hexadecimal-digit
-            //G     hexadecimal-literal { ' | hexadecimal-digit }*
+            //G     '0x' hexadecimal-digit
+            //G     '0X' hexadecimal-digit
+            //G     hexadecimal-literal hexadecimal-digit
+            //G     hexadecimal-literal ''' hexadecimal-digit
             //G
             break;case '0': {
                 auto j = 3;
@@ -839,7 +909,9 @@ auto lex_line(
                 }
 
                 //G decimal-literal:
-                //G     digit { ' | digit }*
+                //G     digit
+                //G     decimal-literal digit
+                //G     decimal-literal ''' digit
                 //G
                 //G floating-point-literal:
                 //G     digit { ' | digit }* . digit { ' | digit }*
@@ -865,7 +937,12 @@ auto lex_line(
                     }
                 }
 
-                //G string-literal: { encoding-prefix }? " { s-char }* "
+                //G string-literal:
+                //G     encoding-prefix-opt '"' s-char-seq-opt '"'
+                //G
+                //G s-char-seq:
+                //G     s-char
+                //G     s-char-seq s-char
                 //G
                 else if (auto j = is_encoding_prefix_and('\"')) {
                     while (auto len = peek_is_sc_char(j, '\"')) { j += len; }
@@ -879,7 +956,12 @@ auto lex_line(
                     store(j+1, lexeme::StringLiteral);
                 }
 
-                //G character-literal: { encoding-prefix }? ' { c-char }* '
+                //G character-literal:
+                //G     encoding-prefix-opt ''' c-char-seq-opt '''
+                //G
+                //G c-char-seq:
+                //G     c-char
+                //G     c-char-seq c-char
                 //G
                 else if (auto j = is_encoding_prefix_and('\'')) {
                     auto len = peek_is_sc_char(j, '\'');

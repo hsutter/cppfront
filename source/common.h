@@ -138,31 +138,36 @@ struct error
 //-----------------------------------------------------------------------
 //
 
-//G binary-digit: one of
-//G     0 1
+//G binary-digit:
+//G     one of '0' '1'
 //G
 auto is_binary_digit(char c) -> bool
 {
     return c == '0' || c == '1';
 }
 
-//G hexadecimal-digit: one of
-//G     0 1 2 3 4 5 6 7 8 9 A B C D E F
-//G
-auto is_hexadecimal_digit(char c) -> bool
-{
-    return isxdigit(c);
-}
-
 //G digit: one of
-//G     0 1 2 3 4 5 6 7 8 9
+//G     binary-digit
+//G     one of '2' '3' '4' '5' '6' '7' '8' '9'
 //G
 auto is_digit(char c) -> bool
 {
     return isdigit(c);
 }
 
-//G nondigit: { a..z | A..Z | _ }
+//G hexadecimal-digit:
+//G     digit
+//G     one of 'A' 'B' 'C' 'D' 'E' 'F'
+//G
+auto is_hexadecimal_digit(char c) -> bool
+{
+    return isxdigit(c);
+}
+
+//G nondigit:
+//G     one of 'a'..'z'
+//G     one of 'A'..'Z'
+//G     _
 //G
 auto is_nondigit(char c) -> bool
 {
@@ -186,7 +191,10 @@ auto is_identifier_continue(char c) -> bool
     return is_digit(c) || is_nondigit(c);
 }
 
-//G identifier: identifier-start { identifier-continue }*
+//G identifier:
+//G     identifier-start
+//G     identifier identifier-continue
+//G     'operator' operator
 //G
 auto starts_with_identifier(std::string_view s) -> int
 {
