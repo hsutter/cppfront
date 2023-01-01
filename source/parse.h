@@ -531,6 +531,10 @@ struct type_id_node
     source_position pos;
 
     std::vector<token const*> pc_qualifiers;
+    token const* address_of                 = {};
+    token const* dereference_of             = {};
+    int dereference_cnt                     = {};
+    token const* suspicious_initialization  = {};
 
     enum active { empty=0, qualified, unqualified, keyword };
     std::variant<
@@ -3307,6 +3311,24 @@ private:
                     error("pointer cannot be initialized to null or int - leave it uninitialized and then set it to a non-null value when you have one");
                     violates_lifetime_safety = true;
                     throw std::runtime_error("null initialization detected");
+                }
+            }
+
+            if (deduced_type) {
+                auto& type = std::get<declaration_node::object>(n->type);
+                if (peek(1)->type() == lexeme::Ampersand) {
+                    type->address_of = &curr();
+                }
+                else if (peek(1)->type() == lexeme::Multiply) {
+                    type->dereference_of = &curr();
+                    for (int i = 1; peek(i)->type() == lexeme::Multiply; ++i)
+                        type->dereference_cnt += 1;
+                }
+                else if (
+                    (peek(1)->type() == lexeme::LeftParen && curr().type() != lexeme::Colon)
+                    || curr().type() == lexeme::Identifier 
+                ) {
+                    type->suspicious_initialization = &curr();
                 }
             }
 
