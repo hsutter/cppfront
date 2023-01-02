@@ -3,30 +3,30 @@ pure2-cpp1-multitoken-fundamental-types-error.cpp2(3,8): error: 'signed short in
 pure2-cpp1-multitoken-fundamental-types-error.cpp2(3,8): error: 'signed short int' is an old-style C/C++ multi-word keyword type
     - most such types should be used only for interoperability with older code
     - using those when you need them is fine, but name them with these short names instead:
-        ushort, uint, ulong, longlong, ulonglong, __schar, __uchar
+        short, ushort, int, uint, long, ulong, longlong, ulonglong, longdouble, __schar, __uchar
     - see also cpp2util.h > "Convenience names for integer types"
 pure2-cpp1-multitoken-fundamental-types-error.cpp2(4,8): error: 'short int signed' - did you mean 'short'?
 pure2-cpp1-multitoken-fundamental-types-error.cpp2(4,8): error: 'short int signed' is an old-style C/C++ multi-word keyword type
     - most such types should be used only for interoperability with older code
     - using those when you need them is fine, but name them with these short names instead:
-        ushort, uint, ulong, longlong, ulonglong, __schar, __uchar
+        short, ushort, int, uint, long, ulong, longlong, ulonglong, longdouble, __schar, __uchar
     - see also cpp2util.h > "Convenience names for integer types"
 pure2-cpp1-multitoken-fundamental-types-error.cpp2(5,8): error: 'long long unsigned int' - did you mean 'ulonglong'?
 pure2-cpp1-multitoken-fundamental-types-error.cpp2(5,8): error: 'long long unsigned int' is an old-style C/C++ multi-word keyword type
     - most such types should be used only for interoperability with older code
     - using those when you need them is fine, but name them with these short names instead:
-        ushort, uint, ulong, longlong, ulonglong, __schar, __uchar
+        short, ushort, int, uint, long, ulong, longlong, ulonglong, longdouble, __schar, __uchar
     - see also cpp2util.h > "Convenience names for integer types"
 pure2-cpp1-multitoken-fundamental-types-error.cpp2(6,8): error: 'long double' - did you mean 'long'?
 pure2-cpp1-multitoken-fundamental-types-error.cpp2(6,8): error: 'long double' is an old-style C/C++ multi-word keyword type
     - most such types should be used only for interoperability with older code
     - using those when you need them is fine, but name them with these short names instead:
-        ushort, uint, ulong, longlong, ulonglong, __schar, __uchar
+        short, ushort, int, uint, long, ulong, longlong, ulonglong, longdouble, __schar, __uchar
     - see also cpp2util.h > "Convenience names for integer types"
 pure2-cpp1-multitoken-fundamental-types-error.cpp2(7,8): error: 'unsigned char' - did you mean 'u8' (usually best) or '__uchar'?
 pure2-cpp1-multitoken-fundamental-types-error.cpp2(7,8): error: 'unsigned char' is an old-style C/C++ multi-word keyword type
     - most such types should be used only for interoperability with older code
     - using those when you need them is fine, but name them with these short names instead:
-        ushort, uint, ulong, longlong, ulonglong, __schar, __uchar
+        short, ushort, int, uint, long, ulong, longlong, ulonglong, longdouble, __schar, __uchar
     - see also cpp2util.h > "Convenience names for integer types"
 

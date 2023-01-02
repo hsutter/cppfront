@@ -1008,6 +1008,29 @@ struct function_type_node
 };
 
 
+//struct udt_type_node
+//{
+//    source_position pos;
+//    std::vector<id_expression_node> metaclass_names;
+//
+//    udt_type_node( source_position pos ) : pos{pos} { }
+//
+//    auto position() const -> source_position
+//    {
+//        return pos;
+//    }
+//
+//    auto visit(auto& v, int depth) -> void
+//    {
+//        v.start(*this, depth);
+//        for (auto const& m : metaclass_names) {
+//            m->visit(v, depth+1);
+//        }
+//        v.end(*this, depth);
+//    }
+//};
+
+
 struct declaration_node
 {
     //  Declared first, because it should outlive any owned
@@ -1021,6 +1044,7 @@ struct declaration_node
     std::variant<
         std::unique_ptr<function_type_node>,
         std::unique_ptr<type_id_node>
+        //std::unique_ptr<udt_type_node>
     > type;
 
     source_position                 equal_sign = {};
@@ -1570,7 +1594,7 @@ private:
     //G     primary-expression
     //G     postfix-expression postfix-operator     [Note: without whitespace before the operator]
     //G     postfix-expression '[' expression-list ']'
-    //G     postfix-expression '(' expression-list-opt ')'
+    //G     postfix-expression '(' expression-list? ')'
     //G     postfix-expression '.' id-expression
     //G
     auto postfix_expression()
@@ -1981,7 +2005,7 @@ private:
     }
 
     //G expression-list:
-    //G     parameter-direction-opt expression
+    //G     parameter-direction? expression
     //G     expression-list ',' expression
     //G
     auto expression_list(source_position open_paren, bool inside_initializer = false) -> std::unique_ptr<expression_list_node> {
@@ -2035,8 +2059,8 @@ private:
 
 
     //G type-id:
-    //G     type-qualifier-seq-opt qualified-id
-    //G     type-qualifier-seq-opt unqualified-id
+    //G     type-qualifier-seq? qualified-id
+    //G     type-qualifier-seq? unqualified-id
     //G
     //G type-qualifier-seq:
     //G     type-qualifier
@@ -2170,7 +2194,7 @@ private:
     //GTODO     operator-function-id
     //G
     //G template-id:
-    //G     identifier '<' template-argument-list-opt '>'
+    //G     identifier '<' template-argument-list? '>'
     //G
     //G template-argument-list:
     //G     template-argument-list ',' template-argument
@@ -2379,8 +2403,8 @@ private:
 
 
     //G selection-statement:
-    //G     'if' 'constexpr'-opt expression compound-statement
-    //G     'if' 'constexpr'-opt expression compound-statement 'else' compound-statement
+    //G     'if' 'constexpr'? expression compound-statement
+    //G     'if' 'constexpr'? expression compound-statement 'else' compound-statement
     //G
     auto selection_statement() -> std::unique_ptr<selection_statement_node>
     {
@@ -2436,7 +2460,7 @@ private:
 
 
     //G return-statement:
-    //G     return expression-opt ';'
+    //G     return expression? ';'
     //G
     auto return_statement() -> std::unique_ptr<return_statement_node>
     {
@@ -2475,9 +2499,9 @@ private:
 
 
     //G iteration-statement:
-    //G     'while' logical-or-expression next-clause-opt compound-statement
-    //G     'do' compound-statement 'while' logical-or-expression next-clause-opt ';'
-    //G     'for' expression next-clause-opt 'do' unnamed-declaration
+    //G     'while' logical-or-expression next-clause? compound-statement
+    //G     'do' compound-statement 'while' logical-or-expression next-clause? ';'
+    //G     'for' expression next-clause? 'do' unnamed-declaration
     //G
     //G next-clause:
     //G     'next' assignment-expression
@@ -2602,9 +2626,9 @@ private:
 
 
     //G alternative:
-    //G     alt-name-opt is-type-constraint '=' statement
-    //G     alt-name-opt is-value-constraint '=' statement
-    //G     alt-name-opt as-type-cast '=' statement
+    //G     alt-name? is-type-constraint '=' statement
+    //G     alt-name? is-value-constraint '=' statement
+    //G     alt-name? as-type-cast '=' statement
     //G
     //G alt-name:
     //G     unqualified-id :
@@ -2653,8 +2677,8 @@ private:
 
 
     //G inspect-expression:
-    //G     'inspect' 'constexpr'-opt expression '{' alternative-seq-opt '}'
-    //G     'inspect' 'constexpr'-opt expression '->' type-id '{' alternative-seq-opt '}'
+    //G     'inspect' 'constexpr'? expression '{' alternative-seq? '}'
+    //G     'inspect' 'constexpr'? expression '->' type-id '{' alternative-seq? '}'
     //G
     //G alternative-seq:
     //G     alternative
@@ -2831,7 +2855,7 @@ private:
 
 
     //G compound-statement:
-    //G     '{' statement-seq-opt '}'
+    //G     '{' statement-seq? '}'
     //G
     //G statement-seq:
     //G     statement
@@ -2875,7 +2899,7 @@ private:
 
 
     //G parameter-declaration:
-    //G     parameter-direction-opt declaration
+    //G     parameter-direction? declaration
     //G
     //G parameter-direction: one of
     //G     'in' 'copy' 'inout' 'out' 'move' 'forward'
@@ -2971,7 +2995,7 @@ private:
 
 
     //G parameter-declaration-list
-    //G     '(' parameter-declaration-seq-opt ')'
+    //G     '(' parameter-declaration-seq? ')'
     //G
     //G parameter-declaration-seq:
     //G     parameter-declaration
@@ -3018,8 +3042,8 @@ private:
 
 
     //G contract:
-    //G     '[' '[' contract-kind id-expression-opt ':' logical-or-expression ']' ']'
-    //G     '[' '[' contract-kind id-expression-opt ':' logical-or-expression ',' string-literal ']' ']'
+    //G     '[' '[' contract-kind id-expression? ':' logical-or-expression ']' ']'
+    //G     '[' '[' contract-kind id-expression? ':' logical-or-expression ',' string-literal ']' ']'
     //G
     //G contract-kind: one of
     //G     'pre' 'post' 'assert'
@@ -3088,7 +3112,7 @@ private:
 
 
     //G function-type:
-    //G     parameter-declaration-list throws-specifier-opt return-list-opt contract-seq-opt
+    //G     parameter-declaration-list throws-specifier? return-list? contract-seq?
     //G
     //G throws-specifier:
     //G     'throws'
@@ -3154,8 +3178,13 @@ private:
 
     //G unnamed-declaration:
     //G     ':' function-type '=' statement
-    //G     ':' type-id-opt '=' statement
+    //G     ':' type-id? '=' statement
     //G     ':' type-id
+    //G     ':' 'type' meta-constraints? '=' statement
+    //G
+    //G meta-constraints:
+    //G     'is' id-expression
+    //G     meta-constraints ',' id-expression
     //G
     auto unnamed_declaration(source_position start, bool semicolon_required = true, bool captures_allowed = false) -> std::unique_ptr<declaration_node>
     {
@@ -3179,7 +3208,13 @@ private:
 
         //  Next is an an optional type
 
-        //  It could be a function type, declaring a function
+        ////  It could be "type," declaring a user-defined type
+        //if (auto t = udt_type()) {
+        //    n->type = std::move(t);
+        //    assert (n->type.index() == declaration_node::udt);
+        //}
+
+        //  Or a function type, declaring a function
         if (auto t = function_type()) {
             n->type = std::move(t);
             assert (n->type.index() == declaration_node::function);
@@ -3316,6 +3351,15 @@ private:
             return {};
         }
 
+        if (n->parent_scope && n->is(declaration_node::function) && n->parent_scope->is(declaration_node::function)) {
+            assert (id->get_token());
+            auto name = id->get_token()->to_string(true);
+            errors.emplace_back(
+                curr().position(),
+                "(temporary alpha limitation) local functions like '" + name + ": (/*params*/) = {/*body*/}' are not currently supported - write a local variable initialized with an unnamed function like '" + name + " := :(/*params*/) = {/*body*/};' instead (add ':=' and ';')"
+            );
+        }
+
         n->identifier = std::move(id);
         return n;
     }
@@ -3326,7 +3370,7 @@ private:
     //G     declaration-seq declaration
     //G
     //G translation-unit:
-    //G     declaration-seq-opt
+    //G     declaration-seq?
     //
     auto translation_unit() -> std::unique_ptr<translation_unit_node>
     {
@@ -3414,6 +3458,11 @@ public:
     auto start(prefix_expression_node const&, int indent) -> void
     {
         o << pre(indent) << "prefix-expression\n";
+    }
+
+    auto start(is_as_expression_node const&, int indent) -> void
+    {
+        o << pre(indent) << "is-as-expression\n";
     }
 
     template<String Name, typename Term>
@@ -3504,6 +3553,11 @@ public:
         }
     }
 
+    //auto start(udt_type_node const&, int indent) -> void
+    //{
+    //    o << pre(indent) << "user-defined type\n";
+    //}
+
     auto start(function_type_node const& n, int indent) -> void
     {
         o << pre(indent) << "function\n";
@@ -3522,7 +3576,8 @@ public:
 
     auto start(declaration_node const& n, int indent) -> void
     {
-        o << pre(indent) << "declaration\n";
+        o << pre(indent) << "declaration [" << &n << "]\n";
+        o << pre(indent+1) << "parent: [" << n.parent_scope << "]\n";
         if (!n.captures.members.empty()) {
             o << pre(indent+1) << "captures: " << n.captures.members.size() << "\n";
         }

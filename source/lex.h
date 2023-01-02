@@ -413,7 +413,7 @@ auto lex_line(
                 "'" + tokens.back().to_string(true) + "' is an old-style C/C++ multi-word keyword type\n"
                 "    - most such types should be used only for interoperability with older code\n"
                 "    - using those when you need them is fine, but name them with these short names instead:\n"
-                "        ushort, uint, ulong, longlong, ulonglong, __schar, __uchar\n"
+                "        short, ushort, int, uint, long, ulong, longlong, ulonglong, longdouble, __schar, __uchar\n"
                 "    - see also cpp2util.h > \"Convenience names for integer types\""
             );
         }
@@ -990,7 +990,7 @@ auto lex_line(
                 }
 
                 //G string-literal:
-                //G     encoding-prefix-opt '"' s-char-seq-opt '"'
+                //G     encoding-prefix? '"' s-char-seq? '"'
                 //G
                 //G s-char-seq:
                 //G     s-char
@@ -1009,7 +1009,7 @@ auto lex_line(
                 }
 
                 //G character-literal:
-                //G     encoding-prefix-opt ''' c-char-seq-opt '''
+                //G     encoding-prefix? ''' c-char-seq? '''
                 //G
                 //G c-char-seq:
                 //G     c-char

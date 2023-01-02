@@ -2493,7 +2493,7 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(declaration_node const& n, std::string const& in_expression_intro = {}) -> void
+    auto emit(declaration_node const& n, std::string const& capture_intro = {}) -> void
     {
         //  If this is a function that has multiple return values,
         //  first we need to emit the struct that contains the returns
@@ -2529,9 +2529,9 @@ public:
 
             //  If this is at expression scope, we can't emit "[[nodiscard]] auto name"
             //  so print the provided intro instead, which will be a lambda-capture-list
-            if (in_expression_intro != "") {
+            if (capture_intro != "") {
                 assert (!n.identifier);
-                printer.print_cpp2(in_expression_intro, n.position());
+                printer.print_cpp2(capture_intro, n.position());
                 emit( *func, nullptr );
             }
             else {
