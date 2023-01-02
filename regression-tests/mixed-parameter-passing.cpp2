@@ -1,7 +1,7 @@
 
-#include <chrono>
-#include <random>
 #include <string>
+#include <cstdlib>
+#include <ctime>
 
 copy_from: (copy x:_) = { }
 
@@ -17,8 +17,7 @@ parameter_styles: (
     z++;
     b += "plugh";
 
-    // the standard mandates that std::mt19937()() == 3499211612
-    if std::mt19937()()%2 {
+    if std::rand()%2 {
         z++;
         copy_from(b);   // definite last use
     }
@@ -32,7 +31,7 @@ parameter_styles: (
 
     copy_from(z);
 
-    if std::chrono::system_clock::now().time_since_epoch().count()%2 == 0 {
+    if std::time(nullptr)%2 == 0 {
         copy_from(z);
     }
 

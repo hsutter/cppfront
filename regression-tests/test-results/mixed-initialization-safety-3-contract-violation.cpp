@@ -15,8 +15,13 @@ auto fill(
     ) -> void;
 #line 26 "mixed-initialization-safety-3-contract-violation.cpp2"
 auto print_decorated(auto const& x) -> void;
-#line 30 "mixed-initialization-safety-3-contract-violation.cpp2"
-[[nodiscard]] auto flip_a_coin() -> bool;
+
+// for test determinism, force "fill" branch
+bool flip_a_coin() {
+    // Change std::mt19937 to std::random_device for non-deterministic PRNG
+    static std::mt19937 rand; 
+    return rand() % 2 == 1;
+}
 
 //=== Cpp2 definitions ==========================================================
 
@@ -46,8 +51,4 @@ auto fill(
 }
 
 auto print_decorated(auto const& x) -> void { std::cout << ">> [" << x << "]\n"; }
-
-// for test determinism, force "fill" branch
-// the standard mandates that std::mt19937()() == 3499211612
-[[nodiscard]] auto flip_a_coin() -> bool { return std::mt19937()() % 2 == 1; }
 

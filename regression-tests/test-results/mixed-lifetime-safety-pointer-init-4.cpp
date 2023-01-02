@@ -7,10 +7,15 @@
 #include <random>
 
 [[nodiscard]] auto main() -> int;
-#line 22 "mixed-lifetime-safety-pointer-init-4.cpp2"
+#line 21 "mixed-lifetime-safety-pointer-init-4.cpp2"
 auto print_and_decorate(auto const& thing) -> void;
-#line 24 "mixed-lifetime-safety-pointer-init-4.cpp2"
+#line 23 "mixed-lifetime-safety-pointer-init-4.cpp2"
 
+bool flip_a_coin() {
+    // Change std::mt19937 to std::random_device for non-deterministic PRNG
+    static std::mt19937 rand; 
+    return rand() % 2 == 1;
+}
 
 //=== Cpp2 definitions ==========================================================
 
@@ -22,8 +27,7 @@ auto print_and_decorate(auto const& thing) -> void;
     cpp2::deferred_init<int*> p; 
 
     // ... more code ...
-    // the standard mandates that std::mt19937()() == 3499211612
-    if (std::mt19937()() % 2 == 1) {
+    if (flip_a_coin()) {
         p.construct(&y);
     }
     else {

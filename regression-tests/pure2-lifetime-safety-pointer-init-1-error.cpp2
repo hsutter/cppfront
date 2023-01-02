@@ -1,12 +1,10 @@
-#include <random>
 
 main: () -> int = {
     x: int = 42;
     p: *int;
 
     // ... more code ...
-    // the standard mandates that std::mt19937()() == 3499211612
-    if std::mt19937()()%2 {
+    if std::rand()%2 {
         // p = nullptr;
     }
     else {

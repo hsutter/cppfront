@@ -23,6 +23,12 @@ int main() {
     print("b", b);
 }
 
+bool flip_a_coin() {
+    // Change std::mt19937 to std::random_device for non-deterministic PRNG
+    static std::mt19937 rand; 
+    return rand() % 2 == 0;
+}
+
 //=== Cpp2 definitions ==========================================================
 
 #line 5 "mixed-multiple-return-values.cpp2"
@@ -36,7 +42,7 @@ int main() {
     i.construct(10);
 
     // the standard mandates that std::mt19937()() == 3499211612
-    if (std::mt19937()() % 2 == 0) {
+    if (flip_a_coin()) {
         s.construct("xyzzy");
     }
     else {
