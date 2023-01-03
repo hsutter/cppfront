@@ -2108,12 +2108,7 @@ public:
     {
         auto add_parens = should_add_expression_list_parens() && !n.inside_initializer;
         if (add_parens) {
-            if (n.expressions.empty()) {
-                printer.print_cpp2( "{", n.position());
-            }
-            else {
-                printer.print_cpp2( "(", n.position());
-            }
+            printer.print_cpp2( *n.open_paren, n.position());
         }
 
         auto first = true;
@@ -2163,12 +2158,7 @@ public:
         }
 
         if (add_parens) {
-            if (n.expressions.empty()) {
-                printer.print_cpp2( "}", n.position());
-            }
-            else {
-                printer.print_cpp2( ")", n.position());
-            }
+            printer.print_cpp2( *n.close_paren, n.position());
         }
         //  We want to consume only one of these
         consumed_expression_list_parens();
@@ -2346,7 +2336,8 @@ public:
             printer.print_cpp2( "{\n", n.position() );
         }
         else {
-            printer.print_cpp2( "(", n.pos_open_paren );
+            assert(n.open_paren);
+            printer.print_cpp2( "(", n.open_paren->position() );
         }
 
         //  So we don't get cute about text-aligning the first parameter when it's on a new line
@@ -2372,8 +2363,9 @@ public:
         else {
             //  Position heuristic (aka hack): Avoid emitting extra whitespace before )
             //  beyond column 10
-            auto col = std::min( n.pos_close_paren.colno, colno_t{10} );
-            printer.print_cpp2( ")", { n.pos_close_paren.lineno, col } );
+            assert(n.close_paren);
+            auto col = std::min( n.close_paren->position().colno, colno_t{10});
+            printer.print_cpp2( ")", { n.close_paren->position().lineno, col});
         }
 
         in_parameter_list = false;

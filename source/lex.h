@@ -96,27 +96,35 @@ enum class lexeme : std::int8_t {
     Keyword,
     Cpp1MultiKeyword,
     Cpp2FixedType,
-    Identifier
+    Identifier,
+    None = 127
 };
 
-auto is_literal(lexeme l) {
+auto is_literal(lexeme l) -> bool {
     switch (l) {
-    break;case lexeme::FloatLiteral:        
-          case lexeme::BinaryLiteral:       
-          case lexeme::DecimalLiteral:      
-          case lexeme::HexadecimalLiteral:  
-          case lexeme::StringLiteral:       
+    break;case lexeme::FloatLiteral:
+          case lexeme::BinaryLiteral:
+          case lexeme::DecimalLiteral:
+          case lexeme::HexadecimalLiteral:
+          case lexeme::StringLiteral:
           case lexeme::CharacterLiteral:    return true;
     break;default:                          return false;
     }
 }
 
-//  TODO: Remove the duplication above/below with a variadic macro,
-//        but for now it's simpler just to write it out
+auto close_paren_type(lexeme l) -> lexeme {
+    switch (l) {
+    break;case lexeme::LeftBrace:   return lexeme::RightBrace;
+    break;case lexeme::LeftBracket: return lexeme::RightBracket;
+    break;case lexeme::LeftParen:   return lexeme::RightParen;
+    break;default:                  return lexeme::None;
+    }
+}
+
 
 template<typename T>
     requires std::is_same_v<T, std::string>
-auto as(lexeme l)
+auto as(lexeme l) -> std::string
 {
     switch (l) {
     break;case lexeme::SlashEq:             return "SlashEq";
@@ -181,6 +189,7 @@ auto as(lexeme l)
     break;case lexeme::Cpp1MultiKeyword:    return "Cpp1MultiKeyword";
     break;case lexeme::Cpp2FixedType:       return "Cpp2FixedType";
     break;case lexeme::Identifier:          return "Identifier";
+    break;case lexeme::None:                return "(NONE)";
     break;default:                          return "INTERNAL-ERROR";
     }
 };

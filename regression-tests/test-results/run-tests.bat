@@ -1,7 +1,4 @@
 @echo off
-REM This is intended to be run in the /test-results directory
-REM A copy is in the parent directory just for convenience in case of accidental deletion.
-REM
 del *.cpp *.output
 copy ..\*.cpp2 .
 set count=0
