@@ -1,0 +1,41 @@
+fun: (inout i:int) -> *int = {
+    return i&;
+}
+
+fun2: (inout i:int) -> (result : *int) = {
+    result = i&;
+}
+
+main: (argc : int, argv : **char) -> int = {
+    a:     int = 2;
+    pa:   *int = a&;
+    ppa: **int = pa&;
+
+    pa = 0;       // caught
+
+    pa2:= ppa*;
+    pa2 = 0;      // caught
+
+    pa3 := a&;
+    pa3 = 0;      // caught
+    pa3 += 2;     // caught
+
+    ppa2 := pa2&;
+    pa4 := ppa2*;
+    pa4 = 0;      // caught
+
+    pppa := ppa&;
+    pa5 := pppa**;
+    pa5 = 0;      // caught
+
+    fun(a)++;     // caught
+    fp := fun(a);
+    fp = 0;       // caught
+
+    f := fun(a)*;
+
+    fp2 := fun2(a).result;
+    fp2--;        // not caught :(
+
+    return a * pa* * ppa**; // 8
+}
