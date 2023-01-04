@@ -1635,7 +1635,7 @@ private:
             return {};
         }
 
-        while (
+        while ( !done() && (
             (is_postfix_operator(curr().type())
                 //  Postfix operators must be lexically adjacent
                 && curr().position().lineno == peek(-1)->position().lineno
@@ -1644,6 +1644,7 @@ private:
             curr().type() == lexeme::LeftBracket ||
             curr().type() == lexeme::LeftParen ||
             curr().type() == lexeme::Dot
+            )
             )
         {
             //  these can't be unary operators if followed by a (, identifier, or literal
@@ -1773,7 +1774,7 @@ private:
         auto n = std::make_unique<Binary>();
         if ( (n->expr = term()) )
         {
-            while (true)
+            while (!done())
             {
                 typename Binary::term t{};
 
@@ -2171,7 +2172,7 @@ private:
         auto is_found = false;
         auto as_found = false;
 
-        while (curr() == "is" || curr() == "as")
+        while (!done() && (curr() == "is" || curr() == "as"))
         {
             if (curr() == "is") {
                 if (is_found) {
@@ -2412,7 +2413,7 @@ private:
             return {};
         }
 
-        if (semicolon_required && curr().type() != lexeme::Semicolon &&
+        if (semicolon_required && (done() || curr().type() != lexeme::Semicolon) &&
             peek(-1)->type() != lexeme::Semicolon
                 //  this last peek(-1)-condition is a hack (? or is it just
                 //  maybe elegant? I'm torn) so that code like
@@ -2426,7 +2427,7 @@ private:
         {
             return {};
         }
-        if (curr().type() == lexeme::Semicolon) {
+        if (!done() && curr().type() == lexeme::Semicolon) {
             n->has_semicolon = true;
             next();
         }
