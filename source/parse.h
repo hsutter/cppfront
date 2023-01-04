@@ -2113,6 +2113,10 @@ private:
             assert (n->id.index() == type_id_node::keyword);
             return n;
         }
+
+        if (!n->pc_qualifiers.empty()) {
+            error("'*'/'const' type qualifiers must be followed by a type name");
+        }
         return {};
     }
 
