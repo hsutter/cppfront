@@ -1687,8 +1687,9 @@ private:
             if (term.op->type() == lexeme::LeftBracket)
             {
                 term.expr_list = expression_list(term.op);
-                if (!term.expr_list) {
-                    error("subscript expression [ ] must not be empty");
+                if (!term.expr_list || term.expr_list->expressions.empty()) {
+                    error("subscript expression [ ] must not be empty (if you were trying to name a C-style array type, use 'std::array' instead)");
+                    next();
                     return {};
                 }
                 if (curr().type() != lexeme::RightBracket) {
@@ -2121,26 +2122,30 @@ private:
             n->pos = id->position();
             n->id  = std::move(id);
             assert (n->id.index() == type_id_node::qualified);
-            return n;
         }
-        if (auto id = unqualified_id()) {
+        else if (auto id = unqualified_id()) {
             n->pos = id->position();
             n->id  = std::move(id);
             assert (n->id.index() == type_id_node::unqualified);
-            return n;
         }
-        if (curr().type() == lexeme::Keyword || curr().type() == lexeme::Cpp2FixedType) {
+        else if (curr().type() == lexeme::Keyword || curr().type() == lexeme::Cpp2FixedType) {
             n->pos = curr().position();
             n->id  = &curr();
             next();
             assert (n->id.index() == type_id_node::keyword);
-            return n;
+        }
+        else {
+            if (!n->pc_qualifiers.empty()) {
+            error("'*'/'const' type qualifiers must be followed by a type name or '_' wildcard");
+            }
+            return {};
         }
 
-        if (!n->pc_qualifiers.empty()) {
-            error("'*'/'const' type qualifiers must be followed by a type name or '_' wildcard");
+        if (curr().type() == lexeme::LeftBracket) {
+            error("C-style array types are not allowed, use std::array instead");
+            return {};
         }
-        return {};
+        return n;
     }
 
 
