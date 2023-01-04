@@ -131,7 +131,7 @@ struct primary_expression_node
     > expr;
 
     auto template_args_count() -> int;
-    auto get_token() -> token const*;
+    auto get_token() const -> token const*;
     auto position() const -> source_position;
     auto visit(auto& v, int depth) -> void;
 };
@@ -432,7 +432,7 @@ struct unqualified_id_node
         return std::ssize(template_args);
     }
 
-    auto get_token() -> token const* {
+    auto get_token() const -> token const* {
         if (template_args.empty()) {
             assert (identifier);
             return identifier;
@@ -480,6 +480,15 @@ struct qualified_id_node
     };
     std::vector<term> ids;
 
+    auto get_token() const -> token const* {
+        if (std::ssize(ids) == 1 && !ids.front().scope_op) {
+            assert (ids.front().id);
+            return ids.front().id->get_token();
+        }
+        // else
+        return {};
+    }
+
     auto position() const -> source_position
     {
         assert (!ids.empty());
@@ -520,7 +529,11 @@ struct type_id_node
         token const*
     > id;
 
-    auto is_pointer_qualified() -> bool {
+    auto is_wildcard() const -> bool {
+        return id.index() == type_id_node::empty || (get_token() && *get_token() == "_");
+    }
+
+    auto is_pointer_qualified() const -> bool {
         for (auto q : pc_qualifiers) {
             if (q->type() == lexeme::Multiply) {
                 return true;
@@ -529,7 +542,7 @@ struct type_id_node
         return false;
     }
 
-    auto template_args_count() -> int {
+    auto template_args_count() const -> int {
         if (id.index() == unqualified) {
             return std::get<unqualified>(id)->template_args_count();
         }
@@ -537,9 +550,18 @@ struct type_id_node
         return 0;
     }
 
-    auto get_token() -> token const* {
-        if (id.index() == unqualified) {
-            return std::get<unqualified>(id)->get_token();
+    auto get_token() const -> token const* {
+        switch (id.index()) {
+        break;case empty:
+            return {};
+        break;case qualified:
+            return get<qualified>(id)->get_token();
+        break;case unqualified:
+            return get<unqualified>(id)->get_token();
+        break;case keyword:
+            return get<keyword>(id);
+        break;default:
+            assert(false && "ICE: invalid type_id state");
         }
         // else
         return {};
@@ -628,7 +650,7 @@ struct id_expression_node
         return 0;
     }
 
-    auto get_token() -> token const* {
+    auto get_token() const -> token const* {
         if (id.index() == unqualified) {
             return std::get<unqualified>(id)->get_token();
         }
@@ -1098,7 +1120,7 @@ auto primary_expression_node::template_args_count() -> int {
     return 0;
 }
 
-auto primary_expression_node::get_token() -> token const*
+auto primary_expression_node::get_token() const -> token const*
 {
     if (expr.index() == identifier) {
         return std::get<identifier>(expr);
@@ -2115,7 +2137,7 @@ private:
         }
 
         if (!n->pc_qualifiers.empty()) {
-            error("'*'/'const' type qualifiers must be followed by a type name");
+            error("'*'/'const' type qualifiers must be followed by a type name or '_' wildcard");
         }
         return {};
     }

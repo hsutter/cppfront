@@ -1068,22 +1068,26 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(token const& n, bool is_qualified = false) -> void
+    auto emit(token const& n, bool is_qualified = false, source_position pos = {}) -> void
     {
+        if (pos == source_position{}) {
+            pos = n.position();
+        }
+
         //  Implicit "cpp2::" qualification of Cpp2 fixed-width type aliases
         if (!is_qualified && n.type() == lexeme::Cpp2FixedType)
         {
-            printer.print_cpp2("cpp2::", n.position());
+            printer.print_cpp2("cpp2::", pos);
         }
 
         if (n == "new") {
-            printer.print_cpp2("cpp2_new", n.position());
+            printer.print_cpp2("cpp2_new", pos);
         }
         else if (n.type() == lexeme::StringLiteral) {
-            printer.print_cpp2( expand_string_literal(n), n.position() );
+            printer.print_cpp2( expand_string_literal(n), pos );
         }
         else {
-            printer.print_cpp2(n, n.position());
+            printer.print_cpp2(n, pos);
         }
 
         in_definite_init = is_definite_initialization(&n);
@@ -1199,15 +1203,24 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(type_id_node const& n) -> void
+    auto emit(type_id_node const& n, source_position pos = {}) -> void
     {
-        try_emit<type_id_node::unqualified>(n.id, false, false);
-        try_emit<type_id_node::qualified  >(n.id);
-        try_emit<type_id_node::keyword    >(n.id);
+        if (pos == source_position{}) {
+            pos = n.position();
+        }
+
+        if (n.is_wildcard()) {
+            printer.print_cpp2("auto", pos);
+        }
+        else {
+            try_emit<type_id_node::unqualified>(n.id, false, false);
+            try_emit<type_id_node::qualified  >(n.id);
+            try_emit<type_id_node::keyword    >(n.id);
+        }
 
         for (auto i = n.pc_qualifiers.rbegin(); i != n.pc_qualifiers.rend(); ++i) {
-            if ((**i) == "const") { printer.print_cpp2(" ", n.position()); }
-            emit(**i);
+            if ((**i) == "const") { printer.print_cpp2(" ", pos); }
+            emit(**i, false, pos);
         }
     }
 
@@ -1345,7 +1358,7 @@ public:
                     return_suffix += " }";
                 }
 
-                if (id == "_") {
+                if (id == "auto") {
                     found_wildcard = true;
                     if (is_expression) {
                         printer.print_cpp2("return ", alt->position());
@@ -1365,7 +1378,7 @@ public:
 
                 printer.print_cpp2(statement, alt->position());
 
-                if (is_expression && id != "_") {
+                if (is_expression && id != "auto") {
                     assert(alt->statement->statement.index() == statement_node::expression);
                     printer.print_cpp2("; else return " + result_type + "{}", alt->position());
                     printer.print_cpp2("; else return " + result_type + "{}", alt->position());
@@ -1997,13 +2010,32 @@ public:
         std::string prefix = {};
         std::string suffix = {};
 
+        auto wildcard_found = false;
+
         for (auto i = n.ops.rbegin(); i != n.ops.rend(); ++i)
         {
             //  If it's "ISORAS type", emit "cpp2::ISORAS<type>(expr)"
             if (i->type)
             {
-                prefix += "cpp2::" + i->op->to_string(true) + "<" + print_to_string(*i->type) + ">(";
-                suffix = ")" + suffix;
+                if (i->type->is_wildcard()) {
+                    wildcard_found = true;
+                    if (*i->op != "is") {
+                        errors.emplace_back(
+                            n.position(),
+                            "'as _' wildcard is not allowed, specify a concrete target type instead"
+                        );
+                    }
+                    else if (std::ssize(n.ops) > 1) {
+                        errors.emplace_back(
+                            n.position(),
+                            "an 'is _' wildcard may only be used on its own, not in a chain with other 'is'/'as' in the same subexpression"
+                        );
+                    }
+                }
+                else {
+                    prefix += "cpp2::" + i->op->to_string(true) + "<" + print_to_string(*i->type) + ">(";
+                    suffix = ")" + suffix;
+                }
             }
             //  Else it's "is value", emit "cpp2::is(expr, value)"
             else
@@ -2015,7 +2047,12 @@ public:
         }
 
         printer.print_cpp2(prefix, n.position());
-        emit(*n.expr);
+        if (wildcard_found) {
+            printer.print_cpp2("true", n.position());
+        }
+        else {
+            emit(*n.expr);
+        }
         printer.print_cpp2(suffix, n.position());
     }
 
@@ -2187,7 +2224,7 @@ public:
         }
 
         emit(*n.expr);
-        if (n.has_semicolon && can_have_semicolon) {
+        if (can_have_semicolon) {
             printer.print_cpp2(";", n.position());
         }
 
@@ -2610,7 +2647,7 @@ public:
                         auto& expr = std::get<statement_node::expression>(decl.initializer->statement);
                         assert(expr);
 
-                        emit(*decl.initializer);
+                        emit(*decl.initializer, false);
                         printer.emit_to_string();
 
                         loc += init;
@@ -2656,9 +2693,10 @@ public:
             auto& type = std::get<declaration_node::object>(n.type);
 
             //  Emit "auto" for deduced types (of course)
-            if (type->id.index() == type_id_node::empty) {
+            if (type->is_wildcard()) {
                 assert(n.initializer);
-                printer.print_cpp2("auto", n.position());
+                //printer.print_cpp2("auto", n.position());
+                emit( *type, n.position() );
             }
             //  Otherwise, emit the type
             else {
