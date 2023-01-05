@@ -555,7 +555,7 @@ struct type_id_node
         break;case empty:
             return {};
         break;case qualified:
-            return get<qualified>(id)->get_token();
+            return {};
         break;case unqualified:
             return get<unqualified>(id)->get_token();
         break;case keyword:
@@ -2337,10 +2337,10 @@ private:
         //  Remember current position, because we need to look ahead to the next ::
         auto start_pos = pos;
 
-        //  If we don't get a first id, or if the next thing isn't :: or .,
-        //  back out and report unsuccessful
+        //  If we don't get a first id, or if we didn't have a leading :: and
+        //  the next thing isn't :: or ., back out and report unsuccessful
         term.id = unqualified_id();
-        if (!term.id || curr().type() != lexeme::Scope) {
+        if (!term.id || (!term.scope_op && curr().type() != lexeme::Scope)) {
             pos = start_pos;    // backtrack
             return {};
         }
@@ -2352,7 +2352,6 @@ private:
 
         n->ids.push_back( std::move(term) );
 
-        assert (curr().type() == lexeme::Scope);
         while (curr().type() == lexeme::Scope)
         {
             auto term = qualified_id_node::term{ &curr() };
