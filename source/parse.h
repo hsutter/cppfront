@@ -131,7 +131,7 @@ struct primary_expression_node
     > expr;
 
     auto template_args_count() -> int;
-    auto get_token() -> token const*;
+    auto get_token() const -> token const*;
     auto position() const -> source_position;
     auto visit(auto& v, int depth) -> void;
 };
@@ -256,9 +256,9 @@ auto to_string_view(passing_style pass) -> std::string_view {
 
 struct expression_list_node
 {
-    source_position open_paren  = {};
-    source_position close_paren = {};
-    bool inside_initializer     = false;
+    token const* open_paren  = {};
+    token const* close_paren = {};
+    bool inside_initializer  = false;
 
     struct term {
         passing_style                    pass = {};
@@ -277,8 +277,8 @@ struct expression_list_node
     auto position() const -> source_position
     {
         //  Make sure this got set
-        assert (open_paren != source_position());
-        return open_paren;
+        assert (open_paren);
+        return open_paren->position();
     }
 
     auto visit(auto& v, int depth) -> void
@@ -432,7 +432,7 @@ struct unqualified_id_node
         return std::ssize(template_args);
     }
 
-    auto get_token() -> token const* {
+    auto get_token() const -> token const* {
         if (template_args.empty()) {
             assert (identifier);
             return identifier;
@@ -480,6 +480,15 @@ struct qualified_id_node
     };
     std::vector<term> ids;
 
+    auto get_token() const -> token const* {
+        if (std::ssize(ids) == 1 && !ids.front().scope_op) {
+            assert (ids.front().id);
+            return ids.front().id->get_token();
+        }
+        // else
+        return {};
+    }
+
     auto position() const -> source_position
     {
         assert (!ids.empty());
@@ -520,7 +529,11 @@ struct type_id_node
         token const*
     > id;
 
-    auto is_pointer_qualified() -> bool {
+    auto is_wildcard() const -> bool {
+        return id.index() == type_id_node::empty || (get_token() && *get_token() == "_");
+    }
+
+    auto is_pointer_qualified() const -> bool {
         for (auto q : pc_qualifiers) {
             if (q->type() == lexeme::Multiply) {
                 return true;
@@ -529,7 +542,7 @@ struct type_id_node
         return false;
     }
 
-    auto template_args_count() -> int {
+    auto template_args_count() const -> int {
         if (id.index() == unqualified) {
             return std::get<unqualified>(id)->template_args_count();
         }
@@ -537,9 +550,18 @@ struct type_id_node
         return 0;
     }
 
-    auto get_token() -> token const* {
-        if (id.index() == unqualified) {
-            return std::get<unqualified>(id)->get_token();
+    auto get_token() const -> token const* {
+        switch (id.index()) {
+        break;case empty:
+            return {};
+        break;case qualified:
+            return get<qualified>(id)->get_token();
+        break;case unqualified:
+            return get<unqualified>(id)->get_token();
+        break;case keyword:
+            return get<keyword>(id);
+        break;default:
+            assert(false && "ICE: invalid type_id state");
         }
         // else
         return {};
@@ -628,7 +650,7 @@ struct id_expression_node
         return 0;
     }
 
-    auto get_token() -> token const* {
+    auto get_token() const -> token const* {
         if (id.index() == unqualified) {
             return std::get<unqualified>(id)->get_token();
         }
@@ -910,8 +932,8 @@ auto compound_statement_node::visit(auto& v, int depth) -> void
 
 struct parameter_declaration_node
 {
-    source_position pos;
-    passing_style pass = passing_style::in;
+    source_position pos = {};
+    passing_style pass  = passing_style::in;
 
     enum class modifier { none=0, implicit, virtual_, override_, final_ };
     modifier mod = modifier::none;
@@ -926,14 +948,15 @@ struct parameter_declaration_node
 
 struct parameter_declaration_list_node
 {
-    source_position pos_open_paren;
-    source_position pos_close_paren;
+    token const* open_paren  = {};
+    token const* close_paren = {};
 
     std::vector<std::unique_ptr<parameter_declaration_node>> parameters;
 
     auto position() const -> source_position
     {
-        return pos_open_paren;
+        assert(open_paren);
+        return open_paren->position();
     }
 
     auto visit(auto& v, int depth) -> void
@@ -1097,7 +1120,7 @@ auto primary_expression_node::template_args_count() -> int {
     return 0;
 }
 
-auto primary_expression_node::get_token() -> token const*
+auto primary_expression_node::get_token() const -> token const*
 {
     if (expr.index() == identifier) {
         return std::get<identifier>(expr);
@@ -1507,6 +1530,7 @@ private:
     //G     id-expression
     //G     literal
     //G     '(' expression-list ')'
+    //G     '{' expression-list '}'
     //G     unnamed-declaration
     //G
     auto primary_expression()
@@ -1538,10 +1562,15 @@ private:
             return n;
         }
 
-        if (curr().type() == lexeme::LeftParen)
+        if (curr().type() == lexeme::LeftParen
+            //  If in the future (not now) we want to experiment with braced-expressions
+            //      || curr().type() == lexeme::LeftBrace
+            )
         {
             bool inside_initializer = (peek(-1)->type() == lexeme::Assignment);
-            auto open_paren = curr().position();
+            auto open_paren = &curr();
+            auto close = close_paren_type(open_paren->type());
+            auto close_text = [&] () -> std::string { if (close == lexeme::RightParen) { return ")"; } return "}"; }();
             next();
             auto expr_list = expression_list(open_paren, inside_initializer);
             if (!expr_list) {
@@ -1549,12 +1578,12 @@ private:
                 next();
                 return {};
             }
-            if (curr().type() != lexeme::RightParen) {
-                error("unexpected text - expression-list is not terminated by )");
+            if (curr().type() != close_paren_type(open_paren->type())) {
+                error("unexpected text - expression-list is not terminated by " + close_text);
                 next();
                 return {};
             }
-            expr_list->close_paren = curr().position();
+            expr_list->close_paren = &curr();
             next();
             n->expr = std::move(expr_list);
             return n;
@@ -1605,7 +1634,7 @@ private:
             return {};
         }
 
-        while (
+        while ( !done() && (
             (is_postfix_operator(curr().type())
                 //  Postfix operators must be lexically adjacent
                 && curr().position().lineno == peek(-1)->position().lineno
@@ -1614,6 +1643,7 @@ private:
             curr().type() == lexeme::LeftBracket ||
             curr().type() == lexeme::LeftParen ||
             curr().type() == lexeme::Dot
+            )
             )
         {
             //  these can't be unary operators if followed by a (, identifier, or literal
@@ -1655,22 +1685,23 @@ private:
 
             if (term.op->type() == lexeme::LeftBracket)
             {
-                term.expr_list = expression_list(term.op->position());
-                if (!term.expr_list) {
-                    error("subscript expression [ ] must not be empty");
+                term.expr_list = expression_list(term.op);
+                if (!term.expr_list || term.expr_list->expressions.empty()) {
+                    error("subscript expression [ ] must not be empty (if you were trying to name a C-style array type, use 'std::array' instead)");
+                    next();
                     return {};
                 }
                 if (curr().type() != lexeme::RightBracket) {
                     error("unexpected text - [ is not properly matched by ]");
                     return {};
                 }
-                term.expr_list->close_paren = curr().position();
+                term.expr_list->close_paren = &curr();
                 term.op_close = &curr();
                 next();
             }
             else if (term.op->type() == lexeme::LeftParen)
             {
-                term.expr_list = expression_list(term.op->position());
+                term.expr_list = expression_list(term.op);
                 if (!term.expr_list) {
                     error("( is not followed by a valid expression list");
                     return {};
@@ -1679,7 +1710,7 @@ private:
                     error("unexpected text - ( is not properly matched by )");
                     return {};
                 }
-                term.expr_list->close_paren = curr().position();
+                term.expr_list->close_paren = &curr();
                 term.op_close = &curr();
                 next();
             }
@@ -1743,7 +1774,7 @@ private:
         auto n = std::make_unique<Binary>();
         if ( (n->expr = term()) )
         {
-            while (true)
+            while (!done())
             {
                 typename Binary::term t{};
 
@@ -2007,7 +2038,7 @@ private:
     //G     parameter-direction? expression
     //G     expression-list ',' parameter-direction? expression
     //G
-    auto expression_list(source_position open_paren, bool inside_initializer = false) -> std::unique_ptr<expression_list_node> {
+    auto expression_list(token const* open_paren, bool inside_initializer = false) -> std::unique_ptr<expression_list_node> {
         auto pass = passing_style::in;
         auto n = std::make_unique<expression_list_node>();
         n->open_paren = open_paren;
@@ -2094,15 +2125,24 @@ private:
             n->pos = id->position();
             n->id  = std::move(id);
             assert (n->id.index() == type_id_node::qualified);
-            return n;
         }
-        if (auto id = unqualified_id()) {
+        else if (auto id = unqualified_id()) {
             n->pos = id->position();
             n->id  = std::move(id);
             assert (n->id.index() == type_id_node::unqualified);
-            return n;
         }
-        return {};
+        else {
+            if (!n->pc_qualifiers.empty()) {
+            error("'*'/'const' type qualifiers must be followed by a type name or '_' wildcard");
+            }
+            return {};
+        }
+
+        if (curr().type() == lexeme::LeftBracket) {
+            error("C-style array types are not allowed, use std::array instead");
+            return {};
+        }
+        return n;
     }
 
 
@@ -2134,7 +2174,7 @@ private:
         auto is_found = false;
         auto as_found = false;
 
-        while (curr() == "is" || curr() == "as")
+        while (!done() && (curr() == "is" || curr() == "as"))
         {
             if (curr() == "is") {
                 if (is_found) {
@@ -2375,7 +2415,7 @@ private:
             return {};
         }
 
-        if (semicolon_required && curr().type() != lexeme::Semicolon &&
+        if (semicolon_required && (done() || curr().type() != lexeme::Semicolon) &&
             peek(-1)->type() != lexeme::Semicolon
                 //  this last peek(-1)-condition is a hack (? or is it just
                 //  maybe elegant? I'm torn) so that code like
@@ -2387,10 +2427,9 @@ private:
                 //  it doesn't destabilize any regression tests
             )
         {
-            error("expected ; at end of statement");
             return {};
         }
-        if (curr().type() == lexeme::Semicolon) {
+        if (!done() && curr().type() == lexeme::Semicolon) {
             n->has_semicolon = true;
             next();
         }
@@ -2844,7 +2883,6 @@ private:
         }
 
         else {
-            //next();
             return {};
         }
     }
@@ -2866,6 +2904,9 @@ private:
 
         auto n = std::make_unique<compound_statement_node>();
 
+        //  Remember current position, in case this isn't a valid statement
+        auto start_pos = pos;
+
         //  In the case where this is a declaration initializer with
         //      = {
         //  on the same line, we want to remember our start position
@@ -2882,7 +2923,7 @@ private:
         while (curr().type() != lexeme::RightBrace) {
             auto s = statement(true);
             if (!s) {
-                error("invalid statement in compound-statement");
+                pos = start_pos;    // backtrack
                 return {};
             }
             n->statements.push_back( std::move(s) );
@@ -3007,7 +3048,7 @@ private:
         }
 
         auto n = std::make_unique<parameter_declaration_list_node>();
-        n->pos_open_paren = curr().position();
+        n->open_paren = &curr();
         next();
 
         auto param = std::make_unique<parameter_declaration_node>();
@@ -3031,7 +3072,7 @@ private:
             return {};
         }
 
-        n->pos_close_paren = curr().position();
+        n->close_paren = &curr();
         next();
         return n;
     }

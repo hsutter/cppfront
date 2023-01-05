@@ -241,26 +241,6 @@ using u16       = std::uint16_t      ;
 using u32       = std::uint32_t      ;
 using u64       = std::uint64_t      ;
 
-//  Rarely, when really needed for speed optimization: Fastest type with at least N bits
-using i8_fast   = std::int_fast8_t   ;
-using i16_fast  = std::int_fast16_t  ;
-using i32_fast  = std::int_fast32_t  ;
-using i64_fast  = std::int_fast64_t  ;
-using u8_fast   = std::uint_fast8_t  ;
-using u16_fast  = std::uint_fast16_t ;
-using u32_fast  = std::uint_fast32_t ;
-using u64_fast  = std::uint_fast64_t ;
-
-//  Rarely, when really needed for space optimization: Smallest type with at least N bits
-using i8_small  = std::int_least8_t  ;
-using i16_small = std::int_least16_t ;
-using i32_small = std::int_least32_t ;
-using i64_small = std::int_least64_t ;
-using u8_small  = std::uint_least8_t ;
-using u16_small = std::uint_least16_t;
-using u32_small = std::uint_least32_t;
-using u64_small = std::uint_least64_t;
-
 //  Discouraged: Variable precision names
 //                short
 using ushort    = unsigned short;
@@ -564,7 +544,7 @@ public:
 #endif
 
 #define CPP2_UFCS(FUNCNAME,PARAM1,...) \
-[](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE { \
+[](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE -> decltype(auto) { \
     if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); }) { \
         return std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); \
     } else { \
@@ -573,7 +553,7 @@ public:
 }(PARAM1, __VA_ARGS__)
 
 #define CPP2_UFCS_0(FUNCNAME,PARAM1) \
-[](auto&& obj) CPP2_FORCE_INLINE { \
+[](auto&& obj) CPP2_FORCE_INLINE -> decltype(auto) { \
     if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(); }) { \
         return std::forward<decltype(obj)>(obj).FUNCNAME(); \
     } else { \
@@ -584,7 +564,7 @@ public:
 #define CPP2_UFCS_REMPARENS(...) __VA_ARGS__
 
 #define CPP2_UFCS_TEMPLATE(FUNCNAME,TEMPARGS,PARAM1,...) \
-[](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE { \
+[](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE -> decltype(auto) { \
     if constexpr (requires{ std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(params)>(params)...); }) { \
         return std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(params)>(params)...); \
     } else { \
@@ -593,7 +573,7 @@ public:
 }(PARAM1, __VA_ARGS__)
 
 #define CPP2_UFCS_TEMPLATE_0(FUNCNAME,TEMPARGS,PARAM1) \
-[](auto&& obj) CPP2_FORCE_INLINE { \
+[](auto&& obj) CPP2_FORCE_INLINE -> decltype(auto) { \
     if constexpr (requires{ std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); }) { \
         return std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
     } else { \

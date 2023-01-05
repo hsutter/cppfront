@@ -1,0 +1,18 @@
+
+less_than: (value:_) -> _ =
+    :(x:_) = x < value$;
+
+main: () -> int
+= {
+    x: const   _ = 2;
+    p: *       _ = x&;
+    q: * const _ = p&;
+
+    if x is (less_than(20)) {
+        std::cout << "yes, less\n";
+    }
+
+    if x is _ {
+        std::cout << "yes, always\n";
+    }
+}
