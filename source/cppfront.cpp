@@ -2011,6 +2011,19 @@ public:
         std::string suffix = {};
 
         auto wildcard_found = false;
+        bool as_on_literal  = false;
+
+        assert(
+            n.expr &&
+            n.expr->get_postfix_expression_node() &&
+            n.expr->get_postfix_expression_node()->expr
+        );
+        if (auto t = n.expr->get_postfix_expression_node()->expr->get_token();
+            t && is_literal(t->type()) && t->type() != lexeme::StringLiteral && t->type() != lexeme::FloatLiteral
+            && std::ssize(n.ops) > 0 && *n.ops[0].op == "as"
+        ) {
+            as_on_literal = true;
+        }
 
         for (auto i = n.ops.rbegin(); i != n.ops.rend(); ++i)
         {
@@ -2046,11 +2059,16 @@ public:
             }
         }
 
+        if (as_on_literal) {
+            auto last_pos = prefix.rfind('>'); assert(last_pos != prefix.npos);
+            prefix.insert(last_pos, ", " + print_to_string(*n.expr));
+        }
+
         printer.print_cpp2(prefix, n.position());
         if (wildcard_found) {
             printer.print_cpp2("true", n.position());
         }
-        else {
+        else if(!as_on_literal) {
             emit(*n.expr);
         }
         printer.print_cpp2(suffix, n.position());

@@ -701,9 +701,61 @@ inline constexpr auto is( auto const& x, auto const& value ) -> bool
 //-------------------------------------------------------------------------------------------------------------
 //  Built-in as
 //
+
+//  Helpers
+//
+template <typename... Ts>
+inline constexpr auto program_violates_type_safety_guarantee = sizeof...(Ts) < 0;
+
 template< typename C >
 auto as(auto const&) -> auto {
+    //static_assert(
+    //    program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
+    //    "No safe 'as' cast available - if this is narrowing and you're sure the conversion is safe, consider using `unsafe_narrow<T>()` to force the conversion"
+    //    );
     return nonesuch;
+}
+
+//  For literals we can check for safe 'narrowing' at a compile time
+template< typename C, auto x >
+inline constexpr bool is_castable_v =
+    std::is_arithmetic_v<C> &&
+    std::is_arithmetic_v<CPP2_TYPEOF(x)> &&
+    !(static_cast<CPP2_TYPEOF(x)>(static_cast<C>(x)) != x ||
+        (
+            (std::is_signed_v<C> != std::is_signed_v<CPP2_TYPEOF(x)>) &&
+            ((static_cast<C>(x) < C{}) != (x < CPP2_TYPEOF(x){}))
+        )
+    );
+
+//  As
+//
+template< typename C, auto x >
+inline constexpr auto as() -> auto
+{
+    if constexpr ( is_castable_v<C, x> ) {
+        return static_cast<C>(CPP2_TYPEOF(x)(x));
+    }
+    else {
+        static_assert(
+            program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
+            "No safe 'as' cast available - if this is narrowing and you're sure the conversion is safe, consider using `unsafe_narrow<T>()` to force the conversion"
+            );
+    }
+}
+
+template< typename C, auto x >
+    requires (std::is_arithmetic_v<C> && std::is_arithmetic_v<CPP2_TYPEOF(x)>)
+inline constexpr auto as() -> auto
+{
+    if constexpr ( is_castable_v<C, x> ) {
+        return static_cast<C>(CPP2_TYPEOF(x)(x));
+    } else {
+        static_assert(
+            program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
+            "No safe 'as' cast available - if this is narrowing and you're sure the conversion is safe, consider using `unsafe_narrow<T>()` to force the conversion"
+            );
+    }
 }
 
 template< typename C, typename X >
@@ -1189,33 +1241,22 @@ inline auto fopen( const char* filename, const char* mode ) {
 //  with cpp2::fopen as a starting example.
 
 
+//-----------------------------------------------------------------------
+//
+//  An implementation of GSL's narrow_cast with a clearly 'unsafe' name
+//
+//-----------------------------------------------------------------------
+//
+template <typename C, typename X>
+auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
+{
+    return static_cast<C>(CPP2_FORWARD(x));
+}
+
 }
 
 
 using cpp2::cpp2_new;
 
-
-//-----------------------------------------------------------------------
-//
-//  A partial implementation of GSL features Cpp2 relies on,
-//  to keep this a standalone header without non-std dependencies
-//
-//-----------------------------------------------------------------------
-//
-namespace gsl {
-
-//-----------------------------------------------------------------------
-//
-//  An implementation of GSL's narrow_cast
-//
-//-----------------------------------------------------------------------
-//
-template<typename To, typename From>
-constexpr auto narrow_cast(From&& from) noexcept -> To
-{
-    return static_cast<To>(std::forward<From>(from));
-}
-
-}
 
 #endif
