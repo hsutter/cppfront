@@ -739,6 +739,20 @@ inline constexpr auto as() -> auto
     }
 }
 
+template< typename C >
+inline constexpr auto as(auto const& x) -> auto
+    requires (
+        std::is_floating_point_v<C> &&
+        std::is_floating_point_v<CPP2_TYPEOF(x)> &&
+        sizeof(CPP2_TYPEOF(x)) > sizeof(C)
+    )
+{
+    static_assert(
+        program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
+        "No safe 'as' cast from larger to smaller floating point precision - if you're sure you want this unsafe conversion, consider using `unsafe_narrow<T>()` to force the conversion"
+        );
+}
+
 //  Signed/unsigned conversions to a not-smaller type are handled as a precondition,
 //  and trying to cast from a value that is in the half of the value space that isn't
 //  representable in the target type C is flagged as a Type safety contract violation
