@@ -593,13 +593,6 @@ public:
 //  Built-in is
 //
 
-//  For use when returning "no such thing", such as
-//  when customizing is/as for std::variant
-struct nonesuch_ {
-    auto operator==(auto const&) -> bool { return false; }
-};
-static nonesuch_ nonesuch;
-
 //  For designating "holds no value" -- used only with is, not as
 //  TODO: Does this really warrant a new synonym? Perhaps "is void" is enough
 using empty = void;
@@ -702,25 +695,21 @@ inline constexpr auto is( auto const& x, auto const& value ) -> bool
 //  Built-in as
 //
 
-//  Helpers
-//
+//  For use when returning "no such thing", such as
+//  when customizing "as" for std::variant
+struct nonesuch_ {
+    auto operator==(auto const&) -> bool { return false; }
+};
+static nonesuch_ nonesuch;
+
 template <typename... Ts>
 inline constexpr auto program_violates_type_safety_guarantee = sizeof...(Ts) < 0;
 
-template< typename C >
-auto as(auto const&) -> auto {
-    //static_assert(
-    //    program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
-    //    "No safe 'as' cast available - if this is narrowing and you're sure the conversion is safe, consider using `unsafe_narrow<T>()` to force the conversion"
-    //    );
-    return nonesuch;
-}
-
-//  For literals we can check for safe 'narrowing' at a compile time
+//  For literals we can check for safe 'narrowing' at a compile time (e.g., 1 as size_t)
 template< typename C, auto x >
 inline constexpr bool is_castable_v =
-    std::is_arithmetic_v<C> &&
-    std::is_arithmetic_v<CPP2_TYPEOF(x)> &&
+    std::is_integral_v<C> &&
+    std::is_integral_v<CPP2_TYPEOF(x)> &&
     !(static_cast<CPP2_TYPEOF(x)>(static_cast<C>(x)) != x ||
         (
             (std::is_signed_v<C> != std::is_signed_v<CPP2_TYPEOF(x)>) &&
@@ -730,18 +719,10 @@ inline constexpr bool is_castable_v =
 
 //  As
 //
-template< typename C, auto x >
-inline constexpr auto as() -> auto
-{
-    if constexpr ( is_castable_v<C, x> ) {
-        return static_cast<C>(CPP2_TYPEOF(x)(x));
-    }
-    else {
-        static_assert(
-            program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
-            "No safe 'as' cast available - if this is narrowing and you're sure the conversion is safe, consider using `unsafe_narrow<T>()` to force the conversion"
-            );
-    }
+
+template< typename C >
+auto as(auto const&) -> auto {
+    return nonesuch;
 }
 
 template< typename C, auto x >
@@ -756,6 +737,26 @@ inline constexpr auto as() -> auto
             "No safe 'as' cast available - if this is narrowing and you're sure the conversion is safe, consider using `unsafe_narrow<T>()` to force the conversion"
             );
     }
+}
+
+//  Signed/unsigned conversions to a not-smaller type are handled as a precondition,
+//  and trying to cast from a value that is in the half of the value space that isn't
+//  representable in the target type C is flagged as a Type safety contract violation
+template< typename C >
+inline constexpr auto as(auto const& x) -> auto
+    requires (
+        std::is_integral_v<C> &&
+        std::is_integral_v<CPP2_TYPEOF(x)> &&
+        std::is_signed_v<CPP2_TYPEOF(x)> != std::is_signed_v<C> &&
+        sizeof(CPP2_TYPEOF(x)) <= sizeof(C)
+    )
+{
+    const C c = static_cast<C>(x);
+    Type.expects(   // precondition check: must be round-trippable => not lossy
+        static_cast<CPP2_TYPEOF(x)>(c) == x && (c < C{}) == (x < CPP2_TYPEOF(x){}),
+        "dynamic lossy narrowing conversion attempt detected" CPP2_SOURCE_LOCATION_ARG
+    );
+    return c;
 }
 
 template< typename C, typename X >
