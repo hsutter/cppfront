@@ -33,7 +33,7 @@ auto violates_lifetime_safety = false;
 //
 
 //G prefix-operator:
-//G     one of  '!'
+//G     one of  '!' '-' '+'
 //G
 auto is_prefix_operator(lexeme l) -> bool
 {
@@ -68,7 +68,7 @@ auto is_postfix_operator(lexeme l)  -> bool
 
 
 //G assignment-operator:
-//G     one of  '=' '*=' '/=' '%=' '+=' '-=' '>>=' '<<='
+//G     one of  '=' '*=' '/=' '%=' '+=' '-=' '>>=' '<<=' '&=' '^=' '|='
 //G
 auto is_assignment_operator(lexeme l) -> bool
 {
@@ -1549,8 +1549,7 @@ private:
             return n;
         }
 
-        if (curr().type() == lexeme::Identifier ||
-            curr().type() == lexeme::DecimalLiteral ||
+        if (curr().type() == lexeme::DecimalLiteral ||
             curr().type() == lexeme::FloatLiteral ||
             curr().type() == lexeme::StringLiteral ||
             curr().type() == lexeme::CharacterLiteral ||
@@ -1944,7 +1943,7 @@ private:
 
     //G bit-xor-expression:
     //G     bit-and-expression
-    //G     bit-xor-expression '&' bit-and-expression
+    //G     bit-xor-expression '^' bit-and-expression
     //G
     auto bit_xor_expression(bool allow_angle_operators = true) {
         return binary_expression<bit_xor_expression_node> (
@@ -1955,7 +1954,7 @@ private:
 
     //G bit-or-expression:
     //G     bit-xor-expression
-    //G     bit-or-expression '&' bit-xor-expression
+    //G     bit-or-expression '|' bit-xor-expression
     //G
     auto bit_or_expression(bool allow_angle_operators = true) {
         return binary_expression<bit_or_expression_node> (
@@ -1990,7 +1989,7 @@ private:
 
     //G assignment-expression:
     //G     logical-or-expression
-    //G     assignment-expression assignment-operator assignment-expression
+    //G     assignment-expression assignment-operator logical-or-expression
     //G
     auto assignment_expression(bool allow_angle_operators = true) -> std::unique_ptr<assignment_expression_node> {
         //return binary_expression<assignment_expression_node> (
@@ -2037,7 +2036,7 @@ private:
 
     //G expression-list:
     //G     parameter-direction? expression
-    //G     expression-list ',' expression
+    //G     expression-list ',' parameter-direction? expression
     //G
     auto expression_list(token const* open_paren, bool inside_initializer = false) -> std::unique_ptr<expression_list_node> {
         auto pass = passing_style::in;
@@ -2076,6 +2075,10 @@ private:
             }
             else if (curr().type() == lexeme::Identifier && curr() == "move") {
                 pass = passing_style::move;
+                next();
+            }
+            else if (curr().type() == lexeme::Identifier && curr() == "forward") {
+                pass = passing_style::forward;
                 next();
             }
             auto expr = expression();
@@ -2127,12 +2130,6 @@ private:
             n->pos = id->position();
             n->id  = std::move(id);
             assert (n->id.index() == type_id_node::unqualified);
-        }
-        else if (curr().type() == lexeme::Keyword || curr().type() == lexeme::Cpp2FixedType) {
-            n->pos = curr().position();
-            n->id  = &curr();
-            next();
-            assert (n->id.index() == type_id_node::keyword);
         }
         else {
             if (!n->pc_qualifiers.empty()) {
@@ -2939,7 +2936,7 @@ private:
 
 
     //G parameter-declaration:
-    //G     parameter-direction? declaration
+    //G     parameter-direction? this-specifier? declaration
     //G
     //G parameter-direction: one of
     //G     'in' 'copy' 'inout' 'out' 'move' 'forward'
