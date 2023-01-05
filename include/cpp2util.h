@@ -743,7 +743,7 @@ inline constexpr auto as() -> auto
 //  and trying to cast from a value that is in the half of the value space that isn't
 //  representable in the target type C is flagged as a Type safety contract violation
 template< typename C >
-inline constexpr auto as(auto const& x) -> auto
+inline constexpr auto as(auto const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto
     requires (
         std::is_integral_v<C> &&
         std::is_integral_v<CPP2_TYPEOF(x)> &&
