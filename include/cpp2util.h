@@ -1144,6 +1144,11 @@ inline auto to_string(T const& t) -> std::string
     return std::to_string(t);
 }
 
+inline auto to_string(char const& t) -> std::string
+{
+    return std::string{t};
+}
+
 inline auto to_string(char const* s) -> std::string
 {
     return std::string{s};
