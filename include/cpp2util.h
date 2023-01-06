@@ -702,6 +702,23 @@ struct nonesuch_ {
 };
 static nonesuch_ nonesuch;
 
+//  Most of the 'as' casts are <To, From> so use that order here
+//  If it's confusing, we can switch this to <From, To>
+template< typename To, typename From >
+inline constexpr auto is_narrowing_v =
+    // [dcl.init.list] 7.1
+    (std::is_floating_point_v<From> && std::is_integral_v<To>) ||
+    // [dcl.init.list] 7.2
+    (std::is_floating_point_v<From> && std::is_floating_point_v<To> && sizeof(From) > sizeof(To)) ||
+    // [dcl.init.list] 7.3
+    (std::is_integral_v<From> && std::is_floating_point_v<To>) ||
+    (std::is_enum_v<From> && std::is_floating_point_v<To>) ||
+    // [dcl.init.list] 7.4
+    (std::is_integral_v<From> && std::is_integral_v<To> && sizeof(From) > sizeof(To)) ||
+    (std::is_enum_v<From> && std::is_integral_v<To> && sizeof(From) > sizeof(To)) ||
+    // [dcl.init.list] 7.5
+    (std::is_pointer_v<From> && std::is_same_v<To, bool>);
+
 template <typename... Ts>
 inline constexpr auto program_violates_type_safety_guarantee = sizeof...(Ts) < 0;
 
@@ -781,7 +798,7 @@ auto as( X const& x ) -> decltype(auto) {
 
 template< typename C, typename X >
 auto as( X const& x ) -> auto
-    requires (!std::is_same_v<C, X> && requires { C{x}; })
+    requires (!std::is_same_v<C, X> && requires { C{x}; } && !is_narrowing_v<C, X>)
 {
     return C{x};
 }
