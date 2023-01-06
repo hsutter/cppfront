@@ -104,15 +104,6 @@ struct comment
 //
 struct error
 {
-    // Controls whether we print `FILE:line:col: error:` or `FILE(line,col):
-    // error:`.  Need to integrate with editors that jump to errors, etc.
-    // TODO: This should become a compiler flag.
-#ifdef _MSC_VER
-    static constexpr bool print_colon_errors = false;
-#else
-    static constexpr bool print_colon_errors = true;
-#endif
-
     source_position where;
     std::string     msg;
     bool            internal = false;
@@ -121,30 +112,7 @@ struct error
         : where{w}, msg{m}, internal{i}
     { }
 
-    auto print(auto& o, std::string const& file) const -> void
-    {
-        o << file ;
-        if (where.lineno > 0) {
-            if (print_colon_errors) {
-                o << ":"<< (where.lineno);
-                if (where.colno >= 0) {
-                    o << ":" << where.colno;
-                }
-            }
-            else {
-                o << "("<< (where.lineno);
-                if (where.colno >= 0) {
-                    o << "," << where.colno;
-                }
-                o  << ")";
-            }
-        }
-        o << ":";
-        if (internal) {
-            o << " internal compiler";
-        }
-        o << " error: " << msg << "\n";
-    }
+    auto print(auto& o, std::string const& file) const -> void;
 };
 
 
