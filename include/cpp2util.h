@@ -798,8 +798,19 @@ auto as( X const& x ) -> decltype(auto) {
 
 template< typename C, typename X >
 auto as( X const& x ) -> auto
-    requires (!std::is_same_v<C, X> && requires { C{x}; } && !is_narrowing_v<C, X>)
+    requires (!std::is_same_v<C, X> && requires { C{x}; })
 {
+    //  Experiment: Recognize the nested `::value_type` pattern for some dynamic library types
+    //  like std::optional, and try to prevent accidental narrowing conversions even when
+    //  those types themselves don't defend against them
+    if constexpr( requires{ typename C::value_type; } && std::is_convertible_v<X, typename C::value_type> ) {
+        if constexpr( is_narrowing_v<typename C::value_type, X>) {
+            static_assert(
+                program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
+                "This is a narrowing 'as' cast to a dynamic library type - if you're sure you want this unsafe conversion, consider adding an `unsafe_narrow<T>()` separately first to force the narrowing conversion, then 'as' to the library type"
+                );
+        }
+    }
     return C{x};
 }
 
