@@ -1359,6 +1359,8 @@ public:
                     statement.pop_back();
                 }
 
+                replace_all( statement, "cpp2::as_<", "cpp2::as<" );
+
                 //  If this is an inspect-expression, we'll have to wrap each alternative
                 //  in an 'if constexpr' so that its type is ignored for mismatches with
                 //  the inspect-expression's type
@@ -2057,7 +2059,11 @@ public:
                     }
                 }
                 else {
-                    prefix += "cpp2::" + i->op->to_string(true) + "<" + print_to_string(*i->type) + ">(";
+                    auto op_name = i->op->to_string(true);
+                    if (op_name == "as") {
+                        op_name = "as_";    // use the static_assert-checked 'as' by default...
+                    }                       // we'll override this inside inspect-expressions
+                    prefix += "cpp2::" + op_name + "<" + print_to_string(*i->type) + ">(";
                     suffix = ")" + suffix;
                 }
             }

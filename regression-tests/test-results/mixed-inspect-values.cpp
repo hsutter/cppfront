@@ -30,7 +30,7 @@ auto test(auto const& x) -> void;
 
     std::any a { 0 }; 
     test(a);
-    a = cpp2::as<std::string>("plugh");
+    a = cpp2::as_<std::string>("plugh");
     test(std::move(a));
 
     test(0);
@@ -38,7 +38,7 @@ auto test(auto const& x) -> void;
     test(2);
     test(3);
     test(-42);
-    test(cpp2::as<std::string>("xyzzy"));
+    test(cpp2::as_<std::string>("xyzzy"));
     test(3.14);
 }
 

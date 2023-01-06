@@ -702,7 +702,7 @@ struct nonesuch_ {
 };
 static nonesuch_ nonesuch;
 
-//  Most of the 'as' casts are <To, From> so use that order here
+//  The 'as' cast functions are <To, From> so use that order here
 //  If it's confusing, we can switch this to <From, To>
 template< typename To, typename From >
 inline constexpr auto is_narrowing_v =
@@ -747,12 +747,9 @@ template< typename C, auto x >
 inline constexpr auto as() -> auto
 {
     if constexpr ( is_castable_v<C, x> ) {
-        return static_cast<C>(CPP2_TYPEOF(x)(x));
+        return static_cast<C>(x);
     } else {
-        static_assert(
-            program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
-            "No safe 'as' cast available - if this is narrowing and you're sure the conversion is safe, consider using `unsafe_narrow<T>()` to force the conversion"
-            );
+        return nonesuch;
     }
 }
 
@@ -764,10 +761,7 @@ inline constexpr auto as(auto const& x) -> auto
         sizeof(CPP2_TYPEOF(x)) > sizeof(C)
     )
 {
-    static_assert(
-        program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
-        "No safe 'as' cast from larger to smaller floating point precision - if you're sure you want this unsafe conversion, consider using `unsafe_narrow<T>()` to force the conversion"
-        );
+    return nonesuch;
 }
 
 //  Signed/unsigned conversions to a not-smaller type are handled as a precondition,
@@ -805,10 +799,7 @@ auto as( X const& x ) -> auto
     //  those types themselves don't defend against them
     if constexpr( requires{ typename C::value_type; } && std::is_convertible_v<X, typename C::value_type> ) {
         if constexpr( is_narrowing_v<typename C::value_type, X>) {
-            static_assert(
-                program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
-                "This is a narrowing 'as' cast to a dynamic library type - if you're sure you want this unsafe conversion, consider adding an `unsafe_narrow<T>()` separately first to force the narrowing conversion, then 'as' to the library type"
-                );
+            return nonesuch;
         }
     }
     return C{x};
@@ -1295,6 +1286,64 @@ auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
 {
     return static_cast<C>(CPP2_FORWARD(x));
 }
+
+
+//-----------------------------------------------------------------------
+//
+//  A static-asserting "as" for better diagnostics than raw 'nonesuch'
+//
+//  Note for the future: This needs go after all 'as', which is fine for
+//  the ones in this file but will have problems with further user-
+//  defined 'as' customizations. One solution would be to make the main
+//  'as' be a class template, and have all customizations be actual
+//  specializations... that way name lookup should find the primary
+//  template first and then see later specializations. Or we could just
+//  remove this and live with the 'nonesuch' error messages. Either way,
+//  we don't need anything more right now, this solution is fine to
+//  unblock general progress
+//
+//-----------------------------------------------------------------------
+//
+template< typename C >
+inline constexpr auto as_( auto&& x ) -> auto
+{
+    if constexpr (is_narrowing_v<C, CPP2_TYPEOF(x)>) {
+        static_assert(
+            program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
+            "'as' does not allow unsafe narrowing conversions - if you're sure you want this, use `unsafe_narrow<T>()` to force the conversion"
+        );
+    }
+    else if constexpr( std::is_same_v< CPP2_TYPEOF(as<C>(CPP2_FORWARD(x))), nonesuch_ > ) {
+        static_assert(
+            program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
+            "No safe 'as' cast available - please check your cast"
+        );
+    }
+    //  else
+    return as<C>(CPP2_FORWARD(x));
+}
+
+template< typename C, auto x >
+inline constexpr auto as_() -> auto
+{
+    if constexpr (requires { as<C, x>(); }) {
+        if constexpr( std::is_same_v< CPP2_TYPEOF((as<C, x>())), nonesuch_ > ) {
+            static_assert(
+                program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
+                "Literal cannot be narrowed using 'as' -  if you're sure you want this, use 'unsafe_narrow<T>()' to force the conversion"
+            );
+        }
+    }
+    else {
+        static_assert(
+            program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
+            "No safe 'as' cast available - please check your cast"
+        );
+    }
+    //  else
+    return as<C,x>();
+}
+
 
 }
 
