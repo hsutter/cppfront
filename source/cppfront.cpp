@@ -110,7 +110,7 @@ static auto flag_cpp1_filename = std::string{};
 static cmdline_processor::register_flag cmd_cpp1_filename(
     2,
     "output",
-    "Output filename (default is *.cpp)",
+    "Output filename, or 'stdout' (default is *.cpp)",
     nullptr,
     [](std::string const& name) { flag_cpp1_filename = name; }
 );
@@ -126,7 +126,8 @@ struct text_with_pos{
 class positional_printer
 {
     //  Core information
-    std::ofstream               out           = {}; // Cpp1 syntax output file
+    std::ofstream               out_file      = {}; // Cpp1 syntax output file
+    std::ostream*               out           = {}; // will point to out_file or cout
     std::string                 cpp2_filename = {};
     std::string                 cpp1_filename = {};
     std::vector<comment> const* pcomments     = {}; // Cpp2 comments data
@@ -193,7 +194,8 @@ class positional_printer
         //  and update our curr_pos position
 
         //  Output the string
-        out << s;
+        assert (out);
+        *out << s;
 
         //  Update curr_pos by finding how many line breaks s contained,
         //  and where the last one was which determines our current colno
@@ -244,7 +246,8 @@ class positional_printer
 
         //  Not using print() here because this is transparent to the curr_pos
         if (!flag_clean_cpp1) {
-            out << "#line " << line << " " << std::quoted(cpp2_filename) << "\n";
+            assert (out);
+            *out << "#line " << line << " " << std::quoted(cpp2_filename) << "\n";
         }
     }
 
@@ -361,17 +364,23 @@ public:
     {
         source_has_cpp2 = has_cpp2;
         cpp2_filename = cpp2_filename_;
-        assert (!out.is_open() && !pcomments && "ICE: tried to call .open twice");
+        assert (!is_open() && !pcomments && "ICE: tried to call .open twice");
         cpp1_filename = cpp1_filename_;
-        out.open(cpp1_filename);
+        if (cpp1_filename == "stdout") {
+            out = &std::cout;
+        }
+        else {
+            out_file.open(cpp1_filename);
+            out = &out_file;
+        }
         pcomments = &comments;
     }
 
     auto is_open() -> bool {
-        if (out.is_open()) {
-            assert (pcomments && "ICE: if out.is_open, pcomments should also be set");
+        if (out) {
+            assert (pcomments && "ICE: if is_open, pcomments should also be set");
         }
-        return out.is_open();
+        return out;
     }
 
 
@@ -380,11 +389,13 @@ public:
     //
     auto abandon() -> void
     {
-        if (!out.is_open()) {
+        if (!is_open()) {
             return;
         }
-        out.close();
-        std::remove(cpp1_filename.c_str());
+        if (out_file.is_open()) {
+            out_file.close();
+            std::remove(cpp1_filename.c_str());
+        }
     }
 
 
@@ -2863,7 +2874,7 @@ auto main(int argc, char* argv[]) -> int
     }
 
     if (cmdline.arguments().empty()) {
-        std::cout << "cppfront: error: no input files\n";
+        std::cerr << "cppfront: error: no input files\n";
         return EXIT_FAILURE;
     }
 
@@ -2893,9 +2904,9 @@ auto main(int argc, char* argv[]) -> int
         }
         //  Otherwise, print the errors
         else {
-            std::cout << "\n";
+            std::cerr << "\n";
             c.print_errors();
-            std::cout << "\n";
+            std::cerr << "\n";
             exit_status = EXIT_FAILURE;
         }
 
