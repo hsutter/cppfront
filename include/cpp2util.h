@@ -1133,7 +1133,7 @@ inline auto to_string(...) -> std::string {
     return "(customize me - no cpp2::to_string overload exists for this type)";
 }
 
-inline auto to_string(std::any const&) -> std::string {
+inline auto to_string(std::same_as<std::any> auto const&) -> std::string {
     return "std::any";
 }
 
