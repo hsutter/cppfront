@@ -1655,14 +1655,30 @@ public:
 
         if (n.expr.index() == primary_expression_node::declaration)
         {
+            //  This must be an anonymous declaration
             auto& decl = std::get<primary_expression_node::declaration>(n.expr);
+            assert(decl && !decl->identifier);
 
-            //  The usual non-null assertion, plus it should be an anonymous function
-            assert(decl && !decl->identifier && decl->is(declaration_node::function));
+            //  Handle an anonymous function
+            if (decl->is(declaration_node::function)) {
+                auto lambda_intro = build_capture_lambda_intro_for(decl->captures, n.position());
+                emit(*decl, lambda_intro);
+            }
+            //  Else an anonymous object as 'typeid { initializer }'
+            else {
+                assert(decl->is(declaration_node::object));
+                auto& type_id = std::get<declaration_node::object>(decl->type);
 
-            auto lambda_intro = build_capture_lambda_intro_for(decl->captures, n.position());
+                printer.add_pad_in_this_line( -5 );
 
-            emit(*decl, lambda_intro);
+                emit(*type_id);
+                printer.print_cpp2("{", decl->position());
+
+                assert(decl->initializer);
+                emit(*decl->initializer, false);
+
+                printer.print_cpp2("}", decl->position());
+            }
         }
     }
 

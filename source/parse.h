@@ -1063,7 +1063,7 @@ struct declaration_node
     source_position pos;
     std::unique_ptr<unqualified_id_node> identifier;
 
-    enum active : std::uint8_t { function, object };
+    enum active : std::uint8_t { function, object, udt_type };
     std::variant<
         std::unique_ptr<function_type_node>,
         std::unique_ptr<type_id_node>
@@ -1563,7 +1563,7 @@ private:
         }
 
         if (curr().type() == lexeme::LeftParen
-            //  If in the future (not now) we want to experiment with braced-expressions
+            //  If in the future (not now) we decide to allow braced-expressions
             //      || curr().type() == lexeme::LeftBrace
             )
         {
@@ -1589,25 +1589,25 @@ private:
             return n;
         }
 
-        if (auto decl = unnamed_declaration(curr().position(), true, true)) // captures are allowed
+        if (auto decl = unnamed_declaration(curr().position(), false, true)) // captures are allowed
         {
             assert (!decl->identifier && "ICE: declaration should have been unnamed");
-            if (!decl->is(declaration_node::function)) {
-                error("an unnamed declaration at expression scope must be a function");
+            if (decl->is(declaration_node::udt_type)) {
+                error("(temporary alpha limitation) an unnamed declaration at expression scope must be a function or an object");
                 next();
                 return {};
             }
-            auto& func = std::get<declaration_node::function>(decl->type);
-            assert(func);
-            if (func->returns.index() == function_type_node::list) {
-                error("an unnamed function at expression scope currently cannot return multiple values");
-                next();
-                return {};
-            }
-            if (!func->contracts.empty()) {
-                error("an unnamed function at expression scope currently cannot have contracts");
-                next();
-                return {};
+            if (auto func = std::get_if<declaration_node::function>(&decl->type)) {
+                if ((*func)->returns.index() == function_type_node::list) {
+                    error("an unnamed function at expression scope currently cannot return multiple values");
+                    next();
+                    return {};
+                }
+                if (!(*func)->contracts.empty()) {
+                    error("an unnamed function at expression scope currently cannot have contracts");
+                    next();
+                    return {};
+                }
             }
 
             n->expr = std::move(decl);
