@@ -1,6 +1,6 @@
+#include <random>
 #include <string>
 #include <vector>
-#include <ctime>
 
 main: () -> int = {
     x: std::string;         // note: uninitialized!
@@ -26,4 +26,5 @@ fill: (
 print_decorated: (x:_) = std::cout << ">> [" << x << "]\n";
 
 // for test determinism, force "xyzzy" branch
-flip_a_coin: () -> bool = true;
+// the standard mandates that std::mt19937()() == 3499211612
+flip_a_coin: () -> bool = std::mt19937()() % 2 == 0;
