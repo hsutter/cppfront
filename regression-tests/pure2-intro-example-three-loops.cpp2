@@ -1,8 +1,8 @@
 
-print: (thing:_) = 
+print: (thing:_) =
     std::cout << ">> " << thing << "\n";
 
-decorate_and_print: (inout thing:_) = { 
+decorate_and_print: (inout thing:_) = {
     thing = "[" + thing + "]";
     print(thing);
 }
@@ -25,5 +25,6 @@ main: () -> int = {
     for words do: (inout word:_) =
         decorate_and_print(word);
 
+    print( : std::string = "end of program" );
 }
 

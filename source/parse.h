@@ -2947,7 +2947,8 @@ private:
     //G     'final'
     //G
     auto parameter_declaration(
-        bool returns = false
+        bool returns = false,
+        bool named   = true
     )
         -> std::unique_ptr<parameter_declaration_node>
     {
@@ -2981,6 +2982,10 @@ private:
                 next();
             }
             else if (curr() == "out") {
+                if (!named) {
+                    error("(temporary alpha limitation) an unnamed function cannot have an 'out' parameter");
+                    return {};
+                }
                 n->pass = passing_style::out;
                 next();
             }
@@ -3038,7 +3043,8 @@ private:
     //G     parameter-declaration-seq ',' parameter-declaration
     //G
     auto parameter_declaration_list(
-        bool returns = false
+        bool returns = false,
+        bool named   = true
     )
         -> std::unique_ptr<parameter_declaration_list_node>
     {
@@ -3052,7 +3058,7 @@ private:
 
         auto param = std::make_unique<parameter_declaration_node>();
 
-        while ((param = parameter_declaration(returns)) != nullptr) {
+        while ((param = parameter_declaration(returns, named)) != nullptr) {
             n->parameters.push_back( std::move(param) );
 
             if (curr().type() == lexeme::RightParen) {
@@ -3161,12 +3167,12 @@ private:
     //G     contract
     //G     contract-seq contract
     //G
-    auto function_type() -> std::unique_ptr<function_type_node>
+    auto function_type(bool named = true) -> std::unique_ptr<function_type_node>
     {
         auto n = std::make_unique<function_type_node>();
 
         //  Parameters
-        auto parameters = parameter_declaration_list();
+        auto parameters = parameter_declaration_list(false, named);
         if (!parameters) {
             return {};
         }
@@ -3186,7 +3192,7 @@ private:
             if (auto t = type_id()) {
                 n->returns = std::move(t);
             }
-            else if (auto returns_list = parameter_declaration_list(true)) {
+            else if (auto returns_list = parameter_declaration_list(true, named)) {
                 if (std::ssize(returns_list->parameters) < 1) {
                     error("an explicit return value list cannot be empty");
                     return {};
@@ -3222,7 +3228,12 @@ private:
     //G     'is' id-expression
     //G     meta-constraints ',' id-expression
     //G
-    auto unnamed_declaration(source_position start, bool semicolon_required = true, bool captures_allowed = false) -> std::unique_ptr<declaration_node>
+    auto unnamed_declaration(
+        source_position start,
+        bool            semicolon_required = true,
+        bool            captures_allowed = false,
+        bool            named = false
+    ) -> std::unique_ptr<declaration_node>
     {
         auto deduced_type = false;
 
@@ -3251,7 +3262,7 @@ private:
         //}
 
         //  Or a function type, declaring a function
-        if (auto t = function_type()) {
+        if (auto t = function_type(named)) {
             n->type = std::move(t);
             assert (n->type.index() == declaration_node::function);
         }
@@ -3384,7 +3395,7 @@ private:
             return {};
         }
 
-        auto n = unnamed_declaration(start_pos, semicolon_required);
+        auto n = unnamed_declaration(start_pos, semicolon_required, false, true);
         if (!n) {
             pos = start_pos;    // backtrack
             return {};
