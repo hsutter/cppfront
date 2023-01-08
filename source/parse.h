@@ -519,6 +519,7 @@ struct type_id_node
 {
     source_position pos;
 
+    token const* static_qualifier = {};
     std::vector<token const*> pc_qualifiers;
 
     enum active { empty=0, qualified, unqualified, keyword };
@@ -531,6 +532,10 @@ struct type_id_node
 
     auto is_wildcard() const -> bool {
         return id.index() == type_id_node::empty || (get_token() && *get_token() == "_");
+    }
+
+    auto is_static_qualified() const -> bool {
+        return static_qualifier != nullptr;
     }
 
     auto is_pointer_qualified() const -> bool {
@@ -575,6 +580,9 @@ struct type_id_node
     auto visit(auto& v, int depth) -> void
     {
         v.start(*this, depth);
+        if(static_qualifier != nullptr) {
+            v.start(*static_qualifier, depth+1);
+        }
         for (auto q : pc_qualifiers) {
             v.start(*q, depth+1);
         }
@@ -1306,6 +1314,12 @@ struct translation_unit_node
         v.end(*this, depth);
     }
 };
+
+struct allow_static {};
+struct disallow_static {};
+
+template <typename T>
+concept static_qualifier_policy = std::is_same_v<T, allow_static> || std::is_same_v<T, disallow_static>;
 
 
 //-----------------------------------------------------------------------
@@ -2091,10 +2105,12 @@ private:
         return n;
     }
 
-
     //G type-id:
-    //G     type-qualifier-seq? qualified-id
-    //G     type-qualifier-seq? unqualified-id
+    //G     static-qualifier? type-qualifier-seq? qualified-id
+    //G     static-qualifier? type-qualifier-seq? unqualified-id
+    //G
+    //G static-qualifier:
+    //G     `static`
     //G
     //G type-qualifier-seq:
     //G     type-qualifier
@@ -2104,21 +2120,39 @@ private:
     //G     'const'
     //G     '*'
     //G
+    template<static_qualifier_policy static_qualif_policy = disallow_static>
     auto type_id() -> std::unique_ptr<type_id_node>
     {
         auto n = std::make_unique<type_id_node>();
 
         while (
-            (curr().type() == lexeme::Keyword && curr() == "const") ||
-            curr().type() == lexeme::Multiply
+            (curr().type() == lexeme::Keyword && (curr() == "const" || curr() == "static"))
+            || curr().type() == lexeme::Multiply
             )
         {
-            if (curr() == "const" && !n->pc_qualifiers.empty() && *n->pc_qualifiers.back() == "const") {
-                error("consecutive 'const' not allowed");
-                return {};
+            if (curr() == "static") {
+                if constexpr (std::is_same_v<static_qualif_policy, disallow_static>) {
+                    error("'static' qualifier not allowed in this context");
+                    return {};
+                } else {
+                    if(!n->pc_qualifiers.empty()) {
+                        error("'static' qualifier has to be the first");
+                        return {};
+                    } else if (n->static_qualifier) {
+                        error("more than one 'static' not allowed");
+                        return {};
+                    }
+                    n->static_qualifier = &curr();
+                    next();
+                }
+            } else {
+                if (curr() == "const" && !n->pc_qualifiers.empty() && *n->pc_qualifiers.back() == "const") {
+                    error("consecutive 'const' not allowed");
+                    return {};
+                }
+                n->pc_qualifiers.push_back( &curr() );
+                next();
             }
-            n->pc_qualifiers.push_back( &curr() );
-            next();
         }
 
         if (auto id = qualified_id()) {
@@ -2132,8 +2166,8 @@ private:
             assert (n->id.index() == type_id_node::unqualified);
         }
         else {
-            if (!n->pc_qualifiers.empty()) {
-            error("'*'/'const' type qualifiers must be followed by a type name or '_' wildcard");
+            if (n->is_static_qualified() || !n->pc_qualifiers.empty()) {
+            error("static/'*'/'const' type qualifiers must be followed by a type name or '_' wildcard");
             }
             return {};
         }
@@ -2859,7 +2893,7 @@ private:
             return n;
         }
 
-        else if (auto s = declaration()) {
+        else if (auto s = declaration<allow_static>()) {
             n->statement = std::move(s);
             assert (n->statement.index() == statement_node::declaration);
             return n;
@@ -3222,6 +3256,7 @@ private:
     //G     'is' id-expression
     //G     meta-constraints ',' id-expression
     //G
+    template<static_qualifier_policy static_qualif_policy = disallow_static>
     auto unnamed_declaration(source_position start, bool semicolon_required = true, bool captures_allowed = false) -> std::unique_ptr<declaration_node>
     {
         auto deduced_type = false;
@@ -3257,7 +3292,7 @@ private:
         }
 
         //  Or just a type, declaring a non-pointer object
-        else if (auto t = type_id()) {
+        else if (auto t = type_id<static_qualif_policy>()) {
             if (auto id = t->get_token(); id && *id == "namespace") {
                 error("(temporary alpha limitation) namespaces are not yet supported", false);
                 return {};
@@ -3372,6 +3407,7 @@ private:
     //G declaration:
     //G     identifier unnamed-declaration
     //G
+    template<static_qualifier_policy static_qualif_policy = disallow_static>
     auto declaration(bool semicolon_required = true) -> std::unique_ptr<declaration_node>
     {
         if (done()) { return {}; }
@@ -3384,7 +3420,7 @@ private:
             return {};
         }
 
-        auto n = unnamed_declaration(start_pos, semicolon_required);
+        auto n = unnamed_declaration<static_qualif_policy>(start_pos, semicolon_required);
         if (!n) {
             pos = start_pos;    // backtrack
             return {};

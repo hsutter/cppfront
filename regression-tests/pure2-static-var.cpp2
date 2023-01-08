@@ -1,0 +1,9 @@
+green_bottles: () -> int = {
+    n: static _ = 10;
+    std::cout << n << std::endl;
+    return n--;
+}
+
+main: () -> int = {
+    while green_bottles() >= 0 {}
+}

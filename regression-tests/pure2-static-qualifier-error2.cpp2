@@ -1,0 +1,2 @@
+// Nonsense
+foo: () -> static int -> {};

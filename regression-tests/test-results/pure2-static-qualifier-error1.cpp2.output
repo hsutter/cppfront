@@ -1,0 +1,8 @@
+pure2-static-qualifier-error1.cpp2...
+pure2-static-qualifier-error1.cpp2(2,11): error: 'static' qualifier not allowed in this context (at 'static')
+pure2-static-qualifier-error1.cpp2(2,11): error: a deduced type must have an = initializer (at 'static')
+pure2-static-qualifier-error1.cpp2(2,7): error: invalid parameter list (at 'p')
+pure2-static-qualifier-error1.cpp2(2,9): error: a deduced type must have an = initializer (at ':')
+pure2-static-qualifier-error1.cpp2(2,1): error: unexpected text at end of Cpp2 code section (at 'foo')
+pure2-static-qualifier-error1.cpp2(1,0): error: parse failed for section starting here
+

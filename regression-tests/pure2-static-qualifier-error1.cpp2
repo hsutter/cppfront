@@ -1,0 +1,2 @@
+// Nonsense
+foo: (p : static int) -> void = {}

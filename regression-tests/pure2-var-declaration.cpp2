@@ -1,0 +1,41 @@
+main: () -> int = {
+    i1: = 42;
+    i1c: const _ = 42;
+    i1s: static _ = 42;
+    i2: int = 42;
+    i2s: static int = 42;
+    i2c: const int = 42;
+    i2sc: static const int = 42;
+
+
+    p1: * _ = i1&;
+    p1c: const* _ = i1&;
+    p1s: static* _ = i1s&;
+    p2: * const _ = i1&;
+    p2c: const* const _ = i1&;
+    p2s: static* const _ = i1s&;
+    p2cs: static const* const _ = i1s&;
+    p3: * int = i1&;
+    p3c: const * int = i1&;
+    p3s: static * int = i1s&;
+    p3sc: static const * int = i1s&;
+    p4: * const int = i1&;
+    p4s: static * const int = i1s&;
+    p5: const * int = i1&;
+    p5s: static const * int = i1s&;
+    p6: const * const * const int = p4&;
+    p6s: static const * const * const int = p5s&;
+
+
+    s1: = "Fred";
+    s1c: const _ = "Fred";
+    s1s: static _ = "Fred";
+    s1sc: static const _ = "Fred";
+    s2: std::string = "Fred";
+    s2c: const std::string = "Fred";
+    s2s: static std::string = "Fred";
+    s2sc: static const std::string = "Fred";
+
+
+    std::cout << s2sc << " is " << p6s** << std::endl;
+}

@@ -1229,6 +1229,11 @@ public:
             try_emit<type_id_node::keyword    >(n.id);
         }
 
+        if(n.is_static_qualified()) {
+            printer.print_extra(" "); 
+            emit(*n.static_qualifier, false, pos);
+        }
+
         for (auto i = n.pc_qualifiers.rbegin(); i != n.pc_qualifiers.rend(); ++i) {
             if ((**i) == "const") { printer.print_cpp2(" ", pos); }
             emit(**i, false, pos);

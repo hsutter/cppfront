@@ -1,0 +1,11 @@
+main: () -> int = {
+    // Nonsense
+    x: std::variant<static int, bool> = 42;
+
+    std::cout <<
+        inspect i -> std::string {
+            is int = "int";
+            is bool = "bool";
+            is _ = "unknown";
+        } << std::endl;
+}
