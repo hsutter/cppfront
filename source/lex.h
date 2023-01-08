@@ -996,9 +996,9 @@ auto lex_line(
                         // [a-zA-Z] and then validate against a list of
                         // allowed suffixes. Ideally handle the C++23 size
                         // suffixes aswell.
-                        if (peek(j) == 'u' || peek(j) == 'U') ++j;
-                        if (peek(j) == 'l' || peek(j) == 'L') ++j;
-                        if (peek(j) == 'l' || peek(j) == 'L') ++j;
+                        if (peek(j) == 'u' || peek(j) == 'U') { ++j; }
+                        if (peek(j) == 'l' || peek(j) == 'L') { ++j; }
+                        if (peek(j) == 'l' || peek(j) == 'L') { ++j; }
                         store(j, lexeme::DecimalLiteral);
                     }
                     else {
@@ -1024,8 +1024,8 @@ auto lex_line(
                         // error checked. Best would be to slurp all [a-zA-Z]
                         // and then validate against a list of allowed
                         // suffixes. Ideally handle the C++23 suffixes aswell.
-                        if (peek(j) == 'f' || peek(j) == 'F') ++j;
-                        else if (peek(j) == 'l' || peek(j) == 'L') ++j;
+                        if      (peek(j) == 'f' || peek(j) == 'F') { ++j; }
+                        else if (peek(j) == 'l' || peek(j) == 'L') { ++j; }
                         store(j, lexeme::FloatLiteral);
                     }
                 }

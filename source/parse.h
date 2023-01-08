@@ -1592,12 +1592,10 @@ private:
         if (auto decl = unnamed_declaration(curr().position(), false, true)) // captures are allowed
         {
             assert (!decl->identifier && "ICE: declaration should have been unnamed");
-            if (decl->is(declaration_node::udt_type)) {
-                error("(temporary alpha limitation) an unnamed declaration at expression scope must be a function or an object");
-                next();
-                return {};
+            if (auto obj = std::get_if<declaration_node::object>(&decl->type)) {
+                //if ((*obj)->typid)
             }
-            if (auto func = std::get_if<declaration_node::function>(&decl->type)) {
+            else if (auto func = std::get_if<declaration_node::function>(&decl->type)) {
                 if ((*func)->returns.index() == function_type_node::list) {
                     error("an unnamed function at expression scope currently cannot return multiple values");
                     next();
@@ -1608,6 +1606,11 @@ private:
                     next();
                     return {};
                 }
+            }
+            else {
+                error("(temporary alpha limitation) an unnamed declaration at expression scope must be a function or an object");
+                next();
+                return {};
             }
 
             n->expr = std::move(decl);
