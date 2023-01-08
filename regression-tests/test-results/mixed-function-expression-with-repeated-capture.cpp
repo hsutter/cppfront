@@ -16,15 +16,15 @@
 #line 7 "mixed-function-expression-with-repeated-capture.cpp2"
 
 [[nodiscard]] auto main() -> int{
-    std::vector<std::string> vec { 
-               "hello", "2022" }; 
-    std::span view { vec }; 
+    std::vector<std::string> vec {
+               "hello", "2022"}; 
+    std::span view {vec}; 
 
-    auto y { "\n" }; 
+    auto y {"\n"}; 
     std::ranges::for_each
         ( view, [_0 = y, _1 = std::move(y)](auto const& x){std::cout << _0 << x << _1;});
 
-    auto callback { [](auto& x) { return x += "-ish"; } }; 
+    auto callback {[](auto& x) { return x += "-ish"; }}; 
     std::ranges::for_each( view, std::move(callback));
 
     for ( auto&& cpp2_range = view;  auto const& str : cpp2_range ) 

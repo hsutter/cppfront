@@ -17,8 +17,8 @@ auto print_and_decorate(auto const& thing) -> void;
 #line 4 "mixed-lifetime-safety-pointer-init-4.cpp2"
 
 [[nodiscard]] auto main() -> int{
-    int x { 42 }; 
-    int y { 43 }; 
+    int x {42}; 
+    int y {43}; 
     cpp2::deferred_init<int*> p; 
 
     // ... more code ...

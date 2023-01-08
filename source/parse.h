@@ -3347,7 +3347,10 @@ private:
 
             if (body->statements.empty() || body->statements.back()->statement.index() != statement_node::return_)
             {
-                auto last_pos = body->statements.back()->position();
+                auto last_pos = n->position();
+                if (!body->statements.empty()) {
+                    last_pos = body->statements.back()->position();
+                }
                 ++last_pos.lineno;
                 generated_tokens_->emplace_back( "return", last_pos, lexeme::Keyword);
 

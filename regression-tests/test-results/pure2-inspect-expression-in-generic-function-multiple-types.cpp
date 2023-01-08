@@ -12,9 +12,9 @@ auto test_generic(auto const& x, auto const& msg) -> void;
 
 #line 1 "pure2-inspect-expression-in-generic-function-multiple-types.cpp2"
 [[nodiscard]] auto main() -> int{
-    std::variant<int,int,double> v { 42.0 }; 
-    std::any a { cpp2::as_<std::string>("xyzzy") }; 
-    std::optional<int> o {  }; 
+    std::variant<int,int,double> v {42.0}; 
+    std::any a {cpp2::as_<std::string>("xyzzy")}; 
+    std::optional<int> o {}; 
 
     test_generic(3.14, "double");
     test_generic(v,    "variant<int, int, double>");

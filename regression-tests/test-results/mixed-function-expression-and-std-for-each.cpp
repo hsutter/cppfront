@@ -15,9 +15,9 @@
 #line 6 "mixed-function-expression-and-std-for-each.cpp2"
 
 [[nodiscard]] auto main() -> int{
-    std::vector<std::string> vec { 
-               "hello", "2022" }; 
-    std::span view { vec }; 
+    std::vector<std::string> vec {
+               "hello", "2022"}; 
+    std::span view {vec}; 
 
     //  Passing a function expression
     std::for_each(
@@ -27,7 +27,7 @@
     );
 
     //  Initializating from a function expression
-    auto callback { [](auto& x) { return x += " maybe"; } }; 
+    auto callback {[](auto& x) { return x += " maybe"; }}; 
     std::for_each(
         CPP2_UFCS_0(begin, view), 
         CPP2_UFCS_0(end, view), 

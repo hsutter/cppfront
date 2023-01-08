@@ -31,7 +31,7 @@ auto parameter_styles(
     std::string&& d
     ) -> void
 {
-    int z { 12 }; 
+    int z {12}; 
 
     ++z;
     b += "plugh";

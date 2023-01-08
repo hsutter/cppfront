@@ -12,9 +12,9 @@ auto test_generic(auto const& x, auto const& msg) -> void;
 
 #line 1 "pure2-type-safety-2-with-inspect-expression.cpp2"
 [[nodiscard]] auto main() -> int{
-    std::variant<int,double,int> v { 42.0 }; 
-    std::any a { "xyzzy" }; 
-    std::optional<int> o {  }; 
+    std::variant<int,double,int> v {42.0}; 
+    std::any a {"xyzzy"}; 
+    std::optional<int> o {}; 
 
     test_generic(3.14, "double");
     test_generic(v,    "variant<int, double, int>");

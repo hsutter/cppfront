@@ -22,7 +22,7 @@ auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void;
     insert_at( 0, 42 );
 }
 
-std::vector<int> vec {  }; 
+std::vector<int> vec {}; 
 
 auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void
 {   

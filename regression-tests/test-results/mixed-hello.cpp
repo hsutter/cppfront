@@ -21,7 +21,7 @@ auto main() -> int {
 #line 4 "mixed-hello.cpp2"
 
 [[nodiscard]] auto name() -> std::string{
-    std::string s { "world" }; 
+    std::string s {"world"}; 
     decorate(s);
     return std::move(s); 
 }

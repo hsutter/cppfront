@@ -16,11 +16,11 @@ auto print_and_decorate(auto const& thing) -> void;
 
 [[nodiscard]] auto main() -> int
 {
-    std::vector<std::string> words { "decorated", "hello", "world" }; 
+    std::vector<std::string> words {"decorated", "hello", "world"}; 
 
-    std::span<std::string> s { words }; 
+    std::span<std::string> s {words}; 
 
-    auto i { 0 }; 
+    auto i {0}; 
     for( ; i < CPP2_UFCS_0(ssize, s); ++i ) {
         print_and_decorate( cpp2::assert_in_bounds(s, i));
     }

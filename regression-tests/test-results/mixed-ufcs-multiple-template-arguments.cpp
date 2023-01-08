@@ -24,10 +24,10 @@ struct X {
 #line 15 "mixed-ufcs-multiple-template-arguments.cpp2"
 
 [[nodiscard]] auto main() -> int{
-    std::string test_string { "The rain in Spain flows mainly down the drain" }; 
+    std::string test_string {"The rain in Spain flows mainly down the drain"}; 
     std::cout << substr<4,8>(test_string) << "\n";
 
-    X x { test_string }; 
+    X x {test_string}; 
     std::cout << CPP2_UFCS_TEMPLATE_0(substr, (<4,8>), std::move(x)) << "\n";
 }
 

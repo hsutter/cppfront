@@ -2687,7 +2687,7 @@ public:
                     {
                         std::string init;
                         printer.emit_to_string(&init);
-                        printer.print_cpp2 ( " = ", decl.initializer->position() );
+                        printer.print_cpp2 ( " {", decl.initializer->position() );
                         if (decl.initializer->statement.index() != statement_node::expression) {
                             errors.emplace_back(
                                 decl.initializer->position(),
@@ -2698,7 +2698,8 @@ public:
                         auto& expr = std::get<statement_node::expression>(decl.initializer->statement);
                         assert(expr);
 
-                        emit(*decl.initializer, false);
+                        emit(*expr, false);
+                        printer.print_cpp2 ( "}", decl.initializer->position() );
                         printer.emit_to_string();
 
                         loc += init;
@@ -2781,14 +2782,14 @@ public:
             {
                 in_non_rvalue_context.push_back(true);
                 printer.add_pad_in_this_line(-100);
-                printer.print_cpp2( " { ", n.position() );
+                printer.print_cpp2( " {", n.position() );
 
                 push_need_expression_list_parens(false);
                 assert( n.initializer );
                 emit( *n.initializer, false );
                 pop_need_expression_list_parens();
 
-                printer.print_cpp2( " }", n.position() );
+                printer.print_cpp2( "}", n.position() );
                 in_non_rvalue_context.pop_back();
             }
 

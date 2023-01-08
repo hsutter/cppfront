@@ -45,12 +45,12 @@ requires std::is_same_v<CPP2_TYPEOF(t), std::pair<X,X>>
 }
 
 [[nodiscard]] auto main() -> int{
-    std::pair<X,X> t1 { 1, 2 }; 
+    std::pair<X,X> t1 {1, 2}; 
     apply_implicit_forward(t1);
     use(t1);
     apply_implicit_forward(std::move(t1));
 
-    std::pair<X,X> t2 { 3, 4 }; 
+    std::pair<X,X> t2 {3, 4}; 
     apply_explicit_forward(t2);
     use(t2);
     apply_explicit_forward(std::move(t2));

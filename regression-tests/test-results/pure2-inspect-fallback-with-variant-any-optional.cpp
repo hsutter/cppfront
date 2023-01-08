@@ -13,9 +13,9 @@ auto test_generic(auto const& x, auto const& msg) -> void;
 #line 1 "pure2-inspect-fallback-with-variant-any-optional.cpp2"
 
 [[nodiscard]] auto main() -> int{
-    std::variant<int,int,std::string> v { cpp2::as_<std::string>("xyzzy") }; 
-    std::any a { cpp2::as_<std::string>("xyzzy") }; 
-    std::optional<std::string> o { cpp2::as_<std::string>("xyzzy") }; 
+    std::variant<int,int,std::string> v {cpp2::as_<std::string>("xyzzy")}; 
+    std::any a {cpp2::as_<std::string>("xyzzy")}; 
+    std::optional<std::string> o {cpp2::as_<std::string>("xyzzy")}; 
 
     std::cout << "\nAll these cases satisfy \"matches std::string\"\n";
 

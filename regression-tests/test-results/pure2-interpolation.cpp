@@ -11,7 +11,7 @@
 #line 1 "pure2-interpolation.cpp2"
 
 [[nodiscard]] auto main() -> int{
-    auto x { 0 }; 
+    auto x {0}; 
     std::cout << "g" + cpp2::to_string(x) + "g" + cpp2::to_string(x) + "g" << "\n";
     std::cout << cpp2::to_string(x) + "g" + cpp2::to_string(x) + "g" << "\n";
     std::cout << cpp2::to_string(x) + "g" + cpp2::to_string(x) << "\n";
