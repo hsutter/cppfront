@@ -84,7 +84,9 @@
         #include <tuple>
         #include <type_traits>
         #include <typeindex>
-        #include <typeinfo>
+        #ifndef CPP2_NO_RTTI
+            #include <typeinfo>
+        #endif
         #include <utility>
         #include <variant>
         #include <memory>
@@ -100,7 +102,9 @@
         #include <limits>
         #include <cassert>
         #include <cerrno>
-        #include <exception>
+        #ifndef CPP2_NO_EXCEPTIONS
+            #include <exception>
+        #endif
         #include <stdexcept>
         #include <system_error>
         #include <cctype>
@@ -194,7 +198,6 @@
 //  Otherwise, we're not in -pure-cpp2 and so just #include
 //  what we need in this header to make this self-contained
 #else
-    #include <exception>
     #include <type_traits>
     #include <new>
     #include <memory>
@@ -208,6 +211,13 @@
     #include <utility>
     #include <cstdio>
     #include <cstdint>
+
+    #ifndef CPP2_NO_EXCEPTIONS
+        #include <exception>
+    #endif
+    #ifndef CPP2_NO_RTTI
+        #include <typeinfo>
+    #endif
 
     #if defined(CPP2_USE_SOURCE_LOCATION)
         #include <source_location>
@@ -373,6 +383,78 @@ auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAU
 
 //-----------------------------------------------------------------------
 //
+//  Support wrappers that unblock using this file in environments that
+//  disable EH or RTTI
+//
+//  Note: This is not endorsing disabling those features, it's just
+//        recognizing that disabling them is popular (e.g., games, WASM)
+//        and so we should remove a potential adoption blocker... only a
+//        few features in this file depend on EH or RTTI anyway, and
+//        wouldn't be exercised in such an environment anyway so there
+//        is no real net loss here
+//
+//-----------------------------------------------------------------------
+//
+
+[[noreturn]] auto Throw(auto&& x, [[maybe_unused]] char const* msg) -> void {
+#ifdef CPP2_NO_EXCEPTIONS
+    Type.expects(
+        !"exceptions are disabled with -fno-exceptions",
+        msg
+    );
+    std::terminate();
+#else
+    throw CPP2_FORWARD(x);
+#endif
+}
+
+auto Uncaught_exceptions() -> int {
+#ifdef CPP2_NO_EXCEPTIONS
+    return 0;
+#else
+    return std::uncaught_exceptions();
+#endif
+}
+
+template<typename T>
+auto Dynamic_cast( [[maybe_unused]] auto&& x ) -> decltype(auto) {
+#ifdef CPP2_NO_RTTI
+    Type.expects(
+        !"'as' dynamic casting is disabled with -fno-rtti", // more likely to appear on console
+         "'as' dynamic casting is disabled with -fno-rtti"  // make message available to hooked handlers
+    );
+    return nullptr;
+#else
+    return dynamic_cast<T>(CPP2_FORWARD(x));
+#endif
+}
+
+template<typename T>
+auto Typeid() -> decltype(auto) {
+#ifdef CPP2_NO_RTTI
+    Type.expects(
+        !"'any' dynamic casting is disabled with -fno-rtti", // more likely to appear on console 
+         "'any' dynamic casting is disabled with -fno-rtti"  // make message available to hooked handlers
+    );
+#else
+    return typeid(T);
+#endif
+}
+
+//  We don't need typeid(expr) yet -- uncomment this if/when we need it
+//auto Typeid( [[maybe_unused]] auto&& x ) -> decltype(auto) {
+//#ifdef CPP2_DISABLE_RTTI
+//    Type.expects(
+//        !"<write appropriate error message here>"
+//    );
+//#else
+//    return typeid(CPP2_FORWARD(x));
+//#endif
+//}
+
+
+//-----------------------------------------------------------------------
+//
 //  Arena objects for std::allocators
 //
 //  Note: cppfront translates "new" to "cpp2_new", so in Cpp2 code
@@ -457,7 +539,7 @@ class out {
     bool has_t;
 
     //  Each out in a chain contains its own uncaught_count ...
-    int  uncaught_count   = std::uncaught_exceptions();
+    int  uncaught_count   = Uncaught_exceptions();
     //  ... but all in a chain share the topmost called_construct_
     bool called_construct_ = false;
 
@@ -477,7 +559,7 @@ public:
     //  In the case of an exception, if the parameter was uninitialized
     //  then leave it in the same state on exit (strong guarantee)
     ~out() {
-        if (called_construct() && uncaught_count != std::uncaught_exceptions()) {
+        if (called_construct() && uncaught_count != Uncaught_exceptions()) {
             Default.expects(!has_t);
             dt->destroy();
             called_construct() = false;
@@ -589,6 +671,7 @@ public:
 //
 //-----------------------------------------------------------------------
 //
+
 //-------------------------------------------------------------------------------------------------------------
 //  Built-in is
 //
@@ -652,7 +735,7 @@ template< typename C, typename X >
           ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>) 
         ) && !std::is_same_v<C,X>)
 auto is( X const& x ) -> bool {
-    return dynamic_cast<C const*>(&x) != nullptr;
+    return Dynamic_cast<C const*>(&x) != nullptr;
 }
 
 template< typename C, typename X >
@@ -661,7 +744,7 @@ template< typename C, typename X >
           ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>) 
         ) && !std::is_same_v<C,X>)
 auto is( X const* x ) -> bool {
-    return dynamic_cast<C const*>(x) != nullptr;
+    return Dynamic_cast<C const*>(x) != nullptr;
 }
 
 template< typename C, typename X >
@@ -814,25 +897,25 @@ auto as( X&& x ) -> C&& {
 template< typename C, typename X >
     requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
 auto as( X& x ) -> C& {
-    return dynamic_cast<C&>(x);
+    return Dynamic_cast<C&>(x);
 }
 
 template< typename C, typename X >
     requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
 auto as( X const& x ) -> C const& {
-    return dynamic_cast<C const&>(x);
+    return Dynamic_cast<C const&>(x);
 }
 
 template< typename C, typename X >
     requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
 auto as( X* x ) -> C* {
-    return dynamic_cast<C*>(x);
+    return Dynamic_cast<C*>(x);
 }
 
 template< typename C, typename X >
     requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
 auto as( X const* x ) -> C const* {
-    return dynamic_cast<C const*>(x);
+    return Dynamic_cast<C const*>(x);
 }
 
 
@@ -978,7 +1061,7 @@ auto as( std::variant<Ts...> const& x ) {
     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) { if (x.index() == 17) return operator_as<7>(x); }
     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) { if (x.index() == 18) return operator_as<8>(x); }
     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<19>(x)), T >) { if (x.index() == 19) return operator_as<9>(x); }
-    throw std::bad_variant_access();
+    Throw( std::bad_variant_access(), "'as' cast failed for 'variant'");
 }
 
 
@@ -1264,7 +1347,7 @@ inline auto fopen( const char* filename, const char* mode ) {
     #endif
 
     if (!x) {
-        throw std::make_error_condition(std::errc::no_such_file_or_directory);
+        Throw( std::make_error_condition(std::errc::no_such_file_or_directory), "'fopen' attempt failed");
     }
     return c_raii( x, &fclose );
 }

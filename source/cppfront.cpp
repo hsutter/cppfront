@@ -62,7 +62,7 @@ auto pad(int padding) -> std::string_view
 //
 static auto flag_clean_cpp1 = false;
 static cmdline_processor::register_flag cmd_noline(
-    1,
+    9,
     "clean-cpp1",
     "Emit clean Cpp1 without #line directives",
     []{ flag_clean_cpp1 = true; }
@@ -70,7 +70,7 @@ static cmdline_processor::register_flag cmd_noline(
 
 static auto flag_cpp2_only = false;
 static cmdline_processor::register_flag cmd_cpp2_only(
-    1,
+    0,
     "pure-cpp2",
     "Allow Cpp2 syntax only",
     []{ flag_cpp2_only = true; }
@@ -80,7 +80,7 @@ static auto flag_safe_null_pointers = true;
 static cmdline_processor::register_flag cmd_safe_null_pointers(
     2,
     "null-checks",
-    "Null safety checks (on by default, - to disable)",
+    "Null safety checks (on by default, '-' to disable)",
     nullptr,
     [](std::string const& opt){ flag_safe_null_pointers = opt.empty(); },
     {},
@@ -91,7 +91,7 @@ static auto flag_safe_subscripts = true;
 static cmdline_processor::register_flag cmd_safe_subscripts(
     2,
     "subscript-checks",
-    "Subscript safety checks (on by default, - to disable)",
+    "Subscript safety checks (on by default, '-' to disable)",
     nullptr,
     [](std::string const& opt){ flag_safe_subscripts = opt.empty(); },
     {},
@@ -102,13 +102,13 @@ static auto flag_use_source_location = false;
 static cmdline_processor::register_flag cmd_enable_source_info(
     2,
     "add-source-info",
-    "Enable source locations for contract checks",
+    "Enable source_location information for contract checks",
     []{ flag_use_source_location = true; }
 );
 
 static auto flag_cpp1_filename = std::string{};
 static cmdline_processor::register_flag cmd_cpp1_filename(
-    2,
+    9,
     "output",
     "Output filename, or 'stdout' (default is *.cpp)",
     nullptr,
@@ -117,10 +117,26 @@ static cmdline_processor::register_flag cmd_cpp1_filename(
 
 static auto flag_print_colon_errors = false;
 static cmdline_processor::register_flag cmd_print_colon_errors(
-    3,
+    9,
     "format-colon-errors",
-    "Emit ':line:col:' format for error messages",
+    "Emit ':line:col:' format for messages (lights up some tools)",
     []{ flag_print_colon_errors = true; }
+);
+
+static auto flag_no_exceptions = false;
+static cmdline_processor::register_flag cmd_no_exceptions(
+    4,
+    "fno-exceptions",
+    "Disable C++ EH, failed 'as' for 'variant' will assert (for now)",
+    []{ flag_no_exceptions = true; }
+);
+
+static auto flag_no_rtti = false;
+static cmdline_processor::register_flag cmd_no_rtti(
+    4,
+    "fno-rtti",
+    "Disable C++ RTTI, using 'as' for '*'/'std::any' will assert (for now)",
+    []{ flag_no_rtti = true; }
 );
 
 struct text_with_pos{
@@ -835,6 +851,12 @@ public:
             }
             if (flag_cpp2_only) {
                 printer.print_extra( "#define CPP2_USE_MODULES         Yes\n" );
+            }
+            if (flag_no_exceptions) {
+                printer.print_extra( "#define CPP2_NO_EXCEPTIONS       Yes\n" );
+            }
+            if (flag_no_rtti) {
+                printer.print_extra( "#define CPP2_NO_RTTI             Yes\n" );
             }
             printer.print_extra( "#include \"cpp2util.h\"\n\n" );
         }

@@ -33,6 +33,7 @@
 #include <iomanip>
 #include <compare>
 #include <algorithm>
+#include <unordered_map>
 
 namespace cpp2 {
 
@@ -310,6 +311,12 @@ class cmdline_processor
     std::vector<flag> flags;
     int max_flag_length = 0;
 
+    std::unordered_map<int, std::string> labels = {
+        { 2, "Additional dynamic safety checks and contract information" },
+        { 4, "Support for constrained target environments" },
+        { 9, "Other options" }
+    };
+
     //  Define this in the main .cpp to avoid bringing <iostream> into the headers,
     //  so that we can't accidentally start depending on iostreams in the compiler body
     static auto print(std::string_view, int width = 0) -> void;
@@ -416,6 +423,9 @@ public:
             if (last_group != flag.group) {
                 print("\n");
                 last_group = flag.group;
+                if (!labels[flag.group].empty()) {
+                    print( labels[flag.group] + "\n");
+                }
             }
             print("  -");
             auto n = flag.name.substr(0, flag.unique_prefix);
