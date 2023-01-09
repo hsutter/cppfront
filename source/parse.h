@@ -241,7 +241,18 @@ struct expression_node
     }
 };
 
-enum class passing_style { in=0, copy, inout, out, move, forward };
+enum class passing_style { in=0, copy, inout, out, move, forward, invalid };
+auto to_passing_style(token const& t) -> passing_style {
+    if (t.type() == lexeme::Identifier) {
+        if (t == "in"     ) { return passing_style::in; }
+        if (t == "copy"   ) { return passing_style::copy; }
+        if (t == "inout"  ) { return passing_style::inout; }
+        if (t == "out"    ) { return passing_style::out; }
+        if (t == "move"   ) { return passing_style::move; }
+        if (t == "forward") { return passing_style::forward; }
+    }
+    return passing_style::invalid;
+}
 auto to_string_view(passing_style pass) -> std::string_view {
     switch (pass) {
     break;case passing_style::in     : return "in";
@@ -1549,14 +1560,7 @@ private:
             return n;
         }
 
-        if (curr().type() == lexeme::DecimalLiteral ||
-            curr().type() == lexeme::FloatLiteral ||
-            curr().type() == lexeme::StringLiteral ||
-            curr().type() == lexeme::CharacterLiteral ||
-            curr().type() == lexeme::BinaryLiteral ||
-            curr().type() == lexeme::HexadecimalLiteral
-            )
-        {
+        if (is_literal(curr().type())) {
             n->expr = &curr();
             next();
             return n;
@@ -2047,16 +2051,11 @@ private:
         n->open_paren = open_paren;
         n->inside_initializer = inside_initializer;
 
-        if (curr().type() == lexeme::Identifier && curr() == "out") {
-            pass = passing_style::out;
-            next();
-        }
-        else if (curr().type() == lexeme::Identifier && curr() == "move") {
-            pass = passing_style::move;
-            next();
-        }
-        else if (curr().type() == lexeme::Identifier && curr() == "forward") {
-            pass = passing_style::forward;
+        if (auto dir = to_passing_style(curr());
+            dir == passing_style::out || dir == passing_style::move || dir == passing_style::forward
+            )
+        {
+            pass = dir;
             next();
         }
         auto x = expression();
@@ -2072,16 +2071,11 @@ private:
         while (curr().type() == lexeme::Comma) {
             next();
             pass = passing_style::in;
-            if (curr().type() == lexeme::Identifier && curr() == "out") {
-                pass = passing_style::out;
-                next();
-            }
-            else if (curr().type() == lexeme::Identifier && curr() == "move") {
-                pass = passing_style::move;
-                next();
-            }
-            else if (curr().type() == lexeme::Identifier && curr() == "forward") {
-                pass = passing_style::forward;
+            if (auto dir = to_passing_style(curr());
+                dir == passing_style::out || dir == passing_style::move || dir == passing_style::forward
+                )
+            {
+                pass = dir;
                 next();
             }
             auto expr = expression();
@@ -2959,51 +2953,31 @@ private:
         n->pass = returns ? passing_style::out : passing_style::in;
         n->pos  = curr().position();
 
-        if (curr().type() == lexeme::Identifier) {
-            if (curr() == "in") {
-                if (returns) {
+        if (auto dir = to_passing_style(curr()); dir != passing_style::invalid) {
+            if (returns) {
+                if (dir == passing_style::in) {
                     error("a return value cannot be 'in'");
                     return {};
                 }
-                n->pass = passing_style::in;
-                next();
-            }
-            else if (curr() == "copy") {
-                if (returns) {
+                if (dir == passing_style::copy) {
                     error("a return value cannot be 'copy'");
                     return {};
                 }
-                n->pass = passing_style::copy;
-                next();
-            }
-            else if (curr() == "inout") {
-                if (returns) {
+                if (dir == passing_style::inout) {
                     error("a return value cannot be 'inout'");
                     return {};
                 }
-                n->pass = passing_style::inout;
-                next();
-            }
-            else if (curr() == "out") {
-                if (!named) {
-                    error("(temporary alpha limitation) an unnamed function cannot have an 'out' parameter");
-                    return {};
-                }
-                n->pass = passing_style::out;
-                next();
-            }
-            else if (curr() == "move") {
-                if (returns) {
+                if (dir == passing_style::move) {
                     error("a return value cannot be 'move' (it is implicitly 'move'-out)");
                     return {};
                 }
-                n->pass = passing_style::move;
-                next();
             }
-            else if (curr() == "forward") {
-                n->pass = passing_style::forward;
-                next();
+            if (!named && dir == passing_style::out) {
+                error("(temporary alpha limitation) an unnamed function cannot have an 'out' parameter");
+                return {};
             }
+            n->pass = dir;
+            next();
         }
 
         if (curr().type() == lexeme::Identifier) {
