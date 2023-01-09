@@ -58,13 +58,15 @@ void literals_cpp1() {
   // 1e - 10.0f;
 }
 
-[[nodiscard]] auto literals_cpp2() -> auto;
+auto literals_cpp2() -> void;
+#line 113 "mixed-float-literals.cpp2"
+[[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
 #line 56 "mixed-float-literals.cpp2"
 
-[[nodiscard]] auto literals_cpp2() -> auto{
+auto literals_cpp2() -> void{
   // integers
   123;
   123u;
@@ -119,4 +121,6 @@ void literals_cpp1() {
   // 1e - 10f;
   // 1e - 10.0f;
 }
+
+[[nodiscard]] auto main() -> int{}
 

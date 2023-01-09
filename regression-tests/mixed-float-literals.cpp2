@@ -54,7 +54,7 @@ void literals_cpp1() {
   // 1e - 10.0f;
 }
 
-literals_cpp2: () -> auto = {
+literals_cpp2: () = {
   // integers
   123;
   123u;
@@ -109,3 +109,5 @@ literals_cpp2: () -> auto = {
   // 1e - 10f;
   // 1e - 10.0f;
 }
+
+main: ()->int = { }

@@ -239,6 +239,3 @@ mixed-float-literals.cpp2:99:3: warning: expression result unused [-Wunused-valu
   1E-1'0;
   ^~~~~~
 80 warnings generated.
-/usr/bin/ld: /usr/bin/../lib/gcc/x86_64-linux-gnu/10/../../../x86_64-linux-gnu/crt1.o: in function `_start':
-(.text+0x24): undefined reference to `main'
-clang: error: linker command failed with exit code 1 (use -v to see invocation)
