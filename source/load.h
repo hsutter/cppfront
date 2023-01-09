@@ -149,8 +149,8 @@ auto starts_with_whitespace_slash_star_and_no_star_slash(std::string const& line
 
 
 //---------------------------------------------------------------------------
-//  starts_with_identifier_colon: returns whether the line starts with an
-//  identifier followed by one colon (not ::)
+//  starts_with_operator: returns whether the line starts with the string "operator"
+//  followed by the symbols of an operator
 //
 //  line    current line being processed
 //
@@ -224,7 +224,12 @@ auto starts_with_operator(std::string_view s) -> int
     return 0;
 }
 
-
+//---------------------------------------------------------------------------
+//  starts_with_identifier_colon: returns whether the line starts with an
+//  identifier followed by one colon (not ::)
+//
+//  line    current line being processed
+//
 auto starts_with_identifier_colon(std::string const& line) -> bool
 {
     auto i = 0;
@@ -395,7 +400,7 @@ public:
 
 
 //---------------------------------------------------------------------------
-//  starts_with_whitespace_slash_slash: is this a "// comment" line
+//  starts_with_preprocessor_if_else_endif: the line starts with a preprocessor conditional
 //
 //  line    current line being processed
 //
