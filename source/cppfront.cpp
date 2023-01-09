@@ -117,7 +117,7 @@ static cmdline_processor::register_flag cmd_cpp1_filename(
 
 static auto flag_print_colon_errors = false;
 static cmdline_processor::register_flag cmd_print_colon_errors(
-    2,
+    3,
     "format-colon-errors",
     "Emit ':line:col:' format for error messages",
     []{ flag_print_colon_errors = true; }
