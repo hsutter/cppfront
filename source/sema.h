@@ -819,14 +819,14 @@ public:
 
     auto start(declaration_node const& n, int) -> void
     {
-        if (!inside_parameter_list || inside_out_parameter) {
+        if (n.identifier && (!inside_parameter_list || inside_out_parameter)) {
             partial_decl_stack.emplace_back(true, &n, nullptr, n.initializer.get(), inside_out_parameter);
         }
     }
 
     auto end(declaration_node const& n, int) -> void
     {
-        if (!inside_parameter_list || inside_out_parameter) {
+        if (n.identifier && (!inside_parameter_list || inside_out_parameter)) {
             symbols.emplace_back( scope_depth, declaration_sym( false, &n, nullptr, nullptr, inside_out_parameter ) );
             if (n.type.index() != declaration_node::active::object) {
                 --scope_depth;

@@ -9,7 +9,7 @@ auto print(auto const& thing) -> void;
 auto decorate_and_print(auto& thing) -> void;
 #line 10 "pure2-intro-example-three-loops.cpp2"
 [[nodiscard]] auto main() -> int;
-#line 29 "pure2-intro-example-three-loops.cpp2"
+#line 30 "pure2-intro-example-three-loops.cpp2"
 
 
 //=== Cpp2 definitions ==========================================================
@@ -25,11 +25,11 @@ auto decorate_and_print(auto& thing) -> void{
 }
 
 [[nodiscard]] auto main() -> int{
-    std::vector<std::string> words { 
-          "hello", "big", "world" }; 
-    std::span<std::string> view { words }; 
+    std::vector<std::string> words {
+          "hello", "big", "world"}; 
+    std::span<std::string> view {words}; 
 
-    auto i { cpp2_new<int>(0) }; 
+    auto i {cpp2_new<int>(0)}; 
     for( ; *cpp2::assert_not_null(i) < CPP2_UFCS_0(size, view); ++*cpp2::assert_not_null(i) ) {
         print( cpp2::assert_in_bounds(view, *cpp2::assert_not_null(i)));
     }
@@ -42,5 +42,6 @@ auto decorate_and_print(auto& thing) -> void{
     for ( auto&& cpp2_range = words;  auto& word : cpp2_range ) 
         decorate_and_print(word);
 
+    print(std::string{"end of program"});
 }
 

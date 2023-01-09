@@ -25,10 +25,10 @@ auto test(auto const& x) -> void{
 }
 
 [[nodiscard]] auto main(cpp2::in<int> argc, cpp2::in<char**> argv) -> int{
-    my::u16 y { 42 }; 
+    my::u16 y {42}; 
     test(std::move(y));
 
-    cpp2::u16 z { 42 }; 
+    cpp2::u16 z {42}; 
     test(std::move(z));
 }
 

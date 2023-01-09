@@ -27,7 +27,7 @@ constexpr auto empty = [](auto&& x){
 #line 18 "mixed-inspect-values-2.cpp2"
 
 [[nodiscard]] auto main() -> int{
-    auto i { 15 }; 
+    auto i {15}; 
 
     std::cout << [&] () -> std::string { auto&& __expr = i;
         if (cpp2::is(__expr, (less_than(10)))) { if constexpr( requires{"i less than 10";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("i less than 10")),std::string> ) return "i less than 10"; else return std::string{}; else return std::string{}; }
@@ -43,7 +43,7 @@ constexpr auto empty = [](auto&& x){
         std::cout << "i is between 10 and 30" << std::endl;
     }
 
-    std::vector<int> v {  }; 
+    std::vector<int> v {}; 
 
     if (empty(v)) {
         std::cout << "v is empty" << std::endl;

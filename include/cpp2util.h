@@ -593,13 +593,6 @@ public:
 //  Built-in is
 //
 
-//  For use when returning "no such thing", such as
-//  when customizing is/as for std::variant
-struct nonesuch_ {
-    auto operator==(auto const&) -> bool { return false; }
-};
-static nonesuch_ nonesuch;
-
 //  For designating "holds no value" -- used only with is, not as
 //  TODO: Does this really warrant a new synonym? Perhaps "is void" is enough
 using empty = void;
@@ -701,9 +694,94 @@ inline constexpr auto is( auto const& x, auto const& value ) -> bool
 //-------------------------------------------------------------------------------------------------------------
 //  Built-in as
 //
+
+//  For use when returning "no such thing", such as
+//  when customizing "as" for std::variant
+struct nonesuch_ {
+    auto operator==(auto const&) -> bool { return false; }
+};
+static nonesuch_ nonesuch;
+
+//  The 'as' cast functions are <To, From> so use that order here
+//  If it's confusing, we can switch this to <From, To>
+template< typename To, typename From >
+inline constexpr auto is_narrowing_v =
+    // [dcl.init.list] 7.1
+    (std::is_floating_point_v<From> && std::is_integral_v<To>) ||
+    // [dcl.init.list] 7.2
+    (std::is_floating_point_v<From> && std::is_floating_point_v<To> && sizeof(From) > sizeof(To)) ||
+    // [dcl.init.list] 7.3
+    (std::is_integral_v<From> && std::is_floating_point_v<To>) ||
+    (std::is_enum_v<From> && std::is_floating_point_v<To>) ||
+    // [dcl.init.list] 7.4
+    (std::is_integral_v<From> && std::is_integral_v<To> && sizeof(From) > sizeof(To)) ||
+    (std::is_enum_v<From> && std::is_integral_v<To> && sizeof(From) > sizeof(To)) ||
+    // [dcl.init.list] 7.5
+    (std::is_pointer_v<From> && std::is_same_v<To, bool>);
+
+template <typename... Ts>
+inline constexpr auto program_violates_type_safety_guarantee = sizeof...(Ts) < 0;
+
+//  For literals we can check for safe 'narrowing' at a compile time (e.g., 1 as size_t)
+template< typename C, auto x >
+inline constexpr bool is_castable_v =
+    std::is_integral_v<C> &&
+    std::is_integral_v<CPP2_TYPEOF(x)> &&
+    !(static_cast<CPP2_TYPEOF(x)>(static_cast<C>(x)) != x ||
+        (
+            (std::is_signed_v<C> != std::is_signed_v<CPP2_TYPEOF(x)>) &&
+            ((static_cast<C>(x) < C{}) != (x < CPP2_TYPEOF(x){}))
+        )
+    );
+
+//  As
+//
+
 template< typename C >
 auto as(auto const&) -> auto {
     return nonesuch;
+}
+
+template< typename C, auto x >
+    requires (std::is_arithmetic_v<C> && std::is_arithmetic_v<CPP2_TYPEOF(x)>)
+inline constexpr auto as() -> auto
+{
+    if constexpr ( is_castable_v<C, x> ) {
+        return static_cast<C>(x);
+    } else {
+        return nonesuch;
+    }
+}
+
+template< typename C >
+inline constexpr auto as(auto const& x) -> auto
+    requires (
+        std::is_floating_point_v<C> &&
+        std::is_floating_point_v<CPP2_TYPEOF(x)> &&
+        sizeof(CPP2_TYPEOF(x)) > sizeof(C)
+    )
+{
+    return nonesuch;
+}
+
+//  Signed/unsigned conversions to a not-smaller type are handled as a precondition,
+//  and trying to cast from a value that is in the half of the value space that isn't
+//  representable in the target type C is flagged as a Type safety contract violation
+template< typename C >
+inline constexpr auto as(auto const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto
+    requires (
+        std::is_integral_v<C> &&
+        std::is_integral_v<CPP2_TYPEOF(x)> &&
+        std::is_signed_v<CPP2_TYPEOF(x)> != std::is_signed_v<C> &&
+        sizeof(CPP2_TYPEOF(x)) <= sizeof(C)
+    )
+{
+    const C c = static_cast<C>(x);
+    Type.expects(   // precondition check: must be round-trippable => not lossy
+        static_cast<CPP2_TYPEOF(x)>(c) == x && (c < C{}) == (x < CPP2_TYPEOF(x){}),
+        "dynamic lossy narrowing conversion attempt detected" CPP2_SOURCE_LOCATION_ARG
+    );
+    return c;
 }
 
 template< typename C, typename X >
@@ -716,6 +794,14 @@ template< typename C, typename X >
 auto as( X const& x ) -> auto
     requires (!std::is_same_v<C, X> && requires { C{x}; })
 {
+    //  Experiment: Recognize the nested `::value_type` pattern for some dynamic library types
+    //  like std::optional, and try to prevent accidental narrowing conversions even when
+    //  those types themselves don't defend against them
+    if constexpr( requires{ typename C::value_type; } && std::is_convertible_v<X, typename C::value_type> ) {
+        if constexpr( is_narrowing_v<typename C::value_type, X>) {
+            return nonesuch;
+        }
+    }
     return C{x};
 }
 
@@ -1047,7 +1133,7 @@ inline auto to_string(...) -> std::string {
     return "(customize me - no cpp2::to_string overload exists for this type)";
 }
 
-inline auto to_string(std::any const&) -> std::string {
+inline auto to_string(std::same_as<std::any> auto const&) -> std::string {
     return "std::any";
 }
 
@@ -1056,6 +1142,11 @@ inline auto to_string(T const& t) -> std::string
     requires requires { std::to_string(t); }
 {
     return std::to_string(t);
+}
+
+inline auto to_string(char const& t) -> std::string
+{
+    return std::string{t};
 }
 
 inline auto to_string(char const* s) -> std::string
@@ -1189,33 +1280,80 @@ inline auto fopen( const char* filename, const char* mode ) {
 //  with cpp2::fopen as a starting example.
 
 
+//-----------------------------------------------------------------------
+//
+//  An implementation of GSL's narrow_cast with a clearly 'unsafe' name
+//
+//-----------------------------------------------------------------------
+//
+template <typename C, typename X>
+auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
+{
+    return static_cast<C>(CPP2_FORWARD(x));
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  A static-asserting "as" for better diagnostics than raw 'nonesuch'
+//
+//  Note for the future: This needs go after all 'as', which is fine for
+//  the ones in this file but will have problems with further user-
+//  defined 'as' customizations. One solution would be to make the main
+//  'as' be a class template, and have all customizations be actual
+//  specializations... that way name lookup should find the primary
+//  template first and then see later specializations. Or we could just
+//  remove this and live with the 'nonesuch' error messages. Either way,
+//  we don't need anything more right now, this solution is fine to
+//  unblock general progress
+//
+//-----------------------------------------------------------------------
+//
+template< typename C >
+inline constexpr auto as_( auto&& x ) -> auto
+{
+    if constexpr (is_narrowing_v<C, CPP2_TYPEOF(x)>) {
+        static_assert(
+            program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
+            "'as' does not allow unsafe narrowing conversions - if you're sure you want this, use `unsafe_narrow<T>()` to force the conversion"
+        );
+    }
+    else if constexpr( std::is_same_v< CPP2_TYPEOF(as<C>(CPP2_FORWARD(x))), nonesuch_ > ) {
+        static_assert(
+            program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
+            "No safe 'as' cast available - please check your cast"
+        );
+    }
+    //  else
+    return as<C>(CPP2_FORWARD(x));
+}
+
+template< typename C, auto x >
+inline constexpr auto as_() -> auto
+{
+    if constexpr (requires { as<C, x>(); }) {
+        if constexpr( std::is_same_v< CPP2_TYPEOF((as<C, x>())), nonesuch_ > ) {
+            static_assert(
+                program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
+                "Literal cannot be narrowed using 'as' -  if you're sure you want this, use 'unsafe_narrow<T>()' to force the conversion"
+            );
+        }
+    }
+    else {
+        static_assert(
+            program_violates_type_safety_guarantee<C, CPP2_TYPEOF(x)>,
+            "No safe 'as' cast available - please check your cast"
+        );
+    }
+    //  else
+    return as<C,x>();
+}
+
+
 }
 
 
 using cpp2::cpp2_new;
 
-
-//-----------------------------------------------------------------------
-//
-//  A partial implementation of GSL features Cpp2 relies on,
-//  to keep this a standalone header without non-std dependencies
-//
-//-----------------------------------------------------------------------
-//
-namespace gsl {
-
-//-----------------------------------------------------------------------
-//
-//  An implementation of GSL's narrow_cast
-//
-//-----------------------------------------------------------------------
-//
-template<typename To, typename From>
-constexpr auto narrow_cast(From&& from) noexcept -> To
-{
-    return static_cast<To>(std::forward<From>(from));
-}
-
-}
 
 #endif

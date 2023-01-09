@@ -26,7 +26,7 @@ fun2: (v : _) -> std::string = {
 main: () -> int = {
     vec : std::vector<int> = (1,2,3);
     arr : std::array<int,4> = (1,2,3,4);
-    var : std::variant<int, double, std::string> = ("cpp2 rulez");
+    var : std::variant<int, double, std::string> = ("C++ rulez");
     myt : my_type<int, double> = ();
 
     std::cout << "inspected vec : (fun(vec))$" << std::endl;

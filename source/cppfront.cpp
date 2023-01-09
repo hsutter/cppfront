@@ -110,7 +110,7 @@ static auto flag_cpp1_filename = std::string{};
 static cmdline_processor::register_flag cmd_cpp1_filename(
     2,
     "output",
-    "Output filename (default is *.cpp)",
+    "Output filename, or 'stdout' (default is *.cpp)",
     nullptr,
     [](std::string const& name) { flag_cpp1_filename = name; }
 );
@@ -126,7 +126,8 @@ struct text_with_pos{
 class positional_printer
 {
     //  Core information
-    std::ofstream               out           = {}; // Cpp1 syntax output file
+    std::ofstream               out_file      = {}; // Cpp1 syntax output file
+    std::ostream*               out           = {}; // will point to out_file or cout
     std::string                 cpp2_filename = {};
     std::string                 cpp1_filename = {};
     std::vector<comment> const* pcomments     = {}; // Cpp2 comments data
@@ -193,7 +194,8 @@ class positional_printer
         //  and update our curr_pos position
 
         //  Output the string
-        out << s;
+        assert (out);
+        *out << s;
 
         //  Update curr_pos by finding how many line breaks s contained,
         //  and where the last one was which determines our current colno
@@ -244,7 +246,8 @@ class positional_printer
 
         //  Not using print() here because this is transparent to the curr_pos
         if (!flag_clean_cpp1) {
-            out << "#line " << line << " " << std::quoted(cpp2_filename) << "\n";
+            assert (out);
+            *out << "#line " << line << " " << std::quoted(cpp2_filename) << "\n";
         }
     }
 
@@ -361,17 +364,23 @@ public:
     {
         source_has_cpp2 = has_cpp2;
         cpp2_filename = cpp2_filename_;
-        assert (!out.is_open() && !pcomments && "ICE: tried to call .open twice");
+        assert (!is_open() && !pcomments && "ICE: tried to call .open twice");
         cpp1_filename = cpp1_filename_;
-        out.open(cpp1_filename);
+        if (cpp1_filename == "stdout") {
+            out = &std::cout;
+        }
+        else {
+            out_file.open(cpp1_filename);
+            out = &out_file;
+        }
         pcomments = &comments;
     }
 
     auto is_open() -> bool {
-        if (out.is_open()) {
-            assert (pcomments && "ICE: if out.is_open, pcomments should also be set");
+        if (out) {
+            assert (pcomments && "ICE: if is_open, pcomments should also be set");
         }
-        return out.is_open();
+        return out;
     }
 
 
@@ -380,11 +389,13 @@ public:
     //
     auto abandon() -> void
     {
-        if (!out.is_open()) {
+        if (!is_open()) {
             return;
         }
-        out.close();
-        std::remove(cpp1_filename.c_str());
+        if (out_file.is_open()) {
+            out_file.close();
+            std::remove(cpp1_filename.c_str());
+        }
     }
 
 
@@ -1348,6 +1359,8 @@ public:
                     statement.pop_back();
                 }
 
+                replace_all( statement, "cpp2::as_<", "cpp2::as<" );
+
                 //  If this is an inspect-expression, we'll have to wrap each alternative
                 //  in an 'if constexpr' so that its type is ignored for mismatches with
                 //  the inspect-expression's type
@@ -1642,14 +1655,30 @@ public:
 
         if (n.expr.index() == primary_expression_node::declaration)
         {
+            //  This must be an anonymous declaration
             auto& decl = std::get<primary_expression_node::declaration>(n.expr);
+            assert(decl && !decl->identifier);
 
-            //  The usual non-null assertion, plus it should be an anonymous function
-            assert(decl && !decl->identifier && decl->is(declaration_node::function));
+            //  Handle an anonymous function
+            if (decl->is(declaration_node::function)) {
+                auto lambda_intro = build_capture_lambda_intro_for(decl->captures, n.position());
+                emit(*decl, lambda_intro);
+            }
+            //  Else an anonymous object as 'typeid { initializer }'
+            else {
+                assert(decl->is(declaration_node::object));
+                auto& type_id = std::get<declaration_node::object>(decl->type);
 
-            auto lambda_intro = build_capture_lambda_intro_for(decl->captures, n.position());
+                printer.add_pad_in_this_line( -5 );
 
-            emit(*decl, lambda_intro);
+                emit(*type_id);
+                printer.print_cpp2("{", decl->position());
+
+                assert(decl->initializer);
+                emit(*decl->initializer, false);
+
+                printer.print_cpp2("}", decl->position());
+            }
         }
     }
 
@@ -2011,6 +2040,19 @@ public:
         std::string suffix = {};
 
         auto wildcard_found = false;
+        bool as_on_literal  = false;
+
+        assert(
+            n.expr &&
+            n.expr->get_postfix_expression_node() &&
+            n.expr->get_postfix_expression_node()->expr
+        );
+        if (auto t = n.expr->get_postfix_expression_node()->expr->get_token();
+            t && is_literal(t->type()) && t->type() != lexeme::StringLiteral && t->type() != lexeme::FloatLiteral
+            && std::ssize(n.ops) > 0 && *n.ops[0].op == "as"
+        ) {
+            as_on_literal = true;
+        }
 
         for (auto i = n.ops.rbegin(); i != n.ops.rend(); ++i)
         {
@@ -2033,7 +2075,11 @@ public:
                     }
                 }
                 else {
-                    prefix += "cpp2::" + i->op->to_string(true) + "<" + print_to_string(*i->type) + ">(";
+                    auto op_name = i->op->to_string(true);
+                    if (op_name == "as") {
+                        op_name = "as_";    // use the static_assert-checked 'as' by default...
+                    }                       // we'll override this inside inspect-expressions
+                    prefix += "cpp2::" + op_name + "<" + print_to_string(*i->type) + ">(";
                     suffix = ")" + suffix;
                 }
             }
@@ -2046,11 +2092,16 @@ public:
             }
         }
 
+        if (as_on_literal) {
+            auto last_pos = prefix.rfind('>'); assert(last_pos != prefix.npos);
+            prefix.insert(last_pos, ", " + print_to_string(*n.expr));
+        }
+
         printer.print_cpp2(prefix, n.position());
         if (wildcard_found) {
             printer.print_cpp2("true", n.position());
         }
-        else {
+        else if(!as_on_literal) {
             emit(*n.expr);
         }
         printer.print_cpp2(suffix, n.position());
@@ -2636,7 +2687,7 @@ public:
                     {
                         std::string init;
                         printer.emit_to_string(&init);
-                        printer.print_cpp2 ( " = ", decl.initializer->position() );
+                        printer.print_cpp2 ( " {", decl.initializer->position() );
                         if (decl.initializer->statement.index() != statement_node::expression) {
                             errors.emplace_back(
                                 decl.initializer->position(),
@@ -2647,7 +2698,8 @@ public:
                         auto& expr = std::get<statement_node::expression>(decl.initializer->statement);
                         assert(expr);
 
-                        emit(*decl.initializer, false);
+                        emit(*expr, false);
+                        printer.print_cpp2 ( "}", decl.initializer->position() );
                         printer.emit_to_string();
 
                         loc += init;
@@ -2730,14 +2782,14 @@ public:
             {
                 in_non_rvalue_context.push_back(true);
                 printer.add_pad_in_this_line(-100);
-                printer.print_cpp2( " { ", n.position() );
+                printer.print_cpp2( " {", n.position() );
 
                 push_need_expression_list_parens(false);
                 assert( n.initializer );
                 emit( *n.initializer, false );
                 pop_need_expression_list_parens();
 
-                printer.print_cpp2( " }", n.position() );
+                printer.print_cpp2( "}", n.position() );
                 in_non_rvalue_context.pop_back();
             }
 
@@ -2845,7 +2897,7 @@ auto main(int argc, char* argv[]) -> int
     }
 
     if (cmdline.arguments().empty()) {
-        std::cout << "cppfront: error: no input files\n";
+        std::cerr << "cppfront: error: no input files\n";
         return EXIT_FAILURE;
     }
 
@@ -2875,9 +2927,9 @@ auto main(int argc, char* argv[]) -> int
         }
         //  Otherwise, print the errors
         else {
-            std::cout << "\n";
+            std::cerr << "\n";
             c.print_errors();
-            std::cout << "\n";
+            std::cerr << "\n";
             exit_status = EXIT_FAILURE;
         }
 

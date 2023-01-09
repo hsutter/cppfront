@@ -16,8 +16,8 @@
 
 [[nodiscard]] auto main() -> int
 {
-    std::vector<int> v { 1, 2, 3, 4, 5 }; 
-    auto counter { 42 }; 
+    std::vector<int> v {1, 2, 3, 4, 5}; 
+    auto counter {42}; 
     for ( auto&& cpp2_range = v;   auto const& i : cpp2_range )  { do {
         std::cout << i << " " << counter << "\n";
     } while (false); counter *= 2; }

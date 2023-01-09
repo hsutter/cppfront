@@ -13,11 +13,11 @@ auto test_generic(auto const& x, auto const& msg) -> void;
 #line 1 "pure2-inspect-generic-void-empty-with-variant-any-optional.cpp2"
 
 [[nodiscard]] auto main() -> int{
-    std::unique_ptr<int> p {  }; 
-    std::vector<int>::iterator i {  }; 
-    std::variant<std::monostate,int,int,std::string> v {  }; 
-    std::any a {  }; 
-    std::optional<std::string> o {  }; 
+    std::unique_ptr<int> p {}; 
+    std::vector<int>::iterator i {}; 
+    std::variant<std::monostate,int,int,std::string> v {}; 
+    std::any a {}; 
+    std::optional<std::string> o {}; 
 
     std::cout << "\nAll these cases satisfy \"VOYDE AND EMPTIE\"\n";
 

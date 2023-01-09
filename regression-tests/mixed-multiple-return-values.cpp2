@@ -1,18 +1,19 @@
 
-#include <string>
 #include <iostream>
-#include <ctime>
+#include <random>
+#include <string>
 
 f: () -> (i: int, s: std::string) = {
     //  note: i and s are uninitialized!
 
     i = 10;
 
-    if std::rand()%2 == 0 {
+    // the standard mandates that std::mt19937()() == 3499211612
+    if flip_a_coin() {
         s = "xyzzy";
     }
     else {
-        s = "xyzzy"; // for test determinism; previously was "plugh"
+        s = "plugh";
     }
 
     return;
@@ -25,4 +26,10 @@ int main() {
     auto [a,b] = f();
     print("a", a);
     print("b", b);
+}
+
+bool flip_a_coin() {
+    // Change std::mt19937 to std::random_device for non-deterministic PRNG
+    static std::mt19937 rand; 
+    return rand() % 2 == 0;
 }

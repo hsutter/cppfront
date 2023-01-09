@@ -3,27 +3,32 @@
 
 #line 1 "mixed-lifetime-safety-pointer-init-4.cpp2"
 
-#include <cstdlib>
 #include <iostream>
+#include <random>
 
 [[nodiscard]] auto main() -> int;
 #line 21 "mixed-lifetime-safety-pointer-init-4.cpp2"
 auto print_and_decorate(auto const& thing) -> void;
 #line 23 "mixed-lifetime-safety-pointer-init-4.cpp2"
 
+bool flip_a_coin() {
+    // Change std::mt19937 to std::random_device for non-deterministic PRNG
+    static std::mt19937 rand; 
+    return rand() % 2 == 1;
+}
 
 //=== Cpp2 definitions ==========================================================
 
 #line 4 "mixed-lifetime-safety-pointer-init-4.cpp2"
 
 [[nodiscard]] auto main() -> int{
-    int x { 42 }; 
-    int y { 43 }; 
+    int x {42}; 
+    int y {43}; 
     cpp2::deferred_init<int*> p; 
 
     // ... more code ...
-    if (std::rand() % 2) {
-        p.construct(&x);// for test determinism; previously was "y&"
+    if (flip_a_coin()) {
+        p.construct(&y);
     }
     else {
         p.construct(&x);

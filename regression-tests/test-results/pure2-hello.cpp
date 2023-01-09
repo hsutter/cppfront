@@ -19,7 +19,7 @@ auto decorate(std::string& s) -> void;
 }
 
 [[nodiscard]] auto name() -> std::string{
-    std::string s { "world" }; 
+    std::string s {"world"}; 
     decorate(s);
     return std::move(s); 
 }

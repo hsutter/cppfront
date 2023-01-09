@@ -12,7 +12,7 @@
 
 #line 1 "pure2-synthesize-rightshift-and-rightshifteq.cpp2"
 [[nodiscard]] auto f(cpp2::in<int> a, cpp2::in<int> b) -> int{
-    auto x { a }; 
+    auto x {a}; 
     x >>= b * 2;
     return std::move(x) >> 1; 
 }

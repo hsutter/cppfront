@@ -16,18 +16,18 @@ auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void;
 #line 4 "mixed-captures-in-expressions-and-postconditions.cpp2"
 
 [[nodiscard]] auto main() -> int{
-    std::vector<std::string> vec { 
-               "hello", "2022" }; 
+    std::vector<std::string> vec {
+               "hello", "2022"}; 
 
-    std::string y { "\n" }; 
-    auto callback { [_0 = (&y)](auto const& x){std::cout << x << *cpp2::assert_not_null(_0);} }; 
+    std::string y {"\n"}; 
+    auto callback {[_0 = (&y)](auto const& x){std::cout << x << *cpp2::assert_not_null(_0);}}; 
 
     std::ranges::for_each( vec, callback );
     y = "-ish\n";
     std::ranges::for_each( std::move(vec), std::move(callback));
 }
 
-std::vector<int> vec {  }; 
+std::vector<int> vec {}; 
 
 auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void
 {   

@@ -17,9 +17,9 @@
 
 [[nodiscard]] auto main() -> int
 {
-    auto const x { 2 }; 
-    auto* p { &x }; 
-    auto const* q { &p }; 
+    auto const x {2}; 
+    auto* p {&x}; 
+    auto const* q {&p}; 
 
     if (cpp2::is(x, (less_than(20)))) {
         std::cout << "yes, less\n";

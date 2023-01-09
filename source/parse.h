@@ -566,7 +566,7 @@ struct type_id_node
         break;case empty:
             return {};
         break;case qualified:
-            return get<qualified>(id)->get_token();
+            return {};
         break;case unqualified:
             return get<unqualified>(id)->get_token();
         break;case keyword:
@@ -1074,7 +1074,7 @@ struct declaration_node
     source_position pos;
     std::unique_ptr<unqualified_id_node> identifier;
 
-    enum active : std::uint8_t { function, object };
+    enum active : std::uint8_t { function, object, udt_type };
     std::variant<
         std::unique_ptr<function_type_node>,
         std::unique_ptr<type_id_node>
@@ -1567,7 +1567,7 @@ private:
         }
 
         if (curr().type() == lexeme::LeftParen
-            //  If in the future (not now) we want to experiment with braced-expressions
+            //  If in the future (not now) we decide to allow braced-expressions
             //      || curr().type() == lexeme::LeftBrace
             )
         {
@@ -1593,23 +1593,26 @@ private:
             return n;
         }
 
-        if (auto decl = unnamed_declaration(curr().position(), true, true)) // captures are allowed
+        if (auto decl = unnamed_declaration(curr().position(), false, true)) // captures are allowed
         {
             assert (!decl->identifier && "ICE: declaration should have been unnamed");
-            if (!decl->is(declaration_node::function)) {
-                error("an unnamed declaration at expression scope must be a function");
-                next();
-                return {};
+            if (auto obj = std::get_if<declaration_node::object>(&decl->type)) {
+                //if ((*obj)->typid)
             }
-            auto& func = std::get<declaration_node::function>(decl->type);
-            assert(func);
-            if (func->returns.index() == function_type_node::list) {
-                error("an unnamed function at expression scope currently cannot return multiple values");
-                next();
-                return {};
+            else if (auto func = std::get_if<declaration_node::function>(&decl->type)) {
+                if ((*func)->returns.index() == function_type_node::list) {
+                    error("an unnamed function at expression scope currently cannot return multiple values");
+                    next();
+                    return {};
+                }
+                if (!(*func)->contracts.empty()) {
+                    error("an unnamed function at expression scope currently cannot have contracts");
+                    next();
+                    return {};
+                }
             }
-            if (!func->contracts.empty()) {
-                error("an unnamed function at expression scope currently cannot have contracts");
+            else {
+                error("(temporary alpha limitation) an unnamed declaration at expression scope must be a function or an object");
                 next();
                 return {};
             }
@@ -2331,10 +2334,10 @@ private:
         //  Remember current position, because we need to look ahead to the next ::
         auto start_pos = pos;
 
-        //  If we don't get a first id, or if the next thing isn't :: or .,
-        //  back out and report unsuccessful
+        //  If we don't get a first id, or if we didn't have a leading :: and
+        //  the next thing isn't :: or ., back out and report unsuccessful
         term.id = unqualified_id();
-        if (!term.id || curr().type() != lexeme::Scope) {
+        if (!term.id || (!term.scope_op && curr().type() != lexeme::Scope)) {
             pos = start_pos;    // backtrack
             return {};
         }
@@ -2346,7 +2349,6 @@ private:
 
         n->ids.push_back( std::move(term) );
 
-        assert (curr().type() == lexeme::Scope);
         while (curr().type() == lexeme::Scope)
         {
             auto term = qualified_id_node::term{ &curr() };
@@ -2942,7 +2944,8 @@ private:
     //G     'final'
     //G
     auto parameter_declaration(
-        bool returns = false
+        bool returns = false,
+        bool named   = true
     )
         -> std::unique_ptr<parameter_declaration_node>
     {
@@ -2968,6 +2971,10 @@ private:
                     error("a return value cannot be 'move' (it is implicitly 'move'-out)");
                     return {};
                 }
+            }
+            if (!named && dir == passing_style::out) {
+                error("(temporary alpha limitation) an unnamed function cannot have an 'out' parameter");
+                return {};
             }
             n->pass = dir;
             next();
@@ -3013,7 +3020,8 @@ private:
     //G     parameter-declaration-seq ',' parameter-declaration
     //G
     auto parameter_declaration_list(
-        bool returns = false
+        bool returns = false,
+        bool named   = true
     )
         -> std::unique_ptr<parameter_declaration_list_node>
     {
@@ -3027,7 +3035,7 @@ private:
 
         auto param = std::make_unique<parameter_declaration_node>();
 
-        while ((param = parameter_declaration(returns)) != nullptr) {
+        while ((param = parameter_declaration(returns, named)) != nullptr) {
             n->parameters.push_back( std::move(param) );
 
             if (curr().type() == lexeme::RightParen) {
@@ -3136,12 +3144,12 @@ private:
     //G     contract
     //G     contract-seq contract
     //G
-    auto function_type() -> std::unique_ptr<function_type_node>
+    auto function_type(bool named = true) -> std::unique_ptr<function_type_node>
     {
         auto n = std::make_unique<function_type_node>();
 
         //  Parameters
-        auto parameters = parameter_declaration_list();
+        auto parameters = parameter_declaration_list(false, named);
         if (!parameters) {
             return {};
         }
@@ -3161,7 +3169,7 @@ private:
             if (auto t = type_id()) {
                 n->returns = std::move(t);
             }
-            else if (auto returns_list = parameter_declaration_list(true)) {
+            else if (auto returns_list = parameter_declaration_list(true, named)) {
                 if (std::ssize(returns_list->parameters) < 1) {
                     error("an explicit return value list cannot be empty");
                     return {};
@@ -3197,7 +3205,12 @@ private:
     //G     'is' id-expression
     //G     meta-constraints ',' id-expression
     //G
-    auto unnamed_declaration(source_position start, bool semicolon_required = true, bool captures_allowed = false) -> std::unique_ptr<declaration_node>
+    auto unnamed_declaration(
+        source_position start,
+        bool            semicolon_required = true,
+        bool            captures_allowed = false,
+        bool            named = false
+    ) -> std::unique_ptr<declaration_node>
     {
         auto deduced_type = false;
 
@@ -3226,7 +3239,7 @@ private:
         //}
 
         //  Or a function type, declaring a function
-        if (auto t = function_type()) {
+        if (auto t = function_type(named)) {
             n->type = std::move(t);
             assert (n->type.index() == declaration_node::function);
         }
@@ -3322,7 +3335,10 @@ private:
 
             if (body->statements.empty() || body->statements.back()->statement.index() != statement_node::return_)
             {
-                auto last_pos = body->statements.back()->position();
+                auto last_pos = n->position();
+                if (!body->statements.empty()) {
+                    last_pos = body->statements.back()->position();
+                }
                 ++last_pos.lineno;
                 generated_tokens_->emplace_back( "return", last_pos, lexeme::Keyword);
 
@@ -3356,7 +3372,7 @@ private:
             return {};
         }
 
-        auto n = unnamed_declaration(start_pos, semicolon_required);
+        auto n = unnamed_declaration(start_pos, semicolon_required, false, true);
         if (!n) {
             pos = start_pos;    // backtrack
             return {};

@@ -17,7 +17,7 @@ auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> vo
 #line 1 "mixed-bounds-safety-with-assert-2.cpp2"
 
 [[nodiscard]] auto main() -> int{
-    std::vector<int> v { 1, 2, 3, 4, 5 }; 
+    std::vector<int> v {1, 2, 3, 4, 5}; 
     add_42_to_subrange(v, 1, 3);
 
     for ( auto&& cpp2_range = v;  auto const& i : cpp2_range ) 
@@ -29,7 +29,7 @@ auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> vo
     cpp2::Bounds.expects(0 <= start, "");
     cpp2::Bounds.expects(end <= CPP2_UFCS_0(size, rng), "");
 
-    auto count { 0 }; 
+    auto count {0}; 
     for ( auto&& cpp2_range = rng;  
 
           auto&  i : cpp2_range )  { do 

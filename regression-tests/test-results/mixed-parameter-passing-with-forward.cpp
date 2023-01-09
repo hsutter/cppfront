@@ -35,7 +35,7 @@ auto parameter_styles(
 requires std::is_same_v<CPP2_TYPEOF(e), std::string>
 #line 15 "mixed-parameter-passing-with-forward.cpp2"
 {
-    int z { 12 }; 
+    int z {12}; 
 
     ++z;
     b += "plugh";

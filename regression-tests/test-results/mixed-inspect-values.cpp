@@ -19,18 +19,18 @@ auto test(auto const& x) -> void;
 [[nodiscard]] auto in_2_3(cpp2::in<int> x) -> bool { return 2 <= x && x <= 3; }
 
 [[nodiscard]] auto main() -> int{
-    std::variant<double,std::string,double> v {  }; 
+    std::variant<double,std::string,double> v {}; 
     v = "rev dodgson";
     test(std::move(v));
 
-    std::optional<int> o {  }; 
+    std::optional<int> o {}; 
     test(o);
     o = 42;
     test(std::move(o));
 
-    std::any a { 0 }; 
+    std::any a {0}; 
     test(a);
-    a = cpp2::as<std::string>("plugh");
+    a = cpp2::as_<std::string>("plugh");
     test(std::move(a));
 
     test(0);
@@ -38,12 +38,12 @@ auto test(auto const& x) -> void;
     test(2);
     test(3);
     test(-42);
-    test(cpp2::as<std::string>("xyzzy"));
+    test(cpp2::as_<std::string>("xyzzy"));
     test(3.14);
 }
 
 auto test(auto const& x) -> void{
-    auto forty_two { 42 }; 
+    auto forty_two {42}; 
     std::cout << [&] () -> std::string { auto&& __expr = x;
         if (cpp2::is(__expr, 0)) { if constexpr( requires{"zero";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("zero")),std::string> ) return "zero"; else return std::string{}; else return std::string{}; }
         else if (cpp2::is(__expr, (in(1, 2)))) { if constexpr( requires{"1 or 2";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("1 or 2")),std::string> ) return "1 or 2"; else return std::string{}; else return std::string{}; }

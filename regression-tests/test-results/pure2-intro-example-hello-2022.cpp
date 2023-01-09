@@ -14,12 +14,12 @@ auto println(auto const& x, auto const& len) -> void;
 
 #line 1 "pure2-intro-example-hello-2022.cpp2"
 [[nodiscard]] auto main() -> int{
-    std::vector<std::string> vec { 
-               "hello", "2022" }; 
-    std::span view { vec }; 
+    std::vector<std::string> vec {
+               "hello", "2022"}; 
+    std::span view {vec}; 
 
     for ( auto&& cpp2_range = view;  auto& str : cpp2_range ) {
-        auto len { decorate(str) }; 
+        auto len {decorate(str)}; 
         println(str, len);
     }
 }

@@ -2,9 +2,9 @@
 #include "cpp2util.h"
 
 #line 1 "mixed-initialization-safety-3-contract-violation.cpp2"
+#include <random>
 #include <string>
 #include <vector>
-#include <ctime>
 
 [[nodiscard]] auto main() -> int;
 #line 16 "mixed-initialization-safety-3-contract-violation.cpp2"
@@ -15,8 +15,13 @@ auto fill(
     ) -> void;
 #line 26 "mixed-initialization-safety-3-contract-violation.cpp2"
 auto print_decorated(auto const& x) -> void;
-#line 29 "mixed-initialization-safety-3-contract-violation.cpp2"
-[[nodiscard]] auto flip_a_coin() -> bool;
+
+// for test determinism, force "fill" branch
+bool flip_a_coin() {
+    // Change std::mt19937 to std::random_device for non-deterministic PRNG
+    static std::mt19937 rand; 
+    return rand() % 2 == 1;
+}
 
 //=== Cpp2 definitions ==========================================================
 
@@ -46,7 +51,4 @@ auto fill(
 }
 
 auto print_decorated(auto const& x) -> void { std::cout << ">> [" << x << "]\n"; }
-
-// for test determinism, force "fill" branch
-[[nodiscard]] auto flip_a_coin() -> bool { return false; }
 

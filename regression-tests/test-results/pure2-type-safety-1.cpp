@@ -18,9 +18,9 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
 
 [[nodiscard]] auto main() -> int
 {
-    std::variant<int,int,double> v { 42.0 }; 
-    std::any a { "xyzzy" }; 
-    std::optional<int> o {  }; 
+    std::variant<int,int,double> v {42.0}; 
+    std::any a {"xyzzy"}; 
+    std::optional<int> o {}; 
 
     test_generic(3.14, "double");
     test_generic(v,    "variant<int, int, double>");
@@ -39,7 +39,7 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
 }
 
 auto test_generic(auto const& x, auto const& msg) -> void{
-    std::string msgx { msg }; 
+    std::string msgx {msg}; 
     print( std::move(msgx) + " is int? ", cpp2::is<int>(x));
 }
 

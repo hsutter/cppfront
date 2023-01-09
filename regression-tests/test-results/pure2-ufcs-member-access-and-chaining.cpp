@@ -20,22 +20,22 @@ struct fun__ret {
 
 #line 1 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto main() -> int{
-    auto i { 42 }; 
+    auto i {42}; 
     CPP2_UFCS_0(ufcs, std::move(i));
 
-    auto j { fun() }; 
+    auto j {fun()}; 
     CPP2_UFCS_0(ufcs, j.i);
 
     CPP2_UFCS_0(ufcs, fun().i);
 
-    auto k { fun().i }; 
+    auto k {fun().i}; 
     CPP2_UFCS_0(ufcs, std::move(k));
 
     CPP2_UFCS_0(ufcs, get_i(j));
 
     CPP2_UFCS_0(ufcs, get_i(fun()));
 
-    auto res { CPP2_UFCS_0(ufcs, 42) }; 
+    auto res {CPP2_UFCS_0(ufcs, 42)}; 
 
     CPP2_UFCS_0(ufcs, (std::move(j).i));
 }

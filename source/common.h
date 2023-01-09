@@ -267,6 +267,26 @@ auto strip_path(std::string const& file) -> std::string
 
 //-----------------------------------------------------------------------
 //
+//  Misc helpers
+//
+//-----------------------------------------------------------------------
+//
+auto replace_all(std::string& s, std::string_view what, std::string_view with)
+{
+    for (
+        std::string::size_type pos{};
+        s.npos != (pos = s.find(what.data(), pos, what.length()));
+        pos += with.length()
+        )
+    {
+        s.replace(pos, what.length(), with.data(), with.length());
+    }
+    return s;
+}
+
+
+//-----------------------------------------------------------------------
+//
 //  Command line handling
 //
 //-----------------------------------------------------------------------
