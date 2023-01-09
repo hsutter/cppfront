@@ -33,6 +33,7 @@
 #include <iomanip>
 #include <compare>
 #include <algorithm>
+#include <type_traits>
 
 namespace cpp2 {
 
