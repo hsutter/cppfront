@@ -112,22 +112,7 @@ struct error
         : where{w}, msg{m}, internal{i}
     { }
 
-    auto print(auto& o, std::string const& file) const -> void
-    {
-        o << file ;
-        if (where.lineno > 0) {
-            o << "("<< (where.lineno);
-            if (where.colno >= 0) {
-                o << "," << where.colno;
-            }
-            o  << ")";
-        }
-        o << ":";
-        if (internal) {
-            o << " internal compiler";
-        }
-        o << " error: " << msg << "\n";
-    }
+    auto print(auto& o, std::string const& file) const -> void;
 };
 
 

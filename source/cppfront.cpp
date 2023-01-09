@@ -115,6 +115,13 @@ static cmdline_processor::register_flag cmd_cpp1_filename(
     [](std::string const& name) { flag_cpp1_filename = name; }
 );
 
+static auto flag_print_colon_errors = false;
+static cmdline_processor::register_flag cmd_print_colon_errors(
+    2,
+    "format-colon-errors",
+    "Emit ':line:col:' format for error messages",
+    []{ flag_print_colon_errors = true; }
+);
 
 struct text_with_pos{
     std::string     text;
@@ -122,6 +129,30 @@ struct text_with_pos{
     text_with_pos(std::string const& t, source_position p) : text{t}, pos{p} { }
 };
 
+// Defined out of line so we can use flag_print_colon_errors.
+auto error::print(auto& o, std::string const& file) const -> void {
+    o << file ;
+    if (where.lineno > 0) {
+        if (flag_print_colon_errors) {
+            o << ":"<< (where.lineno);
+            if (where.colno >= 0) {
+                o << ":" << where.colno;
+            }
+        }
+        else {
+            o << "("<< (where.lineno);
+            if (where.colno >= 0) {
+                o << "," << where.colno;
+            }
+            o  << ")";
+        }
+    }
+    o << ":";
+    if (internal) {
+        o << " internal compiler";
+    }
+    o << " error: " << msg << "\n";
+}
 
 class positional_printer
 {
@@ -1856,7 +1887,7 @@ public:
                 assert (i->expr_list);
                 if (!i->expr_list->expressions.empty()) {
                     local_args.text_chunks = print_to_text_chunks(*i->expr_list);
-                } 
+                }
 
                 flush_args();
                 args.emplace(std::move(local_args));
@@ -1958,7 +1989,7 @@ public:
 
                 if (i->expr_list) {
                     auto text = print_to_text_chunks(*i->expr_list);
-                    for (auto&& e: text) { 
+                    for (auto&& e: text) {
                         suffix.push_back(e);
                     }
                 }
