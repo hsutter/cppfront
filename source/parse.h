@@ -1597,7 +1597,11 @@ private:
         {
             assert (!decl->identifier && "ICE: declaration should have been unnamed");
             if (auto obj = std::get_if<declaration_node::object>(&decl->type)) {
-                //if ((*obj)->typid)
+                if ((*obj)->is_wildcard()) {
+                    error("an unnamed object at expression scope currently cannot have a deduced type (the reason to create an unnamed object is typically to create a temporary of a named type)");
+                    next();
+                    return {};
+                }
             }
             else if (auto func = std::get_if<declaration_node::function>(&decl->type)) {
                 if ((*func)->returns.index() == function_type_node::list) {
