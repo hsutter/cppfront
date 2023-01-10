@@ -783,7 +783,7 @@ inline constexpr auto is( auto const& x, auto const& value ) -> bool
 struct nonesuch_ {
     auto operator==(auto const&) -> bool { return false; }
 };
-static nonesuch_ nonesuch;
+constexpr static nonesuch_ nonesuch;
 
 //  The 'as' cast functions are <To, From> so use that order here
 //  If it's confusing, we can switch this to <From, To>
@@ -926,6 +926,26 @@ auto as( X const* x ) -> C const* {
 //  Common internal helper
 //
 template<size_t I, typename... Ts>
+constexpr auto operator_as( std::variant<Ts...> && x ) -> decltype(auto) {
+    if constexpr (I < std::variant_size_v<std::variant<Ts...>>) {
+        return std::get<I>( x );
+    }
+    else {
+        return nonesuch;
+    }
+}
+
+template<size_t I, typename... Ts>
+constexpr auto operator_as( std::variant<Ts...> & x ) -> decltype(auto) {
+    if constexpr (I < std::variant_size_v<std::variant<Ts...>>) {
+        return std::get<I>( x );
+    }
+    else {
+        return nonesuch;
+    }
+}
+
+template<size_t I, typename... Ts>
 constexpr auto operator_as( std::variant<Ts...> const& x ) -> decltype(auto) {
     if constexpr (I < std::variant_size_v<std::variant<Ts...>>) {
         return std::get<I>( x );
@@ -1040,7 +1060,57 @@ auto is( std::variant<Ts...> const& x ) {
 }
 
 template<typename T, typename... Ts>
-auto as( std::variant<Ts...> const& x ) {
+auto as( std::variant<Ts...> && x ) -> decltype(auto) {
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) { if (x.index() ==  0) return operator_as<0>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 1>(x)), T >) { if (x.index() ==  1) return operator_as<1>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 2>(x)), T >) { if (x.index() ==  2) return operator_as<2>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 3>(x)), T >) { if (x.index() ==  3) return operator_as<3>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 4>(x)), T >) { if (x.index() ==  4) return operator_as<4>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 5>(x)), T >) { if (x.index() ==  5) return operator_as<5>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 6>(x)), T >) { if (x.index() ==  6) return operator_as<6>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 7>(x)), T >) { if (x.index() ==  7) return operator_as<7>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 8>(x)), T >) { if (x.index() ==  8) return operator_as<8>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 9>(x)), T >) { if (x.index() ==  9) return operator_as<9>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<10>(x)), T >) { if (x.index() == 10) return operator_as<0>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<11>(x)), T >) { if (x.index() == 11) return operator_as<1>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<12>(x)), T >) { if (x.index() == 12) return operator_as<2>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<13>(x)), T >) { if (x.index() == 13) return operator_as<3>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<14>(x)), T >) { if (x.index() == 14) return operator_as<4>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<15>(x)), T >) { if (x.index() == 15) return operator_as<5>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<16>(x)), T >) { if (x.index() == 16) return operator_as<6>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) { if (x.index() == 17) return operator_as<7>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) { if (x.index() == 18) return operator_as<8>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<19>(x)), T >) { if (x.index() == 19) return operator_as<9>(x); }
+    Throw( std::bad_variant_access(), "'as' cast failed for 'variant'");
+}
+
+template<typename T, typename... Ts>
+auto as( std::variant<Ts...> & x ) -> decltype(auto) {
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) { if (x.index() ==  0) return operator_as<0>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 1>(x)), T >) { if (x.index() ==  1) return operator_as<1>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 2>(x)), T >) { if (x.index() ==  2) return operator_as<2>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 3>(x)), T >) { if (x.index() ==  3) return operator_as<3>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 4>(x)), T >) { if (x.index() ==  4) return operator_as<4>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 5>(x)), T >) { if (x.index() ==  5) return operator_as<5>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 6>(x)), T >) { if (x.index() ==  6) return operator_as<6>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 7>(x)), T >) { if (x.index() ==  7) return operator_as<7>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 8>(x)), T >) { if (x.index() ==  8) return operator_as<8>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 9>(x)), T >) { if (x.index() ==  9) return operator_as<9>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<10>(x)), T >) { if (x.index() == 10) return operator_as<0>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<11>(x)), T >) { if (x.index() == 11) return operator_as<1>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<12>(x)), T >) { if (x.index() == 12) return operator_as<2>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<13>(x)), T >) { if (x.index() == 13) return operator_as<3>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<14>(x)), T >) { if (x.index() == 14) return operator_as<4>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<15>(x)), T >) { if (x.index() == 15) return operator_as<5>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<16>(x)), T >) { if (x.index() == 16) return operator_as<6>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) { if (x.index() == 17) return operator_as<7>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) { if (x.index() == 18) return operator_as<8>(x); }
+    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<19>(x)), T >) { if (x.index() == 19) return operator_as<9>(x); }
+    Throw( std::bad_variant_access(), "'as' cast failed for 'variant'");
+}
+
+template<typename T, typename... Ts>
+auto as( std::variant<Ts...> const& x ) -> decltype(auto) {
     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) { if (x.index() ==  0) return operator_as<0>(x); }
     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 1>(x)), T >) { if (x.index() ==  1) return operator_as<1>(x); }
     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 2>(x)), T >) { if (x.index() ==  2) return operator_as<2>(x); }
@@ -1393,7 +1463,7 @@ auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
 //-----------------------------------------------------------------------
 //
 template< typename C >
-inline constexpr auto as_( auto&& x ) -> auto
+inline constexpr auto as_( auto&& x ) -> decltype(auto)
 {
     if constexpr (is_narrowing_v<C, CPP2_TYPEOF(x)>) {
         static_assert(
@@ -1412,7 +1482,7 @@ inline constexpr auto as_( auto&& x ) -> auto
 }
 
 template< typename C, auto x >
-inline constexpr auto as_() -> auto
+inline constexpr auto as_() -> decltype(auto)
 {
     if constexpr (requires { as<C, x>(); }) {
         if constexpr( std::is_same_v< CPP2_TYPEOF((as<C, x>())), nonesuch_ > ) {
