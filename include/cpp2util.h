@@ -408,7 +408,7 @@ auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAU
 #endif
 }
 
-auto Uncaught_exceptions() -> int {
+inline auto Uncaught_exceptions() -> int {
 #ifdef CPP2_NO_EXCEPTIONS
     return 0;
 #else
