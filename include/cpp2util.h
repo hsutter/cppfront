@@ -443,7 +443,7 @@ auto Typeid() -> decltype(auto) {
 
 //  We don't need typeid(expr) yet -- uncomment this if/when we need it
 //auto Typeid( [[maybe_unused]] auto&& x ) -> decltype(auto) {
-//#ifdef CPP2_DISABLE_RTTI
+//#ifdef CPP2_NO_RTTI
 //    Type.expects(
 //        !"<write appropriate error message here>"
 //    );
@@ -1144,7 +1144,7 @@ auto as( std::variant<Ts...> const& x ) -> decltype(auto) {
 template<typename T, typename X>
     requires (std::is_same_v<X,std::any> && !std::is_same_v<T,std::any> && !std::is_same_v<T,empty>)
 constexpr auto is( X const& x ) -> bool
-    { return x.type() == typeid(T); }
+    { return x.type() == Typeid<T>(); }
 
 template<typename T, typename X>
     requires (std::is_same_v<X,std::any> && std::is_same_v<T,empty>)
