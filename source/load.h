@@ -849,7 +849,7 @@ public:
     //-----------------------------------------------------------------------
     //  get_lines: Access the source lines
     //
-    auto get_lines() const -> std::vector<source_line> const&
+    auto get_lines() -> std::vector<source_line>&
     {
         return lines;
     }

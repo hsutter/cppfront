@@ -48,9 +48,9 @@ struct my_type {};
     std::cout << "inspected var : " + cpp2::to_string(fun(var)) << std::endl;
     std::cout << "inspected myt : " + cpp2::to_string(fun(myt)) << std::endl;
 
-    std::cout << "inspected vec : " + cpp2::to_string(fun2(vec)) << std::endl;
-    std::cout << "inspected arr : " + cpp2::to_string(fun2(arr)) << std::endl;
-    std::cout << "inspected var : " + cpp2::to_string(fun2(var)) << std::endl;
-    std::cout << "inspected myt : " + cpp2::to_string(fun2(myt)) << std::endl;
+    std::cout << "inspected vec : " + cpp2::to_string(fun2(std::move(vec))) << std::endl;
+    std::cout << "inspected arr : " + cpp2::to_string(fun2(std::move(arr))) << std::endl;
+    std::cout << "inspected var : " + cpp2::to_string(fun2(std::move(var))) << std::endl;
+    std::cout << "inspected myt : " + cpp2::to_string(fun2(std::move(myt))) << std::endl;
 }
 

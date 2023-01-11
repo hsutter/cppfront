@@ -280,6 +280,8 @@ public:
 
     auto type    () const -> lexeme          { return lex_type; }
 
+    auto set_type(lexeme l) -> void          { lex_type = l;    }
+
     auto visit(auto& v, int depth) const -> void {
         v.start(*this, depth);
     }
@@ -297,6 +299,108 @@ static_assert (CHAR_BIT == 8);
 
 
 //-----------------------------------------------------------------------
+//
+//  A StringLiteral could include captures
+//
+auto expand_string_literal(std::string_view text, std::vector<error>& errors, source_position src_pos) -> std::string
+{
+    auto const length = std::ssize(text);
+
+    assert(length >= 2);
+    assert(text.back() == '"');
+
+    auto pos = 0;
+    auto ret = std::string{};   // the return string we're going to build
+
+    //  Skip prefix to first non-" character
+    while (pos < length && text[pos] != '"') {
+        ++pos;
+    }
+    assert(pos < length && text[pos] == '"');
+    ++pos;
+    auto current_start = pos;   // the current offset before which the string has been into ret
+    auto first         = true;
+
+    auto add_plus = [&]{
+        if (!first) {
+            ret += " + ";
+        }
+        first = false;
+    };
+
+    //  Now we're on the first character of the string itself
+    for ( ; pos < length && (text[pos] != '"' || text[pos-1] == '\\'); ++pos )
+    {
+        //  Find the next )$
+        if (text[pos] == '$' && text[pos-1] == ')')
+        {
+            //  Scan back to find the matching (
+            auto paren_depth = 1;
+            auto open = pos - 2;
+
+            //  "next" in the string is the "last" one encountered in the backwards scan
+            auto last_nonwhitespace = '\0';
+
+            for( ; text[open] != '"' || (open > current_start && text[open-1] != '\\'); --open)
+            {
+                if (text[open] == ')') {
+                    ++paren_depth;
+                }
+                else if (text[open] == '(') {
+                    --paren_depth;
+                    if (paren_depth == 0) {
+                        break;
+                    }
+                }
+
+                if (!std::isspace(text[open])) {
+                    last_nonwhitespace = text[open];
+                }
+            }
+            if (text[open] == '"')
+            {
+                errors.emplace_back(
+                    source_position( src_pos.lineno, src_pos.colno + pos ),
+                    "no matching ( for string interpolation ending in )$"
+                );
+                return {};
+            }
+            assert (text[open] == '(');
+
+            //  'open' is now at the matching (
+
+            //  Put the next non-empty non-interpolated chunk straight into ret
+            if (open != current_start) {
+                add_plus();
+                ret += '"';
+                ret += text.substr(current_start, open - current_start);
+                ret += '"';
+            }
+
+            //  Then put interpolated chunk into ret
+            add_plus();
+            ret += "cpp2::to_string";
+            ret += text.substr(open, pos - open);
+
+            current_start = pos+1;
+        }
+    }
+
+    //  Now we should be on the the final " closing the string
+    assert(pos == length-1 && text[pos] == '"');
+
+    //  Put the final non-interpolated chunk straight into ret
+    if (first || current_start < std::ssize(text)-1) {
+        add_plus();
+        ret += '"';
+        ret += text.substr(current_start);
+    }
+
+    return ret;
+}
+
+
+//-----------------------------------------------------------------------
 //  lex: Tokenize a single line while maintaining inter-line state
 //
 //  line                    the line to be tokenized
@@ -308,8 +412,14 @@ static_assert (CHAR_BIT == 8);
 //  comments                the comment token list to add to
 //  errors                  the error message list to use for reporting problems
 //
+
+//  A stable place to store additional text for source tokens that are merged
+//  into a whitespace-containing token (to merge the Cpp1 multi-token keywords)
+//  -- this isn't about tokens generated later, that's tokens::generated_tokens
+static auto generated_text = std::deque<std::string>{};
+
 auto lex_line(
-    std::string const&      line,
+    std::string&            mutable_line,
     int const               lineno,
     bool&                   in_comment,
     std::string&            current_comment,
@@ -320,10 +430,7 @@ auto lex_line(
 )
     -> bool
 {
-    //  A stable place to store additional text for source tokens that are merged
-    //  into a whitespace-containing token (to merge the Cpp1 multi-token keywords)
-    //  -- this isn't about tokens generated later, that's tokens::generated_tokens
-    static auto generated_text = std::deque<std::string>{};
+    auto const& line = mutable_line;    // most accesses will be const, so give that the nice name
 
     auto original_size = std::ssize(tokens);
 
@@ -344,7 +451,11 @@ auto lex_line(
 
         //  Next, check the two tokens before that... only proceed if they ARE those
         --i;
-        if (i < 0 || tokens[i].type() != lexeme::Cpp1MultiKeyword) {
+        if (i < 1 || tokens[i].type() != lexeme::Cpp1MultiKeyword || tokens[i-1].type() != lexeme::Cpp1MultiKeyword) {
+            //  If this is just one such token, changed its type to regular ::Keyword
+            if (i >= 0 && tokens[i].type() == lexeme::Cpp1MultiKeyword) {
+                tokens[i].set_type( lexeme::Keyword );
+            }
             return;
         }
 
@@ -1034,8 +1145,11 @@ auto lex_line(
                 //G     encoding-prefix? '"' s-char-seq? '"'
                 //G
                 //G s-char-seq:
-                //G     s-char
-                //G     s-char-seq s-char
+                //G     interpolation? s-char
+                //G     interpolation? s-char-seq s-char
+                //G
+                //G interpolation:
+                //G     '(' expression ')' '$'
                 //G
                 else if (auto j = is_encoding_prefix_and('\"')) {
                     while (auto len = peek_is_sc_char(j, '\"')) { j += len; }
@@ -1046,7 +1160,29 @@ auto lex_line(
                                 + "\" is missing its closing \""
                         );
                     }
-                    store(j+1, lexeme::StringLiteral);
+
+                    //  At this point we have a string-literal, but it may contain
+                    //  captures/interpolations we want to tokenize
+                    auto literal = std::string_view{ &line[i], std::size_t(j+1) };
+                    auto s = expand_string_literal( literal, errors, source_position(lineno, i + 1) );
+
+                    //  If there are no captures/interpolations, just store it directly and continue
+                    if (std::ssize(s) == j+1) {
+                        store(j+1, lexeme::StringLiteral);
+                    }
+                    //  Otherwise, replace it with the expanded version and continue
+                    else {
+                        assert(std::ssize(s) > j+1);
+                        mutable_line.replace( i, j+1, s );
+
+                        //  Redo processing of this whole line now that the string is expanded,
+                        //  which may have moved it in memory... move i back to the line start
+                        //  and discard any tokens we already tokenized for this line
+                        i = colno_t{0};
+                        while (tokens.back().position().lineno == lineno) {
+                            tokens.pop_back();
+                        }
+                    }
                 }
 
                 //G character-literal:
@@ -1190,7 +1326,7 @@ public:
     //  lines       tagged source lines
     //
     auto lex(
-        std::vector<source_line> const& lines
+        std::vector<source_line>& lines
     )
         -> void
     {
@@ -1281,6 +1417,18 @@ public:
               << "(" << start.lineno << "," << start.colno << ")"
               << "-(" << end.lineno << "," << end.colno << ")"
               << " " << text << "\n";
+        }
+
+        o << "--- Generated tokens\n";
+        for (auto const& token : generated_tokens) {
+            o << "    " << token << " (" << token.position().lineno
+                << "," << token.position().colno << ") "
+                << as<std::string>(token.type()) << "\n";
+        }
+
+        o << "--- Generated text\n";
+        for (auto const& s : generated_text) {
+            o << "    " << s << "\n";
         }
 
     }

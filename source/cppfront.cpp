@@ -1003,135 +1003,6 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    //  A StringLiteral could include captures
-    //
-    auto expand_string_literal(token const& n) -> std::string
-    {
-        assert(n.type() == lexeme::StringLiteral);
-
-        auto text = std::string_view(n);
-        auto length = n.length();
-        assert (std::ssize(text) == length);
-
-        assert(length >= 2);
-        assert(text.back() == '"');
-
-        auto pos = 0;
-        auto ret = std::string{};   // the return string we're going to build
-
-        //  Skip prefix to first non-" character
-        while (pos < length && text[pos] != '"') {
-            ++pos;
-        }
-        assert(pos < length && text[pos] == '"');
-        ++pos;
-        auto current_start = pos;   // the current offset before which the string has been into ret
-        auto first         = true;
-
-        auto add_plus = [&]{
-            if (!first) {
-                ret += " + ";
-            }
-            first = false;
-        };
-
-        //  Now we're on the first character of the string itself
-        for ( ; pos < length && (text[pos] != '"' || text[pos-1] == '\\'); ++pos )
-        {
-            //  Find the next )$
-            if (text[pos] == '$' && text[pos-1] == ')')
-            {
-                //  Scan back to find the matching (
-                auto paren_depth = 1;
-                auto open = pos - 2;
-
-                //  "next" in the string is the "last" one encountered in the backwards scan
-                auto last_nonwhitespace = '\0';
-
-                for( ; text[open] != '"' || (open > current_start && text[open-1] != '\\'); --open)
-                {
-                    if (text[open] == ')') {
-                        ++paren_depth;
-                    }
-                    else if (text[open] == '(') {
-                        --paren_depth;
-                        if (paren_depth == 0) {
-                            break;
-                        }
-                    }
-                    else if (
-                        (text[open] == '+' && text[open - 1] == '+') ||
-                        (text[open] == '-' && text[open - 1] == '-')
-                        )
-                    {
-                        errors.emplace_back(
-                            source_position( n.position().lineno, n.position().colno + pos ),
-                            "a string interpolation expression may not contain ++ or --"
-                        );
-                        return {};
-                    }
-                    else if (
-                        (text[open] == '*' || text[open] == '&' || text[open] == '~') &&
-                        !isspace(text[open - 1]) &&
-                        !isalnum(last_nonwhitespace) && last_nonwhitespace != '('
-                        )
-                    {
-                        errors.emplace_back(
-                            source_position( n.position().lineno, n.position().colno + pos ),
-                            "a string interpolation expression may not contain unary & * or ~"
-                        );
-                        return {};
-                    }
-
-                    if (!std::isspace(text[open])) {
-                        last_nonwhitespace = text[open];
-                    }
-                }
-                if (text[open] == '"')
-                {
-                    errors.emplace_back(
-                        source_position( n.position().lineno, n.position().colno + pos ),
-                        "no matching ( for string interpolation ending in )$"
-                    );
-                    return {};
-                }
-                assert (text[open] == '(');
-
-                //  'open' is now at the matching (
-
-                //  Put the next non-empty non-interpolated chunk straight into ret
-                if (open != current_start) {
-                    add_plus();
-                    ret += '"';
-                    ret += text.substr(current_start, open - current_start);
-                    ret += '"';
-                }
-
-                //  Then put interpolated chunk into ret
-                add_plus();
-                ret += "cpp2::to_string";
-                ret += text.substr(open, pos - open);
-
-                current_start = pos+1;
-            }
-        }
-
-        //  Now we should be on the the final " closing the string
-        assert(pos == length-1 && text[pos] == '"');
-
-        //  Put the final non-interpolated chunk straight into ret
-        if (first || current_start < std::ssize(text)-1) {
-            add_plus();
-            ret += '"';
-            ret += text.substr(current_start);
-        }
-
-        return ret;
-    }
-
-
-    //-----------------------------------------------------------------------
-    //
     auto emit(token const& n, bool is_qualified = false, source_position pos = {}) -> void
     {
         if (pos == source_position{}) {
@@ -1147,9 +1018,9 @@ public:
         if (n == "new") {
             printer.print_cpp2("cpp2_new", pos);
         }
-        else if (n.type() == lexeme::StringLiteral) {
-            printer.print_cpp2( expand_string_literal(n), pos );
-        }
+        //else if (n.type() == lexeme::StringLiteral) {
+        //    printer.print_cpp2( expand_string_literal(n, errors), pos );
+        //}
         else {
             printer.print_cpp2(n, pos);
         }

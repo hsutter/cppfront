@@ -12,15 +12,15 @@
 
 [[nodiscard]] auto main() -> int{
     auto x {0}; 
-    std::cout << "g" + cpp2::to_string(x) + "g" + cpp2::to_string(x) + "g" << "\n";
-    std::cout << cpp2::to_string(x) + "g" + cpp2::to_string(x) + "g" << "\n";
-    std::cout << cpp2::to_string(x) + "g" + cpp2::to_string(x) << "\n";
-    std::cout << cpp2::to_string(x) + cpp2::to_string(x) << "\n";
-    std::cout << "\"" + cpp2::to_string(x) + "\"" << "\n";
-    std::cout << "\"" + cpp2::to_string(x) << "\n";
+    std::cout << "g" + cpp2::to_string(x) + "g" + cpp2::to_string(x) + "g"  << "\n";
+    std::cout << cpp2::to_string(x) + "g" + cpp2::to_string(x) + "g"   << "\n";
+    std::cout << cpp2::to_string(x) + "g" + cpp2::to_string(x)    << "\n";
+    std::cout << cpp2::to_string(x) + cpp2::to_string(x)     << "\n";
+    std::cout << "\"" + cpp2::to_string(x) + "\""     << "\n";
+    std::cout << "\"" + cpp2::to_string(x)       << "\n";
     std::cout << "\""           << "\n";
     std::cout << ""             << "\n";
     std::cout << "pl(ug$h"      << "\n";
-    std::cout << cpp2::to_string(x) + "pl(ug$h" << "\n";
+    std::cout << cpp2::to_string(std::move(x)) + "pl(ug$h" << "\n";
 }
 

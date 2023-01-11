@@ -21,43 +21,43 @@ struct custom_struct_with_no_stringize_customization { } custom;
     std::cout << "a = " + cpp2::to_string(a) + ", b = " + cpp2::to_string(b) + "\n";
 
     b = 42;
-    std::cout << "a^2 + b = " + cpp2::to_string(a * a + b.value()) + "\n";
+    std::cout << "a^2 + b = " + cpp2::to_string(a * std::move(a) + CPP2_UFCS_0(value, std::move(b))) + "\n";
 
     std::string_view sv {"my string_view"}; 
-    std::cout << "sv = " + cpp2::to_string(sv) + "\n";
+    std::cout << "sv = " + cpp2::to_string(std::move(sv)) + "\n";
 
     std::optional<std::string_view> osv {}; 
     std::cout << "osv = " + cpp2::to_string(osv) + "\n";
     osv = "string literal bound to optional string_view";
-    std::cout << "osv = " + cpp2::to_string(osv) + "\n";
+    std::cout << "osv = " + cpp2::to_string(std::move(osv)) + "\n";
 
     std::variant<std::monostate,std::string,double> var {}; 
     std::cout << "var = " + cpp2::to_string(var) + "\n";
     var = "abracadabra";
     std::cout << "var = " + cpp2::to_string(var) + "\n";
     var = 2.71828;
-    std::cout << "var = " + cpp2::to_string(var) + "\n";
+    std::cout << "var = " + cpp2::to_string(std::move(var)) + "\n";
 
     std::pair<int,double> mypair {12, 3.4}; 
-    std::cout << "mypair = " + cpp2::to_string(mypair) + "\n";
+    std::cout << "mypair = " + cpp2::to_string(std::move(mypair)) + "\n";
 
     std::tuple<int> tup1 {12}; 
     std::tuple<int,double> tup2 {12, 3.4}; 
     std::tuple<int,double,std::string> tup3 {12, 3.4, "456"}; 
-    std::cout << "tup1 = " + cpp2::to_string(tup1) + "\n";
-    std::cout << "tup2 = " + cpp2::to_string(tup2) + "\n";
-    std::cout << "tup3 = " + cpp2::to_string(tup3) + "\n";
+    std::cout << "tup1 = " + cpp2::to_string(std::move(tup1)) + "\n";
+    std::cout << "tup2 = " + cpp2::to_string(std::move(tup2)) + "\n";
+    std::cout << "tup3 = " + cpp2::to_string(std::move(tup3)) + "\n";
 
     std::pair<std::string_view,std::optional<std::string>> p {"first", std::nullopt}; 
-    std::cout << "p = " + cpp2::to_string(p) + "\n";
+    std::cout << "p = " + cpp2::to_string(std::move(p)) + "\n";
 
     std::tuple<double,std::optional<std::pair<std::string_view,int>>,std::optional<std::tuple<int,int,int>>> t {3.14, std::nullopt, std::nullopt}; 
-    std::cout << "t = " + cpp2::to_string(t) + "\n";
+    std::cout << "t = " + cpp2::to_string(std::move(t)) + "\n";
 
     std::variant<int,std::string,std::pair<int,double>> vv {}; 
     std::cout << "vv = " + cpp2::to_string(vv) + "\n";
     vv = std::make_pair(1, 2.3);
-    std::cout << "vv = " + cpp2::to_string(vv) + "\n";
+    std::cout << "vv = " + cpp2::to_string(std::move(vv)) + "\n";
 
     std::cout << "custom = " + cpp2::to_string(custom) + "\n";
 }
