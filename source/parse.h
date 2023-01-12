@@ -531,6 +531,10 @@ struct type_id_node
     source_position pos;
 
     std::vector<token const*> pc_qualifiers;
+    token const* address_of                 = {};
+    token const* dereference_of             = {};
+    int dereference_cnt                     = {};
+    token const* suspicious_initialization  = {};
 
     enum active { empty=0, qualified, unqualified, keyword };
     std::variant<
@@ -3307,6 +3311,29 @@ private:
                     error("pointer cannot be initialized to null or int - leave it uninitialized and then set it to a non-null value when you have one");
                     violates_lifetime_safety = true;
                     throw std::runtime_error("null initialization detected");
+                }
+            }
+
+            //  deduced_type == true means that the type will be deduced,
+            //  represented using an empty type-id
+            if (deduced_type) {
+                auto& type = std::get<declaration_node::object>(n->type);
+                // object initialized by the address of the curr() object 
+                if (peek(1)->type() == lexeme::Ampersand) {
+                    type->address_of = &curr();
+                }
+                // object initialized by (potentially multiple) dereference of the curr() object 
+                else if (peek(1)->type() == lexeme::Multiply) {
+                    type->dereference_of = &curr();
+                    for (int i = 1; peek(i)->type() == lexeme::Multiply; ++i)
+                        type->dereference_cnt += 1;
+                }
+                else if (
+                    // object initialized by the result of the function call (and it is not unnamed function)
+                    (peek(1)->type() == lexeme::LeftParen && curr().type() != lexeme::Colon)
+                    || curr().type() == lexeme::Identifier // or by the object (variable that the type need to be checked)
+                ) {
+                    type->suspicious_initialization = &curr();
                 }
             }
 

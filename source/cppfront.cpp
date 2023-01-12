@@ -1082,7 +1082,7 @@ public:
 
         in_definite_init = is_definite_initialization(n.identifier);
         if (!in_definite_init && !in_parameter_list) {
-            if (auto decl = sema.get_local_declaration_of(*n.identifier);
+            if (auto decl = sema.get_declaration_of(*n.identifier);
                 is_local_name &&
                 decl &&
                 //  note pointer equality: if we're not in the actual declaration of n.identifier
@@ -1606,6 +1606,86 @@ public:
         }
     }
 
+    // Don't work yet, TODO: finalize deducing pointer types from parameter lists
+    auto is_pointer_declaration(parameter_declaration_list_node const* decl_node, int deref_cnt, int addr_cnt) -> bool {
+        return false;
+    }
+
+    auto is_pointer_declaration(declaration_node const* decl_node, int deref_cnt, int addr_cnt) -> bool {
+        if (!decl_node) {
+            return false;
+        }
+        if (addr_cnt > deref_cnt) {
+            return true;
+        }
+
+        return std::visit([&](auto const& type){
+            return is_pointer_declaration(type.get(), deref_cnt, addr_cnt);
+        }, decl_node->type);
+    }
+
+    auto is_pointer_declaration(function_type_node const* fun_node, int deref_cnt, int addr_cnt) -> bool {
+        if (!fun_node) { 
+            return false;
+        }
+        if (addr_cnt > deref_cnt) {
+            return true;
+        }
+
+        return std::visit([&]<typename T>(T const& type){
+            if constexpr (std::is_same_v<T, std::monostate>) {
+                return false;
+            } else {
+                return is_pointer_declaration(type.get(),  deref_cnt, addr_cnt);
+            }
+        }, fun_node->returns);
+    }
+
+    auto is_pointer_declaration(type_id_node const* type_node, int deref_cnt, int addr_cnt) -> bool {
+        if (!type_node) { 
+            return false;
+        }
+        if (addr_cnt > deref_cnt) {
+            return true; 
+        }
+
+        if ( type_node->dereference_of ) {
+            return is_pointer_declaration(type_node->dereference_of, deref_cnt + type_node->dereference_cnt, addr_cnt);
+        } else if ( type_node->address_of ) {
+            return is_pointer_declaration(type_node->address_of, deref_cnt, addr_cnt + 1);
+        }
+
+        int pointer_declarators_cnt = std::count_if(std::cbegin(type_node->pc_qualifiers), std::cend(type_node->pc_qualifiers), [](auto* q) {
+            return q->type() == lexeme::Multiply;
+        });
+
+        if (pointer_declarators_cnt == 0 && type_node->suspicious_initialization) {
+            return is_pointer_declaration(type_node->suspicious_initialization, deref_cnt, addr_cnt);
+        }
+
+        return (pointer_declarators_cnt + addr_cnt - deref_cnt) > 0;
+    }
+
+    auto is_pointer_declaration(declaration_sym const* decl, int deref_cnt, int addr_cnt) -> bool {
+        if (!decl) {
+            return false;
+        }
+        if (addr_cnt > deref_cnt) {
+            return true;
+        }
+        return is_pointer_declaration(decl->declaration, deref_cnt, addr_cnt);
+    }
+
+    auto is_pointer_declaration(token const* t, int deref_cnt = 0, int addr_cnt = 0) -> bool {
+        if (!t) {
+            return false;
+        }
+        if (addr_cnt > deref_cnt) {
+            return true;
+        }
+        auto decl = sema.get_declaration_of(*t, true);
+        return is_pointer_declaration(decl, deref_cnt, addr_cnt);
+    }
 
     //-----------------------------------------------------------------------
     //
@@ -1625,7 +1705,7 @@ public:
             assert (n.expr->get_token());
             assert (!current_args.back().ptoken);
             current_args.back().ptoken = n.expr->get_token();
-            auto decl = sema.get_local_declaration_of(*current_args.back().ptoken);
+            auto decl = sema.get_declaration_of(*current_args.back().ptoken);
             if (!(decl && decl->parameter && decl->parameter->pass == passing_style::forward)) {
                 errors.emplace_back(
                     n.position(),
@@ -1644,32 +1724,38 @@ public:
             {
                 auto& unqual = std::get<id_expression_node::unqualified>(id->id);
                 assert(unqual);
-                auto decl = sema.get_local_declaration_of(*unqual->identifier);
-                //  TODO: Generalize this -- for now we detect only cases of the form "p: *int = ...;"
-                //        We don't recognize pointer types that are deduced, multi-level, or from Cpp1
-                if (decl) {
-                    if (auto t = std::get_if<declaration_node::object>(&decl->declaration->type); t && (*t)->is_pointer_qualified()) {
-                        if (n.ops.empty()) {
-                            last_postfix_expr_was_pointer = true;
+                //  TODO: Generalize this: 
+                //        - we don't recognize pointer types from Cpp1
+                //        - we don't deduce pointer types from parameter_declaration_list_node
+                if ( is_pointer_declaration(unqual->identifier) ) {
+                    if (n.ops.empty()) {
+                        last_postfix_expr_was_pointer = true;
+                    }
+                    else
+                    {
+                        auto op = [&](){
+                            if (n.ops.size() >= 2 && n.ops[0].op->type() == lexeme::LeftParen) {
+                                return n.ops[1].op;
+                            } else {
+                                return n.ops.front().op;
+                            }
+                        }();
+
+                        if (op->type() == lexeme::PlusPlus ||
+                            op->type() == lexeme::MinusMinus ||
+                            op->type() == lexeme::LeftBracket
+                            ) {
+                            errors.emplace_back(
+                                op->position(),
+                                op->to_string(true) + " - pointer arithmetic is illegal - use std::span or gsl::span instead"
+                            );
+                            violates_bounds_safety = true;
                         }
-                        else
-                        {
-                            if (n.ops.front().op->type() == lexeme::PlusPlus ||
-                                n.ops.front().op->type() == lexeme::MinusMinus ||
-                                n.ops.front().op->type() == lexeme::LeftBracket
-                                ) {
-                                errors.emplace_back(
-                                    n.ops.front().op->position(),
-                                    n.ops.front().op->to_string(true) + " - pointer arithmetic is illegal - use std::span or gsl::span instead"
-                                );
-                                violates_bounds_safety = true;
-                            }
-                            else if (n.ops.front().op->type() == lexeme::Tilde) {
-                                errors.emplace_back(
-                                    n.ops.front().op->position(),
-                                    n.ops.front().op->to_string(true) + " - pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first"
-                                );
-                            }
+                        else if (op->type() == lexeme::Tilde) {
+                            errors.emplace_back(
+                                op->position(),
+                                op->to_string(true) + " - pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first"
+                            );
                         }
                     }
                 }

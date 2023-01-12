@@ -226,9 +226,9 @@ public:
     {
     }
 
-    //  Get the declaration of t within the same named function
+    //  Get the declaration of t within the same named function or beyound it
     //
-    auto get_local_declaration_of(token const& t) -> declaration_sym const*
+    auto get_declaration_of(token const& t, bool look_beyond_current_function = false) -> declaration_sym const*
     {
         //  First find the position the query is coming from
         //  and remember its depth
@@ -252,11 +252,12 @@ public:
             {
                 auto const& decl = std::get<symbol::active::declaration>(ri->sym);
 
-                //  Don't look beyond the start of the current named (has identifier) function
+                //  Conditionally look beyond the start of the current named (has identifier) function
                 //  (an unnamed function is ok to look beyond)
                 assert(decl.declaration);
                 if (decl.declaration->type.index() == declaration_node::function &&
-                    decl.declaration->identifier)
+                    decl.declaration->identifier &&
+                    !look_beyond_current_function)
                 {
                     return nullptr;
                 }
@@ -883,7 +884,7 @@ public:
             {
                 //  Put this into the table if it's a use of an object in scope
                 //  or it's a 'copy' parameter
-                if (auto decl = get_local_declaration_of(t);
+                if (auto decl = get_declaration_of(t);
                     decl
                     )
                 {
