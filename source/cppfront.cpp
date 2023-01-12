@@ -110,7 +110,7 @@ static auto flag_cpp1_filename = std::string{};
 static cmdline_processor::register_flag cmd_cpp1_filename(
     9,
     "output",
-    "Output filename, or 'stdout' (default is *.cpp)",
+    "Output filename, or 'stdout' (default is *.cpp/*.h)",
     nullptr,
     [](std::string const& name) { flag_cpp1_filename = name; }
 );
@@ -421,6 +421,16 @@ public:
             out = &out_file;
         }
         pcomments = &comments;
+    }
+
+    auto reopen() -> void
+    {
+        assert (is_open() && "ICE: tried to call .reopen without first calling .open");
+        if (cpp1_filename.ends_with(".h"))
+        {
+            out_file.close();
+            out_file.open(cpp1_filename + "pp");
+        }
     }
 
     auto is_open() -> bool {
@@ -753,11 +763,11 @@ public:
         //  "Constraints enable creativity in the right directions"
         //  sort of applies here
         //
-        if (!sourcefile.ends_with(".cpp2"))
+        if (!sourcefile.ends_with(".cpp2") && !sourcefile.ends_with(".h2"))
         {
             errors.emplace_back(
                 source_position(-1, -1),
-                "source filename must end with .cpp2: " + sourcefile
+                "source filename must end with .cpp2 or .h2: " + sourcefile
             );
         }
 
@@ -812,7 +822,7 @@ public:
     //-----------------------------------------------------------------------
     //  lower_to_cpp1
     //
-    //  Emits the target file with the last '2' stripped -> .cpp
+    //  Emits the target file with the last '2' stripped
     //
     auto lower_to_cpp1() -> void
     {
@@ -821,7 +831,7 @@ public:
             return;
         }
 
-        //  Now we'll open the .cpp file
+        //  Now we'll open the Cpp1 file
         auto cpp1_filename = sourcefile.substr(0, std::ssize(sourcefile) - 1);
         if (!flag_cpp1_filename.empty()) {
             cpp1_filename = flag_cpp1_filename; // use override if present
@@ -862,6 +872,7 @@ public:
         }
 
         auto map_iter = tokens.get_map().cbegin();
+        auto hpp_includes = std::string{};
 
         //  First, echo the non-Cpp2 parts
         //
@@ -899,7 +910,15 @@ public:
                         return;
                     }
 
-                    printer.print_cpp1( line.text, curr_lineno );
+                    if (line.cat == source_line::category::preprocessor && line.text.ends_with(".h2\"")) {
+                        //  Strip off the 2"
+                        auto h_include = line.text.substr(0, line.text.size()-2);
+                        printer.print_cpp1( h_include + "\"", curr_lineno );
+                        hpp_includes += h_include + "pp\"\n";
+                    }
+                    else {
+                        printer.print_cpp1( line.text, curr_lineno );
+                    }
                 }
 
                 //  If it's a Cpp2 line...
@@ -939,6 +958,16 @@ public:
         }
 
         //  If there is Cpp2 code, we have more to do...
+        //  First, if this is a .h2 we need to switch filenames
+        printer.reopen();
+        if (!printer.is_open()) {
+            errors.emplace_back(
+                source_position{},
+                "could not open second output file " + cpp1_filename
+            );
+            return;
+        }
+
         //  Next, bring in the Cpp2 helpers
         //
         if (!flag_clean_cpp1) {
@@ -947,6 +976,8 @@ public:
 
         //  Next, emit the Cpp2 definitions
         //
+        printer.print_extra( hpp_includes );
+
         printer.enable_definitions();
 
         for (auto& section : tokens.get_map())
@@ -2911,7 +2942,7 @@ auto main(int argc, char* argv[]) -> int
         return EXIT_FAILURE;
     }
 
-    //  For each .cpp2 source file
+    //  For each Cpp2 source file
     int exit_status = EXIT_SUCCESS;
     for (auto const& arg : cmdline.arguments())
     {
