@@ -1,0 +1,75 @@
+template<int I>
+struct X { operator int() const { return I; } };
+
+main: () -> int = {
+
+    v: std::variant<X< 0>, X< 1>, X< 2>, X< 3>, X< 4>, X< 5>, X< 6>, X< 7>, X< 8>, X< 9>, 
+                    X<10>, X<11>, X<12>, X<13>, X<14>, X<15>, X<16>, X<17>, X<18>, X<19>> = X<0>();
+
+    // lvalue reference
+    v = X< 0>(); std::cout << "v as X< 0> = (int(v as X< 0>))$" << std::endl;
+    v = X< 1>(); std::cout << "v as X< 1> = (int(v as X< 1>))$" << std::endl;
+    v = X< 2>(); std::cout << "v as X< 2> = (int(v as X< 2>))$" << std::endl;
+    v = X< 3>(); std::cout << "v as X< 3> = (int(v as X< 3>))$" << std::endl;
+    v = X< 4>(); std::cout << "v as X< 4> = (int(v as X< 4>))$" << std::endl;
+    v = X< 5>(); std::cout << "v as X< 5> = (int(v as X< 5>))$" << std::endl;
+    v = X< 6>(); std::cout << "v as X< 6> = (int(v as X< 6>))$" << std::endl;
+    v = X< 7>(); std::cout << "v as X< 7> = (int(v as X< 7>))$" << std::endl;
+    v = X< 8>(); std::cout << "v as X< 8> = (int(v as X< 8>))$" << std::endl;
+    v = X< 9>(); std::cout << "v as X< 9> = (int(v as X< 9>))$" << std::endl;
+    v = X<10>(); std::cout << "v as X<10> = (int(v as X<10>))$" << std::endl;
+    v = X<11>(); std::cout << "v as X<11> = (int(v as X<11>))$" << std::endl;
+    v = X<12>(); std::cout << "v as X<12> = (int(v as X<12>))$" << std::endl;
+    v = X<13>(); std::cout << "v as X<13> = (int(v as X<13>))$" << std::endl;
+    v = X<14>(); std::cout << "v as X<14> = (int(v as X<14>))$" << std::endl;
+    v = X<15>(); std::cout << "v as X<15> = (int(v as X<15>))$" << std::endl;
+    v = X<16>(); std::cout << "v as X<16> = (int(v as X<16>))$" << std::endl;
+    v = X<17>(); std::cout << "v as X<17> = (int(v as X<17>))$" << std::endl;
+    v = X<18>(); std::cout << "v as X<18> = (int(v as X<18>))$" << std::endl;
+    v = X<19>(); std::cout << "v as X<19> = (int(v as X<19>))$" << std::endl;
+
+    // const lvalue reference
+    v = X< 0>(); std::cout << "as_const(v) as X< 0> = (int(std::as_const(v) as X< 0>))$" << std::endl;
+    v = X< 1>(); std::cout << "as_const(v) as X< 1> = (int(std::as_const(v) as X< 1>))$" << std::endl;
+    v = X< 2>(); std::cout << "as_const(v) as X< 2> = (int(std::as_const(v) as X< 2>))$" << std::endl;
+    v = X< 3>(); std::cout << "as_const(v) as X< 3> = (int(std::as_const(v) as X< 3>))$" << std::endl;
+    v = X< 4>(); std::cout << "as_const(v) as X< 4> = (int(std::as_const(v) as X< 4>))$" << std::endl;
+    v = X< 5>(); std::cout << "as_const(v) as X< 5> = (int(std::as_const(v) as X< 5>))$" << std::endl;
+    v = X< 6>(); std::cout << "as_const(v) as X< 6> = (int(std::as_const(v) as X< 6>))$" << std::endl;
+    v = X< 7>(); std::cout << "as_const(v) as X< 7> = (int(std::as_const(v) as X< 7>))$" << std::endl;
+    v = X< 8>(); std::cout << "as_const(v) as X< 8> = (int(std::as_const(v) as X< 8>))$" << std::endl;
+    v = X< 9>(); std::cout << "as_const(v) as X< 9> = (int(std::as_const(v) as X< 9>))$" << std::endl;
+    v = X<10>(); std::cout << "as_const(v) as X<10> = (int(std::as_const(v) as X<10>))$" << std::endl;
+    v = X<11>(); std::cout << "as_const(v) as X<11> = (int(std::as_const(v) as X<11>))$" << std::endl;
+    v = X<12>(); std::cout << "as_const(v) as X<12> = (int(std::as_const(v) as X<12>))$" << std::endl;
+    v = X<13>(); std::cout << "as_const(v) as X<13> = (int(std::as_const(v) as X<13>))$" << std::endl;
+    v = X<14>(); std::cout << "as_const(v) as X<14> = (int(std::as_const(v) as X<14>))$" << std::endl;
+    v = X<15>(); std::cout << "as_const(v) as X<15> = (int(std::as_const(v) as X<15>))$" << std::endl;
+    v = X<16>(); std::cout << "as_const(v) as X<16> = (int(std::as_const(v) as X<16>))$" << std::endl;
+    v = X<17>(); std::cout << "as_const(v) as X<17> = (int(std::as_const(v) as X<17>))$" << std::endl;
+    v = X<18>(); std::cout << "as_const(v) as X<18> = (int(std::as_const(v) as X<18>))$" << std::endl;
+    v = X<19>(); std::cout << "as_const(v) as X<19> = (int(std::as_const(v) as X<19>))$" << std::endl;
+
+    // rvalue reference
+    v = X< 0>(); std::cout << "move(v) as X< 0> = (int((move v) as X< 0>))$" << std::endl;
+    v = X< 1>(); std::cout << "move(v) as X< 1> = (int((move v) as X< 1>))$" << std::endl;
+    v = X< 2>(); std::cout << "move(v) as X< 2> = (int((move v) as X< 2>))$" << std::endl;
+    v = X< 3>(); std::cout << "move(v) as X< 3> = (int((move v) as X< 3>))$" << std::endl;
+    v = X< 4>(); std::cout << "move(v) as X< 4> = (int((move v) as X< 4>))$" << std::endl;
+    v = X< 5>(); std::cout << "move(v) as X< 5> = (int((move v) as X< 5>))$" << std::endl;
+    v = X< 6>(); std::cout << "move(v) as X< 6> = (int((move v) as X< 6>))$" << std::endl;
+    v = X< 7>(); std::cout << "move(v) as X< 7> = (int((move v) as X< 7>))$" << std::endl;
+    v = X< 8>(); std::cout << "move(v) as X< 8> = (int((move v) as X< 8>))$" << std::endl;
+    v = X< 9>(); std::cout << "move(v) as X< 9> = (int((move v) as X< 9>))$" << std::endl;
+    v = X<10>(); std::cout << "move(v) as X<10> = (int((move v) as X<10>))$" << std::endl;
+    v = X<11>(); std::cout << "move(v) as X<11> = (int((move v) as X<11>))$" << std::endl;
+    v = X<12>(); std::cout << "move(v) as X<12> = (int((move v) as X<12>))$" << std::endl;
+    v = X<13>(); std::cout << "move(v) as X<13> = (int((move v) as X<13>))$" << std::endl;
+    v = X<14>(); std::cout << "move(v) as X<14> = (int((move v) as X<14>))$" << std::endl;
+    v = X<15>(); std::cout << "move(v) as X<15> = (int((move v) as X<15>))$" << std::endl;
+    v = X<16>(); std::cout << "move(v) as X<16> = (int((move v) as X<16>))$" << std::endl;
+    v = X<17>(); std::cout << "move(v) as X<17> = (int((move v) as X<17>))$" << std::endl;
+    v = X<18>(); std::cout << "move(v) as X<18> = (int((move v) as X<18>))$" << std::endl;
+    v = X<19>(); std::cout << "move(v) as X<19> = (int((move v) as X<19>))$" << std::endl;
+
+}
