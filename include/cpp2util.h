@@ -1455,7 +1455,7 @@ auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
 //-----------------------------------------------------------------------
 //
 template<typename T, typename U>
-inline CPP2_FORCE_INLINE constexpr auto cmp_mixed_signedness_check() -> void
+CPP2_FORCE_INLINE constexpr auto cmp_mixed_signedness_check() -> void
 {
     if constexpr (
         std::is_integral_v<T> &&
@@ -1469,25 +1469,25 @@ inline CPP2_FORCE_INLINE constexpr auto cmp_mixed_signedness_check() -> void
     }
 }
 
-inline CPP2_FORCE_INLINE constexpr auto cmp_less(auto&& t, auto&& u) -> decltype(auto)
+CPP2_FORCE_INLINE constexpr auto cmp_less(auto&& t, auto&& u) -> decltype(auto)
 {
     cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
     return CPP2_FORWARD(t) < CPP2_FORWARD(u);
 }
 
-inline CPP2_FORCE_INLINE constexpr auto cmp_less_eq(auto&& t, auto&& u) -> decltype(auto)
+CPP2_FORCE_INLINE constexpr auto cmp_less_eq(auto&& t, auto&& u) -> decltype(auto)
 {
     cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
     return CPP2_FORWARD(t) <= CPP2_FORWARD(u);
 }
 
-inline CPP2_FORCE_INLINE constexpr auto cmp_greater(auto&& t, auto&& u) -> decltype(auto)
+CPP2_FORCE_INLINE constexpr auto cmp_greater(auto&& t, auto&& u) -> decltype(auto)
 {
     cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
     return CPP2_FORWARD(t) > CPP2_FORWARD(u);
 }
 
-inline CPP2_FORCE_INLINE constexpr auto cmp_greater_eq(auto&& t, auto&& u) -> decltype(auto)
+CPP2_FORCE_INLINE constexpr auto cmp_greater_eq(auto&& t, auto&& u) -> decltype(auto)
 {
     cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
     return CPP2_FORWARD(t) >= CPP2_FORWARD(u);
