@@ -14,7 +14,7 @@ auto parameter_styles(
     std::string b, 
     std::string& c, 
     std::string&& d, 
-    auto&&  e
+    auto&&   e
     ) -> void;
 #line 42 "mixed-parameter-passing-with-forward.cpp2"
 [[nodiscard]] auto main() -> int;
@@ -30,7 +30,7 @@ auto parameter_styles(
     std::string b, 
     std::string& c, 
     std::string&& d, 
-    auto&&  e
+    auto&&   e
     ) -> void
 requires std::is_same_v<CPP2_TYPEOF(e), std::string>
 #line 15 "mixed-parameter-passing-with-forward.cpp2"

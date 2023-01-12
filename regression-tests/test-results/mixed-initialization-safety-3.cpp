@@ -39,7 +39,7 @@ auto fill(
     cpp2::in<int> count
     ) -> void
 {   
-    cpp2::Default.expects(CPP2_UFCS_0(size, value) >= count, "fill: value must contain at least count elements");
+    cpp2::Default.expects(cpp2::cmp_greater_eq(CPP2_UFCS_0(ssize, value),count), "fill: value must contain at least count elements");
 #line 22 "mixed-initialization-safety-3.cpp2"
 
     x.construct(CPP2_UFCS(substr, value, 0, count));

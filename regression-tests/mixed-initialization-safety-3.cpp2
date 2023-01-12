@@ -18,7 +18,7 @@ fill: (
     value: std::string,
     count: int
     )
-    [[pre: value.size() >= count, "fill: value must contain at least count elements"]]
+    [[pre: value.ssize() >= count, "fill: value must contain at least count elements"]]
 = {
     x = value.substr(0, count);
 }

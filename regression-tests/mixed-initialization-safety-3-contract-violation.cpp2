@@ -18,7 +18,7 @@ fill: (
     value: std::string,
     count: int
     )
-    [[pre: value.size() >= count, "fill: value must contain at least count elements"]]
+    [[pre: value.ssize() >= count, "fill: value must contain at least count elements"]]
 = {
     x = value.substr(0, count);
 }
@@ -28,6 +28,6 @@ print_decorated: (x:_) = std::cout << ">> [" << x << "]\n";
 // for test determinism, force "fill" branch
 bool flip_a_coin() {
     // Change std::mt19937 to std::random_device for non-deterministic PRNG
-    static std::mt19937 rand; 
+    static std::mt19937 rand;
     return rand() % 2 == 1;
 }

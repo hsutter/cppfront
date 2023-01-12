@@ -41,7 +41,7 @@ struct my_type {};
     std::vector<int> vec {1, 2, 3}; 
     std::array<int,4> arr {1, 2, 3, 4}; 
     std::variant<int,double,std::string> var {"C++ rulez"}; 
-    my_type      <int, double> myt {}; 
+    my_type<int,double> myt {}; 
 
     std::cout << "inspected vec : " + cpp2::to_string(fun(vec)) << std::endl;
     std::cout << "inspected arr : " + cpp2::to_string(fun(arr)) << std::endl;

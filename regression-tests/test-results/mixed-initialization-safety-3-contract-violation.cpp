@@ -19,7 +19,7 @@ auto print_decorated(auto const& x) -> void;
 // for test determinism, force "fill" branch
 bool flip_a_coin() {
     // Change std::mt19937 to std::random_device for non-deterministic PRNG
-    static std::mt19937 rand; 
+    static std::mt19937 rand;
     return rand() % 2 == 1;
 }
 
@@ -44,7 +44,7 @@ auto fill(
     cpp2::in<int> count
     ) -> void
 {   
-    cpp2::Default.expects(CPP2_UFCS_0(size, value) >= count, "fill: value must contain at least count elements");
+    cpp2::Default.expects(cpp2::cmp_greater_eq(CPP2_UFCS_0(ssize, value),count), "fill: value must contain at least count elements");
 #line 22 "mixed-initialization-safety-3-contract-violation.cpp2"
 
     x.construct(CPP2_UFCS(substr, value, 0, count));

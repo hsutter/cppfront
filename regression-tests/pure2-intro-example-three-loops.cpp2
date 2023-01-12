@@ -13,7 +13,7 @@ main: () -> int = {
     view: std::span<std::string> = words;
 
     i := new<int>(0);
-    while i* < view.size() next i*++ {
+    while i* < view.ssize() next i*++ {
         print( view[i*] );
     }
 

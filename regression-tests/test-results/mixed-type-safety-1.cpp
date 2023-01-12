@@ -44,7 +44,7 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void
     print( "1   is int? ", cpp2::is<int>(1));
 
     auto c {cpp2_new<Circle>()}; // safe by construction
-    Shape * s {CPP2_UFCS_0(get, c)}; // safe by Lifetime
+    Shape* s {CPP2_UFCS_0(get, c)}; // safe by Lifetime
     print("\ns* is Shape?  ", cpp2::is<Shape>(*cpp2::assert_not_null(s)));
     print(  "s* is Circle? ", cpp2::is<Circle>(*cpp2::assert_not_null(s)));
     print(  "s* is Square? ", cpp2::is<Square>(*cpp2::assert_not_null(std::move(s))));

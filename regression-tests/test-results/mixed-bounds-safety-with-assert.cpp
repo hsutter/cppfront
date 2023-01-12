@@ -22,14 +22,14 @@ auto print_subrange(auto const& rng, cpp2::in<int> start, cpp2::in<int> end) -> 
 }
 
 auto print_subrange(auto const& rng, cpp2::in<int> start, cpp2::in<int> end) -> void{
-    cpp2::Bounds.expects(0 <= start, "");
-    cpp2::Bounds.expects(end <= CPP2_UFCS_0(size, rng), "");
+    cpp2::Bounds.expects(cpp2::cmp_less_eq(0,start), "");
+    cpp2::Bounds.expects(cpp2::cmp_less_eq(end,CPP2_UFCS_0(ssize, rng)), "");
 
     auto count {0}; 
     for ( auto&& cpp2_range = rng;  
 
           auto const& i : cpp2_range )  { do 
-        if (start <= count && count <= end) {
+        if (cpp2::cmp_less_eq(start,count) && cpp2::cmp_less_eq(count,end)) {
             std::cout << i << "\n";
         } while (false); ++count; }
 }

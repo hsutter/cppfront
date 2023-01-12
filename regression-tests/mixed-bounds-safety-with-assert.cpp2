@@ -6,11 +6,11 @@ main: () -> int = {
 
 print_subrange: (rng:_, start:int, end:int) = {
     [[assert Bounds: 0 <= start]]
-    [[assert Bounds: end <= rng.size()]]
+    [[assert Bounds: end <= rng.ssize()]]
 
     count := 0;
-    for  rng 
-    next count++ 
+    for  rng
+    next count++
     do:  (i:_) =
         if start <= count && count <= end {
             std::cout << i << "\n";

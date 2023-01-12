@@ -98,6 +98,17 @@ static cmdline_processor::register_flag cmd_safe_subscripts(
     true
 );
 
+static auto flag_safe_comparisons = true;
+static cmdline_processor::register_flag cmd_safe_comparisons(
+    2,
+    "comparison-checks",
+    "Mixed-sign comparison safety checks (on by default, '-' to disable)",
+    nullptr,
+    [](std::string const& opt){ flag_safe_comparisons = opt.empty(); },
+    {},
+    true
+);
+
 static auto flag_use_source_location = false;
 static cmdline_processor::register_flag cmd_enable_source_info(
     2,
@@ -204,7 +215,7 @@ class positional_printer
     } prev_line_info = {};
 
     //  Position override information
-    source_position preempt_pos         = {};       // use this position instead of the next supplied one
+    std::vector<source_position> preempt_pos = {};  // use this position instead of the next supplied one
     int             pad_for_this_line   = 0;        // extra padding to add/subtract for this line only
     bool            ignore_align        = false;
     int             ignore_align_indent = 0;
@@ -557,12 +568,10 @@ public:
             //  (1) See if there's a position preemption request, if so use it up
             //      For now, the preempt position use cases are about overriding colno
             //      and only on the same line. In the future, we might have more use cases.
-            if (preempt_pos != source_position{}) {
-                if (preempt_pos.lineno == pos.lineno) {
-                    adjusted_pos.colno = preempt_pos.colno;
+            if (!preempt_pos.empty()) {
+                if (preempt_pos.back().lineno == pos.lineno) {
+                    adjusted_pos.colno = preempt_pos.back().colno;
                 }
-                preempt_pos = {};
-                assert (preempt_pos == source_position{});
             }
 
             //  (2) Otherwise, see if there's a previous line's offset to repeat
@@ -613,9 +622,15 @@ public:
     //  Useful when Cpp1 syntax is emitted in a different order/verbosity
     //  than Cpp2 such as with declarations
     //
-    auto preempt_position(source_position pos) -> void
+    auto preempt_position_push(source_position pos) -> void
     {
-        preempt_pos = pos;
+        preempt_pos.push_back( pos );
+    }
+
+    auto preempt_position_pop() -> void
+    {
+        assert(!preempt_pos.empty());
+        preempt_pos.pop_back();
     }
 
     //  Add (or, if negative, subtract) padding for the current line only
@@ -1067,9 +1082,6 @@ public:
         if (n == "new") {
             printer.print_cpp2("cpp2_new", pos);
         }
-        //else if (n.type() == lexeme::StringLiteral) {
-        //    printer.print_cpp2( expand_string_literal(n, errors), pos );
-        //}
         else {
             printer.print_cpp2(n, pos);
         }
@@ -2177,7 +2189,44 @@ public:
     {
         assert(n.expr);
 
-        //  If this is an assignment expression, don't add std::move on the lhs
+        //  If this is relational comparison, and safe comparison was requested
+        if (flag_safe_comparisons && !n.terms.empty()) {
+            assert(n.terms.front().op);
+            token const& op = *n.terms.front().op;
+            if (op.type() == lexeme::Less    ||
+                op.type() == lexeme::LessEq  ||
+                op.type() == lexeme::Greater ||
+                op.type() == lexeme::GreaterEq)
+            {
+                if (std::ssize(n.terms) > 1) {
+                    errors.emplace_back(
+                        n.position(),
+                        "comparisons cannot be chained - a future update to cppfront will make expressions like 'a < b < c' meaningful and safe, but note this is a mistake and a pitfall in C and C++ today (see https://wg21.link/p0893)"
+                    );
+                    return;
+                }
+                switch (op.type()) {
+                break;case lexeme::Less:
+                    printer.print_cpp2( "cpp2::cmp_less(", n.position());
+                break;case lexeme::LessEq:
+                    printer.print_cpp2( "cpp2::cmp_less_eq(", n.position());
+                break;case lexeme::Greater:
+                    printer.print_cpp2( "cpp2::cmp_greater(", n.position());
+                break;case lexeme::GreaterEq:
+                    printer.print_cpp2( "cpp2::cmp_greater_eq(", n.position());
+                break;default:
+                    assert(!"ICE: switch is not exhaustive");
+                }
+
+                emit(*n.expr);
+                printer.print_cpp2( ",", n.position() );
+                emit(*n.terms.front().expr);
+                printer.print_cpp2( ")", n.position() );
+                return;
+            }
+        }
+
+        //  Else if this is an assignment expression, don't add std::move on the lhs
         //  even if this is a definite last use (only do that when an rvalue is okay)
         if (!n.terms.empty() && is_assignment_operator(n.terms.front().op->type())) {
             suppress_move_from_last_use = true;
@@ -2233,7 +2282,6 @@ public:
                 printer.print_cpp2(" ", n.position());
                 emit(*x.expr);
             }
-
         }
     }
 
@@ -2367,7 +2415,7 @@ public:
         //  - but for other statement types, we want to get rid of any leftover
         //    preemption (ideally there wouldn't be any, but sometimes there is
         //    and it should not apply to what we're about to emit)
-        printer.preempt_position({});
+        printer.preempt_position_push({});
         //  This only has a whitespace effect in the generated Cpp1 code, but it's
         //  aesthetic and aesthetics are important in this case -- we want to keep
         //  the original source's personal whitespace formatting style as much as we can
@@ -2379,6 +2427,8 @@ public:
         try_emit<statement_node::iteration  >(n.statement);
         try_emit<statement_node::contract   >(n.statement);
         try_emit<statement_node::inspect    >(n.statement, false);
+
+        printer.preempt_position_pop();
     }
 
 
@@ -2405,7 +2455,7 @@ public:
             }
         }
 
-        printer.preempt_position( n.position() );
+        printer.preempt_position_push( n.position() );
 
         if (is_wildcard) {
             switch (n.pass) {
@@ -2436,6 +2486,8 @@ public:
             emit( type_id );
         }
 
+        printer.preempt_position_pop();
+
         //  Then any suffix
         if (!returns && !is_wildcard)
         {
@@ -2448,8 +2500,6 @@ public:
             break;case passing_style::forward: printer.print_cpp2( "&&", n.position() );
             break;default: ;
             }
-
-            printer.preempt_position( n.position() );
         }
 
         printer.print_cpp2( " ", n.declaration->identifier->position() );
@@ -2558,9 +2608,10 @@ public:
                 }
             }
 
-            printer.preempt_position(n.position());
+            printer.preempt_position_push(n.position());
             printer.add_pad_in_this_line(-20);
             emit(*n.group);
+            printer.preempt_position_pop();
         }
         else {
             printer.print_cpp2("cpp2::Default", n.position());
@@ -2770,7 +2821,7 @@ public:
 
             //function_epilog.push_back("/*EPILOG-TEST*/");
 
-            printer.preempt_position( n.equal_sign );
+            printer.preempt_position_push( n.equal_sign );
 
             // TODO: something like this to get rid of extra blank lines
             //       inside the start of bodies of functions that have
@@ -2794,6 +2845,8 @@ public:
                 true, func->position(), n.identifier && func->returns.index() == function_type_node::empty,
                 function_return_locals, function_epilog, n.position().colno
             );
+
+            printer.preempt_position_pop();
 
             function_returns.pop_back();
         }
@@ -2824,8 +2877,9 @@ public:
                         return;
                     }
                 }
-                printer.preempt_position(n.position());
+                printer.preempt_position_push(n.position());
                 emit( *type );
+                printer.preempt_position_pop();
                 //  one pointer is enough for now, pointer-to-function fun can be later
                 if (!n.initializer) {
                     printer.print_cpp2( ">", n.position() );
@@ -2939,7 +2993,7 @@ using namespace std;
 using namespace cpp2;
 
 static auto enable_debug_output_files = false;
-static cmdline_processor::register_flag cmd_noline(
+static cmdline_processor::register_flag cmd_debug(
     9,
     "debug",
     "Emit compiler debug output files",

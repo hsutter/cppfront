@@ -620,13 +620,15 @@ public:
 //-----------------------------------------------------------------------
 //
 #ifdef _MSC_VER
-    #define CPP2_FORCE_INLINE [[msvc::forceinline]]
+    #define CPP2_FORCE_INLINE        __forceinline
+    #define CPP2_FORCE_INLINE_LAMBDA [[msvc::forceinline]]
 #else
-    #define CPP2_FORCE_INLINE __attribute__((always_inline))
+    #define CPP2_FORCE_INLINE        __attribute__((always_inline))
+    #define CPP2_FORCE_INLINE_LAMBDA __attribute__((always_inline))
 #endif
 
 #define CPP2_UFCS(FUNCNAME,PARAM1,...) \
-[](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE -> decltype(auto) { \
+[](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); }) { \
         return std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); \
     } else { \
@@ -635,7 +637,7 @@ public:
 }(PARAM1, __VA_ARGS__)
 
 #define CPP2_UFCS_0(FUNCNAME,PARAM1) \
-[](auto&& obj) CPP2_FORCE_INLINE -> decltype(auto) { \
+[](auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(); }) { \
         return std::forward<decltype(obj)>(obj).FUNCNAME(); \
     } else { \
@@ -646,7 +648,7 @@ public:
 #define CPP2_UFCS_REMPARENS(...) __VA_ARGS__
 
 #define CPP2_UFCS_TEMPLATE(FUNCNAME,TEMPARGS,PARAM1,...) \
-[](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE -> decltype(auto) { \
+[](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(params)>(params)...); }) { \
         return std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(params)>(params)...); \
     } else { \
@@ -655,7 +657,7 @@ public:
 }(PARAM1, __VA_ARGS__)
 
 #define CPP2_UFCS_TEMPLATE_0(FUNCNAME,TEMPARGS,PARAM1) \
-[](auto&& obj) CPP2_FORCE_INLINE -> decltype(auto) { \
+[](auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); }) { \
         return std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
     } else { \
@@ -1443,6 +1445,52 @@ template <typename C, typename X>
 auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
 {
     return static_cast<C>(CPP2_FORWARD(x));
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  Signed/unsigned comparison checks
+//
+//-----------------------------------------------------------------------
+//
+template<typename T, typename U>
+inline CPP2_FORCE_INLINE constexpr auto cmp_mixed_signedness_check() -> void
+{
+    if constexpr (
+        std::is_integral_v<T> &&
+        std::is_integral_v<U> &&
+        std::is_signed_v<T> != std::is_signed_v<U>
+        )
+    {
+        static_assert(
+            program_violates_type_safety_guarantee<T, U>,
+            "Mixed signed/unsigned comparison is unsafe - prefer using .ssize() instead of .size(), or consider using std::cmp_less instead");
+    }
+}
+
+inline CPP2_FORCE_INLINE constexpr auto cmp_less(auto&& t, auto&& u) -> decltype(auto)
+{
+    cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
+    return CPP2_FORWARD(t) < CPP2_FORWARD(u);
+}
+
+inline CPP2_FORCE_INLINE constexpr auto cmp_less_eq(auto&& t, auto&& u) -> decltype(auto)
+{
+    cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
+    return CPP2_FORWARD(t) <= CPP2_FORWARD(u);
+}
+
+inline CPP2_FORCE_INLINE constexpr auto cmp_greater(auto&& t, auto&& u) -> decltype(auto)
+{
+    cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
+    return CPP2_FORWARD(t) > CPP2_FORWARD(u);
+}
+
+inline CPP2_FORCE_INLINE constexpr auto cmp_greater_eq(auto&& t, auto&& u) -> decltype(auto)
+{
+    cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
+    return CPP2_FORWARD(t) >= CPP2_FORWARD(u);
 }
 
 

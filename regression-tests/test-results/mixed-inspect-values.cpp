@@ -16,7 +16,7 @@ auto test(auto const& x) -> void;
 
 #line 4 "mixed-inspect-values.cpp2"
 
-[[nodiscard]] auto in_2_3(cpp2::in<int> x) -> bool { return 2 <= x && x <= 3; }
+[[nodiscard]] auto in_2_3(cpp2::in<int> x) -> bool { return cpp2::cmp_less_eq(2,x) && cpp2::cmp_less_eq(x,3); }
 
 [[nodiscard]] auto main() -> int{
     std::variant<double,std::string,double> v {}; 
