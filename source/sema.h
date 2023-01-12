@@ -226,7 +226,7 @@ public:
     {
     }
 
-    //  Get the declaration of t within the same named function or beyound it
+    //  Get the declaration of t within the same named function or beyond it
     //
     auto get_declaration_of(token const& t, bool look_beyond_current_function = false) -> declaration_sym const*
     {

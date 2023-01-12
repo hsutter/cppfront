@@ -1607,7 +1607,7 @@ public:
     }
 
     // Don't work yet, TODO: finalize deducing pointer types from parameter lists
-    auto is_pointer_declaration(parameter_declaration_list_node const* decl_node, int deref_cnt, int addr_cnt) -> bool {
+    auto is_pointer_declaration(parameter_declaration_list_node const*, int, int) -> bool {
         return false;
     }
 

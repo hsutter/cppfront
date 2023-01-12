@@ -338,9 +338,6 @@ auto expand_string_literal(std::string_view text, std::vector<error>& errors, so
             auto paren_depth = 1;
             auto open = pos - 2;
 
-            //  "next" in the string is the "last" one encountered in the backwards scan
-            auto last_nonwhitespace = '\0';
-
             for( ; text[open] != '"' || (open > current_start && text[open-1] != '\\'); --open)
             {
                 if (text[open] == ')') {
@@ -351,10 +348,6 @@ auto expand_string_literal(std::string_view text, std::vector<error>& errors, so
                     if (paren_depth == 0) {
                         break;
                     }
-                }
-
-                if (!std::isspace(text[open])) {
-                    last_nonwhitespace = text[open];
                 }
             }
             if (text[open] == '"')
