@@ -880,7 +880,7 @@ auto as( X const& x ) -> auto
     //  Experiment: Recognize the nested `::value_type` pattern for some dynamic library types
     //  like std::optional, and try to prevent accidental narrowing conversions even when
     //  those types themselves don't defend against them
-    if constexpr( requires{ typename C::value_type; } && std::is_convertible_v<X, typename C::value_type> ) {
+    if constexpr( requires { requires std::is_convertible_v<X, typename C::value_type>; } ) {
         if constexpr( is_narrowing_v<typename C::value_type, X>) {
             return nonesuch;
         }
