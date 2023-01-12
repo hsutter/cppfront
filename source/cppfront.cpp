@@ -123,6 +123,14 @@ static cmdline_processor::register_flag cmd_print_colon_errors(
     []{ flag_print_colon_errors = true; }
 );
 
+static auto flag_verbose = false;
+static cmdline_processor::register_flag cmd_verbose(
+    9,
+    "verbose",
+    "Print verbose statistics",
+    []{ flag_verbose = true; }
+);
+
 static auto flag_no_exceptions = false;
 static cmdline_processor::register_flag cmd_no_exceptions(
     4,
@@ -824,11 +832,17 @@ public:
     //
     //  Emits the target file with the last '2' stripped
     //
-    auto lower_to_cpp1() -> void
+    struct lower_to_cpp1_ret {
+        lineno_t cpp1_lines = 0;
+        lineno_t cpp2_lines = 0;
+    };
+    auto lower_to_cpp1() -> lower_to_cpp1_ret
     {
+        auto ret = lower_to_cpp1_ret{};
+
         //  Only lower to Cpp1 if we haven't already encountered errors
         if (!errors.empty()) {
-            return;
+            return {};
         }
 
         //  Now we'll open the Cpp1 file
@@ -847,7 +861,7 @@ public:
                 source_position{},
                 "could not open output file " + cpp1_filename
             );
-            return;
+            return {};
         }
 
         //  Only emit extra lines if we actually have Cpp2, because
@@ -876,8 +890,6 @@ public:
 
         //  First, echo the non-Cpp2 parts
         //
-        auto cpp2_found = false;
-
         for (
             lineno_t curr_lineno = 0;
             auto const& line : source.get_lines()
@@ -889,6 +901,8 @@ public:
                 //  If it's a Cpp1 line, emit it
                 if (line.cat != source_line::category::cpp2)
                 {
+                    ++ret.cpp1_lines;
+
                     if (flag_cpp2_only &&
                         !line.text.empty() &&
                         line.cat != source_line::category::comment &&
@@ -896,10 +910,12 @@ public:
                         )
                     {
                         if (line.cat == source_line::category::preprocessor) {
-                            errors.emplace_back(
-                                source_position(curr_lineno, 1),
-                                "pure-cpp2 switch disables the preprocessor, including #include - use import instead (note: 'import std;' is implicit in -pure-cpp2)"
-                            );
+                            if (!line.text.ends_with(".h2\"")) {
+                                errors.emplace_back(
+                                    source_position(curr_lineno, 1),
+                                    "pure-cpp2 switch disables the preprocessor, including #include (except of .h2 files) - use import instead (note: 'import std;' is implicit in -pure-cpp2)"
+                                );
+                            }
                         }
                         else {
                             errors.emplace_back(
@@ -907,7 +923,7 @@ public:
                                 "pure-cpp2 switch disables Cpp1 syntax"
                             );
                         }
-                        return;
+                        return {};
                     }
 
                     if (line.cat == source_line::category::preprocessor && line.text.ends_with(".h2\"")) {
@@ -923,7 +939,7 @@ public:
 
                 //  If it's a Cpp2 line...
                 else {
-                    cpp2_found = true;
+                    ++ret.cpp2_lines;
 
                     //  We should be in a position to emit a set of Cpp2 declarations
                     if (map_iter != tokens.get_map().cend() && map_iter->first /*line*/ <= curr_lineno)
@@ -953,8 +969,8 @@ public:
         //  that we didn't misidentify anything as Cpp2 (even in the
         //  presence of nonstandard vendor extensions)
         //
-        if (!cpp2_found) {
-            return;
+        if (ret.cpp2_lines == 0) {
+            return ret;
         }
 
         //  If there is Cpp2 code, we have more to do...
@@ -965,7 +981,7 @@ public:
                 source_position{},
                 "could not open second output file " + cpp1_filename
             );
-            return;
+            return {};
         }
 
         //  Next, bring in the Cpp2 helpers
@@ -997,6 +1013,8 @@ public:
                 emit(*decl);
             }
         }
+
+        return ret;
     }
 
 
@@ -2938,7 +2956,7 @@ auto main(int argc, char* argv[]) -> int
     }
 
     if (cmdline.arguments().empty()) {
-        std::cerr << "cppfront: error: no input files\n";
+        std::cerr << "cppfront: error: no input files (try -help)\n";
         return EXIT_FAILURE;
     }
 
@@ -2952,22 +2970,35 @@ auto main(int argc, char* argv[]) -> int
         cppfront c(arg.text);
 
         //  Generate Cpp1 (this may catch additional late errors)
-        c.lower_to_cpp1();
+        auto count = c.lower_to_cpp1();
 
         //  If there were no errors, say so and generate Cpp1
-        if (c.had_no_errors()) {
+        if (c.had_no_errors())
+        {
             if (!c.has_cpp1()) {
-                std::cout << " ok (all Cpp2, passes safety checks)\n\n";
+                std::cout << " ok (all Cpp2, passes safety checks)\n";
             }
             else if (c.has_cpp2()) {
-                std::cout << " ok (mixed Cpp1/Cpp2, Cpp2 code passes safety checks)\n\n";
+                std::cout << " ok (mixed Cpp1/Cpp2, Cpp2 code passes safety checks)\n";
             }
             else {
-                std::cout << " ok (all Cpp1)\n\n";
+                std::cout << " ok (all Cpp1)\n";
             }
+
+            if (flag_verbose) {
+                std::cout << "   Cpp1: " << count.cpp1_lines << " lines\n";
+                std::cout << "   Cpp2: " << count.cpp2_lines << " lines";
+                if (count.cpp1_lines + count.cpp2_lines > 0) {
+                    std::cout << " (" << 100 * count.cpp2_lines / (count.cpp1_lines + count.cpp2_lines) << "%)";
+                }
+                std::cout << "\n";
+            }
+
+            std::cout << "\n";
         }
         //  Otherwise, print the errors
-        else {
+        else
+        {
             std::cerr << "\n";
             c.print_errors();
             std::cerr << "\n";

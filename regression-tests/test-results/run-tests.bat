@@ -23,7 +23,7 @@ echo.
 echo Done: %count% .cpp2 tests compiled
 echo.
 echo.      %cpp_count% .cpp files generated
-echo.       %err_count% error test cases (should not generate .cpp)
+echo.      %err_count% error test cases (should not generate .cpp)
 echo.      %total_count% total
 if %total_count% NEQ %count% (
     echo.      *** MISMATCH: should equal total tests run
