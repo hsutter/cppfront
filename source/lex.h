@@ -1171,7 +1171,7 @@ auto lex_line(
                         //  Redo processing of this whole line now that the string is expanded,
                         //  which may have moved it in memory... move i back to the line start
                         //  and discard any tokens we already tokenized for this line
-                        i = colno_t{0};
+                        i = colno_t{-1};
                         while (tokens.back().position().lineno == lineno) {
                             tokens.pop_back();
                         }
