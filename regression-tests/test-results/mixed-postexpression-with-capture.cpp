@@ -27,7 +27,7 @@ std::vector<int> vec {};
 auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void
 {   
     cpp2::Default.expects(cpp2::cmp_less_eq(0,where) && cpp2::cmp_less_eq(where,CPP2_UFCS_0(ssize, vec)), "");
-    auto post_16_5 = cpp2::finally_success([_0 = CPP2_UFCS_0(size, vec)]{cpp2::Default.expects(CPP2_UFCS_0(size, vec) == _0 + 1, "");} );
+    auto post_16_5 = cpp2::finally_success([_0 = CPP2_UFCS_0(size, vec)]{cpp2::Default.expects(CPP2_UFCS_0(size, vec)==_0 + 1, "");} );
 #line 16 "mixed-postexpression-with-capture.cpp2"
 
 

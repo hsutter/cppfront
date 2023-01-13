@@ -55,7 +55,7 @@ requires std::is_same_v<CPP2_TYPEOF(e), std::string>
 
     copy_from(z);
 
-    if (std::time(nullptr) % 2 == 0) {
+    if (std::time(nullptr) % 2==0) {
         copy_from(std::move(z));
     }
 

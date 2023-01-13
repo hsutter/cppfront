@@ -49,5 +49,5 @@ auto print_decorated(auto const& x) -> void { std::cout << ">> [" << x << "]\n";
 
 // for test determinism, force "xyzzy" branch
 // the standard mandates that std::mt19937()() == 3499211612
-[[nodiscard]] auto flip_a_coin() -> bool { return std::mt19937()() % 2 == 0; }
+[[nodiscard]] auto flip_a_coin() -> bool { return std::mt19937()() % 2==0; }
 
