@@ -1458,6 +1458,15 @@ template<typename T, typename U>
 CPP2_FORCE_INLINE constexpr auto cmp_mixed_signedness_check() -> void
 {
     if constexpr (
+        std::is_same_v<T, bool> ||
+        std::is_same_v<U, bool>
+        )
+    {
+        static_assert(
+            program_violates_type_safety_guarantee<T, U>,
+            "comparing bool values using < <= >= > is unsafe and not allowed - are you missing parentheses?");
+    }
+    else if constexpr (
         std::is_integral_v<T> &&
         std::is_integral_v<U> &&
         std::is_signed_v<T> != std::is_signed_v<U>
@@ -1471,7 +1480,7 @@ CPP2_FORCE_INLINE constexpr auto cmp_mixed_signedness_check() -> void
         //  static_assert to reject the comparison is the right way to go.
         static_assert(
             program_violates_type_safety_guarantee<T, U>,
-            "Mixed signed/unsigned comparison is unsafe - prefer using .ssize() instead of .size(), consider using std::cmp_less instead, or consider explicitly casting one of the values to change signedness by using 'as' or 'cpp2::unsafe_narrow'");
+            "mixed signed/unsigned comparison is unsafe - prefer using .ssize() instead of .size(), consider using std::cmp_less instead, or consider explicitly casting one of the values to change signedness by using 'as' or 'cpp2::unsafe_narrow'");
     }
 }
 
