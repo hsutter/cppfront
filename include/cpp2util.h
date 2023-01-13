@@ -1463,6 +1463,12 @@ CPP2_FORCE_INLINE constexpr auto cmp_mixed_signedness_check() -> void
         std::is_signed_v<T> != std::is_signed_v<U>
         )
     {
+        //  Note: It's tempting here to "just call std::cmp_*() instead"
+        //  which does signed/unsigned relational comparison correctly
+        //  for negative values, and so silently "fix that for you." But
+        //  doing that has security pitfalls for the reasons described at
+        //  https://github.com/hsutter/cppfront/issues/220, so this
+        //  static_assert to reject the comparison is the right way to go.
         static_assert(
             program_violates_type_safety_guarantee<T, U>,
             "Mixed signed/unsigned comparison is unsafe - prefer using .ssize() instead of .size(), consider using std::cmp_less instead, or consider explicitly casting one of the values to change signedness by using 'as' or 'cpp2::unsafe_narrow'");
