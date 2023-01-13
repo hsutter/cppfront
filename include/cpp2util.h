@@ -1465,7 +1465,7 @@ CPP2_FORCE_INLINE constexpr auto cmp_mixed_signedness_check() -> void
     {
         static_assert(
             program_violates_type_safety_guarantee<T, U>,
-            "Mixed signed/unsigned comparison is unsafe - prefer using .ssize() instead of .size(), or consider using std::cmp_less instead");
+            "Mixed signed/unsigned comparison is unsafe - prefer using .ssize() instead of .size(), consider using std::cmp_less instead, or consider explicitly casting one of the values to change signedness by using 'as' or 'cpp2::unsafe_narrow'");
     }
 }
 
