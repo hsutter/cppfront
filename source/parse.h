@@ -3007,7 +3007,7 @@ private:
             }
         }
 
-        if (!(n->declaration = declaration(false))) {
+        if (!(n->declaration = declaration(false, true))) {
             return {};
         }
 
@@ -3217,19 +3217,48 @@ private:
         source_position start,
         bool            semicolon_required = true,
         bool            captures_allowed = false,
-        bool            named = false
+        bool            named = false,
+        bool            is_parameter = false
     ) -> std::unique_ptr<declaration_node>
     {
-        auto deduced_type = false;
+        auto n = std::make_unique<declaration_node>( current_declarations.back() );
+        n->pos = start;
 
-        //  The next token must be :
+        //  For a parameter only, ':' is not required and
+        //  we default to ': _' - i.e., deduced with no initializer
+        if (is_parameter && curr().type() != lexeme::Colon)
+        {
+            //  So invent the "_" token
+            generated_text.push_back("_");
+            generated_tokens_->push_back({
+                generated_text.back().c_str(),
+                std::ssize(generated_text.back()),
+                start,
+                lexeme::Identifier
+            });
+
+            //  So we can create the typid_id_node and its unqualified_id_node
+
+            auto id = std::make_unique<unqualified_id_node>();
+            id->identifier = &generated_tokens_->back();
+
+            auto type = std::make_unique<type_id_node>();
+            type->pos = start;
+            type->id = std::move(id);
+
+            n->type = std::move(type);
+            assert (n->type.index() == declaration_node::object);
+
+            //  That's it, we're done here
+            return n;
+        }
+
+        //  Otherwise, the next token must be ':'
         if (curr().type() != lexeme::Colon) {
             return {};
         }
         next();
 
-        auto n = std::make_unique<declaration_node>( current_declarations.back() );
-        n->pos = start;
         auto guard =
             captures_allowed
             ? std::make_unique<capture_groups_stack_guard>(this, &n->captures)
@@ -3239,6 +3268,8 @@ private:
         auto guard2 = current_declarations_stack_guard(this, n.get());
 
         //  Next is an an optional type
+
+        auto deduced_type = false;
 
         ////  It could be "type," declaring a user-defined type
         //if (auto t = udt_type()) {
@@ -3391,7 +3422,11 @@ private:
     //G declaration:
     //G     identifier unnamed-declaration
     //G
-    auto declaration(bool semicolon_required = true) -> std::unique_ptr<declaration_node>
+    auto declaration(
+        bool semicolon_required = true,
+        bool is_parameter = false
+    )
+        -> std::unique_ptr<declaration_node>
     {
         if (done()) { return {}; }
 
@@ -3403,7 +3438,7 @@ private:
             return {};
         }
 
-        auto n = unnamed_declaration(start_pos, semicolon_required, false, true);
+        auto n = unnamed_declaration(start_pos, semicolon_required, false, true, is_parameter);
         if (!n) {
             pos = start_pos;    // backtrack
             return {};

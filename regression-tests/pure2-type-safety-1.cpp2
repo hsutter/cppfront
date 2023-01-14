@@ -21,7 +21,7 @@ main: () -> int =
     test_generic(o,    "optional<int>");
 }
 
-test_generic: ( x: _, msg: _ ) = {
+test_generic: ( x, msg ) = {
     msgx: std::string = msg;
     print( msgx + " is int? ", x is int );
 }

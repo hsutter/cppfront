@@ -32,8 +32,8 @@ auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> vo
     auto count {0}; 
     for ( auto&& cpp2_range = rng;  
 
-          auto&  i : cpp2_range )  { do 
-        if (cpp2::cmp_less_eq(start,count) && cpp2::cmp_less_eq(count,end)) {
+           auto&  i : cpp2_range )  { do 
+        if ([_0 = start, _1 = count, _2 = end]{ return cpp2::cmp_less_eq(_0,_1) && cpp2::cmp_less_eq(_1,_2); }()) {
             i += 42;
         } while (false); ++count; }
 }
