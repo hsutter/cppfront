@@ -445,11 +445,9 @@ public:
     auto reopen() -> void
     {
         assert (is_open() && "ICE: tried to call .reopen without first calling .open");
-        if (cpp1_filename.ends_with(".h"))
-        {
-            out_file.close();
-            out_file.open(cpp1_filename + "pp");
-        }
+        assert(cpp1_filename.ends_with(".h"));
+        out_file.close();
+        out_file.open(cpp1_filename + "pp");
     }
 
     auto is_open() -> bool {
@@ -865,6 +863,7 @@ public:
         if (!flag_cpp1_filename.empty()) {
             cpp1_filename = flag_cpp1_filename; // use override if present
         }
+
         printer.open(
             sourcefile,
             cpp1_filename,
@@ -879,9 +878,22 @@ public:
             return {};
         }
 
+        //  Generate a reasonable macroized name
+        auto cpp1_FILENAME = cpp1_filename;
+        for (char& c : cpp1_FILENAME) {
+            if (0 <= c && c <= 127) { c = std::toupper(c); }
+            if ( !std::isalnum(c) ) { c = '_'; }
+        }
+
         //  Only emit extra lines if we actually have Cpp2, because
         //  we want pure-Cpp1 files to pass through with zero changes
-        if (source.has_cpp2()) {
+        if (source.has_cpp2())
+        {
+            if (cpp1_filename.back() == 'h') {
+                printer.print_extra( "\n#ifndef " + cpp1_FILENAME+"__CPP2");
+                printer.print_extra( "\n#define " + cpp1_FILENAME+"__CPP2" + "\n\n" );
+            }
+
             if (!flag_clean_cpp1) {
                 printer.print_extra( "// ----- Cpp2 support -----\n" );
             }
@@ -930,6 +942,7 @@ public:
                                     source_position(curr_lineno, 1),
                                     "pure-cpp2 switch disables the preprocessor, including #include (except of .h2 files) - use import instead (note: 'import std;' is implicit in -pure-cpp2)"
                                 );
+                                return {};
                             }
                         }
                         else {
@@ -937,8 +950,8 @@ public:
                                 source_position(curr_lineno, 1),
                                 "pure-cpp2 switch disables Cpp1 syntax"
                             );
+                            return {};
                         }
-                        return {};
                     }
 
                     if (line.cat == source_line::category::preprocessor && line.text.ends_with(".h2\"")) {
@@ -984,19 +997,34 @@ public:
         //  that we didn't misidentify anything as Cpp2 (even in the
         //  presence of nonstandard vendor extensions)
         //
-        if (ret.cpp2_lines == 0) {
+        if (!source.has_cpp2()) {
+            assert(ret.cpp2_lines == 0);
             return ret;
         }
 
         //  If there is Cpp2 code, we have more to do...
+
         //  First, if this is a .h2 we need to switch filenames
-        printer.reopen();
-        if (!printer.is_open()) {
-            errors.emplace_back(
-                source_position{},
-                "could not open second output file " + cpp1_filename
-            );
-            return {};
+        if (cpp1_filename.back() == 'h')
+        {
+            printer.print_extra( "\n#endif\n" );
+
+            printer.reopen();
+            if (!printer.is_open()) {
+                errors.emplace_back(
+                    source_position{},
+                    "could not open second output file " + cpp1_filename
+                );
+                return {};
+            }
+
+            printer.print_extra( "\n#ifndef " + cpp1_FILENAME+"__CPP2" );
+            printer.print_extra( "\n#error To use this file, write '#include \"" + cpp1_filename + "2\"' in a '.cpp2' file (this intermediate file is not intended to be compiled on its own)"  );
+            printer.print_extra( "\n#endif\n" );
+
+            cpp1_FILENAME += "PP";
+            printer.print_extra( "\n#ifndef " + cpp1_FILENAME+"__CPP2" );
+            printer.print_extra( "\n#define " + cpp1_FILENAME+"__CPP2" + "\n\n" );
         }
 
         //  Next, bring in the Cpp2 helpers
@@ -1027,6 +1055,10 @@ public:
                 assert(decl);
                 emit(*decl);
             }
+        }
+
+        if (cpp1_filename.back() == 'h') {
+            printer.print_extra( "\n#endif" );
         }
 
         return ret;
