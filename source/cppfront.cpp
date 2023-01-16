@@ -757,7 +757,12 @@ class cppfront
     parameter_declaration_list_node               single_anon;
         //  special value - hack for now to note single-anon-return type kind in this function_returns working list
     std::vector<std::string>                      function_requires_conditions;
-    std::vector<iteration_statement_node const*>  iteration_statements;
+
+    struct iter_info {
+        iteration_statement_node const* stmt;
+        bool used = false;
+    };
+    std::vector<iter_info> iteration_statements;
 
     std::vector<bool>                             in_non_rvalue_context   = { false };
     std::vector<bool>                             need_expression_list_parens = { true };
@@ -1475,7 +1480,7 @@ public:
         assert(n.identifier);
         in_non_rvalue_context.push_back(true);
 
-        iteration_statements.push_back( &n );
+        iteration_statements.push_back({ &n, false});
         auto labelname = labelized_position(n.label);
 
         //  Handle while
@@ -1576,6 +1581,15 @@ public:
             assert(!"ICE: unexpected case");
         }
 
+        assert (iteration_statements.back().stmt);
+        if (iteration_statements.back().stmt->label && !iteration_statements.back().used) {
+            auto name = iteration_statements.back().stmt->label->to_string(true);
+            errors.emplace_back(
+                iteration_statements.back().stmt->position(),
+                name + ": a named loop must have its name used (did you forget 'break " + name + ";' or 'continue " + name + "';?)"
+            );
+        }
+
         iteration_statements.pop_back();
     }
 
@@ -1644,7 +1658,12 @@ public:
                 std::find_if(
                     iteration_statements.begin(),
                     iteration_statements.end(),
-                    [&](auto& s){ return s->label && std::string_view{*s->label} == std::string_view{*n.label}; }
+                    [&](auto& s){
+                        assert(s.stmt);
+                        return
+                            s.stmt->label &&
+                            std::string_view{*s.stmt->label} == std::string_view{*n.label};
+                    }
                 );
             if (iter_stmt == iteration_statements.end())
             {
@@ -1654,9 +1673,10 @@ public:
                 );
                 return;
             }
-            assert((*iter_stmt)->label);
+            iter_stmt->used = true;
+            assert((*iter_stmt).stmt->label);
             printer.print_cpp2(
-                "goto " + to_upper_and_underbar(*n.keyword) + "_" + labelized_position((*iter_stmt)->label) + ";",
+                "goto " + to_upper_and_underbar(*n.keyword) + "_" + labelized_position((*iter_stmt).stmt->label) + ";",
                 n.position()
             );
         }

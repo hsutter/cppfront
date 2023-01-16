@@ -20,7 +20,7 @@ main: () -> int =
 while_continue_inner: () =
 {
     i := 0;
-    outer: while i<3 next i++ {
+    while i<3 next i++ {
         j := 0;
         inner: while j<3 next j++ {
             std::cout << i << j << " ";
@@ -38,7 +38,7 @@ while_continue_outer: () =
     i := 0;
     outer: while i<3 next i++ {
         j := 0;
-        inner: while j<3 next j++ {
+        while j<3 next j++ {
             std::cout << i << j << " ";
             if j == 1 {
                 continue outer;
@@ -52,7 +52,7 @@ while_continue_outer: () =
 while_break_inner: () =
 {
     i := 0;
-    outer: while i<3 next i++ {
+    while i<3 next i++ {
         j := 0;
         inner: while j<3 next j++ {
             std::cout << i << j << " ";
@@ -70,7 +70,7 @@ while_break_outer: () =
     i := 0;
     outer: while i<3 next i++ {
         j := 0;
-        inner: while j<3 next j++ {
+        while j<3 next j++ {
             std::cout << i << j << " ";
             if j == 1 {
                 break outer;
@@ -84,7 +84,7 @@ while_break_outer: () =
 do_continue_inner: () =
 {
     i := 0;
-    outer: do {
+    do {
         j := 0;
         inner: do {
             std::cout << i << j << " ";
@@ -105,7 +105,7 @@ do_continue_outer: () =
     i := 0;
     outer: do {
         j := 0;
-        inner: do {
+        do {
             std::cout << i << j << " ";
             if j == 1 {
                 continue outer;
@@ -122,7 +122,7 @@ do_continue_outer: () =
 do_break_inner: () =
 {
     i := 0;
-    outer: do {
+    do {
         j := 0;
         inner: do {
             std::cout << i << j << " ";
@@ -143,7 +143,7 @@ do_break_outer: () =
     i := 0;
     outer: do {
         j := 0;
-        inner: do {
+        do {
             std::cout << i << j << " ";
             if j == 1 {
                 break outer;
@@ -161,7 +161,7 @@ for_continue_inner: () =
 {
     vi: std::vector = ( 0, 1, 2 );
     counter := 0;
-    outer: for vi next counter++ do :(i) = {
+    for vi next counter++ do :(i) = {
         vj: std::vector = ( 0, 1, 2 );
         inner: for vj do :(j) = {
             std::cout << i << j << " ";
@@ -181,7 +181,7 @@ for_continue_outer: () =
     counter := 0;
     outer: for vi next counter++ do :(i) = {
         vj: std::vector = ( 0, 1, 2 );
-        inner: for vj do :(j) = {
+        for vj do :(j) = {
             std::cout << i << j << " ";
             if j == 1 {
                 continue outer;
@@ -197,7 +197,7 @@ for_break_inner: () =
 {
     vi: std::vector = ( 0, 1, 2 );
     counter := 0;
-    outer: for vi next counter++ do :(i) = {
+    for vi next counter++ do :(i) = {
         vj: std::vector = ( 0, 1, 2 );
         inner: for vj do :(j) = {
             std::cout << i << j << " ";
@@ -217,7 +217,7 @@ for_break_outer: () =
     counter := 0;
     outer: for vi next counter++ do :(i) = {
         vj: std::vector = ( 0, 1, 2 );
-        inner: for vj do :(j) = {
+        for vj do :(j) = {
             std::cout << i << j << " ";
             if j == 1 {
                 break outer;

@@ -55,7 +55,7 @@ auto for_break_outer() -> void;
 auto while_continue_inner() -> void
 {
     auto i {0}; 
-    for( ;       cpp2::cmp_less(i,3); ++i ) {{
+    for( ; cpp2::cmp_less(i,3); ++i ) {
         auto j {0}; 
         for( ;       cpp2::cmp_less(j,3); ++j ) {{
             std::cout << i << j << " ";
@@ -65,7 +65,7 @@ auto while_continue_inner() -> void
             std::cout << "inner ";
         } CPP2_CONTINUE_BREAK(25_9) }
         std::cout << "outer ";
-    } CPP2_CONTINUE_BREAK(23_5) }
+    }
 }
 
 auto while_continue_outer() -> void
@@ -73,13 +73,13 @@ auto while_continue_outer() -> void
     auto i {0}; 
     for( ;       cpp2::cmp_less(i,3); ++i ) {{
         auto j {0}; 
-        for( ;       cpp2::cmp_less(j,3); ++j ) {{
+        for( ; cpp2::cmp_less(j,3); ++j ) {
             std::cout << i << j << " ";
             if (j == 1) {
                 goto CONTINUE_39_5;
             }
             std::cout << "inner ";
-        } CPP2_CONTINUE_BREAK(41_9) }
+        }
         std::cout << "outer ";
     } CPP2_CONTINUE_BREAK(39_5) }
 }
@@ -87,7 +87,7 @@ auto while_continue_outer() -> void
 auto while_break_inner() -> void
 {
     auto i {0}; 
-    for( ;       cpp2::cmp_less(i,3); ++i ) {{
+    for( ; cpp2::cmp_less(i,3); ++i ) {
         auto j {0}; 
         for( ;       cpp2::cmp_less(j,3); ++j ) {{
             std::cout << i << j << " ";
@@ -97,7 +97,7 @@ auto while_break_inner() -> void
             std::cout << "inner ";
         } CPP2_CONTINUE_BREAK(57_9) }
         std::cout << "outer ";
-    } CPP2_CONTINUE_BREAK(55_5) }
+    }
 }
 
 auto while_break_outer() -> void
@@ -105,13 +105,13 @@ auto while_break_outer() -> void
     auto i {0}; 
     for( ;       cpp2::cmp_less(i,3); ++i ) {{
         auto j {0}; 
-        for( ;       cpp2::cmp_less(j,3); ++j ) {{
+        for( ; cpp2::cmp_less(j,3); ++j ) {
             std::cout << i << j << " ";
             if (j == 1) {
                 goto BREAK_71_5;
             }
             std::cout << "inner ";
-        } CPP2_CONTINUE_BREAK(73_9) }
+        }
         std::cout << "outer ";
     } CPP2_CONTINUE_BREAK(71_5) }
 }
@@ -119,7 +119,7 @@ auto while_break_outer() -> void
 auto do_continue_inner() -> void
 {
     auto i {0}; 
-    do {      {
+    do {
         auto j {0}; 
         do {      {
             std::cout << i << j << " ";
@@ -131,7 +131,7 @@ auto do_continue_inner() -> void
               cpp2::cmp_less(j,3) && [&]{ ++j ; return true; }() );
 
         std::cout << "outer ";
-    } CPP2_CONTINUE_BREAK(87_5) } while ( 
+    } while ( 
           cpp2::cmp_less(i,3) && [&]{ ++i ; return true; }() );
 }
 
@@ -140,13 +140,13 @@ auto do_continue_outer() -> void
     auto i {0}; 
     do {      {
         auto j {0}; 
-        do {      {
+        do {
             std::cout << i << j << " ";
             if (j == 1) {
                 goto CONTINUE_106_5;
             }
             std::cout << "inner ";
-        } CPP2_CONTINUE_BREAK(108_9) } while ( 
+        } while ( 
               cpp2::cmp_less(j,3) && [&]{ ++j ; return true; }() );
 
         std::cout << "outer ";
@@ -157,7 +157,7 @@ auto do_continue_outer() -> void
 auto do_break_inner() -> void
 {
     auto i {0}; 
-    do {      {
+    do {
         auto j {0}; 
         do {      {
             std::cout << i << j << " ";
@@ -169,7 +169,7 @@ auto do_break_inner() -> void
               cpp2::cmp_less(j,3) && [&]{ ++j ; return true; }() );
 
         std::cout << "outer ";
-    } CPP2_CONTINUE_BREAK(125_5) } while ( 
+    } while ( 
           cpp2::cmp_less(i,3) && [&]{ ++i ; return true; }() );
 }
 
@@ -178,13 +178,13 @@ auto do_break_outer() -> void
     auto i {0}; 
     do {      {
         auto j {0}; 
-        do {      {
+        do {
             std::cout << i << j << " ";
             if (j == 1) {
                 goto BREAK_144_5;
             }
             std::cout << "inner ";
-        } CPP2_CONTINUE_BREAK(146_9) } while ( 
+        } while ( 
               cpp2::cmp_less(j,3) && [&]{ ++j ; return true; }() );
 
         std::cout << "outer ";
@@ -196,7 +196,7 @@ auto for_continue_inner() -> void
 {
     std::vector vi {0, 1, 2}; 
     auto counter {0}; 
-    for ( auto&& cpp2_range = vi;     auto const& i : cpp2_range ) { { do {
+    for ( auto&& cpp2_range = vi;  auto const& i : cpp2_range )  { do {
         std::vector vj {0, 1, 2}; 
         for ( auto&& cpp2_range = vj;  auto const& j : cpp2_range ) {{
             std::cout << i << j << " ";
@@ -207,7 +207,7 @@ auto for_continue_inner() -> void
         } CPP2_CONTINUE_BREAK(166_9) }
 
         std::cout << "outer ";
-    } while (false); ++counter; } CPP2_CONTINUE_BREAK(164_5) }
+    } while (false); ++counter; }
 }
 
 auto for_continue_outer() -> void
@@ -216,13 +216,13 @@ auto for_continue_outer() -> void
     auto counter {0}; 
     for ( auto&& cpp2_range = vi;     auto const& i : cpp2_range ) { { do {
         std::vector vj {0, 1, 2}; 
-        for ( auto&& cpp2_range = vj;  auto const& j : cpp2_range ) {{
+        for ( auto&& cpp2_range = vj;  auto const& j : cpp2_range ) {
             std::cout << i << j << " ";
             if (j == 1) {
                 goto CONTINUE_182_5;
             }
             std::cout << "inner ";
-        } CPP2_CONTINUE_BREAK(184_9) }
+        }
 
         std::cout << "outer ";
     } while (false); ++counter; } CPP2_CONTINUE_BREAK(182_5) }
@@ -232,7 +232,7 @@ auto for_break_inner() -> void
 {
     std::vector vi {0, 1, 2}; 
     auto counter {0}; 
-    for ( auto&& cpp2_range = vi;     auto const& i : cpp2_range ) { { do {
+    for ( auto&& cpp2_range = vi;  auto const& i : cpp2_range )  { do {
         std::vector vj {0, 1, 2}; 
         for ( auto&& cpp2_range = vj;  auto const& j : cpp2_range ) {{
             std::cout << i << j << " ";
@@ -243,7 +243,7 @@ auto for_break_inner() -> void
         } CPP2_CONTINUE_BREAK(202_9) }
 
         std::cout << "outer ";
-    } while (false); ++counter; } CPP2_CONTINUE_BREAK(200_5) }
+    } while (false); ++counter; }
 }
 
 auto for_break_outer() -> void
@@ -252,13 +252,13 @@ auto for_break_outer() -> void
     auto counter {0}; 
     for ( auto&& cpp2_range = vi;     auto const& i : cpp2_range ) { { do {
         std::vector vj {0, 1, 2}; 
-        for ( auto&& cpp2_range = vj;  auto const& j : cpp2_range ) {{
+        for ( auto&& cpp2_range = vj;  auto const& j : cpp2_range ) {
             std::cout << i << j << " ";
             if (j == 1) {
                 goto BREAK_218_5;
             }
             std::cout << "inner ";
-        } CPP2_CONTINUE_BREAK(220_9) }
+        }
 
         std::cout << "outer ";
     } while (false); ++counter; } CPP2_CONTINUE_BREAK(218_5) }
