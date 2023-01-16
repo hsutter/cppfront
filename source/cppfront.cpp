@@ -1501,7 +1501,7 @@ public:
             }
             emit(*n.statement);
             if (!labelname.empty()) {
-                printer.print_extra(" CPP2_BREAK_CONTINUE("+labelname+") }");
+                printer.print_extra(" CPP2_CONTINUE_BREAK("+labelname+") }");
             }
 
             in_non_rvalue_context.pop_back();
@@ -1518,7 +1518,7 @@ public:
             }
             emit(*n.statement);
             if (!labelname.empty()) {
-                printer.print_extra(" CPP2_BREAK_CONTINUE("+labelname+") }");
+                printer.print_extra(" CPP2_CONTINUE_BREAK("+labelname+") }");
             }
             printer.print_cpp2(" while ( ", n.position());
             emit(*n.condition);
@@ -1566,7 +1566,7 @@ public:
 
             printer.print_cpp2("", n.position());
             if (!labelname.empty()) {
-                printer.print_extra(" CPP2_BREAK_CONTINUE("+labelname+") }");
+                printer.print_extra(" CPP2_CONTINUE_BREAK("+labelname+") }");
             }
 
             in_non_rvalue_context.pop_back();

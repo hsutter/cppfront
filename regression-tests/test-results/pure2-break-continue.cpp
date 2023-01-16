@@ -63,9 +63,9 @@ auto while_continue_inner() -> void
                 goto CONTINUE_25_9;
             }
             std::cout << "inner ";
-        } CPP2_BREAK_CONTINUE(25_9) }
+        } CPP2_CONTINUE_BREAK(25_9) }
         std::cout << "outer ";
-    } CPP2_BREAK_CONTINUE(23_5) }
+    } CPP2_CONTINUE_BREAK(23_5) }
 }
 
 auto while_continue_outer() -> void
@@ -79,9 +79,9 @@ auto while_continue_outer() -> void
                 goto CONTINUE_39_5;
             }
             std::cout << "inner ";
-        } CPP2_BREAK_CONTINUE(41_9) }
+        } CPP2_CONTINUE_BREAK(41_9) }
         std::cout << "outer ";
-    } CPP2_BREAK_CONTINUE(39_5) }
+    } CPP2_CONTINUE_BREAK(39_5) }
 }
 
 auto while_break_inner() -> void
@@ -95,9 +95,9 @@ auto while_break_inner() -> void
                 goto BREAK_57_9;
             }
             std::cout << "inner ";
-        } CPP2_BREAK_CONTINUE(57_9) }
+        } CPP2_CONTINUE_BREAK(57_9) }
         std::cout << "outer ";
-    } CPP2_BREAK_CONTINUE(55_5) }
+    } CPP2_CONTINUE_BREAK(55_5) }
 }
 
 auto while_break_outer() -> void
@@ -111,9 +111,9 @@ auto while_break_outer() -> void
                 goto BREAK_71_5;
             }
             std::cout << "inner ";
-        } CPP2_BREAK_CONTINUE(73_9) }
+        } CPP2_CONTINUE_BREAK(73_9) }
         std::cout << "outer ";
-    } CPP2_BREAK_CONTINUE(71_5) }
+    } CPP2_CONTINUE_BREAK(71_5) }
 }
 
 auto do_continue_inner() -> void
@@ -127,11 +127,11 @@ auto do_continue_inner() -> void
                 goto CONTINUE_89_9;
             }
             std::cout << "inner ";
-        } CPP2_BREAK_CONTINUE(89_9) } while ( 
+        } CPP2_CONTINUE_BREAK(89_9) } while ( 
               cpp2::cmp_less(j,3) && [&]{ ++j ; return true; }() );
 
         std::cout << "outer ";
-    } CPP2_BREAK_CONTINUE(87_5) } while ( 
+    } CPP2_CONTINUE_BREAK(87_5) } while ( 
           cpp2::cmp_less(i,3) && [&]{ ++i ; return true; }() );
 }
 
@@ -146,11 +146,11 @@ auto do_continue_outer() -> void
                 goto CONTINUE_106_5;
             }
             std::cout << "inner ";
-        } CPP2_BREAK_CONTINUE(108_9) } while ( 
+        } CPP2_CONTINUE_BREAK(108_9) } while ( 
               cpp2::cmp_less(j,3) && [&]{ ++j ; return true; }() );
 
         std::cout << "outer ";
-    } CPP2_BREAK_CONTINUE(106_5) } while ( 
+    } CPP2_CONTINUE_BREAK(106_5) } while ( 
           cpp2::cmp_less(i,3) && [&]{ ++i ; return true; }() );
 }
 
@@ -165,11 +165,11 @@ auto do_break_inner() -> void
                 goto BREAK_127_9;
             }
             std::cout << "inner ";
-        } CPP2_BREAK_CONTINUE(127_9) } while ( 
+        } CPP2_CONTINUE_BREAK(127_9) } while ( 
               cpp2::cmp_less(j,3) && [&]{ ++j ; return true; }() );
 
         std::cout << "outer ";
-    } CPP2_BREAK_CONTINUE(125_5) } while ( 
+    } CPP2_CONTINUE_BREAK(125_5) } while ( 
           cpp2::cmp_less(i,3) && [&]{ ++i ; return true; }() );
 }
 
@@ -184,11 +184,11 @@ auto do_break_outer() -> void
                 goto BREAK_144_5;
             }
             std::cout << "inner ";
-        } CPP2_BREAK_CONTINUE(146_9) } while ( 
+        } CPP2_CONTINUE_BREAK(146_9) } while ( 
               cpp2::cmp_less(j,3) && [&]{ ++j ; return true; }() );
 
         std::cout << "outer ";
-    } CPP2_BREAK_CONTINUE(144_5) } while ( 
+    } CPP2_CONTINUE_BREAK(144_5) } while ( 
           cpp2::cmp_less(i,3) && [&]{ ++i ; return true; }() );
 }
 
@@ -204,10 +204,10 @@ auto for_continue_inner() -> void
                 goto CONTINUE_166_9;
             }
             std::cout << "inner ";
-        } CPP2_BREAK_CONTINUE(166_9) }
+        } CPP2_CONTINUE_BREAK(166_9) }
 
         std::cout << "outer ";
-    } while (false); ++counter; } CPP2_BREAK_CONTINUE(164_5) }
+    } while (false); ++counter; } CPP2_CONTINUE_BREAK(164_5) }
 }
 
 auto for_continue_outer() -> void
@@ -222,10 +222,10 @@ auto for_continue_outer() -> void
                 goto CONTINUE_182_5;
             }
             std::cout << "inner ";
-        } CPP2_BREAK_CONTINUE(184_9) }
+        } CPP2_CONTINUE_BREAK(184_9) }
 
         std::cout << "outer ";
-    } while (false); ++counter; } CPP2_BREAK_CONTINUE(182_5) }
+    } while (false); ++counter; } CPP2_CONTINUE_BREAK(182_5) }
 }
 
 auto for_break_inner() -> void
@@ -240,10 +240,10 @@ auto for_break_inner() -> void
                 goto BREAK_202_9;
             }
             std::cout << "inner ";
-        } CPP2_BREAK_CONTINUE(202_9) }
+        } CPP2_CONTINUE_BREAK(202_9) }
 
         std::cout << "outer ";
-    } while (false); ++counter; } CPP2_BREAK_CONTINUE(200_5) }
+    } while (false); ++counter; } CPP2_CONTINUE_BREAK(200_5) }
 }
 
 auto for_break_outer() -> void
@@ -258,9 +258,9 @@ auto for_break_outer() -> void
                 goto BREAK_218_5;
             }
             std::cout << "inner ";
-        } CPP2_BREAK_CONTINUE(220_9) }
+        } CPP2_CONTINUE_BREAK(220_9) }
 
         std::cout << "outer ";
-    } while (false); ++counter; } CPP2_BREAK_CONTINUE(218_5) }
+    } while (false); ++counter; } CPP2_CONTINUE_BREAK(218_5) }
 }
 

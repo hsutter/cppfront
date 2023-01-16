@@ -227,7 +227,8 @@
 
 #define CPP2_TYPEOF(x)              std::remove_cvref_t<decltype(x)>
 #define CPP2_FORWARD(x)             std::forward<decltype(x)>(x)
-#define CPP2_BREAK_CONTINUE(NAME)   goto CONTINUE_##NAME; BREAK_##NAME: break; CONTINUE_##NAME: continue;
+#define CPP2_CONTINUE_BREAK(NAME)   goto CONTINUE_##NAME; CONTINUE_##NAME: continue; goto BREAK_##NAME; BREAK_##NAME: break;
+                                    // these redundant goto's to avoid 'unused label' warnings
 
 
 namespace cpp2 {
