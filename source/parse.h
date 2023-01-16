@@ -765,6 +765,7 @@ struct iteration_statement_node
     std::unique_ptr<compound_statement_node>    statement;          // used for "do" and "while", else null
     std::unique_ptr<expression_node>            range;              // used for "for", else null
     std::unique_ptr<declaration_node>           body;               // used for "for", else null
+    bool                                        for_with_in = false;// usse for "for," says whether loop variable is 'in'
 
     auto get_for_parameter() const -> parameter_declaration_node const*;
 
@@ -2708,6 +2709,11 @@ private:
             {
                 error("for..do loop body must be an unnamed function taking a single parameter and returning nothing", false);
                 return {};
+            }
+            //  else
+            assert(func && *func);
+            if ((**func).parameters->parameters.front()->pass == passing_style::in) {
+                n->for_with_in = true;
             }
 
             return n;

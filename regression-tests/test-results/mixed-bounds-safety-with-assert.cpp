@@ -26,7 +26,7 @@ auto print_subrange(auto const& rng, cpp2::in<int> start, cpp2::in<int> end) -> 
     cpp2::Bounds.expects(cpp2::cmp_less_eq(end,CPP2_UFCS_0(ssize, rng)), "");
 
     auto count {0}; 
-    for ( auto&& cpp2_range = rng;  
+    for ( auto&& cpp2_range = std::as_const(rng);  
 
           auto const& i : cpp2_range )  { do 
         if (cpp2::cmp_less_eq(start,count) && cpp2::cmp_less_eq(count,end)) {
