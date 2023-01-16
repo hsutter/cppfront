@@ -298,6 +298,18 @@ private:
 static_assert (CHAR_BIT == 8);
 
 
+auto labelized_position(token const* t) -> std::string {
+    auto ret = std::string{};
+    if (t) {
+        ret +=
+            std::to_string(t->position().lineno) +
+            "_" +
+            std::to_string(t->position().colno);
+    }
+    return ret;
+}
+
+
 //-----------------------------------------------------------------------
 //
 //  A StringLiteral could include captures

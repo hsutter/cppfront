@@ -758,6 +758,7 @@ struct selection_statement_node
 struct parameter_declaration_node;
 struct iteration_statement_node
 {
+    token const*                                label;
     token const*                                identifier;
     std::unique_ptr<assignment_expression_node> next_expression;    // if used, else null
     std::unique_ptr<logical_or_expression_node> condition;          // used for "do" and "while", else null
@@ -769,6 +770,9 @@ struct iteration_statement_node
 
     auto position() const -> source_position
     {
+        if (label) {
+            return label->position();
+        }
         assert(identifier);
         return identifier->position();
     }
@@ -894,10 +898,35 @@ struct contract_node
 };
 
 
+struct jump_statement_node
+{
+    token const* keyword;
+    token const* label;
+
+    auto position() const -> source_position
+    {
+        assert(keyword);
+        return keyword->position();
+    }
+
+    auto visit(auto& v, int depth) -> void
+    {
+        v.start(*this, depth);
+        if (keyword) {
+            keyword->visit(v, depth+1);
+        }
+        if (label) {
+            label->visit(v, depth+1);
+        }
+        v.end(*this, depth);
+    }
+};
+
+
 struct parameter_declaration_list_node;
 struct statement_node
 {
-    enum active { expression=0, compound, selection, declaration, return_, iteration, contract, inspect };
+    enum active { expression=0, compound, selection, declaration, return_, iteration, contract, inspect, jump };
     std::variant<
         std::unique_ptr<expression_statement_node>,
         std::unique_ptr<compound_statement_node>,
@@ -906,7 +935,8 @@ struct statement_node
         std::unique_ptr<return_statement_node>,
         std::unique_ptr<iteration_statement_node>,
         std::unique_ptr<contract_node>,
-        std::unique_ptr<inspect_expression_node>
+        std::unique_ptr<inspect_expression_node>,
+        std::unique_ptr<jump_statement_node>
     > statement;
 
     auto position() const -> source_position;
@@ -996,6 +1026,7 @@ auto statement_node::visit(auto& v, int depth) -> void
     try_visit<iteration  >(statement, v, depth);
     try_visit<contract   >(statement, v, depth);
     try_visit<inspect    >(statement, v, depth);
+    try_visit<jump       >(statement, v, depth);
     v.end(*this, depth);
 }
 
@@ -1213,6 +1244,12 @@ auto iteration_statement_node::get_for_parameter() const -> parameter_declaratio
 auto iteration_statement_node::visit(auto& v, int depth) -> void
 {
     v.start(*this, depth);
+    if (label) {
+        label->visit(v, depth+1);
+    }
+    if (identifier) {
+        identifier->visit(v, depth+1);
+    }
     if (statement) {
         statement->visit(v, depth+1);
     }
@@ -2538,15 +2575,33 @@ private:
 
 
     //G iteration-statement:
-    //G     'while' logical-or-expression next-clause? compound-statement
-    //G     'do' compound-statement 'while' logical-or-expression next-clause? ';'
-    //G     'for' expression next-clause? 'do' unnamed-declaration
+    //G     label? 'while' logical-or-expression next-clause? compound-statement
+    //G     label? 'do' compound-statement 'while' logical-or-expression next-clause? ';'
+    //G     label? 'for' expression next-clause? 'do' unnamed-declaration
+    //G
+    //G label:
+    //G     identifier ':'
     //G
     //G next-clause:
     //G     'next' assignment-expression
     //G
     auto iteration_statement() -> std::unique_ptr<iteration_statement_node>
     {
+        auto n = std::make_unique<iteration_statement_node>();
+
+        //  If the next three tokens are: identifier ':' 'for/while/do', it's a labeled iteration statement
+        if (curr().type() == lexeme::Identifier &&
+            peek(1) && peek(2) &&
+            peek(1)->type() == lexeme::Colon &&
+            peek(2)->type() == lexeme::Keyword &&
+            (*peek(2) == "while" || *peek(2) == "do" || *peek(2) == "for")
+            )
+        {
+            n->label = &curr();
+            next();
+            next();
+        }
+
         if (curr().type() != lexeme::Keyword ||
             (curr() != "while" && curr() != "do" && curr() != "for")
             )
@@ -2554,7 +2609,6 @@ private:
             return {};
         }
 
-        auto n = std::make_unique<iteration_statement_node>();
         n->identifier = &curr();
         next();
 
@@ -2814,17 +2868,47 @@ private:
     }
 
 
+    //G jump-statement:
+    //G     'break' identifier? ';'
+    //G     'continue' identifier? ';'
+    //G
+    auto jump_statement() -> std::unique_ptr<jump_statement_node>
+    {
+        auto n = std::make_unique<jump_statement_node>();
+
+        if (curr() != "break" && curr() != "continue") {
+            return {};
+        }
+
+        n->keyword = &curr();
+        next();
+
+        if (curr().type() == lexeme::Identifier) {
+            n->label = &curr();
+            next();
+        }
+
+        if (curr().type() != lexeme::Semicolon) {
+            error("expected ; at end of jump-statement");
+            return {};
+        }
+        next();
+
+        return n;
+    }
+
+
     //G statement:
     //G     selection-statement
     //G     inspect-expression
     //G     return-statement
+    //G     jump-statement
     //G     iteration-statement
     //G     compound-statement
-    //G     declaration-statement
+    //G     declaration
     //G     expression-statement
     //G     contract
     //
-    //GTODO     jump-statement
     //GTODO     try-block
     //G
     auto statement(bool semicolon_required, source_position equal_sign = source_position{})
@@ -2849,6 +2933,12 @@ private:
         else if (auto s = return_statement()) {
             n->statement = std::move(s);
             assert (n->statement.index() == statement_node::return_);
+            return n;
+        }
+
+        else if (auto s = jump_statement()) {
+            n->statement = std::move(s);
+            assert (n->statement.index() == statement_node::jump);
             return n;
         }
 
@@ -3613,6 +3703,11 @@ public:
     auto start(alternative_node const&, int indent) -> void
     {
         o << pre(indent) << "alternative\n";
+    }
+
+    auto start(jump_statement_node const&, int indent) -> void
+    {
+        o << pre(indent) << "jump\n";
     }
 
     auto start(inspect_expression_node const& n, int indent) -> void

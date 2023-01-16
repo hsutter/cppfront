@@ -757,6 +757,7 @@ class cppfront
     parameter_declaration_list_node               single_anon;
         //  special value - hack for now to note single-anon-return type kind in this function_returns working list
     std::vector<std::string>                      function_requires_conditions;
+    std::vector<iteration_statement_node const*>  iteration_statements;
 
     std::vector<bool>                             in_non_rvalue_context   = { false };
     std::vector<bool>                             need_expression_list_parens = { true };
@@ -879,11 +880,7 @@ public:
         }
 
         //  Generate a reasonable macroized name
-        auto cpp1_FILENAME = cpp1_filename;
-        for (char& c : cpp1_FILENAME) {
-            if (0 <= c && c <= 127) { c = std::toupper(c); }
-            if ( !std::isalnum(c) ) { c = '_'; }
-        }
+        auto cpp1_FILENAME = to_upper_and_underbar(cpp1_filename);
 
         //  Only emit extra lines if we actually have Cpp2, because
         //  we want pure-Cpp1 files to pass through with zero changes
@@ -1478,6 +1475,9 @@ public:
         assert(n.identifier);
         in_non_rvalue_context.push_back(true);
 
+        iteration_statements.push_back( &n );
+        auto labelname = labelized_position(n.label);
+
         //  Handle while
         //
         if (*n.identifier == "while") {
@@ -1496,19 +1496,30 @@ public:
                 emit(*n.next_expression);
             }
             printer.print_cpp2(" ) ", n.position());
+            if (!labelname.empty()) {
+                printer.print_extra("{");
+            }
             emit(*n.statement);
+            if (!labelname.empty()) {
+                printer.print_extra(" CPP2_BREAK_CONTINUE("+labelname+") }");
+            }
 
             in_non_rvalue_context.pop_back();
-            return;
         }
 
         //  Handle do
         //
-        if (*n.identifier == "do") {
+        else if (*n.identifier == "do") {
             assert(n.condition && n.statement && !n.range && !n.body);
 
             printer.print_cpp2("do ", n.position());
+            if (!labelname.empty()) {
+                printer.print_extra("{");
+            }
             emit(*n.statement);
+            if (!labelname.empty()) {
+                printer.print_extra(" CPP2_BREAK_CONTINUE("+labelname+") }");
+            }
             printer.print_cpp2(" while ( ", n.position());
             emit(*n.condition);
             if (n.next_expression) {
@@ -1521,24 +1532,21 @@ public:
             printer.print_cpp2(");", n.position());
 
             in_non_rvalue_context.pop_back();
-            return;
         }
 
         //  Handle for
         //
-        if (*n.identifier == "for") {
+        else if (*n.identifier == "for") {
             assert(!n.condition && !n.statement && n.range && n.body);
 
-            //  TODO: break n.range into subexpressions and lifetime-extend
-            //        each subexpression, because that's the right thing to do
-            //  For now, just use a for-scope auto&&
-            //  Also: using the name 'cpp2_range' for now because '__range' is reserved
-            //        and common enough that it might clash with existing impls
             printer.print_cpp2("for ( auto&& cpp2_range = ", n.position());
             emit(*n.range);
             printer.print_cpp2(";  ", n.position());
             emit(*n.get_for_parameter());
             printer.print_cpp2(" : cpp2_range ) ", n.position());
+            if (!labelname.empty()) {
+                printer.print_extra("{");
+            }
 
             //  If there's a next-expression, smuggle it in via a nested do/while(false) loop
             //  (nested "continue" will work, but "break" won't until we do extra work to implement
@@ -1556,11 +1564,19 @@ public:
                 printer.print_cpp2("; }", n.position());
             }
 
+            printer.print_cpp2("", n.position());
+            if (!labelname.empty()) {
+                printer.print_extra(" CPP2_BREAK_CONTINUE("+labelname+") }");
+            }
+
             in_non_rvalue_context.pop_back();
-            return;
         }
 
-        assert(!"compiler bug: unexpected case");
+        else {
+            assert(!"ICE: unexpected case");
+        }
+
+        iteration_statements.pop_back();
     }
 
 
@@ -1614,6 +1630,40 @@ public:
         }
 
         printer.print_cpp2("; ", n.position());
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
+    auto emit(jump_statement_node const& n) -> void
+    {
+        assert(n.keyword);
+
+        if (n.label) {
+            auto iter_stmt =
+                std::find_if(
+                    iteration_statements.begin(),
+                    iteration_statements.end(),
+                    [&](auto& s){ return s->label && std::string_view{*s->label} == std::string_view{*n.label}; }
+                );
+            if (iter_stmt == iteration_statements.end())
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "a named " + n.keyword->to_string(true) + " must use the name of an enclosing local loop label"
+                );
+                return;
+            }
+            assert((*iter_stmt)->label);
+            printer.print_cpp2(
+                "goto " + to_upper_and_underbar(*n.keyword) + "_" + labelized_position((*iter_stmt)->label) + ";",
+                n.position()
+            );
+        }
+        else {
+            emit(*n.keyword);
+            printer.print_cpp2(";", n.position());
+        }
     }
 
 
@@ -2607,6 +2657,7 @@ public:
         try_emit<statement_node::iteration  >(n.statement);
         try_emit<statement_node::contract   >(n.statement);
         try_emit<statement_node::inspect    >(n.statement, false);
+        try_emit<statement_node::jump       >(n.statement);
 
         printer.preempt_position_pop();
     }

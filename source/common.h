@@ -270,6 +270,24 @@ auto replace_all(std::string& s, std::string_view what, std::string_view with)
     return s;
 }
 
+auto to_upper(char c) -> char {
+    //  C toupper is only not-UB in [0,127] and returns the wrong type,
+    //  so wrap the range check and the type cast here in one place...
+    //  note the 126 (not 127) is intentional to avoid a GCC warning
+    if (0 <= c && c <= 126) { return (char)std::toupper(c); }
+    //  else
+    return c;
+}
+
+auto to_upper_and_underbar(std::string_view s) -> std::string {
+    auto ret = std::string{s};
+    for (char& c : ret) {
+        if (std::isalnum(c)) { c = to_upper(c); }
+        else                 { c = '_'; }
+    }
+    return ret;
+}
+
 
 //-----------------------------------------------------------------------
 //

@@ -225,8 +225,9 @@
 #endif
 
 
-#define CPP2_TYPEOF(x)  std::remove_cvref_t<decltype(x)>
-#define CPP2_FORWARD(x) std::forward<decltype(x)>(x)
+#define CPP2_TYPEOF(x)              std::remove_cvref_t<decltype(x)>
+#define CPP2_FORWARD(x)             std::forward<decltype(x)>(x)
+#define CPP2_BREAK_CONTINUE(NAME)   goto CONTINUE_##NAME; BREAK_##NAME: break; CONTINUE_##NAME: continue;
 
 
 namespace cpp2 {
