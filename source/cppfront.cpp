@@ -1544,14 +1544,13 @@ public:
         else if (*n.identifier == "for") {
             assert(!n.condition && !n.statement && n.range && n.body);
 
-            printer.print_cpp2("for ( auto&& cpp2_range = ", n.position());
             if (n.for_with_in) {
-                printer.print_cpp2("std::as_const(", n.position());
+                printer.print_cpp2("for ( auto const& cpp2_range = ", n.position());
+            }
+            else {
+                printer.print_cpp2("for ( auto&& cpp2_range = ", n.position());
             }
             emit(*n.range);
-            if (n.for_with_in) {
-                printer.print_cpp2(")", n.position());
-            }
             printer.print_cpp2(";  ", n.position());
             emit(*n.get_for_parameter());
             printer.print_cpp2(" : cpp2_range ) ", n.position());

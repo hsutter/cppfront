@@ -20,7 +20,7 @@ auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> vo
     std::vector<int> v {1, 2, 3, 4, 5}; 
     add_42_to_subrange(v, 1, 3);
 
-    for ( auto&& cpp2_range = std::as_const(v);  auto const& i : cpp2_range ) 
+    for ( auto const& cpp2_range = v;  auto const& i : cpp2_range ) 
         std::cout << i << "\n";
 }
 

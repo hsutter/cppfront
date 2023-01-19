@@ -196,9 +196,9 @@ auto for_continue_inner() -> void
 {
     std::vector vi {0, 1, 2}; 
     auto counter {0}; 
-    for ( auto&& cpp2_range = std::as_const(vi);  auto const& i : cpp2_range )  { do {
+    for ( auto const& cpp2_range = vi;  auto const& i : cpp2_range )  { do {
         std::vector vj {0, 1, 2}; 
-        for ( auto&& cpp2_range = std::as_const(vj);  auto const& j : cpp2_range ) {{
+        for ( auto const& cpp2_range = vj;  auto const& j : cpp2_range ) {{
             std::cout << i << j << " ";
             if (j == 1) {
                 goto CONTINUE_166_9;
@@ -214,9 +214,9 @@ auto for_continue_outer() -> void
 {
     std::vector vi {0, 1, 2}; 
     auto counter {0}; 
-    for ( auto&& cpp2_range = std::as_const(vi);  auto const& i : cpp2_range ) { { do {
+    for ( auto const& cpp2_range = vi;  auto const& i : cpp2_range ) { { do {
         std::vector vj {0, 1, 2}; 
-        for ( auto&& cpp2_range = std::as_const(vj);  auto const& j : cpp2_range ) {
+        for ( auto const& cpp2_range = vj;  auto const& j : cpp2_range ) {
             std::cout << i << j << " ";
             if (j == 1) {
                 goto CONTINUE_182_5;
@@ -232,9 +232,9 @@ auto for_break_inner() -> void
 {
     std::vector vi {0, 1, 2}; 
     auto counter {0}; 
-    for ( auto&& cpp2_range = std::as_const(vi);  auto const& i : cpp2_range )  { do {
+    for ( auto const& cpp2_range = vi;  auto const& i : cpp2_range )  { do {
         std::vector vj {0, 1, 2}; 
-        for ( auto&& cpp2_range = std::as_const(vj);  auto const& j : cpp2_range ) {{
+        for ( auto const& cpp2_range = vj;  auto const& j : cpp2_range ) {{
             std::cout << i << j << " ";
             if (j == 1) {
                 goto BREAK_202_9;
@@ -250,9 +250,9 @@ auto for_break_outer() -> void
 {
     std::vector vi {0, 1, 2}; 
     auto counter {0}; 
-    for ( auto&& cpp2_range = std::as_const(vi);  auto const& i : cpp2_range ) { { do {
+    for ( auto const& cpp2_range = vi;  auto const& i : cpp2_range ) { { do {
         std::vector vj {0, 1, 2}; 
-        for ( auto&& cpp2_range = std::as_const(vj);  auto const& j : cpp2_range ) {
+        for ( auto const& cpp2_range = vj;  auto const& j : cpp2_range ) {
             std::cout << i << j << " ";
             if (j == 1) {
                 goto BREAK_218_5;

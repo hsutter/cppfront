@@ -34,7 +34,7 @@
         std::move(callback)
     );
 
-    for ( auto&& cpp2_range = std::as_const(view);  auto const& str : cpp2_range ) {
+    for ( auto const& cpp2_range = view;  auto const& str : cpp2_range ) {
         std::cout << str << "\n";
     }
 }
