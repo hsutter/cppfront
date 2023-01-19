@@ -1125,6 +1125,10 @@ struct declaration_node
 
     declaration_node(declaration_node* parent) : parent_scope{parent} { }
 
+    auto is_wildcard() const -> bool {
+        return type.index() == object && std::get<object>(type)->is_wildcard();
+    }
+
     //  Shorthand for common query
     //
     auto is(active a) const
@@ -3104,6 +3108,11 @@ private:
         }
 
         if (!(n->declaration = declaration(false, true))) {
+            return {};
+        }
+
+        if (n->pass == passing_style::out && n->declaration->is_wildcard()) {
+            error("(temporary alpha limitation) an 'out' parameter cannot be a deduced type");
             return {};
         }
 
