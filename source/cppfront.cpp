@@ -1136,25 +1136,25 @@ public:
     {
         auto last_use = is_definite_last_use(n.identifier);
 
-        bool add_std_forward =
+        bool add_forward =
             last_use && last_use->is_forward &&
             !in_non_rvalue_context.back();
 
-        bool add_std_move =
-            !add_std_forward &&
+        bool add_move =
+            !add_forward &&
             (in_synthesized_multi_return || (last_use && !suppress_move_from_last_use)) &&
             !in_non_rvalue_context.back();
 
         //  For an explicit 'forward' apply forwarding to correct identifier
         assert (!current_args.empty());
         if (current_args.back().pass == passing_style::forward) {
-            add_std_forward = current_args.back().ptoken == n.identifier;
+            add_forward = current_args.back().ptoken == n.identifier;
         }
 
-        if (add_std_move) {
+        if (add_move) {
             printer.print_cpp2("std::move(", n.position());
         }
-        if (add_std_forward) {
+        if (add_forward) {
             printer.print_cpp2("CPP2_FORWARD(", {n.position().lineno, n.position().colno - 8});
         }
 
@@ -1195,7 +1195,7 @@ public:
             printer.print_cpp2(".value()", n.position());
         }
 
-        if (add_std_move || add_std_forward) {
+        if (add_move || add_forward) {
             printer.print_cpp2(")", n.position());
         }
     }

@@ -330,7 +330,7 @@ auto expand_string_literal(std::string_view text, std::vector<error>& errors, so
     }
     assert(pos < length && text[pos] == '"');
     ++pos;
-    auto current_start = pos;   // the current offset before which the string has been into ret
+    auto current_start = pos;   // the current offset before which the string has been added to ret
     auto first         = true;
 
     auto add_plus = [&]{
@@ -350,7 +350,7 @@ auto expand_string_literal(std::string_view text, std::vector<error>& errors, so
             auto paren_depth = 1;
             auto open = pos - 2;
 
-            for( ; text[open] != '"' || (open > current_start && text[open-1] != '\\'); --open)
+            for( ; open > current_start; --open)
             {
                 if (text[open] == ')') {
                     ++paren_depth;
@@ -362,7 +362,7 @@ auto expand_string_literal(std::string_view text, std::vector<error>& errors, so
                     }
                 }
             }
-            if (text[open] == '"')
+            if (text[open] != '(')
             {
                 errors.emplace_back(
                     source_position( src_pos.lineno, src_pos.colno + pos ),
@@ -370,7 +370,6 @@ auto expand_string_literal(std::string_view text, std::vector<error>& errors, so
                 );
                 return {};
             }
-            assert (text[open] == '(');
 
             //  'open' is now at the matching (
 
@@ -385,7 +384,9 @@ auto expand_string_literal(std::string_view text, std::vector<error>& errors, so
             //  Then put interpolated chunk into ret
             add_plus();
             ret += "cpp2::to_string";
-            ret += text.substr(open, pos - open);
+            auto chunk = std::string{text.substr(open, pos - open)};
+            replace_all(chunk, "\\\"", "\"");
+            ret += chunk;
 
             current_start = pos+1;
         }
@@ -1184,7 +1185,7 @@ auto lex_line(
                         //  which may have moved it in memory... move i back to the line start
                         //  and discard any tokens we already tokenized for this line
                         i = colno_t{-1};
-                        while (tokens.back().position().lineno == lineno) {
+                        while (!tokens.empty() && tokens.back().position().lineno == lineno) {
                             tokens.pop_back();
                         }
                     }
