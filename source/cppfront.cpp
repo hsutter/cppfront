@@ -1123,6 +1123,21 @@ public:
         in_definite_init = is_definite_initialization(&n);
     }
 
+    //-----------------------------------------------------------------------
+    //
+    auto emit(literal_node const& n, source_position pos = {}) -> void
+    {
+        if (pos == source_position{}) {
+            pos = n.position();
+        }
+
+        assert(n.literal);
+        emit(*n.literal);
+        if (n.user_defined_suffix) {
+            emit(*n.user_defined_suffix);
+        }
+    }
+
 
     //-----------------------------------------------------------------------
     //
@@ -1744,6 +1759,7 @@ public:
         try_emit<primary_expression_node::expression_list>(n.expr);
         try_emit<primary_expression_node::id_expression  >(n.expr);
         try_emit<primary_expression_node::inspect        >(n.expr, true);
+        try_emit<primary_expression_node::literal        >(n.expr);
 
         if (n.expr.index() == primary_expression_node::declaration)
         {

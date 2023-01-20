@@ -93,6 +93,7 @@ enum class lexeme : std::int8_t {
     HexadecimalLiteral,
     StringLiteral,
     CharacterLiteral,
+    UserDefinedLiteralSuffix,
     Keyword,
     Cpp1MultiKeyword,
     Cpp2FixedType,
@@ -185,6 +186,7 @@ auto as(lexeme l) -> std::string
     break;case lexeme::HexadecimalLiteral:  return "HexadecimalLiteral";
     break;case lexeme::StringLiteral:       return "StringLiteral";
     break;case lexeme::CharacterLiteral:    return "CharacterLiteral";
+    break;case lexeme::UserDefinedLiteralSuffix:    return "UserDefinedLiteralSuffix";
     break;case lexeme::Keyword:             return "Keyword";
     break;case lexeme::Cpp1MultiKeyword:    return "Cpp1MultiKeyword";
     break;case lexeme::Cpp2FixedType:       return "Cpp2FixedType";
@@ -602,7 +604,7 @@ auto lex_line(
 
     //  Local helper functions for readability
     //
-    auto peek = [&](int num) {  return (i+num < std::ssize(line)) ? line[i+num] : '\0';  };
+    auto peek = [&](int num) {  return (i+num < std::ssize(line) && i+num >= 0) ? line[i+num] : '\0';  };
 
     auto store = [&](auto num, lexeme type)
     {
@@ -1240,28 +1242,34 @@ auto lex_line(
                 //  Identifier
                 //
                 else if (auto j = starts_with_identifier({&line[i], std::size(line)-i})) {
-                    store(j, lexeme::Identifier);
-                    if (tokens.back() == "NULL") {
-                        errors.emplace_back(
-                            source_position(lineno, i),
-                            "'NULL' is not supported in Cpp2 - for a local pointer variable, leave it uninitialized instead, and set it to a non-null value when you have one"
-                        );
-                    }
-                    if (tokens.back() == "union") {
-                        errors.emplace_back(
-                            source_position(lineno, i),
-                            "unsafe 'union's are not supported in Cpp2 - use std::variant instead"
-                        );
-                    }
-                    if (tokens.back() == "delete") {
-                        errors.emplace_back(
-                            source_position(lineno, i),
-                            "'delete' and owning raw pointers are not supported in Cpp2"
-                        );
-                        errors.emplace_back(
-                            source_position(lineno, i),
-                            "  - use unique.new<T>, shared.new<T>, or gc.new<T> instead (in that order)"
-                        );
+                    if (!isspace(peek(-1)) && !tokens.empty() &&
+                        is_literal(tokens.back().type()))
+                    {
+                        store(j, lexeme::UserDefinedLiteralSuffix);
+                    } else {
+                        store(j, lexeme::Identifier);
+                        if (tokens.back() == "NULL") {
+                            errors.emplace_back(
+                                source_position(lineno, i),
+                                "'NULL' is not supported in Cpp2 - for a local pointer variable, leave it uninitialized instead, and set it to a non-null value when you have one"
+                            );
+                        }
+                        if (tokens.back() == "union") {
+                            errors.emplace_back(
+                                source_position(lineno, i),
+                                "unsafe 'union's are not supported in Cpp2 - use std::variant instead"
+                            );
+                        }
+                        if (tokens.back() == "delete") {
+                            errors.emplace_back(
+                                source_position(lineno, i),
+                                "'delete' and owning raw pointers are not supported in Cpp2"
+                            );
+                            errors.emplace_back(
+                                source_position(lineno, i),
+                                "  - use unique.new<T>, shared.new<T>, or gc.new<T> instead (in that order)"
+                            );
+                        }
                     }
                 }
 

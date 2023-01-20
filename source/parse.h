@@ -117,17 +117,19 @@ struct expression_list_node;
 struct id_expression_node;
 struct declaration_node;
 struct inspect_expression_node;
+struct literal_node;
 
 struct primary_expression_node
 {
-    enum active { empty=0, identifier, expression_list, id_expression, declaration, inspect };
+    enum active { empty=0, identifier, expression_list, id_expression, declaration, inspect, literal };
     std::variant<
         std::monostate,
         token const*,
         std::unique_ptr<expression_list_node>,
         std::unique_ptr<id_expression_node>,
         std::unique_ptr<declaration_node>,
-        std::unique_ptr<inspect_expression_node>
+        std::unique_ptr<inspect_expression_node>,
+        std::unique_ptr<literal_node>
     > expr;
 
     auto template_args_count() -> int;
@@ -136,6 +138,31 @@ struct primary_expression_node
     auto visit(auto& v, int depth) -> void;
 };
 
+struct literal_node {
+    token const* literal             = {};
+    token const* user_defined_suffix = {};
+
+    auto position() const -> source_position
+    {
+        assert (literal);
+        return literal->position();
+    }
+
+    auto get_token() const -> token const* {
+        return literal;
+    }
+
+    auto visit(auto& v, int depth) -> void
+    {
+        v.start(*this, depth);
+        assert (literal);
+        literal->visit(v, depth+1);
+        if (user_defined_suffix) {
+            user_defined_suffix->visit(v, depth+1);
+        }
+        v.end(*this, depth);
+    }
+};
 
 struct postfix_expression_node;
 
@@ -1179,6 +1206,9 @@ auto primary_expression_node::get_token() const -> token const*
     else if (expr.index() == id_expression) {
         return std::get<id_expression>(expr)->get_token();
     }
+    else if (expr.index() == literal) {
+        return std::get<literal>(expr)->get_token();
+    }
     // else (because we're deliberately ignoring the other
     //       options which are more than a single token)
     return {};
@@ -1221,6 +1251,12 @@ auto primary_expression_node::position() const -> source_position
         return i->position();
     }
 
+    break;case literal: {
+        auto const& i = std::get<literal>(expr);
+        assert (i);
+        return i->position();
+    }
+
     break;default:
         assert (!"illegal primary_expression_node state");
         return { 0, 0 };
@@ -1235,6 +1271,7 @@ auto primary_expression_node::visit(auto& v, int depth) -> void
     try_visit<id_expression  >(expr, v, depth);
     try_visit<declaration    >(expr, v, depth);
     try_visit<inspect        >(expr, v, depth);
+    try_visit<literal        >(expr, v, depth);
     v.end(*this, depth);
 }
 
@@ -1606,9 +1643,8 @@ private:
             return n;
         }
 
-        if (is_literal(curr().type())) {
-            n->expr = &curr();
-            next();
+        if (auto lit = literal()) {
+            n->expr = std::move(lit);
             return n;
         }
 
@@ -2449,6 +2485,37 @@ private:
         return {};
     }
 
+    //G literal:
+    //G     integer-literal
+    //G     character-literal
+    //G     floating-point-literal
+    //G     string-literal
+    //G     boolean-literal
+    //G     pointer-literal
+    //G     user-defined-literal
+    //G
+    //G user-defined-literal:
+    //G     integer-literal ud-suffix
+    //G     character-literal ud-suffix
+    //G     floating-point-literal ud-suffix
+    //G     string-literal ud-suffix
+    //G     boolean-literal ud-suffix
+    //G     pointer-literal ud-suffix
+    //G
+    auto literal() -> std::unique_ptr<literal_node>
+    {
+        if (is_literal(curr().type())) {
+            auto n = std::make_unique<literal_node>();
+            n->literal = &curr();
+            next();
+            if (curr().type() == lexeme::UserDefinedLiteralSuffix) {
+                n->user_defined_suffix = &curr();
+                next();
+            }
+            return n;
+        }
+        return {};
+    }
 
     //G expression-statement:
     //G     expression ';'
