@@ -1053,6 +1053,7 @@ auto lex_line(
                     if (is_binary_digit(peek2)) {
                         while (is_separator_or(is_binary_digit,peek(j))) { ++j; }
                         store(j, lexeme::BinaryLiteral);
+                        continue;
                     }
                     else {
                         errors.emplace_back(
@@ -1066,6 +1067,7 @@ auto lex_line(
                     if (is_hexadecimal_digit(peek2)) {
                         while (is_separator_or(is_hexadecimal_digit,peek(j))) { ++j; }
                         store(j, lexeme::HexadecimalLiteral);
+                        continue;
                     }
                     else {
                         errors.emplace_back(
