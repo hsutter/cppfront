@@ -1045,6 +1045,7 @@ struct function_type_node
         std::unique_ptr<type_id_node>,
         std::unique_ptr<parameter_declaration_list_node>
     > returns;
+    passing_style returns_passing = passing_style::move;
 
     std::vector<std::unique_ptr<contract_node>> contracts;
 
@@ -3278,6 +3279,14 @@ private:
         if (curr().type() == lexeme::Arrow)
         {
             next();
+
+            if (auto pass = to_passing_style(curr()); pass != passing_style::invalid) {
+                n->returns_passing = pass;
+                if (pass != passing_style::forward && pass != passing_style::move) {
+                    error("only 'forward' and 'move' return passing style are allowed from functions");
+                }
+                next();
+            }
 
             if (auto t = type_id()) {
                 n->returns = std::move(t);

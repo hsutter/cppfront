@@ -2921,7 +2921,11 @@ public:
             printer.print_cpp2( " -> ", n.position() );
             auto& r = std::get<function_type_node::id>(n.returns);
             assert(r);
-            emit(*r);
+            if (r->is_wildcard() && n.returns_passing == passing_style::forward) {
+                printer.print_cpp2( "decltype(auto)", n.position() );
+            } else {
+                emit(*r);
+            }
         }
 
         else {
