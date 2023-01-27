@@ -1066,10 +1066,15 @@ struct function_type_node
     std::unique_ptr<parameter_declaration_list_node> parameters;
     bool throws = false;
 
+    struct single_type_id {
+        std::unique_ptr<type_id_node> type;
+        passing_style pass = passing_style::move;
+    };
+
     enum active { empty = 0, id, list };
     std::variant<
         std::monostate,
-        std::unique_ptr<type_id_node>,
+        single_type_id,
         std::unique_ptr<parameter_declaration_list_node>
     > returns;
 
@@ -1089,8 +1094,8 @@ struct function_type_node
 
         if (returns.index() == id) {
             auto& r = std::get<id>(returns);
-            assert(r);
-            r->visit(v, depth+1);
+            assert(r.type);
+            r.type->visit(v, depth+1);
         }
         else if (returns.index() == list) {
             auto& r = std::get<list>(returns);
@@ -2221,10 +2226,6 @@ private:
             return {};
         }
 
-        if (curr().type() == lexeme::LeftBracket) {
-            error("C-style array types are not allowed, use std::array instead");
-            return {};
-        }
         return n;
     }
 
@@ -3338,8 +3339,24 @@ private:
         {
             next();
 
-            if (auto t = type_id()) {
-                n->returns = std::move(t);
+            if (auto pass = to_passing_style(curr()); pass != passing_style::invalid) {
+                if (pass != passing_style::forward && pass != passing_style::move) {
+                    error("only 'forward' and 'move' return passing style are allowed from functions");
+                }
+                next();
+                if (auto t = type_id()) {
+                    n->returns = function_type_node::single_type_id{ std::move(t), pass };
+                    assert(n->returns.index() == function_type_node::id);
+                }
+                else {
+                    auto msg = std::string("'");
+                    msg += to_string_view(pass);
+                    error( + "'' must be followed by a type-id");
+                }
+            }
+            else if (auto t = type_id()) {
+                n->returns = function_type_node::single_type_id{ std::move(t), passing_style::move };
+                assert(n->returns.index() == function_type_node::id);
             }
             else if (auto returns_list = parameter_declaration_list(true, named)) {
                 if (std::ssize(returns_list->parameters) < 1) {
@@ -3347,6 +3364,7 @@ private:
                     return {};
                 }
                 n->returns = std::move(returns_list);
+                assert(n->returns.index() == function_type_node::list);
             }
             else {
                 error("missing function return after ->");
@@ -3455,6 +3473,11 @@ private:
             }
             n->type = std::move(t);
             assert (n->type.index() == declaration_node::object);
+
+            if (curr().type() == lexeme::LeftBracket) {
+                error("C-style array types are not allowed, use std::array instead");
+                return {};
+            }
         }
 
         //  Or nothing, declaring an object of deduced type,
@@ -3824,6 +3847,12 @@ public:
     {
         o << pre(indent) << "function\n";
         o << pre(indent+1) << "throws: " << as<std::string>(n.throws) << "\n";
+        if (n.returns.index() == function_type_node::id) {
+            auto& r = std::get<function_type_node::id>(n.returns);
+            if (r.pass != passing_style::invalid) {
+                o << pre(indent+1) << "returns by: " << to_string_view(r.pass) << "\n";
+            }
+        }
     }
 
     auto start(function_returns_tag const&, int indent) -> void

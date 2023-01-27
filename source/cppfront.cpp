@@ -1819,7 +1819,11 @@ public:
         return std::visit([&]<typename T>(T const& type){
             if constexpr (std::is_same_v<T, std::monostate>) {
                 return false;
-            } else {
+            }
+            else if constexpr (std::is_same_v<T, function_type_node::single_type_id>) {
+                return is_pointer_declaration(type.type.get(),  deref_cnt, addr_cnt);
+            }
+            else {
                 return is_pointer_declaration(type.get(),  deref_cnt, addr_cnt);
             }
         }, fun_node->returns);
@@ -2936,8 +2940,19 @@ public:
         else if (n.returns.index() == function_type_node::id) {
             printer.print_cpp2( " -> ", n.position() );
             auto& r = std::get<function_type_node::id>(n.returns);
-            assert(r);
-            emit(*r);
+            assert(r.type);
+            if (r.pass == passing_style::forward) {
+                if (r.type->is_wildcard()) {
+                    printer.print_cpp2( "decltype(auto)", n.position() );
+                }
+                else {
+                    emit(*r.type);
+                    printer.print_cpp2( "&", n.position() );
+                }
+            }
+            else {
+                emit(*r.type);
+            }
         }
 
         else {
