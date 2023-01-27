@@ -331,13 +331,25 @@ auto expand_string_literal(std::string_view text, std::vector<error>& errors, so
         ++pos;
     }
     assert(pos < length && text[pos] == '"');
+    auto first_quote_pos = pos;
     ++pos;
     auto current_start = pos;   // the current offset before which the string has been added to ret
     auto first         = true;
 
-    auto add_plus = [&]{
+    auto add_plus = [&](bool and_quote = false) {
+        //  Only add a "+" after the first term
         if (!first) {
             ret += " + ";
+        }
+        //  If also adding a quote,
+        if (and_quote) {
+            //  remember to pull in the prefix on the first term (e.g., u")
+            if (first) {
+                ret += text.substr(0, first_quote_pos+1);
+            }
+            else {
+                ret += '"';
+            }
         }
         first = false;
     };
@@ -377,8 +389,7 @@ auto expand_string_literal(std::string_view text, std::vector<error>& errors, so
 
             //  Put the next non-empty non-interpolated chunk straight into ret
             if (open != current_start) {
-                add_plus();
-                ret += '"';
+                add_plus(true);
                 ret += text.substr(current_start, open - current_start);
                 ret += '"';
             }
@@ -399,8 +410,7 @@ auto expand_string_literal(std::string_view text, std::vector<error>& errors, so
 
     //  Put the final non-interpolated chunk straight into ret
     if (first || current_start < std::ssize(text)-1) {
-        add_plus();
-        ret += '"';
+        add_plus(true);
         ret += text.substr(current_start);
     }
 
@@ -1241,12 +1251,15 @@ auto lex_line(
 
                 //  Identifier
                 //
-                else if (auto j = starts_with_identifier({&line[i], std::size(line)-i})) {
+                else if (auto j = starts_with_identifier({&line[i], std::size(line)-i}))
+                {
                     if (!isspace(peek(-1)) && !tokens.empty() &&
                         is_literal(tokens.back().type()))
                     {
                         store(j, lexeme::UserDefinedLiteralSuffix);
-                    } else {
+                    }
+                    else
+                    {
                         store(j, lexeme::Identifier);
                         if (tokens.back() == "NULL") {
                             errors.emplace_back(

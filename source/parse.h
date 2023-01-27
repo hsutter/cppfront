@@ -2486,21 +2486,13 @@ private:
     }
 
     //G literal:
-    //G     integer-literal
-    //G     character-literal
-    //G     floating-point-literal
-    //G     string-literal
-    //G     boolean-literal
-    //G     pointer-literal
-    //G     user-defined-literal
-    //G
-    //G user-defined-literal:
-    //G     integer-literal ud-suffix
-    //G     character-literal ud-suffix
-    //G     floating-point-literal ud-suffix
-    //G     string-literal ud-suffix
-    //G     boolean-literal ud-suffix
-    //G     pointer-literal ud-suffix
+    //G     integer-literal ud-suffix?
+    //G     character-literal ud-suffix?
+    //G     floating-point-literal ud-suffix?
+    //G     string-literal ud-suffix?
+    //G     boolean-literal ud-suffix?
+    //G     pointer-literal ud-suffix?
+    //G     user-defined-literal ud-suffix?
     //G
     auto literal() -> std::unique_ptr<literal_node>
     {
