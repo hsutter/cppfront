@@ -2051,7 +2051,7 @@ private:
     //G
     auto bit_or_expression(bool allow_angle_operators = true) {
         return binary_expression<bit_or_expression_node> (
-            [](token const& t){ return t.type() == lexeme::LogicalOr; },
+            [](token const& t){ return t.type() == lexeme::Pipe; },
             [=,this]{ return bit_xor_expression(allow_angle_operators); }
         );
     }
