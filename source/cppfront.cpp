@@ -1077,11 +1077,15 @@ public:
     //  is needed where Cpp1 and Cpp2 have different grammar orders
     //
 
-    auto print_to_string(auto& i, auto... more) -> std::string {
-        auto print = std::string{};
-        printer.emit_to_string(&print);
+    void print_to_string(std::string* str, auto& i, auto... more) {
+        printer.emit_to_string(str);
         emit(i, more...);
         printer.emit_to_string();
+    };
+
+    auto print_to_string(auto& i, auto... more) -> std::string {
+        auto print = std::string{};
+        print_to_string(&print, i, more...);
         return print;
     };
 
@@ -1718,9 +1722,27 @@ public:
         for (auto& cap : captures.members)
         {
             assert(cap.capture_expr->cap_grp == &captures);
-            printer.emit_to_string(&cap.str);
-            emit(*cap.capture_expr, true);
-            printer.emit_to_string();
+            print_to_string(&cap.str, *cap.capture_expr, true);
+            suppress_move_from_last_use = true;
+            print_to_string(&cap.str_suppressed_move, *cap.capture_expr, true);
+            suppress_move_from_last_use = false;
+        }
+
+        // If move from last use was used on the variable we need to rewrite the str to add std::move
+        // to earlier use of the variable. That will save us from capturing one variable two times
+        // (one with copy and one with std::move).
+        for (auto rit = captures.members.rbegin(); rit != captures.members.rend(); ++rit)
+        {
+            auto is_same_str_suppressed_move = [s=rit->str_suppressed_move](auto& cap){
+                return cap.str_suppressed_move == s;
+            };
+
+            auto rit2 = std::find_if(rit+1, captures.members.rend(), is_same_str_suppressed_move);
+            while (rit2 != captures.members.rend())
+            {
+                rit2->str = rit->str;
+                rit2 = std::find_if(rit2+1, captures.members.rend(), is_same_str_suppressed_move);
+            }
         }
 
         //  Then build the capture list, ignoring duplicated expressions
@@ -1741,8 +1763,8 @@ public:
                 if (num != 0) { // not first
                     lambda_intro += ", ";
                 }
-                printer.print_cpp2("_"+std::to_string(num)+" = ", pos);
-                emit(*cap.capture_expr, true);
+                cap.cap_sym = "_"+std::to_string(num);
+                printer.print_cpp2(cap.cap_sym + " = " + cap.str, pos);
             }
             ++num;
         }
@@ -1965,24 +1987,20 @@ public:
         if (n.cap_grp && !for_lambda_capture)
         {
             //  First stringize ourselves so that we compare equal against
-            //  the first *cap_grp .str that matches us (which is what the
+            //  the first *cap_grp .str_suppressed_move that matches us (which is what the
             //  lambda introducer generator used to create a lambda capture)
-            auto my_str = std::string{};
-            printer.emit_to_string(&my_str);
-            emit(n, true);  // reentrant, but not in this 'if' because for_lambda_capture == true
-            printer.emit_to_string();
+            suppress_move_from_last_use = true;
+            auto my_sym = print_to_string(n, true);
+            suppress_move_from_last_use = false;
 
-            //  Look in the capture group to see which capture # we are
-            auto mynum = 0;
-            for (auto const& cap : n.cap_grp->members) {
-                if (cap.str == my_str) {
-                    break;
-                }
-                ++mynum;
-            }
-            assert (mynum < std::ssize(n.cap_grp->members) && "could not find this postfix-expression in capture group");
-            //  And then emit that capture number
-            captured_part += "_" + std::to_string(mynum);
+            auto found = std::find_if(n.cap_grp->members.cbegin(), n.cap_grp->members.cend(), [my_sym](auto& cap) {
+                return cap.str_suppressed_move == my_sym;
+            });
+
+            assert (found != n.cap_grp->members.cend() && "could not find this postfix-expression in capture group");
+            //  And then emit that capture symbol with number
+            assert (!found->cap_sym.empty());
+            captured_part += found->cap_sym;
         }
 
         //  Otherwise, we're going to have to potentially do some work to change

@@ -24,7 +24,7 @@
 
     auto y {"\n"}; 
     std::ranges::for_each
-        ( view, [_0 = y, _1 = std::move(y)](auto const& x){std::cout << _0 << x << _1;});
+        ( view, [_0 = std::move(y)](auto const& x){std::cout << _0 << x << _0;});
 
     auto callback {[](auto& x) { return x += "-ish"; }}; 
     std::ranges::for_each( view, std::move(callback));

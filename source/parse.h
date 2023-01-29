@@ -353,7 +353,9 @@ struct expression_statement_node
 
 struct capture {
     postfix_expression_node* capture_expr;
+    std::string              cap_sym = {};
     std::string              str = {};
+    std::string              str_suppressed_move = {};
     auto operator==(postfix_expression_node* p) { return capture_expr == p; }
 };
 
