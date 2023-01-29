@@ -1,10 +1,12 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-bounds-check.cpp2"
 
 #include <vector>
 
+#include "cpp2util.h"
+
+
+#line 4 "mixed-bounds-check.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================

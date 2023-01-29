@@ -1,5 +1,3 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-fixed-type-aliases.cpp2"
 #include <typeinfo>
@@ -9,6 +7,10 @@ namespace my {
     using u16 = float;
 }
 
+#include "cpp2util.h"
+
+
+#line 8 "mixed-fixed-type-aliases.cpp2"
 auto test(auto const& x) -> void;
 #line 15 "mixed-fixed-type-aliases.cpp2"
 [[nodiscard]] auto main(cpp2::in<int> argc, cpp2::in<char**> argv) -> int;

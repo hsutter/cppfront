@@ -1,5 +1,3 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-type-safety-1.cpp2"
 #include <iostream>
@@ -11,6 +9,9 @@
 class Shape { public: virtual ~Shape() { } };
 class Circle : public Shape { };
 class Square : public Shape { };
+
+#include "cpp2util.h"
+
 
 #line 13 "mixed-type-safety-1.cpp2"
 auto print(cpp2::in<std::string> msg, auto const& x) -> void;

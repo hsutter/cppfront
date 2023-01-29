@@ -1,5 +1,3 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-function-expression-with-repeated-capture.cpp2"
 #include <vector>
@@ -9,6 +7,10 @@
 #include <algorithm>
 #include <iostream>
 
+#include "cpp2util.h"
+
+
+#line 8 "mixed-function-expression-with-repeated-capture.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================

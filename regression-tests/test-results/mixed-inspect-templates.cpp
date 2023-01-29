@@ -1,5 +1,3 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-inspect-templates.cpp2"
 #include <vector>
@@ -9,6 +7,10 @@
 template <typename A, typename B>
 struct my_type {};
 
+#include "cpp2util.h"
+
+
+#line 8 "mixed-inspect-templates.cpp2"
 [[nodiscard]] auto fun(auto const& v) -> std::string;
 #line 18 "mixed-inspect-templates.cpp2"
 [[nodiscard]] auto fun2(auto const& v) -> std::string;

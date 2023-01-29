@@ -1,5 +1,3 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-multiple-return-values.cpp2"
 
@@ -7,6 +5,10 @@
 #include <random>
 #include <string>
 
+#include "cpp2util.h"
+
+
+#line 6 "mixed-multiple-return-values.cpp2"
 struct f__ret {
     int i;
     std::string s;

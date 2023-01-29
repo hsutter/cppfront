@@ -1,5 +1,3 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-parameter-passing-with-forward.cpp2"
 
@@ -7,6 +5,10 @@
 #include <cstdlib>
 #include <ctime>
 
+#include "cpp2util.h"
+
+
+#line 6 "mixed-parameter-passing-with-forward.cpp2"
 auto copy_from(auto x) -> void;
 #line 8 "mixed-parameter-passing-with-forward.cpp2"
 auto parameter_styles(

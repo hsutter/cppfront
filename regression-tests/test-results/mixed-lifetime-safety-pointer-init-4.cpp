@@ -1,11 +1,13 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-lifetime-safety-pointer-init-4.cpp2"
 
 #include <iostream>
 #include <random>
 
+#include "cpp2util.h"
+
+
+#line 5 "mixed-lifetime-safety-pointer-init-4.cpp2"
 [[nodiscard]] auto main() -> int;
 #line 21 "mixed-lifetime-safety-pointer-init-4.cpp2"
 auto print_and_decorate(auto const& thing) -> void;

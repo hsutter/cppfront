@@ -891,14 +891,12 @@ public:
         //  we want pure-Cpp1 files to pass through with zero changes
         if (source.has_cpp2())
         {
+            printer.print_extra( "\n" );
             if (cpp1_filename.back() == 'h') {
-                printer.print_extra( "\n#ifndef " + cpp1_FILENAME+"__CPP2");
-                printer.print_extra( "\n#define " + cpp1_FILENAME+"__CPP2" + "\n\n" );
+                printer.print_extra( "#ifndef " + cpp1_FILENAME+"__CPP2\n");
+                printer.print_extra( "#define " + cpp1_FILENAME+"__CPP2" + "\n\n" );
             }
 
-            if (!flag_clean_cpp1) {
-                printer.print_extra( "// ----- Cpp2 support -----\n" );
-            }
             if (flag_use_source_location) {
                 printer.print_extra( "#define CPP2_USE_SOURCE_LOCATION Yes\n" );
             }
@@ -911,7 +909,6 @@ public:
             if (flag_no_rtti) {
                 printer.print_extra( "#define CPP2_NO_RTTI             Yes\n" );
             }
-            printer.print_extra( "#include \"cpp2util.h\"\n\n" );
         }
 
         auto map_iter = tokens.get_map().cbegin();
@@ -970,6 +967,11 @@ public:
                 //  If it's a Cpp2 line...
                 else {
                     ++ret.cpp2_lines;
+
+                    if (ret.cpp2_lines == 1)
+                    {
+                        printer.print_extra( "\n#include \"cpp2util.h\"\n\n" );
+                    }
 
                     //  We should be in a position to emit a set of Cpp2 declarations
                     if (map_iter != tokens.get_map().cend() && map_iter->first /*line*/ <= curr_lineno)

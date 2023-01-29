@@ -1,5 +1,3 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-float-literals.cpp2"
 void literals_cpp1() {
@@ -58,6 +56,10 @@ void literals_cpp1() {
   // 1e - 10.0f;
 }
 
+#include "cpp2util.h"
+
+
+#line 57 "mixed-float-literals.cpp2"
 auto literals_cpp2() -> void;
 #line 113 "mixed-float-literals.cpp2"
 [[nodiscard]] auto main() -> int;

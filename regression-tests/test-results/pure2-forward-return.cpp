@@ -1,5 +1,6 @@
-// ----- Cpp2 support -----
+
 #define CPP2_USE_MODULES         Yes
+
 #include "cpp2util.h"
 
 

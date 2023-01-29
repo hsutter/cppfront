@@ -1,5 +1,3 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-postexpression-with-capture.cpp2"
 #include <vector>
@@ -9,6 +7,10 @@
 #include <algorithm>
 #include <iostream>
 
+#include "cpp2util.h"
+
+
+#line 8 "mixed-postexpression-with-capture.cpp2"
 [[nodiscard]] auto main() -> int;
 #line 12 "mixed-postexpression-with-capture.cpp2"
 #line 14 "mixed-postexpression-with-capture.cpp2"

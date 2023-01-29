@@ -1,5 +1,3 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-lifetime-safety-and-null-contracts.cpp2"
 
@@ -7,6 +5,10 @@
 #include <vector>
 #include <string>
 
+#include "cpp2util.h"
+
+
+#line 6 "mixed-lifetime-safety-and-null-contracts.cpp2"
 [[nodiscard]] auto main() -> int;
 #line 11 "mixed-lifetime-safety-and-null-contracts.cpp2"
 

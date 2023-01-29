@@ -1,5 +1,3 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-out-destruction.cpp2"
 #include <iostream>
@@ -20,6 +18,9 @@ struct C {
     C(std::string const& fn) : f{fn} { std::cout << "enter " << f << "\n"; }
     ~C()                             { std::cout << "exit " << f << "\n"; }
 };
+
+#include "cpp2util.h"
+
 
 #line 22 "mixed-out-destruction.cpp2"
 auto f00() -> void;

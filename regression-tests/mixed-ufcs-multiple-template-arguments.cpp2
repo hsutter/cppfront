@@ -1,3 +1,5 @@
+#include <string>
+#include <iostream>
 
 template <auto from, auto to>
 auto substr(const std::string& input) -> std::string {

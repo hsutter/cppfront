@@ -1,11 +1,13 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-hello.cpp2"
 
 #include <iostream>
 #include <string>
 
+#include "cpp2util.h"
+
+
+#line 5 "mixed-hello.cpp2"
 [[nodiscard]] auto name() -> std::string;
 #line 11 "mixed-hello.cpp2"
 auto decorate(std::string& s) -> void;

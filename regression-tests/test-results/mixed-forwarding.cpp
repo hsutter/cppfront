@@ -1,5 +1,3 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-forwarding.cpp2"
 #include <iostream>
@@ -12,6 +10,10 @@ struct X {
     X(X &&     that) : i{that.i} { std::cout << "move X " << i << "\n"; }
 };
 
+#include "cpp2util.h"
+
+
+#line 11 "mixed-forwarding.cpp2"
 auto copy_from(auto x) -> void;
 #line 13 "mixed-forwarding.cpp2"
 auto use(auto const& x) -> void;

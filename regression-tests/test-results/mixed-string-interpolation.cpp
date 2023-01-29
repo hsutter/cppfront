@@ -1,5 +1,3 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-string-interpolation.cpp2"
 #include <iostream>
@@ -9,6 +7,10 @@
 
 struct custom_struct_with_no_stringize_customization { } custom;
 
+#include "cpp2util.h"
+
+
+#line 8 "mixed-string-interpolation.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================

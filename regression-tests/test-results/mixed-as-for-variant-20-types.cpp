@@ -1,10 +1,12 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-as-for-variant-20-types.cpp2"
 template<int I>
 struct X { operator int() const { return I; } };
 
+#include "cpp2util.h"
+
+
+#line 4 "mixed-as-for-variant-20-types.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================

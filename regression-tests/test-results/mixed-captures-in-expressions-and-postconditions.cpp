@@ -1,11 +1,13 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-captures-in-expressions-and-postconditions.cpp2"
 
 #include <algorithm>
 #include <vector>
 
+#include "cpp2util.h"
+
+
+#line 5 "mixed-captures-in-expressions-and-postconditions.cpp2"
 [[nodiscard]] auto main() -> int;
 #line 17 "mixed-captures-in-expressions-and-postconditions.cpp2"
 #line 19 "mixed-captures-in-expressions-and-postconditions.cpp2"

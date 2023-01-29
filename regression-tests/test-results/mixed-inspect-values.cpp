@@ -1,11 +1,13 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-inspect-values.cpp2"
 auto in(int min, int max) {
     return [=](int x){ return min <= x && x <= max; };
 }
 
+#include "cpp2util.h"
+
+
+#line 5 "mixed-inspect-values.cpp2"
 [[nodiscard]] auto in_2_3(cpp2::in<int> x) -> bool;
 #line 7 "mixed-inspect-values.cpp2"
 [[nodiscard]] auto main() -> int;

@@ -1,4 +1,5 @@
-// ----- Cpp2 support -----
+
+
 #include "cpp2util.h"
 
 

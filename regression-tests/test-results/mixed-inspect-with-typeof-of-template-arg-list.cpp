@@ -1,5 +1,3 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-inspect-with-typeof-of-template-arg-list.cpp2"
 
@@ -8,6 +6,10 @@ auto calc() {
     return i + j;
 }
 
+#include "cpp2util.h"
+
+
+#line 7 "mixed-inspect-with-typeof-of-template-arg-list.cpp2"
 [[nodiscard]] auto fun(auto const& v) -> int;
 #line 14 "mixed-inspect-with-typeof-of-template-arg-list.cpp2"
 [[nodiscard]] auto main() -> int;

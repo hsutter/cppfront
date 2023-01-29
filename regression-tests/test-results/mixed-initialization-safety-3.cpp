@@ -1,11 +1,13 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-initialization-safety-3.cpp2"
 #include <random>
 #include <string>
 #include <vector>
 
+#include "cpp2util.h"
+
+
+#line 5 "mixed-initialization-safety-3.cpp2"
 [[nodiscard]] auto main() -> int;
 #line 16 "mixed-initialization-safety-3.cpp2"
 auto fill(

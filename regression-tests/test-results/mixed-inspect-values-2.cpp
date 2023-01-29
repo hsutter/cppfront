@@ -1,5 +1,3 @@
-// ----- Cpp2 support -----
-#include "cpp2util.h"
 
 #line 1 "mixed-inspect-values-2.cpp2"
 
@@ -20,6 +18,10 @@ constexpr auto empty = [](auto&& x){
     return std::empty(x);
 };
 
+#include "cpp2util.h"
+
+
+#line 19 "mixed-inspect-values-2.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
