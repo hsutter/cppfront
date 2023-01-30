@@ -2145,7 +2145,8 @@ private:
         n->inside_initializer = inside_initializer;
 
         if (auto dir = to_passing_style(curr());
-            dir == passing_style::out || dir == passing_style::move || dir == passing_style::forward
+            (dir == passing_style::out || dir == passing_style::move || dir == passing_style::forward)
+            && peek(1) && peek(1)->type() == lexeme::Identifier
             )
         {
             pass = dir;
