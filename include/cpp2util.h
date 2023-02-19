@@ -546,11 +546,11 @@ class out {
     bool called_construct_ = false;
 
 public:
-    out(T*                 t) noexcept :  t{ t}, has_t{true}      { Default.expects( t); }
-    out(deferred_init<T>* dt) noexcept : dt{dt}, has_t{false}     { Default.expects(dt); }
-    out(out<T>*           ot) noexcept : ot{ot}, has_t{ot->has_t} { Default.expects(ot);
-        if (has_t) {  t = ot->t;  }
-        else       { dt = ot->dt; }
+    out(T*                 t_object) noexcept :  t{ t_object}, has_t{true}      { Default.expects( t_object); }
+    out(deferred_init<T>* dt_object) noexcept : dt{dt_object}, has_t{false}     { Default.expects(dt_object); }
+    out(out<T>*           ot_object) noexcept : ot{ot_object}, has_t{ot_object->has_t} { Default.expects(ot_object);
+        if (has_t) {  t = ot_object->t;  }
+        else       { dt = ot_object->dt; }
     }
 
     auto called_construct() -> bool& {
