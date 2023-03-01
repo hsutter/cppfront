@@ -1159,6 +1159,13 @@ struct declaration_node
 
     declaration_node(declaration_node* parent) : parent_scope{parent} { }
 
+    auto is_const() const -> bool {
+        return
+            type.index() == object &&
+            !std::get<object>(type)->pc_qualifiers.empty() &&
+            *std::get<object>(type)->pc_qualifiers.front() == "const";
+    }
+
     auto is_wildcard() const -> bool {
         return type.index() == object && std::get<object>(type)->is_wildcard();
     }
@@ -3183,6 +3190,27 @@ private:
         }
 
         if (!(n->declaration = declaration(false, true))) {
+            return {};
+        }
+
+        //  The only parameter type that could be const-qualified is a 'copy' parameter, because
+        //  only it is always truly its own variable, so it makes sense to let the user qualify it;
+        //  all the other parameter types are conceptually (usually actually) bound to their args
+        if (!returns && n->declaration->is_const() && n->pass != passing_style::copy) {
+            switch (n->pass) {
+            break;case passing_style::in:
+                error( "an 'in' parameter is always const, 'const' isn't needed and isn't allowed", false );
+            break;case passing_style::inout:
+                error( "an 'inout' parameter can't be const, if you do want it to be const then use 'in' instead", false );
+            break;case passing_style::out:
+                error( "an 'out' parameter can't be const, otherwise it can't be initialized in the function body", false );
+            break;case passing_style::move:
+                error( "a 'move' parameter can't be const, otherwise it can't be moved from in the function body", false );
+            break;case passing_style::forward:
+                error( "a 'forward' parameter shouldn't be const, because it passes along the argument's actual const-ness (and actual value category)", false );
+            break;default:
+                assert (!"ICE: missing case");
+            }
             return {};
         }
 
