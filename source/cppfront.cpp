@@ -2962,7 +2962,34 @@ public:
     auto emit(function_type_node const& n, token const* ident, bool is_main) -> void
     {
         assert(n.parameters);
-        emit(*n.parameters);
+        if (is_main && n.parameters->parameters.size() == 1) {
+            auto& param1 = *n.parameters->parameters[0];
+            auto  param1_name = param1.declaration->identifier->get_token()->to_string(true);
+            if (param1.pass != passing_style::in ||
+                param1.declaration->type.index() != declaration_node::object ||
+                !std::get<declaration_node::object>(param1.declaration->type)->is_wildcard()
+                )
+            {
+                // we don't currently bail right after emitting the declarations (because
+                // we don't necessarily want to hide other interesting errors), so this
+                // avoids emitting the error a second time when we emit the definitions
+                static auto once = true;
+                if (std::exchange(once, false)) {
+                    errors.emplace_back(
+                        param1.position(),
+                        "when 'main' has a single parameter, that parameter should be declared as just:  main: (" + param1_name + ")  - the type 'std::vector<std::string_view>' will be deduced"
+                    );
+                }
+                return;
+            }
+            printer.print_cpp2( "(int argc, char **argv)", n.parameters->position() );
+            current_function.back().prolog.push_back(
+                "auto " + param1_name + " = cpp2::args(argc, argv); "
+            );
+        }
+        else {
+            emit(*n.parameters);
+        }
 
         //  Add implicit noexcept when we implement proper EH
         //  to handle calling Cpp1 code that throws

@@ -203,6 +203,7 @@
     #include <memory>
     #include <string>
     #include <string_view>
+    #include <vector>
     #include <iostream>
     #include <variant>
     #include <any>
@@ -1405,6 +1406,21 @@ inline auto to_string(std::tuple<Ts...> const& t) -> std::string
         out += ")";
         return out;
     }
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  args: see main() arguments as vector<string_view>
+//
+//-----------------------------------------------------------------------
+//
+auto args(int argc, char **argv) -> std::vector<std::string_view> {
+    auto ret = std::vector<std::string_view>{(size_t)argc};
+    for (auto i = 0; i < argc; ++i) {
+        ret[i] = std::string_view{argv[i]};
+    }
+    return ret;
 }
 
 
