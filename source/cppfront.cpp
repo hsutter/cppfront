@@ -2959,7 +2959,7 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(function_type_node const& n, token const* ident) -> void
+    auto emit(function_type_node const& n, token const* ident, bool is_main) -> void
     {
         assert(n.parameters);
         emit(*n.parameters);
@@ -2972,7 +2972,10 @@ public:
         //}
 
         if (n.returns.index() == function_type_node::empty) {
-            if (ident) {
+            if (is_main) {
+                printer.print_cpp2( " -> int", n.position() );
+            }
+            else if (ident) {
                 printer.print_cpp2( " -> void", n.position() );
             }
         }
@@ -3049,6 +3052,8 @@ public:
             auto& func = std::get<declaration_node::function>(n.type);
             assert(func);
 
+            auto is_main = !n.parent_scope && *n.identifier->identifier == "main";
+
             current_function.push_back({});
             auto guard = finally([&]{ current_function.pop_back(); });
 
@@ -3057,7 +3062,7 @@ public:
             if (capture_intro != "") {
                 assert (!n.identifier);
                 printer.print_cpp2(capture_intro, n.position());
-                emit( *func, nullptr );
+                emit( *func, nullptr, is_main);
             }
             else {
                 assert (n.identifier);
@@ -3066,7 +3071,7 @@ public:
                 }
                 printer.print_cpp2( "auto ", n.position() );
                 printer.print_cpp2( *n.identifier->identifier, n.identifier->position() );
-                emit( *func, n.identifier->identifier );
+                emit( *func, n.identifier->identifier, is_main );
             }
 
             //  Function declaration
