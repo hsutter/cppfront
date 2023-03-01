@@ -125,7 +125,7 @@ auto close_paren_type(lexeme l) -> lexeme {
 
 template<typename T>
     requires std::is_same_v<T, std::string>
-auto as(lexeme l) -> std::string
+auto __as(lexeme l) -> std::string
 {
     switch (l) {
     break;case lexeme::SlashEq:             return "SlashEq";
@@ -233,7 +233,7 @@ public:
         lexeme          type
     )
       : start   {sz}
-      , count   {as<int16_t>(std::strlen(sz))}
+      , count   {__as<int16_t>(std::strlen(sz))}
       , pos     {pos  }
       , lex_type{type }
     {
@@ -262,7 +262,7 @@ public:
             return text;
         }
         else {
-            return as<std::string>(lex_type) + std::string(": ") + text;
+            return __as<std::string>(lex_type) + std::string(": ") + text;
         }
     }
 
@@ -883,7 +883,7 @@ auto lex_line(
                     comments.push_back({
                         comment::comment_kind::line_comment,
                         {lineno, i},
-                        {lineno, as<colno_t>(std::ssize(line))},
+                        {lineno, __as<colno_t>(std::ssize(line))},
                         std::string(&line[i], std::ssize(line) - i)
                         });
                     in_comment = false;
@@ -1434,7 +1434,7 @@ public:
             for (auto const& token : entry) {
                 o << "    " << token << " (" << token.position().lineno
                     << "," << token.position().colno << ") "
-                    << as<std::string>(token.type()) << "\n";
+                    << __as<std::string>(token.type()) << "\n";
             }
 
         }
@@ -1452,7 +1452,7 @@ public:
         for (auto const& token : generated_tokens) {
             o << "    " << token << " (" << token.position().lineno
                 << "," << token.position().colno << ") "
-                << as<std::string>(token.type()) << "\n";
+                << __as<std::string>(token.type()) << "\n";
         }
 
         o << "--- Generated text\n";

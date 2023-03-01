@@ -14,7 +14,8 @@
 #ifdef _MSC_VER
 #pragma warning(disable: 4456)
 #endif
-//#include "../include/cpp2util.h"
+
+#include "../include/cpp2util.h"
 
 
 //===========================================================================
@@ -226,7 +227,7 @@ struct String
 //
 template<typename T>
     requires std::is_same_v<T, std::string>
-auto as(bool b) -> T
+auto __as(bool b) -> T
 {
     return b ? "true" : "false";
 }
@@ -234,7 +235,7 @@ auto as(bool b) -> T
 
 //  Explicit cast
 template<typename T>
-auto as(auto x) -> T {
+auto __as(auto x) -> T {
     return T(x);
 }
 
@@ -247,7 +248,7 @@ auto strip_path(std::string const& file) -> std::string
     while (i >= 0 && file[i] != '\\' && file[i] != '/') {
         --i;
     }
-    return {file, as<size_t>(i+1)};
+    return {file, __as<size_t>(i+1)};
 }
 
 
@@ -379,9 +380,9 @@ public:
             }
 
             for (auto& flag : flags) {
-                auto length_to_match = std::max(flag.unique_prefix, as<int>(arg->text.length())-1);
+                auto length_to_match = std::max(flag.unique_prefix, __as<int>(arg->text.length())-1);
                 if (flag.opt_out && arg->text.ends_with("-")) {
-                    length_to_match = std::max(flag.unique_prefix, as<int>(arg->text.length())-2);
+                    length_to_match = std::max(flag.unique_prefix, __as<int>(arg->text.length())-2);
                 }
 
                 //  Allow a switch to start with either - or /

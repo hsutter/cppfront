@@ -546,9 +546,9 @@ class out {
     bool called_construct_ = false;
 
 public:
-    out(T*                 t) noexcept :  t{ t}, has_t{true}      { Default.expects( t); }
-    out(deferred_init<T>* dt) noexcept : dt{dt}, has_t{false}     { Default.expects(dt); }
-    out(out<T>*           ot) noexcept : ot{ot}, has_t{ot->has_t} { Default.expects(ot);
+    out(T*                 t_) noexcept :  t{ t_}, has_t{true}       { Default.expects( t); }
+    out(deferred_init<T>* dt_) noexcept : dt{dt_}, has_t{false}      { Default.expects(dt); }
+    out(out<T>*           ot_) noexcept : ot{ot_}, has_t{ot_->has_t} { Default.expects(ot);
         if (has_t) {  t = ot->t;  }
         else       { dt = ot->dt; }
     }
@@ -1277,6 +1277,39 @@ template <class F>
 [[nodiscard]] auto finally_success(F&& f) noexcept
 {
     return final_action_success<std::remove_cvref_t<F>>{std::forward<F>(f)};
+}
+
+
+//
+//  Same, but clean up also on exceptional paths
+//
+
+template <class F>
+class final_action
+{
+public:
+    explicit final_action(const F& ff) noexcept : f{ff} { }
+    explicit final_action(F&& ff) noexcept : f{std::move(ff)} { }
+
+    ~final_action() noexcept { f(); }
+
+    final_action(final_action&& that) noexcept
+        : f(std::move(that.f)), invoke(std::exchange(that.invoke, false))
+    { }
+
+    final_action  (final_action const&) = delete;
+    void operator=(final_action const&) = delete;
+    void operator=(final_action&&)      = delete;
+
+private:
+    F f;
+    bool invoke = true;
+};
+
+template <class F>
+[[nodiscard]] auto finally(F&& f) noexcept
+{
+    return final_action<std::remove_cvref_t<F>>{std::forward<F>(f)};
 }
 
 

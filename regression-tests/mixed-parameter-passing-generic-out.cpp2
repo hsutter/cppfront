@@ -1,0 +1,23 @@
+#include <iostream>
+
+struct X {
+    X(int) { }
+};
+auto operator<<(std::ostream& o, X const&) -> std::ostream& {
+    o << "exxxx";
+    return o;
+}
+
+f: (out x: _) = {
+    x = 42;
+}
+
+main: ()->int = {
+    a: int;
+    f(out a);
+    std::cout << a << "\n";
+
+    b: X;
+    f(out b);
+    std::cout << b << "\n";
+}

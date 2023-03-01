@@ -49,7 +49,7 @@ auto pad(int padding) -> std::string_view
 
     return {
         indent_str.c_str(),
-        as<size_t>( std::min( padding, as<int>(std::ssize(indent_str))) )
+        __as<size_t>( std::min( padding, __as<int>(std::ssize(indent_str))) )
     };
 }
 
@@ -745,6 +745,12 @@ class cppfront
         token const*  ptoken = {};
     };
     std::vector<arg_info> current_args  = { {} };
+
+    struct function_info {
+        std::vector<std::string> prolog = {};
+        std::vector<std::string> epilog = {};
+    };
+    std::vector<function_info> current_function = { {} };
 
     //  For lowering
     //
@@ -1878,6 +1884,10 @@ public:
         return (pointer_declarators_cnt + addr_cnt - deref_cnt) > 0;
     }
 
+    auto is_pointer_declaration(udt_type_node const*, int, int) -> bool {
+        return false;
+    }
+
     auto is_pointer_declaration(declaration_sym const* decl, int deref_cnt, int addr_cnt) -> bool {
         if (!decl) {
             return false;
@@ -2741,6 +2751,9 @@ public:
         auto unqid = std::get_if<type_id_node::unqualified>(&type_id.id);
         auto is_wildcard = unqid && *(*unqid)->identifier == "_";
 
+        assert( n.declaration->identifier );
+        auto identifier     = print_to_string( *n.declaration->identifier );
+
         //  First any prefix
         if (!returns && !is_wildcard)
         {
@@ -2758,7 +2771,15 @@ public:
             break;case passing_style::in     : printer.print_cpp2( "auto const&", n.position() );
             break;case passing_style::copy   : printer.print_cpp2( "auto",        n.position() );
             break;case passing_style::inout  : printer.print_cpp2( "auto&",       n.position() );
-            break;case passing_style::out    : printer.print_cpp2( "auto&",       n.position() ); // TODO: support out<auto> via rewrite to template param
+
+            //  For generic out parameters, we take a pointer to anything with paramater named "identifier_"
+            //  and then generate the out<> as a stack local with the expected name "identifier"
+            break;case passing_style::out    : printer.print_cpp2( "auto*",       n.position() );
+                                               current_function.back().prolog.push_back(
+                                                   "auto " + identifier + " = cpp2::out(" + identifier + "_); "
+                                               );
+                                               identifier += "_";
+
             break;case passing_style::move   : printer.print_cpp2( "auto&&",      n.position() );
             break;case passing_style::forward: printer.print_cpp2( "auto&&",      n.position() );
             break;default: ;
@@ -2798,8 +2819,7 @@ public:
             }
         }
 
-        printer.print_cpp2( " ", n.declaration->identifier->position() );
-        emit( *n.declaration->identifier );
+        printer.print_cpp2( " " + identifier, n.declaration->identifier->position());
 
         if (!returns && n.declaration->initializer) {
             printer.print_cpp2( " = ", n.declaration->initializer->position() );
@@ -3015,7 +3035,12 @@ public:
         }
 
         //  Function
-        if (n.is(declaration_node::function))
+        if (n.is(declaration_node::udt_type))
+        {
+        }
+
+        //  Function
+        else if (n.is(declaration_node::function))
         {
             //  Start fresh (there may be one spurious leftover
             //  requires-condition created during the declarations pass)
@@ -3024,8 +3049,11 @@ public:
             auto& func = std::get<declaration_node::function>(n.type);
             assert(func);
 
+            current_function.push_back({});
+            auto guard = finally([&]{ current_function.pop_back(); });
+
             //  If this is at expression scope, we can't emit "[[nodiscard]] auto name"
-            //  so print the provided intro instead, which will be a lambda-capture-list
+            //  so print the provided intro instead, which will be a Cpp1 lambda-introducer
             if (capture_intro != "") {
                 assert (!n.identifier);
                 printer.print_cpp2(capture_intro, n.position());
@@ -3061,15 +3089,12 @@ public:
             //  Function body
             assert( n.initializer );
 
-            auto function_return_locals = std::vector<std::string>{};
-            auto function_epilog        = std::vector<std::string>{};
-
             for (auto&& c : func->contracts) {
                 auto print = std::string();
                 printer.emit_to_string(&print);
                 emit(*c);
                 printer.emit_to_string();
-                function_return_locals.push_back(print);
+                current_function.back().prolog.push_back(print);
             }
 
             if (func->returns.index() == function_type_node::list)
@@ -3122,18 +3147,18 @@ public:
                         loc += init;
                     }
                     loc += ";";
-                    function_return_locals.push_back(loc);
+                    current_function.back().prolog.push_back(loc);
                 }
             }
 
-            //function_epilog.push_back("/*EPILOG-TEST*/");
+            //current_function.back().epilog.push_back("/*EPILOG-TEST*/");
 
             printer.preempt_position_push( n.equal_sign );
 
             // TODO: something like this to get rid of extra blank lines
             //       inside the start of bodies of functions that have
             //       multiple contracts
-            //printer.skip_lines( std::ssize(function_return_locals) );
+            //printer.skip_lines( std::ssize(current_function.back().prolog) );
 
             //  If processing the parameters generated any requires conditions,
             //  emit them here
@@ -3150,7 +3175,7 @@ public:
             emit(
                 *n.initializer,
                 true, func->position(), n.identifier && func->returns.index() == function_type_node::empty,
-                function_return_locals, function_epilog, n.position().colno
+                current_function.back().prolog, current_function.back().epilog, n.position().colno
             );
 
             printer.preempt_position_pop();

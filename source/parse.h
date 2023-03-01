@@ -755,7 +755,7 @@ struct compound_statement_node
 struct selection_statement_node
 {
     bool                                     is_constexpr = false;
-    token const*                             identifier;
+    token const*                             identifier   = {};
     source_position                          else_pos;
     std::unique_ptr<expression_node>         expression;
     std::unique_ptr<compound_statement_node> true_branch;
@@ -787,8 +787,8 @@ struct selection_statement_node
 struct parameter_declaration_node;
 struct iteration_statement_node
 {
-    token const*                                label;
-    token const*                                identifier;
+    token const*                                label      = {};
+    token const*                                identifier = {};
     std::unique_ptr<assignment_expression_node> next_expression;    // if used, else null
     std::unique_ptr<logical_or_expression_node> condition;          // used for "do" and "while", else null
     std::unique_ptr<compound_statement_node>    statement;          // used for "do" and "while", else null
@@ -813,7 +813,7 @@ struct iteration_statement_node
 
 struct return_statement_node
 {
-    token const*                     identifier;
+    token const*                     identifier = {};
     std::unique_ptr<expression_node> expression;
 
     auto position() const -> source_position
@@ -836,7 +836,7 @@ struct return_statement_node
 struct alternative_node
 {
     std::unique_ptr<unqualified_id_node> name;
-    token const*                         is_as_keyword;
+    token const*                         is_as_keyword = {};
 
     //  One of these will be used
     std::unique_ptr<type_id_node>            type_id;
@@ -858,7 +858,7 @@ struct alternative_node
 struct inspect_expression_node
 {
     bool                                     is_constexpr = false;
-    token const*                             identifier;
+    token const*                             identifier   = {};
     std::unique_ptr<expression_node>         expression;
     std::unique_ptr<type_id_node>            result_type;
     source_position                          open_brace;
@@ -1112,27 +1112,27 @@ struct function_type_node
 };
 
 
-//struct udt_type_node
-//{
-//    source_position pos;
-//    std::vector<id_expression_node> metaclass_names;
-//
-//    udt_type_node( source_position pos ) : pos{pos} { }
-//
-//    auto position() const -> source_position
-//    {
-//        return pos;
-//    }
-//
-//    auto visit(auto& v, int depth) -> void
-//    {
-//        v.start(*this, depth);
-//        for (auto const& m : metaclass_names) {
-//            m->visit(v, depth+1);
-//        }
-//        v.end(*this, depth);
-//    }
-//};
+struct udt_type_node
+{
+    source_position pos;
+    std::vector<id_expression_node> metaclass_names;
+
+    udt_type_node( source_position pos ) : pos{pos} { }
+
+    auto position() const -> source_position
+    {
+        return pos;
+    }
+
+    auto visit(auto& v, int depth) -> void
+    {
+        v.start(*this, depth);
+        for (auto& m : metaclass_names) {
+            m.visit(v, depth+1);
+        }
+        v.end(*this, depth);
+    }
+};
 
 
 struct declaration_node
@@ -1147,8 +1147,8 @@ struct declaration_node
     enum active : std::uint8_t { function, object, udt_type };
     std::variant<
         std::unique_ptr<function_type_node>,
-        std::unique_ptr<type_id_node>
-        //std::unique_ptr<udt_type_node>
+        std::unique_ptr<type_id_node>,
+        std::unique_ptr<udt_type_node>
     > type;
 
     source_position                 equal_sign = {};
@@ -1188,6 +1188,7 @@ struct declaration_node
 
         try_visit<function>(type, v, depth+1);
         try_visit<object  >(type, v, depth+1);
+        try_visit<udt_type>(type, v, depth+1);
 
         if (initializer) {
             initializer->visit(v, depth+1);
@@ -1618,7 +1619,7 @@ private:
     auto next(int num = 1) -> void
     {
         assert (tokens_);
-        pos = std::min( pos+num, as<int>(std::ssize(*tokens_)) );
+        pos = std::min( pos+num, __as<int>(std::ssize(*tokens_)) );
     }
 
 
@@ -2362,7 +2363,7 @@ private:
             n->open_angle = curr().position();
             next();
 
-            unqualified_id_node::term term;
+            auto term = unqualified_id_node::term{};
 
             do {
                 if (auto e = expression(false)) {   // disallow unparenthesized relational comparisons in template args
@@ -2572,6 +2573,11 @@ private:
             return {};
         }
 
+        if (curr().type() != lexeme::LeftBrace) {
+            error("an if branch body must be enclosed with { }");
+            return {};
+        }
+
         if (auto s = compound_statement()) {
             n->true_branch = std::move(s);
         }
@@ -2589,6 +2595,12 @@ private:
         else {
             n->else_pos = curr().position();
             next();
+
+            if (curr().type() != lexeme::LeftBrace) {
+                error("an else branch body must be enclosed with { }");
+                return {};
+            }
+
             if (auto s = compound_statement()) {
                 n->false_branch = std::move(s);
                 n->has_source_false_branch = true;
@@ -3174,11 +3186,6 @@ private:
             return {};
         }
 
-        if (n->pass == passing_style::out && n->declaration->is_wildcard()) {
-            error("(temporary alpha limitation) an 'out' parameter cannot be a deduced type");
-            return {};
-        }
-
         if (!returns && n->declaration->initializer) {
             error("Cpp2 is currently exploring the path of not allowing default arguments - use overloading instead", false);
             return {};
@@ -3693,7 +3700,7 @@ struct printing_visitor
         assert (indent >= 0);
         return {
             indent_str.c_str(),
-            as<size_t>( std::min( indent*indent_spaces, as<int>(std::ssize(indent_str))) )
+            as<size_t>( std::min( indent*indent_spaces, __as<int>(std::ssize(indent_str))) )
         };
     }
 };
@@ -3797,7 +3804,7 @@ public:
     auto start(selection_statement_node const& n, int indent) -> void
     {
         o << pre(indent) << "selection-statement\n";
-        o << pre(indent+1) << "is_constexpr: " << as<std::string>(n.is_constexpr) << "\n";
+        o << pre(indent+1) << "is_constexpr: " << __as<std::string>(n.is_constexpr) << "\n";
     }
 
     auto start(alternative_node const&, int indent) -> void
@@ -3813,7 +3820,7 @@ public:
     auto start(inspect_expression_node const& n, int indent) -> void
     {
         o << pre(indent) << "inspect-expression\n";
-        o << pre(indent+1) << "is_constexpr: " << as<std::string>(n.is_constexpr) << "\n";
+        o << pre(indent+1) << "is_constexpr: " << __as<std::string>(n.is_constexpr) << "\n";
     }
 
     auto start(return_statement_node const&, int indent) -> void
@@ -3841,15 +3848,15 @@ public:
         }
     }
 
-    //auto start(udt_type_node const&, int indent) -> void
-    //{
-    //    o << pre(indent) << "user-defined type\n";
-    //}
+    auto start(udt_type_node const&, int indent) -> void
+    {
+        o << pre(indent) << "user-defined type\n";
+    }
 
     auto start(function_type_node const& n, int indent) -> void
     {
         o << pre(indent) << "function\n";
-        o << pre(indent+1) << "throws: " << as<std::string>(n.throws) << "\n";
+        o << pre(indent+1) << "throws: " << __as<std::string>(n.throws) << "\n";
         if (n.returns.index() == function_type_node::id) {
             auto& r = std::get<function_type_node::id>(n.returns);
             if (r.pass != passing_style::invalid) {

@@ -22,3 +22,5 @@
 *.vsidx
 *.lock
 .editorconfig
+*.xml
+*.sarif
