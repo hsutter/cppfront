@@ -1114,14 +1114,13 @@ struct function_type_node
 
 struct udt_type_node
 {
-    source_position pos;
+    token const* type;
     std::vector<id_expression_node> metaclass_names;
-
-    udt_type_node( source_position pos ) : pos{pos} { }
 
     auto position() const -> source_position
     {
-        return pos;
+        assert(type);
+        return type->position();
     }
 
     auto visit(auto& v, int depth) -> void
@@ -1150,6 +1149,8 @@ struct declaration_node
         std::unique_ptr<type_id_node>,
         std::unique_ptr<udt_type_node>
     > type;
+
+    std::unique_ptr<parameter_declaration_list_node> template_parameters;
 
     source_position                 equal_sign = {};
     source_position                 decl_end   = {};
@@ -3134,17 +3135,18 @@ private:
     //G     'final'
     //G
     auto parameter_declaration(
-        bool returns = false,
-        bool named   = true
+        bool is_returns  = false,
+        bool is_named    = true,
+        bool is_template = true
     )
         -> std::unique_ptr<parameter_declaration_node>
     {
         auto n = std::make_unique<parameter_declaration_node>();
-        n->pass = returns ? passing_style::out : passing_style::in;
+        n->pass = is_returns ? passing_style::out : passing_style::in;
         n->pos  = curr().position();
 
         if (auto dir = to_passing_style(curr()); dir != passing_style::invalid) {
-            if (returns) {
+            if (is_returns) {
                 if (dir == passing_style::in) {
                     error("a return value cannot be 'in'");
                     return {};
@@ -3162,7 +3164,7 @@ private:
                     return {};
                 }
             }
-            if (!named && dir == passing_style::out) {
+            if (!is_named && dir == passing_style::out) {
                 error("(temporary alpha limitation) an unnamed function cannot have an 'out' parameter");
                 return {};
             }
@@ -3189,14 +3191,14 @@ private:
             }
         }
 
-        if (!(n->declaration = declaration(false, true))) {
+        if (!(n->declaration = declaration(false, true, is_template))) {
             return {};
         }
 
         //  The only parameter type that could be const-qualified is a 'copy' parameter, because
         //  only it is always truly its own variable, so it makes sense to let the user qualify it;
         //  all the other parameter types are conceptually (usually actually) bound to their args
-        if (!returns && n->declaration->is_const() && n->pass != passing_style::copy) {
+        if (!is_returns && n->declaration->is_const() && n->pass != passing_style::copy) {
             switch (n->pass) {
             break;case passing_style::in:
                 error( "an 'in' parameter is always const, 'const' isn't needed and isn't allowed", false );
@@ -3214,7 +3216,7 @@ private:
             return {};
         }
 
-        if (!returns && n->declaration->initializer) {
+        if (!is_returns && n->declaration->initializer) {
             error("Cpp2 is currently exploring the path of not allowing default arguments - use overloading instead", false);
             return {};
         }
@@ -3231,12 +3233,20 @@ private:
     //G     parameter-declaration-seq ',' parameter-declaration
     //G
     auto parameter_declaration_list(
-        bool returns = false,
-        bool named   = true
+        bool is_returns  = false,
+        bool is_named    = true,
+        bool is_template = false
     )
         -> std::unique_ptr<parameter_declaration_list_node>
     {
-        if (curr().type() != lexeme::LeftParen) {
+        auto opener = lexeme::LeftParen;
+        auto closer = lexeme::RightParen;
+        if (is_template) {
+            opener = lexeme::Less;
+            closer = lexeme::Greater;
+        }
+
+        if (curr().type() != opener) {
             return {};
         }
 
@@ -3246,10 +3256,10 @@ private:
 
         auto param = std::make_unique<parameter_declaration_node>();
 
-        while ((param = parameter_declaration(returns, named)) != nullptr) {
+        while ((param = parameter_declaration(is_returns, is_named, is_template)) != nullptr) {
             n->parameters.push_back( std::move(param) );
 
-            if (curr().type() == lexeme::RightParen) {
+            if (curr().type() == closer) {
                 break;
             }
             else if (curr().type() != lexeme::Comma) {
@@ -3259,7 +3269,7 @@ private:
             next();
         }
 
-        if (curr().type() != lexeme::RightParen) {
+        if (curr().type() != closer) {
             error("invalid parameter list");
             next();
             return {};
@@ -3355,12 +3365,12 @@ private:
     //G     contract
     //G     contract-seq contract
     //G
-    auto function_type(bool named = true) -> std::unique_ptr<function_type_node>
+    auto function_type(bool is_named = true) -> std::unique_ptr<function_type_node>
     {
         auto n = std::make_unique<function_type_node>();
 
         //  Parameters
-        auto parameters = parameter_declaration_list(false, named);
+        auto parameters = parameter_declaration_list(false, is_named);
         if (!parameters) {
             return {};
         }
@@ -3396,7 +3406,7 @@ private:
                 n->returns = function_type_node::single_type_id{ std::move(t), passing_style::move };
                 assert(n->returns.index() == function_type_node::id);
             }
-            else if (auto returns_list = parameter_declaration_list(true, named)) {
+            else if (auto returns_list = parameter_declaration_list(true, is_named)) {
                 if (std::ssize(returns_list->parameters) < 1) {
                     error("an explicit return value list cannot be empty");
                     return {};
@@ -3423,28 +3433,73 @@ private:
     }
 
 
-    //G unnamed-declaration:
-    //G     ':' function-type '=' statement
-    //G     ':' type-id? '=' statement
-    //G     ':' type-id
-    //G     ':' 'type' meta-constraints? '=' statement
-    //G
     //G meta-constraints:
     //G     'is' id-expression
     //G     meta-constraints ',' id-expression
     //G
+    auto udt_type() -> std::unique_ptr<udt_type_node>
+    {
+        auto n = std::make_unique<udt_type_node>();
+
+        //  "type" introducer
+        if (curr() != "type") {
+            return {};
+        }
+
+        n->type = &curr();
+        next();
+
+        return n;
+    }
+
+
+    //G unnamed-declaration:
+    //G     ':' template-parameter-declaration-list? function-type '=' statement
+    //G     ':' template-parameter-declaration-list? type-id? '=' statement
+    //G     ':' template-parameter-declaration-list? type-id
+    //G     ':' template-parameter-declaration-list? 'type' meta-constraints? '=' statement
+    //G
+    //G template-parameter-declaration-list
+    //G     '<' parameter-declaration-seq '>'
+    //G
     auto unnamed_declaration(
         source_position start,
-        bool            semicolon_required = true,
-        bool            captures_allowed = false,
-        bool            named = false,
-        bool            is_parameter = false
+        bool            semicolon_required    = true,
+        bool            captures_allowed      = false,
+        bool            named                 = false,
+        bool            is_parameter          = false,
+        bool            is_template_parameter = false
     ) -> std::unique_ptr<declaration_node>
     {
         auto n = std::make_unique<declaration_node>( current_declarations.back() );
         n->pos = start;
 
-        //  For a parameter only, ':' is not required and
+        //  For a template parameter, ':' is not required and
+        //  we default to ': type'
+        if (is_template_parameter && curr().type() != lexeme::Colon)
+        {
+            //  So invent the "type" token
+            generated_text.push_back("type");
+            generated_tokens_->push_back({
+                generated_text.back().c_str(),
+                std::ssize(generated_text.back()),
+                start,
+                lexeme::Identifier
+            });
+
+            //  So we can create the udt_type_node
+
+            auto udt = std::make_unique<udt_type_node>();
+            udt->type = &generated_tokens_->back();
+
+            n->type = std::move(udt);
+            assert (n->type.index() == declaration_node::udt_type);
+
+            //  That's it, we're done here
+            return n;
+        }
+
+        //  For an ordinary parameter, ':' is not required and
         //  we default to ': _' - i.e., deduced with no initializer
         if (is_parameter && curr().type() != lexeme::Colon)
         {
@@ -3457,7 +3512,7 @@ private:
                 lexeme::Identifier
             });
 
-            //  So we can create the typid_id_node and its unqualified_id_node
+            //  So we can create the typeid_id_node and its unqualified_id_node
 
             auto id = std::make_unique<unqualified_id_node>();
             id->identifier = &generated_tokens_->back();
@@ -3479,6 +3534,15 @@ private:
         }
         next();
 
+        //  Next is an optional template parameter list
+        if (curr().type() == lexeme::Less) {
+            auto template_parameters = parameter_declaration_list(false, false, true);
+            if (!template_parameters) {
+                return {};
+            }
+            n->template_parameters = std::move(template_parameters);
+        }
+
         auto guard =
             captures_allowed
             ? std::make_unique<capture_groups_stack_guard>(this, &n->captures)
@@ -3491,19 +3555,23 @@ private:
 
         auto deduced_type = false;
 
-        ////  It could be "type," declaring a user-defined type
-        //if (auto t = udt_type()) {
-        //    n->type = std::move(t);
-        //    assert (n->type.index() == declaration_node::udt);
-        //}
+        //  It could be "type", declaring a user-defined type
+        if (auto t = udt_type()) {
+            if (is_parameter && !is_template_parameter) {
+                error("a normal parameter cannot be a 'type' - did you mean to put this in a < > template parameter list?");
+                return {};
+            }
+            n->type = std::move(t);
+            assert (n->type.index() == declaration_node::udt_type);
+        }
 
         //  Or a function type, declaring a function
-        if (auto t = function_type(named)) {
+        else if (auto t = function_type(named)) {
             n->type = std::move(t);
             assert (n->type.index() == declaration_node::function);
         }
 
-        //  Or just a type, declaring a non-pointer object
+        //  Or just a type-id, declaring a non-pointer object
         else if (auto t = type_id()) {
             if (auto id = t->get_token(); id && *id == "namespace") {
                 error("(temporary alpha limitation) namespaces are not yet supported", false);
@@ -3538,6 +3606,11 @@ private:
 
             if (n->type.index() == declaration_node::function) {
                 error("missing = before function body");
+                return {};
+            }
+
+            if (n->type.index() == declaration_node::udt_type && !is_template_parameter) {
+                error("a type must have an = initializer");
                 return {};
             }
 
@@ -3648,8 +3721,9 @@ private:
     //G     identifier unnamed-declaration
     //G
     auto declaration(
-        bool semicolon_required = true,
-        bool is_parameter = false
+        bool semicolon_required    = true,
+        bool is_parameter          = false,
+        bool is_template_parameter = false
     )
         -> std::unique_ptr<declaration_node>
     {
@@ -3663,7 +3737,7 @@ private:
             return {};
         }
 
-        auto n = unnamed_declaration(start_pos, semicolon_required, false, true, is_parameter);
+        auto n = unnamed_declaration(start_pos, semicolon_required, false, true, is_parameter, is_template_parameter);
         if (!n) {
             pos = start_pos;    // backtrack
             return {};

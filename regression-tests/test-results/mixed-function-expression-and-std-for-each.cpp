@@ -25,7 +25,7 @@
     std::for_each(
         CPP2_UFCS_0(begin, view), 
         CPP2_UFCS_0(end, view), 
-        [](auto& x) {  return x += "-ish"; }
+        [](auto& x ) { return x += "-ish"; }
     );
 
     //  Initializating from a function expression

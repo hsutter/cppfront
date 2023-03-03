@@ -752,6 +752,8 @@ class cppfront
     };
     std::vector<function_info> current_function = { {} };
 
+    std::vector<declaration_node const*> current_declaration = { {} };
+
     //  For lowering
     //
     positional_printer printer;
@@ -2740,22 +2742,62 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(parameter_declaration_node const& n, bool returns = false) -> void
+    auto emit(parameter_declaration_node const& n, bool is_returns = false, bool is_template_parameter = false) -> void
     {
         //  Can't declare functions as parameters -- only pointers to functions which are objects
         assert( n.declaration );
-        assert( n.declaration->is(declaration_node::object) );
+        assert( !n.declaration->is(declaration_node::function) );
 
+        //-----------------------------------------------------------------------
+        //  Handle type parameters
+
+        if (n.declaration->is(declaration_node::udt_type)) {
+            printer.print_cpp2("typename ", n.declaration->identifier->position());
+            assert (n.declaration->identifier);
+            emit(*n.declaration->identifier);
+            return;
+        }
+
+        //-----------------------------------------------------------------------
+        //  Else handle template non-type parameters
+
+        assert( n.declaration->is(declaration_node::object) );
         auto const& type_id = *std::get<declaration_node::object>(n.declaration->type);
+
+        if (is_template_parameter) {
+            emit( type_id );
+            printer.print_cpp2(" ", type_id.position());
+            assert (n.declaration->identifier);
+            emit(*n.declaration->identifier);
+            return;
+        }
+
+        //-----------------------------------------------------------------------
+        //  Else handle ordinary parameters
 
         auto unqid = std::get_if<type_id_node::unqualified>(&type_id.id);
         auto is_wildcard = unqid && *(*unqid)->identifier == "_";
+
+        //  If this parameter's name is an unqualified-id, check to see
+        //  if it's the name of one of the template parameters
+        auto is_template_parameter_name = false;
+        if (unqid && current_declaration.back() && current_declaration.back()->template_parameters) {
+            for (auto& tparam : current_declaration.back()->template_parameters->parameters) {
+                assert(tparam);
+                if (tparam->declaration->type.index() == declaration_node::udt_type &&
+                    *tparam->declaration->identifier->identifier == *(*unqid)->identifier
+                    )
+                {
+                    is_template_parameter_name = true;
+                }
+            }
+        }
 
         assert( n.declaration->identifier );
         auto identifier     = print_to_string( *n.declaration->identifier );
 
         //  First any prefix
-        if (!returns && !is_wildcard)
+        if (!is_returns && !is_wildcard && !is_template_parameter_name)
         {
             switch (n.pass) {
             break;case passing_style::in     : printer.print_cpp2( "cpp2::in<",  n.position() );
@@ -2766,22 +2808,27 @@ public:
 
         printer.preempt_position_push( n.position() );
 
-        if (is_wildcard) {
+        if (is_wildcard || is_template_parameter_name)
+        {
+            auto name = std::string{"auto"};
+            if (is_template_parameter_name) {
+                name = *(*unqid)->identifier;
+            }
             switch (n.pass) {
-            break;case passing_style::in     : printer.print_cpp2( "auto const&", n.position() );
-            break;case passing_style::copy   : printer.print_cpp2( "auto",        n.position() );
-            break;case passing_style::inout  : printer.print_cpp2( "auto&",       n.position() );
+            break;case passing_style::in     : printer.print_cpp2( name+" const&", n.position() );
+            break;case passing_style::copy   : printer.print_cpp2( name,           n.position() );
+            break;case passing_style::inout  : printer.print_cpp2( name+"&",       n.position() );
 
             //  For generic out parameters, we take a pointer to anything with paramater named "identifier_"
             //  and then generate the out<> as a stack local with the expected name "identifier"
-            break;case passing_style::out    : printer.print_cpp2( "auto*",       n.position() );
+            break;case passing_style::out    : printer.print_cpp2( name+"*",       n.position() );
                                                current_function.back().prolog.push_back(
                                                    "auto " + identifier + " = cpp2::out(" + identifier + "_); "
                                                );
                                                identifier += "_";
 
-            break;case passing_style::move   : printer.print_cpp2( "auto&&",      n.position() );
-            break;case passing_style::forward: printer.print_cpp2( "auto&&",      n.position() );
+            break;case passing_style::move   : printer.print_cpp2( name+"&&",      n.position() );
+            break;case passing_style::forward: printer.print_cpp2( name+"&&",      n.position() );
             break;default: ;
             }
         }
@@ -2806,7 +2853,7 @@ public:
         printer.preempt_position_pop();
 
         //  Then any suffix
-        if (!returns && !is_wildcard)
+        if (!is_returns && !is_wildcard && !is_template_parameter_name)
         {
             switch (n.pass) {
             break;case passing_style::in     : printer.print_cpp2( ">",  n.position() );
@@ -2821,7 +2868,7 @@ public:
 
         printer.print_cpp2( " " + identifier, n.declaration->identifier->position());
 
-        if (!returns && n.declaration->initializer) {
+        if (!is_returns && n.declaration->initializer) {
             printer.print_cpp2( " = ", n.declaration->initializer->position() );
             emit(*n.declaration->initializer);
         }
@@ -2841,16 +2888,16 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(parameter_declaration_list_node const& n, bool returns = false) -> void
+    auto emit(parameter_declaration_list_node const& n, bool is_returns = false, bool is_template_parameter = false) -> void
     {
         in_parameter_list = true;
 
-        if (returns) {
+        if (is_returns) {
             printer.print_cpp2( "{\n", n.position() );
         }
         else {
             assert(n.open_paren);
-            printer.print_cpp2( "(", n.open_paren->position() );
+            emit(*n.open_paren);
         }
 
         //  So we don't get cute about text-aligning the first parameter when it's on a new line
@@ -2858,19 +2905,19 @@ public:
 
         auto prev_pos = n.position();
         for (auto first = true; auto const& x : n.parameters) {
-            if (!first && !returns) {
+            if (!first && !is_returns) {
                 printer.print_cpp2( ", ", prev_pos );
             }
             prev_pos = x->position();
             assert(x);
-            emit(*x, returns);
+            emit(*x, is_returns, is_template_parameter);
             first = false;
-            if (returns) {
+            if (is_returns) {
                 printer.print_cpp2( ";\n", x->position() );
             }
         }
 
-        if (returns) {
+        if (is_returns) {
             printer.print_cpp2( "};", n.position() );
         }
         else {
@@ -2878,7 +2925,9 @@ public:
             //  beyond column 10
             assert(n.close_paren);
             auto col = std::min( n.close_paren->position().colno, colno_t{10});
-            printer.print_cpp2( ")", { n.close_paren->position().lineno, col});
+            printer.preempt_position_push({ n.close_paren->position().lineno, col});
+            emit(*n.close_paren);
+            printer.preempt_position_pop();
         }
 
         in_parameter_list = false;
@@ -3042,6 +3091,9 @@ public:
     //
     auto emit(declaration_node const& n, std::string const& capture_intro = {}) -> void
     {
+        current_declaration.push_back(&n);
+        auto guard = finally([&]{ current_declaration.pop_back(); });
+
         //  If this is a function that has multiple return values,
         //  first we need to emit the struct that contains the returns
         if (printer.doing_declarations_only() && n.is(declaration_node::function))
@@ -3064,7 +3116,13 @@ public:
             }
         }
 
-        //  Function
+        if (n.template_parameters) {
+            printer.print_cpp2("template", n.position());
+            emit(*n.template_parameters, false, true);
+            printer.print_cpp2(" ", n.position());
+        }
+
+        //  User-defined type
         if (n.is(declaration_node::udt_type))
         {
         }
