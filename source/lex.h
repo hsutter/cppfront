@@ -349,7 +349,6 @@ auto expand_string_literal(
     }
 
     auto pos = 0;
-    auto ret = std::string{};   // the return string we're going to build
 
     //  Skip prefix to first non-" character
     while (
@@ -363,28 +362,10 @@ auto expand_string_literal(
         pos < length
         && text[pos] == '"'
     );
-    auto first_quote_pos = pos;
     ++pos;
     auto current_start = pos;   // the current offset before which the string has been added to ret
-    auto first         = true;
 
-    auto add_plus = [&](bool and_quote = false) {
-        //  Only add a "+" after the first term
-        if (!first) {
-            ret += " + ";
-        }
-        //  If also adding a quote,
-        if (and_quote) {
-            //  remember to pull in the prefix on the first term (e.g., u")
-            if (first) {
-                ret += text.substr(0, first_quote_pos+1);
-            }
-            else {
-                ret += '"';
-            }
-        }
-        first = false;
-    };
+    auto parts = string_parts{"\"", "\"", string_parts::on_both_ends};
 
     //  Now we're on the first character of the string itself
     for (
@@ -428,17 +409,13 @@ auto expand_string_literal(
 
             //  Put the next non-empty non-interpolated chunk straight into ret
             if (open != current_start) {
-                add_plus(true);
-                ret += text.substr(current_start, open - current_start);
-                ret += '"';
+                parts.add_string(text.substr(current_start, open - current_start));
             }
 
             //  Then put interpolated chunk into ret
-            add_plus();
-            ret += "cpp2::to_string";
             auto chunk = std::string{text.substr(open, pos - open)};
             replace_all(chunk, "\\\"", "\"");
-            ret += chunk;
+            parts.add_code("cpp2::to_string" + chunk);
 
             current_start = pos+1;
         }
@@ -451,16 +428,11 @@ auto expand_string_literal(
     );
 
     //  Put the final non-interpolated chunk straight into ret
-    if (
-        first
-        || current_start < std::ssize(text)-1
-        )
-    {
-        add_plus(true);
-        ret += text.substr(current_start);
+    if (current_start < std::ssize(text)-1) {
+        parts.add_string(text.substr(current_start, std::ssize(text)-current_start-1));
     }
 
-    return ret;
+    return parts.generate();
 }
 
 
