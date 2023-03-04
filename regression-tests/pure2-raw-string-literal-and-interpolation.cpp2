@@ -1,0 +1,34 @@
+main: () -> int = {
+    i := 42;
+    m : std::map<std::string, int> = ();
+    m["one"] = 1;
+    m["two"] = 2;
+
+    str : std::string = "this is a string";
+
+    raw_str : std::string = R"string(raw string without interpolation)string";
+
+    raw_str_multi : std::string = R"test(this is raw string literal
+
+that can last for multiple
+
+lines)test";
+
+    raw_str_inter : std::string = $R"test(this is raw string literal
+that can last for multiple
+lines
+(i)$ R"(this can be added too)"
+calculations like m["one"] + m["two"] = (m["one"] + m["two"])$ also works
+("at the beginning of the line")$!!!)test";
+
+    raw_str_inter_multi : std::string = $R"(
+
+    )" + $R"((i)$)" + $R"((i)$)";
+
+    std::cout << str << std::endl;
+    std::cout << raw_str << std::endl;
+    std::cout << raw_str_multi << std::endl;
+    std::cout << raw_str_inter << std::endl;
+    std::cout << raw_str_inter_multi << std::endl;
+    std::cout << ($R"((m["one"])$.)" + $R"((m["two"])$.)" + $R"((m["three"])$.)" + $R"((i)$)") << std::endl;
+}
