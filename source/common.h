@@ -213,8 +213,9 @@ private:
 struct raw_string
 {
     source_position start;
-    source_position end;
     std::string     text;
+    std::string     opening_seq;
+    std::string     closing_seq;
 };
 
 //-----------------------------------------------------------------------

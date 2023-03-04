@@ -462,7 +462,8 @@ auto lex_line(
     source_position&        current_comment_start,
     std::vector<token>&     tokens,
     std::vector<comment>&   comments,
-    std::vector<error>&     errors
+    std::vector<error>&     errors,
+    std::optional<raw_string>& raw_string_multiline
 )
     -> bool
 {
@@ -900,11 +901,22 @@ auto lex_line(
         //G     'u8' 'u'
         //G
         auto is_encoding_prefix_and = [&](char next) {
-            if (line[i] == next)                        { return 1; }
+            if (line[i] == next)                                        { return 1; } // "
             else if (line[i] == 'u') {
-                if (peek1 == next)                      { return 2; }
-                else if (peek1 == '8' && peek2 == next) { return 3; }
-            }
+                if (peek1 == next)                                      { return 2; } // u"
+                else if (peek1 == '8' && peek2 == next)                 { return 3; } // u8"
+                else if (peek1 == 'R' && peek2 == next)                 { return 3; } // uR"
+                else if (peek1 == '8' && peek2 == 'R' && peek3 == next) { return 4; } // u8R"
+            } 
+            else if (line[i] == 'U') { 
+                if ( peek1 == next)                                     { return 2; } // U"
+                else if (peek1 == 'R' && peek2 == next)                 { return 3; } // UR"
+            } 
+            else if (line[i] == 'L') { 
+                if ( peek1 == next )                                    { return 2; } // L"
+                else if (peek1 == 'R' && peek2 == next)                 { return 3; } // LR" 
+            } 
+            else if (line[i] == 'R' && peek1 == next)                   { return 2; } // R"
             return 0;
         };
 
@@ -929,6 +941,32 @@ auto lex_line(
             break;default:
                 current_comment += line[i];
             }
+        }
+        else if (raw_string_multiline) {
+            auto end_pos = line.find(raw_string_multiline.value().closing_seq, i);
+            auto part = line.substr(i, end_pos-i);
+
+            raw_string_multiline.value().text += part;
+            if (end_pos == std::string::npos) {
+                raw_string_multiline.value().text += '\n';
+                break;
+            }
+
+            // here we know that we are dealing with multiline raw string literal
+            // token needs to use generated_text to store string that exists in multiple lines
+            i = end_pos+std::ssize(raw_string_multiline.value().closing_seq)-1;
+            raw_string_multiline.value().text += raw_string_multiline.value().closing_seq;
+
+            generated_text.push_back(raw_string_multiline.value().text);
+
+            tokens.push_back({
+                &generated_text.back()[0],
+                std::ssize(generated_text.back()),
+                raw_string_multiline.value().start,
+                lexeme::StringLiteral
+            });
+            raw_string_multiline.reset();
+            continue;
         }
 
         //  Otherwise, we will be at the start of a token, a comment, or whitespace
@@ -1256,54 +1294,90 @@ auto lex_line(
 
                 //G string-literal:
                 //G     encoding-prefix? '"' s-char-seq? '"'
+                //G     encoding-prefix? 'R"' d-char-seq? '(' s-char-seq? ')' d-char-seq? '"'
                 //G
                 //G s-char-seq:
                 //G     interpolation? s-char
                 //G     interpolation? s-char-seq s-char
                 //G
+                //G d-char-seq:
+                //G     d-char
+                //G
                 //G interpolation:
                 //G     '(' expression ')' '$'
                 //G
                 else if (auto j = is_encoding_prefix_and('\"')) {
-                    while (auto len = peek_is_sc_char(j, '\"')) { j += len; }
-                    if (peek(j) != '\"') {
-                        errors.emplace_back(
-                            source_position(lineno, i),
-                            "string literal \"" + std::string(&line[i+1],j)
-                                + "\" is missing its closing \""
-                        );
-                    }
+                    // if peek(j-2) is 'R' it means that we deal with raw-string literal
+                    if (peek(j-2) == 'R') { 
+                        auto seq_pos = i + j;
+                            
+                        if (auto paren_pos = line.find("(", seq_pos); paren_pos != std::string::npos) {
+                            auto raw_string_opening_seq = line.substr(i, paren_pos - i + 1);
+                            auto raw_string_closing_seq = ")"+line.substr(seq_pos, paren_pos-seq_pos)+"\"";
 
-                    //  At this point we have a string-literal, but it may contain
-                    //  captures/interpolations we want to tokenize
-                    auto literal = std::string_view{ &line[i], std::size_t(j+1) };
-                    auto s = expand_string_literal( literal, errors, source_position(lineno, i + 1) );
+                            if (auto closing_pos = line.find(raw_string_closing_seq, paren_pos+1); closing_pos != line.npos) {
+                                store(closing_pos+std::ssize(raw_string_closing_seq)-i, lexeme::StringLiteral);
+                            } else {
+                                raw_string_multiline.emplace(raw_string{source_position{lineno, i}, raw_string_opening_seq, raw_string_opening_seq, raw_string_closing_seq });
+                                // skip entire raw string opening sequence R"
+                                i = paren_pos;
 
-                    //  If there are no captures/interpolations, just store it directly and continue
-                    if (std::ssize(s) == j+1) {
-                        store(j+1, lexeme::StringLiteral);
-                    }
-                    //  Otherwise, replace it with the expanded version and continue
-                    else {
-                        if (std::ssize(s) <= j + 1) {
-                            errors.emplace_back(
-                                source_position( lineno, i ),
-                                "not a legal string literal"
-                            );
-                            return {};
+                                // if we are on the end of the line we need to add new line char
+                                if (i+1 == std::ssize(line)) {
+                                    raw_string_multiline.value().text += '\n';
+                                }
+                            }
+                            continue;
                         }
-                        mutable_line.replace( i, j+1, s );
+                        else {
+                            errors.emplace_back(
+                                source_position(lineno, i + j - 2),
+                                "invalid new-line in raw string delimiter \"" + std::string(&line[i],j)
+                                    + "\" - stray 'R' in program \""
+                            );
+                        }
+                    }
+                    else {
+                        while (auto len = peek_is_sc_char(j, '\"')) { j += len; }
+                        if (peek(j) != '\"') {
+                            errors.emplace_back(
+                                source_position(lineno, i),
+                                "string literal \"" + std::string(&line[i+1],j)
+                                    + "\" is missing its closing \""
+                            );
+                        }
 
-                        //  Redo processing of this whole line now that the string is expanded,
-                        //  which may have moved it in memory... move i back to the line start
-                        //  and discard any tokens we already tokenized for this line
-                        i = colno_t{-1};
-                        while (
-                            !tokens.empty()
-                            && tokens.back().position().lineno == lineno
-                            )
-                        {
-                            tokens.pop_back();
+                        //  At this point we have a string-literal, but it may contain
+                        //  captures/interpolations we want to tokenize
+                        auto literal = std::string_view{ &line[i], std::size_t(j+1) };
+                        auto s = expand_string_literal( literal, errors, source_position(lineno, i + 1) );
+
+                        //  If there are no captures/interpolations, just store it directly and continue
+                        if (std::ssize(s) == j+1) {
+                            store(j+1, lexeme::StringLiteral);
+                        }
+                        //  Otherwise, replace it with the expanded version and continue
+                        else {
+                            if (std::ssize(s) <= j + 1) {
+                                errors.emplace_back(
+                                    source_position( lineno, i ),
+                                    "not a legal string literal"
+                                );
+                                return {};
+                            }
+                            mutable_line.replace( i, j+1, s );
+
+                            //  Redo processing of this whole line now that the string is expanded,
+                            //  which may have moved it in memory... move i back to the line start
+                            //  and discard any tokens we already tokenized for this line
+                            i = colno_t{-1};
+                            while (
+                                !tokens.empty()
+                                && tokens.back().position().lineno == lineno
+                                )
+                            {
+                                tokens.pop_back();
+                            }
                         }
                     }
                 }
@@ -1410,6 +1484,9 @@ END:
     if (in_comment) {
         current_comment += "\n";
     }
+    if (raw_string_multiline && line.size() == 0) {
+        raw_string_multiline.value().text += '\n';
+    }
 
     assert (std::ssize(tokens) >= original_size);
     return std::ssize(tokens) != original_size;
@@ -1466,6 +1543,8 @@ public:
         -> void
     {
         auto in_comment = false;
+        auto raw_string_multiline   = std::optional<raw_string>();
+
         assert (std::ssize(lines) > 0);
         auto line = std::begin(lines)+1;
         while (line != std::end(lines)) {
@@ -1494,7 +1573,8 @@ public:
                 lex_line(
                     line->text, lineno,
                     in_comment, current_comment, current_comment_start,
-                    entry, comments, errors
+                    entry, comments, errors,
+                    raw_string_multiline
                 );
             }
 
