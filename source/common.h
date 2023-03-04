@@ -210,6 +210,13 @@ private:
     };
 };
 
+struct raw_string
+{
+    source_position start;
+    source_position end;
+    std::string     text;
+};
+
 //-----------------------------------------------------------------------
 //
 //  error: represents a user-readable error message
