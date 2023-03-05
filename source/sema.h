@@ -255,7 +255,7 @@ public:
                 //  Conditionally look beyond the start of the current named (has identifier) function
                 //  (an unnamed function is ok to look beyond)
                 assert(decl.declaration);
-                if (decl.declaration->type.index() == declaration_node::function &&
+                if (decl.declaration->type.index() == declaration_node::a_function &&
                     decl.declaration->identifier &&
                     !look_beyond_current_function)
                 {
@@ -287,7 +287,7 @@ public:
                 auto const& sym = std::get<symbol::active::declaration>(s.sym);
 
                 assert (sym.declaration);
-                if (sym.declaration->is(declaration_node::active::function)) {
+                if (sym.declaration->is(declaration_node::active::a_function)) {
                     if (sym.start) {
                         o << "function ";
                     }
@@ -295,7 +295,7 @@ public:
                         o << "/function";
                     }
                 }
-                else if (sym.declaration->is(declaration_node::active::object)) {
+                else if (sym.declaration->is(declaration_node::active::an_object)) {
                     if (sym.start) {
                         o << "var ";
                     }
@@ -381,9 +381,9 @@ public:
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
                 assert (sym);
                 if (sym->start && !sym->initializer && !(sym->parameter && sym->parameter->pass != passing_style::out)) {
-                    assert (sym->declaration->is(declaration_node::active::object));
+                    assert (sym->declaration->is(declaration_node::active::an_object));
                     //  Must be in function scope
-                    if (sym->declaration->parent_scope && sym->declaration->parent_scope->is(declaration_node::function)) {
+                    if (sym->declaration->parent_scope && sym->declaration->parent_scope->is(declaration_node::a_function)) {
                         return sym;
                     }
                     else {
@@ -400,7 +400,7 @@ public:
             -> declaration_sym const*
         {
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
-                if (sym->start && sym->declaration->is(declaration_node::active::object) &&
+                if (sym->start && sym->declaration->is(declaration_node::active::an_object) &&
                     (!sym->parameter ||
                      sym->parameter->pass == passing_style::copy ||
                      sym->parameter->pass == passing_style::move ||
@@ -409,7 +409,7 @@ public:
                    )
                 {
                     //  Must be in function scope
-                    if (sym->declaration->parent_scope && sym->declaration->parent_scope->is(declaration_node::function)) {
+                    if (sym->declaration->parent_scope && sym->declaration->parent_scope->is(declaration_node::a_function)) {
                         return sym;
                     }
                     else {
@@ -829,7 +829,7 @@ public:
     {
         if (n.identifier && (!inside_parameter_list || inside_out_parameter)) {
             symbols.emplace_back( scope_depth, declaration_sym( false, &n, nullptr, nullptr, inside_out_parameter ) );
-            if (n.type.index() != declaration_node::active::object) {
+            if (n.type.index() != declaration_node::active::an_object) {
                 --scope_depth;
             }
             partial_decl_stack.pop_back();
@@ -852,7 +852,7 @@ public:
             symbols.emplace_back( scope_depth, partial_decl_stack.back() );
 
             assert (partial_decl_stack.back().declaration);
-            if (!partial_decl_stack.back().declaration->is(declaration_node::active::object)) {
+            if (!partial_decl_stack.back().declaration->is(declaration_node::active::an_object)) {
                 ++scope_depth;
             }
         }

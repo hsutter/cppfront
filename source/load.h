@@ -226,7 +226,7 @@ auto starts_with_operator(std::string_view s) -> int
 
 //---------------------------------------------------------------------------
 //  starts_with_identifier_colon: returns whether the line starts with an
-//  identifier followed by one colon (not ::)
+//  identifier followed by one colon (not ::) (possibly preceded by an access specifier)
 //
 //  line    current line being processed
 //
@@ -239,9 +239,27 @@ auto starts_with_identifier_colon(std::string const& line) -> bool
         return false;
     }
 
-    //  see if it's an "operator @" name
+    //  see if it's an access-specifier
     auto s = std::string_view( &line[i], std::ssize(line) - i );
-    auto j = starts_with_operator(s);
+    auto j = 0;
+    assert (!isspace(s[j]));
+    if (s.starts_with("public")) {
+        j += 6;
+    }
+    else if (s.starts_with("protected")) {
+        j += 9;
+    }
+    else if (s.starts_with("private")) {
+        j += 7;
+    }
+    while (j < std::ssize(s) && isspace(s[j])) {
+        ++j;
+    }
+    s.remove_prefix(j);
+    i += j;
+
+    //  see if it's an "operator @" name
+    j = starts_with_operator(s);
     //  else see if it's a single identifier
     if (j == 0) {
         j = starts_with_identifier(s);

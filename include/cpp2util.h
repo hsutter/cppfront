@@ -492,9 +492,13 @@ template<typename T>
 //-----------------------------------------------------------------------
 //
 template<typename T>
+constexpr bool prefer_pass_by_value =
+    sizeof(T) < 2*sizeof(void*) && std::is_trivially_copy_constructible_v<T>;
+
+template<typename T>
 using in =
     std::conditional_t <
-        sizeof(T) < 2*sizeof(void*) && std::is_trivially_copy_constructible_v<T>,
+        prefer_pass_by_value<T>,
         T const,
         T const&
     >;

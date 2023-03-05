@@ -79,34 +79,25 @@ static cmdline_processor::register_flag cmd_cpp2_only(
 static auto flag_safe_null_pointers = true;
 static cmdline_processor::register_flag cmd_safe_null_pointers(
     2,
-    "null-checks",
-    "Null safety checks (on by default, '-' to disable)",
-    nullptr,
-    [](std::string const& opt){ flag_safe_null_pointers = opt.empty(); },
-    {},
-    true
+    "no-null-checks",
+    "Disable null safety checks",
+    []{ flag_safe_null_pointers = false; }
 );
 
 static auto flag_safe_subscripts = true;
 static cmdline_processor::register_flag cmd_safe_subscripts(
     2,
-    "subscript-checks",
-    "Subscript safety checks (on by default, '-' to disable)",
-    nullptr,
-    [](std::string const& opt){ flag_safe_subscripts = opt.empty(); },
-    {},
-    true
+    "no-subscript-checks",
+    "Disable subscript safety checks",
+    []{ flag_safe_subscripts = false; }
 );
 
 static auto flag_safe_comparisons = true;
 static cmdline_processor::register_flag cmd_safe_comparisons(
     2,
-    "comparison-checks",
-    "Mixed-sign comparison safety checks (on by default, '-' to disable)",
-    nullptr,
-    [](std::string const& opt){ flag_safe_comparisons = opt.empty(); },
-    {},
-    true
+    "no-comparison-checks",
+    "Disable mixed-sign comparison safety checks",
+    []{ flag_safe_comparisons = false; }
 );
 
 static auto flag_use_source_location = false;
@@ -120,8 +111,8 @@ static cmdline_processor::register_flag cmd_enable_source_info(
 static auto flag_cpp1_filename = std::string{};
 static cmdline_processor::register_flag cmd_cpp1_filename(
     9,
-    "output",
-    "Output filename, or 'stdout' (default is *.cpp/*.h)",
+    "output filename",
+    "Output to 'filename' (can be 'stdout') (default is *.cpp/*.h)",
     nullptr,
     [](std::string const& name) { flag_cpp1_filename = name; }
 );
@@ -138,7 +129,7 @@ static auto flag_verbose = false;
 static cmdline_processor::register_flag cmd_verbose(
     9,
     "verbose",
-    "Print verbose statistics",
+    "Print verbose statistics and -debug output",
     []{ flag_verbose = true; }
 );
 
@@ -146,7 +137,7 @@ static auto flag_no_exceptions = false;
 static cmdline_processor::register_flag cmd_no_exceptions(
     4,
     "fno-exceptions",
-    "Disable C++ EH, failed 'as' for 'variant' will assert (for now)",
+    "Disable C++ EH, failed 'as' for 'variant' will assert",
     []{ flag_no_exceptions = true; }
 );
 
@@ -154,7 +145,7 @@ static auto flag_no_rtti = false;
 static cmdline_processor::register_flag cmd_no_rtti(
     4,
     "fno-rtti",
-    "Disable C++ RTTI, using 'as' for '*'/'std::any' will assert (for now)",
+    "Disable C++ RTTI, using 'as' for '*'/'std::any' will assert",
     []{ flag_no_rtti = true; }
 );
 
@@ -747,10 +738,11 @@ class cppfront
     std::vector<arg_info> current_args  = { {} };
 
     struct function_info {
-        std::vector<std::string> prolog = {};
-        std::vector<std::string> epilog = {};
+        bool                     is_in_type = false;
+        std::vector<std::string> prolog     = {};
+        std::vector<std::string> epilog     = {};
     };
-    std::vector<function_info> current_function = { {} };
+    std::vector<function_info> current_function_info = { {} };
 
     std::vector<declaration_node const*> current_declaration = { {} };
 
@@ -1309,10 +1301,8 @@ public:
 
         if (!function_prolog.empty()) {
             printer.ignore_alignment( true, function_indent + 4 );
-            auto pos = source_position{};
-            if (!n.statements.empty()) {
-                pos = n.statements.front()->position();
-            }
+            auto pos = n.position();
+            pos.colno = n.body_indent;
             for (auto& loc : function_prolog) {
                 printer.print_cpp2("\n", pos);
                 printer.print_cpp2(loc, pos);
@@ -1800,14 +1790,14 @@ public:
             assert(decl && !decl->identifier);
 
             //  Handle an anonymous function
-            if (decl->is(declaration_node::function)) {
+            if (decl->is(declaration_node::a_function)) {
                 auto lambda_intro = build_capture_lambda_intro_for(decl->captures, n.position());
                 emit(*decl, lambda_intro);
             }
             //  Else an anonymous object as 'typeid { initializer }'
             else {
-                assert(decl->is(declaration_node::object));
-                auto& type_id = std::get<declaration_node::object>(decl->type);
+                assert(decl->is(declaration_node::an_object));
+                auto& type_id = std::get<declaration_node::an_object>(decl->type);
 
                 printer.add_pad_in_this_line( -5 );
 
@@ -1861,32 +1851,36 @@ public:
         }, fun_node->returns);
     }
 
-    auto is_pointer_declaration(type_id_node const* type_node, int deref_cnt, int addr_cnt) -> bool {
-        if (!type_node) { 
+    auto is_pointer_declaration(type_id_node const* type_id_node, int deref_cnt, int addr_cnt) -> bool {
+        if (!type_id_node) { 
             return false;
         }
         if (addr_cnt > deref_cnt) {
             return true; 
         }
 
-        if ( type_node->dereference_of ) {
-            return is_pointer_declaration(type_node->dereference_of, deref_cnt + type_node->dereference_cnt, addr_cnt);
-        } else if ( type_node->address_of ) {
-            return is_pointer_declaration(type_node->address_of, deref_cnt, addr_cnt + 1);
+        if ( type_id_node->dereference_of ) {
+            return is_pointer_declaration(type_id_node->dereference_of, deref_cnt + type_id_node->dereference_cnt, addr_cnt);
+        } else if ( type_id_node->address_of ) {
+            return is_pointer_declaration(type_id_node->address_of, deref_cnt, addr_cnt + 1);
         }
 
-        int pointer_declarators_cnt = std::count_if(std::cbegin(type_node->pc_qualifiers), std::cend(type_node->pc_qualifiers), [](auto* q) {
+        int pointer_declarators_cnt = std::count_if(std::cbegin(type_id_node->pc_qualifiers), std::cend(type_id_node->pc_qualifiers), [](auto* q) {
             return q->type() == lexeme::Multiply;
         });
 
-        if (pointer_declarators_cnt == 0 && type_node->suspicious_initialization) {
-            return is_pointer_declaration(type_node->suspicious_initialization, deref_cnt, addr_cnt);
+        if (pointer_declarators_cnt == 0 && type_id_node->suspicious_initialization) {
+            return is_pointer_declaration(type_id_node->suspicious_initialization, deref_cnt, addr_cnt);
         }
 
         return (pointer_declarators_cnt + addr_cnt - deref_cnt) > 0;
     }
 
-    auto is_pointer_declaration(udt_type_node const*, int, int) -> bool {
+    auto is_pointer_declaration(type_node const*, int, int) -> bool {
+        return false;
+    }
+
+    auto is_pointer_declaration(namespace_node const*, int, int) -> bool {
         return false;
     }
 
@@ -2746,12 +2740,20 @@ public:
     {
         //  Can't declare functions as parameters -- only pointers to functions which are objects
         assert( n.declaration );
-        assert( !n.declaration->is(declaration_node::function) );
+        assert( !n.declaration->is(declaration_node::a_function) );
+
+        //-----------------------------------------------------------------------
+        //  Skip 'this' parameters
+
+        if (*n.declaration->identifier->identifier == "this")
+        {
+            return;
+        }
 
         //-----------------------------------------------------------------------
         //  Handle type parameters
 
-        if (n.declaration->is(declaration_node::udt_type)) {
+        if (n.declaration->is(declaration_node::a_type)) {
             printer.print_cpp2("typename ", n.declaration->identifier->position());
             assert (n.declaration->identifier);
             emit(*n.declaration->identifier);
@@ -2761,8 +2763,8 @@ public:
         //-----------------------------------------------------------------------
         //  Else handle template non-type parameters
 
-        assert( n.declaration->is(declaration_node::object) );
-        auto const& type_id = *std::get<declaration_node::object>(n.declaration->type);
+        assert( n.declaration->is(declaration_node::an_object) );
+        auto const& type_id = *std::get<declaration_node::an_object>(n.declaration->type);
 
         if (is_template_parameter) {
             emit( type_id );
@@ -2784,7 +2786,7 @@ public:
         if (unqid && current_declaration.back() && current_declaration.back()->template_parameters) {
             for (auto& tparam : current_declaration.back()->template_parameters->parameters) {
                 assert(tparam);
-                if (tparam->declaration->type.index() == declaration_node::udt_type &&
+                if (tparam->declaration->type.index() == declaration_node::a_type &&
                     *tparam->declaration->identifier->identifier == *(*unqid)->identifier
                     )
                 {
@@ -2822,7 +2824,7 @@ public:
             //  For generic out parameters, we take a pointer to anything with paramater named "identifier_"
             //  and then generate the out<> as a stack local with the expected name "identifier"
             break;case passing_style::out    : printer.print_cpp2( name+"*",       n.position() );
-                                               current_function.back().prolog.push_back(
+                                               current_function_info.back().prolog.push_back(
                                                    "auto " + identifier + " = cpp2::out(" + identifier + "_); "
                                                );
                                                identifier += "_";
@@ -2911,7 +2913,9 @@ public:
             prev_pos = x->position();
             assert(x);
             emit(*x, is_returns, is_template_parameter);
-            first = false;
+            if (*x->declaration->identifier->identifier != "this") {
+                first = false;
+            }
             if (is_returns) {
                 printer.print_cpp2( ";\n", x->position() );
             }
@@ -3008,21 +3012,32 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(function_type_node const& n, token const* ident, bool is_main) -> void
+    auto emit(function_type_node const& n, token const* ident, bool is_main, std::string suffix1 = {}) -> void
     {
         assert(n.parameters);
-        if (is_main && n.parameters->parameters.size() == 1) {
+
+        if (is_main && n.parameters->parameters.size() > 0)
+        {
+            if (n.parameters->parameters.size() != 1) {
+                errors.emplace_back(
+                    n.position(),
+                    "'main' takes either zero parameters, or just one parameter for which the type 'std::vector<std::string_view>' will be deduced"
+                );
+                return;
+            }
+
             auto& param1 = *n.parameters->parameters[0];
             auto  param1_name = param1.declaration->identifier->get_token()->to_string(true);
             if (param1.pass != passing_style::in ||
-                param1.declaration->type.index() != declaration_node::object ||
-                !std::get<declaration_node::object>(param1.declaration->type)->is_wildcard()
+                param1.declaration->type.index() != declaration_node::an_object ||
+                !std::get<declaration_node::an_object>(param1.declaration->type)->is_wildcard()
                 )
             {
-                // we don't currently bail right after emitting the declarations (because
-                // we don't necessarily want to hide other interesting errors), so this
-                // avoids emitting the error a second time when we emit the definitions
                 static auto once = true;
+                    // to avoid emitting the error a second time when we emit the definitions
+                    // (we don't currently bail right after emitting the declarations, because
+                    // we don't necessarily want to hide other interesting errors)
+
                 if (std::exchange(once, false)) {
                     errors.emplace_back(
                         param1.position(),
@@ -3032,7 +3047,7 @@ public:
                 return;
             }
             printer.print_cpp2( "(int argc, char **argv)", n.parameters->position() );
-            current_function.back().prolog.push_back(
+            current_function_info.back().prolog.push_back(
                 "auto " + param1_name + " = cpp2::args(argc, argv); "
             );
         }
@@ -3046,6 +3061,8 @@ public:
         //    printer.add_pad_in_this_line(-25);
         //    printer.print_cpp2( " noexcept", n.position() );
         //}
+
+        printer.print_cpp2( suffix1, n.position() );
 
         if (n.returns.index() == function_type_node::empty) {
             if (is_main) {
@@ -3091,14 +3108,17 @@ public:
     //
     auto emit(declaration_node const& n, std::string const& capture_intro = {}) -> void
     {
+        auto is_main = !n.parent_scope && *n.identifier->identifier == "main";
+        auto is_in_type = n.parent_is(declaration_node::a_type);
+
         current_declaration.push_back(&n);
         auto guard = finally([&]{ current_declaration.pop_back(); });
 
         //  If this is a function that has multiple return values,
         //  first we need to emit the struct that contains the returns
-        if (printer.doing_declarations_only() && n.is(declaration_node::function))
+        if (printer.doing_declarations_only() && n.is(declaration_node::a_function))
         {
-            auto& func = std::get<declaration_node::function>(n.type);
+            auto& func = std::get<declaration_node::a_function>(n.type);
             assert(func);
 
             if (func->returns.index() == function_type_node::list) {
@@ -3116,6 +3136,19 @@ public:
             }
         }
 
+        if (n.access) {
+            assert (is_in_type);
+            printer.print_cpp2(n.access->to_string(true) + ": ", n.access->position());
+        }
+        else if (is_in_type) {
+            if (n.is(declaration_node::an_object)) {
+                printer.print_cpp2("private: ", n.position());
+            }
+            else {
+                printer.print_cpp2("public: ", n.position());
+            }
+        }
+
         if (n.template_parameters) {
             printer.print_cpp2("template", n.position());
             emit(*n.template_parameters, false, true);
@@ -3123,24 +3156,82 @@ public:
         }
 
         //  User-defined type
-        if (n.is(declaration_node::udt_type))
+        if (n.is(declaration_node::a_type))
         {
+            printer.print_cpp2("class ", n.position());
+            emit(*n.identifier);
+
+            //  Type declaration
+            if (printer.doing_declarations_only()) {
+                printer.print_cpp2( ";\n", n.position() );
+                return;
+            }
+
+            //  Type body
+            assert(n.initializer && n.initializer->statement.index() == statement_node::compound);
+            auto& compound_stmt = std::get<statement_node::compound>(n.initializer->statement);
+
+            printer.print_cpp2(" {", compound_stmt->position());
+
+            assert(compound_stmt);
+            for (auto& stmt : compound_stmt->statements) {
+                assert(stmt);
+                if (stmt->statement.index() != statement_node::declaration) {
+                    errors.emplace_back(
+                        stmt->position(),
+                        "a user-defined type body must contain only declarations, not other code"
+                    );
+                    return;
+                }
+                auto& decl = std::get<statement_node::declaration>(stmt->statement);
+                assert(decl);
+                emit(*decl);
+            }
+
+            printer.print_cpp2("};\n", compound_stmt->close_brace);
+        }
+
+        //  Namespace
+        if (n.is(declaration_node::a_namespace))
+        {
+            printer.print_cpp2("namespace ", n.position());
+            emit(*n.identifier);
+
+            assert(n.initializer && n.initializer->statement.index() == statement_node::compound);
+            auto& compound_stmt = std::get<statement_node::compound>(n.initializer->statement);
+
+            printer.print_cpp2(" {", compound_stmt->position());
+
+            assert(compound_stmt);
+            for (auto& stmt : compound_stmt->statements) {
+                assert(stmt);
+                if (stmt->statement.index() != statement_node::declaration) {
+                    errors.emplace_back(
+                        stmt->position(),
+                        "a namespace scope must contain only declarations, not other code"
+                    );
+                    return;
+                }
+                auto& decl = std::get<statement_node::declaration>(stmt->statement);
+                assert(decl);
+                emit(*decl);
+            }
+
+            printer.print_cpp2("};\n", compound_stmt->close_brace);
         }
 
         //  Function
-        else if (n.is(declaration_node::function))
+        else if (n.is(declaration_node::a_function))
         {
             //  Start fresh (there may be one spurious leftover
             //  requires-condition created during the declarations pass)
             function_requires_conditions = {};
 
-            auto& func = std::get<declaration_node::function>(n.type);
+            auto& func = std::get<declaration_node::a_function>(n.type);
             assert(func);
 
-            auto is_main = !n.parent_scope && *n.identifier->identifier == "main";
-
-            current_function.push_back({});
-            auto guard = finally([&]{ current_function.pop_back(); });
+            current_function_info.push_back({is_in_type, {}, {}});
+            auto guard = finally([&]{ current_function_info.pop_back(); });
 
             //  If this is at expression scope, we can't emit "[[nodiscard]] auto name"
             //  so print the provided intro instead, which will be a Cpp1 lambda-introducer
@@ -3149,14 +3240,75 @@ public:
                 printer.print_cpp2(capture_intro, n.position());
                 emit( *func, nullptr, is_main);
             }
+
+            //  Else start introducing a normal function
             else {
                 assert (n.identifier);
+
+                //  Handle member functions
+                std::string prefix  = {};
+                std::string suffix1 = {};
+                std::string suffix2 = {};
+
+                //  If there's a 'this' parameter, handle it here (the parameter emission will skip it)
+                //  because Cpp1 syntax requires its information to be spread around the declaration syntax
+                assert (func->parameters);
+                if (!func->parameters->parameters.empty() &&
+                    *func->parameters->parameters[0]->declaration->identifier->identifier == "this"
+                    )
+                {
+                    assert (is_in_type);
+                    auto& this_ = func->parameters->parameters[0];
+
+                    switch (this_->pass) {
+                    break;case passing_style::in:
+                        suffix1 += " const";
+                    break;case passing_style::inout:
+                        ;
+                    break;case passing_style::out:
+                        ; // TODO: constructor
+                    break;case passing_style::move:
+                        suffix1 += " &&";
+
+                    //  We shouldn't be able to get into a state where these values
+                    //  exist here, if we did it's our compiler bug
+                    break;case passing_style::copy:
+                          case passing_style::forward:
+                          default:
+                        errors.emplace_back( n.position(), "ICE: invalid parameter passing style, should have been rejected");
+                    }
+
+                    switch (this_->mod) {
+                    break;case parameter_declaration_node::modifier::implicit:
+                        ;
+                    break;case parameter_declaration_node::modifier::virtual_:
+                        prefix += "virtual ";
+                    break;case parameter_declaration_node::modifier::override_:
+                        suffix2 += " override";
+                    break;case parameter_declaration_node::modifier::final_:
+                        suffix2 += " final";
+                    break;default:
+                        ; // TODO, only for constructors: decl_prefix += "explicit ";
+                    }
+                }
+                //  Else if there isn't a 'this' parameter, but this function is in a type scope,
+                //  it's a Cpp1 static function so we need to decorate it thusly
+                else if (is_in_type) {
+                    prefix += "static ";
+                }
+
+                //  If there's a return type, it's [[nodiscard]] implicitly and all the time
+                //  -- for now there's no opt-out, wait and see whether we actually need one
                 if (func->returns.index() != function_type_node::empty) {
                     printer.print_cpp2( "[[nodiscard]] ", n.position() );
                 }
+
+                //  Now we have all the pieces we need for the Cpp1 function declaration
+                printer.print_cpp2( prefix, n.position() );
                 printer.print_cpp2( "auto ", n.position() );
                 printer.print_cpp2( *n.identifier->identifier, n.identifier->position() );
-                emit( *func, n.identifier->identifier, is_main );
+                emit( *func, n.identifier->identifier, is_main, suffix1 );
+                printer.print_cpp2( suffix2, n.position() );
             }
 
             //  Function declaration
@@ -3184,7 +3336,7 @@ public:
                 printer.emit_to_string(&print);
                 emit(*c);
                 printer.emit_to_string();
-                current_function.back().prolog.push_back(print);
+                current_function_info.back().prolog.push_back(print);
             }
 
             if (func->returns.index() == function_type_node::list)
@@ -3196,8 +3348,8 @@ public:
                     assert(param && param->declaration);
                     auto& decl    = *param->declaration;
 
-                    assert(decl.type.index() == declaration_node::object);
-                    auto& id_expr = std::get<declaration_node::object>(decl.type);
+                    assert(decl.type.index() == declaration_node::an_object);
+                    auto& id_expr = std::get<declaration_node::an_object>(decl.type);
                     assert(id_expr);
 
                     auto loc = std::string{};
@@ -3237,18 +3389,18 @@ public:
                         loc += init;
                     }
                     loc += ";";
-                    current_function.back().prolog.push_back(loc);
+                    current_function_info.back().prolog.push_back(loc);
                 }
             }
 
-            //current_function.back().epilog.push_back("/*EPILOG-TEST*/");
+            //current_function_info.back().epilog.push_back("/*EPILOG-TEST*/");
 
             printer.preempt_position_push( n.equal_sign );
 
             // TODO: something like this to get rid of extra blank lines
             //       inside the start of bodies of functions that have
             //       multiple contracts
-            //printer.skip_lines( std::ssize(current_function.back().prolog) );
+            //printer.skip_lines( std::ssize(current_function_info.back().prolog) );
 
             //  If processing the parameters generated any requires conditions,
             //  emit them here
@@ -3265,7 +3417,7 @@ public:
             emit(
                 *n.initializer,
                 true, func->position(), n.identifier && func->returns.index() == function_type_node::empty,
-                current_function.back().prolog, current_function.back().epilog, n.position().colno
+                current_function_info.back().prolog, current_function_info.back().epilog, n.position().colno
             );
 
             printer.preempt_position_pop();
@@ -3274,27 +3426,26 @@ public:
         }
 
         //  Object with optional initializer
-        else if (!printer.doing_declarations_only() && n.is(declaration_node::object))
+        else if (!printer.doing_declarations_only() && n.is(declaration_node::an_object))
         {
-            auto& type = std::get<declaration_node::object>(n.type);
+            auto& type = std::get<declaration_node::an_object>(n.type);
 
             //  Emit "auto" for deduced types (of course)
             if (type->is_wildcard()) {
                 assert(n.initializer);
-                //printer.print_cpp2("auto", n.position());
                 emit( *type, n.position() );
             }
             //  Otherwise, emit the type
             else {
                 //  If there isn't an initializer, use cpp2::deferred_init<T>
                 if (!n.initializer) {
-                    if (n.parent_scope && n.parent_scope->is(declaration_node::function)) {
+                    if (n.parent_is(declaration_node::a_function)) {
                         printer.print_cpp2( "cpp2::deferred_init<", n.position() );
                     }
-                    else {
+                    else if (!n.parent_is(declaration_node::a_type)) {
                         errors.emplace_back(
                             n.position(),
-                            "a non-local object must have an initializer"
+                            "a namespace-scope object must have an initializer"
                         );
                         return;
                     }
@@ -3303,7 +3454,7 @@ public:
                 emit( *type );
                 printer.preempt_position_pop();
                 //  one pointer is enough for now, pointer-to-function fun can be later
-                if (!n.initializer) {
+                if (!n.initializer && n.parent_is(declaration_node::a_function)) {
                     printer.print_cpp2( ">", n.position() );
                 }
             }

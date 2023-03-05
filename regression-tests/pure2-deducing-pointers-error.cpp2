@@ -6,7 +6,7 @@ fun2: (inout i:int) -> (result : *int) = {
     result = i&;
 }
 
-main: (argc : int, argv : **char) -> int = {
+main: () -> int = {
     a:     int = 2;
     pa:   *int = a&;
     ppa: **int = pa&;

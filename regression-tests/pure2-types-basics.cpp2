@@ -1,0 +1,33 @@
+
+N: namespace = {
+
+myclass : type = {
+
+    f: (virtual this, x: int) = {
+        std::cout << "N::myclass::f with (x)$\n";
+    }
+
+    data: int;
+
+    nested : type = {
+        g: () = std::cout << "N::myclass::nested::g\n";
+    }
+
+    f1: <T     , U     > (t:T, u:U) -> _ = t+u;
+    f2: <T:type, U:type> (t:T, u:U) -> _ = t+u;
+    f3: <T:_   , U:_   > ()         -> _ = T+U;
+    f4: <T:i8  , U:i16 > ()         -> _ = T+U;
+
+}
+
+}
+
+main: () = {
+    x: N::myclass = ();
+    x.f(53);
+    N::myclass::nested::g();
+    std::cout << "f1: (x.f1(1,1))$\n";
+    std::cout << "f2: (x.f2(2,2))$\n";
+    std::cout << "f3: (x.f3<3,3>())$\n";
+    std::cout << "f4: (x.f4<4,4>())$\n";
+}

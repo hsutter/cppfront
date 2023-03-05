@@ -288,7 +288,7 @@ auto to_string_view(passing_style pass) -> std::string_view {
     break;case passing_style::out    : return "out";
     break;case passing_style::move   : return "move";
     break;case passing_style::forward: return "forward";
-    break;default:                     return "INVALID passing_style";
+    break;default                    : return "INVALID passing_style";
     }
 }
 
@@ -742,6 +742,8 @@ struct compound_statement_node
     source_position close_brace;
     std::vector<std::unique_ptr<statement_node>> statements;
 
+    colno_t body_indent = 0;
+
     compound_statement_node(source_position o = source_position{}) : open_brace{o} { }
 
     auto position() const -> source_position
@@ -1112,7 +1114,7 @@ struct function_type_node
 };
 
 
-struct udt_type_node
+struct type_node
 {
     token const* type;
     std::vector<id_expression_node> metaclass_names;
@@ -1134,6 +1136,24 @@ struct udt_type_node
 };
 
 
+struct namespace_node
+{
+    token const* namespace_;
+
+    auto position() const -> source_position
+    {
+        assert(namespace_);
+        return namespace_->position();
+    }
+
+    auto visit(auto& v, int depth) -> void
+    {
+        v.start(*this, depth);
+        v.end(*this, depth);
+    }
+};
+
+
 struct declaration_node
 {
     //  Declared first, because it should outlive any owned
@@ -1142,12 +1162,14 @@ struct declaration_node
 
     source_position pos;
     std::unique_ptr<unqualified_id_node> identifier;
+    token const* access = {};
 
-    enum active : std::uint8_t { function, object, udt_type };
+    enum active : std::uint8_t { a_function, an_object, a_type, a_namespace };
     std::variant<
         std::unique_ptr<function_type_node>,
         std::unique_ptr<type_id_node>,
-        std::unique_ptr<udt_type_node>
+        std::unique_ptr<type_node>,
+        std::unique_ptr<namespace_node>
     > type;
 
     std::unique_ptr<parameter_declaration_list_node> template_parameters;
@@ -1156,26 +1178,31 @@ struct declaration_node
     source_position                 decl_end   = {};
     std::unique_ptr<statement_node> initializer;
 
-    declaration_node*               parent_scope = {};
+    declaration_node*               parent_scope     = {};
 
     declaration_node(declaration_node* parent) : parent_scope{parent} { }
 
     auto is_const() const -> bool {
         return
-            type.index() == object &&
-            !std::get<object>(type)->pc_qualifiers.empty() &&
-            *std::get<object>(type)->pc_qualifiers.front() == "const";
+            type.index() == an_object &&
+            !std::get<an_object>(type)->pc_qualifiers.empty() &&
+            *std::get<an_object>(type)->pc_qualifiers.front() == "const";
     }
 
     auto is_wildcard() const -> bool {
-        return type.index() == object && std::get<object>(type)->is_wildcard();
+        return type.index() == an_object && std::get<an_object>(type)->is_wildcard();
     }
 
     //  Shorthand for common query
     //
-    auto is(active a) const
+    auto is(active a) const -> bool
     {
         return type.index() == a;
+    }
+
+    auto parent_is(active a) const -> bool
+    {
+        return parent_scope && parent_scope->is(a);
     }
 
     auto position() const -> source_position
@@ -1194,9 +1221,9 @@ struct declaration_node
             identifier->visit(v, depth+1);
         }
 
-        try_visit<function>(type, v, depth+1);
-        try_visit<object  >(type, v, depth+1);
-        try_visit<udt_type>(type, v, depth+1);
+        try_visit<a_function>(type, v, depth+1);
+        try_visit<an_object >(type, v, depth+1);
+        try_visit<a_type    >(type, v, depth+1);
 
         if (initializer) {
             initializer->visit(v, depth+1);
@@ -1294,7 +1321,7 @@ auto primary_expression_node::visit(auto& v, int depth) -> void
 
 auto iteration_statement_node::get_for_parameter() const -> parameter_declaration_node const* {
     assert(*identifier == "for");
-    auto func = std::get_if<declaration_node::function>(&body->type);
+    auto func = std::get_if<declaration_node::a_function>(&body->type);
     assert(func && *func && std::ssize((**func).parameters->parameters) == 1);
     return (**func).parameters->parameters[0].get();
 }
@@ -1694,14 +1721,14 @@ private:
         if (auto decl = unnamed_declaration(curr().position(), false, true)) // captures are allowed
         {
             assert (!decl->identifier && "ICE: declaration should have been unnamed");
-            if (auto obj = std::get_if<declaration_node::object>(&decl->type)) {
+            if (auto obj = std::get_if<declaration_node::an_object>(&decl->type)) {
                 if ((*obj)->is_wildcard()) {
                     error("an unnamed object at expression scope currently cannot have a deduced type (the reason to create an unnamed object is typically to create a temporary of a named type)");
                     next();
                     return {};
                 }
             }
-            else if (auto func = std::get_if<declaration_node::function>(&decl->type)) {
+            else if (auto func = std::get_if<declaration_node::a_function>(&decl->type)) {
                 if ((*func)->returns.index() == function_type_node::list) {
                     error("an unnamed function at expression scope currently cannot return multiple values");
                     next();
@@ -2788,7 +2815,7 @@ private:
             next();
 
             n->body = unnamed_declaration(curr().position());
-            auto func = n->body ? std::get_if<declaration_node::function>(&n->body->type) : nullptr;
+            auto func = n->body ? std::get_if<declaration_node::a_function>(&n->body->type) : nullptr;
             if (!n->body || n->body->identifier || !func || !*func ||
                 std::ssize((**func).parameters->parameters) != 1 ||
                 (**func).returns.index() != function_type_node::empty
@@ -3090,6 +3117,9 @@ private:
         }
 
         auto n = std::make_unique<compound_statement_node>();
+        if (peek(1)) {
+            n->body_indent = peek(1)->position().colno;
+        }
 
         //  Remember current position, in case this isn't a valid statement
         auto start_pos = pos;
@@ -3123,7 +3153,7 @@ private:
 
 
     //G parameter-declaration:
-    //G     parameter-direction? this-specifier? declaration
+    //G     this-specifier? parameter-direction? declaration
     //G
     //G parameter-direction: one of
     //G     'in' 'copy' 'inout' 'out' 'move' 'forward'
@@ -3145,6 +3175,27 @@ private:
         n->pass = is_returns ? passing_style::out : passing_style::in;
         n->pos  = curr().position();
 
+        //  Handle optional this-specifier
+        //
+        if (curr() == "implicit") {
+            n->mod = parameter_declaration_node::modifier::implicit;
+            next();
+        }
+        else if (curr() == "virtual") {
+            n->mod = parameter_declaration_node::modifier::virtual_;
+            next();
+        }
+        else if (curr() == "override") {
+            n->mod = parameter_declaration_node::modifier::override_;
+            next();
+        }
+        else if (curr() == "final") {
+            n->mod = parameter_declaration_node::modifier::final_;
+            next();
+        }
+
+        //  Handle optional parameter-direction
+        //
         if (auto dir = to_passing_style(curr()); dir != passing_style::invalid) {
             if (is_returns) {
                 if (dir == passing_style::in) {
@@ -3172,27 +3223,26 @@ private:
             next();
         }
 
-        if (curr().type() == lexeme::Identifier) {
-            if (curr() == "implicit") {
-                n->mod = parameter_declaration_node::modifier::implicit;
-                next();
-            }
-            else if (curr() == "virtual") {
-                n->mod = parameter_declaration_node::modifier::virtual_;
-                next();
-            }
-            else if (curr() == "override") {
-                n->mod = parameter_declaration_node::modifier::override_;
-                next();
-            }
-            else if (curr() == "final") {
-                n->mod = parameter_declaration_node::modifier::final_;
-                next();
-            }
-        }
-
+        //  Now the main declaration
+        //
         if (!(n->declaration = declaration(false, true, is_template))) {
             return {};
+        }
+
+        //  And some error checks
+        //
+        if (*n->declaration->identifier->identifier != "this" &&
+            n->mod != parameter_declaration_node::modifier::none
+            )
+        {
+            error( "only a 'this' parameter may be declared implicit, virtual, override, or final", false );
+        }
+
+        if (*n->declaration->identifier->identifier == "this" &&
+            (n->pass == passing_style::copy || n->pass == passing_style::forward)
+            )
+        {
+            error( "a 'this' parameter must be in, inout, out, or move" );
         }
 
         //  The only parameter type that could be const-qualified is a 'copy' parameter, because
@@ -3233,9 +3283,10 @@ private:
     //G     parameter-declaration-seq ',' parameter-declaration
     //G
     auto parameter_declaration_list(
-        bool is_returns  = false,
-        bool is_named    = true,
-        bool is_template = false
+        bool is_returns    = false,
+        bool is_named      = true,
+        bool is_template   = false,
+        bool is_type_scope = false
     )
         -> std::unique_ptr<parameter_declaration_list_node>
     {
@@ -3256,7 +3307,14 @@ private:
 
         auto param = std::make_unique<parameter_declaration_node>();
 
-        while ((param = parameter_declaration(is_returns, is_named, is_template)) != nullptr) {
+        while ((param = parameter_declaration(is_returns, is_named, is_template)) != nullptr)
+        {
+            if (*param->declaration->identifier->identifier == "this") {
+                if (!n->parameters.empty() || !is_type_scope) {
+                    error("'this' must be the first parameter of a type-scope function", false);
+                }
+            }
+
             n->parameters.push_back( std::move(param) );
 
             if (curr().type() == closer) {
@@ -3365,12 +3423,12 @@ private:
     //G     contract
     //G     contract-seq contract
     //G
-    auto function_type(bool is_named = true) -> std::unique_ptr<function_type_node>
+    auto function_type(bool is_named = true, bool is_type_scope = false) -> std::unique_ptr<function_type_node>
     {
         auto n = std::make_unique<function_type_node>();
 
         //  Parameters
-        auto parameters = parameter_declaration_list(false, is_named);
+        auto parameters = parameter_declaration_list(false, is_named, false, is_type_scope);
         if (!parameters) {
             return {};
         }
@@ -3437,9 +3495,9 @@ private:
     //G     'is' id-expression
     //G     meta-constraints ',' id-expression
     //G
-    auto udt_type() -> std::unique_ptr<udt_type_node>
+    auto a_type() -> std::unique_ptr<type_node>
     {
-        auto n = std::make_unique<udt_type_node>();
+        auto n = std::make_unique<type_node>();
 
         //  "type" introducer
         if (curr() != "type") {
@@ -3458,6 +3516,7 @@ private:
     //G     ':' template-parameter-declaration-list? type-id? '=' statement
     //G     ':' template-parameter-declaration-list? type-id
     //G     ':' template-parameter-declaration-list? 'type' meta-constraints? '=' statement
+    //G     ':' 'namespace' '=' statement
     //G
     //G template-parameter-declaration-list
     //G     '<' parameter-declaration-seq '>'
@@ -3468,7 +3527,8 @@ private:
         bool            captures_allowed      = false,
         bool            named                 = false,
         bool            is_parameter          = false,
-        bool            is_template_parameter = false
+        bool            is_template_parameter = false,
+        bool            is_this               = false
     ) -> std::unique_ptr<declaration_node>
     {
         auto n = std::make_unique<declaration_node>( current_declarations.back() );
@@ -3487,16 +3547,22 @@ private:
                 lexeme::Identifier
             });
 
-            //  So we can create the udt_type_node
+            //  So we can create the type_node
 
-            auto udt = std::make_unique<udt_type_node>();
-            udt->type = &generated_tokens_->back();
+            auto t = std::make_unique<type_node>();
+            t->type = &generated_tokens_->back();
 
-            n->type = std::move(udt);
-            assert (n->type.index() == declaration_node::udt_type);
+            n->type = std::move(t);
+            assert (n->type.index() == declaration_node::a_type);
 
             //  That's it, we're done here
             return n;
+        }
+
+        //  For 'this', ':' is not allowed and we'll use the default ': _'
+        if (is_this && curr().type() == lexeme::Colon) {
+            error("a 'this' parameter knows its type, no ':' is allowed here", false);
+            return {};
         }
 
         //  For an ordinary parameter, ':' is not required and
@@ -3522,7 +3588,7 @@ private:
             type->id = std::move(id);
 
             n->type = std::move(type);
-            assert (n->type.index() == declaration_node::object);
+            assert (n->type.index() == declaration_node::an_object);
 
             //  That's it, we're done here
             return n;
@@ -3556,29 +3622,32 @@ private:
         auto deduced_type = false;
 
         //  It could be "type", declaring a user-defined type
-        if (auto t = udt_type()) {
+        if (auto t = a_type()) {
             if (is_parameter && !is_template_parameter) {
                 error("a normal parameter cannot be a 'type' - did you mean to put this in a < > template parameter list?");
                 return {};
             }
             n->type = std::move(t);
-            assert (n->type.index() == declaration_node::udt_type);
+            assert (n->type.index() == declaration_node::a_type);
+        }
+        
+        //  Or a function type, declaring a function - and tell the function whether it's in a user-defined type
+        else if (auto t = function_type(named, n->parent_is(declaration_node::a_type))) {
+            n->type = std::move(t);
+            assert (n->type.index() == declaration_node::a_function);
         }
 
-        //  Or a function type, declaring a function
-        else if (auto t = function_type(named)) {
-            n->type = std::move(t);
-            assert (n->type.index() == declaration_node::function);
+        //  Or a namespace
+        else if (curr() == "namespace") {
+            n->type = std::make_unique<namespace_node>( &curr() );
+            assert (n->type.index() == declaration_node::a_namespace);
+            next();
         }
 
         //  Or just a type-id, declaring a non-pointer object
         else if (auto t = type_id()) {
-            if (auto id = t->get_token(); id && *id == "namespace") {
-                error("(temporary alpha limitation) namespaces are not yet supported", false);
-                return {};
-            }
             n->type = std::move(t);
-            assert (n->type.index() == declaration_node::object);
+            assert (n->type.index() == declaration_node::an_object);
 
             if (curr().type() == lexeme::LeftBracket) {
                 error("C-style array types are not allowed, use std::array instead");
@@ -3589,8 +3658,13 @@ private:
         //  Or nothing, declaring an object of deduced type,
         //  which we'll represent using an empty type-id
         else {
+            if (n->parent_is(declaration_node::a_type)) {
+                error("a type scope variable must have a declared type");
+                return {};
+            }
+
             n->type = std::make_unique<type_id_node>();
-            assert (n->type.index() == declaration_node::object);
+            assert (n->type.index() == declaration_node::an_object);
             deduced_type = true;
         }
 
@@ -3600,17 +3674,17 @@ private:
         if (curr().type() != lexeme::Assignment)
         {
             if (deduced_type) {
-                error("a deduced type must have an = initializer");
+                error("a variable with a deduced type must have an = initializer");
                 return {};
             }
 
-            if (n->type.index() == declaration_node::function) {
+            if (n->type.index() == declaration_node::a_function) {
                 error("missing = before function body");
                 return {};
             }
 
-            if (n->type.index() == declaration_node::udt_type && !is_template_parameter) {
-                error("a type must have an = initializer");
+            if (n->type.index() == declaration_node::a_type && !is_template_parameter) {
+                error("a user-defined type must have an = initializer");
                 return {};
             }
 
@@ -3631,7 +3705,7 @@ private:
             n->equal_sign = curr().position();
             next();
 
-            if (auto t = std::get_if<declaration_node::object>(&n->type); t && (*t)->is_pointer_qualified()) {
+            if (auto t = std::get_if<declaration_node::an_object>(&n->type); t && (*t)->is_pointer_qualified()) {
                 if (curr() == "nullptr" ||
                     isdigit(std::string_view(curr())[0]) ||
                     (curr() == "(" && peek(1) && *peek(1) == ")")
@@ -3646,7 +3720,7 @@ private:
             //  deduced_type == true means that the type will be deduced,
             //  represented using an empty type-id
             if (deduced_type) {
-                auto& type = std::get<declaration_node::object>(n->type);
+                auto& type = std::get<declaration_node::an_object>(n->type);
                 // object initialized by the address of the curr() object 
                 if (peek(1)->type() == lexeme::Ampersand) {
                     type->address_of = &curr();
@@ -3675,7 +3749,7 @@ private:
 
         //  If this is an object with an initializer, the initializer must be an expression
         if (
-            n->is(declaration_node::object) &&
+            n->is(declaration_node::an_object) &&
             n->initializer &&
             n->initializer->statement.index() != statement_node::expression
             )
@@ -3684,10 +3758,31 @@ private:
             return {};
         }
 
+        //  If this is a user-defined type with an initializer, the initializer must be a compound expression
+        if (
+            n->is(declaration_node::a_type) &&
+            n->initializer &&
+            n->initializer->statement.index() != statement_node::compound
+            )
+        {
+            error("a user-defined type initializer must be a compound-expression consisting of declarations", false);
+            return {};
+        }
+
+        //  If this is a namespace, it must have an initializer, which must be a compound expression
+        if (
+            n->is(declaration_node::a_namespace) &&
+            (!n->initializer || n->initializer->statement.index() != statement_node::compound)
+            )
+        {
+            error("a namespace must be = initialized with a compound-expression consisting of declarations", false);
+            return {};
+        }
+
         //  If this is a function with a list of multiple/named return values,
         //  and the function body's end doesn't already have "return" as the
         //  last statement, then generate "return;" as the last statement
-        if (auto func = std::get_if<declaration_node::function>(&n->type);
+        if (auto func = std::get_if<declaration_node::a_function>(&n->type);
             func && (*func)->returns.index() == function_type_node::list)
         {
             assert (n->initializer && n->initializer->statement.index() == statement_node::compound);
@@ -3718,7 +3813,12 @@ private:
 
 
     //G declaration:
-    //G     identifier unnamed-declaration
+    //G     access-specifier? identifier unnamed-declaration
+    //G
+    //G access-specifier:
+    //G     public
+    //G     protected
+    //G     private
     //G
     auto declaration(
         bool semicolon_required    = true,
@@ -3732,27 +3832,54 @@ private:
         //  Remember current position, because we need to look ahead
         auto start_pos = pos;
 
+        token const* access = {};
+        if (curr() == "public" || curr() == "protected" || curr() == "private") {
+            access = &curr();
+            next();
+        }
+
         auto id = unqualified_id();
         if (!id) {
             return {};
         }
 
-        auto n = unnamed_declaration(start_pos, semicolon_required, false, true, is_parameter, is_template_parameter);
+        auto n = unnamed_declaration(start_pos, semicolon_required, false, true, is_parameter, is_template_parameter, *id->identifier == "this");
         if (!n) {
             pos = start_pos;    // backtrack
             return {};
         }
 
-        if (n->parent_scope && n->is(declaration_node::function) && n->parent_scope->is(declaration_node::function)) {
+        //  Note: Do this after trying to parse this as a declaration, for parse backtracking
+
+        if (*id->identifier == "this" && (!is_parameter || is_template_parameter)) {
+            errors.emplace_back(
+                id->position(),
+                "'this' may only be declared as an ordinary function parameter"
+            );
+            return {};
+        }
+
+        if (access && !n->parent_is(declaration_node::a_type)) {
+            errors.emplace_back(
+                access->position(),
+                "an access-specifier is only allowed on a type-scope (member) declaration"
+            );
+            return {};
+        }
+
+        if (n->is(declaration_node::a_function) && n->parent_is(declaration_node::a_function)) {
             assert (id->get_token());
             auto name = id->get_token()->to_string(true);
             errors.emplace_back(
                 curr().position(),
                 "(temporary alpha limitation) local functions like '" + name + ": (/*params*/) = {/*body*/}' are not currently supported - write a local variable initialized with an unnamed function like '" + name + " := :(/*params*/) = {/*body*/};' instead (add ':=' and ';')"
             );
+            return {};
         }
 
         n->identifier = std::move(id);
+        n->access     = access;
+
         return n;
     }
 
@@ -3950,9 +4077,14 @@ public:
         }
     }
 
-    auto start(udt_type_node const&, int indent) -> void
+    auto start(type_node const&, int indent) -> void
     {
         o << pre(indent) << "user-defined type\n";
+    }
+
+    auto start(namespace_node const&, int indent) -> void
+    {
+        o << pre(indent) << "namespace\n";
     }
 
     auto start(function_type_node const& n, int indent) -> void
@@ -3981,6 +4113,9 @@ public:
     {
         o << pre(indent) << "declaration [" << &n << "]\n";
         o << pre(indent+1) << "parent: [" << n.parent_scope << "]\n";
+        if (n.access) {
+            o << pre(indent+1) << "access: " << *n.access << "\n";
+        }
         if (!n.captures.members.empty()) {
             o << pre(indent+1) << "captures: " << n.captures.members.size() << "\n";
         }

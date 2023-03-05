@@ -352,6 +352,8 @@ public:
                 while (
                     i < std::ssize(flag1->name) &&
                     i < std::ssize(flag2->name) &&
+                    flag1->name[i] != ' ' &&
+                    flag2->name[i] != ' ' &&
                     flag1->name[i] == flag2->name[i]
                     )
                 {
@@ -449,9 +451,11 @@ public:
             print("  -");
             auto n = flag.name.substr(0, flag.unique_prefix);
             if (flag.unique_prefix < std::ssize(flag.name)) {
+                auto name_length = __as<int>(std::min(flag.name.find(' '), flag.name.size()));
                 n += "[";
-                n += flag.name.substr(flag.unique_prefix);
+                n += flag.name.substr(flag.unique_prefix, name_length - flag.unique_prefix);
                 n += "]";
+                n += flag.name.substr(name_length);
             }
             if (flag.opt_out) {
                 n += "[-]";
