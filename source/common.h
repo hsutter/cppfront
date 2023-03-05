@@ -216,6 +216,13 @@ struct raw_string
     std::string     text;
     std::string     opening_seq;
     std::string     closing_seq;
+    bool            should_interpolate = false;
+};
+
+struct multiline_raw_string
+{
+    std::string     text;
+    source_position end = {0, 0};
 };
 
 //-----------------------------------------------------------------------

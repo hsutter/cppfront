@@ -435,6 +435,70 @@ auto expand_string_literal(
     return parts.generate();
 }
 
+auto expand_raw_string_literal(
+    const std::string& opening_seq,
+    const std::string& closing_seq,
+    string_parts::adds_sequences closing_strategy,
+    std::string_view text,
+    std::vector<error>& errors,
+    source_position src_pos) -> string_parts
+{
+    auto const length = std::ssize(text);
+    auto pos = 0;
+    auto current_start   = pos;   // the current offset before which the string has been added to ret
+    string_parts parts{opening_seq, closing_seq, closing_strategy};
+
+    //  Now we're on the first character of the string itself
+    for ( ; pos < length; ++pos )
+    {
+        //  Find the next )$
+        if (text[pos] == '$' && text[pos-1] == ')')
+        {
+            //  Scan back to find the matching (
+            auto paren_depth = 1;
+            auto open = pos - 2;
+
+            for( ; open > current_start; --open)
+            {
+                if (text[open] == ')') {
+                    ++paren_depth;
+                }
+                else if (text[open] == '(') {
+                    --paren_depth;
+                    if (paren_depth == 0) {
+                        break;
+                    }
+                }
+            }
+            if (text[open] != '(')
+            {
+                errors.emplace_back(
+                    source_position( src_pos.lineno, src_pos.colno + pos ),
+                    "no matching ( for string interpolation ending in )$"
+                );
+                return parts;
+            }
+
+            //  'open' is now at the matching (
+
+            //  Put the next non-empty non-interpolated chunk straight into ret
+            if (open != current_start) {
+                parts.add_string(text.substr(current_start, open - current_start));
+            }
+            //  Then put interpolated chunk into ret
+            parts.add_code("cpp2::to_string" + std::string{text.substr(open, pos - open)});
+
+            current_start = pos+1;
+        }
+    }
+
+    //  Put the final non-interpolated chunk straight into ret
+    if (current_start < std::ssize(text)) {
+        parts.add_string(text.substr(current_start));
+    }
+
+    return parts;
+}
 
 //-----------------------------------------------------------------------
 //  lex: Tokenize a single line while maintaining inter-line state
@@ -453,6 +517,8 @@ auto expand_string_literal(
 //  into a whitespace-containing token (to merge the Cpp1 multi-token keywords)
 //  -- this isn't about tokens generated later, that's tokens::generated_tokens
 static auto generated_text = std::deque<std::string>{};
+
+static auto multiline_raw_strings = std::deque<multiline_raw_string>{};
 
 auto lex_line(
     std::string&            mutable_line,
@@ -888,6 +954,49 @@ auto lex_line(
         return do_is_keyword(multi_keys);
     };
 
+    auto reset_processing_of_the_line = [&]() {
+        //  Redo processing of this whole line now that the string is expanded,
+        //  which may have moved it in memory... move i back to the line start
+        //  and discard any tokens we already tokenized for this line
+        i = colno_t{-1};
+        while (
+            !tokens.empty()
+            && tokens.back().position().lineno == lineno
+            )
+        {
+            tokens.pop_back();
+        }
+    };
+
+    auto interpolate_raw_string = [&](
+        const std::string& opening_seq,
+        const std::string& closing_seq,
+        string_parts::adds_sequences closing_strategy,
+        std::string_view part, 
+        int pos_to_replace, 
+        int size_to_replace
+    ) -> bool {
+        auto parts = expand_raw_string_literal(opening_seq, closing_seq, closing_strategy, part, errors, source_position(lineno, pos_to_replace + 1));
+        auto new_part = parts.generate();
+        mutable_line.replace( pos_to_replace, size_to_replace, new_part );
+        i += std::ssize(new_part)-1;
+
+        if (parts.is_expanded()) {
+            // raw string was expanded and we need to repeat the processing of this line
+            reset_processing_of_the_line();
+
+            // but skipping end of potential multiline raw string that ends on this line
+            if (!multiline_raw_strings.empty() && multiline_raw_strings.back().end.lineno == lineno) {
+                i = multiline_raw_strings.back().end.colno;
+                raw_string_multiline.reset();
+            } else if (raw_string_multiline && raw_string_multiline->start.lineno == lineno) {
+                raw_string_multiline.reset();
+            }
+            return true;
+        }
+        return false;
+    };
+
     //
     //-----------------------------------------------------
 
@@ -917,6 +1026,7 @@ auto lex_line(
                 else if (peek1 == 'R' && peek2 == next)                 { return 3; } // LR" 
             } 
             else if (line[i] == 'R' && peek1 == next)                   { return 2; } // R"
+            else if (line[i] == '$' && peek1 == 'R' && peek2 == next)   { return 3; } // $R"
             return 0;
         };
 
@@ -946,22 +1056,36 @@ auto lex_line(
             auto end_pos = line.find(raw_string_multiline.value().closing_seq, i);
             auto part = line.substr(i, end_pos-i);
 
+            if (const auto& rsm = raw_string_multiline.value(); rsm.should_interpolate) {
+                
+                auto closing_strategy = end_pos == line.npos ? string_parts::no_ends : string_parts::on_the_end;
+                auto size_to_replace  = end_pos == line.npos ? std::ssize(line) - i  : end_pos - i + std::ssize(rsm.closing_seq);
+
+                if (interpolate_raw_string(rsm.opening_seq, rsm.closing_seq, closing_strategy, part, i, size_to_replace ) ) {
+                    continue;
+                }
+            }
+            // raw string was not expanded
+
             raw_string_multiline.value().text += part;
             if (end_pos == std::string::npos) {
                 raw_string_multiline.value().text += '\n';
                 break;
             }
 
-            // here we know that we are dealing with multiline raw string literal
-            // token needs to use generated_text to store string that exists in multiple lines
-            i = end_pos+std::ssize(raw_string_multiline.value().closing_seq)-1;
+            // here we know that we are dealing with finalized multiline raw string literal
+            // token needs to use multiline_raw_strings to store string that exists in multiple lines
             raw_string_multiline.value().text += raw_string_multiline.value().closing_seq;
 
-            generated_text.push_back(raw_string_multiline.value().text);
+            // and position where multiline_raw_string ends (needed for reseting line parsing)
+            i = end_pos+std::ssize(raw_string_multiline.value().closing_seq)-1;
+
+            const auto& text = raw_string_multiline.value().should_interpolate ? raw_string_multiline.value().text.substr(1) : raw_string_multiline.value().text;
+            multiline_raw_strings.emplace_back(multiline_raw_string{ text, {lineno, i} });
 
             tokens.push_back({
-                &generated_text.back()[0],
-                std::ssize(generated_text.back()),
+                &multiline_raw_strings.back().text[0],
+                std::ssize(multiline_raw_strings.back().text),
                 raw_string_multiline.value().start,
                 lexeme::StringLiteral
             });
@@ -1152,7 +1276,62 @@ auto lex_line(
                 store(1, lexeme::QuestionMark);
 
             break;case '$':
-                store(1, lexeme::Dollar);
+                if (auto j = is_encoding_prefix_and('\"'); peek(j-2) == 'R') {
+                    // if peek(j-2) is 'R' it means that we deal with raw-string literal
+                    auto R_pos = i + j - 2;
+                    auto seq_pos = i + j;
+                        
+                    if (auto paren_pos = line.find("(", seq_pos); paren_pos != std::string::npos) {
+                        auto opening_seq = line.substr(i, paren_pos - i + 1);
+                        auto closing_seq = ")"+line.substr(seq_pos, paren_pos-seq_pos)+"\"";
+
+                        if (auto closing_pos = line.find(closing_seq, paren_pos+1); closing_pos != line.npos) {
+                            if (interpolate_raw_string(
+                                    opening_seq,
+                                    closing_seq,
+                                    string_parts::on_both_ends,
+                                    std::string_view(&line[paren_pos+1], closing_pos-paren_pos-1), i, closing_pos-i+std::ssize(closing_seq))
+                            ) {
+                                continue;
+                            }
+
+                            tokens.push_back({
+                                                &line[R_pos],
+                                                i - R_pos + 1,
+                                                source_position(lineno, R_pos + 1),
+                                                lexeme::StringLiteral
+                                            });
+                        } else {
+                            raw_string_multiline.emplace(raw_string{source_position{lineno, i}, opening_seq, opening_seq, closing_seq, true });
+
+                            if (interpolate_raw_string(
+                                    opening_seq,
+                                    closing_seq,
+                                    string_parts::on_the_begining,
+                                    std::string_view(&line[paren_pos+1], std::ssize(line)-(paren_pos+1)), i, std::ssize(line)-i)
+                            ) {
+                                continue;
+                            }
+                            // skip entire raw string opening sequence R"
+                            i = paren_pos;
+
+                            // if we are on the end of the line we need to add new line char
+                            if (i+1 == std::ssize(line)) {
+                                raw_string_multiline.value().text += '\n';
+                            }
+                        }
+                        continue;
+                    }
+                    else {
+                        errors.emplace_back(
+                            source_position(lineno, i + j - 2),
+                            "invalid new-line in raw string delimiter \"" + std::string(&line[i],j)
+                                + "\" - stray 'R' in program \""
+                        );
+                    }
+                } else {
+                    store(1, lexeme::Dollar);
+                }
 
             //G
             //G literal:
@@ -1312,13 +1491,13 @@ auto lex_line(
                         auto seq_pos = i + j;
                             
                         if (auto paren_pos = line.find("(", seq_pos); paren_pos != std::string::npos) {
-                            auto raw_string_opening_seq = line.substr(i, paren_pos - i + 1);
-                            auto raw_string_closing_seq = ")"+line.substr(seq_pos, paren_pos-seq_pos)+"\"";
+                            auto opening_seq = line.substr(i, paren_pos - i + 1);
+                            auto closing_seq = ")"+line.substr(seq_pos, paren_pos-seq_pos)+"\"";
 
-                            if (auto closing_pos = line.find(raw_string_closing_seq, paren_pos+1); closing_pos != line.npos) {
-                                store(closing_pos+std::ssize(raw_string_closing_seq)-i, lexeme::StringLiteral);
+                            if (auto closing_pos = line.find(closing_seq, paren_pos+1); closing_pos != line.npos) {
+                                store(closing_pos+std::ssize(closing_seq)-i, lexeme::StringLiteral);
                             } else {
-                                raw_string_multiline.emplace(raw_string{source_position{lineno, i}, raw_string_opening_seq, raw_string_opening_seq, raw_string_closing_seq });
+                                raw_string_multiline.emplace(raw_string{source_position{lineno, i}, opening_seq, opening_seq, closing_seq });
                                 // skip entire raw string opening sequence R"
                                 i = paren_pos;
 
@@ -1367,17 +1546,7 @@ auto lex_line(
                             }
                             mutable_line.replace( i, j+1, s );
 
-                            //  Redo processing of this whole line now that the string is expanded,
-                            //  which may have moved it in memory... move i back to the line start
-                            //  and discard any tokens we already tokenized for this line
-                            i = colno_t{-1};
-                            while (
-                                !tokens.empty()
-                                && tokens.back().position().lineno == lineno
-                                )
-                            {
-                                tokens.pop_back();
-                            }
+                            reset_processing_of_the_line();
                         }
                     }
                 }
