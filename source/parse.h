@@ -1140,6 +1140,8 @@ struct namespace_node
 {
     token const* namespace_;
 
+    namespace_node(token const* ns) : namespace_{ns} { }
+
     auto position() const -> source_position
     {
         assert(namespace_);
