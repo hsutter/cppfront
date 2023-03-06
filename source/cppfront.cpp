@@ -1122,6 +1122,9 @@ public:
         if (n == "new") {
             printer.print_cpp2("cpp2_new", pos);
         }
+        else if (n == "this") {
+            printer.print_cpp2("(*this)", pos);
+        }
         else {
             printer.print_cpp2(n, pos);
         }

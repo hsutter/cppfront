@@ -1864,6 +1864,15 @@ private:
             n->ops.push_back( std::move(term) );
         }
 
+        if (auto tok = n->expr->get_token(); tok && *tok == "this" && curr().type() == lexeme::Arrow) {
+            auto next_word = std::string{};
+            if (peek(1)) {
+                next_word = peek(1)->to_string(true);
+            }
+            error("'this' is not a pointer - write 'this." + next_word + "' instead of 'this->" + next_word + "'");
+            return {};
+        }
+
         return n;
     }
 
@@ -2130,10 +2139,6 @@ private:
     //G     assignment-expression assignment-operator logical-or-expression
     //G
     auto assignment_expression(bool allow_angle_operators = true) -> std::unique_ptr<assignment_expression_node> {
-        //return binary_expression<assignment_expression_node> (
-        //    [](token const& t){ return is_assignment_operator(t.type()); },
-        //    [=,this]{ return logical_or_expression(allow_angle_operators); }
-        //);
         if (allow_angle_operators) {
             return binary_expression<assignment_expression_node> (
                 [this](token const& t, token const& next) -> token const* {
@@ -2379,7 +2384,7 @@ private:
 
         auto n = std::make_unique<unqualified_id_node>();
 
-        n->identifier =  &curr();
+        n->identifier = &curr();
         next();
 
         //  Handle the template-argument-list if there is one
