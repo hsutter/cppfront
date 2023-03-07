@@ -1007,7 +1007,7 @@ auto lex_line(
         auto peek3 = peek(3);
 
         //G encoding-prefix: one of
-        //G     'u8' 'u'
+        //G     'u8' 'u' 'uR' 'u8R' 'U' 'UR' 'L' 'LR' 'R' 
         //G
         auto is_encoding_prefix_and = [&](char next) {
             if (line[i] == next)                                        { return 1; } // "
@@ -1026,7 +1026,6 @@ auto lex_line(
                 else if (peek1 == 'R' && peek2 == next)                 { return 3; } // LR" 
             } 
             else if (line[i] == 'R' && peek1 == next)                   { return 2; } // R"
-            else if (line[i] == '$' && peek1 == 'R' && peek2 == next)   { return 3; } // $R"
             return 0;
         };
 
@@ -1276,10 +1275,10 @@ auto lex_line(
                 store(1, lexeme::QuestionMark);
 
             break;case '$':
-                if (auto j = is_encoding_prefix_and('\"'); peek(j-2) == 'R') {
+                if (peek1 == 'R' && peek2 == '"') {
                     // if peek(j-2) is 'R' it means that we deal with raw-string literal
-                    auto R_pos = i + j - 2;
-                    auto seq_pos = i + j;
+                    auto R_pos = i + 1;
+                    auto seq_pos = i + 3;
                         
                     if (auto paren_pos = line.find("(", seq_pos); paren_pos != std::string::npos) {
                         auto opening_seq = line.substr(i, paren_pos - i + 1);
@@ -1324,8 +1323,8 @@ auto lex_line(
                     }
                     else {
                         errors.emplace_back(
-                            source_position(lineno, i + j - 2),
-                            "invalid new-line in raw string delimiter \"" + std::string(&line[i],j)
+                            source_position(lineno, i + 1),
+                            "invalid new-line in raw string delimiter \"" + std::string(&line[i],3)
                                 + "\" - stray 'R' in program \""
                         );
                     }
