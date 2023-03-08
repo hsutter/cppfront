@@ -1419,7 +1419,7 @@ inline auto to_string(std::tuple<Ts...> const& t) -> std::string
 //
 //-----------------------------------------------------------------------
 //
-auto args(int argc, char **argv) -> std::vector<std::string_view> {
+inline auto args(int argc, char **argv) -> std::vector<std::string_view> {
     auto ret = std::vector<std::string_view>{(size_t)argc};
     for (auto i = 0; i < argc; ++i) {
         ret[i] = std::string_view{argv[i]};
