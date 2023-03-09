@@ -25,11 +25,11 @@
     std::for_each(
         CPP2_UFCS_0(begin, view), 
         CPP2_UFCS_0(end, view), 
-        [](auto& x ) { return x += "-ish"; }
+        [](auto& x ) -> void { x += "-ish"; }
     );
 
     //  Initializating from a function expression
-    auto callback {[](auto& x) { return x += " maybe"; }}; 
+    auto callback {[](auto& x) -> void { x += " maybe"; }}; 
     std::for_each(
         CPP2_UFCS_0(begin, view), 
         CPP2_UFCS_0(end, view), 

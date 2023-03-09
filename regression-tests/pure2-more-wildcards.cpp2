@@ -1,6 +1,6 @@
 
 less_than: (value:_) -> _ =
-    :(x:_) = x < value$;
+    :(x:_) -> _ = x < value$;
 
 main: () -> int
 = {

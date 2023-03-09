@@ -13,7 +13,7 @@ namespace my {
 #line 8 "mixed-fixed-type-aliases.cpp2"
 auto test(auto const& x) -> void;
 #line 15 "mixed-fixed-type-aliases.cpp2"
-[[nodiscard]] auto main(int argc, char **argv) -> int;
+[[nodiscard]] auto main(int const argc_, char const* const* const argv_) -> int;
 
 //=== Cpp2 definitions ==========================================================
 
@@ -26,8 +26,8 @@ auto test(auto const& x) -> void{
         << "\n";
 }
 
-[[nodiscard]] auto main(int argc, char **argv) -> int{
-    auto args = cpp2::args(argc, argv); 
+[[nodiscard]] auto main(int const argc_, char const* const* const argv_) -> int{
+    auto args = cpp2::make_args(argc_, argv_); 
 #line 16 "mixed-fixed-type-aliases.cpp2"
     my::u16 y {42}; 
     test(std::move(y));

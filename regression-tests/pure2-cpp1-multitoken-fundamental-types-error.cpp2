@@ -1,5 +1,5 @@
 
-main: (argc: int, argv: **char) -> int = {
+main: () -> int = {
     a: signed short int       = 1;
     b: short int signed       = 2;
     c: long long unsigned int = 3;

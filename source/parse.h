@@ -971,6 +971,30 @@ struct statement_node
         std::unique_ptr<jump_statement_node>
     > statement;
 
+    //  API
+    //
+    auto is_expression () const -> bool { return statement.index() == expression;  }
+    auto is_compound   () const -> bool { return statement.index() == compound;    }
+    auto is_selection  () const -> bool { return statement.index() == selection;   }
+    auto is_declaration() const -> bool { return statement.index() == declaration; }
+    auto is_return     () const -> bool { return statement.index() == return_;     }
+    auto is_iteration  () const -> bool { return statement.index() == iteration;   }
+    auto is_contract   () const -> bool { return statement.index() == contract;    }
+    auto is_inspect    () const -> bool { return statement.index() == inspect;     }
+    auto is_jump       () const -> bool { return statement.index() == jump;        }
+
+    template<typename Node>
+    auto get_if() -> Node const* {
+        auto pnode = std::get_if<std::unique_ptr<Node>>(&statement);
+        if (pnode) {
+            return pnode->get();
+        }
+        //  else
+        return nullptr;
+    }
+
+    //  Internals
+    //
     auto position() const -> source_position;
 
     auto visit(auto& v, int depth) -> void;
@@ -1017,6 +1041,16 @@ struct parameter_declaration_node
 
     std::unique_ptr<declaration_node> declaration;
 
+    //  API
+    //
+    auto name() const -> token const*;
+
+    auto direction() const -> passing_style {
+        return pass;
+    }
+
+    //  Internals
+    //
     auto position() const -> source_position;
 
     auto visit(auto& v, int depth) -> void;
@@ -1030,6 +1064,18 @@ struct parameter_declaration_list_node
 
     std::vector<std::unique_ptr<parameter_declaration_node>> parameters;
 
+    //  API
+    //
+    auto ssize() const -> auto {
+        return std::ssize(parameters);
+    }
+
+    auto operator[](int i) const -> parameter_declaration_node const* {
+        return parameters[i].get();
+    }
+
+    //  Internals
+    //
     auto position() const -> source_position
     {
         assert(open_paren);
@@ -1067,6 +1113,8 @@ struct function_returns_tag { };
 
 struct function_type_node
 {
+    declaration_node* my_decl;
+
     std::unique_ptr<parameter_declaration_list_node> parameters;
     bool throws = false;
 
@@ -1084,6 +1132,14 @@ struct function_type_node
 
     std::vector<std::unique_ptr<contract_node>> contracts;
 
+    function_type_node(declaration_node* decl) : my_decl{decl} { }
+
+    //  API
+    //
+    auto is_constructor() const -> bool;
+
+    //  Internals
+    //
     auto position() const -> source_position
     {
         assert (parameters);
@@ -1158,8 +1214,8 @@ struct namespace_node
 
 struct declaration_node
 {
-    //  Declared first, because it should outlive any owned
-    //  postfix_expressions that could refer to it
+    //  The capture_group is declared first, because it should outlive
+    //  any owned postfix_expressions that could refer to it
     capture_group captures;
 
     source_position pos;
@@ -1180,9 +1236,60 @@ struct declaration_node
     source_position                 decl_end   = {};
     std::unique_ptr<statement_node> initializer;
 
-    declaration_node*               parent_scope     = {};
+    declaration_node*               parent_declaration = {};
 
-    declaration_node(declaration_node* parent) : parent_scope{parent} { }
+    declaration_node(declaration_node* parent) : parent_declaration{parent} { }
+
+    //  API
+    //
+    auto is_function () const -> bool
+        { return type.index() == a_function;  }
+    auto is_object   () const -> bool
+        { return type.index() == an_object;   }
+    auto is_type     () const -> bool
+        { return type.index() == a_type;      }
+    auto is_namespace() const -> bool
+        { return type.index() == a_namespace; }
+    auto is_global   () const -> bool
+        { return !parent_declaration;         }
+
+    auto parent_is_function () const -> bool
+        { return parent_declaration && parent_declaration->type.index() == a_function;  }
+    auto parent_is_object   () const -> bool
+        { return parent_declaration && parent_declaration->type.index() == an_object;   }
+    auto parent_is_type     () const -> bool
+        { return parent_declaration && parent_declaration->type.index() == a_type;      }
+    auto parent_is_namespace() const -> bool
+        { return !parent_declaration || parent_declaration->type.index() == a_namespace; }
+
+    auto get_type_scope_declarations() const -> std::vector<declaration_node const*>
+    {
+        if (!is_type()) {
+            return {};
+        }
+
+        assert (initializer->is_compound());
+        auto compound_stmt = initializer->get_if<compound_statement_node>();
+        assert (compound_stmt);
+
+        auto ret = std::vector<declaration_node const*>{};
+        for (auto& o : compound_stmt->statements) {
+            assert (o->is_declaration());
+            auto decl = o->get_if<declaration_node>();
+            assert (decl);
+            ret.push_back(decl);
+        }
+
+        return ret;
+    }
+
+    auto is_constructor() const -> bool {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_constructor();
+        }
+        //  else
+        return false;
+    }
 
     auto is_const() const -> bool {
         return
@@ -1195,18 +1302,8 @@ struct declaration_node
         return type.index() == an_object && std::get<an_object>(type)->is_wildcard();
     }
 
-    //  Shorthand for common query
+    //  Internals
     //
-    auto is(active a) const -> bool
-    {
-        return type.index() == a;
-    }
-
-    auto parent_is(active a) const -> bool
-    {
-        return parent_scope && parent_scope->is(a);
-    }
-
     auto position() const -> source_position
     {
         if (identifier) {
@@ -1234,6 +1331,22 @@ struct declaration_node
         v.end(*this, depth);
     }
 };
+
+auto parameter_declaration_node::name() const -> token const* {
+    return declaration->identifier->identifier;
+}
+
+auto function_type_node::is_constructor() const -> bool {
+    if (
+        (*parameters).ssize() > 0 &&
+        *(*parameters)[0]->name() == "this" &&
+        (*parameters)[0]->direction() == passing_style::out
+        )
+    {
+        return true;
+    }
+    return false;
+}
 
 auto primary_expression_node::template_args_count() -> int {
     if (expr.index() == id_expression) {
@@ -1601,7 +1714,7 @@ private:
     //
     //  msg                 message to be printed
     //
-    //  include_curr_token  in this file (during parsing)_ we normally want
+    //  include_curr_token  in this file (during parsing), we normally want
     //                      to show the current token as the unexpected text
     //                      we encountered, but some sema rules are applied
     //                      early during parsing and for those it doesn't
@@ -1610,18 +1723,31 @@ private:
     //                      it's not relevant to add "at LeftParen: ("
     //                      just because ( happens to be the next token)
     //
-    auto error(char const* msg, bool include_curr_token = true) const -> void
+    auto error(
+        char const*     msg,
+        bool            include_curr_token = true,
+        source_position err_pos            = {}
+    ) const
+        -> void
     {
         auto m = std::string{msg};
         if (include_curr_token) {
             m += std::string(" (at '") + curr().to_string(true) + "')";
         }
-        errors.emplace_back( curr().position(), m );
+        if (err_pos == source_position{} && peek(0)) {
+            err_pos = peek(0)->position();
+        }
+        errors.emplace_back( err_pos, m );
     }
 
-    auto error(std::string const& msg, bool include_curr_token = true) const -> void
+    auto error(
+        std::string const& msg,
+        bool               include_curr_token = true,
+        source_position    err_pos            = {}
+    ) const
+        -> void
     {
-        error(msg.c_str(), include_curr_token);
+        error(msg.c_str(), include_curr_token, err_pos);
     }
 
 
@@ -2975,7 +3101,7 @@ private:
                 error("invalid alternative in inspect");
                 return {};
             }
-            if (is_expression && a->statement->statement.index() != statement_node::expression) {
+            if (is_expression && !a->statement->is_expression()) {
                 error("an inspect expression alternative must be just an expression "
                     "(not a braced block) that will be used as the value of the inspect expression");
                 return {};
@@ -3047,49 +3173,49 @@ private:
 
         if (auto s = selection_statement()) {
             n->statement = std::move(s);
-            assert (n->statement.index() == statement_node::selection);
+            assert (n->is_selection());
             return n;
         }
 
         else if (auto i = inspect_expression(false)) {
             n->statement = std::move(i);
-            assert (n->statement.index() == statement_node::inspect);
+            assert (n->is_inspect());
             return n;
         }
 
         else if (auto s = return_statement()) {
             n->statement = std::move(s);
-            assert (n->statement.index() == statement_node::return_);
+            assert (n->is_return());
             return n;
         }
 
         else if (auto s = jump_statement()) {
             n->statement = std::move(s);
-            assert (n->statement.index() == statement_node::jump);
+            assert (n->is_jump());
             return n;
         }
 
         else if (auto s = iteration_statement()) {
             n->statement = std::move(s);
-            assert (n->statement.index() == statement_node::iteration);
+            assert (n->is_iteration());
             return n;
         }
 
         else if (auto s = compound_statement(equal_sign)) {
             n->statement = std::move(s);
-            assert (n->statement.index() == statement_node::compound);
+            assert (n->is_compound());
             return n;
         }
 
         else if (auto s = declaration()) {
             n->statement = std::move(s);
-            assert (n->statement.index() == statement_node::declaration);
+            assert (n->is_declaration());
             return n;
         }
 
         else if (auto s = expression_statement(semicolon_required)) {
             n->statement = std::move(s);
-            assert (n->statement.index() == statement_node::expression);
+            assert (n->is_expression());
             return n;
         }
 
@@ -3099,7 +3225,7 @@ private:
                 return {};
             }
             n->statement = std::move(s);
-            assert (n->statement.index() == statement_node::contract);
+            assert (n->is_contract());
             return n;
         }
 
@@ -3430,9 +3556,14 @@ private:
     //G     contract
     //G     contract-seq contract
     //G
-    auto function_type(bool is_named = true, bool is_type_scope = false) -> std::unique_ptr<function_type_node>
+    auto function_type(
+        declaration_node* my_decl,
+        bool              is_named      = true,
+        bool              is_type_scope = false
+        )
+        -> std::unique_ptr<function_type_node>
     {
-        auto n = std::make_unique<function_type_node>();
+        auto n = std::make_unique<function_type_node>( my_decl );
 
         //  Parameters
         auto parameters = parameter_declaration_list(false, is_named, false, is_type_scope);
@@ -3560,7 +3691,7 @@ private:
             t->type = &generated_tokens_->back();
 
             n->type = std::move(t);
-            assert (n->type.index() == declaration_node::a_type);
+            assert (n->is_type());
 
             //  That's it, we're done here
             return n;
@@ -3595,7 +3726,7 @@ private:
             type->id = std::move(id);
 
             n->type = std::move(type);
-            assert (n->type.index() == declaration_node::an_object);
+            assert (n->is_object());
 
             //  That's it, we're done here
             return n;
@@ -3635,13 +3766,13 @@ private:
                 return {};
             }
             n->type = std::move(t);
-            assert (n->type.index() == declaration_node::a_type);
+            assert (n->is_type());
         }
         
         //  Or a function type, declaring a function - and tell the function whether it's in a user-defined type
-        else if (auto t = function_type(named, n->parent_is(declaration_node::a_type))) {
+        else if (auto t = function_type(n.get(), named, n->parent_is_type())) {
             n->type = std::move(t);
-            assert (n->type.index() == declaration_node::a_function);
+            assert (n->is_function());
         }
 
         //  Or a namespace
@@ -3654,7 +3785,7 @@ private:
         //  Or just a type-id, declaring a non-pointer object
         else if (auto t = type_id()) {
             n->type = std::move(t);
-            assert (n->type.index() == declaration_node::an_object);
+            assert (n->is_object());
 
             if (curr().type() == lexeme::LeftBracket) {
                 error("C-style array types are not allowed, use std::array instead");
@@ -3665,13 +3796,13 @@ private:
         //  Or nothing, declaring an object of deduced type,
         //  which we'll represent using an empty type-id
         else {
-            if (n->parent_is(declaration_node::a_type)) {
+            if (n->parent_is_type()) {
                 error("a type scope variable must have a declared type");
                 return {};
             }
 
             n->type = std::make_unique<type_id_node>();
-            assert (n->type.index() == declaration_node::an_object);
+            assert (n->is_object());
             deduced_type = true;
         }
 
@@ -3685,12 +3816,12 @@ private:
                 return {};
             }
 
-            if (n->type.index() == declaration_node::a_function) {
+            if (n->is_function()) {
                 error("missing = before function body");
                 return {};
             }
 
-            if (n->type.index() == declaration_node::a_type && !is_template_parameter) {
+            if (n->is_type() && !is_template_parameter) {
                 error("a user-defined type must have an = initializer");
                 return {};
             }
@@ -3756,9 +3887,9 @@ private:
 
         //  If this is an object with an initializer, the initializer must be an expression
         if (
-            n->is(declaration_node::an_object) &&
+            n->is_object() &&
             n->initializer &&
-            n->initializer->statement.index() != statement_node::expression
+            !n->initializer->is_expression()
             )
         {
             error("an object initializer must be an expression", false);
@@ -3767,9 +3898,9 @@ private:
 
         //  If this is a user-defined type with an initializer, the initializer must be a compound expression
         if (
-            n->is(declaration_node::a_type) &&
+            n->is_type() &&
             n->initializer &&
-            n->initializer->statement.index() != statement_node::compound
+            !n->initializer->is_compound()
             )
         {
             error("a user-defined type initializer must be a compound-expression consisting of declarations", false);
@@ -3778,11 +3909,29 @@ private:
 
         //  If this is a namespace, it must have an initializer, which must be a compound expression
         if (
-            n->is(declaration_node::a_namespace) &&
-            (!n->initializer || n->initializer->statement.index() != statement_node::compound)
+            n->is_namespace() &&
+            (!n->initializer || !n->initializer->is_compound())
             )
         {
-            error("a namespace must be = initialized with a compound-expression consisting of declarations", false);
+            error(
+                "a namespace must be = initialized with a { } body containing declarations",
+                false,
+                n->initializer->position()
+            );
+            return {};
+        }
+
+        //  If this is a function, its body must be an expression-statement or
+        //  a compound-statement
+        if (n->is_function() &&
+            n->initializer->is_return()
+            )
+        {
+            error(
+                "a function with a single-expression body doesn't need to say 'return' - either omit 'return' or write a full { }-enclosed function body",
+                false,
+                n->initializer->position()
+            );
             return {};
         }
 
@@ -3792,10 +3941,16 @@ private:
         if (auto func = std::get_if<declaration_node::a_function>(&n->type);
             func && (*func)->returns.index() == function_type_node::list)
         {
-            assert (n->initializer && n->initializer->statement.index() == statement_node::compound);
+            assert (n->initializer);
+
+            if (!n->initializer->is_compound()) {
+                error("a function with named return value(s) must have a full { } body", false);
+                return {};
+            }
+
             auto& body = std::get<statement_node::compound>(n->initializer->statement);
 
-            if (body->statements.empty() || body->statements.back()->statement.index() != statement_node::return_)
+            if (body->statements.empty() || !body->statements.back()->is_return())
             {
                 auto last_pos = n->position();
                 if (!body->statements.empty()) {
@@ -3866,7 +4021,7 @@ private:
             return {};
         }
 
-        if (access && !n->parent_is(declaration_node::a_type)) {
+        if (access && !n->parent_is_type()) {
             errors.emplace_back(
                 access->position(),
                 "an access-specifier is only allowed on a type-scope (member) declaration"
@@ -3874,7 +4029,7 @@ private:
             return {};
         }
 
-        if (n->is(declaration_node::a_function) && n->parent_is(declaration_node::a_function)) {
+        if (n->is_function() && n->parent_is_function()) {
             assert (id->get_token());
             auto name = id->get_token()->to_string(true);
             errors.emplace_back(
@@ -3886,6 +4041,42 @@ private:
 
         n->identifier = std::move(id);
         n->access     = access;
+
+        //  If this is the main function, it must be 'main: ()' or 'main: (args)'
+        if (
+            n->identifier &&
+            *n->identifier->identifier == "main" &&
+            n->is_function() &&
+            n->is_global()
+            )
+        {
+            auto& func = std::get<declaration_node::a_function>(n->type);
+
+            //  It's more readable to express this as positive condition here...
+            if (
+                //  There are no parameters
+                func->parameters->parameters.empty() ||
+                //  Or there's a single wildcard in-param named 'args'
+                (
+                    *func->parameters->parameters[0]->name() == "args" &&
+                    func->parameters->parameters[0]->pass == passing_style::in &&
+                    func->parameters->parameters[0]->declaration->is_object() &&
+                    std::get<declaration_node::an_object>(func->parameters->parameters[0]->declaration->type)->is_wildcard()
+                )
+                )
+            {
+                ;   // ok
+            }
+            //  ... and if it isn't that, then complain
+            else
+            {
+                errors.emplace_back(
+                    func->parameters->parameters[0]->position(),
+                    "'main' must be declared as 'main: ()' with zero parameters, or 'main: (args)' with one parameter named 'args' for which the type 'std::vector<std::string_view>' will be deduced"
+                );
+                return {};
+            }
+        }
 
         return n;
     }
@@ -3956,6 +4147,11 @@ public:
     auto start(token const& n, int indent) -> void
     {
         o << pre(indent) << n.to_string() << "\n";
+    }
+
+    auto start(literal_node const&, int indent) -> void
+    {
+        o << pre(indent) << "literal" << "\n";
     }
 
     auto start(expression_node const&, int indent) -> void
@@ -4119,7 +4315,19 @@ public:
     auto start(declaration_node const& n, int indent) -> void
     {
         o << pre(indent) << "declaration [" << &n << "]\n";
-        o << pre(indent+1) << "parent: [" << n.parent_scope << "]\n";
+        o << pre(indent+1) << "parent: [" << n.parent_declaration << "]\n";
+        switch (n.type.index()) {
+        break;case declaration_node::a_function:
+            o << pre(indent+1) << "function\n";
+        break;case declaration_node::an_object:
+            o << pre(indent+1) << "object\n";
+        break;case declaration_node::a_type:
+            o << pre(indent+1) << "type\n";
+        break;case declaration_node::a_namespace:
+            o << pre(indent+1) << "namespace\n";
+        break;default:
+            o << pre(indent+1) << "ICE - invalid variant state\n";
+        }
         if (n.access) {
             o << pre(indent+1) << "access: " << *n.access << "\n";
         }

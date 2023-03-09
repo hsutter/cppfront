@@ -30,24 +30,27 @@ namespace cpp2 {
 //-----------------------------------------------------------------------
 //
 struct declaration_sym {
-    bool start = false;
+    bool                              start       = false;
     declaration_node const*           declaration = {};
     token const*                      identifier  = {};
     statement_node const*             initializer = {};
     parameter_declaration_node const* parameter   = {};
+    bool                              member      = false;
 
     declaration_sym(
-        bool s = false,
+        bool                              s     = false,
         declaration_node const*           decl  = {},
         token const*                      id    = {},
         statement_node const*             init  = {},
-        parameter_declaration_node const* param = {}
+        parameter_declaration_node const* param = {},
+        bool                              mem   = false
     )
         : start{s}
         , declaration{decl}
         , identifier{id}
         , initializer{init}
         , parameter{param}
+        , member{mem}
     { }
 
     auto position() const -> source_position
@@ -86,10 +89,10 @@ struct selection_sym {
 struct compound_sym {
     bool start = false;
     compound_statement_node const* compound = {};
-    bool is_true_branch;
+    enum kind { is_scope, is_true, is_false } kind_ = is_scope;
 
-    compound_sym(bool s, compound_statement_node const* c, bool is_true)
-        : start{s}, compound{c}, is_true_branch{is_true}
+    compound_sym(bool s, compound_statement_node const* c, kind k)
+        : start{s}, compound{c}, kind_{k}
     { }
 
     auto position() const -> source_position
@@ -274,6 +277,18 @@ public:
     }
 
 
+    //-----------------------------------------------------------------------
+    //  Factor out the uninitialized var decl test
+    //
+    auto is_uninitialized_decl(declaration_sym const& sym) {
+        return
+            sym.start &&
+            !(sym.identifier && *sym.identifier == "this") &&
+            !sym.initializer &&
+            !(sym.parameter && sym.parameter->pass != passing_style::out);
+    }
+
+
     void debug_print(std::ostream& o)
     {
         for (auto const& s : symbols)
@@ -287,7 +302,7 @@ public:
                 auto const& sym = std::get<symbol::active::declaration>(s.sym);
 
                 assert (sym.declaration);
-                if (sym.declaration->is(declaration_node::active::a_function)) {
+                if (sym.declaration->is_function()) {
                     if (sym.start) {
                         o << "function ";
                     }
@@ -295,7 +310,7 @@ public:
                         o << "/function";
                     }
                 }
-                else if (sym.declaration->is(declaration_node::active::an_object)) {
+                else if (sym.declaration->is_object()) {
                     if (sym.start) {
                         o << "var ";
                     }
@@ -308,7 +323,7 @@ public:
                     o << sym.identifier->to_string(true);
                 }
 
-                if (sym.start && !(sym.parameter && sym.parameter->pass != passing_style::out) && !sym.initializer) {
+                if (is_uninitialized_decl(sym)) {
                     o << " *** UNINITIALIZED";
                 }
             }
@@ -350,7 +365,16 @@ public:
                     o << "/";
                     --scope_depth;
                 }
-                o << (sym.is_true_branch ? "true" : "false") << " branch";
+                if (sym.kind_ == sym.is_true) {
+                    o << "true branch";
+                }
+                else if (sym.kind_ == sym.is_false) {
+                    o << "false branch";
+                }
+                else {
+                    o << "scope";
+                }
+
             }
 
             break;default:
@@ -380,10 +404,10 @@ public:
         {
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
                 assert (sym);
-                if (sym->start && !sym->initializer && !(sym->parameter && sym->parameter->pass != passing_style::out)) {
-                    assert (sym->declaration->is(declaration_node::active::an_object));
+                if (is_uninitialized_decl(*sym)) {
+                    assert (sym->declaration->is_object());
                     //  Must be in function scope
-                    if (sym->declaration->parent_scope && sym->declaration->parent_scope->is(declaration_node::a_function)) {
+                    if (sym->declaration->parent_is_function()) {
                         return sym;
                     }
                     else {
@@ -400,7 +424,7 @@ public:
             -> declaration_sym const*
         {
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
-                if (sym->start && sym->declaration->is(declaration_node::active::an_object) &&
+                if (sym->start && sym->declaration->is_object() &&
                     (!sym->parameter ||
                      sym->parameter->pass == passing_style::copy ||
                      sym->parameter->pass == passing_style::move ||
@@ -409,7 +433,7 @@ public:
                    )
                 {
                     //  Must be in function scope
-                    if (sym->declaration->parent_scope && sym->declaration->parent_scope->is(declaration_node::a_function)) {
+                    if (sym->declaration->parent_declaration && sym->declaration->parent_declaration->is_function()) {
                         return sym;
                     }
                     else {
@@ -818,10 +842,45 @@ public:
         inside_returns_list = false;
     }
 
+    auto start(function_type_node const&n, int) -> void
+    {
+        //  If this is a constructor, inject all the class's data members
+        //  as uninitialized locals at the start of this function
+        if (n.is_constructor())
+        {
+            //  The parent must be a type, and we'll iterate through
+            //  all its member declarations looking for data members
+            assert (n.my_decl->parent_is_type());
+            for (auto& member : n.my_decl->parent_declaration->get_type_scope_declarations())
+            {
+                if (member->is_object()) {
+                    //symbols.emplace_back(
+                    //    scope_depth,
+                    //    declaration_sym(
+                    //        true,
+                    //        member,
+                    //        member->identifier->get_token(),
+                    //        member->initializer.get(),
+                    //        nullptr,
+                    //        true
+                    //    )
+                    //);
+                }
+            }
+        }
+    }
+
     auto start(declaration_node const& n, int) -> void
     {
         if (n.identifier && (!inside_parameter_list || inside_out_parameter)) {
             partial_decl_stack.emplace_back(true, &n, nullptr, n.initializer.get(), inside_out_parameter);
+
+            // TODO: replace partial_decl_stack with just putting the id token in like this...
+            //
+            //symbols.emplace_back( scope_depth, declaration_sym( true, &n, n.identifier->get_token(), n.initializer.get(), inside_out_parameter ) );
+            //if (!n.is_object()) {
+            //    ++scope_depth;
+            //}
         }
     }
 
@@ -829,7 +888,7 @@ public:
     {
         if (n.identifier && (!inside_parameter_list || inside_out_parameter)) {
             symbols.emplace_back( scope_depth, declaration_sym( false, &n, nullptr, nullptr, inside_out_parameter ) );
-            if (n.type.index() != declaration_node::active::an_object) {
+            if (!n.is_object()) {
                 --scope_depth;
             }
             partial_decl_stack.pop_back();
@@ -852,7 +911,7 @@ public:
             symbols.emplace_back( scope_depth, partial_decl_stack.back() );
 
             assert (partial_decl_stack.back().declaration);
-            if (!partial_decl_stack.back().declaration->is(declaration_node::active::an_object)) {
+            if (!partial_decl_stack.back().declaration->is_object()) {
                 ++scope_depth;
             }
         }
@@ -908,15 +967,30 @@ public:
         --scope_depth;
     }
 
+    auto kind_of(compound_statement_node const& n) -> compound_sym::kind {
+        auto kind = compound_sym::is_scope;
+        if (!active_selections.empty())
+        {
+            assert(active_selections.back()->true_branch);
+            if (active_selections.back()->true_branch.get() == &n)
+            {
+                kind = compound_sym::is_true;
+            }
+            if (active_selections.back()->false_branch &&
+                active_selections.back()->false_branch.get() == &n
+                )
+            {
+                kind = compound_sym::is_false;
+            }
+        }
+        return kind;
+    }
+
     auto start(compound_statement_node const& n, int) -> void
     {
         symbols.emplace_back(
             scope_depth,
-            compound_sym{
-                true,
-                &n,
-                !active_selections.empty() && active_selections.back()->true_branch.get() == &n
-            }
+            compound_sym{ true, &n, kind_of(n) }
         );
         ++scope_depth;
     }
@@ -925,11 +999,7 @@ public:
     {
         symbols.emplace_back(
             scope_depth,
-            compound_sym{
-                false,
-                &n,
-                !active_selections.empty() && active_selections.back()->true_branch.get() == &n
-            }
+            compound_sym{ false, &n, kind_of(n) }
         );
         --scope_depth;
     }

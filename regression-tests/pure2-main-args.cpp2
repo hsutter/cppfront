@@ -1,0 +1,2 @@
+main: (args) =
+    std::cout << "args.argc is (args.argc)$, and args.argv[0] is (args.argv[0])$\n";
