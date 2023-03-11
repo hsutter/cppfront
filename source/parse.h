@@ -179,8 +179,8 @@ struct literal_node {
 struct postfix_expression_node;
 
 struct postfix_expression_node_pair {
-    postfix_expression_node const* lhs;
-    postfix_expression_node const* rhs;
+    postfix_expression_node * lhs;
+    postfix_expression_node * rhs;
 };
 
 
@@ -190,7 +190,7 @@ struct prefix_expression_node
     std::unique_ptr<postfix_expression_node> expr;
 
     auto get_postfix_expression_node() const
-        -> postfix_expression_node const*
+        -> postfix_expression_node *
     {
         assert(expr);
         return expr.get();
@@ -218,7 +218,7 @@ struct binary_expression_node
 
     //  Get left-hand postfix-expression
     auto get_postfix_expression_node() const
-        -> postfix_expression_node const*
+        -> postfix_expression_node *
     {
         assert(expr);
         return expr->get_postfix_expression_node();
@@ -226,7 +226,7 @@ struct binary_expression_node
 
     //  Get first right-hand postfix-expression, if there is one
     auto get_second_postfix_expression_node() const
-        -> postfix_expression_node const*
+        -> postfix_expression_node *
     {
         if (!terms.empty()) {
             assert(terms.front().expr);
@@ -756,7 +756,7 @@ struct is_as_expression_node
     std::vector<term> ops;
 
     auto get_postfix_expression_node() const
-        -> postfix_expression_node const*
+        -> postfix_expression_node *
     {
         assert(expr);
         return expr->get_postfix_expression_node();

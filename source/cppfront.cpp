@@ -3715,7 +3715,10 @@ public:
                         auto exprs = (*statement)->get_lhs_rhs_if_simple_assignment();
 
                         assert(!exprs.lhs || exprs.lhs->expr);
-                        auto is_match = false;
+                        auto is_match    = false;
+                        auto stmt_pos    = (*statement)->position();
+                        auto initializer = std::string{};
+
                         if (exprs.lhs)
                         {
                             //  First, see if it's an assignment 'name = something'
@@ -3734,30 +3737,47 @@ public:
                                     is_match = true;
                                 }
                             }
-                        } 
+
+                            if (is_match)
+                            {
+                                assert(exprs.rhs);
+                                initializer = print_to_string( *exprs.rhs );
+
+                                //  We've used this statement, so note that
+                                //  and move 'statement' forward
+                                (*statement)->emitted = true;
+                                ++statement;
+                            }
+                        }
+
+                        //  Otherwise, if the member has an initializer, we can use that
+                        if (!is_match &&
+                            (*object)->initializer
+                            )
+                        {
+                            is_match = true;
+                            initializer = print_to_string( *(*object)->initializer, false );
+                        }
 
                         //  If this is not an assignment to *object, complain
                         if (!is_match)
                         {
                             errors.emplace_back(
-                                (*statement)->position(),
+                                stmt_pos,
                                 "expected '" + (*object)->name()->to_string(true) + " = ...' initialization statement - " + error_msg
                             );
                             return;
                         }
 
-                        assert(exprs.rhs && exprs.rhs->expr);
                         current_function_info.back().prolog.mem_inits.push_back(
                             separator +
                             (*object)->name()->to_string(true) +
                             "{ " +
-                            exprs.rhs->expr->get_token()->to_string(true) +
+                            initializer +
                             " }"
                         );
-                        (*statement)->emitted = true;
 
                         ++object;
-                        ++statement;
                         separator = ", ";
                     }
 

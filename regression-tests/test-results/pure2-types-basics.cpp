@@ -8,7 +8,7 @@
 namespace N   {
 class myclass;
 };
-#line 48 "pure2-types-basics.cpp2"
+#line 55 "pure2-types-basics.cpp2"
 auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
@@ -21,29 +21,36 @@ class myclass   {
 
     public: myclass(cpp2::in<int> x)
         : data{ x }
-        , more{ "xyzzy" }
+        , more{ std::to_string(42 * 12) }
 #line 7 "pure2-types-basics.cpp2"
 {
-
+        // use default initializer for this.more
         std::cout << "myclass: implicit constructor from int\n";
+        print();
     }
 
     public: explicit myclass(cpp2::in<std::string> s)
         : data{ 99 }
         , more{ "plugh" }
-#line 13 "pure2-types-basics.cpp2"
+#line 14 "pure2-types-basics.cpp2"
 {
 
         std::cout << "myclass: explicit constructor from string\n";
+        print();
     }
 
     public: myclass()
-        : data{ 3 }
-        , more{ "-3" }
-#line 19 "pure2-types-basics.cpp2"
-{
+        : data{ 42 * 12 }
+        , more{ std::to_string(3.14159) }
+#line 21 "pure2-types-basics.cpp2"
+{       // use default initializer for this.data
 
         std::cout << "myclass: default constructor\n";
+        print();
+    }
+
+    public: auto print() const -> void{
+        std::cout << "    data: " + cpp2::to_string(data) + ", more: " + cpp2::to_string(more) + "\n";
     }
 
     public: ~myclass(){
@@ -54,8 +61,8 @@ class myclass   {
         std::cout << "N::myclass::f with " + cpp2::to_string(x) + "\n";
     }
 
-    private: int data; 
-    private: std::string more; 
+    private: int data {42 * 12}; 
+    private: std::string more {std::to_string(42 * 12)}; 
 
     public: class nested {
         public: static auto g() -> void { std::cout << "N::myclass::nested::g\n"; }

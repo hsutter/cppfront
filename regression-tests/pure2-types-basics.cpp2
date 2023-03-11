@@ -5,20 +5,27 @@ myclass : type = {
 
     operator=: (implicit out this, x: int) = {
         data = x;
-        more = "xyzzy";
+        // use default initializer for this.more
         std::cout << "myclass: implicit constructor from int\n";
+        print();
     }
 
     operator=: (out this, s: std::string) = {
         this.data = 99;
         this.more = "plugh";
         std::cout << "myclass: explicit constructor from string\n";
+        print();
     }
 
     operator=: (out this) = {
-        data = -3;
-        more = "-3";
+        // use default initializer for this.data
+        more = std::to_string(3.14159);
         std::cout << "myclass: default constructor\n";
+        print();
+    }
+
+    print: (this) = {
+        std::cout << "    data: (data)$, more: (more)$\n";
     }
 
     operator=: (move this) = {
@@ -29,8 +36,8 @@ myclass : type = {
         std::cout << "N::myclass::f with (x)$\n";
     }
 
-    data: int;
-    more: std::string;
+    data: int         = 42 * 12;
+    more: std::string = std::to_string(42 * 12);
 
     nested : type = {
         g: () = std::cout << "N::myclass::nested::g\n";
