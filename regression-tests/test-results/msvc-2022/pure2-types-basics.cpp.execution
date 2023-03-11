@@ -1,6 +1,12 @@
+myclass: implicit constructor from int
 N::myclass::f with 53
 N::myclass::nested::g
 f1: 2
 f2: 4
 f3: 6
 f4: 8
+myclass: explicit constructor from string
+myclass: default constructor
+myclass: destructor
+myclass: destructor
+myclass: destructor

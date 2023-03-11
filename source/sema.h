@@ -53,7 +53,8 @@ struct declaration_sym {
         , member{mem}
     { }
 
-    auto position() const -> source_position
+    auto position() const
+        -> source_position
     {
         assert (declaration);
         return declaration->position();
@@ -64,9 +65,16 @@ struct identifier_sym {
     bool assignment_to = false;
     token const* identifier = {};
 
-    identifier_sym(bool a, token const* id) : assignment_to{a}, identifier{id} { }
+    identifier_sym(
+        bool         a,
+        token const* id
+    )
+        : assignment_to{a}
+        , identifier{id}
+    { }
 
-    auto position() const -> source_position
+    auto position() const
+        -> source_position
     {
         assert (identifier);
         return identifier->position();
@@ -77,9 +85,16 @@ struct selection_sym {
     bool start = false;
     selection_statement_node const* selection = {};
 
-    selection_sym(bool s, selection_statement_node const* sel) : start{s}, selection{sel} { }
+    selection_sym(
+        bool                            s,
+        selection_statement_node const* sel
+    )
+        : start{s}
+        , selection{sel}
+    { }
 
-    auto position() const -> source_position
+    auto position() const
+        -> source_position
     {
         assert (selection);
         return selection->position();
@@ -91,11 +106,18 @@ struct compound_sym {
     compound_statement_node const* compound = {};
     enum kind { is_scope, is_true, is_false } kind_ = is_scope;
 
-    compound_sym(bool s, compound_statement_node const* c, kind k)
-        : start{s}, compound{c}, kind_{k}
+    compound_sym(
+        bool                           s,
+        compound_statement_node const* c,
+        kind                           k
+    )
+        : start{s}
+        , compound{c}
+        , kind_{k}
     { }
 
-    auto position() const -> source_position
+    auto position() const
+        -> source_position
     {
         assert (compound);
         return compound->position();
@@ -120,7 +142,8 @@ struct symbol {
     symbol(int depth, selection_sym   const& sym) : depth{depth}, sym{sym}, start{sym.start} { }
     symbol(int depth, compound_sym    const& sym) : depth{depth}, sym{sym}, start{sym.start} { }
 
-    auto position() const -> source_position
+    auto position() const
+        -> source_position
     {
         switch (sym.index())
         {
@@ -158,7 +181,8 @@ struct symbol {
 //
 std::vector<token const*> definite_initializations;
 
-auto is_definite_initialization(token const* t) -> bool
+auto is_definite_initialization(token const* t)
+    -> bool
 {
     return
         std::find(
@@ -176,13 +200,22 @@ auto is_definite_initialization(token const* t) -> bool
 //
 struct last_use {
     token const* t;
-    bool is_forward;
-    last_use( token const* t_, bool is_forward_ = false ) : t{t_}, is_forward{is_forward_} { }
+    bool         is_forward;
+
+    last_use(
+        token const* t_,
+        bool         is_forward_ = false
+    )
+        : t{t_}
+        , is_forward{is_forward_}
+    { }
+
     bool operator==(last_use const& that) { return t == that.t; }
 };
 std::vector<last_use> definite_last_uses;
 
-auto is_definite_last_use(token const* t) -> last_use const*
+auto is_definite_last_use(token const* t)
+    -> last_use const*
 {
     auto iter = std::find(
             definite_last_uses.begin(),
@@ -212,7 +245,6 @@ class sema
 public:
     std::vector<error>&          errors;
     std::vector<symbol>          symbols;
-    std::vector<declaration_sym> partial_decl_stack;
 
     std::vector<selection_statement_node const*> active_selections;
 
@@ -231,16 +263,28 @@ public:
 
     //  Get the declaration of t within the same named function or beyond it
     //
-    auto get_declaration_of(token const& t, bool look_beyond_current_function = false) -> declaration_sym const*
+    auto get_declaration_of(
+        token const& t,
+        bool         look_beyond_current_function = false
+    )
+        -> declaration_sym const*
     {
         //  First find the position the query is coming from
         //  and remember its depth
         auto i = symbols.cbegin();
-        while (i != symbols.cend() && i->position() < t.position()) {
+        while (
+            i != symbols.cend() &&
+            i->position() < t.position()
+            )
+        {
             ++i;
         }
 
-        while (i == symbols.cend() || !i->start) {
+        while (
+            i == symbols.cend() ||
+            !i->start
+            )
+        {
             --i;
         }
 
@@ -251,7 +295,9 @@ public:
         //  and is in the same function
         for (auto ri = std::make_reverse_iterator(i+1); ri != symbols.crend(); ++ri )
         {
-            if (ri->sym.index() == symbol::active::declaration && ri->depth <= depth)
+            if (ri->sym.index() == symbol::active::declaration &&
+                ri->depth <= depth
+                )
             {
                 auto const& decl = std::get<symbol::active::declaration>(ri->sym);
 
@@ -260,13 +306,17 @@ public:
                 assert(decl.declaration);
                 if (decl.declaration->type.index() == declaration_node::a_function &&
                     decl.declaration->identifier &&
-                    !look_beyond_current_function)
+                    !look_beyond_current_function
+                    )
                 {
                     return nullptr;
                 }
 
                 //  If the name matches, this is it
-                if (decl.identifier && *decl.identifier == t) {
+                if (decl.identifier &&
+                    *decl.identifier == t
+                    )
+                {
                     return &decl;
                 }
                 depth = ri->depth;
@@ -280,7 +330,9 @@ public:
     //-----------------------------------------------------------------------
     //  Factor out the uninitialized var decl test
     //
-    auto is_uninitialized_decl(declaration_sym const& sym) {
+    auto is_uninitialized_decl(declaration_sym const& sym)
+        -> bool
+    {
         return
             sym.start &&
             !(sym.identifier && *sym.identifier == "this") &&
@@ -289,7 +341,8 @@ public:
     }
 
 
-    void debug_print(std::ostream& o)
+    auto debug_print(std::ostream& o)
+        -> void
     {
         for (auto const& s : symbols)
         {
@@ -389,7 +442,8 @@ public:
     //-----------------------------------------------------------------------
     //  Apply local first- and last-use rules
     //
-    auto apply_local_rules() -> bool
+    auto apply_local_rules()
+        -> bool
     {
         auto ret = true;
 
@@ -406,8 +460,8 @@ public:
                 assert (sym);
                 if (is_uninitialized_decl(*sym)) {
                     assert (sym->declaration->is_object());
-                    //  Must be in function scope
-                    if (sym->declaration->parent_is_function()) {
+                    //  A namespace-scope object doesn't count
+                    if (!sym->declaration->parent_is_namespace()) {
                         return sym;
                     }
                     else {
@@ -424,7 +478,8 @@ public:
             -> declaration_sym const*
         {
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
-                if (sym->start && sym->declaration->is_object() &&
+                if (sym->start &&
+                    sym->declaration->is_object() &&
                     (!sym->parameter ||
                      sym->parameter->pass == passing_style::copy ||
                      sym->parameter->pass == passing_style::move ||
@@ -433,7 +488,10 @@ public:
                    )
                 {
                     //  Must be in function scope
-                    if (sym->declaration->parent_declaration && sym->declaration->parent_declaration->is_function()) {
+                    if (sym->declaration->parent_declaration &&
+                        sym->declaration->parent_declaration->is_function()
+                        )
+                    {
                         return sym;
                     }
                     else {
@@ -453,9 +511,12 @@ public:
             //  ensure it is definitely initialized and tag those initializations
             //
             if (auto decl = is_uninitialized_variable_decl(symbols[sympos])) {
-                assert (decl->identifier && !decl->initializer);
+                assert(
+                    decl->identifier &&
+                    !decl->initializer
+                );
                 ret = ret &&
-                    ensure_definitely_initialized(decl->identifier, sympos+1, symbols[sympos].depth);
+                    ensure_definitely_initialized(decl, sympos+1, symbols[sympos].depth);
             }
 
             //  If this is a copy, move, or forward parameter or a local variable,
@@ -463,7 +524,11 @@ public:
             //
             if (auto decl = is_potentially_movable_local(symbols[sympos])) {
                 assert (decl->identifier);
-                find_definite_last_uses(decl->identifier, sympos, decl->parameter && decl->parameter->pass == passing_style::forward);
+                find_definite_last_uses(
+                    decl->identifier,
+                    sympos,
+                    decl->parameter && decl->parameter->pass == passing_style::forward
+                );
             }
         }
 
@@ -474,7 +539,12 @@ private:
     //  Find the definite last uses for local variable *id starting at the
     //  given position and depth in the symbol/scope table
     //
-    auto find_definite_last_uses(token const* id, int pos, bool is_forward) const -> void
+    auto find_definite_last_uses(
+        token const* id,
+        int          pos,
+        bool         is_forward
+    ) const
+        -> void
     {
         auto i = pos;
         auto depth = symbols[pos].depth;
@@ -485,7 +555,10 @@ private:
 
         //  Scan forward to the end of this scope, keeping track of
         //  the trailing nest of selection statements
-        while (i+1 < std::ssize(symbols) && symbols[i+1].depth >= depth)
+        while (
+            i+1 < std::ssize(symbols) &&
+            symbols[i+1].depth >= depth
+            )
         {
             assert (std::ssize(symbols) > 1);
             if (symbols[i].sym.index() == symbol::selection) {
@@ -507,7 +580,10 @@ private:
         {
             //  Once we find something, don't continue back further
             //  than the closest enclosing selection statement
-            if (found && symbols[i].depth <= selections.back()) {
+            if (found &&
+                symbols[i].depth <= selections.back()
+                )
+            {
                 break;
             }
 
@@ -527,7 +603,11 @@ private:
                         assert (!selections.empty());   // won't remove sentinel
                     }
                     //  Then skip over the earlier part of the current branch
-                    while (i > pos && symbols[i].depth > selections.back() + 1) {
+                    while (
+                        i > pos &&
+                        symbols[i].depth > selections.back() + 1
+                        )
+                    {
                         --i;
                     }
                 }
@@ -546,8 +626,21 @@ private:
     //        rewriting it wouldn't give any benefit, and I need to resist the urge to
     //        be distracted by goldplating when I could be implementing a new feature.
     //
-    auto ensure_definitely_initialized(token const* id, int pos, int depth) const -> bool
+    auto ensure_definitely_initialized(
+        declaration_sym const* decl,
+        int                    pos,
+        int                    depth
+    ) const
+        -> bool
     {
+        //  If this is a member variable in a constructor, the name doesn't
+        //  appear lexically right in the constructor, so prepending "this."
+        //  to the printed name might make the error more readable to the programmer
+        auto name = decl->identifier->to_string(true);
+        if (decl->declaration->parent_is_type()) {
+            name += " (aka this." + name + ")";
+        }
+
         struct stack_entry{
             int pos;    // start of this selection statement
 
@@ -571,12 +664,21 @@ private:
         };
         std::vector<stack_entry> selection_stack;
 
-        for ( ; pos < std::ssize(symbols) && symbols[pos].depth >= depth; ++pos) {
+        for (
+            ;
+            pos < std::ssize(symbols) && symbols[pos].depth >= depth;
+            ++pos
+            )
+        {
             switch (symbols[pos].sym.index()) {
 
             break;case symbol::active::declaration: {
                 auto const& sym = std::get<symbol::active::declaration>(symbols[pos].sym);
-                if (sym.start && sym.identifier && *sym.identifier == *id) {
+                if (sym.start &&
+                    sym.identifier &&
+                    *sym.identifier == *decl->identifier
+                    )
+                {
                     errors.emplace_back(
                         sym.identifier->position(),
                         "local variable " + sym.identifier->to_string(true)
@@ -592,7 +694,7 @@ private:
                 if (is_definite_initialization(sym.identifier)) {
                     errors.emplace_back(
                         sym.identifier->position(),
-                        "local variable " + id->to_string(true)
+                        "local variable " + name
                             + " must be initialized before " + sym.identifier->to_string(true)
                             + " (local variables must be initialized in the order they are declared)"
                     );
@@ -600,7 +702,7 @@ private:
                 }
 
                 //  If we find a use of this identifier
-                if (*sym.identifier == *id) {
+                if (*sym.identifier == *decl->identifier) {
 
                     //  If we're not inside a selection statement, we're at the top level --
                     //  just return true if it's an assignment to it, else return false
@@ -611,7 +713,7 @@ private:
                         else {
                             errors.emplace_back(
                                 sym.identifier->position(),
-                                "local variable " + sym.identifier->to_string(true)
+                                "local variable " + name
                                     + " is used before it was initialized");
                         }
                         return sym.assignment_to;
@@ -629,7 +731,7 @@ private:
                             else {
                                 errors.emplace_back(
                                     sym.identifier->position(),
-                                    "local variable " + sym.identifier->to_string(true)
+                                    "local variable " + name
                                         + " is used in a condition before it was initialized");
                             }
                             return sym.assignment_to;
@@ -657,7 +759,7 @@ private:
                         else {
                             errors.emplace_back(
                                 sym.identifier->position(),
-                                "local variable " + sym.identifier->to_string(true)
+                                "local variable " + name
                                     + " is used in a branch before it was initialized");
                         }
                         selection_stack.back().branches.back().result = sym.assignment_to;
@@ -738,8 +840,8 @@ private:
                     else
                     {
                         errors.emplace_back(
-                            id->position(),
-                            "local variable " + id->to_string(true)
+                            decl->identifier->position(),
+                            "local variable " + name
                                     + " must be initialized on both branches or neither branch");
 
                         assert (symbols[selection_stack.back().pos].sym.index() == symbol::active::selection);
@@ -747,7 +849,7 @@ private:
                         errors.emplace_back(
                             sym.selection->identifier->position(),
                             "\"" + sym.selection->identifier->to_string(true)
-                                + "\" initializes " + id->to_string(true)
+                                + "\" initializes " + name
                                 + " on:" + true_branches
                                 + "\nbut not on:" + false_branches
                         );
@@ -781,8 +883,8 @@ private:
         }
 
         errors.emplace_back(
-            id->position(),
-            id->to_string(true)
+            decl->identifier->position(),
+            name
             + " - variable must be initialized on every branch path");
         return false;
     }
@@ -800,30 +902,36 @@ public:
     bool inside_returns_list           = false;
     parameter_declaration_node const* inside_out_parameter = {};
 
-    auto start(parameter_declaration_list_node const&, int) -> void {
+    auto start(parameter_declaration_list_node const&, int) -> void
+    {
         inside_parameter_list = true;
     }
 
-    auto end(parameter_declaration_list_node const&, int) -> void {
+    auto end(parameter_declaration_list_node const&, int) -> void
+    {
         inside_parameter_list = false;
     }
 
-    auto start(parameter_declaration_node const& n, int) -> void {
+    auto start(parameter_declaration_node const& n, int) -> void
+    {
         if (
-            (!inside_returns_list && n.pass == passing_style::out) ||
+            //  If it's an 'out' parameter
+            (!inside_returns_list && n.pass == passing_style::out /*&& !n.has_name("this")*/) ||
+            //  Or it's an uninitialized 'out' return value
             ( inside_returns_list && n.pass == passing_style::out && !n.declaration->initializer)
-        )
+            )
         {
             inside_out_parameter = &n;
         }
 
         if (n.pass == passing_style::copy || n.pass == passing_style::move || n.pass == passing_style::forward)
         {
-            symbols.emplace_back( scope_depth, declaration_sym( true, n.declaration.get(), n.declaration->identifier->identifier, n.declaration->initializer.get(), &n));
+            symbols.emplace_back( scope_depth, declaration_sym( true, n.declaration.get(), n.declaration->name(), n.declaration->initializer.get(), &n));
         }
     }
 
-    auto end(parameter_declaration_node const&, int) -> void {
+    auto end(parameter_declaration_node const&, int) -> void
+    {
         inside_out_parameter = {};
     }
 
@@ -842,56 +950,39 @@ public:
         inside_returns_list = false;
     }
 
-    auto start(function_type_node const&n, int) -> void
-    {
-        //  If this is a constructor, inject all the class's data members
-        //  as uninitialized locals at the start of this function
-        if (n.is_constructor())
-        {
-            //  The parent must be a type, and we'll iterate through
-            //  all its member declarations looking for data members
-            assert (n.my_decl->parent_is_type());
-            for (auto& member : n.my_decl->parent_declaration->get_type_scope_declarations())
-            {
-                if (member->is_object()) {
-                    //symbols.emplace_back(
-                    //    scope_depth,
-                    //    declaration_sym(
-                    //        true,
-                    //        member,
-                    //        member->identifier->get_token(),
-                    //        member->initializer.get(),
-                    //        nullptr,
-                    //        true
-                    //    )
-                    //);
-                }
-            }
-        }
-    }
-
     auto start(declaration_node const& n, int) -> void
     {
-        if (n.identifier && (!inside_parameter_list || inside_out_parameter)) {
-            partial_decl_stack.emplace_back(true, &n, nullptr, n.initializer.get(), inside_out_parameter);
-
-            // TODO: replace partial_decl_stack with just putting the id token in like this...
-            //
-            //symbols.emplace_back( scope_depth, declaration_sym( true, &n, n.identifier->get_token(), n.initializer.get(), inside_out_parameter ) );
-            //if (!n.is_object()) {
-            //    ++scope_depth;
-            //}
+        if (
+            //  Skip type scope (member) variables
+            !(n.parent_is_type() && n.is_object()) &&
+            //  Skip unnamed variables
+            n.identifier &&
+            //  Skip non-out parameters
+            (!inside_parameter_list || inside_out_parameter)
+            )
+        {
+            symbols.emplace_back( scope_depth, declaration_sym( true, &n, n.name(), n.initializer.get(), inside_out_parameter ) );
+            if (!n.is_object()) {
+                ++scope_depth;
+            }
         }
     }
 
     auto end(declaration_node const& n, int) -> void
     {
-        if (n.identifier && (!inside_parameter_list || inside_out_parameter)) {
+        if (
+            //  Skip type scope (member) variables
+            !(n.parent_is_type() && n.is_object()) &&
+            //  Skip unnamed variables
+            n.identifier &&
+            //  Skip non-out parameters
+            (!inside_parameter_list || inside_out_parameter)
+            )
+        {
             symbols.emplace_back( scope_depth, declaration_sym( false, &n, nullptr, nullptr, inside_out_parameter ) );
             if (!n.is_object()) {
                 --scope_depth;
             }
-            partial_decl_stack.pop_back();
         }
     }
 
@@ -900,20 +991,6 @@ public:
         //  We currently only care to look at identifiers
         if (t.type() != lexeme::Identifier) {
             return;
-        }
-
-        //  If this is the first identifier since we started a new decl,
-        //  then it's the declaration's identifier name, so finish
-        //  recognizing the decl and store it now that we have all the info
-        if (!partial_decl_stack.empty() && !partial_decl_stack.back().identifier)
-        {
-            partial_decl_stack.back().identifier = &t;
-            symbols.emplace_back( scope_depth, partial_decl_stack.back() );
-
-            assert (partial_decl_stack.back().declaration);
-            if (!partial_decl_stack.back().declaration->is_object()) {
-                ++scope_depth;
-            }
         }
 
         //  If this is the first identifier since we started a new assignment,
@@ -942,9 +1019,11 @@ public:
             if (!inside_parameter_list)
             {
                 //  Put this into the table if it's a use of an object in scope
-                //  or it's a 'copy' parameter
+                //  or it's a 'copy' parameter (but to be a use it must be after
+                //  the declaration, not the token in the decl's name itself)
                 if (auto decl = get_declaration_of(t);
-                    decl
+                    decl &&
+                    decl->declaration->name() != &t
                     )
                 {
                     symbols.emplace_back( scope_depth, identifier_sym( false, &t ) );
@@ -967,7 +1046,9 @@ public:
         --scope_depth;
     }
 
-    auto kind_of(compound_statement_node const& n) -> compound_sym::kind {
+    auto kind_of(compound_statement_node const& n)
+        -> compound_sym::kind
+    {
         auto kind = compound_sym::is_scope;
         if (!active_selections.empty())
         {
@@ -1004,7 +1085,8 @@ public:
         --scope_depth;
     }
 
-    auto start(assignment_expression_node const& n, int) {
+    auto start(assignment_expression_node const& n, int)
+    {
         if (std::ssize(n.terms) > 0) {
             assert (n.terms.front().op);
             if (n.terms.front().op->type() == lexeme::Assignment) {

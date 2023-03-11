@@ -113,7 +113,9 @@ auto is_literal(lexeme l) -> bool {
     }
 }
 
-auto close_paren_type(lexeme l) -> lexeme {
+auto close_paren_type(lexeme l)
+    -> lexeme
+{
     switch (l) {
     break;case lexeme::LeftBrace:   return lexeme::RightBrace;
     break;case lexeme::LeftBracket: return lexeme::RightBracket;
@@ -125,7 +127,8 @@ auto close_paren_type(lexeme l) -> lexeme {
 
 template<typename T>
     requires std::is_same_v<T, std::string>
-auto __as(lexeme l) -> std::string
+auto __as(lexeme l)
+    -> std::string
 {
     switch (l) {
     break;case lexeme::SlashEq:             return "SlashEq";
@@ -197,7 +200,8 @@ auto __as(lexeme l) -> std::string
 };
 
 
-auto is_operator(lexeme l) -> bool
+auto is_operator(lexeme l)
+    -> bool
 {
     return l <= lexeme::Not;
 }
@@ -245,17 +249,20 @@ public:
         return {start, (unsigned)count};
     }
 
-    auto operator== (token const& t) const -> bool
+    auto operator== (token const& t) const
+        -> bool
     {
         return operator std::string_view() == t.operator std::string_view();
     }
 
-    auto operator== (std::string_view s) const -> bool
+    auto operator== (std::string_view s) const
+        -> bool
     {
         return s == this->operator std::string_view();
     }
 
-    auto to_string( bool text_only = false ) const -> std::string
+    auto to_string( bool text_only = false ) const
+        -> std::string
     {
         auto text = std::string{start, (unsigned)count};
         if (text_only) {
@@ -266,12 +273,15 @@ public:
         }
     }
 
-    friend auto operator<< (auto& o, token const& t) -> auto&
+    friend auto operator<< (auto& o, token const& t)
+        -> auto&
     {
         return o << std::string_view(t);
     }
 
-    auto position_col_shift( colno_t offset ) -> void {
+    auto position_col_shift( colno_t offset )
+        -> void
+    {
         assert (pos.colno + offset > 0);
         pos.colno += offset;
     }
@@ -284,7 +294,9 @@ public:
 
     auto set_type(lexeme l) -> void          { lex_type = l;    }
 
-    auto visit(auto& v, int depth) const -> void {
+    auto visit(auto& v, int depth) const
+        -> void
+    {
         v.start(*this, depth);
     }
 
@@ -300,7 +312,9 @@ private:
 static_assert (CHAR_BIT == 8);
 
 
-auto labelized_position(token const* t) -> std::string {
+auto labelized_position(token const* t)
+    -> std::string
+{
     auto ret = std::string{};
     if (t) {
         ret +=
@@ -316,7 +330,12 @@ auto labelized_position(token const* t) -> std::string {
 //
 //  A StringLiteral could include captures
 //
-auto expand_string_literal(std::string_view text, std::vector<error>& errors, source_position src_pos) -> std::string
+auto expand_string_literal(
+    std::string_view    text,
+    std::vector<error>& errors,
+    source_position     src_pos
+)
+    -> std::string
 {
     auto const length = std::ssize(text);
 
@@ -327,10 +346,17 @@ auto expand_string_literal(std::string_view text, std::vector<error>& errors, so
     auto ret = std::string{};   // the return string we're going to build
 
     //  Skip prefix to first non-" character
-    while (pos < length && text[pos] != '"') {
+    while (
+        pos < length &&
+        text[pos] != '"'
+        )
+    {
         ++pos;
     }
-    assert(pos < length && text[pos] == '"');
+    assert(
+        pos < length &&
+        text[pos] == '"'
+    );
     auto first_quote_pos = pos;
     ++pos;
     auto current_start = pos;   // the current offset before which the string has been added to ret
@@ -355,10 +381,16 @@ auto expand_string_literal(std::string_view text, std::vector<error>& errors, so
     };
 
     //  Now we're on the first character of the string itself
-    for ( ; pos < length && (text[pos] != '"' || text[pos-1] == '\\'); ++pos )
+    for (
+        ;
+        pos < length && (text[pos] != '"' || text[pos-1] == '\\');
+        ++pos
+        )
     {
         //  Find the next )$
-        if (text[pos] == '$' && text[pos-1] == ')')
+        if (text[pos] == '$' &&
+            text[pos-1] == ')'
+            )
         {
             //  Scan back to find the matching (
             auto paren_depth = 1;
@@ -406,10 +438,16 @@ auto expand_string_literal(std::string_view text, std::vector<error>& errors, so
     }
 
     //  Now we should be on the the final " closing the string
-    assert(pos == length-1 && text[pos] == '"');
+    assert(
+        pos == length-1 &&
+        text[pos] == '"'
+    );
 
     //  Put the final non-interpolated chunk straight into ret
-    if (first || current_start < std::ssize(text)-1) {
+    if (first ||
+        current_start < std::ssize(text)-1
+        )
+    {
         add_plus(true);
         ret += text.substr(current_start);
     }
@@ -456,7 +494,7 @@ auto lex_line(
 
     //  Token merging helpers
     //
-    auto merge_cpp1_multi_token_fundamental_type_names = [&]()
+    auto merge_cpp1_multi_token_fundamental_type_names = [&]
     {
         //  If the last token is a non-Cpp1MultiKeyword, we might be at the end
         //  of a sequence of Cpp1MultiKeyword tokens that need to be merged
@@ -471,7 +509,10 @@ auto lex_line(
         --i;
         if (i < 1 || tokens[i].type() != lexeme::Cpp1MultiKeyword || tokens[i-1].type() != lexeme::Cpp1MultiKeyword) {
             //  If this is just one such token, changed its type to regular ::Keyword
-            if (i >= 0 && tokens[i].type() == lexeme::Cpp1MultiKeyword) {
+            if (i >= 0 &&
+                tokens[i].type() == lexeme::Cpp1MultiKeyword
+                )
+            {
                 tokens[i].set_type( lexeme::Keyword );
             }
             return;
@@ -498,7 +539,10 @@ auto lex_line(
         auto is_signed         = 0;
         auto is_unsigned       = 0;
         generated_text.push_back( "" );
-        while( !tokens.empty() && tokens.back().type() == lexeme::Cpp1MultiKeyword)
+        while(
+            !tokens.empty() &&
+            tokens.back().type() == lexeme::Cpp1MultiKeyword
+            )
         {
             auto text = tokens.back().to_string(true);
             if (text == "char"    ) { ++is_char    ; }
@@ -559,15 +603,17 @@ auto lex_line(
         tokens.push_back(last_token);
     };
 
-    auto merge_operator_function_names = [&]()
+    auto merge_operator_function_names = [&]
     {
         auto i = std::ssize(tokens)-1;
 
         //  If the third-to-last token is "operator", we may need to
         //  merge an "operator@" name into a single identifier token
 
-        if (i >= 2 && tokens[i-2] == "operator") {
-
+        if (i >= 2 &&
+            tokens[i-2] == "operator"
+            )
+        {
             //  If the tokens after "operator" are ">" and without whitespace one of ">=" ">" "="
             if (tokens[i-1].type() == lexeme::Greater &&
                 (tokens[i-1].position() == source_position{tokens[i].position().lineno, tokens[i].position().colno-1}) &&
@@ -614,7 +660,12 @@ auto lex_line(
 
     //  Local helper functions for readability
     //
-    auto peek = [&](int num) {  return (i+num < std::ssize(line) && i+num >= 0) ? line[i+num] : '\0';  };
+    auto peek = [&](int num) {
+        return
+            (i+num < std::ssize(line) && i+num >= 0)
+            ? line[i+num]
+            : '\0';
+    };
 
     auto store = [&](auto num, lexeme type)
     {
@@ -638,10 +689,15 @@ auto lex_line(
     //G simple-escape-sequence:
     //G     '\' { any member of the basic character set except u, U, or x }
     //G
-    auto peek_is_simple_escape_sequence = [&](int offset) {
+    auto peek_is_simple_escape_sequence = [&](int offset)
+    {
         auto peek1 = peek(offset);
         auto peek2 = peek(1 + offset);
-        if (peek1 == '\\' && peek2 != 'u' && peek2 != 'U' && peek2 != 'x')
+        if (peek1 == '\\' &&
+            peek2 != 'u' &&
+            peek2 != 'U' &&
+            peek2 != 'x'
+            )
         {
             return 2;
         }
@@ -659,7 +715,10 @@ auto lex_line(
             is_hexadecimal_digit(peek(2+offset)))
         {
             auto j = 3;
-            while (peek(j+offset) && is_hexadecimal_digit(peek(j+offset)))
+            while (
+                peek(j+offset) &&
+                is_hexadecimal_digit(peek(j+offset))
+                )
             {
                 ++j;
             }
@@ -674,9 +733,18 @@ auto lex_line(
     //G
     auto peek_is_universal_character_name = [&](colno_t offset)
     {
-        if (peek(offset) == '\\' && peek(1 + offset) == 'u') {
+        if (peek(offset) == '\\' &&
+            peek(1 + offset) == 'u'
+            )
+        {
             auto j = 2;
-            while (j <= 5 && is_hexadecimal_digit(peek(j + offset))) { ++j; }
+            while (
+                j <= 5 &&
+                is_hexadecimal_digit(peek(j + offset))
+                )
+            {
+                ++j;
+            }
             if (j == 6) { return j; }
             errors.emplace_back(
                 source_position( lineno, i + offset ),
@@ -684,9 +752,18 @@ auto lex_line(
                 " be followed by 4 hexadecimal digits)"
             );
         }
-        if (peek(offset) == '\\' && peek(1+offset) == 'U') {
+        if (peek(offset) == '\\' &&
+            peek(1+offset) == 'U'
+            )
+        {
             auto j = 2;
-            while (j <= 9 && is_hexadecimal_digit(peek(j+offset))) { ++j; }
+            while (
+                j <= 9 &&
+                is_hexadecimal_digit(peek(j+offset))
+                )
+            {
+                ++j;
+            }
             if (j == 10) { return j; }
             errors.emplace_back(
                 source_position(lineno, i+offset),
@@ -725,12 +802,18 @@ auto lex_line(
     //G
     auto peek_is_sc_char = [&](int offset, char quote)
     {
-        if (auto u = peek_is_universal_character_name(offset))
-            { return u; }
-        if (auto e = peek_is_escape_sequence(offset))
-            { return e; }
-        if (peek(offset) && peek(offset) != quote && peek(offset) != '\\')
-            { return 1; }
+        if (auto u = peek_is_universal_character_name(offset)) {
+            return u;
+        }
+        if (auto e = peek_is_escape_sequence(offset)) {
+            return e;
+        }
+        if (peek(offset) &&
+            peek(offset) != quote && peek(offset) != '\\'
+            )
+        {
+            return 1;
+        }
         return 0;
     };
 
@@ -753,7 +836,7 @@ auto lex_line(
         return 0;
     };
 
-    auto peek_is_keyword = [&]()
+    auto peek_is_keyword = [&]
     {
         //  Cpp2 has a smaller set of the Cpp1 globally reserved keywords, but we continue to
         //  reserve all the ones Cpp1 has both for compatibility and to not give up a keyword
@@ -785,7 +868,7 @@ auto lex_line(
         return do_is_keyword(keys);
     };
 
-    auto peek_is_cpp2_fundamental_type_keyword = [&]()
+    auto peek_is_cpp2_fundamental_type_keyword = [&]
     {
         const auto keys = std::regex(
             "^i8_fast|^i16_fast|^i32_fast|^i64_fast|^u8_fast|^u16_fast|^u32_fast|^u64_fast|"
@@ -796,7 +879,7 @@ auto lex_line(
         return do_is_keyword(keys);
     };
 
-    auto peek_is_cpp1_multi_token_fundamental_keyword = [&]()
+    auto peek_is_cpp1_multi_token_fundamental_keyword = [&]
     {
         const auto multi_keys = std::regex(
             "^char16_t|^char32_t|^char8_t|^char|^double|^float|^int|^long|^short|^signed|^unsigned"
@@ -1096,7 +1179,12 @@ auto lex_line(
             // (this will be less kludgy to write with pattern matching)
             default:
 
-                if (line[i] == 'n' && peek1 == 'o' && peek2 == 't' && isspace(peek3)) {
+                if (line[i] == 'n' &&
+                    peek1   == 'o' &&
+                    peek2   == 't' &&
+                    isspace(peek3)
+                    )
+                {
                     store(3, lexeme::Not);
                 }
 
@@ -1199,7 +1287,11 @@ auto lex_line(
                         //  which may have moved it in memory... move i back to the line start
                         //  and discard any tokens we already tokenized for this line
                         i = colno_t{-1};
-                        while (!tokens.empty() && tokens.back().position().lineno == lineno) {
+                        while (
+                            !tokens.empty() &&
+                            tokens.back().position().lineno == lineno
+                            )
+                        {
                             tokens.pop_back();
                         }
                     }
@@ -1255,8 +1347,10 @@ auto lex_line(
                 //
                 else if (auto j = starts_with_identifier({&line[i], std::size(line)-i}))
                 {
-                    if (!isspace(peek(-1)) && !tokens.empty() &&
-                        is_literal(tokens.back().type()))
+                    if (!isspace(peek(-1)) &&
+                        !tokens.empty() &&
+                        is_literal(tokens.back().type())
+                        )
                     {
                         store(j, lexeme::UserDefinedLiteralSuffix);
                     }
@@ -1399,7 +1493,8 @@ public:
     //-----------------------------------------------------------------------
     //  get_map: Access the token map
     //
-    auto get_map() const -> auto const&
+    auto get_map() const
+        -> auto const&
     {
         return grammar_map;
     }
@@ -1408,7 +1503,8 @@ public:
     //-----------------------------------------------------------------------
     //  get_comments: Access the comment list
     //
-    auto get_comments() const -> auto const&
+    auto get_comments() const
+        -> auto const&
     {
         return comments;
     }
@@ -1417,7 +1513,8 @@ public:
     //-----------------------------------------------------------------------
     //  get_generated: Access the generated tokens
     //
-    auto get_generated() -> auto&
+    auto get_generated()
+        -> auto&
     {
         return generated_tokens;
     }
@@ -1426,7 +1523,8 @@ public:
     //-----------------------------------------------------------------------
     //  debug_print
     //
-    auto debug_print(std::ostream& o) const -> void
+    auto debug_print(std::ostream& o) const
+        -> void
     {
         for (auto const& [lineno, entry] : grammar_map) {
 

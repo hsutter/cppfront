@@ -3,11 +3,34 @@ N: namespace = {
 
 myclass : type = {
 
+    operator=: (implicit out this, x: int) = {
+        data = x;
+        more = "xyzzy";
+        std::cout << "myclass: implicit constructor from int\n";
+    }
+
+    operator=: (out this, s: std::string) = {
+        data = 99;
+        more = "plugh";
+        std::cout << "myclass: explicit constructor from string\n";
+    }
+
+    operator=: (out this) = {
+        data = -3;
+        more = "-3";
+        std::cout << "myclass: default constructor\n";
+    }
+
+    operator=: (move this) = {
+        std::cout << "myclass: destructor\n";
+    }
+
     f: (virtual this, x: int) = {
         std::cout << "N::myclass::f with (x)$\n";
     }
 
     data: int;
+    more: std::string;
 
     nested : type = {
         g: () = std::cout << "N::myclass::nested::g\n";
@@ -23,11 +46,13 @@ myclass : type = {
 }
 
 main: () = {
-    x: N::myclass = ();
+    x: N::myclass = 1;
     x.f(53);
     N::myclass::nested::g();
     std::cout << "f1: (x.f1(1,1))$\n";
     std::cout << "f2: (x.f2(2,2))$\n";
     std::cout << "f3: (x.f3<3,3>())$\n";
     std::cout << "f4: (x.f4<4,4>())$\n";
+    x2: N::myclass = "abracadabra";
+    x3: N::myclass = ();
 }

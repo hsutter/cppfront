@@ -51,7 +51,8 @@ struct source_line
     enum class category { empty, preprocessor, comment, import, cpp1, cpp2, rawstring }
         cat = category::empty;
 
-    auto prefix() const -> std::string
+    auto prefix() const
+        -> std::string
     {
         switch (cat) {
         break;case category::empty:         return "/*   */ ";
@@ -82,7 +83,8 @@ struct source_position
 
     auto operator<=>(source_position const&) const = default;
 
-    auto to_string() const -> std::string
+    auto to_string() const
+        -> std::string
     {
         return "(" + std::to_string(lineno) + "," + std::to_string(colno) + ")";
     }
@@ -114,7 +116,8 @@ struct error
         : where{w}, msg{m}, internal{i}
     { }
 
-    auto print(auto& o, std::string const& file) const -> void;
+    auto print(auto& o, std::string const& file) const
+        -> void;
 };
 
 
@@ -128,7 +131,8 @@ struct error
 //G binary-digit:
 //G     one of '0' '1'
 //G
-auto is_binary_digit(char c) -> bool
+auto is_binary_digit(char c)
+    -> bool
 {
     return c == '0' || c == '1';
 }
@@ -137,7 +141,8 @@ auto is_binary_digit(char c) -> bool
 //G     binary-digit
 //G     one of '2' '3' '4' '5' '6' '7' '8' '9'
 //G
-auto is_digit(char c) -> bool
+auto is_digit(char c)
+    -> bool
 {
     return isdigit(c);
 }
@@ -146,7 +151,8 @@ auto is_digit(char c) -> bool
 //G     digit
 //G     one of 'A' 'B' 'C' 'D' 'E' 'F'
 //G
-auto is_hexadecimal_digit(char c) -> bool
+auto is_hexadecimal_digit(char c)
+    -> bool
 {
     return isxdigit(c);
 }
@@ -156,7 +162,8 @@ auto is_hexadecimal_digit(char c) -> bool
 //G     one of 'A'..'Z'
 //G     _
 //G
-auto is_nondigit(char c) -> bool
+auto is_nondigit(char c)
+    -> bool
 {
     return isalpha(c) || c == '_';
 };
@@ -164,7 +171,8 @@ auto is_nondigit(char c) -> bool
 //G identifier-start:
 //G     nondigit
 //G
-auto is_identifier_start(char c) -> bool
+auto is_identifier_start(char c)
+    -> bool
 {
     return is_nondigit(c);
 }
@@ -173,7 +181,8 @@ auto is_identifier_start(char c) -> bool
 //G     digit
 //G     nondigit
 //G
-auto is_identifier_continue(char c) -> bool
+auto is_identifier_continue(char c)
+    -> bool
 {
     return is_digit(c) || is_nondigit(c);
 }
@@ -183,11 +192,18 @@ auto is_identifier_continue(char c) -> bool
 //G     identifier identifier-continue
 //G     'operator' operator
 //G
-auto starts_with_identifier(std::string_view s) -> int
+auto starts_with_identifier(std::string_view s)
+    -> int
 {
     if (is_identifier_start(s[0])) {
         auto j = 1;
-        while (j < std::ssize(s) && is_identifier_continue(s[j])) { ++j; }
+        while (
+            j < std::ssize(s) &&
+            is_identifier_continue(s[j])
+            )
+        {
+            ++j;
+        }
         return j;
     }
     return 0;
@@ -196,7 +212,8 @@ auto starts_with_identifier(std::string_view s) -> int
 //  Helper to allow one of the above or a digit separator
 //  Example:    is_separator_or( is_binary_digit (c) )
 //
-auto is_separator_or(auto pred, char c) -> bool
+auto is_separator_or(auto pred, char c)
+    -> bool
 {
     return c == '\'' || pred(c);
 }
@@ -227,7 +244,8 @@ struct String
 //
 template<typename T>
     requires std::is_same_v<T, std::string>
-auto __as(bool b) -> T
+auto __as(bool b)
+    -> T
 {
     return b ? "true" : "false";
 }
@@ -235,17 +253,25 @@ auto __as(bool b) -> T
 
 //  Explicit cast
 template<typename T>
-auto __as(auto x) -> T {
+auto __as(auto x)
+    -> T
+{
     return T(x);
 }
 
 
 //  String path prefix from filename
 //
-auto strip_path(std::string const& file) -> std::string
+auto strip_path(std::string const& file)
+    -> std::string
 {
     auto i = std::ssize(file)-1;
-    while (i >= 0 && file[i] != '\\' && file[i] != '/') {
+    while (
+        i >= 0 &&
+        file[i] != '\\' &&
+        file[i] != '/'
+        )
+    {
         --i;
     }
     return {file, __as<size_t>(i+1)};
@@ -271,7 +297,9 @@ auto replace_all(std::string& s, std::string_view what, std::string_view with)
     return s;
 }
 
-auto to_upper(char c) -> char {
+auto to_upper(char c)
+    -> char
+{
     //  C toupper is only not-UB in [0,127] and returns the wrong type,
     //  so wrap the range check and the type cast here in one place...
     //  note the 126 (not 127) is intentional to avoid a GCC warning
@@ -280,7 +308,9 @@ auto to_upper(char c) -> char {
     return c;
 }
 
-auto to_upper_and_underbar(std::string_view s) -> std::string {
+auto to_upper_and_underbar(std::string_view s)
+    -> std::string
+{
     auto ret = std::string{s};
     for (char& c : ret) {
         if (std::isalnum(c)) { c = to_upper(c); }
@@ -338,10 +368,12 @@ class cmdline_processor
 
     //  Define this in the main .cpp to avoid bringing <iostream> into the headers,
     //  so that we can't accidentally start depending on iostreams in the compiler body
-    static auto print(std::string_view, int width = 0) -> void;
+    static auto print(std::string_view, int width = 0)
+        -> void;
 
 public:
-    auto process_flags() -> void
+    auto process_flags()
+        -> void
     {
         constexpr auto processed = -1;
 
@@ -383,7 +415,10 @@ public:
 
             for (auto& flag : flags) {
                 auto length_to_match = std::max(flag.unique_prefix, __as<int>(arg->text.length())-1);
-                if (flag.opt_out && arg->text.ends_with("-")) {
+                if (flag.opt_out &&
+                    arg->text.ends_with("-")
+                    )
+                {
                     length_to_match = std::max(flag.unique_prefix, __as<int>(arg->text.length())-2);
                 }
 
@@ -428,7 +463,8 @@ public:
         std::erase_if( args, [=](auto& arg){ return arg.pos == processed; } );
     }
 
-    auto print_help() -> void
+    auto print_help()
+        -> void
     {
         help_requested = true;
 
@@ -469,7 +505,17 @@ public:
         }
     }
 
-    auto add_flag(int group, std::string_view name, std::string_view description, callback0 handler0, callback1 handler1, std::string_view synonym, bool opt_out) {
+    auto add_flag(
+        int              group,
+        std::string_view name,
+        std::string_view description,
+        callback0        handler0,
+        callback1        handler1,
+        std::string_view synonym,
+        bool             opt_out
+    )
+        -> void
+    {
         flags.emplace_back( group, name, description, handler0, handler1, synonym, opt_out );
         auto length = std::ssize(name);
         if (opt_out) { length += 3; }   // space to print "[-]"
@@ -478,24 +524,43 @@ public:
         }
     }
     struct register_flag {
-        register_flag(int group, std::string_view name, std::string_view description, callback0 handler0, callback1 handler1 = {}, std::string_view synonym = {}, bool opt_out = false);
+        register_flag(
+            int              group,
+            std::string_view name,
+            std::string_view description,
+            callback0        handler0,
+            callback1        handler1 = {},
+            std::string_view synonym  = {},
+            bool             opt_out  = false
+        );
     };
 
-    auto set_args(int argc, char* argv[]) -> void {
+    auto set_args(
+        int   argc,
+        char* argv[]
+    )
+        -> void
+    {
         for (auto i = 1; i < argc; ++i) {
             args.emplace_back( i, argv[i] );
         }
     }
 
-    auto help_was_requested() -> bool {
+    auto help_was_requested()
+        -> bool
+    {
         return help_requested;
     }
 
-    auto arguments() -> std::vector<arg>& {
+    auto arguments()
+        -> std::vector<arg>&
+    {
         return args;
     }
 
-    auto print_version() -> void {
+    auto print_version()
+        -> void
+    {
         help_requested = true;
         print("cppfront 0.1.1 compiler\nCopyright (C) Herb Sutter\n");
         print("All rights reserved\n");
@@ -519,7 +584,8 @@ cmdline_processor::register_flag::register_flag(
     callback1        handler1,
     std::string_view synonym,
     bool             opt_out
-) {
+)
+{
     cmdline.add_flag( group, name, description, handler0, handler1, synonym, opt_out );
 }
 

@@ -24,7 +24,8 @@ namespace cpp2 {
 
 //  Defined out of line here just to avoid bringing <iostream> into the headers,
 //  so that we can't accidentally start depending on iostreams in the compiler body
-auto cmdline_processor::print(std::string_view s, int width) -> void
+auto cmdline_processor::print(std::string_view s, int width)
+    -> void
 {
     if (width > 0) {
         std::cout << std::setw(width) << std::left;
@@ -39,7 +40,8 @@ auto cmdline_processor::print(std::string_view s, int width) -> void
 //
 //-----------------------------------------------------------------------
 
-auto pad(int padding) -> std::string_view
+auto pad(int padding)
+    -> std::string_view
 {
     static std::string indent_str = std::string( 1024, ' ' );    // "1K should be enough for everyone"
 
@@ -156,11 +158,16 @@ struct text_with_pos{
 };
 
 // Defined out of line so we can use flag_print_colon_errors.
-auto error::print(auto& o, std::string const& file) const -> void {
+auto error::print(
+    auto&              o,
+    std::string const& file
+) const
+    -> void
+{
     o << file ;
     if (where.lineno > 0) {
         if (flag_print_colon_errors) {
-            o << ":"<< (where.lineno);
+            o << ":" << (where.lineno);
             if (where.colno >= 0) {
                 o << ":" << where.colno;
             }
@@ -226,7 +233,11 @@ class positional_printer
     //-----------------------------------------------------------------------
     //  Print text
     //
-    auto print( std::string_view s, source_position pos = source_position{}) -> void
+    auto print(
+        std::string_view s,
+        source_position  pos = source_position{}
+    )
+        -> void
     {
         //  If the caller is capturing this output, emit to the
         //  current target instead and skip most positioning logic
@@ -284,7 +295,8 @@ class positional_printer
 
     //  Start a new line if we're not in col 1 already
     //
-    auto ensure_at_start_of_new_line() -> void
+    auto ensure_at_start_of_new_line()
+        -> void
     {
         if (curr_pos.colno > 1) {
             auto old_pos = curr_pos;
@@ -296,7 +308,8 @@ class positional_printer
 
     //  Print a #line directive
     //
-    auto print_line_directive( lineno_t line ) -> void
+    auto print_line_directive( lineno_t line )
+        -> void
     {
         prev_line_info = { curr_pos.lineno, { } };
         ensure_at_start_of_new_line();
@@ -310,7 +323,8 @@ class positional_printer
 
     //  Catch up with comment/blank lines
     //
-    auto flush_comments( source_position pos ) -> void
+    auto flush_comments( source_position pos )
+        -> void
     {
         if (!pcomments) {
             return;
@@ -330,7 +344,9 @@ class positional_printer
         {
             //  If a comment goes on this line, print it
             assert( next_comment >= std::ssize(comments) || comments[next_comment].start.lineno >= curr_pos.lineno );
-            if (next_comment < std::ssize(comments) && comments[next_comment].start.lineno == curr_pos.lineno)
+            if (next_comment < std::ssize(comments) &&
+                comments[next_comment].start.lineno == curr_pos.lineno
+                )
             {
                 //  For a line comment, start it at the right indentation and print it
                 //  with a newline end
@@ -362,7 +378,8 @@ class positional_printer
     //  Position ourselves as close to pos as possible,
     //  and catch up with displaying comments
     //
-    auto align_to( source_position pos ) -> void
+    auto align_to( source_position pos )
+        -> void
     {
         //  Ignoring this logic is used when we're generating new code sections,
         //  such as return value structs
@@ -395,10 +412,14 @@ public:
     //-----------------------------------------------------------------------
     //  Destructor
     //
-    ~positional_printer() {
+    ~positional_printer()
+    {
         flush_comments( {curr_pos.lineno+1, 1} );
 
-        if (is_open() && source_has_cpp2) {
+        if (is_open() &&
+            source_has_cpp2
+            )
+        {
             //  Always make sure the last line ends with a newline
             //  (not really necessary but makes some tools quieter)
             //  -- but only if there's any Cpp2, otherwise don't
@@ -421,7 +442,11 @@ public:
     {
         source_has_cpp2 = has_cpp2;
         cpp2_filename = cpp2_filename_;
-        assert (!is_open() && !pcomments && "ICE: tried to call .open twice");
+        assert(
+            !is_open() &&
+            !pcomments &&
+            "ICE: tried to call .open twice"
+        );
         cpp1_filename = cpp1_filename_;
         if (cpp1_filename == "stdout") {
             out = &std::cout;
@@ -433,17 +458,26 @@ public:
         pcomments = &comments;
     }
 
-    auto reopen() -> void
+    auto reopen()
+        -> void
     {
-        assert (is_open() && "ICE: tried to call .reopen without first calling .open");
+        assert(
+            is_open() &&
+            "ICE: tried to call .reopen without first calling .open"
+        );
         assert(cpp1_filename.ends_with(".h"));
         out_file.close();
         out_file.open(cpp1_filename + "pp");
     }
 
-    auto is_open() -> bool {
+    auto is_open()
+        -> bool
+    {
         if (out) {
-            assert (pcomments && "ICE: if is_open, pcomments should also be set");
+            assert(
+                pcomments &&
+                "ICE: if is_open, pcomments should also be set"
+            );
         }
         return out;
     }
@@ -452,7 +486,8 @@ public:
     //-----------------------------------------------------------------------
     //  Abandon: close and delete
     //
-    auto abandon() -> void
+    auto abandon()
+        -> void
     {
         if (!is_open()) {
             return;
@@ -468,9 +503,13 @@ public:
     //  Print extra text and don't track positions
     //  Used for Cpp2 boundary comment and prelude and final newline
     //
-    auto print_extra( std::string_view s ) -> void
+    auto print_extra( std::string_view s )
+        -> void
     {
-        assert (is_open() && "ICE: printer must be open before printing");
+        assert(
+            is_open() &&
+            "ICE: printer must be open before printing"
+        );
         print( s );
     }
 
@@ -478,9 +517,13 @@ public:
     //-----------------------------------------------------------------------
     //  Print a Cpp1 line, which should be at lineno
     //
-    auto print_cpp1( std::string_view s, lineno_t line ) -> void
+    auto print_cpp1( std::string_view s, lineno_t line )
+        -> void
     {
-        assert (is_open() && "ICE: printer must be open before printing");
+        assert(
+            is_open() &&
+            "ICE: printer must be open before printing"
+        );
 
         //  Keep track of whether the last thing we printed was Cpp2
         last_was_cpp2 = false;
@@ -505,13 +548,20 @@ public:
     //-----------------------------------------------------------------------
     //  Start a new Cpp2 section, which should start at lineno
     //
-    auto start_cpp2(lineno_t line) -> void
+    auto start_cpp2(lineno_t line)
+        -> void
     {
-        assert (is_open() && "ICE: printer must be open before printing");
+        assert(
+            is_open() &&
+            "ICE: printer must be open before printing"
+        );
 
         //  Because the blank/comment lines before a Cpp2 code section are part
         //  of the Cpp2 section, and not printed in thedeclarations-only pass
-        if (!last_was_cpp2 && declarations_only) {
+        if (!last_was_cpp2 &&
+            declarations_only
+            )
+        {
             print ("\n");
         }
 
@@ -535,13 +585,23 @@ public:
     //-----------------------------------------------------------------------
     //  Print a Cpp2 item, which should be at pos
     //
-    auto print_cpp2(std::string_view s, source_position pos) -> void
+    auto print_cpp2(
+        std::string_view s,
+        source_position  pos
+    )
+        -> void
     {
-        assert (is_open() && "ICE: printer must be open before printing");
+        assert(
+            is_open() &&
+            "ICE: printer must be open before printing"
+        );
 
         //  Keep track of whether the last thing we printed was Cpp2
         //  Note: We should have been switched to Cpp2 with a `start_cpp2` call
-        assert(last_was_cpp2 && "ICE: didn't call start_cpp2 to begin a Cpp2 section");
+        assert(
+            last_was_cpp2 &&
+            "ICE: didn't call start_cpp2 to begin a Cpp2 section"
+        );
         last_was_cpp2 = true;
 
         //  Skip alignment work if we're capturing emitted text
@@ -566,16 +626,22 @@ public:
             //  (2) Otherwise, see if there's a previous line's offset to repeat
             //      If we moved to a new line, then this is the first
             //      non-comment non-whitespace text on the new line
-            else if (last_pos.lineno == pos.lineno-1 && enable_indent_heuristic) {
+            else if (
+                last_pos.lineno == pos.lineno-1 &&
+                enable_indent_heuristic
+                )
+            {
                 //  If the last line had a request for this colno, remember its actual offset
                 constexpr int sentinel = -100;
                 auto last_line_offset = sentinel;
                 for(auto i = 0;
-                    i < std::ssize(prev_line_info.requests) && prev_line_info.requests[i].requested <= pos.colno;
+                    i < std::ssize(prev_line_info.requests) &&
+                        prev_line_info.requests[i].requested <= pos.colno;
                     ++i
                     )
                 {
-                    if (prev_line_info.requests[i].requested == pos.colno) {
+                    if (prev_line_info.requests[i].requested == pos.colno)
+                    {
                         last_line_offset = prev_line_info.requests[i].offset;
                         break;
                     }
@@ -611,12 +677,14 @@ public:
     //  Useful when Cpp1 syntax is emitted in a different order/verbosity
     //  than Cpp2 such as with declarations
     //
-    auto preempt_position_push(source_position pos) -> void
+    auto preempt_position_push(source_position pos)
+        -> void
     {
         preempt_pos.push_back( pos );
     }
 
-    auto preempt_position_pop() -> void
+    auto preempt_position_pop()
+        -> void
     {
         assert(!preempt_pos.empty());
         preempt_pos.pop_back();
@@ -624,21 +692,28 @@ public:
 
     //  Add (or, if negative, subtract) padding for the current line only
     //
-    auto add_pad_in_this_line(colno_t extra) -> void
+    auto add_pad_in_this_line(colno_t extra)
+        -> void
     {
         pad_for_this_line += extra;
     }
 
     //  Enable indent heuristic for just this line
     //
-    auto disable_indent_heuristic_for_next_text() -> void {
+    auto disable_indent_heuristic_for_next_text()
+        -> void
+    {
         enable_indent_heuristic = false;
     }
 
     //  Ignore position information, usually when emitting generated code
     //  such as generated multi-return type structs
     //
-    auto ignore_alignment(bool ignore, int indent = 0) -> void
+    auto ignore_alignment(
+        bool ignore,
+        int  indent = 0
+    )
+        -> void
     {
         //  We'll only ever call this in local non-nested true/false pairs.
         //  If we ever want to generalize (support nesting, or make it non-brittle),
@@ -667,18 +742,24 @@ public:
     //  In the first pass we will print only declarations (the default)
     //  For the second pass this function enables printing definitions
     //
-    auto enable_definitions() -> void {
+    auto enable_definitions()
+        -> void
+    {
         declarations_only = false;
     }
 
-    auto doing_declarations_only() const -> bool {
+    auto doing_declarations_only() const
+        -> bool
+    {
         return declarations_only;
     }
 
     //  Provide an option to store to a given string instead, which is
     //  useful for capturing Cpp1-formatted output for generated code
     //
-    auto emit_to_string( std::string* target = {} ) -> void {
+    auto emit_to_string( std::string* target = {} )
+        -> void
+    {
         if (target) {
             emit_string_targets.push_back( target );
             emit_target_stack.push_back(target_type::string);
@@ -693,7 +774,9 @@ public:
     //  useful for postfix expression which have to mix unwrapping operators
     //  with emitting sub-elements such as expression lists
     //
-    auto emit_to_text_chunks( std::vector<text_with_pos>* target = {} ) -> void {
+    auto emit_to_text_chunks( std::vector<text_with_pos>* target = {} )
+        -> void
+    {
         if (target) {
             emit_text_chunks_targets.push_back( target );
             emit_target_stack.push_back(target_type::chunks);
@@ -713,6 +796,11 @@ public:
 //
 //-----------------------------------------------------------------------
 //
+struct function_prolog {
+    std::vector<std::string> mem_inits  = {};
+    std::vector<std::string> statements = {};
+};
+
 class cppfront
 {
     std::string sourcefile;
@@ -738,8 +826,8 @@ class cppfront
     std::vector<arg_info> current_args  = { {} };
 
     struct function_info {
-        token const*             name   = {};
-        std::vector<std::string> prolog = {};
+        token const*    pname  = {};
+        function_prolog prolog = {};
     };
     std::vector<function_info> current_function_info = { {} };
 
@@ -789,7 +877,9 @@ public:
         //  "Constraints enable creativity in the right directions"
         //  sort of applies here
         //
-        if (!sourcefile.ends_with(".cpp2") && !sourcefile.ends_with(".h2"))
+        if (!sourcefile.ends_with(".cpp2") &&
+            !sourcefile.ends_with(".h2")
+            )
         {
             errors.emplace_back(
                 source_position(-1, -1),
@@ -854,7 +944,8 @@ public:
         lineno_t cpp1_lines = 0;
         lineno_t cpp2_lines = 0;
     };
-    auto lower_to_cpp1() -> lower_to_cpp1_ret
+    auto lower_to_cpp1()
+        -> lower_to_cpp1_ret
     {
         auto ret = lower_to_cpp1_ret{};
 
@@ -952,7 +1043,10 @@ public:
                         }
                     }
 
-                    if (line.cat == source_line::category::preprocessor && line.text.ends_with(".h2\"")) {
+                    if (line.cat == source_line::category::preprocessor &&
+                        line.text.ends_with(".h2\"")
+                        )
+                    {
                         //  Strip off the 2"
                         auto h_include = line.text.substr(0, line.text.size()-2);
                         printer.print_cpp1( h_include + "\"", curr_lineno );
@@ -973,7 +1067,9 @@ public:
                     }
 
                     //  We should be in a position to emit a set of Cpp2 declarations
-                    if (map_iter != tokens.get_map().cend() && map_iter->first /*line*/ <= curr_lineno)
+                    if (map_iter != tokens.get_map().cend() &&
+                        map_iter->first /*line*/ <= curr_lineno
+                        )
                     {
                         //  We should be here only when we're at exactly the first line of a Cpp2 section
                         assert (map_iter->first == curr_lineno);
@@ -1076,13 +1172,23 @@ public:
     //  is needed where Cpp1 and Cpp2 have different grammar orders
     //
 
-    void print_to_string(std::string* str, auto& i, auto... more) {
+    void print_to_string(
+        std::string* str,
+        auto&        i,
+        auto...      more
+    )
+    {
         printer.emit_to_string(str);
         emit(i, more...);
         printer.emit_to_string();
     };
 
-    auto print_to_string(auto& i, auto... more) -> std::string {
+    auto print_to_string(
+        auto&   i,
+        auto... more
+    )
+        -> std::string
+    {
         auto print = std::string{};
         print_to_string(&print, i, more...);
         return print;
@@ -1095,7 +1201,12 @@ public:
     //  alternative is a smart pointer
     //
     template <int I>
-    auto try_emit(auto& v, auto... more) -> void {
+    auto try_emit(
+        auto&   v,
+        auto... more
+    )
+        -> void
+    {
         if (v.index() == I) {
             auto const& alt = std::get<I>(v);
             assert (alt);
@@ -1106,14 +1217,21 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(token const& n, bool is_qualified = false, source_position pos = {}) -> void
+    auto emit(
+        token const&    n,
+        bool            is_qualified = false,
+        source_position pos          = {}
+    )
+        -> void
     {
         if (pos == source_position{}) {
             pos = n.position();
         }
 
         //  Implicit "cpp2::" qualification of Cpp2 fixed-width type aliases
-        if (!is_qualified && n.type() == lexeme::Cpp2FixedType)
+        if (!is_qualified &&
+            n.type() == lexeme::Cpp2FixedType
+            )
         {
             printer.print_cpp2("cpp2::", pos);
         }
@@ -1134,7 +1252,11 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(literal_node const& n, source_position pos = {}) -> void
+    auto emit(
+        literal_node const& n,
+        source_position     pos = {}
+    )
+        -> void
     {
         if (pos == source_position{}) {
             pos = n.position();
@@ -1161,7 +1283,8 @@ public:
         auto last_use = is_definite_last_use(n.identifier);
 
         bool add_forward =
-            last_use && last_use->is_forward &&
+            last_use &&
+            last_use->is_forward &&
             !in_non_rvalue_context.back();
 
         bool add_move =
@@ -1200,7 +1323,10 @@ public:
         }
 
         in_definite_init = is_definite_initialization(n.identifier);
-        if (!in_definite_init && !in_parameter_list) {
+        if (!in_definite_init &&
+            !in_parameter_list
+            )
+        {
             if (auto decl = sema.get_declaration_of(*n.identifier);
                 is_local_name &&
                 decl &&
@@ -1227,7 +1353,8 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(qualified_id_node const& n) -> void
+    auto emit(qualified_id_node const& n)
+        -> void
     {
         //  Implicit "cpp2::" qualification of "unique.new" and "shared.new"
         if (n.ids.size() == 2 &&
@@ -1257,7 +1384,11 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(type_id_node const& n, source_position pos = {}) -> void
+    auto emit(
+        type_id_node const& n,
+        source_position     pos = {}
+    )
+        -> void
     {
         if (pos == source_position{}) {
             pos = n.position();
@@ -1281,20 +1412,50 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(id_expression_node const& n, bool is_local_name = true) -> void
+    auto emit(
+        id_expression_node const& n,
+        bool                      is_local_name = true
+    )
+        -> void
     {
         try_emit<id_expression_node::qualified  >(n.id);
         try_emit<id_expression_node::unqualified>(n.id, false, is_local_name);
     }
 
 
-    auto emit_prolog(std::vector<std::string> const& prolog, source_position pos, colno_t indent) {
-        if (!prolog.empty()) {
+    auto emit_prolog_mem_inits(
+        function_prolog const& prolog,
+        source_position        pos,
+        colno_t                indent
+    )
+        -> void
+    {
+        if (!prolog.mem_inits.empty())
+        {
             printer.ignore_alignment( true, indent );
             pos.colno = indent;
-            for (auto& loc : prolog) {
+            for (auto& line : prolog.mem_inits) {
                 printer.print_cpp2("\n", pos);
-                printer.print_cpp2(loc, pos);
+                printer.print_cpp2(line, pos);
+            }
+            printer.ignore_alignment( false );
+        }
+    }
+
+    auto emit_prolog_statements(
+        function_prolog const& prolog,
+        source_position        pos,
+        colno_t                indent
+    )
+        -> void
+    {
+        if (!prolog.statements.empty())
+        {
+            printer.ignore_alignment( true, indent );
+            pos.colno = indent;
+            for (auto& line : prolog.statements) {
+                printer.print_cpp2("\n", pos);
+                printer.print_cpp2(line, pos);
             }
             printer.ignore_alignment( false );
         }
@@ -1303,16 +1464,19 @@ public:
     //-----------------------------------------------------------------------
     //
     auto emit(
-        compound_statement_node  const&  n,
-        std::vector<std::string> const& function_prolog = {}
+        compound_statement_node const&  n,
+        function_prolog         const& function_prolog = {}
     )
         -> void
     {
+        emit_prolog_mem_inits(function_prolog, n.position(), n.body_indent);
+
         auto pos = n.open_brace;
-        pos.lineno -= std::ssize(function_prolog);
+        pos.lineno -= std::ssize(function_prolog.mem_inits );
+        pos.lineno -= std::ssize(function_prolog.statements);
         printer.print_cpp2( "{", pos );
 
-        emit_prolog(function_prolog, n.position(), n.body_indent);
+        emit_prolog_statements(function_prolog, n.position(), n.body_indent);
 
         for (auto const& x : n.statements) {
             assert(x);
@@ -1325,7 +1489,11 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(inspect_expression_node const& n, bool is_expression) -> void
+    auto emit(
+        inspect_expression_node const& n,
+        bool                           is_expression
+    )
+        -> void
     {
         auto constexpr_qualifier = std::string{};
         if (n.is_constexpr) {
@@ -1348,7 +1516,10 @@ public:
         emit(*n.expression);
         printer.print_cpp2(";", n.position());
 
-        assert(n.identifier && *n.identifier == "inspect");
+        assert(
+            n.identifier &&
+            *n.identifier == "inspect"
+        );
 
         assert(!n.alternatives.empty());
         auto found_wildcard = false;
@@ -1384,7 +1555,11 @@ public:
                 emit(*alt->statement);
                 printer.emit_to_string();
                 //  ... and jettison the final ; for an expression-statement
-                while (!statement.empty() && (statement.back() == ';' || isspace(statement.back()))) {
+                while (
+                    !statement.empty() &&
+                    (statement.back() == ';' || isspace(statement.back()))
+                    )
+                {
                     statement.pop_back();
                 }
 
@@ -1420,7 +1595,10 @@ public:
 
                 printer.print_cpp2(statement, alt->position());
 
-                if (is_expression && id != "auto") {
+                if (is_expression &&
+                    id != "auto"
+                    )
+                {
                     assert(alt->statement->is_expression());
                     printer.print_cpp2("; else return " + result_type + "{}", alt->position());
                     printer.print_cpp2("; else return " + result_type + "{}", alt->position());
@@ -1459,7 +1637,8 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(selection_statement_node const& n) -> void
+    auto emit(selection_statement_node const& n)
+        -> void
     {
         assert(n.identifier);
         emit(*n.identifier);
@@ -1485,7 +1664,8 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(iteration_statement_node const& n) -> void
+    auto emit(iteration_statement_node const& n)
+        -> void
     {
         assert(n.identifier);
         in_non_rvalue_context.push_back(true);
@@ -1496,7 +1676,12 @@ public:
         //  Handle while
         //
         if (*n.identifier == "while") {
-            assert(n.condition && n.statement && !n.range && !n.body);
+            assert(
+                n.condition &&
+                n.statement &&
+                !n.range &&
+                !n.body
+            );
 
             //  We emit Cpp2 while loops as Cpp2 for loops if there's a "next" clause
             if (!n.next_expression) {
@@ -1525,7 +1710,12 @@ public:
         //  Handle do
         //
         else if (*n.identifier == "do") {
-            assert(n.condition && n.statement && !n.range && !n.body);
+            assert(
+                n.condition &&
+                n.statement &&
+                !n.range &&
+                !n.body
+            );
 
             printer.print_cpp2("do ", n.position());
             if (!labelname.empty()) {
@@ -1552,7 +1742,12 @@ public:
         //  Handle for
         //
         else if (*n.identifier == "for") {
-            assert(!n.condition && !n.statement && n.range && n.body);
+            assert(
+                !n.condition &&
+                !n.statement &&
+                n.range &&
+                n.body
+            );
 
             if (n.for_with_in) {
                 printer.print_cpp2("for ( auto const& cpp2_range = ", n.position());
@@ -1597,7 +1792,10 @@ public:
         }
 
         assert (iteration_statements.back().stmt);
-        if (iteration_statements.back().stmt->label && !iteration_statements.back().used) {
+        if (iteration_statements.back().stmt->label &&
+            !iteration_statements.back().used
+            )
+        {
             auto name = iteration_statements.back().stmt->label->to_string(true);
             errors.emplace_back(
                 iteration_statements.back().stmt->position(),
@@ -1611,7 +1809,8 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(return_statement_node const& n) -> void
+    auto emit(return_statement_node const& n)
+        -> void
     {
         assert(n.identifier);
         assert(*n.identifier == "return");
@@ -1630,7 +1829,11 @@ public:
             }
         }
 
-        else if (!function_returns.empty() && function_returns.back() == &single_anon) {
+        else if (
+            !function_returns.empty() &&
+            function_returns.back() == &single_anon
+            )
+        {
             errors.emplace_back(
                 n.position(),
                 "return statement must have an expression in a function with a single anonymous return value"
@@ -1639,7 +1842,11 @@ public:
 
         //  Return without expression == zero or named return values
         //
-        else if (!function_returns.empty() && function_returns.back()) {
+        else if (
+            !function_returns.empty() &&
+            function_returns.back()
+            )
+        {
             //auto stmt = function_return_name + " { "; // we shouldn't need this with { } init
             auto stmt = std::string(" { ");
             auto& parameters = function_returns.back()->parameters;
@@ -1664,7 +1871,8 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(jump_statement_node const& n) -> void
+    auto emit(jump_statement_node const& n)
+        -> void
     {
         assert(n.keyword);
 
@@ -1704,7 +1912,11 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto build_capture_lambda_intro_for( capture_group& captures, source_position pos ) -> std::string
+    auto build_capture_lambda_intro_for(
+        capture_group&  captures,
+        source_position pos
+    )
+        -> std::string
     {
         //  First calculate the stringized version of each capture expression
         //  This will let us compare and de-duplicate repeated capture expressions
@@ -1766,7 +1978,8 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(primary_expression_node const& n) -> void
+    auto emit(primary_expression_node const& n)
+        -> void
     {
         try_emit<primary_expression_node::identifier     >(n.expr);
         try_emit<primary_expression_node::expression_list>(n.expr);
@@ -1804,11 +2017,23 @@ public:
     }
 
     // Don't work yet, TODO: finalize deducing pointer types from parameter lists
-    auto is_pointer_declaration(parameter_declaration_list_node const*, int, int) -> bool {
+    auto is_pointer_declaration(
+        parameter_declaration_list_node const*,
+        int,
+        int
+    )
+        -> bool
+    {
         return false;
     }
 
-    auto is_pointer_declaration(declaration_node const* decl_node, int deref_cnt, int addr_cnt) -> bool {
+    auto is_pointer_declaration(
+        declaration_node const* decl_node,
+        int                     deref_cnt,
+        int                     addr_cnt
+    )
+        -> bool
+    {
         if (!decl_node) {
             return false;
         }
@@ -1821,7 +2046,13 @@ public:
         }, decl_node->type);
     }
 
-    auto is_pointer_declaration(function_type_node const* fun_node, int deref_cnt, int addr_cnt) -> bool {
+    auto is_pointer_declaration(
+        function_type_node const* fun_node,
+        int                       deref_cnt,
+        int                       addr_cnt
+    )
+        -> bool
+    {
         if (!fun_node) { 
             return false;
         }
@@ -1842,7 +2073,13 @@ public:
         }, fun_node->returns);
     }
 
-    auto is_pointer_declaration(type_id_node const* type_id_node, int deref_cnt, int addr_cnt) -> bool {
+    auto is_pointer_declaration(
+        type_id_node const* type_id_node,
+        int                 deref_cnt,
+        int                 addr_cnt
+    )
+        -> bool
+    {
         if (!type_id_node) { 
             return false;
         }
@@ -1860,22 +2097,43 @@ public:
             return q->type() == lexeme::Multiply;
         });
 
-        if (pointer_declarators_cnt == 0 && type_id_node->suspicious_initialization) {
+        if (pointer_declarators_cnt == 0 &&
+            type_id_node->suspicious_initialization
+            )
+        {
             return is_pointer_declaration(type_id_node->suspicious_initialization, deref_cnt, addr_cnt);
         }
 
         return (pointer_declarators_cnt + addr_cnt - deref_cnt) > 0;
     }
 
-    auto is_pointer_declaration(type_node const*, int, int) -> bool {
+    auto is_pointer_declaration(
+        type_node const*,
+        int,
+        int
+    )
+        -> bool
+    {
         return false;
     }
 
-    auto is_pointer_declaration(namespace_node const*, int, int) -> bool {
+    auto is_pointer_declaration(
+        namespace_node const*,
+        int,
+        int
+    )
+        -> bool
+    {
         return false;
     }
 
-    auto is_pointer_declaration(declaration_sym const* decl, int deref_cnt, int addr_cnt) -> bool {
+    auto is_pointer_declaration(
+        declaration_sym const* decl,
+        int                    deref_cnt,
+        int                    addr_cnt
+    )
+        -> bool
+    {
         if (!decl) {
             return false;
         }
@@ -1885,7 +2143,13 @@ public:
         return is_pointer_declaration(decl->declaration, deref_cnt, addr_cnt);
     }
 
-    auto is_pointer_declaration(token const* t, int deref_cnt = 0, int addr_cnt = 0) -> bool {
+    auto is_pointer_declaration(
+        token const* t,
+        int          deref_cnt = 0,
+        int          addr_cnt = 0
+    )
+        -> bool
+    {
         if (!t) {
             return false;
         }
@@ -1898,10 +2162,14 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(postfix_expression_node& n, bool for_lambda_capture = false) -> void
+    auto emit(
         // note: parameter is deliberately not const because we we will fill
         //       in the capture .str information, and we may also adjust token
         //       column positions when moving operators to prefix notation
+        postfix_expression_node& n,
+        bool                     for_lambda_capture = false
+    )
+        -> void
     {
         assert(n.expr);
         last_postfix_expr_was_pointer = false;
@@ -1942,8 +2210,10 @@ public:
                     }
                     else
                     {
-                        auto op = [&](){
-                            if (n.ops.size() >= 2 && n.ops[0].op->type() == lexeme::LeftParen) {
+                        auto op = [&]{
+                            if (n.ops.size() >= 2 &&
+                                n.ops[0].op->type() == lexeme::LeftParen
+                                ) {
                                 return n.ops[1].op;
                             } else {
                                 return n.ops.front().op;
@@ -1981,7 +2251,9 @@ public:
         //  and if we're not capturing the expression for the lambda
         //  introducer replace it with the capture name
         auto captured_part = std::string{};
-        if (n.cap_grp && !for_lambda_capture)
+        if (n.cap_grp &&
+            !for_lambda_capture
+            )
         {
             //  First stringize ourselves so that we compare equal against
             //  the first *cap_grp .str_suppressed_move that matches us (which is what the
@@ -1994,7 +2266,10 @@ public:
                 return cap.str_suppressed_move == my_sym;
             });
 
-            assert (found != n.cap_grp->members.cend() && "could not find this postfix-expression in capture group");
+            assert(
+                found != n.cap_grp->members.cend() &&
+                "could not find this postfix-expression in capture group"
+            );
             //  And then emit that capture symbol with number
             assert (!found->cap_sym.empty());
             captured_part += found->cap_sym;
@@ -2078,7 +2353,10 @@ public:
             }
             // Going backwards if we found Dot and there is args variable
             // it means that it should be handled by UFCS
-            else if( i->op->type() == lexeme::Dot && args )
+            else if(
+                i->op->type() == lexeme::Dot &&
+                args
+                )
             {
                 auto funcname = print_to_string(*i->id_expr);
 
@@ -2121,20 +2399,34 @@ public:
                 adjust_remaining_token_columns_on_this_line_visitor v(i->op->position(), 0 - i->op->length());
                 n.visit(v, 0);
 
-                if (!last_was_prefixed && i != n.ops.rbegin()) {    // omit some needless parens
+                // omit some needless parens
+                if (!last_was_prefixed &&
+                    i != n.ops.rbegin()
+                    )
+                {
                     prefix.emplace_back( "(", i->op->position() );
                 }
                 prefix.emplace_back( i->op->to_string(true), i->op->position());
 
                 //  Enable null dereference checks
-                if (flag_safe_null_pointers && i->op->type() == lexeme::Multiply) {
+                if (flag_safe_null_pointers &&
+                    i->op->type() == lexeme::Multiply
+                    )
+                {
                     prefix.emplace_back( "cpp2::assert_not_null(", i->op->position() );
                 }
-                if (flag_safe_null_pointers && i->op->type() == lexeme::Multiply) {
+                if (flag_safe_null_pointers &&
+                    i->op->type() == lexeme::Multiply
+                    )
+                {
                     suffix.emplace_back( ")", i->op->position() );
                 }
 
-                if (!last_was_prefixed && i != n.ops.rbegin()) {    // omit some needless parens
+                // omit some needless parens
+                if (!last_was_prefixed &&
+                    i != n.ops.rbegin()
+                    )
+                {
                     suffix.emplace_back( ")", i->op->position() );
                 }
                 last_was_prefixed = true;
@@ -2147,7 +2439,10 @@ public:
                 last_was_prefixed = false;
 
                 //  Enable subscript bounds checks
-                if (flag_safe_subscripts && i->op->type() == lexeme::LeftBracket) {
+                if (flag_safe_subscripts &&
+                    i->op->type() == lexeme::LeftBracket
+                    )
+                {
                     suffix.emplace_back( ")", i->op->position() );
                 }
                 else if (i->op_close) {
@@ -2179,7 +2474,10 @@ public:
                 }
 
                 //  Enable subscript bounds checks
-                if (flag_safe_subscripts && i->op->type() == lexeme::LeftBracket) {
+                if (flag_safe_subscripts &&
+                    i->op->type() == lexeme::LeftBracket
+                    )
+                {
                     prefix.emplace_back( "cpp2::assert_in_bounds(", i->op->position() );
                     suffix.emplace_back( ", ", i->op->position() );
                 }
@@ -2225,7 +2523,8 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(prefix_expression_node const& n) -> void
+    auto emit(prefix_expression_node const& n)
+        -> void
     {
         auto suffix = std::string{};
         for (auto const& x : n.ops) {
@@ -2249,7 +2548,8 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(is_as_expression_node const& n) -> void
+    auto emit(is_as_expression_node const& n)
+        -> void
     {
         std::string prefix = {};
         std::string suffix = {};
@@ -2263,13 +2563,22 @@ public:
             n.expr->get_postfix_expression_node()->expr
         );
         if (auto t = n.expr->get_postfix_expression_node()->expr->get_token();
-            t && is_literal(t->type()) && t->type() != lexeme::StringLiteral && t->type() != lexeme::FloatLiteral
-            && std::ssize(n.ops) > 0 && *n.ops[0].op == "as"
-        ) {
+            t &&
+            is_literal(t->type()) &&
+            t->type() != lexeme::StringLiteral &&
+            t->type() != lexeme::FloatLiteral &&
+            std::ssize(n.ops) > 0 &&
+            *n.ops[0].op == "as"
+            )
+        {
             as_on_literal = true;
         }
 
-        for (auto i = n.ops.rbegin(); i != n.ops.rend(); ++i)
+        for (
+            auto i = n.ops.rbegin();
+            i != n.ops.rend();
+            ++i
+            )
         {
             //  If it's "ISORAS type", emit "cpp2::ISORAS<type>(expr)"
             if (i->type)
@@ -2329,7 +2638,8 @@ public:
         String   Name,
         typename Term
     >
-    auto emit(binary_expression_node<Name,Term> const& n) -> void
+    auto emit(binary_expression_node<Name,Term> const& n)
+        -> void
     {
         assert(n.expr);
         assert(n.terms.empty() || n.terms.front().op);
@@ -2520,7 +2830,10 @@ public:
 
         //  Else if this is an assignment expression, don't add std::move on the lhs
         //  even if this is a definite last use (only do that when an rvalue is okay)
-        if (!n.terms.empty() && is_assignment_operator(n.terms.front().op->type())) {
+        if (!n.terms.empty() &&
+            is_assignment_operator(n.terms.front().op->type())
+            )
+        {
             suppress_move_from_last_use = true;
         }
         emit(*n.expr);
@@ -2528,12 +2841,15 @@ public:
 
         //  Check that this isn't an illegal pointer operation
         //      (initial partial implementation)
-        if (!n.terms.empty() && last_postfix_expr_was_pointer)
+        if (!n.terms.empty() &&
+            last_postfix_expr_was_pointer
+            )
         {
             auto rhs_post = n.get_second_postfix_expression_node();
             assert(rhs_post && rhs_post->expr);
             auto rhs_tok = rhs_post->expr->get_token();
-            if (is_assignment_operator(n.terms.front().op->type()) && rhs_tok &&
+            if (is_assignment_operator(n.terms.front().op->type()) &&
+                rhs_tok &&
                 (*rhs_tok == "nullptr" || is_digit(((std::string_view)*rhs_tok)[0]))
                 )
             {
@@ -2563,7 +2879,10 @@ public:
             //  Normally we'll just emit the operator, but if this is an
             //  assignment that's a definite initialization, change it to
             //  a .construct() call
-            if (x.op->type() == lexeme::Assignment && in_definite_init) {
+            if (x.op->type() == lexeme::Assignment &&
+                in_definite_init
+                )
+            {
                 printer.print_cpp2( ".construct(", n.position() );
                 emit(*x.expr);
                 printer.print_cpp2( ")", n.position() );
@@ -2580,7 +2899,8 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(expression_node const& n) -> void
+    auto emit(expression_node const& n)
+        -> void
     {
         assert(n.expr);
         push_need_expression_list_parens(true);
@@ -2591,9 +2911,12 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(expression_list_node const& n) -> void
+    auto emit(expression_list_node const& n)
+        -> void
     {
-        auto add_parens = should_add_expression_list_parens() && !n.inside_initializer;
+        auto add_parens =
+            should_add_expression_list_parens() &&
+            !n.inside_initializer;
         if (add_parens) {
             printer.print_cpp2( *n.open_paren, n.position());
         }
@@ -2654,13 +2977,20 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(expression_statement_node const& n, bool can_have_semicolon, source_position function_body_start = {}, bool function_void_ret = false ) -> void
+    auto emit(
+        expression_statement_node const& n,
+        bool                             can_have_semicolon,
+        source_position                  function_body_start = {},
+        bool                             function_void_ret   = false
+    )
+        -> void
     {
         assert(n.expr);
 
         if (function_body_start != source_position{}) {
+            emit_prolog_mem_inits(current_function_info.back().prolog, n.position(), 4);
             printer.print_cpp2(" { ", function_body_start);
-            emit_prolog(current_function_info.back().prolog, n.position(), 4);
+            emit_prolog_statements(current_function_info.back().prolog, n.position(), 4);
             if (!function_void_ret) {
                 printer.print_cpp2("return ", n.position());
             }
@@ -2680,14 +3010,19 @@ public:
     //-----------------------------------------------------------------------
     //
     auto emit(
-        statement_node const&           n,
-        bool                            can_have_semicolon  = true,
-        source_position                 function_body_start = {},
-        bool                            function_void_ret   = false,
-        std::vector<std::string> const& function_prolog     = {}
+        statement_node const&  n,
+        bool                   can_have_semicolon  = true,
+        source_position        function_body_start = {},
+        bool                   function_void_ret   = false,
+        function_prolog const& function_prolog     = {}
     )
         -> void
     {
+        //  Skip this one if it was already handled earlier (i.e., a constructor member init)
+        if (n.emitted) {
+            return;
+        }
+
         printer.disable_indent_heuristic_for_next_text();
 
         try_emit<statement_node::compound   >(n.statement, function_prolog);
@@ -2718,7 +3053,12 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(parameter_declaration_node const& n, bool is_returns = false, bool is_template_parameter = false) -> void
+    auto emit(
+        parameter_declaration_node const& n,
+        bool                              is_returns            = false,
+        bool                              is_template_parameter = false
+    )
+        -> void
     {
         //  Can't declare functions as parameters -- only pointers to functions which are objects
         assert( n.declaration );
@@ -2728,8 +3068,8 @@ public:
         {
             if (
                 n.pass != passing_style::out ||
-                !current_function_info.back().name ||
-                *current_function_info.back().name != "operator="
+                !current_function_info.back().pname ||
+                *current_function_info.back().pname != "operator="
                 )
             {
                 errors.emplace_back(
@@ -2742,8 +3082,11 @@ public:
         //-----------------------------------------------------------------------
         //  Skip 'this' parameters
 
-        if (*n.declaration->identifier->identifier == "this")
+        if (n.declaration->has_name("this"))
         {
+            //  Since we're skipping "out this," plus possibly "implicit " and
+            //  whitespace, any following parameters on the same line can shift left
+            printer.add_pad_in_this_line(-18);
             return;
         }
 
@@ -2775,16 +3118,23 @@ public:
         //  Else handle ordinary parameters
 
         auto unqid = std::get_if<type_id_node::unqualified>(&type_id.id);
-        auto is_wildcard = unqid && *(*unqid)->identifier == "_";
+        auto is_wildcard =
+            unqid &&
+            *(*unqid)->identifier == "_";
 
         //  If this parameter's name is an unqualified-id, check to see
         //  if it's the name of one of the template parameters
         auto is_template_parameter_name = false;
-        if (unqid && current_declaration.back() && current_declaration.back()->template_parameters) {
-            for (auto& tparam : current_declaration.back()->template_parameters->parameters) {
+        if (unqid &&
+            current_declaration.back() &&
+            current_declaration.back()->template_parameters
+            )
+        {
+            for (auto& tparam : current_declaration.back()->template_parameters->parameters)
+            {
                 assert(tparam);
                 if (tparam->declaration->is_type() &&
-                    *tparam->declaration->identifier->identifier == *(*unqid)->identifier
+                    tparam->declaration->has_name( *(*unqid)->identifier )
                     )
                 {
                     is_template_parameter_name = true;
@@ -2796,7 +3146,10 @@ public:
         auto identifier     = print_to_string( *n.declaration->identifier );
 
         //  First any prefix
-        if (!is_returns && !is_wildcard && !is_template_parameter_name)
+        if (!is_returns &&
+            !is_wildcard &&
+            !is_template_parameter_name
+            )
         {
             switch (n.pass) {
             break;case passing_style::in     : printer.print_cpp2( "cpp2::in<",  n.position() );
@@ -2821,7 +3174,7 @@ public:
             //  For generic out parameters, we take a pointer to anything with paramater named "identifier_"
             //  and then generate the out<> as a stack local with the expected name "identifier"
             break;case passing_style::out    : printer.print_cpp2( name+"*",       n.position() );
-                                               current_function_info.back().prolog.push_back(
+                                               current_function_info.back().prolog.statements.push_back(
                                                    "auto " + identifier + " = cpp2::out(" + identifier + "_); "
                                                );
                                                identifier += "_";
@@ -2852,7 +3205,10 @@ public:
         printer.preempt_position_pop();
 
         //  Then any suffix
-        if (!is_returns && !is_wildcard && !is_template_parameter_name)
+        if (!is_returns &&
+            !is_wildcard &&
+            !is_template_parameter_name
+            )
         {
             switch (n.pass) {
             break;case passing_style::in     : printer.print_cpp2( ">",  n.position() );
@@ -2867,7 +3223,10 @@ public:
 
         printer.print_cpp2( " " + identifier, n.declaration->identifier->position());
 
-        if (!is_returns && n.declaration->initializer) {
+        if (!is_returns &&
+            n.declaration->initializer
+            )
+        {
             printer.print_cpp2( " = ", n.declaration->initializer->position() );
             emit(*n.declaration->initializer);
         }
@@ -2887,7 +3246,12 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(parameter_declaration_list_node const& n, bool is_returns = false, bool is_template_parameter = false) -> void
+    auto emit(
+        parameter_declaration_list_node const& n,
+        bool                                   is_returns            = false,
+        bool                                   is_template_parameter = false
+    )
+        -> void
     {
         in_parameter_list = true;
 
@@ -2904,13 +3268,16 @@ public:
 
         auto prev_pos = n.position();
         for (auto first = true; auto const& x : n.parameters) {
-            if (!first && !is_returns) {
+            if (!first &&
+                !is_returns
+                )
+            {
                 printer.print_cpp2( ", ", prev_pos );
             }
             prev_pos = x->position();
             assert(x);
             emit(*x, is_returns, is_template_parameter);
-            if (*x->declaration->identifier->identifier != "this") {
+            if (!x->declaration->has_name("this")) {
                 first = false;
             }
             if (is_returns) {
@@ -2937,9 +3304,12 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(contract_node& n) -> void
+    auto emit(
         // note: parameter is deliberately not const because we will fill
         //       in the capture .str information
+        contract_node& n
+    )
+        -> void
     {
         assert (n.kind);
 
@@ -3009,14 +3379,23 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(function_type_node const& n, token const* ident, bool is_main, std::string suffix1 = {}) -> void
+    auto emit(
+        function_type_node const& n,
+        token const*              ident,
+        bool                      is_main         = false,
+        bool                      is_ctor_or_dtor = false,
+        std::string               suffix1         = {}
+    )
+        -> void
     {
         assert(n.parameters);
 
-        if (is_main && n.parameters->parameters.size() > 0)
+        if (is_main &&
+            n.parameters->parameters.size() > 0
+            )
         {
             printer.print_cpp2( "(int const argc_, char const* const* const argv_)", n.parameters->position() );
-            current_function_info.back().prolog.push_back(
+            current_function_info.back().prolog.statements.push_back(
                 "auto args = cpp2::make_args(argc_, argv_); "
             );
         }
@@ -3037,7 +3416,7 @@ public:
             if (is_main) {
                 printer.print_cpp2( " -> int", n.position() );
             }
-            else {
+            else if(!is_ctor_or_dtor) {
                 printer.print_cpp2( " -> void", n.position() );
             }
         }
@@ -3075,9 +3454,15 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(declaration_node const& n, std::string const& capture_intro = {}) -> void
+    auto emit(
+        declaration_node const& n,
+        std::string const&      capture_intro = {}
+    )
+        -> void
     {
-        auto is_main = !n.parent_declaration && *n.identifier->identifier == "main";
+        auto is_main =
+            !n.parent_declaration &&
+            n.has_name("main");
         auto is_in_type = n.parent_is_type();
 
         current_declaration.push_back(&n);
@@ -3085,7 +3470,9 @@ public:
 
         //  If this is a function that has multiple return values,
         //  first we need to emit the struct that contains the returns
-        if (printer.doing_declarations_only() && n.is_function())
+        if (printer.doing_declarations_only() &&
+            n.is_function()
+            )
         {
             auto& func = std::get<declaration_node::a_function>(n.type);
             assert(func);
@@ -3097,7 +3484,7 @@ public:
                 printer.ignore_alignment( true, n.position().colno );
                 printer.print_cpp2( "struct ", n.position() );
                 printer.ignore_alignment( true, n.position().colno + 4 );
-                printer.print_cpp2( *n.identifier->identifier, n.position() );
+                printer.print_cpp2( *n.name(), n.position());
                 printer.print_cpp2( "__ret ", n.position() );
                 emit(*r, true);
                 printer.print_cpp2( "\n", n.position() );
@@ -3137,7 +3524,10 @@ public:
             }
 
             //  Type body
-            assert(n.initializer && n.initializer->is_compound());
+            assert(
+                n.initializer &&
+                n.initializer->is_compound()
+            );
             auto& compound_stmt = std::get<statement_node::compound>(n.initializer->statement);
 
             printer.print_cpp2(" {", compound_stmt->position());
@@ -3166,7 +3556,10 @@ public:
             printer.print_cpp2("namespace ", n.position());
             emit(*n.identifier);
 
-            assert(n.initializer && n.initializer->is_compound());
+            assert(
+                n.initializer &&
+                n.initializer->is_compound()
+            );
             auto& compound_stmt = std::get<statement_node::compound>(n.initializer->statement);
 
             printer.print_cpp2(" {", compound_stmt->position());
@@ -3200,7 +3593,7 @@ public:
             assert(func);
 
             current_function_info.push_back({
-                n.identifier ? n.identifier->identifier : nullptr,
+                n.identifier ? n.name() : nullptr,
                 {}
                 });
             auto guard = finally([&]{ current_function_info.pop_back(); });
@@ -3226,7 +3619,7 @@ public:
                 //  because Cpp1 syntax requires its information to be spread around the declaration syntax
                 assert (func->parameters);
                 if (!func->parameters->parameters.empty() &&
-                    *func->parameters->parameters[0]->declaration->identifier->identifier == "this"
+                    func->parameters->parameters[0]->declaration->has_name("this")
                     )
                 {
                     assert (is_in_type);
@@ -3260,7 +3653,9 @@ public:
                     break;case parameter_declaration_node::modifier::final_:
                         suffix2 += " final";
                     break;default:
-                        ; // TODO, only for constructors: decl_prefix += "explicit ";
+                        if (func->is_constructor() && func->parameters->ssize() > 1) {
+                            prefix += "explicit ";
+                        }
                     }
                 }
                 //  Else if there isn't a 'this' parameter, but this function is in a type scope,
@@ -3276,11 +3671,117 @@ public:
                 }
 
                 //  Now we have all the pieces we need for the Cpp1 function declaration
-                printer.print_cpp2( prefix, n.position() );
-                printer.print_cpp2( "auto ", n.position() );
-                printer.print_cpp2( *n.identifier->identifier, n.identifier->position() );
-                emit( *func, n.identifier->identifier, is_main, suffix1 );
-                printer.print_cpp2( suffix2, n.position() );
+
+                //  For a constructor, we need to do more work to translate in-body
+                //  initialization statements to the Cpp1 mem-init-list syntax
+                if (n.is_constructor())
+                {
+                    assert(
+                        !is_main &&
+                        // prefix can be "explicit "
+                        suffix1.empty() &&
+                        suffix2.empty() &&
+                        "ICE: a constructor shouldn't have been able to generate a prefix or suffix (or be main)"
+                    );
+
+                    //  We'll use this common guidance in several errors,
+                    //  so write it once to keep the guidance consistent
+                    auto error_msg = "a constructor body must start with a series of 'member = value;' initialization statements for each type scope member, in the same order the members are declared";
+
+                    //  If this constructor's type has data members, handle their initialization
+                    //      - objects is the list of this type's declarations
+                    //      - statements is the list of this constructor's statements
+                    auto objects    = n.parent_declaration->get_type_scope_declarations(n.objects);
+                    auto statements = n.get_initializer_statements();
+
+                    auto object     = objects.begin();
+                    auto statement  = statements.begin();
+                    auto separator  = std::string{": "};
+                    while (
+                        object    != objects   .end() &&
+                        statement != statements.end()
+                        )
+                    {
+                        assert((*object)->has_name());
+
+                        //  The ctor body can't have other statements until it
+                        //  has initialized all the data members
+                        if (!(*statement)->is_expression()) {
+                            errors.emplace_back( (*statement)->position(), error_msg );
+                            return;
+                        }
+
+                        //  If this is not an assignment to *object, complain
+                        auto toks = (*statement)->get_lhs_rhs_if_simple_assignment();
+                        if (!toks.lhs || !(*object)->has_name(*toks.lhs)) {
+                            errors.emplace_back(
+                                (*statement)->position(),
+                                "expected '" + (*object)->name()->to_string(true) + " = ...' initialization statement - " + error_msg
+                            );
+                            return;
+                        }
+
+                        assert(toks.rhs);
+                        current_function_info.back().prolog.mem_inits.push_back(
+                            separator +
+                            (*object)->name()->to_string(true) +
+                            "{ " +
+                            toks.rhs->to_string(true) +
+                            " }"
+                        );
+                        (*statement)->emitted = true;
+
+                        ++object;
+                        ++statement;
+                        separator = ", ";
+                    }
+
+                    //  No data members should be left over
+                    if (object != objects.end()) {
+                        assert((*object)->has_name());
+                        errors.emplace_back(
+                            (*object)->position(),
+                            (*object)->name()->to_string(true) + " was not initialized - " + error_msg
+                        );
+                        return;
+                    }
+
+                    //  Print the type name instead of the operator= function name
+                    assert(n.parent_is_type());
+                    printer.print_cpp2( prefix, n.position() );
+                    printer.print_cpp2( *n.parent_declaration->name(), n.position() );
+                    emit( *func, n.name(), false, true);
+                }
+
+                //  For a destructor, we need to translate
+                else if (n.is_destructor())
+                {
+                    assert(
+                        !is_main &&
+                        prefix.empty() &&
+                        // suffix1 will be " &&" though we'll ignore that
+                        suffix2.empty() &&
+                        "ICE: a destructor shouldn't have been able to generate a prefix or suffix (or be main)"
+                    );
+
+                    //  Print the ~-prefixed type name instead of the operator= function name
+                    assert(
+                        n.parent_is_type() &&
+                        n.parent_declaration->name()
+                    );
+                    printer.print_cpp2( "~" + n.parent_declaration->name()->to_string(true), n.position());
+                    emit( *func, n.name(), false, true);
+                }
+
+                //  Ordinary functions are easier
+                else
+                {
+                    printer.print_cpp2( prefix, n.position() );
+                    printer.print_cpp2( "auto ", n.position() );
+                    printer.print_cpp2( *n.name(), n.identifier->position());
+                    emit( *func, n.name(), is_main, false, suffix1);
+                    printer.print_cpp2( suffix2, n.position() );
+                }
             }
 
             //  Function declaration
@@ -3308,7 +3809,7 @@ public:
                 printer.emit_to_string(&print);
                 emit(*c);
                 printer.emit_to_string();
-                current_function_info.back().prolog.push_back(print);
+                current_function_info.back().prolog.statements.push_back(print);
             }
 
             if (func->returns.index() == function_type_node::list)
@@ -3338,7 +3839,7 @@ public:
                         loc += (">");
                     }
                     loc += " ";
-                    loc += ((std::string_view)*decl.identifier->identifier);
+                    loc += ((std::string_view)*decl.name());
                     if (decl.initializer)
                     {
                         std::string init;
@@ -3361,7 +3862,7 @@ public:
                         loc += init;
                     }
                     loc += ";";
-                    current_function_info.back().prolog.push_back(loc);
+                    current_function_info.back().prolog.statements.push_back(loc);
                 }
             }
 
@@ -3370,7 +3871,7 @@ public:
             // TODO: something like this to get rid of extra blank lines
             //       inside the start of bodies of functions that have
             //       multiple contracts
-            //printer.skip_lines( std::ssize(current_function_info.back().prolog) );
+            //printer.skip_lines( std::ssize(current_function_info.back().prolog.statements) );
 
             //  If processing the parameters generated any requires conditions,
             //  emit them here
@@ -3396,7 +3897,10 @@ public:
         }
 
         //  Object with optional initializer
-        else if (!printer.doing_declarations_only() && n.is_object())
+        else if (
+            !printer.doing_declarations_only() &&
+            n.is_object()
+            )
         {
             auto& type = std::get<declaration_node::an_object>(n.type);
 
@@ -3424,7 +3928,10 @@ public:
                 emit( *type );
                 printer.preempt_position_pop();
                 //  one pointer is enough for now, pointer-to-function fun can be later
-                if (!n.initializer && n.parent_is_function()) {
+                if (!n.initializer &&
+                    n.parent_is_function()
+                    )
+                {
                     printer.print_cpp2( ">", n.position() );
                 }
             }
@@ -3457,7 +3964,8 @@ public:
     //-----------------------------------------------------------------------
     //  print_errors
     //
-    auto print_errors() -> void
+    auto print_errors()
+        -> void
     {
         if (!errors.empty()) {
             //  Delete the output file
@@ -3478,7 +3986,8 @@ public:
         }
     }
 
-    auto had_no_errors() -> bool
+    auto had_no_errors()
+        -> bool
     {
         return errors.empty();
     }
@@ -3487,7 +3996,8 @@ public:
     //-----------------------------------------------------------------------
     //  debug_print
     //
-    auto debug_print() -> void
+    auto debug_print()
+        -> void
     {
         //  Only create debug output files if we managed to load the source file.
         //
@@ -3512,7 +4022,9 @@ public:
     //-----------------------------------------------------------------------
     //  has_cpp1: pass through
     //
-    auto has_cpp1() const -> bool {
+    auto has_cpp1() const
+        -> bool
+    {
         return source.has_cpp1();
     }
 
@@ -3520,7 +4032,9 @@ public:
     //-----------------------------------------------------------------------
     //  has_cpp2: pass through
     //
-    auto has_cpp2() const -> bool {
+    auto has_cpp2() const
+        -> bool
+    {
         return source.has_cpp2();
     }
 };
@@ -3543,7 +4057,11 @@ static cmdline_processor::register_flag cmd_debug(
     []{ enable_debug_output_files = true; }
 );
 
-auto main(int argc, char* argv[]) -> int
+auto main(
+    int   argc,
+    char* argv[]
+)
+    -> int
 {
     cmdline.set_args(argc, argv);
     cmdline.process_flags();
