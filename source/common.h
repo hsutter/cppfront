@@ -134,7 +134,10 @@ struct error
 auto is_binary_digit(char c)
     -> bool
 {
-    return c == '0' || c == '1';
+    return
+        c == '0'
+        || c == '1'
+        ;
 }
 
 //G digit: one of
@@ -165,7 +168,10 @@ auto is_hexadecimal_digit(char c)
 auto is_nondigit(char c)
     -> bool
 {
-    return isalpha(c) || c == '_';
+    return
+        isalpha(c)
+        || c == '_'
+        ;
 };
 
 //G identifier-start:
@@ -184,7 +190,10 @@ auto is_identifier_start(char c)
 auto is_identifier_continue(char c)
     -> bool
 {
-    return is_digit(c) || is_nondigit(c);
+    return
+        is_digit(c)
+        || is_nondigit(c)
+        ;
 }
 
 //G identifier:
@@ -198,8 +207,8 @@ auto starts_with_identifier(std::string_view s)
     if (is_identifier_start(s[0])) {
         auto j = 1;
         while (
-            j < std::ssize(s) &&
-            is_identifier_continue(s[j])
+            j < std::ssize(s)
+            && is_identifier_continue(s[j])
             )
         {
             ++j;
@@ -215,7 +224,10 @@ auto starts_with_identifier(std::string_view s)
 auto is_separator_or(auto pred, char c)
     -> bool
 {
-    return c == '\'' || pred(c);
+    return
+        c == '\''
+        || pred(c)
+        ;
 }
 
 
@@ -267,9 +279,9 @@ auto strip_path(std::string const& file)
 {
     auto i = std::ssize(file)-1;
     while (
-        i >= 0 &&
-        file[i] != '\\' &&
-        file[i] != '/'
+        i >= 0
+        && file[i] != '\\'
+        && file[i] != '/'
         )
     {
         --i;
@@ -382,11 +394,11 @@ public:
             for (auto flag2 = flag1+1; flag2 != flags.end(); ++flag2) {
                 int i = 0;
                 while (
-                    i < std::ssize(flag1->name) &&
-                    i < std::ssize(flag2->name) &&
-                    flag1->name[i] != ' ' &&
-                    flag2->name[i] != ' ' &&
-                    flag1->name[i] == flag2->name[i]
+                    i < std::ssize(flag1->name)
+                    && i < std::ssize(flag2->name)
+                    && flag1->name[i] != ' '
+                    && flag2->name[i] != ' '
+                    && flag1->name[i] == flag2->name[i]
                     )
                 {
                     ++i;
@@ -415,18 +427,19 @@ public:
 
             for (auto& flag : flags) {
                 auto length_to_match = std::max(flag.unique_prefix, __as<int>(arg->text.length())-1);
-                if (flag.opt_out &&
-                    arg->text.ends_with("-")
+                if (
+                    flag.opt_out
+                    && arg->text.ends_with("-")
                     )
                 {
                     length_to_match = std::max(flag.unique_prefix, __as<int>(arg->text.length())-2);
                 }
 
                 //  Allow a switch to start with either - or /
-                if (arg->text.starts_with("-" + flag.name.substr(0, length_to_match)) ||
-                    arg->text.starts_with("/" + flag.name.substr(0, length_to_match)) ||
-                    arg->text == "-" + flag.synonym ||
-                    arg->text == "/" + flag.synonym
+                if (arg->text.starts_with("-" + flag.name.substr(0, length_to_match))
+                    || arg->text.starts_with("/" + flag.name.substr(0, length_to_match))
+                    || arg->text == "-" + flag.synonym
+                    || arg->text == "/" + flag.synonym
                     )
                 {
                     assert(flag.handler0 || flag.handler1);

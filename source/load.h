@@ -43,16 +43,17 @@ auto move_next(
     -> bool
 {
     while (
-        i < ssize(line) &&
-        line[i] &&
-        p(line[i])
+        i < ssize(line)
+        && line[i]
+        && p(line[i])
         )
     {
         ++i;
     }
     return
-        i < ssize(line) &&
-        line[i];
+        i < ssize(line)
+        && line[i]
+        ;
 }
 
 
@@ -93,8 +94,9 @@ auto is_preprocessor(
     -> is_preprocessor_ret
 {
     //  see if the first non-whitespace is #
-    if (first_line &&
-        peek_first_non_whitespace(line) != '#'
+    if (
+        first_line
+        && peek_first_non_whitespace(line) != '#'
         )
     {
         return { false, false };
@@ -142,9 +144,10 @@ auto starts_with_whitespace_slash_slash(std::string const& line)
     }
 
     return
-        i < ssize(line)-1 &&
-        line[i] == '/' &&
-        line[i+1] == '/';
+        i < ssize(line)-1
+        && line[i] == '/'
+        && line[i+1] == '/'
+        ;
 }
 
 
@@ -163,9 +166,10 @@ auto starts_with_whitespace_slash_star_and_no_star_slash(std::string const& line
         return false;
     }
 
-    if (i < ssize(line) - 1 &&
-        line[i] == '/' &&
-        line[i + 1] == '*'
+    if (
+        i < ssize(line) - 1
+        && line[i] == '/'
+        && line[i + 1] == '*'
         )
     {
         return line.find("*/", i) == std::string::npos;
@@ -191,8 +195,8 @@ auto starts_with_operator(std::string_view s)
 
         //  skip any spaces
         while (
-            j < std::ssize(s) &&
-            isspace(s[j])
+            j < std::ssize(s)
+            && isspace(s[j])
             )
         {
             ++j;
@@ -289,8 +293,8 @@ auto starts_with_identifier_colon(std::string const& line)
         j += 7;
     }
     while (
-        j < std::ssize(s) &&
-        isspace(s[j])
+        j < std::ssize(s)
+        && isspace(s[j])
         )
     {
         ++j;
@@ -323,8 +327,9 @@ auto starts_with_identifier_colon(std::string const& line)
     //  (e.g., not a Cpp1 "using ::something")
     assert (i < ssize(line));
     return
-        line[i] == ':' &&
-        (i == ssize(line)-1 || line[i+1] != ':');
+        line[i] == ':'
+        && (i == ssize(line)-1 || line[i+1] != ':')
+        ;
 }
 
 
@@ -364,8 +369,9 @@ class braces_tracker
         //  of unbalanced braces, they were double-counted in the brace
         //  matching and to try to keep going we can apply this adjustment
         auto braces_to_ignore() -> int {
-            if (if_net_braces >= 0 &&
-                if_net_braces == else_net_braces
+            if (
+                if_net_braces >= 0
+                && if_net_braces == else_net_braces
                 )
             {
                 return if_net_braces;
@@ -533,9 +539,10 @@ auto process_cpp_line(
 )
     -> process_line_ret
 {
-    if (!in_comment &&
-        !in_string_literal &&
-        !in_raw_string_literal
+    if (
+        !in_comment
+        && !in_string_literal
+        && !in_raw_string_literal
         )
     {
         if (starts_with_whitespace_slash_slash(line)) {
@@ -564,9 +571,10 @@ auto process_cpp_line(
             r.empty_line = false;
         }
 
-        if (in_comment &&
-            !in_string_literal &&
-            !in_raw_string_literal
+        if (
+            in_comment
+            && !in_string_literal
+            && !in_raw_string_literal
             )
         {
             switch (line[i]) {
@@ -587,10 +595,11 @@ auto process_cpp_line(
             r.all_rawstring_line = false;
             switch (line[i]) {
                 break;case 'R':
-                    if (!in_comment &&
-                        !in_string_literal &&
-                        !in_raw_string_literal &&
-                        peek(1) == '"'
+                    if (
+                        !in_comment
+                        && !in_string_literal
+                        && !in_raw_string_literal
+                        && peek(1) == '"'
                         )
                     {
                         i+=2;
@@ -608,10 +617,11 @@ auto process_cpp_line(
                     
                 break;case '\"':
                     //  If this isn't an escaped quote, toggle string literal state
-                    if (!in_comment &&
-                        prev != '\\' &&
-                        (in_string_literal || prev != '\'') &&
-                        !in_raw_string_literal
+                    if (
+                        !in_comment
+                        && prev != '\\'
+                        && (in_string_literal || prev != '\'')
+                        && !in_raw_string_literal
                         )
                     {
                         in_string_literal = !in_string_literal;
@@ -628,18 +638,20 @@ auto process_cpp_line(
                     }
 
                 break;case '*':
-                    if (!in_string_literal &&
-                        !in_raw_string_literal &&
-                        prev == '/'
+                    if (
+                        !in_string_literal
+                        && !in_raw_string_literal
+                        && prev == '/'
                         )
                     {
                         in_comment = true;
                     }
 
                 break;case '/':
-                    if (!in_string_literal &&
-                        !in_raw_string_literal &&
-                        prev == '/'
+                    if (
+                        !in_string_literal
+                        && !in_raw_string_literal
+                        && prev == '/'
                         )
                     {
                         in_comment = false;
@@ -837,8 +849,8 @@ public:
                 //lines.push_back({ &buf[0], source_line::category::preprocessor });
                 add_preprocessor_line();
                 while (
-                    pre.has_continuation &&
-                    in.getline(&buf[0], max_line_len)
+                    pre.has_continuation
+                    && in.getline(&buf[0], max_line_len)
                     )
                 {
                     //lines.push_back({ &buf[0], source_line::category::preprocessor });
@@ -854,10 +866,10 @@ public:
                 //  Switch to cpp2 mode if we're not in a comment, not inside nested { },
                 //  and the line starts with "nonwhitespace :" but not "::"
                 //
-                if (!in_comment &&
-                    !in_raw_string_literal &&
-                    braces.current_depth() < 1 &&
-                    starts_with_identifier_colon(lines.back().text)
+                if (!in_comment
+                    && !in_raw_string_literal
+                    && braces.current_depth() < 1
+                    && starts_with_identifier_colon(lines.back().text)
                     )
                 {
                     cpp2_found= true;
@@ -866,9 +878,11 @@ public:
                     lines.back().cat = source_line::category::cpp2;
                     if (std::ssize(lines) > 1) {
                         auto prev = --std::end(lines);
-                        while (--prev != std::begin(lines) &&
-                               (prev->cat == source_line::category::empty ||
-                                   prev->cat == source_line::category::comment))
+                        while (
+                            --prev != std::begin(lines)
+                            && (prev->cat == source_line::category::empty
+                                || prev->cat == source_line::category::comment)
+                            )
                         {
                             prev->cat = source_line::category::cpp2;
                         }
@@ -882,8 +896,8 @@ public:
                             braces,
                             std::ssize(lines)-1,
                             errors
-                        ) &&
-                        in.getline(&buf[0], max_line_len)
+                        )
+                        && in.getline(&buf[0], max_line_len)
                         )
                     {
                         lines.push_back({ &buf[0], source_line::category::cpp2 });

@@ -347,15 +347,15 @@ auto expand_string_literal(
 
     //  Skip prefix to first non-" character
     while (
-        pos < length &&
-        text[pos] != '"'
+        pos < length
+        && text[pos] != '"'
         )
     {
         ++pos;
     }
     assert(
-        pos < length &&
-        text[pos] == '"'
+        pos < length
+        && text[pos] == '"'
     );
     auto first_quote_pos = pos;
     ++pos;
@@ -388,8 +388,9 @@ auto expand_string_literal(
         )
     {
         //  Find the next )$
-        if (text[pos] == '$' &&
-            text[pos-1] == ')'
+        if (
+            text[pos] == '$'
+            && text[pos-1] == ')'
             )
         {
             //  Scan back to find the matching (
@@ -439,13 +440,14 @@ auto expand_string_literal(
 
     //  Now we should be on the the final " closing the string
     assert(
-        pos == length-1 &&
-        text[pos] == '"'
+        pos == length-1
+        && text[pos] == '"'
     );
 
     //  Put the final non-interpolated chunk straight into ret
-    if (first ||
-        current_start < std::ssize(text)-1
+    if (
+        first
+        || current_start < std::ssize(text)-1
         )
     {
         add_plus(true);
@@ -501,16 +503,26 @@ auto lex_line(
 
         //  First, check the last token... only proceed if it is NOT one of those
         auto i = std::ssize(tokens)-1;
-        if (i < 0 || tokens[i].type() == lexeme::Cpp1MultiKeyword) {
+        if (
+            i < 0
+            || tokens[i].type() == lexeme::Cpp1MultiKeyword
+            )
+        {
             return;
         }
 
         //  Next, check the two tokens before that... only proceed if they ARE those
         --i;
-        if (i < 1 || tokens[i].type() != lexeme::Cpp1MultiKeyword || tokens[i-1].type() != lexeme::Cpp1MultiKeyword) {
+        if (
+            i < 1
+            || tokens[i].type() != lexeme::Cpp1MultiKeyword
+            || tokens[i-1].type() != lexeme::Cpp1MultiKeyword
+            )
+        {
             //  If this is just one such token, changed its type to regular ::Keyword
-            if (i >= 0 &&
-                tokens[i].type() == lexeme::Cpp1MultiKeyword
+            if (
+                i >= 0
+                && tokens[i].type() == lexeme::Cpp1MultiKeyword
                 )
             {
                 tokens[i].set_type( lexeme::Keyword );
@@ -540,8 +552,8 @@ auto lex_line(
         auto is_unsigned       = 0;
         generated_text.push_back( "" );
         while(
-            !tokens.empty() &&
-            tokens.back().type() == lexeme::Cpp1MultiKeyword
+            !tokens.empty()
+            && tokens.back().type() == lexeme::Cpp1MultiKeyword
             )
         {
             auto text = tokens.back().to_string(true);
@@ -610,14 +622,16 @@ auto lex_line(
         //  If the third-to-last token is "operator", we may need to
         //  merge an "operator@" name into a single identifier token
 
-        if (i >= 2 &&
-            tokens[i-2] == "operator"
+        if (
+            i >= 2
+            && tokens[i-2] == "operator"
             )
         {
             //  If the tokens after "operator" are ">" and without whitespace one of ">=" ">" "="
-            if (tokens[i-1].type() == lexeme::Greater &&
-                (tokens[i-1].position() == source_position{tokens[i].position().lineno, tokens[i].position().colno-1}) &&
-                (tokens[i].type() == lexeme::GreaterEq || tokens[i].type() == lexeme::Greater || tokens[i].type() == lexeme::Assignment))
+            if (
+                tokens[i-1].type() == lexeme::Greater
+                && (tokens[i-1].position() == source_position{tokens[i].position().lineno, tokens[i].position().colno-1})
+                && (tokens[i].type() == lexeme::GreaterEq || tokens[i].type() == lexeme::Greater || tokens[i].type() == lexeme::Assignment))
             {
                 //  Merge all three tokens into an identifier
                 generated_text.push_back( "operator" + tokens[i-1].to_string(true) + tokens[i].to_string(true) );
@@ -693,10 +707,11 @@ auto lex_line(
     {
         auto peek1 = peek(offset);
         auto peek2 = peek(1 + offset);
-        if (peek1 == '\\' &&
-            peek2 != 'u' &&
-            peek2 != 'U' &&
-            peek2 != 'x'
+        if (
+            peek1 == '\\'
+            && peek2 != 'u'
+            && peek2 != 'U'
+            && peek2 != 'x'
             )
         {
             return 2;
@@ -710,14 +725,16 @@ auto lex_line(
     //G
     auto peek_is_hexadecimal_escape_sequence = [&](int offset)
     {
-        if (peek(  offset) == '\\' &&
-            peek(1+offset) == 'x'  &&
-            is_hexadecimal_digit(peek(2+offset)))
+        if (
+            peek(  offset) == '\\'
+            && peek(1+offset) == 'x'
+            && is_hexadecimal_digit(peek(2+offset))
+            )
         {
             auto j = 3;
             while (
-                peek(j+offset) &&
-                is_hexadecimal_digit(peek(j+offset))
+                peek(j+offset)
+                && is_hexadecimal_digit(peek(j+offset))
                 )
             {
                 ++j;
@@ -733,14 +750,15 @@ auto lex_line(
     //G
     auto peek_is_universal_character_name = [&](colno_t offset)
     {
-        if (peek(offset) == '\\' &&
-            peek(1 + offset) == 'u'
+        if (
+            peek(offset) == '\\'
+            && peek(1 + offset) == 'u'
             )
         {
             auto j = 2;
             while (
-                j <= 5 &&
-                is_hexadecimal_digit(peek(j + offset))
+                j <= 5
+                && is_hexadecimal_digit(peek(j + offset))
                 )
             {
                 ++j;
@@ -752,14 +770,15 @@ auto lex_line(
                 " be followed by 4 hexadecimal digits)"
             );
         }
-        if (peek(offset) == '\\' &&
-            peek(1+offset) == 'U'
+        if (
+            peek(offset) == '\\'
+            && peek(1+offset) == 'U'
             )
         {
             auto j = 2;
             while (
-                j <= 9 &&
-                is_hexadecimal_digit(peek(j+offset))
+                j <= 9
+                && is_hexadecimal_digit(peek(j+offset))
                 )
             {
                 ++j;
@@ -808,8 +827,10 @@ auto lex_line(
         if (auto e = peek_is_escape_sequence(offset)) {
             return e;
         }
-        if (peek(offset) &&
-            peek(offset) != quote && peek(offset) != '\\'
+        if (
+            peek(offset)
+            && peek(offset) != quote
+            && peek(offset) != '\\'
             )
         {
             return 1;
@@ -826,8 +847,9 @@ auto lex_line(
         if (std::regex_search(&line[i], m, r)) {
             assert (m.position(0) == 0);
             //  If we matched and what's next is EOL or a non-identifier char, we matched!
-            if (i+m[0].length() == std::ssize(line) ||          // EOL
-                !is_identifier_continue(line[i+m[0].length()])  // non-identifier char
+            if (
+                i+m[0].length() == std::ssize(line)                 // EOL
+                || !is_identifier_continue(line[i+m[0].length()])   // non-identifier char
                 )
             {
                 return (int)(m[0].length());
@@ -1179,10 +1201,11 @@ auto lex_line(
             // (this will be less kludgy to write with pattern matching)
             default:
 
-                if (line[i] == 'n' &&
-                    peek1   == 'o' &&
-                    peek2   == 't' &&
-                    isspace(peek3)
+                if (
+                    line[i] == 'n'
+                    && peek1 == 'o'
+                    && peek2 == 't'
+                    && isspace(peek3)
                     )
                 {
                     store(3, lexeme::Not);
@@ -1203,9 +1226,13 @@ auto lex_line(
                 else if (is_digit(line[i])) {
                     auto j = 1;
                     while (is_separator_or(is_digit,peek(j))) { ++j; }
-                    if (peek(j) != '.' &&
-                        peek(j) != 'f' && peek(j) != 'F' &&
-                        peek(j) != 'e' && peek(j) != 'E')
+                    if (
+                        peek(j) != '.'
+                        && peek(j) != 'f'
+                        && peek(j) != 'F'
+                        && peek(j) != 'e'
+                        && peek(j) != 'E'
+                        )
                     {
                         // cf: https://en.cppreference.com/w/cpp/language/integer_literal
                         //
@@ -1288,8 +1315,8 @@ auto lex_line(
                         //  and discard any tokens we already tokenized for this line
                         i = colno_t{-1};
                         while (
-                            !tokens.empty() &&
-                            tokens.back().position().lineno == lineno
+                            !tokens.empty()
+                            && tokens.back().position().lineno == lineno
                             )
                         {
                             tokens.pop_back();
@@ -1347,9 +1374,10 @@ auto lex_line(
                 //
                 else if (auto j = starts_with_identifier({&line[i], std::size(line)-i}))
                 {
-                    if (!isspace(peek(-1)) &&
-                        !tokens.empty() &&
-                        is_literal(tokens.back().type())
+                    if (
+                        !isspace(peek(-1))
+                        && !tokens.empty()
+                        && is_literal(tokens.back().type())
                         )
                     {
                         store(j, lexeme::UserDefinedLiteralSuffix);

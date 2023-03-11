@@ -273,16 +273,16 @@ public:
         //  and remember its depth
         auto i = symbols.cbegin();
         while (
-            i != symbols.cend() &&
-            i->position() < t.position()
+            i != symbols.cend()
+            && i->position() < t.position()
             )
         {
             ++i;
         }
 
         while (
-            i == symbols.cend() ||
-            !i->start
+            i == symbols.cend()
+            || !i->start
             )
         {
             --i;
@@ -295,8 +295,9 @@ public:
         //  and is in the same function
         for (auto ri = std::make_reverse_iterator(i+1); ri != symbols.crend(); ++ri )
         {
-            if (ri->sym.index() == symbol::active::declaration &&
-                ri->depth <= depth
+            if (
+                ri->sym.index() == symbol::active::declaration
+                && ri->depth <= depth
                 )
             {
                 auto const& decl = std::get<symbol::active::declaration>(ri->sym);
@@ -304,17 +305,19 @@ public:
                 //  Conditionally look beyond the start of the current named (has identifier) function
                 //  (an unnamed function is ok to look beyond)
                 assert(decl.declaration);
-                if (decl.declaration->type.index() == declaration_node::a_function &&
-                    decl.declaration->identifier &&
-                    !look_beyond_current_function
+                if (
+                    decl.declaration->type.index() == declaration_node::a_function
+                    && decl.declaration->identifier
+                    && !look_beyond_current_function
                     )
                 {
                     return nullptr;
                 }
 
                 //  If the name matches, this is it
-                if (decl.identifier &&
-                    *decl.identifier == t
+                if (
+                    decl.identifier
+                    && *decl.identifier == t
                     )
                 {
                     return &decl;
@@ -334,10 +337,11 @@ public:
         -> bool
     {
         return
-            sym.start &&
-            !(sym.identifier && *sym.identifier == "this") &&
-            !sym.initializer &&
-            !(sym.parameter && sym.parameter->pass != passing_style::out);
+            sym.start
+            && !(sym.identifier && *sym.identifier == "this")
+            && !sym.initializer
+            && !(sym.parameter && sym.parameter->pass != passing_style::out)
+            ;
     }
 
 
@@ -478,18 +482,20 @@ public:
             -> declaration_sym const*
         {
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
-                if (sym->start &&
-                    sym->declaration->is_object() &&
-                    (!sym->parameter ||
-                     sym->parameter->pass == passing_style::copy ||
-                     sym->parameter->pass == passing_style::move ||
-                     sym->parameter->pass == passing_style::forward
+                if (
+                    sym->start
+                    && sym->declaration->is_object()
+                    && (!sym->parameter
+                        || sym->parameter->pass == passing_style::copy
+                        || sym->parameter->pass == passing_style::move
+                        || sym->parameter->pass == passing_style::forward
+                        )
                     )
-                   )
                 {
                     //  Must be in function scope
-                    if (sym->declaration->parent_declaration &&
-                        sym->declaration->parent_declaration->is_function()
+                    if (
+                        sym->declaration->parent_declaration
+                        && sym->declaration->parent_declaration->is_function()
                         )
                     {
                         return sym;
@@ -512,11 +518,12 @@ public:
             //
             if (auto decl = is_uninitialized_variable_decl(symbols[sympos])) {
                 assert(
-                    decl->identifier &&
-                    !decl->initializer
+                    decl->identifier
+                    && !decl->initializer
                 );
-                ret = ret &&
-                    ensure_definitely_initialized(decl, sympos+1, symbols[sympos].depth);
+                ret = ret
+                    && ensure_definitely_initialized(decl, sympos+1, symbols[sympos].depth)
+                    ;
             }
 
             //  If this is a copy, move, or forward parameter or a local variable,
@@ -556,8 +563,8 @@ private:
         //  Scan forward to the end of this scope, keeping track of
         //  the trailing nest of selection statements
         while (
-            i+1 < std::ssize(symbols) &&
-            symbols[i+1].depth >= depth
+            i+1 < std::ssize(symbols)
+            && symbols[i+1].depth >= depth
             )
         {
             assert (std::ssize(symbols) > 1);
@@ -580,8 +587,9 @@ private:
         {
             //  Once we find something, don't continue back further
             //  than the closest enclosing selection statement
-            if (found &&
-                symbols[i].depth <= selections.back()
+            if (
+                found
+                && symbols[i].depth <= selections.back()
                 )
             {
                 break;
@@ -604,8 +612,8 @@ private:
                     }
                     //  Then skip over the earlier part of the current branch
                     while (
-                        i > pos &&
-                        symbols[i].depth > selections.back() + 1
+                        i > pos
+                        && symbols[i].depth > selections.back() + 1
                         )
                     {
                         --i;
@@ -674,9 +682,10 @@ private:
 
             break;case symbol::active::declaration: {
                 auto const& sym = std::get<symbol::active::declaration>(symbols[pos].sym);
-                if (sym.start &&
-                    sym.identifier &&
-                    *sym.identifier == *decl->identifier
+                if (
+                    sym.start
+                    && sym.identifier
+                    && *sym.identifier == *decl->identifier
                     )
                 {
                     errors.emplace_back(
@@ -867,8 +876,9 @@ private:
                 if (std::ssize(selection_stack) > 0) {
                     //  If this is a compound start with the current selection's depth
                     //  plus one, it's the start of one of the branches of that selection
-                    if (sym.start &&
-                        symbols[pos].depth == symbols[selection_stack.back().pos].depth+1
+                    if (
+                        sym.start
+                        && symbols[pos].depth == symbols[selection_stack.back().pos].depth+1
                         )
                     {
                         selection_stack.back().branches.emplace_back( pos, false );
@@ -916,15 +926,26 @@ public:
     {
         if (
             //  If it's an 'out' parameter
-            (!inside_returns_list && n.pass == passing_style::out /*&& !n.has_name("this")*/) ||
+            (
+                !inside_returns_list
+                && n.pass == passing_style::out
+                )
             //  Or it's an uninitialized 'out' return value
-            ( inside_returns_list && n.pass == passing_style::out && !n.declaration->initializer)
+            || (
+                inside_returns_list
+                && n.pass == passing_style::out
+                && !n.declaration->initializer
+                )
             )
         {
             inside_out_parameter = &n;
         }
 
-        if (n.pass == passing_style::copy || n.pass == passing_style::move || n.pass == passing_style::forward)
+        if (
+            n.pass == passing_style::copy
+            || n.pass == passing_style::move
+            || n.pass == passing_style::forward
+            )
         {
             symbols.emplace_back( scope_depth, declaration_sym( true, n.declaration.get(), n.declaration->name(), n.declaration->initializer.get(), &n));
         }
@@ -954,11 +975,14 @@ public:
     {
         if (
             //  Skip type scope (member) variables
-            !(n.parent_is_type() && n.is_object()) &&
+            !(n.parent_is_type() && n.is_object())
             //  Skip unnamed variables
-            n.identifier &&
+            && n.identifier
             //  Skip non-out parameters
-            (!inside_parameter_list || inside_out_parameter)
+            && (
+                !inside_parameter_list
+                || inside_out_parameter
+                )
             )
         {
             symbols.emplace_back( scope_depth, declaration_sym( true, &n, n.name(), n.initializer.get(), inside_out_parameter ) );
@@ -972,11 +996,14 @@ public:
     {
         if (
             //  Skip type scope (member) variables
-            !(n.parent_is_type() && n.is_object()) &&
+            !(n.parent_is_type() && n.is_object())
             //  Skip unnamed variables
-            n.identifier &&
+            && n.identifier 
             //  Skip non-out parameters
-            (!inside_parameter_list || inside_out_parameter)
+            && (
+                !inside_parameter_list
+                || inside_out_parameter
+                )
             )
         {
             symbols.emplace_back( scope_depth, declaration_sym( false, &n, nullptr, nullptr, inside_out_parameter ) );
@@ -1022,8 +1049,8 @@ public:
                 //  or it's a 'copy' parameter (but to be a use it must be after
                 //  the declaration, not the token in the decl's name itself)
                 if (auto decl = get_declaration_of(t);
-                    decl &&
-                    decl->declaration->name() != &t
+                    decl
+                    && decl->declaration->name() != &t
                     )
                 {
                     symbols.emplace_back( scope_depth, identifier_sym( false, &t ) );
@@ -1057,8 +1084,9 @@ public:
             {
                 kind = compound_sym::is_true;
             }
-            if (active_selections.back()->false_branch &&
-                active_selections.back()->false_branch.get() == &n
+            if (
+                active_selections.back()->false_branch
+                && active_selections.back()->false_branch.get() == &n
                 )
             {
                 kind = compound_sym::is_false;

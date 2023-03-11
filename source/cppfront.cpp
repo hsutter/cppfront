@@ -343,9 +343,13 @@ class positional_printer
         while (curr_pos.lineno < pos.lineno)
         {
             //  If a comment goes on this line, print it
-            assert( next_comment >= std::ssize(comments) || comments[next_comment].start.lineno >= curr_pos.lineno );
-            if (next_comment < std::ssize(comments) &&
-                comments[next_comment].start.lineno == curr_pos.lineno
+            assert(
+                next_comment >= std::ssize(comments)
+                || comments[next_comment].start.lineno >= curr_pos.lineno
+            );
+            if (
+                next_comment < std::ssize(comments)
+                && comments[next_comment].start.lineno == curr_pos.lineno
                 )
             {
                 //  For a line comment, start it at the right indentation and print it
@@ -416,8 +420,9 @@ public:
     {
         flush_comments( {curr_pos.lineno+1, 1} );
 
-        if (is_open() &&
-            source_has_cpp2
+        if (
+            is_open()
+            && source_has_cpp2
             )
         {
             //  Always make sure the last line ends with a newline
@@ -443,9 +448,9 @@ public:
         source_has_cpp2 = has_cpp2;
         cpp2_filename = cpp2_filename_;
         assert(
-            !is_open() &&
-            !pcomments &&
-            "ICE: tried to call .open twice"
+            !is_open()
+            && !pcomments
+            && "ICE: tried to call .open twice"
         );
         cpp1_filename = cpp1_filename_;
         if (cpp1_filename == "stdout") {
@@ -462,8 +467,8 @@ public:
         -> void
     {
         assert(
-            is_open() &&
-            "ICE: tried to call .reopen without first calling .open"
+            is_open()
+            && "ICE: tried to call .reopen without first calling .open"
         );
         assert(cpp1_filename.ends_with(".h"));
         out_file.close();
@@ -475,8 +480,8 @@ public:
     {
         if (out) {
             assert(
-                pcomments &&
-                "ICE: if is_open, pcomments should also be set"
+                pcomments
+                && "ICE: if is_open, pcomments should also be set"
             );
         }
         return out;
@@ -507,8 +512,8 @@ public:
         -> void
     {
         assert(
-            is_open() &&
-            "ICE: printer must be open before printing"
+            is_open()
+            && "ICE: printer must be open before printing"
         );
         print( s );
     }
@@ -521,8 +526,8 @@ public:
         -> void
     {
         assert(
-            is_open() &&
-            "ICE: printer must be open before printing"
+            is_open()
+            && "ICE: printer must be open before printing"
         );
 
         //  Keep track of whether the last thing we printed was Cpp2
@@ -552,14 +557,15 @@ public:
         -> void
     {
         assert(
-            is_open() &&
-            "ICE: printer must be open before printing"
+            is_open()
+            && "ICE: printer must be open before printing"
         );
 
         //  Because the blank/comment lines before a Cpp2 code section are part
         //  of the Cpp2 section, and not printed in thedeclarations-only pass
-        if (!last_was_cpp2 &&
-            declarations_only
+        if (
+            !last_was_cpp2
+            && declarations_only
             )
         {
             print ("\n");
@@ -592,15 +598,15 @@ public:
         -> void
     {
         assert(
-            is_open() &&
-            "ICE: printer must be open before printing"
+            is_open()
+            && "ICE: printer must be open before printing"
         );
 
         //  Keep track of whether the last thing we printed was Cpp2
         //  Note: We should have been switched to Cpp2 with a `start_cpp2` call
         assert(
-            last_was_cpp2 &&
-            "ICE: didn't call start_cpp2 to begin a Cpp2 section"
+            last_was_cpp2
+            && "ICE: didn't call start_cpp2 to begin a Cpp2 section"
         );
         last_was_cpp2 = true;
 
@@ -627,16 +633,16 @@ public:
             //      If we moved to a new line, then this is the first
             //      non-comment non-whitespace text on the new line
             else if (
-                last_pos.lineno == pos.lineno-1 &&
-                enable_indent_heuristic
+                last_pos.lineno == pos.lineno-1
+                && enable_indent_heuristic
                 )
             {
                 //  If the last line had a request for this colno, remember its actual offset
                 constexpr int sentinel = -100;
                 auto last_line_offset = sentinel;
                 for(auto i = 0;
-                    i < std::ssize(prev_line_info.requests) &&
-                        prev_line_info.requests[i].requested <= pos.colno;
+                    i < std::ssize(prev_line_info.requests)
+                        && prev_line_info.requests[i].requested <= pos.colno;
                     ++i
                     )
                 {
@@ -877,8 +883,9 @@ public:
         //  "Constraints enable creativity in the right directions"
         //  sort of applies here
         //
-        if (!sourcefile.ends_with(".cpp2") &&
-            !sourcefile.ends_with(".h2")
+        if (
+            !sourcefile.ends_with(".cpp2")
+            && !sourcefile.ends_with(".h2")
             )
         {
             errors.emplace_back(
@@ -1019,10 +1026,11 @@ public:
                 {
                     ++ret.cpp1_lines;
 
-                    if (flag_cpp2_only &&
-                        !line.text.empty() &&
-                        line.cat != source_line::category::comment &&
-                        line.cat != source_line::category::import
+                    if (
+                        flag_cpp2_only
+                        && !line.text.empty()
+                        && line.cat != source_line::category::comment
+                        && line.cat != source_line::category::import
                         )
                     {
                         if (line.cat == source_line::category::preprocessor) {
@@ -1043,8 +1051,9 @@ public:
                         }
                     }
 
-                    if (line.cat == source_line::category::preprocessor &&
-                        line.text.ends_with(".h2\"")
+                    if (
+                        line.cat == source_line::category::preprocessor
+                        && line.text.ends_with(".h2\"")
                         )
                     {
                         //  Strip off the 2"
@@ -1067,8 +1076,9 @@ public:
                     }
 
                     //  We should be in a position to emit a set of Cpp2 declarations
-                    if (map_iter != tokens.get_map().cend() &&
-                        map_iter->first /*line*/ <= curr_lineno
+                    if (
+                        map_iter != tokens.get_map().cend()
+                        && map_iter->first /*line*/ <= curr_lineno
                         )
                     {
                         //  We should be here only when we're at exactly the first line of a Cpp2 section
@@ -1229,8 +1239,9 @@ public:
         }
 
         //  Implicit "cpp2::" qualification of Cpp2 fixed-width type aliases
-        if (!is_qualified &&
-            n.type() == lexeme::Cpp2FixedType
+        if (
+            !is_qualified
+            && n.type() == lexeme::Cpp2FixedType
             )
         {
             printer.print_cpp2("cpp2::", pos);
@@ -1283,14 +1294,17 @@ public:
         auto last_use = is_definite_last_use(n.identifier);
 
         bool add_forward =
-            last_use &&
-            last_use->is_forward &&
-            !in_non_rvalue_context.back();
+            last_use
+            && last_use->is_forward
+            && !in_non_rvalue_context.back();
 
         bool add_move =
-            !add_forward &&
-            (in_synthesized_multi_return || (last_use && !suppress_move_from_last_use)) &&
-            !in_non_rvalue_context.back();
+            !add_forward
+            && (
+                in_synthesized_multi_return
+                || (last_use && !suppress_move_from_last_use)
+                )
+            && !in_non_rvalue_context.back();
 
         //  For an explicit 'forward' apply forwarding to correct identifier
         assert (!current_args.empty());
@@ -1323,19 +1337,29 @@ public:
         }
 
         in_definite_init = is_definite_initialization(n.identifier);
-        if (!in_definite_init &&
-            !in_parameter_list
+        if (
+            !in_definite_init
+            && !in_parameter_list
             )
         {
             if (auto decl = sema.get_declaration_of(*n.identifier);
-                is_local_name &&
-                decl &&
+                is_local_name
+                && decl
                 //  note pointer equality: if we're not in the actual declaration of n.identifier
-                (in_synthesized_multi_return || decl->identifier != n.identifier) &&
+                && (
+                    in_synthesized_multi_return
+                    || decl->identifier != n.identifier
+                    )
                 //  and this variable was uninitialized
-                !decl->initializer &&
+                && !decl->initializer
                 //  and it's either a non-parameter or an out parameter
-                (!decl->parameter || (decl->parameter && decl->parameter->pass == passing_style::out))
+                && (
+                    !decl->parameter
+                    || (
+                        decl->parameter
+                        && decl->parameter->pass == passing_style::out
+                        )
+                    )
                 )
             {
                 printer.print_cpp2(".value()", n.position());
@@ -1345,7 +1369,11 @@ public:
             printer.print_cpp2(".value()", n.position());
         }
 
-        if (add_move || add_forward) {
+        if (
+            add_move
+            || add_forward
+            )
+        {
             printer.print_cpp2(")", n.position());
         }
     }
@@ -1357,10 +1385,14 @@ public:
         -> void
     {
         //  Implicit "cpp2::" qualification of "unique.new" and "shared.new"
-        if (n.ids.size() == 2 &&
-            (*n.ids[0].id->identifier == "unique" || *n.ids[0].id->identifier == "shared") &&
-            *n.ids[1].scope_op == "." &&
-            *n.ids[1].id->identifier == "new"
+        if (
+            n.ids.size() == 2
+            && (
+                *n.ids[0].id->identifier == "unique"
+                || *n.ids[0].id->identifier == "shared"
+                )
+            && *n.ids[1].scope_op == "."
+            && *n.ids[1].id->identifier == "new"
             )
         {
             printer.print_cpp2("cpp2::", n.position());
@@ -1517,8 +1549,8 @@ public:
         printer.print_cpp2(";", n.position());
 
         assert(
-            n.identifier &&
-            *n.identifier == "inspect"
+            n.identifier
+            && *n.identifier == "inspect"
         );
 
         assert(!n.alternatives.empty());
@@ -1544,7 +1576,10 @@ public:
             }
             printer.emit_to_string();
 
-            assert (*alt->is_as_keyword == "is" || *alt->is_as_keyword == "as");
+            assert (
+                *alt->is_as_keyword == "is"
+                || *alt->is_as_keyword == "as"
+            );
             // TODO: pick up 'as' next, for now just do 'is'
 
             if (*alt->is_as_keyword == "is")
@@ -1556,8 +1591,11 @@ public:
                 printer.emit_to_string();
                 //  ... and jettison the final ; for an expression-statement
                 while (
-                    !statement.empty() &&
-                    (statement.back() == ';' || isspace(statement.back()))
+                    !statement.empty()
+                    && (
+                        statement.back() == ';'
+                        || isspace(statement.back())
+                        )
                     )
                 {
                     statement.pop_back();
@@ -1595,8 +1633,9 @@ public:
 
                 printer.print_cpp2(statement, alt->position());
 
-                if (is_expression &&
-                    id != "auto"
+                if (
+                    is_expression
+                    && id != "auto"
                     )
                 {
                     assert(alt->statement->is_expression());
@@ -1677,10 +1716,10 @@ public:
         //
         if (*n.identifier == "while") {
             assert(
-                n.condition &&
-                n.statement &&
-                !n.range &&
-                !n.body
+                n.condition
+                && n.statement
+                && !n.range
+                && !n.body
             );
 
             //  We emit Cpp2 while loops as Cpp2 for loops if there's a "next" clause
@@ -1711,10 +1750,10 @@ public:
         //
         else if (*n.identifier == "do") {
             assert(
-                n.condition &&
-                n.statement &&
-                !n.range &&
-                !n.body
+                n.condition
+                && n.statement
+                && !n.range
+                && !n.body
             );
 
             printer.print_cpp2("do ", n.position());
@@ -1743,10 +1782,10 @@ public:
         //
         else if (*n.identifier == "for") {
             assert(
-                !n.condition &&
-                !n.statement &&
-                n.range &&
-                n.body
+                !n.condition
+                && !n.statement
+                && n.range
+                && n.body
             );
 
             if (n.for_with_in) {
@@ -1792,8 +1831,9 @@ public:
         }
 
         assert (iteration_statements.back().stmt);
-        if (iteration_statements.back().stmt->label &&
-            !iteration_statements.back().used
+        if (
+            iteration_statements.back().stmt->label
+            && !iteration_statements.back().used
             )
         {
             auto name = iteration_statements.back().stmt->label->to_string(true);
@@ -1820,7 +1860,11 @@ public:
         //
         if (n.expression) {
             emit(*n.expression);
-            if (function_returns.empty() || function_returns.back() != &single_anon) {
+            if (
+                function_returns.empty()
+                || function_returns.back() != &single_anon
+                )
+            {
                 errors.emplace_back(
                     n.position(),
                     "return statement with expression must be in a function with a single anonymous return value"
@@ -1830,8 +1874,8 @@ public:
         }
 
         else if (
-            !function_returns.empty() &&
-            function_returns.back() == &single_anon
+            !function_returns.empty()
+            && function_returns.back() == &single_anon
             )
         {
             errors.emplace_back(
@@ -1843,8 +1887,8 @@ public:
         //  Return without expression == zero or named return values
         //
         else if (
-            !function_returns.empty() &&
-            function_returns.back()
+            !function_returns.empty()
+            && function_returns.back()
             )
         {
             //auto stmt = function_return_name + " { "; // we shouldn't need this with { } init
@@ -1884,8 +1928,9 @@ public:
                     [&](auto& s){
                         assert(s.stmt);
                         return
-                            s.stmt->label &&
-                            std::string_view{*s.stmt->label} == std::string_view{*n.label};
+                            s.stmt->label
+                            && std::string_view{*s.stmt->label} == std::string_view{*n.label}
+                            ;
                     }
                 );
             if (iter_stmt == iteration_statements.end())
@@ -1991,7 +2036,10 @@ public:
         {
             //  This must be an anonymous declaration
             auto& decl = std::get<primary_expression_node::declaration>(n.expr);
-            assert(decl && !decl->identifier);
+            assert(
+                decl
+                && !decl->identifier
+            );
 
             //  Handle an anonymous function
             if (decl->is_function()) {
@@ -2097,8 +2145,9 @@ public:
             return q->type() == lexeme::Multiply;
         });
 
-        if (pointer_declarators_cnt == 0 &&
-            type_id_node->suspicious_initialization
+        if (
+            pointer_declarators_cnt == 0
+            && type_id_node->suspicious_initialization
             )
         {
             return is_pointer_declaration(type_id_node->suspicious_initialization, deref_cnt, addr_cnt);
@@ -2183,7 +2232,8 @@ public:
             assert (!current_args.back().ptoken);
             current_args.back().ptoken = n.expr->get_token();
             auto decl = sema.get_declaration_of(*current_args.back().ptoken);
-            if (!(decl && decl->parameter && decl->parameter->pass == passing_style::forward)) {
+            if (!(decl && decl->parameter && decl->parameter->pass == passing_style::forward))
+            {
                 errors.emplace_back(
                     n.position(),
                     n.expr->get_token()->to_string(true) + " is not a forwarding parameter name"
@@ -2211,26 +2261,35 @@ public:
                     else
                     {
                         auto op = [&]{
-                            if (n.ops.size() >= 2 &&
-                                n.ops[0].op->type() == lexeme::LeftParen
-                                ) {
+                            if (
+                                n.ops.size() >= 2
+                                && n.ops[0].op->type() == lexeme::LeftParen
+                                )
+                            {
                                 return n.ops[1].op;
-                            } else {
+                            }
+                            else
+                            {
                                 return n.ops.front().op;
                             }
                         }();
 
-                        if (op->type() == lexeme::PlusPlus ||
-                            op->type() == lexeme::MinusMinus ||
-                            op->type() == lexeme::LeftBracket
-                            ) {
+                        if (
+                            op->type() == lexeme::PlusPlus
+                            || op->type() == lexeme::MinusMinus
+                            || op->type() == lexeme::LeftBracket
+                            )
+                        {
                             errors.emplace_back(
                                 op->position(),
                                 op->to_string(true) + " - pointer arithmetic is illegal - use std::span or gsl::span instead"
                             );
                             violates_bounds_safety = true;
                         }
-                        else if (op->type() == lexeme::Tilde) {
+                        else if (
+                            op->type() == lexeme::Tilde
+                            )
+                        {
                             errors.emplace_back(
                                 op->position(),
                                 op->to_string(true) + " - pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first"
@@ -2251,8 +2310,9 @@ public:
         //  and if we're not capturing the expression for the lambda
         //  introducer replace it with the capture name
         auto captured_part = std::string{};
-        if (n.cap_grp &&
-            !for_lambda_capture
+        if (
+            n.cap_grp
+            && !for_lambda_capture
             )
         {
             //  First stringize ourselves so that we compare equal against
@@ -2267,8 +2327,8 @@ public:
             });
 
             assert(
-                found != n.cap_grp->members.cend() &&
-                "could not find this postfix-expression in capture group"
+                found != n.cap_grp->members.cend()
+                && "ICE: could not find this postfix-expression in capture group"
             );
             //  And then emit that capture symbol with number
             assert (!found->cap_sym.empty());
@@ -2354,8 +2414,8 @@ public:
             // Going backwards if we found Dot and there is args variable
             // it means that it should be handled by UFCS
             else if(
-                i->op->type() == lexeme::Dot &&
-                args
+                i->op->type() == lexeme::Dot
+                && args
                 )
             {
                 auto funcname = print_to_string(*i->id_expr);
@@ -2389,19 +2449,21 @@ public:
 
             //  Handle the Cpp2 postfix operators that are prefix in Cpp1
             //
-            else if (i->op->type() == lexeme::MinusMinus ||
-                i->op->type() == lexeme::PlusPlus ||
-                i->op->type() == lexeme::Multiply ||
-                i->op->type() == lexeme::Ampersand ||
-                i->op->type() == lexeme::Tilde
+            else if (
+                i->op->type() == lexeme::MinusMinus
+                || i->op->type() == lexeme::PlusPlus
+                || i->op->type() == lexeme::Multiply
+                || i->op->type() == lexeme::Ampersand
+                || i->op->type() == lexeme::Tilde
                 )
             {
                 adjust_remaining_token_columns_on_this_line_visitor v(i->op->position(), 0 - i->op->length());
                 n.visit(v, 0);
 
                 // omit some needless parens
-                if (!last_was_prefixed &&
-                    i != n.ops.rbegin()
+                if (
+                    !last_was_prefixed
+                    && i != n.ops.rbegin()
                     )
                 {
                     prefix.emplace_back( "(", i->op->position() );
@@ -2409,22 +2471,25 @@ public:
                 prefix.emplace_back( i->op->to_string(true), i->op->position());
 
                 //  Enable null dereference checks
-                if (flag_safe_null_pointers &&
-                    i->op->type() == lexeme::Multiply
+                if (
+                    flag_safe_null_pointers
+                    && i->op->type() == lexeme::Multiply
                     )
                 {
                     prefix.emplace_back( "cpp2::assert_not_null(", i->op->position() );
                 }
-                if (flag_safe_null_pointers &&
-                    i->op->type() == lexeme::Multiply
+                if (
+                    flag_safe_null_pointers
+                    && i->op->type() == lexeme::Multiply
                     )
                 {
                     suffix.emplace_back( ")", i->op->position() );
                 }
 
                 // omit some needless parens
-                if (!last_was_prefixed &&
-                    i != n.ops.rbegin()
+                if (
+                    !last_was_prefixed
+                    && i != n.ops.rbegin()
                     )
                 {
                     suffix.emplace_back( ")", i->op->position() );
@@ -2439,8 +2504,9 @@ public:
                 last_was_prefixed = false;
 
                 //  Enable subscript bounds checks
-                if (flag_safe_subscripts &&
-                    i->op->type() == lexeme::LeftBracket
+                if (
+                    flag_safe_subscripts
+                    && i->op->type() == lexeme::LeftBracket
                     )
                 {
                     suffix.emplace_back( ")", i->op->position() );
@@ -2474,8 +2540,9 @@ public:
                 }
 
                 //  Enable subscript bounds checks
-                if (flag_safe_subscripts &&
-                    i->op->type() == lexeme::LeftBracket
+                if (
+                    flag_safe_subscripts
+                    && i->op->type() == lexeme::LeftBracket
                     )
                 {
                     prefix.emplace_back( "cpp2::assert_in_bounds(", i->op->position() );
@@ -2494,9 +2561,10 @@ public:
 
         //  If this is an --, ++, or &, don't add std::move on the lhs
         //  even if this is a definite last use (only do that when an rvalue is okay)
-        if (n.ops.front().op->type() == lexeme::MinusMinus ||
-            n.ops.front().op->type() == lexeme::PlusPlus ||
-            n.ops.front().op->type() == lexeme::Ampersand
+        if (
+            n.ops.front().op->type() == lexeme::MinusMinus
+            || n.ops.front().op->type() == lexeme::PlusPlus
+            || n.ops.front().op->type() == lexeme::Ampersand
             )
         {
             suppress_move_from_last_use = true;
@@ -2558,17 +2626,17 @@ public:
         bool as_on_literal  = false;
 
         assert(
-            n.expr &&
-            n.expr->get_postfix_expression_node() &&
-            n.expr->get_postfix_expression_node()->expr
+            n.expr
+            && n.expr->get_postfix_expression_node()
+            && n.expr->get_postfix_expression_node()->expr
         );
         if (auto t = n.expr->get_postfix_expression_node()->expr->get_token();
-            t &&
-            is_literal(t->type()) &&
-            t->type() != lexeme::StringLiteral &&
-            t->type() != lexeme::FloatLiteral &&
-            std::ssize(n.ops) > 0 &&
-            *n.ops[0].op == "as"
+            t
+            && is_literal(t->type())
+            && t->type() != lexeme::StringLiteral
+            && t->type() != lexeme::FloatLiteral
+            && std::ssize(n.ops) > 0
+            && *n.ops[0].op == "as"
             )
         {
             as_on_literal = true;
@@ -2642,18 +2710,22 @@ public:
         -> void
     {
         assert(n.expr);
-        assert(n.terms.empty() || n.terms.front().op);
+        assert(
+            n.terms.empty()
+            || n.terms.front().op
+        );
 
         //  If this is relational comparison
-        if (!n.terms.empty() &&
-            (
-            n.terms.front().op->type() == lexeme::Less            ||
-            n.terms.front().op->type() == lexeme::LessEq          ||
-            n.terms.front().op->type() == lexeme::Greater         ||
-            n.terms.front().op->type() == lexeme::GreaterEq       ||
-            n.terms.front().op->type() == lexeme::EqualComparison ||
-            n.terms.front().op->type() == lexeme::NotEqualComparison
-            )
+        if (
+            !n.terms.empty()
+            && (
+                n.terms.front().op->type() == lexeme::Less
+                || n.terms.front().op->type() == lexeme::LessEq
+                || n.terms.front().op->type() == lexeme::Greater
+                || n.terms.front().op->type() == lexeme::GreaterEq
+                || n.terms.front().op->type() == lexeme::EqualComparison
+                || n.terms.front().op->type() == lexeme::NotEqualComparison
+                )
             )
         {
             auto const& op = *n.terms.front().op;
@@ -2731,7 +2803,10 @@ public:
 
                 for (auto const& term : n.terms)
                 {
-                    assert(term.op && term.expr);
+                    assert(
+                        term.op
+                        && term.expr
+                    );
                     ++count;
                     auto rhs_name = "_" + std::to_string(count);
 
@@ -2830,8 +2905,9 @@ public:
 
         //  Else if this is an assignment expression, don't add std::move on the lhs
         //  even if this is a definite last use (only do that when an rvalue is okay)
-        if (!n.terms.empty() &&
-            is_assignment_operator(n.terms.front().op->type())
+        if (
+            !n.terms.empty()
+            && is_assignment_operator(n.terms.front().op->type())
             )
         {
             suppress_move_from_last_use = true;
@@ -2841,16 +2917,24 @@ public:
 
         //  Check that this isn't an illegal pointer operation
         //      (initial partial implementation)
-        if (!n.terms.empty() &&
-            last_postfix_expr_was_pointer
+        if (
+            !n.terms.empty()
+            && last_postfix_expr_was_pointer
             )
         {
             auto rhs_post = n.get_second_postfix_expression_node();
-            assert(rhs_post && rhs_post->expr);
+            assert(
+                rhs_post
+                && rhs_post->expr
+            );
             auto rhs_tok = rhs_post->expr->get_token();
-            if (is_assignment_operator(n.terms.front().op->type()) &&
-                rhs_tok &&
-                (*rhs_tok == "nullptr" || is_digit(((std::string_view)*rhs_tok)[0]))
+            if (
+                is_assignment_operator(n.terms.front().op->type())
+                && rhs_tok
+                && (
+                    *rhs_tok == "nullptr"
+                    || is_digit(((std::string_view)*rhs_tok)[0])
+                    )
                 )
             {
                 errors.emplace_back(
@@ -2860,8 +2944,10 @@ public:
                 violates_lifetime_safety = true;
             }
             else if (
-                *n.terms.front().op == "+" || *n.terms.front().op == "+=" ||
-                *n.terms.front().op == "-" || *n.terms.front().op == "-="
+                *n.terms.front().op == "+"
+                || *n.terms.front().op == "+="
+                || *n.terms.front().op == "-"
+                || *n.terms.front().op == "-="
                 )
             {
                 errors.emplace_back(
@@ -2879,8 +2965,9 @@ public:
             //  Normally we'll just emit the operator, but if this is an
             //  assignment that's a definite initialization, change it to
             //  a .construct() call
-            if (x.op->type() == lexeme::Assignment &&
-                in_definite_init
+            if (
+                x.op->type() == lexeme::Assignment
+                && in_definite_init
                 )
             {
                 printer.print_cpp2( ".construct(", n.position() );
@@ -2915,8 +3002,9 @@ public:
         -> void
     {
         auto add_parens =
-            should_add_expression_list_parens() &&
-            !n.inside_initializer;
+            should_add_expression_list_parens()
+            && !n.inside_initializer
+            ;
         if (add_parens) {
             printer.print_cpp2( *n.open_paren, n.position());
         }
@@ -2932,9 +3020,9 @@ public:
 
             if (x.pass != passing_style::in) {
                 assert(
-                    x.pass == passing_style::out ||
-                    x.pass == passing_style::move ||
-                    x.pass == passing_style::forward
+                    x.pass == passing_style::out
+                    || x.pass == passing_style::move
+                    || x.pass == passing_style::forward
                 );
                 if (x.pass == passing_style::out) {
                     is_out = true;
@@ -3067,9 +3155,9 @@ public:
         if (n.mod == parameter_declaration_node::modifier::implicit)
         {
             if (
-                n.pass != passing_style::out ||
-                !current_function_info.back().pname ||
-                *current_function_info.back().pname != "operator="
+                n.pass != passing_style::out
+                || !current_function_info.back().pname
+                || *current_function_info.back().pname != "operator="
                 )
             {
                 errors.emplace_back(
@@ -3119,22 +3207,25 @@ public:
 
         auto unqid = std::get_if<type_id_node::unqualified>(&type_id.id);
         auto is_wildcard =
-            unqid &&
-            *(*unqid)->identifier == "_";
+            unqid
+            && *(*unqid)->identifier == "_"
+            ;
 
         //  If this parameter's name is an unqualified-id, check to see
         //  if it's the name of one of the template parameters
         auto is_template_parameter_name = false;
-        if (unqid &&
-            current_declaration.back() &&
-            current_declaration.back()->template_parameters
+        if (
+            unqid
+            && current_declaration.back()
+            && current_declaration.back()->template_parameters
             )
         {
             for (auto& tparam : current_declaration.back()->template_parameters->parameters)
             {
                 assert(tparam);
-                if (tparam->declaration->is_type() &&
-                    tparam->declaration->has_name( *(*unqid)->identifier )
+                if (
+                    tparam->declaration->is_type()
+                    && tparam->declaration->has_name( *(*unqid)->identifier )
                     )
                 {
                     is_template_parameter_name = true;
@@ -3146,9 +3237,10 @@ public:
         auto identifier     = print_to_string( *n.declaration->identifier );
 
         //  First any prefix
-        if (!is_returns &&
-            !is_wildcard &&
-            !is_template_parameter_name
+        if (
+            !is_returns
+            && !is_wildcard
+            && !is_template_parameter_name
             )
         {
             switch (n.pass) {
@@ -3160,7 +3252,10 @@ public:
 
         printer.preempt_position_push( n.position() );
 
-        if (is_wildcard || is_template_parameter_name)
+        if (
+            is_wildcard
+            || is_template_parameter_name
+            )
         {
             auto name = std::string{"auto"};
             if (is_template_parameter_name) {
@@ -3205,9 +3300,10 @@ public:
         printer.preempt_position_pop();
 
         //  Then any suffix
-        if (!is_returns &&
-            !is_wildcard &&
-            !is_template_parameter_name
+        if (
+            !is_returns
+            && !is_wildcard
+            && !is_template_parameter_name
             )
         {
             switch (n.pass) {
@@ -3223,8 +3319,9 @@ public:
 
         printer.print_cpp2( " " + identifier, n.declaration->identifier->position());
 
-        if (!is_returns &&
-            n.declaration->initializer
+        if (
+            !is_returns
+            && n.declaration->initializer
             )
         {
             printer.print_cpp2( " = ", n.declaration->initializer->position() );
@@ -3268,8 +3365,9 @@ public:
 
         auto prev_pos = n.position();
         for (auto first = true; auto const& x : n.parameters) {
-            if (!first &&
-                !is_returns
+            if (
+                !first
+                && !is_returns
                 )
             {
                 printer.print_cpp2( ", ", prev_pos );
@@ -3333,11 +3431,11 @@ public:
             if (auto uid = std::get_if<id_expression_node::unqualified>(&n.group->id)) {
                 assert (*uid && (**uid).identifier);
                 if (
-                    *(**uid).identifier == "Default" ||
-                    *(**uid).identifier == "Bounds"  ||
-                    *(**uid).identifier == "Null"    ||
-                    *(**uid).identifier == "Type"    ||
-                    *(**uid).identifier == "Testing"
+                    *(**uid).identifier == "Default"
+                    || *(**uid).identifier == "Bounds"
+                    || *(**uid).identifier == "Null"
+                    || *(**uid).identifier == "Type"
+                    || *(**uid).identifier == "Testing"
                     )
                 {
                     printer.print_cpp2("cpp2::", n.position());
@@ -3390,8 +3488,9 @@ public:
     {
         assert(n.parameters);
 
-        if (is_main &&
-            n.parameters->parameters.size() > 0
+        if (
+            is_main
+            && n.parameters->parameters.size() > 0
             )
         {
             printer.print_cpp2( "(int const argc_, char const* const* const argv_)", n.parameters->position() );
@@ -3461,8 +3560,9 @@ public:
         -> void
     {
         auto is_main =
-            !n.parent_declaration &&
-            n.has_name("main");
+            !n.parent_declaration
+            && n.has_name("main")
+            ;
         auto is_in_type = n.parent_is_type();
 
         current_declaration.push_back(&n);
@@ -3470,8 +3570,9 @@ public:
 
         //  If this is a function that has multiple return values,
         //  first we need to emit the struct that contains the returns
-        if (printer.doing_declarations_only() &&
-            n.is_function()
+        if (
+            printer.doing_declarations_only()
+            && n.is_function()
             )
         {
             auto& func = std::get<declaration_node::a_function>(n.type);
@@ -3525,8 +3626,8 @@ public:
 
             //  Type body
             assert(
-                n.initializer &&
-                n.initializer->is_compound()
+                n.initializer
+                && n.initializer->is_compound()
             );
             auto& compound_stmt = std::get<statement_node::compound>(n.initializer->statement);
 
@@ -3557,8 +3658,8 @@ public:
             emit(*n.identifier);
 
             assert(
-                n.initializer &&
-                n.initializer->is_compound()
+                n.initializer
+                && n.initializer->is_compound()
             );
             auto& compound_stmt = std::get<statement_node::compound>(n.initializer->statement);
 
@@ -3618,8 +3719,9 @@ public:
                 //  If there's a 'this' parameter, handle it here (the parameter emission will skip it)
                 //  because Cpp1 syntax requires its information to be spread around the declaration syntax
                 assert (func->parameters);
-                if (!func->parameters->parameters.empty() &&
-                    func->parameters->parameters[0]->declaration->has_name("this")
+                if (
+                    !func->parameters->parameters.empty()
+                    && func->parameters->parameters[0]->declaration->has_name("this")
                     )
                 {
                     assert (is_in_type);
@@ -3653,7 +3755,11 @@ public:
                     break;case parameter_declaration_node::modifier::final_:
                         suffix2 += " final";
                     break;default:
-                        if (func->is_constructor() && func->parameters->ssize() > 1) {
+                        if (
+                            func->is_constructor()
+                            && func->parameters->ssize() > 1
+                            )
+                        {
                             prefix += "explicit ";
                         }
                     }
@@ -3677,11 +3783,11 @@ public:
                 if (n.is_constructor())
                 {
                     assert(
-                        !is_main &&
+                        !is_main
                         // prefix can be "explicit "
-                        suffix1.empty() &&
-                        suffix2.empty() &&
-                        "ICE: a constructor shouldn't have been able to generate a prefix or suffix (or be main)"
+                        && suffix1.empty()
+                        && suffix2.empty()
+                        && "ICE: a constructor shouldn't have been able to generate a prefix or suffix (or be main)"
                     );
 
                     //  We'll use this common guidance in several errors,
@@ -3698,8 +3804,8 @@ public:
                     auto statement  = statements.begin();
                     auto separator  = std::string{": "};
                     while (
-                        object    != objects   .end() &&
-                        statement != statements.end()
+                        object != objects.end()
+                        && statement != statements.end()
                         )
                     {
                         assert((*object)->has_name());
@@ -3714,7 +3820,10 @@ public:
                         //  Check that this is an assignment to *object
                         auto exprs = (*statement)->get_lhs_rhs_if_simple_assignment();
 
-                        assert(!exprs.lhs || exprs.lhs->expr);
+                        assert(
+                            !exprs.lhs
+                            || exprs.lhs->expr
+                        );
                         auto is_match    = false;
                         auto stmt_pos    = (*statement)->position();
                         auto initializer = std::string{};
@@ -3730,8 +3839,9 @@ public:
                                 //  If it's of the form 'this.name', get a pointer
                                 //  to the token for 'name'
                                 auto second_tok = exprs.lhs->get_second_token_if_a_this_qualified_name();
-                                if (second_tok &&
-                                    (*object)->has_name(*second_tok)
+                                if (
+                                    second_tok
+                                    && (*object)->has_name(*second_tok)
                                     )
                                 {
                                     is_match = true;
@@ -3751,8 +3861,9 @@ public:
                         }
 
                         //  Otherwise, if the member has an initializer, we can use that
-                        if (!is_match &&
-                            (*object)->initializer
+                        if (
+                            !is_match
+                            && (*object)->initializer
                             )
                         {
                             is_match = true;
@@ -3802,17 +3913,17 @@ public:
                 else if (n.is_destructor())
                 {
                     assert(
-                        !is_main &&
-                        prefix.empty() &&
+                        !is_main
+                        && prefix.empty()
                         // suffix1 will be " &&" though we'll ignore that
-                        suffix2.empty() &&
-                        "ICE: a destructor shouldn't have been able to generate a prefix or suffix (or be main)"
+                        && suffix2.empty()
+                        && "ICE: a destructor shouldn't have been able to generate a prefix or suffix (or be main)"
                     );
 
                     //  Print the ~-prefixed type name instead of the operator= function name
                     assert(
-                        n.parent_is_type() &&
-                        n.parent_declaration->name()
+                        n.parent_is_type()
+                        && n.parent_declaration->name()
                     );
                     printer.print_cpp2( "~" + n.parent_declaration->name()->to_string(true), n.position());
                     emit( *func, n.name(), false, true);
@@ -3849,7 +3960,8 @@ public:
             //  Function body
             assert( n.initializer );
 
-            for (auto&& c : func->contracts) {
+            for (auto&& c : func->contracts)
+            {
                 auto print = std::string();
                 printer.emit_to_string(&print);
                 emit(*c);
@@ -3943,8 +4055,8 @@ public:
 
         //  Object with optional initializer
         else if (
-            !printer.doing_declarations_only() &&
-            n.is_object()
+            !printer.doing_declarations_only()
+            && n.is_object()
             )
         {
             auto& type = std::get<declaration_node::an_object>(n.type);
@@ -3973,8 +4085,9 @@ public:
                 emit( *type );
                 printer.preempt_position_pop();
                 //  one pointer is enough for now, pointer-to-function fun can be later
-                if (!n.initializer &&
-                    n.parent_is_function()
+                if (
+                    !n.initializer
+                    && n.parent_is_function()
                     )
                 {
                     printer.print_cpp2( ">", n.position() );

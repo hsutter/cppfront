@@ -241,8 +241,9 @@ struct binary_expression_node
         -> postfix_expression_node_pair
     {
         //  "simple" means binary (size>0) and not chained (size<2)
-        if (std::ssize(terms) == 1 &&
-            terms[0].op->type() == op
+        if (
+            std::ssize(terms) == 1
+            && terms[0].op->type() == op
             )
         {
             return {
@@ -614,8 +615,9 @@ struct qualified_id_node
     auto get_token() const
         -> token const*
     {
-        if (std::ssize(ids) == 1 &&
-            !ids.front().scope_op
+        if (
+            std::ssize(ids) == 1
+            && !ids.front().scope_op
             )
         {
             assert (ids.front().id);
@@ -675,7 +677,10 @@ struct type_id_node
     auto is_wildcard() const
         -> bool
     {
-        return id.index() == type_id_node::empty || (get_token() && *get_token() == "_");
+        return
+            id.index() == type_id_node::empty
+            || (get_token() && *get_token() == "_")
+            ;
     }
 
     auto is_pointer_qualified() const
@@ -841,9 +846,10 @@ struct id_expression_node
 auto postfix_expression_node::get_second_token_if_a_this_qualified_name() const
     -> token const*
 {
-    if (*expr->get_token() == "this" &&
-        std::ssize(ops)    == 1      &&
-        ops[0].op->type()  == lexeme::Dot
+    if (
+        *expr->get_token() == "this"
+        && std::ssize(ops) == 1
+        && ops[0].op->type() == lexeme::Dot
         )
     {
         return ops[0].id_expr->get_token();
@@ -1472,8 +1478,9 @@ struct declaration_node
         -> bool
     {
         return
-            identifier &&
-            identifier->identifier;
+            identifier
+            && identifier->identifier
+            ;
     }
 
     auto name() const
@@ -1487,8 +1494,9 @@ struct declaration_node
         -> bool
     {
         return
-            has_name() &&
-            *name() == s;
+            has_name()
+            && *name() == s
+            ;
     }
 
     auto is_function () const -> bool
@@ -1531,12 +1539,13 @@ struct declaration_node
             assert (decl);
 
             assert(
-                !decl->is_namespace() &&
-                "ICE: a type shouldn't be able to contain a namespace"
+                !decl->is_namespace()
+                && "ICE: a type shouldn't be able to contain a namespace"
             );
-            if ((w & functions && decl->is_function()) ||
-                (w & objects   && decl->is_object  ()) ||
-                (w & types     && decl->is_type    ())
+            if (
+                (w & functions && decl->is_function())
+                || (w & objects && decl->is_object())
+                || (w & types && decl->is_type())
                 )
             {
                 ret.push_back(decl);
@@ -1594,17 +1603,19 @@ struct declaration_node
         -> bool
     {
         return
-            type.index() == an_object &&
-            !std::get<an_object>(type)->pc_qualifiers.empty() &&
-            *std::get<an_object>(type)->pc_qualifiers.front() == "const";
+            type.index() == an_object
+            && !std::get<an_object>(type)->pc_qualifiers.empty()
+            && *std::get<an_object>(type)->pc_qualifiers.front() == "const"
+            ;
     }
 
     auto is_wildcard() const
         -> bool
     {
         return
-            type.index() == an_object &&
-            std::get<an_object>(type)->is_wildcard();
+            type.index() == an_object
+            && std::get<an_object>(type)->is_wildcard()
+            ;
     }
 
     //  Internals
@@ -1665,9 +1676,9 @@ auto function_type_node::is_constructor() const
     -> bool
 {
     if (
-        (*parameters).ssize() > 0 &&
-        (*parameters)[0]->has_name("this") &&
-        (*parameters)[0]->direction() == passing_style::out
+        (*parameters).ssize() > 0
+        && (*parameters)[0]->has_name("this")
+        && (*parameters)[0]->direction() == passing_style::out
         )
     {
         return true;
@@ -1680,9 +1691,9 @@ auto function_type_node::is_destructor() const
     -> bool
 {
     if (
-        (*parameters).ssize() == 1 &&
-        (*parameters)[0]->has_name("this") &&
-        (*parameters)[0]->direction() == passing_style::move
+        (*parameters).ssize() == 1
+        && (*parameters)[0]->has_name("this")
+        && (*parameters)[0]->direction() == passing_style::move
         )
     {
         return true;
@@ -1791,9 +1802,9 @@ auto iteration_statement_node::get_for_parameter() const
     assert(*identifier == "for");
     auto func = std::get_if<declaration_node::a_function>(&body->type);
     assert(
-        func &&
-        *func &&
-        std::ssize((**func).parameters->parameters) == 1
+        func
+        && *func
+        && std::ssize((**func).parameters->parameters) == 1
     );
     return (**func).parameters->parameters[0].get();
 }
@@ -2107,8 +2118,9 @@ private:
         if (include_curr_token) {
             m += std::string(" (at '") + curr().to_string(true) + "')";
         }
-        if (err_pos == source_position{} &&
-            peek(0)
+        if (
+            err_pos == source_position{}
+            && peek(0)
             )
         {
             err_pos = peek(0)->position();
@@ -2144,8 +2156,9 @@ private:
         -> token const*
     {
         assert (tokens_);
-        if (pos + num >= 0 &&
-            pos + num < std::ssize(*tokens_)
+        if (
+            pos + num >= 0
+            && pos + num < std::ssize(*tokens_)
             )
         {
             return &(*tokens_)[pos + num];
@@ -2231,7 +2244,10 @@ private:
 
         if (auto decl = unnamed_declaration(curr().position(), false, true)) // captures are allowed
         {
-            assert (!decl->has_name() && "ICE: declaration should have been unnamed");
+            assert (
+                !decl->has_name()
+                && "ICE: declaration should have been unnamed"
+            );
             if (auto obj = std::get_if<declaration_node::an_object>(&decl->type)) {
                 if ((*obj)->is_wildcard()) {
                     error("an unnamed object at expression scope currently cannot have a deduced type (the reason to create an unnamed object is typically to create a temporary of a named type)");
@@ -2281,22 +2297,34 @@ private:
             return {};
         }
 
-        while ( !done() && (
-            (is_postfix_operator(curr().type())
-                //  Postfix operators must be lexically adjacent
-                && curr().position().lineno == peek(-1)->position().lineno
-                && curr().position().colno == peek(-1)->position().colno + peek(-1)->length()
-            ) ||
-            curr().type() == lexeme::LeftBracket ||
-            curr().type() == lexeme::LeftParen ||
-            curr().type() == lexeme::Dot
+        while (
+            !done()
+            && (
+                (is_postfix_operator(curr().type())
+                    //  Postfix operators must be lexically adjacent
+                    && curr().position().lineno == peek(-1)->position().lineno
+                    && curr().position().colno == peek(-1)->position().colno + peek(-1)->length()
+                )
+                || curr().type() == lexeme::LeftBracket
+                || curr().type() == lexeme::LeftParen
+                || curr().type() == lexeme::Dot
             )
             )
         {
             //  these can't be unary operators if followed by a (, identifier, or literal
-            if ((curr().type() == lexeme::Multiply  || curr().type() == lexeme::Ampersand || curr().type() == lexeme::Tilde) &&
-                peek(1) &&
-                (peek(1)->type() == lexeme::LeftParen || peek(1)->type() == lexeme::Identifier || is_literal(peek(1)->type())))
+            if (
+                (
+                    curr().type() == lexeme::Multiply
+                    || curr().type() == lexeme::Ampersand
+                    || curr().type() == lexeme::Tilde
+                    )
+                && peek(1)
+                && (
+                    peek(1)->type() == lexeme::LeftParen
+                    || peek(1)->type() == lexeme::Identifier
+                    || is_literal(peek(1)->type())
+                    )
+                )
             {
                 auto op  = curr().to_string(true);
                 auto msg = "postfix unary " + op;
@@ -2333,12 +2361,17 @@ private:
             if (term.op->type() == lexeme::LeftBracket)
             {
                 term.expr_list = expression_list(term.op);
-                if (!term.expr_list || term.expr_list->expressions.empty()) {
+                if (
+                    !term.expr_list
+                    || term.expr_list->expressions.empty()
+                    )
+                {
                     error("subscript expression [ ] must not be empty (if you were trying to name a C-style array type, use 'std::array' instead)");
                     next();
                     return {};
                 }
-                if (curr().type() != lexeme::RightBracket) {
+                if (curr().type() != lexeme::RightBracket)
+                {
                     error("unexpected text - [ is not properly matched by ]");
                     return {};
                 }
@@ -2374,9 +2407,9 @@ private:
         }
 
         if (auto tok = n->expr->get_token();
-            tok &&
-            *tok == "this" &&
-            curr().type() == lexeme::Arrow
+            tok
+            && *tok == "this"
+            && curr().type() == lexeme::Arrow
             )
         {
             auto next_word = std::string{};
@@ -2453,7 +2486,11 @@ private:
                 //  which will return a token* == a valid operator for this production
                 //  (possibly a synthesized new token) or nullptr otherwise
                 else if constexpr( requires{ validate_op(curr(), *peek(1)); } ) {
-                    if (peek(1) == nullptr || (t.op = validate_op(curr(), *peek(1))) == nullptr) {
+                    if (
+                        peek(1) == nullptr
+                        || (t.op = validate_op(curr(), *peek(1))) == nullptr
+                        )
+                    {
                         break;
                     }
                     //  If we didn't consume the next token, we consumed the next two
@@ -2523,10 +2560,12 @@ private:
                     if (t.type() == lexeme::LeftShift) {
                         return &t;
                     }
-                    if (t.type() == lexeme::Greater &&
-                        next.type() == lexeme::Greater &&
-                        t.position() == source_position{ next.position().lineno, next.position().colno-1 }
-                        ) {
+                    if (
+                        t.type() == lexeme::Greater
+                        && next.type() == lexeme::Greater
+                        && t.position() == source_position{ next.position().lineno, next.position().colno-1 }
+                        )
+                    {
                         generated_tokens_->emplace_back( ">>", t.position(), lexeme::RightShift);
                         return &generated_tokens_->back();
                     }
@@ -2569,10 +2608,11 @@ private:
         if (allow_angle_operators) {
             return binary_expression<relational_expression_node> (
                 [](token const& t, token const& next) -> token const* {
-                    if (t.type() == lexeme::Less ||
-                        t.type() == lexeme::LessEq ||
-                        (t.type() == lexeme::Greater && next.type() != lexeme::GreaterEq) ||
-                        t.type() == lexeme::GreaterEq
+                    if (
+                        t.type() == lexeme::Less
+                        || t.type() == lexeme::LessEq
+                        || (t.type() == lexeme::Greater && next.type() != lexeme::GreaterEq)
+                        || t.type() == lexeme::GreaterEq
                         ) {
                         return &t;
                     }
@@ -2684,10 +2724,12 @@ private:
                     if (is_assignment_operator(t.type())) {
                         return &t;
                     }
-                    if (t.type() == lexeme::Greater &&
-                        next.type() == lexeme::GreaterEq &&
-                        t.position() == source_position{ next.position().lineno, next.position().colno-1 }
-                        ) {
+                    if (
+                        t.type() == lexeme::Greater
+                        && next.type() == lexeme::GreaterEq
+                        && t.position() == source_position{ next.position().lineno, next.position().colno-1 }
+                        )
+                    {
                         generated_tokens_->emplace_back( ">>=", t.position(), lexeme::RightShiftEq);
                         return &generated_tokens_->back();
                     }
@@ -2735,9 +2777,13 @@ private:
         n->inside_initializer = inside_initializer;
 
         if (auto dir = to_passing_style(curr());
-            (dir == passing_style::out || dir == passing_style::move || dir == passing_style::forward) &&
-            peek(1) &&
-            peek(1)->type() == lexeme::Identifier
+            (
+                dir == passing_style::out
+                || dir == passing_style::move
+                || dir == passing_style::forward
+                )
+            && peek(1)
+            && peek(1)->type() == lexeme::Identifier
             )
         {
             pass = dir;
@@ -2757,7 +2803,9 @@ private:
             next();
             pass = passing_style::in;
             if (auto dir = to_passing_style(curr());
-                dir == passing_style::out || dir == passing_style::move || dir == passing_style::forward
+                dir == passing_style::out
+                || dir == passing_style::move
+                || dir == passing_style::forward
                 )
             {
                 pass = dir;
@@ -2792,13 +2840,14 @@ private:
         auto n = std::make_unique<type_id_node>();
 
         while (
-            (curr().type() == lexeme::Keyword && curr() == "const") ||
-            curr().type() == lexeme::Multiply
+            (curr().type() == lexeme::Keyword && curr() == "const")
+            || curr().type() == lexeme::Multiply
             )
         {
-            if (curr() == "const" &&
-                !n->pc_qualifiers.empty() &&
-                *n->pc_qualifiers.back() == "const"
+            if (
+                curr() == "const"
+                && !n->pc_qualifiers.empty()
+                && *n->pc_qualifiers.back() == "const"
                 )
             {
                 error("consecutive 'const' not allowed");
@@ -2858,8 +2907,8 @@ private:
         auto as_found = false;
 
         while (
-            !done() &&
-            (curr() == "is" || curr() == "as")
+            !done()
+            && (curr() == "is" || curr() == "as")
             )
         {
             if (curr() == "is") {
@@ -2889,15 +2938,17 @@ private:
                 ;
             }
 
-            if (*term.op == "as" &&
-                term.expr
+            if (
+                *term.op == "as"
+                && term.expr
                 )
             {
                 error("'as' must be followed by a type-id, not an expression", false);
                 return {};
             }
-            if (!term.type &&
-                !term.expr
+            if (
+                !term.type
+                && !term.expr
                 )
             {
                 if (*term.op == "is") {
@@ -2936,9 +2987,10 @@ private:
         -> std::unique_ptr<unqualified_id_node>
     {
         //  Handle the identifier
-        if (curr().type() != lexeme::Identifier &&
-            curr().type() != lexeme::Keyword    &&
-            curr().type() != lexeme::Cpp2FixedType
+        if (
+            curr().type() != lexeme::Identifier
+            && curr().type() != lexeme::Keyword
+            && curr().type() != lexeme::Cpp2FixedType
             )
         {
             return {};
@@ -2985,8 +3037,8 @@ private:
             }
             //  Use the lambda trick to jam in a "next" clause
             while (
-                curr().type() == lexeme::Comma &&
-                [&]{term.comma = curr().position(); next(); return true;}()
+                curr().type() == lexeme::Comma
+                && [&]{term.comma = curr().position(); next(); return true;}()
             );
                 //  When this is rewritten in Cpp2, it will be:
                 //      while curr().type() == lexeme::Comma
@@ -3034,8 +3086,9 @@ private:
         //  If we don't get a first id, or if we didn't have a leading :: and
         //  the next thing isn't :: or ., back out and report unsuccessful
         term.id = unqualified_id();
-        if (!term.id ||
-            (!term.scope_op && curr().type() != lexeme::Scope)
+        if (
+            !term.id
+            || (!term.scope_op && curr().type() != lexeme::Scope)
             )
         {
             pos = start_pos;    // backtrack
@@ -3059,9 +3112,10 @@ private:
                 return {};
             }
             assert (term.id->identifier);
-            if (first_time_through_loop &&
-                first_uid_was_std &&
-                term.scope_op->type() == lexeme::Scope
+            if (
+                first_time_through_loop
+                && first_uid_was_std
+                && term.scope_op->type() == lexeme::Scope
                 )
             {
                 if (*term.id->identifier == "move") {
@@ -3141,9 +3195,10 @@ private:
             return {};
         }
 
-        if (semicolon_required &&
-            (done() || curr().type() != lexeme::Semicolon) &&
-            peek(-1)->type() != lexeme::Semicolon
+        if (
+            semicolon_required
+            && (done() || curr().type() != lexeme::Semicolon)
+            && peek(-1)->type() != lexeme::Semicolon
                 //  this last peek(-1)-condition is a hack (? or is it just
                 //  maybe elegant? I'm torn) so that code like
                 //
@@ -3156,8 +3211,9 @@ private:
         {
             return {};
         }
-        if (!done() &&
-            curr().type() == lexeme::Semicolon
+        if (
+            !done()
+            && curr().type() == lexeme::Semicolon
             )
         {
             n->has_semicolon = true;
@@ -3174,15 +3230,20 @@ private:
     auto selection_statement()
         -> std::unique_ptr<selection_statement_node>
     {
-        if (curr().type() != lexeme::Keyword || curr() != "if") {
+        if (
+            curr().type() != lexeme::Keyword
+            || curr() != "if"
+            )
+        {
             return {};
         }
         auto n = std::make_unique<selection_statement_node>();
         n->identifier = &curr();
         next();
 
-        if (curr().type() == lexeme::Keyword &&
-            curr() == "constexpr"
+        if (
+            curr().type() == lexeme::Keyword
+            && curr() == "constexpr"
             )
         {
             n->is_constexpr = true;
@@ -3210,7 +3271,11 @@ private:
             return {};
         }
 
-        if (curr().type() != lexeme::Keyword || curr() != "else") {
+        if (
+            curr().type() != lexeme::Keyword
+            || curr() != "else"
+            )
+        {
             //  Add empty else branch to simplify processing elsewhere
             //  Note: Position (0,0) signifies it's implicit (no source location)
             n->false_branch =
@@ -3245,7 +3310,11 @@ private:
     auto return_statement()
         -> std::unique_ptr<return_statement_node>
     {
-        if (curr().type() != lexeme::Keyword || curr() != "return") {
+        if (
+            curr().type() != lexeme::Keyword
+            || curr() != "return"
+            )
+        {
             return {};
         }
 
@@ -3296,11 +3365,13 @@ private:
         auto n = std::make_unique<iteration_statement_node>();
 
         //  If the next three tokens are: identifier ':' 'for/while/do', it's a labeled iteration statement
-        if (curr().type() == lexeme::Identifier &&
-            peek(1) && peek(2) &&
-            peek(1)->type() == lexeme::Colon &&
-            peek(2)->type() == lexeme::Keyword &&
-            (*peek(2) == "while" || *peek(2) == "do" || *peek(2) == "for")
+        if (
+            curr().type() == lexeme::Identifier
+            && peek(1)
+            && peek(1)->type() == lexeme::Colon
+            && peek(2)
+            && peek(2)->type() == lexeme::Keyword
+            && (*peek(2) == "while" || *peek(2) == "do" || *peek(2) == "for")
             )
         {
             n->label = &curr();
@@ -3308,8 +3379,9 @@ private:
             next();
         }
 
-        if (curr().type() != lexeme::Keyword ||
-            (curr() != "while" && curr() != "do" && curr() != "for")
+        if (
+            curr().type() != lexeme::Keyword
+            || (curr() != "while" && curr() != "do" && curr() != "for")
             )
         {
             return {};
@@ -3407,9 +3479,13 @@ private:
 
             n->body = unnamed_declaration(curr().position());
             auto func = n->body ? std::get_if<declaration_node::a_function>(&n->body->type) : nullptr;
-            if (!n->body || n->body->identifier || !func || !*func ||
-                std::ssize((**func).parameters->parameters) != 1 ||
-                (**func).returns.index() != function_type_node::empty
+            if (
+                !n->body
+                || n->body->identifier
+                || !func
+                || !*func
+                || std::ssize((**func).parameters->parameters) != 1
+                || (**func).returns.index() != function_type_node::empty
                 )
             {
                 error("for..do loop body must be an unnamed function taking a single parameter and returning nothing", false);
@@ -3444,8 +3520,9 @@ private:
 
         //  Now we should be as "is" or "as"
         //  (initial partial implementation, just "is/as id-expression")
-        if (curr() != "is" &&
-            curr() != "as"
+        if (
+            curr() != "is"
+            && curr() != "as"
             )
         {
             return {};
@@ -3564,8 +3641,9 @@ private:
                 error("invalid alternative in inspect");
                 return {};
             }
-            if (is_expression &&
-                !a->statement->is_expression()
+            if (
+                is_expression
+                && !a->statement->is_expression()
                 )
             {
                 error("an inspect expression alternative must be just an expression "
@@ -3596,8 +3674,9 @@ private:
     {
         auto n = std::make_unique<jump_statement_node>();
 
-        if (curr() != "break" &&
-            curr() != "continue"
+        if (
+            curr() != "break"
+            && curr() != "continue"
             )
         {
             return {};
@@ -3827,8 +3906,9 @@ private:
                     return {};
                 }
             }
-            if (!is_named &&
-                dir == passing_style::out
+            if (
+                !is_named
+                && dir == passing_style::out
                 )
             {
                 error("(temporary alpha limitation) an unnamed function cannot have an 'out' parameter");
@@ -3846,15 +3926,20 @@ private:
 
         //  And some error checks
         //
-        if (n->mod != parameter_declaration_node::modifier::none &&
-            !n->declaration->has_name("this")
+        if (
+            n->mod != parameter_declaration_node::modifier::none
+            && !n->declaration->has_name("this")
             )
         {
             error( "only a 'this' parameter may be declared implicit, virtual, override, or final", false );
         }
 
-        if (n->declaration->has_name("this") &&
-            (n->pass == passing_style::copy || n->pass == passing_style::forward)
+        if (
+            n->declaration->has_name("this")
+            && (
+                n->pass == passing_style::copy
+                || n->pass == passing_style::forward
+                )
             )
         {
             error( "a 'this' parameter must be in, inout, out, or move" );
@@ -3863,9 +3948,10 @@ private:
         //  The only parameter type that could be const-qualified is a 'copy' parameter, because
         //  only it is always truly its own variable, so it makes sense to let the user qualify it;
         //  all the other parameter types are conceptually (usually actually) bound to their args
-        if (!is_returns &&
-            n->declaration->is_const() &&
-            n->pass != passing_style::copy
+        if (
+            !is_returns
+            && n->declaration->is_const()
+            && n->pass != passing_style::copy
             )
         {
             switch (n->pass) {
@@ -3885,8 +3971,9 @@ private:
             return {};
         }
 
-        if (!is_returns &&
-            n->declaration->initializer
+        if (
+            !is_returns
+            && n->declaration->initializer
             )
         {
             error("Cpp2 is currently exploring the path of not allowing default arguments - use overloading instead", false);
@@ -3932,7 +4019,11 @@ private:
         while ((param = parameter_declaration(is_returns, is_named, is_template)) != nullptr)
         {
             if (param->declaration->has_name("this")) {
-                if (!n->parameters.empty() || !is_type_scope) {
+                if (
+                    !n->parameters.empty()
+                    || !is_type_scope
+                    )
+                {
                     error("'this' must be the first parameter of a type-scope function", false);
                 }
             }
@@ -3977,7 +4068,12 @@ private:
         //        multiline // comment correctly as a comment
 
         //  If there's no [ [ then this isn't a contract
-        if (curr().type() != lexeme::LeftBracket || !peek(1) || peek(1)->type() != lexeme::LeftBracket) {
+        if (
+            curr().type() != lexeme::LeftBracket
+            || !peek(1)
+            || peek(1)->type() != lexeme::LeftBracket
+            )
+        {
             return {};
         }
 
@@ -3986,9 +4082,10 @@ private:
         next();
         next();
 
-        if (curr() != "pre" &&
-            curr() != "post" &&
-            curr() != "assert"
+        if (
+            curr() != "pre"
+            && curr() != "post"
+            && curr() != "assert"
             )
         {
             error("[ begins a contract and must be followed by 'pre', 'post', or 'assert'");
@@ -4025,7 +4122,12 @@ private:
             next();
         }
 
-        if (curr().type() != lexeme::RightBracket || !peek(1) || peek(1)->type() != lexeme::RightBracket) {
+        if (
+            curr().type() != lexeme::RightBracket
+            || !peek(1)
+            || peek(1)->type() != lexeme::RightBracket
+            )
+        {
             error("expected ]] at the end of the contract");
             return {};
         }
@@ -4067,8 +4169,9 @@ private:
         n->parameters = std::move(parameters);
 
         //  Optional "throws"
-        if (curr().type() == lexeme::Keyword &&
-            curr() == "throws"
+        if (
+            curr().type() == lexeme::Keyword
+            && curr() == "throws"
             )
         {
             n->throws = true;
@@ -4084,8 +4187,9 @@ private:
                 pass != passing_style::invalid
                 )
             {
-                if (pass != passing_style::forward &&
-                    pass != passing_style::move
+                if (
+                    pass != passing_style::forward
+                    && pass != passing_style::move
                     )
                 {
                     error("only 'forward' and 'move' return passing style are allowed from functions");
@@ -4120,9 +4224,11 @@ private:
         }
 
         //  Pre/post conditions
-        while (auto c = contract()) {
-            if (*c->kind != "pre" &&
-                *c->kind != "post"
+        while (auto c = contract())
+        {
+            if (
+                *c->kind != "pre"
+                && *c->kind != "post"
                 )
             {
                 error("only 'pre' and 'post' contracts are allowed on functions");
@@ -4182,8 +4288,9 @@ private:
 
         //  For a template parameter, ':' is not required and
         //  we default to ': type'
-        if (is_template_parameter &&
-            curr().type() != lexeme::Colon
+        if (
+            is_template_parameter
+            && curr().type() != lexeme::Colon
             )
         {
             //  So invent the "type" token
@@ -4208,8 +4315,9 @@ private:
         }
 
         //  For 'this', ':' is not allowed and we'll use the default ': _'
-        if (is_this &&
-            curr().type() == lexeme::Colon
+        if (
+            is_this
+            && curr().type() == lexeme::Colon
             )
         {
             error("a 'this' parameter knows its type, no ':' is allowed here", false);
@@ -4218,8 +4326,9 @@ private:
 
         //  For an ordinary parameter, ':' is not required and
         //  we default to ': _' - i.e., deduced with no initializer
-        if (is_parameter &&
-            curr().type() != lexeme::Colon
+        if (
+            is_parameter
+            && curr().type() != lexeme::Colon
             )
         {
             //  So invent the "_" token
@@ -4276,8 +4385,9 @@ private:
 
         //  It could be "type", declaring a user-defined type
         if (auto t = a_type()) {
-            if (is_parameter &&
-                !is_template_parameter
+            if (
+                is_parameter
+                && !is_template_parameter
                 )
             {
                 error("a normal parameter cannot be a 'type' - did you mean to put this in a < > template parameter list?");
@@ -4339,8 +4449,9 @@ private:
                 return {};
             }
 
-            if (n->is_type() &&
-                !is_template_parameter
+            if (
+                n->is_type()
+                && !is_template_parameter
                 )
             {
                 error("a user-defined type must have an = initializer");
@@ -4365,13 +4476,18 @@ private:
             next();
 
             if (auto t = std::get_if<declaration_node::an_object>(&n->type);
-                t &&
-                (*t)->is_pointer_qualified()
+                t
+                && (*t)->is_pointer_qualified()
                 )
             {
-                if (curr() == "nullptr" ||
-                    isdigit(std::string_view(curr())[0]) ||
-                    (curr() == "(" && peek(1) && *peek(1) == ")")
+                if (
+                    curr() == "nullptr"
+                    || isdigit(std::string_view(curr())[0])
+                    || (
+                        curr() == "("
+                        && peek(1)
+                        && *peek(1) == ")"
+                        )
                     )
                 {
                     error("pointer cannot be initialized to null or int - leave it uninitialized and then set it to a non-null value when you have one");
@@ -4412,9 +4528,9 @@ private:
 
         //  If this is an object with an initializer, the initializer must be an expression
         if (
-            n->is_object() &&
-            n->initializer &&
-            !n->initializer->is_expression()
+            n->is_object()
+            && n->initializer
+            && !n->initializer->is_expression()
             )
         {
             error("an object initializer must be an expression", false);
@@ -4423,9 +4539,9 @@ private:
 
         //  If this is a user-defined type with an initializer, the initializer must be a compound expression
         if (
-            n->is_type() &&
-            n->initializer &&
-            !n->initializer->is_compound()
+            n->is_type()
+            && n->initializer
+            && !n->initializer->is_compound()
             )
         {
             error("a user-defined type initializer must be a compound-expression consisting of declarations", false);
@@ -4434,8 +4550,11 @@ private:
 
         //  If this is a namespace, it must have an initializer, which must be a compound expression
         if (
-            n->is_namespace() &&
-            (!n->initializer || !n->initializer->is_compound())
+            n->is_namespace()
+            && (
+                !n->initializer
+                || !n->initializer->is_compound()
+                )
             )
         {
             error(
@@ -4448,8 +4567,9 @@ private:
 
         //  If this is a function, its body must be an expression-statement or
         //  a compound-statement
-        if (n->is_function() &&
-            n->initializer->is_return()
+        if (
+            n->is_function()
+            && n->initializer->is_return()
             )
         {
             error(
@@ -4464,8 +4584,8 @@ private:
         //  and the function body's end doesn't already have "return" as the
         //  last statement, then generate "return;" as the last statement
         if (auto func = std::get_if<declaration_node::a_function>(&n->type);
-            func &&
-            (*func)->returns.index() == function_type_node::list
+            func
+            && (*func)->returns.index() == function_type_node::list
             )
         {
             assert (n->initializer);
@@ -4477,7 +4597,10 @@ private:
 
             auto& body = std::get<statement_node::compound>(n->initializer->statement);
 
-            if (body->statements.empty() || !body->statements.back()->is_return())
+            if (
+                body->statements.empty()
+                || !body->statements.back()->is_return()
+                )
             {
                 auto last_pos = n->position();
                 if (!body->statements.empty()) {
@@ -4522,7 +4645,12 @@ private:
         auto start_pos = pos;
 
         token const* access = {};
-        if (curr() == "public" || curr() == "protected" || curr() == "private") {
+        if (
+            curr() == "public"
+            || curr() == "protected"
+            || curr() == "private"
+            )
+        {
             access = &curr();
             next();
         }
@@ -4540,8 +4668,12 @@ private:
 
         //  Note: Do this after trying to parse this as a declaration, for parse backtracking
 
-        if (*id->identifier == "this" &&
-            (!is_parameter || is_template_parameter)
+        if (
+            *id->identifier == "this"
+            && (
+                !is_parameter
+                || is_template_parameter
+                )
             )
         {
             errors.emplace_back(
@@ -4551,8 +4683,9 @@ private:
             return {};
         }
 
-        if (access &&
-            !n->parent_is_type()
+        if (
+            access
+            && !n->parent_is_type()
             )
         {
             errors.emplace_back(
@@ -4565,16 +4698,17 @@ private:
         if (n->is_constructor()) {
             auto& func = std::get<declaration_node::a_function>(n->type);
             assert(
-                func->parameters->ssize() > 0 &&
-                (*func->parameters)[0]->has_name("this")
+                func->parameters->ssize() > 0
+                && (*func->parameters)[0]->has_name("this")
             );
             if ((*func->parameters)[0]->is_polymorphic()) {
                 error( "a constructor may not be declared virtual, override, or final", false );
             }
         }
 
-        if (n->is_function() &&
-            n->parent_is_function()
+        if (
+            n->is_function()
+            && n->parent_is_function()
             )
         {
             assert (id->get_token());
@@ -4591,10 +4725,10 @@ private:
 
         //  If this is the main function, it must be 'main: ()' or 'main: (args)'
         if (
-            n->identifier &&
-            n->has_name("main") &&
-            n->is_function() &&
-            n->is_global()
+            n->identifier
+            && n->has_name("main")
+            && n->is_function()
+            && n->is_global()
             )
         {
             auto& func = std::get<declaration_node::a_function>(n->type);
@@ -4602,14 +4736,14 @@ private:
             //  It's more readable to express this as positive condition here...
             if (
                 //  There are no parameters
-                func->parameters->parameters.empty() ||
+                func->parameters->parameters.empty()
                 //  Or there's a single wildcard in-param named 'args'
-                (
-                    func->parameters->parameters[0]->has_name("args") &&
-                    func->parameters->parameters[0]->pass == passing_style::in &&
-                    func->parameters->parameters[0]->declaration->is_object() &&
-                    std::get<declaration_node::an_object>(func->parameters->parameters[0]->declaration->type)->is_wildcard()
-                )
+                || (
+                    func->parameters->parameters[0]->has_name("args")
+                    && func->parameters->parameters[0]->pass == passing_style::in
+                    && func->parameters->parameters[0]->declaration->is_object()
+                    && std::get<declaration_node::an_object>(func->parameters->parameters[0]->declaration->type)->is_wildcard()
+                    )
                 )
             {
                 ;   // ok
@@ -4625,24 +4759,27 @@ private:
             }
         }
 
-        if (n->has_name("operator=") &&
-            n->is_function()
+        if (
+            n->has_name("operator=")
+            && n->is_function()
             )
         {
             auto& func = std::get<declaration_node::a_function>(n->type);
-            if (func->parameters->ssize() > 0 &&
-                (*func->parameters)[0]->has_name("this") &&
-                (*func->parameters)[0]->pass != passing_style::inout &&
-                (*func->parameters)[0]->pass != passing_style::out &&
-                (*func->parameters)[0]->pass != passing_style::move
+            if (
+                func->parameters->ssize() > 0
+                && (*func->parameters)[0]->has_name("this")
+                && (*func->parameters)[0]->pass != passing_style::inout
+                && (*func->parameters)[0]->pass != passing_style::out
+                && (*func->parameters)[0]->pass != passing_style::move
                 )
             {
                 error( "an operator= function's 'this' parameter must be inout, out, or move", false );
             }
 
-            if (func->parameters->ssize() > 1 &&
-                (*func->parameters)[0]->has_name("this") &&
-                (*func->parameters)[0]->pass == passing_style::move
+            if (
+                func->parameters->ssize() > 1
+                && (*func->parameters)[0]->has_name("this")
+                && (*func->parameters)[0]->pass == passing_style::move
                 )
             {
                 error( "a destructor may not have other parameters besides 'this'", false );
@@ -4985,8 +5122,9 @@ public:
 
     auto start(token& n, int) -> void
     {
-        if (n.position().lineno == line_to_adjust_pos.lineno &&
-            n.position().colno >= line_to_adjust_pos.colno
+        if (
+            n.position().lineno == line_to_adjust_pos.lineno
+            && n.position().colno >= line_to_adjust_pos.colno
             )
         {
             n.position_col_shift(col_offset);
