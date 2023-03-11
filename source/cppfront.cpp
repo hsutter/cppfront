@@ -3757,7 +3757,7 @@ public:
                     break;default:
                         if (
                             func->is_constructor()
-                            && func->parameters->ssize() > 1
+                            && func->parameters->ssize() == 2
                             )
                         {
                             prefix += "explicit ";

@@ -178,12 +178,6 @@ struct literal_node {
 
 struct postfix_expression_node;
 
-struct postfix_expression_node_pair {
-    postfix_expression_node * lhs;
-    postfix_expression_node * rhs;
-};
-
-
 struct prefix_expression_node
 {
     std::vector<token const*> ops;
@@ -236,11 +230,14 @@ struct binary_expression_node
         return {};
     }
 
-    //  Get 'expr' as raw * if the first op is 'op'
+    //  "Simple" means binary (size>0) and not chained (size<2)
+    struct get_lhs_rhs_if_simple_binary_expression_with_ret {
+        postfix_expression_node* lhs;
+        Term*                    rhs;
+    };
     auto get_lhs_rhs_if_simple_binary_expression_with(lexeme op) const
-        -> postfix_expression_node_pair
+        -> get_lhs_rhs_if_simple_binary_expression_with_ret
     {
-        //  "simple" means binary (size>0) and not chained (size<2)
         if (
             std::ssize(terms) == 1
             && terms[0].op->type() == op
@@ -248,7 +245,7 @@ struct binary_expression_node
         {
             return {
                 get_postfix_expression_node(),
-                get_second_postfix_expression_node()
+                terms.front().expr.get()
             };
         }
         //  Else
@@ -295,6 +292,12 @@ using logical_or_expression_node     = binary_expression_node< "logical-or"     
 using assignment_expression_node     = binary_expression_node< "assignment"     , logical_or_expression_node     >;
 
 
+struct assignment_expression_lhs_rhs {
+    postfix_expression_node*    lhs;
+    logical_or_expression_node* rhs;
+};
+
+
 struct expression_node
 {
     std::unique_ptr<assignment_expression_node> expr;
@@ -302,7 +305,7 @@ struct expression_node
     // API
     //
     auto get_lhs_rhs_if_simple_assignment() const
-        -> postfix_expression_node_pair;
+        -> assignment_expression_lhs_rhs;
 
     auto position() const -> source_position
     {
@@ -475,9 +478,10 @@ struct postfix_expression_node
 
 
 auto expression_node::get_lhs_rhs_if_simple_assignment() const
-    -> postfix_expression_node_pair
+    -> assignment_expression_lhs_rhs
 {
-    return expr->get_lhs_rhs_if_simple_binary_expression_with(lexeme::Assignment);
+    auto ret = expr->get_lhs_rhs_if_simple_binary_expression_with(lexeme::Assignment);
+    return { ret.lhs, ret.rhs };
 }
 
 
@@ -1166,7 +1170,7 @@ struct statement_node
     }
 
     auto get_lhs_rhs_if_simple_assignment() const
-        -> postfix_expression_node_pair
+        -> assignment_expression_lhs_rhs
     {
         if (is_expression()) {
             return std::get<expression>(statement)->expr->get_lhs_rhs_if_simple_assignment();
@@ -1244,6 +1248,12 @@ struct parameter_declaration_node
         -> passing_style
     {
         return pass;
+    }
+
+    auto is_implicit() const
+        -> bool
+    {
+        return mod == modifier::implicit;
     }
 
     auto is_polymorphic() const
@@ -4578,6 +4588,24 @@ private:
                 n->initializer->position()
             );
             return {};
+        }
+
+        //  If this is an implicit constructor, it must have two parameters
+        if (n->is_constructor())
+        {
+            auto& params = std::get<declaration_node::a_function>(n->type)->parameters;
+            assert(params->ssize() > 0);
+            if (
+                params->parameters[0]->is_implicit()
+                && params->ssize() > 2
+                )
+            {
+                error(
+                    "an 'implicit' constructor must have exactly one additional parameter besides 'this'",
+                    false,
+                    params->parameters[2]->position()
+                );
+            }
         }
 
         //  If this is a function with a list of multiple/named return values,
