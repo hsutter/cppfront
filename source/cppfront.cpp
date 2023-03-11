@@ -3711,9 +3711,34 @@ public:
                             return;
                         }
 
+                        //  Check that this is an assignment to *object
+                        auto exprs = (*statement)->get_lhs_rhs_if_simple_assignment();
+
+                        assert(!exprs.lhs || exprs.lhs->expr);
+                        auto is_match = false;
+                        if (exprs.lhs)
+                        {
+                            //  First, see if it's an assignment 'name = something'
+                            is_match = (*object)->has_name(*exprs.lhs->expr->get_token());
+
+                            //  Otherwise, check if it's 'this.name = something'
+                            if (!is_match)
+                            {
+                                //  If it's of the form 'this.name', get a pointer
+                                //  to the token for 'name'
+                                auto second_tok = exprs.lhs->get_second_token_if_a_this_qualified_name();
+                                if (second_tok &&
+                                    (*object)->has_name(*second_tok)
+                                    )
+                                {
+                                    is_match = true;
+                                }
+                            }
+                        } 
+
                         //  If this is not an assignment to *object, complain
-                        auto toks = (*statement)->get_lhs_rhs_if_simple_assignment();
-                        if (!toks.lhs || !(*object)->has_name(*toks.lhs)) {
+                        if (!is_match)
+                        {
                             errors.emplace_back(
                                 (*statement)->position(),
                                 "expected '" + (*object)->name()->to_string(true) + " = ...' initialization statement - " + error_msg
@@ -3721,12 +3746,12 @@ public:
                             return;
                         }
 
-                        assert(toks.rhs);
+                        assert(exprs.rhs && exprs.rhs->expr);
                         current_function_info.back().prolog.mem_inits.push_back(
                             separator +
                             (*object)->name()->to_string(true) +
                             "{ " +
-                            toks.rhs->to_string(true) +
+                            exprs.rhs->expr->get_token()->to_string(true) +
                             " }"
                         );
                         (*statement)->emitted = true;

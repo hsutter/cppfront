@@ -10,8 +10,8 @@ myclass : type = {
     }
 
     operator=: (out this, s: std::string) = {
-        data = 99;
-        more = "plugh";
+        this.data = 99;
+        this.more = "plugh";
         std::cout << "myclass: explicit constructor from string\n";
     }
 

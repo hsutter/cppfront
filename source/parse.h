@@ -118,11 +118,13 @@ auto try_visit(auto& variant, auto& visitor, int depth)
     }
 }
 
+
 struct expression_list_node;
 struct id_expression_node;
 struct declaration_node;
 struct inspect_expression_node;
 struct literal_node;
+
 
 struct primary_expression_node
 {
@@ -142,6 +144,7 @@ struct primary_expression_node
     auto position() const -> source_position;
     auto visit(auto& v, int depth) -> void;
 };
+
 
 struct literal_node {
     token const* literal             = {};
@@ -172,7 +175,14 @@ struct literal_node {
     }
 };
 
+
 struct postfix_expression_node;
+
+struct postfix_expression_node_pair {
+    postfix_expression_node const* lhs;
+    postfix_expression_node const* rhs;
+};
+
 
 struct prefix_expression_node
 {
@@ -227,12 +237,8 @@ struct binary_expression_node
     }
 
     //  Get 'expr' as raw * if the first op is 'op'
-    struct get_lhs_rhs_if_simple_binary_expression_with__ret {
-        postfix_expression_node const* lhs;
-        postfix_expression_node const* rhs;
-    };
     auto get_lhs_rhs_if_simple_binary_expression_with(lexeme op) const
-        -> get_lhs_rhs_if_simple_binary_expression_with__ret
+        -> postfix_expression_node_pair
     {
         //  "simple" means binary (size>0) and not chained (size<2)
         if (std::ssize(terms) == 1 &&
@@ -271,6 +277,7 @@ struct binary_expression_node
     }
 };
 
+
 struct is_as_expression_node;
 
 using multiplicative_expression_node = binary_expression_node< "multiplicative" , is_as_expression_node          >;
@@ -287,18 +294,14 @@ using logical_or_expression_node     = binary_expression_node< "logical-or"     
 using assignment_expression_node     = binary_expression_node< "assignment"     , logical_or_expression_node     >;
 
 
-struct token_pair {
-    token const* lhs;
-    token const* rhs;
-};
-
 struct expression_node
 {
     std::unique_ptr<assignment_expression_node> expr;
 
     // API
     //
-    auto get_lhs_rhs_if_simple_assignment() const -> token_pair;
+    auto get_lhs_rhs_if_simple_assignment() const
+        -> postfix_expression_node_pair;
 
     auto position() const -> source_position
     {
@@ -314,6 +317,7 @@ struct expression_node
         v.end(*this, depth);
     }
 };
+
 
 enum class passing_style { in=0, copy, inout, out, move, forward, invalid };
 auto to_passing_style(token const& t) -> passing_style {
@@ -338,6 +342,7 @@ auto to_string_view(passing_style pass) -> std::string_view {
     break;default                    : return "INVALID passing_style";
     }
 }
+
 
 struct expression_list_node
 {
@@ -425,6 +430,7 @@ struct capture_group {
     ~capture_group();
 };
 
+
 struct postfix_expression_node
 {
     std::unique_ptr<primary_expression_node> expr;
@@ -450,6 +456,13 @@ struct postfix_expression_node
         }
     }
 
+    //  API
+    //
+    auto get_second_token_if_a_this_qualified_name() const
+        -> token const*;
+
+    //  Internals
+    //
     auto position() const -> source_position
     {
         assert (expr);
@@ -459,21 +472,13 @@ struct postfix_expression_node
     auto visit(auto& v, int depth) -> void;
 };
 
+
 auto expression_node::get_lhs_rhs_if_simple_assignment() const
-    -> token_pair
+    -> postfix_expression_node_pair
 {
-    auto ret = token_pair{};
-    auto postfix = expr->get_lhs_rhs_if_simple_binary_expression_with(lexeme::Assignment);
-    if (postfix.lhs) {
-        assert(postfix.lhs->expr);
-        ret.lhs = postfix.lhs->expr->get_token();
-    }
-    if (postfix.rhs) {
-        assert(postfix.rhs->expr);
-        ret.rhs = postfix.rhs->expr->get_token();
-    }
-    return ret;
+    return expr->get_lhs_rhs_if_simple_binary_expression_with(lexeme::Assignment);
 }
+
 
 auto capture_group::remove(postfix_expression_node* p)
     -> void
@@ -483,6 +488,7 @@ auto capture_group::remove(postfix_expression_node* p)
     std::erase(members, p);
     assert (members.size() == old_size-1);
 }
+
 
 capture_group::~capture_group()
 {
@@ -497,6 +503,7 @@ capture_group::~capture_group()
     //      point back up to that capture_group
 }
 
+
 auto prefix_expression_node::position() const
     -> source_position
 {
@@ -506,6 +513,7 @@ auto prefix_expression_node::position() const
     assert (expr);
     return expr->position();
 }
+
 
 auto prefix_expression_node::visit(auto& v, int depth)
     -> void
@@ -522,8 +530,8 @@ auto prefix_expression_node::visit(auto& v, int depth)
 
 
 struct type_id_node;
-
 struct template_args_tag { };
+
 
 struct unqualified_id_node
 {
@@ -592,6 +600,7 @@ struct unqualified_id_node
     }
 };
 
+
 struct qualified_id_node
 {
     struct term {
@@ -643,6 +652,7 @@ struct qualified_id_node
         v.end(*this, depth);
     }
 };
+
 
 struct type_id_node
 {
@@ -728,6 +738,7 @@ struct type_id_node
     }
 };
 
+
 struct is_as_expression_node
 {
     std::unique_ptr<prefix_expression_node> expr;
@@ -778,6 +789,7 @@ struct is_as_expression_node
     }
 };
 
+
 struct id_expression_node
 {
     source_position pos;
@@ -825,6 +837,21 @@ struct id_expression_node
     }
 };
 
+
+auto postfix_expression_node::get_second_token_if_a_this_qualified_name() const
+    -> token const*
+{
+    if (*expr->get_token() == "this" &&
+        std::ssize(ops)    == 1      &&
+        ops[0].op->type()  == lexeme::Dot
+        )
+    {
+        return ops[0].id_expr->get_token();
+    }
+    return nullptr;
+}
+
+
 auto postfix_expression_node::visit(auto& v, int depth)
     -> void
 {
@@ -843,6 +870,7 @@ auto postfix_expression_node::visit(auto& v, int depth)
     }
     v.end(*this, depth);
 }
+
 
 struct statement_node;
 
@@ -866,6 +894,7 @@ struct compound_statement_node
 
     auto visit(auto& v, int depth) -> void;
 };
+
 
 struct selection_statement_node
 {
@@ -901,7 +930,9 @@ struct selection_statement_node
     }
 };
 
+
 struct parameter_declaration_node;
+
 struct iteration_statement_node
 {
     token const*                                label      = {};
@@ -1086,6 +1117,7 @@ struct jump_statement_node
 
 
 struct parameter_declaration_list_node;
+
 struct statement_node
 {
     enum active { expression=0, compound, selection, declaration, return_, iteration, contract, inspect, jump };
@@ -1128,7 +1160,7 @@ struct statement_node
     }
 
     auto get_lhs_rhs_if_simple_assignment() const
-        -> token_pair
+        -> postfix_expression_node_pair
     {
         if (is_expression()) {
             return std::get<expression>(statement)->expr->get_lhs_rhs_if_simple_assignment();
@@ -1145,6 +1177,7 @@ struct statement_node
     auto visit(auto& v, int depth)
         -> void;
 };
+
 
 auto alternative_node::visit(auto& v, int depth)
     -> void
@@ -1166,6 +1199,7 @@ auto alternative_node::visit(auto& v, int depth)
     statement->visit(v, depth+1);
     v.end(*this, depth);
 }
+
 
 auto compound_statement_node::visit(auto& v, int depth)
     -> void
@@ -1268,6 +1302,7 @@ struct parameter_declaration_list_node
         v.end(*this, depth);
     }
 };
+
 
 auto statement_node::visit(auto& v, int depth)
     -> void
@@ -1604,11 +1639,13 @@ struct declaration_node
     }
 };
 
+
 auto parameter_declaration_node::has_name() const
     -> bool
 {
     return declaration->has_name();
 }
+
 
 auto parameter_declaration_node::name() const
     -> token const*
@@ -1616,11 +1653,13 @@ auto parameter_declaration_node::name() const
     return declaration->name();
 }
 
+
 auto parameter_declaration_node::has_name(std::string_view s) const
     -> bool
 {
     return declaration->has_name(s);
 }
+
 
 auto function_type_node::is_constructor() const
     -> bool
@@ -1636,6 +1675,7 @@ auto function_type_node::is_constructor() const
     return false;
 }
 
+
 auto function_type_node::is_destructor() const
     -> bool
 {
@@ -1650,6 +1690,7 @@ auto function_type_node::is_destructor() const
     return false;
 }
 
+
 auto primary_expression_node::template_args_count()
     -> int
 {
@@ -1659,6 +1700,7 @@ auto primary_expression_node::template_args_count()
     // else
     return 0;
 }
+
 
 auto primary_expression_node::get_token() const
     -> token const*
@@ -1676,6 +1718,7 @@ auto primary_expression_node::get_token() const
     //       options which are more than a single token)
     return {};
 }
+
 
 auto primary_expression_node::position() const
     -> source_position
@@ -1727,6 +1770,7 @@ auto primary_expression_node::position() const
     }
 }
 
+
 auto primary_expression_node::visit(auto& v, int depth)
     -> void
 {
@@ -1753,6 +1797,7 @@ auto iteration_statement_node::get_for_parameter() const
     );
     return (**func).parameters->parameters[0].get();
 }
+
 
 auto iteration_statement_node::visit(auto& v, int depth)
     -> void
@@ -1836,12 +1881,14 @@ auto statement_node::position() const
     }
 }
 
+
 auto parameter_declaration_node::position() const
     -> source_position
 {
     assert (declaration);
     return pos;
 }
+
 
 auto parameter_declaration_node::visit(auto& v, int depth)
     -> void
