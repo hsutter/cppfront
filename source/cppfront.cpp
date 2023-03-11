@@ -3701,14 +3701,16 @@ public:
 
             //  If this is at expression scope, we can't emit "[[nodiscard]] auto name"
             //  so print the provided intro instead, which will be a Cpp1 lambda-introducer
-            if (capture_intro != "") {
+            if (capture_intro != "")
+            {
                 assert (!n.identifier);
                 printer.print_cpp2(capture_intro, n.position());
                 emit( *func, nullptr, is_main);
             }
 
             //  Else start introducing a normal function
-            else {
+            else
+            {
                 assert (n.identifier);
 
                 //  Handle member functions
@@ -3892,8 +3894,39 @@ public:
                         separator = ", ";
                     }
 
-                    //  No data members should be left over
-                    if (object != objects.end()) {
+                    //  Each remaining objects is required to have an initializer,
+                    //  since it had no explicit initialization statement
+                    for (
+                        ;
+                        object != objects.end();
+                        ++object
+                        )
+                    {
+                        assert((*object)->has_name());
+                        if ((*object)->initializer)
+                        {
+                            auto initializer = print_to_string( *(*object)->initializer, false );
+                            current_function_info.back().prolog.mem_inits.push_back(
+                                separator +
+                                (*object)->name()->to_string(true) +
+                                "{ " +
+                                initializer +
+                                " }"
+                            );
+                        }
+                        else
+                        {
+                            errors.emplace_back(
+                                (*object)->position(),
+                                (*object)->name()->to_string(true) + " was not initialized in the constructor body and has no default initializer - " + error_msg
+                            );
+                            return;
+                        }
+                    }
+
+                    //  Now no data members should be left over
+                    if (object != objects.end())
+                    {
                         assert((*object)->has_name());
                         errors.emplace_back(
                             (*object)->position(),
