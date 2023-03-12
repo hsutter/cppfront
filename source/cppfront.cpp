@@ -846,8 +846,20 @@ class cppfront
     bool               in_parameter_list = false;
 
     std::string                                   function_return_name;
-    std::vector<parameter_declaration_list_node*> function_returns;
-    parameter_declaration_list_node               single_anon;
+    struct function_return {
+        parameter_declaration_list_node* param_list;
+        passing_style                    pass;
+
+        function_return(
+            parameter_declaration_list_node* param_list_,
+            passing_style                    pass_ = passing_style::invalid
+        )
+            : param_list{param_list_}
+            , pass{pass_}
+        { }
+    };
+    std::vector<function_return>         function_returns;
+    parameter_declaration_list_node      single_anon;
         //  special value - hack for now to note single-anon-return type kind in this function_returns working list
     std::vector<std::string>                      function_requires_conditions;
 
@@ -1858,11 +1870,27 @@ public:
 
         //  Return with expression == single anonymous return type
         //
-        if (n.expression) {
+        if (n.expression)
+        {
+            auto tok = n.expression->expr->get_postfix_expression_node()->expr->get_token();
+            if (
+                tok
+                && sema.get_declaration_of(*tok)
+                && !function_returns.empty()
+                && function_returns.back().pass == passing_style::forward
+                )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "a 'forward' return type cannot return a local variable"
+                );
+                return;
+            }
+
             emit(*n.expression);
             if (
                 function_returns.empty()
-                || function_returns.back() != &single_anon
+                || function_returns.back().param_list != &single_anon
                 )
             {
                 errors.emplace_back(
@@ -1875,7 +1903,7 @@ public:
 
         else if (
             !function_returns.empty()
-            && function_returns.back() == &single_anon
+            && function_returns.back().param_list == &single_anon
             )
         {
             errors.emplace_back(
@@ -1888,12 +1916,12 @@ public:
         //
         else if (
             !function_returns.empty()
-            && function_returns.back()
+            && function_returns.back().param_list
             )
         {
             //auto stmt = function_return_name + " { "; // we shouldn't need this with { } init
             auto stmt = std::string(" { ");
-            auto& parameters = function_returns.back()->parameters;
+            auto& parameters = function_returns.back().param_list->parameters;
             for (bool first = true; auto& param : parameters) {
                 if (!first) {
                     stmt += ", ";
@@ -4000,13 +4028,16 @@ public:
 
             if (func->returns.index() == function_type_node::list) {
                 auto& r = std::get<function_type_node::list>(func->returns);
-                function_returns.push_back(r.get());
+                function_returns.emplace_back(r.get());
             }
             else if (func->returns.index() == function_type_node::id) {
-                function_returns.push_back(&single_anon);   // use special value as a note
+                function_returns.emplace_back(
+                    &single_anon,               // use special value as a note
+                    std::get<function_type_node::id>(func->returns).pass
+                );
             }
             else {
-                function_returns.push_back(nullptr);        // no return type at all
+                function_returns.emplace_back(nullptr);        // no return type at all
             }
 
             //  Function body
