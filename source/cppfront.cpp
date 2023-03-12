@@ -3511,26 +3511,41 @@ public:
 
         printer.print_cpp2( suffix1, n.position() );
 
-        if (n.returns.index() == function_type_node::empty) {
-            if (is_main) {
+        if (n.returns.index() == function_type_node::empty)
+        {
+            if (is_main)
+            {
                 printer.print_cpp2( " -> int", n.position() );
             }
-            else if(!is_ctor_or_dtor) {
+            else if(!is_ctor_or_dtor)
+            {
                 printer.print_cpp2( " -> void", n.position() );
             }
         }
 
-        else if (n.returns.index() == function_type_node::id) {
+        else if (n.returns.index() == function_type_node::id)
+        {
+            auto is_type_scope_function_with_in_this =
+                n.my_decl->parent_is_type()
+                && n.parameters->ssize() > 0
+                && (*n.parameters)[0]->direction() == passing_style::in
+                ;
+
             printer.print_cpp2( " -> ", n.position() );
             auto& r = std::get<function_type_node::id>(n.returns);
             assert(r.type);
             if (r.pass == passing_style::forward) {
                 if (r.type->is_wildcard()) {
-                    printer.print_cpp2( "decltype(auto)", n.position() );
+                    printer.print_cpp2( "auto&&", n.position() );
                 }
                 else {
                     emit(*r.type);
-                    printer.print_cpp2( "&", n.position() );
+                    if (is_type_scope_function_with_in_this) {
+                        printer.print_cpp2( " const&", n.position() );
+                    }
+                    else {
+                        printer.print_cpp2( "&", n.position() );
+                    }
                 }
             }
             else {
@@ -3779,6 +3794,10 @@ public:
                 }
 
                 //  Now we have all the pieces we need for the Cpp1 function declaration
+
+                //  This flag is because certain operator= functions are emitted twice,
+                //  once as a constructor and once as an assignment operator
+                auto done_emitting_this_function = false;
 
                 //  For a constructor, we need to do more work to translate in-body
                 //  initialization statements to the Cpp1 mem-init-list syntax

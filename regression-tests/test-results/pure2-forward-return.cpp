@@ -5,7 +5,7 @@
 
 
 #line 2 "pure2-forward-return.cpp2"
-[[nodiscard]] auto first(auto&& rng) -> decltype(auto);
+[[nodiscard]] auto first(auto&& rng) -> auto&&;
 #line 7 "pure2-forward-return.cpp2"
 #line 8 "pure2-forward-return.cpp2"
 [[nodiscard]] auto f() -> int const&;
@@ -16,7 +16,7 @@
 
 #line 1 "pure2-forward-return.cpp2"
 
-[[nodiscard]] auto first(auto&& rng) -> decltype(auto) { 
+[[nodiscard]] auto first(auto&& rng) -> auto&& { 
    cpp2::Bounds.expects(!(std::empty(rng)), "");
 #line 3 "pure2-forward-return.cpp2"
 
