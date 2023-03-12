@@ -837,7 +837,7 @@ class cppfront
     };
     std::vector<function_info> current_function_info = { {} };
 
-    std::vector<declaration_node const*> current_declaration = { {} };
+    std::vector<declaration_node const*> current_declarations = { {} };
 
     //  For lowering
     //
@@ -3245,11 +3245,11 @@ public:
         auto is_template_parameter_name = false;
         if (
             unqid
-            && current_declaration.back()
-            && current_declaration.back()->template_parameters
+            && current_declarations.back()
+            && current_declarations.back()->template_parameters
             )
         {
-            for (auto& tparam : current_declaration.back()->template_parameters->parameters)
+            for (auto& tparam : current_declarations.back()->template_parameters->parameters)
             {
                 assert(tparam);
                 if (
@@ -3597,6 +3597,49 @@ public:
 
     //-----------------------------------------------------------------------
     //
+    auto is_name_declared_in_current_type_scope(std::string_view s)
+        -> bool
+    {
+        if (!s.empty())
+        {
+            //  Navigate to the enclosing type, if there is one...
+            for (auto parent = current_declarations.rbegin();
+                parent != current_declarations.rend();
+                ++parent
+                )
+            {
+                if (
+                    *parent
+                    && (*parent)->is_namespace()
+                    )
+                {
+                    break;
+                }
+                //  ... and here it is, so...
+                if (
+                    *parent
+                    && (*parent)->is_type()
+                    )
+                {
+                    //  ... for each of its type scope decls...
+                    for (auto const& decl : (*parent)->get_type_scope_declarations())
+                    {
+                        //  ... check the name
+                        if (decl->has_name(s))
+                        {
+                            return true;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        return false;
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
     auto emit(
         declaration_node const& n,
         std::string const&      capture_intro                  = {},
@@ -3612,8 +3655,25 @@ public:
             ;
         auto is_in_type = n.parent_is_type();
 
-        current_declaration.push_back(&n);
-        auto guard = finally([&]{ current_declaration.pop_back(); });
+        //  In a type scope function, disallow declaring a name that is
+        //  the same as (i.e., shadows) a type scope name... this is a
+        //  convenient place to check because we have the decls stack
+        if (
+            n.has_name()                        // this is a named declaration
+            && !n.parent_is_type()              // where the type isn't the direct parent
+            && is_name_declared_in_current_type_scope(*n.name())    // and it shadows a name
+            && !emit_constructor_as_assignment  // (don't emit the error twice if this is the 
+            )                                   // second time we're 're handling this function)
+        {
+            errors.emplace_back(
+                n.position(),
+                "a type's implementation may not declare a name that is the same as (i.e., shadows) a type scope name - for example, a type scope function's local variable may not have the same as one of the type's members"
+            );
+            return;
+        }
+
+        current_declarations.push_back(&n);
+        auto guard = finally([&]{ current_declarations.pop_back(); });
 
         //  If this is a function that has multiple return values,
         //  first we need to emit the struct that contains the returns
@@ -3862,13 +3922,6 @@ public:
                         )
                     {
                         assert((*object)->has_name());
-
-                        //  The ctor body can't have other statements until it
-                        //  has initialized all the data members
-                        if (!(*statement)->is_expression()) {
-                            errors.emplace_back( (*statement)->position(), error_msg );
-                            return;
-                        }
 
                         //  Check that this is an assignment to *object
                         auto exprs = (*statement)->get_lhs_rhs_if_simple_assignment();
@@ -4236,8 +4289,18 @@ public:
             printer.abandon();
         }
 
+        error const* prev = nullptr;
         for (auto&& error : errors) {
-            error.print(std::cerr, strip_path(sourcefile));
+            //  Suppress adjacent duplicates (e.g., can arise when we
+            //  reenter operator= to emit it as an assignment operator)
+            if (
+                !prev
+                || error != *prev
+                )
+            {
+                error.print(std::cerr, strip_path(sourcefile));
+            }
+            prev = &error;
         }
         if (violates_lifetime_safety) {
             std::cerr << "  ==> program violates lifetime safety guarantee - see previous errors\n";

@@ -116,6 +116,15 @@ struct error
         : where{w}, msg{m}, internal{i}
     { }
 
+    auto operator==(error const& that)
+        -> bool
+    {
+        return
+            where == that.where
+            && msg == that.msg
+            ;
+    }
+
     auto print(auto& o, std::string const& file) const
         -> void;
 };
