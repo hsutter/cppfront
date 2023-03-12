@@ -1534,31 +1534,36 @@ struct declaration_node
     auto get_type_scope_declarations(which w = all) const
         -> std::vector<declaration_node const*>
     {
-        if (!is_type()) {
+        if (
+            !is_type()
+            || !initializer
+            || !initializer->is_compound()
+            )
+        {
             return {};
         }
 
-        assert (initializer->is_compound());
         auto compound_stmt = initializer->get_if<compound_statement_node>();
         assert (compound_stmt);
 
         auto ret = std::vector<declaration_node const*>{};
-        for (auto& o : compound_stmt->statements) {
-            assert (o->is_declaration());
+        for (auto& o : compound_stmt->statements)
+        {
             auto decl = o->get_if<declaration_node>();
-            assert (decl);
-
-            assert(
-                !decl->is_namespace()
-                && "ICE: a type shouldn't be able to contain a namespace"
-            );
-            if (
-                (w & functions && decl->is_function())
-                || (w & objects && decl->is_object())
-                || (w & types && decl->is_type())
-                )
+            if (decl)
             {
-                ret.push_back(decl);
+                assert(
+                    !decl->is_namespace()
+                    && "ICE: a type shouldn't be able to contain a namespace"
+                );
+                if (
+                    (w & functions && decl->is_function())
+                    || (w & objects && decl->is_object())
+                    || (w & types && decl->is_type())
+                    )
+                {
+                    ret.push_back(decl);
+                }
             }
         }
 
@@ -3946,13 +3951,22 @@ private:
 
         if (
             n->declaration->has_name("this")
-            && (
-                n->pass == passing_style::copy
-                || n->pass == passing_style::forward
-                )
+            && n->pass != passing_style::in
+            && n->pass != passing_style::inout
+            && n->pass != passing_style::out
+            && n->pass != passing_style::move
             )
         {
-            error( "a 'this' parameter must be in, inout, out, or move" );
+            error( "a 'this' parameter must be in, inout, out, or move", false );
+        }
+
+        if (
+            n->declaration->has_name("that")
+            && n->pass != passing_style::in
+            && n->pass != passing_style::move
+            )
+        {
+            error( "a 'that' parameter must be in or move", false );
         }
 
         //  The only parameter type that could be const-qualified is a 'copy' parameter, because
@@ -4036,6 +4050,25 @@ private:
                 {
                     error("'this' must be the first parameter of a type-scope function", false);
                 }
+            }
+
+            if (param->declaration->has_name("that")) {
+                if (
+                    std::ssize(n->parameters) != 1
+                    || !n->parameters.front()->has_name("this")
+                    || !is_type_scope
+                    )
+                {
+                    error("'that' must be the second parameter of a type-scope function (after the initial 'this' parameter)", false);
+                }
+            }
+
+            if (
+                std::ssize(n->parameters) > 1
+                && n->parameters.back()->has_name("that")
+                )
+            {
+                error("'that' may not be followed by any additional parameters", false);
             }
 
             n->parameters.push_back( std::move(param) );
@@ -4289,7 +4322,7 @@ private:
         bool            named                 = false,
         bool            is_parameter          = false,
         bool            is_template_parameter = false,
-        bool            is_this               = false
+        bool            is_this_or_that       = false
     )
         -> std::unique_ptr<declaration_node>
     {
@@ -4324,13 +4357,13 @@ private:
             return n;
         }
 
-        //  For 'this', ':' is not allowed and we'll use the default ': _'
+        //  For 'this' and 'that', ':' is not allowed and we'll use the default ': _'
         if (
-            is_this
+            is_this_or_that
             && curr().type() == lexeme::Colon
             )
         {
-            error("a 'this' parameter knows its type, no ':' is allowed here", false);
+            error("a 'this' or 'that' parameter knows its type, no ':' is allowed here", false);
             return {};
         }
 
@@ -4688,7 +4721,15 @@ private:
             return {};
         }
 
-        auto n = unnamed_declaration(start_pos, semicolon_required, false, true, is_parameter, is_template_parameter, *id->identifier == "this");
+        auto n = unnamed_declaration(
+            start_pos,
+            semicolon_required,
+            false,
+            true,
+            is_parameter,
+            is_template_parameter,
+            *id->identifier == "this" || *id->identifier == "that"
+        );
         if (!n) {
             pos = start_pos;    // backtrack
             return {};
@@ -4697,7 +4738,10 @@ private:
         //  Note: Do this after trying to parse this as a declaration, for parse backtracking
 
         if (
-            *id->identifier == "this"
+            (
+                *id->identifier == "this"
+                || *id->identifier == "that"
+                )
             && (
                 !is_parameter
                 || is_template_parameter
@@ -4706,7 +4750,7 @@ private:
         {
             errors.emplace_back(
                 id->position(),
-                "'this' may only be declared as an ordinary function parameter"
+                "'" + id->identifier->to_string(true) + "' may only be declared as an ordinary function parameter"
             );
             return {};
         }
@@ -4723,7 +4767,8 @@ private:
             return {};
         }
 
-        if (n->is_constructor()) {
+        if (n->is_constructor())
+        {
             auto& func = std::get<declaration_node::a_function>(n->type);
             assert(
                 func->parameters->ssize() > 0
@@ -4793,6 +4838,7 @@ private:
             )
         {
             auto& func = std::get<declaration_node::a_function>(n->type);
+
             if (
                 func->parameters->ssize() > 0
                 && (*func->parameters)[0]->has_name("this")
@@ -4806,11 +4852,32 @@ private:
 
             if (
                 func->parameters->ssize() > 1
+                && (*func->parameters)[1]->has_name("that")
+                && (*func->parameters)[1]->pass != passing_style::in
+                && (*func->parameters)[1]->pass != passing_style::move
+                )
+            {
+                error( "an operator= function's 'that' parameter must be in or move", false );
+            }
+
+            if (
+                func->parameters->ssize() > 1
                 && (*func->parameters)[0]->has_name("this")
                 && (*func->parameters)[0]->pass == passing_style::move
                 )
             {
                 error( "a destructor may not have other parameters besides 'this'", false );
+            }
+        }
+
+        for (auto& decl : n->get_type_scope_declarations())
+        {
+            if (
+                decl->has_name("this")
+                || decl->has_name("that")
+                )
+            {
+                error( "'this' and 'that' may not be used as type scope names", false );
             }
         }
 

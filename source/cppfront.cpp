@@ -825,6 +825,9 @@ class cppfront
     bool violates_initialization_safety = false;
     bool suppress_move_from_last_use    = false;
 
+    bool in_move_that_function          = false;
+    std::vector<token const*> already_moved_that_members = {};
+
     struct arg_info {
         passing_style pass   = passing_style::in;
         token const*  ptoken = {};
@@ -1318,6 +1321,14 @@ public:
                 )
             && !in_non_rvalue_context.back();
 
+        if (
+            in_move_that_function
+            && *n.identifier == "that"
+            )
+        {
+            add_move = true;
+        }
+
         //  For an explicit 'forward' apply forwarding to correct identifier
         assert (!current_args.empty());
         if (current_args.back().pass == passing_style::forward) {
@@ -1357,10 +1368,11 @@ public:
             if (auto decl = sema.get_declaration_of(*n.identifier);
                 is_local_name
                 && !(*n.identifier == "this")
+                && !(*n.identifier == "that")
                 && decl
-                //  note pointer equality: if we're not in the actual declaration of n.identifier
                 && (
                     in_synthesized_multi_return
+                    //  note pointer equality: if we're not in the actual declaration of n.identifier
                     || decl->identifier != n.identifier
                     )
                 //  and this variable was uninitialized
@@ -2251,6 +2263,51 @@ public:
     {
         assert(n.expr);
         last_postfix_expr_was_pointer = false;
+
+        //  For a 'move that' parameter, track the members we already moved from
+        //  so we can diagnose attempts to move from the same member twice
+        if (
+            in_move_that_function
+            && *n.expr->get_token() == "that"
+            )
+        {
+            if (n.ops.empty()) {
+                if (!already_moved_that_members.empty()) {
+                    errors.emplace_back(
+                        n.position(),
+                        "attempting to move from whole 'that' object after a 'that.member' was already moved from"
+                    );
+                    return;
+                }
+                //  push a sentinel for "all members"
+                already_moved_that_members.push_back(nullptr);
+            }
+            else {
+                auto member = n.ops[0].id_expr->get_token();
+                assert(member);
+
+                for (
+                    auto i = already_moved_that_members.begin();
+                    i != already_moved_that_members.end();
+                    ++i
+                    )
+                {
+                    if (
+                        !*i
+                        || **i == *member
+                        )
+                    {
+                        errors.emplace_back(
+                            n.position(),
+                            "attempting to move twice from 'that." + member->to_string(true) + "'"
+                        );
+                        return;
+                    }
+                }
+
+                already_moved_that_members.push_back(member);
+            }
+        }
 
         //  Ensure that forwarding postfix-expressions start with a forwarded parameter name
         //
@@ -3235,6 +3292,43 @@ public:
             //  Since we're skipping "out this," plus possibly "implicit " and
             //  whitespace, any following parameters on the same line can shift left
             printer.add_pad_in_this_line(-18);
+
+            return;
+        }
+
+        //-----------------------------------------------------------------------
+        //  Handle 'that' parameters
+
+        if (n.declaration->has_name("that"))
+        {
+            assert(
+                n.pass == passing_style::in
+                || n.pass == passing_style::move
+            );
+            auto pass = std::string{" const&"};
+            if (n.pass == passing_style::move) {
+                pass = "&&";
+                in_move_that_function = true;
+            }
+
+            auto func_name = get_enclosing_function_name();
+            assert(func_name);
+
+            if (*func_name != "operator=") {
+                errors.emplace_back(
+                    n.position(),
+                    "only an operator= function may have a 'that' parameter"
+                );
+                return;
+            }
+
+            auto type_name = get_enclosing_type_name();
+            assert(type_name);
+
+            printer.print_cpp2(
+                type_name->to_string(true) + pass + " that",
+                n.position()
+            );
             return;
         }
 
@@ -3671,6 +3765,68 @@ public:
 
     //-----------------------------------------------------------------------
     //
+    auto get_enclosing_type_name()
+        -> token const*
+    {
+        //  Navigate to the enclosing type, if there is one...
+        for (auto parent = current_declarations.rbegin();
+            parent != current_declarations.rend();
+            ++parent
+            )
+        {
+            if (
+                *parent
+                && (*parent)->is_namespace()
+                )
+            {
+                break;
+            }
+            //  ... and here it is, so...
+            if (
+                *parent
+                && (*parent)->is_type()
+                )
+            {
+                return (*parent)->name();
+            }
+        }
+        return {};
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
+    auto get_enclosing_function_name()
+        -> token const*
+    {
+        //  Navigate to the enclosing function, if there is one...
+        for (auto parent = current_declarations.rbegin();
+            parent != current_declarations.rend();
+            ++parent
+            )
+        {
+            if (
+                *parent
+                && (*parent)->is_namespace()
+                )
+            {
+                break;
+            }
+            //  ... and here it is, so...
+            if (
+                *parent
+                && (*parent)->is_function()
+                )
+            {
+                return (*parent)->name();
+            }
+        }
+        return {};
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
     auto emit(
         declaration_node const& n,
         std::string const&      capture_intro                  = {},
@@ -3679,6 +3835,15 @@ public:
         -> void
     {
         auto do_recursive_call_for_assignment = false;
+
+        if (
+            n.is_function()
+            && n.has_name()
+            )
+        {   // reset the 'we have a move-that on this function' flag
+            in_move_that_function = false;
+            already_moved_that_members = {};
+        }
 
         auto is_main =
             !n.parent_declaration
@@ -3913,6 +4078,15 @@ public:
                     && !emit_constructor_as_assignment
                     )
                 {
+                    if (
+                        func->parameters->ssize() > 1
+                        && (*func->parameters)[1]->has_name("that")
+                        && (*func->parameters)[1]->pass == passing_style::move
+                        )
+                    {
+                        in_move_that_function = true;
+                    }
+
                     assert(
                         !is_main
                         // prefix can be "explicit "
@@ -4035,6 +4209,7 @@ public:
                                 initializer +
                                 " }"
                             );
+                            separator = ", ";
                         }
                         else
                         {
