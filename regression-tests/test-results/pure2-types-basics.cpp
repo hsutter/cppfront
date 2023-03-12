@@ -8,7 +8,7 @@
 namespace N   {
 class myclass;
 };
-#line 55 "pure2-types-basics.cpp2"
+#line 62 "pure2-types-basics.cpp2"
 auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
@@ -25,27 +25,37 @@ class myclass   {
 #line 7 "pure2-types-basics.cpp2"
 {
         // use default initializer for this.more
-        std::cout << "myclass: implicit constructor from int\n";
+        std::cout << "myclass: implicit from int\n";
         print();
-    }
+    }public: auto operator=(cpp2::in<int> x) -> void{data = x;std::cout << "myclass: implicit from int\n";print();}
 
     public: explicit myclass(cpp2::in<std::string> s)
         : data{ 99 }
-        , more{ "plugh" }
+        , more{ s }
 #line 14 "pure2-types-basics.cpp2"
 {
 
-        std::cout << "myclass: explicit constructor from string\n";
+        std::cout << "myclass: explicit from string\n";
+        print();
+    }public: auto operator=(cpp2::in<std::string> s) -> void{(*this).data = 99;(*this).more = s;std::cout << "myclass: explicit from string\n";print();}
+
+    public: myclass(cpp2::in<int> x, cpp2::in<std::string> s)
+        : data{ 77 }
+        , more{ s + " plugh" }
+#line 21 "pure2-types-basics.cpp2"
+{
+
+        std::cout << "myclass: from int and string\n";
         print();
     }
 
     public: myclass()
         : data{ 42 * 12 }
         , more{ std::to_string(3.14159) }
-#line 21 "pure2-types-basics.cpp2"
+#line 28 "pure2-types-basics.cpp2"
 {       // use default initializer for this.data
 
-        std::cout << "myclass: default constructor\n";
+        std::cout << "myclass: default\n";
         print();
     }
 
@@ -84,8 +94,17 @@ auto main() -> int{
     std::cout << "f1: " + cpp2::to_string(CPP2_UFCS(f1, x, 1, 1)) + "\n";
     std::cout << "f2: " + cpp2::to_string(CPP2_UFCS(f2, x, 2, 2)) + "\n";
     std::cout << "f3: " + cpp2::to_string(CPP2_UFCS_TEMPLATE_0(f3, (<3,3>), x)) + "\n";
-    std::cout << "f4: " + cpp2::to_string(CPP2_UFCS_TEMPLATE_0(f4, (<4,4>), std::move(x))) + "\n";
+    std::cout << "f4: " + cpp2::to_string(CPP2_UFCS_TEMPLATE_0(f4, (<4,4>), x)) + "\n";
     N::myclass x2 {"abracadabra"}; 
     N::myclass x3 {}; 
+    N::myclass x4 {1, "hair"}; 
+
+    // Invoke the single-param operator=s as actual assignments
+    std::cout << "x's state before assignments: ";
+    CPP2_UFCS_0(print, x);
+    x = 84;
+    x = "syzygy";
+    x = 84;
+    x = "syzygy";
 }
 

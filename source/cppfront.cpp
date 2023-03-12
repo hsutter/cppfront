@@ -1356,6 +1356,7 @@ public:
         {
             if (auto decl = sema.get_declaration_of(*n.identifier);
                 is_local_name
+                && !(*n.identifier == "this")
                 && decl
                 //  note pointer equality: if we're not in the actual declaration of n.identifier
                 && (
@@ -3598,10 +3599,13 @@ public:
     //
     auto emit(
         declaration_node const& n,
-        std::string const&      capture_intro = {}
+        std::string const&      capture_intro                  = {},
+        bool                    emit_constructor_as_assignment = false
     )
         -> void
     {
+        auto do_recursive_call_for_assignment = false;
+
         auto is_main =
             !n.parent_declaration
             && n.has_name("main")
@@ -3778,7 +3782,7 @@ public:
                     break;case passing_style::inout:
                         ;
                     break;case passing_style::out:
-                        ; // TODO: constructor
+                        ; // constructor is handled below
                     break;case passing_style::move:
                         suffix1 += " &&";
 
@@ -3803,6 +3807,7 @@ public:
                         if (
                             func->is_constructor()
                             && func->parameters->ssize() == 2
+                            && !emit_constructor_as_assignment
                             )
                         {
                             prefix += "explicit ";
@@ -3823,13 +3828,12 @@ public:
 
                 //  Now we have all the pieces we need for the Cpp1 function declaration
 
-                //  This flag is because certain operator= functions are emitted twice,
-                //  once as a constructor and once as an assignment operator
-                auto done_emitting_this_function = false;
-
                 //  For a constructor, we need to do more work to translate in-body
                 //  initialization statements to the Cpp1 mem-init-list syntax
-                if (n.is_constructor())
+                if (
+                    n.is_constructor()
+                    && !emit_constructor_as_assignment
+                    )
                 {
                     assert(
                         !is_main
@@ -3987,6 +3991,12 @@ public:
                     printer.print_cpp2( prefix, n.position() );
                     printer.print_cpp2( *n.parent_declaration->name(), n.position() );
                     emit( *func, n.name(), false, true);
+
+                    //  If this operator= has two parameters, do a recursive
+                    //  call to also emit it as a Cpp1 assignment operator
+                    if (func->parameters->ssize() == 2) {
+                        do_recursive_call_for_assignment = true;
+                    }
                 }
 
                 //  For a destructor, we need to translate
@@ -4198,6 +4208,19 @@ public:
             }
 
             printer.print_cpp2( "; ", n.position() );
+        }
+
+        //  Finally, if this was a constructor and we want also want to emit
+        //  it as an assignemnt operator, do it via a recusive call
+        if (do_recursive_call_for_assignment)
+        {
+            //  Reset the 'emitted' flags
+            for (auto& statement : n.get_initializer_statements()) {
+                statement->emitted = false;
+            }
+
+            //  Then do the recursive call
+            emit( n, capture_intro, true );
         }
     }
 

@@ -6,21 +6,28 @@ myclass : type = {
     operator=: (implicit out this, x: int) = {
         data = x;
         // use default initializer for this.more
-        std::cout << "myclass: implicit constructor from int\n";
+        std::cout << "myclass: implicit from int\n";
         print();
     }
 
     operator=: (out this, s: std::string) = {
         this.data = 99;
-        this.more = "plugh";
-        std::cout << "myclass: explicit constructor from string\n";
+        this.more = s;
+        std::cout << "myclass: explicit from string\n";
+        print();
+    }
+
+    operator=: (out this, x: int, s: std::string) = {
+        this.data = 77;
+        this.more = s + " plugh";
+        std::cout << "myclass: from int and string\n";
         print();
     }
 
     operator=: (out this) = {
         // use default initializer for this.data
         more = std::to_string(3.14159);
-        std::cout << "myclass: default constructor\n";
+        std::cout << "myclass: default\n";
         print();
     }
 
@@ -62,4 +69,13 @@ main: () = {
     std::cout << "f4: (x.f4<4,4>())$\n";
     x2: N::myclass = "abracadabra";
     x3: N::myclass = ();
+    x4: N::myclass = (1, "hair");
+
+    // Invoke the single-param operator=s as actual assignments
+    std::cout << "x's state before assignments: ";
+    x.print();
+    x = 84;
+    x = "syzygy";
+    x = 84;
+    x = "syzygy";
 }
