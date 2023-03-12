@@ -3169,6 +3169,33 @@ public:
 
 
     //-----------------------------------------------------------------------
+    //  Within a type scope implementation, disallow declaring a name that
+    //  is the same as (i.e., shadows) a type scope name... this is a
+    //  convenient place to check because we have the decls stack
+    //
+    auto check_shadowing_of_type_scope_names(
+        declaration_node const& decl
+    )
+        -> bool
+    {
+        if (
+            decl.has_name()                 // this is a named declaration
+            && !decl.parent_is_type()       // and the type isn't the direct parent
+            && is_name_declared_in_current_type_scope(*decl.name())
+            )                               // and it shadows a name
+        {
+            errors.emplace_back(
+                decl.position(),
+                "a type's implementation may not declare a name that is the same as (i.e., shadows) a type scope name - for example, a type scope function's local variable may not have the same as one of the type's members"
+            );
+            return false;
+        }
+
+        return true;
+    }
+
+
+    //-----------------------------------------------------------------------
     //
     auto emit(
         parameter_declaration_node const& n,
@@ -3180,6 +3207,10 @@ public:
         //  Can't declare functions as parameters -- only pointers to functions which are objects
         assert( n.declaration );
         assert( !n.declaration->is_function() );
+
+        if (!check_shadowing_of_type_scope_names(*n.declaration)) {
+            return;
+        }
 
         if (n.mod == parameter_declaration_node::modifier::implicit)
         {
@@ -3655,20 +3686,7 @@ public:
             ;
         auto is_in_type = n.parent_is_type();
 
-        //  In a type scope function, disallow declaring a name that is
-        //  the same as (i.e., shadows) a type scope name... this is a
-        //  convenient place to check because we have the decls stack
-        if (
-            n.has_name()                        // this is a named declaration
-            && !n.parent_is_type()              // where the type isn't the direct parent
-            && is_name_declared_in_current_type_scope(*n.name())    // and it shadows a name
-            && !emit_constructor_as_assignment  // (don't emit the error twice if this is the 
-            )                                   // second time we're 're handling this function)
-        {
-            errors.emplace_back(
-                n.position(),
-                "a type's implementation may not declare a name that is the same as (i.e., shadows) a type scope name - for example, a type scope function's local variable may not have the same as one of the type's members"
-            );
+        if (!check_shadowing_of_type_scope_names(n)) {
             return;
         }
 
