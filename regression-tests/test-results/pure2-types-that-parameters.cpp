@@ -15,18 +15,25 @@ auto main() -> int;
 
 class myclass   {
 
-    public: myclass()         
-                              : name{ "Henry" }
-                              , addr{ "123 Ford Dr." }
-#line 5 "pure2-types-that-parameters.cpp2"
-{}
+    public: myclass(){}
+
     public: explicit myclass(myclass const& that)
         : name{ that.name }
         , addr{ that.addr }
 #line 7 "pure2-types-that-parameters.cpp2"
 {
 
-    }public: auto operator=(myclass const& that) -> void{name = that.name;addr = that.addr;}
+    }
+#line 6 "pure2-types-that-parameters.cpp2"
+    public: auto operator=(myclass const& that) -> myclass& {
+        name = that.name;
+        addr = that.addr;
+#line 7 "pure2-types-that-parameters.cpp2"
+        
+        return *this;
+#line 8 "pure2-types-that-parameters.cpp2"
+
+    }
 
     public: explicit myclass(myclass&& that)
         : name{ std::move(that).name }
@@ -34,7 +41,17 @@ class myclass   {
 #line 12 "pure2-types-that-parameters.cpp2"
 {
 
-    }public: auto operator=(myclass&& that) -> void{name = std::move(that).name;addr = std::move(that).addr;}
+    }
+#line 11 "pure2-types-that-parameters.cpp2"
+    public: auto operator=(myclass&& that) -> myclass& {
+        name = std::move(that).name;
+        addr = std::move(that).addr;
+#line 12 "pure2-types-that-parameters.cpp2"
+        
+        return *this;
+#line 13 "pure2-types-that-parameters.cpp2"
+
+    }
 
     public: auto print() const -> void{
         std::cout << "name '" + cpp2::to_string(name) + "', addr '" + cpp2::to_string(addr) + "'\n";

@@ -340,7 +340,13 @@ auto expand_string_literal(
     auto const length = std::ssize(text);
 
     assert(length >= 2);
-    assert(text.back() == '"');
+    if (text.back() != '"') {
+        errors.emplace_back(
+            source_position( src_pos ),
+            "not a legal string literal"
+        );
+        return {};
+    }
 
     auto pos = 0;
     auto ret = std::string{};   // the return string we're going to build
@@ -1307,7 +1313,13 @@ auto lex_line(
                     }
                     //  Otherwise, replace it with the expanded version and continue
                     else {
-                        assert(std::ssize(s) > j+1);
+                        if (std::ssize(s) <= j + 1) {
+                            errors.emplace_back(
+                                source_position( lineno, i ),
+                                "not a legal string literal"
+                            );
+                            return {};
+                        }
                         mutable_line.replace( i, j+1, s );
 
                         //  Redo processing of this whole line now that the string is expanded,

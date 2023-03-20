@@ -18,7 +18,7 @@ myclass: implicit from int
 myclass: explicit from string
     data: 99, more: syzygy
 myclass: implicit from int
-    data: 84, more: syzygy
+    data: 84, more: 504
 myclass: explicit from string
     data: 99, more: syzygy
 myclass: destructor

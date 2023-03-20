@@ -1369,8 +1369,32 @@ struct function_type_node
     auto is_constructor() const
         -> bool;
 
+    auto is_constructor_with_that() const
+        -> bool;
+
+    auto is_constructor_with_in_that() const
+        -> bool;
+
+    auto is_constructor_with_move_that() const
+        -> bool;
+
+    auto is_assignment() const
+        -> bool;
+
+    auto is_assignment_with_in_that() const
+        -> bool;
+
+    auto is_assignment_with_move_that() const
+        -> bool;
+
     auto is_destructor() const
         -> bool;
+
+    auto has_declared_return_type() const
+        -> bool
+    {
+        return returns.index() != empty;
+    }
 
     //  Internals
     //
@@ -1529,7 +1553,12 @@ struct declaration_node
     auto parent_is_namespace() const -> bool
         { return !parent_declaration || parent_declaration->type.index() == a_namespace; }
 
-    enum which { functions = 1, objects = 2, types = 4, all = functions|objects|types };
+    enum which {
+        functions = 1,
+        objects   = 2,
+        types     = 4,
+        all       = functions|objects|types
+    };
 
     auto get_type_scope_declarations(which w = all) const
         -> std::vector<declaration_node const*>
@@ -1603,6 +1632,114 @@ struct declaration_node
         //  else
         return false;
     }
+
+    auto is_constructor_with_that() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_constructor_with_that();
+        }
+        //  else
+        return false;
+    }
+
+    auto is_constructor_with_in_that() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_constructor_with_in_that();
+        }
+        //  else
+        return false;
+    }
+
+    auto is_constructor_with_move_that() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_constructor_with_move_that();
+        }
+        //  else
+        return false;
+    }
+
+    auto is_assignment() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_assignment();
+        }
+        //  else
+        return false;
+    }
+
+    auto is_assignment_with_in_that() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_assignment_with_in_that();
+        }
+        //  else
+        return false;
+    }
+
+    auto is_assignment_with_move_that() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_assignment_with_move_that();
+        }
+        //  else
+        return false;
+    }
+
+    struct declared_that_funcs {
+        declaration_node const* out_this_in_that     = {};
+        declaration_node const* out_this_move_that   = {};
+        declaration_node const* inout_this_in_that   = {};
+        declaration_node const* inout_this_move_that = {};
+    };
+
+    auto find_declared_that_functions() const
+        -> declared_that_funcs
+    {
+        auto compound_stmt = initializer->get_if<compound_statement_node>();
+        assert (compound_stmt);
+
+        auto ret = declared_that_funcs{};
+        for (auto& o : compound_stmt->statements)
+        {
+            auto decl = o->get_if<declaration_node>();
+            if (decl)
+            {
+                if (decl->is_constructor_with_in_that()) {
+                    ret.out_this_in_that = decl;
+                }
+                if (decl->is_constructor_with_move_that()) {
+                    ret.out_this_move_that = decl;
+                }
+                if (decl->is_assignment_with_in_that()) {
+                    ret.inout_this_in_that = decl;
+                }
+                if (decl->is_assignment_with_move_that()) {
+                    ret.inout_this_move_that = decl;
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    auto find_parent_declared_that_functions() const
+        -> declared_that_funcs
+    {
+        if (parent_is_type()) {
+            return parent_declaration->find_declared_that_functions();
+        }
+        //  else
+        return {};
+    }
+
 
     auto is_destructor() const
         -> bool
@@ -1694,6 +1831,105 @@ auto function_type_node::is_constructor() const
         (*parameters).ssize() > 0
         && (*parameters)[0]->has_name("this")
         && (*parameters)[0]->direction() == passing_style::out
+        )
+    {
+        return true;
+    }
+    return false;
+}
+
+
+auto function_type_node::is_constructor_with_that() const
+    -> bool
+{
+    if (
+        (*parameters).ssize() == 2
+        && (*parameters)[0]->has_name("this")
+        && (*parameters)[0]->direction() == passing_style::out
+        && (*parameters)[1]->has_name("that")
+        )
+    {
+        return true;
+    }
+    return false;
+}
+
+
+auto function_type_node::is_constructor_with_in_that() const
+    -> bool
+{
+    if (
+        (*parameters).ssize() == 2
+        && (*parameters)[0]->has_name("this")
+        && (*parameters)[0]->direction() == passing_style::out
+        && (*parameters)[1]->has_name("that")
+        && (*parameters)[1]->direction() == passing_style::in
+        )
+    {
+        return true;
+    }
+    return false;
+}
+
+
+auto function_type_node::is_constructor_with_move_that() const
+    -> bool
+{
+    if (
+        (*parameters).ssize() == 2
+        && (*parameters)[0]->has_name("this")
+        && (*parameters)[0]->direction() == passing_style::out
+        && (*parameters)[1]->has_name("that")
+        && (*parameters)[1]->direction() == passing_style::move
+        )
+    {
+        return true;
+    }
+    return false;
+}
+
+
+auto function_type_node::is_assignment() const
+    -> bool
+{
+    if (
+        (*parameters).ssize() > 0
+        && (*parameters)[0]->has_name("this")
+        && (*parameters)[0]->direction() == passing_style::inout
+        )
+    {
+        return true;
+    }
+    return false;
+}
+
+
+auto function_type_node::is_assignment_with_in_that() const
+    -> bool
+{
+    if (
+        (*parameters).ssize() == 2
+        && (*parameters)[0]->has_name("this")
+        && (*parameters)[0]->direction() == passing_style::inout
+        && (*parameters)[1]->has_name("that")
+        && (*parameters)[1]->direction() == passing_style::in
+        )
+    {
+        return true;
+    }
+    return false;
+}
+
+
+auto function_type_node::is_assignment_with_move_that() const
+    -> bool
+{
+    if (
+        (*parameters).ssize() == 2
+        && (*parameters)[0]->has_name("this")
+        && (*parameters)[0]->direction() == passing_style::inout
+        && (*parameters)[1]->has_name("that")
+        && (*parameters)[1]->direction() == passing_style::move
         )
     {
         return true;
@@ -4716,6 +4952,15 @@ private:
             next();
         }
 
+        //if (curr().type() == lexeme::Colon)
+        //{
+        //    errors.emplace_back(
+        //        curr().position(),
+        //        "':' is not allowed after " + access->to_string(true)
+        //    );
+        //    return {};
+        //}
+
         auto id = unqualified_id();
         if (!id) {
             return {};
@@ -4832,12 +5077,26 @@ private:
             }
         }
 
-        if (
-            n->has_name("operator=")
-            && n->is_function()
-            )
+        if (n->has_name("operator="))
         {
+            if (!n->is_function())
+            {
+                errors.emplace_back(
+                    n->position(),
+                    "'operator=' must be a function"
+                );
+                return {};
+            }
             auto& func = std::get<declaration_node::a_function>(n->type);
+
+            if (func->has_declared_return_type())
+            {
+                errors.emplace_back(
+                    func->parameters->parameters[0]->position(),
+                    "'operator=' may not have a declared return type"
+                );
+                return {};
+            }
 
             if (
                 func->parameters->ssize() > 0

@@ -574,6 +574,16 @@ public:
         //  Keep track of whether the last thing we printed was Cpp2
         last_was_cpp2 = true;
 
+        reset_cpp2_line_to(line);
+    }
+
+    //-----------------------------------------------------------------------
+    //  Used when we start a new Cpp2 section, or when we emit the same item
+    //  more than once (notably when we emit operator= more than once)
+    //
+    auto reset_cpp2_line_to(lineno_t line)
+        -> void
+    {
         //  Always start a Cpp2 section on its own new line
         ensure_at_start_of_new_line();
 
@@ -825,7 +835,10 @@ class cppfront
     bool violates_initialization_safety = false;
     bool suppress_move_from_last_use    = false;
 
-    bool in_move_that_function          = false;
+    bool generating_assignment_function                  = false;
+    bool generating_move_function            = false;
+    bool emitting_that_function                          = false;
+    bool emitting_move_that_function                     = false;
     std::vector<token const*> already_moved_that_members = {};
 
     struct arg_info {
@@ -835,8 +848,10 @@ class cppfront
     std::vector<arg_info> current_args  = { {} };
 
     struct function_info {
-        token const*    pname  = {};
-        function_prolog prolog = {};
+        token const*                          pname                   = {};
+        declaration_node::declared_that_funcs declared_that_functions = {};
+        function_prolog                       prolog                  = {};
+        std::vector<std::string>              epilog                  = {};
     };
     std::vector<function_info> current_function_info = { {} };
 
@@ -1322,7 +1337,7 @@ public:
             && !in_non_rvalue_context.back();
 
         if (
-            in_move_that_function
+            emitting_move_that_function
             && *n.identifier == "that"
             )
         {
@@ -1518,11 +1533,31 @@ public:
         }
     }
 
+    auto emit_epilog_statements(
+        std::vector<std::string> const& epilog,
+        source_position                 pos,
+        colno_t                         indent
+    )
+        -> void
+    {
+        if (!epilog.empty())
+        {
+            printer.ignore_alignment( true, indent );
+            pos.colno = indent;
+            for (auto& line : epilog) {
+                printer.print_cpp2("\n", pos);
+                printer.print_cpp2(line, pos);
+            }
+            printer.ignore_alignment( false );
+        }
+    }
+
     //-----------------------------------------------------------------------
     //
     auto emit(
-        compound_statement_node const&  n,
-        function_prolog         const& function_prolog = {}
+        compound_statement_node  const&  n,
+        function_prolog          const& function_prolog = {},
+        std::vector<std::string> const& function_epilog = {}
     )
         -> void
     {
@@ -1539,6 +1574,9 @@ public:
             assert(x);
             emit(*x);
         }
+
+        assert (!current_function_info.empty());
+        emit_epilog_statements( function_epilog, n.position(), n.body_indent);
 
         printer.print_cpp2( "}", n.close_brace );
     }
@@ -1925,7 +1963,14 @@ public:
             );
         }
 
-        //  Return without expression == zero or named return values
+        //  Return without expression, could be assignment operator
+        //
+        else if (generating_assignment_function)
+        {
+            printer.print_cpp2("*this", n.position());
+        }
+
+        //  Otherwise, zero or named return values
         //
         else if (
             !function_returns.empty()
@@ -2267,7 +2312,8 @@ public:
         //  For a 'move that' parameter, track the members we already moved from
         //  so we can diagnose attempts to move from the same member twice
         if (
-            in_move_that_function
+            emitting_move_that_function
+            && n.expr->get_token()
             && *n.expr->get_token() == "that"
             )
         {
@@ -3184,11 +3230,12 @@ public:
     //-----------------------------------------------------------------------
     //
     auto emit(
-        statement_node const&  n,
-        bool                   can_have_semicolon  = true,
-        source_position        function_body_start = {},
-        bool                   function_void_ret   = false,
-        function_prolog const& function_prolog     = {}
+        statement_node const&           n,
+        bool                            can_have_semicolon  = true,
+        source_position                 function_body_start = {},
+        bool                            function_void_ret   = false,
+        function_prolog const&          function_prolog     = {},
+        std::vector<std::string> const& function_epilog = {}
     )
         -> void
     {
@@ -3199,7 +3246,7 @@ public:
 
         printer.disable_indent_heuristic_for_next_text();
 
-        try_emit<statement_node::compound   >(n.statement, function_prolog);
+        try_emit<statement_node::compound   >(n.statement, function_prolog, function_epilog);
 
         //  NOTE: Reset preemption here because
         //  - for compound statements written as "= { ... }", we want to keep the
@@ -3301,14 +3348,21 @@ public:
 
         if (n.declaration->has_name("that"))
         {
+            emitting_that_function = true;
             assert(
                 n.pass == passing_style::in
                 || n.pass == passing_style::move
             );
             auto pass = std::string{" const&"};
-            if (n.pass == passing_style::move) {
+            if (
+                //n.pass == passing_style::move
+                //||
+                emitting_move_that_function
+                )
+            {
                 pass = "&&";
-                in_move_that_function = true;
+                //assert(emitting_move_that_function);    // this should already have been set
+                ////emitting_move_that_function = true;
             }
 
             auto func_name = get_enclosing_function_name();
@@ -3647,7 +3701,10 @@ public:
             && n.parameters->parameters.size() > 0
             )
         {
-            printer.print_cpp2( "(int const argc_, char const* const* const argv_)", n.parameters->position() );
+            printer.print_cpp2(
+                "(int const argc_, char const* const* const argv_)",
+                n.parameters->position()
+            );
             current_function_info.back().prolog.statements.push_back(
                 "auto args = cpp2::make_args(argc_, argv_); "
             );
@@ -3665,7 +3722,24 @@ public:
 
         printer.print_cpp2( suffix1, n.position() );
 
-        if (n.returns.index() == function_type_node::empty)
+        //  Handle a special member function
+        if (
+            n.is_assignment()
+            || generating_assignment_function
+            )
+        {
+            assert(
+                n.returns.index() == function_type_node::empty
+                && n.my_decl->parent_declaration->name()
+            );
+            printer.print_cpp2(
+                " -> " + n.my_decl->parent_declaration->name()->to_string(true) + "& ",
+                n.position()
+            );
+        }
+
+        //  Otherwise, handle a default return type
+        else if (n.returns.index() == function_type_node::empty)
         {
             if (is_main)
             {
@@ -3677,6 +3751,7 @@ public:
             }
         }
 
+        //  Otherwise, handle a single anonymous return type
         else if (n.returns.index() == function_type_node::id)
         {
             auto is_type_scope_function_with_in_this =
@@ -3707,6 +3782,7 @@ public:
             }
         }
 
+        //  Otherwise, handle multiple/named returns
         else {
             printer.print_cpp2( " -> ", n.position() );
             function_return_name = {};
@@ -3744,18 +3820,18 @@ public:
                 if (
                     *parent
                     && (*parent)->is_type()
-                    )
-                {
-                    //  ... for each of its type scope decls...
-                    for (auto const& decl : (*parent)->get_type_scope_declarations())
-                    {
-                        //  ... check the name
-                        if (decl->has_name(s))
+                        )
                         {
-                            return true;
-                        }
-                    }
-                    break;
+                            //  ... for each of its type scope decls...
+                            for (auto const& decl : (*parent)->get_type_scope_declarations())
+                            {
+                                //  ... check the name
+                                if (decl->has_name(s))
+                                {
+                                    return true;
+                                }
+                            }
+                            break;
                 }
             }
         }
@@ -3826,23 +3902,270 @@ public:
 
 
     //-----------------------------------------------------------------------
+    //  Constructors and assignment operators
     //
-    auto emit(
+    auto emit_special_member_function(
         declaration_node const& n,
-        std::string const&      capture_intro                  = {},
-        bool                    emit_constructor_as_assignment = false
+        std::string             prefix
     )
         -> void
     {
-        auto do_recursive_call_for_assignment = false;
+        auto& func = std::get<declaration_node::a_function>(n.type);
+        assert(func);
+
+        auto is_assignment =
+            generating_assignment_function
+            || (*func->parameters)[0]->pass == passing_style::inout;
+
+        if (
+            func->parameters->ssize() > 1
+            && (*func->parameters)[1]->has_name("that")
+            )
+        {
+            emitting_that_function = true;
+            if (
+                (*func->parameters)[1]->pass == passing_style::move
+                || generating_move_function
+                )
+            {
+                emitting_move_that_function = true;
+            }
+        }
+
+        //  We'll use this common guidance in several errors,
+        //  so write it once to keep the guidance consistent
+        auto error_msg = "an operator= body must start with a series of 'member = value;' initialization statements for each of the type's members, in the same order the members are declared";
+
+        //  If this constructor's type has data members, handle their initialization
+        //      - objects is the list of this type's declarations
+        //      - statements is the list of this constructor's statements
+        auto objects    = n.parent_declaration->get_type_scope_declarations(n.objects);
+        auto statements = n.get_initializer_statements();
+
+        auto object     = objects.begin();
+        auto statement  = statements.begin();
+        auto separator  = std::string{": "};
+        while (
+            object != objects.end()
+            && statement != statements.end()
+            )
+        {
+            assert((*object)->has_name());
+
+            //  Check whether this is an assignment to *object
+            auto exprs = (*statement)->get_lhs_rhs_if_simple_assignment();
+
+            assert(
+                !exprs.lhs
+                || exprs.lhs->expr
+            );
+
+            auto found_explicit_init = false;
+            auto found_default_init  = false;
+
+            auto stmt_pos    = (*statement)->position();
+            auto initializer = std::string{};
+
+            if (exprs.lhs)
+            {
+                //  First, see if it's an assignment 'name = something'
+                found_explicit_init = (*object)->has_name(*exprs.lhs->expr->get_token());
+
+                //  Otherwise, check if it's 'this.name = something'
+                if (!found_explicit_init)
+                {
+                    //  If it's of the form 'this.name', get a pointer
+                    //  to the token for 'name'
+                    auto second_tok = exprs.lhs->get_second_token_if_a_this_qualified_name();
+                    if (
+                        second_tok
+                        && (*object)->has_name(*second_tok)
+                        )
+                    {
+                        found_explicit_init = true;
+                    }
+                }
+
+                if (found_explicit_init)
+                {
+                    assert(exprs.rhs);
+                    initializer = print_to_string( *exprs.rhs );
+
+                    //  We've used this statement, so note it
+                    //  and move 'statement' forward
+                    (*statement)->emitted = true;
+                    ++statement;
+                }
+            }
+
+            //  Otherwise, use a default... for a non-copy/move that's the member initializer
+            //  (for which we don't need to emit anything special because it will get used),
+            //  and for a copy/move function we default to "= that.same_member"
+            if (!found_explicit_init)
+            {
+                if (emitting_move_that_function)
+                {
+                    initializer = "std::move(that)." + (*object)->name()->to_string(true);
+                    found_default_init = true;
+                }
+                else if (emitting_that_function)
+                {
+                    initializer = "that." + (*object)->name()->to_string(true);
+                    found_default_init = true;
+                }
+                else if ((*object)->initializer)
+                {
+                    initializer = print_to_string(*(*object)->initializer, false);
+                    found_default_init = true;
+                }
+            }
+
+            assert(
+                found_explicit_init
+                || found_default_init
+            );
+
+            //  If this is not an assignment to *object,
+            //  and there was no member initializer, complain
+            if (
+                !found_explicit_init
+                && !found_default_init
+                )
+            {
+                errors.emplace_back(
+                    stmt_pos,
+                    "expected '" + (*object)->name()->to_string(true) + " = ...' initialization statement - " + error_msg
+                );
+                return;
+            }
+
+            assert(
+                found_explicit_init
+                || found_default_init
+            );
+
+            //  Emit the initializer if it was an explicit or that initializer,
+            if (
+                (
+                    found_explicit_init
+                    || emitting_that_function
+                    )
+                && !is_assignment
+                )
+            {
+                current_function_info.back().prolog.mem_inits.push_back(
+                    separator +
+                    (*object)->name()->to_string(true) +
+                    "{ " +
+                    initializer +
+                    " }"
+                );
+                separator = ", ";
+            }
+            //  or either kind if we're emitting an assignment operator
+            if (is_assignment)
+            {
+                current_function_info.back().prolog.statements.push_back(
+                    (*object)->name()->to_string(true) +
+                    " = " +
+                    initializer +
+                    ";"
+                );
+                separator = ", ";
+            }
+
+            ++object;
+        }
+
+        //  Each remaining object is required to have a default initializer,
+        //  since it had no explicit initialization statement
+        for (
+            ;
+            object != objects.end();
+            ++object
+            )
+        {
+            assert((*object)->has_name());
+            if ((*object)->initializer)
+            {
+                //  Good. Entering here avoids emitting the error on the 'else'
+
+                //  Only need to actually emit the initializer in an assignment operator
+                if (is_assignment)
+                {
+                    auto initializer = print_to_string( *(*object)->initializer, false );
+                    current_function_info.back().prolog.mem_inits.push_back(
+                        separator +
+                        (*object)->name()->to_string(true) +
+                        "{ " +
+                        initializer +
+                        " }"
+                    );
+                    separator = ", ";
+                }
+            }
+            else
+            {
+                errors.emplace_back(
+                    (*object)->position(),
+                    (*object)->name()->to_string(true) + " was not initialized in the operator= body and has no default initializer - " + error_msg
+                );
+                return;
+            }
+        }
+
+        //  Now no data members should be left over
+        if (object != objects.end())
+        {
+            assert((*object)->has_name());
+            errors.emplace_back(
+                (*object)->position(),
+                (*object)->name()->to_string(true) + " was not initialized - " + error_msg
+            );
+            return;
+        }
+
+        //  For a constructor, print the type name instead of the operator= function name
+        assert(n.parent_is_type());
+        if (!is_assignment)
+        {
+            printer.print_cpp2( prefix, n.position() );
+            printer.print_cpp2( *n.parent_declaration->name(), n.position() );
+            emit( *func, n.name(), false, true);
+        }
+        //  For an assignment operator, similar to emitting an ordinary function
+        else
+        {
+            assert (
+                prefix.empty()
+                && !current_function_info.empty()
+            );
+            current_function_info.back().epilog.push_back( "return *this;");
+            printer.print_cpp2( "auto ", n.position() );
+            printer.print_cpp2( *n.name(), n.identifier->position());
+            emit( *func, n.name());
+        }
+    }
+
+    //-----------------------------------------------------------------------
+    //
+    auto emit(
+        declaration_node const& n,
+        std::string const&      capture_intro = {}
+    )
+        -> void
+    {
+        auto need_to_generate_assignment       = false;
+        auto need_to_generate_move = false;
 
         if (
             n.is_function()
             && n.has_name()
             )
-        {   // reset the 'we have a move-that on this function' flag
-            in_move_that_function = false;
-            already_moved_that_members = {};
+        {   // reset the 'that' flags
+            emitting_that_function      = false;
+            emitting_move_that_function = false;
+            already_moved_that_members  = {};
         }
 
         auto is_main =
@@ -3983,10 +4306,10 @@ public:
             auto& func = std::get<declaration_node::a_function>(n.type);
             assert(func);
 
-            current_function_info.push_back({
+            current_function_info.emplace_back(
                 n.identifier ? n.name() : nullptr,
-                {}
-                });
+                n.find_parent_declared_that_functions()
+                );
             auto guard = finally([&]{ current_function_info.pop_back(); });
 
             //  If this is at expression scope, we can't emit "[[nodiscard]] auto name"
@@ -4050,7 +4373,7 @@ public:
                         if (
                             func->is_constructor()
                             && func->parameters->ssize() == 2
-                            && !emit_constructor_as_assignment
+                            && !generating_assignment_function
                             )
                         {
                             prefix += "explicit ";
@@ -4071,177 +4394,97 @@ public:
 
                 //  Now we have all the pieces we need for the Cpp1 function declaration
 
-                //  For a constructor, we need to do more work to translate in-body
-                //  initialization statements to the Cpp1 mem-init-list syntax
+                //  For a special member function, we need to do more work to translate
+                //  in-body initialization statements to the Cpp1 mem-init-list syntax
                 if (
                     n.is_constructor()
-                    && !emit_constructor_as_assignment
+                    || n.is_assignment()
                     )
                 {
-                    if (
-                        func->parameters->ssize() > 1
-                        && (*func->parameters)[1]->has_name("that")
-                        && (*func->parameters)[1]->pass == passing_style::move
-                        )
-                    {
-                        in_move_that_function = true;
-                    }
-
                     assert(
                         !is_main
                         // prefix can be "explicit "
                         && suffix1.empty()
                         && suffix2.empty()
-                        && "ICE: a constructor shouldn't have been able to generate a prefix or suffix (or be main)"
+                        && "ICE: an operator= shouldn't have been able to generate a prefix or suffix (or be main)"
                     );
 
-                    //  We'll use this common guidance in several errors,
-                    //  so write it once to keep the guidance consistent
-                    auto error_msg = "a constructor body must start with a series of 'member = value;' initialization statements for each type scope member, in the same order the members are declared";
+                    emit_special_member_function(
+                        n,
+                        prefix
+                    );
 
-                    //  If this constructor's type has data members, handle their initialization
-                    //      - objects is the list of this type's declarations
-                    //      - statements is the list of this constructor's statements
-                    auto objects    = n.parent_declaration->get_type_scope_declarations(n.objects);
-                    auto statements = n.get_initializer_statements();
-
-                    auto object     = objects.begin();
-                    auto statement  = statements.begin();
-                    auto separator  = std::string{": "};
-                    while (
-                        object != objects.end()
-                        && statement != statements.end()
+                    //  If this operator= has two parameters, it's setting from a single value
+                    //  -- either from the same type (aka copy/move) or another type (a conversion) --
+                    //  so recurse to emit related functions if the user didn't write them by hand
+                    if (
+                        func->parameters->ssize() == 2
+                        && !generating_assignment_function
                         )
                     {
-                        assert((*object)->has_name());
+                        assert(!current_function_info.empty());
 
-                        //  Check that this is an assignment to *object
-                        auto exprs = (*statement)->get_lhs_rhs_if_simple_assignment();
-
-                        assert(
-                            !exprs.lhs
-                            || exprs.lhs->expr
-                        );
-                        auto is_match    = false;
-                        auto stmt_pos    = (*statement)->position();
-                        auto initializer = std::string{};
-
-                        if (exprs.lhs)
-                        {
-                            //  First, see if it's an assignment 'name = something'
-                            is_match = (*object)->has_name(*exprs.lhs->expr->get_token());
-
-                            //  Otherwise, check if it's 'this.name = something'
-                            if (!is_match)
-                            {
-                                //  If it's of the form 'this.name', get a pointer
-                                //  to the token for 'name'
-                                auto second_tok = exprs.lhs->get_second_token_if_a_this_qualified_name();
-                                if (
-                                    second_tok
-                                    && (*object)->has_name(*second_tok)
-                                    )
-                                {
-                                    is_match = true;
-                                }
-                            }
-
-                            if (is_match)
-                            {
-                                assert(exprs.rhs);
-                                initializer = print_to_string( *exprs.rhs );
-
-                                //  We've used this statement, so note that
-                                //  and move 'statement' forward
-                                (*statement)->emitted = true;
-                                ++statement;
-                            }
-                        }
-
-                        //  Otherwise, if the member has an initializer, we can use that
+                        //  A)  Generate (A)ssignment from a constructor,
+                        //      if the user didn't write the assignment function themselves
                         if (
-                            !is_match
-                            && (*object)->initializer
+                            //  A1) This is '(out   this, that)'
+                            //      and no  '(inout this, that)' was written by the user
+                            (
+                                &n == current_function_info.back().declared_that_functions.out_this_in_that
+                                && !current_function_info.back().declared_that_functions.inout_this_in_that
+                                )
+                            ||
+                            //  A2) This is '(out   this, move that)'
+                            //      and no  '(inout this, move that)' was written by the user
+                            //  (*) and no  '(inout this,      that)' was written by the user (*)
+                            //  
+                            //  (*) This third test is to tie-break M2 and A2 in favor of M2. Both M2 and A2
+                            //      can generate a missing '(inout this, move that)', and if we have both
+                            //      options then we should prefer to use M2 (generate move assignment from
+                            //      copy assignment) rather than A2 (generate move assignment from move
+                            //      construction) as M2 is a better fit (move assignment is more like copy
+                            //      assignment than like move construction, because assignments are designed
+                            //      structurally to set the value of an existing 'this' object)
+                            (
+                                &n == current_function_info.back().declared_that_functions.out_this_move_that
+                                && !current_function_info.back().declared_that_functions.inout_this_move_that
+                                && !current_function_info.back().declared_that_functions.inout_this_in_that
+                                )
+                            ||
+                            //  A3) This is '(out   this, something-other-than-that)'
+                            (
+                                n.is_constructor()
+                                && !n.is_constructor_with_that()
+                                )
                             )
                         {
-                            is_match = true;
-                            initializer = print_to_string( *(*object)->initializer, false );
+                            need_to_generate_assignment = true;
                         }
 
-                        //  If this is not an assignment to *object, complain
-                        if (!is_match)
-                        {
-                            errors.emplace_back(
-                                stmt_pos,
-                                "expected '" + (*object)->name()->to_string(true) + " = ...' initialization statement - " + error_msg
-                            );
-                            return;
+                        if (!generating_move_function) {
+
+                            //  M)  Generate (M)ove from copy,
+                            //      if the user didn't write the move function themselves
+                            if (
+                                //  M1) This is '(out   this,      that)'
+                                //      and no  '(out   this, move that)' was written by the user
+                                (
+                                    &n == current_function_info.back().declared_that_functions.out_this_in_that
+                                    && !current_function_info.back().declared_that_functions.out_this_move_that
+                                    )
+                                ||
+                                //  M2) This is '(inout this,      that)'
+                                //      and no  '(inout this, move that)' was written by the user
+                                (
+                                    &n == current_function_info.back().declared_that_functions.inout_this_in_that
+                                    && !current_function_info.back().declared_that_functions.inout_this_move_that
+                                    )
+                                )
+                            {
+                                need_to_generate_move = true;
+                            }
+
                         }
-
-                        current_function_info.back().prolog.mem_inits.push_back(
-                            separator +
-                            (*object)->name()->to_string(true) +
-                            "{ " +
-                            initializer +
-                            " }"
-                        );
-
-                        ++object;
-                        separator = ", ";
-                    }
-
-                    //  Each remaining objects is required to have an initializer,
-                    //  since it had no explicit initialization statement
-                    for (
-                        ;
-                        object != objects.end();
-                        ++object
-                        )
-                    {
-                        assert((*object)->has_name());
-                        if ((*object)->initializer)
-                        {
-                            auto initializer = print_to_string( *(*object)->initializer, false );
-                            current_function_info.back().prolog.mem_inits.push_back(
-                                separator +
-                                (*object)->name()->to_string(true) +
-                                "{ " +
-                                initializer +
-                                " }"
-                            );
-                            separator = ", ";
-                        }
-                        else
-                        {
-                            errors.emplace_back(
-                                (*object)->position(),
-                                (*object)->name()->to_string(true) + " was not initialized in the constructor body and has no default initializer - " + error_msg
-                            );
-                            return;
-                        }
-                    }
-
-                    //  Now no data members should be left over
-                    if (object != objects.end())
-                    {
-                        assert((*object)->has_name());
-                        errors.emplace_back(
-                            (*object)->position(),
-                            (*object)->name()->to_string(true) + " was not initialized - " + error_msg
-                        );
-                        return;
-                    }
-
-                    //  Print the type name instead of the operator= function name
-                    assert(n.parent_is_type());
-                    printer.print_cpp2( prefix, n.position() );
-                    printer.print_cpp2( *n.parent_declaration->name(), n.position() );
-                    emit( *func, n.name(), false, true);
-
-                    //  If this operator= has two parameters, do a recursive
-                    //  call to also emit it as a Cpp1 assignment operator
-                    if (func->parameters->ssize() == 2) {
-                        do_recursive_call_for_assignment = true;
                     }
                 }
 
@@ -4384,7 +4627,8 @@ public:
             emit(
                 *n.initializer,
                 true, func->position(), func->returns.index() == function_type_node::empty,
-                current_function_info.back().prolog
+                current_function_info.back().prolog,
+                current_function_info.back().epilog
             );
 
             printer.preempt_position_pop();
@@ -4456,17 +4700,38 @@ public:
             printer.print_cpp2( "; ", n.position() );
         }
 
-        //  Finally, if this was a constructor and we want also want to emit
-        //  it as an assignemnt operator, do it via a recusive call
-        if (do_recursive_call_for_assignment)
+        //  Finally, do the potential recursions...
+
+        //  If this was a constructor and we want also want to emit
+        //  it as an assignment operator, do it via a recursive call
+        if (need_to_generate_assignment)
         {
             //  Reset the 'emitted' flags
             for (auto& statement : n.get_initializer_statements()) {
                 statement->emitted = false;
             }
 
-            //  Then do the recursive call
-            emit( n, capture_intro, true );
+            //  Then reposition and do the recursive call
+            printer.reset_cpp2_line_to(n.position().lineno);
+            generating_assignment_function = true;
+            emit( n, capture_intro );
+            generating_assignment_function = false;
+        }
+
+        //  If this was a constructor and we want also want to emit
+        //  it as an assignment operator, do it via a recursive call
+        if (need_to_generate_move)
+        {
+            //  Reset the 'emitted' flags
+            for (auto& statement : n.get_initializer_statements()) {
+                statement->emitted = false;
+            }
+
+            //  Then reposition and do the recursive call
+            printer.reset_cpp2_line_to(n.position().lineno);
+            generating_move_function = true;
+            emit( n, capture_intro );
+            generating_move_function = false;
         }
     }
 

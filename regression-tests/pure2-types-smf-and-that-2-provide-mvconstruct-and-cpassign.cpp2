@@ -1,0 +1,63 @@
+
+myclass : type = {
+
+    operator=: (out this, that) = {
+        std::cout << "ctor - copy (GENERAL)";
+    }
+
+    operator=: (out this, move that) = {
+        name = that.name + "(CM)";
+        std::cout << "ctor - move          ";
+    }
+
+    operator=: (inout this,  that) = {
+        addr = that.addr + "(AC)";
+        std::cout << "assign - copy        ";
+    }
+
+    // operator=: (inout this, move that) = {
+    //     std::cout << "assign - move        ";
+    // }
+
+    operator=: (out this, x: std::string) = {
+        name = x;
+        std::cout << "ctor - from string   ";
+    }
+
+    name: std::string = "Henry";
+    addr: std::string = "123 Ford Dr.";
+
+    print: (
+        this,
+        prefix: std::string_view,
+        suffix: std::string_view
+        )
+    = std::cout << prefix << "[ (name)$ | (addr)$ ]" << suffix;
+
+}
+
+main: () = {
+    std::cout << "Function invoked        Call syntax   Results\n";
+    std::cout << "----------------------  ------------  ------------------------------------------------------\n";
+
+    x: myclass = "Henry";
+    x.print("   construct     ", "\n");
+    x = "Clara";
+    x.print("   assign        ", "\n");
+
+    y := x;
+    y.print("   cp-construct  ", " <- ");
+    x.print("", "\n");
+
+    z := (move x);
+    z.print("   mv-construct  ", " <- ");
+    x.print("", "\n");
+
+    z = y;
+    z.print("   cp-assign     ", " <- ");
+    y.print("", "\n");
+
+    z = (move y);
+    z.print("   mv-assign     ", " <- ");
+    y.print("", "\n");
+}

@@ -21,13 +21,24 @@ class myclass   {
 
     public: myclass(cpp2::in<int> x)
         : data{ x }
-        , more{ std::to_string(42 * 12) }
 #line 7 "pure2-types-basics.cpp2"
 {
         // use default initializer for this.more
         std::cout << "myclass: implicit from int\n";
         print();
-    }public: auto operator=(cpp2::in<int> x) -> void{data = x;std::cout << "myclass: implicit from int\n";print();}
+    }
+#line 6 "pure2-types-basics.cpp2"
+    public: auto operator=(cpp2::in<int> x) -> myclass& {
+        data = x;
+        more = std::to_string(42 * 12);
+#line 7 "pure2-types-basics.cpp2"
+
+
+        std::cout << "myclass: implicit from int\n";
+        print();
+        return *this;
+#line 11 "pure2-types-basics.cpp2"
+    }
 
     public: explicit myclass(cpp2::in<std::string> s)
         : data{ 99 }
@@ -37,7 +48,19 @@ class myclass   {
 
         std::cout << "myclass: explicit from string\n";
         print();
-    }public: auto operator=(cpp2::in<std::string> s) -> void{(*this).data = 99;(*this).more = s;std::cout << "myclass: explicit from string\n";print();}
+    }
+#line 13 "pure2-types-basics.cpp2"
+    public: auto operator=(cpp2::in<std::string> s) -> myclass& {
+        data = 99;
+        more = s;
+#line 14 "pure2-types-basics.cpp2"
+
+
+        std::cout << "myclass: explicit from string\n";
+        print();
+        return *this;
+#line 18 "pure2-types-basics.cpp2"
+    }
 
     public: myclass(cpp2::in<int> x, cpp2::in<std::string> s)
         : data{ 77 }
@@ -50,8 +73,7 @@ class myclass   {
     }
 
     public: myclass()
-        : data{ 42 * 12 }
-        , more{ std::to_string(3.14159) }
+        : more{ std::to_string(3.14159) }
 #line 28 "pure2-types-basics.cpp2"
 {       // use default initializer for this.data
 
