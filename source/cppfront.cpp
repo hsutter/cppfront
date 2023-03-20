@@ -4268,7 +4268,15 @@ public:
         if (n.is_namespace())
         {
             printer.print_cpp2("namespace ", n.position());
-            emit(*n.identifier);
+
+            //  "_" is the anonymous namespace, which is just whitespace in Cpp1
+            if (auto tok = n.identifier->get_token();
+                tok
+                && *tok != "_"
+                )
+            {
+                emit(*n.identifier);
+            }
 
             assert(
                 n.initializer
