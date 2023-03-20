@@ -1396,6 +1396,17 @@ struct function_type_node
         return returns.index() != empty;
     }
 
+    auto has_non_void_return_type() const
+        -> bool
+    {
+        if (auto id = std::get_if<function_type_node::id>(&returns)) {
+            if (auto name = (*id).type->get_token()) {
+                return *name != "void";
+            }
+        }
+        return returns.index() != empty;
+    }
+
     //  Internals
     //
     auto position() const
@@ -4950,16 +4961,16 @@ private:
         {
             access = &curr();
             next();
-        }
 
-        //if (curr().type() == lexeme::Colon)
-        //{
-        //    errors.emplace_back(
-        //        curr().position(),
-        //        "':' is not allowed after " + access->to_string(true)
-        //    );
-        //    return {};
-        //}
+            if (curr().type() == lexeme::Colon)
+            {
+                errors.emplace_back(
+                    curr().position(),
+                    "':' is not allowed after " + access->to_string(true)
+                );
+                return {};
+            }
+        }
 
         auto id = unqualified_id();
         if (!id) {

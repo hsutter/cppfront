@@ -4388,7 +4388,7 @@ public:
 
                 //  If there's a return type, it's [[nodiscard]] implicitly and all the time
                 //  -- for now there's no opt-out, wait and see whether we actually need one
-                if (func->returns.index() != function_type_node::empty) {
+                if (func->has_non_void_return_type()) {
                     printer.print_cpp2( "[[nodiscard]] ", n.position() );
                 }
 
