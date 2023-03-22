@@ -835,11 +835,11 @@ class cppfront
     bool violates_initialization_safety = false;
     bool suppress_move_from_last_use    = false;
 
-    bool generating_assignment_function                  = false;
-    bool generating_move_function            = false;
-    bool emitting_that_function                          = false;
-    bool emitting_move_that_function                     = false;
-    std::vector<token const*> already_moved_that_members = {};
+    declaration_node const*   generating_assignment_from  = {};
+    declaration_node const*   generating_move_from        = {};
+    bool                      emitting_that_function      = false;
+    bool                      emitting_move_that_function = false;
+    std::vector<token const*> already_moved_that_members  = {};
 
     struct arg_info {
         passing_style pass   = passing_style::in;
@@ -848,10 +848,18 @@ class cppfront
     std::vector<arg_info> current_args  = { {} };
 
     struct function_info {
-        token const*                          pname                   = {};
+        declaration_node const*               decl                    = {};
         declaration_node::declared_that_funcs declared_that_functions = {};
         function_prolog                       prolog                  = {};
         std::vector<std::string>              epilog                  = {};
+
+        function_info(
+            declaration_node const* decl_,
+            declaration_node::declared_that_funcs declared_that_functions_
+        )
+            : decl{decl_}
+            , declared_that_functions{declared_that_functions_}
+        { }
     };
     std::vector<function_info> current_function_info = { {} };
 
@@ -1965,7 +1973,7 @@ public:
 
         //  Return without expression, could be assignment operator
         //
-        else if (generating_assignment_function)
+        else if (generating_assignment_from == current_function_info.back().decl)
         {
             printer.print_cpp2("*this", n.position());
         }
@@ -2079,9 +2087,35 @@ public:
 
         //  Then build the capture list, ignoring duplicated expressions
         auto lambda_intro = std::string("[");
+        auto num_captures = 0;
+
+        //  === NOTE: (see also corresponding note in cpp2util.h)
+        //
+        //  This "&" capture default is to work around 'if constexpr' bugs in Clang and MSVC...
+        //  If we don't emit a not-actually-used "[&]" here, then both compilers get tripped up
+        //  if we attempt UFCS for a member function name... the reason is that the UFCS macro
+        //  generates a lambda that does an 'if constexpr' to call the member function if
+        //  available, but Clang and MSVC look into the NOT-taken 'if constexpr' branch (which
+        //  they shouldn't) and see the nonmember function call syntax and think it's trying to
+        //  use the member function with implicit 'this->' and choke... (see issue #281, and
+        //  https://godbolt.org/z/M47zzMsoT for a distilled repro)
+        //
+        //  The workaround that seems to be effective is to add TWO actually-unused "&" captures:
+        //      - here, and
+        //      - and also in the cpp2util.h UFCS code
+        //
+        if (
+            !current_function_info.empty()
+            && current_function_info.back().decl->is_function_with_this()
+            )
+        {
+            lambda_intro += "&";
+            ++num_captures;
+        }
+        //  === END NOTE
+
         printer.emit_to_string(&lambda_intro);
 
-        auto num = 0;
         auto handled = std::vector<std::string>{};
         for (auto& cap : captures.members)
         {
@@ -2092,13 +2126,13 @@ public:
                 handled.push_back(cap.str);
 
                 //  And handle it
-                if (num != 0) { // not first
+                if (num_captures != 0) { // not first
                     lambda_intro += ", ";
                 }
-                cap.cap_sym = "_"+std::to_string(num);
+                cap.cap_sym = "_"+std::to_string(num_captures);
                 printer.print_cpp2(cap.cap_sym + " = " + cap.str, pos);
             }
-            ++num;
+            ++num_captures;
         }
         printer.emit_to_string();
         lambda_intro += "]";
@@ -3320,8 +3354,7 @@ public:
         {
             if (
                 n.pass != passing_style::out
-                || !current_function_info.back().pname
-                || *current_function_info.back().pname != "operator="
+                || !current_function_info.back().decl->has_name("operator=")
                 )
             {
                 errors.emplace_back(
@@ -3725,7 +3758,7 @@ public:
         //  Handle a special member function
         if (
             n.is_assignment()
-            || generating_assignment_function
+            || generating_assignment_from == n.my_decl
             )
         {
             assert(
@@ -3914,7 +3947,7 @@ public:
         assert(func);
 
         auto is_assignment =
-            generating_assignment_function
+            generating_assignment_from == &n
             || (*func->parameters)[0]->pass == passing_style::inout;
 
         if (
@@ -3925,7 +3958,7 @@ public:
             emitting_that_function = true;
             if (
                 (*func->parameters)[1]->pass == passing_style::move
-                || generating_move_function
+                || generating_move_from == &n
                 )
             {
                 emitting_move_that_function = true;
@@ -4315,7 +4348,7 @@ public:
             assert(func);
 
             current_function_info.emplace_back(
-                n.identifier ? n.name() : nullptr,
+                &n,
                 n.find_parent_declared_that_functions()
                 );
             auto guard = finally([&]{ current_function_info.pop_back(); });
@@ -4381,7 +4414,7 @@ public:
                         if (
                             func->is_constructor()
                             && func->parameters->ssize() == 2
-                            && !generating_assignment_function
+                            && generating_assignment_from != &n
                             )
                         {
                             prefix += "explicit ";
@@ -4427,7 +4460,7 @@ public:
                     //  so recurse to emit related functions if the user didn't write them by hand
                     if (
                         func->parameters->ssize() == 2
-                        && !generating_assignment_function
+                        && generating_assignment_from != &n
                         )
                     {
                         assert(!current_function_info.empty());
@@ -4469,7 +4502,7 @@ public:
                             need_to_generate_assignment = true;
                         }
 
-                        if (!generating_move_function) {
+                        if (generating_move_from != &n) {
 
                             //  M)  Generate (M)ove from copy,
                             //      if the user didn't write the move function themselves
@@ -4721,9 +4754,9 @@ public:
 
             //  Then reposition and do the recursive call
             printer.reset_cpp2_line_to(n.position().lineno);
-            generating_assignment_function = true;
+            generating_assignment_from = &n;
             emit( n, capture_intro );
-            generating_assignment_function = false;
+            generating_assignment_from = {};
         }
 
         //  If this was a constructor and we want also want to emit
@@ -4737,9 +4770,9 @@ public:
 
             //  Then reposition and do the recursive call
             printer.reset_cpp2_line_to(n.position().lineno);
-            generating_move_function = true;
+            generating_move_from = &n;
             emit( n, capture_intro );
-            generating_move_function = false;
+            generating_move_from = {};
         }
     }
 

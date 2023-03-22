@@ -1366,6 +1366,9 @@ struct function_type_node
 
     //  API
     //
+    auto is_function_with_this() const
+        -> bool;
+
     auto is_constructor() const
         -> bool;
 
@@ -1531,7 +1534,10 @@ struct declaration_node
     auto name() const
         -> token const*
     {
-        assert(identifier);
+        if (!identifier) {
+            return nullptr;
+        }
+        //  Else
         return identifier->identifier;
     }
 
@@ -1632,6 +1638,16 @@ struct declaration_node
         }
 
         return ret;
+    }
+
+    auto is_function_with_this() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_function_with_this();
+        }
+        //  else
+        return false;
     }
 
     auto is_constructor() const
@@ -1835,6 +1851,19 @@ auto parameter_declaration_node::has_name(std::string_view s) const
 }
 
 
+auto function_type_node::is_function_with_this() const
+    -> bool
+{
+    if (
+        (*parameters).ssize() > 0
+        && (*parameters)[0]->has_name("this")
+        )
+    {
+        return true;
+    }
+    return false;
+}
+
 auto function_type_node::is_constructor() const
     -> bool
 {
@@ -1844,6 +1873,7 @@ auto function_type_node::is_constructor() const
         && (*parameters)[0]->direction() == passing_style::out
         )
     {
+        assert(my_decl->has_name("operator="));
         return true;
     }
     return false;
@@ -1854,9 +1884,8 @@ auto function_type_node::is_constructor_with_that() const
     -> bool
 {
     if (
-        (*parameters).ssize() == 2
-        && (*parameters)[0]->has_name("this")
-        && (*parameters)[0]->direction() == passing_style::out
+        is_constructor()
+        && (*parameters).ssize() == 2
         && (*parameters)[1]->has_name("that")
         )
     {
@@ -1870,9 +1899,8 @@ auto function_type_node::is_constructor_with_in_that() const
     -> bool
 {
     if (
-        (*parameters).ssize() == 2
-        && (*parameters)[0]->has_name("this")
-        && (*parameters)[0]->direction() == passing_style::out
+        is_constructor()
+        && (*parameters).ssize() == 2
         && (*parameters)[1]->has_name("that")
         && (*parameters)[1]->direction() == passing_style::in
         )
@@ -1887,9 +1915,8 @@ auto function_type_node::is_constructor_with_move_that() const
     -> bool
 {
     if (
-        (*parameters).ssize() == 2
-        && (*parameters)[0]->has_name("this")
-        && (*parameters)[0]->direction() == passing_style::out
+        is_constructor()
+        && (*parameters).ssize() == 2
         && (*parameters)[1]->has_name("that")
         && (*parameters)[1]->direction() == passing_style::move
         )
@@ -1904,9 +1931,10 @@ auto function_type_node::is_assignment() const
     -> bool
 {
     if (
-        (*parameters).ssize() > 0
+        my_decl->has_name("operator=")
         && (*parameters)[0]->has_name("this")
         && (*parameters)[0]->direction() == passing_style::inout
+        && (*parameters).ssize() > 1
         )
     {
         return true;
@@ -1919,9 +1947,8 @@ auto function_type_node::is_assignment_with_in_that() const
     -> bool
 {
     if (
-        (*parameters).ssize() == 2
-        && (*parameters)[0]->has_name("this")
-        && (*parameters)[0]->direction() == passing_style::inout
+        is_assignment()
+        && (*parameters).ssize() == 2
         && (*parameters)[1]->has_name("that")
         && (*parameters)[1]->direction() == passing_style::in
         )
@@ -1936,9 +1963,8 @@ auto function_type_node::is_assignment_with_move_that() const
     -> bool
 {
     if (
-        (*parameters).ssize() == 2
-        && (*parameters)[0]->has_name("this")
-        && (*parameters)[0]->direction() == passing_style::inout
+        is_assignment()
+        && (*parameters).ssize() == 2
         && (*parameters)[1]->has_name("that")
         && (*parameters)[1]->direction() == passing_style::move
         )
@@ -1953,9 +1979,10 @@ auto function_type_node::is_destructor() const
     -> bool
 {
     if (
-        (*parameters).ssize() == 1
+        my_decl->has_name("operator=")
         && (*parameters)[0]->has_name("this")
         && (*parameters)[0]->direction() == passing_style::move
+        && (*parameters).ssize() == 1
         )
     {
         return true;
@@ -4563,18 +4590,22 @@ private:
     //G     '<' parameter-declaration-seq '>'
     //G
     auto unnamed_declaration(
-        source_position start,
-        bool            semicolon_required    = true,
-        bool            captures_allowed      = false,
-        bool            named                 = false,
-        bool            is_parameter          = false,
-        bool            is_template_parameter = false,
-        bool            is_this_or_that       = false
+        source_position                      start,
+        bool                                 semicolon_required    = true,
+        bool                                 captures_allowed      = false,
+        bool                                 named                 = false,
+        bool                                 is_parameter          = false,
+        bool                                 is_template_parameter = false,
+        std::unique_ptr<unqualified_id_node> id                    = {},
+        token const*                         access                = {}
     )
         -> std::unique_ptr<declaration_node>
     {
         auto n = std::make_unique<declaration_node>( current_declarations.back() );
         n->pos = start;
+
+        n->identifier = std::move(id);
+        n->access     = access;
 
         //  For a template parameter, ':' is not required and
         //  we default to ': type'
@@ -4606,7 +4637,11 @@ private:
 
         //  For 'this' and 'that', ':' is not allowed and we'll use the default ': _'
         if (
-            is_this_or_that
+            n->identifier
+            && (
+                *n->identifier->identifier == "this"
+                || *n->identifier->identifier == "that"
+                )
             && curr().type() == lexeme::Colon
             )
         {
@@ -4952,51 +4987,61 @@ private:
         //  Remember current position, because we need to look ahead
         auto start_pos = pos;
 
-        token const* access = {};
-        if (
-            curr() == "public"
-            || curr() == "protected"
-            || curr() == "private"
-            )
-        {
-            access = &curr();
-            next();
+        auto n = std::unique_ptr<declaration_node>{};
 
-            if (curr().type() == lexeme::Colon)
+        //  This scope is to ensure that once we've moved 'id' into the
+        //  declaration_node, we don't access the moved-from local name
+        //  (and similar hygiene for 'access' though that one doesn't matter as much)
+        //  The reason to move 'id' into unnamed_declaration() is so that
+        //  it can conveniently perform some checks that refer to the name
+        {
+            token const* access = {};
+            if (
+                curr() == "public"
+                || curr() == "protected"
+                || curr() == "private"
+                )
             {
-                errors.emplace_back(
-                    curr().position(),
-                    "':' is not allowed after " + access->to_string(true)
-                );
+                access = &curr();
+                next();
+
+                if (curr().type() == lexeme::Colon)
+                {
+                    errors.emplace_back(
+                        curr().position(),
+                        "':' is not allowed after " + access->to_string(true)
+                    );
+                    return {};
+                }
+            }
+
+            auto id = unqualified_id();
+            if (!id) {
                 return {};
             }
-        }
 
-        auto id = unqualified_id();
-        if (!id) {
-            return {};
-        }
-
-        auto n = unnamed_declaration(
-            start_pos,
-            semicolon_required,
-            false,
-            true,
-            is_parameter,
-            is_template_parameter,
-            *id->identifier == "this" || *id->identifier == "that"
-        );
-        if (!n) {
-            pos = start_pos;    // backtrack
-            return {};
+            n = unnamed_declaration(
+                start_pos,
+                semicolon_required,
+                false,
+                true,
+                is_parameter,
+                is_template_parameter,
+                std::move(id),
+                access
+            );
+            if (!n) {
+                pos = start_pos;    // backtrack
+                return {};
+            }
         }
 
         //  Note: Do this after trying to parse this as a declaration, for parse backtracking
 
         if (
             (
-                *id->identifier == "this"
-                || *id->identifier == "that"
+                *n->identifier->identifier == "this"
+                || *n->identifier->identifier == "that"
                 )
             && (
                 !is_parameter
@@ -5005,19 +5050,19 @@ private:
             )
         {
             errors.emplace_back(
-                id->position(),
-                "'" + id->identifier->to_string(true) + "' may only be declared as an ordinary function parameter"
+                n->identifier->position(),
+                "'" + n->identifier->identifier->to_string(true) + "' may only be declared as an ordinary function parameter"
             );
             return {};
         }
 
         if (
-            access
+            n->access
             && !n->parent_is_type()
             )
         {
             errors.emplace_back(
-                access->position(),
+                n->access->position(),
                 "an access-specifier is only allowed on a type-scope (member) declaration"
             );
             return {};
@@ -5040,17 +5085,14 @@ private:
             && n->parent_is_function()
             )
         {
-            assert (id->get_token());
-            auto name = id->get_token()->to_string(true);
+            assert (n->identifier->get_token());
+            auto name = n->identifier->get_token()->to_string(true);
             errors.emplace_back(
                 curr().position(),
                 "(temporary alpha limitation) local functions like '" + name + ": (/*params*/) = {/*body*/}' are not currently supported - write a local variable initialized with an unnamed function like '" + name + " := :(/*params*/) = {/*body*/};' instead (add ':=' and ';')"
             );
             return {};
         }
-
-        n->identifier = std::move(id);
-        n->access     = access;
 
         //  If this is the main function, it must be 'main: ()' or 'main: (args)'
         if (
