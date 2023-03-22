@@ -1233,7 +1233,7 @@ auto lex_line(
                     auto j = 1;
                     while (is_separator_or(is_digit,peek(j))) { ++j; }
                     if (
-                        peek(j) != '.'
+                        (peek(j) != '.' || !is_digit(peek(j+1)))
                         && peek(j) != 'f'
                         && peek(j) != 'F'
                         && peek(j) != 'e'
@@ -1259,6 +1259,12 @@ auto lex_line(
                         // slurps the digits after '.'
                         if (peek(j) == '.') {
                             ++j;
+                            if (!is_digit(peek(j))) {
+                                errors.emplace_back(
+                                    source_position(lineno, i),
+                                    "a floating point literal must have at least one digit after the decimal point (can be '.0')"
+                                );
+                            }
                             while (is_separator_or(is_digit,peek(j))) {
                                 ++j;
                             }

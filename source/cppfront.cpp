@@ -2562,7 +2562,7 @@ public:
             }
 
             // Going backwards if we found LeftParen it might be UFCS
-            // expr_list is emited to args variable for future use
+            // expr_list is emitted to 'args' for future use
             if (i->op->type() == lexeme::LeftParen) {
 
                 assert(i->op);

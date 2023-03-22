@@ -61,7 +61,7 @@ void literals_cpp1() {
 
 #line 57 "mixed-float-literals.cpp2"
 auto literals_cpp2() -> void;
-#line 113 "mixed-float-literals.cpp2"
+#line 114 "mixed-float-literals.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
@@ -86,28 +86,20 @@ auto literals_cpp2() -> void{
   123'456LL;
   // float points
   123'456.0f;
-  123'456.f;
   456.0;
-  456.;
   1.0e10;
   1.0e+10;
   1.0e-10;
   1.0e-10f;
-  1.e-10;
-  1.e-10f;
   1e-10;
   1e-10f;
   1e-1'0;
   123'456.0F;
-  123'456.F;
   456.0;
-  456.;
   1.0E10;
   1.0E+10;
   1.0E-10;
   1.0E-10F;
-  1.E-10;
-  1.E-10F;
   1E-10;
   1E-10F;
   1E-1'0;
@@ -122,6 +114,15 @@ auto literals_cpp2() -> void{
   // 1e - 10.0;
   // 1e - 10f;
   // 1e - 10.0f;
+  // 123'456.f;
+  // 123'456.f;
+  // 456.;
+  // 1.e-10;
+  // 1.e-10f;
+  // 123'456.F;
+  // 456.;
+  // 1.E-10;
+  // 1.E-10F;
 }
 
 [[nodiscard]] auto main() -> int{}
