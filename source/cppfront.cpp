@@ -847,7 +847,14 @@ class cppfront
     };
     std::vector<arg_info> current_args  = { {} };
 
-    struct function_info {
+    std::vector<declaration_node const*> current_declarations = { {} };
+
+    //  Maintain a stack of the functions we're currently processing, which can
+    //  be up to MaxNestedFunctions in progress (if we run out, bump the Max).
+    //  The main reason for this is to be able to pass function_info's, especially
+    //  their .epilog, by reference for performance while still having lifetime safety
+    struct function_info
+    {
         declaration_node const*               decl                    = {};
         declaration_node::declared_that_funcs declared_that_functions = {};
         function_prolog                       prolog                  = {};
@@ -861,9 +868,40 @@ class cppfront
             , declared_that_functions{declared_that_functions_}
         { }
     };
-    std::vector<function_info> current_function_info = { {} };
+    class current_functions_
+    {
+        std::vector<function_info> list = { {} };
+        const int MaxNestedFunctions = 100;         // see the next comment and the assertion:
+    public:
+        current_functions_() {
+            list.reserve(MaxNestedFunctions);       // (1) for pointer stability / lifetime safety
+        }
 
-    std::vector<declaration_node const*> current_declarations = { {} };
+        auto push(
+            declaration_node const*               decl,
+            declaration_node::declared_that_funcs thats
+        ) {
+            assert(                             
+                list.size() < MaxNestedFunctions    // (2) check that we're not exceeding the limit
+                && "ICE: overflowed limit on nested functions - fix by increasing MaxNestedFunctions value"
+            );
+            list.emplace_back(decl, thats);
+        }
+
+        auto pop() {
+            list.pop_back();
+        }
+
+        auto back() -> function_info& {
+            assert(!empty());
+            return list.back();
+        }
+
+        auto empty() -> bool {
+            return list.empty();
+        }
+    };
+    current_functions_ current_functions;
 
     //  For lowering
     //
@@ -1250,15 +1288,15 @@ public:
     //
     template <int I>
     auto try_emit(
-        auto&   v,
-        auto... more
+        auto&     v,
+        auto&&... more
     )
         -> void
     {
         if (v.index() == I) {
             auto const& alt = std::get<I>(v);
             assert (alt);
-            emit (*alt, more...);
+            emit (*alt, std::forward<decltype(more)>(more)...);
         }
     }
 
@@ -1583,7 +1621,7 @@ public:
             emit(*x);
         }
 
-        assert (!current_function_info.empty());
+        assert (!current_functions.empty());
         emit_epilog_statements( function_epilog, n.position(), n.body_indent);
 
         printer.print_cpp2( "}", n.close_brace );
@@ -1973,7 +2011,7 @@ public:
 
         //  Return without expression, could be assignment operator
         //
-        else if (generating_assignment_from == current_function_info.back().decl)
+        else if (generating_assignment_from == current_functions.back().decl)
         {
             printer.print_cpp2("*this", n.position());
         }
@@ -2105,8 +2143,8 @@ public:
         //      - and also in the cpp2util.h UFCS code
         //
         if (
-            !current_function_info.empty()
-            && current_function_info.back().decl->is_function_with_this()
+            !current_functions.empty()
+            && current_functions.back().decl->is_function_with_this()
             )
         {
             lambda_intro += "&";
@@ -2184,7 +2222,7 @@ public:
         }
     }
 
-    // Don't work yet, TODO: finalize deducing pointer types from parameter lists
+    //  Not yet implemented. TODO: finalize deducing pointer types from parameter lists
     auto is_pointer_declaration(
         parameter_declaration_list_node const*,
         int,
@@ -3235,27 +3273,33 @@ public:
         expression_statement_node const& n,
         bool                             can_have_semicolon,
         source_position                  function_body_start = {},
-        bool                             function_void_ret   = false
+        bool                             function_void_ret   = false,
+        function_prolog const&           function_prolog     = {},
+        std::vector<std::string> const&  function_epilog     = {},
+        bool                             emitted             = false
     )
         -> void
     {
         assert(n.expr);
 
         if (function_body_start != source_position{}) {
-            emit_prolog_mem_inits(current_function_info.back().prolog, n.position(), 4);
+            emit_prolog_mem_inits(function_prolog, n.position(), 4);
             printer.print_cpp2(" { ", function_body_start);
-            emit_prolog_statements(current_function_info.back().prolog, n.position(), 4);
+            emit_prolog_statements(function_prolog, n.position(), 4);
             if (!function_void_ret) {
                 printer.print_cpp2("return ", n.position());
             }
         }
 
-        emit(*n.expr);
-        if (can_have_semicolon) {
-            printer.print_cpp2(";", n.position());
+        if (!emitted) {
+            emit(*n.expr);
+            if (can_have_semicolon) {
+                printer.print_cpp2(";", n.position());
+            }
         }
 
         if (function_body_start != source_position{}) {
+            emit_epilog_statements( function_epilog, n.position(), 4);
             printer.print_cpp2(" }", n.position());
         }
     }
@@ -3269,11 +3313,23 @@ public:
         source_position                 function_body_start = {},
         bool                            function_void_ret   = false,
         function_prolog const&          function_prolog     = {},
-        std::vector<std::string> const& function_epilog = {}
+        std::vector<std::string> const& function_epilog     = {}
     )
         -> void
     {
-        //  Skip this one if it was already handled earlier (i.e., a constructor member init)
+        //  Do expression statement case first... it's the most comple
+        //  because it's used for single-statement function bodies
+        try_emit<statement_node::expression >(
+            n.statement,
+            can_have_semicolon,
+            function_body_start,
+            function_void_ret,
+            function_prolog,
+            function_epilog,
+            n.emitted
+        );
+
+        //  Otherwise, skip this one if it was already handled earlier (i.e., a constructor member init)
         if (n.emitted) {
             return;
         }
@@ -3293,7 +3349,6 @@ public:
         //  aesthetic and aesthetics are important in this case -- we want to keep
         //  the original source's personal whitespace formatting style as much as we can
 
-        try_emit<statement_node::expression >(n.statement, can_have_semicolon, function_body_start, function_void_ret);
         try_emit<statement_node::selection  >(n.statement);
         try_emit<statement_node::declaration>(n.statement);
         try_emit<statement_node::return_    >(n.statement);
@@ -3354,7 +3409,7 @@ public:
         {
             if (
                 n.pass != passing_style::out
-                || !current_function_info.back().decl->has_name("operator=")
+                || !current_functions.back().decl->has_name("operator=")
                 )
             {
                 errors.emplace_back(
@@ -3510,7 +3565,7 @@ public:
             //  For generic out parameters, we take a pointer to anything with paramater named "identifier_"
             //  and then generate the out<> as a stack local with the expected name "identifier"
             break;case passing_style::out    : printer.print_cpp2( name+"*",       n.position() );
-                                               current_function_info.back().prolog.statements.push_back(
+                                               current_functions.back().prolog.statements.push_back(
                                                    "auto " + identifier + " = cpp2::out(" + identifier + "_); "
                                                );
                                                identifier += "_";
@@ -3738,7 +3793,7 @@ public:
                 "(int const argc_, char const* const* const argv_)",
                 n.parameters->position()
             );
-            current_function_info.back().prolog.statements.push_back(
+            current_functions.back().prolog.statements.push_back(
                 "auto args = cpp2::make_args(argc_, argv_); "
             );
         }
@@ -4086,7 +4141,7 @@ public:
                 && !is_assignment
                 )
             {
-                current_function_info.back().prolog.mem_inits.push_back(
+                current_functions.back().prolog.mem_inits.push_back(
                     separator +
                     (*object)->name()->to_string(true) +
                     "{ " +
@@ -4098,7 +4153,7 @@ public:
             //  or either kind if we're emitting an assignment operator
             if (is_assignment)
             {
-                current_function_info.back().prolog.statements.push_back(
+                current_functions.back().prolog.statements.push_back(
                     (*object)->name()->to_string(true) +
                     " = " +
                     initializer +
@@ -4127,7 +4182,7 @@ public:
                 if (is_assignment)
                 {
                     auto initializer = print_to_string( *(*object)->initializer, false );
-                    current_function_info.back().prolog.mem_inits.push_back(
+                    current_functions.back().prolog.mem_inits.push_back(
                         separator +
                         (*object)->name()->to_string(true) +
                         "{ " +
@@ -4171,9 +4226,9 @@ public:
         {
             assert (
                 prefix.empty()
-                && !current_function_info.empty()
+                && !current_functions.empty()
             );
-            current_function_info.back().epilog.push_back( "return *this;");
+            current_functions.back().epilog.push_back( "return *this;");
             printer.print_cpp2( "auto ", n.position() );
             printer.print_cpp2( *n.name(), n.identifier->position());
             emit( *func, n.name());
@@ -4347,11 +4402,11 @@ public:
             auto& func = std::get<declaration_node::a_function>(n.type);
             assert(func);
 
-            current_function_info.emplace_back(
+            current_functions.push(
                 &n,
                 n.find_parent_declared_that_functions()
                 );
-            auto guard = finally([&]{ current_function_info.pop_back(); });
+            auto guard = finally([&]{ current_functions.pop(); });
 
             //  If this is at expression scope, we can't emit "[[nodiscard]] auto name"
             //  so print the provided intro instead, which will be a Cpp1 lambda-introducer
@@ -4463,7 +4518,7 @@ public:
                         && generating_assignment_from != &n
                         )
                     {
-                        assert(!current_function_info.empty());
+                        assert(!current_functions.empty());
 
                         //  A)  Generate (A)ssignment from a constructor,
                         //      if the user didn't write the assignment function themselves
@@ -4471,8 +4526,8 @@ public:
                             //  A1) This is '(out   this, that)'
                             //      and no  '(inout this, that)' was written by the user
                             (
-                                &n == current_function_info.back().declared_that_functions.out_this_in_that
-                                && !current_function_info.back().declared_that_functions.inout_this_in_that
+                                &n == current_functions.back().declared_that_functions.out_this_in_that
+                                && !current_functions.back().declared_that_functions.inout_this_in_that
                                 )
                             ||
                             //  A2) This is '(out   this, move that)'
@@ -4487,9 +4542,9 @@ public:
                             //      assignment than like move construction, because assignments are designed
                             //      structurally to set the value of an existing 'this' object)
                             (
-                                &n == current_function_info.back().declared_that_functions.out_this_move_that
-                                && !current_function_info.back().declared_that_functions.inout_this_move_that
-                                && !current_function_info.back().declared_that_functions.inout_this_in_that
+                                &n == current_functions.back().declared_that_functions.out_this_move_that
+                                && !current_functions.back().declared_that_functions.inout_this_move_that
+                                && !current_functions.back().declared_that_functions.inout_this_in_that
                                 )
                             ||
                             //  A3) This is '(out   this, something-other-than-that)'
@@ -4510,15 +4565,15 @@ public:
                                 //  M1) This is '(out   this,      that)'
                                 //      and no  '(out   this, move that)' was written by the user
                                 (
-                                    &n == current_function_info.back().declared_that_functions.out_this_in_that
-                                    && !current_function_info.back().declared_that_functions.out_this_move_that
+                                    &n == current_functions.back().declared_that_functions.out_this_in_that
+                                    && !current_functions.back().declared_that_functions.out_this_move_that
                                     )
                                 ||
                                 //  M2) This is '(inout this,      that)'
                                 //      and no  '(inout this, move that)' was written by the user
                                 (
-                                    &n == current_function_info.back().declared_that_functions.inout_this_in_that
-                                    && !current_function_info.back().declared_that_functions.inout_this_move_that
+                                    &n == current_functions.back().declared_that_functions.inout_this_in_that
+                                    && !current_functions.back().declared_that_functions.inout_this_move_that
                                     )
                                 )
                             {
@@ -4589,7 +4644,7 @@ public:
                 printer.emit_to_string(&print);
                 emit(*c);
                 printer.emit_to_string();
-                current_function_info.back().prolog.statements.push_back(print);
+                current_functions.back().prolog.statements.push_back(print);
             }
 
             if (func->returns.index() == function_type_node::list)
@@ -4642,7 +4697,7 @@ public:
                         loc += init;
                     }
                     loc += ";";
-                    current_function_info.back().prolog.statements.push_back(loc);
+                    current_functions.back().prolog.statements.push_back(loc);
                 }
             }
 
@@ -4651,7 +4706,7 @@ public:
             // TODO: something like this to get rid of extra blank lines
             //       inside the start of bodies of functions that have
             //       multiple contracts
-            //printer.skip_lines( std::ssize(current_function_info.back().prolog.statements) );
+            //printer.skip_lines( std::ssize(current_functions.back().prolog.statements) );
 
             //  If processing the parameters generated any requires conditions,
             //  emit them here
@@ -4668,8 +4723,8 @@ public:
             emit(
                 *n.initializer,
                 true, func->position(), func->returns.index() == function_type_node::empty,
-                current_function_info.back().prolog,
-                current_function_info.back().epilog
+                current_functions.back().prolog,
+                current_functions.back().epilog
             );
 
             printer.preempt_position_pop();

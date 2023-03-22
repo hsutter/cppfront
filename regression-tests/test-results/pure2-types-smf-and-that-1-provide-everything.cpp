@@ -74,7 +74,7 @@ class myclass   {
         cpp2::in<std::string_view> prefix, 
         cpp2::in<std::string_view> suffix
         ) const -> void { 
-      std::cout << prefix << "[ " + cpp2::to_string(name) + " | " + cpp2::to_string(addr) + " ]" << suffix; }
+    std::cout << prefix << "[ " + cpp2::to_string(name) + " | " + cpp2::to_string(addr) + " ]" << suffix; }
 
 };
 

@@ -164,78 +164,54 @@ mixed-float-literals.cpp2:74:3: warning: expression result unused [-Wunused-valu
   123'456.0f;
   ^~~~~~~~~~
 mixed-float-literals.cpp2:75:3: warning: expression result unused [-Wunused-value]
-  123'456.f;
-  ^~~~~~~~~
-mixed-float-literals.cpp2:76:3: warning: expression result unused [-Wunused-value]
   456.0;
   ^~~~~
-mixed-float-literals.cpp2:77:3: warning: expression result unused [-Wunused-value]
-  456.;
-  ^~~~
-mixed-float-literals.cpp2:78:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp2:76:3: warning: expression result unused [-Wunused-value]
   1.0e10;
   ^~~~~~
-mixed-float-literals.cpp2:79:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp2:77:3: warning: expression result unused [-Wunused-value]
   1.0e+10;
   ^~~~~~~
-mixed-float-literals.cpp2:80:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp2:78:3: warning: expression result unused [-Wunused-value]
   1.0e-10;
   ^~~~~~~
-mixed-float-literals.cpp2:81:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp2:79:3: warning: expression result unused [-Wunused-value]
   1.0e-10f;
   ^~~~~~~~
-mixed-float-literals.cpp2:82:3: warning: expression result unused [-Wunused-value]
-  1.e-10;
-  ^~~~~~
-mixed-float-literals.cpp2:83:3: warning: expression result unused [-Wunused-value]
-  1.e-10f;
-  ^~~~~~~
-mixed-float-literals.cpp2:84:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp2:80:3: warning: expression result unused [-Wunused-value]
   1e-10;
   ^~~~~
-mixed-float-literals.cpp2:85:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp2:81:3: warning: expression result unused [-Wunused-value]
   1e-10f;
   ^~~~~~
-mixed-float-literals.cpp2:86:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp2:82:3: warning: expression result unused [-Wunused-value]
   1e-1'0;
   ^~~~~~
-mixed-float-literals.cpp2:87:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp2:83:3: warning: expression result unused [-Wunused-value]
   123'456.0F;
   ^~~~~~~~~~
-mixed-float-literals.cpp2:88:3: warning: expression result unused [-Wunused-value]
-  123'456.F;
-  ^~~~~~~~~
-mixed-float-literals.cpp2:89:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp2:84:3: warning: expression result unused [-Wunused-value]
   456.0;
   ^~~~~
-mixed-float-literals.cpp2:90:3: warning: expression result unused [-Wunused-value]
-  456.;
-  ^~~~
-mixed-float-literals.cpp2:91:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp2:85:3: warning: expression result unused [-Wunused-value]
   1.0E10;
   ^~~~~~
-mixed-float-literals.cpp2:92:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp2:86:3: warning: expression result unused [-Wunused-value]
   1.0E+10;
   ^~~~~~~
-mixed-float-literals.cpp2:93:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp2:87:3: warning: expression result unused [-Wunused-value]
   1.0E-10;
   ^~~~~~~
-mixed-float-literals.cpp2:94:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp2:88:3: warning: expression result unused [-Wunused-value]
   1.0E-10F;
   ^~~~~~~~
-mixed-float-literals.cpp2:95:3: warning: expression result unused [-Wunused-value]
-  1.E-10;
-  ^~~~~~
-mixed-float-literals.cpp2:96:3: warning: expression result unused [-Wunused-value]
-  1.E-10F;
-  ^~~~~~~
-mixed-float-literals.cpp2:97:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp2:89:3: warning: expression result unused [-Wunused-value]
   1E-10;
   ^~~~~
-mixed-float-literals.cpp2:98:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp2:90:3: warning: expression result unused [-Wunused-value]
   1E-10F;
   ^~~~~~
-mixed-float-literals.cpp2:99:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp2:91:3: warning: expression result unused [-Wunused-value]
   1E-1'0;
   ^~~~~~
-80 warnings generated.
+72 warnings generated.

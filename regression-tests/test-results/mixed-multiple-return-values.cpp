@@ -55,5 +55,5 @@ bool flip_a_coin() {
 }
 
 auto print(cpp2::in<std::string> name, auto const& value) -> void { 
-      std::cout << name << " is " << value << "\n"; }
+    std::cout << name << " is " << value << "\n"; }
 
