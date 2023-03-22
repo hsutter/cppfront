@@ -871,7 +871,7 @@ class cppfront
     class current_functions_
     {
         std::vector<function_info> list = { {} };
-        const int MaxNestedFunctions = 100;         // see the next comment and the assertion:
+        const size_t MaxNestedFunctions = 100;      // see the next comment and the assertion:
     public:
         current_functions_() {
             list.reserve(MaxNestedFunctions);       // (1) for pointer stability / lifetime safety

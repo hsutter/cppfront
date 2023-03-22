@@ -1224,7 +1224,7 @@ auto lex_line(
                 //G     decimal-literal ''' digit [uU][lL][lL]
                 //G
                 //G floating-point-literal:
-                //G     digit { ' | digit }* (. digit { ' | digit }*)? ([eE][-+]?digit { ' | digit }*) [fFlL]
+                //G     digit { ' | digit }* . digit ({ ' | digit }*)? ([eE][-+]?digit { ' | digit }*) [fFlL]
                 //G
                 //G TODO full grammar & refactor to utility functions with their
                 //G      own unit test rather than inline everything here
@@ -1247,7 +1247,7 @@ auto lex_line(
                         // and be error checked. Best would be to slurp all
                         // [a-zA-Z] and then validate against a list of
                         // allowed suffixes. Ideally handle the C++23 size
-                        // suffixes aswell.
+                        // suffixes as well.
                         if (peek(j) == 'u' || peek(j) == 'U') { ++j; }
                         if (peek(j) == 'l' || peek(j) == 'L') { ++j; }
                         if (peek(j) == 'l' || peek(j) == 'L') { ++j; }

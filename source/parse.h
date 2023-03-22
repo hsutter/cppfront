@@ -102,7 +102,7 @@ auto is_assignment_operator(lexeme l)
 //
 
 //-----------------------------------------------------------------------
-//  try_emit
+//  try_visit
 //
 //  Helper to visit whatever is in a variant where each
 //  alternative is a smart pointer
@@ -4667,12 +4667,12 @@ private:
 
             //  So we can create the typeid_id_node and its unqualified_id_node
 
-            auto id = std::make_unique<unqualified_id_node>();
-            id->identifier = &generated_tokens_->back();
+            auto gen_id = std::make_unique<unqualified_id_node>();
+            gen_id->identifier = &generated_tokens_->back();
 
             auto type = std::make_unique<type_id_node>();
             type->pos = start;
-            type->id = std::move(id);
+            type->id = std::move(gen_id);
 
             n->type = std::move(type);
             assert (n->is_object());
