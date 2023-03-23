@@ -100,6 +100,131 @@ struct comment
     std::string     text;
 };
 
+struct string_parts {
+    struct cpp_code   { std::string text; };
+    struct raw_string { std::string text; };
+    enum adds_sequences { no_ends = 0, on_the_begining = 1, on_the_end = 2, on_both_ends = 3 };
+
+    string_parts(const std::string& beginseq,
+                 const std::string& endseq,
+                 adds_sequences     strateg) 
+     : begin_seq{beginseq}
+     , end_seq{endseq}
+     , strategy{strateg}
+    {
+        if (!(strategy & on_the_begining)) {
+            parts.push_back(raw_string{""});
+        }
+    }
+
+    void add_code(const std::string& text) { parts.push_back(cpp_code{text});}
+    void add_string(const std::string& text) { parts.push_back(raw_string{text});}
+    void add_string(const std::string_view& text) { parts.push_back(raw_string{std::string(text)});}
+
+    void clear() { parts.clear(); }
+
+
+    auto generate() const -> std::string {
+        
+        if (parts.empty()) { 
+            return (strategy & on_the_begining ? begin_seq : std::string{}) 
+                 + (strategy & on_the_end ? end_seq : std::string{}); 
+        }
+
+        auto result = std::visit(begin_visit{begin_seq, strategy}, 
+                                 parts.front());
+
+        if (std::ssize(parts) > 1) { 
+            auto it1 = parts.cbegin();
+            auto it2 = parts.cbegin()+1;
+            for(;it2 != parts.cend(); ++it1, ++it2) {
+                result += std::visit(generator_visit{begin_seq, end_seq}, *it1, *it2);
+            }
+        }
+
+        if (!(strategy & on_the_end)) {
+            result += std::visit([this](const auto& lhs) {
+                return generator_visit{begin_seq, end_seq}(lhs, raw_string{""});
+            }, parts.back());
+        }
+
+        result += std::visit(end_visit{end_seq, strategy}, parts.back());
+
+        return result;
+    }
+
+    auto is_expanded() const -> bool {
+        for (const auto& p : parts) {
+            if (std::holds_alternative<cpp_code>(p)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+private:
+    std::string     begin_seq;
+    std::string     end_seq;
+    adds_sequences  strategy;
+    std::vector<std::variant<raw_string, cpp_code>> parts;
+
+    struct begin_visit {
+        std::string begin_seq;
+        adds_sequences strategy;
+
+        auto operator()(const raw_string& part) const -> std::string {
+            return (strategy & on_the_begining ? begin_seq : "") + part.text;
+        }
+        auto operator()(const cpp_code& part) const -> std::string {
+            return part.text;
+        }
+    };
+
+    struct end_visit {
+        std::string end_seq;
+        adds_sequences strategy;
+        auto operator()(const raw_string&) const -> std::string {
+            return strategy & on_the_end ? end_seq : "";
+        }
+        auto operator()(const cpp_code&) const -> std::string {
+            return {};
+        }
+    };
+
+    struct generator_visit {
+        std::string begin_seq;
+        std::string end_seq;
+
+        auto operator()(const raw_string&, const cpp_code& part ) const -> std::string {
+            return end_seq + " + " + part.text;
+        }
+        auto operator()(const cpp_code&, const raw_string& part ) const -> std::string  {
+            return " + " + begin_seq + part.text;
+        }
+        auto operator()(const raw_string&, const raw_string& part ) const -> std::string  {
+            return part.text;
+        }
+        auto operator()(const cpp_code&, const cpp_code& part ) const -> std::string  {
+            return " + " + part.text;
+        }
+    };
+};
+
+struct raw_string
+{
+    source_position start;
+    std::string     text;
+    std::string     opening_seq;
+    std::string     closing_seq;
+    bool            should_interpolate = false;
+};
+
+struct multiline_raw_string
+{
+    std::string     text;
+    source_position end = {0, 0};
+};
+
 //-----------------------------------------------------------------------
 //
 //  error: represents a user-readable error message
