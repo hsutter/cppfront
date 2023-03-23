@@ -870,21 +870,12 @@ class cppfront
     };
     class current_functions_
     {
-        std::vector<function_info> list = { {} };
-        const size_t MaxNestedFunctions = 100;      // see the next comment and the assertion:
+        std::deque<function_info> list = { {} };
     public:
-        current_functions_() {
-            list.reserve(MaxNestedFunctions);       // (1) for pointer stability / lifetime safety
-        }
-
         auto push(
             declaration_node const*               decl,
             declaration_node::declared_that_funcs thats
         ) {
-            assert(                             
-                list.size() < MaxNestedFunctions    // (2) check that we're not exceeding the limit
-                && "ICE: overflowed limit on nested functions - fix by increasing MaxNestedFunctions value"
-            );
             list.emplace_back(decl, thats);
         }
 
