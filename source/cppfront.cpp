@@ -221,7 +221,20 @@ class positional_printer
     bool            enable_indent_heuristic = true;
 
     //  Modal information
-    bool            declarations_only   = true;     // print only declarations in the first pass
+    enum phases {
+        phase0_type_decls           = 0,
+        phase1_type_defs_func_decls = 1,
+        phase2_func_defs            = 2
+    };
+    phases phase = phase1_type_defs_func_decls;
+
+    auto inc_phase() -> void {
+        switch (phase) {
+        break;case phase0_type_decls          : phase = phase1_type_defs_func_decls;
+        break;case phase1_type_defs_func_decls: phase = phase2_func_defs;
+        break;default                         : assert(!"ICE: invalid lowering phase");
+        }
+    }
 
     std::vector<std::string*>                emit_string_targets;       // option to emit to string instead of out file
     std::vector<std::vector<text_with_pos>*> emit_text_chunks_targets;  // similar for vector<text_pos>
@@ -334,7 +347,7 @@ class positional_printer
         auto& comments = *pcomments;
 
         //  Don't emit comments while in the first declarations-only pass
-        if (declarations_only) {
+        if (phase < phase2_func_defs) {
             return;
         }
 
@@ -565,7 +578,7 @@ public:
         //  of the Cpp2 section, and not printed in thedeclarations-only pass
         if (
             !last_was_cpp2
-            && declarations_only
+            && phase < phase2_func_defs
             )
         {
             print ("\n");
@@ -755,19 +768,16 @@ public:
     //  Modal state control functions
     //
 
-    //  In the first pass we will print only declarations (the default)
-    //  For the second pass this function enables printing definitions
-    //
-    auto enable_definitions()
+    auto next_phase()
         -> void
     {
-        declarations_only = false;
+        inc_phase();
     }
 
     auto doing_declarations_only() const
         -> bool
     {
-        return declarations_only;
+        return phase < phase2_func_defs;
     }
 
     //  Provide an option to store to a given string instead, which is
@@ -1213,7 +1223,7 @@ public:
         //
         printer.print_extra( hpp_includes );
 
-        printer.enable_definitions();
+        printer.next_phase();
 
         for (auto& section : tokens.get_map())
         {
@@ -3128,7 +3138,7 @@ public:
                 && rhs_tok
                 && (
                     *rhs_tok == "nullptr"
-                    || is_digit(((std::string_view)*rhs_tok)[0])
+                    || is_digit((rhs_tok->as_string_view())[0])
                     )
                 )
             {
@@ -4665,7 +4675,7 @@ public:
                         loc += (">");
                     }
                     loc += " ";
-                    loc += ((std::string_view)*decl.name());
+                    loc += decl.name()->as_string_view();
                     if (decl.initializer)
                     {
                         std::string init;

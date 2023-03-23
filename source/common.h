@@ -449,7 +449,7 @@ auto to_upper(char c)
     //  C toupper is only not-UB in [0,127] and returns the wrong type,
     //  so wrap the range check and the type cast here in one place...
     //  note the 126 (not 127) is intentional to avoid a GCC warning
-    if (0 <= c && c <= 126) { return (char)std::toupper(c); }
+    if (0 <= c && c <= 126) { return static_cast<char>(std::toupper(c)); }
     //  else
     return c;
 }

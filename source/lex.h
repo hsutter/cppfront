@@ -243,10 +243,16 @@ public:
     {
     }
 
-    operator std::string_view() const
+    auto as_string_view() const
+        -> std::string_view
     {
         assert (start);
-        return {start, (unsigned)count};
+        return {start, static_cast<unsigned>(count)};
+    }
+
+    operator std::string_view() const
+    {
+        return as_string_view();
     }
 
     auto operator== (token const& t) const
@@ -264,7 +270,7 @@ public:
     auto to_string( bool text_only = false ) const
         -> std::string
     {
-        auto text = std::string{start, (unsigned)count};
+        auto text = std::string{start, static_cast<unsigned>(count)};
         if (text_only) {
             return text;
         }
@@ -897,7 +903,7 @@ auto lex_line(
                 || !is_identifier_continue(line[i+m[0].length()])   // non-identifier char
                 )
             {
-                return (int)(m[0].length());
+                return static_cast<int>(m[0].length());
             }
         }
         return 0;

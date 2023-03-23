@@ -1433,7 +1433,7 @@ inline auto to_string(std::tuple<Ts...> const& t) -> std::string
 //
 struct args_t : std::vector<std::string_view>
 {
-    args_t(int c, char const* const* v) : vector{(size_t)c}, argc{c}, argv{v} {}
+    args_t(int c, char const* const* v) : vector{static_cast<size_t>(c)}, argc{c}, argv{v} {}
 
     int                argc = 0;
     char const* const* argv = nullptr;
