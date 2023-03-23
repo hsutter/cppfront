@@ -957,7 +957,9 @@ public:
         {
             errors.emplace_back(
                 source_position(lineno_t(std::ssize(lines)), 0),
-                std::string("unexpected error reading source lines - did not reach EOF")
+                std::string("unexpected error reading source lines - did not reach EOF"),
+                false,
+                true    // a noisy fallback error
             );
             return false;
         }

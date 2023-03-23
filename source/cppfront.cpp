@@ -952,10 +952,10 @@ public:
     //
     cppfront(std::string const& filename)
         : sourcefile{ filename }
-        , source{ errors }
-        , tokens{ errors }
-        , parser{ errors }
-        , sema{ errors }
+        , source    { errors }
+        , tokens    { errors }
+        , parser    { errors }
+        , sema      { errors }
     {
         //  "Constraints enable creativity in the right directions"
         //  sort of applies here
@@ -998,7 +998,9 @@ public:
                     if (!parser.parse(entry, tokens.get_generated())) {
                         errors.emplace_back(
                             source_position(line, 0),
-                            "parse failed for section starting here"
+                            "parse failed for section starting here",
+                            false,
+                            true    // a noisy fallback error message
                         );
                     }
                 }
@@ -4454,7 +4456,7 @@ public:
                     break;case passing_style::copy:
                           case passing_style::forward:
                           default:
-                        errors.emplace_back( n.position(), "ICE: invalid parameter passing style, should have been rejected");
+                        errors.emplace_back( n.position(), "ICE: invalid parameter passing style, should have been rejected", true);
                     }
 
                     switch (this_->mod) {
@@ -4844,8 +4846,20 @@ public:
             printer.abandon();
         }
 
-        error const* prev = nullptr;
-        for (auto&& error : errors) {
+        error const* prev                  = {};
+        bool         print_fallback_errors = true; // true until we find a non-fallback message
+
+        for (auto&& error : errors)
+        {
+            //  Only print fallback error messages if we
+            //  haven't found a better (non-fallback) one yet
+            if (!error.fallback) {
+                print_fallback_errors = false;
+            }
+            if (error.fallback && !print_fallback_errors) {
+                continue;
+            }
+
             //  Suppress adjacent duplicates (e.g., can arise when we
             //  reenter operator= to emit it as an assignment operator)
             if (
@@ -4857,6 +4871,7 @@ public:
             }
             prev = &error;
         }
+
         if (violates_lifetime_safety) {
             std::cerr << "  ==> program violates lifetime safety guarantee - see previous errors\n";
         }

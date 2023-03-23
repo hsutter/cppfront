@@ -236,9 +236,18 @@ struct error
     source_position where;
     std::string     msg;
     bool            internal = false;
+    bool            fallback = false;   // only emit this message if there was nothing better
 
-    error( source_position w, std::string const& m, bool i = false )
-        : where{w}, msg{m}, internal{i}
+    error(
+        source_position    w,
+        std::string const& m,
+        bool               i = false,
+        bool               f = false
+    )
+        : where{w}
+        , msg{m}
+        , internal{i}
+        , fallback{f}
     { }
 
     auto operator==(error const& that)

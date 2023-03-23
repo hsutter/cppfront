@@ -1511,7 +1511,6 @@ struct declaration_node
     std::unique_ptr<parameter_declaration_list_node> template_parameters;
 
     source_position                 equal_sign = {};
-    source_position                 decl_end   = {};
     std::unique_ptr<statement_node> initializer;
 
     declaration_node*               parent_declaration = {};
@@ -2194,8 +2193,8 @@ auto parameter_declaration_node::visit(auto& v, int depth)
     -> void
 {
     v.start(*this, depth);
-    assert (declaration);
-    declaration->visit(v, depth+1);
+    assert(declaration);
+    declaration->visit(v, depth + 1);
     v.end(*this, depth);
 }
 
@@ -2217,7 +2216,7 @@ struct translation_unit_node
         v.start(*this, depth);
         for (auto const& x : declarations) {
             assert(x);
-            x->visit(v, depth+1);
+            x->visit(v, depth + 1);
         }
         v.end(*this, depth);
     }
@@ -2244,7 +2243,7 @@ class parser
         parser* pars;
 
         capture_groups_stack_guard(parser* p, capture_group* cg)
-            : pars{p}
+            : pars{ p }
         {
             assert(p);
             assert(cg);
@@ -2265,7 +2264,7 @@ class parser
         parser* pars;
 
         current_declarations_stack_guard(parser* p, declaration_node* decl)
-            : pars{p}
+            : pars{ p }
         {
             assert(p);
             assert(decl);
@@ -2279,9 +2278,64 @@ class parser
     };
 
     //  Used only for the duration of each parse() call
-    std::vector<token> const* tokens_           = {};
-    std::deque<token> *       generated_tokens_ = {};
+    std::vector<token> const* tokens_ = {};
+    std::deque<token>* generated_tokens_ = {};
     int pos = 0;
+
+    //  Keep track of the function bodies' locations - used to emit comments
+    //  in the right pass (decide whether it's a comment that belongs with
+    //  the declaration or is part of the definition)
+    struct function_body_extent {
+        lineno_t first;
+        lineno_t last;
+        auto operator<=>(function_body_extent const&) const = default;
+        auto operator<=>(int i) const { return first <=> i; }
+
+        function_body_extent( lineno_t f, lineno_t l ): first{f}, last{l} { }
+    };
+    std::vector<function_body_extent> function_body_extents;
+    bool                              is_function_body_extents_sorted = false;
+
+public:
+    auto is_within_function_body(source_position p)
+    {
+        //  Ensure we are sorted
+        if (!is_function_body_extents_sorted) {
+            std::sort(
+                function_body_extents.begin(),
+                function_body_extents.end()
+            );
+            is_function_body_extents_sorted = true;
+        }
+
+        //  Find the first entry that is beyond pos
+        auto iter = std::lower_bound(
+            function_body_extents.begin(),
+            function_body_extents.end(),
+            p.lineno+1
+        );
+
+        //  Now go backwards through the preceding entries until
+        //  one includes pos or we move before pos
+        while (
+            iter != function_body_extents.end()
+            && iter->last >= p.lineno
+            )
+        {
+            if (
+                iter->first <= p.lineno
+                && p.lineno <= iter->last
+                )
+            {
+                return true;
+            }
+            if (iter == function_body_extents.begin()) {
+                break;
+            }
+            --iter;
+        }
+        return false;
+    }
 
 public:
     //-----------------------------------------------------------------------
@@ -2325,7 +2379,7 @@ public:
             std::make_move_iterator(tu->declarations.end())
         );
         if (!done()) {
-            error("unexpected text at end of Cpp2 code section");
+            error("unexpected text at end of Cpp2 code section", true, {}, true);
             return false;
         }
         return true;
@@ -2399,7 +2453,8 @@ private:
     auto error(
         char const*     msg,
         bool            include_curr_token = true,
-        source_position err_pos            = {}
+        source_position err_pos            = {},
+        bool            fallback           = false
     ) const
         -> void
     {
@@ -2414,17 +2469,18 @@ private:
         {
             err_pos = peek(0)->position();
         }
-        errors.emplace_back( err_pos, m );
+        errors.emplace_back( err_pos, m, false, fallback );
     }
 
     auto error(
         std::string const& msg,
         bool               include_curr_token = true,
-        source_position    err_pos            = {}
+        source_position    err_pos            = {},
+        bool               fallback           = false
     ) const
         -> void
     {
-        error(msg.c_str(), include_curr_token, err_pos);
+        error( msg.c_str(), include_curr_token, err_pos, fallback );
     }
 
 
@@ -2796,7 +2852,7 @@ private:
 
                 //  At this point we have a valid t.op, so try to parse the next term
                 if ( !(t.expr = term()) ) {
-                    error("invalid expression after " + peek(-1)->to_string(true));
+                    error("invalid expression after " + peek(-1)->to_string(true), true, {}, true);
                     return n;
                 }
                 n->terms.push_back( std::move(t) );
@@ -3102,7 +3158,7 @@ private:
             }
             auto expr = expression();
             if (!expr) {
-                error("invalid text in expression list");
+                error("invalid text in expression list", true, {}, true);
                 return {};
             }
             n->expressions.push_back( { pass, std::move(expr) } );
@@ -3397,7 +3453,7 @@ private:
             next();
             term.id = unqualified_id();
             if (!term.id) {
-                error("invalid text in qualified name");
+                error("invalid text in qualified name", true, {}, true);
                 return {};
             }
             assert (term.id->identifier);
@@ -3543,7 +3599,7 @@ private:
             n->expression = std::move(e);
         }
         else {
-            error("invalid if condition");
+            error("invalid if condition", true, {}, true);
             return {};
         }
 
@@ -3556,7 +3612,7 @@ private:
             n->true_branch = std::move(s);
         }
         else {
-            error("invalid if branch body");
+            error("invalid if branch body", true, {}, true);
             return {};
         }
 
@@ -3584,7 +3640,7 @@ private:
                 n->has_source_false_branch = true;
             }
             else {
-                error("invalid else branch body");
+                error("invalid else branch body", true, {}, true);
                 return {};
             }
         }
@@ -3620,7 +3676,7 @@ private:
         //  Handle the return expression
         auto x = expression();
         if (!x) {
-            error("invalid return expression");
+            error("invalid return expression", true, {}, true);
             return {};
         }
         n->expression = std::move(x);
@@ -3689,7 +3745,7 @@ private:
             next(); // don't bother remembering "next" token, shouldn't need its position info
             auto next = assignment_expression();
             if (!next) {
-                error("invalid expression after 'next'");
+                error("invalid expression after 'next'", true, {}, true);
                 return false;
             }
             n->next_expression = std::move(next);
@@ -3709,7 +3765,7 @@ private:
         auto handle_compound_statement = [&]() -> bool {
             auto s = compound_statement();
             if (!s) {
-                error("invalid while loop body");
+                error("invalid while loop body", true, {}, true);
                 return false;
             }
             n->statement= std::move(s);
@@ -3754,14 +3810,14 @@ private:
         {
             n->range = expression();
             if (!n->range) {
-                error("expected valid range expression after 'for'");
+                error("expected valid range expression after 'for'", true, {}, true);
                 return {};
             }
 
             if (!handle_optional_next_clause()) { return {}; }
 
             if (curr() != "do") {
-                error("'for each of' must be followed by 'do'");
+                error("'for condition' must be followed by 'do'");
                 return {};
             }
             next();
@@ -3827,12 +3883,12 @@ private:
             n->value = std::move(e);
         }
         else {
-            error("expected type-id or value after 'is' in inspect alternative");
+            error("expected type-id or value after 'is' in inspect alternative", true, {}, true);
             return {};
         }
 
         if (curr().type() != lexeme::Assignment) {
-            error("expected = at start of inspect alternative body");
+            error("expected = at start of inspect alternative body", true, {}, true);
             return {};
         }
         n->equal_sign = curr().position();
@@ -3842,7 +3898,7 @@ private:
             n->statement = std::move(s);
         }
         else {
-            error("expected statement after = in inspect alternative");
+            error("expected statement after = in inspect alternative", true, {}, true);
             return {};
         }
 
@@ -3886,7 +3942,7 @@ private:
             n->expression = std::move(e);
         }
         else {
-            error("invalid inspect expression");
+            error("invalid inspect expression", true, {}, true);
             return {};
         }
 
@@ -3927,7 +3983,7 @@ private:
         {
             auto a = alternative();
             if (!a) {
-                error("invalid alternative in inspect");
+                error("invalid alternative in inspect", true, {}, true);
                 return {};
             }
             if (
@@ -4351,14 +4407,14 @@ private:
                 break;
             }
             else if (curr().type() != lexeme::Comma) {
-                error("expected , in parameter list");
+                error("expected , in parameter list", true, {}, true);
                 return {};
             }
             next();
         }
 
         if (curr().type() != closer) {
-            error("invalid parameter list");
+            error("invalid parameter list", true, {}, true);
             next();
             return {};
         }
@@ -4423,7 +4479,7 @@ private:
 
         auto condition = logical_or_expression();
         if (!condition) {
-            error("invalid contract condition");
+            error("invalid contract condition", true, {}, true);
             return {};
         }
         n->condition = std::move(condition);
@@ -4790,7 +4846,7 @@ private:
             }
             // But if there isn't one and it was required, diagnose an error
             else if (semicolon_required) {
-                error("missing semicolon at end of declaration");
+                error("missing semicolon at end of declaration", true, {}, true);
                 return {};
             }
         }
@@ -4845,7 +4901,7 @@ private:
             }
 
             if (!(n->initializer = statement(semicolon_required, n->equal_sign))) {
-                error("ill-formed initializer");
+                error("ill-formed initializer", true, {}, true);
                 next();
                 return {};
             }
@@ -4858,7 +4914,12 @@ private:
             && !n->initializer->is_expression()
             )
         {
-            error("an object initializer must be an expression", false);
+            error(
+                "an object initializer must be an expression",
+                false,
+                {},
+                true
+            );
             return {};
         }
 
@@ -4869,7 +4930,12 @@ private:
             && !n->initializer->is_compound()
             )
         {
-            error("a user-defined type initializer must be a compound-expression consisting of declarations", false);
+            error(
+                "a user-defined type initializer must be a compound-expression consisting of declarations",
+                false,
+                {},
+                true
+            );
             return {};
         }
 
@@ -4885,7 +4951,8 @@ private:
             error(
                 "a namespace must be = initialized with a { } body containing declarations",
                 false,
-                n->initializer->position()
+                n->initializer->position(),
+                true
             );
             return {};
         }
@@ -4934,7 +5001,12 @@ private:
             assert (n->initializer);
 
             if (!n->initializer->is_compound()) {
-                error("a function with named return value(s) must have a full { } body", false);
+                error(
+                    "a function with named return value(s) must have a full { } body",
+                    false,
+                    {},
+                    true
+                );
                 return {};
             }
 
@@ -4962,7 +5034,14 @@ private:
             }
         }
 
-        n->decl_end = peek(-1)->position();
+        //  If this is a function, record its extents
+        if (n->is_function()) {
+            function_body_extents.emplace_back(
+                n->initializer->position().lineno,
+                peek(-1)->position().lineno
+            );
+        }
+
         return n;
     }
 

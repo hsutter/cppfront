@@ -349,7 +349,9 @@ auto expand_string_literal(
     if (text.back() != '"') {
         errors.emplace_back(
             source_position( src_pos ),
-            "not a legal string literal"
+            "not a legal string literal",
+            false,
+            true    // a noisy fallback error message
         );
         return {};
     }
@@ -1551,7 +1553,9 @@ auto lex_line(
                             if (std::ssize(s) <= j + 1) {
                                 errors.emplace_back(
                                     source_position( lineno, i ),
-                                    "not a legal string literal"
+                                    "not a legal string literal",
+                                    false,
+                                    true    // a noisy fallback error message
                                 );
                                 return {};
                             }
@@ -1632,17 +1636,13 @@ auto lex_line(
                         if (tokens.back() == "union") {
                             errors.emplace_back(
                                 source_position(lineno, i),
-                                "unsafe 'union's are not supported in Cpp2 - use std::variant instead"
+                                "unsafe 'union's are not supported in Cpp2 - use std::variant instead (or, in the future, the Cpp2 'union' metaclass function, but that is not yet implemented)"
                             );
                         }
                         if (tokens.back() == "delete") {
                             errors.emplace_back(
                                 source_position(lineno, i),
-                                "'delete' and owning raw pointers are not supported in Cpp2"
-                            );
-                            errors.emplace_back(
-                                source_position(lineno, i),
-                                "  - use unique.new<T>, shared.new<T>, or gc.new<T> instead (in that order)"
+                                "'delete' and owning raw pointers are not supported in Cpp2 - use unique.new<T>, shared.new<T>, or gc.new<T> instead (in that order)"
                             );
                         }
                     }
@@ -1653,7 +1653,9 @@ auto lex_line(
                 else if (!isspace(line[i])) {
                     errors.emplace_back(
                         source_position(lineno, i),
-                        std::string("unexpected text '") + line[i] + "'"
+                        std::string("unexpected text '") + line[i] + "'",
+                        false,
+                        true    // a noisy fallback error message
                     );
                 }
             }
