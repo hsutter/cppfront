@@ -4716,8 +4716,17 @@ public:
             if (!function_requires_conditions.empty()) {
                 printer.ignore_alignment( true, n.position().colno + 4 );
                 printer.print_extra("\n");
-                for (auto const& req : function_requires_conditions) {
-                    printer.print_extra("requires " + req);
+                auto is_multi_fwd = function_requires_conditions.size() > 1;
+                printer.print_extra("requires ");
+                if (is_multi_fwd) {
+                    printer.print_extra("(");
+                }
+                printer.print_extra(function_requires_conditions.front());
+                for (auto it = std::cbegin(function_requires_conditions)+1; it != std::cend(function_requires_conditions); ++it) {
+                    printer.print_extra(" && " + *it);
+                }
+                if (is_multi_fwd) {
+                    printer.print_extra(")");
                 }
                 function_requires_conditions = {};
                 printer.ignore_alignment( false );
