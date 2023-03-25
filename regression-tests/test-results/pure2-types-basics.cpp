@@ -3,7 +3,6 @@
 
 #include "cpp2util.h"
 
-
 #line 2 "pure2-types-basics.cpp2"
 namespace N   {
 
@@ -11,21 +10,22 @@ class myclass;
 
 #line 60 "pure2-types-basics.cpp2"
 };
-#line 62 "pure2-types-basics.cpp2"
+
 auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 1 "pure2-types-basics.cpp2"
 
+#line 2 "pure2-types-basics.cpp2"
 namespace N   {
 
 class myclass   {
 
     public: myclass(cpp2::in<int> x)
         : data{ x }
-#line 7 "pure2-types-basics.cpp2"
-{
+#line 6 "pure2-types-basics.cpp2"
+                                           {
+
         // use default initializer for this.more
         std::cout << "myclass: implicit from int\n";
         print();
@@ -34,8 +34,6 @@ class myclass   {
     public: auto operator=(cpp2::in<int> x) -> myclass& {
         data = x;
         more = std::to_string(42 * 12);
-#line 7 "pure2-types-basics.cpp2"
-
 #line 9 "pure2-types-basics.cpp2"
         std::cout << "myclass: implicit from int\n";
         print();
@@ -46,9 +44,10 @@ class myclass   {
     public: explicit myclass(cpp2::in<std::string> s)
         : data{ 99 }
         , more{ s }
-#line 14 "pure2-types-basics.cpp2"
-{
+#line 13 "pure2-types-basics.cpp2"
+                                          {
 
+#line 16 "pure2-types-basics.cpp2"
         std::cout << "myclass: explicit from string\n";
         print();
     }
@@ -56,8 +55,6 @@ class myclass   {
     public: auto operator=(cpp2::in<std::string> s) -> myclass& {
         data = 99;
         more = s;
-#line 14 "pure2-types-basics.cpp2"
-
 #line 16 "pure2-types-basics.cpp2"
         std::cout << "myclass: explicit from string\n";
         print();
@@ -68,17 +65,19 @@ class myclass   {
     public: myclass(cpp2::in<int> x, cpp2::in<std::string> s)
         : data{ 77 }
         , more{ s + " plugh" }
-#line 21 "pure2-types-basics.cpp2"
-{
+#line 20 "pure2-types-basics.cpp2"
+                                                  {
 
+#line 23 "pure2-types-basics.cpp2"
         std::cout << "myclass: from int and string\n";
         print();
     }
 
     public: myclass()
         : more{ std::to_string(3.14159) }
-#line 28 "pure2-types-basics.cpp2"
-{       // use default initializer for this.data
+#line 27 "pure2-types-basics.cpp2"
+                          {
+        // use default initializer for this.data
 
         std::cout << "myclass: default\n";
         print();

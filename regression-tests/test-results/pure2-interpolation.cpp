@@ -3,14 +3,13 @@
 
 #include "cpp2util.h"
 
-
 #line 2 "pure2-interpolation.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 1 "pure2-interpolation.cpp2"
 
+#line 2 "pure2-interpolation.cpp2"
 [[nodiscard]] auto main() -> int{
     auto x {0}; 
     std::cout << "g" + cpp2::to_string(x) + "g" + cpp2::to_string(x) + "g"  << "\n";

@@ -3,9 +3,9 @@
 
 #include "cpp2util.h"
 
-
 #line 1 "pure2-type-safety-2-with-inspect-expression.cpp2"
 [[nodiscard]] auto main() -> int;
+
 #line 20 "pure2-type-safety-2-with-inspect-expression.cpp2"
 auto test_generic(auto const& x, auto const& msg) -> void;
 

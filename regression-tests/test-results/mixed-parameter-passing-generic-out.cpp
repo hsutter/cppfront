@@ -12,16 +12,16 @@ auto operator<<(std::ostream& o, X const&) -> std::ostream& {
 
 #include "cpp2util.h"
 
-
 #line 11 "mixed-parameter-passing-generic-out.cpp2"
 auto f(auto* x_) -> void;
+
 #line 15 "mixed-parameter-passing-generic-out.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 10 "mixed-parameter-passing-generic-out.cpp2"
 
+#line 11 "mixed-parameter-passing-generic-out.cpp2"
 auto f(auto* x_) -> void{
     auto x = cpp2::out(x_); 
 #line 12 "mixed-parameter-passing-generic-out.cpp2"

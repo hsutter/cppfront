@@ -98,6 +98,8 @@ struct comment
     source_position start;
     source_position end;
     std::string     text;
+
+    mutable bool    dbg_was_printed = false;
 };
 
 struct string_parts {

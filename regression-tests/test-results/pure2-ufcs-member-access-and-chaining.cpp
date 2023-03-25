@@ -3,17 +3,18 @@
 
 #include "cpp2util.h"
 
-
 #line 1 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto main() -> int;
+
 #line 22 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto ufcs(cpp2::in<int> i) -> int;
-#line 26 "pure2-ufcs-member-access-and-chaining.cpp2"
 struct fun__ret {
     int i;
     };
-#line 27 "pure2-ufcs-member-access-and-chaining.cpp2"
+
+#line 26 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto fun() -> fun__ret;
+
 #line 31 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto get_i(auto const& r) -> int;
 

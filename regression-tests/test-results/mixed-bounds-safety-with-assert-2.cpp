@@ -2,9 +2,9 @@
 
 #include "cpp2util.h"
 
-
 #line 2 "mixed-bounds-safety-with-assert-2.cpp2"
 [[nodiscard]] auto main() -> int;
+
 #line 10 "mixed-bounds-safety-with-assert-2.cpp2"
 auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> void;
 #line 23 "mixed-bounds-safety-with-assert-2.cpp2"
@@ -15,8 +15,8 @@ auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> vo
 
 //=== Cpp2 definitions ==========================================================
 
-#line 1 "mixed-bounds-safety-with-assert-2.cpp2"
 
+#line 2 "mixed-bounds-safety-with-assert-2.cpp2"
 [[nodiscard]] auto main() -> int{
     std::vector<int> v {1, 2, 3, 4, 5}; 
     add_42_to_subrange(v, 1, 3);

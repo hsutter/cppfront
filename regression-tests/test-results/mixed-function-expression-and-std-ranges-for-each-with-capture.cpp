@@ -9,14 +9,13 @@
 
 #include "cpp2util.h"
 
-
 #line 8 "mixed-function-expression-and-std-ranges-for-each-with-capture.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 7 "mixed-function-expression-and-std-ranges-for-each-with-capture.cpp2"
 
+#line 8 "mixed-function-expression-and-std-ranges-for-each-with-capture.cpp2"
 [[nodiscard]] auto main() -> int{
     std::vector<std::string> vec {
                "hello", "2022"}; 

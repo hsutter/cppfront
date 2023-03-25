@@ -2,18 +2,18 @@
 
 #include "cpp2util.h"
 
-
 #line 2 "mixed-postfix-expression-custom-formatting.cpp2"
 auto call(auto const& v, auto const& w, auto const& x, auto const& y, auto const& z) -> void;
-#line 4 "mixed-postfix-expression-custom-formatting.cpp2"
+
 [[nodiscard]] auto test(auto const& a) -> std::string;
+
 #line 15 "mixed-postfix-expression-custom-formatting.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 1 "mixed-postfix-expression-custom-formatting.cpp2"
 
+#line 2 "mixed-postfix-expression-custom-formatting.cpp2"
 auto call(auto const& v, auto const& w, auto const& x, auto const& y, auto const& z) -> void{}
 
 [[nodiscard]] auto test(auto const& a) -> std::string{

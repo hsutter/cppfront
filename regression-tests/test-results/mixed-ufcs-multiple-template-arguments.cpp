@@ -19,14 +19,13 @@ struct X {
 
 #include "cpp2util.h"
 
-
 #line 18 "mixed-ufcs-multiple-template-arguments.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 17 "mixed-ufcs-multiple-template-arguments.cpp2"
 
+#line 18 "mixed-ufcs-multiple-template-arguments.cpp2"
 [[nodiscard]] auto main() -> int{
     std::string test_string {"The rain in Spain flows mainly down the drain"}; 
     std::cout << substr<4,8>(test_string) << "\n";

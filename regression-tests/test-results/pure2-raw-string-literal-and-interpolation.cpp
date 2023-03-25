@@ -3,7 +3,6 @@
 
 #include "cpp2util.h"
 
-
 #line 1 "pure2-raw-string-literal-and-interpolation.cpp2"
 [[nodiscard]] auto main() -> int;
 

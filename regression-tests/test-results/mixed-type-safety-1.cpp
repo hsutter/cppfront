@@ -12,20 +12,22 @@ class Square : public Shape { };
 
 #include "cpp2util.h"
 
-
 #line 13 "mixed-type-safety-1.cpp2"
 auto print(cpp2::in<std::string> msg, auto const& x) -> void;
+
 #line 16 "mixed-type-safety-1.cpp2"
 auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
+
 #line 26 "mixed-type-safety-1.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 10 "mixed-type-safety-1.cpp2"
 
+#line 11 "mixed-type-safety-1.cpp2"
 //--- printing helpers -----------------
 
+#line 13 "mixed-type-safety-1.cpp2"
 auto print(cpp2::in<std::string> msg, auto const& x) -> void { 
     std::cout << msg << x << "\n"; }
 

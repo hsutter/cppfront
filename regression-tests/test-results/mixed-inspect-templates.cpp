@@ -9,18 +9,19 @@ struct my_type {};
 
 #include "cpp2util.h"
 
-
 #line 8 "mixed-inspect-templates.cpp2"
 [[nodiscard]] auto fun(auto const& v) -> std::string;
+
 #line 18 "mixed-inspect-templates.cpp2"
 [[nodiscard]] auto fun2(auto const& v) -> std::string;
+
 #line 26 "mixed-inspect-templates.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 7 "mixed-inspect-templates.cpp2"
 
+#line 8 "mixed-inspect-templates.cpp2"
 [[nodiscard]] auto fun(auto const& v) -> std::string{
     return [&] () -> std::string { auto&& __expr = v;
         if (cpp2::is<std::vector>(__expr)) { if constexpr( requires{"std::vector";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("std::vector")),std::string> ) return "std::vector"; else return std::string{}; else return std::string{}; }

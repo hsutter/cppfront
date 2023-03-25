@@ -9,16 +9,16 @@ namespace my {
 
 #include "cpp2util.h"
 
-
 #line 8 "mixed-fixed-type-aliases.cpp2"
 auto test(auto const& x) -> void;
+
 #line 15 "mixed-fixed-type-aliases.cpp2"
 [[nodiscard]] auto main(int const argc_, char const* const* const argv_) -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 7 "mixed-fixed-type-aliases.cpp2"
 
+#line 8 "mixed-fixed-type-aliases.cpp2"
 auto test(auto const& x) -> void{
     std::cout 
         << std::boolalpha 

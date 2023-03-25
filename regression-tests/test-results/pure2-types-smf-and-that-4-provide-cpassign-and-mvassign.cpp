@@ -3,30 +3,32 @@
 
 #include "cpp2util.h"
 
-
 #line 2 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
 class myclass;
+
 #line 39 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
 auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 1 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
 
+#line 2 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
 class myclass   {
 
     public: explicit myclass(myclass const& that)
         : name{ that.name }
         , addr{ that.addr }
-#line 5 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
-{       std::cout << "ctor - copy (GENERAL)";
+#line 4 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
+                                {
+        std::cout << "ctor - copy (GENERAL)";
     }
 #line 4 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
     public: explicit myclass(myclass&& that)
         : name{ std::move(that).name }
         , addr{ std::move(that).addr }
-#line 5 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
-{       std::cout << "ctor - copy (GENERAL)";
+#line 4 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
+                                {
+        std::cout << "ctor - copy (GENERAL)";
     }
 
     // operator=: (out this, move that) = {
@@ -37,8 +39,7 @@ class myclass   {
     public: auto operator=(myclass const& that) -> myclass& {
         name = that.name;
         addr = that.addr + "(AC)";
-#line 14 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
-
+#line 15 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
         std::cout << "assign - copy        ";
         return *this;
 #line 16 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
@@ -55,16 +56,16 @@ class myclass   {
 
     public: explicit myclass(cpp2::in<std::string> x)
         : name{ x }
-#line 23 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
-{
+#line 22 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
+                                          {
+
         std::cout << "ctor - from string   ";
     }
 #line 22 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
     public: auto operator=(cpp2::in<std::string> x) -> myclass& {
         name = x;
         addr = "123 Ford Dr.";
-#line 23 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
-
+#line 24 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
         std::cout << "ctor - from string   ";
         return *this;
 #line 25 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"

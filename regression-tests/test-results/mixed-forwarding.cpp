@@ -12,22 +12,24 @@ struct X {
 
 #include "cpp2util.h"
 
-
 #line 11 "mixed-forwarding.cpp2"
 auto copy_from(auto x) -> void;
-#line 13 "mixed-forwarding.cpp2"
+
 auto use(auto const& x) -> void;
+
 #line 16 "mixed-forwarding.cpp2"
 auto apply_implicit_forward(auto&& t) -> void;
+
 #line 20 "mixed-forwarding.cpp2"
 auto apply_explicit_forward(auto&& t) -> void;
+
 #line 25 "mixed-forwarding.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 10 "mixed-forwarding.cpp2"
 
+#line 11 "mixed-forwarding.cpp2"
 auto copy_from(auto x) -> void{}
 
 auto use(auto const& x) -> void{}
@@ -35,14 +37,16 @@ auto use(auto const& x) -> void{}
 // invoking each of these with an rvalue std::pair argument ...
 auto apply_implicit_forward(auto&& t) -> void
 requires std::is_same_v<CPP2_TYPEOF(t), std::pair<X,X>>
-#line 17 "mixed-forwarding.cpp2"
-{   copy_from(t.first);             // copies
+#line 16 "mixed-forwarding.cpp2"
+                                                     {
+    copy_from(t.first);             // copies
     copy_from(CPP2_FORWARD(t).second);// moves
 }
 auto apply_explicit_forward(auto&& t) -> void
 requires std::is_same_v<CPP2_TYPEOF(t), std::pair<X,X>>
-#line 21 "mixed-forwarding.cpp2"
-{   copy_from(        CPP2_FORWARD(t).first);// moves
+#line 20 "mixed-forwarding.cpp2"
+                                                     {
+    copy_from(        CPP2_FORWARD(t).first);// moves
     copy_from(        CPP2_FORWARD(t).second);// moves
 }
 

@@ -5037,7 +5037,7 @@ private:
         //  If this is a function, record its extents
         if (n->is_function()) {
             function_body_extents.emplace_back(
-                n->initializer->position().lineno,
+                n->equal_sign.lineno,
                 peek(-1)->position().lineno
             );
         }

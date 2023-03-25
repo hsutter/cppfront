@@ -6,18 +6,18 @@ auto in(int min, int max) {
 
 #include "cpp2util.h"
 
-
 #line 5 "mixed-inspect-values.cpp2"
 [[nodiscard]] auto in_2_3(cpp2::in<int> x) -> bool;
-#line 7 "mixed-inspect-values.cpp2"
+
 [[nodiscard]] auto main() -> int;
+
 #line 31 "mixed-inspect-values.cpp2"
 auto test(auto const& x) -> void;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 4 "mixed-inspect-values.cpp2"
 
+#line 5 "mixed-inspect-values.cpp2"
 [[nodiscard]] auto in_2_3(cpp2::in<int> x) -> bool { return cpp2::cmp_less_eq(2,x) && cpp2::cmp_less_eq(x,3); }
 
 [[nodiscard]] auto main() -> int{

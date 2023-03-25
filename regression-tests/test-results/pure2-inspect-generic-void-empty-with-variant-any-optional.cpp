@@ -3,16 +3,16 @@
 
 #include "cpp2util.h"
 
-
 #line 2 "pure2-inspect-generic-void-empty-with-variant-any-optional.cpp2"
 [[nodiscard]] auto main() -> int;
+
 #line 18 "pure2-inspect-generic-void-empty-with-variant-any-optional.cpp2"
 auto test_generic(auto const& x, auto const& msg) -> void;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 1 "pure2-inspect-generic-void-empty-with-variant-any-optional.cpp2"
 
+#line 2 "pure2-inspect-generic-void-empty-with-variant-any-optional.cpp2"
 [[nodiscard]] auto main() -> int{
     std::unique_ptr<int> p {}; 
     std::vector<int>::iterator i {}; 

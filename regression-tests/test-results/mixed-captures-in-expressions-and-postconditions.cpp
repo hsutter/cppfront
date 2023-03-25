@@ -6,17 +6,16 @@
 
 #include "cpp2util.h"
 
-
 #line 5 "mixed-captures-in-expressions-and-postconditions.cpp2"
 [[nodiscard]] auto main() -> int;
-#line 17 "mixed-captures-in-expressions-and-postconditions.cpp2"
+
 #line 19 "mixed-captures-in-expressions-and-postconditions.cpp2"
 auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 4 "mixed-captures-in-expressions-and-postconditions.cpp2"
 
+#line 5 "mixed-captures-in-expressions-and-postconditions.cpp2"
 [[nodiscard]] auto main() -> int{
     std::vector<std::string> vec {
                "hello", "2022"}; 
@@ -32,11 +31,11 @@ auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void;
 std::vector<int> vec {}; 
 
 auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void
-{   
+
+#line 22 "mixed-captures-in-expressions-and-postconditions.cpp2"
+{
     cpp2::Default.expects(cpp2::cmp_less_eq(0,where) && cpp2::cmp_less_eq(where,CPP2_UFCS_0(ssize, vec)), "");
     auto post_21_5 = cpp2::finally_success([_0 = CPP2_UFCS_0(ssize, vec)]{cpp2::Default.expects(CPP2_UFCS_0(ssize, vec)==_0 + 1, "");} );
-#line 21 "mixed-captures-in-expressions-and-postconditions.cpp2"
-
 #line 23 "mixed-captures-in-expressions-and-postconditions.cpp2"
     CPP2_UFCS(insert, vec, CPP2_UFCS_0(begin, vec) + where, val);
 }

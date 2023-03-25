@@ -3,26 +3,25 @@
 
 #include "cpp2util.h"
 
-
-#line 2 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 struct f__ret {
     int ri;
     };
-#line 3 "pure2-look-up-parameter-across-unnamed-function.cpp2"
+#line 2 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 [[nodiscard]] auto f() -> f__ret;
-#line 8 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 struct g__ret {
     int ri;
     };
-#line 9 "pure2-look-up-parameter-across-unnamed-function.cpp2"
+
+#line 8 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 [[nodiscard]] auto g() -> g__ret;
+
 #line 15 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 1 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 
+#line 2 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 [[nodiscard]] auto f() -> f__ret{
     int ri {0};
 #line 3 "pure2-look-up-parameter-across-unnamed-function.cpp2"

@@ -35,4 +35,3 @@ auto main() -> int {
         decorate_and_print(word);
     }
 }
-

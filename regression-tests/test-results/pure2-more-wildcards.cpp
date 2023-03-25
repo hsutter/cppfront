@@ -3,16 +3,16 @@
 
 #include "cpp2util.h"
 
-
 #line 2 "pure2-more-wildcards.cpp2"
 [[nodiscard]] auto less_than(auto const& value) -> auto;
+
 #line 5 "pure2-more-wildcards.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 1 "pure2-more-wildcards.cpp2"
 
+#line 2 "pure2-more-wildcards.cpp2"
 [[nodiscard]] auto less_than(auto const& value) -> auto { 
     return [_0 = value](auto const& x) -> auto { return cpp2::cmp_less(x,_0); }; }
 

@@ -190,19 +190,20 @@ auto error::print(
 class positional_printer
 {
     //  Core information
-    std::ofstream               out_file      = {}; // Cpp1 syntax output file
-    std::ostream*               out           = {}; // will point to out_file or cout
-    std::string                 cpp2_filename = {};
-    std::string                 cpp1_filename = {};
-    std::vector<comment> const* pcomments     = {}; // Cpp2 comments data
-    cpp2::parser const*         pparser       = {};
-
-    source_position curr_pos                  = {}; // current (line,col) in output
-    int             next_comment              = 0;  // index of the next comment not yet printed
-    bool            last_was_empty            = false;
-    int             empty_lines_suppressed    = 0;
-    bool            last_was_cpp2             = false;
-    bool            source_has_cpp2           = false;
+    std::ofstream               out_file        = {}; // Cpp1 syntax output file
+    std::ostream*               out             = {}; // will point to out_file or cout
+    std::string                 cpp2_filename   = {};
+    std::string                 cpp1_filename   = {};
+    std::vector<comment> const* pcomments       = {}; // Cpp2 comments data
+    cpp2::parser const*         pparser         = {};
+                                                
+    source_position curr_pos                    = {}; // current (line,col) in output
+    int             next_comment                = 0;  // index of the next comment not yet printed
+    bool            last_was_empty              = false;
+    int             empty_lines_suppressed      = 0;
+    bool            just_printed_line_directive = false;
+    bool            source_has_cpp2             = false;
+    bool            printed_extra               = false;
 
     struct req_act_info {
         colno_t requested;
@@ -223,12 +224,16 @@ class positional_printer
     lineno_t        ignore_align_lineno = 0;
     bool            enable_indent_heuristic = true;
 
+public:
     //  Modal information
     enum phases {
         phase0_type_decls           = 0,
         phase1_type_defs_func_decls = 1,
         phase2_func_defs            = 2
     };
+    auto get_phase() const { return phase; }
+
+private:
     phases phase = phase1_type_defs_func_decls;
 
     auto inc_phase() -> void {
@@ -237,6 +242,7 @@ class positional_printer
         break;case phase1_type_defs_func_decls: phase = phase2_func_defs;
         break;default                         : assert(!"ICE: invalid lowering phase");
         }
+        curr_pos     = {};
         next_comment = 0;   // start over with the comments
     }
 
@@ -256,6 +262,9 @@ class positional_printer
     )
         -> void
     {
+        //  Take ownership of (and reset) just_printed_line_directive value
+        auto line_directive_already_done = std::exchange(just_printed_line_directive, false);
+
         //  If the caller is capturing this output, emit to the
         //  current target instead and skip most positioning logic
         if (!emit_target_stack.empty())
@@ -302,7 +311,9 @@ class positional_printer
 
             //  And if we did suppress any empties, emit a #line to resync
             if (empty_lines_suppressed > 0) {
-                print_line_directive(curr_pos.lineno);
+                if (!line_directive_already_done) {
+                    print_line_directive(curr_pos.lineno);
+                }
                 empty_lines_suppressed = 0;
             }
         }
@@ -365,6 +376,7 @@ class positional_printer
             assert (out);
             *out << "#line " << line << " " << std::quoted(cpp2_filename) << "\n";
         }
+        just_printed_line_directive = true;
     }
 
     //  Catch up with comment/blank lines
@@ -378,7 +390,7 @@ class positional_printer
 
         //  For convenience
         auto& comments = *pcomments;
-        
+
         //  Add unprinted comments and blank lines as needed to catch up vertically
         //
         while (curr_pos.lineno < pos.lineno)
@@ -386,12 +398,22 @@ class positional_printer
             //  If a comment goes on this line, print it
             if (
                 next_comment < std::ssize(comments)
-                && comments[next_comment].start.lineno == curr_pos.lineno
+                && comments[next_comment].start.lineno <= curr_pos.lineno
                 )
             {
+                //  Emit non-function body comments in phase1_type_defs_func_decls,
+                //  and emit function body comments in phase2_func_defs
                 assert(pparser);
                 if (
+                    //(
+                    //    phase < phase2_func_defs
+                    //    && !pparser->is_within_function_body( comments[next_comment].start.lineno )
+                    //    )
+                    //||
+                    //(
                         phase == phase2_func_defs
+                        //&& pparser->is_within_function_body( comments[next_comment].start.lineno )
+                        //)
                     )
                 {
                     //  For a line comment, start it at the right indentation and print it
@@ -410,6 +432,8 @@ class positional_printer
                         print( comments[next_comment].text );
                         assert(curr_pos.lineno <= pos.lineno);  // we shouldn't have overshot
                     }
+
+                    comments[next_comment].dbg_was_printed = true;
                 }
 
                 ++next_comment;
@@ -441,7 +465,13 @@ class positional_printer
         flush_comments( pos );
 
         //  If we're not on the right line
-        if (curr_pos.lineno < pos.lineno)
+        if (printed_extra) {
+            print_line_directive(pos.lineno);
+            curr_pos.lineno = pos.lineno;
+            printed_extra = false;
+        }
+        else if (curr_pos.lineno < pos.lineno)
+           //if (curr_pos.lineno != pos.lineno)
         {
             //  If we're just one away, try to move forward one line
             //  Note: If there are consecutive blank lines, this might
@@ -466,9 +496,9 @@ class positional_printer
 
 public:
     //-----------------------------------------------------------------------
-    //  Destructor
+    //  Finalize
     //
-    ~positional_printer()
+    auto finalize()
     {
         flush_comments( {curr_pos.lineno+1, 1} );
 
@@ -485,6 +515,7 @@ public:
             print_extra("\n");
         }
     }
+
 
     //-----------------------------------------------------------------------
     //  Open
@@ -570,6 +601,7 @@ public:
             && "ICE: printer must be open before printing"
         );
         print( s );
+        printed_extra = true;
     }
 
 
@@ -583,9 +615,6 @@ public:
             is_open()
             && "ICE: printer must be open before printing"
         );
-
-        //  Keep track of whether the last thing we printed was Cpp2
-        last_was_cpp2 = false;
 
         //  Always start a Cpp1 line on its own new line
         ensure_at_start_of_new_line();
@@ -603,33 +632,6 @@ public:
         print( "\n" );
     }
 
-
-    //-----------------------------------------------------------------------
-    //  Start a new Cpp2 section, which should start at lineno
-    //
-    auto start_cpp2(lineno_t line)
-        -> void
-    {
-        assert(
-            is_open()
-            && "ICE: printer must be open before printing"
-        );
-
-        //  Because the blank/comment lines before a Cpp2 code section are part
-        //  of the Cpp2 section, and not printed in the pre-function-definitions passes
-        if (
-            !last_was_cpp2
-            && phase < phase2_func_defs
-            )
-        {
-            print ("\n");
-        }
-
-        //  Keep track of whether the last thing we printed was Cpp2
-        last_was_cpp2 = true;
-
-        reset_line_to(line);
-    }
 
     //-----------------------------------------------------------------------
     //  Used when we start a new Cpp2 section, or when we emit the same item
@@ -665,14 +667,6 @@ public:
             is_open()
             && "ICE: printer must be open before printing"
         );
-
-        //  Keep track of whether the last thing we printed was Cpp2
-        //  Note: We should have been switched to Cpp2 with a `start_cpp2` call
-        assert(
-            last_was_cpp2
-            && "ICE: didn't call start_cpp2 to begin a Cpp2 section"
-        );
-        last_was_cpp2 = true;
 
         //  Skip alignment work if we're capturing emitted text
         if (emit_target_stack.empty())
@@ -796,10 +790,6 @@ public:
         else {
             ignore_align        = false;
             ignore_align_indent = 0;
-            if (ignore_align_lineno != curr_pos.lineno) {
-                ensure_at_start_of_new_line();
-                print_line_directive(ignore_align_lineno+1);
-            }
             curr_pos.lineno     = ignore_align_lineno+1;  // pop state
         }
     }
@@ -1132,8 +1122,17 @@ public:
         auto map_iter = tokens.get_map().cbegin();
         auto hpp_includes = std::string{};
 
-        //  First, echo the non-Cpp2 parts
+
+
+
+        //  TODO: Do phase0_type_decls
+
+
+
+        
+        //  Do phase1_type_defs_func_decls
         //
+        assert (printer.get_phase() == positional_printer::phase1_type_defs_func_decls);
         for (
             lineno_t curr_lineno = 0;
             auto const& line : source.get_lines()
@@ -1210,10 +1209,6 @@ public:
                         auto decls = parser.get_parse_tree(map_iter->second);
                         for (auto& decl : decls) {
                             assert(decl);
-
-                            //  Treat each declaration as the start of a Cpp2 section (so we get #line)
-                            printer.start_cpp2( decl->position().lineno );
-//                            printer.start_cpp2( map_iter->first /*lineno*/);
                             emit(*decl);
                         }
                         ++map_iter;
@@ -1274,9 +1269,6 @@ public:
         {
             assert (!section.second.empty());
 
-            //  Tell the printer that we're starting a Cpp2 section
-            printer.start_cpp2( section.first /*lineno*/);
-
             //  Get the parse tree for this section and emit each forward declaration
             auto decls = parser.get_parse_tree(section.second);
             for (auto& decl : decls) {
@@ -1288,6 +1280,13 @@ public:
         if (cpp1_filename.back() == 'h') {
             printer.print_extra( "\n#endif" );
         }
+
+        //  Finally, some debug checks
+        printer.finalize();
+        assert(
+            tokens.num_unprinted_comments() == 0
+            && "ICE: not all comments were printed"
+        );
 
         return ret;
     }
@@ -1586,58 +1585,40 @@ public:
 
     auto emit_prolog_mem_inits(
         function_prolog const& prolog,
-        source_position        pos,
         colno_t                indent
     )
         -> void
     {
-        if (!prolog.mem_inits.empty())
-        {
-            printer.ignore_alignment( true, indent );
-            pos.colno = indent;
-            for (auto& line : prolog.mem_inits) {
-                printer.print_cpp2("\n", pos);
-                printer.print_cpp2(line, pos);
-            }
-            printer.ignore_alignment( false );
+        for (auto& line : prolog.mem_inits) {
+            printer.print_extra("\n");
+            printer.print_extra(pad(indent-1));
+            printer.print_extra(line);
         }
     }
 
     auto emit_prolog_statements(
         function_prolog const& prolog,
-        source_position        pos,
         colno_t                indent
     )
         -> void
     {
-        if (!prolog.statements.empty())
-        {
-            printer.ignore_alignment( true, indent );
-            pos.colno = indent;
-            for (auto& line : prolog.statements) {
-                printer.print_cpp2("\n", pos);
-                printer.print_cpp2(line, pos);
-            }
-            printer.ignore_alignment( false );
+        for (auto& line : prolog.statements) {
+            printer.print_extra("\n");
+            printer.print_extra(pad(indent-1));
+            printer.print_extra(line);
         }
     }
 
     auto emit_epilog_statements(
         std::vector<std::string> const& epilog,
-        source_position                 pos,
         colno_t                         indent
     )
         -> void
     {
-        if (!epilog.empty())
-        {
-            printer.ignore_alignment( true, indent );
-            pos.colno = indent;
-            for (auto& line : epilog) {
-                printer.print_cpp2("\n", pos);
-                printer.print_cpp2(line, pos);
-            }
-            printer.ignore_alignment( false );
+        for (auto& line : epilog) {
+            printer.print_extra("\n");
+            printer.print_extra(pad(indent-1));
+            printer.print_extra(line);
         }
     }
 
@@ -1650,14 +1631,11 @@ public:
     )
         -> void
     {
-        emit_prolog_mem_inits(function_prolog, n.position(), n.body_indent);
+        emit_prolog_mem_inits(function_prolog, n.body_indent);
 
-        auto pos = n.open_brace;
-        pos.lineno -= std::ssize(function_prolog.mem_inits );
-        pos.lineno -= std::ssize(function_prolog.statements);
-        printer.print_cpp2( "{", pos );
+        printer.print_cpp2( "{", n.open_brace );
 
-        emit_prolog_statements(function_prolog, n.position(), n.body_indent);
+        emit_prolog_statements(function_prolog, n.body_indent);
 
         for (auto const& x : n.statements) {
             assert(x);
@@ -1665,7 +1643,7 @@ public:
         }
 
         assert (!current_functions.empty());
-        emit_epilog_statements( function_epilog, n.position(), n.body_indent);
+        emit_epilog_statements( function_epilog, n.body_indent);
 
         printer.print_cpp2( "}", n.close_brace );
     }
@@ -3326,9 +3304,9 @@ public:
         assert(n.expr);
 
         if (function_body_start != source_position{}) {
-            emit_prolog_mem_inits(function_prolog, n.position(), 4);
+            emit_prolog_mem_inits(function_prolog, n.position().colno);
             printer.print_cpp2(" { ", function_body_start);
-            emit_prolog_statements(function_prolog, n.position(), 4);
+            emit_prolog_statements(function_prolog, n.position().colno);
             if (!function_void_ret) {
                 printer.print_cpp2("return ", n.position());
             }
@@ -3342,7 +3320,7 @@ public:
         }
 
         if (function_body_start != source_position{}) {
-            emit_epilog_statements( function_epilog, n.position(), 4);
+            emit_epilog_statements( function_epilog, n.position().colno);
             printer.print_cpp2(" }", n.position());
         }
     }

@@ -3,22 +3,25 @@
 
 #include "cpp2util.h"
 
-
 #line 2 "pure2-template-parameter-lists.cpp2"
 template<typename T, typename U> [[nodiscard]] auto f1(T const& t, U const& u) -> auto;
+
 #line 6 "pure2-template-parameter-lists.cpp2"
 template<typename T, typename U> [[nodiscard]] auto f2(T const& t, U const& u) -> auto;
+
 #line 10 "pure2-template-parameter-lists.cpp2"
 template<auto T, auto U> [[nodiscard]] auto f3() -> auto;
+
 #line 14 "pure2-template-parameter-lists.cpp2"
 template<cpp2::i8 T, cpp2::i16 U> [[nodiscard]] auto f4() -> auto;
+
 #line 18 "pure2-template-parameter-lists.cpp2"
 auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 1 "pure2-template-parameter-lists.cpp2"
 
+#line 2 "pure2-template-parameter-lists.cpp2"
 template<typename T, typename U> [[nodiscard]] auto f1(T const& t, U const& u) -> auto{
     return t + u; 
 }

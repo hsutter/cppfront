@@ -1795,6 +1795,21 @@ public:
 
 
     //-----------------------------------------------------------------------
+    //  num_unprinted_comments: The number of not-yet-printed comments
+    //
+    auto num_unprinted_comments()
+        -> int
+    {
+        auto ret = 0;
+        for (auto const& c : comments) {
+            if (!c.dbg_was_printed) {
+                ++ret;
+            }
+        }
+        return ret;
+    }
+
+    //-----------------------------------------------------------------------
     //  debug_print
     //
     auto debug_print(std::ostream& o) const
@@ -1812,7 +1827,7 @@ public:
         }
 
         o << "--- Comments\n";
-        for (auto const& [kind, start, end, text] : comments) {
+        for (auto const& [kind, start, end, text, dbg_ignore] : comments) {
             o << "    "
               << (kind == comment::comment_kind::line_comment ? "// " : "/* ")
               << "(" << start.lineno << "," << start.colno << ")"

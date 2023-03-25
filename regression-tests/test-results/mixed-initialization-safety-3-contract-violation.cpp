@@ -6,15 +6,16 @@
 
 #include "cpp2util.h"
 
-
 #line 5 "mixed-initialization-safety-3-contract-violation.cpp2"
 [[nodiscard]] auto main() -> int;
+
 #line 16 "mixed-initialization-safety-3-contract-violation.cpp2"
 auto fill(
     cpp2::out<std::string> x, 
     cpp2::in<std::string> value, 
     cpp2::in<int> count
     ) -> void;
+
 #line 26 "mixed-initialization-safety-3-contract-violation.cpp2"
 auto print_decorated(auto const& x) -> void;
 
@@ -27,8 +28,8 @@ bool flip_a_coin() {
 
 //=== Cpp2 definitions ==========================================================
 
-#line 4 "mixed-initialization-safety-3-contract-violation.cpp2"
 
+#line 5 "mixed-initialization-safety-3-contract-violation.cpp2"
 [[nodiscard]] auto main() -> int{
     cpp2::deferred_init<std::string> x; // note: uninitialized!
 
@@ -45,10 +46,10 @@ auto fill(
     cpp2::in<std::string> value, 
     cpp2::in<int> count
     ) -> void
-{   
-    cpp2::Default.expects(cpp2::cmp_greater_eq(CPP2_UFCS_0(ssize, value),count), "fill: value must contain at least count elements");
-#line 22 "mixed-initialization-safety-3-contract-violation.cpp2"
 
+{
+    cpp2::Default.expects(cpp2::cmp_greater_eq(CPP2_UFCS_0(ssize, value),count), "fill: value must contain at least count elements");
+#line 23 "mixed-initialization-safety-3-contract-violation.cpp2"
     x.construct(CPP2_UFCS(substr, value, 0, count));
 }
 

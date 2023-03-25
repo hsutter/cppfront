@@ -9,14 +9,13 @@ constexpr int a = 1;
 
 #include "cpp2util.h"
 
-
 #line 8 "mixed-test-parens.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 7 "mixed-test-parens.cpp2"
 
+#line 8 "mixed-test-parens.cpp2"
 [[nodiscard]] auto main() -> int{
     std::vector<int> v {1, 2, 3}; 
     std::cout << (1 + 2) * (3 + cpp2::assert_in_bounds(std::move(v), 0));

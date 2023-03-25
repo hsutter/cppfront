@@ -3,23 +3,24 @@
 
 #include "cpp2util.h"
 
-
 #line 2 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
 class myclass;
+
 #line 39 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
 auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 1 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
 
+#line 2 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
 class myclass   {
 
     public: explicit myclass(myclass const& that)
         : name{ that.name }
         , addr{ that.addr }
-#line 5 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
-{       std::cout << "ctor - copy (GENERAL)";
+#line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+                                {
+        std::cout << "ctor - copy (GENERAL)";
     }
 #line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     public: auto operator=(myclass const& that) -> myclass& {
@@ -34,8 +35,9 @@ class myclass   {
     public: explicit myclass(myclass&& that)
         : name{ std::move(that).name }
         , addr{ std::move(that).addr }
-#line 5 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
-{       std::cout << "ctor - copy (GENERAL)";
+#line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+                                {
+        std::cout << "ctor - copy (GENERAL)";
     }
 #line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     public: auto operator=(myclass&& that) -> myclass& {
@@ -63,16 +65,16 @@ class myclass   {
 
     public: explicit myclass(cpp2::in<std::string> x)
         : name{ x }
-#line 23 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
-{
+#line 22 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+                                          {
+
         std::cout << "ctor - from string   ";
     }
 #line 22 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     public: auto operator=(cpp2::in<std::string> x) -> myclass& {
         name = x;
         addr = "123 Ford Dr.";
-#line 23 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
-
+#line 24 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
         std::cout << "ctor - from string   ";
         return *this;
 #line 25 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"

@@ -21,10 +21,10 @@ struct C {
 
 #include "cpp2util.h"
 
-
 #line 22 "mixed-out-destruction.cpp2"
 auto f00() -> void;
 auto f01(cpp2::out<X> x) -> void;
+
 #line 27 "mixed-out-destruction.cpp2"
 auto f10() -> void;
 auto f11(cpp2::out<X> x) -> void;
@@ -41,10 +41,11 @@ int main() {
 
 //=== Cpp2 definitions ==========================================================
 
-#line 19 "mixed-out-destruction.cpp2"
 
+#line 20 "mixed-out-destruction.cpp2"
 //-------------------------------------------------------
 // 0x: Test one level of out and immediate throw
+#line 22 "mixed-out-destruction.cpp2"
 auto f00() -> void     {   C c {"f00"}; cpp2::deferred_init<X> x; f01(&x);}
 auto f01(cpp2::out<X> x) -> void{C c {"f01"}; x.construct();throw_1();}
 

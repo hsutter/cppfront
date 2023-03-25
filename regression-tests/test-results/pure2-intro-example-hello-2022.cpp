@@ -3,11 +3,12 @@
 
 #include "cpp2util.h"
 
-
 #line 1 "pure2-intro-example-hello-2022.cpp2"
 [[nodiscard]] auto main() -> int;
+
 #line 12 "pure2-intro-example-hello-2022.cpp2"
 [[nodiscard]] auto decorate(auto& thing) -> int;
+
 #line 17 "pure2-intro-example-hello-2022.cpp2"
 auto println(auto const& x, auto const& len) -> void;
 

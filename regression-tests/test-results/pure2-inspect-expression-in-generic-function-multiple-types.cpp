@@ -3,9 +3,9 @@
 
 #include "cpp2util.h"
 
-
 #line 1 "pure2-inspect-expression-in-generic-function-multiple-types.cpp2"
 [[nodiscard]] auto main() -> int;
+
 #line 20 "pure2-inspect-expression-in-generic-function-multiple-types.cpp2"
 auto test_generic(auto const& x, auto const& msg) -> void;
 

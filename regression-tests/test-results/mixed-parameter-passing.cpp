@@ -7,23 +7,23 @@
 
 #include "cpp2util.h"
 
-
 #line 6 "mixed-parameter-passing.cpp2"
 auto copy_from(auto x) -> void;
-#line 8 "mixed-parameter-passing.cpp2"
+
 auto parameter_styles(
     cpp2::in<std::string> a, 
     std::string b, 
     std::string& c, 
     std::string&& d
     ) -> void;
+
 #line 40 "mixed-parameter-passing.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 5 "mixed-parameter-passing.cpp2"
 
+#line 6 "mixed-parameter-passing.cpp2"
 auto copy_from(auto x) -> void{}
 
 auto parameter_styles(

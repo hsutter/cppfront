@@ -20,14 +20,13 @@ constexpr auto empty = [](auto&& x){
 
 #include "cpp2util.h"
 
-
 #line 19 "mixed-inspect-values-2.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 18 "mixed-inspect-values-2.cpp2"
 
+#line 19 "mixed-inspect-values-2.cpp2"
 [[nodiscard]] auto main() -> int{
     auto i {15}; 
 

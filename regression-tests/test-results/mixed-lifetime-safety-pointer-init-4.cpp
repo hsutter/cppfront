@@ -6,9 +6,9 @@
 
 #include "cpp2util.h"
 
-
 #line 5 "mixed-lifetime-safety-pointer-init-4.cpp2"
 [[nodiscard]] auto main() -> int;
+
 #line 21 "mixed-lifetime-safety-pointer-init-4.cpp2"
 auto print_and_decorate(auto const& thing) -> void;
 #line 23 "mixed-lifetime-safety-pointer-init-4.cpp2"
@@ -21,8 +21,8 @@ bool flip_a_coin() {
 
 //=== Cpp2 definitions ==========================================================
 
-#line 4 "mixed-lifetime-safety-pointer-init-4.cpp2"
 
+#line 5 "mixed-lifetime-safety-pointer-init-4.cpp2"
 [[nodiscard]] auto main() -> int{
     int x {42}; 
     int y {43}; 

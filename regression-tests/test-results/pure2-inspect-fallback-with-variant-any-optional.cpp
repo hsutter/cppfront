@@ -3,16 +3,16 @@
 
 #include "cpp2util.h"
 
-
 #line 2 "pure2-inspect-fallback-with-variant-any-optional.cpp2"
 [[nodiscard]] auto main() -> int;
+
 #line 14 "pure2-inspect-fallback-with-variant-any-optional.cpp2"
 auto test_generic(auto const& x, auto const& msg) -> void;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 1 "pure2-inspect-fallback-with-variant-any-optional.cpp2"
 
+#line 2 "pure2-inspect-fallback-with-variant-any-optional.cpp2"
 [[nodiscard]] auto main() -> int{
     std::variant<int,int,std::string> v {cpp2::as_<std::string>("xyzzy")}; 
     std::any a {cpp2::as_<std::string>("xyzzy")}; 

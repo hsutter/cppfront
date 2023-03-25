@@ -8,14 +8,13 @@
 
 #include "cpp2util.h"
 
-
 #line 7 "mixed-function-expression-and-std-for-each.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 definitions ==========================================================
 
-#line 6 "mixed-function-expression-and-std-for-each.cpp2"
 
+#line 7 "mixed-function-expression-and-std-for-each.cpp2"
 [[nodiscard]] auto main() -> int{
     std::vector<std::string> vec {
                "hello", "2022"}; 
