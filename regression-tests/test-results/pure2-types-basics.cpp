@@ -6,7 +6,10 @@
 
 #line 2 "pure2-types-basics.cpp2"
 namespace N   {
+
 class myclass;
+
+#line 60 "pure2-types-basics.cpp2"
 };
 #line 62 "pure2-types-basics.cpp2"
 auto main() -> int;
@@ -33,7 +36,7 @@ class myclass   {
         more = std::to_string(42 * 12);
 #line 7 "pure2-types-basics.cpp2"
 
-
+#line 9 "pure2-types-basics.cpp2"
         std::cout << "myclass: implicit from int\n";
         print();
         return *this;
@@ -55,7 +58,7 @@ class myclass   {
         more = s;
 #line 14 "pure2-types-basics.cpp2"
 
-
+#line 16 "pure2-types-basics.cpp2"
         std::cout << "myclass: explicit from string\n";
         print();
         return *this;

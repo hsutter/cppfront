@@ -13,3 +13,4 @@ auto main() -> int
     auto s = std::string{"world\n"};
     std::cout << "Hello " << s;
 }
+

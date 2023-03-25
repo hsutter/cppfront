@@ -20,7 +20,7 @@
    cpp2::Bounds.expects(!(std::empty(rng)), "");
 #line 3 "pure2-forward-return.cpp2"
 
-
+#line 5 "pure2-forward-return.cpp2"
     return *cpp2::assert_not_null(std::begin(CPP2_FORWARD(rng))); }
 
 int const global {42}; 

@@ -195,9 +195,12 @@ class positional_printer
     std::string                 cpp2_filename = {};
     std::string                 cpp1_filename = {};
     std::vector<comment> const* pcomments     = {}; // Cpp2 comments data
+    cpp2::parser const*         pparser       = {};
 
     source_position curr_pos                  = {}; // current (line,col) in output
     int             next_comment              = 0;  // index of the next comment not yet printed
+    bool            last_was_empty            = false;
+    int             empty_lines_suppressed    = 0;
     bool            last_was_cpp2             = false;
     bool            source_has_cpp2           = false;
 
@@ -234,6 +237,7 @@ class positional_printer
         break;case phase1_type_defs_func_decls: phase = phase2_func_defs;
         break;default                         : assert(!"ICE: invalid lowering phase");
         }
+        next_comment = 0;   // start over with the comments
     }
 
     std::vector<std::string*>                emit_string_targets;       // option to emit to string instead of out file
@@ -273,6 +277,35 @@ class positional_printer
 
         //  Otherwise, we'll actually print the string to the output file
         //  and update our curr_pos position
+
+        //  Reject consecutive empty lines: If this line is empty
+        if (
+            s == "\n"
+            && curr_pos.colno <= 1
+            )
+        {
+            //  And so was the last one, update logical position only
+            //  and increment empty_lines_suppressed instead of printing
+            if (last_was_empty) {
+                ++curr_pos.lineno;
+                curr_pos.colno = 1;
+                ++empty_lines_suppressed;
+                return;
+            }
+            //  If this is the first consecutive empty, remember and continue
+            last_was_empty = true;
+        }
+        //  Otherwise, if this line is not empty
+        else {
+            //  Remember that this line was not empty
+            last_was_empty = false;
+
+            //  And if we did suppress any empties, emit a #line to resync
+            if (empty_lines_suppressed > 0) {
+                print_line_directive(curr_pos.lineno);
+                empty_lines_suppressed = 0;
+            }
+        }
 
         //  Output the string
         assert (out);
@@ -345,41 +378,38 @@ class positional_printer
 
         //  For convenience
         auto& comments = *pcomments;
-
-        //  Don't emit comments while in the first declarations-only pass
-        if (phase < phase2_func_defs) {
-            return;
-        }
-
+        
         //  Add unprinted comments and blank lines as needed to catch up vertically
         //
         while (curr_pos.lineno < pos.lineno)
         {
             //  If a comment goes on this line, print it
-            assert(
-                next_comment >= std::ssize(comments)
-                || comments[next_comment].start.lineno >= curr_pos.lineno
-            );
             if (
                 next_comment < std::ssize(comments)
                 && comments[next_comment].start.lineno == curr_pos.lineno
                 )
             {
-                //  For a line comment, start it at the right indentation and print it
-                //  with a newline end
-                if (comments[next_comment].kind == comment::comment_kind::line_comment) {
-                    print( pad( comments[next_comment].start.colno - curr_pos.colno + 1 ) );
-                    print( comments[next_comment].text );
-                    assert( comments[next_comment].text.find("\n") == std::string::npos );  // we shouldn't have newlines
-                    print("\n");
-                }
+                assert(pparser);
+                if (
+                        phase == phase2_func_defs
+                    )
+                {
+                    //  For a line comment, start it at the right indentation and print it
+                    //  with a newline end
+                    if (comments[next_comment].kind == comment::comment_kind::line_comment) {
+                        print( pad( comments[next_comment].start.colno - curr_pos.colno + 1 ) );
+                        print( comments[next_comment].text );
+                        assert( comments[next_comment].text.find("\n") == std::string::npos );  // we shouldn't have newlines
+                        print("\n");
+                    }
 
-                //  For a stream comment, pad out to its column (if we haven't passed it already)
-                //  and emit it there
-                else {
-                    print( pad( comments[next_comment].start.colno - curr_pos.colno ) );
-                    print( comments[next_comment].text );
-                    assert(curr_pos.lineno <= pos.lineno);  // we shouldn't have overshot
+                    //  For a stream comment, pad out to its column (if we haven't passed it already)
+                    //  and emit it there
+                    else {
+                        print( pad( comments[next_comment].start.colno - curr_pos.colno ) );
+                        print( comments[next_comment].text );
+                        assert(curr_pos.lineno <= pos.lineno);  // we shouldn't have overshot
+                    }
                 }
 
                 ++next_comment;
@@ -410,11 +440,20 @@ class positional_printer
         //  Catch up with displaying comments
         flush_comments( pos );
 
-        //  If we're not on the right line, move forward one line
-        if (curr_pos.lineno < pos.lineno) {
-            ensure_at_start_of_new_line();
-            assert (curr_pos.lineno <= pos.lineno);
-            curr_pos.lineno = pos.lineno;   // re-sync
+        //  If we're not on the right line
+        if (curr_pos.lineno < pos.lineno)
+        {
+            //  If we're just one away, try to move forward one line
+            //  Note: If there are consecutive blank lines, this might
+            //  get ignored, so we will repeat the "!= lineno" again...
+            if (curr_pos.lineno == pos.lineno - 1) {
+                print( "\n" );
+            }
+            //  ...here:
+            if (curr_pos.lineno != pos.lineno) {
+                print_line_directive(pos.lineno);
+            }
+            curr_pos.lineno = pos.lineno;
         }
 
         //  Finally, align to the target column
@@ -454,6 +493,7 @@ public:
         std::string                 cpp2_filename_,
         std::string                 cpp1_filename_,
         std::vector<comment> const& comments,
+        cpp2::parser const&         parser,
         bool                        has_cpp2
     )
         -> void
@@ -474,6 +514,7 @@ public:
             out = &out_file;
         }
         pcomments = &comments;
+        pparser   = &parser;
     }
 
     auto reopen()
@@ -575,7 +616,7 @@ public:
         );
 
         //  Because the blank/comment lines before a Cpp2 code section are part
-        //  of the Cpp2 section, and not printed in thedeclarations-only pass
+        //  of the Cpp2 section, and not printed in the pre-function-definitions passes
         if (
             !last_was_cpp2
             && phase < phase2_func_defs
@@ -587,14 +628,14 @@ public:
         //  Keep track of whether the last thing we printed was Cpp2
         last_was_cpp2 = true;
 
-        reset_cpp2_line_to(line);
+        reset_line_to(line);
     }
 
     //-----------------------------------------------------------------------
     //  Used when we start a new Cpp2 section, or when we emit the same item
     //  more than once (notably when we emit operator= more than once)
     //
-    auto reset_cpp2_line_to(lineno_t line)
+    auto reset_line_to(lineno_t line)
         -> void
     {
         //  Always start a Cpp2 section on its own new line
@@ -1050,6 +1091,7 @@ public:
             sourcefile,
             cpp1_filename,
             tokens.get_comments(),
+            parser,
             source.has_cpp2()
         );
         if (!printer.is_open()) {
@@ -1171,6 +1213,7 @@ public:
 
                             //  Treat each declaration as the start of a Cpp2 section (so we get #line)
                             printer.start_cpp2( decl->position().lineno );
+//                            printer.start_cpp2( map_iter->first /*lineno*/);
                             emit(*decl);
                         }
                         ++map_iter;
@@ -1232,9 +1275,6 @@ public:
             assert (!section.second.empty());
 
             //  Tell the printer that we're starting a Cpp2 section
-            //  This time, we use the actual first start line of the section which includes
-            //  the blank/comment lines at the beginning if any (whereas in the first pass
-            //  we used the line of the first Cpp2 token in the section to skip blanks/comments)
             printer.start_cpp2( section.first /*lineno*/);
 
             //  Get the parse tree for this section and emit each forward declaration
@@ -4246,8 +4286,8 @@ public:
     )
         -> void
     {
-        auto need_to_generate_assignment       = false;
-        auto need_to_generate_move = false;
+        auto need_to_generate_assignment = false;
+        auto need_to_generate_move       = false;
 
         if (
             n.is_function()
@@ -4811,7 +4851,7 @@ public:
             }
 
             //  Then reposition and do the recursive call
-            printer.reset_cpp2_line_to(n.position().lineno);
+            printer.reset_line_to(n.position().lineno);
             generating_assignment_from = &n;
             emit( n, capture_intro );
             generating_assignment_from = {};
@@ -4827,7 +4867,7 @@ public:
             }
 
             //  Then reposition and do the recursive call
-            printer.reset_cpp2_line_to(n.position().lineno);
+            printer.reset_line_to(n.position().lineno);
             generating_move_from = &n;
             emit( n, capture_intro );
             generating_move_from = {};
@@ -4900,18 +4940,17 @@ public:
         //
         if (source_loaded)
         {
-            auto out_source     = std::ofstream{ sourcefile+"-source"  };
-            source.debug_print( out_source     );
+            auto out_source  = std::ofstream{ sourcefile+"-source"  };
+            source.debug_print( out_source );
 
-            auto out_tokens     = std::ofstream{ sourcefile+"-tokens"  };
-            tokens.debug_print( out_tokens     );
+            auto out_tokens  = std::ofstream{ sourcefile+"-tokens"  };
+            tokens.debug_print( out_tokens );
 
-            auto out_parse      = std::ofstream{ sourcefile+"-parse"   };
-            auto tree_printer   = parse_tree_printer{out_parse  };
-            parser.visit      ( tree_printer   );
+            auto out_parse   = std::ofstream{ sourcefile+"-parse"   };
+            parser.debug_print( out_parse );
 
-            auto out_symbols    = std::ofstream{ sourcefile+"-symbols" };
-            sema.debug_print  ( out_symbols    );
+            auto out_symbols = std::ofstream{ sourcefile+"-symbols" };
+            sema.debug_print  ( out_symbols );
         }
     }
 

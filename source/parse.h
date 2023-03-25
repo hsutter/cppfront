@@ -2293,11 +2293,11 @@ class parser
 
         function_body_extent( lineno_t f, lineno_t l ): first{f}, last{l} { }
     };
-    std::vector<function_body_extent> function_body_extents;
-    bool                              is_function_body_extents_sorted = false;
+    mutable std::vector<function_body_extent> function_body_extents;
+    mutable bool                              is_function_body_extents_sorted = false;
 
 public:
-    auto is_within_function_body(source_position p)
+    auto is_within_function_body(source_position p) const
     {
         //  Ensure we are sorted
         if (!is_function_body_extents_sorted) {
@@ -5293,6 +5293,12 @@ private:
         return n;
     }
 
+public:
+    //-----------------------------------------------------------------------
+    //  debug_print
+    //
+    auto debug_print(std::ostream& o)
+        -> void;
 };
 
 
@@ -5580,6 +5586,23 @@ public:
         //  Ignore other node types
     }
 };
+
+
+auto parser::debug_print(std::ostream& o)
+
+    -> void
+{
+    o << "\n\n--- Parse tree\n";
+
+    auto tree_printer = parse_tree_printer{o};
+    visit( tree_printer );
+
+    o << "\n\n--- Function body extents\n";
+
+    for (auto const& f : function_body_extents) {
+        o << "    " << f.first << "-" << f.last << "\n";
+    }
+}
 
 
 //-----------------------------------------------------------------------
