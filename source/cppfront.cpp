@@ -4643,6 +4643,8 @@ public:
                 }
             }
 
+            //  *** LOCATION (A) -- SEE NOTE REGARDING (A) BELOW
+
             //  End function declaration
             if (printer.doing_declarations_only()) {
                 printer.print_cpp2( ";\n", n.position() );
@@ -4731,7 +4733,17 @@ public:
 
             printer.preempt_position_push( n.equal_sign );
 
-            //  Handle requires expression - an explicit one plus any generated
+            //  *** NOTE: This branch to emit the requires-clause should maybe be
+            //            moved to location (A) above, so that it's also emitted
+            //            on the function declaration. But doing that triggers a
+            //            bug in GCC 10.x (that was fixed in 11.x), and 10.x is
+            //            my main test compiler and works for everything else,
+            //            and moving it up there would break 'forward' parameters
+            //            with concrete types on GCC 10.x.
+            //            So I'm not yet moving this code up to the declaration,
+            //            given that so far things appear to be working well enough
+            //            with the requires-clause on the function definition only...
+            //  Handle requires clause - an explicit one plus any generated
             //  from processing the parameters
             if (
                 n.requires_clause_expression
