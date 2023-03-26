@@ -1,9 +1,0 @@
-vals: () -> (i : int) = {
-    i = 42;
-    return;
-}
-
-main: () -> int = {
-    v := vals();
-    v.i;
-}

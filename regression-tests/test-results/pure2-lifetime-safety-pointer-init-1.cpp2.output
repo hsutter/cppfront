@@ -1,4 +1,0 @@
-pure2-lifetime-safety-pointer-init-1.cpp2...
-pure2-lifetime-safety-pointer-init-1.cpp2(14,25): error: local variable p is used before it was initialized
-  ==> program violates initialization safety guarantee - see previous errors
-

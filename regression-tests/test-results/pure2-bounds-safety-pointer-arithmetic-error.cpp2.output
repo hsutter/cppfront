@@ -1,9 +1,0 @@
-pure2-bounds-safety-pointer-arithmetic-error.cpp2...
-pure2-bounds-safety-pointer-arithmetic-error.cpp2(15,13): error: 'delete' and owning raw pointers are not supported in Cpp2
-pure2-bounds-safety-pointer-arithmetic-error.cpp2(15,13): error:   - use unique.new<T>, shared.new<T>, or gc.new<T> instead (in that order)
-pure2-bounds-safety-pointer-arithmetic-error.cpp2(15,16): error: expected ; at end of statement (at 'first')
-pure2-bounds-safety-pointer-arithmetic-error.cpp2(15,16): error: invalid statement in compound-statement (at 'first')
-pure2-bounds-safety-pointer-arithmetic-error.cpp2(15,16): error: invalid while loop body (at 'first')
-pure2-bounds-safety-pointer-arithmetic-error.cpp2(17,1): error: unexpected text at end of Cpp2 code section (at '}')
-pure2-bounds-safety-pointer-arithmetic-error.cpp2(1,0): error: parse failed for section starting here
-
