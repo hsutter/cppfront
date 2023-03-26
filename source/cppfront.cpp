@@ -4733,18 +4733,26 @@ public:
 
             printer.preempt_position_push( n.equal_sign );
 
-            //  *** NOTE: This branch to emit the requires-clause should maybe be
-            //            moved to location (A) above, so that it's also emitted
-            //            on the function declaration. But doing that triggers a
-            //            bug in GCC 10.x (that was fixed in 11.x), and 10.x is
-            //            my main test compiler and works for everything else,
-            //            and moving it up there would break 'forward' parameters
-            //            with concrete types on GCC 10.x.
-            //            So I'm not yet moving this code up to the declaration,
-            //            given that so far things appear to be working well enough
-            //            with the requires-clause on the function definition only...
-            //  Handle requires clause - an explicit one plus any generated
-            //  from processing the parameters
+            //  *** NOTE =====================================================
+            // 
+            //      This branch to emit the requires-clause should maybe be
+            //      moved to location (A) above, so that it's also emitted
+            //      on the function declaration. But moving it to (A) triggers
+            //      a bug in GCC 10.x (that was fixed in 11.x), where it would
+            //      break using a 'forward' parameter of a concrete type and
+            //      also explicitly user-written requires-clauses that do
+            //      similar decltype tests.
+            // 
+            //      I don't want to neednessly break compatibility with a
+            //      decently conforming C++20 compiler that works well for
+            //      everything else that Cpp2 needs from C++20. If the
+            //      'requires' down here doesn't cause a problem, I'll keep
+            //      it here for now... if we do encounter a reason it needs to
+            //      also be on the declaration, move this code to (A).
+            // 
+            //  Handle requires clause - an explicit one the user wrote,
+            //  and/or any conditions we generated while processing the
+            //  parameters (i.e., forwarding a concrete type)
             if (
                 n.requires_clause_expression
                 || !function_requires_conditions.empty()
@@ -4772,6 +4780,7 @@ public:
                 function_requires_conditions = {};
                 printer.ignore_alignment( false );
             }
+            //  *** END NOTE =================================================
 
             emit(
                 *n.initializer,
