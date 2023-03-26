@@ -36,14 +36,14 @@ auto use(auto const& x) -> void{}
 
 // invoking each of these with an rvalue std::pair argument ...
 auto apply_implicit_forward(auto&& t) -> void
-requires std::is_same_v<CPP2_TYPEOF(t), std::pair<X,X>>
+requires (std::is_same_v<CPP2_TYPEOF(t), std::pair<X,X>>)
 #line 16 "mixed-forwarding.cpp2"
                                                      {
     copy_from(t.first);             // copies
     copy_from(CPP2_FORWARD(t).second);// moves
 }
 auto apply_explicit_forward(auto&& t) -> void
-requires std::is_same_v<CPP2_TYPEOF(t), std::pair<X,X>>
+requires (std::is_same_v<CPP2_TYPEOF(t), std::pair<X,X>>)
 #line 20 "mixed-forwarding.cpp2"
                                                      {
     copy_from(        CPP2_FORWARD(t).first);// moves

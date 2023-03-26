@@ -4256,6 +4256,7 @@ public:
         }
     }
 
+
     //-----------------------------------------------------------------------
     //
     auto emit(
@@ -4337,6 +4338,12 @@ public:
         //  User-defined type
         if (n.is_type())
         {
+            if (n.requires_clause_expression) {
+                printer.print_cpp2("requires( ", n.requires_pos);
+                emit(*n.requires_clause_expression);
+                printer.print_cpp2(")\n", n.requires_pos);
+            }
+
             printer.print_cpp2("class ", n.position());
             emit(*n.identifier);
 
@@ -4636,7 +4643,7 @@ public:
                 }
             }
 
-            //  Function declaration
+            //  End function declaration
             if (printer.doing_declarations_only()) {
                 printer.print_cpp2( ";\n", n.position() );
                 return;
@@ -4724,28 +4731,32 @@ public:
 
             printer.preempt_position_push( n.equal_sign );
 
-            // TODO: something like this to get rid of extra blank lines
-            //       inside the start of bodies of functions that have
-            //       multiple contracts
-            //printer.skip_lines( std::ssize(current_functions.back().prolog.statements) );
-
-            //  If processing the parameters generated any requires conditions,
-            //  emit them here
-            if (!function_requires_conditions.empty()) {
-                printer.ignore_alignment( true, n.position().colno + 4 );
+            //  Handle requires expression - an explicit one plus any generated
+            //  from processing the parameters
+            if (
+                n.requires_clause_expression
+                || !function_requires_conditions.empty()
+                )
+            {
                 printer.print_extra("\n");
-                auto is_multi_fwd = function_requires_conditions.size() > 1;
-                printer.print_extra("requires ");
-                if (is_multi_fwd) {
-                    printer.print_extra("(");
+                printer.ignore_alignment( true, n.position().colno + 4 );
+                printer.print_extra("requires (");
+
+                if (n.requires_clause_expression) {
+                    emit(*n.requires_clause_expression);
+                    if (!function_requires_conditions.empty()) {
+                        printer.print_extra(" && ");
+                    }
                 }
-                printer.print_extra(function_requires_conditions.front());
-                for (auto it = std::cbegin(function_requires_conditions)+1; it != std::cend(function_requires_conditions); ++it) {
-                    printer.print_extra(" && " + *it);
+
+                if (!function_requires_conditions.empty()) {
+                    printer.print_extra(function_requires_conditions.front());
+                    for (auto it = std::cbegin(function_requires_conditions)+1; it != std::cend(function_requires_conditions); ++it) {
+                        printer.print_extra(" && " + *it);
+                    }
                 }
-                if (is_multi_fwd) {
-                    printer.print_extra(")");
-                }
+
+                printer.print_extra(")");
                 function_requires_conditions = {};
                 printer.ignore_alignment( false );
             }

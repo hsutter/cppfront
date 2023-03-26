@@ -1,0 +1,21 @@
+
+X:  <T: type, U: type>
+    type
+    requires std::is_same_v<T, int>
+              && std::is_same_v<U, int>
+= {
+    operator=: (out this) = { }
+}
+
+f:  <T: type, U: type>
+    (forward a: int, forward b: int) -> int
+    requires std::is_same_v<T, int>
+              && std::is_same_v<U, int>
+= {
+    return a * b;
+}
+
+main: () = {
+    x: X<int,int> = ();
+    std::cout << f<int,int>(2,5);
+}

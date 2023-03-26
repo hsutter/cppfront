@@ -1509,6 +1509,8 @@ struct declaration_node
     > type;
 
     std::unique_ptr<parameter_declaration_list_node> template_parameters;
+    source_position                                  requires_pos = {};
+    std::unique_ptr<expression_node>                 requires_clause_expression;
 
     source_position                 equal_sign = {};
     std::unique_ptr<statement_node> initializer;
@@ -2827,6 +2829,10 @@ private:
             {
                 typename Binary::term t{};
 
+                //  Remember current position, because we may need to backtrack if this next
+                //  t.op might be valid but isn't followed by a valid term and so isn't for us
+                auto term_pos = pos;
+
                 //  Most of these predicates only look at the current token and return
                 //  true/false == whether this is a valid operator for this production
                 if constexpr( requires{ bool{ validate_op(curr()) }; } ) {
@@ -2860,11 +2866,16 @@ private:
                     assert (!"ICE: validate_op should take one token and return bool, or two tokens and return token const* ");
                 }
 
-                //  At this point we have a valid t.op, so try to parse the next term
+                //  At this point we may have a valid t.op, so try to parse the next term...
+                //  If it's not a valid term, then this t.op wasn't for us, pop it and return
+                //  what we found (e.g., with "requires expression = {...}" the = is a grammar
+                //  element and not an operator, it isn't and can't be part of the expression)
                 if ( !(t.expr = term()) ) {
-                    error("invalid expression after " + peek(-1)->to_string(true), true, {}, true);
+                    pos = term_pos;    // backtrack
                     return n;
                 }
+
+                //  We got a term, so this op + term was for us
                 n->terms.push_back( std::move(t) );
             }
             return n;
@@ -4646,11 +4657,14 @@ private:
 
 
     //G unnamed-declaration:
-    //G     ':' template-parameter-declaration-list? function-type '=' statement
-    //G     ':' template-parameter-declaration-list? type-id? '=' statement
+    //G     ':' template-parameter-declaration-list? function-type requires-clause? '=' statement
+    //G     ':' template-parameter-declaration-list? type-id? requires-clause? '=' statement
     //G     ':' template-parameter-declaration-list? type-id
-    //G     ':' template-parameter-declaration-list? 'type' meta-constraints? '=' statement
+    //G     ':' template-parameter-declaration-list? 'type' meta-constraints? requires-clause? '=' statement
     //G     ':' 'namespace' '=' statement
+    //G
+    //G requires-clause:
+    //G     'requires' expression
     //G
     //G template-parameter-declaration-list
     //G     '<' parameter-declaration-seq '>'
@@ -4823,6 +4837,18 @@ private:
             n->type = std::make_unique<type_id_node>();
             assert (n->is_object());
             deduced_type = true;
+        }
+
+        //  Next is optionally a requires clause
+        if (curr() == "requires") {
+            n->requires_pos = curr().position();
+            next();
+            auto e = expression();
+            if (!e) {
+                error("'requires' must be followed by an expression");
+                return {};
+            }
+            n->requires_clause_expression = std::move(e);
         }
 
         //  Next is optionally = followed by an initializer
