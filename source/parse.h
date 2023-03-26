@@ -2299,6 +2299,12 @@ class parser
 public:
     auto is_within_function_body(source_position p) const
     {
+        //  Short circuit the empty case, so that the rest of the function
+        //  can unconditionally decrement any non-.begin() iterator once
+        if (function_body_extents.empty()) {
+            return false;
+        }
+
         //  Ensure we are sorted
         if (!is_function_body_extents_sorted) {
             std::sort(
@@ -2308,18 +2314,22 @@ public:
             is_function_body_extents_sorted = true;
         }
 
-        //  Find the first entry that is beyond pos
+        //  Find the first entry that is beyond pos, and back up one to
+        //  the last that could be a match; this also ensures iter is
+        //  dereferenceable, not .end()
         auto iter = std::lower_bound(
             function_body_extents.begin(),
             function_body_extents.end(),
             p.lineno+1
         );
+        if (iter != function_body_extents.begin()) {
+            --iter;
+        }
 
         //  Now go backwards through the preceding entries until
         //  one includes pos or we move before pos
         while (
-            iter != function_body_extents.end()
-            && iter->last >= p.lineno
+            iter->last >= p.lineno
             )
         {
             if (
