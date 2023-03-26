@@ -373,7 +373,9 @@ auto expand_string_literal(
     ++pos;
     auto current_start = pos;   // the current offset before which the string has been added to ret
 
-    auto parts = string_parts{"\"", "\"", string_parts::on_both_ends};
+    auto parts = string_parts{std::string(text.substr(0, current_start)), // begin sequence ", U", u8" depends on the string type 
+                              "\"", // end sequence
+                              string_parts::on_both_ends}; // add opening and closing sequence to generated string
 
     //  Now we're on the first character of the string itself
     for (
