@@ -195,6 +195,7 @@ class positional_printer
     std::string                 cpp2_filename   = {};
     std::string                 cpp1_filename   = {};
     std::vector<comment> const* pcomments       = {}; // Cpp2 comments data
+    cpp2::source const*         psource         = {};
     cpp2::parser const*         pparser         = {};
                                                 
     source_position curr_pos                    = {}; // current (line,col) in output
@@ -202,8 +203,8 @@ class positional_printer
     bool            last_was_empty              = false;
     int             empty_lines_suppressed      = 0;
     bool            just_printed_line_directive = false;
-    bool            source_has_cpp2             = false;
     bool            printed_extra               = false;
+    char            last_printed_char           = {};
 
     struct req_act_info {
         colno_t requested;
@@ -262,6 +263,10 @@ private:
     )
         -> void
     {
+        if (s.length() > 0) {
+            last_printed_char = s.back();
+        }
+
         //  Take ownership of (and reset) just_printed_line_directive value
         auto line_directive_already_done = std::exchange(just_printed_line_directive, false);
 
@@ -452,6 +457,8 @@ private:
     auto align_to( source_position pos )
         -> void
     {
+        auto on_same_line = curr_pos.lineno == pos.lineno;
+
         //  Ignoring this logic is used when we're generating new code sections,
         //  such as return value structs
         if (ignore_align) {
@@ -473,13 +480,9 @@ private:
         else if (curr_pos.lineno < pos.lineno)
            //if (curr_pos.lineno != pos.lineno)
         {
-            //  If we're just one away, try to move forward one line
-            //  Note: If there are consecutive blank lines, this might
-            //  get ignored, so we will repeat the "!= lineno" again...
-            if (curr_pos.lineno == pos.lineno - 1) {
-                print( "\n" );
-            }
-            //  ...here:
+            //  In case we're just one away, try a blank line
+            //  (this might get ignored and we'll get the line directive)
+            print( "\n" );
             if (curr_pos.lineno != pos.lineno) {
                 print_line_directive(pos.lineno);
             }
@@ -487,9 +490,40 @@ private:
         }
 
         //  Finally, align to the target column
-        if (curr_pos.lineno == pos.lineno) {
-            pos.colno = std::max( 1, pos.colno + pad_for_this_line );
-            print( pad( pos.colno - curr_pos.colno ) );
+        assert (
+            psource
+            && 0 <= curr_pos.lineno
+            && curr_pos.lineno < std::ssize(psource->get_lines())
+        );
+        if (curr_pos.lineno == pos.lineno)
+        {
+            //  If this line was originally densely spaced (had <2 whitespace
+            //  between all tokens), then the programmer likely wasn't doing a lot
+            //  of special formatting...
+            if (psource->get_lines()[curr_pos.lineno].all_tokens_are_densely_spaced)
+            {
+                //  For the first token in a line, use the line's original indentation
+                if (curr_pos.colno <= 1)
+                {
+                    print( pad( psource->get_lines()[curr_pos.lineno].indent() ) );
+                }
+                //  For later tokens, don't try to add padding
+                else {
+                    if (
+                        last_printed_char == ';'
+                        && on_same_line
+                        )
+                    {
+                        print( " " );
+                    }
+                }
+            }
+            //  Otherwise, make a best effort to adjust position with some padding
+            else
+            {
+                pos.colno = std::max( 1, pos.colno + pad_for_this_line );
+                print( pad( pos.colno - curr_pos.colno ) );
+            }
         }
     }
 
@@ -504,7 +538,8 @@ public:
 
         if (
             is_open()
-            && source_has_cpp2
+            && psource
+            && psource->has_cpp2()
             )
         {
             //  Always make sure the last line ends with a newline
@@ -524,12 +559,11 @@ public:
         std::string                 cpp2_filename_,
         std::string                 cpp1_filename_,
         std::vector<comment> const& comments,
-        cpp2::parser const&         parser,
-        bool                        has_cpp2
+        cpp2::source const&         source,
+        cpp2::parser const&         parser
     )
         -> void
     {
-        source_has_cpp2 = has_cpp2;
         cpp2_filename = cpp2_filename_;
         assert(
             !is_open()
@@ -545,6 +579,7 @@ public:
             out = &out_file;
         }
         pcomments = &comments;
+        psource   = &source;
         pparser   = &parser;
     }
 
@@ -1081,8 +1116,8 @@ public:
             sourcefile,
             cpp1_filename,
             tokens.get_comments(),
-            parser,
-            source.has_cpp2()
+            source,
+            parser
         );
         if (!printer.is_open()) {
             errors.emplace_back(

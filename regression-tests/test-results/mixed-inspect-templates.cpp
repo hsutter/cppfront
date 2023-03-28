@@ -26,9 +26,9 @@ struct my_type {};
     return [&] () -> std::string { auto&& __expr = v;
         if (cpp2::is<std::vector>(__expr)) { if constexpr( requires{"std::vector";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("std::vector")),std::string> ) return "std::vector"; else return std::string{}; else return std::string{}; }
         else if (cpp2::is<std::array>(__expr)) { if constexpr( requires{"std::array";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("std::array")),std::string> ) return "std::array"; else return std::string{}; else return std::string{}; }
-        else if (cpp2::is<std::variant>(__expr)) { if constexpr( requires{"std::variant";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("std::variant")),std::string> ) return "std::variant"; else return std::string{}; else return std::string{}; }
+        else  if (cpp2::is<std::variant>(__expr)) { if constexpr( requires{"std::variant";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("std::variant")),std::string> ) return "std::variant"; else return std::string{}; else return std::string{}; }
         else if (cpp2::is<my_type>(__expr)) { if constexpr( requires{"my_type";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("my_type")),std::string> ) return "my_type"; else return std::string{}; else return std::string{}; }
-        else return "unknown"; }
+        else  return "unknown"; }
     (); 
 }
 

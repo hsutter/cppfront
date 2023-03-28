@@ -13,13 +13,13 @@ auto main() -> int;
 
 
 #line 2 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
-class myclass   {
+class myclass {
 
     public: explicit myclass(myclass const& that)
         : name{ that.name }
         , addr{ that.addr }
 #line 4 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
-                                {
+    {
         std::cout << "ctor - copy (GENERAL)";
     }
 
@@ -27,7 +27,7 @@ class myclass   {
         : name{ std::move(that).name + "(CM)" }
         , addr{ std::move(that).addr }
 #line 8 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
-                                     {
+    {
 
         std::cout << "ctor - move          ";
     }
@@ -57,7 +57,7 @@ class myclass   {
     public: explicit myclass(cpp2::in<std::string> x)
         : name{ x }
 #line 22 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
-                                          {
+    {
 
         std::cout << "ctor - from string   ";
     }
@@ -79,7 +79,7 @@ class myclass   {
         cpp2::in<std::string_view> prefix, 
         cpp2::in<std::string_view> suffix
         ) const -> void { 
-    std::cout << prefix << "[ " + cpp2::to_string(name) + " | " + cpp2::to_string(addr) + " ]" << suffix; }
+    std::cout << prefix << "[ " + cpp2::to_string(name) + " | " + cpp2::to_string(addr) + " ]" << suffix;  }
 
 };
 

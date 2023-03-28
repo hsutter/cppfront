@@ -20,7 +20,7 @@ auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void;
 
 #line 8 "mixed-postexpression-with-capture.cpp2"
 [[nodiscard]] auto main() -> int{
-    insert_at( 0, 42 );
+    insert_at(0, 42);
 }
 
 std::vector<int> vec {}; 

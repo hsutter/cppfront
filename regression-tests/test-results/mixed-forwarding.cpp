@@ -38,16 +38,16 @@ auto use(auto const& x) -> void{}
 auto apply_implicit_forward(auto&& t) -> void
 requires (std::is_same_v<CPP2_TYPEOF(t), std::pair<X,X>>)
 #line 16 "mixed-forwarding.cpp2"
-                                                     {
+{
     copy_from(t.first);             // copies
     copy_from(CPP2_FORWARD(t).second);// moves
 }
 auto apply_explicit_forward(auto&& t) -> void
 requires (std::is_same_v<CPP2_TYPEOF(t), std::pair<X,X>>)
 #line 20 "mixed-forwarding.cpp2"
-                                                     {
-    copy_from(        CPP2_FORWARD(t).first);// moves
-    copy_from(        CPP2_FORWARD(t).second);// moves
+{
+    copy_from(CPP2_FORWARD(t).first);// moves
+    copy_from(CPP2_FORWARD(t).second);// moves
 }
 
 [[nodiscard]] auto main() -> int{

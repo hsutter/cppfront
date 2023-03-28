@@ -20,6 +20,6 @@ constexpr int a = 1;
     std::vector<int> v {1, 2, 3}; 
     std::cout << (1 + 2) * (3 + cpp2::assert_in_bounds(std::move(v), 0));
     f<(cpp2::cmp_greater(1,2))>(3, 4);
-    f< a + a>(5, 6);
+    f<a + a>(5, 6);
 }
 

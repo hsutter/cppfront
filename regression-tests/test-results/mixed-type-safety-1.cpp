@@ -29,13 +29,13 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
 
 #line 13 "mixed-type-safety-1.cpp2"
 auto print(cpp2::in<std::string> msg, auto const& x) -> void { 
-    std::cout << msg << x << "\n"; }
+    std::cout << msg << x << "\n";  }
 
 auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void
 {
     cpp2::deferred_init<char const*> bmsg; 
     if (b) { bmsg.construct("true");}
-    else { bmsg.construct("false");}
+    else {bmsg.construct("false"); }
     std::cout << msg << std::move(bmsg.value()) << "\n";
 }
 
@@ -43,7 +43,7 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void
 
 [[nodiscard]] auto main() -> int
 {
-    print( "1.1 is int? ", cpp2::is<int>(1.1));
+    print("1.1 is int? ", cpp2::is<int>(1.1));
     print( "1   is int? ", cpp2::is<int>(1));
 
     auto c {cpp2_new<Circle>()}; // safe by construction

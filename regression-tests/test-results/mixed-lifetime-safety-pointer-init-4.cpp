@@ -36,9 +36,9 @@ bool flip_a_coin() {
         p.construct(&x);
     }
 
-    print_and_decorate( *cpp2::assert_not_null(std::move(p.value())));
+    print_and_decorate(*cpp2::assert_not_null(std::move(p.value())));
 }
 
 auto print_and_decorate(auto const& thing) -> void { 
-    std::cout << ">> " << thing << "\n"; }
+    std::cout << ">> " << thing << "\n";  }
 

@@ -4,7 +4,7 @@
 #include "cpp2util.h"
 
 #line 2 "pure2-types-basics.cpp2"
-namespace N   {
+namespace N {
 
 class myclass;
 
@@ -17,14 +17,14 @@ auto main() -> int;
 
 
 #line 2 "pure2-types-basics.cpp2"
-namespace N   {
+namespace N {
 
-class myclass   {
+class myclass {
 
     public: myclass(cpp2::in<int> x)
         : data{ x }
 #line 6 "pure2-types-basics.cpp2"
-                                           {
+    {
 
         // use default initializer for this.more
         std::cout << "myclass: implicit from int\n";
@@ -45,7 +45,7 @@ class myclass   {
         : data{ 99 }
         , more{ s }
 #line 13 "pure2-types-basics.cpp2"
-                                          {
+    {
 
 #line 16 "pure2-types-basics.cpp2"
         std::cout << "myclass: explicit from string\n";
@@ -66,7 +66,7 @@ class myclass   {
         : data{ 77 }
         , more{ s + " plugh" }
 #line 20 "pure2-types-basics.cpp2"
-                                                  {
+    {
 
 #line 23 "pure2-types-basics.cpp2"
         std::cout << "myclass: from int and string\n";
@@ -76,7 +76,7 @@ class myclass   {
     public: myclass()
         : more{ std::to_string(3.14159) }
 #line 27 "pure2-types-basics.cpp2"
-                          {
+    {
         // use default initializer for this.data
 
         std::cout << "myclass: default\n";
@@ -99,11 +99,11 @@ class myclass   {
     private: std::string more {std::to_string(42 * 12)}; 
 
     public: class nested {
-        public: static auto g() -> void { std::cout << "N::myclass::nested::g\n"; }
+        public: static auto g() -> void { std::cout << "N::myclass::nested::g\n";  }
     };
 
     public: template<typename T, typename U> [[nodiscard]] static auto f1(T const& t, U const& u) -> auto { return t + u; }
-    public: template<typename T, typename U> [[nodiscard]] static auto f2(T const& t, U const& u) -> auto { return t + u; }
+    public: template<typename T, typename U> [[nodiscard]] static auto f2(T const& t, U const& u) -> auto { return t + u;  }
     public: template<auto T, auto U> [[nodiscard]] static auto f3() -> auto { return T + U; }
     public: template<cpp2::i8 T, cpp2::i16 U> [[nodiscard]] static auto f4() -> auto { return T + U; }
 

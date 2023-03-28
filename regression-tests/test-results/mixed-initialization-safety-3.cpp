@@ -31,8 +31,8 @@ auto print_decorated(auto const& x) -> void;
 
     if (flip_a_coin()) {
         x.construct("xyzzy");
-    } else {
-        fill(&    x, "plugh", 40 ); // note: constructs x!
+    }else {
+        fill(&x, "plugh", 40);      // note: constructs x!
     }
     print_decorated(std::move(x.value()));
 }
@@ -49,9 +49,9 @@ auto fill(
     x.construct(CPP2_UFCS(substr, value, 0, count));
 }
 
-auto print_decorated(auto const& x) -> void { std::cout << ">> [" << x << "]\n"; }
+auto print_decorated(auto const& x) -> void { std::cout << ">> [" << x << "]\n";  }
 
 // for test determinism, force "xyzzy" branch
 // the standard mandates that std::mt19937()() == 3499211612
-[[nodiscard]] auto flip_a_coin() -> bool { return std::mt19937()() % 2==0; }
+[[nodiscard]] auto flip_a_coin() -> bool { return std::mt19937()() % 2==0;  }
 

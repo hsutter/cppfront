@@ -567,7 +567,7 @@ auto process_cpp_line(
 
         //  Process this source character
         //
-        if (!std::isspace(line[i])) {
+        if (!isspace(line[i])) {
             r.empty_line = false;
         }
 
@@ -978,6 +978,10 @@ public:
         return lines;
     }
 
+    auto get_lines() const -> std::vector<source_line> const&
+    {
+        return lines;
+    }
 
     //-----------------------------------------------------------------------
     //  debug_print
@@ -987,6 +991,12 @@ public:
         for (auto lineno = 0; auto const& line : lines) {
             //  Skip dummy first entry
             if (lineno > 0) {
+                if (line.all_tokens_are_densely_spaced) {
+                    o << "+";
+                }
+                else {
+                    o << " ";
+                }
                 o << line.prefix() << line.text << '\n';
             }
             ++lineno;

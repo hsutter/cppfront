@@ -14,7 +14,7 @@
 
 #line 2 "pure2-more-wildcards.cpp2"
 [[nodiscard]] auto less_than(auto const& value) -> auto { 
-    return [_0 = value](auto const& x) -> auto { return cpp2::cmp_less(x,_0); }; }
+    return [_0 = value](auto const& x) -> auto { return cpp2::cmp_less(x,_0);  };  }
 
 [[nodiscard]] auto main() -> int
 {
@@ -26,7 +26,7 @@
         std::cout << "yes, less\n";
     }
 
-    if (true)   {
+    if (true) {
         std::cout << "yes, always\n";
     }
 }

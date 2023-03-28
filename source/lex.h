@@ -1760,6 +1760,30 @@ public:
                     entry, comments, errors,
                     raw_string_multiline
                 );
+
+                //  Check whether all the tokens on this line were consecutive
+                //  w/o extra whitespace (separated by 0 or 1 whitespace chars)
+                if (!entry.empty()) {
+                    for (auto i = std::ssize(entry) - 1;
+                        i > 0;
+                        --i
+                        )
+                    {
+                        if (entry[i-1].position().lineno != lineno) {
+                            break;
+                        }
+
+                        if (
+                            entry[i].position().lineno == lineno
+                            && entry[i-1].position().colno + entry[i-1].length() + 1
+                                < entry[i].position().colno
+                            )
+                        {
+                            line->all_tokens_are_densely_spaced = false;
+                            break;
+                        }
+                    }
+                }
             }
 
         }

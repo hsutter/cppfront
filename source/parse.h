@@ -34,11 +34,16 @@ auto violates_lifetime_safety = false;
 
 //G prefix-operator:
 //G     one of  '!' '-' '+'
+//GT     parameter-direction
 //G
-auto is_prefix_operator(lexeme l)
+auto is_prefix_operator(token const& tok)
     -> bool
 {
-    switch (l) {
+    //if (to_passing_style(tok) != passing_style::invalid) {
+    //    return true;
+    //}
+
+    switch (tok.type()) {
     break;case lexeme::Not:
           case lexeme::Minus:
           case lexeme::Plus:
@@ -2794,7 +2799,11 @@ private:
         -> std::unique_ptr<prefix_expression_node>
     {
         auto n = std::make_unique<prefix_expression_node>();
-        for ( ; is_prefix_operator(curr().type()); next()) {
+        for ( ;
+            is_prefix_operator(curr());
+            next()
+            )
+        {
             n->ops.push_back(&curr());
         }
         if ((n->expr = postfix_expression())) {

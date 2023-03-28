@@ -19,7 +19,7 @@ auto decorate_and_print(auto& thing) -> void;
 
 #line 2 "pure2-intro-example-three-loops.cpp2"
 auto print(auto const& thing) -> void { 
-    std::cout << ">> " << thing << "\n"; }
+    std::cout << ">> " << thing << "\n";  }
 
 auto decorate_and_print(auto& thing) -> void{
     thing = "[" + thing + "]";
@@ -28,12 +28,12 @@ auto decorate_and_print(auto& thing) -> void{
 
 [[nodiscard]] auto main() -> int{
     std::vector<std::string> words {
-          "hello", "big", "world"}; 
+        "hello", "big", "world"}; 
     std::span<std::string> view {words}; 
 
     auto i {cpp2_new<int>(0)}; 
     for( ; cpp2::cmp_less(*cpp2::assert_not_null(i),CPP2_UFCS_0(ssize, view)); ++*cpp2::assert_not_null(i) ) {
-        print( cpp2::assert_in_bounds(view, *cpp2::assert_not_null(i)));
+        print(cpp2::assert_in_bounds(view, *cpp2::assert_not_null(i)));
     }
 
     do {

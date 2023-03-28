@@ -30,11 +30,11 @@ auto f(auto* x_) -> void{
 
 [[nodiscard]] auto main() -> int{
     cpp2::deferred_init<int> a; 
-    f(&   a);
+    f(&a);
     std::cout << std::move(a.value()) << "\n";
 
     cpp2::deferred_init<X> b; 
-    f(&   b);
+    f(&b);
     std::cout << std::move(b.value()) << "\n";
 }
 

@@ -15,11 +15,11 @@
 
 
 #line 2 "pure2-forward-return.cpp2"
-[[nodiscard]] auto first(auto&& rng) -> auto&& { 
+[[nodiscard]] auto first(auto&& rng) -> auto&&  { 
     cpp2::Bounds.expects(!(std::empty(rng)), "");
 
 #line 5 "pure2-forward-return.cpp2"
-    return *cpp2::assert_not_null(std::begin(CPP2_FORWARD(rng))); }
+    return *cpp2::assert_not_null(std::begin(CPP2_FORWARD(rng)));  }
 
 int const global {42}; 
 [[nodiscard]] auto f() -> int const&{return global; }

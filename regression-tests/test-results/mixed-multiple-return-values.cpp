@@ -34,7 +34,7 @@ bool flip_a_coin() {
 
 
 #line 6 "mixed-multiple-return-values.cpp2"
-[[nodiscard]] auto f() -> f__ret  {
+[[nodiscard]] auto f() -> f__ret{
         cpp2::deferred_init<int> i;
         cpp2::deferred_init<std::string> s;//  note: i and s are uninitialized!
 #line 9 "mixed-multiple-return-values.cpp2"
@@ -52,5 +52,5 @@ bool flip_a_coin() {
 }
 
 auto print(cpp2::in<std::string> name, auto const& value) -> void { 
-    std::cout << name << " is " << value << "\n"; }
+    std::cout << name << " is " << value << "\n";  }
 

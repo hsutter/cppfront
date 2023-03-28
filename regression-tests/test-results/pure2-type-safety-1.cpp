@@ -42,13 +42,13 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
 
 auto test_generic(auto const& x, auto const& msg) -> void{
     std::string msgx {msg}; 
-    print( std::move(msgx) + " is int? ", cpp2::is<int>(x));
+    print(std::move(msgx) + " is int? ", cpp2::is<int>(x));
 }
 
 auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void{
     cpp2::deferred_init<char const*> bmsg; 
     if (b) { bmsg.construct("true");}
-    else { bmsg.construct("false");}
+    else {bmsg.construct("false"); }
     std::cout << std::setw(40) << msg << std::move(bmsg.value()) << "\n";
 }
 

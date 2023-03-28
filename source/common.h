@@ -48,8 +48,26 @@ struct source_line
 {
     std::string text;
 
-    enum class category { empty, preprocessor, comment, import, cpp1, cpp2, rawstring }
-        cat = category::empty;
+    enum class category { empty, preprocessor, comment, import, cpp1, cpp2, rawstring };
+    category cat;
+
+    bool all_tokens_are_densely_spaced = true; // to be overridden in lexing if they're not
+
+    source_line(
+        std::string const& t = {},
+        category           c = category::empty
+    )
+        : text{t}
+        , cat{c}
+    { }
+
+    auto indent() const
+        -> int
+    {
+        return
+            std::find_if_not( text.begin(), text.end(), &isspace )
+                - text.begin();
+    }
 
     auto prefix() const
         -> std::string
@@ -124,7 +142,6 @@ struct string_parts {
     void add_string(const std::string_view& text) { parts.push_back(raw_string{std::string(text)});}
 
     void clear() { parts.clear(); }
-
 
     auto generate() const -> std::string {
         

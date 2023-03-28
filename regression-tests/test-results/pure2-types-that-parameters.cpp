@@ -13,7 +13,7 @@ auto main() -> int;
 
 
 #line 2 "pure2-types-that-parameters.cpp2"
-class myclass   {
+class myclass {
 
     public: myclass(){}
 
@@ -21,7 +21,7 @@ class myclass   {
         : name{ that.name }
         , addr{ that.addr }
 #line 6 "pure2-types-that-parameters.cpp2"
-                                {
+    {
 
 #line 9 "pure2-types-that-parameters.cpp2"
     }
@@ -37,7 +37,7 @@ class myclass   {
         : name{ std::move(that).name }
         , addr{ std::move(that).addr }
 #line 11 "pure2-types-that-parameters.cpp2"
-                                     {
+    {
 
 #line 14 "pure2-types-that-parameters.cpp2"
     }
