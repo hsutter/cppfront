@@ -2717,9 +2717,6 @@ public:
                 || i->op->type() == lexeme::Tilde
                 )
             {
-                adjust_remaining_token_columns_on_this_line_visitor v(i->op->position(), 0 - i->op->length());
-                n.visit(v, 0);
-
                 // omit some needless parens
                 if (
                     !last_was_prefixed
@@ -3300,9 +3297,7 @@ public:
             }
 
             assert(x.expr);
-            adjust_remaining_token_columns_on_this_line_visitor v(x.expr->position(), offset);
             current_args.push_back( {x.pass} );
-            x.expr->visit(v, 0);
             emit(*x.expr);
             current_args.pop_back();
 
