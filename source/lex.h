@@ -380,7 +380,7 @@ auto expand_string_literal(
     //  Now we're on the first character of the string itself
     for (
         ;
-        pos < length && (text[pos] != '"' || text[pos-1] == '\\');
+        pos < length && (text[pos] != '"' || (text[pos-1] == '\\' && pos>=2 && text[pos-2] != '\\'));
         ++pos
         )
     {
