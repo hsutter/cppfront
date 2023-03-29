@@ -3272,7 +3272,6 @@ public:
                 printer.print_cpp2(", ", n.position());
             }
             first = false;
-            auto offset = 0;
             auto is_out = false;
 
             if (x.pass != passing_style::in) {
@@ -3284,11 +3283,9 @@ public:
                 if (x.pass == passing_style::out) {
                     is_out = true;
                     printer.print_cpp2("&", n.position());
-                    offset = -3;   // because we're replacing "out " (followed by at least one space) with "&"
                 }
                 else if (x.pass == passing_style::move) {
                     printer.print_cpp2("std::move(", n.position());
-                    offset = 6;    // because we're replacing "move " (followed by at least one space) with "std::move("
                 }
             }
 
