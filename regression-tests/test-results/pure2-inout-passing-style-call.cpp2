@@ -1,0 +1,8 @@
+f2: (inout x) -> _ = {
+    return x * 2;
+}
+
+main: () -> int = {
+    x := 21;
+    std::cout << f2(inout x) << std::endl;
+}
