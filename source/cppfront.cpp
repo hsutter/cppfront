@@ -3280,6 +3280,7 @@ public:
                     x.pass == passing_style::out
                     || x.pass == passing_style::move
                     || x.pass == passing_style::forward
+                    || x.pass == passing_style::inout
                 );
                 if (x.pass == passing_style::out) {
                     is_out = true;
@@ -3289,6 +3290,10 @@ public:
                 else if (x.pass == passing_style::move) {
                     printer.print_cpp2("std::move(", n.position());
                     offset = 6;    // because we're replacing "move " (followed by at least one space) with "std::move("
+                }
+                else if (x.pass == passing_style::inout) {
+                    is_out = true;
+                    offset = -6;   // because we're replacing "inout " (followed by at least one space) with nothing
                 }
             }
 

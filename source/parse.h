@@ -3156,6 +3156,7 @@ private:
                 dir == passing_style::out
                 || dir == passing_style::move
                 || dir == passing_style::forward
+                || dir == passing_style::inout
                 )
             && peek(1)
             && peek(1)->type() == lexeme::Identifier
