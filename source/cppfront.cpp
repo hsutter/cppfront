@@ -4457,20 +4457,20 @@ public:
             }
         }
 
-        if (n.access) {
-            assert (is_in_type);
-            printer.print_cpp2(n.access->to_string(true) + ": ", n.access->position());
-        }
-        else if (
-            is_in_type
-            && printer.get_phase() == printer.phase1_type_defs_func_decls
-            )
-        {
-            if (n.is_object()) {
-                printer.print_cpp2("private: ", n.position());
+        //  In class definitions, emit the explicit access specifier if there
+        //  is one, or default to private for data and public for functions
+        if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
+            if (n.access) {
+                assert (is_in_type);
+                printer.print_cpp2(n.access->to_string(true) + ": ", n.access->position());
             }
-            else {
-                printer.print_cpp2("public: ", n.position());
+            else if (is_in_type) {
+                if (n.is_object()) {
+                    printer.print_cpp2("private: ", n.position());
+                }
+                else {
+                    printer.print_cpp2("public: ", n.position());
+                }
             }
         }
 
