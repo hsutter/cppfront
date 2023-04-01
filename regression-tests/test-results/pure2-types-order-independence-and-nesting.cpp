@@ -116,7 +116,7 @@ namespace N {
 #line 10 "pure2-types-order-independence-and-nesting.cpp2"
     auto X::operator=(cpp2::out<Y> y) -> X& {
         y.construct(&(*this));
-        py = &y.value();
+        py = {&y.value()};
 
 #line 31 "pure2-types-order-independence-and-nesting.cpp2"
         std::cout << "made a safely initialized cycle\n";
@@ -140,7 +140,7 @@ namespace N {
      {  }
 #line 49 "pure2-types-order-independence-and-nesting.cpp2"
     auto Y::operator=(cpp2::in<X*> x) -> Y&  { 
-                                   px = x;
+                                   px = {x};
                                    return *this;
 #line 49 "pure2-types-order-independence-and-nesting.cpp2"
      }

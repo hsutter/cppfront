@@ -64,8 +64,8 @@ auto main() -> int;
     }
 #line 4 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     auto myclass::operator=(myclass const& that) -> myclass& {
-        name = that.name;
-        addr = that.addr;
+        name = {that.name};
+        addr = {that.addr};
 #line 5 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
         std::cout << "ctor - copy (GENERAL)";
         return *this;
@@ -83,8 +83,8 @@ auto main() -> int;
 
 #line 18 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     auto myclass::operator=(myclass&& that) -> myclass& {
-        name = std::move(that).name;
-        addr = std::move(that).addr;
+        name = {std::move(that).name};
+        addr = {std::move(that).addr};
 #line 19 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
         std::cout << "assign - move        ";
         return *this;
@@ -100,8 +100,8 @@ auto main() -> int;
     }
 #line 22 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     auto myclass::operator=(cpp2::in<std::string> x) -> myclass& {
-        name = x;
-        addr = "123 Ford Dr.";
+        name = {x};
+        addr = {"123 Ford Dr."};
 
 #line 24 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
         std::cout << "ctor - from string   ";

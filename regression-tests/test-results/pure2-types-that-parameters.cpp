@@ -54,8 +54,8 @@ auto main() -> int;
     }
 #line 6 "pure2-types-that-parameters.cpp2"
     auto myclass::operator=(myclass const& that) -> myclass& {
-        name = that.name;
-        addr = that.addr;
+        name = {that.name};
+        addr = {that.addr};
         return *this;
 
 #line 9 "pure2-types-that-parameters.cpp2"
@@ -71,8 +71,8 @@ auto main() -> int;
     }
 #line 11 "pure2-types-that-parameters.cpp2"
     auto myclass::operator=(myclass&& that) -> myclass& {
-        name = std::move(that).name;
-        addr = std::move(that).addr;
+        name = {std::move(that).name};
+        addr = {std::move(that).addr};
         return *this;
 
 #line 14 "pure2-types-that-parameters.cpp2"

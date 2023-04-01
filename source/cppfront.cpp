@@ -4288,11 +4288,10 @@ public:
 
                     current_functions.back().prolog.statements.push_back(
                         (*object)->name()->to_string(true) +
-                        " = " +
+                        " = {" +
                         initializer +
-                        ";"
+                        "};"
                     );
-                    separator = ", ";
                 }
                 //  (b) ... if this isn't assignment, only need to emit it if it was
                 //          explicit or is a 'that' initializer
@@ -4356,14 +4355,12 @@ public:
                     if (is_assignment)
                     {
                         auto initializer = print_to_string( *(*object)->initializer, false );
-                        current_functions.back().prolog.mem_inits.push_back(
-                            separator +
+                        current_functions.back().prolog.statements.push_back(
                             (*object)->name()->to_string(true) +
-                            "{ " +
+                            " = {" +
                             initializer +
-                            " }"
+                            "};"
                         );
-                        separator = ", ";
                     }
                 }
                 else
