@@ -4387,11 +4387,10 @@ public:
                 return;
             }
 
-            assert(out_inits.empty());
             //  Flush any possible remaining 'out' parameters (shouldn't be any...)
-            //for (auto& init : out_inits) {
-            //    current_functions.back().prolog.statements.push_back(init);
-            //}
+            for (auto& init : out_inits) {
+                current_functions.back().prolog.statements.push_back(init + ";");
+            }
         }
 
         //  For a constructor, print the type name instead of the operator= function name
