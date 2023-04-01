@@ -1373,9 +1373,16 @@ public:
         auto...      more
     )
     {
+        //  Quick special-purpose preservation of need_* state... right now it's
+        //  only needed here so the tactical fix is fine, but if it's needed
+        //  elsewhere then generalize this
+        auto state = need_expression_list_parens;
+
         printer.emit_to_string(str);
         emit(i, more...);
         printer.emit_to_string();
+
+        need_expression_list_parens.swap(state); // restore the state
     };
 
     auto print_to_string(
