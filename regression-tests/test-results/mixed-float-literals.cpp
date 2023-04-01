@@ -1,5 +1,13 @@
 
-#line 1 "mixed-float-literals.cpp2"
+
+//=== Cpp2 type declarations ====================================================
+
+
+#include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
+
 void literals_cpp1() {
   // integers
   123;
@@ -56,15 +64,13 @@ void literals_cpp1() {
   // 1e - 10.0f;
 }
 
-#include "cpp2util.h"
-
 #line 57 "mixed-float-literals.cpp2"
 auto literals_cpp2() -> void;
 
 #line 114 "mixed-float-literals.cpp2"
 [[nodiscard]] auto main() -> int;
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 
 #line 57 "mixed-float-literals.cpp2"

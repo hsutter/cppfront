@@ -1,7 +1,14 @@
 
 #define CPP2_USE_MODULES         Yes
 
+//=== Cpp2 type declarations ====================================================
+
+
 #include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
+
 
 #line 2 "pure2-intro-example-three-loops.cpp2"
 auto print(auto const& thing) -> void;
@@ -14,7 +21,7 @@ auto decorate_and_print(auto& thing) -> void;
 #line 30 "pure2-intro-example-three-loops.cpp2"
 
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 
 #line 2 "pure2-intro-example-three-loops.cpp2"

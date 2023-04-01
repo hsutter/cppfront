@@ -1,7 +1,14 @@
 
 #define CPP2_USE_MODULES         Yes
 
+//=== Cpp2 type declarations ====================================================
+
+
 #include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
+
 
 #line 2 "pure2-template-parameter-lists.cpp2"
 template<typename T, typename U> [[nodiscard]] auto f1(T const& t, U const& u) -> auto;
@@ -18,7 +25,7 @@ template<cpp2::i8 T, cpp2::i16 U> [[nodiscard]] auto f4() -> auto;
 #line 18 "pure2-template-parameter-lists.cpp2"
 auto main() -> int;
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 
 #line 2 "pure2-template-parameter-lists.cpp2"

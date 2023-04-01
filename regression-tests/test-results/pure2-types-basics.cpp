@@ -1,7 +1,11 @@
 
 #define CPP2_USE_MODULES         Yes
 
+//=== Cpp2 type declarations ====================================================
+
+
 #include "cpp2util.h"
+
 
 #line 2 "pure2-types-basics.cpp2"
 namespace N {
@@ -9,11 +13,9 @@ namespace N {
 class myclass;
 
 #line 60 "pure2-types-basics.cpp2"
-};
+}
 
-auto main() -> int;
-
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 type definitions and function declarations ===========================
 
 
 #line 2 "pure2-types-basics.cpp2"
@@ -21,7 +23,57 @@ namespace N {
 
 class myclass {
 
-    public: myclass(cpp2::in<int> x)
+    public: myclass(cpp2::in<int> x);
+#line 6 "pure2-types-basics.cpp2"
+    public: auto operator=(cpp2::in<int> x) -> myclass& ;
+
+#line 13 "pure2-types-basics.cpp2"
+    public: explicit myclass(cpp2::in<std::string> s);
+#line 13 "pure2-types-basics.cpp2"
+    public: auto operator=(cpp2::in<std::string> s) -> myclass& ;
+
+#line 20 "pure2-types-basics.cpp2"
+    public: myclass(cpp2::in<int> x, cpp2::in<std::string> s);
+
+#line 27 "pure2-types-basics.cpp2"
+    public: myclass();
+
+#line 34 "pure2-types-basics.cpp2"
+    public: auto print() const -> void;
+
+#line 38 "pure2-types-basics.cpp2"
+    public: ~myclass();
+
+#line 42 "pure2-types-basics.cpp2"
+    public: virtual auto f(cpp2::in<int> x) const -> void;
+
+#line 46 "pure2-types-basics.cpp2"
+    private: int data {42 * 12}; 
+    private: std::string more {std::to_string(42 * 12)}; 
+
+    public: class nested {
+        public: static auto g() -> void;
+    };
+
+    public: template<typename T, typename U> [[nodiscard]] static auto f1(T const& t, U const& u) -> auto;
+    public: template<typename T, typename U> [[nodiscard]] static auto f2(T const& t, U const& u) -> auto;
+    public: template<auto T, auto U> [[nodiscard]] static auto f3() -> auto;
+    public: template<cpp2::i8 T, cpp2::i16 U> [[nodiscard]] static auto f4() -> auto;
+
+};
+
+}
+
+auto main() -> int;
+
+//=== Cpp2 function definitions =================================================
+
+
+#line 2 "pure2-types-basics.cpp2"
+namespace N {
+
+#line 6 "pure2-types-basics.cpp2"
+    myclass::myclass(cpp2::in<int> x)
         : data{ x }
 #line 6 "pure2-types-basics.cpp2"
     {
@@ -31,9 +83,10 @@ class myclass {
         print();
     }
 #line 6 "pure2-types-basics.cpp2"
-    public: auto operator=(cpp2::in<int> x) -> myclass& {
+    auto myclass::operator=(cpp2::in<int> x) -> myclass& {
         data = x;
         more = std::to_string(42 * 12);
+
 #line 9 "pure2-types-basics.cpp2"
         std::cout << "myclass: implicit from int\n";
         print();
@@ -41,7 +94,7 @@ class myclass {
 #line 11 "pure2-types-basics.cpp2"
     }
 
-    public: explicit myclass(cpp2::in<std::string> s)
+    myclass::myclass(cpp2::in<std::string> s)
         : data{ 99 }
         , more{ s }
 #line 13 "pure2-types-basics.cpp2"
@@ -52,9 +105,10 @@ class myclass {
         print();
     }
 #line 13 "pure2-types-basics.cpp2"
-    public: auto operator=(cpp2::in<std::string> s) -> myclass& {
+    auto myclass::operator=(cpp2::in<std::string> s) -> myclass& {
         data = 99;
         more = s;
+
 #line 16 "pure2-types-basics.cpp2"
         std::cout << "myclass: explicit from string\n";
         print();
@@ -62,7 +116,7 @@ class myclass {
 #line 18 "pure2-types-basics.cpp2"
     }
 
-    public: myclass(cpp2::in<int> x, cpp2::in<std::string> s)
+    myclass::myclass(cpp2::in<int> x, cpp2::in<std::string> s)
         : data{ 77 }
         , more{ s + " plugh" }
 #line 20 "pure2-types-basics.cpp2"
@@ -73,7 +127,7 @@ class myclass {
         print();
     }
 
-    public: myclass()
+    myclass::myclass()
         : more{ std::to_string(3.14159) }
 #line 27 "pure2-types-basics.cpp2"
     {
@@ -83,33 +137,29 @@ class myclass {
         print();
     }
 
-    public: auto print() const -> void{
+    auto myclass::print() const -> void{
         std::cout << "    data: " + cpp2::to_string(data) + ", more: " + cpp2::to_string(more) + "\n";
     }
 
-    public: ~myclass(){
+    myclass::~myclass(){
         std::cout << "myclass: destructor\n";
     }
 
-    public: virtual auto f(cpp2::in<int> x) const -> void{
+    auto myclass::f(cpp2::in<int> x) const -> void{
         std::cout << "N::myclass::f with " + cpp2::to_string(x) + "\n";
     }
 
-    private: int data {42 * 12}; 
-    private: std::string more {std::to_string(42 * 12)}; 
+#line 50 "pure2-types-basics.cpp2"
+        auto myclass::nested::g() -> void { std::cout << "N::myclass::nested::g\n";  }
 
-    public: class nested {
-        public: static auto g() -> void { std::cout << "N::myclass::nested::g\n";  }
-    };
+#line 53 "pure2-types-basics.cpp2"
+    template<typename T, typename U> [[nodiscard]] auto myclass::f1(T const& t, U const& u) -> auto { return t + u; }
+    template<typename T, typename U> [[nodiscard]] auto myclass::f2(T const& t, U const& u) -> auto { return t + u;  }
+    template<auto T, auto U> [[nodiscard]] auto myclass::f3() -> auto { return T + U; }
+    template<cpp2::i8 T, cpp2::i16 U> [[nodiscard]] auto myclass::f4() -> auto { return T + U; }
 
-    public: template<typename T, typename U> [[nodiscard]] static auto f1(T const& t, U const& u) -> auto { return t + u; }
-    public: template<typename T, typename U> [[nodiscard]] static auto f2(T const& t, U const& u) -> auto { return t + u;  }
-    public: template<auto T, auto U> [[nodiscard]] static auto f3() -> auto { return T + U; }
-    public: template<cpp2::i8 T, cpp2::i16 U> [[nodiscard]] static auto f4() -> auto { return T + U; }
-
-};
-
-};
+#line 60 "pure2-types-basics.cpp2"
+}
 
 auto main() -> int{
     N::myclass x {1}; 

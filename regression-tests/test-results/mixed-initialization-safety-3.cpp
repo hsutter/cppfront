@@ -1,10 +1,16 @@
 
-#line 1 "mixed-initialization-safety-3.cpp2"
+
+//=== Cpp2 type declarations ====================================================
+
+
+#include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
+
 #include <random>
 #include <string>
 #include <vector>
-
-#include "cpp2util.h"
 
 #line 5 "mixed-initialization-safety-3.cpp2"
 [[nodiscard]] auto main() -> int;
@@ -19,10 +25,11 @@ auto fill(
 #line 26 "mixed-initialization-safety-3.cpp2"
 auto print_decorated(auto const& x) -> void;
 
-#line 30 "mixed-initialization-safety-3.cpp2"
+// for test determinism, force "xyzzy" branch
+// the standard mandates that std::mt19937()() == 3499211612
 [[nodiscard]] auto flip_a_coin() -> bool;
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 
 #line 5 "mixed-initialization-safety-3.cpp2"
@@ -51,7 +58,6 @@ auto fill(
 
 auto print_decorated(auto const& x) -> void { std::cout << ">> [" << x << "]\n";  }
 
-// for test determinism, force "xyzzy" branch
-// the standard mandates that std::mt19937()() == 3499211612
+#line 30 "mixed-initialization-safety-3.cpp2"
 [[nodiscard]] auto flip_a_coin() -> bool { return std::mt19937()() % 2==0;  }
 

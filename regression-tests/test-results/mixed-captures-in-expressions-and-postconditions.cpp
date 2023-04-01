@@ -1,18 +1,26 @@
 
-#line 1 "mixed-captures-in-expressions-and-postconditions.cpp2"
+
+//=== Cpp2 type declarations ====================================================
+
+
+#include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
+
 
 #include <algorithm>
 #include <vector>
 
-#include "cpp2util.h"
-
 #line 5 "mixed-captures-in-expressions-and-postconditions.cpp2"
 [[nodiscard]] auto main() -> int;
 
-#line 19 "mixed-captures-in-expressions-and-postconditions.cpp2"
+#line 17 "mixed-captures-in-expressions-and-postconditions.cpp2"
+extern std::vector<int> vec;
+
 auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void;
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 
 #line 5 "mixed-captures-in-expressions-and-postconditions.cpp2"

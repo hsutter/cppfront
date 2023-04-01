@@ -1,6 +1,13 @@
 
 
+//=== Cpp2 type declarations ====================================================
+
+
 #include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
+
 
 #line 2 "mixed-intro-for-with-counter-include-last.cpp2"
 [[nodiscard]] auto main() -> int;
@@ -10,7 +17,7 @@
 #include <span>
 #include <iostream>
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 
 #line 2 "mixed-intro-for-with-counter-include-last.cpp2"

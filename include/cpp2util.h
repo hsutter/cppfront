@@ -570,7 +570,7 @@ public:
     }
 
     auto construct(auto&& ...args) -> void {
-        if (has_t) {
+        if (has_t || called_construct()) {
             Default.expects( t );
             *t = T(std::forward<decltype(args)>(args)...);
         }
@@ -587,7 +587,7 @@ public:
     }
 
     auto construct_list(auto&& ...args) -> void {
-        if (has_t) {
+        if (has_t || called_construct()) {
             Default.expects( t );
             *t = T{std::forward<decltype(args)>(args)...};
         }
@@ -631,21 +631,7 @@ public:
 #endif
 
 
-//  === NOTE: (see also corresponding note in cppfront.cpp)
-//
-//  This "&" capture default is to work around 'if constexpr' bugs in Clang and MSVC...
-//  If we don't emit a not-actually-used "[&]" here, then both compilers get tripped up
-//  if we attempt UFCS for a member function name... the reason is that the UFCS macro
-//  generates a lambda that does an 'if constexpr' to call the member function if
-//  available, but Clang and MSVC look into the NOT-taken 'if constexpr' branch (which
-//  they shouldn't) and see the nonmember function call syntax and think it's trying to
-//  use the member function with implicit 'this->' and choke... (see issue #281, and
-//  https://godbolt.org/z/M47zzMsoT for a distilled repro)
-//
-//  The workaround that seems to be effective is to add TWO actually-unused "&" captures:
-//      - here, and
-//      - and also in the cppfront.cpp build_capture_lambda_intro_for() code
-//
+//  Note: [&] is because a nested UFCS might be viewed as trying to capture 'this'
 
 #define CPP2_UFCS(FUNCNAME,PARAM1,...) \
 [&](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \

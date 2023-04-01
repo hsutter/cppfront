@@ -1,10 +1,16 @@
 
-#line 1 "mixed-initialization-safety-3-contract-violation.cpp2"
+
+//=== Cpp2 type declarations ====================================================
+
+
+#include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
+
 #include <random>
 #include <string>
 #include <vector>
-
-#include "cpp2util.h"
 
 #line 5 "mixed-initialization-safety-3-contract-violation.cpp2"
 [[nodiscard]] auto main() -> int;
@@ -26,7 +32,7 @@ bool flip_a_coin() {
     return rand() % 2 == 1;
 }
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 
 #line 5 "mixed-initialization-safety-3-contract-violation.cpp2"

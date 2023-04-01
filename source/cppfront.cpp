@@ -235,7 +235,7 @@ public:
     auto get_phase() const { return phase; }
 
 private:
-    phases phase = phase1_type_defs_func_decls;
+    phases phase = phase0_type_decls;
 
     auto inc_phase() -> void {
         switch (phase) {
@@ -259,14 +259,11 @@ private:
     //
     auto print(
         std::string_view s,
-        source_position  pos = source_position{}
+        source_position  pos = source_position{},
+        bool             track_curr_pos = true
     )
         -> void
     {
-        if (s.length() > 0) {
-            last_printed_char = s.back();
-        }
-
         //  Take ownership of (and reset) just_printed_line_directive value
         auto line_directive_already_done = std::exchange(just_printed_line_directive, false);
 
@@ -292,6 +289,10 @@ private:
         //  Otherwise, we'll actually print the string to the output file
         //  and update our curr_pos position
 
+        if (s.length() > 0) {
+            last_printed_char = s.back();
+        }
+
         //  Reject consecutive empty lines: If this line is empty
         if (
             s == "\n"
@@ -301,8 +302,10 @@ private:
             //  And so was the last one, update logical position only
             //  and increment empty_lines_suppressed instead of printing
             if (last_was_empty) {
-                ++curr_pos.lineno;
-                curr_pos.colno = 1;
+                if (track_curr_pos) {
+                    ++curr_pos.lineno;
+                    curr_pos.colno = 1;
+                }
                 ++empty_lines_suppressed;
                 return;
             }
@@ -329,25 +332,28 @@ private:
 
         //  Update curr_pos by finding how many line breaks s contained,
         //  and where the last one was which determines our current colno
-        auto last_newline = std::string::npos;  // the last newline we found in the string
-        auto newline_pos  = std::size_t(0);     // the current newline we found in the string
-        while ((newline_pos = s.find('\n', newline_pos)) != std::string::npos)
+        if (track_curr_pos)
         {
-            //  For each line break we find, reset pad and inc current lineno
-            pad_for_this_line = 0;
-            ++curr_pos.lineno;
-            last_newline = newline_pos;
-            ++newline_pos;
-        }
+            auto last_newline = std::string::npos;  // the last newline we found in the string
+            auto newline_pos  = std::size_t(0);     // the current newline we found in the string
+            while ((newline_pos = s.find('\n', newline_pos)) != std::string::npos)
+            {
+                //  For each line break we find, reset pad and inc current lineno
+                pad_for_this_line = 0;
+                ++curr_pos.lineno;
+                last_newline = newline_pos;
+                ++newline_pos;
+            }
 
-        //  Now also adjust the colno
-        if (last_newline != std::string::npos) {
-            //  If we found a newline, it's the distance from the last newline to EOL
-            curr_pos.colno = s.length() - last_newline;
-        }
-        else {
-            //  Else add the length of the string
-            curr_pos.colno += s.length();
+            //  Now also adjust the colno
+            if (last_newline != std::string::npos) {
+                //  If we found a newline, it's the distance from the last newline to EOL
+                curr_pos.colno = s.length() - last_newline;
+            }
+            else {
+                //  Else add the length of the string
+                curr_pos.colno += s.length();
+            }
         }
     }
 
@@ -410,15 +416,15 @@ private:
                 //  and emit function body comments in phase2_func_defs
                 assert(pparser);
                 if (
-                    //(
-                    //    phase < phase2_func_defs
-                    //    && !pparser->is_within_function_body( comments[next_comment].start.lineno )
-                    //    )
-                    //||
-                    //(
+                    (
+                        phase == phase1_type_defs_func_decls
+                        && !pparser->is_within_function_body( comments[next_comment].start.lineno )
+                        )
+                    ||
+                    (
                         phase == phase2_func_defs
-                        //&& pparser->is_within_function_body( comments[next_comment].start.lineno )
-                        //)
+                        && pparser->is_within_function_body( comments[next_comment].start.lineno )
+                        )
                     )
                 {
                     //  For a line comment, start it at the right indentation and print it
@@ -635,7 +641,7 @@ public:
             is_open()
             && "ICE: printer must be open before printing"
         );
-        print( s );
+        print( s, source_position{}, false );
         printed_extra = true;
     }
 
@@ -838,12 +844,6 @@ public:
         -> void
     {
         inc_phase();
-    }
-
-    auto doing_declarations_only() const
-        -> bool
-    {
-        return phase < phase2_func_defs;
     }
 
     //  Provide an option to store to a given string instead, which is
@@ -1130,6 +1130,10 @@ public:
         //  Generate a reasonable macroized name
         auto cpp1_FILENAME = to_upper_and_underbar(cpp1_filename);
 
+
+        //---------------------------------------------------------------------
+        //  Do lowered file prolog
+        // 
         //  Only emit extra lines if we actually have Cpp2, because
         //  we want pure-Cpp1 files to pass through with zero changes
         if (source.has_cpp2())
@@ -1158,15 +1162,49 @@ public:
         auto hpp_includes = std::string{};
 
 
+        //---------------------------------------------------------------------
+        //  Do phase0_type_decls
+        assert(printer.get_phase() == printer.phase0_type_decls);
 
+        if (
+            source.has_cpp2()
+            && !flag_clean_cpp1
+            )
+        {
+            printer.print_extra( "\n//=== Cpp2 type declarations ====================================================\n\n" );
+        }
 
-        //  TODO: Do phase0_type_decls
+        if (!tokens.get_map().empty())
+        {
+            printer.print_extra( "\n#include \"cpp2util.h\"\n\n" );
+        }
 
+        for (auto& section : tokens.get_map())
+        {
+            assert (!section.second.empty());
 
+            //  Get the parse tree for this section and emit each forward declaration
+            auto decls = parser.get_parse_tree(section.second);
+            for (auto& decl : decls) {
+                assert(decl);
+                emit(*decl);
+            }
+        }
 
         
+        //---------------------------------------------------------------------
         //  Do phase1_type_defs_func_decls
         //
+        printer.next_phase();
+
+        if (
+            source.has_cpp2()
+            && !flag_clean_cpp1
+            )
+        {
+            printer.print_extra( "\n//=== Cpp2 type definitions and function declarations ===========================\n\n" );
+        }
+
         assert (printer.get_phase() == positional_printer::phase1_type_defs_func_decls);
         for (
             lineno_t curr_lineno = 0;
@@ -1224,11 +1262,6 @@ public:
                 //  If it's a Cpp2 line...
                 else {
                     ++ret.cpp2_lines;
-
-                    if (ret.cpp2_lines == 1)
-                    {
-                        printer.print_extra( "\n#include \"cpp2util.h\"\n\n" );
-                    }
 
                     //  We should be in a position to emit a set of Cpp2 declarations
                     if (
@@ -1288,17 +1321,16 @@ public:
             printer.print_extra( "\n#define " + cpp1_FILENAME+"__CPP2" + "\n\n" );
         }
 
-        //  Next, bring in the Cpp2 helpers
-        //
-        if (!flag_clean_cpp1) {
-            printer.print_extra( "\n//=== Cpp2 definitions ==========================================================\n\n" );
-        }
-
-        //  Next, emit the Cpp2 definitions
-        //
         printer.print_extra( hpp_includes );
 
+        //---------------------------------------------------------------------
+        //  Do phase2_func_defs
+        //
         printer.next_phase();
+
+        if (!flag_clean_cpp1) {
+            printer.print_extra( "\n//=== Cpp2 function definitions =================================================\n\n" );
+        }
 
         for (auto& section : tokens.get_map())
         {
@@ -2156,10 +2188,12 @@ public:
         for (auto& cap : captures.members)
         {
             assert(cap.capture_expr->cap_grp == &captures);
-            print_to_string(&cap.str, *cap.capture_expr, true);
-            suppress_move_from_last_use = true;
-            print_to_string(&cap.str_suppressed_move, *cap.capture_expr, true);
-            suppress_move_from_last_use = false;
+            if (cap.str.empty()) {
+                print_to_string(&cap.str, *cap.capture_expr, true);
+                suppress_move_from_last_use = true;
+                print_to_string(&cap.str_suppressed_move, *cap.capture_expr, true);
+                suppress_move_from_last_use = false;
+            }
         }
 
         // If move from last use was used on the variable we need to rewrite the str to add std::move
@@ -2183,30 +2217,15 @@ public:
         auto lambda_intro = std::string("[");
         auto num_captures = 0;
 
-        //  === NOTE: (see also corresponding note in cpp2util.h)
-        //
-        //  This "&" capture default is to work around 'if constexpr' bugs in Clang and MSVC...
-        //  If we don't emit a not-actually-used "[&]" here, then both compilers get tripped up
-        //  if we attempt UFCS for a member function name... the reason is that the UFCS macro
-        //  generates a lambda that does an 'if constexpr' to call the member function if
-        //  available, but Clang and MSVC look into the NOT-taken 'if constexpr' branch (which
-        //  they shouldn't) and see the nonmember function call syntax and think it's trying to
-        //  use the member function with implicit 'this->' and choke... (see issue #281, and
-        //  https://godbolt.org/z/M47zzMsoT for a distilled repro)
-        //
-        //  The workaround that seems to be effective is to add TWO actually-unused "&" captures:
-        //      - here, and
-        //      - and also in the cpp2util.h UFCS code
-        //
         if (
             !current_functions.empty()
             && current_functions.back().decl->is_function_with_this()
             )
         {
+            //  Note: & is needed because a nested UFCS might be viewed as trying to capture 'this'
             lambda_intro += "&";
             ++num_captures;
         }
-        //  === END NOTE
 
         printer.emit_to_string(&lambda_intro);
 
@@ -2426,9 +2445,7 @@ public:
     //-----------------------------------------------------------------------
     //
     auto emit(
-        // note: parameter is deliberately not const because we we will fill
-        //       in the capture .str information, and we may also adjust token
-        //       column positions when moving operators to prefix notation
+        //  Note: parameter is not const as we'll fill in the capture .str info
         postfix_expression_node& n,
         bool                     for_lambda_capture = false
     )
@@ -3104,7 +3121,7 @@ public:
 
                     auto rhs_expr = print_to_string(*term.expr);
 
-                    lambda_body    += lhs_name;
+                    lambda_body += lhs_name;
 
                     //  emit == and != as infix a @ b operators (since we don't have
                     //  any checking/instrumentation we want to do for those)
@@ -3272,7 +3289,6 @@ public:
                 printer.print_cpp2(", ", n.position());
             }
             first = false;
-            auto offset = 0;
             auto is_out = false;
 
             if (x.pass != passing_style::in) {
@@ -3284,11 +3300,9 @@ public:
                 if (x.pass == passing_style::out) {
                     is_out = true;
                     printer.print_cpp2("&", n.position());
-                    offset = -3;   // because we're replacing "out " (followed by at least one space) with "&"
                 }
                 else if (x.pass == passing_style::move) {
                     printer.print_cpp2("std::move(", n.position());
-                    offset = 6;    // because we're replacing "move " (followed by at least one space) with "std::move("
                 }
             }
 
@@ -3674,17 +3688,6 @@ public:
             printer.print_cpp2( " = ", n.declaration->initializer->position() );
             emit(*n.declaration->initializer);
         }
-
-        //TODO - when we get to classes and inheritance
-        //o << pre(indent+1);
-        //using enum parameter_declaration_node::modifier;
-        //switch (n.mod) {
-        //break;case implicit  : o << "implicit";
-        //break;case virtual_  : o << "virtual";
-        //break;case override_ : o << "override";
-        //break;case final_    : o << "final";
-        //}
-        //o << "\n";
     }
 
 
@@ -4041,6 +4044,47 @@ public:
 
 
     //-----------------------------------------------------------------------
+    //  Helper to emit type-qualified names for member functions
+    //
+    auto type_qualification_if_any_for(
+        declaration_node const& n
+    )
+        -> std::string
+    {
+        auto ret = std::string{};
+
+        if (
+            printer.get_phase() == printer.phase2_func_defs
+            && n.parent_is_type()
+            )
+        {
+            //  If this function is inside templated type(s),
+            //  emit those outer template parameter lists too
+            auto parent = n.parent_declaration;
+            while (
+                parent
+                && parent->is_type()
+                )
+            {
+                auto list = std::string{""};
+                if (parent->template_parameters) {
+                    auto separator = std::string{"<"};
+                    for (auto& tparam : parent->template_parameters->parameters) {
+                        assert (tparam->has_name());
+                        list += separator + tparam->name()->to_string(true);
+                        separator = ",";
+                    }
+                    list += ">";
+                }
+                ret = print_to_string(*parent->identifier) + list + "::" + ret;
+                parent = parent->parent_declaration;
+            }
+        }
+
+        return ret;
+    }
+
+    //-----------------------------------------------------------------------
     //  Constructors and assignment operators
     //
     auto emit_special_member_function(
@@ -4049,6 +4093,7 @@ public:
     )
         -> void
     {
+        assert(n.is_function());
         auto& func = std::get<declaration_node::a_function>(n.type);
         assert(func);
 
@@ -4071,197 +4116,252 @@ public:
             }
         }
 
-        //  We'll use this common guidance in several errors,
-        //  so write it once to keep the guidance consistent
-        auto error_msg = "an operator= body must start with a series of 'member = value;' initialization statements for each of the type's members, in the same order the members are declared";
-
-        //  If this constructor's type has data members, handle their initialization
-        //      - objects is the list of this type's declarations
-        //      - statements is the list of this constructor's statements
-        auto objects    = n.parent_declaration->get_type_scope_declarations(n.objects);
-        auto statements = n.get_initializer_statements();
-
-        auto object     = objects.begin();
-        auto statement  = statements.begin();
-        auto separator  = std::string{": "};
-        while (
-            object != objects.end()
-            && statement != statements.end()
-            )
+        //  Do the 'out' param and member init work only in the definition phase
+        if (printer.get_phase() == printer.phase2_func_defs)
         {
-            assert((*object)->has_name());
+            //  We'll use this common guidance in several errors,
+            //  so write it once to keep the guidance consistent
+            auto error_msg = "an operator= body must start with a series of 'member = value;' initialization statements for each of the function's 'out' parameters and then each of the type's members, in the same order the members are declared";
 
-            //  Check whether this is an assignment to *object
-            auto exprs = (*statement)->get_lhs_rhs_if_simple_assignment();
+            //  If this constructor's type has data members, handle their initialization
+            //      - objects is the list of this type's declarations
+            //      - statements is the list of this constructor's statements
+            auto objects    = n.parent_declaration->get_type_scope_declarations(n.objects);
+            auto statements = n.get_initializer_statements();
+            auto out_inits  = std::vector<std::string>{};
 
-            assert(
-                !exprs.lhs
-                || exprs.lhs->expr
-            );
-
-            auto found_explicit_init = false;
-            auto found_default_init  = false;
-
-            auto stmt_pos    = (*statement)->position();
-            auto initializer = std::string{};
-
-            if (exprs.lhs)
+            auto object     = objects.begin();
+            auto statement  = statements.begin();
+            auto separator  = std::string{": "};
+            while (
+                object != objects.end()
+                && statement != statements.end()
+                )
             {
-                //  First, see if it's an assignment 'name = something'
-                found_explicit_init = (*object)->has_name(*exprs.lhs->expr->get_token());
+                assert ((*object)->has_name());
+                assert (*statement);
 
-                //  Otherwise, check if it's 'this.name = something'
-                if (!found_explicit_init)
+                //  Check whether this is an assignment to *object
+                auto exprs = (*statement)->get_lhs_rhs_if_simple_assignment();
+
+                assert(
+                    !exprs.lhs
+                    || exprs.lhs->expr
+                );
+                assert(
+                    !exprs.lhs
+                    || exprs.lhs->expr->get_token()
+                );
+
+                //  If this is an initialization of an 'out' parameter, stash it
+                if (
+                    exprs.lhs
+                    && *exprs.lhs->expr->get_token() != "this"
+                    && n.has_out_parameter_named(*exprs.lhs->expr->get_token())
+                    )
                 {
-                    //  If it's of the form 'this.name', get a pointer
-                    //  to the token for 'name'
-                    auto second_tok = exprs.lhs->get_second_token_if_a_this_qualified_name();
-                    if (
-                        second_tok
-                        && (*object)->has_name(*second_tok)
-                        )
+                    out_inits.push_back( print_to_string(**statement, false) );
+                    (*statement)->emitted = true;
+                    ++statement;
+                    continue;
+                }
+
+                auto found_explicit_init = false;
+                auto found_default_init  = false;
+
+                auto stmt_pos    = (*statement)->position();
+                auto initializer = std::string{};
+
+                if (exprs.lhs)
+                {
+                    //  First, see if it's an assignment 'name = something'
+                    found_explicit_init = (*object)->has_name(*exprs.lhs->expr->get_token());
+
+                    //  Otherwise, check if it's 'this.name = something'
+                    if (!found_explicit_init)
                     {
-                        found_explicit_init = true;
+                        //  If it's of the form 'this.name', get a pointer
+                        //  to the token for 'name'
+                        auto second_tok = exprs.lhs->get_second_token_if_a_this_qualified_name();
+                        if (
+                            second_tok
+                            && (*object)->has_name(*second_tok)
+                            )
+                        {
+                            found_explicit_init = true;
+                        }
+                    }
+
+                    if (found_explicit_init)
+                    {
+                        assert(exprs.rhs);
+                        initializer = print_to_string( *exprs.rhs );
+
+                        //  We've used this statement, so note it
+                        //  and move 'statement' forward
+                        (*statement)->emitted = true;
+                        ++statement;
                     }
                 }
 
-                if (found_explicit_init)
+                //  Otherwise, use a default... for a non-copy/move that's the member initializer
+                //  (for which we don't need to emit anything special because it will get used),
+                //  and for a copy/move function we default to "= that.same_member"
+                if (!found_explicit_init)
                 {
-                    assert(exprs.rhs);
-                    initializer = print_to_string( *exprs.rhs );
-
-                    //  We've used this statement, so note it
-                    //  and move 'statement' forward
-                    (*statement)->emitted = true;
-                    ++statement;
+                    if (emitting_move_that_function)
+                    {
+                        initializer = "std::move(that)." + (*object)->name()->to_string(true);
+                        found_default_init = true;
+                    }
+                    else if (emitting_that_function)
+                    {
+                        initializer = "that." + (*object)->name()->to_string(true);
+                        found_default_init = true;
+                    }
+                    else if ((*object)->initializer)
+                    {
+                        initializer = print_to_string(*(*object)->initializer, false);
+                        found_default_init = true;
+                    }
                 }
-            }
 
-            //  Otherwise, use a default... for a non-copy/move that's the member initializer
-            //  (for which we don't need to emit anything special because it will get used),
-            //  and for a copy/move function we default to "= that.same_member"
-            if (!found_explicit_init)
-            {
-                if (emitting_move_that_function)
-                {
-                    initializer = "std::move(that)." + (*object)->name()->to_string(true);
-                    found_default_init = true;
-                }
-                else if (emitting_that_function)
-                {
-                    initializer = "that." + (*object)->name()->to_string(true);
-                    found_default_init = true;
-                }
-                else if ((*object)->initializer)
-                {
-                    initializer = print_to_string(*(*object)->initializer, false);
-                    found_default_init = true;
-                }
-            }
-
-            assert(
-                found_explicit_init
-                || found_default_init
-            );
-
-            //  If this is not an assignment to *object,
-            //  and there was no member initializer, complain
-            if (
-                !found_explicit_init
-                && !found_default_init
-                )
-            {
-                errors.emplace_back(
-                    stmt_pos,
-                    "expected '" + (*object)->name()->to_string(true) + " = ...' initialization statement - " + error_msg
-                );
-                return;
-            }
-
-            assert(
-                found_explicit_init
-                || found_default_init
-            );
-
-            //  Emit the initializer if it was an explicit or that initializer,
-            if (
-                (
-                    found_explicit_init
-                    || emitting_that_function
+                //  If this is not an assignment to *object,
+                //  and there was no member initializer, complain
+                if (
+                    !found_explicit_init
+                    && !found_default_init
                     )
-                && !is_assignment
-                )
-            {
-                current_functions.back().prolog.mem_inits.push_back(
-                    separator +
-                    (*object)->name()->to_string(true) +
-                    "{ " +
-                    initializer +
-                    " }"
+                {
+                    errors.emplace_back(
+                        stmt_pos,
+                        "expected '" + (*object)->name()->to_string(true) + " = ...' initialization statement - " + error_msg
+                    );
+                    return;
+                }
+
+                assert(
+                    found_explicit_init
+                    || found_default_init
                 );
-                separator = ", ";
-            }
-            //  or either kind if we're emitting an assignment operator
-            if (is_assignment)
-            {
-                current_functions.back().prolog.statements.push_back(
-                    (*object)->name()->to_string(true) +
-                    " = " +
-                    initializer +
-                    ";"
-                );
-                separator = ", ";
-            }
 
-            ++object;
-        }
+                //  Emit the initializer...
 
-        //  Each remaining object is required to have a default initializer,
-        //  since it had no explicit initialization statement
-        for (
-            ;
-            object != objects.end();
-            ++object
-            )
-        {
-            assert((*object)->has_name());
-            if ((*object)->initializer)
-            {
-                //  Good. Entering here avoids emitting the error on the 'else'
-
-                //  Only need to actually emit the initializer in an assignment operator
+                //  (a) ... if this is assignment, emit it in all cases
                 if (is_assignment)
                 {
-                    auto initializer = print_to_string( *(*object)->initializer, false );
-                    current_functions.back().prolog.mem_inits.push_back(
-                        separator +
+                    //  Flush any 'out' parameter initializations
+                    for (auto& init : out_inits) {
+                        current_functions.back().prolog.statements.push_back(init + ";");
+                    }
+                    out_inits = {};
+
+                    current_functions.back().prolog.statements.push_back(
                         (*object)->name()->to_string(true) +
-                        "{ " +
+                        " = " +
                         initializer +
-                        " }"
+                        ";"
                     );
                     separator = ", ";
                 }
+                //  (b) ... if this isn't assignment, only need to emit it if it was
+                //          explicit or is a 'that' initializer
+                else if (
+                    found_explicit_init
+                    || emitting_that_function
+                    )
+                {
+                    //  Flush any 'out' parameter initializations
+                    auto out_inits_with_commas = [&]() -> std::string {
+                        auto ret = std::string{};
+                        for (auto& init : out_inits) {
+                            ret += init + ", ";
+                        }
+                        out_inits = {};
+                        return ret;
+                    }();
+
+                    //  If there were any, wedge them into this initializer
+                    //  using (holds nose) the comma operator and extra parens
+                    if (!out_inits_with_commas.empty()) {
+                        current_functions.back().prolog.mem_inits.push_back(
+                            separator +
+                            (*object)->name()->to_string(true) +
+                            "{(" +
+                            out_inits_with_commas +
+                            initializer +
+                            " )}"
+                        );
+                    }
+                    else {
+                        current_functions.back().prolog.mem_inits.push_back(
+                            separator +
+                            (*object)->name()->to_string(true) +
+                            "{ " +
+                            initializer +
+                            " }"
+                        );
+                    }
+                    separator = ", ";
+                }
+
+                //  And on to the next data member...
+                ++object;
             }
-            else
+
+            //  Each remaining object is required to have a default initializer,
+            //  since it had no explicit initialization statement
+            for (
+                ;
+                object != objects.end();
+                ++object
+                )
             {
+                assert((*object)->has_name());
+                if ((*object)->initializer)
+                {
+                    //  Good. Entering here avoids emitting the error on the 'else'
+
+                    //  Only need to actually emit the initializer in an assignment operator
+                    if (is_assignment)
+                    {
+                        auto initializer = print_to_string( *(*object)->initializer, false );
+                        current_functions.back().prolog.mem_inits.push_back(
+                            separator +
+                            (*object)->name()->to_string(true) +
+                            "{ " +
+                            initializer +
+                            " }"
+                        );
+                        separator = ", ";
+                    }
+                }
+                else
+                {
+                    errors.emplace_back(
+                        (*object)->position(),
+                        (*object)->name()->to_string(true) + " was not initialized in the operator= body and has no default initializer - " + error_msg
+                    );
+                    return;
+                }
+            }
+
+            //  Now no data members should be left over
+            if (object != objects.end())
+            {
+                assert((*object)->has_name());
                 errors.emplace_back(
                     (*object)->position(),
-                    (*object)->name()->to_string(true) + " was not initialized in the operator= body and has no default initializer - " + error_msg
+                    (*object)->name()->to_string(true) + " was not initialized - " + error_msg
                 );
                 return;
             }
-        }
 
-        //  Now no data members should be left over
-        if (object != objects.end())
-        {
-            assert((*object)->has_name());
-            errors.emplace_back(
-                (*object)->position(),
-                (*object)->name()->to_string(true) + " was not initialized - " + error_msg
-            );
-            return;
+            assert(out_inits.empty());
+            //  Flush any possible remaining 'out' parameters (shouldn't be any...)
+            //for (auto& init : out_inits) {
+            //    current_functions.back().prolog.statements.push_back(init);
+            //}
         }
 
         //  For a constructor, print the type name instead of the operator= function name
@@ -4269,6 +4369,7 @@ public:
         if (!is_assignment)
         {
             printer.print_cpp2( prefix, n.position() );
+            printer.print_cpp2( type_qualification_if_any_for(n), n.position() );
             printer.print_cpp2( *n.parent_declaration->name(), n.position() );
             emit( *func, n.name(), false, true);
         }
@@ -4280,7 +4381,7 @@ public:
                 && !current_functions.empty()
             );
             current_functions.back().epilog.push_back( "return *this;");
-            printer.print_cpp2( "auto ", n.position() );
+            printer.print_cpp2( "auto " + type_qualification_if_any_for(n), n.position() );
             printer.print_cpp2( *n.name(), n.identifier->position());
             emit( *func, n.name());
         }
@@ -4295,6 +4396,16 @@ public:
     )
         -> void
     {
+        //  In phase 0, only need to consider namespaces and types
+        if (
+            printer.get_phase() == printer.phase0_type_decls
+            && !n.is_namespace()
+            && !n.is_type()
+            )
+        {
+            return;
+        }
+
         auto need_to_generate_assignment = false;
         auto need_to_generate_move       = false;
 
@@ -4324,7 +4435,7 @@ public:
         //  If this is a function that has multiple return values,
         //  first we need to emit the struct that contains the returns
         if (
-            printer.doing_declarations_only()
+            printer.get_phase() == printer.phase1_type_defs_func_decls
             && n.is_function()
             )
         {
@@ -4350,7 +4461,11 @@ public:
             assert (is_in_type);
             printer.print_cpp2(n.access->to_string(true) + ": ", n.access->position());
         }
-        else if (is_in_type) {
+        else if (
+            is_in_type
+            && printer.get_phase() == printer.phase1_type_defs_func_decls
+            )
+        {
             if (n.is_object()) {
                 printer.print_cpp2("private: ", n.position());
             }
@@ -4359,7 +4474,45 @@ public:
             }
         }
 
-        if (n.template_parameters) {
+        //  If this is a function definition and the function is inside
+        //  type(s) that have template parameters and/or requires clauses,
+        //  emit those outer template parameters and requires clauses too
+        if (
+            printer.get_phase() == printer.phase2_func_defs
+            && n.is_function()
+            )
+        {
+            auto parent_template_parameters = std::string{};
+            auto parent = n.parent_declaration;
+            while (
+                parent
+                && parent->is_type()
+                )
+            {
+                if (parent->requires_clause_expression) {
+                    parent_template_parameters =
+                        "requires( " + print_to_string(*parent->requires_clause_expression) + " )\n"
+                        + parent_template_parameters;
+                }
+                if (parent->template_parameters) {
+                    parent_template_parameters =
+                        "template " + print_to_string( *parent->template_parameters, false, true )
+                        + " " + parent_template_parameters;
+                }
+                parent = parent->parent_declaration;
+            }
+            printer.print_cpp2(parent_template_parameters, n.position());
+        }
+
+        //  Now, emit our own template parameters
+        if (
+            n.template_parameters
+            && (
+                  (!n.is_function() && printer.get_phase() <  printer.phase2_func_defs)
+                || (n.is_function() && printer.get_phase() <= printer.phase2_func_defs)
+                )
+            )
+        {
             printer.print_cpp2("template", n.position());
             emit(*n.template_parameters, false, true);
             printer.print_cpp2(" ", n.position());
@@ -4368,30 +4521,33 @@ public:
         //  User-defined type
         if (n.is_type())
         {
-            if (n.requires_clause_expression) {
-                printer.print_cpp2("requires( ", n.requires_pos);
-                emit(*n.requires_clause_expression);
-                printer.print_cpp2(")\n", n.requires_pos);
-            }
-
-            printer.print_cpp2("class ", n.position());
-            emit(*n.identifier);
-
-            //  Type declaration
-            if (printer.doing_declarations_only()) {
-                printer.print_cpp2( ";\n", n.position() );
-                return;
-            }
-
-            //  Type body
             assert(
                 n.initializer
                 && n.initializer->is_compound()
             );
             auto& compound_stmt = std::get<statement_node::compound>(n.initializer->statement);
 
-            printer.print_cpp2(" {", compound_stmt->position());
+            if (printer.get_phase() != printer.phase2_func_defs)
+            {
+                if (n.requires_clause_expression) {
+                    printer.print_cpp2("requires( ", n.requires_pos);
+                    emit(*n.requires_clause_expression);
+                    printer.print_cpp2(" )\n", n.requires_pos);
+                }
 
+                printer.print_cpp2("class ", n.position());
+                emit(*n.identifier);
+
+                //  Type declaration
+                if (printer.get_phase() == printer.phase0_type_decls) {
+                    printer.print_cpp2( ";\n", n.position() );
+                    return;
+                }
+
+                printer.print_cpp2(" {", compound_stmt->position());
+            }
+
+            //  Type body
             assert(compound_stmt);
             for (auto& stmt : compound_stmt->statements) {
                 assert(stmt);
@@ -4407,7 +4563,9 @@ public:
                 emit(*decl);
             }
 
-            printer.print_cpp2("};\n", compound_stmt->close_brace);
+            if (printer.get_phase() != printer.phase2_func_defs) {
+                printer.print_cpp2("};\n", compound_stmt->close_brace);
+            }
         }
 
         //  Namespace
@@ -4447,7 +4605,7 @@ public:
                 emit(*decl);
             }
 
-            printer.print_cpp2("};\n", compound_stmt->close_brace);
+            printer.print_cpp2("}\n", compound_stmt->close_brace);
         }
 
         //  Function
@@ -4514,29 +4672,37 @@ public:
                         errors.emplace_back( n.position(), "ICE: invalid parameter passing style, should have been rejected", true);
                     }
 
-                    switch (this_->mod) {
-                    break;case parameter_declaration_node::modifier::implicit:
-                        ;
-                    break;case parameter_declaration_node::modifier::virtual_:
-                        prefix += "virtual ";
-                    break;case parameter_declaration_node::modifier::override_:
-                        suffix2 += " override";
-                    break;case parameter_declaration_node::modifier::final_:
-                        suffix2 += " final";
-                    break;default:
-                        if (
-                            func->is_constructor()
-                            && func->parameters->ssize() == 2
-                            && generating_assignment_from != &n
-                            )
-                        {
-                            prefix += "explicit ";
+                    //  Note: Include a phase check because Cpp1 does not allow
+                    //        these on out-of-line definitions
+                    if (printer.get_phase() != printer.phase2_func_defs)
+                    {
+                        switch (this_->mod) {
+                        break;case parameter_declaration_node::modifier::implicit:
+                            ;
+                        break;case parameter_declaration_node::modifier::virtual_:
+                            prefix += "virtual ";
+                        break;case parameter_declaration_node::modifier::override_:
+                            suffix2 += " override";
+                        break;case parameter_declaration_node::modifier::final_:
+                            suffix2 += " final";
+                        break;default:
+                            if (
+                                func->is_constructor()
+                                && func->parameters->ssize() == 2
+                                && generating_assignment_from != &n
+                                )
+                            {
+                                prefix += "explicit ";
+                            }
                         }
                     }
                 }
                 //  Else if there isn't a 'this' parameter, but this function is in a type scope,
-                //  it's a Cpp1 static function so we need to decorate it thusly
-                else if (is_in_type) {
+                //  it's a Cpp1 static function so we need to say so (on the declaration only)
+                else if (
+                    is_in_type
+                    && printer.get_phase() != printer.phase2_func_defs
+                    ) {
                     prefix += "static ";
                 }
 
@@ -4557,10 +4723,9 @@ public:
                 {
                     assert(
                         !is_main
-                        // prefix can be "explicit "
                         && suffix1.empty()
                         && suffix2.empty()
-                        && "ICE: an operator= shouldn't have been able to generate a prefix or suffix (or be main)"
+                        && "ICE: an operator= shouldn't have been able to generate a suffix (or be main)"
                     );
 
                     emit_special_member_function(
@@ -4658,7 +4823,10 @@ public:
                         n.parent_is_type()
                         && n.parent_declaration->name()
                     );
-                    printer.print_cpp2( "~" + n.parent_declaration->name()->to_string(true), n.position());
+                    printer.print_cpp2(
+                        type_qualification_if_any_for(n)
+                            + "~" + n.parent_declaration->name()->to_string(true),
+                        n.position() );
                     emit( *func, n.name(), false, true);
                 }
 
@@ -4666,171 +4834,236 @@ public:
                 else
                 {
                     printer.print_cpp2( prefix, n.position() );
-                    printer.print_cpp2( "auto ", n.position() );
-                    printer.print_cpp2( *n.name(), n.identifier->position());
-                    emit( *func, n.name(), is_main, false, suffix1);
+                    printer.print_cpp2( "auto " + type_qualification_if_any_for(n), n.position() );
+                    printer.print_cpp2( *n.name(), n.identifier->position() );
+                    emit( *func, n.name(), is_main, false, suffix1 );
                     printer.print_cpp2( suffix2, n.position() );
                 }
             }
 
             //  *** LOCATION (A) -- SEE NOTE REGARDING (A) BELOW
 
-            //  End function declaration
-            if (printer.doing_declarations_only()) {
+            //  If we're only emitting declarations, end the function declaration
+            if (printer.get_phase() == printer.phase1_type_defs_func_decls)
+            {
                 printer.print_cpp2( ";\n", n.position() );
-                return;
+                //  Note: Not just early "return;" here because we may need to
+                //  recurse to emit the generated operator= declarations too,
+                //  so all the definition work goes into a big 'else' branch
             }
 
-            if (func->returns.index() == function_type_node::list) {
-                auto& r = std::get<function_type_node::list>(func->returns);
-                function_returns.emplace_back(r.get());
-            }
-            else if (func->returns.index() == function_type_node::id) {
-                function_returns.emplace_back(
-                    &single_anon,               // use special value as a note
-                    std::get<function_type_node::id>(func->returns).pass
-                );
-            }
-            else {
-                function_returns.emplace_back(nullptr);        // no return type at all
-            }
-
-            //  Function body
-            assert( n.initializer );
-
-            for (auto&& c : func->contracts)
+            //  Else emit the definition
+            else
             {
-                auto print = std::string();
-                printer.emit_to_string(&print);
-                emit(*c);
-                printer.emit_to_string();
-                current_functions.back().prolog.statements.push_back(print);
-            }
 
-            if (func->returns.index() == function_type_node::list)
-            {
-                auto& r = std::get<function_type_node::list>(func->returns);
-                assert(r);
-                for (auto& param : r->parameters)
+                if (func->returns.index() == function_type_node::list) {
+                    auto& r = std::get<function_type_node::list>(func->returns);
+                    function_returns.emplace_back(r.get());
+                }
+                else if (func->returns.index() == function_type_node::id) {
+                    function_returns.emplace_back(
+                        &single_anon,               // use special value as a note
+                        std::get<function_type_node::id>(func->returns).pass
+                    );
+                }
+                else {
+                    function_returns.emplace_back(nullptr);        // no return type at all
+                }
+
+                //  Function body
+                assert( n.initializer );
+
+                for (auto&& c : func->contracts)
                 {
-                    assert(param && param->declaration);
-                    auto& decl    = *param->declaration;
-
-                    assert(decl.is_object());
-                    auto& id_expr = std::get<declaration_node::an_object>(decl.type);
-                    assert(id_expr);
-
-                    auto loc = std::string{};
-                    if (!decl.initializer) {
-                        loc += ("    cpp2::deferred_init<");
-                    }
-
-                    //  For convenience, just capture the id-expression as a string
-                    printer.emit_to_string(&loc);
-                    emit(*id_expr);
+                    auto print = std::string();
+                    printer.emit_to_string(&print);
+                    emit(*c);
                     printer.emit_to_string();
+                    current_functions.back().prolog.statements.push_back(print);
+                }
 
-                    if (!decl.initializer) {
-                        loc += (">");
-                    }
-                    loc += " ";
-                    loc += decl.name()->as_string_view();
-                    if (decl.initializer)
+                if (func->returns.index() == function_type_node::list)
+                {
+                    auto& r = std::get<function_type_node::list>(func->returns);
+                    assert(r);
+                    for (auto& param : r->parameters)
                     {
-                        std::string init;
-                        printer.emit_to_string(&init);
-                        printer.print_cpp2 ( " {", decl.initializer->position() );
-                        if (!decl.initializer->is_expression()) {
-                            errors.emplace_back(
-                                decl.initializer->position(),
-                                "return value initializer must be an expression"
-                            );
-                            return;
-                        }
-                        auto& expr = std::get<statement_node::expression>(decl.initializer->statement);
-                        assert(expr);
+                        assert(param && param->declaration);
+                        auto& decl    = *param->declaration;
 
-                        emit(*expr, false);
-                        printer.print_cpp2 ( "}", decl.initializer->position() );
+                        assert(decl.is_object());
+                        auto& id_expr = std::get<declaration_node::an_object>(decl.type);
+                        assert(id_expr);
+
+                        auto loc = std::string{};
+                        if (!decl.initializer) {
+                            loc += ("    cpp2::deferred_init<");
+                        }
+
+                        //  For convenience, just capture the id-expression as a string
+                        printer.emit_to_string(&loc);
+                        emit(*id_expr);
                         printer.emit_to_string();
 
-                        loc += init;
+                        if (!decl.initializer) {
+                            loc += (">");
+                        }
+                        loc += " ";
+                        loc += decl.name()->as_string_view();
+                        if (decl.initializer)
+                        {
+                            std::string init;
+                            printer.emit_to_string(&init);
+                            printer.print_cpp2 ( " {", decl.initializer->position() );
+                            if (!decl.initializer->is_expression()) {
+                                errors.emplace_back(
+                                    decl.initializer->position(),
+                                    "return value initializer must be an expression"
+                                );
+                                return;
+                            }
+                            auto& expr = std::get<statement_node::expression>(decl.initializer->statement);
+                            assert(expr);
+
+                            emit(*expr, false);
+                            printer.print_cpp2 ( "}", decl.initializer->position() );
+                            printer.emit_to_string();
+
+                            loc += init;
+                        }
+                        loc += ";";
+                        current_functions.back().prolog.statements.push_back(loc);
                     }
-                    loc += ";";
-                    current_functions.back().prolog.statements.push_back(loc);
                 }
-            }
 
-            printer.preempt_position_push( n.equal_sign );
+                printer.preempt_position_push( n.equal_sign );
 
-            //  *** NOTE =====================================================
-            // 
-            //      This branch to emit the requires-clause should maybe be
-            //      moved to location (A) above, so that it's also emitted
-            //      on the function declaration. But moving it to (A) triggers
-            //      a bug in GCC 10.x (that was fixed in 11.x), where it would
-            //      break using a 'forward' parameter of a concrete type and
-            //      also explicitly user-written requires-clauses that do
-            //      similar decltype tests.
-            // 
-            //      I don't want to neednessly break compatibility with a
-            //      decently conforming C++20 compiler that works well for
-            //      everything else that Cpp2 needs from C++20. If the
-            //      'requires' down here doesn't cause a problem, I'll keep
-            //      it here for now... if we do encounter a reason it needs to
-            //      also be on the declaration, move this code to (A).
-            // 
-            //  Handle requires clause - an explicit one the user wrote,
-            //  and/or any conditions we generated while processing the
-            //  parameters (i.e., forwarding a concrete type)
-            if (
-                n.requires_clause_expression
-                || !function_requires_conditions.empty()
-                )
-            {
-                printer.print_extra("\n");
-                printer.ignore_alignment( true, n.position().colno + 4 );
-                printer.print_extra("requires (");
+                //  *** NOTE =====================================================
+                // 
+                //      This branch to emit the requires-clause should maybe be
+                //      moved to location (A) above, so that it's also emitted
+                //      on the function declaration. But moving it to (A) triggers
+                //      a bug in GCC 10.x (that was fixed in 11.x), where it would
+                //      break using a 'forward' parameter of a concrete type and
+                //      also explicitly user-written requires-clauses that do
+                //      similar decltype tests.
+                // 
+                //      I don't want to neednessly break compatibility with a
+                //      decently conforming C++20 compiler that works well for
+                //      everything else that Cpp2 needs from C++20. If the
+                //      'requires' down here doesn't cause a problem, I'll keep
+                //      it here for now... if we do encounter a reason it needs to
+                //      also be on the declaration, move this code to (A).
+                // 
+                //  Handle requires clause - an explicit one the user wrote,
+                //  and/or any conditions we generated while processing the
+                //  parameters (i.e., forwarding a concrete type)
+                if (
+                    n.requires_clause_expression
+                    || !function_requires_conditions.empty()
+                    )
+                {
+                    printer.print_extra("\n");
+                    printer.ignore_alignment( true, n.position().colno + 4 );
+                    printer.print_extra("requires (");
 
-                if (n.requires_clause_expression) {
-                    emit(*n.requires_clause_expression);
+                    if (n.requires_clause_expression) {
+                        emit(*n.requires_clause_expression);
+                        if (!function_requires_conditions.empty()) {
+                            printer.print_extra(" && ");
+                        }
+                    }
+
                     if (!function_requires_conditions.empty()) {
-                        printer.print_extra(" && ");
+                        printer.print_extra(function_requires_conditions.front());
+                        for (auto it = std::cbegin(function_requires_conditions)+1; it != std::cend(function_requires_conditions); ++it) {
+                            printer.print_extra(" && " + *it);
+                        }
                     }
-                }
 
-                if (!function_requires_conditions.empty()) {
-                    printer.print_extra(function_requires_conditions.front());
-                    for (auto it = std::cbegin(function_requires_conditions)+1; it != std::cend(function_requires_conditions); ++it) {
-                        printer.print_extra(" && " + *it);
-                    }
+                    printer.print_extra(")");
+                    function_requires_conditions = {};
+                    printer.ignore_alignment( false );
                 }
+                //  *** END NOTE =================================================
 
-                printer.print_extra(")");
-                function_requires_conditions = {};
-                printer.ignore_alignment( false );
+                emit(
+                    *n.initializer,
+                    true, func->position(), func->returns.index() == function_type_node::empty,
+                    current_functions.back().prolog,
+                    current_functions.back().epilog
+                );
+
+                printer.preempt_position_pop();
+
+                function_returns.pop_back();
             }
-            //  *** END NOTE =================================================
 
-            emit(
-                *n.initializer,
-                true, func->position(), func->returns.index() == function_type_node::empty,
-                current_functions.back().prolog,
-                current_functions.back().epilog
-            );
+            //  Finally, do the potential recursions...
 
-            printer.preempt_position_pop();
+            //  If this was a constructor and we want also want to emit
+            //  it as an assignment operator, do it via a recursive call
+            if (need_to_generate_assignment)
+            {
+                //  Reset the 'emitted' flags
+                for (auto& statement : n.get_initializer_statements()) {
+                    statement->emitted = false;
+                }
 
-            function_returns.pop_back();
+                //  Then reposition and do the recursive call
+                printer.reset_line_to(n.position().lineno);
+                generating_assignment_from = &n;
+                emit( n, capture_intro );
+                generating_assignment_from = {};
+            }
+
+            //  If this was a constructor and we want also want to emit
+            //  it as an assignment operator, do it via a recursive call
+            if (need_to_generate_move)
+            {
+                //  Reset the 'emitted' flags
+                for (auto& statement : n.get_initializer_statements()) {
+                    statement->emitted = false;
+                }
+
+                //  Then reposition and do the recursive call
+                printer.reset_line_to(n.position().lineno);
+                generating_move_from = &n;
+                emit( n, capture_intro );
+                generating_move_from = {};
+            }
         }
 
         //  Object with optional initializer
         else if (
-            !printer.doing_declarations_only()
-            && n.is_object()
+            n.is_object()
+            && (
+                (
+                    n.parent_is_namespace()
+                    && printer.get_phase() >= printer.phase1_type_defs_func_decls
+                    )
+                ||
+                (
+                    n.parent_is_type()
+                    && printer.get_phase() == printer.phase1_type_defs_func_decls
+                    )
+                ||
+                (
+                    n.parent_is_function()
+                    && printer.get_phase() == printer.phase2_func_defs
+                    )
+                )
             )
         {
             auto& type = std::get<declaration_node::an_object>(n.type);
+
+            if (
+                printer.get_phase() != printer.phase2_func_defs
+                && n.parent_is_namespace()
+                )
+            {
+                printer.print_cpp2( "extern ", n.position() );
+            }
 
             //  Emit "auto" for deduced types (of course)
             if (type->is_wildcard()) {
@@ -4867,7 +5100,26 @@ public:
 
             printer.print_cpp2( " ", n.position());
             assert(n.identifier);
-            emit(*n.identifier);
+
+            //  If this is anonymous object (named "_"), generate a unique name
+            if (n.has_name("_")) {
+                printer.print_cpp2(
+                    "auto_" + labelized_position(n.identifier->get_token()),
+                    n.identifier->position()
+                );
+            }
+            else {
+                emit(*n.identifier);
+            }
+
+            if (
+                n.parent_is_namespace()
+                && printer.get_phase() != printer.phase2_func_defs
+                )
+            {
+                printer.print_cpp2( ";", n.position());
+                return;
+            }
 
             //  If there's an initializer, emit it
             if (n.initializer)
@@ -4886,40 +5138,6 @@ public:
             }
 
             printer.print_cpp2( "; ", n.position() );
-        }
-
-        //  Finally, do the potential recursions...
-
-        //  If this was a constructor and we want also want to emit
-        //  it as an assignment operator, do it via a recursive call
-        if (need_to_generate_assignment)
-        {
-            //  Reset the 'emitted' flags
-            for (auto& statement : n.get_initializer_statements()) {
-                statement->emitted = false;
-            }
-
-            //  Then reposition and do the recursive call
-            printer.reset_line_to(n.position().lineno);
-            generating_assignment_from = &n;
-            emit( n, capture_intro );
-            generating_assignment_from = {};
-        }
-
-        //  If this was a constructor and we want also want to emit
-        //  it as an assignment operator, do it via a recursive call
-        if (need_to_generate_move)
-        {
-            //  Reset the 'emitted' flags
-            for (auto& statement : n.get_initializer_statements()) {
-                statement->emitted = false;
-            }
-
-            //  Then reposition and do the recursive call
-            printer.reset_line_to(n.position().lineno);
-            generating_move_from = &n;
-            emit( n, capture_intro );
-            generating_move_from = {};
         }
     }
 

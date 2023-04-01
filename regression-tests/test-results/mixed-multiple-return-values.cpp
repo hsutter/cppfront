@@ -1,12 +1,17 @@
 
-#line 1 "mixed-multiple-return-values.cpp2"
+
+//=== Cpp2 type declarations ====================================================
+
+
+#include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
+
 
 #include <iostream>
 #include <random>
 #include <string>
-
-#include "cpp2util.h"
-
 struct f__ret {
     int i;
     std::string s;
@@ -30,13 +35,15 @@ bool flip_a_coin() {
     return rand() % 2 == 0;
 }
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 
 #line 6 "mixed-multiple-return-values.cpp2"
 [[nodiscard]] auto f() -> f__ret{
         cpp2::deferred_init<int> i;
-        cpp2::deferred_init<std::string> s;//  note: i and s are uninitialized!
+        cpp2::deferred_init<std::string> s;
+    //  note: i and s are uninitialized!
+
 #line 9 "mixed-multiple-return-values.cpp2"
     i.construct(10);
 

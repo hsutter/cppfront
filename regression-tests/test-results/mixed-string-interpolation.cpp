@@ -1,5 +1,13 @@
 
-#line 1 "mixed-string-interpolation.cpp2"
+
+//=== Cpp2 type declarations ====================================================
+
+
+#include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
+
 #include <iostream>
 #include <string_view>
 #include <utility>
@@ -7,12 +15,10 @@
 
 struct custom_struct_with_no_stringize_customization { } custom;
 
-#include "cpp2util.h"
-
 #line 8 "mixed-string-interpolation.cpp2"
 [[nodiscard]] auto main() -> int;
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 
 #line 8 "mixed-string-interpolation.cpp2"

@@ -1,7 +1,14 @@
 
 #define CPP2_USE_MODULES         Yes
 
+//=== Cpp2 type declarations ====================================================
+
+
 #include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
+
 
 #line 2 "pure2-type-safety-1.cpp2"
 [[nodiscard]] auto main() -> int;
@@ -14,7 +21,7 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
 #line 35 "pure2-type-safety-1.cpp2"
 
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 
 #line 2 "pure2-type-safety-1.cpp2"

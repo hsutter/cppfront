@@ -5,7 +5,7 @@
 #include <iostream>
 
 main: () -> int = {
-    vec: std::vector<std::string> 
+    vec: std::vector<std::string>
             = ("hello", "2022");
     view: std::span = vec;
 
@@ -16,7 +16,7 @@ main: () -> int = {
         :(inout x:_) = x += "-ish";
     );
 
-    //  Initializating from a function expression
+    //  Initializing from a function expression
     callback := :(inout x:_) = x += " maybe";
     std::for_each(
         view.begin(),

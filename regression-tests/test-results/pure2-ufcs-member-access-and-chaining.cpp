@@ -1,7 +1,13 @@
 
 #define CPP2_USE_MODULES         Yes
 
+//=== Cpp2 type declarations ====================================================
+
+
 #include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto main() -> int;
@@ -18,7 +24,7 @@ struct fun__ret {
 #line 31 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto get_i(auto const& r) -> int;
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 #line 1 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto main() -> int{

@@ -1,7 +1,14 @@
 
 #define CPP2_USE_MODULES         Yes
 
+//=== Cpp2 type declarations ====================================================
+
+
 #include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
+
 
 #line 2 "pure2-break-continue.cpp2"
 [[nodiscard]] auto main() -> int;
@@ -42,7 +49,7 @@ auto for_break_inner() -> void;
 #line 214 "pure2-break-continue.cpp2"
 auto for_break_outer() -> void;
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 
 #line 2 "pure2-break-continue.cpp2"

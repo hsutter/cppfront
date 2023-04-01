@@ -1,121 +1,121 @@
-mixed-float-literals.cpp2:3:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:13:3: warning: expression result unused [-Wunused-value]
   123;
   ^~~
-mixed-float-literals.cpp2:4:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:14:3: warning: expression result unused [-Wunused-value]
   123u;
   ^~~~
-mixed-float-literals.cpp2:5:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:15:3: warning: expression result unused [-Wunused-value]
   123ul;
   ^~~~~
-mixed-float-literals.cpp2:6:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:16:3: warning: expression result unused [-Wunused-value]
   123ull;
   ^~~~~~
-mixed-float-literals.cpp2:7:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:17:3: warning: expression result unused [-Wunused-value]
   123l;
   ^~~~
-mixed-float-literals.cpp2:8:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:18:3: warning: expression result unused [-Wunused-value]
   123ll;
   ^~~~~
-mixed-float-literals.cpp2:9:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:19:3: warning: expression result unused [-Wunused-value]
   123'456ll;
   ^~~~~~~~~
-mixed-float-literals.cpp2:10:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:20:3: warning: expression result unused [-Wunused-value]
   123;
   ^~~
-mixed-float-literals.cpp2:11:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:21:3: warning: expression result unused [-Wunused-value]
   123U;
   ^~~~
-mixed-float-literals.cpp2:12:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:22:3: warning: expression result unused [-Wunused-value]
   123UL;
   ^~~~~
-mixed-float-literals.cpp2:13:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:23:3: warning: expression result unused [-Wunused-value]
   123ULL;
   ^~~~~~
-mixed-float-literals.cpp2:14:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:24:3: warning: expression result unused [-Wunused-value]
   123L;
   ^~~~
-mixed-float-literals.cpp2:15:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:25:3: warning: expression result unused [-Wunused-value]
   123LL;
   ^~~~~
-mixed-float-literals.cpp2:16:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:26:3: warning: expression result unused [-Wunused-value]
   123'456LL;
   ^~~~~~~~~
-mixed-float-literals.cpp2:18:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:28:3: warning: expression result unused [-Wunused-value]
   123'456.0f;
   ^~~~~~~~~~
-mixed-float-literals.cpp2:19:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:29:3: warning: expression result unused [-Wunused-value]
   123'456.f;
   ^~~~~~~~~
-mixed-float-literals.cpp2:20:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:30:3: warning: expression result unused [-Wunused-value]
   456.0;
   ^~~~~
-mixed-float-literals.cpp2:21:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:31:3: warning: expression result unused [-Wunused-value]
   456.;
   ^~~~
-mixed-float-literals.cpp2:22:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:32:3: warning: expression result unused [-Wunused-value]
   1.0e10;
   ^~~~~~
-mixed-float-literals.cpp2:23:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:33:3: warning: expression result unused [-Wunused-value]
   1.0e+10;
   ^~~~~~~
-mixed-float-literals.cpp2:24:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:34:3: warning: expression result unused [-Wunused-value]
   1.0e-10;
   ^~~~~~~
-mixed-float-literals.cpp2:25:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:35:3: warning: expression result unused [-Wunused-value]
   1.0e-10f;
   ^~~~~~~~
-mixed-float-literals.cpp2:26:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:36:3: warning: expression result unused [-Wunused-value]
   1.e-10;
   ^~~~~~
-mixed-float-literals.cpp2:27:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:37:3: warning: expression result unused [-Wunused-value]
   1.e-10f;
   ^~~~~~~
-mixed-float-literals.cpp2:28:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:38:3: warning: expression result unused [-Wunused-value]
   1e-10;
   ^~~~~
-mixed-float-literals.cpp2:29:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:39:3: warning: expression result unused [-Wunused-value]
   1e-10f;
   ^~~~~~
-mixed-float-literals.cpp2:30:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:40:3: warning: expression result unused [-Wunused-value]
   1e-1'0;
   ^~~~~~
-mixed-float-literals.cpp2:31:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:41:3: warning: expression result unused [-Wunused-value]
   123'456.0F;
   ^~~~~~~~~~
-mixed-float-literals.cpp2:32:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:42:3: warning: expression result unused [-Wunused-value]
   123'456.F;
   ^~~~~~~~~
-mixed-float-literals.cpp2:33:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:43:3: warning: expression result unused [-Wunused-value]
   456.0;
   ^~~~~
-mixed-float-literals.cpp2:34:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:44:3: warning: expression result unused [-Wunused-value]
   456.;
   ^~~~
-mixed-float-literals.cpp2:35:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:45:3: warning: expression result unused [-Wunused-value]
   1.0E10;
   ^~~~~~
-mixed-float-literals.cpp2:36:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:46:3: warning: expression result unused [-Wunused-value]
   1.0E+10;
   ^~~~~~~
-mixed-float-literals.cpp2:37:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:47:3: warning: expression result unused [-Wunused-value]
   1.0E-10;
   ^~~~~~~
-mixed-float-literals.cpp2:38:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:48:3: warning: expression result unused [-Wunused-value]
   1.0E-10F;
   ^~~~~~~~
-mixed-float-literals.cpp2:39:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:49:3: warning: expression result unused [-Wunused-value]
   1.E-10;
   ^~~~~~
-mixed-float-literals.cpp2:40:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:50:3: warning: expression result unused [-Wunused-value]
   1.E-10F;
   ^~~~~~~
-mixed-float-literals.cpp2:41:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:51:3: warning: expression result unused [-Wunused-value]
   1E-10;
   ^~~~~
-mixed-float-literals.cpp2:42:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:52:3: warning: expression result unused [-Wunused-value]
   1E-10F;
   ^~~~~~
-mixed-float-literals.cpp2:43:3: warning: expression result unused [-Wunused-value]
+mixed-float-literals.cpp:53:3: warning: expression result unused [-Wunused-value]
   1E-1'0;
   ^~~~~~
 mixed-float-literals.cpp2:59:3: warning: expression result unused [-Wunused-value]

@@ -1,7 +1,13 @@
 
 #define CPP2_USE_MODULES         Yes
 
+//=== Cpp2 type declarations ====================================================
+
+
 #include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-type-safety-2-with-inspect-expression.cpp2"
 [[nodiscard]] auto main() -> int;
@@ -9,7 +15,7 @@
 #line 20 "pure2-type-safety-2-with-inspect-expression.cpp2"
 auto test_generic(auto const& x, auto const& msg) -> void;
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 #line 1 "pure2-type-safety-2-with-inspect-expression.cpp2"
 [[nodiscard]] auto main() -> int{

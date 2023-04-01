@@ -1,5 +1,13 @@
 
-#line 1 "mixed-type-safety-1.cpp2"
+
+//=== Cpp2 type declarations ====================================================
+
+
+#include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
+
 #include <iostream>
 #include <string>
 #include <variant>
@@ -10,7 +18,7 @@ class Shape { public: virtual ~Shape() { } };
 class Circle : public Shape { };
 class Square : public Shape { };
 
-#include "cpp2util.h"
+//--- printing helpers -----------------
 
 #line 13 "mixed-type-safety-1.cpp2"
 auto print(cpp2::in<std::string> msg, auto const& x) -> void;
@@ -18,14 +26,13 @@ auto print(cpp2::in<std::string> msg, auto const& x) -> void;
 #line 16 "mixed-type-safety-1.cpp2"
 auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
 
-#line 26 "mixed-type-safety-1.cpp2"
+#line 24 "mixed-type-safety-1.cpp2"
+//--- examples -------------------------
+
 [[nodiscard]] auto main() -> int;
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
-
-#line 11 "mixed-type-safety-1.cpp2"
-//--- printing helpers -----------------
 
 #line 13 "mixed-type-safety-1.cpp2"
 auto print(cpp2::in<std::string> msg, auto const& x) -> void { 
@@ -39,8 +46,7 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void
     std::cout << msg << std::move(bmsg.value()) << "\n";
 }
 
-//--- examples -------------------------
-
+#line 26 "mixed-type-safety-1.cpp2"
 [[nodiscard]] auto main() -> int
 {
     print("1.1 is int? ", cpp2::is<int>(1.1));

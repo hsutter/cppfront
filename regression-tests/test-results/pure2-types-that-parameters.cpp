@@ -1,23 +1,50 @@
 
 #define CPP2_USE_MODULES         Yes
 
+//=== Cpp2 type declarations ====================================================
+
+
 #include "cpp2util.h"
+
 
 #line 2 "pure2-types-that-parameters.cpp2"
 class myclass;
 
-#line 25 "pure2-types-that-parameters.cpp2"
-auto main() -> int;
-
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 type definitions and function declarations ===========================
 
 
 #line 2 "pure2-types-that-parameters.cpp2"
 class myclass {
 
-    public: myclass(){}
+    public: myclass();
 
-    public: explicit myclass(myclass const& that)
+    public: explicit myclass(myclass const& that);
+#line 6 "pure2-types-that-parameters.cpp2"
+    public: auto operator=(myclass const& that) -> myclass& ;
+
+#line 11 "pure2-types-that-parameters.cpp2"
+    public: explicit myclass(myclass&& that);
+#line 11 "pure2-types-that-parameters.cpp2"
+    public: auto operator=(myclass&& that) -> myclass& ;
+
+#line 16 "pure2-types-that-parameters.cpp2"
+    public: auto print() const -> void;
+
+#line 20 "pure2-types-that-parameters.cpp2"
+    private: std::string name {"Henry"}; 
+    private: std::string addr {"123 Ford Dr."}; 
+
+};
+
+auto main() -> int;
+
+//=== Cpp2 function definitions =================================================
+
+
+#line 4 "pure2-types-that-parameters.cpp2"
+    myclass::myclass(){}
+
+    myclass::myclass(myclass const& that)
         : name{ that.name }
         , addr{ that.addr }
 #line 6 "pure2-types-that-parameters.cpp2"
@@ -26,14 +53,15 @@ class myclass {
 #line 9 "pure2-types-that-parameters.cpp2"
     }
 #line 6 "pure2-types-that-parameters.cpp2"
-    public: auto operator=(myclass const& that) -> myclass& {
+    auto myclass::operator=(myclass const& that) -> myclass& {
         name = that.name;
         addr = that.addr;
         return *this;
+
 #line 9 "pure2-types-that-parameters.cpp2"
     }
 
-    public: explicit myclass(myclass&& that)
+    myclass::myclass(myclass&& that)
         : name{ std::move(that).name }
         , addr{ std::move(that).addr }
 #line 11 "pure2-types-that-parameters.cpp2"
@@ -42,22 +70,19 @@ class myclass {
 #line 14 "pure2-types-that-parameters.cpp2"
     }
 #line 11 "pure2-types-that-parameters.cpp2"
-    public: auto operator=(myclass&& that) -> myclass& {
+    auto myclass::operator=(myclass&& that) -> myclass& {
         name = std::move(that).name;
         addr = std::move(that).addr;
         return *this;
+
 #line 14 "pure2-types-that-parameters.cpp2"
     }
 
-    public: auto print() const -> void{
+    auto myclass::print() const -> void{
         std::cout << "name '" + cpp2::to_string(name) + "', addr '" + cpp2::to_string(addr) + "'\n";
     }
 
-    private: std::string name {"Henry"}; 
-    private: std::string addr {"123 Ford Dr."}; 
-
-};
-
+#line 25 "pure2-types-that-parameters.cpp2"
 auto main() -> int{
     myclass x {}; 
     CPP2_UFCS_0(print, x);

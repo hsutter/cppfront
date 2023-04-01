@@ -1,5 +1,13 @@
 
-#line 1 "mixed-forwarding.cpp2"
+
+//=== Cpp2 type declarations ====================================================
+
+
+#include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
+
 #include <iostream>
 #include <utility>
 
@@ -10,14 +18,12 @@ struct X {
     X(X &&     that) : i{that.i} { std::cout << "move X " << i << "\n"; }
 };
 
-#include "cpp2util.h"
-
 #line 11 "mixed-forwarding.cpp2"
 auto copy_from(auto x) -> void;
 
 auto use(auto const& x) -> void;
 
-#line 16 "mixed-forwarding.cpp2"
+// invoking each of these with an rvalue std::pair argument ...
 auto apply_implicit_forward(auto&& t) -> void;
 
 #line 20 "mixed-forwarding.cpp2"
@@ -26,7 +32,7 @@ auto apply_explicit_forward(auto&& t) -> void;
 #line 25 "mixed-forwarding.cpp2"
 [[nodiscard]] auto main() -> int;
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 
 #line 11 "mixed-forwarding.cpp2"
@@ -34,7 +40,7 @@ auto copy_from(auto x) -> void{}
 
 auto use(auto const& x) -> void{}
 
-// invoking each of these with an rvalue std::pair argument ...
+#line 16 "mixed-forwarding.cpp2"
 auto apply_implicit_forward(auto&& t) -> void
 requires (std::is_same_v<CPP2_TYPEOF(t), std::pair<X,X>>)
 #line 16 "mixed-forwarding.cpp2"

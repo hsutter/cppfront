@@ -1,5 +1,13 @@
 
-#line 1 "mixed-fixed-type-aliases.cpp2"
+
+//=== Cpp2 type declarations ====================================================
+
+
+#include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
+
 #include <typeinfo>
 #include <iostream>
 
@@ -7,15 +15,13 @@ namespace my {
     using u16 = float;
 }
 
-#include "cpp2util.h"
-
 #line 8 "mixed-fixed-type-aliases.cpp2"
 auto test(auto const& x) -> void;
 
 #line 15 "mixed-fixed-type-aliases.cpp2"
 [[nodiscard]] auto main(int const argc_, char const* const* const argv_) -> int;
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 
 #line 8 "mixed-fixed-type-aliases.cpp2"

@@ -1,5 +1,13 @@
 
-#line 1 "mixed-test-parens.cpp2"
+
+//=== Cpp2 type declarations ====================================================
+
+
+#include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
+
 #include <vector>
 
 template<auto>
@@ -7,12 +15,10 @@ auto f(auto, auto) -> void { }
 
 constexpr int a = 1;
 
-#include "cpp2util.h"
-
 #line 8 "mixed-test-parens.cpp2"
 [[nodiscard]] auto main() -> int;
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 
 #line 8 "mixed-test-parens.cpp2"

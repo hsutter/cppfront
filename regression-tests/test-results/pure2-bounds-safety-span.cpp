@@ -1,7 +1,14 @@
 
 #define CPP2_USE_MODULES         Yes
 
+//=== Cpp2 type declarations ====================================================
+
+
 #include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
+
 
 #line 2 "pure2-bounds-safety-span.cpp2"
 [[nodiscard]] auto main() -> int;
@@ -11,7 +18,7 @@ auto print_and_decorate(auto const& thing) -> void;
 #line 16 "pure2-bounds-safety-span.cpp2"
 
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 
 #line 2 "pure2-bounds-safety-span.cpp2"

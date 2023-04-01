@@ -1,11 +1,17 @@
 
-#line 1 "mixed-lifetime-safety-and-null-contracts.cpp2"
+
+//=== Cpp2 type declarations ====================================================
+
+
+#include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
+
 
 #include <iostream>
 #include <vector>
 #include <string>
-
-#include "cpp2util.h"
 
 #line 6 "mixed-lifetime-safety-and-null-contracts.cpp2"
 [[nodiscard]] auto main() -> int;
@@ -19,7 +25,7 @@ auto try_pointer_stuff() -> void;
 #line 21 "mixed-lifetime-safety-and-null-contracts.cpp2"
 auto call_my_framework(cpp2::in<char const*> msg) -> void;
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 
 #line 6 "mixed-lifetime-safety-and-null-contracts.cpp2"

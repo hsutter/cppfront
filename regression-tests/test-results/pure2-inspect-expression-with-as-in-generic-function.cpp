@@ -1,7 +1,13 @@
 
 #define CPP2_USE_MODULES         Yes
 
+//=== Cpp2 type declarations ====================================================
+
+
 #include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-inspect-expression-with-as-in-generic-function.cpp2"
 [[nodiscard]] auto main() -> int;
@@ -9,7 +15,7 @@
 #line 7 "pure2-inspect-expression-with-as-in-generic-function.cpp2"
 auto print_an_int(auto const& x) -> void;
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 #line 1 "pure2-inspect-expression-with-as-in-generic-function.cpp2"
 [[nodiscard]] auto main() -> int{

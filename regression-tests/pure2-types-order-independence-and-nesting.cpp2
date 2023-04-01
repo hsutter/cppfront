@@ -1,0 +1,80 @@
+
+N: namespace = {
+
+//  A type X, that uses Y (defined later)
+//
+X: type = {
+    py: *Y;
+
+    //  Note: A constructor with an 'out' parameter
+    operator=: (out this, out y: Y) = {
+        //  === The following comments will stay close to, but not exactly at,
+        //      the corresponding lines that get moved to the Cpp1 mem-init-list
+
+        //  At this point, 'this' is now in scope and can safely be used.
+        //  The guaranteed initialization rules ensure we cannot use an
+        //  unconstructed object, and if a constructor that has begun chooses to
+        //  hand out 'this&' (as in the next line below) then it is explicitly
+        //  aware it's doing so - this constructor knows that if y's constructor
+        //  uses the pointer it will see 'this' object's state as of this line
+
+        //  'out' parameters are constructed first
+        y = this&;  // ok, construct 'y' to refer to 'this'
+        //  at this point, 'y' is now initialized and can safely be used
+
+        //  then members are constructed next
+        py = y&;    // ok, set 'this' to refer to 'y'
+
+        //  === from here onward, the comments stick with their code
+
+        //  then do anything else the constructor wants to do
+        std::cout << "made a safely initialized cycle\n";
+    }
+
+    //  X::exx member function description here
+    exx: (this, count: int) = {
+        //  Exercise '_' anonymous objects too while we're at it
+        _ := cpp2::finally( :()= std::cout << "leaving call to 'why((count)$)'\n"; );
+        if count < 5 {
+            py*.why( count+1 );     // use Y object from X
+        }
+    }
+}
+
+//  Another type Y, that uses X
+//
+Y: type = {
+    px: *X;
+
+    operator=: (out this, x: *X) = px = x;
+
+    why: (this, count: int) =
+        px*.exx( count+1 );         // use X object from Y
+}
+
+M: namespace = {
+
+//  Testing nested templated types
+A: <T, U> type = {
+    B: <I: int> type = {
+        f: <V, J: int, W> (w: W) = std::cout << "hallo (w)$\n";
+    }
+}
+
+}
+
+}
+
+//  Mainline - gratuitous comment just to check that this comment
+//  stays on the function declaration when lowering
+main: () =
+{
+    y: N::Y;            // declare an uninitialized Y object
+    x: N::X = (out y);  // construct y and x, and point them at each other
+
+    // now have the two objects call each other back and forth a few times
+    x.exx(1);
+
+    // and test a nested template out-of-line definition
+    N::M::A<int, int>::B<42>::f<int, 43>("welt");
+}

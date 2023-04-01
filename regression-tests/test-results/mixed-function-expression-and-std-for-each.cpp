@@ -1,17 +1,23 @@
 
-#line 1 "mixed-function-expression-and-std-for-each.cpp2"
+
+//=== Cpp2 type declarations ====================================================
+
+
+#include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
+
 #include <vector>
 #include <string>
 #include <span>
 #include <algorithm>
 #include <iostream>
 
-#include "cpp2util.h"
-
 #line 7 "mixed-function-expression-and-std-for-each.cpp2"
 [[nodiscard]] auto main() -> int;
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 
 #line 7 "mixed-function-expression-and-std-for-each.cpp2"
@@ -27,7 +33,7 @@
         [](auto& x) -> void { x += "-ish";  }
     );
 
-    //  Initializating from a function expression
+    //  Initializing from a function expression
     auto callback {[](auto& x) -> void { x += " maybe";  }}; 
     std::for_each(
         CPP2_UFCS_0(begin, view), 

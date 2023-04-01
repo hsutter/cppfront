@@ -1415,6 +1415,21 @@ struct function_type_node
         return returns.index() != empty;
     }
 
+    auto has_out_parameter_named(std::string_view s) const
+        -> bool
+    {
+        for (auto& param : parameters->parameters) {
+            if (
+                param->has_name(s)
+                && param->pass == passing_style::out
+                )
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     //  Internals
     //
     auto position() const
@@ -1554,6 +1569,15 @@ struct declaration_node
             has_name()
             && *name() == s
             ;
+    }
+
+    auto has_out_parameter_named(std::string_view s) const
+        -> bool
+    {
+        if (!is_function()) {
+            return false;
+        }
+        return std::get<a_function>(type)->has_out_parameter_named(s);
     }
 
     auto is_function () const -> bool
@@ -2336,7 +2360,7 @@ public:
         //  Now go backwards through the preceding entries until
         //  one includes pos or we move before pos
         while (
-            iter->last >= p.lineno
+            iter->first <= p.lineno
             )
         {
             if (
@@ -5144,6 +5168,44 @@ private:
                 return {};
             }
 
+            //  Provide some useful Cpp1->Cpp2 migration diagnostics for common mistakes
+            //
+            if (
+                id->get_token()
+                && *id->get_token() == "namespace"
+                )
+            {
+                auto name = std::string{"N"};
+                if (peek(0)) {
+                    name = peek(0)->to_string(true);
+                }
+                errors.emplace_back(
+                    curr().position(),
+                    "to define a namespace " + name + ", write '" + name + " : namespace = { /*contents*/ }'"
+                );
+                return {};
+            }
+            if (
+                id->get_token()
+                && (
+                    *id->get_token() == "class"
+                    || *id->get_token() == "struct"
+                    )
+                )
+            {
+                auto name = std::string{"C"};
+                if (peek(0)) {
+                    name = peek(0)->to_string(true);
+                }
+                errors.emplace_back(
+                    curr().position(),
+                    "to define a type " + name + ", write '" + name + " : type = { /*body*/ }'"
+                );
+                return {};
+            }
+
+            //  Now proceed...
+            //
             n = unnamed_declaration(
                 start_pos,
                 semicolon_required,
@@ -5161,6 +5223,19 @@ private:
         }
 
         //  Note: Do this after trying to parse this as a declaration, for parse backtracking
+
+        if (
+            n->has_name("_")
+            && !n->is_object()
+            && !n->is_namespace()
+            )
+        {
+            errors.emplace_back(
+                n->identifier->position(),
+                "'_' (wildcard) may not be the name of a function or type - it may only be used as the name of an anonymous object or anonymous namespace"
+            );
+            return {};
+        }
 
         if (
             (

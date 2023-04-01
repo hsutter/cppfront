@@ -1,10 +1,16 @@
 
-#line 1 "mixed-lifetime-safety-pointer-init-4.cpp2"
+
+//=== Cpp2 type declarations ====================================================
+
+
+#include "cpp2util.h"
+
+
+//=== Cpp2 type definitions and function declarations ===========================
+
 
 #include <iostream>
 #include <random>
-
-#include "cpp2util.h"
 
 #line 5 "mixed-lifetime-safety-pointer-init-4.cpp2"
 [[nodiscard]] auto main() -> int;
@@ -19,7 +25,7 @@ bool flip_a_coin() {
     return rand() % 2 == 1;
 }
 
-//=== Cpp2 definitions ==========================================================
+//=== Cpp2 function definitions =================================================
 
 
 #line 5 "mixed-lifetime-safety-pointer-init-4.cpp2"
