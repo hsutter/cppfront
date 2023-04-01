@@ -1415,19 +1415,51 @@ struct function_type_node
         return returns.index() != empty;
     }
 
-    auto has_out_parameter_named(std::string_view s) const
+    auto has_parameter_named(std::string_view s) const
+        -> bool
+    {
+        for (auto& param : parameters->parameters) {
+            if (param->has_name(s)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    auto has_parameter_with_name_and_pass(
+        std::string_view s,
+        passing_style    pass
+    ) const
         -> bool
     {
         for (auto& param : parameters->parameters) {
             if (
                 param->has_name(s)
-                && param->pass == passing_style::out
+                && param->pass == pass
                 )
             {
                 return true;
             }
         }
         return false;
+    }
+
+    auto has_in_parameter_named(std::string_view s) const
+        -> bool
+    {
+        return has_parameter_with_name_and_pass(s, passing_style::in);
+    }
+
+    auto has_out_parameter_named(std::string_view s) const
+        -> bool
+    {
+        return has_parameter_with_name_and_pass(s, passing_style::out);
+    }
+
+    auto has_move_parameter_named(std::string_view s) const
+        -> bool
+    {
+        return has_parameter_with_name_and_pass(s, passing_style::move);
     }
 
     //  Internals
@@ -1571,6 +1603,24 @@ struct declaration_node
             ;
     }
 
+    auto has_parameter_named(std::string_view s) const
+        -> bool
+    {
+        if (!is_function()) {
+            return false;
+        }
+        return std::get<a_function>(type)->has_parameter_named(s);
+    }
+
+    auto has_in_parameter_named(std::string_view s) const
+        -> bool
+    {
+        if (!is_function()) {
+            return false;
+        }
+        return std::get<a_function>(type)->has_in_parameter_named(s);
+    }
+
     auto has_out_parameter_named(std::string_view s) const
         -> bool
     {
@@ -1578,6 +1628,15 @@ struct declaration_node
             return false;
         }
         return std::get<a_function>(type)->has_out_parameter_named(s);
+    }
+
+    auto has_move_parameter_named(std::string_view s) const
+        -> bool
+    {
+        if (!is_function()) {
+            return false;
+        }
+        return std::get<a_function>(type)->has_move_parameter_named(s);
     }
 
     auto is_function () const -> bool

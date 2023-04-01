@@ -2057,19 +2057,42 @@ public:
         //
         if (n.expression)
         {
-            auto tok = n.expression->expr->get_postfix_expression_node()->expr->get_token();
-            if (
+            assert(!current_functions.empty());
+
+            //  If we're doing a forward return
+            if (auto tok = n.expression->expr->get_postfix_expression_node()->expr->get_token();
                 tok
-                && sema.get_declaration_of(*tok)
                 && !function_returns.empty()
                 && function_returns.back().pass == passing_style::forward
                 )
             {
-                errors.emplace_back(
-                    n.position(),
-                    "a 'forward' return type cannot return a local variable"
-                );
-                return;
+                //  Ensure we're not returning a local or an in/move parameter
+                auto is_parameter_name = current_functions.back().decl->has_parameter_named(*tok);
+                if (
+                    is_parameter_name
+                    && (
+                        current_functions.back().decl->has_in_parameter_named(*tok)
+                        || current_functions.back().decl->has_move_parameter_named(*tok)
+                        )
+                    )
+                {
+                    errors.emplace_back(
+                        n.position(),
+                        "a 'forward' return type cannot return an 'in' or 'move' parameter"
+                    );
+                    return;
+                }
+                else if (
+                    !is_parameter_name
+                    && sema.get_declaration_of(*tok)
+                    )
+                {
+                    errors.emplace_back(
+                        n.position(),
+                        "a 'forward' return type cannot return a local variable"
+                    );
+                    return;
+                }
             }
 
             emit(*n.expression);
