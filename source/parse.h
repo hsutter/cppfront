@@ -5240,7 +5240,8 @@ private:
     //G     ':' template-parameter-declaration-list? '_'? '==' expression ';'
     //G
     //GT     ':' function-type '==' expression ';'
-    //GT        # See commit comment for why I don't see a need to enable this yet
+    //GT        # See commit 63efa6ed21c4d4f4f136a7a73e9f6b2c110c81d7 comment
+    //GT        # for why I don't see a need to enable this yet
     //
     auto alias()
         -> std::unique_ptr<declaration_node>

@@ -4298,9 +4298,9 @@ public:
 
                     current_functions.back().prolog.statements.push_back(
                         (*object)->name()->to_string(true) +
-                        " = {" +
+                        " = " +
                         initializer +
-                        "};"
+                        ";"
                     );
                 }
                 //  (b) ... if this isn't assignment, only need to emit it if it was
@@ -4365,11 +4365,15 @@ public:
                     if (is_assignment)
                     {
                         auto initializer = print_to_string( *(*object)->initializer, false );
+                        if (initializer.empty()) {
+                            initializer = "{}";
+                        }
+
                         current_functions.back().prolog.statements.push_back(
                             (*object)->name()->to_string(true) +
-                            " = {" +
+                            " = " +
                             initializer +
-                            "};"
+                            ";"
                         );
                     }
                 }

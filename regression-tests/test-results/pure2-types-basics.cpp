@@ -84,8 +84,8 @@ namespace N {
     }
 #line 6 "pure2-types-basics.cpp2"
     auto myclass::operator=(cpp2::in<int> x) -> myclass& {
-        data = {x};
-        more = {std::to_string(42 * 12)};
+        data = x;
+        more = std::to_string(42 * 12);
 
 #line 9 "pure2-types-basics.cpp2"
         std::cout << "myclass: implicit from int\n";
@@ -106,8 +106,8 @@ namespace N {
     }
 #line 13 "pure2-types-basics.cpp2"
     auto myclass::operator=(cpp2::in<std::string> s) -> myclass& {
-        data = {99};
-        more = {s};
+        data = 99;
+        more = s;
 
 #line 16 "pure2-types-basics.cpp2"
         std::cout << "myclass: explicit from string\n";

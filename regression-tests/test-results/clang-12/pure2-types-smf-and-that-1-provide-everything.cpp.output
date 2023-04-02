@@ -1,4 +1,0 @@
-pure2-types-smf-and-that-1-provide-everything.cpp2:24:16: warning: braces around scalar initializer [-Wbraced-scalar-init]
-        addr = {"123 Ford Dr."};
-               ^~~~~~~~~~~~~~~~
-1 warning generated.
