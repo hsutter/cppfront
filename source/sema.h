@@ -604,9 +604,16 @@ private:
                 assert (sym.identifier);
 
                 //  If we find a use of this identifier
-                if (*sym.identifier == *id) {
-                    definite_last_uses.emplace_back( sym.identifier, is_forward );
-                    found = true;
+                if (*sym.identifier == *id)
+                {
+                    if (
+                        !found
+                        || symbols[i].depth > selections.back()+1
+                        )
+                    {
+                        definite_last_uses.emplace_back( sym.identifier, is_forward );
+                        found = true;
+                    }
 
                     //  Pop any of the last branches that we're outside of
                     while (symbols[i].depth <= selections.back()) {
