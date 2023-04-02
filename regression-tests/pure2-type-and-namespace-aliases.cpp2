@@ -1,0 +1,32 @@
+
+N: namespace = {
+    pmr_vec: <T> type == std::vector<T, std::pmr::polymorphic_allocator<T>>;
+}
+
+N1: namespace == N;
+
+myclass: type = {
+    //  Default to public
+    str: type == std::string;
+
+    private str2: type == std::string;
+}
+
+N3: namespace == ::std::literals;
+
+myfunc: () = {
+    v: N1::pmr_vec<myclass::str> = ("xyzzy", "plugh");
+
+    v2 :== v;
+
+    for v2 do :(s) =
+        std::cout << "(s)$\n";
+}
+
+main: () = {
+    view: type == std::string_view;
+    N4: namespace == std::literals;
+
+    myfunc2 :== myfunc;
+    myfunc2();
+}

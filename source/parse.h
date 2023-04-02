@@ -1542,6 +1542,57 @@ struct namespace_node
 };
 
 
+struct alias_node
+{
+    token const* type = {};
+
+    enum active : std::uint8_t { a_type, a_namespace_qualified, a_namespace_unqualified, an_object };
+    std::variant<
+        std::unique_ptr<type_id_node>,
+        std::unique_ptr<qualified_id_node>,
+        std::unique_ptr<unqualified_id_node>,
+        std::unique_ptr<expression_node>
+    > initializer;
+
+    alias_node( token const* t ) : type{t} { }
+
+    //  API
+    //
+    auto is_type_alias     () const -> bool
+        { return initializer.index() == a_type;      }
+    auto is_namespace_alias() const -> bool
+        { return
+            initializer.index() == a_namespace_qualified
+            || initializer.index() == a_namespace_unqualified
+            ;
+        }
+    auto is_object_alias   () const -> bool
+        { return initializer.index() == an_object;   }
+
+    //  Internals
+    //
+    auto position() const
+        -> source_position
+    {
+        assert (type);
+        return type->position();
+    }
+
+    auto visit(auto& v, int depth)
+        -> void
+    {
+        v.start(*this, depth);
+
+        try_visit<a_type                 >(initializer, v, depth+1);
+        try_visit<a_namespace_qualified  >(initializer, v, depth+1);
+        try_visit<a_namespace_unqualified>(initializer, v, depth+1);
+        try_visit<an_object              >(initializer, v, depth+1);
+
+        v.end(*this, depth);
+    }
+};
+
+
 struct declaration_node
 {
     //  The capture_group is declared first, because it should outlive
@@ -1552,12 +1603,13 @@ struct declaration_node
     std::unique_ptr<unqualified_id_node> identifier;
     token const* access = {};
 
-    enum active : std::uint8_t { a_function, an_object, a_type, a_namespace };
+    enum active : std::uint8_t { a_function, an_object, a_type, a_namespace, an_alias };
     std::variant<
         std::unique_ptr<function_type_node>,
         std::unique_ptr<type_id_node>,
         std::unique_ptr<type_node>,
-        std::unique_ptr<namespace_node>
+        std::unique_ptr<namespace_node>,
+        std::unique_ptr<alias_node>
     > type;
 
     std::unique_ptr<parameter_declaration_list_node> template_parameters;
@@ -1647,6 +1699,9 @@ struct declaration_node
         { return type.index() == a_type;      }
     auto is_namespace() const -> bool
         { return type.index() == a_namespace; }
+    auto is_alias() const -> bool
+        { return type.index() == an_alias;    }
+
     auto is_global   () const -> bool
         { return !parent_declaration;         }
 
@@ -1658,6 +1713,8 @@ struct declaration_node
         { return  parent_declaration && parent_declaration->type.index() == a_type;      }
     auto parent_is_namespace() const -> bool
         { return !parent_declaration || parent_declaration->type.index() == a_namespace; }
+    auto parent_is_alias    () const -> bool
+        { return !parent_declaration || parent_declaration->type.index() == an_alias;    }
 
     enum which {
         functions = 1,
@@ -1906,9 +1963,11 @@ struct declaration_node
             identifier->visit(v, depth+1);
         }
 
-        try_visit<a_function>(type, v, depth+1);
-        try_visit<an_object >(type, v, depth+1);
-        try_visit<a_type    >(type, v, depth+1);
+        try_visit<a_function >(type, v, depth+1);
+        try_visit<an_object  >(type, v, depth+1);
+        try_visit<a_type     >(type, v, depth+1);
+        try_visit<a_namespace>(type, v, depth+1);
+        try_visit<an_alias   >(type, v, depth+1);
 
         if (initializer) {
             initializer->visit(v, depth+1);
@@ -4863,6 +4922,7 @@ private:
         if (curr().type() == lexeme::Less) {
             auto template_parameters = parameter_declaration_list(false, false, true);
             if (!template_parameters) {
+                error("invalid template parameter list");
                 return {};
             }
             n->template_parameters = std::move(template_parameters);
@@ -5174,8 +5234,166 @@ private:
     }
 
 
+    //G alias
+    //G     ':' template-parameter-declaration-list? 'type' '==' type-id ';'
+    //G     ':' 'namespace' '==' qualified-id ';'
+    //G     ':' template-parameter-declaration-list? '_'? '==' expression ';'
+    //G
+    //GT     ':' function-type '==' expression ';'
+    //GT        # See commit comment for why I don't see a need to enable this yet
+    //
+    auto alias()
+        -> std::unique_ptr<declaration_node>
+    {
+        //  Remember current position, because we need to look ahead
+        auto start_pos = pos;
+
+        auto n = std::make_unique<declaration_node>( current_declarations.back() );
+
+        if (curr().type() != lexeme::Colon) {
+            return {};
+        }
+        next();
+
+        //  Next is an optional template parameter list
+        if (curr().type() == lexeme::Less) {
+            auto template_parameters = parameter_declaration_list(false, false, true);
+            if (!template_parameters) {
+                pos = start_pos;    // backtrack
+                return {};
+            }
+            n->template_parameters = std::move(template_parameters);
+        }
+
+        if (
+            curr() != "type"
+            && curr() != "namespace"
+            && curr() != "_"
+            && curr().type() != lexeme::EqualComparison
+            )
+        {
+            pos = start_pos;    // backtrack
+            return {};
+        }
+
+        //  Pause parsing to check for some semantic diagnostics
+
+        if (
+            n->template_parameters
+            && curr() == "namespace"
+            )
+        {
+            errors.emplace_back(
+                curr().position(),
+                "a namespace cannot have template parameters"
+            );
+            return {};
+        }
+
+        //  Resume parsing
+
+        auto a = std::make_unique<alias_node>( &curr() );
+        next();
+
+        if (curr().type() == lexeme::EqualComparison) {
+            next();
+        }
+        else {
+            if (a->type->type() != lexeme::EqualComparison) {
+                pos = start_pos;    // backtrack
+                return {};
+            }
+        }
+        assert(peek(-1)->type() == lexeme::EqualComparison);
+
+        if (
+            n->parent_is_type()
+            && *a->type != "type"
+            )
+        {
+            errors.emplace_back(
+                curr().position(),
+                "only a type alias may appear in a type scope - not a namespace or object alias"
+            );
+            return {};
+        }
+
+        //  Finally, pick up the initializer
+
+        //  Type alias
+        if (*a->type == "type")
+        {
+            auto t = type_id();
+            if (!t) {
+                errors.emplace_back(
+                    curr().position(),
+                    "a 'type ==' alias declaration must be followed by a type name"
+                );
+                return {};
+            }
+            a->initializer = std::move(t);
+        }
+
+        //  Namespace alias
+        else if (*a->type == "namespace")
+        {
+            if (auto qid = qualified_id()) {
+                a->initializer = std::move(qid);
+            }
+            else if (auto uid = unqualified_id()) {
+                a->initializer = std::move(uid);
+            }
+            else {
+                errors.emplace_back(
+                    curr().position(),
+                    "a 'namespace ==' alias declaration must be followed by a namespace name"
+                );
+                return {};
+            }
+        }
+
+        //  Object alias
+        else if (
+            *a->type == "_"
+            || a->type->type() == lexeme::EqualComparison
+            )
+        {
+            auto e = expression();
+            if (!e) {
+                errors.emplace_back(
+                    curr().position(),
+                    "an object '==' alias declaration must be followed by an expression"
+                );
+                return {};
+            }
+            a->initializer = std::move(e);
+        }
+
+        //  Anything else shouldn't be possible
+        else {
+            assert(!"ICE: should be unreachable - invalid alias declaration");
+            return {};
+        }
+
+        //  And the final ceremonial semicolon
+        if (curr() != ";") {
+            errors.emplace_back(
+                curr().position(),
+                "';' expected at end of alias declaration"
+            );
+            return {};
+        }
+        next();
+
+        n->type = std::move(a);
+
+        return n;
+    }
+
+
     //G declaration:
     //G     access-specifier? identifier unnamed-declaration
+    //G     access-specifier? identifier alias
     //G
     //G access-specifier:
     //G     public
@@ -5265,6 +5483,17 @@ private:
 
             //  Now proceed...
             //
+
+            //  First see if it's an alias declaration
+            n = alias();
+            if (n) {
+                n->pos        = start_pos;
+                n->identifier = std::move(id);
+                n->access     = access;
+                return n;
+            }
+
+            //  Otherwise, this is a normal declaration
             n = unnamed_declaration(
                 start_pos,
                 semicolon_required,
@@ -5706,6 +5935,8 @@ public:
             o << pre(indent+1) << "type\n";
         break;case declaration_node::a_namespace:
             o << pre(indent+1) << "namespace\n";
+        break;case declaration_node::an_alias:
+            o << pre(indent+1) << "alias\n";
         break;default:
             o << pre(indent+1) << "ICE - invalid variant state\n";
         }

@@ -285,6 +285,9 @@ public:
             || !i->start
             )
         {
+            if (i == symbols.cbegin()) {
+                return nullptr;
+            }
             --i;
         }
 
@@ -974,8 +977,9 @@ public:
     auto start(declaration_node const& n, int) -> void
     {
         if (
+            !n.is_alias()
             //  Skip type scope (member) variables
-            !(n.parent_is_type() && n.is_object())
+            && !(n.parent_is_type() && n.is_object())
             //  Skip unnamed variables
             && n.identifier
             //  Skip non-out parameters
@@ -995,8 +999,9 @@ public:
     auto end(declaration_node const& n, int) -> void
     {
         if (
+            !n.is_alias()
             //  Skip type scope (member) variables
-            !(n.parent_is_type() && n.is_object())
+            && !(n.parent_is_type() && n.is_object())
             //  Skip unnamed variables
             && n.identifier 
             //  Skip non-out parameters

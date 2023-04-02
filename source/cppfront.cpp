@@ -2440,6 +2440,16 @@ public:
     }
 
     auto is_pointer_declaration(
+        alias_node const*,
+        int,
+        int
+    )
+        -> bool
+    {
+        return false;
+    }
+
+    auto is_pointer_declaration(
         declaration_sym const* decl,
         int                    deref_cnt,
         int                    addr_cnt
@@ -4423,6 +4433,7 @@ public:
         -> void
     {
         //  In phase 0, only need to consider namespaces and types
+
         if (
             printer.get_phase() == printer.phase0_type_decls
             && !n.is_namespace()
@@ -4431,6 +4442,109 @@ public:
         {
             return;
         }
+
+
+        //  Handle aliases
+
+        if (n.is_alias())
+        {
+            auto& a = std::get<declaration_node::an_alias>(n.type);
+            assert(a);
+
+            //  Non-local aliases are emitted in phase 1, locals in phase 2
+            if (
+                (
+                    !n.parent_is_function()
+                    && printer.get_phase() == printer.phase1_type_defs_func_decls
+                    )
+                ||
+                (
+                    n.parent_is_function()
+                    && printer.get_phase() == printer.phase2_func_defs
+                    )
+                )
+            {
+                assert(
+                    a->is_type_alias()
+                    || a->is_namespace_alias()
+                    || a->is_object_alias()
+                );
+
+                //  If we're in a type scope, handle the access specifier
+                if (n.parent_is_type()) {
+                    if (n.access) {
+                        printer.print_cpp2(n.access->to_string(true) + ": ", n.access->position());
+                    }
+                    else {
+                        printer.print_cpp2("public: ", n.position());
+                    }
+                }
+
+                //  Emit template parameters if any
+                if (n.template_parameters) {
+                    printer.print_cpp2("template", n.position());
+                    emit(*n.template_parameters, false, true);
+                    printer.print_cpp2(" ", n.position());
+                }
+
+                //  Handle type aliases
+                if (a->is_type_alias()) {
+                    printer.print_cpp2(
+                        "using "
+                            + print_to_string(*n.identifier)
+                            + " = "
+                            + print_to_string( *std::get<alias_node::a_type>(a->initializer) )
+                            + ";\n",
+                        n.position()
+                    );
+                }
+
+                //  Handle namespace aliases
+                else if (a->is_namespace_alias()) {
+                    auto initializer = std::string{};
+                    if (auto qid = std::get_if<alias_node::a_namespace_qualified>(&a->initializer)) {
+                        assert(*qid);
+                        initializer = print_to_string(**qid);
+                    }
+                    else if (auto uid = std::get_if<alias_node::a_namespace_unqualified>(&a->initializer)) {
+                        assert(*uid);
+                        initializer = print_to_string(**uid);
+                    }
+                    else {
+                        assert(!"ICE: should be unreachable - invalid namespace alias initializer");
+                    }
+                    printer.print_cpp2(
+                        "namespace "
+                            + print_to_string(*n.identifier)
+                            + " = "
+                            + initializer
+                            + ";\n",
+                        n.position()
+                    );
+                }
+
+                //  Handle object aliases
+                else if (a->is_object_alias()) {
+                    printer.print_cpp2(
+                        "auto const& "
+                            + print_to_string(*n.identifier)
+                            + " = "
+                            + print_to_string( *std::get<alias_node::an_object>(a->initializer) )
+                            + ";\n",
+                        n.position()
+                    );
+                }
+
+                else {
+                    assert(!"ICE: should be unreachable - invalid alias");
+                }
+
+                return;
+            }
+        }
+
+
+        //  Handle other declarations
 
         auto need_to_generate_assignment = false;
         auto need_to_generate_move       = false;
