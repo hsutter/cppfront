@@ -1934,7 +1934,7 @@ struct declaration_node
             ;
     }
 
-    auto is_wildcard() const
+    auto has_wildcard_type() const
         -> bool
     {
         return
@@ -5488,6 +5488,14 @@ private:
             //  First see if it's an alias declaration
             n = alias();
             if (n) {
+                if (is_parameter) {
+                    errors.emplace_back(
+                        curr().position(),
+                        "a parameter declaration may not be an alias declaration"
+                    );
+                    return {};
+                }
+
                 n->pos        = start_pos;
                 n->identifier = std::move(id);
                 n->access     = access;
@@ -5512,6 +5520,20 @@ private:
         }
 
         //  Note: Do this after trying to parse this as a declaration, for parse backtracking
+
+        if (
+            !is_parameter
+            && n->is_object()
+            && n->has_wildcard_type()
+            && n->parent_is_namespace()
+            )
+        {
+            errors.emplace_back(
+                n->identifier->position(),
+                "namespace scope objects must have a concrete type, not a deduced type"
+            );
+            return {};
+        }
 
         if (
             n->has_name("_")
