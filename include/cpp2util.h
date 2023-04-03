@@ -672,6 +672,45 @@ public:
 }(PARAM1)
 
 
+//  But for non-local lambdas [&] is not allowed
+
+#define CPP2_UFCS_NONLOCAL(FUNCNAME,PARAM1,...) \
+[](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
+    if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); }) { \
+        return std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); \
+    } else { \
+        return FUNCNAME(std::forward<decltype(obj)>(obj), std::forward<decltype(params)>(params)...); \
+    } \
+}(PARAM1, __VA_ARGS__)
+
+#define CPP2_UFCS_0_NONLOCAL(FUNCNAME,PARAM1) \
+[](auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
+    if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(); }) { \
+        return std::forward<decltype(obj)>(obj).FUNCNAME(); \
+    } else { \
+        return FUNCNAME(std::forward<decltype(obj)>(obj)); \
+    } \
+}(PARAM1)
+
+#define CPP2_UFCS_TEMPLATE_NONLOCAL(FUNCNAME,TEMPARGS,PARAM1,...) \
+[](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
+    if constexpr (requires{ std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(params)>(params)...); }) { \
+        return std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(params)>(params)...); \
+    } else { \
+        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(obj)>(obj), std::forward<decltype(params)>(params)...); \
+    } \
+}(PARAM1, __VA_ARGS__)
+
+#define CPP2_UFCS_TEMPLATE_0_NONLOCAL(FUNCNAME,TEMPARGS,PARAM1) \
+[](auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
+    if constexpr (requires{ std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); }) { \
+        return std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
+    } else { \
+        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(obj)>(obj)); \
+    } \
+}(PARAM1)
+
+
 //-----------------------------------------------------------------------
 //
 //  is and as

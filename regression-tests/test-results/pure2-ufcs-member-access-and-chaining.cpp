@@ -24,6 +24,10 @@ struct fun__ret {
 #line 31 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto get_i(auto const& r) -> int;
 
+#line 35 "pure2-ufcs-member-access-and-chaining.cpp2"
+//  And a test for non-local UFCS, which shouldn't do a [&] capture
+[[nodiscard]] auto f(auto const& x) -> int;
+extern int y;
 //=== Cpp2 function definitions =================================================
 
 #line 1 "pure2-ufcs-member-access-and-chaining.cpp2"
@@ -62,4 +66,8 @@ struct fun__ret {
 [[nodiscard]] auto get_i(auto const& r) -> int{
     return r.i; 
 }
+
+#line 36 "pure2-ufcs-member-access-and-chaining.cpp2"
+[[nodiscard]] auto f(auto const& x) -> int { return 0;  }
+int y {CPP2_UFCS_0_NONLOCAL(f, 0)}; 
 

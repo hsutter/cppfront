@@ -31,3 +31,7 @@ fun: () -> (i:int) = {
 get_i: (r:_) -> int = {
     return r.i;
 }
+
+//  And a test for non-local UFCS, which shouldn't do a [&] capture
+f: (x)->int = 0;
+y: int = 0.f();

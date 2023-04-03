@@ -1714,7 +1714,7 @@ struct declaration_node
     auto parent_is_namespace() const -> bool
         { return !parent_declaration || parent_declaration->type.index() == a_namespace; }
     auto parent_is_alias    () const -> bool
-        { return !parent_declaration || parent_declaration->type.index() == an_alias;    }
+        { return  parent_declaration && parent_declaration->type.index() == an_alias;    }
 
     enum which {
         functions = 1,

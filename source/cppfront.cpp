@@ -2250,9 +2250,11 @@ public:
         if (
             !current_functions.empty()
             && current_functions.back().decl->is_function_with_this()
+            && !current_functions.back().decl->parent_is_namespace()
             )
         {
-            //  Note: & is needed because a nested UFCS might be viewed as trying to capture 'this'
+            //  Note: & is needed (when allowed, not at namespace scope) because a
+            //  nested UFCS might be viewed as trying to capture 'this'
             lambda_intro += "&";
             ++num_captures;
         }
@@ -2737,8 +2739,11 @@ public:
             {
                 auto funcname = print_to_string(*i->id_expr);
 
+                //  First, build the UFCS macro name
+
                 auto ufcs_string = std::string("CPP2_UFCS");
 
+                //  If there are template arguments, use the _TEMPLATE version
                 if (i->id_expr->template_args_count() > 0) {
                     ufcs_string += "_TEMPLATE";
                     // we need to replace "fun<int,long,double>" to "fun, (<int,long,double>)" to be able to generate
@@ -2748,10 +2753,30 @@ public:
                     assert(funcname.back() == '>');
                     funcname += ')';
                 }
+
                 //  If there are no additional arguments, use the _0 version
                 if (args.value().text_chunks.empty()) {
                     ufcs_string += "_0";
                 }
+
+                //  If we're in an object declaration (i.e., initializer)
+                //  at namespace scope, use the _NONLOCAL version
+                //
+                //  Note: If there are other cases where code could execute
+                //  in a non-local scope where a capture-default for the UFCS
+                //  lambda would not be allowed, then add them here
+                if (
+                    current_declarations.back()->is_namespace()
+                    || (
+                        current_declarations.back()->is_object()
+                        && current_declarations.back()->parent_is_namespace()
+                        )
+                    )
+                {
+                    ufcs_string += "_NONLOCAL";
+                }
+
+                //  Second, emit the UFCS argument list
 
                 prefix.emplace_back(ufcs_string + "(" + funcname + ", ", args.value().open_pos );
                 suffix.emplace_back(")", args.value().close_pos );
