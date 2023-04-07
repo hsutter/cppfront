@@ -5067,7 +5067,7 @@ private:
 
             //  deduced_type == true means that the type will be deduced,
             //  represented using an empty type-id
-            if (deduced_type) {
+            if (deduced_type && peek(1)) {
                 auto& type = std::get<declaration_node::an_object>(n->type);
                 // object initialized by the address of the curr() object 
                 if (peek(1)->type() == lexeme::Ampersand) {
