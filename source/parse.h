@@ -467,7 +467,7 @@ struct postfix_expression_node
 
     //  API
     //
-    auto get_second_token_if_a_this_qualified_name() const
+    auto get_first_token_ignoring_this() const
         -> token const*;
 
     //  Internals
@@ -852,18 +852,19 @@ struct id_expression_node
 };
 
 
-auto postfix_expression_node::get_second_token_if_a_this_qualified_name() const
+auto postfix_expression_node::get_first_token_ignoring_this() const
     -> token const*
 {
     if (
-        *expr->get_token() == "this"
+        expr->get_token()
+        && *expr->get_token() == "this"
         && std::ssize(ops) == 1
         && ops[0].op->type() == lexeme::Dot
         )
     {
         return ops[0].id_expr->get_token();
     }
-    return nullptr;
+    return expr->get_token();
 }
 
 
@@ -1261,6 +1262,24 @@ struct parameter_declaration_node
         return mod == modifier::implicit;
     }
 
+    auto is_virtual() const
+        -> bool
+    {
+        return mod == modifier::virtual_;
+    }
+
+    auto is_override() const
+        -> bool
+    {
+        return mod == modifier::override_;
+    }
+
+    auto is_final() const
+        -> bool
+    {
+        return mod == modifier::final_;
+    }
+
     auto is_polymorphic() const
         -> bool
     {
@@ -1372,6 +1391,9 @@ struct function_type_node
     //  API
     //
     auto is_function_with_this() const
+        -> bool;
+
+    auto is_virtual_function() const
         -> bool;
 
     auto is_constructor() const
@@ -1546,11 +1568,10 @@ struct alias_node
 {
     token const* type = {};
 
-    enum active : std::uint8_t { a_type, a_namespace_qualified, a_namespace_unqualified, an_object };
+    enum active : std::uint8_t { a_type, a_namespace, an_object };
     std::variant<
         std::unique_ptr<type_id_node>,
-        std::unique_ptr<qualified_id_node>,
-        std::unique_ptr<unqualified_id_node>,
+        std::unique_ptr<id_expression_node>,
         std::unique_ptr<expression_node>
     > initializer;
 
@@ -1561,11 +1582,7 @@ struct alias_node
     auto is_type_alias     () const -> bool
         { return initializer.index() == a_type;      }
     auto is_namespace_alias() const -> bool
-        { return
-            initializer.index() == a_namespace_qualified
-            || initializer.index() == a_namespace_unqualified
-            ;
-        }
+        { return initializer.index() == a_namespace; }
     auto is_object_alias   () const -> bool
         { return initializer.index() == an_object;   }
 
@@ -1583,10 +1600,9 @@ struct alias_node
     {
         v.start(*this, depth);
 
-        try_visit<a_type                 >(initializer, v, depth+1);
-        try_visit<a_namespace_qualified  >(initializer, v, depth+1);
-        try_visit<a_namespace_unqualified>(initializer, v, depth+1);
-        try_visit<an_object              >(initializer, v, depth+1);
+        try_visit<a_type     >(initializer, v, depth+1);
+        try_visit<a_namespace>(initializer, v, depth+1);
+        try_visit<an_object  >(initializer, v, depth+1);
 
         v.end(*this, depth);
     }
@@ -1716,6 +1732,24 @@ struct declaration_node
     auto parent_is_alias    () const -> bool
         { return  parent_declaration && parent_declaration->type.index() == an_alias;    }
 
+    auto has_base_types_or_virtual_functions() const
+        -> bool
+    {
+        for (auto& decl : get_type_scope_declarations()) {
+            if (
+                decl->has_name("this")
+                || decl->is_virtual_function()
+                )
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    auto parent_has_base_types_or_virtual_functions() const -> bool
+        { return  parent_declaration && parent_declaration->has_base_types_or_virtual_functions(); }
+
     enum which {
         functions = 1,
         objects   = 2,
@@ -1762,11 +1796,67 @@ struct declaration_node
         return ret;
     }
 
+
+    auto get_decl_if_type_scope_object_name_before_a_base_type( std::string_view s ) const
+        -> declaration_node const*
+    {
+        declaration_node const* ret = {};
+
+        //  If it's 'this' then it can't be an object name
+        if (s == "this") {
+            return {};
+        }
+
+        //  Navigate to the nearest enclosing type
+        auto decl = this;
+        while (
+            !decl->is_type()
+            && decl->parent_declaration
+            )
+        {
+            decl = decl->parent_declaration;
+        }
+
+        if (!decl->is_type()) {
+            return {};
+        }
+
+        //  Look for a name match and if so remember the type,
+        //  and look for a base type after that match
+        auto objects               = decl->get_type_scope_declarations();
+        auto found_name            = false;
+        auto found_later_base_type = false;
+
+        for (auto& o : objects) {
+            if (o->has_name(s)) {
+                found_name = true;
+                ret        = o;
+            }
+            if (o->has_name("this")) {
+                if (found_name) {
+                    found_later_base_type = true;
+                    break;
+                }
+            }
+        }
+
+        //  If we didn't find a later base type, discard any name match
+        if (!found_later_base_type) {
+            ret = {};
+        }
+
+        return ret;
+    }
+
+
     auto get_initializer_statements() const
         -> std::vector<statement_node*>
     {
-        auto ret = std::vector<statement_node*>{};
+        if (!initializer) {
+            return {};
+        }
 
+        auto ret = std::vector<statement_node*>{};
         //  For non-compound initializers, we want just that statement
         if (!initializer->is_compound())
         {
@@ -1791,6 +1881,16 @@ struct declaration_node
     {
         if (auto func = std::get_if<a_function>(&type)) {
             return (*func)->is_function_with_this();
+        }
+        //  else
+        return false;
+    }
+
+    auto is_virtual_function() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_virtual_function();
         }
         //  else
         return false;
@@ -1876,6 +1976,10 @@ struct declaration_node
     auto find_declared_that_functions() const
         -> declared_that_funcs
     {
+        if (!initializer) {
+            return {};
+        }
+
         auto compound_stmt = initializer->get_if<compound_statement_node>();
         assert (compound_stmt);
 
@@ -1943,6 +2047,16 @@ struct declaration_node
             ;
     }
 
+    auto get_object_type() const
+        -> type_id_node const*
+    {
+        if (type.index() == an_object) {
+            return std::get<an_object>(type).get();
+        }
+        //  Else
+        return {};
+    }
+
     //  Internals
     //
     auto position() const
@@ -2005,6 +2119,20 @@ auto function_type_node::is_function_with_this() const
     if (
         (*parameters).ssize() > 0
         && (*parameters)[0]->has_name("this")
+        )
+    {
+        return true;
+    }
+    return false;
+}
+
+auto function_type_node::is_virtual_function() const
+    -> bool
+{
+    if (
+        (*parameters).ssize() > 0
+        && (*parameters)[0]->has_name("this")
+        && (*parameters)[0]->is_virtual()
         )
     {
         return true;
@@ -4866,9 +4994,10 @@ private:
             return n;
         }
 
-        //  For 'this' and 'that', ':' is not allowed and we'll use the default ': _'
+        //  For 'this' and 'that' parameters ':' is not allowed and we'll use the default ': _'
         if (
             n->identifier
+            && is_parameter
             && (
                 *n->identifier->identifier == "this"
                 || *n->identifier->identifier == "that"
@@ -5013,8 +5142,12 @@ private:
                 return {};
             }
 
-            if (n->is_function()) {
-                error("missing = before function body");
+            if (
+                n->is_function()
+                && !n->is_virtual_function()
+                )
+            {
+                error("missing = before nonvirtual function body");
                 return {};
             }
 
@@ -5149,6 +5282,7 @@ private:
         //  a compound-statement
         if (
             n->is_function()
+            && n->initializer
             && n->initializer->is_return()
             )
         {
@@ -5183,11 +5317,10 @@ private:
         //  last statement, then generate "return;" as the last statement
         if (auto func = std::get_if<declaration_node::a_function>(&n->type);
             func
+            && n->initializer
             && (*func)->returns.index() == function_type_node::list
             )
         {
-            assert (n->initializer);
-
             if (!n->initializer->is_compound()) {
                 error(
                     "a function with named return value(s) must have a full { } body",
@@ -5338,16 +5471,13 @@ private:
         //  Namespace alias
         else if (*a->type == "namespace")
         {
-            if (auto qid = qualified_id()) {
+            if (auto qid = id_expression()) {
                 a->initializer = std::move(qid);
-            }
-            else if (auto uid = unqualified_id()) {
-                a->initializer = std::move(uid);
             }
             else {
                 errors.emplace_back(
                     curr().position(),
-                    "a 'namespace ==' alias declaration must be followed by a namespace name"
+                    "a 'namespace ==' alias declaration must be followed by a namespace name (id-expression)"
                 );
                 return {};
             }
@@ -5549,10 +5679,7 @@ private:
         }
 
         if (
-            (
-                *n->identifier->identifier == "this"
-                || *n->identifier->identifier == "that"
-                )
+            *n->identifier->identifier == "that"
             && (
                 !is_parameter
                 || is_template_parameter
@@ -5561,9 +5688,52 @@ private:
         {
             errors.emplace_back(
                 n->identifier->position(),
-                "'" + n->identifier->identifier->to_string(true) + "' may only be declared as an ordinary function parameter"
+                "'that' may only be declared as an ordinary function parameter"
             );
             return {};
+        }
+
+        if (*n->identifier->identifier == "this")
+        {
+            if (
+                is_template_parameter
+                || (
+                    !is_parameter
+                    && !n->parent_is_type()
+                    )
+                )
+            {
+                errors.emplace_back(
+                    n->identifier->position(),
+                    "'this' may only be declared as an ordinary function parameter or type-scope (base) object"
+                );
+                return {};
+            }
+
+            if (
+                !is_parameter
+                && n->access
+                && *n->access != "public"
+                )
+            {
+                errors.emplace_back(
+                    n->access->position(),
+                    "a base type must be public (the default)"
+                );
+                return {};
+            }
+
+            if (
+                !is_parameter
+                && n->has_wildcard_type()
+                )
+            {
+                errors.emplace_back(
+                    n->position(),
+                    "a base type must be a specific type, not a deduced or '_' wildcard type"
+                );
+                return {};
+            }
         }
 
         if (
@@ -5670,6 +5840,7 @@ private:
                 )
             {
                 error( "an operator= function's 'this' parameter must be inout, out, or move", false );
+                return {};
             }
 
             if (
@@ -5680,6 +5851,7 @@ private:
                 )
             {
                 error( "an operator= function's 'that' parameter must be in or move", false );
+                return {};
             }
 
             if (
@@ -5689,17 +5861,16 @@ private:
                 )
             {
                 error( "a destructor may not have other parameters besides 'this'", false );
+                return {};
             }
         }
 
         for (auto& decl : n->get_type_scope_declarations())
         {
-            if (
-                decl->has_name("this")
-                || decl->has_name("that")
-                )
+            if (decl->has_name("that"))
             {
-                error( "'this' and 'that' may not be used as type scope names", false );
+                error( "'that' may not be used as a type scope name", false );
+                return {};
             }
         }
 

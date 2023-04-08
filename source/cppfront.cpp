@@ -1373,16 +1373,18 @@ public:
         auto...      more
     )
     {
-        //  Quick special-purpose preservation of need_* state... right now it's
-        //  only needed here so the tactical fix is fine, but if it's needed
-        //  elsewhere then generalize this
-        auto state = need_expression_list_parens;
+        //  Quick special-purpose state preservation... this tactical hack
+        //  is fine for now, but if needed more then generalize this
+        auto state1 = need_expression_list_parens;
+        auto state2 = already_moved_that_members;
 
         printer.emit_to_string(str);
         emit(i, more...);
         printer.emit_to_string();
 
-        need_expression_list_parens.swap(state); // restore the state
+        //  Restore state
+        need_expression_list_parens.swap(state1);
+        already_moved_that_members .swap(state2);
     };
 
     auto print_to_string(
@@ -1412,7 +1414,7 @@ public:
         if (v.index() == I) {
             auto const& alt = std::get<I>(v);
             assert (alt);
-            emit (*alt, std::forward<decltype(more)>(more)...);
+            emit (*alt, CPP2_FORWARD(more)...);
         }
     }
 
@@ -1431,19 +1433,37 @@ public:
         }
 
         //  Implicit "cpp2::" qualification of Cpp2 fixed-width type aliases
+        //  and cpp2::finally
         if (
             !is_qualified
-            && n.type() == lexeme::Cpp2FixedType
+            && (
+                n.type() == lexeme::Cpp2FixedType
+                || n == "finally"
+                )
             )
         {
             printer.print_cpp2("cpp2::", pos);
         }
+
+        declaration_node const* decl = {};
 
         if (n == "new") {
             printer.print_cpp2("cpp2_new", pos);
         }
         else if (n == "this") {
             printer.print_cpp2("(*this)", pos);
+        }
+        else if (
+            current_declarations.back()
+            && (decl = current_declarations.back()->get_decl_if_type_scope_object_name_before_a_base_type(n))
+            )
+        {
+            assert(decl && decl->is_object());
+            auto type = decl->get_object_type();
+            assert(type);
+            printer.print_cpp2("cpp2::store_as_base<", pos);
+            emit(*type);
+            printer.print_cpp2(">::value__()", pos);
         }
         else {
             printer.print_cpp2(n, pos);
@@ -3503,6 +3523,7 @@ public:
     {
         if (
             decl.has_name()                 // this is a named declaration
+            && !decl.has_name("this")       // that's not 'this'
             && !decl.parent_is_type()       // and the type isn't the direct parent
             && is_name_declared_in_current_type_scope(*decl.name())
             )                               // and it shadows a name
@@ -4184,9 +4205,20 @@ public:
         //  Do the 'out' param and member init work only in the definition phase
         if (printer.get_phase() == printer.phase2_func_defs)
         {
+            auto canonize_object_name = [&]( declaration_node const* obj )
+                -> std::string
+            {
+                assert(obj->has_name());
+                auto ret = obj->name()->to_string(true);
+                if (ret == "this") {
+                    ret = print_to_string( *obj->get_object_type() );
+                }
+                return ret;
+            };
+
             //  We'll use this common guidance in several errors,
             //  so write it once to keep the guidance consistent
-            auto error_msg = "an operator= body must start with a series of 'member = value;' initialization statements for each of the function's 'out' parameters and then each of the type's members, in the same order the members are declared";
+            auto error_msg = "an operator= body must start with a series of 'member = value;' initialization statements for each of the type-scope objects in the same order they are declared";
 
             //  If this constructor's type has data members, handle their initialization
             //      - objects is the list of this type's declarations
@@ -4203,33 +4235,40 @@ public:
                 && statement != statements.end()
                 )
             {
-                assert ((*object)->has_name());
                 assert (*statement);
 
-                //  Check whether this is an assignment to *object
-                auto exprs = (*statement)->get_lhs_rhs_if_simple_assignment();
+                auto object_name = canonize_object_name(*object);
 
-                assert(
-                    !exprs.lhs
-                    || exprs.lhs->expr
-                );
-                assert(
-                    !exprs.lhs
-                    || exprs.lhs->expr->get_token()
-                );
+                auto is_object_before_base =
+                    n.get_decl_if_type_scope_object_name_before_a_base_type(*(*object)->name());
+
+                //  If this is an assignment statement, get the lhs and rhs
+                auto lhs = std::string{};
+                auto rhs = std::string{};
+                {
+                    auto exprs = (*statement)->get_lhs_rhs_if_simple_assignment();
+                    if (exprs.lhs) {
+                        if (auto tok = exprs.lhs->get_first_token_ignoring_this()) {
+                            lhs = *tok;
+                        }
+                        else {
+                            lhs = print_to_string( *exprs.lhs );
+                        }
+                    }
+                    if (exprs.rhs) {
+                        rhs = print_to_string( *exprs.rhs );
+                    }
+                }
 
                 //  If this is an initialization of an 'out' parameter, stash it
-                if (
-                    exprs.lhs
-                    && *exprs.lhs->expr->get_token() != "this"
-                    && n.has_out_parameter_named(*exprs.lhs->expr->get_token())
-                    )
-                {
+                if (n.has_out_parameter_named(lhs)){
                     out_inits.push_back( print_to_string(**statement, false) );
                     (*statement)->emitted = true;
                     ++statement;
                     continue;
                 }
+
+                //  Now we're ready to check whether this is an assignment to *object
 
                 auto found_explicit_init = false;
                 auto found_default_init  = false;
@@ -4237,20 +4276,18 @@ public:
                 auto stmt_pos    = (*statement)->position();
                 auto initializer = std::string{};
 
-                if (exprs.lhs)
+                if (!lhs.empty())
                 {
                     //  First, see if it's an assignment 'name = something'
-                    found_explicit_init = (*object)->has_name(*exprs.lhs->expr->get_token());
+                    found_explicit_init = object_name == lhs;
 
-                    //  Otherwise, check if it's 'this.name = something'
+                    //  Otherwise, see if it's 'this.name = something'
                     if (!found_explicit_init)
                     {
-                        //  If it's of the form 'this.name', get a pointer
-                        //  to the token for 'name'
-                        auto second_tok = exprs.lhs->get_second_token_if_a_this_qualified_name();
+                        //  If it's of the form 'this.name', check 'name'
                         if (
-                            second_tok
-                            && (*object)->has_name(*second_tok)
+                            starts_with( lhs, "(*this).")
+                            && object_name == lhs.substr(8)
                             )
                         {
                             found_explicit_init = true;
@@ -4259,8 +4296,7 @@ public:
 
                     if (found_explicit_init)
                     {
-                        assert(exprs.rhs);
-                        initializer = print_to_string( *exprs.rhs );
+                        initializer = rhs;
 
                         //  We've used this statement, so note it
                         //  and move 'statement' forward
@@ -4276,12 +4312,12 @@ public:
                 {
                     if (emitting_move_that_function)
                     {
-                        initializer = "std::move(that)." + (*object)->name()->to_string(true);
+                        initializer = "std::move(that)." + object_name;
                         found_default_init = true;
                     }
                     else if (emitting_that_function)
                     {
-                        initializer = "that." + (*object)->name()->to_string(true);
+                        initializer = "that." + object_name;
                         found_default_init = true;
                     }
                     else if ((*object)->initializer)
@@ -4300,7 +4336,7 @@ public:
                 {
                     errors.emplace_back(
                         stmt_pos,
-                        "expected '" + (*object)->name()->to_string(true) + " = ...' initialization statement - " + error_msg
+                        "expected '" + object_name + " = ...' initialization statement - " + error_msg
                     );
                     return;
                 }
@@ -4312,29 +4348,66 @@ public:
 
                 //  Emit the initializer...
 
+                if (initializer.empty()) {
+                    initializer = "{}";
+                }
+
                 //  (a) ... if this is assignment, emit it in all cases
                 if (is_assignment)
                 {
+                    if (is_object_before_base) {
+                        object_name =
+                            "cpp2::store_as_base<"
+                            + print_to_string(*(*object)->get_object_type())
+                            + ">::value__()";
+                    }
+
                     //  Flush any 'out' parameter initializations
                     for (auto& init : out_inits) {
                         current_functions.back().prolog.statements.push_back(init + ";");
                     }
                     out_inits = {};
 
-                    current_functions.back().prolog.statements.push_back(
-                        (*object)->name()->to_string(true) +
-                        " = " +
-                        initializer +
-                        ";"
-                    );
+                    //  Then add this statement
+
+                    //  Use ::operator= for base classes
+                    if ((*object)->has_name("this")) {
+                        current_functions.back().prolog.statements.push_back(
+                            print_to_string( *(*object)->get_object_type() ) +
+                            "::operator= ( " +
+                            initializer +
+                            " );"
+                        );
+                    }
+                    //  Else just use infix assignment
+                    else {
+                        current_functions.back().prolog.statements.push_back(
+                            object_name +
+                            " = " +
+                            initializer +
+                            ";"
+                        );
+                    }
                 }
                 //  (b) ... if this isn't assignment, only need to emit it if it was
-                //          explicit or is a 'that' initializer
+                //          explicit, or is a base type or 'that' initializer
                 else if (
                     found_explicit_init
+                    || is_object_before_base
+                    || (
+                        (*object)->has_name("this")
+                         && !initializer.empty()
+                        )
                     || emitting_that_function
                     )
                 {
+                    if (is_object_before_base) {
+                        object_name =
+                            "cpp2::store_as_base<"
+                            + print_to_string(*(*object)->get_object_type())
+                            + ">";
+                    }
+
                     //  Flush any 'out' parameter initializations
                     auto out_inits_with_commas = [&]() -> std::string {
                         auto ret = std::string{};
@@ -4347,10 +4420,11 @@ public:
 
                     //  If there were any, wedge them into this initializer
                     //  using (holds nose) the comma operator and extra parens
+                    //  as we add this statement
                     if (!out_inits_with_commas.empty()) {
                         current_functions.back().prolog.mem_inits.push_back(
                             separator +
-                            (*object)->name()->to_string(true) +
+                            object_name +
                             "{(" +
                             out_inits_with_commas +
                             initializer +
@@ -4358,9 +4432,12 @@ public:
                         );
                     }
                     else {
+                        if (initializer == "{}") {
+                            initializer = "";
+                        }
                         current_functions.back().prolog.mem_inits.push_back(
                             separator +
-                            (*object)->name()->to_string(true) +
+                            object_name +
                             "{ " +
                             initializer +
                             " }"
@@ -4381,32 +4458,72 @@ public:
                 ++object
                 )
             {
-                assert((*object)->has_name());
+                auto object_name = canonize_object_name(*object);
+
+                auto is_object_before_base =
+                    n.get_decl_if_type_scope_object_name_before_a_base_type(*(*object)->name());
+
                 if ((*object)->initializer)
                 {
                     //  Good. Entering here avoids emitting the error on the 'else'
 
-                    //  Only need to actually emit the initializer in an assignment operator
+                    if (is_object_before_base) {
+                        object_name =
+                            "cpp2::store_as_base<"
+                            + print_to_string(*(*object)->get_object_type())
+                            + ">::value__()";
+                    }
+
+                    auto initializer = print_to_string( *(*object)->initializer, false );
+                    if (initializer.empty()) {
+                        initializer = "{}";
+                    }
+
+                    //  Need to actually emit the initializer in an assignment operator
                     if (is_assignment)
                     {
-                        auto initializer = print_to_string( *(*object)->initializer, false );
-                        if (initializer.empty()) {
-                            initializer = "{}";
+                        if (is_object_before_base)
+                        {
+                            object_name =
+                                "cpp2::store_as_base<"
+                                + print_to_string(*(*object)->get_object_type())
+                                + ">::value__()";
                         }
 
                         current_functions.back().prolog.statements.push_back(
-                            (*object)->name()->to_string(true) +
+                            object_name +
                             " = " +
                             initializer +
                             ";"
                         );
                     }
+                    //  Or an object being stored as a private base
+                    else if (is_object_before_base)
+                    {
+                        object_name =
+                            "cpp2::store_as_base<"
+                            + print_to_string(*(*object)->get_object_type())
+                            + ">";
+
+                        if (initializer == "{}") {
+                            initializer = "";
+                        }
+                        current_functions.back().prolog.mem_inits.push_back(
+                            separator +
+                            object_name +
+                            "{ " +
+                            initializer +
+                            " }"
+                        );
+                        separator = ", ";
+                    }
+
                 }
                 else
                 {
                     errors.emplace_back(
-                        (*object)->position(),
-                        (*object)->name()->to_string(true) + " was not initialized in the operator= body and has no default initializer - " + error_msg
+                        n.position(),
+                        object_name + " was not initialized in the operator= body and has no default initializer - " + error_msg
                     );
                     return;
                 }
@@ -4415,15 +4532,14 @@ public:
             //  Now no data members should be left over
             if (object != objects.end())
             {
-                assert((*object)->has_name());
                 errors.emplace_back(
                     (*object)->position(),
-                    (*object)->name()->to_string(true) + " was not initialized - " + error_msg
+                    canonize_object_name(*object) + " was not initialized - " + error_msg
                 );
                 return;
             }
 
-            //  Flush any possible remaining 'out' parameters (shouldn't be any...)
+            //  Flush any possible remaining 'out' parameters
             for (auto& init : out_inits) {
                 current_functions.back().prolog.statements.push_back(init + ";");
             }
@@ -4530,23 +4646,11 @@ public:
 
                 //  Handle namespace aliases
                 else if (a->is_namespace_alias()) {
-                    auto initializer = std::string{};
-                    if (auto qid = std::get_if<alias_node::a_namespace_qualified>(&a->initializer)) {
-                        assert(*qid);
-                        initializer = print_to_string(**qid);
-                    }
-                    else if (auto uid = std::get_if<alias_node::a_namespace_unqualified>(&a->initializer)) {
-                        assert(*uid);
-                        initializer = print_to_string(**uid);
-                    }
-                    else {
-                        assert(!"ICE: should be unreachable - invalid namespace alias initializer");
-                    }
                     printer.print_cpp2(
                         "namespace "
                             + print_to_string(*n.identifier)
                             + " = "
-                            + initializer
+                            + print_to_string( *std::get<alias_node::a_namespace>(a->initializer) )
                             + ";\n",
                         n.position()
                     );
@@ -4712,13 +4816,16 @@ public:
                     printer.print_cpp2( ";\n", n.position() );
                     return;
                 }
-
-                printer.print_cpp2(" {", compound_stmt->position());
             }
 
-            //  Type body
+            //  Type definition
+
+            auto separator    = std::string{":"};
+            auto started_body = false;
             assert(compound_stmt);
-            for (auto& stmt : compound_stmt->statements) {
+
+            for (auto& stmt : compound_stmt->statements)
+            {
                 assert(stmt);
                 if (!stmt->is_declaration()) {
                     errors.emplace_back(
@@ -4727,12 +4834,60 @@ public:
                     );
                     return;
                 }
+
                 auto& decl = std::get<statement_node::declaration>(stmt->statement);
                 assert(decl);
-                emit(*decl);
+
+                //  First we'll encounter the base types == subobjects named "this"
+                //  and any data members declared before them that we push into private bases
+                assert(decl->name());
+                auto emit_as_base =
+                    decl->get_decl_if_type_scope_object_name_before_a_base_type(*decl->name())
+                    || decl->has_name("this")
+                    ;
+                if (emit_as_base) {
+                    if (decl->has_name("this")) {
+                        if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
+                            printer.print_cpp2(
+                                separator + " public " + print_to_string(*decl->get_object_type()),
+                                compound_stmt->position()
+                            );
+                            separator = ",";
+                        }
+                    }
+                    else {
+                        if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
+                            printer.print_cpp2(
+                                separator + " private cpp2::store_as_base<"
+                                    + print_to_string(*decl->get_object_type()) + ">",
+                                compound_stmt->position()
+                            );
+                            separator = ",";
+                        }
+                    }
+                }
+                //  Then we'll switch to start the body == other members
+                else {
+                    if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
+                        if (!started_body) {
+                            printer.print_cpp2(" {", compound_stmt->position());
+                            started_body = true;
+                        }
+                    }
+                    emit(*decl);
+                }
             }
 
-            if (printer.get_phase() != printer.phase2_func_defs) {
+            //  Ensure we emit the { even if there are only bases in the type
+            if (
+                printer.get_phase() == printer.phase1_type_defs_func_decls
+                && !started_body
+                )
+            {
+                printer.print_cpp2(" {", compound_stmt->position());
+            }
+
+            if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
                 printer.print_cpp2("};\n", compound_stmt->close_brace);
             }
         }
@@ -4850,6 +5005,9 @@ public:
                             ;
                         break;case parameter_declaration_node::modifier::virtual_:
                             prefix += "virtual ";
+                            if (!n.initializer) {
+                                suffix2 += " = 0";
+                            }
                         break;case parameter_declaration_node::modifier::override_:
                             suffix2 += " override";
                         break;case parameter_declaration_node::modifier::final_:
@@ -4902,11 +5060,13 @@ public:
                         prefix
                     );
 
-                    //  If this operator= has two parameters, it's setting from a single value
-                    //  -- either from the same type (aka copy/move) or another type (a conversion) --
-                    //  so recurse to emit related functions if the user didn't write them by hand
+                    //  If there's no inheritance and this operator= has two parameters,
+                    //  it's setting from a single value -- either from the same type
+                    //  (aka copy/move) or another type (a conversion) -- so recurse to
+                    //  emit related functions if the user didn't write them by hand
                     if (
-                        func->parameters->ssize() == 2
+                        !n.parent_has_base_types_or_virtual_functions()
+                        && func->parameters->ssize() == 2
                         && generating_assignment_from != &n
                         )
                     {
@@ -4999,8 +5159,12 @@ public:
                     emit( *func, n.name(), false, true);
                 }
 
-                //  Ordinary functions are easier
-                else
+                //  Ordinary functions are easier, do all their declarations except
+                //  don't emit abstract virtual functions in phase 2
+                else if (
+                    n.initializer
+                    || printer.get_phase() < printer.phase2_func_defs
+                    )
                 {
                     printer.print_cpp2( prefix, n.position() );
                     printer.print_cpp2( "auto " + type_qualification_if_any_for(n), n.position() );
@@ -5022,7 +5186,7 @@ public:
             }
 
             //  Else emit the definition
-            else
+            else if (n.initializer)
             {
 
                 if (func->returns.index() == function_type_node::list) {
@@ -5038,9 +5202,6 @@ public:
                 else {
                     function_returns.emplace_back(nullptr);        // no return type at all
                 }
-
-                //  Function body
-                assert( n.initializer );
 
                 for (auto&& c : func->contracts)
                 {

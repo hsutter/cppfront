@@ -471,6 +471,7 @@ auto replace_all(std::string& s, std::string_view what, std::string_view with)
     return s;
 }
 
+
 auto to_upper(char c)
     -> char
 {
@@ -482,6 +483,7 @@ auto to_upper(char c)
     return c;
 }
 
+
 auto to_upper_and_underbar(std::string_view s)
     -> std::string
 {
@@ -491,6 +493,16 @@ auto to_upper_and_underbar(std::string_view s)
         else                 { c = '_'; }
     }
     return ret;
+}
+
+
+auto starts_with(
+    std::string const& s,
+    std::string_view   sv
+)
+    -> bool
+{
+    return std::string_view(s).starts_with(sv);
 }
 
 

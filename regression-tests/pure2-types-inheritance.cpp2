@@ -1,0 +1,49 @@
+
+Human: type = {
+    operator=: (out this) = {}
+    speak:     (virtual this);
+}
+
+N: namespace = {
+    Machine: type = {
+        operator=: (out this, id: std::string) = {}
+        work:      (virtual this);
+    }
+}
+
+Cyborg: type = {
+    name: std::string;
+    this: Human = ();
+    this: N::Machine;
+
+    operator=: (out this, n: std::string) = {
+        name = n;
+        N::Machine = "Acme Corp. engineer tech";
+        std::cout << "(name)$ checks in for the day's shift\n";
+    }
+
+    speak: (override this) =
+        std::cout << "(name)$ cracks a few jokes with a coworker\n";
+
+    work: (override this) =
+        std::cout << "(name)$ carries some half-tonne crates of Fe2O3 to cold storage\n";
+
+    operator=: (move this) =
+        std::cout << "Tired but satisfied after another successful day, (name)$ checks out and goes home to their family\n";
+}
+
+make_speak: ( h: Human ) = {
+    std::cout << "-> [vcall: make_speak] ";
+    h.speak();
+}
+
+do_work: ( m: N::Machine ) = {
+    std::cout << "-> [vcall: do_work] ";
+    m.work();
+}
+
+main: () = {
+    c: Cyborg = "Parsnip";
+    c.make_speak();
+    c.do_work();
+}

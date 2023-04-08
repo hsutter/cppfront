@@ -39,7 +39,7 @@ myclass : type = {
         std::cout << "myclass: destructor\n";
     }
 
-    f: (virtual this, x: int) = {
+    f: (this, x: int) = {
         std::cout << "N::myclass::f with (x)$\n";
     }
 

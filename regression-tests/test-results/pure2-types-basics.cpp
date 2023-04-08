@@ -45,7 +45,7 @@ class myclass {
     public: ~myclass();
 
 #line 42 "pure2-types-basics.cpp2"
-    public: virtual auto f(cpp2::in<int> x) const -> void;
+    public: auto f(cpp2::in<int> x) const -> void;
 
 #line 46 "pure2-types-basics.cpp2"
     private: int data {42 * 12}; 

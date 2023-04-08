@@ -363,7 +363,7 @@ auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> declty
     //        doesn't guarantee that using == and != will reliably report whether an
     //        STL iterator has the default-constructed value
     Null.expects(p != CPP2_TYPEOF(p){}, "dynamic null dereference attempt detected" CPP2_SOURCE_LOCATION_ARG);
-    return std::forward<decltype(p)>(p);
+    return CPP2_FORWARD(p);
 }
 
 //  Subscript bounds checking
@@ -373,14 +373,14 @@ auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAU
              requires { std::ssize(x); x[arg]; })
 {
     Bounds.expects(0 <= arg && arg < std::ssize(x), "out of bounds access attempt detected" CPP2_SOURCE_LOCATION_ARG);
-    return std::forward<decltype(x)>(x) [ std::forward<decltype(arg)>(arg) ];
+    return CPP2_FORWARD(x) [ CPP2_FORWARD(arg) ];
 }
 
 auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
     requires (!(std::is_integral_v<CPP2_TYPEOF(arg)> &&
              requires { std::ssize(x); x[arg]; }))
 {
-    return std::forward<decltype(x)>(x) [ std::forward<decltype(arg)>(arg) ];
+    return CPP2_FORWARD(x) [ CPP2_FORWARD(arg) ];
 }
 
 
@@ -468,20 +468,20 @@ auto Typeid() -> decltype(auto) {
 struct {
     template<typename T>
     [[nodiscard]] auto cpp2_new(auto&& ...args) const -> std::unique_ptr<T> {
-        return std::make_unique<T>(std::forward<decltype(args)>(args)...);
+        return std::make_unique<T>(CPP2_FORWARD(args)...);
     }
 } unique;
 
 [[maybe_unused]] struct {
     template<typename T>
     [[nodiscard]] auto cpp2_new(auto&& ...args) const -> std::shared_ptr<T> {
-        return std::make_shared<T>(std::forward<decltype(args)>(args)...);
+        return std::make_shared<T>(CPP2_FORWARD(args)...);
     }
 } shared;
 
 template<typename T>
 [[nodiscard]] auto cpp2_new(auto&& ...args) -> std::unique_ptr<T> {
-    return unique.cpp2_new<T>(std::forward<decltype(args)>(args)...);
+    return unique.cpp2_new<T>(CPP2_FORWARD(args)...);
 }
 
 
@@ -504,9 +504,11 @@ using in =
 //
 //  Initialization: These are closely related...
 //
-//  deferred_init<T>    For deferred-initialized local or member variable
+//  deferred_init<T>    For deferred-initialized local object
 //
 //  out<T>              For out parameter
+//
+//  store_as_base<T>    For member object declared before a base object
 //
 //-----------------------------------------------------------------------
 //
@@ -527,9 +529,10 @@ public:
    ~deferred_init() noexcept       { destroy(); }
     auto value()    noexcept -> T& { Default.expects(init);  return t(); }
 
-    auto construct     (auto&& ...args) -> void { Default.expects(!init);  new (&data) T(std::forward<decltype(args)>(args)...);  init = true; }
-    auto construct_list(auto&& ...args) -> void { Default.expects(!init);  new (&data) T{std::forward<decltype(args)>(args)...};  init = true; }
+    auto construct     (auto&& ...args) -> void { Default.expects(!init);  new (&data) T(CPP2_FORWARD(args)...);  init = true; }
+    auto construct_list(auto&& ...args) -> void { Default.expects(!init);  new (&data) T{CPP2_FORWARD(args)...};  init = true; }
 };
+
 
 template<typename T>
 class out {
@@ -572,15 +575,15 @@ public:
     auto construct(auto&& ...args) -> void {
         if (has_t || called_construct()) {
             Default.expects( t );
-            *t = T(std::forward<decltype(args)>(args)...);
+            *t = T(CPP2_FORWARD(args)...);
         }
         else {
             Default.expects( dt );
             if (dt->init) {
-                dt->value() = T(std::forward<decltype(args)>(args)...);
+                dt->value() = T(CPP2_FORWARD(args)...);
             }
             else {
-                dt->construct(std::forward<decltype(args)>(args)...);
+                dt->construct(CPP2_FORWARD(args)...);
                 called_construct() = true;
             }
         }
@@ -589,15 +592,15 @@ public:
     auto construct_list(auto&& ...args) -> void {
         if (has_t || called_construct()) {
             Default.expects( t );
-            *t = T{std::forward<decltype(args)>(args)...};
+            *t = T{CPP2_FORWARD(args)...};
         }
         else {
             Default.expects( dt );
             if (dt->init) {
-                dt->value() = T{std::forward<decltype(args)>(args)...};
+                dt->value() = T{CPP2_FORWARD(args)...};
             }
             else {
-                dt->construct_list(std::forward<decltype(args)>(args)...);
+                dt->construct_list(CPP2_FORWARD(args)...);
                 called_construct() = true;
             }
         }
@@ -613,6 +616,18 @@ public:
             return dt->value();
         }
     }
+};
+
+
+template<typename T>
+struct store_as_base : private T
+{
+    store_as_base( T const& t    ) : T{t}                  { }
+    store_as_base( T     && t    ) : T{std::move(t)}       { }
+    store_as_base( auto  && args ) : T{CPP2_FORWARD(args)} { }
+
+    auto value__()       -> T      & { return *this; }
+    auto value__() const -> T const& { return *this; }
 };
 
 
@@ -635,19 +650,19 @@ public:
 
 #define CPP2_UFCS(FUNCNAME,PARAM1,...) \
 [&](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); }) { \
-        return std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); \
+    if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); }) { \
+        return CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); \
     } else { \
-        return FUNCNAME(std::forward<decltype(obj)>(obj), std::forward<decltype(params)>(params)...); \
+        return FUNCNAME(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
     } \
 }(PARAM1, __VA_ARGS__)
 
 #define CPP2_UFCS_0(FUNCNAME,PARAM1) \
 [&](auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(); }) { \
-        return std::forward<decltype(obj)>(obj).FUNCNAME(); \
+    if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(); }) { \
+        return CPP2_FORWARD(obj).FUNCNAME(); \
     } else { \
-        return FUNCNAME(std::forward<decltype(obj)>(obj)); \
+        return FUNCNAME(CPP2_FORWARD(obj)); \
     } \
 }(PARAM1)
 
@@ -655,19 +670,19 @@ public:
 
 #define CPP2_UFCS_TEMPLATE(FUNCNAME,TEMPARGS,PARAM1,...) \
 [&](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(params)>(params)...); }) { \
-        return std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(params)>(params)...); \
+    if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); }) { \
+        return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); \
     } else { \
-        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(obj)>(obj), std::forward<decltype(params)>(params)...); \
+        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
     } \
 }(PARAM1, __VA_ARGS__)
 
 #define CPP2_UFCS_TEMPLATE_0(FUNCNAME,TEMPARGS,PARAM1) \
 [&](auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); }) { \
-        return std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
+    if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); }) { \
+        return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
     } else { \
-        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(obj)>(obj)); \
+        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj)); \
     } \
 }(PARAM1)
 
@@ -676,37 +691,37 @@ public:
 
 #define CPP2_UFCS_NONLOCAL(FUNCNAME,PARAM1,...) \
 [](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); }) { \
-        return std::forward<decltype(obj)>(obj).FUNCNAME(std::forward<decltype(params)>(params)...); \
+    if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); }) { \
+        return CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); \
     } else { \
-        return FUNCNAME(std::forward<decltype(obj)>(obj), std::forward<decltype(params)>(params)...); \
+        return FUNCNAME(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
     } \
 }(PARAM1, __VA_ARGS__)
 
 #define CPP2_UFCS_0_NONLOCAL(FUNCNAME,PARAM1) \
 [](auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ std::forward<decltype(obj)>(obj).FUNCNAME(); }) { \
-        return std::forward<decltype(obj)>(obj).FUNCNAME(); \
+    if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(); }) { \
+        return CPP2_FORWARD(obj).FUNCNAME(); \
     } else { \
-        return FUNCNAME(std::forward<decltype(obj)>(obj)); \
+        return FUNCNAME(CPP2_FORWARD(obj)); \
     } \
 }(PARAM1)
 
 #define CPP2_UFCS_TEMPLATE_NONLOCAL(FUNCNAME,TEMPARGS,PARAM1,...) \
 [](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(params)>(params)...); }) { \
-        return std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(params)>(params)...); \
+    if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); }) { \
+        return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); \
     } else { \
-        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(obj)>(obj), std::forward<decltype(params)>(params)...); \
+        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
     } \
 }(PARAM1, __VA_ARGS__)
 
 #define CPP2_UFCS_TEMPLATE_0_NONLOCAL(FUNCNAME,TEMPARGS,PARAM1) \
 [](auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); }) { \
-        return std::forward<decltype(obj)>(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
+    if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); }) { \
+        return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
     } else { \
-        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (std::forward<decltype(obj)>(obj)); \
+        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj)); \
     } \
 }(PARAM1)
 
@@ -937,7 +952,7 @@ auto as( X const& x ) -> auto
 template< typename C, typename X >
     requires std::is_base_of_v<C, X>
 auto as( X&& x ) -> C&& {
-    return std::forward<X>(x);
+    return CPP2_FORWARD(x);
 }
 
 template< typename C, typename X >
@@ -1315,10 +1330,9 @@ private:
     bool invoke = true;
 };
 
-template <class F>
-[[nodiscard]] auto finally_success(F&& f) noexcept
+[[nodiscard]] auto finally_success(auto&& f) noexcept
 {
-    return final_action_success<std::remove_cvref_t<F>>{std::forward<F>(f)};
+    return final_action_success<CPP2_TYPEOF(f)>{CPP2_FORWARD(f)};
 }
 
 
@@ -1348,10 +1362,9 @@ private:
     bool invoke = true;
 };
 
-template <class F>
-[[nodiscard]] auto finally(F&& f) noexcept
+[[nodiscard]] auto finally(auto&& f) noexcept
 {
-    return final_action<std::remove_cvref_t<F>>{std::forward<F>(f)};
+    return final_action<CPP2_TYPEOF(f)>{CPP2_FORWARD(f)};
 }
 
 

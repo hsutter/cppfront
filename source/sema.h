@@ -458,7 +458,7 @@ public:
         //  Helpers for readability
 
         //  It's an uninitialized variable (incl. named return values) if it's
-        //  a local variable with no initializer and that isn't a parameter
+        //  a non-namespace-scope non-parameter object with no initializer
         //
         auto is_uninitialized_variable_decl = [&](symbol const& s)
             -> declaration_sym const*
@@ -466,9 +466,11 @@ public:
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
                 assert (sym);
                 if (is_uninitialized_decl(*sym)) {
-                    assert (sym->declaration->is_object());
-                    //  A namespace-scope object doesn't count
-                    if (!sym->declaration->parent_is_namespace()) {
+                    if (
+                        sym->declaration->is_object()
+                        && !sym->declaration->parent_is_namespace()
+                        )
+                    {
                         return sym;
                     }
                     else {
