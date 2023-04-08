@@ -12,9 +12,10 @@ N: namespace = {
 }
 
 Cyborg: type = {
-    name: std::string;
-    this: Human = ();
-    this: N::Machine;
+    name:    std::string;
+    this:    Human = ();
+    address: std::string = "123 Main St.";
+    this:    N::Machine;
 
     operator=: (out this, n: std::string) = {
         name = n;
@@ -27,6 +28,9 @@ Cyborg: type = {
 
     work: (override this) =
         std::cout << "(name)$ carries some half-tonne crates of Fe2O3 to cold storage\n";
+
+    print: (this) =
+        std::cout << "printing: (name)$ lives at (address)$\n";
 
     operator=: (move this) =
         std::cout << "Tired but satisfied after another successful day, (name)$ checks out and goes home to their family\n";
@@ -44,6 +48,7 @@ do_work: ( m: N::Machine ) = {
 
 main: () = {
     c: Cyborg = "Parsnip";
+    c.print();
     c.make_speak();
     c.do_work();
 }

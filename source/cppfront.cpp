@@ -1461,7 +1461,8 @@ public:
             assert(decl && decl->is_object());
             auto type = decl->get_object_type();
             assert(type);
-            printer.print_cpp2("cpp2::store_as_base<", pos);
+            assert(decl->name());
+            printer.print_cpp2("cpp2::store_as_base<\"" + decl->name()->to_string(true) + "\",", pos);
             emit(*type);
             printer.print_cpp2(">::value__()", pos);
         }
@@ -4355,9 +4356,12 @@ public:
                 //  (a) ... if this is assignment, emit it in all cases
                 if (is_assignment)
                 {
+                    assert ((*object)->name());
                     if (is_object_before_base) {
                         object_name =
-                            "cpp2::store_as_base<"
+                            "cpp2::store_as_base<\""
+                            + (*object)->name()->to_string(true)
+                            + "\","
                             + print_to_string(*(*object)->get_object_type())
                             + ">::value__()";
                     }
@@ -4403,7 +4407,9 @@ public:
                 {
                     if (is_object_before_base) {
                         object_name =
-                            "cpp2::store_as_base<"
+                            "cpp2::store_as_base<\""
+                            + (*object)->name()->to_string(true)
+                            + "\","
                             + print_to_string(*(*object)->get_object_type())
                             + ">";
                     }
@@ -4469,7 +4475,9 @@ public:
 
                     if (is_object_before_base) {
                         object_name =
-                            "cpp2::store_as_base<"
+                            "cpp2::store_as_base<\""
+                            + (*object)->name()->to_string(true)
+                            + "\","
                             + print_to_string(*(*object)->get_object_type())
                             + ">::value__()";
                     }
@@ -4485,7 +4493,9 @@ public:
                         if (is_object_before_base)
                         {
                             object_name =
-                                "cpp2::store_as_base<"
+                                "cpp2::store_as_base<\""
+                                + (*object)->name()->to_string(true)
+                                + "\","
                                 + print_to_string(*(*object)->get_object_type())
                                 + ">::value__()";
                         }
@@ -4501,7 +4511,9 @@ public:
                     else if (is_object_before_base)
                     {
                         object_name =
-                            "cpp2::store_as_base<"
+                            "cpp2::store_as_base<\""
+                            + (*object)->name()->to_string(true)
+                            + "\","
                             + print_to_string(*(*object)->get_object_type())
                             + ">";
 
@@ -4858,7 +4870,9 @@ public:
                     else {
                         if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
                             printer.print_cpp2(
-                                separator + " private cpp2::store_as_base<"
+                                separator + " private cpp2::store_as_base<\""
+                                    + decl->name()->to_string(true)
+                                    + "\","
                                     + print_to_string(*decl->get_object_type()) + ">",
                                 compound_stmt->position()
                             );

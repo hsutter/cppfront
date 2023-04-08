@@ -380,6 +380,7 @@ auto starts_with_identifier(std::string_view s)
     return 0;
 };
 
+
 //  Helper to allow one of the above or a digit separator
 //  Example:    is_separator_or( is_binary_digit (c) )
 //
@@ -391,27 +392,6 @@ auto is_separator_or(auto pred, char c)
         || pred(c)
         ;
 }
-
-
-//-----------------------------------------------------------------------
-//
-//  String: A helper workaround for passing a string literal as a
-//  template argument
-//
-//-----------------------------------------------------------------------
-//
-template<size_t N>
-struct String
-{
-    constexpr String(const char (&str)[N])
-    {
-        std::copy_n(str, N, value);
-    }
-
-    auto operator<=>(String const&) const = default;
-
-    char value[N] = {};
-};
 
 
 //  Bool to string
@@ -426,6 +406,7 @@ auto __as(bool b)
 
 
 //  Explicit cast
+//
 template<typename T>
 auto __as(auto x)
     -> T

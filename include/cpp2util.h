@@ -271,6 +271,27 @@ using __uchar   = unsigned char;    // normally use u8 instead
 
 //-----------------------------------------------------------------------
 //
+//  String: A helper workaround for passing a string literal as a
+//  template argument
+//
+//-----------------------------------------------------------------------
+//
+template<size_t N>
+struct String
+{
+    constexpr String(const char (&str)[N])
+    {
+        std::copy_n(str, N, value);
+    }
+
+    auto operator<=>(String const&) const = default;
+
+    char value[N] = {};
+};
+
+
+//-----------------------------------------------------------------------
+//
 //  contract_group
 //
 //-----------------------------------------------------------------------
@@ -619,7 +640,7 @@ public:
 };
 
 
-template<typename T>
+template<String Name, typename T>
 struct store_as_base : private T
 {
     store_as_base( T const& t    ) : T{t}                  { }
