@@ -1447,11 +1447,30 @@ public:
 
         declaration_node const* decl = {};
 
+        //  'new' is a named allocator object
         if (n == "new") {
             printer.print_cpp2("cpp2_new", pos);
         }
+        //  'this' is not a pointer
         else if (n == "this") {
             printer.print_cpp2("(*this)", pos);
+        }
+        //  Reclaim the alternative names for users
+        else if (
+            n == "and"
+            || n == "and_eq"
+            || n == "bitand"
+            || n == "bitor"
+            || n == "compl"
+            || n == "not"
+            || n == "not_eq"
+            || n == "or_eq"
+            || n == "or_eq"
+            || n == "xor"
+            || n == "xor_eq"
+            )
+        {
+            printer.print_cpp2(n.to_string(true) + "_", pos);
         }
         else if (
             current_declarations.back()
