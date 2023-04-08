@@ -2852,7 +2852,9 @@ private:
             //      || curr().type() == lexeme::LeftBrace
             )
         {
-            bool inside_initializer = (peek(-1)->type() == lexeme::Assignment);
+            bool inside_initializer = ( 
+                peek(-1) && peek(-1)->type() == lexeme::Assignment
+            );
             auto open_paren = &curr();
             auto close = close_paren_type(open_paren->type());
             auto close_text = [&] () -> std::string { if (close == lexeme::RightParen) { return ")"; } return "}"; }();
@@ -2870,6 +2872,9 @@ private:
             }
             expr_list->close_paren = &curr();
             next();
+            if (curr().type() != lexeme::Semicolon) {
+                expr_list->inside_initializer = false;
+            } 
             n->expr = std::move(expr_list);
             return n;
         }
