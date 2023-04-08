@@ -47,7 +47,7 @@ extern int y;
 
     CPP2_UFCS_0(ufcs, get_i(fun()));
 
-    auto res {CPP2_UFCS_0(ufcs, 42)}; 
+    auto res {CPP2_UFCS_0(ufcs, (42))}; 
 
     CPP2_UFCS_0(ufcs, (std::move(j).i));
 }

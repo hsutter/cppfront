@@ -487,6 +487,21 @@ auto starts_with(
 }
 
 
+auto contains(
+    auto const& range,
+    auto const& value
+)
+    -> bool
+{
+    return std::find(
+        range.begin(),
+        range.end(),
+        value
+        )
+        != range.end();
+}
+
+
 //-----------------------------------------------------------------------
 //
 //  Command line handling

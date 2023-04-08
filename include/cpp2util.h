@@ -641,14 +641,17 @@ public:
 
 
 template<String Name, typename T>
-struct store_as_base : private T
+class store_as_base
 {
-    store_as_base( T const& t    ) : T{t}                  { }
-    store_as_base( T     && t    ) : T{std::move(t)}       { }
-    store_as_base( auto  && args ) : T{CPP2_FORWARD(args)} { }
+    T value;
 
-    auto value__()       -> T      & { return *this; }
-    auto value__() const -> T const& { return *this; }
+public:
+    store_as_base( T const& t    ) : value{t}                  { }
+    store_as_base( T     && t    ) : value{std::move(t)}       { }
+    store_as_base( auto  && args ) : value{CPP2_FORWARD(args)} { }
+
+    auto value__()       -> T      & { return value; }
+    auto value__() const -> T const& { return value; }
 };
 
 
