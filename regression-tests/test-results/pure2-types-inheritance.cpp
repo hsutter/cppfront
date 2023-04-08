@@ -12,7 +12,7 @@ class Human;
 
 #line 7 "pure2-types-inheritance.cpp2"
 namespace N {
-    class Machine;
+    template<int I> class Machine;
 
 #line 12 "pure2-types-inheritance.cpp2"
 }
@@ -29,13 +29,13 @@ class Human {
 };
 
 namespace N {
-    class Machine {
+    template<int I> class Machine {
         public: explicit Machine(cpp2::in<std::string> id);
         public: virtual auto work() const -> void = 0;
     };
 }
 
-class Cyborg: private cpp2::store_as_base<"name",std::string>, public Human, private cpp2::store_as_base<"address",std::string>, public N::Machine {
+class Cyborg: private cpp2::store_as_base<"name",std::string>, public Human, private cpp2::store_as_base<"address",std::string>, public N::Machine<99> {
 
 #line 20 "pure2-types-inheritance.cpp2"
     public: explicit Cyborg(cpp2::in<std::string> n);
@@ -57,7 +57,7 @@ class Cyborg: private cpp2::store_as_base<"name",std::string>, public Human, pri
 auto make_speak(cpp2::in<Human> h) -> void;
 
 #line 44 "pure2-types-inheritance.cpp2"
-auto do_work(cpp2::in<N::Machine> m) -> void;
+auto do_work(cpp2::in<N::Machine<99>> m) -> void;
 
 #line 49 "pure2-types-inheritance.cpp2"
 auto main() -> int;
@@ -67,14 +67,13 @@ auto main() -> int;
 
 #line 3 "pure2-types-inheritance.cpp2"
     Human::Human(){}
-    
 
 #line 7 "pure2-types-inheritance.cpp2"
 namespace N {
 
-        Machine::Machine(cpp2::in<std::string> id){}
-        
+        template <int I> Machine<I>::Machine(cpp2::in<std::string> id){}
 
+#line 12 "pure2-types-inheritance.cpp2"
 }
 
 #line 20 "pure2-types-inheritance.cpp2"
@@ -82,7 +81,7 @@ namespace N {
         : cpp2::store_as_base<"name",std::string>{ n }
         , Human{  }
         , cpp2::store_as_base<"address",std::string>{ "123 Main St." }
-        , N::Machine{ "Acme Corp. engineer tech" }
+        , N::Machine<99>{ "Acme Corp. engineer tech" }
 #line 20 "pure2-types-inheritance.cpp2"
     {
 
@@ -108,7 +107,7 @@ auto make_speak(cpp2::in<Human> h) -> void{
     CPP2_UFCS_0(speak, h);
 }
 
-auto do_work(cpp2::in<N::Machine> m) -> void{
+auto do_work(cpp2::in<N::Machine<99>> m) -> void{
     std::cout << "-> [vcall: do_work] ";
     CPP2_UFCS_0(work, m);
 }

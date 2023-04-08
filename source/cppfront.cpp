@@ -4765,6 +4765,7 @@ public:
         if (
             printer.get_phase() == printer.phase2_func_defs
             && n.is_function()
+            && n.initializer    // only if the function has a definition (is not abstract)
             )
         {
             auto parent_template_parameters = std::string{};
@@ -4793,8 +4794,12 @@ public:
         if (
             n.template_parameters
             && (
-                  (!n.is_function() && printer.get_phase() <  printer.phase2_func_defs)
-                || (n.is_function() && printer.get_phase() <= printer.phase2_func_defs)
+                printer.get_phase() <  printer.phase2_func_defs
+                || (
+                    n.is_function()
+                    && n.initializer    // only if the function has a definition (is not abstract)
+                    && printer.get_phase() == printer.phase2_func_defs
+                    )
                 )
             )
         {
@@ -4947,7 +4952,13 @@ public:
         }
 
         //  Function
-        else if (n.is_function())
+        else if (
+            n.is_function()
+            && (
+                printer.get_phase() < printer.phase2_func_defs
+                || n.initializer    // only emit definition if the function has one (is not abstract)
+                )
+            )
         {
             //  Start fresh (there may be one spurious leftover
             //  requires-condition created during the declarations pass)

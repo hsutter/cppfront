@@ -5,7 +5,7 @@ Human: type = {
 }
 
 N: namespace = {
-    Machine: type = {
+    Machine: <I:int> type = {
         operator=: (out this, id: std::string) = {}
         work:      (virtual this);
     }
@@ -15,11 +15,11 @@ Cyborg: type = {
     name:    std::string;
     this:    Human = ();
     address: std::string = "123 Main St.";
-    this:    N::Machine;
+    this:    N::Machine<99>;
 
     operator=: (out this, n: std::string) = {
         name = n;
-        N::Machine = "Acme Corp. engineer tech";
+        N::Machine<99> = "Acme Corp. engineer tech";
         std::cout << "(name)$ checks in for the day's shift\n";
     }
 
@@ -41,7 +41,7 @@ make_speak: ( h: Human ) = {
     h.speak();
 }
 
-do_work: ( m: N::Machine ) = {
+do_work: ( m: N::Machine<99> ) = {
     std::cout << "-> [vcall: do_work] ";
     m.work();
 }
