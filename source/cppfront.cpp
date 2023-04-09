@@ -1626,6 +1626,27 @@ public:
     auto emit(qualified_id_node const& n)
         -> void
     {
+        //  Check for some incorrect uses of :: or .
+        if (auto decl = sema.get_declaration_of(n.get_first_token(), true);
+            decl && std::ssize(n.ids) > 1
+            )
+        {
+            assert (decl->declaration);
+
+            if (
+                decl->declaration->is_object()
+                && n.ids[1].scope_op
+                && n.ids[1].scope_op->type() == lexeme::Scope
+                )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "use '" + decl->identifier->to_string(true) + ".' to refer to an object member"
+                );
+                return;
+            }
+        }
+
         //  Implicit "cpp2::" qualification of "unique.new" and "shared.new"
         if (
             n.ids.size() == 2
@@ -2535,6 +2556,27 @@ public:
     {
         assert(n.expr);
         last_postfix_expr_was_pointer = false;
+
+        //  Check for some incorrect uses of :: or .
+        if (auto decl = sema.get_declaration_of(n.get_first_token_ignoring_this(), true);
+            decl && !n.ops.empty()
+            )
+        {
+            assert (decl->declaration);
+
+            if (
+                decl->declaration->is_type()
+                && n.ops[0].op
+                && n.ops[0].op->type() == lexeme::Dot
+                )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "use '" + decl->identifier->to_string(true) + "::' to refer to a type member"
+                );
+                return;
+            }
+        }
 
         //  For a 'move that' parameter, track the members we already moved from
         //  so we can diagnose attempts to move from the same member twice

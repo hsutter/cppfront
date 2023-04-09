@@ -636,6 +636,16 @@ struct qualified_id_node
         return {};
     }
 
+    auto get_first_token() const
+        -> token const*
+    {
+        assert (
+            !ids.empty()
+            && ids.front().id
+        );
+        return ids.front().id->get_token();
+    }
+
     auto position() const
         -> source_position
     {
