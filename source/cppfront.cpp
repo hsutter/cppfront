@@ -4928,7 +4928,8 @@ public:
                     decl->get_decl_if_type_scope_object_name_before_a_base_type(*decl->name())
                     || decl->has_name("this")
                     ;
-                if (emit_as_base) {
+                if (emit_as_base)
+                {
                     if (decl->has_name("this")) {
                         if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
                             printer.print_cpp2(
@@ -4938,7 +4939,20 @@ public:
                             separator = ",";
                         }
                     }
-                    else {
+                    else
+                    {
+                        if (
+                            decl->access
+                            && *decl->access != "public"
+                            )
+                        {
+                            errors.emplace_back(
+                                decl->position(),
+                                "a member object that appears before a 'this' base type object must be private (the default)"
+                            );
+                            return;
+                        }
+
                         if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
                             printer.print_cpp2(
                                 separator + " private cpp2::store_as_base<\""
@@ -4952,7 +4966,8 @@ public:
                     }
                 }
                 //  Then we'll switch to start the body == other members
-                else {
+                else
+                {
                     if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
                         if (!started_body) {
                             printer.print_cpp2(" {", compound_stmt->position());
