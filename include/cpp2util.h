@@ -212,6 +212,7 @@
     #include <utility>
     #include <cstdio>
     #include <cstdint>
+    #include <algorithm>
 
     #ifndef CPP2_NO_EXCEPTIONS
         #include <exception>
