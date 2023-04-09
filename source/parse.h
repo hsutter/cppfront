@@ -5599,6 +5599,21 @@ private:
             //
             if (
                 id->get_token()
+                && *id->get_token() == "auto"
+                )
+            {
+                auto name = std::string{"v"};
+                if (peek(0) && peek(0)->type() == lexeme::Identifier) {
+                    name = peek(0)->to_string(true);
+                }
+                errors.emplace_back(
+                    curr().position(),
+                    "to define a variable " + name + " of type T, write '" + name + ": T = /* initializer */'"
+                );
+                return {};
+            }
+            if (
+                id->get_token()
                 && *id->get_token() == "namespace"
                 )
             {
