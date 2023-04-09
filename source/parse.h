@@ -5450,6 +5450,17 @@ private:
             //
             if (
                 id->get_token()
+                && *id->get_token() == "auto"
+                )
+            {
+                errors.emplace_back(
+                    curr().position(),
+                    "unknown declaration (use `name: type = initializer` instead?)"
+                );
+                return {};
+            }
+            if (
+                id->get_token()
                 && *id->get_token() == "namespace"
                 )
             {
