@@ -647,9 +647,21 @@ class store_as_base
     T value;
 
 public:
-    store_as_base( T const& t    ) : value{t}                  { }
-    store_as_base( T     && t    ) : value{std::move(t)}       { }
-    store_as_base( auto  && args ) : value{CPP2_FORWARD(args)} { }
+    store_as_base()
+        requires requires { T{ }; }
+        : value{ } { }
+
+    store_as_base( T const& t )
+        requires requires { T{t}; }
+        : value{t} { }
+
+    store_as_base( T && t )
+        requires requires { T{std::move(t)}; }
+        : value{std::move(t)} { }
+
+    store_as_base( auto  && args )
+        requires requires { T{CPP2_FORWARD(args)}; }
+        : value{CPP2_FORWARD(args)} { }
 
     auto value__()       -> T      & { return value; }
     auto value__() const -> T const& { return value; }

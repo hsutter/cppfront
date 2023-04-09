@@ -53,7 +53,7 @@ class myclass {
 
     public: class nested {
         public: static auto g() -> void;
-    };
+public: nested() = default; nested(nested const&) = delete; auto operator=(nested const&) -> void = delete; };
 
     public: template<typename T, typename U> [[nodiscard]] static auto f1(T const& t, U const& u) -> auto;
     public: template<typename T, typename U> [[nodiscard]] static auto f2(T const& t, U const& u) -> auto;

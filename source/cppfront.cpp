@@ -4898,8 +4898,9 @@ public:
 
             //  Type definition
 
-            auto separator    = std::string{":"};
-            auto started_body = false;
+            auto separator         = std::string{":"};
+            auto started_body      = false;
+            auto found_constructor = false;
             assert(compound_stmt);
 
             for (auto& stmt : compound_stmt->statements)
@@ -4915,6 +4916,10 @@ public:
 
                 auto& decl = std::get<statement_node::declaration>(stmt->statement);
                 assert(decl);
+
+                if (decl->is_constructor()) {
+                    found_constructor = true;
+                }
 
                 //  First we'll encounter the base types == subobjects named "this"
                 //  and any data members declared before them that we push into private bases
@@ -4959,15 +4964,30 @@ public:
             }
 
             //  Ensure we emit the { even if there are only bases in the type
-            if (
-                printer.get_phase() == printer.phase1_type_defs_func_decls
-                && !started_body
-                )
+            if (printer.get_phase() == printer.phase1_type_defs_func_decls)
             {
-                printer.print_cpp2(" {", compound_stmt->position());
-            }
+                if (!started_body) {
+                    printer.print_cpp2(" {", compound_stmt->position());
+                }
 
-            if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
+                //  If there no constructor was defined, there shoudl only be
+                //  a default constructor, so generate that and disable copy/move
+                if (!found_constructor) {
+                    auto id = print_to_string(*n.identifier);
+                    printer.print_cpp2(
+                        "public: " + id + "() = default; ",
+                        compound_stmt->position()
+                    );
+                    printer.print_cpp2(
+                        "" + id + "(" + id + " const&) = delete; ",
+                        compound_stmt->position()
+                    );
+                    printer.print_cpp2(
+                        "auto operator=(" + id + " const&) -> void = delete; ",
+                        compound_stmt->position()
+                    );
+                }
+
                 printer.print_cpp2("};\n", compound_stmt->close_brace);
             }
         }

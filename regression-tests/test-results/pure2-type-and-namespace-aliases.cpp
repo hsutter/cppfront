@@ -30,7 +30,7 @@ class myclass {
     public: using str = std::string;
 
     private: using str2 = std::string;
-};
+public: myclass() = default; myclass(myclass const&) = delete; auto operator=(myclass const&) -> void = delete; };
 
 namespace N3 = ::std::literals;
 
