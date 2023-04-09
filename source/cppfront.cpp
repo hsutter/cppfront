@@ -1470,7 +1470,7 @@ public:
             || n == "xor_eq"
             )
         {
-            printer.print_cpp2(n.to_string(true) + "_", pos);
+            printer.print_cpp2("cpp2_"+n.to_string(true), pos);
         }
         else if (
             current_declarations.back()

@@ -5205,21 +5205,25 @@ private:
 
             //  deduced_type == true means that the type will be deduced,
             //  represented using an empty type-id
-            if (deduced_type) {
+            if (
+                deduced_type
+                && peek(1)
+                )
+            {
                 auto& type = std::get<declaration_node::an_object>(n->type);
                 // object initialized by the address of the curr() object 
-                if (peek(1) && peek(1)->type() == lexeme::Ampersand) {
+                if (peek(1)->type() == lexeme::Ampersand) {
                     type->address_of = &curr();
                 }
                 // object initialized by (potentially multiple) dereference of the curr() object 
-                else if (peek(1) && peek(1)->type() == lexeme::Multiply) {
+                else if (peek(1)->type() == lexeme::Multiply) {
                     type->dereference_of = &curr();
                     for (int i = 1; peek(i)->type() == lexeme::Multiply; ++i)
                         type->dereference_cnt += 1;
                 }
                 else if (
                     // object initialized by the result of the function call (and it is not unnamed function)
-                    (peek(1) && peek(1)->type() == lexeme::LeftParen && curr().type() != lexeme::Colon)
+                    (peek(1)->type() == lexeme::LeftParen && curr().type() != lexeme::Colon)
                     || curr().type() == lexeme::Identifier // or by the object (variable that the type need to be checked)
                 ) {
                     type->suspicious_initialization = &curr();
