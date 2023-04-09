@@ -2080,9 +2080,9 @@ auto function_type_node::is_assignment() const
 {
     if (
         my_decl->has_name("operator=")
+        && (*parameters).ssize() > 1
         && (*parameters)[0]->has_name("this")
         && (*parameters)[0]->direction() == passing_style::inout
-        && (*parameters).ssize() > 1
         )
     {
         return true;
@@ -2128,9 +2128,9 @@ auto function_type_node::is_destructor() const
 {
     if (
         my_decl->has_name("operator=")
+        && (*parameters).ssize() == 1
         && (*parameters)[0]->has_name("this")
         && (*parameters)[0]->direction() == passing_style::move
-        && (*parameters).ssize() == 1
         )
     {
         return true;
@@ -5661,9 +5661,12 @@ private:
                 return {};
             }
 
-            if (
-                func->parameters->ssize() > 0
-                && (*func->parameters)[0]->has_name("this")
+            if (func->parameters->ssize() == 0)
+            {
+                error( "an operator= function must have a parameter", false );
+            }
+            else if (
+                (*func->parameters)[0]->has_name("this")
                 && (*func->parameters)[0]->pass != passing_style::inout
                 && (*func->parameters)[0]->pass != passing_style::out
                 && (*func->parameters)[0]->pass != passing_style::move
