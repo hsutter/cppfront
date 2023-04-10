@@ -4894,6 +4894,21 @@ private:
                 }
             }
             else if (auto t = type_id()) {
+                if (
+                    t->get_token()
+                    && t->get_token()->to_string(true) == "auto"
+                    )
+                {
+                    auto name = std::string{"v"};
+                    if (my_decl && my_decl->name()) {
+                        name = my_decl->name()->to_string(true);
+                    }
+                    errors.emplace_back(
+                        curr().position(),
+                        "to define a function " + name + " with deduced return type, write '" + name + ": ( /* arguments */ ) -> _ = { /* function body */ }'"
+                    );
+                    return {};
+                }
                 n->returns = function_type_node::single_type_id{ std::move(t), passing_style::move };
                 assert(n->returns.index() == function_type_node::id);
             }
