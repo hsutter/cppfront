@@ -69,8 +69,8 @@ namespace M {
 template<typename T, typename U> class A {
     public: template<int I> class B {
         public: template<typename V, int J, typename W> static auto f(W const& w) -> void;
-public: B() = default; B(B const&) = delete; auto operator=(B const&) -> void = delete; };
-public: A() = default; A(A const&) = delete; auto operator=(A const&) -> void = delete; };
+public: B() = default; B(B const&) = delete; auto operator=(B const&) -> void = delete; };public: A() = default; A(A const&) = delete; auto operator=(A const&) -> void = delete; 
+};
 
 }
 
