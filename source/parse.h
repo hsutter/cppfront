@@ -2882,7 +2882,12 @@ private:
             }
             expr_list->close_paren = &curr();
             next();
-            if (curr().type() != lexeme::Semicolon) {
+            if (
+                   curr().type() != lexeme::Semicolon
+                && curr().type() != lexeme::RightParen 
+                && curr().type() != lexeme::RightBracket 
+                && curr().type() != lexeme::Comma
+            ) {
                 expr_list->inside_initializer = false;
             } 
             n->expr = std::move(expr_list);
