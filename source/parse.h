@@ -5128,6 +5128,22 @@ private:
 
         //  Or just a type-id, declaring a non-pointer object
         else if (auto t = type_id()) {
+            if (
+                t->get_token()
+                && t->get_token()->to_string(true) == "auto"
+                )
+            {
+                auto name = std::string{"v"};
+                if (n->name()) {
+                    name = n->name()->to_string(true);
+                }
+                errors.emplace_back(
+                    curr().position(),
+                    "to define a variable " + name + " with deduced type, write '" + name + " := /* initializer */;'"
+                );
+                return {};
+            }
+
             n->type = std::move(t);
             assert (n->is_object());
 
