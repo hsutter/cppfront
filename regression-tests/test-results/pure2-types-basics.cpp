@@ -14,7 +14,6 @@ class myclass;
 
 #line 60 "pure2-types-basics.cpp2"
 }
-
 //=== Cpp2 type definitions and function declarations ===========================
 
 

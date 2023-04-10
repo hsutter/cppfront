@@ -5044,7 +5044,7 @@ public:
                 emit(*decl);
             }
 
-            printer.print_cpp2("}\n", compound_stmt->close_brace);
+            printer.print_cpp2("}", compound_stmt->close_brace);
         }
 
         //  Function

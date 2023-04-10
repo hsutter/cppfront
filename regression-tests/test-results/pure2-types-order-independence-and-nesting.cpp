@@ -26,7 +26,6 @@ template<typename T, typename U> class A;
 }
 
 }
-
 //=== Cpp2 type definitions and function declarations ===========================
 
 
