@@ -538,7 +538,7 @@ public:
     //-----------------------------------------------------------------------
     //  Finalize
     //
-    auto finalize()
+    auto finalize(phases phase = phases::phase2_func_defs)
     {
         flush_comments( {curr_pos.lineno+1, 1} );
 
@@ -546,6 +546,7 @@ public:
             is_open()
             && psource
             && psource->has_cpp2()
+            && phase == phases::phase2_func_defs
             )
         {
             //  Always make sure the last line ends with a newline
@@ -1284,6 +1285,20 @@ public:
                 }
             }
             ++curr_lineno;
+        }
+
+        if (
+            printer.get_phase() == positional_printer::phase1_type_defs_func_decls
+        ) {
+            const auto& comments = tokens.get_comments();
+            // check if there is any comment left that should be printed in phase1
+            if (
+                std::any_of(std::cbegin(comments), std::cend(comments), [this](const auto& c){
+                    return !c.dbg_was_printed && !parser.is_within_function_body(c.start.lineno);
+                })
+            ) {
+                printer.finalize(positional_printer::phase1_type_defs_func_decls);
+            }
         }
 
         //  We can stop here if there's no Cpp2 code -- a file with no Cpp2
