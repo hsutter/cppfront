@@ -1278,6 +1278,12 @@ struct parameter_declaration_node
         return mod == modifier::virtual_;
     }
 
+    auto make_virtual()
+        -> void
+    {
+        mod = modifier::virtual_;
+    }
+
     auto is_override() const
         -> bool
     {
@@ -1324,6 +1330,12 @@ struct parameter_declaration_list_node
     //
     auto ssize() const -> auto {
         return std::ssize(parameters);
+    }
+
+    auto operator[](int i)
+        -> parameter_declaration_node*
+    {
+        return parameters[i].get();
     }
 
     auto operator[](int i) const
@@ -1406,6 +1418,9 @@ struct function_type_node
     auto is_virtual_function() const
         -> bool;
 
+    auto make_function_virtual()
+        -> bool;
+
     auto is_constructor() const
         -> bool;
 
@@ -1419,6 +1434,9 @@ struct function_type_node
         -> bool;
 
     auto is_assignment() const
+        -> bool;
+
+    auto is_assignment_with_that() const
         -> bool;
 
     auto is_assignment_with_in_that() const
@@ -1653,6 +1671,30 @@ struct declaration_node
 
     //  API
     //
+    auto is_public() const
+        -> bool
+    {
+        return access && *access == "public";
+    }
+
+    auto is_protected() const
+        -> bool
+    {
+        return access && *access == "protected";
+    }
+
+    auto is_private() const
+        -> bool
+    {
+        return access && *access == "private";
+    }
+
+    auto is_default_access() const
+        -> bool
+    {
+        return !access;
+    }
+
     auto has_name() const
         -> bool
     {
@@ -1679,6 +1721,12 @@ struct declaration_node
             has_name()
             && *name() == s
             ;
+    }
+
+    auto has_initializer() const
+        -> bool
+    {
+        return initializer != nullptr;
     }
 
     auto has_parameter_named(std::string_view s) const
@@ -1717,6 +1765,9 @@ struct declaration_node
         return std::get<a_function>(type)->has_move_parameter_named(s);
     }
 
+    auto is_global   () const -> bool
+        { return !parent_declaration;         }
+
     auto is_function () const -> bool
         { return type.index() == a_function;  }
     auto is_object   () const -> bool
@@ -1728,21 +1779,7 @@ struct declaration_node
     auto is_alias() const -> bool
         { return type.index() == an_alias;    }
 
-    auto is_global   () const -> bool
-        { return !parent_declaration;         }
-
-    auto parent_is_function () const -> bool
-        { return  parent_declaration && parent_declaration->type.index() == a_function;  }
-    auto parent_is_object   () const -> bool
-        { return  parent_declaration && parent_declaration->type.index() == an_object;   }
-    auto parent_is_type     () const -> bool
-        { return  parent_declaration && parent_declaration->type.index() == a_type;      }
-    auto parent_is_namespace() const -> bool
-        { return !parent_declaration || parent_declaration->type.index() == a_namespace; }
-    auto parent_is_alias    () const -> bool
-        { return  parent_declaration && parent_declaration->type.index() == an_alias;    }
-
-    auto has_base_types_or_virtual_functions() const
+    auto is_polymorphic() const // has base types or virtual functions
         -> bool
     {
         for (auto& decl : get_type_scope_declarations()) {
@@ -1757,8 +1794,18 @@ struct declaration_node
         return false;
     }
 
-    auto parent_has_base_types_or_virtual_functions() const -> bool
-        { return  parent_declaration && parent_declaration->has_base_types_or_virtual_functions(); }
+    auto parent_is_function   () const -> bool
+        { return  parent_declaration && parent_declaration->type.index() == a_function;  }
+    auto parent_is_object     () const -> bool
+        { return  parent_declaration && parent_declaration->type.index() == an_object;   }
+    auto parent_is_type       () const -> bool
+        { return  parent_declaration && parent_declaration->type.index() == a_type;      }
+    auto parent_is_namespace  () const -> bool
+        { return !parent_declaration || parent_declaration->type.index() == a_namespace; }
+    auto parent_is_alias      () const -> bool
+        { return  parent_declaration && parent_declaration->type.index() == an_alias;    }
+    auto parent_is_polymorphic() const -> bool
+        { return  parent_declaration && parent_declaration->is_polymorphic(); }
 
     enum which {
         functions = 1,
@@ -1906,6 +1953,16 @@ struct declaration_node
         return false;
     }
 
+    auto make_function_virtual()
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->make_function_virtual();
+        }
+        //  else
+        return false;
+    }
+
     auto is_constructor() const
         -> bool
     {
@@ -1951,6 +2008,16 @@ struct declaration_node
     {
         if (auto func = std::get_if<a_function>(&type)) {
             return (*func)->is_assignment();
+        }
+        //  else
+        return false;
+    }
+
+    auto is_assignment_with_that() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_assignment_with_that();
         }
         //  else
         return false;
@@ -2150,6 +2217,16 @@ auto function_type_node::is_virtual_function() const
     return false;
 }
 
+auto function_type_node::make_function_virtual()
+    -> bool
+{
+    if (is_function_with_this()) {
+        (*parameters)[0]->make_virtual();
+        return true;
+    }
+    return false;
+}
+
 auto function_type_node::is_constructor() const
     -> bool
 {
@@ -2171,6 +2248,21 @@ auto function_type_node::is_constructor_with_that() const
 {
     if (
         is_constructor()
+        && (*parameters).ssize() == 2
+        && (*parameters)[1]->has_name("that")
+        )
+    {
+        return true;
+    }
+    return false;
+}
+
+
+auto function_type_node::is_assignment_with_that() const
+    -> bool
+{
+    if (
+        is_assignment()
         && (*parameters).ssize() == 2
         && (*parameters)[1]->has_name("that")
         )
@@ -2518,7 +2610,7 @@ struct translation_unit_node
 //
 class parser
 {
-    std::vector<cpp2::error>& errors;
+    std::vector<error_entry>& errors;
 
     std::unique_ptr<translation_unit_node> parse_tree;
 
@@ -2565,9 +2657,12 @@ class parser
     };
 
     //  Used only for the duration of each parse() call
-    std::vector<token> const* tokens_ = {};
-    std::deque<token>* generated_tokens_ = {};
-    int pos = 0;
+    //struct parse_state {
+        std::vector<token> const* tokens_ = {};
+        std::deque<token>* generated_tokens_ = {};
+        int pos = 0;
+    //};
+    //std::vector<parse_state> state_stack;
 
     //  Keep track of the function bodies' locations - used to emit comments
     //  in the right pass (decide whether it's a comment that belongs with
@@ -2641,17 +2736,19 @@ public:
     //  errors      error list
     //
     parser(
-        std::vector<cpp2::error>& errors
+        std::vector<error_entry>& errors_
     )
-        : errors{ errors }
+        : errors{ errors_ }
         , parse_tree{std::make_unique<translation_unit_node>()}
     {
     }
 
+
     //-----------------------------------------------------------------------
     //  parse
     //
-    //  tokens      input tokens for this section of Cpp2 source code
+    //  tokens              input tokens for this section of Cpp2 source code
+    //  generated_tokens    a shared place to store generated tokens
     //
     //  Each call parses this section's worth of tokens and adds the
     //  result to the stored parse tree. Call this repeatedly for the Cpp2
@@ -2734,7 +2831,7 @@ public:
 
 private:
     //-----------------------------------------------------------------------
-    //  Error reporting: Fed into the supplied this->error object
+    //  Error reporting: Fed into the supplied this->errors object
     //
     //  msg                 message to be printed
     //
@@ -4465,7 +4562,7 @@ private:
 
         auto n = std::make_unique<compound_statement_node>();
         if (peek(1)) {
-            n->body_indent = peek(1)->position().colno;
+            n->body_indent = peek(1)->position().colno-1;
         }
 
         //  Remember current position, in case this isn't a valid statement

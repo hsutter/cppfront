@@ -47,6 +47,8 @@ class X {
     //  X::exx member function description here
     public: auto exx(cpp2::in<int> count) const -> void;
 
+    public: X(X const&) = delete;
+    public: auto operator=(X const&) -> void = delete;
 #line 42 "pure2-types-order-independence-and-nesting.cpp2"
 };
 
@@ -61,6 +63,9 @@ class Y {
 
     public: auto why(cpp2::in<int> count) const -> void;
 
+    public: Y(Y const&) = delete;
+    public: auto operator=(Y const&) -> void = delete;
+#line 53 "pure2-types-order-independence-and-nesting.cpp2"
 };
 
 namespace M {
@@ -69,8 +74,18 @@ namespace M {
 template<typename T, typename U> class A {
     public: template<int I> class B {
         public: template<typename V, int J, typename W> static auto f(W const& w) -> void;
-public: B() = default; B(B const&) = delete; auto operator=(B const&) -> void = delete; };
-public: A() = default; A(A const&) = delete; auto operator=(A const&) -> void = delete; };
+
+        public: B() = default;
+        public: B(B const&) = delete;
+        public: auto operator=(B const&) -> void = delete;
+#line 61 "pure2-types-order-independence-and-nesting.cpp2"
+    };
+
+    public: A() = default;
+    public: A(A const&) = delete;
+    public: auto operator=(A const&) -> void = delete;
+#line 62 "pure2-types-order-independence-and-nesting.cpp2"
+};
 
 }
 

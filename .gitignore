@@ -24,3 +24,4 @@
 .editorconfig
 *.xml
 *.sarif
+*.bin

@@ -30,7 +30,12 @@ class myclass {
     public: using str = std::string;
 
     private: using str2 = std::string;
-public: myclass() = default; myclass(myclass const&) = delete; auto operator=(myclass const&) -> void = delete; };
+
+    public: myclass() = default;
+    public: myclass(myclass const&) = delete;
+    public: auto operator=(myclass const&) -> void = delete;
+#line 13 "pure2-type-and-namespace-aliases.cpp2"
+};
 
 namespace N3 = ::std::literals;
 

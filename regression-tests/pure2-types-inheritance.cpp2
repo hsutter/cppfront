@@ -1,6 +1,5 @@
 
 Human: type = {
-    operator=: (out this) = {}
     speak:     (virtual this);
 }
 

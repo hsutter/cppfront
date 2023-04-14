@@ -10,11 +10,11 @@
 #line 2 "pure2-types-inheritance.cpp2"
 class Human;
 
-#line 7 "pure2-types-inheritance.cpp2"
+#line 6 "pure2-types-inheritance.cpp2"
 namespace N {
     template<int I> class Machine;
 
-#line 12 "pure2-types-inheritance.cpp2"
+#line 11 "pure2-types-inheritance.cpp2"
 }
 
 class Cyborg;
@@ -24,84 +24,95 @@ class Cyborg;
 
 #line 2 "pure2-types-inheritance.cpp2"
 class Human {
-    public: Human();
     public: virtual auto speak() const -> void = 0;
+
+    public: Human() = default;
+    public: Human(Human const&) = delete;
+    public: auto operator=(Human const&) -> void = delete;
+#line 4 "pure2-types-inheritance.cpp2"
 };
 
 namespace N {
     template<int I> class Machine {
         public: explicit Machine(cpp2::in<std::string> id);
         public: virtual auto work() const -> void = 0;
+
+        public: Machine(Machine const&) = delete;
+        public: auto operator=(Machine const&) -> void = delete;
+#line 10 "pure2-types-inheritance.cpp2"
     };
 }
 
-class Cyborg: private cpp2::store_as_base<"name",std::string>, public Human, private cpp2::store_as_base<"address",std::string>, public N::Machine<99> {
+struct Cyborg_name_as_base { std::string name; };
+struct Cyborg_address_as_base { std::string address; };
+#line 13 "pure2-types-inheritance.cpp2"
+class Cyborg: public Cyborg_name_as_base, public Human, public Cyborg_address_as_base, public N::Machine<99> {
 
-#line 20 "pure2-types-inheritance.cpp2"
+#line 19 "pure2-types-inheritance.cpp2"
     public: explicit Cyborg(cpp2::in<std::string> n);
 
-#line 26 "pure2-types-inheritance.cpp2"
+#line 25 "pure2-types-inheritance.cpp2"
     public: auto speak() const -> void override;
 
-#line 29 "pure2-types-inheritance.cpp2"
+#line 28 "pure2-types-inheritance.cpp2"
     public: auto work() const -> void override;
 
-#line 32 "pure2-types-inheritance.cpp2"
+#line 31 "pure2-types-inheritance.cpp2"
     public: auto print() const -> void;
 
-#line 35 "pure2-types-inheritance.cpp2"
+#line 34 "pure2-types-inheritance.cpp2"
     public: ~Cyborg();
 
+    public: Cyborg(Cyborg const&) = delete;
+    public: auto operator=(Cyborg const&) -> void = delete;
+#line 36 "pure2-types-inheritance.cpp2"
 };
 
 auto make_speak(cpp2::in<Human> h) -> void;
 
-#line 44 "pure2-types-inheritance.cpp2"
+#line 43 "pure2-types-inheritance.cpp2"
 auto do_work(cpp2::in<N::Machine<99>> m) -> void;
 
-#line 49 "pure2-types-inheritance.cpp2"
+#line 48 "pure2-types-inheritance.cpp2"
 auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
 
 
-#line 3 "pure2-types-inheritance.cpp2"
-    Human::Human(){}
-
-#line 7 "pure2-types-inheritance.cpp2"
+#line 6 "pure2-types-inheritance.cpp2"
 namespace N {
 
         template <int I> Machine<I>::Machine(cpp2::in<std::string> id){}
 
-#line 12 "pure2-types-inheritance.cpp2"
+#line 11 "pure2-types-inheritance.cpp2"
 }
 
-#line 20 "pure2-types-inheritance.cpp2"
+#line 19 "pure2-types-inheritance.cpp2"
     Cyborg::Cyborg(cpp2::in<std::string> n)
-        : cpp2::store_as_base<"name",std::string>{ n }
+        : Cyborg_name_as_base{ n }
         , Human{  }
-        , cpp2::store_as_base<"address",std::string>{ "123 Main St." }
+        , Cyborg_address_as_base{ "123 Main St." }
         , N::Machine<99>{ "Acme Corp. engineer tech" }
-#line 20 "pure2-types-inheritance.cpp2"
+#line 19 "pure2-types-inheritance.cpp2"
     {
 
-#line 23 "pure2-types-inheritance.cpp2"
-        std::cout << cpp2::to_string(cpp2::store_as_base<"name",std::string>::value__()) + " checks in for the day's shift\n";
+#line 22 "pure2-types-inheritance.cpp2"
+        std::cout << cpp2::to_string(name) + " checks in for the day's shift\n";
     }
 
     auto Cyborg::speak() const -> void { 
-        std::cout << cpp2::to_string(cpp2::store_as_base<"name",std::string>::value__()) + " cracks a few jokes with a coworker\n";  }
+        std::cout << cpp2::to_string(name) + " cracks a few jokes with a coworker\n";  }
 
     auto Cyborg::work() const -> void { 
-        std::cout << cpp2::to_string(cpp2::store_as_base<"name",std::string>::value__()) + " carries some half-tonne crates of Fe2O3 to cold storage\n";  }
+        std::cout << cpp2::to_string(name) + " carries some half-tonne crates of Fe2O3 to cold storage\n";  }
 
     auto Cyborg::print() const -> void { 
-        std::cout << "printing: " + cpp2::to_string(cpp2::store_as_base<"name",std::string>::value__()) + " lives at " + cpp2::to_string(cpp2::store_as_base<"address",std::string>::value__()) + "\n";  }
+        std::cout << "printing: " + cpp2::to_string(name) + " lives at " + cpp2::to_string(address) + "\n";  }
 
     Cyborg::~Cyborg() { 
-        std::cout << "Tired but satisfied after another successful day, " + cpp2::to_string(cpp2::store_as_base<"name",std::string>::value__()) + " checks out and goes home to their family\n";  }
+        std::cout << "Tired but satisfied after another successful day, " + cpp2::to_string(name) + " checks out and goes home to their family\n";  }
 
-#line 39 "pure2-types-inheritance.cpp2"
+#line 38 "pure2-types-inheritance.cpp2"
 auto make_speak(cpp2::in<Human> h) -> void{
     std::cout << "-> [vcall: make_speak] ";
     CPP2_UFCS_0(speak, h);

@@ -243,8 +243,8 @@ class sema
     //using enum symbol::active;
 
 public:
-    std::vector<error>&          errors;
-    std::vector<symbol>          symbols;
+    std::vector<error_entry>& errors;
+    std::vector<symbol>       symbols;
 
     std::vector<selection_statement_node const*> active_selections;
 
@@ -255,9 +255,9 @@ public:
     //  errors      error list
     //
     sema(
-        std::vector<error>& errors
+        std::vector<error_entry>& errors_
     )
-        : errors{ errors }
+        : errors{ errors_ }
     {
     }
 

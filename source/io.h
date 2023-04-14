@@ -383,10 +383,10 @@ class braces_tracker
     };
     std::vector<pre_if_depth_info> preprocessor = { {} };  // sentinel
     std::vector<lineno_t>          open_braces;
-    std::vector<error>&            errors;
+    std::vector<error_entry>&      errors;
 
 public:
-    braces_tracker( std::vector<error>& errors )
+    braces_tracker( std::vector<error_entry>& errors )
         : errors{errors}
     { }
 
@@ -682,11 +682,11 @@ auto process_cpp_line(
 //  Returns:    whether additional lines should be inspected
 //
 auto process_cpp2_line(
-    std::string const&  line,
-    bool&               in_comment,
-    braces_tracker&     braces,
-    lineno_t            lineno,
-    std::vector<error>& errors
+    std::string const&        line,
+    bool&                     in_comment,
+    braces_tracker&           braces,
+    lineno_t                  lineno,
+    std::vector<error_entry>& errors
 )
     -> bool
 {
@@ -751,10 +751,10 @@ auto process_cpp2_line(
 //
 class source
 {
-    std::vector<error>&      errors;
-    std::vector<source_line> lines;
-    bool                     cpp1_found = false;
-    bool                     cpp2_found = false;
+    std::vector<error_entry>& errors;
+    std::vector<source_line>  lines;
+    bool                      cpp1_found = false;
+    bool                      cpp2_found = false;
 
     static const int max_line_len = 90'000;
         //  do not reduce this - I encountered an 80,556-char
@@ -768,9 +768,9 @@ public:
     //  errors      error list
     //
     source(
-        std::vector<error>& errors
+        std::vector<error_entry>& errors_
     )
-        : errors{ errors }
+        : errors{ errors_ }
         , lines( 1 )        // extra blank to avoid off-by-one everywhere
         , buf{0}
     {

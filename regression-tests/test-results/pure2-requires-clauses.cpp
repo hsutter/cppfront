@@ -24,6 +24,10 @@ template<typename T, typename U>
               && std::is_same_v<U,int> )
 class X {
     public: X();
+
+    public: X(X const&) = delete;
+    public: auto operator=(X const&) -> void = delete;
+#line 8 "pure2-requires-clauses.cpp2"
 };
 
 template<typename T, typename U> [[nodiscard]] auto f

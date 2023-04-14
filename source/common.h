@@ -250,14 +250,14 @@ struct multiline_raw_string
 //
 //-----------------------------------------------------------------------
 //
-struct error
+struct error_entry
 {
     source_position where;
     std::string     msg;
     bool            internal = false;
     bool            fallback = false;   // only emit this message if there was nothing better
 
-    error(
+    error_entry(
         source_position    w,
         std::string const& m,
         bool               i = false,
@@ -269,7 +269,7 @@ struct error
         , fallback{f}
     { }
 
-    auto operator==(error const& that)
+    auto operator==(error_entry const& that)
         -> bool
     {
         return

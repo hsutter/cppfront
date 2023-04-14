@@ -530,8 +530,6 @@ using in =
 //
 //  out<T>              For out parameter
 //
-//  store_as_base<T>    For member object declared before a base object
-//
 //-----------------------------------------------------------------------
 //
 template<typename T>
@@ -596,13 +594,23 @@ public:
 
     auto construct(auto&& ...args) -> void {
         if (has_t || called_construct()) {
-            Default.expects( t );
-            *t = T(CPP2_FORWARD(args)...);
+            if constexpr (requires { *t = T(CPP2_FORWARD(args)...); }) {
+                Default.expects( t );
+                *t = T(CPP2_FORWARD(args)...);
+            }
+            else {
+                Default.expects(!"attempted to copy assign, but copy assignment is not available");
+            }
         }
         else {
             Default.expects( dt );
             if (dt->init) {
-                dt->value() = T(CPP2_FORWARD(args)...);
+                if constexpr (requires { *t = T(CPP2_FORWARD(args)...); }) {
+                    dt->value() = T(CPP2_FORWARD(args)...);
+                }
+                else {
+                    Default.expects(!"attempted to copy assign, but copy assignment is not available");
+                }
             }
             else {
                 dt->construct(CPP2_FORWARD(args)...);
@@ -613,16 +621,26 @@ public:
 
     auto construct_list(auto&& ...args) -> void {
         if (has_t || called_construct()) {
-            Default.expects( t );
-            *t = T{CPP2_FORWARD(args)...};
+            if constexpr (requires { *t = T{CPP2_FORWARD(args)...}; }) {
+                Default.expects( t );
+                *t = T{CPP2_FORWARD(args)...};
+            }
+            else {
+                Default.expects(!"attempted to copy assign, but copy assignment is not available");
+            }
         }
         else {
             Default.expects( dt );
             if (dt->init) {
-                dt->value() = T{CPP2_FORWARD(args)...};
+                if constexpr (requires { *t = T{CPP2_FORWARD(args)...}; }) {
+                    dt->value() = T{CPP2_FORWARD(args)...};
+                }
+                else {
+                    Default.expects(!"attempted to copy assign, but copy assignment is not available");
+                }
             }
             else {
-                dt->construct_list(CPP2_FORWARD(args)...);
+                dt->construct(CPP2_FORWARD(args)...);
                 called_construct() = true;
             }
         }
@@ -638,33 +656,6 @@ public:
             return dt->value();
         }
     }
-};
-
-
-template<String Name, typename T>
-class store_as_base
-{
-    T value;
-
-public:
-    store_as_base()
-        requires requires { T{ }; }
-        : value{ } { }
-
-    store_as_base( T const& t )
-        requires requires { T{t}; }
-        : value{t} { }
-
-    store_as_base( T && t )
-        requires requires { T{std::move(t)}; }
-        : value{std::move(t)} { }
-
-    store_as_base( auto  && args )
-        requires requires { T{CPP2_FORWARD(args)}; }
-        : value{CPP2_FORWARD(args)} { }
-
-    auto value__()       -> T      & { return value; }
-    auto value__() const -> T const& { return value; }
 };
 
 

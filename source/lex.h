@@ -18,7 +18,7 @@
 #ifndef __CPP2_LEX
 #define __CPP2_LEX
 
-#include "load.h"
+#include "io.h"
 #include <map>
 #include <climits>
 #include <deque>
@@ -337,9 +337,9 @@ auto labelized_position(token const* t)
 //  A StringLiteral could include captures
 //
 auto expand_string_literal(
-    std::string_view    text,
-    std::vector<error>& errors,
-    source_position     src_pos
+    std::string_view          text,
+    std::vector<error_entry>& errors,
+    source_position           src_pos
 )
     -> std::string
 {
@@ -446,12 +446,14 @@ auto expand_string_literal(
 }
 
 auto expand_raw_string_literal(
-    const std::string& opening_seq,
-    const std::string& closing_seq,
+    const std::string&           opening_seq,
+    const std::string&           closing_seq,
     string_parts::adds_sequences closing_strategy,
-    std::string_view text,
-    std::vector<error>& errors,
-    source_position src_pos) -> string_parts
+    std::string_view             text,
+    std::vector<error_entry>&    errors,
+    source_position src_pos
+)
+    -> string_parts
 {
     auto const length = std::ssize(text);
     auto pos = 0;
@@ -531,14 +533,14 @@ static auto generated_text = std::deque<std::string>{};
 static auto multiline_raw_strings = std::deque<multiline_raw_string>{};
 
 auto lex_line(
-    std::string&            mutable_line,
-    int const               lineno,
-    bool&                   in_comment,
-    std::string&            current_comment,
-    source_position&        current_comment_start,
-    std::vector<token>&     tokens,
-    std::vector<comment>&   comments,
-    std::vector<error>&     errors,
+    std::string&               mutable_line,
+    int const                  lineno,
+    bool&                      in_comment,
+    std::string&               current_comment,
+    source_position&           current_comment_start,
+    std::vector<token>&        tokens,
+    std::vector<comment>&      comments,
+    std::vector<error_entry>&  errors,
     std::optional<raw_string>& raw_string_multiline
 )
     -> bool
@@ -1686,7 +1688,7 @@ END:
 
 class tokens
 {
-    std::vector<error>& errors;
+    std::vector<error_entry>& errors;
 
     //  All non-comment source tokens go here, which will be parsed in the parser
     std::map<lineno_t, std::vector<token>> grammar_map;
@@ -1709,9 +1711,9 @@ public:
     //  errors      error list
     //
     tokens(
-        std::vector<error>& errors
+        std::vector<error_entry>& errors_
     )
-        : errors{ errors }
+        : errors{ errors_ }
     {
     }
 

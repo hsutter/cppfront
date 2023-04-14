@@ -158,7 +158,7 @@ struct text_with_pos{
 };
 
 // Defined out of line so we can use flag_print_colon_errors.
-auto error::print(
+auto error_entry::print(
     auto&              o,
     std::string const& file
 ) const
@@ -195,8 +195,8 @@ class positional_printer
     std::string                 cpp2_filename   = {};
     std::string                 cpp1_filename   = {};
     std::vector<comment> const* pcomments       = {}; // Cpp2 comments data
-    cpp2::source const*         psource         = {};
-    cpp2::parser const*         pparser         = {};
+    source const*               psource         = {};
+    parser const*               pparser         = {};
                                                 
     source_position curr_pos                    = {}; // current (line,col) in output
     int             next_comment                = 0;  // index of the next comment not yet printed
@@ -895,8 +895,8 @@ struct function_prolog {
 
 class cppfront
 {
-    std::string sourcefile;
-    std::vector<error> errors;
+    std::string              sourcefile;
+    std::vector<error_entry> errors;
 
     //  For building
     //
@@ -1217,7 +1217,17 @@ public:
                 //  If it's a Cpp1 line, emit it
                 if (line.cat != source_line::category::cpp2)
                 {
-                    ++ret.cpp1_lines;
+                    if (
+                        source.has_cpp2()
+                        && line.cat == source_line::category::empty
+                        )
+                    {
+                        ++ret.cpp2_lines;
+                    }
+                    else
+                    {
+                        ++ret.cpp1_lines;
+                    }
 
                     if (
                         flag_cpp2_only
@@ -1298,8 +1308,12 @@ public:
 
         //  If there is Cpp2 code, we have more to do...
 
-        //  First, if this is a .h2 we need to switch filenames
-        if (cpp1_filename.back() == 'h')
+        //  First, if this is a .h2 and in a -pure-cpp2 compilation,
+        //  we need to switch filenames
+        if (
+            cpp1_filename.back() == 'h'
+            && flag_cpp2_only
+            )
         {
             printer.print_extra( "\n#endif\n" );
 
@@ -1313,15 +1327,16 @@ public:
             }
 
             printer.print_extra( "\n#ifndef " + cpp1_FILENAME+"__CPP2" );
-            printer.print_extra( "\n#error To use this file, write '#include \"" + cpp1_filename + "2\"' in a '.cpp2' file (this intermediate file is not intended to be compiled on its own)"  );
+            printer.print_extra( "\n#error This file is part of a '.h2' header compiled to be consumed from another -pure-cpp2 file. To use this file, write '#include \"" + cpp1_filename + "2\"' in a '.h2' or '.cpp2' file compiled with -pure-cpp2."  );
             printer.print_extra( "\n#endif\n" );
 
             cpp1_FILENAME += "PP";
             printer.print_extra( "\n#ifndef " + cpp1_FILENAME+"__CPP2" );
             printer.print_extra( "\n#define " + cpp1_FILENAME+"__CPP2" + "\n\n" );
+
+            printer.print_extra( hpp_includes );
         }
 
-        printer.print_extra( hpp_includes );
 
         //---------------------------------------------------------------------
         //  Do phase2_func_defs
@@ -1445,8 +1460,6 @@ public:
             printer.print_cpp2("cpp2::", pos);
         }
 
-        declaration_node const* decl = {};
-
         //  'new' is a named allocator object
         if (n == "new") {
             printer.print_cpp2("cpp2_new", pos);
@@ -1464,26 +1477,13 @@ public:
             || n == "compl"
             || n == "not"
             || n == "not_eq"
-            || n == "or_eq"
+            || n == "or"
             || n == "or_eq"
             || n == "xor"
             || n == "xor_eq"
             )
         {
             printer.print_cpp2("cpp2_"+n.to_string(true), pos);
-        }
-        else if (
-            current_declarations.back()
-            && (decl = current_declarations.back()->get_decl_if_type_scope_object_name_before_a_base_type(n))
-            )
-        {
-            assert(decl && decl->is_object());
-            auto type = decl->get_object_type();
-            assert(type);
-            assert(decl->name());
-            printer.print_cpp2("cpp2::store_as_base<\"" + decl->name()->to_string(true) + "\",", pos);
-            emit(*type);
-            printer.print_cpp2(">::value__()", pos);
         }
         else {
             printer.print_cpp2(n, pos);
@@ -1766,11 +1766,11 @@ public:
     )
         -> void
     {
-        emit_prolog_mem_inits(function_prolog, n.body_indent);
+        emit_prolog_mem_inits(function_prolog, n.body_indent+1);
 
         printer.print_cpp2( "{", n.open_brace );
 
-        emit_prolog_statements(function_prolog, n.body_indent);
+        emit_prolog_statements(function_prolog, n.body_indent+1);
 
         for (auto const& x : n.statements) {
             assert(x);
@@ -1778,7 +1778,7 @@ public:
         }
 
         assert (!current_functions.empty());
-        emit_epilog_statements( function_epilog, n.body_indent);
+        emit_epilog_statements( function_epilog, n.body_indent+1);
 
         printer.print_cpp2( "}", n.close_brace );
     }
@@ -2746,8 +2746,8 @@ public:
 
         struct text_chunks_with_parens_position {
             std::vector<text_with_pos> text_chunks;
-            cpp2::source_position open_pos;
-            cpp2::source_position close_pos;
+            source_position            open_pos;
+            source_position            close_pos;
         };
 
         auto args = std::optional<text_chunks_with_parens_position>{};
@@ -4418,14 +4418,6 @@ public:
                 if (is_assignment)
                 {
                     assert ((*object)->name());
-                    if (is_object_before_base) {
-                        object_name =
-                            "cpp2::store_as_base<\""
-                            + (*object)->name()->to_string(true)
-                            + "\","
-                            + print_to_string(*(*object)->get_object_type())
-                            + ">::value__()";
-                    }
 
                     //  Flush any 'out' parameter initializations
                     for (auto& init : out_inits) {
@@ -4467,12 +4459,12 @@ public:
                     )
                 {
                     if (is_object_before_base) {
+                        assert (is_object_before_base->name());
                         object_name =
-                            "cpp2::store_as_base<\""
+                            is_object_before_base->parent_declaration->name()->to_string(true)
+                            + "_"
                             + (*object)->name()->to_string(true)
-                            + "\","
-                            + print_to_string(*(*object)->get_object_type())
-                            + ">";
+                            + "_as_base";
                     }
 
                     //  Flush any 'out' parameter initializations
@@ -4527,21 +4519,9 @@ public:
             {
                 auto object_name = canonize_object_name(*object);
 
-                auto is_object_before_base =
-                    n.get_decl_if_type_scope_object_name_before_a_base_type(*(*object)->name());
-
                 if ((*object)->initializer)
                 {
                     //  Good. Entering here avoids emitting the error on the 'else'
-
-                    if (is_object_before_base) {
-                        object_name =
-                            "cpp2::store_as_base<\""
-                            + (*object)->name()->to_string(true)
-                            + "\","
-                            + print_to_string(*(*object)->get_object_type())
-                            + ">::value__()";
-                    }
 
                     auto initializer = print_to_string( *(*object)->initializer, false );
                     if (initializer.empty()) {
@@ -4551,16 +4531,6 @@ public:
                     //  Need to actually emit the initializer in an assignment operator
                     if (is_assignment)
                     {
-                        if (is_object_before_base)
-                        {
-                            object_name =
-                                "cpp2::store_as_base<\""
-                                + (*object)->name()->to_string(true)
-                                + "\","
-                                + print_to_string(*(*object)->get_object_type())
-                                + ">::value__()";
-                        }
-
                         current_functions.back().prolog.statements.push_back(
                             object_name +
                             " = " +
@@ -4568,29 +4538,6 @@ public:
                             ";"
                         );
                     }
-                    //  Or an object being stored as a private base
-                    else if (is_object_before_base)
-                    {
-                        object_name =
-                            "cpp2::store_as_base<\""
-                            + (*object)->name()->to_string(true)
-                            + "\","
-                            + print_to_string(*(*object)->get_object_type())
-                            + ">";
-
-                        if (initializer == "{}") {
-                            initializer = "";
-                        }
-                        current_functions.back().prolog.mem_inits.push_back(
-                            separator +
-                            object_name +
-                            "{ " +
-                            initializer +
-                            " }"
-                        );
-                        separator = ", ";
-                    }
-
                 }
                 else
                 {
@@ -4803,9 +4750,55 @@ public:
             }
         }
 
+        //  If this is a class definition that has data members before bases,
+        //  first we need to emit the aggregate that contains the members
+        if (
+            n.is_type()
+            && printer.get_phase() == printer.phase1_type_defs_func_decls
+            )
+        {
+            assert(
+                n.initializer
+                && n.initializer->is_compound()
+            );
+            auto& compound_stmt = std::get<statement_node::compound>(n.initializer->statement);
+
+            assert(compound_stmt);
+            auto found = false;
+
+            for (auto& stmt : compound_stmt->statements)
+            {
+                auto& decl = std::get<statement_node::declaration>(stmt->statement);
+                assert(decl);
+                assert(decl->name());
+                auto emit_as_base =
+                    decl->get_decl_if_type_scope_object_name_before_a_base_type(*decl->name());
+
+                if (emit_as_base) {
+                    printer.print_extra(
+                        "\nstruct "
+                            + decl->parent_declaration->name()->to_string(true)
+                            + "_"
+                            + decl->name()->to_string(true)
+                            + "_as_base { "
+                            + print_to_string( *decl->get_object_type() )
+                            + " "
+                            + decl->name()->to_string(true)
+                            + "; };"
+                    );
+                    found = true;
+                }
+            }
+
+            if (found) {
+                printer.print_extra("\n");
+            }
+        }
+
         //  In class definitions, emit the explicit access specifier if there
         //  is one, or default to private for data and public for functions
-        if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
+        if (printer.get_phase() == printer.phase1_type_defs_func_decls)
+        {
             if (n.access) {
                 assert (is_in_type);
                 printer.print_cpp2(n.access->to_string(true) + ": ", n.access->position());
@@ -4898,9 +4891,10 @@ public:
 
             //  Type definition
 
-            auto separator         = std::string{":"};
-            auto started_body      = false;
-            auto found_constructor = false;
+            auto separator              = std::string{":"};
+            auto started_body           = false;
+            auto found_constructor      = false;
+            auto found_that_constructor = false;
             assert(compound_stmt);
 
             for (auto& stmt : compound_stmt->statements)
@@ -4919,6 +4913,9 @@ public:
 
                 if (decl->is_constructor()) {
                     found_constructor = true;
+                }
+                if (decl->is_constructor_with_that()) {
+                    found_that_constructor = true;
                 }
 
                 //  First we'll encounter the base types == subobjects named "this"
@@ -4941,24 +4938,14 @@ public:
                     }
                     else
                     {
-                        if (
-                            decl->access
-                            && *decl->access != "public"
-                            )
-                        {
-                            errors.emplace_back(
-                                decl->position(),
-                                "a member object that appears before a 'this' base type object must be private (the default)"
-                            );
-                            return;
-                        }
-
                         if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
                             printer.print_cpp2(
-                                separator + " private cpp2::store_as_base<\""
+                                separator
+                                    + " public "
+                                    + decl->parent_declaration->name()->to_string(true)
+                                    + "_"
                                     + decl->name()->to_string(true)
-                                    + "\","
-                                    + print_to_string(*decl->get_object_type()) + ">",
+                                    + "_as_base",
                                 compound_stmt->position()
                             );
                             separator = ",";
@@ -4985,22 +4972,31 @@ public:
                     printer.print_cpp2(" {", compound_stmt->position());
                 }
 
-                //  If there no constructor was defined, there shoudl only be
-                //  a default constructor, so generate that and disable copy/move
+                auto id     = print_to_string(*n.identifier);
+                auto indent = static_cast<size_t>(
+                                std::clamp(
+                                    compound_stmt->body_indent,
+                                    n.position().colno,
+                                    n.position().colno + 5      // sanity check
+                                    )
+                                );
+                auto prefix = "\n" + std::string( indent, ' ' ) + "public: ";
+
+                //  If no constructor was defined, there should only be
+                //  a default constructor, so generate that
                 if (!found_constructor) {
-                    auto id = print_to_string(*n.identifier);
-                    printer.print_cpp2(
-                        "public: " + id + "() = default; ",
-                        compound_stmt->position()
-                    );
-                    printer.print_cpp2(
-                        "" + id + "(" + id + " const&) = delete; ",
-                        compound_stmt->position()
-                    );
-                    printer.print_cpp2(
-                        "auto operator=(" + id + " const&) -> void = delete; ",
-                        compound_stmt->position()
-                    );
+                    printer.print_extra( prefix + id + "() = default;" );
+                }
+
+                //  If no 'that' constructor was defined, disable copy/move
+                //  so that Cpp1 doesn't silently generate it anyway
+                if (!found_that_constructor) {
+                    printer.print_extra( prefix + id + "(" + id + " const&) = delete;" );
+                    printer.print_extra( prefix + "auto operator=(" + id + " const&) -> void = delete;" );
+                }
+
+                if (!found_constructor || !found_that_constructor) {
+                    printer.print_extra( "\n" );
                 }
 
                 printer.print_cpp2("};\n", compound_stmt->close_brace);
@@ -5186,7 +5182,7 @@ public:
                     //  (aka copy/move) or another type (a conversion) -- so recurse to
                     //  emit related functions if the user didn't write them by hand
                     if (
-                        !n.parent_has_base_types_or_virtual_functions()
+                        !n.parent_is_polymorphic()
                         && func->parameters->ssize() == 2
                         && generating_assignment_from != &n
                         )
@@ -5604,8 +5600,8 @@ public:
             printer.abandon();
         }
 
-        error const* prev                  = {};
-        bool         print_fallback_errors = true; // true until we find a non-fallback message
+        error_entry const* prev                  = {};
+        bool               print_fallback_errors = true; // true until we find a non-fallback message
 
         for (auto&& error : errors)
         {
