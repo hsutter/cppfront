@@ -2370,6 +2370,12 @@ public:
             //  Handle an anonymous function
             if (decl->is_function()) {
                 auto lambda_intro = build_capture_lambda_intro_for(decl->captures, n.position());
+
+                // Handle an anonymous generic function with explicit type list
+                if (decl->template_parameters) {
+                    print_to_string(&lambda_intro, *decl->template_parameters, false, true);
+                }
+
                 emit(*decl, lambda_intro);
             }
             //  Else an anonymous object as 'typeid { initializer }'
@@ -4851,6 +4857,7 @@ public:
                 printer.get_phase() <  printer.phase2_func_defs
                 || (
                     n.is_function()
+                    && n.has_name()     // only if it is not unnambed function aka lambda
                     && n.initializer    // only if the function has a definition (is not abstract)
                     && printer.get_phase() == printer.phase2_func_defs
                     )
