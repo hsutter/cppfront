@@ -971,7 +971,9 @@ public:
             || n.pass == passing_style::forward
             )
         {
-            symbols.emplace_back( scope_depth, declaration_sym( true, n.declaration.get(), n.declaration->name(), n.declaration->initializer.get(), &n));
+            // Handle variables in unnamed functions. For such cases scope_depth is increased by +1
+            auto depth = scope_depth + ((n.declaration->parent_is_function() && n.declaration->parent_declaration->name() == nullptr) ? 1 : 0 );
+            symbols.emplace_back( depth, declaration_sym( true, n.declaration.get(), n.declaration->name(), n.declaration->initializer.get(), &n));
         }
     }
 
