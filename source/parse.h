@@ -4902,6 +4902,15 @@ private:
                     error("an explicit return value list cannot be empty");
                     return {};
                 }
+                for (auto& p : returns_list->parameters) {
+                    if (p->declaration->name()->type() != lexeme::Identifier) {
+                        error("return parameter must have an identifier");
+                    }
+                    else if (p->declaration->type.index() != declaration_node::active::a_type) {
+                        auto name = p->name()->to_string(true);
+                        error("return parameter '" + name + "' must have a type");
+                    }
+                }
                 n->returns = std::move(returns_list);
                 assert(n->returns.index() == function_type_node::list);
             }
