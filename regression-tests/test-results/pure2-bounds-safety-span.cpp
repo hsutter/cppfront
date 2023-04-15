@@ -7,6 +7,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 
@@ -15,8 +16,9 @@
 
 #line 14 "pure2-bounds-safety-span.cpp2"
 auto print_and_decorate(auto const& thing) -> void;
-#line 16 "pure2-bounds-safety-span.cpp2"
+    
 
+#line 1 "pure2-bounds-safety-span.cpp2"
 
 //=== Cpp2 function definitions =================================================
 

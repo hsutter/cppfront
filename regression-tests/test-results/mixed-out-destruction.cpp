@@ -6,6 +6,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 #include <iostream>
@@ -47,6 +48,7 @@ int main() {
     std::cout << "\n";
     try { f10(); } catch (int) {}
 }
+
 
 //=== Cpp2 function definitions =================================================
 

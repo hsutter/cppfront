@@ -12,20 +12,24 @@ namespace N {
 
 #line 6 "pure2-types-order-independence-and-nesting.cpp2"
 class X;
+    
 
 #line 46 "pure2-types-order-independence-and-nesting.cpp2"
 class Y;
+    
 
 #line 55 "pure2-types-order-independence-and-nesting.cpp2"
 namespace M {
 
 #line 58 "pure2-types-order-independence-and-nesting.cpp2"
 template<typename T, typename U> class A;
+    
 
 #line 64 "pure2-types-order-independence-and-nesting.cpp2"
 }
 
 }
+
 
 //=== Cpp2 type definitions and function declarations ===========================
 
@@ -40,15 +44,19 @@ class X {
 
     //  Note: A constructor with an 'out' parameter
     public: explicit X(cpp2::out<Y> y);
+        
 #line 10 "pure2-types-order-independence-and-nesting.cpp2"
     public: auto operator=(cpp2::out<Y> y) -> X& ;
+        
 
 #line 34 "pure2-types-order-independence-and-nesting.cpp2"
     //  X::exx member function description here
     public: auto exx(cpp2::in<int> count) const -> void;
-
+        
     public: X(X const&) = delete;
     public: auto operator=(X const&) -> void = delete;
+
+
 #line 42 "pure2-types-order-independence-and-nesting.cpp2"
 };
 
@@ -62,9 +70,10 @@ class Y {
     public: auto operator=(cpp2::in<X*> x) -> Y& ;
 
     public: auto why(cpp2::in<int> count) const -> void;
-
+        
     public: Y(Y const&) = delete;
     public: auto operator=(Y const&) -> void = delete;
+
 #line 53 "pure2-types-order-independence-and-nesting.cpp2"
 };
 
@@ -74,10 +83,11 @@ namespace M {
 template<typename T, typename U> class A {
     public: template<int I> class B {
         public: template<typename V, int J, typename W> static auto f(W const& w) -> void;
-
+    
         public: B() = default;
         public: B(B const&) = delete;
         public: auto operator=(B const&) -> void = delete;
+
 #line 61 "pure2-types-order-independence-and-nesting.cpp2"
     };
 
@@ -94,6 +104,7 @@ template<typename T, typename U> class A {
 //  Mainline - gratuitous comment just to check that this comment
 //  stays on the function declaration when lowering
 auto main() -> int;
+
 
 //=== Cpp2 function definitions =================================================
 

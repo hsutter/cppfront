@@ -6,6 +6,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 
@@ -15,15 +16,18 @@
 
 #line 6 "mixed-lifetime-safety-and-null-contracts.cpp2"
 [[nodiscard]] auto main() -> int;
+    
 #line 11 "mixed-lifetime-safety-and-null-contracts.cpp2"
 
 //  Calling Cpp1 is the easiest way to create a null...
 auto null_from_cpp1() -> int* { return nullptr; }
 
 auto try_pointer_stuff() -> void;
+    
 
 #line 21 "mixed-lifetime-safety-and-null-contracts.cpp2"
 auto call_my_framework(cpp2::in<char const*> msg) -> void;
+    
 
 //=== Cpp2 function definitions =================================================
 

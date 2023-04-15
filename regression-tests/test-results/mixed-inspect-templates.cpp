@@ -6,6 +6,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 #include <vector>
@@ -17,12 +18,14 @@ struct my_type {};
 
 #line 8 "mixed-inspect-templates.cpp2"
 [[nodiscard]] auto fun(auto const& v) -> std::string;
+    
 
 #line 18 "mixed-inspect-templates.cpp2"
 [[nodiscard]] auto fun2(auto const& v) -> std::string;
 
 #line 26 "mixed-inspect-templates.cpp2"
 [[nodiscard]] auto main() -> int;
+    
 
 //=== Cpp2 function definitions =================================================
 

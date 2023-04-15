@@ -10,6 +10,7 @@
 #line 2 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
 class myclass;
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 
@@ -17,12 +18,16 @@ class myclass;
 class myclass {
 
     public: explicit myclass(myclass const& that);
+        
 #line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     public: auto operator=(myclass const& that) -> myclass& ;
+        
 #line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     public: explicit myclass(myclass&& that);
+        
 #line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     public: auto operator=(myclass&& that) -> myclass& ;
+        
 
 #line 8 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     // operator=: (out this, move that) = {
@@ -40,8 +45,10 @@ class myclass {
     // }
 
     public: explicit myclass(cpp2::in<std::string> x);
+        
 #line 22 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     public: auto operator=(cpp2::in<std::string> x) -> myclass& ;
+        
 
 #line 27 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     private: std::string name {"Henry"}; 
@@ -57,6 +64,7 @@ class myclass {
 };
 
 auto main() -> int;
+    
 
 //=== Cpp2 function definitions =================================================
 

@@ -6,6 +6,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 template<int I>
@@ -13,6 +14,7 @@ struct X { operator int() const { return I; } };
 
 #line 4 "mixed-as-for-variant-20-types.cpp2"
 [[nodiscard]] auto main() -> int;
+
 
 //=== Cpp2 function definitions =================================================
 

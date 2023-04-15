@@ -6,6 +6,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 #include <vector>
@@ -17,11 +18,13 @@
 
 #line 8 "mixed-postexpression-with-capture.cpp2"
 [[nodiscard]] auto main() -> int;
+    
 
 #line 12 "mixed-postexpression-with-capture.cpp2"
 extern std::vector<int> vec;
 
 auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void;
+
 
 //=== Cpp2 function definitions =================================================
 

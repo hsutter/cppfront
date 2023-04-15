@@ -6,6 +6,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 #include <vector>
@@ -17,6 +18,7 @@
 
 #line 8 "mixed-function-expression-and-std-ranges-for-each.cpp2"
 [[nodiscard]] auto main() -> int;
+    
 
 //=== Cpp2 function definitions =================================================
 

@@ -6,6 +6,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 #include <random>
@@ -14,6 +15,7 @@
 
 #line 5 "mixed-initialization-safety-3.cpp2"
 [[nodiscard]] auto main() -> int;
+    
 
 #line 16 "mixed-initialization-safety-3.cpp2"
 auto fill(
@@ -28,6 +30,7 @@ auto print_decorated(auto const& x) -> void;
 // for test determinism, force "xyzzy" branch
 // the standard mandates that std::mt19937()() == 3499211612
 [[nodiscard]] auto flip_a_coin() -> bool;
+
 
 //=== Cpp2 function definitions =================================================
 

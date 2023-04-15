@@ -6,6 +6,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 #include <iostream>
@@ -17,6 +18,7 @@ struct custom_struct_with_no_stringize_customization { } custom;
 
 #line 8 "mixed-string-interpolation.cpp2"
 [[nodiscard]] auto main() -> int;
+    
 
 //=== Cpp2 function definitions =================================================
 

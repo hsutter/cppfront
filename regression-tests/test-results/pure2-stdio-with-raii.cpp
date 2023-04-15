@@ -7,6 +7,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 
@@ -14,6 +15,7 @@
 //
 #line 4 "pure2-stdio-with-raii.cpp2"
 [[nodiscard]] auto main() -> int;
+    
 
 //=== Cpp2 function definitions =================================================
 

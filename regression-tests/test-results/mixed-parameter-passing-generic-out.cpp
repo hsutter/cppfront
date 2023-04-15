@@ -6,6 +6,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 #include <iostream>
@@ -20,9 +21,11 @@ auto operator<<(std::ostream& o, X const&) -> std::ostream& {
 
 #line 11 "mixed-parameter-passing-generic-out.cpp2"
 auto f(auto* x_) -> void;
+    
 
 #line 15 "mixed-parameter-passing-generic-out.cpp2"
 [[nodiscard]] auto main() -> int;
+    
 
 //=== Cpp2 function definitions =================================================
 

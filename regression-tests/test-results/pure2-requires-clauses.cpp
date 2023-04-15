@@ -31,10 +31,11 @@ class X {
 };
 
 template<typename T, typename U> [[nodiscard]] auto f
-    (auto&& a, auto&& b) -> int;
+    (auto&& a, auto&& b) -> int; 
 
 #line 18 "pure2-requires-clauses.cpp2"
 auto main() -> int;
+    
 
 //=== Cpp2 function definitions =================================================
 

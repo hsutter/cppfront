@@ -6,6 +6,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 #include <iostream>
@@ -25,12 +26,15 @@ auto use(auto const& x) -> void;
 
 // invoking each of these with an rvalue std::pair argument ...
 auto apply_implicit_forward(auto&& t) -> void;
+    
 
 #line 20 "mixed-forwarding.cpp2"
 auto apply_explicit_forward(auto&& t) -> void;
+    
 
 #line 25 "mixed-forwarding.cpp2"
 [[nodiscard]] auto main() -> int;
+    
 
 //=== Cpp2 function definitions =================================================
 

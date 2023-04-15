@@ -260,7 +260,8 @@ private:
     auto print(
         std::string_view s,
         source_position  pos = source_position{},
-        bool             track_curr_pos = true
+        bool             track_curr_pos = true,
+        bool             is_known_empty = false
     )
         -> void
     {
@@ -295,7 +296,7 @@ private:
 
         //  Reject consecutive empty lines: If this line is empty
         if (
-            s == "\n"
+            ( s == "\n" || is_known_empty )
             && curr_pos.colno <= 1
             )
         {
@@ -466,7 +467,7 @@ private:
         auto on_same_line = curr_pos.lineno == pos.lineno;
 
         //  Ignoring this logic is used when we're generating new code sections,
-        //  such as return value structs
+        //  such as return value structs, and emitting raw string literals
         if (ignore_align) {
             print( pad( ignore_align_indent - curr_pos.colno ) );
             return;
@@ -495,13 +496,17 @@ private:
             curr_pos.lineno = pos.lineno;
         }
 
-        //  Finally, align to the target column
-        assert (
+        //  Finally, align to the target column, if we're on the right line
+        //  and not one-past-the-end on the extra line at section end)
+        assert(
             psource
             && 0 <= curr_pos.lineno
-            && curr_pos.lineno < std::ssize(psource->get_lines())
+            && curr_pos.lineno < std::ssize(psource->get_lines())+1
         );
-        if (curr_pos.lineno == pos.lineno)
+        if (
+            curr_pos.lineno == pos.lineno
+            && curr_pos.lineno < std::ssize(psource->get_lines())
+            )
         {
             //  If this line was originally densely spaced (had <2 whitespace
             //  between all tokens), then the programmer likely wasn't doing a lot
@@ -536,24 +541,26 @@ private:
 
 public:
     //-----------------------------------------------------------------------
-    //  Finalize
+    //  Finalize phase
     //
-    auto finalize()
+    auto finalize_phase()
     {
-        flush_comments( {curr_pos.lineno+1, 1} );
-
         if (
             is_open()
             && psource
             && psource->has_cpp2()
             )
         {
-            //  Always make sure the last line ends with a newline
+            flush_comments( {curr_pos.lineno+1, 1} );
+
+            //  Always make sure the very last line ends with a newline
             //  (not really necessary but makes some tools quieter)
             //  -- but only if there's any Cpp2, otherwise don't
             //  because passing through all-Cpp1 code should always
             //  remain diff-identical
-            print_extra("\n");
+            if (phase == phase2_func_defs) {
+                print_extra("\n");
+            }
         }
     }
 
@@ -700,7 +707,10 @@ public:
     //
     auto print_cpp2(
         std::string_view s,
-        source_position  pos
+        source_position  pos,
+        bool             leave_newlines_alone = false,
+        bool             is_known_empty = false
+
     )
         -> void
     {
@@ -708,6 +718,40 @@ public:
             is_open()
             && "ICE: printer must be open before printing"
         );
+
+        //  If there are any embedded newlines, split this string into
+        //  separate print_cpp2 calls
+        if (auto newline_pos = s.find('\n');
+            !leave_newlines_alone
+            && s.length() > 1
+            && newline_pos != std::string_view::npos
+            )
+        {
+            while (newline_pos != std::string_view::npos)
+            {
+                //  Print the text before the next newline
+                if (newline_pos > 0) {
+                    print_cpp2( s.substr(0, newline_pos), pos );
+                }
+
+                //  Emit the newline as a positioned empty string
+                assert (s[newline_pos] == '\n');
+                ++pos.lineno;
+                pos.colno = 1;
+                print_cpp2( "", pos, false, curr_pos.colno <= 1 );
+
+                s.remove_prefix( newline_pos+1 );
+                newline_pos = s.find('\n');
+            }
+            //  Print any tail following the last newline
+            if (!s.empty()) {
+                print_cpp2( s, pos );
+            }
+            return;
+        }
+
+        //  The rest of this call handles a single chunk that's either a
+        //  standalone "\n" or a piece of text that doesn't have a newline
 
         //  Skip alignment work if we're capturing emitted text
         if (emit_target_stack.empty())
@@ -770,7 +814,7 @@ public:
             prev_line_info.requests.push_back( req_act_info( pos.colno /*requested*/ , curr_pos.colno /*actual*/ - pos.colno ) );
         }
 
-        print(s, pos);
+        print(s, pos, true, is_known_empty );
     }
 
 
@@ -1195,6 +1239,7 @@ public:
         //---------------------------------------------------------------------
         //  Do phase1_type_defs_func_decls
         //
+        printer.finalize_phase();
         printer.next_phase();
 
         if (
@@ -1341,6 +1386,7 @@ public:
         //---------------------------------------------------------------------
         //  Do phase2_func_defs
         //
+        printer.finalize_phase();
         printer.next_phase();
 
         if (!flag_clean_cpp1) {
@@ -1364,7 +1410,7 @@ public:
         }
 
         //  Finally, some debug checks
-        printer.finalize();
+        printer.finalize_phase();
         assert(
             tokens.num_unprinted_comments() == 0
             && "ICE: not all comments were printed"
@@ -1486,7 +1532,7 @@ public:
             printer.print_cpp2("cpp2_"+n.to_string(true), pos);
         }
         else {
-            printer.print_cpp2(n, pos);
+            printer.print_cpp2(n, pos, true);
         }
 
         in_definite_init = is_definite_initialization(&n);
@@ -3749,7 +3795,7 @@ public:
         }
 
         assert( n.declaration->identifier );
-        auto identifier     = print_to_string( *n.declaration->identifier );
+        auto identifier = print_to_string( *n.declaration->identifier );
 
         //  First any prefix
         if (
@@ -3809,7 +3855,13 @@ public:
             function_requires_conditions.push_back(req);
         }
         else {
-            emit( type_id );
+            auto type_name = print_to_string( type_id );
+            if (is_returns) {
+                printer.print_extra( type_name );
+            }
+            else {
+                printer.print_cpp2( type_name, type_id.position() );
+            }
         }
 
         printer.preempt_position_pop();
@@ -3832,7 +3884,12 @@ public:
             }
         }
 
-        printer.print_cpp2( " " + identifier, n.declaration->identifier->position());
+        if (is_returns) {
+            printer.print_extra( " " + identifier);
+        }
+        else {
+            printer.print_cpp2( " " + identifier, n.declaration->identifier->position());
+        }
 
         if (
             !is_returns
@@ -3857,7 +3914,7 @@ public:
         in_parameter_list = true;
 
         if (is_returns) {
-            printer.print_cpp2( "{\n", n.position() );
+            printer.print_extra( "{ " );
         }
         else {
             assert(n.open_paren);
@@ -3883,12 +3940,12 @@ public:
                 first = false;
             }
             if (is_returns) {
-                printer.print_cpp2( ";\n", x->position() );
+                printer.print_extra( "; " );
             }
         }
 
         if (is_returns) {
-            printer.print_cpp2( "};", n.position() );
+            printer.print_extra( "};\n" );
         }
         else {
             //  Position heuristic (aka hack): Avoid emitting extra whitespace before )
@@ -4745,14 +4802,11 @@ public:
                 auto& r = std::get<function_type_node::list>(func->returns);
                 assert(r);
                 assert(std::ssize(r->parameters) > 0);
-                printer.ignore_alignment( true, n.position().colno );
-                printer.print_cpp2( "struct ", n.position() );
-                printer.ignore_alignment( true, n.position().colno + 4 );
-                printer.print_cpp2( *n.name(), n.position());
-                printer.print_cpp2( "__ret ", n.position() );
+                printer.print_extra( "struct " );
+                printer.print_extra( *n.name() );
+                printer.print_extra( "__ret " );
                 emit(*r, true);
-                printer.print_cpp2( "\n", n.position() );
-                printer.ignore_alignment( false );
+                printer.print_extra( "\n" );
             }
         }
 
@@ -4883,7 +4937,7 @@ public:
                 if (n.requires_clause_expression) {
                     printer.print_cpp2("requires( ", n.requires_pos);
                     emit(*n.requires_clause_expression);
-                    printer.print_cpp2(" )\n", n.requires_pos);
+                    printer.print_cpp2(" )\n\n", n.requires_pos);
                 }
 
                 printer.print_cpp2("class ", n.position());

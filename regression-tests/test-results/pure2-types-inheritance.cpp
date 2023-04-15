@@ -13,11 +13,13 @@ class Human;
 #line 6 "pure2-types-inheritance.cpp2"
 namespace N {
     template<int I> class Machine;
+        
 
 #line 11 "pure2-types-inheritance.cpp2"
 }
 
 class Cyborg;
+
 
 //=== Cpp2 type definitions and function declarations ===========================
 
@@ -36,9 +38,10 @@ namespace N {
     template<int I> class Machine {
         public: explicit Machine(cpp2::in<std::string> id);
         public: virtual auto work() const -> void = 0;
-
+    
         public: Machine(Machine const&) = delete;
         public: auto operator=(Machine const&) -> void = delete;
+
 #line 10 "pure2-types-inheritance.cpp2"
     };
 }
@@ -50,31 +53,36 @@ class Cyborg: public Cyborg_name_as_base, public Human, public Cyborg_address_as
 
 #line 19 "pure2-types-inheritance.cpp2"
     public: explicit Cyborg(cpp2::in<std::string> n);
+        
 
 #line 25 "pure2-types-inheritance.cpp2"
     public: auto speak() const -> void override;
+        
 
-#line 28 "pure2-types-inheritance.cpp2"
     public: auto work() const -> void override;
+        
 
-#line 31 "pure2-types-inheritance.cpp2"
     public: auto print() const -> void;
+        
 
-#line 34 "pure2-types-inheritance.cpp2"
     public: ~Cyborg();
-
+        
     public: Cyborg(Cyborg const&) = delete;
     public: auto operator=(Cyborg const&) -> void = delete;
+
 #line 36 "pure2-types-inheritance.cpp2"
 };
 
 auto make_speak(cpp2::in<Human> h) -> void;
+    
 
 #line 43 "pure2-types-inheritance.cpp2"
 auto do_work(cpp2::in<N::Machine<99>> m) -> void;
+    
 
 #line 48 "pure2-types-inheritance.cpp2"
 auto main() -> int;
+    
 
 //=== Cpp2 function definitions =================================================
 

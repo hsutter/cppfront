@@ -14,6 +14,7 @@ namespace N {
 
 #line 8 "pure2-type-and-namespace-aliases.cpp2"
 class myclass;
+    
 
 //=== Cpp2 type definitions and function declarations ===========================
 
@@ -40,9 +41,11 @@ class myclass {
 namespace N3 = ::std::literals;
 
 auto myfunc() -> void;
+    
 
 #line 26 "pure2-type-and-namespace-aliases.cpp2"
 auto main() -> int;
+    
 
 //=== Cpp2 function definitions =================================================
 

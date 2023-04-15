@@ -7,14 +7,17 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 
 #line 2 "pure2-inspect-fallback-with-variant-any-optional.cpp2"
 [[nodiscard]] auto main() -> int;
+    
 
 #line 14 "pure2-inspect-fallback-with-variant-any-optional.cpp2"
 auto test_generic(auto const& x, auto const& msg) -> void;
+    
 
 //=== Cpp2 function definitions =================================================
 

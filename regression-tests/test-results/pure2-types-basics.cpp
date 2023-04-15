@@ -15,6 +15,7 @@ class myclass;
 #line 60 "pure2-types-basics.cpp2"
 }
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 
@@ -24,28 +25,37 @@ namespace N {
 class myclass {
 
     public: myclass(cpp2::in<int> x);
+        
 #line 6 "pure2-types-basics.cpp2"
     public: auto operator=(cpp2::in<int> x) -> myclass& ;
+        
 
 #line 13 "pure2-types-basics.cpp2"
     public: explicit myclass(cpp2::in<std::string> s);
+        
 #line 13 "pure2-types-basics.cpp2"
     public: auto operator=(cpp2::in<std::string> s) -> myclass& ;
+        
 
 #line 20 "pure2-types-basics.cpp2"
     public: myclass(cpp2::in<int> x, cpp2::in<std::string> s);
+        
 
 #line 27 "pure2-types-basics.cpp2"
     public: myclass();
+        
 
 #line 34 "pure2-types-basics.cpp2"
     public: auto print() const -> void;
+        
 
 #line 38 "pure2-types-basics.cpp2"
     public: ~myclass();
+        
 
 #line 42 "pure2-types-basics.cpp2"
     public: auto f(cpp2::in<int> x) const -> void;
+        
 
 #line 46 "pure2-types-basics.cpp2"
     private: int data {42 * 12}; 
@@ -53,10 +63,11 @@ class myclass {
 
     public: class nested {
         public: static auto g() -> void;
-
+    
         public: nested() = default;
         public: nested(nested const&) = delete;
         public: auto operator=(nested const&) -> void = delete;
+
 #line 51 "pure2-types-basics.cpp2"
     };
 
@@ -73,6 +84,7 @@ class myclass {
 }
 
 auto main() -> int;
+    
 
 //=== Cpp2 function definitions =================================================
 

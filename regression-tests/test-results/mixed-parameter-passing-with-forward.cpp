@@ -6,6 +6,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 
@@ -26,6 +27,7 @@ auto parameter_styles(
 
 #line 42 "mixed-parameter-passing-with-forward.cpp2"
 [[nodiscard]] auto main() -> int;
+
 
 //=== Cpp2 function definitions =================================================
 

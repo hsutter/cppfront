@@ -6,6 +6,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 auto in(int min, int max) {
@@ -16,9 +17,11 @@ auto in(int min, int max) {
 [[nodiscard]] auto in_2_3(cpp2::in<int> x) -> bool;
 
 [[nodiscard]] auto main() -> int;
+    
 
 #line 31 "mixed-inspect-values.cpp2"
 auto test(auto const& x) -> void;
+    
 
 //=== Cpp2 function definitions =================================================
 

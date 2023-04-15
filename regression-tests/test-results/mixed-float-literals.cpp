@@ -6,6 +6,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 void literals_cpp1() {
@@ -66,9 +67,11 @@ void literals_cpp1() {
 
 #line 57 "mixed-float-literals.cpp2"
 auto literals_cpp2() -> void;
+  
 
 #line 114 "mixed-float-literals.cpp2"
 [[nodiscard]] auto main() -> int;
+
 
 //=== Cpp2 function definitions =================================================
 

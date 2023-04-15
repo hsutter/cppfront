@@ -10,6 +10,7 @@
 #line 2 "pure2-types-that-parameters.cpp2"
 class myclass;
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 
@@ -19,16 +20,21 @@ class myclass {
     public: myclass();
 
     public: explicit myclass(myclass const& that);
+        
 #line 6 "pure2-types-that-parameters.cpp2"
     public: auto operator=(myclass const& that) -> myclass& ;
+        
 
 #line 11 "pure2-types-that-parameters.cpp2"
     public: explicit myclass(myclass&& that);
+        
 #line 11 "pure2-types-that-parameters.cpp2"
     public: auto operator=(myclass&& that) -> myclass& ;
+        
 
 #line 16 "pure2-types-that-parameters.cpp2"
     public: auto print() const -> void;
+        
 
 #line 20 "pure2-types-that-parameters.cpp2"
     private: std::string name {"Henry"}; 
@@ -37,6 +43,7 @@ class myclass {
 };
 
 auto main() -> int;
+    
 
 //=== Cpp2 function definitions =================================================
 

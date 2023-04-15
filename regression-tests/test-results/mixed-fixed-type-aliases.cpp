@@ -6,6 +6,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 #include <typeinfo>
@@ -17,9 +18,11 @@ namespace my {
 
 #line 8 "mixed-fixed-type-aliases.cpp2"
 auto test(auto const& x) -> void;
+    
 
 #line 15 "mixed-fixed-type-aliases.cpp2"
 [[nodiscard]] auto main(int const argc_, char const* const* const argv_) -> int;
+    
 
 //=== Cpp2 function definitions =================================================
 

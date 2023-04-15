@@ -6,22 +6,22 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 
 #include <iostream>
 #include <random>
 #include <string>
-struct f__ret {
-    int i;
-    std::string s;
-    };
+struct f__ret { int i; std::string s; };
+
 #line 6 "mixed-multiple-return-values.cpp2"
 [[nodiscard]] auto f() -> f__ret;
+    
 
 #line 22 "mixed-multiple-return-values.cpp2"
 auto print(cpp2::in<std::string> name, auto const& value) -> void;
-#line 24 "mixed-multiple-return-values.cpp2"
+    
 
 int main() {
     auto [a,b] = f();
@@ -34,6 +34,7 @@ bool flip_a_coin() {
     static std::mt19937 rand; 
     return rand() % 2 == 0;
 }
+
 
 //=== Cpp2 function definitions =================================================
 

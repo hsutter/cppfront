@@ -6,6 +6,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 #include <string>
@@ -27,6 +28,7 @@ struct X {
 
 #line 18 "mixed-ufcs-multiple-template-arguments.cpp2"
 [[nodiscard]] auto main() -> int;
+    
 
 //=== Cpp2 function definitions =================================================
 

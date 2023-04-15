@@ -6,6 +6,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 
@@ -13,9 +14,11 @@
 auto call(auto const& v, auto const& w, auto const& x, auto const& y, auto const& z) -> void;
 
 [[nodiscard]] auto test(auto const& a) -> std::string;
+    
 
 #line 15 "mixed-postfix-expression-custom-formatting.cpp2"
 [[nodiscard]] auto main() -> int;
+
 
 //=== Cpp2 function definitions =================================================
 

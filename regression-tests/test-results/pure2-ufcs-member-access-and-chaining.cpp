@@ -7,27 +7,32 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto main() -> int;
+    
 
 #line 22 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto ufcs(cpp2::in<int> i) -> int;
-struct fun__ret {
-    int i;
-    };
+    struct fun__ret { int i; };
+
+
 
 #line 26 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto fun() -> fun__ret;
+    
 
 #line 31 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto get_i(auto const& r) -> int;
+    
 
 #line 35 "pure2-ufcs-member-access-and-chaining.cpp2"
 //  And a test for non-local UFCS, which shouldn't do a [&] capture
 [[nodiscard]] auto f(auto const& x) -> int;
 extern int y;
+
 //=== Cpp2 function definitions =================================================
 
 #line 1 "pure2-ufcs-member-access-and-chaining.cpp2"

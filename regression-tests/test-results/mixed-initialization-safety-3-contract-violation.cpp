@@ -6,6 +6,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 #include <random>
@@ -14,6 +15,7 @@
 
 #line 5 "mixed-initialization-safety-3-contract-violation.cpp2"
 [[nodiscard]] auto main() -> int;
+    
 
 #line 16 "mixed-initialization-safety-3-contract-violation.cpp2"
 auto fill(
@@ -31,6 +33,7 @@ bool flip_a_coin() {
     static std::mt19937 rand;
     return rand() % 2 == 1;
 }
+
 
 //=== Cpp2 function definitions =================================================
 

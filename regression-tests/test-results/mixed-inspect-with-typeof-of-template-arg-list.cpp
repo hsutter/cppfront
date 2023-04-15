@@ -6,6 +6,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 
@@ -16,9 +17,11 @@ auto calc() {
 
 #line 7 "mixed-inspect-with-typeof-of-template-arg-list.cpp2"
 [[nodiscard]] auto fun(auto const& v) -> int;
+    
 
 #line 14 "mixed-inspect-with-typeof-of-template-arg-list.cpp2"
 [[nodiscard]] auto main() -> int;
+    
 
 //=== Cpp2 function definitions =================================================
 

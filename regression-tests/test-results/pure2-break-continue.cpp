@@ -7,6 +7,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 
@@ -48,6 +49,7 @@ auto for_break_inner() -> void;
 
 #line 214 "pure2-break-continue.cpp2"
 auto for_break_outer() -> void;
+
 
 //=== Cpp2 function definitions =================================================
 

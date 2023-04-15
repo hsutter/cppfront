@@ -6,6 +6,7 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 
@@ -16,6 +17,7 @@
 #include <vector>
 #include <span>
 #include <iostream>
+
 
 //=== Cpp2 function definitions =================================================
 

@@ -7,22 +7,24 @@
 #include "cpp2util.h"
 
 
+
 //=== Cpp2 type definitions and function declarations ===========================
 
-struct f__ret {
-    int ri;
-    };
+struct f__ret { int ri; };
+
 #line 2 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 [[nodiscard]] auto f() -> f__ret;
-struct g__ret {
-    int ri;
-    };
+    struct g__ret { int ri; };
+
+
 
 #line 8 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 [[nodiscard]] auto g() -> g__ret;
+    
 
 #line 15 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 [[nodiscard]] auto main() -> int;
+    
 
 //=== Cpp2 function definitions =================================================
 
