@@ -4903,12 +4903,14 @@ private:
                     return {};
                 }
                 for (auto& p : returns_list->parameters) {
-                    if (p->declaration->name()->type() != lexeme::Identifier) {
-                        error("return parameter must have an identifier");
+                    auto tok = p->name();
+                    if (tok->type() != lexeme::Identifier) {
+                        error("expected identifier, not '" + tok->to_string(true) + "'",
+                            false, tok->position());
                     }
                     else if (p->declaration->type.index() != declaration_node::active::a_type) {
-                        auto name = p->name()->to_string(true);
-                        error("return parameter '" + name + "' must have a type");
+                        error("return parameter '" + tok->to_string(true) + "' must have a type",
+                            false, tok->position());
                     }
                 }
                 n->returns = std::move(returns_list);

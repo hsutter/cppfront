@@ -1,0 +1,2 @@
+pure2-return-tuple-no-identifier.cpp2(1,11): error: expected identifier, not 'int'
+pure2-return-tuple-no-identifier.cpp2(1,16): error: expected identifier, not 'int'
