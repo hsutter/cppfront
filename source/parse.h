@@ -3015,6 +3015,17 @@ private:
                     next();
                     return {};
                 }
+                if (
+                    peek(-1) && peek(-1)->type() != lexeme::RightBrace  // it is short function syntax
+                    && curr().type() != lexeme::LeftParen               // not imediatelly called
+                    && curr().type() != lexeme::RightParen              // not as a last argument to function
+                    && curr().type() != lexeme::Comma                   // not as first or in-the-middle, function argument
+                ) {
+                    // this is a fix for a short function syntax that should have double semicolon used
+                    // (check comment in expression_statement(bool semicolon_required))
+                    // We simulate double semicolon by moving back to single semicolon.
+                    next(-1);
+                }
             }
             else {
                 error("(temporary alpha limitation) an unnamed declaration at expression scope must be a function or an object");
