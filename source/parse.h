@@ -5628,6 +5628,16 @@ private:
                 );
                 return {};
             }
+            if (
+                t->is_wildcard() 
+                || ( t->get_token() && t->get_token()->to_string(true) == "auto" )
+            ) {
+                errors.emplace_back(
+                    curr().position(),
+                    "a 'type ==' alias declaration must be followed by a type name (not a wildcard _ nor auto)"
+                );
+                return {};
+            }
             a->initializer = std::move(t);
         }
 
