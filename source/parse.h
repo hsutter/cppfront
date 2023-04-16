@@ -4648,7 +4648,17 @@ private:
             error("Cpp2 is currently exploring the path of not allowing default arguments - use overloading instead", false);
             return {};
         }
-
+        if (is_named && is_returns) {
+            auto tok = n->name();
+            if (tok->type() != lexeme::Identifier) {
+                error("expected identifier, not '" + tok->to_string(true) + "'",
+                    false, tok->position());
+            }
+            else if (n->declaration->type.index() != declaration_node::active::a_type) {
+                error("return parameter '" + tok->to_string(true) + "' must have a type",
+                    false, tok->position());
+            }
+        }
         return n;
     }
 
@@ -4901,17 +4911,6 @@ private:
                 if (std::ssize(returns_list->parameters) < 1) {
                     error("an explicit return value list cannot be empty");
                     return {};
-                }
-                for (auto& p : returns_list->parameters) {
-                    auto tok = p->name();
-                    if (tok->type() != lexeme::Identifier) {
-                        error("expected identifier, not '" + tok->to_string(true) + "'",
-                            false, tok->position());
-                    }
-                    else if (p->declaration->type.index() != declaration_node::active::a_type) {
-                        error("return parameter '" + tok->to_string(true) + "' must have a type",
-                            false, tok->position());
-                    }
                 }
                 n->returns = std::move(returns_list);
                 assert(n->returns.index() == function_type_node::list);
