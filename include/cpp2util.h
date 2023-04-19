@@ -213,6 +213,7 @@
     #include <cstdio>
     #include <cstdint>
     #include <algorithm>
+    #include <ranges>
 
     #ifndef CPP2_NO_EXCEPTIONS
         #include <exception>
@@ -1493,25 +1494,26 @@ inline auto to_string(std::tuple<Ts...> const& t) -> std::string
 
 //-----------------------------------------------------------------------
 //
-//  args: see main() arguments as vector<string_view>
+//  args: see main() arguments as std::ranges::view<string_view>
 //
 //-----------------------------------------------------------------------
 //
-struct args_t : std::vector<std::string_view>
+struct args_t : std::ranges::transform_view<
+                    std::span<char const* const>, 
+                    decltype([](char const* s) { return std::string_view{s}; }) 
+                >
 {
-    args_t(int c, char const* const* v) : vector{static_cast<size_t>(c)}, argc{c}, argv{v} {}
-
     int                argc = 0;
     char const* const* argv = nullptr;
 };
 
 inline auto make_args(int argc, char const* const* argv) -> args_t
 {
-    auto ret = args_t{argc, argv};
-    for (auto i = 0; i < argc; ++i) {
-        ret[i] = std::string_view{argv[i]};
-    }
-    return ret;
+    return args_t{
+        { std::span(argv, argc), {} },
+        argc,
+        argv
+    };
 }
 
 
