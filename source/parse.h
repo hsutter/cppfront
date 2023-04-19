@@ -195,6 +195,8 @@ struct prefix_expression_node
         return expr.get();
     }
 
+    auto is_result_a_temporary_variable() const -> bool;
+
     auto position() const -> source_position;
     auto visit(auto& v, int depth) -> void;
 };
@@ -255,6 +257,20 @@ struct binary_expression_node
         }
         //  Else
         return { nullptr, nullptr };
+    }
+
+    auto is_result_a_temporary_variable() const -> bool {
+        if constexpr (std::string_view(Name.value) == "assignment") {
+            assert(expr);
+            return expr->is_result_a_temporary_variable();
+        } else {
+            if (terms.empty()) {
+                assert(expr);
+                return expr->is_result_a_temporary_variable();
+            } else {
+                return true;
+            }
+        }
     }
 
     auto position() const
@@ -470,6 +486,15 @@ struct postfix_expression_node
     auto get_first_token_ignoring_this() const
         -> token const*;
 
+    auto is_result_a_temporary_variable() const -> bool {
+        if (ops.empty()) {
+            return false;
+        } else {
+            return (ops.front().op->type() == lexeme::Ampersand 
+                    || ops.front().op->type() == lexeme::Tilde);
+        }
+    }
+
     //  Internals
     //
     auto position() const -> source_position
@@ -480,6 +505,14 @@ struct postfix_expression_node
 
     auto visit(auto& v, int depth) -> void;
 };
+
+auto prefix_expression_node::is_result_a_temporary_variable() const -> bool {
+    if (ops.empty()) {
+        return expr->is_result_a_temporary_variable();
+    } else {
+        return true;
+    }
+}
 
 
 auto expression_node::get_lhs_rhs_if_simple_assignment() const
@@ -805,6 +838,15 @@ struct is_as_expression_node
     {
         assert(expr);
         return expr->get_postfix_expression_node();
+    }
+
+    auto is_result_a_temporary_variable() const -> bool {
+        if (ops.empty()) {
+            assert(expr);
+            return expr->is_result_a_temporary_variable();
+        } else {
+            return true;
+        }
     }
 
     auto position() const
