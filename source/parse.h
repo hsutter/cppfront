@@ -4810,9 +4810,19 @@ private:
             n->open_brace = curr().position();
         }
         next();
-        auto s = std::unique_ptr<statement_node>();
 
         while (curr().type() != lexeme::RightBrace) {
+            if (
+                (
+                    is_literal(curr().type())
+                    || curr().type() == lexeme::Identifier
+                )
+                && peek(1) && peek(1)->type() == lexeme::Semicolon
+            ) {
+                error("unused literal or identifier");
+                return {};
+            }
+
             auto s = statement(true);
             if (!s) {
                 pos = start_pos;    // backtrack
