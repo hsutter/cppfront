@@ -239,9 +239,6 @@ auto is_definite_last_use(token const* t)
 //
 class sema
 {
-    //using enum declaration_node::active;
-    //using enum symbol::active;
-
 public:
     std::vector<error_entry>& errors;
     std::vector<symbol>       symbols;
@@ -925,6 +922,131 @@ private:
 
 
 public:
+    //-----------------------------------------------------------------------
+    //  Per-node sema rules
+    //
+
+    auto check(qualified_id_node const& n)
+    {
+        //  Check for some incorrect uses of .
+        if (auto decl = get_declaration_of(n.get_first_token(), true);
+            decl && std::ssize(n.ids) > 1
+            )
+        {
+            assert (decl->declaration);
+
+            if (
+                decl->declaration->is_object()
+                && n.ids[1].scope_op
+                && n.ids[1].scope_op->type() == lexeme::Scope
+                )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "use '" + decl->identifier->to_string(true) + ".' to refer to an object member"
+                );
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
+    auto check(postfix_expression_node const& n)
+    {
+        //  Check for some incorrect uses of :: or .
+        if (auto decl = get_declaration_of(n.get_first_token_ignoring_this(), true);
+            decl && !n.ops.empty()
+            )
+        {
+            assert (decl->declaration);
+
+            if (
+                decl->declaration->is_type()
+                && n.ops[0].op
+                && n.ops[0].op->type() == lexeme::Dot
+                )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "use '" + decl->identifier->to_string(true) + "::' to refer to a type member"
+                );
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
+    auto check(declaration_node const& n)
+        -> bool
+    {
+        //  If this is a nonvirtual function, it must have an initializer
+        if (
+            n.is_function()
+            && !n.is_virtual_function()
+            && !n.has_initializer()
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "a nonvirtual function must have a body ('=' initializer)"
+            );
+            return false;
+        }
+
+        {
+            auto this_index = n.index_of_parameter_named("this");
+            auto that_index = n.index_of_parameter_named("that");
+
+            if (this_index >= 0) {
+                if (!n.parent_is_type()) {
+                    errors.emplace_back(
+                        n.position(),
+                        "'this' must be the first parameter of a type-scope function"
+                    );
+                    return false;
+                }
+                if (this_index != 0) {
+                    errors.emplace_back(
+                        n.position(),
+                        "'this' must be the first parameter"
+                    );
+                    return false;
+                }
+            }
+
+            if (that_index >= 0) {
+                if (!n.parent_is_type()) {
+                    errors.emplace_back(
+                        n.position(),
+                        "'that' must be the second parameter of a type-scope function"
+                    );
+                    return false;
+                }
+                if (that_index != 1) {
+                    errors.emplace_back(
+                        n.position(),
+                        "'that' must be the second parameter"
+                    );
+                    return false;
+                }
+                if (this_index != 0) {
+                    errors.emplace_back(
+                        n.position(),
+                        "'that' must come after an initial 'this' parameter"
+                    );
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+
     //-----------------------------------------------------------------------
     //  Visitor functions
     //

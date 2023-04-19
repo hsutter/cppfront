@@ -2001,11 +2001,8 @@ public:
         -> std::vector<declaration_node const*>
     {
         //  Convert the gather_ results to const*
-        auto ret = std::vector<declaration_node const*>{};
-        for (auto o : gather_type_scope_declarations(w)) {
-            ret.push_back( o );
-        }
-        return ret;
+        auto tmp = gather_type_scope_declarations(w);
+        return std::vector<declaration_node const*>(tmp.begin(), tmp.end());
     }
 
 

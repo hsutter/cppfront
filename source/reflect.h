@@ -242,8 +242,8 @@ public:
     struct declared_that_funcs {
         bool out_this_in_that     = false;
         bool out_this_move_that   = false;
-        bool inout_this_in_that   = false;;
-        bool inout_this_move_that = false;;
+        bool inout_this_in_that   = false;
+        bool inout_this_move_that = false;
     };
 
     auto query_declared_that_functions() const
@@ -394,7 +394,7 @@ auto declaration::as_type() const
 auto interface( meta::type_declaration&  t )
     -> void
 {
-    bool has_dtor = false;
+    auto has_dtor = false;
     for (auto m : t.get_members()) {
         m.require( !m.is_object(),
                    "interfaces may not contain data objects");
@@ -412,7 +412,7 @@ auto interface( meta::type_declaration&  t )
     }
     if (!has_dtor) {
         t.require( t.add_member( "operator=: (virtual move this) = { }"),
-                   "could not add pure virtual destructor");
+                   "could not add virtual destructor");
     }
 }
 

@@ -1672,25 +1672,8 @@ public:
     auto emit(qualified_id_node const& n)
         -> void
     {
-        //  Check for some incorrect uses of :: or .
-        if (auto decl = sema.get_declaration_of(n.get_first_token(), true);
-            decl && std::ssize(n.ids) > 1
-            )
-        {
-            assert (decl->declaration);
-
-            if (
-                decl->declaration->is_object()
-                && n.ids[1].scope_op
-                && n.ids[1].scope_op->type() == lexeme::Scope
-                )
-            {
-                errors.emplace_back(
-                    n.position(),
-                    "use '" + decl->identifier->to_string(true) + ".' to refer to an object member"
-                );
-                return;
-            }
+        if (!sema.check(n)) {
+            return;
         }
 
         //  Implicit "cpp2::" qualification of "unique.new" and "shared.new"
@@ -2606,29 +2589,12 @@ public:
     )
         -> void
     {
+        if (!sema.check(n)) {
+            return;
+        }
+
         assert(n.expr);
         last_postfix_expr_was_pointer = false;
-
-        //  Check for some incorrect uses of :: or .
-        if (auto decl = sema.get_declaration_of(n.get_first_token_ignoring_this(), true);
-            decl && !n.ops.empty()
-            )
-        {
-            assert (decl->declaration);
-
-            if (
-                decl->declaration->is_type()
-                && n.ops[0].op
-                && n.ops[0].op->type() == lexeme::Dot
-                )
-            {
-                errors.emplace_back(
-                    n.position(),
-                    "use '" + decl->identifier->to_string(true) + "::' to refer to a type member"
-                );
-                return;
-            }
-        }
 
         //  For a 'move that' parameter, track the members we already moved from
         //  so we can diagnose attempts to move from the same member twice
@@ -4660,67 +4626,8 @@ public:
     )
         -> void
     {
-        //  First, do some deferred sema checks - deferred to here because
-        //  they may be satisfied by metafunction application
-
-        //  If this is a nonvirtual function, it must have an initializer
-        if (
-            n.is_function()
-            && !n.is_virtual_function()
-            && !n.has_initializer()
-            )
-        {
-            errors.emplace_back(
-                n.position(),
-                "a nonvirtual function must have a body ('=' initializer)"
-            );
+        if (!sema.check(n)) {
             return;
-        }
-
-        {
-            auto this_index = n.index_of_parameter_named("this");
-            auto that_index = n.index_of_parameter_named("that");
-
-            if (this_index >= 0) {
-                if (!n.parent_is_type()) {
-                    errors.emplace_back(
-                        n.position(),
-                        "'this' must be the first parameter of a type-scope function"
-                    );
-                    return;
-                }
-                if (this_index != 0) {
-                    errors.emplace_back(
-                        n.position(),
-                        "'this' must be the first parameter"
-                    );
-                    return;
-                }
-            }
-
-            if (that_index >= 0) {
-                if (!n.parent_is_type()) {
-                    errors.emplace_back(
-                        n.position(),
-                        "'that' must be the second parameter of a type-scope function"
-                    );
-                    return;
-                }
-                if (that_index != 1) {
-                    errors.emplace_back(
-                        n.position(),
-                        "'that' must be the second parameter"
-                    );
-                    return;
-                }
-                if (this_index != 0) {
-                    errors.emplace_back(
-                        n.position(),
-                        "'that' must come after an initial 'this' parameter"
-                    );
-                    return;
-                }
-            }
         }
 
         //  In phase 0, only need to consider namespaces and types
