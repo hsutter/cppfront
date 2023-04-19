@@ -18,7 +18,7 @@
 #ifndef __CPP2_SEMA
 #define __CPP2_SEMA
 
-#include "parse.h"
+#include "reflect.h"
 
 
 namespace cpp2 {

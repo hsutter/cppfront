@@ -1,6 +1,6 @@
 
-Human: type = {
-    speak:     (virtual this);
+Human: @interface type = {
+    speak: (this);
 }
 
 N: namespace = {

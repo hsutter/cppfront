@@ -54,8 +54,8 @@ struct source_line
     bool all_tokens_are_densely_spaced = true; // to be overridden in lexing if they're not
 
     source_line(
-        std::string const& t = {},
-        category           c = category::empty
+        std::string_view t = {},
+        category         c = category::empty
     )
         : text{t}
         , cat{c}
@@ -258,10 +258,10 @@ struct error_entry
     bool            fallback = false;   // only emit this message if there was nothing better
 
     error_entry(
-        source_position    w,
-        std::string const& m,
-        bool               i = false,
-        bool               f = false
+        source_position  w,
+        std::string_view m,
+        bool             i = false,
+        bool             f = false
     )
         : where{w}
         , msg{m}

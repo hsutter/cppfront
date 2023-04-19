@@ -579,6 +579,13 @@ struct unqualified_id_node
         return {};
     }
 
+    auto to_string() const
+        -> std::string
+    {
+        assert(identifier);
+        return identifier->to_string(true);
+    }
+
     auto position() const
         -> source_position
     {
@@ -634,6 +641,20 @@ struct qualified_id_node
         }
         // else
         return {};
+    }
+
+    auto to_string() const
+        -> std::string
+    {
+        auto ret = std::string{};
+        for (auto& term : ids) {
+            if (term.scope_op) {
+                ret += term.scope_op->as_string_view();
+            }
+            assert (term.id);
+            ret += term.id->to_string();
+        }
+        return ret;
     }
 
     auto get_first_token() const
@@ -828,11 +849,29 @@ struct id_expression_node
     auto template_args_count()
         -> int
     {
-        if (id.index() == unqualified) {
+        if (is_unqualified()) {
             return std::get<unqualified>(id)->template_args_count();
         }
         // else
         return 0;
+    }
+
+    auto is_empty() const
+        -> bool
+    {
+        return id.index() == empty;
+    }
+
+    auto is_qualified() const
+        -> bool
+    {
+        return id.index() == qualified;
+    }
+
+    auto is_unqualified() const
+        -> bool
+    {
+        return id.index() == unqualified;
     }
 
     auto get_token() const
@@ -840,6 +879,19 @@ struct id_expression_node
     {
         if (id.index() == unqualified) {
             return std::get<unqualified>(id)->get_token();
+        }
+        // else
+        return {};
+    }
+
+    auto to_string() const
+        -> std::string
+    {
+        if (id.index() == qualified) {
+            return std::get<qualified>(id)->to_string();
+        }
+        else if (id.index() == unqualified) {
+            return std::get<unqualified>(id)->to_string();
         }
         // else
         return {};
@@ -1175,6 +1227,18 @@ struct statement_node
 
     template<typename Node>
     auto get_if()
+        -> Node*
+    {
+        auto pnode = std::get_if<std::unique_ptr<Node>>(&statement);
+        if (pnode) {
+            return pnode->get();
+        }
+        //  else
+        return nullptr;
+    }
+
+    template<typename Node>
+    auto get_if() const
         -> Node const*
     {
         auto pnode = std::get_if<std::unique_ptr<Node>>(&statement);
@@ -1465,6 +1529,19 @@ struct function_type_node
         return returns.index() != empty;
     }
 
+    auto index_of_parameter_named(std::string_view s) const
+        -> int
+    {
+        auto ret = 0;
+        for (auto& param : parameters->parameters) {
+            if (param->has_name(s)) {
+                return ret;
+            }
+            ++ret;
+        }
+        return -1;
+    }
+
     auto has_parameter_named(std::string_view s) const
         -> bool
     {
@@ -1549,7 +1626,8 @@ struct function_type_node
 struct type_node
 {
     token const* type;
-    std::vector<id_expression_node> metaclass_names;
+
+    type_node( token const* t) : type{t} { }
 
     auto position() const
         -> source_position
@@ -1562,9 +1640,6 @@ struct type_node
         -> void
     {
         v.start(*this, depth);
-        for (auto& m : metaclass_names) {
-            m.visit(v, depth+1);
-        }
         v.end(*this, depth);
     }
 };
@@ -1637,6 +1712,21 @@ struct alias_node
 };
 
 
+enum class accessibility { default_ = 0, public_, protected_, private_ };
+
+auto to_string(accessibility a)
+    -> std::string
+{
+    switch (a) {
+    break;case accessibility::public_   : return "public";
+    break;case accessibility::protected_: return "protected";
+    break;case accessibility::private_  : return "private";
+    break;default: assert(a == accessibility::default_);
+    }
+    return "default";
+}
+
+
 struct declaration_node
 {
     //  The capture_group is declared first, because it should outlive
@@ -1645,7 +1735,7 @@ struct declaration_node
 
     source_position pos;
     std::unique_ptr<unqualified_id_node> identifier;
-    token const* access = {};
+    accessibility access = accessibility::default_;
 
     enum active : std::uint8_t { a_function, an_object, a_type, a_namespace, an_alias };
     std::variant<
@@ -1656,6 +1746,7 @@ struct declaration_node
         std::unique_ptr<alias_node>
     > type;
 
+    std::vector<std::unique_ptr<id_expression_node>> meta_functions;
     std::unique_ptr<parameter_declaration_list_node> template_parameters;
     source_position                                  requires_pos = {};
     std::unique_ptr<expression_node>                 requires_clause_expression;
@@ -1674,25 +1765,54 @@ struct declaration_node
     auto is_public() const
         -> bool
     {
-        return access && *access == "public";
+        return access == accessibility::public_;
     }
 
     auto is_protected() const
         -> bool
     {
-        return access && *access == "protected";
+        return access == accessibility::protected_;
     }
 
     auto is_private() const
         -> bool
     {
-        return access && *access == "private";
+        return access == accessibility::private_;
     }
 
     auto is_default_access() const
         -> bool
     {
-        return !access;
+        return access == accessibility::default_;
+    }
+
+private:
+    auto set_access(accessibility a)
+        -> bool
+    {
+        if (is_default_access()) {
+            access = a;
+        }
+        return access == a;
+    }
+
+public:
+    auto make_public()
+        -> bool
+    {
+        return set_access( accessibility::public_ );
+    }
+
+    auto make_protected()
+        -> bool
+    {
+        return set_access( accessibility::protected_ );
+    }
+
+    auto make_private()
+        -> bool
+    {
+        return set_access( accessibility::private_ );
     }
 
     auto has_name() const
@@ -1727,6 +1847,15 @@ struct declaration_node
         -> bool
     {
         return initializer != nullptr;
+    }
+
+    auto index_of_parameter_named(std::string_view s) const
+        -> int
+    {
+        if (!is_function()) {
+            return -1;
+        }
+        return std::get<a_function>(type)->index_of_parameter_named(s);
     }
 
     auto has_parameter_named(std::string_view s) const
@@ -1814,8 +1943,14 @@ struct declaration_node
         all       = functions|objects|types
     };
 
-    auto get_type_scope_declarations(which w = all) const
-        -> std::vector<declaration_node const*>
+private:
+    //  This helper is a const function that delivers pointers
+    //  to non-const... because this is the best way I can
+    //  think of right now to write the following two get_
+    //  functions (without duplicating their bodies, and
+    //  without resorting to const_casts)
+    auto gather_type_scope_declarations(which w) const
+        -> std::vector<declaration_node*>
     {
         if (
             !is_type()
@@ -1829,7 +1964,7 @@ struct declaration_node
         auto compound_stmt = initializer->get_if<compound_statement_node>();
         assert (compound_stmt);
 
-        auto ret = std::vector<declaration_node const*>{};
+        auto ret = std::vector<declaration_node*>{};
         for (auto& o : compound_stmt->statements)
         {
             auto decl = o->get_if<declaration_node>();
@@ -1851,6 +1986,58 @@ struct declaration_node
         }
 
         return ret;
+    }
+
+public:
+    auto get_type_scope_declarations(which w = all)
+        -> std::vector<declaration_node*>
+    {
+        //  Only want to return the gather_ results as
+        //  non-const* in a non-const function
+        return gather_type_scope_declarations(w);
+    }
+
+    auto get_type_scope_declarations(which w = all) const
+        -> std::vector<declaration_node const*>
+    {
+        //  Convert the gather_ results to const*
+        auto ret = std::vector<declaration_node const*>{};
+        for (auto o : gather_type_scope_declarations(w)) {
+            ret.push_back( o );
+        }
+        return ret;
+    }
+
+
+    auto add_type_member( std::unique_ptr<statement_node> statement )
+        -> bool
+    {
+        if (
+            !is_type()
+            || !initializer
+            || !initializer->is_compound()
+            || !statement->is_declaration()
+            )
+        {
+            return false;
+        }
+
+        //  Tell this declaration statement that we are its new parent
+        //  and check to ensure that it doesn't already have a parent
+        //  (that shouldn't happen because we should only get here for a
+        //  generated statement that hasn't been added elsewhere yet)
+        auto decl = statement->get_if<declaration_node>();
+        assert(
+            decl
+            && !decl->parent_declaration
+        );
+        decl->parent_declaration = this;
+
+        //  And actually adopt it into our list of statements
+        auto compound_stmt = initializer->get_if<compound_statement_node>();
+        assert (compound_stmt);
+        compound_stmt->statements.push_back(std::move(statement));
+        return true;
     }
 
 
@@ -2159,6 +2346,11 @@ struct declaration_node
         try_visit<a_type     >(type, v, depth+1);
         try_visit<a_namespace>(type, v, depth+1);
         try_visit<an_alias   >(type, v, depth+1);
+
+        for (auto& m : meta_functions) {
+            assert(m);
+            m->visit(v, depth+1);
+        }
 
         if (initializer) {
             initializer->visit(v, depth+1);
@@ -2612,10 +2804,10 @@ class parser
 {
     std::vector<error_entry>& errors;
 
-    std::unique_ptr<translation_unit_node> parse_tree;
+    std::unique_ptr<translation_unit_node> parse_tree = {};
 
     //  Keep a stack of current capture groups (contracts/decls still being parsed)
-    std::vector<capture_group*> current_capture_groups;
+    std::vector<capture_group*> current_capture_groups = {};
 
     struct capture_groups_stack_guard
     {
@@ -2656,13 +2848,9 @@ class parser
         }
     };
 
-    //  Used only for the duration of each parse() call
-    //struct parse_state {
-        std::vector<token> const* tokens_ = {};
-        std::deque<token>* generated_tokens_ = {};
-        int pos = 0;
-    //};
-    //std::vector<parse_state> state_stack;
+    std::vector<token> const* tokens = {};
+    std::deque<token>* generated_tokens = {};
+    int pos = 0;
 
     //  Keep track of the function bodies' locations - used to emit comments
     //  in the right pass (decide whether it's a comment that belongs with
@@ -2729,19 +2917,23 @@ public:
         return false;
     }
 
+
 public:
     //-----------------------------------------------------------------------
-    //  Constructor
+    //  Constructors - the copy constructor constructs a new instance with
+    //                 the same errors reference but otherwise a clean slate
     //
     //  errors      error list
     //
-    parser(
-        std::vector<error_entry>& errors_
-    )
+    parser( std::vector<error_entry>& errors_ )
         : errors{ errors_ }
         , parse_tree{std::make_unique<translation_unit_node>()}
-    {
-    }
+    { }
+
+    parser( parser const& that )
+        : errors{ that.errors }
+        , parse_tree{std::make_unique<translation_unit_node>()}
+    { }
 
 
     //-----------------------------------------------------------------------
@@ -2755,14 +2947,16 @@ public:
     //  sections in a TU to build the whole TU's parse tree
     //
     auto parse(
-        std::vector<token> const& tokens,
-        std::deque<token>&        generated_tokens
+        std::vector<token> const& tokens_,
+        std::deque<token>&        generated_tokens_
     )
         -> bool
     {
+        //  Set per-parse state for the duration of this call
+        tokens           = &tokens_;
+        generated_tokens = &generated_tokens_;
+
         //  Generate parse tree for this section as if a standalone TU
-        tokens_ = &tokens;
-        generated_tokens_ = &generated_tokens;
         pos     = 0;
         auto tu = translation_unit();
 
@@ -2781,26 +2975,50 @@ public:
 
 
     //-----------------------------------------------------------------------
-    //  get_parse_tree
+    //  parse_one_statement
     //
-    //  Get the entire parse tree, from the root (translation_unit_node)
+    //  tokens              input tokens for this section of Cpp2 source code
+    //  generated_tokens    a shared place to store generated tokens
     //
-    auto get_parse_tree()
-        -> translation_unit_node&
+    //  Each call parses one statement and returns its parse tree.
+    //
+    auto parse_one_declaration(
+        std::vector<token> const& tokens_,
+        std::deque<token>&        generated_tokens_
+    )
+        -> std::unique_ptr<statement_node>
     {
-        assert (parse_tree);
-        return *parse_tree;
+        //  Set per-parse state for the duration of this call
+        tokens           = &tokens_;
+        generated_tokens = &generated_tokens_;
+
+        //  Parse one declaration - we succeed if the parse succeeded,
+        //  and there were no new errors, and all tokens were consumed
+        auto errors_size = std::ssize(errors);
+        pos = 0;
+        if (auto d = statement();
+            d
+            && std::ssize(errors) == errors_size
+            && done()
+            )
+        {
+            return d;
+        }
+
+        return {};
     }
 
+
+    //-----------------------------------------------------------------------
     //  Get a set of pointers to just the declarations in the given token map section
     //
-    auto get_parse_tree(std::vector<token> const& tokens)
+    auto get_parse_tree_declarations_in_range(std::vector<token> const& token_range) const
         -> std::vector< declaration_node const* >
     {
         assert (parse_tree);
-        assert (!tokens.empty());
-        auto first_line = tokens.front().position().lineno;
-        auto last_line  = tokens.back().position().lineno;
+        assert (!token_range.empty());
+        auto first_line = token_range.front().position().lineno;
+        auto last_line  = token_range.back().position().lineno;
 
         auto ret = std::vector< declaration_node const* >{};
         for (auto& decl : parse_tree->declarations)
@@ -2888,19 +3106,19 @@ private:
             throw std::runtime_error("unexpected end of source file");
         }
 
-        return (*tokens_)[pos];
+        return (*tokens)[pos];
     }
 
     auto peek(int num) const
         -> token const*
     {
-        assert (tokens_);
+        assert (tokens);
         if (
             pos + num >= 0
-            && pos + num < std::ssize(*tokens_)
+            && pos + num < std::ssize(*tokens)
             )
         {
-            return &(*tokens_)[pos + num];
+            return &(*tokens)[pos + num];
         }
         return {};
     }
@@ -2908,16 +3126,16 @@ private:
     auto done() const
         -> bool
     {
-        assert (tokens_);
-        assert (pos <= std::ssize(*tokens_));
-        return pos == std::ssize(*tokens_);
+        assert (tokens);
+        assert (pos <= std::ssize(*tokens));
+        return pos == std::ssize(*tokens);
     }
 
     auto next(int num = 1)
         -> void
     {
-        assert (tokens_);
-        pos = std::min( pos+num, __as<int>(std::ssize(*tokens_)) );
+        assert (tokens);
+        pos = std::min( pos+num, __as<int>(std::ssize(*tokens)) );
     }
 
 
@@ -3339,8 +3557,8 @@ private:
                         && t.position() == source_position{ next.position().lineno, next.position().colno-1 }
                         )
                     {
-                        generated_tokens_->emplace_back( ">>", t.position(), lexeme::RightShift);
-                        return &generated_tokens_->back();
+                        generated_tokens->emplace_back( ">>", t.position(), lexeme::RightShift);
+                        return &generated_tokens->back();
                     }
                     return nullptr;
                 },
@@ -3503,8 +3721,8 @@ private:
                         && t.position() == source_position{ next.position().lineno, next.position().colno-1 }
                         )
                     {
-                        generated_tokens_->emplace_back( ">>=", t.position(), lexeme::RightShiftEq);
-                        return &generated_tokens_->back();
+                        generated_tokens->emplace_back( ">>=", t.position(), lexeme::RightShiftEq);
+                        return &generated_tokens->back();
                     }
                     return nullptr;
                 },
@@ -4487,8 +4705,8 @@ private:
     //GTODO     try-block
     //G
     auto statement(
-        bool            semicolon_required,
-        source_position equal_sign          = source_position{}
+        bool            semicolon_required = true,
+        source_position equal_sign         = source_position{}
     )
         -> std::unique_ptr<statement_node>
     {
@@ -4776,8 +4994,7 @@ private:
     auto parameter_declaration_list(
         bool is_returns    = false,
         bool is_named      = true,
-        bool is_template   = false,
-        bool is_type_scope = false
+        bool is_template   = false
     )
         -> std::unique_ptr<parameter_declaration_list_node>
     {
@@ -4800,27 +5017,6 @@ private:
 
         while ((param = parameter_declaration(is_returns, is_named, is_template)) != nullptr)
         {
-            if (param->declaration->has_name("this")) {
-                if (
-                    !n->parameters.empty()
-                    || !is_type_scope
-                    )
-                {
-                    error("'this' must be the first parameter of a type-scope function", false);
-                }
-            }
-
-            if (param->declaration->has_name("that")) {
-                if (
-                    std::ssize(n->parameters) != 1
-                    || !n->parameters.front()->has_name("this")
-                    || !is_type_scope
-                    )
-                {
-                    error("'that' must be the second parameter of a type-scope function (after the initial 'this' parameter)", false);
-                }
-            }
-
             if (
                 std::ssize(n->parameters) > 1
                 && n->parameters.back()->has_name("that")
@@ -4955,15 +5151,14 @@ private:
     //G
     auto function_type(
         declaration_node* my_decl,
-        bool              is_named      = true,
-        bool              is_type_scope = false
+        bool              is_named = true
         )
         -> std::unique_ptr<function_type_node>
     {
         auto n = std::make_unique<function_type_node>( my_decl );
 
         //  Parameters
-        auto parameters = parameter_declaration_list(false, is_named, false, is_type_scope);
+        auto parameters = parameter_declaration_list(false, is_named, false);
         if (!parameters) {
             return {};
         }
@@ -5057,33 +5252,20 @@ private:
     }
 
 
-    //G meta-constraints:
-    //G     'is' id-expression
-    //G     meta-constraints ',' id-expression
-    //G
-    auto a_type()
-        -> std::unique_ptr<type_node>
-    {
-        auto n = std::make_unique<type_node>();
-
-        //  "type" introducer
-        if (curr() != "type") {
-            return {};
-        }
-
-        n->type = &curr();
-        next();
-
-        return n;
-    }
+    auto apply_type_meta_functions( declaration_node& decl )
+        -> bool;
 
 
     //G unnamed-declaration:
-    //G     ':' template-parameter-declaration-list? function-type requires-clause? '=' statement
-    //G     ':' template-parameter-declaration-list? type-id? requires-clause? '=' statement
-    //G     ':' template-parameter-declaration-list? type-id
-    //G     ':' template-parameter-declaration-list? 'type' meta-constraints? requires-clause? '=' statement
+    //G     ':' meta-functions-list? template-parameter-declaration-list? function-type requires-clause? '=' statement
+    //G     ':' meta-functions-list? template-parameter-declaration-list? type-id? requires-clause? '=' statement
+    //G     ':' meta-functions-list? template-parameter-declaration-list? type-id
+    //G     ':' meta-functions-list? template-parameter-declaration-list? 'type' requires-clause? '=' statement
     //G     ':' 'namespace' '=' statement
+    //G
+    //G meta-functions-list:
+    //G     '@' id-expression
+    //G     meta-functions-list '@' id-expression
     //G
     //G requires-clause:
     //G     'requires' expression
@@ -5099,7 +5281,7 @@ private:
         bool                                 is_parameter          = false,
         bool                                 is_template_parameter = false,
         std::unique_ptr<unqualified_id_node> id                    = {},
-        token const*                         access                = {}
+        accessibility                        access                = {}
     )
         -> std::unique_ptr<declaration_node>
     {
@@ -5118,7 +5300,7 @@ private:
         {
             //  So invent the "type" token
             generated_text.push_back("type");
-            generated_tokens_->push_back({
+            generated_tokens->push_back({
                 generated_text.back().c_str(),
                 std::ssize(generated_text.back()),
                 start,
@@ -5127,8 +5309,7 @@ private:
 
             //  So we can create the type_node
 
-            auto t = std::make_unique<type_node>();
-            t->type = &generated_tokens_->back();
+            auto t = std::make_unique<type_node>( &generated_tokens->back() );
 
             n->type = std::move(t);
             assert (n->is_type());
@@ -5161,7 +5342,7 @@ private:
         {
             //  So invent the "_" token
             generated_text.push_back("_");
-            generated_tokens_->push_back({
+            generated_tokens->push_back({
                 generated_text.back().c_str(),
                 std::ssize(generated_text.back()),
                 start,
@@ -5171,7 +5352,7 @@ private:
             //  So we can create the typeid_id_node and its unqualified_id_node
 
             auto gen_id = std::make_unique<unqualified_id_node>();
-            gen_id->identifier = &generated_tokens_->back();
+            gen_id->identifier = &generated_tokens->back();
 
             auto type = std::make_unique<type_id_node>();
             type->pos = start;
@@ -5189,6 +5370,17 @@ private:
             return {};
         }
         next();
+
+        //  Next is an optional meta functions clause
+        while (curr() == "@") {
+            next();
+            auto idx = id_expression();
+            if (!idx) {
+                error("'@' must be followed by a a meta function name", false);
+                return {};
+            }
+            n->meta_functions.push_back( std::move(idx) );
+        }
 
         //  Next is an optional template parameter list
         if (curr().type() == lexeme::Less) {
@@ -5213,7 +5405,10 @@ private:
         auto deduced_type = false;
 
         //  It could be "type", declaring a user-defined type
-        if (auto t = a_type()) {
+        if (curr() == "type")
+        {
+            n->type = std::make_unique<type_node>(&curr());
+            next();
             if (
                 is_parameter
                 && !is_template_parameter
@@ -5222,25 +5417,43 @@ private:
                 error("a normal parameter cannot be a 'type' - did you mean to put this in a < > template parameter list?");
                 return {};
             }
-            n->type = std::move(t);
             assert (n->is_type());
         }
         
         //  Or a function type, declaring a function - and tell the function whether it's in a user-defined type
-        else if (auto t = function_type(n.get(), named, n->parent_is_type())) {
+        else if (auto t = function_type(n.get(), named))
+        {
             n->type = std::move(t);
             assert (n->is_function());
+
+            if (!n->meta_functions.empty()) {
+                errors.emplace_back(
+                    n->meta_functions.front()->position(),
+                    "(temporary alpha limitation) meta functions are currently not supported on functions, only on types"
+                );
+                return {};
+            }
         }
 
         //  Or a namespace
-        else if (curr() == "namespace") {
+        else if (curr() == "namespace")
+        {
             n->type = std::make_unique<namespace_node>( &curr() );
             assert (n->type.index() == declaration_node::a_namespace);
             next();
+
+            if (!n->meta_functions.empty()) {
+                errors.emplace_back(
+                    n->meta_functions.front()->position(),
+                    "(temporary alpha limitation) meta functions are currently not supported on namespaces, only on types"
+                );
+                return {};
+            }
         }
 
         //  Or just a type-id, declaring a non-pointer object
-        else if (auto t = type_id()) {
+        else if (auto t = type_id())
+        {
             if (
                 t->get_token()
                 && t->get_token()->to_string(true) == "auto"
@@ -5259,6 +5472,14 @@ private:
 
             n->type = std::move(t);
             assert (n->is_object());
+
+            if (!n->meta_functions.empty()) {
+                errors.emplace_back(
+                    n->meta_functions.front()->position(),
+                    "(temporary alpha limitation) meta functions are currently not supported on objects, only on types"
+                );
+                return {};
+            }
 
             if (curr().type() == lexeme::LeftBracket) {
                 error("C-style array types are not allowed, use std::array instead");
@@ -5298,15 +5519,6 @@ private:
         {
             if (deduced_type) {
                 error("a variable with a deduced type must have an = initializer");
-                return {};
-            }
-
-            if (
-                n->is_function()
-                && !n->is_virtual_function()
-                )
-            {
-                error("missing = before nonvirtual function body");
                 return {};
             }
 
@@ -5385,8 +5597,22 @@ private:
             }
 
             if (!(n->initializer = statement(semicolon_required, n->equal_sign))) {
-                error("ill-formed initializer", true, {}, true);
+                error(
+                    "ill-formed initializer",
+                    true, {}, true
+                );
                 next();
+                return {};
+            }
+        }
+
+        //  If this is a type with meta functions, apply those
+        if (n->is_type()) {
+            if (!apply_type_meta_functions(*n)) {
+                error(
+                    "error encountered while applying type's meta functions",
+                    false, {}, true
+                );
                 return {};
             }
         }
@@ -5506,10 +5732,10 @@ private:
                     last_pos = body->statements.back()->position();
                 }
                 ++last_pos.lineno;
-                generated_tokens_->emplace_back( "return", last_pos, lexeme::Keyword);
+                generated_tokens->emplace_back( "return", last_pos, lexeme::Keyword);
 
                 auto ret = std::make_unique<return_statement_node>();
-                ret->identifier = &generated_tokens_->back();
+                ret->identifier = &generated_tokens->back();
 
                 auto stmt = std::make_unique<statement_node>();
                 stmt->statement = std::move(ret);
@@ -5724,24 +5950,32 @@ private:
         //  The reason to move 'id' into unnamed_declaration() is so that
         //  it can conveniently perform some checks that refer to the name
         {
-            token const* access = {};
+            auto access = accessibility::default_;
+            if (curr() == "public") {
+                access = accessibility::public_;
+                next();
+            }
+            else if (curr() == "protected") {
+                access = accessibility::protected_;
+                next();
+            }
+            else if (curr() == "private") {
+                access = accessibility::private_;
+                next();
+            }
+
+            //  If they wrote an access-specifier, see if they put a ':'
+            //  after it out of Cpp1 habit (there's no colon in Cpp2)
             if (
-                curr() == "public"
-                || curr() == "protected"
-                || curr() == "private"
+                access != accessibility::default_
+                && curr().type() == lexeme::Colon
                 )
             {
-                access = &curr();
-                next();
-
-                if (curr().type() == lexeme::Colon)
-                {
-                    errors.emplace_back(
-                        curr().position(),
-                        "':' is not allowed after " + access->to_string(true)
-                    );
-                    return {};
-                }
+                errors.emplace_back(
+                    curr().position(),
+                    "':' is not allowed after an access-specifier"
+                );
+                return {};
             }
 
             auto id = unqualified_id();
@@ -5900,12 +6134,14 @@ private:
 
             if (
                 !is_parameter
-                && n->access
-                && *n->access != "public"
+                && (
+                    !n->is_public()
+                    && !n->is_default_access()
+                    )
                 )
             {
                 errors.emplace_back(
-                    n->access->position(),
+                    n->position(),
                     "a base type must be public (the default)"
                 );
                 return {};
@@ -5925,12 +6161,12 @@ private:
         }
 
         if (
-            n->access
+            n->access != accessibility::default_
             && !n->parent_is_type()
             )
         {
             errors.emplace_back(
-                n->access->position(),
+                n->position(),
                 "an access-specifier is only allowed on a type-scope (member) declaration"
             );
             return {};
@@ -6325,8 +6561,8 @@ public:
         break;default:
             o << pre(indent+1) << "ICE - invalid variant state\n";
         }
-        if (n.access) {
-            o << pre(indent+1) << "access: " << *n.access << "\n";
+        if (!n.is_default_access()) {
+            o << pre(indent+1) << "access: " << to_string(n.access) << "\n";
         }
         if (!n.captures.members.empty()) {
             o << pre(indent+1) << "captures: " << n.captures.members.size() << "\n";

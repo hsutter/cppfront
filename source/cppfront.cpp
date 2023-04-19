@@ -724,7 +724,7 @@ public:
         if (auto newline_pos = s.find('\n');
             !leave_newlines_alone
             && s.length() > 1
-            && newline_pos != std::string_view::npos
+            && newline_pos != s.npos
             )
         {
             while (newline_pos != std::string_view::npos)
@@ -1228,7 +1228,7 @@ public:
             assert (!section.second.empty());
 
             //  Get the parse tree for this section and emit each forward declaration
-            auto decls = parser.get_parse_tree(section.second);
+            auto decls = parser.get_parse_tree_declarations_in_range(section.second);
             for (auto& decl : decls) {
                 assert(decl);
                 emit(*decl);
@@ -1329,7 +1329,7 @@ public:
                         assert (!map_iter->second.empty());
 
                         //  Get the parse tree for this section and emit each forward declaration
-                        auto decls = parser.get_parse_tree(map_iter->second);
+                        auto decls = parser.get_parse_tree_declarations_in_range(map_iter->second);
                         for (auto& decl : decls) {
                             assert(decl);
                             emit(*decl);
@@ -1398,7 +1398,7 @@ public:
             assert (!section.second.empty());
 
             //  Get the parse tree for this section and emit each forward declaration
-            auto decls = parser.get_parse_tree(section.second);
+            auto decls = parser.get_parse_tree_declarations_in_range(section.second);
             for (auto& decl : decls) {
                 assert(decl);
                 emit(*decl);
@@ -1412,7 +1412,7 @@ public:
         //  Finally, some debug checks
         printer.finalize_phase();
         assert(
-            tokens.num_unprinted_comments() == 0
+            (!errors.empty() || tokens.num_unprinted_comments() == 0)
             && "ICE: not all comments were printed"
         );
 
@@ -3226,7 +3226,7 @@ public:
 
                 emit(*n.expr);
 
-                //  emit == and != as infix a @ b operators (since we don't have
+                //  emit == and != as infix a ? b operators (since we don't have
                 //  any checking/instrumentation we want to do for those)
                 if (flag_safe_comparisons) {
                     switch (op.type()) {
@@ -3322,7 +3322,7 @@ public:
 
                     lambda_body += lhs_name;
 
-                    //  emit == and != as infix a @ b operators (since we don't have
+                    //  emit == and != as infix a ? b operators (since we don't have
                     //  any checking/instrumentation we want to do for those)
                     if (flag_safe_comparisons) {
                         switch (term.op->type()) {
@@ -4660,6 +4660,69 @@ public:
     )
         -> void
     {
+        //  First, do some deferred sema checks - deferred to here because
+        //  they may be satisfied by metafunction application
+
+        //  If this is a nonvirtual function, it must have an initializer
+        if (
+            n.is_function()
+            && !n.is_virtual_function()
+            && !n.has_initializer()
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "a nonvirtual function must have a body ('=' initializer)"
+            );
+            return;
+        }
+
+        {
+            auto this_index = n.index_of_parameter_named("this");
+            auto that_index = n.index_of_parameter_named("that");
+
+            if (this_index >= 0) {
+                if (!n.parent_is_type()) {
+                    errors.emplace_back(
+                        n.position(),
+                        "'this' must be the first parameter of a type-scope function"
+                    );
+                    return;
+                }
+                if (this_index != 0) {
+                    errors.emplace_back(
+                        n.position(),
+                        "'this' must be the first parameter"
+                    );
+                    return;
+                }
+            }
+
+            if (that_index >= 0) {
+                if (!n.parent_is_type()) {
+                    errors.emplace_back(
+                        n.position(),
+                        "'that' must be the second parameter of a type-scope function"
+                    );
+                    return;
+                }
+                if (that_index != 1) {
+                    errors.emplace_back(
+                        n.position(),
+                        "'that' must be the second parameter"
+                    );
+                    return;
+                }
+                if (this_index != 0) {
+                    errors.emplace_back(
+                        n.position(),
+                        "'that' must come after an initial 'this' parameter"
+                    );
+                    return;
+                }
+            }
+        }
+
         //  In phase 0, only need to consider namespaces and types
 
         if (
@@ -4700,8 +4763,8 @@ public:
 
                 //  If we're in a type scope, handle the access specifier
                 if (n.parent_is_type()) {
-                    if (n.access) {
-                        printer.print_cpp2(n.access->to_string(true) + ": ", n.access->position());
+                    if (!n.is_default_access()) {
+                        printer.print_cpp2(to_string(n.access) + ": ", n.position());
                     }
                     else {
                         printer.print_cpp2("public: ", n.position());
@@ -4859,9 +4922,9 @@ public:
         //  is one, or default to private for data and public for functions
         if (printer.get_phase() == printer.phase1_type_defs_func_decls)
         {
-            if (n.access) {
+            if (!n.is_default_access()) {
                 assert (is_in_type);
-                printer.print_cpp2(n.access->to_string(true) + ": ", n.access->position());
+                printer.print_cpp2(to_string(n.access) + ": ", n.position());
             }
             else if (is_in_type) {
                 if (n.is_object()) {
@@ -5319,10 +5382,9 @@ public:
                 {
                     assert(
                         !is_main
-                        && prefix.empty()
+                        // prefix can be "virtual"
                         // suffix1 will be " &&" though we'll ignore that
-                        && suffix2.empty()
-                        && "ICE: a destructor shouldn't have been able to generate a prefix or suffix (or be main)"
+                        // suffix2 can be "= 0"
                     );
 
                     //  Print the ~-prefixed type name instead of the operator= function name
@@ -5331,10 +5393,13 @@ public:
                         && n.parent_declaration->name()
                     );
                     printer.print_cpp2(
-                        type_qualification_if_any_for(n)
+                        prefix
+                            + type_qualification_if_any_for(n)
                             + "~" + n.parent_declaration->name()->to_string(true),
-                        n.position() );
+                        n.position()
+                    );
                     emit( *func, n.name(), false, true);
+                    printer.print_cpp2( suffix2, n.position() );
                 }
 
                 //  Ordinary functions are easier, do all their declarations except

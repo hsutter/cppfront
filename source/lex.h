@@ -86,6 +86,7 @@ enum class lexeme : std::int8_t {
     Dot,
     Ellipsis,
     QuestionMark,
+    At,
     Dollar,
     FloatLiteral,
     BinaryLiteral,
@@ -182,6 +183,7 @@ auto __as(lexeme l)
     break;case lexeme::Dot:                 return "Dot";
     break;case lexeme::Ellipsis:            return "Ellipsis";
     break;case lexeme::QuestionMark:        return "QuestionMark";
+    break;case lexeme::At:                  return "At";
     break;case lexeme::Dollar:              return "Dollar";
     break;case lexeme::FloatLiteral:        return "FloatLiteral";
     break;case lexeme::BinaryLiteral:       return "BinaryLiteral";
@@ -515,7 +517,7 @@ auto expand_raw_string_literal(
 //-----------------------------------------------------------------------
 //  lex: Tokenize a single line while maintaining inter-line state
 //
-//  line                    the line to be tokenized
+//  mutable_line            the line to be tokenized
 //  lineno                  the current line number
 //  in_comment              are we currently in a comment
 //  current_comment         the current partial comment
@@ -523,12 +525,15 @@ auto expand_raw_string_literal(
 //  tokens                  the token list to add to
 //  comments                the comment token list to add to
 //  errors                  the error message list to use for reporting problems
+//  raw_string_multiline    the current optional raw_string state
 //
 
 //  A stable place to store additional text for source tokens that are merged
 //  into a whitespace-containing token (to merge the Cpp1 multi-token keywords)
 //  -- this isn't about tokens generated later, that's tokens::generated_tokens
-static auto generated_text = std::deque<std::string>{};
+static auto generated_text  = std::deque<std::string>{};
+static auto generated_lines = std::deque<std::vector<source_line>>{};
+
 
 static auto multiline_raw_strings = std::deque<multiline_raw_string>{};
 
@@ -677,7 +682,7 @@ auto lex_line(
         auto i = std::ssize(tokens)-1;
 
         //  If the third-to-last token is "operator", we may need to
-        //  merge an "operator@" name into a single identifier token
+        //  merge an "operator?" name into a single identifier token
 
         if (
             i >= 2
@@ -1286,6 +1291,9 @@ auto lex_line(
             break; case '?':
                 store(1, lexeme::QuestionMark);
 
+            break; case '@':
+                store(1, lexeme::At);
+
             break;case '$':
                 if (peek1 == 'R' && peek2 == '"') {
                     // if peek(j-2) is 'R' it means that we deal with raw-string literal
@@ -1721,7 +1729,7 @@ public:
     //-----------------------------------------------------------------------
     //  lex: Tokenize the Cpp2 lines
     //
-    //  lines       tagged source lines
+    //  lines               tagged source lines
     //
     auto lex(
         std::vector<source_line>& lines
@@ -1732,7 +1740,7 @@ public:
         auto raw_string_multiline   = std::optional<raw_string>();
 
         assert (std::ssize(lines) > 0);
-        auto line = std::begin(lines)+1;
+        auto line = std::begin(lines);
         while (line != std::end(lines)) {
 
             //  Skip over non-Cpp2 lines
@@ -1878,6 +1886,8 @@ public:
     }
 
 };
+
+static auto generated_lexers = std::deque<tokens>{};
 
 }
 

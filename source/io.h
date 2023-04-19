@@ -846,14 +846,12 @@ public:
                 )
             {
                 cpp1_found = true;
-                //lines.push_back({ &buf[0], source_line::category::preprocessor });
                 add_preprocessor_line();
                 while (
                     pre.has_continuation
                     && in.getline(&buf[0], max_line_len)
                     )
                 {
-                    //lines.push_back({ &buf[0], source_line::category::preprocessor });
                     add_preprocessor_line();
                     pre = is_preprocessor(buf, false);
                 }

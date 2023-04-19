@@ -9,6 +9,7 @@
 
 #line 2 "pure2-types-inheritance.cpp2"
 class Human;
+    
 
 #line 6 "pure2-types-inheritance.cpp2"
 namespace N {
@@ -27,10 +28,11 @@ class Cyborg;
 #line 2 "pure2-types-inheritance.cpp2"
 class Human {
     public: virtual auto speak() const -> void = 0;
-
+public: virtual ~Human();
     public: Human() = default;
     public: Human(Human const&) = delete;
     public: auto operator=(Human const&) -> void = delete;
+
 #line 4 "pure2-types-inheritance.cpp2"
 };
 
@@ -86,6 +88,8 @@ auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
 
+#line 0 "pure2-types-inheritance.cpp2"
+Human::~Human(){}
 
 #line 6 "pure2-types-inheritance.cpp2"
 namespace N {
