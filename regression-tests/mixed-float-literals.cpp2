@@ -1,46 +1,46 @@
 void literals_cpp1() {
   // integers
-  123;
-  123u;
-  123ul;
-  123ull;
-  123l;
-  123ll;
-  123'456ll;
-  123;
-  123U;
-  123UL;
-  123ULL;
-  123L;
-  123LL;
-  123'456LL;
+  std::cout << 123 << std::endl;
+  std::cout << 123u << std::endl;
+  std::cout << 123ul << std::endl;
+  std::cout << 123ull << std::endl;
+  std::cout << 123l << std::endl;
+  std::cout << 123ll << std::endl;
+  std::cout << 123'456ll << std::endl;
+  std::cout << 123 << std::endl;
+  std::cout << 123U << std::endl;
+  std::cout << 123UL << std::endl;
+  std::cout << 123ULL << std::endl;
+  std::cout << 123L << std::endl;
+  std::cout << 123LL << std::endl;
+  std::cout << 123'456LL << std::endl;
   // float points
-  123'456.0f;
-  123'456.f;
-  456.0;
-  456.;
-  1.0e10;
-  1.0e+10;
-  1.0e-10;
-  1.0e-10f;
-  1.e-10;
-  1.e-10f;
-  1e-10;
-  1e-10f;
-  1e-1'0;
-  123'456.0F;
-  123'456.F;
-  456.0;
-  456.;
-  1.0E10;
-  1.0E+10;
-  1.0E-10;
-  1.0E-10F;
-  1.E-10;
-  1.E-10F;
-  1E-10;
-  1E-10F;
-  1E-1'0;
+  std::cout << 123'456.0f << std::endl;
+  std::cout << 123'456.f << std::endl;
+  std::cout << 456.0 << std::endl;
+  std::cout << 456. << std::endl;
+  std::cout << 1.0e10 << std::endl;
+  std::cout << 1.0e+10 << std::endl;
+  std::cout << 1.0e-10 << std::endl;
+  std::cout << 1.0e-10f << std::endl;
+  std::cout << 1.e-10 << std::endl;
+  std::cout << 1.e-10f << std::endl;
+  std::cout << 1e-10 << std::endl;
+  std::cout << 1e-10f << std::endl;
+  std::cout << 1e-1'0 << std::endl;
+  std::cout << 123'456.0F << std::endl;
+  std::cout << 123'456.F << std::endl;
+  std::cout << 456.0 << std::endl;
+  std::cout << 456. << std::endl;
+  std::cout << 1.0E10 << std::endl;
+  std::cout << 1.0E+10 << std::endl;
+  std::cout << 1.0E-10 << std::endl;
+  std::cout << 1.0E-10F << std::endl;
+  std::cout << 1.E-10 << std::endl;
+  std::cout << 1.E-10F << std::endl;
+  std::cout << 1E-10 << std::endl;
+  std::cout << 1E-10F << std::endl;
+  std::cout << 1E-1'0 << std::endl;
   // invalid
   // 456f
   // (void)1e-10.0f;
@@ -56,39 +56,39 @@ void literals_cpp1() {
 
 literals_cpp2: () = {
   // integers
-  123;
-  123u;
-  123ul;
-  123ull;
-  123l;
-  123ll;
-  123'456ll;
-  123;
-  123U;
-  123UL;
-  123ULL;
-  123L;
-  123LL;
-  123'456LL;
+  std::cout << 123 << std::endl;
+  std::cout << 123u << std::endl;
+  std::cout << 123ul << std::endl;
+  std::cout << 123ull << std::endl;
+  std::cout << 123l << std::endl;
+  std::cout << 123ll << std::endl;
+  std::cout << 123'456ll << std::endl;
+  std::cout << 123 << std::endl;
+  std::cout << 123U << std::endl;
+  std::cout << 123UL << std::endl;
+  std::cout << 123ULL << std::endl;
+  std::cout << 123L << std::endl;
+  std::cout << 123LL << std::endl;
+  std::cout << 123'456LL << std::endl;
   // float points
-  123'456.0f;
-  456.0;
-  1.0e10;
-  1.0e+10;
-  1.0e-10;
-  1.0e-10f;
-  1e-10;
-  1e-10f;
-  1e-1'0;
-  123'456.0F;
-  456.0;
-  1.0E10;
-  1.0E+10;
-  1.0E-10;
-  1.0E-10F;
-  1E-10;
-  1E-10F;
-  1E-1'0;
+  std::cout << 123'456.0f << std::endl;
+  std::cout << 456.0 << std::endl;
+  std::cout << 1.0e10 << std::endl;
+  std::cout << 1.0e+10 << std::endl;
+  std::cout << 1.0e-10 << std::endl;
+  std::cout << 1.0e-10f << std::endl;
+  std::cout << 1e-10 << std::endl;
+  std::cout << 1e-10f << std::endl;
+  std::cout << 1e-1'0 << std::endl;
+  std::cout << 123'456.0F << std::endl;
+  std::cout << 456.0 << std::endl;
+  std::cout << 1.0E10 << std::endl;
+  std::cout << 1.0E+10 << std::endl;
+  std::cout << 1.0E-10 << std::endl;
+  std::cout << 1.0E-10F << std::endl;
+  std::cout << 1E-10 << std::endl;
+  std::cout << 1E-10F << std::endl;
+  std::cout << 1E-1'0 << std::endl;
   // invalid
   // 456f
   // (void)1e-10.0f;
@@ -111,4 +111,7 @@ literals_cpp2: () = {
   // 1.E-10F;
 }
 
-main: ()->int = { }
+main: ()->int = {
+  literals_cpp1();
+  literals_cpp2();
+}
