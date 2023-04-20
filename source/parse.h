@@ -144,6 +144,12 @@ struct primary_expression_node
         std::unique_ptr<literal_node>
     > expr;
 
+    auto is_expression_list() const
+        -> bool;
+
+    auto get_expression_list() const
+        -> expression_list_node const*;
+
     auto template_args_count() -> int;
     auto get_token() const -> token const*;
     auto position() const -> source_position;
@@ -188,6 +194,12 @@ struct prefix_expression_node
     std::vector<token const*> ops;
     std::unique_ptr<postfix_expression_node> expr;
 
+    auto is_expression_list() const
+        -> bool;
+
+    auto get_expression_list() const
+        -> expression_list_node const*;
+
     auto get_postfix_expression_node() const
         -> postfix_expression_node *
     {
@@ -216,6 +228,23 @@ struct binary_expression_node
         std::unique_ptr<Term> expr;
     };
     std::vector<term> terms;
+
+    //  API
+    //
+    auto is_expression_list() const
+        -> bool
+    {
+        return terms.empty() && expr->is_expression_list();
+    }
+
+    auto get_expression_list() const
+        -> expression_list_node const*
+    {
+        if (is_expression_list()) {
+            return expr->get_expression_list();
+        }
+        return {};
+    }
 
     //  Get left-hand postfix-expression
     auto get_postfix_expression_node() const
@@ -325,6 +354,21 @@ struct expression_node
 
     // API
     //
+    auto is_expression_list() const
+        -> bool
+    {
+        return expr->is_expression_list();
+    }
+
+    auto get_expression_list() const
+        -> expression_list_node const*
+    {
+        if (is_expression_list()) {
+            return expr->get_expression_list();
+        }
+        return {};
+    }
+
     auto get_lhs_rhs_if_simple_assignment() const
         -> assignment_expression_lhs_rhs;
 
@@ -408,6 +452,21 @@ struct expression_list_node
     }
 };
 
+auto primary_expression_node::is_expression_list() const
+    -> bool
+{
+    return expr.index() == expression_list;
+}
+
+auto primary_expression_node::get_expression_list() const
+    -> expression_list_node const*
+{
+    if (is_expression_list()) {
+        return std::get<expression_list>(expr).get();
+    }
+    return {};
+}
+
 
 struct expression_statement_node
 {
@@ -483,6 +542,21 @@ struct postfix_expression_node
 
     //  API
     //
+    auto is_expression_list() const
+        -> bool
+    {
+        return ops.empty() && expr->is_expression_list();
+    }
+
+    auto get_expression_list() const
+        -> expression_list_node const*
+    {
+        if (is_expression_list()) {
+            return expr->get_expression_list();
+        }
+        return {};
+    }
+
     auto get_first_token_ignoring_this() const
         -> token const*;
 
@@ -505,6 +579,21 @@ struct postfix_expression_node
 
     auto visit(auto& v, int depth) -> void;
 };
+
+auto prefix_expression_node::is_expression_list() const
+    -> bool
+{
+    return ops.empty() && expr->is_expression_list();
+}
+
+auto prefix_expression_node::get_expression_list() const
+    -> expression_list_node const*
+{
+    if (is_expression_list()) {
+        return expr->get_expression_list();
+    }
+    return {};
+}
 
 auto prefix_expression_node::is_result_a_temporary_variable() const -> bool {
     if (ops.empty()) {
@@ -832,6 +921,21 @@ struct is_as_expression_node
         std::unique_ptr<expression_node> expr = {};
     };
     std::vector<term> ops;
+
+    auto is_expression_list() const
+        -> bool
+    {
+        return ops.empty() && expr->is_expression_list();
+    }
+
+    auto get_expression_list() const
+        -> expression_list_node const*
+    {
+        if (is_expression_list()) {
+            return expr->get_expression_list();
+        }
+        return {};
+    }
 
     auto get_postfix_expression_node() const
         -> postfix_expression_node *

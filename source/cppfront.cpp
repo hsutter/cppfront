@@ -2201,7 +2201,19 @@ public:
                 }
             }
 
-            emit(*n.expression);
+            //  If this expression is just a single expression-list, we can
+            //  take over direct control of emitting it without needing to
+            //  go through the whole grammar, and surround it with braces
+            if (n.expression->is_expression_list()) {
+                printer.print_cpp2( "{ ", n.position() );
+                emit(*n.expression->get_expression_list(), false);
+                printer.print_cpp2( " }", n.position() );
+            }
+            //  Otherwise, just emit the general expression as usual
+            else {
+                emit(*n.expression);
+            }
+
             if (
                 function_returns.empty()
                 || function_returns.back().param_list != &single_anon
@@ -3446,12 +3458,16 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(expression_list_node const& n)
+    auto emit(
+        expression_list_node const& n,
+        bool                        parens_ok = true
+    )
         -> void
     {
         auto add_parens =
             should_add_expression_list_parens()
             && !n.inside_initializer
+            && parens_ok
             ;
         if (add_parens) {
             printer.print_cpp2( *n.open_paren, n.position());
@@ -3520,6 +3536,7 @@ public:
         -> void
     {
         assert(n.expr);
+        auto generating_return = false;
 
         if (function_body_start != source_position{}) {
             emit_prolog_mem_inits(function_prolog, n.position().colno);
@@ -3527,11 +3544,27 @@ public:
             emit_prolog_statements(function_prolog, n.position().colno);
             if (!function_void_ret) {
                 printer.print_cpp2("return ", n.position());
+                generating_return = true;
             }
         }
 
         if (!emitted) {
-            emit(*n.expr);
+            //  When generating 'return' of a single expression-list, we can
+            //  take over direct control of emitting it without needing to
+            //  go through the whole grammar, and surround it with braces
+            if (
+                generating_return
+                && n.expr->is_expression_list()
+                )
+            {
+                printer.print_cpp2( "{ ", n.position() );
+                emit(*n.expr->get_expression_list(), false);
+                printer.print_cpp2( " }", n.position() );
+            }
+            //  Otherwise, just emit the general expression as usual
+            else {
+                emit(*n.expr);
+            }
             if (can_have_semicolon) {
                 printer.print_cpp2(";", n.position());
             }
