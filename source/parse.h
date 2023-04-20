@@ -5690,6 +5690,21 @@ private:
             return {};
         }
 
+        if (
+            n->is_function()
+            && n->initializer
+            && !done() && curr().type() == lexeme::Semicolon
+            )
+        {
+            if (n->initializer->is_compound() && n->has_name()) {
+                error("a braced function body may not be followed by a semicolon (empty statements are not allowed)");
+                return {};
+            } else if (n->initializer->is_expression()) {
+                error("a single-expression function should end with a single semicolon");
+                return {};
+            }
+        }
+
         //  If this is an implicit constructor, it must have two parameters
         if (n->is_constructor())
         {
