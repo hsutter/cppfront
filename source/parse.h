@@ -3068,15 +3068,15 @@ private:
         -> void
     {
         auto m = std::string{msg};
+        auto i = done() ? -1 : 0;
+        assert (peek(i));
         if (include_curr_token) {
-            m += std::string(" (at '") + curr().to_string(true) + "')";
+            m += std::string(" (at '") + peek(i)->to_string(true) + "')";
         }
         if (
             err_pos == source_position{}
-            && peek(0)
-            )
-        {
-            err_pos = peek(0)->position();
+        ) {
+            err_pos = peek(i)->position();
         }
         errors.emplace_back( err_pos, m, false, fallback );
     }
@@ -5093,7 +5093,8 @@ private:
 
         //  If there's no [ [ then this isn't a contract
         if (
-            curr().type() != lexeme::LeftBracket
+            done()
+            || curr().type() != lexeme::LeftBracket
             || !peek(1)
             || peek(1)->type() != lexeme::LeftBracket
             )
