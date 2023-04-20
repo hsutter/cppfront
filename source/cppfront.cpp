@@ -3729,14 +3729,6 @@ public:
             auto func_name = get_enclosing_function_name();
             assert(func_name);
 
-            if (*func_name != "operator=") {
-                errors.emplace_back(
-                    n.position(),
-                    "only an operator= function may have a 'that' parameter"
-                );
-                return;
-            }
-
             auto type_name = get_enclosing_type_name();
             assert(type_name);
 

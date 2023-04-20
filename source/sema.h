@@ -1136,7 +1136,7 @@ public:
             auto name = n.identifier->get_token()->to_string(true);
             errors.emplace_back(
                 n.position(),
-                "(temporary alpha limitation) local functions like '" + name + ": (/*params*/) = {/*body*/}' are not currently supported - write a local variable initialized with an unnamed function like '" + name + " := :(/*params*/) = {/*body*/};' instead (add ':=' and ';')"
+                "(temporary alpha limitation) local functions like '" + name + ": (/*params*/) = {/*body*/}' are not currently supported - write a local variable initialized with an unnamed function like '" + name + " := :(/*params*/) = {/*body*/};' instead (add '=' and ';')"
             );
             return false;
         }
