@@ -2189,6 +2189,15 @@ public:
                         "a 'forward' return type cannot return a local variable"
                     );
                     return;
+                } else if (
+                    is_literal(tok->type()) || n.expression->expr->is_result_a_temporary_variable()
+                ) 
+                {
+                    errors.emplace_back(
+                        n.position(),
+                        "a 'forward' return type cannot return a temporary variable"
+                    );
+                    return;
                 }
             }
 
