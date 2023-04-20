@@ -38,6 +38,7 @@ class compiler_services
     int                       errors_original_size;
     std::deque<token>*        generated_tokens;
     cpp2::parser              parser;
+    std::string               meta_function_name;
 
 public:
     compiler_services(
@@ -49,6 +50,10 @@ public:
         , generated_tokens{generated_tokens_}
         , parser{*errors}
     {
+    }
+
+    auto set_meta_function_name(std::string_view s) {
+        meta_function_name = s;
     }
 
 protected:
@@ -107,7 +112,11 @@ public:
         -> void
     {
         if (!b) {
-            errors->emplace_back( pos, msg );
+            auto message = std::string{msg};
+            if (!meta_function_name.empty()) {
+                message = "while applying @" + meta_function_name + " - " + message;
+            }
+            errors->emplace_back( pos, message );
         }
     }
 
@@ -224,7 +233,7 @@ public:
     auto has_move_parameter_named(std::string_view s) const -> bool { return n->has_move_parameter_named(s); }
 
     auto is_function_with_this        () const -> bool { return n->is_function_with_this(); }
-    auto is_virtual_function          () const -> bool { return n->is_virtual_function(); }
+    auto is_virtual                   () const -> bool { return n->is_virtual_function(); }
     auto is_constructor               () const -> bool { return n->is_constructor(); }
     auto is_constructor_with_that     () const -> bool { return n->is_constructor_with_that(); }
     auto is_constructor_with_in_that  () const -> bool { return n->is_constructor_with_in_that(); }
@@ -389,13 +398,28 @@ auto declaration::as_type() const
 //
 
 //-----------------------------------------------------------------------
+//  Some common meta function helpers (meta functions are just functions,
+//  so they can be factored as usual)
+//
+auto add_virtual_destructor(meta::type_declaration& t)
+    -> void
+{
+    t.require( t.add_member( "operator=: (virtual move this) = { }"),
+                "could not add virtual destructor");
+}
+
+
+
+//-----------------------------------------------------------------------
 //  interface: an abstract base class having only pure virtual functions
 //
-auto interface( meta::type_declaration&  t )
+auto interface(meta::type_declaration& t)
     -> void
 {
     auto has_dtor = false;
-    for (auto m : t.get_members()) {
+
+    for (auto m : t.get_members())
+    {
         m.require( !m.is_object(),
                    "interfaces may not contain data objects");
         if (m.is_function()) {
@@ -410,15 +434,58 @@ auto interface( meta::type_declaration&  t )
             has_dtor |= mf.is_destructor();
         }
     }
+
     if (!has_dtor) {
-        t.require( t.add_member( "operator=: (virtual move this) = { }"),
-                   "could not add virtual destructor");
+        add_virtual_destructor(t);
     }
 }
 
 
+//-----------------------------------------------------------------------
+//  polymorphic_base: A pure polymorphic base type that has no instance
+//  data, is not copyable, and whose destructor is either public and
+//  virtual or protected and nonvirtual.
+//
+//  Unlike an interface, it can have nonpublic and nonvirtual functions.
+//
+auto polymorphic_base(meta::type_declaration& t)
+    -> void
+{
+    auto has_dtor = false;
+
+    for (auto mf : t.get_member_functions())
+    {
+        if (mf.is_default_access()) {
+            mf.make_public();
+        }
+        mf.require( !mf.is_copy_or_move(),
+                    "polymorphic base types may not copy or move; consider a virtual clone() instead");
+        if (mf.is_destructor()) {
+            has_dtor = true;
+            mf.require( (mf.is_public() && mf.is_virtual())
+                        || (mf.is_protected() && !mf.is_virtual()),
+                        "a polymorphic base type destructor must be public and virtual, or protected and nonvirtual");
+        }
+    }
+
+    if (!has_dtor) {
+        add_virtual_destructor(t);
+    }
+
+    for (auto mo : t.get_member_objects()) {
+        mo.require( mo.has_name("this"),
+                    "polymorphic base types may not contain data");
+    }
+}
+
+
+//-----------------------------------------------------------------------
+//
 //  Now finish namespace cpp2, for the rest of the parser definition
 //  and the currently-hardwired initial set of meta functions
+//
+//-----------------------------------------------------------------------
+//
 
 auto parser::apply_type_meta_functions( declaration_node& n )
     -> bool
@@ -430,12 +497,18 @@ auto parser::apply_type_meta_functions( declaration_node& n )
     auto rtype = meta::type_declaration{ &n, cs };
 
     //  For each meta function, apply it
-    for (auto& meta : n.meta_functions) {
+    for (auto& meta : n.meta_functions)
+    {
+        rtype.set_meta_function_name( meta->to_string() );
+
         if (meta->to_string() == "interface") {
             interface( rtype );
         }
+        else if (meta->to_string() == "polymorphic_base") {
+            polymorphic_base( rtype );
+        }
         else {
-            error( "(temporary alpha limitation) unrecognized meta function name - currently only unqualified 'interface' is supported" );
+            error( "(temporary alpha limitation) unrecognized meta function name '" + meta->to_string() + "' - currently the supported names are: interface, polymorphic_base" );
             return false;
         }
     }

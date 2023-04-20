@@ -1043,6 +1043,223 @@ public:
             }
         }
 
+        if (
+            n.is_object()
+            && n.has_wildcard_type()
+            && n.parent_is_namespace()
+            )
+        {
+            errors.emplace_back(
+                n.identifier->position(),
+                "namespace scope objects must have a concrete type, not a deduced type"
+            );
+            return false;
+        }
+
+        if (
+            n.has_name("_")
+            && !n.is_object()
+            && !n.is_namespace()
+            )
+        {
+            errors.emplace_back(
+                n.identifier->position(),
+                "'_' (wildcard) may not be the name of a function or type - it may only be used as the name of an anonymous object or anonymous namespace"
+            );
+            return false;
+        }
+
+        if (
+            n.has_name("this")
+            && n.parent_is_type()
+            )
+        {
+            assert(n.is_object());
+
+            if (
+                !n.is_public()
+                && !n.is_default_access()
+                )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "a base type must be public (the default)"
+                );
+                return false;
+            }
+
+            if (n.has_wildcard_type())
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "a base type must be a specific type, not a deduced type (omitted or '_'-wildcarded)"
+                );
+                return false;
+            }
+        }
+
+        if (
+            n.access != accessibility::default_
+            && !n.parent_is_type()
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "an access-specifier is only allowed on a type-scope (member) declaration"
+            );
+            return false;
+        }
+
+        if (n.is_constructor())
+        {
+            auto& func = std::get<declaration_node::a_function>(n.type);
+            assert(
+                func->parameters->ssize() > 0
+                && (*func->parameters)[0]->has_name("this")
+            );
+            if ((*func->parameters)[0]->is_polymorphic()) {
+                errors.emplace_back(
+                    n.position(),
+                    "a constructor may not be declared virtual, override, or final"
+                );
+                return false;
+            }
+        }
+
+        if (
+            n.is_function()
+            && n.has_name()
+            && n.parent_is_function()
+            )
+        {
+            assert (n.identifier->get_token());
+            auto name = n.identifier->get_token()->to_string(true);
+            errors.emplace_back(
+                n.position(),
+                "(temporary alpha limitation) local functions like '" + name + ": (/*params*/) = {/*body*/}' are not currently supported - write a local variable initialized with an unnamed function like '" + name + " := :(/*params*/) = {/*body*/};' instead (add ':=' and ';')"
+            );
+            return false;
+        }
+
+        //  If this is the main function, it must be 'main: ()' or 'main: (args)'
+        if (
+            n.identifier
+            && n.has_name("main")
+            && n.is_function()
+            && n.is_global()
+            )
+        {
+            auto& func = std::get<declaration_node::a_function>(n.type);
+
+            //  It's more readable to express this as positive condition here...
+            if (
+                //  There are no parameters
+                func->parameters->parameters.empty()
+                //  Or there's a single wildcard in-param named 'args'
+                || (
+                    func->parameters->parameters[0]->has_name("args")
+                    && func->parameters->parameters[0]->pass == passing_style::in
+                    && func->parameters->parameters[0]->declaration->is_object()
+                    && std::get<declaration_node::an_object>(func->parameters->parameters[0]->declaration->type)->is_wildcard()
+                    )
+                )
+            {
+                ;   // ok
+            }
+            //  ... and if it isn't that, then complain
+            else
+            {
+                errors.emplace_back(
+                    func->parameters->parameters[0]->position(),
+                    "'main' must be declared as 'main: ()' with zero parameters, or 'main: (args)' with one parameter named 'args' for which the type 'std::vector<std::string_view>' will be deduced"
+                );
+                return false;
+            }
+        }
+
+        if (n.has_name("operator="))
+        {
+            if (!n.is_function())
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "'operator=' must be a function"
+                );
+                return false;
+            }
+            auto& func = std::get<declaration_node::a_function>(n.type);
+
+            if (func->has_declared_return_type())
+            {
+                errors.emplace_back(
+                    func->parameters->parameters[0]->position(),
+                    "'operator=' may not have a declared return type"
+                );
+                return false;
+            }
+
+            if (func->parameters->ssize() == 0)
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "an operator= function must have a parameter"
+                );
+                return false;
+            }
+            else if (
+                (*func->parameters)[0]->has_name("this")
+                && (*func->parameters)[0]->pass != passing_style::inout
+                && (*func->parameters)[0]->pass != passing_style::out
+                && (*func->parameters)[0]->pass != passing_style::move
+                )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "an operator= function's 'this' parameter must be inout, out, or move"
+                );
+                return false;
+            }
+
+            if (
+                func->parameters->ssize() > 1
+                && (*func->parameters)[1]->has_name("that")
+                && (*func->parameters)[1]->pass != passing_style::in
+                && (*func->parameters)[1]->pass != passing_style::move
+                )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "an operator= function's 'that' parameter must be in or move"
+                );
+                return false;
+            }
+
+            if (
+                func->parameters->ssize() > 1
+                && (*func->parameters)[0]->has_name("this")
+                && (*func->parameters)[0]->pass == passing_style::move
+                )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "a destructor may not have other parameters besides 'this'"
+                );
+                return false;
+            }
+        }
+
+        for (auto& decl : n.get_type_scope_declarations())
+        {
+            if (decl->has_name("that"))
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "'that' may not be used as a type scope name"
+                );
+                return false;
+            }
+        }
+
         return true;
     }
 

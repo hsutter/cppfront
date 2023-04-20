@@ -702,11 +702,7 @@ struct unqualified_id_node
     }
 
     auto to_string() const
-        -> std::string
-    {
-        assert(identifier);
-        return identifier->to_string(true);
-    }
+        -> std::string;
 
     auto position() const
         -> source_position
@@ -866,6 +862,25 @@ struct type_id_node
         return 0;
     }
 
+    auto to_string() const
+        -> std::string
+    {
+        switch (id.index()) {
+        break;case empty:
+            return {};
+        break;case qualified:
+            return std::get<qualified>(id)->to_string();
+        break;case unqualified:
+            return std::get<unqualified>(id)->to_string();
+        break;case keyword:
+            return std::get<keyword>(id)->to_string(true);
+        break;default:
+            assert(!"ICE: invalid type_id state");
+        }
+        // else
+        return {};
+    }
+
     auto get_token() const
         -> token const*
     {
@@ -904,6 +919,29 @@ struct type_id_node
         v.end(*this, depth);
     }
 };
+
+auto unqualified_id_node::to_string() const
+    -> std::string
+{
+    assert(identifier);
+    auto ret = identifier->to_string(true);
+    if (!template_args.empty()) {
+        auto separator = std::string{"<"};
+        for (auto& t : template_args) {
+            ret += separator;
+            assert(t.arg.index() != empty);
+            if (t.arg.index() == expression) {
+                ret += "(expression)";
+            }
+            else if (t.arg.index() == type_id) {
+                ret += std::get<type_id>(t.arg)->to_string();
+            }
+            separator = ",";
+        }
+        ret += ">";
+    }
+    return ret;
+}
 
 
 struct is_as_expression_node
@@ -6263,33 +6301,6 @@ private:
         //  Note: Do this after trying to parse this as a declaration, for parse backtracking
 
         if (
-            !is_parameter
-            && n->is_object()
-            && n->has_wildcard_type()
-            && n->parent_is_namespace()
-            )
-        {
-            errors.emplace_back(
-                n->identifier->position(),
-                "namespace scope objects must have a concrete type, not a deduced type"
-            );
-            return {};
-        }
-
-        if (
-            n->has_name("_")
-            && !n->is_object()
-            && !n->is_namespace()
-            )
-        {
-            errors.emplace_back(
-                n->identifier->position(),
-                "'_' (wildcard) may not be the name of a function or type - it may only be used as the name of an anonymous object or anonymous namespace"
-            );
-            return {};
-        }
-
-        if (
             *n->identifier->identifier == "that"
             && (
                 !is_parameter
@@ -6318,174 +6329,6 @@ private:
                     n->identifier->position(),
                     "'this' may only be declared as an ordinary function parameter or type-scope (base) object"
                 );
-                return {};
-            }
-
-            if (
-                !is_parameter
-                && (
-                    !n->is_public()
-                    && !n->is_default_access()
-                    )
-                )
-            {
-                errors.emplace_back(
-                    n->position(),
-                    "a base type must be public (the default)"
-                );
-                return {};
-            }
-
-            if (
-                !is_parameter
-                && n->has_wildcard_type()
-                )
-            {
-                errors.emplace_back(
-                    n->position(),
-                    "a base type must be a specific type, not a deduced or '_' wildcard type"
-                );
-                return {};
-            }
-        }
-
-        if (
-            n->access != accessibility::default_
-            && !n->parent_is_type()
-            )
-        {
-            errors.emplace_back(
-                n->position(),
-                "an access-specifier is only allowed on a type-scope (member) declaration"
-            );
-            return {};
-        }
-
-        if (n->is_constructor())
-        {
-            auto& func = std::get<declaration_node::a_function>(n->type);
-            assert(
-                func->parameters->ssize() > 0
-                && (*func->parameters)[0]->has_name("this")
-            );
-            if ((*func->parameters)[0]->is_polymorphic()) {
-                error( "a constructor may not be declared virtual, override, or final", false );
-            }
-        }
-
-        if (
-            n->is_function()
-            && n->parent_is_function()
-            )
-        {
-            assert (n->identifier->get_token());
-            auto name = n->identifier->get_token()->to_string(true);
-            errors.emplace_back(
-                curr().position(),
-                "(temporary alpha limitation) local functions like '" + name + ": (/*params*/) = {/*body*/}' are not currently supported - write a local variable initialized with an unnamed function like '" + name + " := :(/*params*/) = {/*body*/};' instead (add ':=' and ';')"
-            );
-            return {};
-        }
-
-        //  If this is the main function, it must be 'main: ()' or 'main: (args)'
-        if (
-            n->identifier
-            && n->has_name("main")
-            && n->is_function()
-            && n->is_global()
-            )
-        {
-            auto& func = std::get<declaration_node::a_function>(n->type);
-
-            //  It's more readable to express this as positive condition here...
-            if (
-                //  There are no parameters
-                func->parameters->parameters.empty()
-                //  Or there's a single wildcard in-param named 'args'
-                || (
-                    func->parameters->parameters[0]->has_name("args")
-                    && func->parameters->parameters[0]->pass == passing_style::in
-                    && func->parameters->parameters[0]->declaration->is_object()
-                    && std::get<declaration_node::an_object>(func->parameters->parameters[0]->declaration->type)->is_wildcard()
-                    )
-                )
-            {
-                ;   // ok
-            }
-            //  ... and if it isn't that, then complain
-            else
-            {
-                errors.emplace_back(
-                    func->parameters->parameters[0]->position(),
-                    "'main' must be declared as 'main: ()' with zero parameters, or 'main: (args)' with one parameter named 'args' for which the type 'std::vector<std::string_view>' will be deduced"
-                );
-                return {};
-            }
-        }
-
-        if (n->has_name("operator="))
-        {
-            if (!n->is_function())
-            {
-                errors.emplace_back(
-                    n->position(),
-                    "'operator=' must be a function"
-                );
-                return {};
-            }
-            auto& func = std::get<declaration_node::a_function>(n->type);
-
-            if (func->has_declared_return_type())
-            {
-                errors.emplace_back(
-                    func->parameters->parameters[0]->position(),
-                    "'operator=' may not have a declared return type"
-                );
-                return {};
-            }
-
-            if (func->parameters->ssize() == 0)
-            {
-                error( "an operator= function must have a parameter", false );
-            }
-            else if (
-                (*func->parameters)[0]->has_name("this")
-                && (*func->parameters)[0]->pass != passing_style::inout
-                && (*func->parameters)[0]->pass != passing_style::out
-                && (*func->parameters)[0]->pass != passing_style::move
-                )
-            {
-                error( "an operator= function's 'this' parameter must be inout, out, or move", false );
-                return {};
-            }
-
-            if (
-                func->parameters->ssize() > 1
-                && (*func->parameters)[1]->has_name("that")
-                && (*func->parameters)[1]->pass != passing_style::in
-                && (*func->parameters)[1]->pass != passing_style::move
-                )
-            {
-                error( "an operator= function's 'that' parameter must be in or move", false );
-                return {};
-            }
-
-            if (
-                func->parameters->ssize() > 1
-                && (*func->parameters)[0]->has_name("this")
-                && (*func->parameters)[0]->pass == passing_style::move
-                )
-            {
-                error( "a destructor may not have other parameters besides 'this'", false );
-                return {};
-            }
-        }
-
-        for (auto& decl : n->get_type_scope_declarations())
-        {
-            if (decl->has_name("that"))
-            {
-                error( "'that' may not be used as a type scope name", false );
                 return {};
             }
         }

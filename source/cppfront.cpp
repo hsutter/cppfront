@@ -5000,6 +5000,12 @@ public:
                     ;
                 if (emit_as_base)
                 {
+                    //  Do the sema check for these declarations here, because we're
+                    //  handling them here instead of going through emit() for them
+                    if (!sema.check(*decl)) {
+                        return;
+                    }
+
                     if (decl->has_name("this")) {
                         if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
                             printer.print_cpp2(

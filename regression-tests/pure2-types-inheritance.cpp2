@@ -4,7 +4,7 @@ Human: @interface type = {
 }
 
 N: namespace = {
-    Machine: <I:int> type = {
+    Machine: @polymorphic_base <I:int> type = {
         operator=: (out this, id: std::string) = {}
         work:      (virtual this);
     }
