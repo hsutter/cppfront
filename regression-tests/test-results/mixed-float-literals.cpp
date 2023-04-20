@@ -71,7 +71,7 @@ auto literals_cpp2() -> void;
 
 #line 114 "mixed-float-literals.cpp2"
 [[nodiscard]] auto main() -> int;
-
+  
 
 //=== Cpp2 function definitions =================================================
 
