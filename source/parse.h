@@ -3214,15 +3214,15 @@ private:
         -> void
     {
         auto m = std::string{msg};
+        auto i = done() ? -1 : 0;
+        assert (peek(i));
         if (include_curr_token) {
-            m += std::string(" (at '") + curr().to_string(true) + "')";
+            m += std::string(" (at '") + peek(i)->to_string(true) + "')";
         }
         if (
             err_pos == source_position{}
-            && peek(0)
-            )
-        {
-            err_pos = peek(0)->position();
+        ) {
+            err_pos = peek(i)->position();
         }
         errors.emplace_back( err_pos, m, false, fallback );
     }
@@ -3370,6 +3370,12 @@ private:
                     error("an unnamed function at expression scope currently cannot return multiple values");
                     next();
                     return {};
+                }
+                if ( // check if a single-expression function is followed by an extra second semicolon
+                    decl->initializer && decl->initializer->is_expression()
+                    && !done() && curr().type() == lexeme::Semicolon
+                ) {
+                    error("a single-expression function should end with a single semicolon");
                 }
                 if (!(*func)->contracts.empty()) {
                     error("an unnamed function at expression scope currently cannot have contracts");
@@ -4569,6 +4575,10 @@ private:
             if (!handle_logical_expression  ()) { return {}; }
             if (!handle_optional_next_clause()) { return {}; }
             if (!handle_compound_statement  ()) { return {}; }
+            if (!done() && curr().type() == lexeme::Semicolon) {
+                error("a loop body may not be followed by a semicolon (empty statements are not allowed)");
+                return {};
+            }
             return n;
         }
 
@@ -4629,6 +4639,11 @@ private:
             assert(func && *func);
             if ((**func).parameters->parameters.front()->pass == passing_style::in) {
                 n->for_with_in = true;
+            }
+
+            if (!done() && curr().type() == lexeme::Semicolon) {
+                error("a loop body may not be followed by a semicolon (empty statements are not allowed)");
+                return {};
             }
 
             return n;
@@ -4853,6 +4868,11 @@ private:
     )
         -> std::unique_ptr<statement_node>
     {
+        if (!done() && curr().type() == lexeme::Semicolon) {
+            error("empty statement is not allowed - remove extra semicolon");
+            return {};
+        }
+
         auto n = std::make_unique<statement_node>();
 
         //  Now handle the rest of the statement
@@ -5219,7 +5239,8 @@ private:
 
         //  If there's no [ [ then this isn't a contract
         if (
-            curr().type() != lexeme::LeftBracket
+            done()
+            || curr().type() != lexeme::LeftBracket
             || !peek(1)
             || peek(1)->type() != lexeme::LeftBracket
             )
@@ -5834,6 +5855,21 @@ private:
                 n->initializer->position()
             );
             return {};
+        }
+
+        if (
+            n->is_function()
+            && n->initializer
+            && !done() && curr().type() == lexeme::Semicolon
+            )
+        {
+            if (n->initializer->is_compound() && n->has_name()) {
+                error("a braced function body may not be followed by a semicolon (empty statements are not allowed)");
+                return {};
+            } else if (n->initializer->is_expression()) {
+                error("a single-expression function should end with a single semicolon");
+                return {};
+            }
         }
 
         //  If this is an implicit constructor, it must have two parameters
