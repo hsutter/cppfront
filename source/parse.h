@@ -4485,6 +4485,11 @@ private:
                 n->for_with_in = true;
             }
 
+            if (!done() && curr().type() == lexeme::Semicolon) {
+                error("a loop body may not be followed by a semicolon (empty statements are not allowed)");
+                return {};
+            }
+
             return n;
         }
 
