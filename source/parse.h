@@ -3225,6 +3225,12 @@ private:
                     next();
                     return {};
                 }
+                if ( // check if a single-expression function is followed by an extra second semicolon
+                    decl->initializer && decl->initializer->is_expression()
+                    && !done() && curr().type() == lexeme::Semicolon
+                ) {
+                    error("a single-expression function should end with a single semicolon");
+                }
                 if (!(*func)->contracts.empty()) {
                     error("an unnamed function at expression scope currently cannot have contracts");
                     next();
