@@ -3716,9 +3716,8 @@ public:
             );
             auto pass = std::string{" const&"};
             if (
-                //n.pass == passing_style::move
-                //||
-                emitting_move_that_function
+                n.pass == passing_style::move
+                || emitting_move_that_function
                 )
             {
                 pass = "&&";
