@@ -5205,7 +5205,7 @@ private:
                 else {
                     auto msg = std::string("'");
                     msg += to_string_view(pass);
-                    error( + "'' must be followed by a type-id");
+                    error(msg + "' must be followed by a type-id");
                 }
             }
             else if (auto t = type_id()) {
