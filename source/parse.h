@@ -4423,6 +4423,10 @@ private:
             if (!handle_logical_expression  ()) { return {}; }
             if (!handle_optional_next_clause()) { return {}; }
             if (!handle_compound_statement  ()) { return {}; }
+            if (!done() && curr().type() == lexeme::Semicolon) {
+                error("a loop body may not be followed by a semicolon (empty statements are not allowed)");
+                return {};
+            }
             return n;
         }
 
