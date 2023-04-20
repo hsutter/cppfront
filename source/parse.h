@@ -4722,6 +4722,11 @@ private:
     )
         -> std::unique_ptr<statement_node>
     {
+        if (!done() && curr().type() == lexeme::Semicolon) {
+            error("empty statement is not allowed - remove extra semicolon");
+            return {};
+        }
+
         auto n = std::make_unique<statement_node>();
 
         //  Now handle the rest of the statement
