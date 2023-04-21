@@ -1669,7 +1669,13 @@ struct function_type_node
     auto make_function_virtual()
         -> bool;
 
+    auto is_defaultable() const
+        -> bool;
+
     auto is_constructor() const
+        -> bool;
+
+    auto is_default_constructor() const
         -> bool;
 
     auto is_constructor_with_that() const
@@ -1700,6 +1706,26 @@ struct function_type_node
         -> bool
     {
         return returns.index() != empty;
+    }
+
+    auto unnamed_return_type_to_string() const
+        -> std::string
+    {
+        if (auto id = std::get_if<function_type_node::id>(&returns)) {
+            return (*id).type->to_string();
+        }
+        return {};
+    }
+
+    auto has_bool_return_type() const
+        -> bool
+    {
+        if (auto id = std::get_if<function_type_node::id>(&returns)) {
+            if (auto name = (*id).type->get_token()) {
+                return *name == "bool";
+            }
+        }
+        return false;
     }
 
     auto has_non_void_return_type() const
@@ -1810,9 +1836,32 @@ struct function_type_node
 struct type_node
 {
     token const* type;
+    bool         final = false;
 
-    type_node( token const* t) : type{t} { }
+    type_node(
+        token const* t,
+        bool         final_ = false
+    )
+        : type{t}
+        , final{final_}
+    { }
 
+    //  API
+    //
+    auto is_final() const
+        -> bool
+    {
+        return final;
+    }
+
+    auto make_final()
+        -> void
+    {
+        final = true;
+    }
+
+    //  Internals
+    //
     auto position() const
         -> source_position
     {
@@ -2321,6 +2370,27 @@ public:
         return false;
     }
 
+    auto is_type_final() const
+        -> bool
+    {
+        if (auto t = std::get_if<a_type>(&type)) {
+            return (*t)->is_final();
+        }
+        //  else
+        return false;
+    }
+
+    auto make_type_final()
+        -> bool
+    {
+        if (auto t = std::get_if<a_type>(&type)) {
+            (*t)->make_final();
+            return true;
+        }
+        //  else
+        return false;
+    }
+
     auto make_function_virtual()
         -> bool
     {
@@ -2331,11 +2401,31 @@ public:
         return false;
     }
 
+    auto is_defaultable_function() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_defaultable();
+        }
+        //  else
+        return false;
+    }
+
     auto is_constructor() const
         -> bool
     {
         if (auto func = std::get_if<a_function>(&type)) {
             return (*func)->is_constructor();
+        }
+        //  else
+        return false;
+    }
+
+    auto is_default_constructor() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_default_constructor();
         }
         //  else
         return false;
@@ -2473,6 +2563,74 @@ public:
         return false;
     }
 
+    auto has_declared_return_type() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->has_declared_return_type();
+        }
+        //  else
+        return false;
+    }
+
+    auto unnamed_return_type_to_string() const
+        -> std::string
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->unnamed_return_type_to_string();
+        }
+        //  else
+        return {};
+    }
+
+    auto has_bool_return_type() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->has_bool_return_type();
+        }
+        //  else
+        return false;
+    }
+
+    auto has_non_void_return_type() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->has_non_void_return_type();
+        }
+        //  else
+        return false;
+    }
+
+    auto has_parameter_with_name_and_pass(
+        std::string_view s,
+        passing_style    pass
+    ) const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->has_parameter_with_name_and_pass(s, pass);
+        }
+        //  else
+        return false;
+    }
+
+    auto is_binary_comparison_function() const
+        -> bool
+    {
+        return
+            is_function()
+            && (
+                has_name("operator==")
+                || has_name("operator!=")
+                || has_name("operator<")
+                || has_name("operator<=")
+                || has_name("operator>")
+                || has_name("operator>=")
+                );
+    }
+
     auto is_const() const
         -> bool
     {
@@ -2576,6 +2734,7 @@ auto function_type_node::is_function_with_this() const
     return false;
 }
 
+
 auto function_type_node::is_virtual_function() const
     -> bool
 {
@@ -2590,6 +2749,7 @@ auto function_type_node::is_virtual_function() const
     return false;
 }
 
+
 auto function_type_node::make_function_virtual()
     -> bool
 {
@@ -2599,6 +2759,21 @@ auto function_type_node::make_function_virtual()
     }
     return false;
 }
+
+
+auto function_type_node::is_defaultable() const
+    -> bool
+{
+    if (
+        my_decl->has_name("operator==")
+        || my_decl->has_name("operator<=>")
+        )
+    {
+        return true;
+    }
+    return false;
+}
+
 
 auto function_type_node::is_constructor() const
     -> bool
@@ -2610,6 +2785,20 @@ auto function_type_node::is_constructor() const
         )
     {
         assert(my_decl->has_name("operator="));
+        return true;
+    }
+    return false;
+}
+
+
+auto function_type_node::is_default_constructor() const
+    -> bool
+{
+    if (
+        is_constructor()
+        && (*parameters).ssize() == 1
+        )
+    {
         return true;
     }
     return false;
@@ -5472,7 +5661,7 @@ private:
     //G     ':' meta-functions-list? template-parameter-declaration-list? function-type requires-clause? '=' statement
     //G     ':' meta-functions-list? template-parameter-declaration-list? type-id? requires-clause? '=' statement
     //G     ':' meta-functions-list? template-parameter-declaration-list? type-id
-    //G     ':' meta-functions-list? template-parameter-declaration-list? 'type' requires-clause? '=' statement
+    //G     ':' meta-functions-list? template-parameter-declaration-list? 'final'? 'type' requires-clause? '=' statement
     //G     ':' 'namespace' '=' statement
     //G
     //G meta-functions-list:
@@ -5617,10 +5806,21 @@ private:
         auto deduced_type = false;
 
         //  It could be "type", declaring a user-defined type
-        if (curr() == "type")
+        if (
+            curr() == "type"
+            || (
+                curr() == "final"
+                && peek(1) && *peek(1) == "type"
+                )
+            )
         {
-            n->type = std::make_unique<type_node>(&curr());
+            n->type = std::make_unique<type_node>( &curr(), curr() == "final" );
+
+            if (curr() == "final") {
+                next();
+            }
             next();
+
             if (
                 is_parameter
                 && !is_template_parameter

@@ -4953,6 +4953,14 @@ public:
                 }
             }
 
+            if (
+                n.is_type_final()
+                && printer.get_phase() == printer.phase1_type_defs_func_decls
+                )
+            {
+                printer.print_cpp2( " final", n.position() );
+            }
+
             //  Type definition
 
             auto separator              = std::string{":"};
@@ -5119,6 +5127,7 @@ public:
             && (
                 printer.get_phase() < printer.phase2_func_defs
                 || n.initializer    // only emit definition if the function has one (is not abstract)
+                || n.is_defaultable_function()
                 )
             )
         {
@@ -5153,6 +5162,14 @@ public:
                 std::string prefix  = {};
                 std::string suffix1 = {};
                 std::string suffix2 = {};
+
+                if (
+                    !n.has_initializer()
+                    && n.is_defaultable_function()
+                    )
+                {
+                    suffix2 += " = default";
+                }
 
                 //  If there's a 'this' parameter, handle it here (the parameter emission will skip it)
                 //  because Cpp1 syntax requires its information to be spread around the declaration syntax
@@ -5222,7 +5239,14 @@ public:
 
                 //  If there's a return type, it's [[nodiscard]] implicitly and all the time
                 //  -- for now there's no opt-out, wait and see whether we actually need one
-                if (func->has_non_void_return_type()) {
+                if (
+                    func->has_non_void_return_type()
+                    && (
+                        printer.get_phase() == printer.phase1_type_defs_func_decls
+                        || n.has_initializer()  // so we're printing it in phase 2
+                        )
+                    )
+                {
                     printer.print_cpp2( "[[nodiscard]] ", n.position() );
                 }
 

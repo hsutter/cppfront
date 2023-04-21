@@ -232,9 +232,14 @@ public:
     auto has_out_parameter_named (std::string_view s) const -> bool { return n->has_out_parameter_named(s); }
     auto has_move_parameter_named(std::string_view s) const -> bool { return n->has_move_parameter_named(s); }
 
+    auto has_parameter_with_name_and_pass(std::string_view s, passing_style pass) const -> bool
+                                                      { return n->has_parameter_with_name_and_pass(s, pass); }
+
     auto is_function_with_this        () const -> bool { return n->is_function_with_this(); }
     auto is_virtual                   () const -> bool { return n->is_virtual_function(); }
+    auto is_defaultable               () const -> bool { return n->is_defaultable_function(); }
     auto is_constructor               () const -> bool { return n->is_constructor(); }
+    auto is_default_constructor       () const -> bool { return n->is_default_constructor(); }
     auto is_constructor_with_that     () const -> bool { return n->is_constructor_with_that(); }
     auto is_constructor_with_in_that  () const -> bool { return n->is_constructor_with_in_that(); }
     auto is_constructor_with_move_that() const -> bool { return n->is_constructor_with_move_that(); }
@@ -246,7 +251,15 @@ public:
 
     auto is_copy_or_move() const -> bool { return is_constructor_with_that() || is_assignment_with_that(); }
 
-    auto make_function_virtual() -> bool { return n->make_function_virtual(); }
+    auto has_declared_return_type() const -> bool { return n->has_declared_return_type(); }
+    auto has_bool_return_type    () const -> bool { return n->has_bool_return_type(); }
+    auto has_non_void_return_type() const -> bool { return n->has_non_void_return_type(); }
+
+    auto unnamed_return_type() const -> std::string { return n->unnamed_return_type_to_string(); }
+
+    auto is_binary_comparison_function() const -> bool { return n->is_binary_comparison_function(); }
+    
+    auto make_virtual() -> bool { return n->make_function_virtual(); }
 
     struct declared_that_funcs {
         bool out_this_in_that     = false;
@@ -322,11 +335,9 @@ public:
         assert(n->is_type());
     }
 
-    auto is_polymorphic() const
-        -> bool
-    {
-        return n->is_polymorphic();
-    }
+    auto is_polymorphic() const -> bool { return n->is_polymorphic(); }
+    auto is_final      () const -> bool { return n->is_type_final(); }
+    auto make_final    ()       -> bool { return n->make_type_final(); }
 
     auto get_member_functions() const
         -> std::vector<function_declaration>
@@ -411,7 +422,16 @@ auto add_virtual_destructor(meta::type_declaration& t)
 
 
 //-----------------------------------------------------------------------
-//  interface: an abstract base class having only pure virtual functions
+// 
+//      "... an abstract base class defines an interface ..."
+// 
+//          -- Stroustrup (The Design and Evolution of C++, § 12.3.1)
+//
+//-----------------------------------------------------------------------
+// 
+//  interface
+//
+//  an abstract base class having only pure virtual functions
 //
 auto interface(meta::type_declaration& t)
     -> void
@@ -430,7 +450,7 @@ auto interface(meta::type_declaration& t)
                         "interface functions must not have a function body; remove the '=' initializer");
             mf.require( mf.make_public(),
                         "interface functions must be public");
-            mf.make_function_virtual();
+            mf.make_virtual();
             has_dtor |= mf.is_destructor();
         }
     }
@@ -442,9 +462,22 @@ auto interface(meta::type_declaration& t)
 
 
 //-----------------------------------------------------------------------
-//  polymorphic_base: A pure polymorphic base type that has no instance
-//  data, is not copyable, and whose destructor is either public and
-//  virtual or protected and nonvirtual.
+//
+//     "C.35: A base class destructor should be either public and
+//      virtual, or protected and non-virtual."
+// 
+//     "[C.43] ... a base class should not be copyable, and so does not
+//      necessarily need a default constructor."
+// 
+//          -- Stroustrup, Sutter, et al. (C++ Core Guidelines)
+//
+//-----------------------------------------------------------------------
+// 
+//  polymorphic_base
+//
+//  A pure polymorphic base type that has no instance data, is not
+//  copyable, and whose destructor is either public and virtual or
+//  protected and nonvirtual.
 //
 //  Unlike an interface, it can have nonpublic and nonvirtual functions.
 //

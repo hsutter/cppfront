@@ -983,16 +983,18 @@ public:
     auto check(declaration_node const& n)
         -> bool
     {
-        //  If this is a nonvirtual function, it must have an initializer
+        //  If this is a nonvirtual and nondefaultable function,
+        //  it must have an initializer
         if (
             n.is_function()
             && !n.is_virtual_function()
+            && !n.is_defaultable_function()
             && !n.has_initializer()
             )
         {
             errors.emplace_back(
                 n.position(),
-                "a nonvirtual function must have a body ('=' initializer)"
+                "a function must have a body ('=' initializer), unless it is virtual (has a 'virtual this' parameter) or is defaultable (operator== or operator<=>)"
             );
             return false;
         }
@@ -1255,6 +1257,34 @@ public:
                 errors.emplace_back(
                     n.position(),
                     "'that' may not be used as a type scope name"
+                );
+                return false;
+            }
+        }
+
+        if (
+            n.is_binary_comparison_function()
+            && !n.has_bool_return_type()
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                n.name()->to_string(true) + " must return bool"
+            );
+            return false;
+        }
+
+        if (n.has_name("operator<=>")) {
+            auto return_name = n.unnamed_return_type_to_string();
+            if (
+                return_name.find("strong_ordering") == return_name.npos
+                && return_name.find("weak_ordering") == return_name.npos
+                && return_name.find("partial_ordering") == return_name.npos
+                )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "operator<=> must return std::strong_ordering, std::weak_ordering, or std::partial_ordering"
                 );
                 return false;
             }

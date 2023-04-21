@@ -1,0 +1,22 @@
+
+widget: final type =
+{
+    v: int;
+
+    operator=: (out this, value: int) = { v = value; }
+
+    operator==: (this, that) -> bool;
+
+    operator<=>: (this, that) -> std::strong_ordering;
+}
+
+main: () = {
+    a: widget = 1;
+    b: widget = 2;
+    if a < b {
+        std::cout << "less";
+    }
+    else {
+        std::cout << "more";
+    }
+}
