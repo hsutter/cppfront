@@ -3221,6 +3221,7 @@ class parser
     std::vector<token> const* tokens = {};
     std::deque<token>* generated_tokens = {};
     int pos = 0;
+    std::string parse_kind = {};
 
     //  Keep track of the function bodies' locations - used to emit comments
     //  in the right pass (decide whether it's a comment that belongs with
@@ -3322,6 +3323,8 @@ public:
     )
         -> bool
     {
+        parse_kind = "source file";
+
         //  Set per-parse state for the duration of this call
         tokens           = &tokens_;
         generated_tokens = &generated_tokens_;
@@ -3358,6 +3361,8 @@ public:
     )
         -> std::unique_ptr<statement_node>
     {
+        parse_kind = "source string during code generation";
+
         //  Set per-parse state for the duration of this call
         tokens           = &tokens_;
         generated_tokens = &generated_tokens_;
@@ -3473,7 +3478,7 @@ private:
         -> token const&
     {
         if (done()) {
-            throw std::runtime_error("unexpected end of source file");
+            throw std::runtime_error("unexpected end of " + parse_kind);
         }
 
         return (*tokens)[pos];
@@ -5927,7 +5932,7 @@ private:
         //  Next is optionally = followed by an initializer
 
         //  If there is no =
-        if (curr().type() != lexeme::Assignment)
+        if (!done() && curr().type() != lexeme::Assignment)
         {
             if (deduced_type) {
                 error("a variable with a deduced type must have an = initializer");
@@ -5945,7 +5950,7 @@ private:
 
             //  Then there may be a semicolon
             //  If there is a semicolon, eat it
-            if (curr().type() == lexeme::Semicolon) {
+            if (!done() && curr().type() == lexeme::Semicolon) {
                 next();
             }
             // But if there isn't one and it was required, diagnose an error

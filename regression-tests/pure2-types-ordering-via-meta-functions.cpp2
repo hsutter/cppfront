@@ -1,0 +1,44 @@
+
+my_integer: @ordered type = {
+    v: int;
+    operator=: (out this, val: int) = { v = val; }
+}
+
+case_insensitive_string: @weakly_ordered type = {
+    v: std::string; // case insensitive
+    operator=: (out this, val: std::string) = { v = val; }
+}
+
+person_in_family_tree: @partially_ordered type = {
+    dummy_data: int;
+    operator=: (out this, parents: int) = { dummy_data = parents; }
+}
+
+main: () = {
+    a: my_integer = 1;
+    b: my_integer = 2;
+    if a < b {
+        std::cout << "less ";
+    }
+    else {
+        std::cout << "more ";
+    }
+
+    c: case_insensitive_string = "def";
+    d: case_insensitive_string = "abc";
+    if c < d {
+        std::cout << "less ";
+    }
+    else {
+        std::cout << "more ";
+    }
+
+    e: person_in_family_tree = 20;
+    f: person_in_family_tree = 23;
+    if e < f {
+        std::cout << "less\n";
+    }
+    else {
+        std::cout << "more\n";
+    }
+}
