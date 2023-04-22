@@ -1160,13 +1160,13 @@ struct compound_statement_node
 
 struct selection_statement_node
 {
-    bool                                     is_constexpr = false;
-    token const*                             identifier   = {};
-    source_position                          else_pos;
-    std::unique_ptr<expression_node>         expression;
-    std::unique_ptr<compound_statement_node> true_branch;
-    std::unique_ptr<compound_statement_node> false_branch;
-    bool                                     has_source_false_branch = false;
+    bool                                        is_constexpr = false;
+    token const*                                identifier   = {};
+    source_position                             else_pos;
+    std::unique_ptr<logical_or_expression_node> expression;
+    std::unique_ptr<compound_statement_node>    true_branch;
+    std::unique_ptr<compound_statement_node>    false_branch;
+    bool                                        has_source_false_branch = false;
 
     auto position() const
         -> source_position
@@ -4596,8 +4596,8 @@ private:
 
 
     //G selection-statement:
-    //G     'if' 'constexpr'? expression compound-statement
-    //G     'if' 'constexpr'? expression compound-statement 'else' compound-statement
+    //G     'if' 'constexpr'? logical-or-expression compound-statement
+    //G     'if' 'constexpr'? logical-or-expression compound-statement 'else' compound-statement
     //G
     auto selection_statement()
         -> std::unique_ptr<selection_statement_node>
@@ -4622,7 +4622,7 @@ private:
             next();
         }
 
-        if (auto e = expression()) {
+        if (auto e = logical_or_expression()) {
             n->expression = std::move(e);
         }
         else {
@@ -4657,12 +4657,16 @@ private:
             n->else_pos = curr().position();
             next();
 
-            if (curr().type() != lexeme::LeftBrace) {
+            if (
+                curr().type() != lexeme::LeftBrace
+                && curr() != "if"
+                )
+            {
                 error("an else branch body must be enclosed with { }");
                 return {};
             }
 
-            if (auto s = compound_statement()) {
+            if (auto s = compound_statement( source_position{}, true )) {
                 n->false_branch = std::move(s);
                 n->has_source_false_branch = true;
             }
@@ -5181,16 +5185,25 @@ private:
     //G     statement-seq statement
     //G
     auto compound_statement(
-        source_position equal_sign = source_position{}
+        source_position equal_sign                      = source_position{},
+        bool            allow_single_unbraced_statement = false
     )
         -> std::unique_ptr<compound_statement_node>
     {
-        if (curr().type() != lexeme::LeftBrace) {
+        bool is_braced = curr().type() == lexeme::LeftBrace;
+        if (
+            !is_braced
+            && !allow_single_unbraced_statement
+            )
+        {
             return {};
         }
 
         auto n = std::make_unique<compound_statement_node>();
-        if (peek(1)) {
+        if (!is_braced) {
+            n->body_indent = curr().position().colno-1;
+        }
+        else if (peek(1)) {
             n->body_indent = peek(1)->position().colno-1;
         }
 
@@ -5207,9 +5220,19 @@ private:
         else {
             n->open_brace = curr().position();
         }
-        next();
 
-        while (curr().type() != lexeme::RightBrace) {
+        if (is_braced) {
+            next();
+        }
+
+        while (
+            curr().type() != lexeme::RightBrace
+            && (
+                is_braced
+                || std::ssize(n->statements) < 1
+                )
+            )
+        {
             if (
                 (
                     is_literal(curr().type())
@@ -5229,8 +5252,11 @@ private:
             n->statements.push_back( std::move(s) );
         }
 
-        n->close_brace = curr().position();
-        next();
+        if (is_braced) {
+            assert(curr().type() == lexeme::RightBrace);
+            n->close_brace = curr().position();
+            next();
+        }
         return n;
     }
 
