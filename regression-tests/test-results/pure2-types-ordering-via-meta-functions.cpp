@@ -19,6 +19,10 @@ class case_insensitive_string;
 class person_in_family_tree;
     
 
+#line 17 "pure2-types-ordering-via-meta-functions.cpp2"
+class mystruct;
+    
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 
@@ -62,6 +66,18 @@ public: [[nodiscard]] auto operator<=>(person_in_family_tree const& that) const 
 #line 15 "pure2-types-ordering-via-meta-functions.cpp2"
 };
 
+class mystruct {
+    public: int val {0}; 
+    public: mystruct(mystruct const& that);
+
+public: auto operator=(mystruct const& that) -> mystruct& ;
+public: mystruct(mystruct&& that);
+public: auto operator=(mystruct&& that) -> mystruct& ;
+public: mystruct();
+
+#line 19 "pure2-types-ordering-via-meta-functions.cpp2"
+};
+
 auto main() -> int;
     
 
@@ -103,8 +119,21 @@ auto main() -> int;
                                             return *this;
 #line 14 "pure2-types-ordering-via-meta-functions.cpp2"
     }
+    
+    mystruct::mystruct(mystruct const& that)
+                                : val{ that.val }{}
 
-#line 17 "pure2-types-ordering-via-meta-functions.cpp2"
+    auto mystruct::operator=(mystruct const& that) -> mystruct& {
+                                val = that.val;
+                                return *this;}
+    mystruct::mystruct(mystruct&& that)
+                                : val{ std::move(that).val }{}
+    auto mystruct::operator=(mystruct&& that) -> mystruct& {
+                                val = std::move(that).val;
+                                return *this;}
+    
+    mystruct::mystruct(){}
+#line 21 "pure2-types-ordering-via-meta-functions.cpp2"
 auto main() -> int{
     my_integer a {1}; 
     my_integer b {2}; 
@@ -132,5 +161,7 @@ auto main() -> int{
     else {
         std::cout << "more\n";
     }
+
+    mystruct s {}; 
 }
 

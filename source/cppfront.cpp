@@ -1531,15 +1531,11 @@ public:
             printer.print_cpp2("cpp2::", pos);
         }
 
-        //  'new' is a named allocator object
-        if (n == "new") {
-            printer.print_cpp2("cpp2_new", pos);
-        }
         //  'this' is not a pointer
-        else if (n == "this") {
+        if (n == "this") {
             printer.print_cpp2("(*this)", pos);
         }
-        //  Reclaim the alternative names for users
+        //  Reclaim the alternative names and some keywords for users
         else if (
             n == "and"
             || n == "and_eq"
@@ -1552,6 +1548,8 @@ public:
             || n == "or_eq"
             || n == "xor"
             || n == "xor_eq"
+            || n == "new"
+            || n == "struct"
             )
         {
             printer.print_cpp2("cpp2_"+n.to_string(true), pos);

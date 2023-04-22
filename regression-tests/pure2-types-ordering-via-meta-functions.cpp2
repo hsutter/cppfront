@@ -14,6 +14,10 @@ person_in_family_tree: @partially_ordered type = {
     operator=: (out this, parents: int) = { dummy_data = parents; }
 }
 
+mystruct: @struct type = {
+    val: int = 0;
+}
+
 main: () = {
     a: my_integer = 1;
     b: my_integer = 2;
@@ -41,4 +45,6 @@ main: () = {
     else {
         std::cout << "more\n";
     }
+
+    s: mystruct = ();
 }

@@ -683,6 +683,50 @@ auto partially_ordered_value(meta::type_declaration& t)
 
 
 //-----------------------------------------------------------------------
+// 
+//     "By definition, a `struct` is a `class` in which members
+//      are by default `public`; that is,
+//
+//      	struct s { ...
+// 
+//      is simply shorthand for
+//
+//          class s { public: ...
+//
+//      ... Which style you use depends on circumstances and taste.
+//      I usually prefer to use `struct` for classes that have all
+//      data `public`."
+// 
+//          -- Stroustrup (The C++ Programming Language, 3rd ed., p. 234)
+//
+//-----------------------------------------------------------------------
+// 
+//  struct
+//
+//  a basic_value with only public bases, objects, and functions,
+//  no virtual functions, and no user-defined constructors
+//  (i.e., no invariants) or assignment or destructors.
+//
+auto struct_(meta::type_declaration& t)
+    -> void
+{
+    for (auto m : t.get_members())
+    {
+        m.require( m.make_public(),
+                   "all struct members must be public");
+        if (m.is_function()) {
+            auto mf = m.as_function();
+            t.require( !mf.is_virtual(),
+                       "a struct may not have a virtual function");
+            t.require( !mf.has_name("operator="),
+                       "a struct may not have a user-defined operator=");
+        }
+    }
+    basic_value(t);		// a plain_struct is-a basic_value
+}
+
+
+//-----------------------------------------------------------------------
 //
 //  Now finish the rest of the parser definition
 //
@@ -727,8 +771,11 @@ auto parser::apply_type_meta_functions( declaration_node& n )
         else if (meta->to_string() == "partially_ordered_value") {
             partially_ordered_value( rtype );
         }
+        else if (meta->to_string() == "struct") {
+            struct_( rtype );
+        }
         else {
-            error( "(temporary alpha limitation) unrecognized meta function name '" + meta->to_string() + "' - currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, value, weakly_ordered_value, partially_ordered_value" );
+            error( "(temporary alpha limitation) unrecognized meta function name '" + meta->to_string() + "' - currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, value, weakly_ordered_value, partially_ordered_value, struct" );
             return false;
         }
     }
