@@ -2001,6 +2001,10 @@ public:
         assert(n.identifier);
         emit(*n.identifier);
 
+        if (n.is_constexpr) {
+            printer.print_cpp2(" constexpr", n.position());
+        }
+
         printer.print_cpp2(" (", n.position());
         printer.add_pad_in_this_line(1);
 
