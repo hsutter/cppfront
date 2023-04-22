@@ -123,7 +123,7 @@ struct comment
 struct string_parts {
     struct cpp_code   { std::string text; };
     struct raw_string { std::string text; };
-    enum adds_sequences { no_ends = 0, on_the_begining = 1, on_the_end = 2, on_both_ends = 3 };
+    enum adds_sequences { no_ends = 0, on_the_beginning = 1, on_the_end = 2, on_both_ends = 3 };
 
     string_parts(const std::string& beginseq,
                  const std::string& endseq,
@@ -132,7 +132,7 @@ struct string_parts {
      , end_seq{endseq}
      , strategy{strateg}
     {
-        if (!(strategy & on_the_begining)) {
+        if (!(strategy & on_the_beginning)) {
             parts.push_back(raw_string{""});
         }
     }
@@ -146,7 +146,7 @@ struct string_parts {
     auto generate() const -> std::string {
         
         if (parts.empty()) { 
-            return (strategy & on_the_begining ? begin_seq : std::string{}) 
+            return (strategy & on_the_beginning ? begin_seq : std::string{}) 
                  + (strategy & on_the_end ? end_seq : std::string{}); 
         }
 
@@ -192,7 +192,7 @@ private:
         adds_sequences strategy;
 
         auto operator()(const raw_string& part) const -> std::string {
-            return (strategy & on_the_begining ? begin_seq : "") + part.text;
+            return (strategy & on_the_beginning ? begin_seq : "") + part.text;
         }
         auto operator()(const cpp_code& part) const -> std::string {
             return part.text;

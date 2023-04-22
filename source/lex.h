@@ -1326,7 +1326,7 @@ auto lex_line(
                             if (interpolate_raw_string(
                                     opening_seq,
                                     closing_seq,
-                                    string_parts::on_the_begining,
+                                    string_parts::on_the_beginning,
                                     std::string_view(&line[paren_pos+1], std::ssize(line)-(paren_pos+1)), i, std::ssize(line)-i)
                             ) {
                                 continue;
