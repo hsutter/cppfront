@@ -695,6 +695,7 @@ private:
             }
         };
         std::vector<stack_entry> selection_stack;
+        bool                     in_branch = false;
 
         for (
             ;
@@ -795,12 +796,17 @@ private:
                                 "local variable " + name
                                     + " is used in a branch before it was initialized");
                         }
+
+                        if (!in_branch) {
+                            return sym.assignment_to;
+                        }
+
                         selection_stack.back().branches.back().result = sym.assignment_to;
 
                         //  The depth of this branch should always be the depth of
                         //  the current selection statement + 1
                         int branch_depth = symbols[selection_stack.back().pos].depth + 1;
-                        while (symbols[pos + 1].depth > branch_depth) {
+                        while (symbols[pos + 1].depth > branch_depth && symbols[pos + 1].start) {
                             ++pos;
                         }
                     }
@@ -906,6 +912,11 @@ private:
                         )
                     {
                         selection_stack.back().branches.emplace_back( pos, false );
+                        in_branch = true;
+                    }
+
+                    if ( !sym.start ) {
+                        in_branch = false;
                     }
                 }
             }
