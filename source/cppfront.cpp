@@ -2017,6 +2017,26 @@ public:
         assert(n.true_branch);
         emit(*n.true_branch);
 
+        for(const auto& elif : n.else_ifs) {
+            printer.print_cpp2(" else if ", elif.pos);
+
+            if (elif.is_constexpr) {
+                printer.print_cpp2("constexpr ", elif.pos);
+            }
+
+            printer.print_cpp2("(", elif.pos);
+            printer.add_pad_in_this_line(1);
+
+            assert(elif.expression);
+            emit(*elif.expression);
+
+            printer.print_cpp2(") ", elif.pos);
+            printer.add_pad_in_this_line(1);
+
+            assert(elif.branch);
+            emit(*elif.branch);
+        }
+
         if (n.has_source_false_branch) {
             printer.print_cpp2("else ", n.else_pos);
             emit(*n.false_branch);

@@ -104,7 +104,7 @@ struct selection_sym {
 struct compound_sym {
     bool start = false;
     compound_statement_node const* compound = {};
-    enum kind { is_scope, is_true, is_false } kind_ = is_scope;
+    enum kind { is_scope, is_if, is_else_if, is_else } kind_ = is_scope;
 
     compound_sym(
         bool                           s,
@@ -434,11 +434,14 @@ public:
                     o << "/";
                     --scope_depth;
                 }
-                if (sym.kind_ == sym.is_true) {
-                    o << "true branch";
+                if (sym.kind_ == sym.is_if) {
+                    o << "if branch";
                 }
-                else if (sym.kind_ == sym.is_false) {
-                    o << "false branch";
+                else if (sym.kind_ == sym.is_else_if) {
+                    o << "if else branch";
+                }
+                else if (sym.kind_ == sym.is_else) {
+                    o << "else branch";
                 }
                 else {
                     o << "scope";
@@ -1479,14 +1482,26 @@ public:
             assert(active_selections.back()->true_branch);
             if (active_selections.back()->true_branch.get() == &n)
             {
-                kind = compound_sym::is_true;
+                kind = compound_sym::is_if;
             }
-            if (
+            else if (
+                std::any_of(
+                    std::cbegin(active_selections.back()->else_ifs),
+                    std::cend(active_selections.back()->else_ifs),
+                    [&](const auto& elif) -> bool {
+                        return elif.branch && elif.branch.get() == &n;
+                    }
+                )
+            )
+            {
+                kind = compound_sym::is_else_if;
+            }
+            else if (
                 active_selections.back()->false_branch
                 && active_selections.back()->false_branch.get() == &n
                 )
             {
-                kind = compound_sym::is_false;
+                kind = compound_sym::is_else;
             }
         }
         return kind;

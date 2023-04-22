@@ -1168,6 +1168,14 @@ struct selection_statement_node
     std::unique_ptr<compound_statement_node> false_branch;
     bool                                     has_source_false_branch = false;
 
+    struct else_if {
+        bool                                     is_constexpr = false;
+        std::unique_ptr<expression_node>         expression;
+        std::unique_ptr<compound_statement_node> branch;
+        source_position                          pos;
+    };
+    std::vector<else_if>                      else_ifs;
+
     auto position() const
         -> source_position
     {
@@ -1185,6 +1193,14 @@ struct selection_statement_node
         expression->visit(v, depth+1);
         assert (true_branch);
         true_branch->visit(v, depth+1);
+
+        for(const auto& elif : else_ifs) {
+            assert (elif.expression);
+            elif.expression->visit(v, depth+1);
+            assert (elif.branch);
+            elif.branch->visit(v, depth+1);
+        }
+
         if (false_branch) {
             false_branch->visit(v, depth+1);
         }
@@ -4641,6 +4657,48 @@ private:
         else {
             error("invalid if branch body", true, {}, true);
             return {};
+        }
+
+        while (
+            curr().type() == lexeme::Keyword
+            && curr() == "else"
+            && peek(1) && peek(1)->type() == lexeme::Keyword && peek(1)->to_string(true) == "if"
+        ) {
+            selection_statement_node::else_if elif;
+            elif.pos = curr().position();
+            next(2); // skip "else if"
+
+            if (
+                curr().type() == lexeme::Keyword
+                && curr() == "constexpr"
+                )
+            {
+                elif.is_constexpr = true;
+                next();
+            }
+
+            if (auto e = expression()) {
+                elif.expression = std::move(e);
+            }
+            else {
+                error("invalid else if condition", true, {}, true);
+                return {};
+            }
+
+            if (curr().type() != lexeme::LeftBrace) {
+                error("an if branch body must be enclosed with { }");
+                return {};
+            }
+
+            if (auto s = compound_statement()) {
+                elif.branch = std::move(s);
+            }
+            else {
+                error("invalid if branch body", true, {}, true);
+                return {};
+            }
+
+            n->else_ifs.emplace_back(std::move(elif));
         }
 
         if (
