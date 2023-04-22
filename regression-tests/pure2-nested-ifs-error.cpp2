@@ -1,0 +1,27 @@
+main: (args) = {
+    p : *int;
+
+    a := 1;
+    b := 2;
+    c := 3;
+    d := 4;
+
+    if args.argc == 3 {
+        p = a&;
+    } else if b > 2 {
+        if args.argc == 2 {
+            p = c&;
+        } else {
+            if b > 0 {
+                p = a&;
+            } 
+            else {
+                p = d&;
+            }
+        }
+    } else {
+        // p = c&;
+    }
+
+    std::cout << p* << std::endl;
+}

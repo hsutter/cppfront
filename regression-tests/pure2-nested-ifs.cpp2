@@ -1,0 +1,52 @@
+main: (args) = 
+{
+    a := 1;
+    b := 2;
+    c := 3;
+    d := 4;
+
+    {
+        p : *int;
+
+        // no initialization in selection_node
+        if args.argc > 20 {
+            c = 20;
+        } else if args.argc > 10 {
+            c = 10;
+        } else {
+            if args.argc % 2 {
+                b = 2;
+            } else {
+                b = 1;
+            }
+        }
+
+        // initialization in:
+        // - first if branch
+        // - second if branch in nested if:
+        //   - first branch
+        //   - second branch in nested if:
+        //     - first if branch
+        //     - else branch
+        // - else branch
+        if args.argc == 3 {
+            p = a&;
+        } else if args.argc == 2 {
+            if b > 0 {
+                p = c&;
+            } else {
+                if b > 2 {
+                    p = a&;
+                } 
+                else {
+                    p = d&;
+                }
+            }
+        } else {
+            p = c&;
+        }
+
+        std::cout << p* << std::endl;
+    }
+
+}

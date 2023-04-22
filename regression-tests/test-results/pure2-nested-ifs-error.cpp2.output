@@ -1,0 +1,9 @@
+pure2-nested-ifs-error.cpp2...
+pure2-nested-ifs-error.cpp2(2,5): error: local variable p must be initialized on both branches or neither branch
+pure2-nested-ifs-error.cpp2(9,5): error: "if" initializes p on:
+  branch starting at line 9
+  branch starting at line 11
+but not on:
+  branch starting at line 22
+  ==> program violates initialization safety guarantee - see previous errors
+
