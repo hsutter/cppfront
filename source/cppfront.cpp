@@ -4383,78 +4383,80 @@ public:
             auto object     = objects.begin();
             auto statement  = statements.begin();
             auto separator  = std::string{": "};
-            while (
-                object != objects.end()
-                && statement != statements.end()
-                )
-            {
-                assert (*statement);
 
+            while (object != objects.end())
+            {
                 auto object_name = canonize_object_name(*object);
 
                 auto is_object_before_base =
                     n.get_decl_if_type_scope_object_name_before_a_base_type(*(*object)->name());
 
-                //  If this is an assignment statement, get the lhs and rhs
-                auto lhs = std::string{};
-                auto rhs = std::string{};
-                {
-                    auto exprs = (*statement)->get_lhs_rhs_if_simple_assignment();
-                    if (exprs.lhs) {
-                        if (auto tok = exprs.lhs->get_first_token_ignoring_this()) {
-                            lhs = *tok;
-                        }
-                        else {
-                            lhs = print_to_string( *exprs.lhs );
-                        }
-                    }
-                    if (exprs.rhs) {
-                        rhs = print_to_string( *exprs.rhs );
-                    }
-                }
-
-                //  If this is an initialization of an 'out' parameter, stash it
-                if (n.has_out_parameter_named(lhs)){
-                    out_inits.push_back( print_to_string(**statement, false) );
-                    (*statement)->emitted = true;
-                    ++statement;
-                    continue;
-                }
-
-                //  Now we're ready to check whether this is an assignment to *object
-
                 auto found_explicit_init = false;
                 auto found_default_init  = false;
+                auto stmt_pos = source_position{};
 
-                auto stmt_pos    = (*statement)->position();
                 auto initializer = std::string{};
 
-                if (!lhs.empty())
+                //  If we're at an assignment statement, get the lhs and rhs
+                if (statement != statements.end())
                 {
-                    //  First, see if it's an assignment 'name = something'
-                    found_explicit_init = object_name == lhs;
+                    assert (*statement);
+                    stmt_pos = (*statement)->position();
 
-                    //  Otherwise, see if it's 'this.name = something'
-                    if (!found_explicit_init)
+                    auto lhs = std::string{};
+                    auto rhs = std::string{};
                     {
-                        //  If it's of the form 'this.name', check 'name'
-                        if (
-                            starts_with( lhs, "(*this).")
-                            && object_name == lhs.substr(8)
-                            )
-                        {
-                            found_explicit_init = true;
+                        auto exprs = (*statement)->get_lhs_rhs_if_simple_assignment();
+                        if (exprs.lhs) {
+                            if (auto tok = exprs.lhs->get_first_token_ignoring_this()) {
+                                lhs = *tok;
+                            }
+                            else {
+                                lhs = print_to_string( *exprs.lhs );
+                            }
+                        }
+                        if (exprs.rhs) {
+                            rhs = print_to_string( *exprs.rhs );
                         }
                     }
 
-                    if (found_explicit_init)
-                    {
-                        initializer = rhs;
-
-                        //  We've used this statement, so note it
-                        //  and move 'statement' forward
+                    //  If this is an initialization of an 'out' parameter, stash it
+                    if (n.has_out_parameter_named(lhs)){
+                        out_inits.push_back( print_to_string(**statement, false) );
                         (*statement)->emitted = true;
                         ++statement;
+                        continue;
+                    }
+
+                    //  Now we're ready to check whether this is an assignment to *object
+
+                    if (!lhs.empty())
+                    {
+                        //  First, see if it's an assignment 'name = something'
+                        found_explicit_init = object_name == lhs;
+
+                        //  Otherwise, see if it's 'this.name = something'
+                        if (!found_explicit_init)
+                        {
+                            //  If it's of the form 'this.name', check 'name'
+                            if (
+                                starts_with( lhs, "(*this).")
+                                && object_name == lhs.substr(8)
+                                )
+                            {
+                                found_explicit_init = true;
+                            }
+                        }
+
+                        if (found_explicit_init)
+                        {
+                            initializer = rhs;
+
+                            //  We've used this statement, so note it
+                            //  and move 'statement' forward
+                            (*statement)->emitted = true;
+                            ++statement;
+                        }
                     }
                 }
 
@@ -4600,45 +4602,45 @@ public:
                 ++object;
             }
 
-            //  Each remaining object is required to have a default initializer,
-            //  since it had no explicit initialization statement
-            for (
-                ;
-                object != objects.end();
-                ++object
-                )
-            {
-                auto object_name = canonize_object_name(*object);
+            ////  Each remaining object is required to have a default initializer,
+            ////  since it had no explicit initialization statement
+            //for (
+            //    ;
+            //    object != objects.end();
+            //    ++object
+            //    )
+            //{
+            //    auto object_name = canonize_object_name(*object);
 
-                if ((*object)->initializer)
-                {
-                    //  Good. Entering here avoids emitting the error on the 'else'
+            //    if ((*object)->initializer)
+            //    {
+            //        //  Good. Entering here avoids emitting the error on the 'else'
 
-                    auto initializer = print_to_string( *(*object)->initializer, false );
-                    if (initializer.empty()) {
-                        initializer = "{}";
-                    }
+            //        auto initializer = print_to_string( *(*object)->initializer, false );
+            //        if (initializer.empty()) {
+            //            initializer = "{}";
+            //        }
 
-                    //  Need to actually emit the initializer in an assignment operator
-                    if (is_assignment)
-                    {
-                        current_functions.back().prolog.statements.push_back(
-                            object_name +
-                            " = " +
-                            initializer +
-                            ";"
-                        );
-                    }
-                }
-                else
-                {
-                    errors.emplace_back(
-                        n.position(),
-                        object_name + " was not initialized in the operator= body and has no default initializer - " + error_msg
-                    );
-                    return;
-                }
-            }
+            //        //  Need to actually emit the initializer in an assignment operator
+            //        if (is_assignment)
+            //        {
+            //            current_functions.back().prolog.statements.push_back(
+            //                object_name +
+            //                " = " +
+            //                initializer +
+            //                ";"
+            //            );
+            //        }
+            //    }
+            //    else
+            //    {
+            //        errors.emplace_back(
+            //            n.position(),
+            //            object_name + " was not initialized in the operator= body and has no default initializer - " + error_msg
+            //        );
+            //        return;
+            //    }
+            //}
 
             //  Now no data members should be left over
             if (object != objects.end())

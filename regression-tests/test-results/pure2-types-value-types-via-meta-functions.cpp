@@ -93,16 +93,16 @@ template<typename T> auto test() -> void;
 #line 4 "pure2-types-value-types-via-meta-functions.cpp2"
     }
     
-    
-    widget::widget(widget const& that){}
+    widget::widget(widget const& that)
+                                : val{ that.val }{}
 
     auto widget::operator=(widget const& that) -> widget& {
-                                val = 0;
+                                val = that.val;
                                 return *this;}
-    
-    widget::widget(widget&& that){}
+    widget::widget(widget&& that)
+                                : val{ std::move(that).val }{}
     auto widget::operator=(widget&& that) -> widget& {
-                                val = 0;
+                                val = std::move(that).val;
                                 return *this;}
     
     widget::widget(){}
@@ -118,16 +118,16 @@ template<typename T> auto test() -> void;
 #line 9 "pure2-types-value-types-via-meta-functions.cpp2"
     }
     
-    
-    w_widget::w_widget(w_widget const& that){}
+    w_widget::w_widget(w_widget const& that)
+                                : val{ that.val }{}
 
     auto w_widget::operator=(w_widget const& that) -> w_widget& {
-                                val = 0;
+                                val = that.val;
                                 return *this;}
-    
-    w_widget::w_widget(w_widget&& that){}
+    w_widget::w_widget(w_widget&& that)
+                                : val{ std::move(that).val }{}
     auto w_widget::operator=(w_widget&& that) -> w_widget& {
-                                val = 0;
+                                val = std::move(that).val;
                                 return *this;}
     
     w_widget::w_widget(){}
@@ -143,16 +143,16 @@ template<typename T> auto test() -> void;
 #line 14 "pure2-types-value-types-via-meta-functions.cpp2"
     }
     
-    
-    p_widget::p_widget(p_widget const& that){}
+    p_widget::p_widget(p_widget const& that)
+                                : val{ that.val }{}
 
     auto p_widget::operator=(p_widget const& that) -> p_widget& {
-                                val = 0;
+                                val = that.val;
                                 return *this;}
-    
-    p_widget::p_widget(p_widget&& that){}
+    p_widget::p_widget(p_widget&& that)
+                                : val{ std::move(that).val }{}
     auto p_widget::operator=(p_widget&& that) -> p_widget& {
-                                val = 0;
+                                val = std::move(that).val;
                                 return *this;}
     
     p_widget::p_widget(){}
