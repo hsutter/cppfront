@@ -28,11 +28,12 @@ class Cyborg;
 #line 2 "pure2-types-inheritance.cpp2"
 class Human {
     public: virtual auto speak() const -> void = 0;
+
 public: virtual ~Human();
+
     public: Human() = default;
     public: Human(Human const&) = delete;
     public: auto operator=(Human const&) -> void = delete;
-
 #line 4 "pure2-types-inheritance.cpp2"
 };
 
@@ -40,7 +41,9 @@ namespace N {
     template<int I> class Machine {
         public: explicit Machine(cpp2::in<std::string> id);
         public: virtual auto work() const -> void = 0;
+    
     public: virtual ~Machine();
+
         public: Machine(Machine const&) = delete;
         public: auto operator=(Machine const&) -> void = delete;
 
@@ -88,13 +91,15 @@ auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
 
-#line 0 "pure2-types-inheritance.cpp2"
-Human::~Human(){}
 
+    
+    Human::~Human(){}
 #line 6 "pure2-types-inheritance.cpp2"
 namespace N {
 
-        template <int I> Machine<I>::Machine(cpp2::in<std::string> id){}template <int I> Machine<I>::~Machine(){}
+        template <int I> Machine<I>::Machine(cpp2::in<std::string> id){}
+        template <int I> 
+        Machine<I>::~Machine(){}
 
 #line 11 "pure2-types-inheritance.cpp2"
 }

@@ -17,11 +17,11 @@ class myclass;
 #line 2 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
 class myclass {
 
-    public: explicit myclass(myclass const& that);
+    public: myclass(myclass const& that);
         
 
 #line 8 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
-    public: explicit myclass(myclass&& that);
+    public: myclass(myclass&& that);
         
 
 #line 13 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"

@@ -199,6 +199,8 @@ class positional_printer
     parser const*               pparser         = {};
                                                 
     source_position curr_pos                    = {}; // current (line,col) in output
+    lineno_t        generated_pos_line          = {}; // current line in generated output
+    int             last_line_indentation       = {};
     int             next_comment                = 0;  // index of the next comment not yet printed
     bool            last_was_empty              = false;
     int             empty_lines_suppressed      = 0;
@@ -380,6 +382,12 @@ private:
     auto print_line_directive( lineno_t line )
         -> void
     {
+        //  Ignore requests from generated code (negative line numbers)
+        if (line < 1) {
+            return;
+        }
+
+        //  Otherwise, implement the request
         prev_line_info = { curr_pos.lineno, { } };
         ensure_at_start_of_new_line();
 
@@ -485,7 +493,6 @@ private:
             printed_extra = false;
         }
         else if (curr_pos.lineno < pos.lineno)
-           //if (curr_pos.lineno != pos.lineno)
         {
             //  In case we're just one away, try a blank line
             //  (this might get ignored and we'll get the line directive)
@@ -508,6 +515,9 @@ private:
             && curr_pos.lineno < std::ssize(psource->get_lines())
             )
         {
+            //  Record this line's indentation as the 'last' line for next time
+            last_line_indentation = psource->get_lines()[curr_pos.lineno].indent();
+
             //  If this line was originally densely spaced (had <2 whitespace
             //  between all tokens), then the programmer likely wasn't doing a lot
             //  of special formatting...
@@ -661,7 +671,8 @@ public:
     {
         assert(
             is_open()
-            && "ICE: printer must be open before printing"
+            && line >= 0
+            && "ICE: printer must be open before printing, and line number must not be negative (Cpp1 code is never generated)"
         );
 
         //  Always start a Cpp1 line on its own new line
@@ -714,6 +725,20 @@ public:
     )
         -> void
     {
+        //  If we are in a generated text region (signified by negative
+        //  line numbers) shunt this call to print_extra instead
+        if (pos.lineno < 0) {
+            if (generated_pos_line != pos.lineno) {
+                *out << "\n" + std::string(last_line_indentation, ' ');
+                generated_pos_line = pos.lineno;
+            }
+            print_extra(s);
+            return;
+        }
+
+        //  No longer in generated code, so reset the generated code counter
+        generated_pos_line = {};
+
         assert(
             is_open()
             && "ICE: printer must be open before printing"
@@ -5219,6 +5244,7 @@ public:
                         break;default:
                             if (
                                 func->is_constructor()
+                                && !func->is_constructor_with_that()
                                 && func->parameters->ssize() == 2
                                 && generating_assignment_from != &n
                                 )

@@ -19,14 +19,14 @@ class myclass {
 
     public: myclass();
 
-    public: explicit myclass(myclass const& that);
+    public: myclass(myclass const& that);
         
 #line 6 "pure2-types-that-parameters.cpp2"
     public: auto operator=(myclass const& that) -> myclass& ;
         
 
 #line 11 "pure2-types-that-parameters.cpp2"
-    public: explicit myclass(myclass&& that);
+    public: myclass(myclass&& that);
         
 #line 11 "pure2-types-that-parameters.cpp2"
     public: auto operator=(myclass&& that) -> myclass& ;

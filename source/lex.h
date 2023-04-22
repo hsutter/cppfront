@@ -1729,15 +1729,17 @@ public:
     //-----------------------------------------------------------------------
     //  lex: Tokenize the Cpp2 lines
     //
-    //  lines               tagged source lines
+    //  lines           tagged source lines
+    //  is_generated    is this generated code
     //
     auto lex(
-        std::vector<source_line>& lines
+        std::vector<source_line>& lines,
+        bool                      is_generated = false
     )
         -> void
     {
-        auto in_comment = false;
-        auto raw_string_multiline   = std::optional<raw_string>();
+        auto in_comment           = false;
+        auto raw_string_multiline = std::optional<raw_string>();
 
         assert (std::ssize(lines) > 0);
         auto line = std::begin(lines);
@@ -1754,6 +1756,13 @@ public:
             //  Create new map entry for the section starting at this line,
             //  and populate its tokens with the tokens in this section
             auto lineno = std::distance(std::begin(lines), line);
+
+            //  If this is generated code, use negative line numbers to
+            //  inform and assist the printer
+            if (is_generated) {
+                lineno -= 10'000;
+            }
+
             auto& entry = grammar_map[lineno];
             auto current_comment = std::string{};
             auto current_comment_start = source_position{};
@@ -1795,7 +1804,6 @@ public:
                     }
                 }
             }
-
         }
     }
 

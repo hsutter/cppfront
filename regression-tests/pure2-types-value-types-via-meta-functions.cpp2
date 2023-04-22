@@ -1,0 +1,35 @@
+
+widget: @value type = {
+    val: int = 0;
+    operator=: (out this, i: int) = { val = i; }
+}
+
+w_widget: @weakly_ordered_value type = {
+    val: int = 0;
+    operator=: (out this, i: int) = { val = i; }
+}
+
+p_widget: @partially_ordered_value type = {
+    val: int = 0;
+    operator=: (out this, i: int) = { val = i; }
+}
+
+main: () = {
+    test<widget>();
+    test<w_widget>();
+    test<p_widget>();
+}
+
+test: <T> () = {
+    //  should be default constructible
+    a: T = ();
+
+    //  widget should be comparable
+    b: T = 2;
+    if (a<b) {
+        std::cout << "less ";
+    }
+    else {
+        std::cout << "more ";
+    }
+}
