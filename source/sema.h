@@ -683,6 +683,8 @@ private:
                 branch(int s, bool r) : start{s}, result{r} { }
             };
             std::vector<branch> branches;
+            bool in_branch = false;
+            int initialized_in_condition_pos = -1;
 
             stack_entry(int p) : pos{p} { }
 
@@ -695,7 +697,6 @@ private:
             }
         };
         std::vector<stack_entry> selection_stack;
-        bool                     in_branch = false;
 
         for (
             ;
@@ -755,12 +756,10 @@ private:
 
                     //  Else if we're inside a selection statement but still in the condition
                     //  portion (there are no branches entered yet)
-                    else if (std::ssize(selection_stack.back().branches) == 0) {
-                        //  If this is a top-level selection statement, handle it the same as
-                        //  if we weren't an a selection statement
-                        if (std::ssize(selection_stack) == 1) {
+                    else if (!selection_stack.back().in_branch) {
                             if (sym.assignment_to) {
                                 definite_initializations.push_back( sym.identifier );
+                                selection_stack.back().initialized_in_condition_pos = pos;
                             }
                             else {
                                 errors.emplace_back(
@@ -768,20 +767,12 @@ private:
                                     "local variable " + name
                                         + " is used in a condition before it was initialized");
                             }
-                            return sym.assignment_to;
-                        }
-                        //  Else we can skip the rest of this selection statement, and record
-                        //  this as the result of the next outer selection statement's current branch
-                        else {
-                            selection_stack.pop_back();
-                            assert (std::ssize(selection_stack.back().branches) > 0);
-                            selection_stack.back().branches.back().result = sym.assignment_to;
 
-                            int this_depth = symbols[pos].depth;
-                            while (symbols[pos + 1].depth >= this_depth) {
+                            int branch_depth = symbols[selection_stack.back().pos].depth;
+                            while (symbols[pos + 1].depth > branch_depth) {
                                 ++pos;
                             }
-                        }
+                            --pos; // to handle end of if/else branch
                     }
 
                     //  Else we're in a selection branch and can skip the rest of this branch
@@ -797,7 +788,7 @@ private:
                                     + " is used in a branch before it was initialized");
                         }
 
-                        if (!in_branch) {
+                        if (!selection_stack.back().in_branch) {
                             return sym.assignment_to;
                         }
 
@@ -806,7 +797,11 @@ private:
                         //  The depth of this branch should always be the depth of
                         //  the current selection statement + 1
                         int branch_depth = symbols[selection_stack.back().pos].depth + 1;
-                        while (symbols[pos + 1].depth > branch_depth && symbols[pos + 1].start) {
+                        while (symbols[pos + 1].depth > branch_depth + 1
+                            || (
+                                symbols[pos + 1].depth == branch_depth + 1 && symbols[pos + 1].start
+                            )
+                        ) {
                             ++pos;
                         }
                     }
@@ -831,6 +826,7 @@ private:
 
                     auto true_branches  = std::string{};
                     auto false_branches = std::string{};
+
                     for (auto const& b : selection_stack.back().branches)
                     {
                         //  If this is not an implicit 'else' branch (i.e., if lineno > 0)
@@ -845,9 +841,13 @@ private:
                         }
                     }
 
+                    if (auto init_pos = selection_stack.back().initialized_in_condition_pos; init_pos != -1) {
+                        true_branches += "\n  branch condition starting at line "
+                                    + std::to_string(symbols[init_pos].position().lineno);
+                    }
+
                     //  If none of the branches was true
-                    if (true_branches.length() == 0)
-                    {
+                    if (true_branches.length() == 0) {
                         selection_stack.pop_back();
                         //  Nothing else to do, just continue
                     }
@@ -912,11 +912,11 @@ private:
                         )
                     {
                         selection_stack.back().branches.emplace_back( pos, false );
-                        in_branch = true;
+                        selection_stack.back().in_branch = true;
                     }
 
                     if ( !sym.start ) {
-                        in_branch = false;
+                        selection_stack.back().in_branch = false;
                     }
                 }
             }
