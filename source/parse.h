@@ -4650,11 +4650,12 @@ private:
         }
         if (is_named && is_returns) {
             auto tok = n->name();
+            assert(tok);
             if (tok->type() != lexeme::Identifier) {
                 error("expected identifier, not '" + tok->to_string(true) + "'",
                     false, tok->position());
             }
-            else if (n->declaration->type.index() != declaration_node::active::a_type) {
+            else if (!n->declaration->is_type()) {
                 error("return parameter '" + tok->to_string(true) + "' must have a type",
                     false, tok->position());
             }
