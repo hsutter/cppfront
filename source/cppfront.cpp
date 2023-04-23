@@ -2038,7 +2038,7 @@ public:
         if (*n.identifier == "while") {
             assert(
                 n.condition
-                && n.statement
+                && n.statements
                 && !n.range
                 && !n.body
             );
@@ -2059,7 +2059,7 @@ public:
             if (!labelname.empty()) {
                 printer.print_extra("{");
             }
-            emit(*n.statement);
+            emit(*n.statements);
             if (!labelname.empty()) {
                 printer.print_extra(" CPP2_CONTINUE_BREAK("+labelname+") }");
             }
@@ -2072,7 +2072,7 @@ public:
         else if (*n.identifier == "do") {
             assert(
                 n.condition
-                && n.statement
+                && n.statements
                 && !n.range
                 && !n.body
             );
@@ -2081,7 +2081,7 @@ public:
             if (!labelname.empty()) {
                 printer.print_extra("{");
             }
-            emit(*n.statement);
+            emit(*n.statements);
             if (!labelname.empty()) {
                 printer.print_extra(" CPP2_CONTINUE_BREAK("+labelname+") }");
             }
@@ -2104,8 +2104,9 @@ public:
         else if (*n.identifier == "for") {
             assert(
                 !n.condition
-                && !n.statement
+                && !n.statements
                 && n.range
+                && n.parameter
                 && n.body
             );
 
@@ -2117,7 +2118,7 @@ public:
             }
             emit(*n.range);
             printer.print_cpp2(";  ", n.position());
-            emit(*n.get_for_parameter());
+            emit(*n.parameter);
             printer.print_cpp2(" : cpp2_range ) ", n.position());
             if (!labelname.empty()) {
                 printer.print_extra("{");
@@ -2130,8 +2131,8 @@ public:
                 printer.print_cpp2(" { do ", n.position());
             }
 
-            assert(n.body->initializer);
-            emit(*n.body->initializer);
+            assert(n.body);
+            emit(*n.body);
 
             if (n.next_expression) {
                 printer.print_cpp2(" while (false); ", n.position());
@@ -3616,7 +3617,21 @@ public:
     )
         -> void
     {
-        //  Do expression statement case first... it's the most comple
+        auto emit_parameters =
+            !n.emitted
+            && n.parameters
+            ;
+
+        if (emit_parameters) {
+            printer.print_extra( "\n");
+            printer.print_extra( "{");
+            for (auto& param : n.parameters->parameters) {
+                printer.print_extra( "\n");
+                printer.print_extra( print_to_string(*param) );
+            }
+        }
+
+        //  Do expression statement case first... it's the most complex
         //  because it's used for single-statement function bodies
         try_emit<statement_node::expression >(
             n.statement,
@@ -3657,6 +3672,11 @@ public:
         try_emit<statement_node::jump       >(n.statement);
 
         printer.preempt_position_pop();
+
+        if (emit_parameters) {
+            printer.print_extra( "\n");
+            printer.print_extra( "}");
+        }
     }
 
 
@@ -3793,10 +3813,6 @@ public:
         //  Else handle ordinary parameters
 
         auto unqid = std::get_if<type_id_node::unqualified>(&type_id.id);
-        auto is_wildcard =
-            unqid
-            && *(*unqid)->identifier == "_"
-            ;
 
         //  If this parameter's name is an unqualified-id, check to see
         //  if it's the name of one of the template parameters
@@ -3826,7 +3842,7 @@ public:
         //  First any prefix
         if (
             !is_returns
-            && !is_wildcard
+            && !type_id.is_wildcard()
             && !is_template_parameter_name
             )
         {
@@ -3840,7 +3856,7 @@ public:
         printer.preempt_position_push( n.position() );
 
         if (
-            is_wildcard
+            type_id.is_wildcard()
             || is_template_parameter_name
             )
         {
@@ -3895,7 +3911,7 @@ public:
         //  Then any suffix
         if (
             !is_returns
-            && !is_wildcard
+            && !type_id.is_wildcard()
             && !is_template_parameter_name
             )
         {

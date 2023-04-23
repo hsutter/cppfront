@@ -19,6 +19,6 @@ main: (args) -> int = {
     z: u16 = 42;
     test(z);
 
-    for args do :(arg) =
+    for args do (arg)
         std::cout << arg << "\n";
 }

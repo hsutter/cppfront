@@ -6,7 +6,7 @@
 #include <iostream>
 
 main: () -> int = {
-    vec: std::vector<std::string> 
+    vec: std::vector<std::string>
             = ("hello", "2022");
     view: std::span = vec;
 
@@ -17,6 +17,6 @@ main: () -> int = {
     callback := :(inout x:_) = x += "-ish";
     std::ranges::for_each( view, callback );
 
-    for view do :(str:_) =
+    for view do (str)
         std::cout << str << "\n";
 }

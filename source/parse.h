@@ -1201,13 +1201,11 @@ struct iteration_statement_node
     token const*                                identifier = {};
     std::unique_ptr<assignment_expression_node> next_expression;    // if used, else null
     std::unique_ptr<logical_or_expression_node> condition;          // used for "do" and "while", else null
-    std::unique_ptr<compound_statement_node>    statement;          // used for "do" and "while", else null
+    std::unique_ptr<compound_statement_node>    statements;         // used for "do" and "while", else null
     std::unique_ptr<expression_node>            range;              // used for "for", else null
-    std::unique_ptr<declaration_node>           body;               // used for "for", else null
-    bool                                        for_with_in = false;// usse for "for," says whether loop variable is 'in'
-
-    auto get_for_parameter() const
-        -> parameter_declaration_node const*;
+    std::unique_ptr<parameter_declaration_node> parameter;          // used for "for", else null
+    std::unique_ptr<statement_node>             body;               // used for "for", else null
+    bool                                        for_with_in = false;// used for "for," says whether loop variable is 'in'
 
     auto position() const
         -> source_position
@@ -1382,6 +1380,8 @@ struct parameter_declaration_list_node;
 
 struct statement_node
 {
+    std::unique_ptr<parameter_declaration_list_node> parameters;
+
     enum active { expression=0, compound, selection, declaration, return_, iteration, contract, inspect, jump };
     std::variant<
         std::unique_ptr<expression_statement_node>,
@@ -3025,20 +3025,6 @@ auto primary_expression_node::visit(auto& v, int depth)
 }
 
 
-auto iteration_statement_node::get_for_parameter() const
-    -> parameter_declaration_node const*
-{
-    assert(*identifier == "for");
-    auto func = std::get_if<declaration_node::a_function>(&body->type);
-    assert(
-        func
-        && *func
-        && std::ssize((**func).parameters->parameters) == 1
-    );
-    return (**func).parameters->parameters[0].get();
-}
-
-
 auto iteration_statement_node::visit(auto& v, int depth)
     -> void
 {
@@ -3049,8 +3035,8 @@ auto iteration_statement_node::visit(auto& v, int depth)
     if (identifier) {
         identifier->visit(v, depth+1);
     }
-    if (statement) {
-        statement->visit(v, depth+1);
+    if (statements) {
+        statements->visit(v, depth+1);
     }
     if (next_expression) {
         next_expression->visit(v, depth+1);
@@ -3060,8 +3046,9 @@ auto iteration_statement_node::visit(auto& v, int depth)
         condition->visit(v, depth+1);
     }
     else {
-        assert(range && body);
+        assert(range && parameter && body);
         range->visit(v, depth+1);
+        parameter->visit(v, depth+1);
         body->visit(v, depth+1);
     }
     v.end(*this, depth);
@@ -4740,7 +4727,9 @@ private:
     {
         auto n = std::make_unique<iteration_statement_node>();
 
-        //  If the next three tokens are: identifier ':' 'for/while/do', it's a labeled iteration statement
+        //  If the next three tokens are:
+        //      identifier ':' 'for/while/do'
+        //  then it's a labeled iteration statement
         if (
             curr().type() == lexeme::Identifier
             && peek(1)
@@ -4799,7 +4788,7 @@ private:
                 error("invalid while loop body", true, {}, true);
                 return false;
             }
-            n->statement= std::move(s);
+            n->statements = std::move(s);
             return true;
         };
         //-----------------------------------------------------------------
@@ -4851,29 +4840,42 @@ private:
 
             if (!handle_optional_next_clause()) { return {}; }
 
-            if (curr() != "do") {
-                error("'for condition' must be followed by 'do'");
-                return {};
-            }
-            next();
-
-            n->body = unnamed_declaration(curr().position());
-            auto func = n->body ? std::get_if<declaration_node::a_function>(&n->body->type) : nullptr;
             if (
-                !n->body
-                || n->body->identifier
-                || !func
-                || !*func
-                || std::ssize((**func).parameters->parameters) != 1
-                || (**func).returns.index() != function_type_node::empty
+                curr() != "do"
+                || !peek(1)
+                || peek(1)->type() != lexeme::LeftParen
                 )
             {
-                error("for..do loop body must be an unnamed function taking a single parameter and returning nothing", false);
+                next();
+                if (curr().type() == lexeme::Colon) {
+                    error("alpha design change note: 'for range' syntax has changed - please remove ':' and '=', for example: for args do (arg) std::cout << arg;");
+                }
+                else {
+                    error("'for range' must be followed by 'do ( parameter )'");
+                }
+                return {};
+            }
+            next(2);    // eat 'do' and '('
+
+            n->parameter = parameter_declaration(false, false, false);
+            if (!n->parameter) {
+                error("'for range do (' must be followed by a parameter declaration", false, source_position{}, true);
+                return {};
+            }
+
+            if (curr().type() != lexeme::RightParen) {
+                error("expected ')' after 'for' parameter");
+                return {};
+            }
+            next();     // eat ')'
+
+            n->body = statement();
+            if (!n->body) {
+                error("invalid for..do loop body", false, source_position{}, true);
                 return {};
             }
             //  else
-            assert(func && *func);
-            if ((**func).parameters->parameters.front()->pass == passing_style::in) {
+            if (n->parameter->pass == passing_style::in) {
                 n->for_with_in = true;
             }
 
@@ -5100,7 +5102,8 @@ private:
     //G
     auto statement(
         bool            semicolon_required = true,
-        source_position equal_sign         = source_position{}
+        source_position equal_sign         = source_position{},
+        bool            parameters_allowed = false
     )
         -> std::unique_ptr<statement_node>
     {
@@ -5110,6 +5113,23 @@ private:
         }
 
         auto n = std::make_unique<statement_node>();
+
+        //  If a parameter list is allowed here, try to parse one
+        if (parameters_allowed) {
+            n->parameters = parameter_declaration_list(false, true, false, true);
+            if (n->parameters) {
+                for (auto& param : n->parameters->parameters) {
+                    if (
+                        param->direction() != passing_style::in
+                        && param->direction() != passing_style::inout
+                        )
+                    {
+                        error("parameters scoped to a block/statement must be 'in' (the default) or 'inout'", false);
+                        return {};
+                    }
+                }
+            }
+        }
 
         //  Now handle the rest of the statement
 
@@ -5244,7 +5264,9 @@ private:
                 return {};
             }
 
-            auto s = statement(true);
+            //  Only inside a compound-statement, a
+            //  contained statement() may have parameters
+            auto s = statement(true, source_position{}, true);
             if (!s) {
                 pos = start_pos;    // backtrack
                 return {};
@@ -5274,9 +5296,10 @@ private:
     //G     'final'
     //G
     auto parameter_declaration(
-        bool is_returns  = false,
-        bool is_named    = true,
-        bool is_template = true
+        bool is_returns   = false,
+        bool is_named     = true,
+        bool is_template  = true,
+        bool is_statement = false
     )
         -> std::unique_ptr<parameter_declaration_node>
     {
@@ -5404,6 +5427,7 @@ private:
 
         if (
             !is_returns
+            && !is_statement
             && n->declaration->initializer
             )
         {
@@ -5425,10 +5449,17 @@ private:
     auto parameter_declaration_list(
         bool is_returns    = false,
         bool is_named      = true,
-        bool is_template   = false
+        bool is_template   = false,
+        bool is_statement  = false
     )
         -> std::unique_ptr<parameter_declaration_list_node>
     {
+        //  Remember current position, because we need to look ahead in
+        //  the case of seeing whether a local statement starts with a
+        //  parameter list, since finding that it doesn't (it's some other
+        //  parenthesized expression) is not an error, just backtrack
+        auto start_pos = pos;
+
         auto opener = lexeme::LeftParen;
         auto closer = lexeme::RightParen;
         if (is_template) {
@@ -5446,7 +5477,7 @@ private:
 
         auto param = std::make_unique<parameter_declaration_node>();
 
-        while ((param = parameter_declaration(is_returns, is_named, is_template)) != nullptr)
+        while ((param = parameter_declaration(is_returns, is_named, is_template, is_statement)) != nullptr)
         {
             if (
                 std::ssize(n->parameters) > 1
@@ -5462,14 +5493,24 @@ private:
                 break;
             }
             else if (curr().type() != lexeme::Comma) {
-                error("expected , in parameter list", true, {}, true);
+                if (is_statement) {
+                    pos = start_pos;    // backtrack
+                }
+                else {
+                    error("expected , in parameter list", true, {}, true);
+                }
                 return {};
             }
             next();
         }
 
         if (curr().type() != closer) {
-            error("invalid parameter list", true, {}, true);
+            if (is_statement) {
+                pos = start_pos;    // backtrack
+            }
+            else {
+                error("invalid parameter list", true, {}, true);
+            }
             next();
             return {};
         }

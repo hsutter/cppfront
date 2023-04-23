@@ -19,7 +19,7 @@ myfunc: () = {
 
     v2 :== v;
 
-    for v2 do :(s) =
+    for v2 do (s)
         std::cout << "(s)$\n";
 }
 

@@ -1303,6 +1303,7 @@ public:
     bool is_out_expression             = false;
     bool inside_parameter_list         = false;
     bool inside_returns_list           = false;
+    bool just_entered_for              = false;
     parameter_declaration_node const* inside_out_parameter = {};
 
     auto start(parameter_declaration_list_node const&, int) -> void
@@ -1366,8 +1367,23 @@ public:
         inside_returns_list = false;
     }
 
+    auto start(iteration_statement_node const& n, int) -> void
+    {
+        if (*n.identifier == "for") {
+            just_entered_for = true;
+        }
+    }
+
     auto start(declaration_node const& n, int) -> void
     {
+        //  Skip the first declaration after entering a 'for',
+        //  which is the for loop parameter - it's always
+        //  guaranteed to be initialized by the language
+        if (just_entered_for) {
+            just_entered_for = false;
+            return;
+        }
+
         if (
             !n.is_alias()
             //  Skip type scope (member) variables

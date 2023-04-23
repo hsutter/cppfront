@@ -1,0 +1,15 @@
+
+main: (args) = {
+    local_int := 42;
+
+    //  'in' (read-only) statement scope variable
+    (i := local_int) for args do (arg) {
+        std::cout << i << "\n";     // prints 42
+    }
+
+    //  'inout' (read-write) statement scope variable
+    (inout i := local_int) {
+        i++;
+    }
+    std::cout << local_int << "\n";     // prints 43
+}

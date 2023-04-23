@@ -24,7 +24,7 @@ main: () -> int = {
         callback
     );
 
-    for view do :(str:_) = {
+    for view do (str) {
         std::cout << str << "\n";
     }
 }

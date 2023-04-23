@@ -3,7 +3,7 @@ main: () -> int
 = {
     v: std::vector<int> = (1, 2, 3, 4, 5);
     counter := 42;
-    for v  next counter *= 2  do: (i:_) = {
+    for v  next counter *= 2  do (i) {
         std::cout << i << " " << counter << "\n";
     }
 }
