@@ -5124,7 +5124,7 @@ private:
                         && param->direction() != passing_style::inout
                         )
                     {
-                        error("parameters scoped to a block/statement must be 'in' (the default) or 'inout'", false);
+                        error("(temporary alpha limitation) parameters scoped to a block/statement must be 'in' (the default) or 'inout'", false);
                         return {};
                     }
                 }

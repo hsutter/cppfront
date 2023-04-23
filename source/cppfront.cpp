@@ -3812,26 +3812,35 @@ public:
         //-----------------------------------------------------------------------
         //  Else handle ordinary parameters
 
-        auto unqid = std::get_if<type_id_node::unqualified>(&type_id.id);
+        auto param_type = print_to_string(type_id);
 
-        //  If this parameter's name is an unqualified-id, check to see
-        //  if it's the name of one of the template parameters
-        auto is_template_parameter_name = false;
+        //  If there are template parameters, see if this parameter's name is an
+        //  unqualified-id with a template parameter name, or mentions a template
+        //  parameter as a template argument
+        auto is_dependent_parameter_type = false;
         if (
-            unqid
-            && current_declarations.back()
+            current_declarations.back()
             && current_declarations.back()->template_parameters
             )
         {
             for (auto& tparam : current_declarations.back()->template_parameters->parameters)
             {
-                assert(tparam);
+                assert(
+                    tparam
+                    && tparam->name()
+                );
+                //  For now just do a quick string match
+                auto tparam_name = tparam->name()->to_string(true);
                 if (
                     tparam->declaration->is_type()
-                    && tparam->declaration->has_name( *(*unqid)->identifier )
+                    && (
+                        param_type == tparam_name
+                        || std::string_view{param_type}.find("<"+tparam_name) != std::string_view::npos
+                        || std::string_view{param_type}.find(","+tparam_name) != std::string_view::npos
+                    )
                     )
                 {
-                    is_template_parameter_name = true;
+                    is_dependent_parameter_type = true;
                 }
             }
         }
@@ -3843,7 +3852,7 @@ public:
         if (
             !is_returns
             && !type_id.is_wildcard()
-            && !is_template_parameter_name
+            && !is_dependent_parameter_type
             )
         {
             switch (n.pass) {
@@ -3857,12 +3866,12 @@ public:
 
         if (
             type_id.is_wildcard()
-            || is_template_parameter_name
+            || is_dependent_parameter_type
             )
         {
             auto name = std::string{"auto"};
-            if (is_template_parameter_name) {
-                name = *(*unqid)->identifier;
+            if (is_dependent_parameter_type) {
+                name = param_type;
             }
             switch (n.pass) {
             break;case passing_style::in     : printer.print_cpp2( name+" const&", n.position() );
@@ -3912,7 +3921,7 @@ public:
         if (
             !is_returns
             && !type_id.is_wildcard()
-            && !is_template_parameter_name
+            && !is_dependent_parameter_type
             )
         {
             switch (n.pass) {
