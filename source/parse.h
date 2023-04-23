@@ -5434,7 +5434,18 @@ private:
             error("Cpp2 is currently exploring the path of not allowing default arguments - use overloading instead", false);
             return {};
         }
-
+        if (is_named && is_returns) {
+            auto tok = n->name();
+            assert(tok);
+            if (tok->type() != lexeme::Identifier) {
+                error("expected identifier, not '" + tok->to_string(true) + "'",
+                    false, tok->position());
+            }
+            else if (n->declaration->has_wildcard_type()) {
+                error("return parameter '" + tok->to_string(true) + "' must have a type",
+                    false, tok->position());
+            }
+        }
         return n;
     }
 
