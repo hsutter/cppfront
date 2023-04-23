@@ -4655,7 +4655,7 @@ private:
                 error("expected identifier, not '" + tok->to_string(true) + "'",
                     false, tok->position());
             }
-            else if (!n->declaration->is_type()) {
+            else if (n->declaration->has_wildcard_type()) {
                 error("return parameter '" + tok->to_string(true) + "' must have a type",
                     false, tok->position());
             }
