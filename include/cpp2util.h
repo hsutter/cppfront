@@ -1517,6 +1517,17 @@ inline auto make_args(int argc, char const* const* argv) -> args_t
 
 //-----------------------------------------------------------------------
 //
+//  alien_memory: memory typed as T but that is outside C++ and that the
+//                compiler may not assume it knows anything at all about
+//
+//-----------------------------------------------------------------------
+//
+template<typename T>
+using alien_memory = T volatile;
+
+
+//-----------------------------------------------------------------------
+//
 //  Speculative: RAII wrapping for the C standard library
 //
 //  As part of embracing compatibility while also reducing what we have to
