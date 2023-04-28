@@ -3785,7 +3785,7 @@ public:
             assert(type_name);
 
             printer.print_cpp2(
-                type_name->to_string(true) + pass + " that",
+                print_to_string( *type_name ) + pass + " that",
                 n.position()
             );
             return;
@@ -4143,7 +4143,7 @@ public:
                 && n.my_decl->parent_declaration->name()
             );
             printer.print_cpp2(
-                " -> " + n.my_decl->parent_declaration->name()->to_string(true) + "& ",
+                " -> " + print_to_string( *n.my_decl->parent_declaration->name() ) + "& ",
                 n.position()
             );
         }
@@ -4583,7 +4583,7 @@ public:
                     if (is_object_before_base) {
                         assert (is_object_before_base->name());
                         object_name =
-                            is_object_before_base->parent_declaration->name()->to_string(true)
+                            print_to_string( *is_object_before_base->parent_declaration->name() )
                             + "_"
                             + (*object)->name()->to_string(true)
                             + "_as_base";
