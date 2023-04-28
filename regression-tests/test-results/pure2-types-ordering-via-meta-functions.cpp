@@ -96,6 +96,7 @@ auto main() -> int;
 #line 4 "pure2-types-ordering-via-meta-functions.cpp2"
     }
 
+
 #line 9 "pure2-types-ordering-via-meta-functions.cpp2"
     case_insensitive_string::case_insensitive_string(cpp2::in<std::string> val)
                                                 : v{ val }
@@ -108,6 +109,7 @@ auto main() -> int;
 #line 9 "pure2-types-ordering-via-meta-functions.cpp2"
     }
 
+
 #line 14 "pure2-types-ordering-via-meta-functions.cpp2"
     person_in_family_tree::person_in_family_tree(cpp2::in<int> parents)
                                             : dummy_data{ parents }
@@ -119,20 +121,20 @@ auto main() -> int;
                                             return *this;
 #line 14 "pure2-types-ordering-via-meta-functions.cpp2"
     }
-    
+
+
     mystruct::mystruct(mystruct const& that)
                                 : val{ that.val }{}
 
-    auto mystruct::operator=(mystruct const& that) -> mystruct& {
+auto mystruct::operator=(mystruct const& that) -> mystruct& {
                                 val = that.val;
                                 return *this;}
-    mystruct::mystruct(mystruct&& that)
+mystruct::mystruct(mystruct&& that)
                                 : val{ std::move(that).val }{}
-    auto mystruct::operator=(mystruct&& that) -> mystruct& {
+auto mystruct::operator=(mystruct&& that) -> mystruct& {
                                 val = std::move(that).val;
                                 return *this;}
-    
-    mystruct::mystruct(){}
+mystruct::mystruct(){}
 #line 21 "pure2-types-ordering-via-meta-functions.cpp2"
 auto main() -> int{
     my_integer a {1}; 

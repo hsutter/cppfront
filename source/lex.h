@@ -929,7 +929,7 @@ auto lex_line(
         const auto keys = std::regex(
             "^alignas|^alignof|^asm|^as|^auto|"
             "^bool|^break|"
-            "^case|^catch|^char16_t|^char32_t|^char8_t|^char|^class|^co_await|^co_return|"
+            "^case|^catch|^char16_t|^char32_t|^char8_t|^char|^co_await|^co_return|"
             "^co_yield|^concept|^const_cast|^consteval|^constexpr|^constinit|^const|^continue|"
             "^decltype|^default|^double|^do|^dynamic_cast|"
             "^else|^enum|^explicit|^export|^extern|"

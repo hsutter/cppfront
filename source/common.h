@@ -744,17 +744,30 @@ public:
     auto print_version()
         -> void
     {
+        auto stamp = [](
+            std::string_view a = __DATE__, 
+            std::string_view b = __TIME__
+        )
+            -> std::string
+        {
+            std::unordered_map<std::string_view, char> m = { {"Jan",'1'}, {"Feb",'2'}, {"Mar",'3'}, {"Apr",'4'}, {"May",'5'}, {"Jun",'6'}, {"Jul",'7'}, {"Aug",'8'}, {"Sep",'9'}, {"Oct",'A'}, {"Nov",'B'}, {"Dec",'C'} };
+
+            auto ret = std::to_string(atoi(&a[9])-15);
+            ret += m[a.substr(0, 3)];
+            ret += a.substr(4,2);
+            ret += ":";
+            ret += b.substr(0,2);
+            ret += b.substr(3,2);
+            return ret;
+        };
+
         help_requested = true;
-        print("cppfront 0.1.1 compiler\nCopyright (C) Herb Sutter\n");
-        print("All rights reserved\n");
+        print("\ncppfront compiler - v0.2.1, build " + stamp());
+        print("\nCopyright(c) Herb Sutter, all rights reserved\n");
         print("\nSPDX-License-Identifier: CC-BY-NC-ND-4.0");
         print("\n  No commercial use");
-        print("\n  No forks/derivatives");
-        print("\n");
-        print("\nNote: This is a hilariously incomplete personal project.");
-        print("\nIt's known to be incomplet and incorrekt, and it has lots of b");
-        print("\nad formAt ting. Absolutely no warranty - try at your own risk.");
-        print("\n");
+        print("\n  No forks/derivatives\n");
+        print("\nAbsolutely no warranty - try at your own risk\n");
     }
 
 } cmdline;

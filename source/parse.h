@@ -5122,9 +5122,10 @@ private:
                     if (
                         param->direction() != passing_style::in
                         && param->direction() != passing_style::inout
+                        && param->direction() != passing_style::copy
                         )
                     {
-                        error("(temporary alpha limitation) parameters scoped to a block/statement must be 'in' (the default) or 'inout'", false);
+                        error("(temporary alpha limitation) parameters scoped to a block/statement must be 'in' (the default), 'copy', or 'inout'", false);
                         return {};
                     }
                 }
@@ -6498,6 +6499,7 @@ private:
             if (
                 id->get_token()
                 && *id->get_token() == "auto"
+                && curr().type() != lexeme::Colon
                 )
             {
                 auto name = std::string{"v"};
@@ -6513,6 +6515,7 @@ private:
             if (
                 id->get_token()
                 && *id->get_token() == "namespace"
+                && curr().type() != lexeme::Colon
                 )
             {
                 auto name = std::string{"N"};
@@ -6531,6 +6534,7 @@ private:
                     *id->get_token() == "class"
                     || *id->get_token() == "struct"
                     )
+                && curr().type() != lexeme::Colon
                 )
             {
                 auto name = std::string{"C"};

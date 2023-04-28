@@ -1,4 +1,5 @@
 @echo off
+cppfront.exe -version > version
 del *.cpp *.output
 copy ..\*.cpp2 .
 set count=0

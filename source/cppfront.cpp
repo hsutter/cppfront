@@ -725,19 +725,24 @@ public:
     )
         -> void
     {
-        //  If we are in a generated text region (signified by negative
-        //  line numbers) shunt this call to print_extra instead
-        if (pos.lineno < 0) {
-            if (generated_pos_line != pos.lineno) {
-                *out << "\n" + std::string(last_line_indentation, ' ');
-                generated_pos_line = pos.lineno;
+        //  If we're printing for real (not to a string target)
+        if (emit_target_stack.empty())
+        {
+            //  If we're in a generated text region (signified by negative
+            //  line numbers), then shunt this call to print_extra instead
+            if (pos.lineno < 1) {
+                if (generated_pos_line != pos.lineno) {
+                    *out << "\n" + std::string(last_line_indentation, ' ');
+                    generated_pos_line = pos.lineno;
+                }
+                print_extra(s);
+                return;
             }
-            print_extra(s);
-            return;
-        }
 
-        //  No longer in generated code, so reset the generated code counter
-        generated_pos_line = {};
+            //  Otherwise, we're no longer in generated code, so reset the
+            //  generated code counter
+            generated_pos_line = {};
+        }
 
         assert(
             is_open()
@@ -1549,6 +1554,7 @@ public:
             || n == "xor"
             || n == "xor_eq"
             || n == "new"
+            || n == "class"
             || n == "struct"
             )
         {
@@ -4625,46 +4631,6 @@ public:
                 ++object;
             }
 
-            ////  Each remaining object is required to have a default initializer,
-            ////  since it had no explicit initialization statement
-            //for (
-            //    ;
-            //    object != objects.end();
-            //    ++object
-            //    )
-            //{
-            //    auto object_name = canonize_object_name(*object);
-
-            //    if ((*object)->initializer)
-            //    {
-            //        //  Good. Entering here avoids emitting the error on the 'else'
-
-            //        auto initializer = print_to_string( *(*object)->initializer, false );
-            //        if (initializer.empty()) {
-            //            initializer = "{}";
-            //        }
-
-            //        //  Need to actually emit the initializer in an assignment operator
-            //        if (is_assignment)
-            //        {
-            //            current_functions.back().prolog.statements.push_back(
-            //                object_name +
-            //                " = " +
-            //                initializer +
-            //                ";"
-            //            );
-            //        }
-            //    }
-            //    else
-            //    {
-            //        errors.emplace_back(
-            //            n.position(),
-            //            object_name + " was not initialized in the operator= body and has no default initializer - " + error_msg
-            //        );
-            //        return;
-            //    }
-            //}
-
             //  Now no data members should be left over
             if (object != objects.end())
             {
@@ -4687,8 +4653,8 @@ public:
         {
             printer.print_cpp2( prefix, n.position() );
             printer.print_cpp2( type_qualification_if_any_for(n), n.position() );
-            printer.print_cpp2( *n.parent_declaration->name(), n.position() );
-            emit( *func, n.name(), false, true);
+            printer.print_cpp2( print_to_string( *n.parent_declaration->name() ), n.position() );
+            emit( *func, n.name(), false, true );
         }
         //  For an assignment operator, similar to emitting an ordinary function
         else
@@ -4698,9 +4664,8 @@ public:
                 && !current_functions.empty()
             );
             current_functions.back().epilog.push_back( "return *this;");
-            printer.print_cpp2( "auto " + type_qualification_if_any_for(n), n.position() );
-            printer.print_cpp2( *n.name(), n.identifier->position());
-            emit( *func, n.name());
+            printer.print_cpp2( "auto " + type_qualification_if_any_for(n) + print_to_string( *n.name() ), n.position());
+            emit( *func, n.name() );
         }
     }
 
@@ -4728,6 +4693,15 @@ public:
             return;
         }
 
+        //  If this is a generated declaration (negative source line number),
+        //  add a line break before 
+        if (
+            printer.get_phase() == printer.phase2_func_defs
+            && n.position().lineno < 1
+            )
+        {
+            printer.print_extra("\n");
+        }
 
         //  Handle aliases
 
@@ -4894,7 +4868,7 @@ public:
                 if (emit_as_base) {
                     printer.print_extra(
                         "\nstruct "
-                            + decl->parent_declaration->name()->to_string(true)
+                            + print_to_string(*decl->parent_declaration->name())
                             + "_"
                             + decl->name()->to_string(true)
                             + "_as_base { "
@@ -5074,7 +5048,7 @@ public:
                             printer.print_cpp2(
                                 separator
                                     + " public "
-                                    + decl->parent_declaration->name()->to_string(true)
+                                    + print_to_string(*decl->parent_declaration->name())
                                     + "_"
                                     + decl->name()->to_string(true)
                                     + "_as_base",
@@ -5420,7 +5394,7 @@ public:
                     printer.print_cpp2(
                         prefix
                             + type_qualification_if_any_for(n)
-                            + "~" + n.parent_declaration->name()->to_string(true),
+                            + "~" + print_to_string(*n.parent_declaration->name()),
                         n.position()
                     );
                     emit( *func, n.name(), false, true);

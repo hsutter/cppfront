@@ -92,20 +92,20 @@ template<typename T> auto test() -> void;
                                       return *this;
 #line 4 "pure2-types-value-types-via-meta-functions.cpp2"
     }
-    
+
+
     widget::widget(widget const& that)
                                 : val{ that.val }{}
 
-    auto widget::operator=(widget const& that) -> widget& {
+auto widget::operator=(widget const& that) -> widget& {
                                 val = that.val;
                                 return *this;}
-    widget::widget(widget&& that)
+widget::widget(widget&& that)
                                 : val{ std::move(that).val }{}
-    auto widget::operator=(widget&& that) -> widget& {
+auto widget::operator=(widget&& that) -> widget& {
                                 val = std::move(that).val;
                                 return *this;}
-    
-    widget::widget(){}
+widget::widget(){}
 #line 9 "pure2-types-value-types-via-meta-functions.cpp2"
     w_widget::w_widget(cpp2::in<int> i)
                                       : val{ i }
@@ -117,20 +117,20 @@ template<typename T> auto test() -> void;
                                       return *this;
 #line 9 "pure2-types-value-types-via-meta-functions.cpp2"
     }
-    
+
+
     w_widget::w_widget(w_widget const& that)
                                 : val{ that.val }{}
 
-    auto w_widget::operator=(w_widget const& that) -> w_widget& {
+auto w_widget::operator=(w_widget const& that) -> w_widget& {
                                 val = that.val;
                                 return *this;}
-    w_widget::w_widget(w_widget&& that)
+w_widget::w_widget(w_widget&& that)
                                 : val{ std::move(that).val }{}
-    auto w_widget::operator=(w_widget&& that) -> w_widget& {
+auto w_widget::operator=(w_widget&& that) -> w_widget& {
                                 val = std::move(that).val;
                                 return *this;}
-    
-    w_widget::w_widget(){}
+w_widget::w_widget(){}
 #line 14 "pure2-types-value-types-via-meta-functions.cpp2"
     p_widget::p_widget(cpp2::in<int> i)
                                       : val{ i }
@@ -142,20 +142,20 @@ template<typename T> auto test() -> void;
                                       return *this;
 #line 14 "pure2-types-value-types-via-meta-functions.cpp2"
     }
-    
+
+
     p_widget::p_widget(p_widget const& that)
                                 : val{ that.val }{}
 
-    auto p_widget::operator=(p_widget const& that) -> p_widget& {
+auto p_widget::operator=(p_widget const& that) -> p_widget& {
                                 val = that.val;
                                 return *this;}
-    p_widget::p_widget(p_widget&& that)
+p_widget::p_widget(p_widget&& that)
                                 : val{ std::move(that).val }{}
-    auto p_widget::operator=(p_widget&& that) -> p_widget& {
+auto p_widget::operator=(p_widget&& that) -> p_widget& {
                                 val = std::move(that).val;
                                 return *this;}
-    
-    p_widget::p_widget(){}
+p_widget::p_widget(){}
 #line 17 "pure2-types-value-types-via-meta-functions.cpp2"
 auto main() -> int{
     test<widget>();
