@@ -976,8 +976,6 @@ auto lex_line(
     auto peek_is_cpp2_fundamental_type_keyword = [&]
     {
         const auto keys = std::regex(
-            "^i8_fast|^i16_fast|^i32_fast|^i64_fast|^u8_fast|^u16_fast|^u32_fast|^u64_fast|"
-            "^i8_least|^i16_least|^i32_least|^i64_least|^u8_least|^u16_least|^u32_least|^u64_least|"
             "^i8|^i16|^i32|^i64|^u8|^u16|^u32|^u64"
         );
 
