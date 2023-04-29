@@ -5856,12 +5856,12 @@ private:
         }
         next();
 
-        //  Next is an optional meta functions clause
+        //  Next is an optional metafunctions clause
         while (curr() == "@") {
             next();
             auto idx = id_expression();
             if (!idx) {
-                error("'@' must be followed by a a meta function name", false);
+                error("'@' must be followed by a a metafunction name", false);
                 return {};
             }
             n->meta_functions.push_back( std::move(idx) );
@@ -5925,7 +5925,7 @@ private:
             if (!n->meta_functions.empty()) {
                 errors.emplace_back(
                     n->meta_functions.front()->position(),
-                    "(temporary alpha limitation) meta functions are currently not supported on functions, only on types"
+                    "(temporary alpha limitation) metafunctions are currently not supported on functions, only on types"
                 );
                 return {};
             }
@@ -5941,7 +5941,7 @@ private:
             if (!n->meta_functions.empty()) {
                 errors.emplace_back(
                     n->meta_functions.front()->position(),
-                    "(temporary alpha limitation) meta functions are currently not supported on namespaces, only on types"
+                    "(temporary alpha limitation) metafunctions are currently not supported on namespaces, only on types"
                 );
                 return {};
             }
@@ -5972,7 +5972,7 @@ private:
             if (!n->meta_functions.empty()) {
                 errors.emplace_back(
                     n->meta_functions.front()->position(),
-                    "(temporary alpha limitation) meta functions are currently not supported on objects, only on types"
+                    "(temporary alpha limitation) metafunctions are currently not supported on objects, only on types"
                 );
                 return {};
             }
@@ -6102,11 +6102,11 @@ private:
             }
         }
 
-        //  If this is a type with meta functions, apply those
+        //  If this is a type with metafunctions, apply those
         if (n->is_type()) {
             if (!apply_type_meta_functions(*n)) {
                 error(
-                    "error encountered while applying type's meta functions",
+                    "error encountered while applying type metafunctions",
                     false, {}, true
                 );
                 return {};

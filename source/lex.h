@@ -709,7 +709,7 @@ auto lex_line(
                     });
             }
 
-            //  Else if token after "operator" is an operator symbol
+            //  Else if token after "operator" is a single-token operator symbol
             else if (is_operator(tokens[i-1].type()))
             {
                 //  Merge just "operator" + the symbol into an identifier,
@@ -728,6 +728,27 @@ auto lex_line(
                     lexeme::Identifier
                     });
                 tokens.push_back(last_token);
+            }
+
+            //  Else if token after "operator" is a two-token operator symbol
+            else if (
+                (tokens[i-1].type() == lexeme::LeftParen && tokens[i].type() == lexeme::RightParen)
+                || (tokens[i-1].type() == lexeme::LeftBracket && tokens[i].type() == lexeme::RightBracket)
+                )
+            {
+                //  Merge just "operator" + the symbols into an identifier,
+                generated_text.push_back( "operator" + tokens[i-1].to_string(true) + tokens[i].to_string(true) );
+
+                tokens.pop_back();
+                tokens.pop_back();
+                auto pos = tokens.back().position();
+                tokens.pop_back();
+                tokens.push_back({
+                    &generated_text.back()[0],
+                    std::ssize(generated_text.back()),
+                    pos,
+                    lexeme::Identifier
+                    });
             }
 
         }

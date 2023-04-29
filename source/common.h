@@ -762,8 +762,8 @@ public:
         };
 
         help_requested = true;
-        print("\ncppfront compiler - v0.2.1, build " + stamp());
-        print("\nCopyright(c) Herb Sutter, all rights reserved\n");
+        print("\ncppfront compiler v0.2.1   Build " + stamp());
+        print("\nCopyright(c) Herb Sutter   All rights reserved\n");
         print("\nSPDX-License-Identifier: CC-BY-NC-ND-4.0");
         print("\n  No commercial use");
         print("\n  No forks/derivatives\n");

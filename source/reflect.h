@@ -410,14 +410,14 @@ auto declaration::as_type() const
 
 //-----------------------------------------------------------------------
 //
-//  Meta functions - these are hardwired for now until we get to the
+//  Metafunctions - these are hardwired for now until we get to the
 //  step of writing a Cpp2 interpreter to run inside the compiler
 //
 //-----------------------------------------------------------------------
 //
 
 //-----------------------------------------------------------------------
-//  Some common meta function helpers (meta functions are just functions,
+//  Some common metafunction helpers (metafunctions are just functions,
 //  so they can be factored as usual)
 //
 auto add_virtual_destructor(meta::type_declaration& t)
@@ -742,7 +742,7 @@ auto parser::apply_type_meta_functions( declaration_node& n )
     auto cs = meta::compiler_services{ &errors, generated_tokens };
     auto rtype = meta::type_declaration{ &n, cs };
 
-    //  For each meta function, apply it
+    //  For each metafunction, apply it
     for (auto& meta : n.meta_functions)
     {
         rtype.set_meta_function_name( meta->to_string() );
@@ -775,7 +775,7 @@ auto parser::apply_type_meta_functions( declaration_node& n )
             struct_( rtype );
         }
         else {
-            error( "(temporary alpha limitation) unrecognized meta function name '" + meta->to_string() + "' - currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, value, weakly_ordered_value, partially_ordered_value, struct" );
+            error( "(temporary alpha limitation) unrecognized metafunction name '" + meta->to_string() + "' - currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, value, weakly_ordered_value, partially_ordered_value, struct" );
             return false;
         }
     }
