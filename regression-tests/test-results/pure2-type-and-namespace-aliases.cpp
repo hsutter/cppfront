@@ -33,7 +33,7 @@ class myclass {
     private: using str2 = std::string;
 
     public: myclass() = default;
-    public: myclass(myclass const&) = delete;
+    public: myclass(myclass const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(myclass const&) -> void = delete;
 #line 13 "pure2-type-and-namespace-aliases.cpp2"
 };

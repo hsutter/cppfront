@@ -53,7 +53,7 @@ class X {
     //  X::exx member function description here
     public: auto exx(cpp2::in<int> count) const -> void;
         
-    public: X(X const&) = delete;
+    public: X(X const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(X const&) -> void = delete;
 
 
@@ -71,7 +71,7 @@ class Y {
 
     public: auto why(cpp2::in<int> count) const -> void;
         
-    public: Y(Y const&) = delete;
+    public: Y(Y const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(Y const&) -> void = delete;
 
 #line 53 "pure2-types-order-independence-and-nesting.cpp2"
@@ -85,14 +85,14 @@ template<typename T, typename U> class A {
         public: template<typename V, int J, typename W> static auto f(W const& w) -> void;
     
         public: B() = default;
-        public: B(B const&) = delete;
+        public: B(B const&) = delete; /* No 'that' constructor, suppress copy */
         public: auto operator=(B const&) -> void = delete;
 
 #line 61 "pure2-types-order-independence-and-nesting.cpp2"
     };
 
     public: A() = default;
-    public: A(A const&) = delete;
+    public: A(A const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(A const&) -> void = delete;
 #line 62 "pure2-types-order-independence-and-nesting.cpp2"
 };

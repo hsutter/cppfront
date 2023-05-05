@@ -5097,7 +5097,7 @@ public:
                 //  If no 'that' constructor was defined, disable copy/move
                 //  so that Cpp1 doesn't silently generate it anyway
                 if (!found_that_constructor) {
-                    printer.print_extra( prefix + id + "(" + id + " const&) = delete;" );
+                    printer.print_extra( prefix + id + "(" + id + " const&) = delete; /* No 'that' constructor, suppress copy */" );
                     printer.print_extra( prefix + "auto operator=(" + id + " const&) -> void = delete;" );
                 }
 

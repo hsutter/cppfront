@@ -758,6 +758,7 @@ public:
             ret += ":";
             ret += b.substr(0,2);
             ret += b.substr(3,2);
+            for (auto& c : ret) { if (c == ' ') { c = '0'; } }
             return ret;
         };
 

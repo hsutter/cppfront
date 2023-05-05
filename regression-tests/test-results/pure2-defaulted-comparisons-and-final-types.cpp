@@ -27,7 +27,7 @@ class widget final
 
     public: [[nodiscard]] auto operator<=>(widget const& that) const -> std::strong_ordering = default;
 
-    public: widget(widget const&) = delete;
+    public: widget(widget const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(widget const&) -> void = delete;
 #line 11 "pure2-defaulted-comparisons-and-final-types.cpp2"
 };

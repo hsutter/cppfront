@@ -25,7 +25,7 @@ template<typename T, typename U>
 class X {
     public: X();
 
-    public: X(X const&) = delete;
+    public: X(X const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(X const&) -> void = delete;
 #line 8 "pure2-requires-clauses.cpp2"
 };

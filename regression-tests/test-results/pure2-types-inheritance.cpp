@@ -32,7 +32,7 @@ class Human {
 public: virtual ~Human();
 
     public: Human() = default;
-    public: Human(Human const&) = delete;
+    public: Human(Human const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(Human const&) -> void = delete;
 #line 4 "pure2-types-inheritance.cpp2"
 };
@@ -44,7 +44,7 @@ namespace N {
     
     public: virtual ~Machine();
 
-        public: Machine(Machine const&) = delete;
+        public: Machine(Machine const&) = delete; /* No 'that' constructor, suppress copy */
         public: auto operator=(Machine const&) -> void = delete;
 
 #line 10 "pure2-types-inheritance.cpp2"
@@ -72,7 +72,7 @@ class Cyborg: public Cyborg_name_as_base, public Human, public Cyborg_address_as
 
     public: ~Cyborg();
         
-    public: Cyborg(Cyborg const&) = delete;
+    public: Cyborg(Cyborg const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(Cyborg const&) -> void = delete;
 
 #line 36 "pure2-types-inheritance.cpp2"

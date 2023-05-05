@@ -65,7 +65,7 @@ class myclass {
         public: static auto g() -> void;
     
         public: nested() = default;
-        public: nested(nested const&) = delete;
+        public: nested(nested const&) = delete; /* No 'that' constructor, suppress copy */
         public: auto operator=(nested const&) -> void = delete;
 
 #line 51 "pure2-types-basics.cpp2"
@@ -76,7 +76,7 @@ class myclass {
     public: template<auto T, auto U> [[nodiscard]] static auto f3() -> auto;
     public: template<cpp2::i8 T, cpp2::i16 U> [[nodiscard]] static auto f4() -> auto;
 
-    public: myclass(myclass const&) = delete;
+    public: myclass(myclass const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(myclass const&) -> void = delete;
 #line 58 "pure2-types-basics.cpp2"
 };
