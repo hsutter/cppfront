@@ -1,0 +1,3 @@
+pure2-cpp1-prefix-expression.cpp2...
+pure2-cpp1-prefix-expression.cpp2(4,10): error: use postfix 'var&' for address, not '&var'
+

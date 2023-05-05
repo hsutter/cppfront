@@ -3793,6 +3793,20 @@ private:
         if ((n->expr = postfix_expression())) {
             return n;
         }
+        switch (curr().type())
+        {
+        break; case lexeme::PlusPlus:
+            error("only postfix 'var++' increment is supported, not '++var'", false);
+        break; case lexeme::MinusMinus:
+            error("only postfix 'var--' decrement is supported, not '--var'", false);
+        break; case lexeme::Multiply:
+            error("use postfix 'ptr*' to dereference, not '*ptr'", false);
+        break; case lexeme::Ampersand:
+            error("use postfix 'var&' for address, not '&var'", false);
+        break; case lexeme::Tilde:
+            error("use postfix 'var~' for bitwise complement, not '~var'", false);
+        break; default: ;
+        }
         return {};
     }
 
