@@ -4092,6 +4092,14 @@ private:
                         generated_tokens->emplace_back( ">>=", t.position(), lexeme::RightShiftEq);
                         return &generated_tokens->back();
                     }
+                    if (
+                        peek(-1)->type() == lexeme::Identifier
+                        && peek(-1)->as_string_view() == "new"
+                        && next.type() != lexeme::Less
+                        )
+                    {
+                        error("use 'new<T>', not 'new T'");
+                    }
                     return nullptr;
                 },
                 [=,this]{ return logical_or_expression(allow_angle_operators); }
