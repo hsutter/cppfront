@@ -163,66 +163,67 @@ class type_declaration;
 class object_declaration;
 
 
-//-----------------------------------------------------------------------
-//  All declarations
-//
-class declaration
-    : public declaration_base
-{
-public:
-    declaration(
-        declaration_node*        n_,
-        compiler_services const& s
-    )
-        : declaration_base{n_, s}
-    { }
-
-    auto is_public        () const -> bool { return n->is_public(); }
-    auto is_protected     () const -> bool { return n->is_protected(); }
-    auto is_private       () const -> bool { return n->is_private(); }
-    auto is_default_access() const -> bool { return n->is_default_access(); }
-
-    auto make_public      () const -> bool { return n->make_public(); }
-    auto make_protected   () const -> bool { return n->make_protected(); }
-    auto make_private     () const -> bool { return n->make_private(); }
-
-    auto has_name()                   const -> bool        { return n->has_name(); }
-    auto has_name(std::string_view s) const -> bool        { return n->has_name(s); }
-
-    auto name() const -> std::string_view {
-        if (has_name()) { return n->name()->as_string_view(); }
-        else            { return ""; }
-    }
-
-    auto has_initializer() const -> bool { return n->has_initializer(); }
-
-    auto is_global   () const -> bool { return n->is_global(); }
-
-    auto is_function () const -> bool { return n->is_function(); }
-    auto is_object   () const -> bool { return n->is_object(); }
-    auto is_type     () const -> bool { return n->is_type(); }
-    auto is_namespace() const -> bool { return n->is_namespace(); }
-    auto is_alias    () const -> bool { return n->is_alias(); }
-
-    auto as_function() const -> function_declaration;
-    auto as_object  () const -> object_declaration;
-    auto as_type    () const -> type_declaration;
-
-    auto parent_is_function   () const -> bool { return n->parent_is_function(); }
-    auto parent_is_object     () const -> bool { return n->parent_is_object(); }
-    auto parent_is_type       () const -> bool { return n->parent_is_type(); }
-    auto parent_is_namespace  () const -> bool { return n->parent_is_namespace(); }
-    auto parent_is_alias      () const -> bool { return n->parent_is_alias(); }
-    auto parent_is_polymorphic() const -> bool { return n->parent_is_polymorphic(); }
-};
-
-
 //=======================================================================
 //  Switch to Cpp2
 }
 }
 cpp2: namespace = {
 meta: namespace = {
+
+//-----------------------------------------------------------------------
+//  All declarations
+//
+declaration: @copyable type =
+{
+    this: declaration_base = ();
+
+    operator=: (
+        out this,
+        n_: *declaration_node,
+        s : compiler_services
+    )
+    = {
+        declaration_base = (n_, s);
+    }
+
+    is_public        : (this) -> bool = n*.is_public();
+    is_protected     : (this) -> bool = n*.is_protected();
+    is_private       : (this) -> bool = n*.is_private();
+    is_default_access: (this) -> bool = n*.is_default_access();
+
+    make_public      : (inout this) -> bool = n*.make_public();
+    make_protected   : (inout this) -> bool = n*.make_protected();
+    make_private     : (inout this) -> bool = n*.make_private();
+
+    has_name         : (this)                      -> bool = n*.has_name();
+    has_name         : (this, s: std::string_view) -> bool = n*.has_name(s);
+
+    name: (this) -> std::string_view = {
+        if has_name() { return n*.name()*.as_string_view(); }
+        else          { return ""; }
+    }
+
+    has_initializer: (this) -> bool = n*.has_initializer();
+
+    is_global   : (this) -> bool = n*.is_global();
+    is_function : (this) -> bool = n*.is_function();
+    is_object   : (this) -> bool = n*.is_object();
+    is_type     : (this) -> bool = n*.is_type();
+    is_namespace: (this) -> bool = n*.is_namespace();
+    is_alias    : (this) -> bool = n*.is_alias();
+
+    as_function : (this) -> function_declaration = function_declaration(n, this);
+    as_object   : (this) -> object_declaration   = object_declaration(n, this);
+    as_type     : (this) -> type_declaration     = type_declaration(n, this);
+
+    parent_is_function   : (this) -> bool = n*.parent_is_function();
+    parent_is_object     : (this) -> bool = n*.parent_is_object();
+    parent_is_type       : (this) -> bool = n*.parent_is_type();
+    parent_is_namespace  : (this) -> bool = n*.parent_is_namespace();
+    parent_is_alias      : (this) -> bool = n*.parent_is_alias();
+    parent_is_polymorphic: (this) -> bool = n*.parent_is_polymorphic();
+}
+
 
 //-----------------------------------------------------------------------
 //  Function declarations
@@ -390,38 +391,6 @@ type_declaration: @copyable type =
     }
 }
 
-
-//=======================================================================
-//  Switch to Cpp1
-}
-}
-namespace cpp2 {
-namespace meta {
-
-auto declaration::as_function() const
-    -> function_declaration
-{
-    return function_declaration(n, *this);
-}
-
-auto declaration::as_object() const
-    -> object_declaration
-{
-    return object_declaration(n, *this);
-}
-
-auto declaration::as_type() const
-    -> type_declaration
-{
-    return type_declaration(n, *this);
-}
-
-
-//=======================================================================
-//  Switch to Cpp2, and close meta subnamespace
-}
-}
-cpp2: namespace = {
 
 //-----------------------------------------------------------------------
 //
@@ -734,7 +703,8 @@ struct: (inout t: meta::type_declaration) =
 
 
 //=======================================================================
-//  Switch to Cpp1
+//  Switch to Cpp1 and close subnamespace meta
+}
 }
 namespace cpp2 {
 
