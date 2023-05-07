@@ -130,6 +130,13 @@ public:
 };
 
 
+//=======================================================================
+//  Switch to Cpp2
+}
+}
+cpp2: namespace = {
+meta: namespace = {
+
 //-----------------------------------------------------------------------
 //
 //  Declarations
@@ -139,32 +146,26 @@ public:
 
 //  All declarations are noncopyable wrappers around a pointer to node
 //
-class declaration_base : public compiler_services
+declaration_base: @copyable type =
 {
-protected:
-    //  Note: const member => implicitly =delete's copy/move
-    declaration_node* const n;
+    this: compiler_services = ();
 
-    declaration_base(
-        declaration_node*        n_,
-        compiler_services const& s
+    protected n: *declaration_node;
+
+    protected operator=: (
+        out this,
+        n_: *declaration_node,
+        s : compiler_services
     )
-        : compiler_services{s}
-        , n{n_}
-    {
-        assert(n && "a meta::declaration must point to a valid declaration_node, not null");
+    = {
+        compiler_services = s;
+        n = n_;
+        [[assert: n, "a meta::declaration must point to a valid declaration_node, not null"]]
     }
 
-    auto position() const -> source_position override { return n->position(); }
-};
-
-
-//=======================================================================
-//  Switch to Cpp2
+    position: (override this) -> source_position = n*.position();
 }
-}
-cpp2: namespace = {
-meta: namespace = {
+
 
 //-----------------------------------------------------------------------
 //  All declarations
