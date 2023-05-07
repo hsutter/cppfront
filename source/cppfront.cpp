@@ -4497,17 +4497,24 @@ public:
 
                 //  Otherwise, use a default... for a non-copy/move that's the member initializer
                 //  (for which we don't need to emit anything special because it will get used),
-                //  and for a copy/move function we default to "= that.same_member"
+                //  and for a copy/move function we default to "= that.same_member" (or, if this
+                //  is a base type, just "= that")
                 if (!found_explicit_init)
                 {
                     if (emitting_move_that_function)
                     {
-                        initializer = "std::move(that)." + object_name;
+                        initializer = "std::move(that)";
+                        if (!(*object)->has_name("this")) {
+                            initializer += "." + object_name;
+                        }
                         found_default_init = true;
                     }
                     else if (emitting_that_function)
                     {
-                        initializer = "that." + object_name;
+                        initializer = "that";
+                        if (!(*object)->has_name("this")) {
+                            initializer += "." + object_name;
+                        }
                         found_default_init = true;
                     }
                     else if ((*object)->initializer)

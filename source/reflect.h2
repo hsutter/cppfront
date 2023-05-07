@@ -274,29 +274,47 @@ auto declaration::as_function() const
 }
 
 
+//=======================================================================
+//  Switch to Cpp2
+}
+}
+cpp2: namespace = {
+meta: namespace = {
+
 //-----------------------------------------------------------------------
 //  Object declarations
 //
-class object_declaration
-    : public declaration
+object_declaration: type =
 {
-public:
-    object_declaration(
-        declaration_node*        n_,
-        compiler_services const& s
-    )
-        : declaration{n_, s}
+    this: declaration = ();
+
+    operator=: (
+        out this,
+        n_: *declaration_node,
+        s : compiler_services
+    ) =
     {
-        assert(n->is_object());
+        declaration = (n_, s);
+        [[assert: n*.is_object()]]
     }
 
-    auto is_const() const -> bool { return n->is_const(); }
+    operator=: (out this, that) = { }
 
-    auto has_wildcard_type() const -> bool { return n->has_wildcard_type(); }
+    is_const: (this)->bool = n*.is_const();
+
+    has_wildcard_type: (this)->bool = n*.has_wildcard_type();
 
     // TODO: auto get_type() const ->
 
-};
+}
+
+
+//=======================================================================
+//  Switch to Cpp1
+}
+}
+namespace cpp2 {
+namespace meta {
 
 auto declaration::as_object() const
     -> object_declaration
@@ -394,6 +412,14 @@ public:
     }
 };
 
+
+//=======================================================================
+//  Switch to Cpp1
+}
+}
+namespace cpp2 {
+namespace meta {
+
 auto declaration::as_type() const
     -> type_declaration
 {
@@ -401,11 +427,9 @@ auto declaration::as_type() const
 }
 
 
-//  Close subnamespace meta
-}
-
 //=======================================================================
-//  Switch to Cpp2: Close namespace cpp2 and reopen it in Cpp2 code
+//  Switch to Cpp2, and close meta subnamespace
+}
 }
 cpp2: namespace = {
 
@@ -709,7 +733,7 @@ struct: (inout t: meta::type_declaration) =
 
 
 //=======================================================================
-//  Switch to Cpp1: Close namespace cpp2 and reopen it in Cpp1 code
+//  Switch to Cpp1
 }
 namespace cpp2 {
 
