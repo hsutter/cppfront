@@ -509,11 +509,6 @@ polymorphic_base: (inout t: meta::type_declaration) =
     if !has_dtor {
         add_virtual_destructor(t);
     }
-
-    for t.get_member_objects() do (mo) {
-        mo.require( mo.has_name("this"),
-                    "polymorphic base types may not contain data");
-    }
 }
 
 
