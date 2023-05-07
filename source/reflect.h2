@@ -101,29 +101,31 @@ protected:
     }
 
 public:
+    virtual auto position() const
+        -> source_position
+    {
+        return {};
+    }
+
     auto require(
         bool             b,
-        std::string_view msg,
-        source_position  pos = source_position{}
+        std::string_view msg
     ) const
         -> void
     {
         if (!b) {
-            error( msg, pos );
+            error( msg );
         }
     }
 
-    auto error(
-        std::string_view msg,
-        source_position  pos = source_position{}
-    ) const
+    auto error(std::string_view msg) const
         -> void
     {
         auto message = std::string{msg};
         if (!meta_function_name.empty()) {
             message = "while applying @" + meta_function_name + " - " + message;
         }
-        errors->emplace_back( pos, message );
+        errors->emplace_back( position(), message);
     }
 };
 
@@ -152,6 +154,8 @@ protected:
     {
         assert(n && "a meta::declaration must point to a valid declaration_node, not null");
     }
+
+    auto position() const -> source_position override { return n->position(); }
 };
 
 class function_declaration;
@@ -172,8 +176,6 @@ public:
     )
         : declaration_base{n_, s}
     { }
-
-    auto position() const -> source_position { return n->position(); }
 
     auto is_public        () const -> bool { return n->is_public(); }
     auto is_protected     () const -> bool { return n->is_protected(); }

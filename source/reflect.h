@@ -9,21 +9,21 @@
 #include "cpp2util.h"
 
 
-#line 281 "reflect.h2"
+#line 283 "reflect.h2"
 namespace cpp2 {
 namespace meta {
 
-#line 287 "reflect.h2"
+#line 289 "reflect.h2"
 class object_declaration;
 
-#line 314 "reflect.h2"
+#line 316 "reflect.h2"
 }
 }
 
-#line 434 "reflect.h2"
+#line 436 "reflect.h2"
 namespace cpp2 {
 
-#line 737 "reflect.h2"
+#line 739 "reflect.h2"
 }
 
 
@@ -132,29 +132,31 @@ protected:
     }
 
 public:
+    virtual auto position() const
+        -> source_position
+    {
+        return {};
+    }
+
     auto require(
         bool             b,
-        std::string_view msg,
-        source_position  pos = source_position{}
+        std::string_view msg
     ) const
         -> void
     {
         if (!b) {
-            error( msg, pos );
+            error( msg );
         }
     }
 
-    auto error(
-        std::string_view msg,
-        source_position  pos = source_position{}
-    ) const
+    auto error(std::string_view msg) const
         -> void
     {
         auto message = std::string{msg};
         if (!meta_function_name.empty()) {
             message = "while applying @" + meta_function_name + " - " + message;
         }
-        errors->emplace_back( pos, message );
+        errors->emplace_back( position(), message);
     }
 };
 
@@ -183,6 +185,8 @@ protected:
     {
         assert(n && "a meta::declaration must point to a valid declaration_node, not null");
     }
+
+    auto position() const -> source_position override { return n->position(); }
 };
 
 class function_declaration;
@@ -203,8 +207,6 @@ public:
     )
         : declaration_base{n_, s}
     { }
-
-    auto position() const -> source_position { return n->position(); }
 
     auto is_public        () const -> bool { return n->is_public(); }
     auto is_protected     () const -> bool { return n->is_protected(); }
@@ -309,7 +311,7 @@ auto declaration::as_function() const
 //  Switch to Cpp2
 }
 }
-#line 281 "reflect.h2"
+#line 283 "reflect.h2"
 namespace cpp2 {
 namespace meta {
 
@@ -319,14 +321,14 @@ namespace meta {
 class object_declaration
 : public declaration {
 
-#line 291 "reflect.h2"
+#line 293 "reflect.h2"
     public: object_declaration(
 
         cpp2::in<declaration_node*> n_, 
         cpp2::in<compiler_services> s
     );
 
-#line 301 "reflect.h2"
+#line 303 "reflect.h2"
     public: object_declaration(object_declaration const& that);
 
     public: [[nodiscard]] auto is_const() const -> bool;
@@ -337,7 +339,7 @@ class object_declaration
 
 };
 
-#line 312 "reflect.h2"
+#line 314 "reflect.h2"
 //=======================================================================
 //  Switch to Cpp1
 }
@@ -476,7 +478,7 @@ namespace cpp2 {
 //
 auto add_virtual_destructor(meta::type_declaration& t) -> void;
 
-#line 455 "reflect.h2"
+#line 457 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //      "... an abstract base class defines an interface ..."
@@ -491,7 +493,7 @@ auto add_virtual_destructor(meta::type_declaration& t) -> void;
 //
 auto interface(meta::type_declaration& t) -> void;
 
-#line 494 "reflect.h2"
+#line 496 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "C.35: A base class destructor should be either public and
@@ -514,7 +516,7 @@ auto interface(meta::type_declaration& t) -> void;
 //
 auto polymorphic_base(meta::type_declaration& t) -> void;
 
-#line 539 "reflect.h2"
+#line 541 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "... A totally ordered type ... requires operator<=> that
@@ -540,7 +542,7 @@ auto ordered_impl(
     cpp2::in<std::string_view> ordering// must be "strong_ordering" etc.
 ) -> void;
 
-#line 584 "reflect.h2"
+#line 586 "reflect.h2"
 //-----------------------------------------------------------------------
 //  ordered - a totally ordered type
 //
@@ -548,19 +550,19 @@ auto ordered_impl(
 //
 auto ordered(meta::type_declaration& t) -> void;
 
-#line 594 "reflect.h2"
+#line 596 "reflect.h2"
 //-----------------------------------------------------------------------
 //  weakly_ordered - a weakly ordered type
 //
 auto weakly_ordered(meta::type_declaration& t) -> void;
 
-#line 602 "reflect.h2"
+#line 604 "reflect.h2"
 //-----------------------------------------------------------------------
 //  partially_ordered - a partially ordered type
 //
 auto partially_ordered(meta::type_declaration& t) -> void;
 
-#line 611 "reflect.h2"
+#line 613 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "A value is ... a regular type. It must have all public
@@ -580,7 +582,7 @@ auto partially_ordered(meta::type_declaration& t) -> void;
 //
 auto basic_value(meta::type_declaration& t) -> void;
 
-#line 664 "reflect.h2"
+#line 666 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "A 'value' is a totally ordered basic_value..."
@@ -592,13 +594,13 @@ auto basic_value(meta::type_declaration& t) -> void;
 //
 auto value(meta::type_declaration& t) -> void;
 
-#line 679 "reflect.h2"
+#line 681 "reflect.h2"
 auto weakly_ordered_value(meta::type_declaration& t) -> void;
 
-#line 685 "reflect.h2"
+#line 687 "reflect.h2"
 auto partially_ordered_value(meta::type_declaration& t) -> void;
 
-#line 692 "reflect.h2"
+#line 694 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "By definition, a `struct` is a `class` in which members
@@ -626,7 +628,7 @@ auto partially_ordered_value(meta::type_declaration& t) -> void;
 //
 auto cpp2_struct(meta::type_declaration& t) -> void;
 
-#line 735 "reflect.h2"
+#line 737 "reflect.h2"
 //=======================================================================
 //  Switch to Cpp1
 }
@@ -696,18 +698,18 @@ auto parser::apply_type_meta_functions( declaration_node& n )
 //=== Cpp2 function definitions =================================================
 
 
-#line 281 "reflect.h2"
+#line 283 "reflect.h2"
 namespace cpp2 {
 namespace meta {
 
-#line 291 "reflect.h2"
+#line 293 "reflect.h2"
     object_declaration::object_declaration(
 
         cpp2::in<declaration_node*> n_, 
         cpp2::in<compiler_services> s
     )
         : declaration{ n_, s }
-#line 296 "reflect.h2"
+#line 298 "reflect.h2"
     {
 
         cpp2::Default.expects(CPP2_UFCS_0(is_object, (*cpp2::assert_not_null(n))), "");
@@ -715,28 +717,28 @@ namespace meta {
 
     object_declaration::object_declaration(object_declaration const& that)
                                     : declaration{ that }
-#line 301 "reflect.h2"
+#line 303 "reflect.h2"
     {}
 
     [[nodiscard]] auto object_declaration::is_const() const -> bool { return CPP2_UFCS_0(is_const, (*cpp2::assert_not_null(n)));  }
 
     [[nodiscard]] auto object_declaration::has_wildcard_type() const -> bool { return CPP2_UFCS_0(has_wildcard_type, (*cpp2::assert_not_null(n)));  }
 
-#line 314 "reflect.h2"
+#line 316 "reflect.h2"
 }
 }
 
-#line 434 "reflect.h2"
+#line 436 "reflect.h2"
 namespace cpp2 {
 
-#line 448 "reflect.h2"
+#line 450 "reflect.h2"
 auto add_virtual_destructor(meta::type_declaration& t) -> void
 {
     CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "operator=: (virtual move this) = { }"), 
                "could not add virtual destructor");
 }
 
-#line 467 "reflect.h2"
+#line 469 "reflect.h2"
 auto interface(meta::type_declaration& t) -> void
 {
     auto has_dtor {false}; 
@@ -758,13 +760,13 @@ auto interface(meta::type_declaration& t) -> void
         }
     }}
 
-#line 488 "reflect.h2"
+#line 490 "reflect.h2"
     if (!(std::move(has_dtor))) {
         add_virtual_destructor(t);
     }
 }
 
-#line 514 "reflect.h2"
+#line 516 "reflect.h2"
 auto polymorphic_base(meta::type_declaration& t) -> void
 {
     auto has_dtor {false}; 
@@ -784,13 +786,13 @@ auto polymorphic_base(meta::type_declaration& t) -> void
         }
     }}
 
-#line 533 "reflect.h2"
+#line 535 "reflect.h2"
     if (!(std::move(has_dtor))) {
         add_virtual_destructor(t);
     }
 }
 
-#line 559 "reflect.h2"
+#line 561 "reflect.h2"
 auto ordered_impl(
     meta::type_declaration& t, 
     cpp2::in<std::string_view> ordering
@@ -810,32 +812,32 @@ auto ordered_impl(
         }
     }}
 
-#line 578 "reflect.h2"
+#line 580 "reflect.h2"
     if (!(std::move(has_spaceship))) {
         CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "operator<=>: (this, that) -> std::" + (cpp2::as_<std::string>(ordering)) + ";"), 
                    "could not add operator<=> with std::" + (cpp2::as_<std::string>(ordering)));
     }
 }
 
-#line 589 "reflect.h2"
+#line 591 "reflect.h2"
 auto ordered(meta::type_declaration& t) -> void
 {
     ordered_impl(t, "strong_ordering");
 }
 
-#line 597 "reflect.h2"
+#line 599 "reflect.h2"
 auto weakly_ordered(meta::type_declaration& t) -> void
 {
     ordered_impl(t, "weak_ordering");
 }
 
-#line 605 "reflect.h2"
+#line 607 "reflect.h2"
 auto partially_ordered(meta::type_declaration& t) -> void
 {
     ordered_impl(t, "partial_ordering");
 }
 
-#line 628 "reflect.h2"
+#line 630 "reflect.h2"
 auto basic_value(meta::type_declaration& t) -> void
 {
     //  If the user explicitly wrote any of the copy/move functions,
@@ -866,14 +868,14 @@ auto basic_value(meta::type_declaration& t) -> void
                     "a value type may not have a non-public destructor");
     }}
 
-#line 658 "reflect.h2"
+#line 660 "reflect.h2"
     if (!(std::move(has_default_ctor))) {
         CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "operator=: (out this) = { }"), 
                    "could not add default constructor");
     }
 }
 
-#line 673 "reflect.h2"
+#line 675 "reflect.h2"
 auto value(meta::type_declaration& t) -> void
 {
     ordered(t);
@@ -892,7 +894,7 @@ auto partially_ordered_value(meta::type_declaration& t) -> void
     basic_value(t);
 }
 
-#line 717 "reflect.h2"
+#line 719 "reflect.h2"
 auto cpp2_struct(meta::type_declaration& t) -> void
 {
     { auto&& cpp2_range = CPP2_UFCS_0(get_members, t); for ( auto& m : cpp2_range ) 
@@ -907,11 +909,11 @@ auto cpp2_struct(meta::type_declaration& t) -> void
                        "a struct may not have a user-defined operator=");
         }
     }}
-#line 731 "reflect.h2"
+#line 733 "reflect.h2"
     basic_value(t);  // a plain_struct is-a basic_value
 }
 
-#line 737 "reflect.h2"
+#line 739 "reflect.h2"
 }
 
 #endif
