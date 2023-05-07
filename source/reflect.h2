@@ -303,101 +303,100 @@ object_declaration: @copyable type =
 }
 
 
+//-----------------------------------------------------------------------
+//  Type declarations
+//
+type_declaration: @copyable type =
+{
+    this: declaration = ();
+
+    operator=: (
+        out this,
+        n_: *declaration_node,
+        s : compiler_services
+    ) =
+    {
+        declaration = (n_, s);
+        [[assert: n*.is_type()]]
+    }
+
+    is_polymorphic: (this)       -> bool = n*.is_polymorphic();
+    is_final      : (this)       -> bool = n*.is_type_final();
+    make_final    : (inout this) -> bool = n*.make_type_final();
+
+    get_member_functions: (this)
+        -> std::vector<function_declaration>
+    = {
+        ret: std::vector<function_declaration> = ();
+        for n*.get_type_scope_declarations(declaration_node::functions) do (d) {
+            ret.emplace_back( d, this );
+        }
+        return ret;
+    }
+
+    get_member_objects: (this)
+        -> std::vector<object_declaration>
+    = {
+        ret: std::vector<object_declaration> = ();
+        for n*.get_type_scope_declarations(declaration_node::objects) do (d) {
+            ret.emplace_back( d, this );
+        }
+        return ret;
+    }
+
+    get_member_types: (this)
+        -> std::vector<type_declaration>
+    = {
+        ret: std::vector<type_declaration> = ();
+        for n*.get_type_scope_declarations(declaration_node::types) do (d) {
+            ret.emplace_back( d, this );
+        }
+        return ret;
+    }
+
+    get_members: (this)
+        -> std::vector<declaration>
+    = {
+        ret: std::vector<declaration> = ();
+        for n*.get_type_scope_declarations(declaration_node::all) do (d) {
+            ret.emplace_back( d, this );
+        }
+        return ret;
+    }
+
+    query_declared_that_functions: (this)
+        -> (
+            out_this_in_that     : bool,
+            out_this_move_that   : bool,
+            inout_this_in_that   : bool,
+            inout_this_move_that : bool
+            )
+    = {
+        declared := n*.find_declared_that_functions();
+        out_this_in_that     = declared.out_this_in_that     != nullptr;
+        out_this_move_that   = declared.out_this_move_that   != nullptr;
+        inout_this_in_that   = declared.inout_this_in_that   != nullptr;
+        inout_this_move_that = declared.inout_this_move_that != nullptr;
+    }
+
+    add_member: ( inout this, source: std::string_view )
+        -> bool
+    = {
+        decl := parse_statement(source);
+        if decl {
+            return n*.add_type_member(decl);
+        }
+        return false;
+    }
+}
+
+
 //=======================================================================
 //  Switch to Cpp1
 }
 }
 namespace cpp2 {
 namespace meta {
-
-//-----------------------------------------------------------------------
-//  Type declarations
-//
-class type_declaration
-    : public declaration
-{
-public:
-    type_declaration(
-        declaration_node*        n_,
-        compiler_services const& s
-    )
-        : declaration{n_, s}
-    {
-        assert(n->is_type());
-    }
-
-    auto is_polymorphic() const -> bool { return n->is_polymorphic(); }
-    auto is_final      () const -> bool { return n->is_type_final(); }
-    auto make_final    ()       -> bool { return n->make_type_final(); }
-
-    auto get_member_functions() const
-        -> std::vector<function_declaration>
-    {
-        auto ret = std::vector<function_declaration>{};
-        for (auto d : n->get_type_scope_declarations(declaration_node::functions)) {
-            ret.emplace_back( d, *this );
-        }
-        return ret;
-    }
-
-    auto get_member_objects() const
-        -> std::vector<object_declaration>
-    {
-        auto ret = std::vector<object_declaration>{};
-        for (auto& d : n->get_type_scope_declarations(declaration_node::objects)) {
-            ret.emplace_back( d, *this );
-        }
-        return ret;
-    }
-
-    auto get_member_types() const
-        -> std::vector<type_declaration>
-    {
-        auto ret = std::vector<type_declaration>{};
-        for (auto& d : n->get_type_scope_declarations(declaration_node::types)) {
-            ret.emplace_back( d, *this );
-        }
-        return ret;
-    }
-
-    auto get_members() const
-        -> std::vector<declaration>
-    {
-        auto ret = std::vector<declaration>{};
-        for (auto& d : n->get_type_scope_declarations(declaration_node::all)) {
-            ret.emplace_back( d, *this );
-        }
-        return ret;
-    }
-
-    struct declared_that_funcs {
-        bool out_this_in_that     = false;
-        bool out_this_move_that   = false;
-        bool inout_this_in_that   = false;
-        bool inout_this_move_that = false;
-    };
-
-    auto query_declared_that_functions() const
-        -> declared_that_funcs
-    {
-        auto declared = n->find_declared_that_functions();
-        return {
-            declared.out_this_in_that     != nullptr,
-            declared.out_this_move_that   != nullptr,
-            declared.inout_this_in_that   != nullptr,
-            declared.inout_this_move_that != nullptr
-        };
-    }
-
-    auto add_member( std::string_view source )
-        -> bool
-    {
-        if (auto decl = parse_statement(source)) {
-            return n->add_type_member(std::move(decl));
-        }
-        return false;
-    }
-};
 
 auto declaration::as_function() const
     -> function_declaration
