@@ -286,7 +286,7 @@ meta: namespace = {
 //-----------------------------------------------------------------------
 //  Object declarations
 //
-object_declaration: type =
+object_declaration: @copyable type =
 {
     this: declaration = ();
 
@@ -299,8 +299,6 @@ object_declaration: type =
         declaration = (n_, s);
         [[assert: n*.is_object()]]
     }
-
-    operator=: (out this, that) = { }
 
     is_const: (this)->bool = n*.is_const();
 
@@ -622,12 +620,11 @@ partially_ordered: (inout t: meta::type_declaration) =
 //
 //-----------------------------------------------------------------------
 //
-//  basic_value
+//  copyable    
+// 
+//  A type with (copy and move) x (construction and assignment)
 //
-//  A regular type: public default construction, copy/move construction
-//  and assignment, and no protected or virtual functions
-//
-basic_value: (inout t: meta::type_declaration) =
+copyable: (inout t: meta::type_declaration) =
 {
     //  If the user explicitly wrote any of the copy/move functions,
     //  they must also have written the most general one - we can't
@@ -647,6 +644,18 @@ basic_value: (inout t: meta::type_declaration) =
         t.require( t.add_member( "operator=: (out this, that) = { }"),
                    "could not add general operator=:(out this, that)");
     }
+}
+
+//-----------------------------------------------------------------------
+//
+//  basic_value
+//
+//  A regular type: copyable, plus has public default construction
+//  and no protected or virtual functions
+//
+basic_value: (inout t: meta::type_declaration) =
+{
+    copyable(t);
 
     has_default_ctor := false;
     for t.get_member_functions() do (inout mf) {
@@ -776,6 +785,12 @@ auto parser::apply_type_meta_functions( declaration_node& n )
         else if (meta->to_string() == "partially_ordered") {
             partially_ordered( rtype );
         }
+        else if (meta->to_string() == "copyable") {
+            copyable( rtype );
+        }
+        else if (meta->to_string() == "basic_value") {
+            basic_value( rtype );
+        }
         else if (meta->to_string() == "value") {
             value( rtype );
         }
@@ -789,7 +804,7 @@ auto parser::apply_type_meta_functions( declaration_node& n )
             cpp2_struct( rtype );
         }
         else {
-            error( "(temporary alpha limitation) unrecognized metafunction name '" + meta->to_string() + "' - currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, value, weakly_ordered_value, partially_ordered_value, struct" );
+            error( "(temporary alpha limitation) unrecognized metafunction name '" + meta->to_string() + "' - currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct" );
             return false;
         }
     }
