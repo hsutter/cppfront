@@ -14,7 +14,6 @@
 *.db
 *.ipch
 *.sln
-*.exe
 *.txt
 *.db-shm
 *.db-wal

@@ -15,7 +15,7 @@
 #pragma warning(disable: 4456)
 #endif
 
-#include "../include/cpp2util.h"
+#include "cpp2util.h"
 
 
 //===========================================================================

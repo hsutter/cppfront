@@ -1,24 +1,4 @@
 
-#ifndef REFLECT_H__CPP2
-#define REFLECT_H__CPP2
-
-
-//=== Cpp2 type declarations ====================================================
-
-
-#include "cpp2util.h"
-
-
-#line 410 "reflect.h2"
-namespace cpp2 {
-
-#line 718 "reflect.h2"
-}
-
-
-//=== Cpp2 type definitions and function declarations ===========================
-
-
 //  Copyright (c) Herb Sutter
 //  SPDX-License-Identifier: CC-BY-NC-ND-4.0
 
@@ -427,8 +407,7 @@ auto declaration::as_type() const
 //=======================================================================
 //  Switch to Cpp2: Close namespace cpp2 and reopen it in Cpp2 code
 }
-#line 410 "reflect.h2"
-namespace cpp2 {
+cpp2: namespace = {
 
 //-----------------------------------------------------------------------
 //
@@ -442,9 +421,13 @@ namespace cpp2 {
 //  Some common metafunction helpers (metafunctions are just functions,
 //  so they can be factored as usual)
 //
-auto add_virtual_destructor(meta::type_declaration& t) -> void;
+add_virtual_destructor: (inout t: meta::type_declaration) =
+{
+    t.require( t.add_member( "operator=: (virtual move this) = { }"),
+               "could not add virtual destructor");
+}
 
-#line 431 "reflect.h2"
+
 //-----------------------------------------------------------------------
 //
 //      "... an abstract base class defines an interface ..."
@@ -457,9 +440,33 @@ auto add_virtual_destructor(meta::type_declaration& t) -> void;
 //
 //  an abstract base class having only pure virtual functions
 //
-auto interface(meta::type_declaration& t) -> void;
+interface: (inout t: meta::type_declaration) =
+{
+    has_dtor := false;
 
-#line 470 "reflect.h2"
+    for t.get_members() do (inout m)
+    {
+        m.require( !m.is_object(),
+                   "interfaces may not contain data objects");
+        if m.is_function() {
+            mf := m.as_function();
+            mf.require( !mf.is_copy_or_move(),
+                        "interfaces may not copy or move; consider a virtual clone() instead");
+            mf.require( !mf.has_initializer(),
+                        "interface functions must not have a function body; remove the '=' initializer");
+            mf.require( mf.make_public(),
+                        "interface functions must be public");
+            mf.make_virtual();
+            has_dtor |= mf.is_destructor();
+        }
+    }
+
+    if !has_dtor {
+        add_virtual_destructor(t);
+    }
+}
+
+
 //-----------------------------------------------------------------------
 //
 //     "C.35: A base class destructor should be either public and
@@ -480,9 +487,36 @@ auto interface(meta::type_declaration& t) -> void;
 //
 //  Unlike an interface, it can have nonpublic and nonvirtual functions.
 //
-auto polymorphic_base(meta::type_declaration& t) -> void;
+polymorphic_base: (inout t: meta::type_declaration) =
+{
+    has_dtor := false;
 
-#line 520 "reflect.h2"
+    for t.get_member_functions() do (inout mf)
+    {
+        if mf.is_default_access() {
+            mf.make_public();
+        }
+        mf.require( !mf.is_copy_or_move(),
+                    "polymorphic base types may not copy or move; consider a virtual clone() instead");
+        if mf.is_destructor() {
+            has_dtor = true;
+            mf.require( (mf.is_public() && mf.is_virtual())
+                        || (mf.is_protected() && !mf.is_virtual()),
+                        "a polymorphic base type destructor must be public and virtual, or protected and nonvirtual");
+        }
+    }
+
+    if !has_dtor {
+        add_virtual_destructor(t);
+    }
+
+    for t.get_member_objects() do (mo) {
+        mo.require( mo.has_name("this"),
+                    "polymorphic base types may not contain data");
+    }
+}
+
+
 //-----------------------------------------------------------------------
 //
 //     "... A totally ordered type ... requires operator<=> that
@@ -503,32 +537,58 @@ auto polymorphic_base(meta::type_declaration& t) -> void;
 //-----------------------------------------------------------------------
 //
 
-auto ordered_impl(
-    meta::type_declaration& t, 
-    cpp2::in<std::string_view> ordering// must be "strong_ordering" etc.
-) -> void;
+ordered_impl: (
+    inout t:  meta::type_declaration,
+    ordering: std::string_view  // must be "strong_ordering" etc.
+) =
+{
+    has_spaceship := false;
 
-#line 565 "reflect.h2"
+    for t.get_member_functions() do (inout mf)
+    {
+        if mf.has_name("operator<=>") {
+            has_spaceship = true;
+            return_name := mf.unnamed_return_type();
+            if return_name.find(ordering) == return_name.npos
+            {
+                mf.error( "operator<=> must return std::" + ordering as std::string );
+            }
+        }
+    }
+
+    if !has_spaceship {
+        t.require( t.add_member( "operator<=>: (this, that) -> std::" + (ordering as std::string) + ";" ),
+                   "could not add operator<=> with std::" + (ordering as std::string) );
+    }
+}
+
 //-----------------------------------------------------------------------
 //  ordered - a totally ordered type
 //
 //  Note: the ordering that should be encouraged as default gets the nice name
 //
-auto ordered(meta::type_declaration& t) -> void;
+ordered: (inout t: meta::type_declaration) =
+{
+    ordered_impl( t, "strong_ordering" );
+}
 
-#line 575 "reflect.h2"
 //-----------------------------------------------------------------------
 //  weakly_ordered - a weakly ordered type
 //
-auto weakly_ordered(meta::type_declaration& t) -> void;
+weakly_ordered: (inout t: meta::type_declaration) =
+{
+    ordered_impl( t, "weak_ordering" );
+}
 
-#line 583 "reflect.h2"
 //-----------------------------------------------------------------------
 //  partially_ordered - a partially ordered type
 //
-auto partially_ordered(meta::type_declaration& t) -> void;
+partially_ordered: (inout t: meta::type_declaration) =
+{
+    ordered_impl( t, "partial_ordering" );
+}
 
-#line 592 "reflect.h2"
+
 //-----------------------------------------------------------------------
 //
 //     "A value is ... a regular type. It must have all public
@@ -546,9 +606,42 @@ auto partially_ordered(meta::type_declaration& t) -> void;
 //  A regular type: public default construction, copy/move construction
 //  and assignment, and no protected or virtual functions
 //
-auto basic_value(meta::type_declaration& t) -> void;
+basic_value: (inout t: meta::type_declaration) =
+{
+    //  If the user explicitly wrote any of the copy/move functions,
+    //  they must also have written the most general one - we can't
+    //  assume we can safely generate it for them since they've opted
+    //  into customized semantics
+    smfs := t.query_declared_that_functions();
+    if  !smfs.out_this_in_that
+        && (
+            smfs.out_this_move_that
+            || smfs.inout_this_in_that
+            || smfs.inout_this_move_that
+        )
+    {
+        t.error( "this type is partially copyable/movable - when you provide any of the more-specific operator= signatures, you must also provide the one with the general signature (out this, that); alternatively, consider removing all the operator= functions and let them all be generated for you with default memberwise semantics" );
+    }
+    else if !smfs.out_this_in_that {
+        t.require( t.add_member( "operator=: (out this, that) = { }"),
+                   "could not add general operator=:(out this, that)");
+    }
 
-#line 645 "reflect.h2"
+    has_default_ctor := false;
+    for t.get_member_functions() do (inout mf) {
+        has_default_ctor |= mf.is_default_constructor();
+        mf.require( !mf.is_protected() && !mf.is_virtual(),
+                    "a value type may not have a protected or virtual function");
+        mf.require( !mf.is_destructor() || mf.is_public(),
+                    "a value type may not have a non-public destructor");
+    }
+
+    if !has_default_ctor {
+        t.require( t.add_member( "operator=: (out this) = { }"),
+                   "could not add default constructor");
+    }
+}
+
 //-----------------------------------------------------------------------
 //
 //     "A 'value' is a totally ordered basic_value..."
@@ -558,15 +651,25 @@ auto basic_value(meta::type_declaration& t) -> void;
 //
 //  Note: the ordering that should be encouraged as default gets the nice name
 //
-auto value(meta::type_declaration& t) -> void;
+value: (inout t: meta::type_declaration) =
+{
+    ordered(t);
+    basic_value(t);
+}
 
-#line 660 "reflect.h2"
-auto weakly_ordered_value(meta::type_declaration& t) -> void;
+weakly_ordered_value: (inout t: meta::type_declaration) =
+{
+    weakly_ordered(t);
+    basic_value(t);
+}
 
-#line 666 "reflect.h2"
-auto partially_ordered_value(meta::type_declaration& t) -> void;
+partially_ordered_value: (inout t: meta::type_declaration) =
+{
+    partially_ordered(t);
+    basic_value(t);
+}
 
-#line 673 "reflect.h2"
+
 //-----------------------------------------------------------------------
 //
 //     "By definition, a `struct` is a `class` in which members
@@ -592,9 +695,24 @@ auto partially_ordered_value(meta::type_declaration& t) -> void;
 //  no virtual functions, and no user-defined constructors
 //  (i.e., no invariants) or assignment or destructors.
 //
-auto cpp2_struct(meta::type_declaration& t) -> void;
+struct: (inout t: meta::type_declaration) =
+{
+    for t.get_members() do (inout m)
+    {
+        m.require( m.make_public(),
+                   "all struct members must be public");
+        if m.is_function() {
+            mf := m.as_function();
+            t.require( !mf.is_virtual(),
+                       "a struct may not have a virtual function");
+            t.require( !mf.has_name("operator="),
+                       "a struct may not have a user-defined operator=");
+        }
+    }
+    basic_value(t);		// a plain_struct is-a basic_value
+}
 
-#line 716 "reflect.h2"
+
 //=======================================================================
 //  Switch to Cpp1: Close namespace cpp2 and reopen it in Cpp1 code
 }
@@ -659,203 +777,3 @@ auto parser::apply_type_meta_functions( declaration_node& n )
 
 
 }
-
-
-//=== Cpp2 function definitions =================================================
-
-
-#line 410 "reflect.h2"
-namespace cpp2 {
-
-#line 424 "reflect.h2"
-auto add_virtual_destructor(meta::type_declaration& t) -> void
-{
-    CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "operator=: (virtual move this) = { }"), 
-               "could not add virtual destructor");
-}
-
-#line 443 "reflect.h2"
-auto interface(meta::type_declaration& t) -> void
-{
-    auto has_dtor {false}; 
-
-    { auto&& cpp2_range = CPP2_UFCS_0(get_members, t); for ( auto& m : cpp2_range ) 
-    {
-        CPP2_UFCS(require, m, !(CPP2_UFCS_0(is_object, m)), 
-                   "interfaces may not contain data objects");
-        if (CPP2_UFCS_0(is_function, m)) {
-            auto mf {CPP2_UFCS_0(as_function, m)}; 
-            CPP2_UFCS(require, mf, !(CPP2_UFCS_0(is_copy_or_move, mf)), 
-                        "interfaces may not copy or move; consider a virtual clone() instead");
-            CPP2_UFCS(require, mf, !(CPP2_UFCS_0(has_initializer, mf)), 
-                        "interface functions must not have a function body; remove the '=' initializer");
-            CPP2_UFCS(require, mf, CPP2_UFCS_0(make_public, mf), 
-                        "interface functions must be public");
-            CPP2_UFCS_0(make_virtual, mf);
-            has_dtor |= CPP2_UFCS_0(is_destructor, mf);
-        }
-    }}
-
-#line 464 "reflect.h2"
-    if (!(std::move(has_dtor))) {
-        add_virtual_destructor(t);
-    }
-}
-
-#line 490 "reflect.h2"
-auto polymorphic_base(meta::type_declaration& t) -> void
-{
-    auto has_dtor {false}; 
-
-    { auto&& cpp2_range = CPP2_UFCS_0(get_member_functions, t); for ( auto& mf : cpp2_range ) 
-    {
-        if (CPP2_UFCS_0(is_default_access, mf)) {
-            CPP2_UFCS_0(make_public, mf);
-        }
-        CPP2_UFCS(require, mf, !(CPP2_UFCS_0(is_copy_or_move, mf)), 
-                    "polymorphic base types may not copy or move; consider a virtual clone() instead");
-        if (CPP2_UFCS_0(is_destructor, mf)) {
-            has_dtor = true;
-            CPP2_UFCS(require, mf, (CPP2_UFCS_0(is_public, mf) && CPP2_UFCS_0(is_virtual, mf)) 
-                        || (CPP2_UFCS_0(is_protected, mf) && !(CPP2_UFCS_0(is_virtual, mf))), 
-                        "a polymorphic base type destructor must be public and virtual, or protected and nonvirtual");
-        }
-    }}
-
-#line 509 "reflect.h2"
-    if (!(std::move(has_dtor))) {
-        add_virtual_destructor(t);
-    }
-
-    { auto const& cpp2_range = CPP2_UFCS_0(get_member_objects, t); for ( auto const& mo : cpp2_range ) {
-        CPP2_UFCS(require, mo, CPP2_UFCS(has_name, mo, "this"), 
-                    "polymorphic base types may not contain data");
-    }}
-#line 517 "reflect.h2"
-}
-
-#line 540 "reflect.h2"
-auto ordered_impl(
-    meta::type_declaration& t, 
-    cpp2::in<std::string_view> ordering
-) -> void
-{
-    auto has_spaceship {false}; 
-
-    { auto&& cpp2_range = CPP2_UFCS_0(get_member_functions, t); for ( auto& mf : cpp2_range ) 
-    {
-        if (CPP2_UFCS(has_name, mf, "operator<=>")) {
-            has_spaceship = true;
-            auto return_name {CPP2_UFCS_0(unnamed_return_type, mf)}; 
-            if (CPP2_UFCS(find, return_name, ordering)==return_name.npos) 
-            {
-                CPP2_UFCS(error, mf, "operator<=> must return std::" + cpp2::as_<std::string>(ordering));
-            }
-        }
-    }}
-
-#line 559 "reflect.h2"
-    if (!(std::move(has_spaceship))) {
-        CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "operator<=>: (this, that) -> std::" + (cpp2::as_<std::string>(ordering)) + ";"), 
-                   "could not add operator<=> with std::" + (cpp2::as_<std::string>(ordering)));
-    }
-}
-
-#line 570 "reflect.h2"
-auto ordered(meta::type_declaration& t) -> void
-{
-    ordered_impl(t, "strong_ordering");
-}
-
-#line 578 "reflect.h2"
-auto weakly_ordered(meta::type_declaration& t) -> void
-{
-    ordered_impl(t, "weak_ordering");
-}
-
-#line 586 "reflect.h2"
-auto partially_ordered(meta::type_declaration& t) -> void
-{
-    ordered_impl(t, "partial_ordering");
-}
-
-#line 609 "reflect.h2"
-auto basic_value(meta::type_declaration& t) -> void
-{
-    //  If the user explicitly wrote any of the copy/move functions,
-    //  they must also have written the most general one - we can't
-    //  assume we can safely generate it for them since they've opted
-    //  into customized semantics
-    auto smfs {CPP2_UFCS_0(query_declared_that_functions, t)}; 
-    if ( !(smfs.out_this_in_that) 
-        && (
-            smfs.out_this_move_that 
-            || smfs.inout_this_in_that 
-            || smfs.inout_this_move_that)) 
-
-    {
-        CPP2_UFCS(error, t, "this type is partially copyable/movable - when you provide any of the more-specific operator= signatures, you must also provide the one with the general signature (out this, that); alternatively, consider removing all the operator= functions and let them all be generated for you with default memberwise semantics");
-    }
-    else {if (!(std::move(smfs).out_this_in_that)) {
-        CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "operator=: (out this, that) = { }"), 
-                   "could not add general operator=:(out this, that)");
-    }}
-
-    auto has_default_ctor {false}; 
-    { auto&& cpp2_range = CPP2_UFCS_0(get_member_functions, t); for ( auto& mf : cpp2_range ) {
-        has_default_ctor |= CPP2_UFCS_0(is_default_constructor, mf);
-        CPP2_UFCS(require, mf, !(CPP2_UFCS_0(is_protected, mf)) && !(CPP2_UFCS_0(is_virtual, mf)), 
-                    "a value type may not have a protected or virtual function");
-        CPP2_UFCS(require, mf, !(CPP2_UFCS_0(is_destructor, mf)) || CPP2_UFCS_0(is_public, mf), 
-                    "a value type may not have a non-public destructor");
-    }}
-
-#line 639 "reflect.h2"
-    if (!(std::move(has_default_ctor))) {
-        CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "operator=: (out this) = { }"), 
-                   "could not add default constructor");
-    }
-}
-
-#line 654 "reflect.h2"
-auto value(meta::type_declaration& t) -> void
-{
-    ordered(t);
-    basic_value(t);
-}
-
-auto weakly_ordered_value(meta::type_declaration& t) -> void
-{
-    weakly_ordered(t);
-    basic_value(t);
-}
-
-auto partially_ordered_value(meta::type_declaration& t) -> void
-{
-    partially_ordered(t);
-    basic_value(t);
-}
-
-#line 698 "reflect.h2"
-auto cpp2_struct(meta::type_declaration& t) -> void
-{
-    { auto&& cpp2_range = CPP2_UFCS_0(get_members, t); for ( auto& m : cpp2_range ) 
-    {
-        CPP2_UFCS(require, m, CPP2_UFCS_0(make_public, m), 
-                   "all struct members must be public");
-        if (CPP2_UFCS_0(is_function, m)) {
-            auto mf {CPP2_UFCS_0(as_function, m)}; 
-            CPP2_UFCS(require, t, !(CPP2_UFCS_0(is_virtual, mf)), 
-                       "a struct may not have a virtual function");
-            CPP2_UFCS(require, t, !(CPP2_UFCS(has_name, mf, "operator=")), 
-                       "a struct may not have a user-defined operator=");
-        }
-    }}
-#line 712 "reflect.h2"
-    basic_value(t);  // a plain_struct is-a basic_value
-}
-
-#line 718 "reflect.h2"
-}
-
-#endif
