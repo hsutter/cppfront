@@ -2116,14 +2116,18 @@ public:
                 && n.body
             );
 
+            //  Note: This used to emit cpp2_range as a range-for-loop scope variable,
+            //        but some major compilers seem to have random troubles with that;
+            //        the workaround to avoid their bugs for now is to emit a { } block
+            //        around the Cpp1 range-for and make the scope variable a normal local
             if (n.for_with_in) {
-                printer.print_cpp2("for ( auto const& cpp2_range = ", n.position());
+                printer.print_cpp2("{ auto const& cpp2_range = ", n.position());
             }
             else {
-                printer.print_cpp2("for ( auto&& cpp2_range = ", n.position());
+                printer.print_cpp2("{ auto&& cpp2_range = ", n.position());
             }
             emit(*n.range);
-            printer.print_cpp2(";  ", n.position());
+            printer.print_cpp2("; for ( ", n.position());
             emit(*n.parameter);
             printer.print_cpp2(" : cpp2_range ) ", n.position());
             if (!labelname.empty()) {
@@ -2150,6 +2154,8 @@ public:
             if (!labelname.empty()) {
                 printer.print_extra(" CPP2_CONTINUE_BREAK("+labelname+") }");
             }
+
+            printer.print_extra("}");
 
             in_non_rvalue_context.pop_back();
         }
@@ -5410,7 +5416,7 @@ public:
                 {
                     printer.print_cpp2( prefix, n.position() );
                     printer.print_cpp2( "auto " + type_qualification_if_any_for(n), n.position() );
-                    printer.print_cpp2( *n.name(), n.identifier->position() );
+                    emit( *n.name() );
                     emit( *func, n.name(), is_main, false, suffix1 );
                     printer.print_cpp2( suffix2, n.position() );
                 }

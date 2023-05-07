@@ -27,8 +27,9 @@
 {
     std::vector<int> v {1, 2, 3, 4, 5}; 
     auto counter {42}; 
-    for ( auto const& cpp2_range = v;  auto const& i : cpp2_range )  { do {
+    { auto const& cpp2_range = v; for ( auto const& i : cpp2_range )  { do {
         std::cout << i << " " << counter << "\n";
-    } while (false); counter *= 2; }
+    } while (false); counter *= 2; }}
+#line 9 "mixed-intro-for-with-counter-include-last.cpp2"
 }
 

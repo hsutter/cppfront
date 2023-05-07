@@ -44,7 +44,8 @@ auto test(auto const& x) -> void{
     cpp2::u16 z {42}; 
     test(std::move(z));
 
-    for ( auto const& cpp2_range = args;  auto const& arg : cpp2_range ) 
-        std::cout << arg << "\n";
+    { auto const& cpp2_range = args; for ( auto const& arg : cpp2_range ) 
+        std::cout << arg << "\n";}
+#line 24 "mixed-fixed-type-aliases.cpp2"
 }
 

@@ -31,8 +31,9 @@ auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> vo
     std::vector<int> v {1, 2, 3, 4, 5}; 
     add_42_to_subrange(v, 1, 3);
 
-    for ( auto const& cpp2_range = v;  auto const& i : cpp2_range ) 
-        std::cout << i << "\n";
+    { auto const& cpp2_range = v; for ( auto const& i : cpp2_range ) 
+        std::cout << i << "\n";}
+#line 8 "mixed-bounds-safety-with-assert-2.cpp2"
 }
 
 auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> void
@@ -41,11 +42,12 @@ auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> vo
     cpp2::Bounds.expects(cpp2::cmp_less_eq(end,CPP2_UFCS_0(ssize, rng)), "");
 
     auto count {0}; 
-    for ( auto&& cpp2_range = rng;  
+    { auto&& cpp2_range = rng; for ( 
 
           auto&  i : cpp2_range )  { do 
         if ([_0 = start, _1 = count, _2 = end]{ return cpp2::cmp_less_eq(_0,_1) && cpp2::cmp_less_eq(_1,_2); }()) {
             i += 42;
-        } while (false); ++count; }
+        } while (false); ++count; }}
+#line 22 "mixed-bounds-safety-with-assert-2.cpp2"
 }
 

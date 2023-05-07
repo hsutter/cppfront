@@ -52,9 +52,10 @@ auto decorate_and_print(auto& thing) -> void{
     } while ( cpp2::cmp_greater(*cpp2::assert_not_null(i),1) && [&]{ --*cpp2::assert_not_null(i) ; return true; }() );
 
     std::cout << "\n";
-    for ( auto&& cpp2_range = words;  auto& word : cpp2_range ) 
-        decorate_and_print(word);
+    { auto&& cpp2_range = words; for ( auto& word : cpp2_range ) 
+        decorate_and_print(word);}
 
+#line 28 "pure2-intro-example-three-loops.cpp2"
     print(std::string{"end of program"});
 }
 

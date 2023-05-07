@@ -28,9 +28,9 @@ auto const& i = local_int;
 
     //  'in' (read-only) statement scope variable
 #line 6 "pure2-statement-scope-parameters.cpp2"
-    for ( auto const& cpp2_range = args;  auto const& arg : cpp2_range ) {
+    { auto const& cpp2_range = args; for ( auto const& arg : cpp2_range ) {
         std::cout << i << "\n";     // prints 42
-    }
+    }}
 }
 {
 auto& i = local_int;
