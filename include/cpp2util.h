@@ -213,6 +213,8 @@
     #include <cstdio>
     #include <cstdint>
     #include <algorithm>
+    #include <compare>
+    #include <iterator>
 
     #ifndef CPP2_NO_EXCEPTIONS
         #include <exception>
@@ -392,7 +394,7 @@ auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> declty
 //
 auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
     requires (std::is_integral_v<CPP2_TYPEOF(arg)> &&
-             requires { std::ssize(x); x[arg]; })
+             requires { std::ssize(x); x[arg]; std::begin(x) + 2; })
 {
     Bounds.expects(0 <= arg && arg < std::ssize(x), "out of bounds access attempt detected" CPP2_SOURCE_LOCATION_ARG);
     return CPP2_FORWARD(x) [ CPP2_FORWARD(arg) ];
@@ -400,7 +402,7 @@ auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAU
 
 auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
     requires (!(std::is_integral_v<CPP2_TYPEOF(arg)> &&
-             requires { std::ssize(x); x[arg]; }))
+             requires { std::ssize(x); x[arg]; std::begin(x) + 2; }))
 {
     return CPP2_FORWARD(x) [ CPP2_FORWARD(arg) ];
 }
@@ -1524,6 +1526,37 @@ inline auto make_args(int argc, char const* const* argv) -> args_t
 //
 template<typename T>
 using alien_memory = T volatile;
+
+
+//-----------------------------------------------------------------------
+//
+//  strict_value: a strong typedef-like helper for value types
+//
+//  Intended for use as an underlying type for types/variables where you
+//  don't want implicit conversions or comparisons to happen between
+//  values even if they may share the same underlying type (e.g.,
+//  Color::Red and CardGame::Poker may both be represented as an `int`
+//  but shouldn't be interconvertible or intercomparable)
+//
+//  Used by the `enum` and `flag_enum` metafunctions
+//
+//-----------------------------------------------------------------------
+//
+template <typename T, typename Tag>
+class strict_value {
+    T t;
+public:
+    template <typename U> requires std::is_same_v<T,U>
+    explicit constexpr strict_value(U const& u) : t{u} { }
+
+    template <typename U> requires std::is_same_v<T,U>
+    explicit constexpr operator U() const { return t; }
+
+    template <typename U> requires std::is_same_v<T,U>
+    explicit constexpr operator U()       { return t; }
+
+    auto operator<=>( strict_value const& ) const -> std::strong_ordering = default;
+};
 
 
 //-----------------------------------------------------------------------
