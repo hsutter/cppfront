@@ -158,10 +158,6 @@ protected:
     auto position() const -> source_position override { return n->position(); }
 };
 
-class function_declaration;
-class type_declaration;
-class object_declaration;
-
 
 //=======================================================================
 //  Switch to Cpp2
