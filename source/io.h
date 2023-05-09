@@ -693,11 +693,18 @@ auto process_cpp2_line(
     auto found_end = false;
 
     auto prev = ' ';
+    auto in_string_literal = false;
+
     for (auto i = colno_t{0}; i < ssize(line); ++i) {
 
         if (in_comment) {
             switch (line[i]) {
             break;case '/': if (prev == '*') { in_comment = false; }
+            break;default: ;
+            }
+        } else if (in_string_literal) {
+            switch (line[i]) {
+            break;case '"': if (prev != '\\') { in_string_literal = false; }
             break;default: ;
             }
         }
@@ -731,6 +738,9 @@ auto process_cpp2_line(
 
             break;case '/':
                 if (prev == '/') { in_comment = false; return false; }
+
+            break;case '"':
+                if (prev != '\\') { in_string_literal = true; }
 
             break;default: ;
             }
