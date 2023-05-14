@@ -1614,6 +1614,15 @@ public:
             && !in_non_rvalue_context.back();
 
         if (
+            add_move
+            && *(n.identifier - 1) == "return"
+            && *(n.identifier + 1) == ";"
+            )
+        {
+            add_move = false;
+        }
+    
+        if (
             emitting_move_that_function
             && *n.identifier == "that"
             )

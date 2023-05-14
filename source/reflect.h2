@@ -146,7 +146,7 @@ meta: namespace = {
 
 //  All declarations are noncopyable wrappers around a pointer to node
 //
-declaration_base: @copyable type =
+declaration_base: @polymorphic_base @copyable type =
 {
     this: compiler_services = ();
 
@@ -170,7 +170,7 @@ declaration_base: @copyable type =
 //-----------------------------------------------------------------------
 //  All declarations
 //
-declaration: @copyable type =
+declaration: @polymorphic_base @copyable type =
 {
     this: declaration_base = ();
 
@@ -461,9 +461,8 @@ interface: (inout t: meta::type_declaration) =
 //
 //  polymorphic_base
 //
-//  A pure polymorphic base type that has no instance data, is not
-//  copyable, and whose destructor is either public and virtual or
-//  protected and nonvirtual.
+//  A pure polymorphic base type that is not copyable, and whose
+//  destructor is either public and virtual or protected and nonvirtual.
 //
 //  Unlike an interface, it can have nonpublic and nonvirtual functions.
 //
@@ -576,8 +575,8 @@ partially_ordered: (inout t: meta::type_declaration) =
 //
 //-----------------------------------------------------------------------
 //
-//  copyable    
-// 
+//  copyable
+//
 //  A type with (copy and move) x (construction and assignment)
 //
 copyable: (inout t: meta::type_declaration) =
