@@ -5262,8 +5262,8 @@ public:
                         break;default:
                             if (
                                 func->is_constructor()
+                                && (func->is_default_constructor() || func->parameters->ssize() == 2)
                                 && !func->is_constructor_with_that()
-                                && func->parameters->ssize() == 2
                                 && generating_assignment_from != &n
                                 )
                             {

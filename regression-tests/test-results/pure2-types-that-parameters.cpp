@@ -17,7 +17,7 @@ class myclass;
 #line 2 "pure2-types-that-parameters.cpp2"
 class myclass {
 
-    public: myclass();
+    public: explicit myclass();
 
     public: myclass(myclass const& that);
         

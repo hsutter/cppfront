@@ -34,7 +34,7 @@ public: widget(widget const& that);
 public: auto operator=(widget const& that) -> widget& ;
 public: widget(widget&& that);
 public: auto operator=(widget&& that) -> widget& ;
-public: widget();
+public: explicit widget();
 
 #line 5 "pure2-types-value-types-via-meta-functions.cpp2"
 };
@@ -50,7 +50,7 @@ public: w_widget(w_widget const& that);
 public: auto operator=(w_widget const& that) -> w_widget& ;
 public: w_widget(w_widget&& that);
 public: auto operator=(w_widget&& that) -> w_widget& ;
-public: w_widget();
+public: explicit w_widget();
 
 #line 10 "pure2-types-value-types-via-meta-functions.cpp2"
 };
@@ -66,7 +66,7 @@ public: p_widget(p_widget const& that);
 public: auto operator=(p_widget const& that) -> p_widget& ;
 public: p_widget(p_widget&& that);
 public: auto operator=(p_widget&& that) -> p_widget& ;
-public: p_widget();
+public: explicit p_widget();
 
 #line 15 "pure2-types-value-types-via-meta-functions.cpp2"
 };

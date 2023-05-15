@@ -23,7 +23,7 @@ template<typename T, typename U>
     requires( std::is_same_v<T,int> 
               && std::is_same_v<U,int> )
 class X {
-    public: X();
+    public: explicit X();
 
     public: X(X const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(X const&) -> void = delete;

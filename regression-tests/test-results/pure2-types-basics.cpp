@@ -42,7 +42,7 @@ class myclass {
         
 
 #line 27 "pure2-types-basics.cpp2"
-    public: myclass();
+    public: explicit myclass();
         
 
 #line 34 "pure2-types-basics.cpp2"

@@ -73,7 +73,7 @@ class mystruct {
 public: auto operator=(mystruct const& that) -> mystruct& ;
 public: mystruct(mystruct&& that);
 public: auto operator=(mystruct&& that) -> mystruct& ;
-public: mystruct();
+public: explicit mystruct();
 
 #line 19 "pure2-types-ordering-via-meta-functions.cpp2"
 };
