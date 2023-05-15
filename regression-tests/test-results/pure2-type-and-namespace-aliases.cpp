@@ -61,9 +61,8 @@ auto myfunc() -> void{
 
     auto const& v2 = std::move(v);
 
-    { auto const& cpp2_range = v2; for ( auto const& s : cpp2_range ) 
-        std::cout << cpp2::to_string(s) + "\n";}
-#line 24 "pure2-type-and-namespace-aliases.cpp2"
+    for ( auto const& s : v2 ) 
+        std::cout << cpp2::to_string(s) + "\n";
 }
 
 auto main() -> int{

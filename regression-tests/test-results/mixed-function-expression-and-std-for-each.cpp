@@ -43,9 +43,8 @@
         std::move(callback)
     );
 
-    { auto const& cpp2_range = view; for ( auto const& str : cpp2_range ) {
+    for ( auto const& str : view ) {
         std::cout << str << "\n";
-    }}
-#line 30 "mixed-function-expression-and-std-for-each.cpp2"
+    }
 }
 

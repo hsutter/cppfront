@@ -30,11 +30,10 @@ auto println(auto const& x, auto const& len) -> void;
             "hello", "2022"}; 
     std::span view {vec}; 
 
-    { auto&& cpp2_range = view; for ( auto& str : cpp2_range ) {
+    for ( auto& str : view ) {
         auto len {decorate(str)}; 
         println(str, len);
-    }}
-#line 10 "pure2-intro-example-hello-2022.cpp2"
+    }
 }
 
 [[nodiscard]] auto decorate(auto& thing) -> int{

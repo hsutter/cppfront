@@ -37,8 +37,7 @@
     auto callback {[](auto& x) -> void { x += "-ish";  }}; 
     std::ranges::for_each(view, std::move(callback));
 
-    { auto const& cpp2_range = view; for ( auto const& str : cpp2_range ) 
-        std::cout << str << "\n";}
-#line 23 "mixed-function-expression-with-pointer-capture.cpp2"
+    for ( auto const& str : view ) 
+        std::cout << str << "\n";
 }
 
