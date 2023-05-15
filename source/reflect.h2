@@ -144,7 +144,7 @@ meta: namespace = {
 //-----------------------------------------------------------------------
 //
 
-//  All declarations are noncopyable wrappers around a pointer to node
+//  All declarations are wrappers around a pointer to node
 //
 declaration_base: @polymorphic_base @copyable type =
 {

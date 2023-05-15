@@ -182,7 +182,7 @@ namespace meta {
 //-----------------------------------------------------------------------
 //
 
-//  All declarations are noncopyable wrappers around a pointer to node
+//  All declarations are wrappers around a pointer to node
 //
 class declaration_base
 : public compiler_services {
@@ -808,10 +808,9 @@ declaration::declaration(declaration const& that)
         std::vector<function_declaration>
     {
         std::vector<function_declaration> ret {}; 
-        { auto const& cpp2_range = CPP2_UFCS(get_type_scope_declarations, (*cpp2::assert_not_null(n)), declaration_node::functions); for ( auto const& d : cpp2_range ) {
+        for ( auto const& d : CPP2_UFCS(get_type_scope_declarations, (*cpp2::assert_not_null(n)), declaration_node::functions) ) {
             CPP2_UFCS(emplace_back, ret, d, (*this));
-        }}
-#line 332 "reflect.h2"
+        }
         return ret; 
     }
 
@@ -819,10 +818,9 @@ declaration::declaration(declaration const& that)
         std::vector<object_declaration>
     {
         std::vector<object_declaration> ret {}; 
-        { auto const& cpp2_range = CPP2_UFCS(get_type_scope_declarations, (*cpp2::assert_not_null(n)), declaration_node::objects); for ( auto const& d : cpp2_range ) {
+        for ( auto const& d : CPP2_UFCS(get_type_scope_declarations, (*cpp2::assert_not_null(n)), declaration_node::objects) ) {
             CPP2_UFCS(emplace_back, ret, d, (*this));
-        }}
-#line 342 "reflect.h2"
+        }
         return ret; 
     }
 
@@ -830,10 +828,9 @@ declaration::declaration(declaration const& that)
         std::vector<type_declaration>
     {
         std::vector<type_declaration> ret {}; 
-        { auto const& cpp2_range = CPP2_UFCS(get_type_scope_declarations, (*cpp2::assert_not_null(n)), declaration_node::types); for ( auto const& d : cpp2_range ) {
+        for ( auto const& d : CPP2_UFCS(get_type_scope_declarations, (*cpp2::assert_not_null(n)), declaration_node::types) ) {
             CPP2_UFCS(emplace_back, ret, d, (*this));
-        }}
-#line 352 "reflect.h2"
+        }
         return ret; 
     }
 
@@ -841,10 +838,9 @@ declaration::declaration(declaration const& that)
         std::vector<declaration>
     {
         std::vector<declaration> ret {}; 
-        { auto const& cpp2_range = CPP2_UFCS(get_type_scope_declarations, (*cpp2::assert_not_null(n)), declaration_node::all); for ( auto const& d : cpp2_range ) {
+        for ( auto const& d : CPP2_UFCS(get_type_scope_declarations, (*cpp2::assert_not_null(n)), declaration_node::all) ) {
             CPP2_UFCS(emplace_back, ret, d, (*this));
-        }}
-#line 362 "reflect.h2"
+        }
         return ret; 
     }
 
@@ -889,7 +885,7 @@ auto interface(meta::type_declaration& t) -> void
 {
     auto has_dtor {false}; 
 
-    { auto&& cpp2_range = CPP2_UFCS_0(get_members, t); for ( auto& m : cpp2_range ) 
+    for ( auto& m : CPP2_UFCS_0(get_members, t) ) 
     {
         CPP2_UFCS(require, m, !(CPP2_UFCS_0(is_object, m)), 
                    "interfaces may not contain data objects");
@@ -904,9 +900,8 @@ auto interface(meta::type_declaration& t) -> void
             CPP2_UFCS_0(make_virtual, mf);
             has_dtor |= CPP2_UFCS_0(is_destructor, mf);
         }
-    }}
+    }
 
-#line 444 "reflect.h2"
     if (!(std::move(has_dtor))) {
         add_virtual_destructor(t);
     }
@@ -917,7 +912,7 @@ auto polymorphic_base(meta::type_declaration& t) -> void
 {
     auto has_dtor {false}; 
 
-    { auto&& cpp2_range = CPP2_UFCS_0(get_member_functions, t); for ( auto& mf : cpp2_range ) 
+    for ( auto& mf : CPP2_UFCS_0(get_member_functions, t) ) 
     {
         if (CPP2_UFCS_0(is_default_access, mf)) {
             CPP2_UFCS_0(make_public, mf);
@@ -930,9 +925,8 @@ auto polymorphic_base(meta::type_declaration& t) -> void
                         || (CPP2_UFCS_0(is_protected, mf) && !(CPP2_UFCS_0(is_virtual, mf))), 
                         "a polymorphic base type destructor must be public and virtual, or protected and nonvirtual");
         }
-    }}
+    }
 
-#line 488 "reflect.h2"
     if (!(std::move(has_dtor))) {
         add_virtual_destructor(t);
     }
@@ -946,7 +940,7 @@ auto ordered_impl(
 {
     auto has_spaceship {false}; 
 
-    { auto&& cpp2_range = CPP2_UFCS_0(get_member_functions, t); for ( auto& mf : cpp2_range ) 
+    for ( auto& mf : CPP2_UFCS_0(get_member_functions, t) ) 
     {
         if (CPP2_UFCS(has_name, mf, "operator<=>")) {
             has_spaceship = true;
@@ -956,9 +950,8 @@ auto ordered_impl(
                 CPP2_UFCS(error, mf, "operator<=> must return std::" + cpp2::as_<std::string>(ordering));
             }
         }
-    }}
+    }
 
-#line 533 "reflect.h2"
     if (!(std::move(has_spaceship))) {
         CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "operator<=>: (this, that) -> std::" + (cpp2::as_<std::string>(ordering)) + ";"), 
                    "could not add operator<=> with std::" + (cpp2::as_<std::string>(ordering)));
@@ -1012,15 +1005,14 @@ auto basic_value(meta::type_declaration& t) -> void
     copyable(t);
 
     auto has_default_ctor {false}; 
-    { auto&& cpp2_range = CPP2_UFCS_0(get_member_functions, t); for ( auto& mf : cpp2_range ) {
+    for ( auto& mf : CPP2_UFCS_0(get_member_functions, t) ) {
         has_default_ctor |= CPP2_UFCS_0(is_default_constructor, mf);
         CPP2_UFCS(require, mf, !(CPP2_UFCS_0(is_protected, mf)) && !(CPP2_UFCS_0(is_virtual, mf)), 
                     "a value type may not have a protected or virtual function");
         CPP2_UFCS(require, mf, !(CPP2_UFCS_0(is_destructor, mf)) || CPP2_UFCS_0(is_public, mf), 
                     "a value type may not have a non-public destructor");
-    }}
+    }
 
-#line 624 "reflect.h2"
     if (!(std::move(has_default_ctor))) {
         CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "operator=: (out this) = { }"), 
                    "could not add default constructor");
@@ -1049,7 +1041,7 @@ auto partially_ordered_value(meta::type_declaration& t) -> void
 #line 683 "reflect.h2"
 auto cpp2_struct(meta::type_declaration& t) -> void
 {
-    { auto&& cpp2_range = CPP2_UFCS_0(get_members, t); for ( auto& m : cpp2_range ) 
+    for ( auto& m : CPP2_UFCS_0(get_members, t) ) 
     {
         CPP2_UFCS(require, m, CPP2_UFCS_0(make_public, m), 
                    "all struct members must be public");
@@ -1060,8 +1052,7 @@ auto cpp2_struct(meta::type_declaration& t) -> void
             CPP2_UFCS(require, t, !(CPP2_UFCS(has_name, mf, "operator=")), 
                        "a struct may not have a user-defined operator=");
         }
-    }}
-#line 697 "reflect.h2"
+    }
     basic_value(t);  // a plain_struct is-a basic_value
 }
 
