@@ -660,6 +660,11 @@ public:
         print("\nUsage: cppfront [options] file ...\n\nOptions:\n");
         int last_group = -1;
         for (auto& flag : flags) {
+            //  Skip hidden flags
+            if (flag.name.front() == '_') {
+                continue;
+            }
+
             if (last_group != flag.group) {
                 print("\n");
                 last_group = flag.group;
@@ -741,33 +746,38 @@ public:
         return args;
     }
 
+    //  This is used only by the owner of the 'main' branch
+    //  to generate stable build version strings
+    auto gen_version()
+        -> void
+    {
+        help_requested = true;
+        std::string_view a = __DATE__;
+        std::string_view b = __TIME__;
+        std::unordered_map<std::string_view, char> m = { {"Jan",'1'}, {"Feb",'2'}, {"Mar",'3'}, {"Apr",'4'}, {"May",'5'}, {"Jun",'6'}, {"Jul",'7'}, {"Aug",'8'}, {"Sep",'9'}, {"Oct",'A'}, {"Nov",'B'}, {"Dec",'C'} };
+
+        auto stamp = std::to_string(atoi(&a[9])-15);
+        stamp += m[a.substr(0, 3)];
+        stamp += a.substr(4,2);
+        stamp += ":";
+        stamp += b.substr(0,2);
+        stamp += b.substr(3,2);
+        for (auto& c : stamp) { if (c == ' ') { c = '0'; } }
+        print( "\"" + stamp + "\"");
+    }
+
     auto print_version()
         -> void
     {
-        auto stamp = [](
-            std::string_view a = __DATE__, 
-            std::string_view b = __TIME__
-        )
-            -> std::string
-        {
-            std::unordered_map<std::string_view, char> m = { {"Jan",'1'}, {"Feb",'2'}, {"Mar",'3'}, {"Apr",'4'}, {"May",'5'}, {"Jun",'6'}, {"Jul",'7'}, {"Aug",'8'}, {"Sep",'9'}, {"Oct",'A'}, {"Nov",'B'}, {"Dec",'C'} };
-
-            auto ret = std::to_string(atoi(&a[9])-15);
-            ret += m[a.substr(0, 3)];
-            ret += a.substr(4,2);
-            ret += ":";
-            ret += b.substr(0,2);
-            ret += b.substr(3,2);
-            for (auto& c : ret) { if (c == ' ') { c = '0'; } }
-            return ret;
-        };
-
         help_requested = true;
-        print("\ncppfront compiler v0.2.1   Build " + stamp());
+        print("\ncppfront compiler v0.2.1   Build "
+            #include "build.info"
+        );
         print("\nCopyright(c) Herb Sutter   All rights reserved\n");
         print("\nSPDX-License-Identifier: CC-BY-NC-ND-4.0");
         print("\n  No commercial use");
-        print("\n  No forks/derivatives\n");
+        print("\n  No forks/derivatives");
+        print("\nFAQ: Why? Because this is a personal experiment at this time\n");
         print("\nAbsolutely no warranty - try at your own risk\n");
     }
 
@@ -800,6 +810,13 @@ static cmdline_processor::register_flag cmd_version(
     "version",
     "Print version information",
     []{ cmdline.print_version(); }
+);
+
+static cmdline_processor::register_flag cmd_gen_version(
+    0,
+    "_gen_version",
+    "Generate version information",
+    []{ cmdline.gen_version(); }
 );
 
 }

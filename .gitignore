@@ -25,3 +25,4 @@
 *.sarif
 *.bin
 *.exe
+source/gen_version.bat
