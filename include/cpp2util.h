@@ -215,6 +215,7 @@
     #include <algorithm>
     #include <compare>
     #include <iterator>
+    #include <concepts>
 
     #ifndef CPP2_NO_EXCEPTIONS
         #include <exception>
