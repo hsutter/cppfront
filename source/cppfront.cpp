@@ -4131,12 +4131,15 @@ public:
             emit(*n.parameters);
         }
 
-        //  Add implicit noexcept when we implement proper EH
-        //  to handle calling Cpp1 code that throws
-        //if (!n.throws) {
-        //    printer.add_pad_in_this_line(-25);
-        //    printer.print_cpp2( " noexcept", n.position() );
-        //}
+        //  For now, adding implicit noexcept only for move and swap functions
+        if (
+            n.is_move()
+            || n.is_swap()
+            || generating_move_from == n.my_decl
+            )
+        {
+            printer.print_cpp2( " noexcept", n.position() );
+        }
 
         printer.print_cpp2( suffix1, n.position() );
 

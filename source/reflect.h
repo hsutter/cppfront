@@ -22,13 +22,13 @@ class declaration;
 #line 228 "reflect.h2"
 class function_declaration;
 
-#line 281 "reflect.h2"
+#line 283 "reflect.h2"
 class object_declaration;
 
-#line 307 "reflect.h2"
+#line 309 "reflect.h2"
 class type_declaration;
 
-#line 703 "reflect.h2"
+#line 705 "reflect.h2"
 }
 }
 
@@ -288,6 +288,8 @@ class function_declaration
     public: [[nodiscard]] auto is_defaultable() const -> bool;
     public: [[nodiscard]] auto is_constructor() const -> bool;
     public: [[nodiscard]] auto is_default_constructor() const -> bool;
+    public: [[nodiscard]] auto is_move() const -> bool;
+    public: [[nodiscard]] auto is_swap() const -> bool;
     public: [[nodiscard]] auto is_constructor_with_that() const -> bool;
     public: [[nodiscard]] auto is_constructor_with_in_that() const -> bool;
     public: [[nodiscard]] auto is_constructor_with_move_that() const -> bool;
@@ -310,24 +312,24 @@ class function_declaration
     public: [[nodiscard]] auto make_virtual() -> bool;
 
 public: function_declaration(function_declaration const& that);
-#line 275 "reflect.h2"
+#line 277 "reflect.h2"
 };
 
-#line 278 "reflect.h2"
+#line 280 "reflect.h2"
 //-----------------------------------------------------------------------
 //  Object declarations
 //
 class object_declaration
 : public declaration {
 
-#line 285 "reflect.h2"
+#line 287 "reflect.h2"
     public: object_declaration(
 
         cpp2::in<declaration_node*> n_, 
         cpp2::in<compiler_services> s
     );
 
-#line 295 "reflect.h2"
+#line 297 "reflect.h2"
     public: [[nodiscard]] auto is_const() const -> bool;
 
     public: [[nodiscard]] auto has_wildcard_type() const -> bool;
@@ -336,24 +338,24 @@ public: object_declaration(object_declaration const& that);
 
     // TODO: auto get_type() const ->
 
-#line 301 "reflect.h2"
+#line 303 "reflect.h2"
 };
 
-#line 304 "reflect.h2"
+#line 306 "reflect.h2"
 //-----------------------------------------------------------------------
 //  Type declarations
 //
 class type_declaration
 : public declaration {
 
-#line 311 "reflect.h2"
+#line 313 "reflect.h2"
     public: type_declaration(
 
         cpp2::in<declaration_node*> n_, 
         cpp2::in<compiler_services> s
     );
 
-#line 321 "reflect.h2"
+#line 323 "reflect.h2"
     public: [[nodiscard]] auto is_polymorphic() const -> bool;
     public: [[nodiscard]] auto is_final() const -> bool;
     public: [[nodiscard]] auto make_final() -> bool;
@@ -361,34 +363,34 @@ class type_declaration
     public: [[nodiscard]] auto get_member_functions() const -> 
         std::vector<function_declaration>; 
 
-#line 335 "reflect.h2"
+#line 337 "reflect.h2"
     public: [[nodiscard]] auto get_member_objects() const -> 
         std::vector<object_declaration>; 
 
-#line 345 "reflect.h2"
+#line 347 "reflect.h2"
     public: [[nodiscard]] auto get_member_types() const -> 
         std::vector<type_declaration>; 
 
-#line 355 "reflect.h2"
+#line 357 "reflect.h2"
     public: [[nodiscard]] auto get_members() const -> 
         std::vector<declaration>; struct query_declared_that_functions__ret { bool out_this_in_that; bool out_this_move_that; bool inout_this_in_that; bool inout_this_move_that; };
 
 
 
-#line 365 "reflect.h2"
+#line 367 "reflect.h2"
     public: [[nodiscard]] auto query_declared_that_functions() const -> query_declared_that_functions__ret;
         
 
-#line 380 "reflect.h2"
+#line 382 "reflect.h2"
     public: [[nodiscard]] auto add_member(cpp2::in<std::string_view> source) -> 
         bool; 
         public: type_declaration(type_declaration const& that);
 
 
-#line 389 "reflect.h2"
+#line 391 "reflect.h2"
 };
 
-#line 392 "reflect.h2"
+#line 394 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  Metafunctions - these are hardwired for now until we get to the
@@ -403,7 +405,7 @@ class type_declaration
 //
 auto add_virtual_destructor(meta::type_declaration& t) -> void;
 
-#line 411 "reflect.h2"
+#line 413 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //      "... an abstract base class defines an interface ..."
@@ -418,7 +420,7 @@ auto add_virtual_destructor(meta::type_declaration& t) -> void;
 //
 auto interface(meta::type_declaration& t) -> void;
 
-#line 450 "reflect.h2"
+#line 452 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "C.35: A base class destructor should be either public and
@@ -440,7 +442,7 @@ auto interface(meta::type_declaration& t) -> void;
 //
 auto polymorphic_base(meta::type_declaration& t) -> void;
 
-#line 494 "reflect.h2"
+#line 496 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "... A totally ordered type ... requires operator<=> that
@@ -466,7 +468,7 @@ auto ordered_impl(
     cpp2::in<std::string_view> ordering// must be "strong_ordering" etc.
 ) -> void;
 
-#line 539 "reflect.h2"
+#line 541 "reflect.h2"
 //-----------------------------------------------------------------------
 //  ordered - a totally ordered type
 //
@@ -474,19 +476,19 @@ auto ordered_impl(
 //
 auto ordered(meta::type_declaration& t) -> void;
 
-#line 549 "reflect.h2"
+#line 551 "reflect.h2"
 //-----------------------------------------------------------------------
 //  weakly_ordered - a weakly ordered type
 //
 auto weakly_ordered(meta::type_declaration& t) -> void;
 
-#line 557 "reflect.h2"
+#line 559 "reflect.h2"
 //-----------------------------------------------------------------------
 //  partially_ordered - a partially ordered type
 //
 auto partially_ordered(meta::type_declaration& t) -> void;
 
-#line 566 "reflect.h2"
+#line 568 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "A value is ... a regular type. It must have all public
@@ -505,7 +507,7 @@ auto partially_ordered(meta::type_declaration& t) -> void;
 //
 auto copyable(meta::type_declaration& t) -> void;
 
-#line 604 "reflect.h2"
+#line 606 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  basic_value
@@ -515,7 +517,7 @@ auto copyable(meta::type_declaration& t) -> void;
 //
 auto basic_value(meta::type_declaration& t) -> void;
 
-#line 630 "reflect.h2"
+#line 632 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "A 'value' is a totally ordered basic_value..."
@@ -527,13 +529,13 @@ auto basic_value(meta::type_declaration& t) -> void;
 //
 auto value(meta::type_declaration& t) -> void;
 
-#line 645 "reflect.h2"
+#line 647 "reflect.h2"
 auto weakly_ordered_value(meta::type_declaration& t) -> void;
 
-#line 651 "reflect.h2"
+#line 653 "reflect.h2"
 auto partially_ordered_value(meta::type_declaration& t) -> void;
 
-#line 658 "reflect.h2"
+#line 660 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "By definition, a `struct` is a `class` in which members
@@ -561,7 +563,7 @@ auto partially_ordered_value(meta::type_declaration& t) -> void;
 //
 auto cpp2_struct(meta::type_declaration& t) -> void;
 
-#line 701 "reflect.h2"
+#line 703 "reflect.h2"
 //=======================================================================
 //  Switch to Cpp1 and close subnamespace meta
 }
@@ -743,6 +745,8 @@ declaration::declaration(declaration const& that)
     [[nodiscard]] auto function_declaration::is_defaultable() const -> bool { return CPP2_UFCS_0(is_defaultable_function, (*cpp2::assert_not_null(n))); }
     [[nodiscard]] auto function_declaration::is_constructor() const -> bool { return CPP2_UFCS_0(is_constructor, (*cpp2::assert_not_null(n))); }
     [[nodiscard]] auto function_declaration::is_default_constructor() const -> bool { return CPP2_UFCS_0(is_default_constructor, (*cpp2::assert_not_null(n))); }
+    [[nodiscard]] auto function_declaration::is_move() const -> bool { return CPP2_UFCS_0(is_move, (*cpp2::assert_not_null(n))); }
+    [[nodiscard]] auto function_declaration::is_swap() const -> bool { return CPP2_UFCS_0(is_swap, (*cpp2::assert_not_null(n))); }
     [[nodiscard]] auto function_declaration::is_constructor_with_that() const -> bool { return CPP2_UFCS_0(is_constructor_with_that, (*cpp2::assert_not_null(n))); }
     [[nodiscard]] auto function_declaration::is_constructor_with_in_that() const -> bool { return CPP2_UFCS_0(is_constructor_with_in_that, (*cpp2::assert_not_null(n))); }
     [[nodiscard]] auto function_declaration::is_constructor_with_move_that() const -> bool { return CPP2_UFCS_0(is_constructor_with_move_that, (*cpp2::assert_not_null(n)));  }
@@ -767,14 +771,14 @@ declaration::declaration(declaration const& that)
     function_declaration::function_declaration(function_declaration const& that)
                                 : declaration{ that }{}
 
-#line 285 "reflect.h2"
+#line 287 "reflect.h2"
     object_declaration::object_declaration(
 
         cpp2::in<declaration_node*> n_, 
         cpp2::in<compiler_services> s
     )
         : declaration{ n_, s }
-#line 290 "reflect.h2"
+#line 292 "reflect.h2"
     {
 
         cpp2::Default.expects(CPP2_UFCS_0(is_object, (*cpp2::assert_not_null(n))), "");
@@ -787,14 +791,14 @@ declaration::declaration(declaration const& that)
     object_declaration::object_declaration(object_declaration const& that)
                                 : declaration{ that }{}
 
-#line 311 "reflect.h2"
+#line 313 "reflect.h2"
     type_declaration::type_declaration(
 
         cpp2::in<declaration_node*> n_, 
         cpp2::in<compiler_services> s
     )
         : declaration{ n_, s }
-#line 316 "reflect.h2"
+#line 318 "reflect.h2"
     {
 
         cpp2::Default.expects(CPP2_UFCS_0(is_type, (*cpp2::assert_not_null(n))), "");
@@ -846,13 +850,13 @@ declaration::declaration(declaration const& that)
 
     [[nodiscard]] auto type_declaration::query_declared_that_functions() const -> query_declared_that_functions__ret
 
-#line 372 "reflect.h2"
+#line 374 "reflect.h2"
     {
             cpp2::deferred_init<bool> out_this_in_that;
             cpp2::deferred_init<bool> out_this_move_that;
             cpp2::deferred_init<bool> inout_this_in_that;
             cpp2::deferred_init<bool> inout_this_move_that;
-#line 373 "reflect.h2"
+#line 375 "reflect.h2"
         auto declared {CPP2_UFCS_0(find_declared_that_functions, (*cpp2::assert_not_null(n)))}; 
         out_this_in_that.construct(declared.out_this_in_that != nullptr);
         out_this_move_that.construct(declared.out_this_move_that!=nullptr);
@@ -873,14 +877,14 @@ declaration::declaration(declaration const& that)
     type_declaration::type_declaration(type_declaration const& that)
                                 : declaration{ that }{}
 
-#line 404 "reflect.h2"
+#line 406 "reflect.h2"
 auto add_virtual_destructor(meta::type_declaration& t) -> void
 {
     CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "operator=: (virtual move this) = { }"), 
                "could not add virtual destructor");
 }
 
-#line 423 "reflect.h2"
+#line 425 "reflect.h2"
 auto interface(meta::type_declaration& t) -> void
 {
     auto has_dtor {false}; 
@@ -907,7 +911,7 @@ auto interface(meta::type_declaration& t) -> void
     }
 }
 
-#line 469 "reflect.h2"
+#line 471 "reflect.h2"
 auto polymorphic_base(meta::type_declaration& t) -> void
 {
     auto has_dtor {false}; 
@@ -932,7 +936,7 @@ auto polymorphic_base(meta::type_declaration& t) -> void
     }
 }
 
-#line 514 "reflect.h2"
+#line 516 "reflect.h2"
 auto ordered_impl(
     meta::type_declaration& t, 
     cpp2::in<std::string_view> ordering
@@ -958,25 +962,25 @@ auto ordered_impl(
     }
 }
 
-#line 544 "reflect.h2"
+#line 546 "reflect.h2"
 auto ordered(meta::type_declaration& t) -> void
 {
     ordered_impl(t, "strong_ordering");
 }
 
-#line 552 "reflect.h2"
+#line 554 "reflect.h2"
 auto weakly_ordered(meta::type_declaration& t) -> void
 {
     ordered_impl(t, "weak_ordering");
 }
 
-#line 560 "reflect.h2"
+#line 562 "reflect.h2"
 auto partially_ordered(meta::type_declaration& t) -> void
 {
     ordered_impl(t, "partial_ordering");
 }
 
-#line 582 "reflect.h2"
+#line 584 "reflect.h2"
 auto copyable(meta::type_declaration& t) -> void
 {
     //  If the user explicitly wrote any of the copy/move functions,
@@ -999,7 +1003,7 @@ auto copyable(meta::type_declaration& t) -> void
     }}
 }
 
-#line 611 "reflect.h2"
+#line 613 "reflect.h2"
 auto basic_value(meta::type_declaration& t) -> void
 {
     copyable(t);
@@ -1019,7 +1023,7 @@ auto basic_value(meta::type_declaration& t) -> void
     }
 }
 
-#line 639 "reflect.h2"
+#line 641 "reflect.h2"
 auto value(meta::type_declaration& t) -> void
 {
     ordered(t);
@@ -1038,7 +1042,7 @@ auto partially_ordered_value(meta::type_declaration& t) -> void
     basic_value(t);
 }
 
-#line 683 "reflect.h2"
+#line 685 "reflect.h2"
 auto cpp2_struct(meta::type_declaration& t) -> void
 {
     for ( auto& m : CPP2_UFCS_0(get_members, t) ) 
@@ -1056,7 +1060,7 @@ auto cpp2_struct(meta::type_declaration& t) -> void
     basic_value(t);  // a plain_struct is-a basic_value
 }
 
-#line 703 "reflect.h2"
+#line 705 "reflect.h2"
 }
 }
 

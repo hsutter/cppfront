@@ -32,8 +32,8 @@ class widget {
 public: [[nodiscard]] auto operator<=>(widget const& that) const -> std::strong_ordering = default;
 public: widget(widget const& that);
 public: auto operator=(widget const& that) -> widget& ;
-public: widget(widget&& that);
-public: auto operator=(widget&& that) -> widget& ;
+public: widget(widget&& that) noexcept;
+public: auto operator=(widget&& that) noexcept -> widget& ;
 public: explicit widget();
 
 #line 5 "pure2-types-value-types-via-meta-functions.cpp2"
@@ -48,8 +48,8 @@ class w_widget {
 public: [[nodiscard]] auto operator<=>(w_widget const& that) const -> std::weak_ordering = default;
 public: w_widget(w_widget const& that);
 public: auto operator=(w_widget const& that) -> w_widget& ;
-public: w_widget(w_widget&& that);
-public: auto operator=(w_widget&& that) -> w_widget& ;
+public: w_widget(w_widget&& that) noexcept;
+public: auto operator=(w_widget&& that) noexcept -> w_widget& ;
 public: explicit w_widget();
 
 #line 10 "pure2-types-value-types-via-meta-functions.cpp2"
@@ -64,8 +64,8 @@ class p_widget {
 public: [[nodiscard]] auto operator<=>(p_widget const& that) const -> std::partial_ordering = default;
 public: p_widget(p_widget const& that);
 public: auto operator=(p_widget const& that) -> p_widget& ;
-public: p_widget(p_widget&& that);
-public: auto operator=(p_widget&& that) -> p_widget& ;
+public: p_widget(p_widget&& that) noexcept;
+public: auto operator=(p_widget&& that) noexcept -> p_widget& ;
 public: explicit p_widget();
 
 #line 15 "pure2-types-value-types-via-meta-functions.cpp2"
@@ -100,9 +100,9 @@ template<typename T> auto test() -> void;
 auto widget::operator=(widget const& that) -> widget& {
                                 val = that.val;
                                 return *this;}
-widget::widget(widget&& that)
+widget::widget(widget&& that) noexcept
                                 : val{ std::move(that).val }{}
-auto widget::operator=(widget&& that) -> widget& {
+auto widget::operator=(widget&& that) noexcept -> widget& {
                                 val = std::move(that).val;
                                 return *this;}
 widget::widget(){}
@@ -125,9 +125,9 @@ widget::widget(){}
 auto w_widget::operator=(w_widget const& that) -> w_widget& {
                                 val = that.val;
                                 return *this;}
-w_widget::w_widget(w_widget&& that)
+w_widget::w_widget(w_widget&& that) noexcept
                                 : val{ std::move(that).val }{}
-auto w_widget::operator=(w_widget&& that) -> w_widget& {
+auto w_widget::operator=(w_widget&& that) noexcept -> w_widget& {
                                 val = std::move(that).val;
                                 return *this;}
 w_widget::w_widget(){}
@@ -150,9 +150,9 @@ w_widget::w_widget(){}
 auto p_widget::operator=(p_widget const& that) -> p_widget& {
                                 val = that.val;
                                 return *this;}
-p_widget::p_widget(p_widget&& that)
+p_widget::p_widget(p_widget&& that) noexcept
                                 : val{ std::move(that).val }{}
-auto p_widget::operator=(p_widget&& that) -> p_widget& {
+auto p_widget::operator=(p_widget&& that) noexcept -> p_widget& {
                                 val = std::move(that).val;
                                 return *this;}
 p_widget::p_widget(){}

@@ -1678,6 +1678,12 @@ struct function_type_node
     auto is_default_constructor() const
         -> bool;
 
+    auto is_move() const
+        -> bool;
+
+    auto is_swap() const
+        -> bool;
+
     auto is_constructor_with_that() const
         -> bool;
 
@@ -2431,6 +2437,26 @@ public:
         return false;
     }
 
+    auto is_move() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_move();
+        }
+        //  else
+        return false;
+    }
+
+    auto is_swap() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_swap();
+        }
+        //  else
+        return false;
+    }
+
     auto is_constructor_with_that() const
         -> bool
     {
@@ -2797,6 +2823,38 @@ auto function_type_node::is_default_constructor() const
     if (
         is_constructor()
         && (*parameters).ssize() == 1
+        )
+    {
+        return true;
+    }
+    return false;
+}
+
+
+auto function_type_node::is_move() const
+    -> bool
+{
+    if (
+        (is_constructor() || is_assignment())
+        && (*parameters).ssize() == 2
+        && (*parameters)[1]->has_name("that")
+        && (*parameters)[1]->direction() == passing_style::move
+        )
+    {
+        return true;
+    }
+    return false;
+}
+
+
+auto function_type_node::is_swap() const
+    -> bool
+{
+    assert (my_decl);
+    if (
+        my_decl->has_name("swap")
+        && (*parameters).ssize() == 2
+        && (*parameters)[1]->has_name("that")
         )
     {
         return true;
@@ -5655,6 +5713,11 @@ private:
             && curr() == "throws"
             )
         {
+            if (n->is_move() || n->is_swap()) {
+                error( "(experimental restriction) Cpp2 currently does not allow a move or swap function to be designated 'throws'" );
+                return {};
+            }
+
             n->throws = true;
             next();
         }
