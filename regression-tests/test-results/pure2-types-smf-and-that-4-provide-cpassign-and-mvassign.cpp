@@ -20,9 +20,7 @@ class myclass {
     public: myclass(myclass const& that);
         
 #line 4 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
-    public: myclass(myclass&& that) noexcept
-#line 4 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
-    ;
+    public: myclass(myclass&& that) noexcept;
         
 
 #line 8 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
@@ -35,9 +33,7 @@ class myclass {
         
 
 #line 18 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
-    public: auto operator=(myclass&& that) noexcept
-#line 18 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
-     -> myclass& ;
+    public: auto operator=(myclass&& that) noexcept -> myclass& ;
         
 
 #line 22 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
@@ -76,8 +72,6 @@ auto main() -> int;
     }
 #line 4 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
     myclass::myclass(myclass&& that) noexcept
-#line 4 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
-    
         : name{ std::move(that).name }
         , addr{ std::move(that).addr }
 #line 4 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
@@ -96,9 +90,7 @@ auto main() -> int;
 #line 16 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
     }
 
-    auto myclass::operator=(myclass&& that) noexcept
-#line 18 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
-     -> myclass& {
+    auto myclass::operator=(myclass&& that) noexcept -> myclass& {
         name = std::move(that).name;
         addr = std::move(that).addr;
 #line 19 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"

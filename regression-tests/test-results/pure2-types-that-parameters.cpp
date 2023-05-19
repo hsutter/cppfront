@@ -26,14 +26,10 @@ class myclass {
         
 
 #line 11 "pure2-types-that-parameters.cpp2"
-    public: myclass(myclass&& that) noexcept
-#line 11 "pure2-types-that-parameters.cpp2"
-    ;
+    public: myclass(myclass&& that) noexcept;
         
 #line 11 "pure2-types-that-parameters.cpp2"
-    public: auto operator=(myclass&& that) noexcept
-#line 11 "pure2-types-that-parameters.cpp2"
-     -> myclass& ;
+    public: auto operator=(myclass&& that) noexcept -> myclass& ;
         
 
 #line 16 "pure2-types-that-parameters.cpp2"
@@ -73,8 +69,6 @@ auto main() -> int;
     }
 
     myclass::myclass(myclass&& that) noexcept
-#line 11 "pure2-types-that-parameters.cpp2"
-    
         : name{ std::move(that).name }
         , addr{ std::move(that).addr }
 #line 11 "pure2-types-that-parameters.cpp2"
@@ -83,9 +77,7 @@ auto main() -> int;
 #line 14 "pure2-types-that-parameters.cpp2"
     }
 #line 11 "pure2-types-that-parameters.cpp2"
-    auto myclass::operator=(myclass&& that) noexcept
-#line 11 "pure2-types-that-parameters.cpp2"
-     -> myclass& {
+    auto myclass::operator=(myclass&& that) noexcept -> myclass& {
         name = std::move(that).name;
         addr = std::move(that).addr;
         return *this;
