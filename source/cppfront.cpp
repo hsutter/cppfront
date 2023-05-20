@@ -401,6 +401,28 @@ private:
 
     //  Catch up with comment/blank lines
     //
+    auto print_comment(comment const& c)
+        -> void
+    {
+        //  For a line comment, start it at the right indentation and print it
+        //  with a newline end
+        if (c.kind == comment::comment_kind::line_comment) {
+            print( pad( c.start.colno - curr_pos.colno + 1 ) );
+            print( c.text );
+            assert( c.text.find("\n") == std::string::npos );  // we shouldn't have newlines
+            print("\n");
+        }
+
+        //  For a stream comment, pad out to its column (if we haven't passed it already)
+        //  and emit it there
+        else {
+            print( pad( c.start.colno - curr_pos.colno ) );
+            print( c.text );
+        }
+
+        c.dbg_was_printed = true;
+    }
+
     auto flush_comments( source_position pos )
         -> void
     {
@@ -436,24 +458,8 @@ private:
                         )
                     )
                 {
-                    //  For a line comment, start it at the right indentation and print it
-                    //  with a newline end
-                    if (comments[next_comment].kind == comment::comment_kind::line_comment) {
-                        print( pad( comments[next_comment].start.colno - curr_pos.colno + 1 ) );
-                        print( comments[next_comment].text );
-                        assert( comments[next_comment].text.find("\n") == std::string::npos );  // we shouldn't have newlines
-                        print("\n");
-                    }
-
-                    //  For a stream comment, pad out to its column (if we haven't passed it already)
-                    //  and emit it there
-                    else {
-                        print( pad( comments[next_comment].start.colno - curr_pos.colno ) );
-                        print( comments[next_comment].text );
-                        assert(curr_pos.lineno <= pos.lineno);  // we shouldn't have overshot
-                    }
-
-                    comments[next_comment].dbg_was_printed = true;
+                    print_comment( comments[next_comment] );
+                    assert(curr_pos.lineno <= pos.lineno);  // we shouldn't have overshot
                 }
 
                 ++next_comment;
@@ -462,6 +468,15 @@ private:
             //  Otherwise, just print a blank line
             else {
                 print("\n");
+            }
+        }
+    }
+
+    auto print_unprinted_comments()
+    {
+        for (auto const& c : *pcomments) {
+            if (!c.dbg_was_printed) {
+                print_comment(c);
             }
         }
     }
@@ -553,7 +568,7 @@ public:
     //-----------------------------------------------------------------------
     //  Finalize phase
     //
-    auto finalize_phase()
+    auto finalize_phase(bool print_remaining_comments = false)
     {
         if (
             is_open()
@@ -562,6 +577,10 @@ public:
             )
         {
             flush_comments( {curr_pos.lineno+1, 1} );
+
+            if (print_remaining_comments) {
+                print_unprinted_comments();
+            }
 
             //  Always make sure the very last line ends with a newline
             //  (not really necessary but makes some tools quieter)
@@ -1439,8 +1458,9 @@ public:
             printer.print_extra( "\n#endif" );
         }
 
+        printer.finalize_phase( true );
+
         //  Finally, some debug checks
-        printer.finalize_phase();
         assert(
             (!errors.empty() || tokens.num_unprinted_comments() == 0)
             && "ICE: not all comments were printed"
