@@ -5610,7 +5610,6 @@ private:
             else {
                 error("invalid parameter list", true, {}, true);
             }
-            next();
             return {};
         }
 
