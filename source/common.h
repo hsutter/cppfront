@@ -777,7 +777,8 @@ public:
         print("\nSPDX-License-Identifier: CC-BY-NC-ND-4.0");
         print("\n  No commercial use");
         print("\n  No forks/derivatives");
-        print("\nFAQ: Why? Because this is a personal experiment at this time\n");
+        print("\n  Note: This license emphasizes that this is a personal");
+        print("\n        experiment; it will be upgraded if that changes\n");
         print("\nAbsolutely no warranty - try at your own risk\n");
     }
 

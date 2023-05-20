@@ -3776,7 +3776,7 @@ private:
                 }
                 if (curr().type() != lexeme::RightBracket)
                 {
-                    error("unexpected text - [ is not properly matched by ]");
+                    error("unexpected text - [ is not properly matched by ]", true, {}, true);
                     return {};
                 }
                 term.expr_list->close_paren = &curr();
@@ -3791,7 +3791,7 @@ private:
                     return {};
                 }
                 if (curr().type() != lexeme::RightParen) {
-                    error("unexpected text - ( is not properly matched by )");
+                    error("unexpected text - ( is not properly matched by )", true, {}, true);
                     return {};
                 }
                 term.expr_list->close_paren = &curr();
@@ -4467,6 +4467,13 @@ private:
             }
             n->close_angle = curr().position();
             next();
+        }
+
+        else {
+            if (*n->identifier == "new") {
+                error( "use 'new<" + curr().to_string(true) + ">', not 'new " + curr().to_string(true) + "'", false);
+                return {};
+            }
         }
 
         return n;
