@@ -1,0 +1,3 @@
+pure2-cpp1-prefix-expression-error.cpp2...
+pure2-cpp1-prefix-expression-error.cpp2(4,10): error: prefix '&var' address-of is not valid Cpp2; use postfix 'var&' instead
+

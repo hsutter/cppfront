@@ -3854,15 +3854,15 @@ private:
         switch (curr().type())
         {
         break; case lexeme::PlusPlus:
-            error("only postfix 'var++' increment is supported, not '++var'", false);
+            error("prefix '++var' is not valid Cpp2; use postfix 'var++' instead", false);
         break; case lexeme::MinusMinus:
-            error("only postfix 'var--' decrement is supported, not '--var'", false);
+            error("prefix '--var' is not valid Cpp2; use postfix 'var--' instead", false);
         break; case lexeme::Multiply:
-            error("use postfix 'ptr*' to dereference, not '*ptr'", false);
+            error("prefix '*ptr' dereference is not valid Cpp2; use postfix 'ptr*' instead", false);
         break; case lexeme::Ampersand:
-            error("use postfix 'var&' for address, not '&var'", false);
+            error("prefix '&var' address-of is not valid Cpp2; use postfix 'var&' instead", false);
         break; case lexeme::Tilde:
-            error("use postfix 'var~' for bitwise complement, not '~var'", false);
+            error("prefix '~var' is not valid Cpp2; use postfix 'var~' instead", false);
         break; default: ;
         }
         return {};
