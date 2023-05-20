@@ -29,7 +29,7 @@ class Cyborg;
 class Human {
     public: virtual auto speak() const -> void = 0;
 
-public: virtual ~Human();
+public: virtual ~Human() noexcept;
 
     public: Human() = default;
     public: Human(Human const&) = delete; /* No 'that' constructor, suppress copy */
@@ -42,7 +42,7 @@ namespace N {
         public: explicit Machine(cpp2::in<std::string> id);
         public: virtual auto work() const -> void = 0;
     
-    public: virtual ~Machine();
+    public: virtual ~Machine() noexcept;
 
         public: Machine(Machine const&) = delete; /* No 'that' constructor, suppress copy */
         public: auto operator=(Machine const&) -> void = delete;
@@ -70,7 +70,7 @@ class Cyborg: public Cyborg_name_as_base, public Human, public Cyborg_address_as
     public: auto print() const -> void;
         
 
-    public: ~Cyborg();
+    public: ~Cyborg() noexcept;
         
     public: Cyborg(Cyborg const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(Cyborg const&) -> void = delete;
@@ -93,13 +93,13 @@ auto main() -> int;
 
 
 
-    Human::~Human(){}
+    Human::~Human() noexcept{}
 #line 6 "pure2-types-inheritance.cpp2"
 namespace N {
 
         template <int I> Machine<I>::Machine(cpp2::in<std::string> id){}
 
-        template <int I> Machine<I>::~Machine(){}
+        template <int I> Machine<I>::~Machine() noexcept{}
 
 #line 11 "pure2-types-inheritance.cpp2"
 }
@@ -126,7 +126,7 @@ namespace N {
     auto Cyborg::print() const -> void { 
         std::cout << "printing: " + cpp2::to_string(name) + " lives at " + cpp2::to_string(address) + "\n";  }
 
-    Cyborg::~Cyborg() { 
+    Cyborg::~Cyborg() noexcept { 
         std::cout << "Tired but satisfied after another successful day, " + cpp2::to_string(name) + " checks out and goes home to their family\n";  }
 
 #line 38 "pure2-types-inheritance.cpp2"

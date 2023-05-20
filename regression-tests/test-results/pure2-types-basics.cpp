@@ -50,7 +50,7 @@ class myclass {
         
 
 #line 38 "pure2-types-basics.cpp2"
-    public: ~myclass();
+    public: ~myclass() noexcept;
         
 
 #line 42 "pure2-types-basics.cpp2"
@@ -161,7 +161,7 @@ namespace N {
         std::cout << "    data: " + cpp2::to_string(data) + ", more: " + cpp2::to_string(more) + "\n";
     }
 
-    myclass::~myclass(){
+    myclass::~myclass() noexcept{
         std::cout << "myclass: destructor\n";
     }
 

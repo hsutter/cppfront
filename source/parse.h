@@ -5713,8 +5713,13 @@ private:
             && curr() == "throws"
             )
         {
-            if (n->is_move() || n->is_swap()) {
-                error( "(experimental restriction) Cpp2 currently does not allow a move or swap function to be designated 'throws'" );
+            if (
+                n->is_move()
+                || n->is_swap()
+                || n->is_destructor()
+                )
+            {
+                error( "(experimental restriction) Cpp2 currently does not allow a move, swap, or destructor function to be designated 'throws'" );
                 return {};
             }
 

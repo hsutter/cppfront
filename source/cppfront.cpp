@@ -4131,10 +4131,11 @@ public:
             emit(*n.parameters);
         }
 
-        //  For now, adding implicit noexcept only for move and swap functions
+        //  For now, adding implicit noexcept only for move/swap/dtor functions
         if (
             n.is_move()
             || n.is_swap()
+            || n.is_destructor()
             || generating_move_from == n.my_decl
             )
         {

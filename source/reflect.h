@@ -199,7 +199,7 @@ class declaration_base
 #line 166 "reflect.h2"
     public: [[nodiscard]] auto position() const -> source_position override;
 
-public: virtual ~declaration_base();
+public: virtual ~declaration_base() noexcept;
 public: declaration_base(declaration_base const& that);
 #line 167 "reflect.h2"
 };
@@ -255,7 +255,7 @@ class declaration
     public: [[nodiscard]] auto parent_is_alias() const -> bool;
     public: [[nodiscard]] auto parent_is_polymorphic() const -> bool;
 
-public: virtual ~declaration();
+public: virtual ~declaration() noexcept;
 public: declaration(declaration const& that);
 #line 222 "reflect.h2"
 };
@@ -661,7 +661,7 @@ namespace meta {
 
     [[nodiscard]] auto declaration_base::position() const -> source_position { return CPP2_UFCS_0(position, (*cpp2::assert_not_null(n)));  }
 
-    declaration_base::~declaration_base(){}
+    declaration_base::~declaration_base() noexcept{}
 declaration_base::declaration_base(declaration_base const& that)
                                 : compiler_services{ that }
                                 , n{ that.n }{}
@@ -715,7 +715,7 @@ declaration_base::declaration_base(declaration_base const& that)
     [[nodiscard]] auto declaration::parent_is_alias() const -> bool { return CPP2_UFCS_0(parent_is_alias, (*cpp2::assert_not_null(n))); }
     [[nodiscard]] auto declaration::parent_is_polymorphic() const -> bool { return CPP2_UFCS_0(parent_is_polymorphic, (*cpp2::assert_not_null(n)));  }
 
-    declaration::~declaration(){}
+    declaration::~declaration() noexcept{}
 declaration::declaration(declaration const& that)
                                 : declaration_base{ that }{}
 

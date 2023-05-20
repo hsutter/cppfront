@@ -21,18 +21,14 @@ class myclass {
         
 
 #line 8 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
-    public: myclass(myclass&& that) noexcept
-#line 8 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
-    ;
+    public: myclass(myclass&& that) noexcept;
         
 
 #line 13 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
     public: auto operator=(myclass const& that) -> myclass& ;
         
 #line 13 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
-    public: auto operator=(myclass&& that) noexcept
-#line 13 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
-                -> myclass& ;
+    public: auto operator=(myclass&& that) noexcept -> myclass& ;
         
 
 #line 18 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
@@ -75,8 +71,6 @@ auto main() -> int;
     }
 
     myclass::myclass(myclass&& that) noexcept
-#line 8 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
-    
         : name{ std::move(that).name + "(CM)" }
         , addr{ std::move(that).addr }
 #line 8 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
@@ -95,9 +89,7 @@ auto main() -> int;
 #line 16 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
     }
 #line 13 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
-    auto myclass::operator=(myclass&& that) noexcept
-#line 13 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
-                -> myclass&        {
+    auto myclass::operator=(myclass&& that) noexcept -> myclass& {
         name = std::move(that).name;
         addr = std::move(that).addr + "(AC)";
 

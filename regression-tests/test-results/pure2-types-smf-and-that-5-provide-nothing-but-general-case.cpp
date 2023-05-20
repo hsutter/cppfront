@@ -23,14 +23,10 @@ class myclass {
     public: auto operator=(myclass const& that) -> myclass& ;
         
 #line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
-    public: myclass(myclass&& that) noexcept
-#line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
-    ;
+    public: myclass(myclass&& that) noexcept;
         
 #line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
-    public: auto operator=(myclass&& that) noexcept
-#line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
-     -> myclass& ;
+    public: auto operator=(myclass&& that) noexcept -> myclass& ;
         
 
 #line 8 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
@@ -92,8 +88,6 @@ auto main() -> int;
     }
 #line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     myclass::myclass(myclass&& that) noexcept
-#line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
-    
         : name{ std::move(that).name }
         , addr{ std::move(that).addr }
 #line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
@@ -101,9 +95,7 @@ auto main() -> int;
         std::cout << "ctor - copy (GENERAL)";
     }
 #line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
-    auto myclass::operator=(myclass&& that) noexcept
-#line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
-     -> myclass& {
+    auto myclass::operator=(myclass&& that) noexcept -> myclass& {
         name = std::move(that).name;
         addr = std::move(that).addr;
 #line 5 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
