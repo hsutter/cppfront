@@ -212,6 +212,7 @@ declaration: @polymorphic_base @copyable type =
     as_function : (this) -> function_declaration = function_declaration(n, this);
     as_object   : (this) -> object_declaration   = object_declaration(n, this);
     as_type     : (this) -> type_declaration     = type_declaration(n, this);
+    get_parent  : (this) -> declaration          = declaration(n, this);
 
     parent_is_function   : (this) -> bool = n*.parent_is_function();
     parent_is_object     : (this) -> bool = n*.parent_is_object();

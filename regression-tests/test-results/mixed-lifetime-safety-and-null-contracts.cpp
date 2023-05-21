@@ -26,7 +26,7 @@ auto try_pointer_stuff() -> void;
     
 
 #line 21 "mixed-lifetime-safety-and-null-contracts.cpp2"
-auto call_my_framework(cpp2::in<char const*> msg) -> void;
+auto call_my_framework(char const* msg) -> void;
     
 
 //=== Cpp2 function definitions =================================================
@@ -46,7 +46,7 @@ auto try_pointer_stuff() -> void{
                 // to show -n
 }
 
-auto call_my_framework(cpp2::in<char const*> msg) -> void{
+auto call_my_framework(char const* msg) -> void{
     std::cout 
         << "sending error to my framework... [" 
         << msg << "]\n";

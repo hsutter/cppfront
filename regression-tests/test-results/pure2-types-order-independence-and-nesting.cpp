@@ -65,9 +65,9 @@ class X {
 class Y {
     private: X* px; 
 
-    public: explicit Y(cpp2::in<X*> x);
+    public: explicit Y(X* x);
 #line 49 "pure2-types-order-independence-and-nesting.cpp2"
-    public: auto operator=(cpp2::in<X*> x) -> Y& ;
+    public: auto operator=(X* x) -> Y& ;
 
     public: auto why(cpp2::in<int> count) const -> void;
         
@@ -160,12 +160,12 @@ namespace N {
     }
 
 #line 49 "pure2-types-order-independence-and-nesting.cpp2"
-    Y::Y(cpp2::in<X*> x)
+    Y::Y(X* x)
                                    : px{ x }
 #line 49 "pure2-types-order-independence-and-nesting.cpp2"
      {  }
 #line 49 "pure2-types-order-independence-and-nesting.cpp2"
-    auto Y::operator=(cpp2::in<X*> x) -> Y&  { 
+    auto Y::operator=(X* x) -> Y&  { 
                                    px = x;
                                    return *this;
 #line 49 "pure2-types-order-independence-and-nesting.cpp2"

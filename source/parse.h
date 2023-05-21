@@ -2001,6 +2001,12 @@ struct declaration_node
 
     //  API
     //
+    auto get_parent() const
+        -> declaration_node*
+    {
+        return parent_declaration;
+    }
+
     auto is_public() const
         -> bool
     {

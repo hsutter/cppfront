@@ -3852,36 +3852,50 @@ public:
 
         auto param_type = print_to_string(type_id);
 
-        //  If there are template parameters, see if this parameter's name is an
-        //  unqualified-id with a template parameter name, or mentions a template
-        //  parameter as a template argument
-        auto is_dependent_parameter_type = false;
-        if (
-            current_declarations.back()
-            && current_declarations.back()->template_parameters
+        //  If there are template parameters on this function or its enclosing
+        //  type, see if this parameter's name is an unqualified-id with a
+        //  template parameter name, or mentions a template parameter as a
+        //  template argument
+        auto has_template_parameter_type_named = [](
+            declaration_node const& decl,
+            std::string_view        name
             )
+            -> bool
         {
-            for (auto& tparam : current_declarations.back()->template_parameters->parameters)
-            {
-                assert(
-                    tparam
-                    && tparam->name()
-                );
-                //  For now just do a quick string match
-                auto tparam_name = tparam->name()->to_string(true);
-                if (
-                    tparam->declaration->is_type()
-                    && (
-                        param_type == tparam_name
-                        || std::string_view{param_type}.find("<"+tparam_name) != std::string_view::npos
-                        || std::string_view{param_type}.find(","+tparam_name) != std::string_view::npos
-                    )
-                    )
+            if (decl.template_parameters) {
+                for (auto& tparam : decl.template_parameters->parameters)
                 {
-                    is_dependent_parameter_type = true;
+                    assert(
+                        tparam
+                        && tparam->name()
+                    );
+                    //  For now just do a quick string match
+                    auto tparam_name = tparam->name()->to_string(true);
+                    if (
+                        tparam->declaration->is_type()
+                        && (
+                            name == tparam_name
+                            || name.find("<"+tparam_name) != std::string_view::npos
+                            || name.find(","+tparam_name) != std::string_view::npos
+                        )
+                        )
+                    {
+                        return true;
+                    }
                 }
             }
-        }
+            return false;
+        };
+
+        assert( current_declarations.back() );
+        auto is_dependent_parameter_type =
+            has_template_parameter_type_named( *current_declarations.back(), param_type )
+            || (
+                current_declarations.back()->parent_is_type()
+                && current_declarations.back()->has_name("operator=")
+                && has_template_parameter_type_named( *current_declarations.back()->get_parent(), param_type)
+                )
+            ;
 
         assert( n.declaration->identifier );
         auto identifier = print_to_string( *n.declaration->identifier );
@@ -3891,6 +3905,7 @@ public:
             !is_returns
             && !type_id.is_wildcard()
             && !is_dependent_parameter_type
+            && !type_id.is_pointer_qualified()
             )
         {
             switch (n.pass) {
@@ -3903,6 +3918,13 @@ public:
         printer.preempt_position_push( n.position() );
 
         if (
+            type_id.is_pointer_qualified()
+            && n.pass == passing_style::in
+            )
+        {
+            printer.print_cpp2( print_to_string(type_id), n.position() );
+        }
+        else if (
             type_id.is_wildcard()
             || is_dependent_parameter_type
             )
@@ -3960,6 +3982,7 @@ public:
             !is_returns
             && !type_id.is_wildcard()
             && !is_dependent_parameter_type
+            && !type_id.is_pointer_qualified()
             )
         {
             switch (n.pass) {
