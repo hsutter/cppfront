@@ -5027,6 +5027,13 @@ public:
             {
                 printer.print_cpp2( " final", n.position() );
             }
+            
+            // CTAD
+            struct ctad_details {
+                std::string args;
+                std::string types;
+            };
+            auto ctads             = std::vector<ctad_details>{};
 
             //  Type definition
 
@@ -5052,6 +5059,52 @@ public:
 
                 if (decl->is_constructor()) {
                     found_constructor = true;
+
+                    if (n.template_parameters) {
+                        if (auto func = std::get_if<declaration_node::a_function>(&decl->type)) {
+                            const auto& params = (*func)->parameters->parameters;
+                            auto can_generate_ctad = std::equal(
+                                std::cbegin(params)+1, std::cend(params),
+                                std::cbegin(n.template_parameters->parameters), std::cend(n.template_parameters->parameters),
+                                [](const auto& arg, const auto& type) -> bool {
+                                    if (const auto* arg_type = std::get_if<declaration_node::an_object>(&arg->declaration->type)) {
+                                        assert(type->name());
+                                        return (*arg_type)->get_token() && (*arg_type)->get_token()->as_string_view() == type->name()->as_string_view();
+                                    } else {
+                                        return false;
+                                    }
+                                }
+                            );
+                            if (can_generate_ctad) {
+                                ctads.emplace_back();
+                                std::for_each(std::cbegin(params)+1, std::cend(params), [&](const auto& arg) {
+                                    if (const auto* type = std::get_if<declaration_node::an_object>(&arg->declaration->type)) {
+                                        auto& arg_t = *type;
+                                        assert(arg_t->get_token());
+                                        auto type_name = arg_t->get_token()->to_string(true);
+                                        auto arg_type = print_to_string(*arg_t);
+                                        switch (arg->pass) {
+                                            case passing_style::in     : arg_type += " const &"; break;
+                                            case passing_style::out    : arg_type = "cpp2::deferred_init<" + arg_type + ">*"; break;
+                                            case passing_style::inout  : arg_type += "&"; break;
+                                            case passing_style::move   :
+                                            case passing_style::forward: arg_type += "&&"; break;
+                                            case passing_style::copy   : break;
+                                            default: assert(!"ICE: invalid argument passing style");
+                                        }
+
+                                        if (ctads.back().args.empty()) {
+                                            ctads.back().args = arg_type;
+                                            ctads.back().types = type_name;
+                                        } else {
+                                            ctads.back().args += ", " + arg_type;
+                                            ctads.back().types += ", " + type_name;
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    }
                 }
                 if (decl->is_constructor_with_that()) {
                     found_that_constructor = true;
@@ -5145,6 +5198,25 @@ public:
                 }
 
                 printer.print_cpp2("};\n", compound_stmt->close_brace);
+
+                if (!ctads.empty()) {
+                    printer.print_cpp2("\n", n.position());
+                }
+
+                for (const auto& ctad : ctads) {
+                    printer.print_cpp2("template", n.position());
+                    emit(*n.template_parameters, false, true);
+                    printer.print_cpp2(" ", n.position());
+
+                    printer.print_cpp2(n.name()->to_string(true), n.position());
+                    printer.print_cpp2("(", n.position());
+
+                    printer.print_cpp2(ctad.args, n.position());
+                    printer.print_cpp2(") -> ", n.position());
+                    printer.print_cpp2(n.name()->to_string(true) + "<", n.position());
+                    printer.print_cpp2(ctad.types, n.position());
+                    printer.print_cpp2(">;\n", n.position());
+                }
             }
         }
 
