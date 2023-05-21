@@ -45,7 +45,7 @@ bool flip_a_coin() {
     if (flip_a_coin()) {
         x.construct("xyzzy");
     }else {
-        fill(&x, "plugh", 40);      // note: constructs x!
+        fill(cpp2::out(&x), "plugh", 40);// note: constructs x!
     }
     print_decorated(std::move(x.value()));
 }

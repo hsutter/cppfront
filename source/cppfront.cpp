@@ -3551,7 +3551,7 @@ public:
                 );
                 if (x.pass == passing_style::out) {
                     is_out = true;
-                    printer.print_cpp2("&", n.position());
+                    printer.print_cpp2("cpp2::out(&", n.position());
                 }
                 else if (x.pass == passing_style::move) {
                     printer.print_cpp2("std::move(", n.position());
@@ -3571,7 +3571,11 @@ public:
                 in_non_rvalue_context.pop_back();
             }
 
-            if (x.pass == passing_style::move) {
+            if (
+                x.pass == passing_style::move
+                || x.pass == passing_style::out
+                )
+            {
                 printer.print_cpp2(")", n.position());
             }
         }
@@ -3914,7 +3918,7 @@ public:
 
             //  For generic out parameters, we take a pointer to anything with paramater named "identifier_"
             //  and then generate the out<> as a stack local with the expected name "identifier"
-            break;case passing_style::out    : printer.print_cpp2( name+"*",       n.position() );
+            break;case passing_style::out    : printer.print_cpp2( name,           n.position() );
                                                current_functions.back().prolog.statements.push_back(
                                                    "auto " + identifier + " = cpp2::out(" + identifier + "_); "
                                                );

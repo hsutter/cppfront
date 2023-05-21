@@ -54,13 +54,13 @@ int main() {
 
 
 #line 22 "mixed-out-destruction.cpp2"
-auto f00() -> void     {   C c {"f00"}; cpp2::deferred_init<X> x; f01(&x);}
+auto f00() -> void     {   C c {"f00"}; cpp2::deferred_init<X> x; f01(cpp2::out(&x));}
 auto f01(cpp2::out<X> x) -> void{C c {"f01"}; x.construct();throw_1();}
 
 #line 27 "mixed-out-destruction.cpp2"
-auto f10() -> void     {   C c {"f10"}; cpp2::deferred_init<X> x; f11(&x);}
-auto f11(cpp2::out<X> x) -> void{C c {"f11"}; f12(&x);}
-auto f12(cpp2::out<X> x) -> void{C c {"f12"}; f13(&x);throw_1();}
-auto f13(cpp2::out<X> x) -> void{C c {"f13"}; f14(&x);}
+auto f10() -> void     {   C c {"f10"}; cpp2::deferred_init<X> x; f11(cpp2::out(&x));}
+auto f11(cpp2::out<X> x) -> void{C c {"f11"}; f12(cpp2::out(&x));}
+auto f12(cpp2::out<X> x) -> void{C c {"f12"}; f13(cpp2::out(&x));throw_1();}
+auto f13(cpp2::out<X> x) -> void{C c {"f13"}; f14(cpp2::out(&x));}
 auto f14(cpp2::out<X> x) -> void{C c {"f14"}; x.construct();}
 

@@ -189,7 +189,7 @@ namespace M {
 auto main() -> int
 {
     cpp2::deferred_init<N::Y> y; // declare an uninitialized Y object
-    N::X x {&y};        // construct y and x, and point them at each other
+    N::X x {cpp2::out(&y)}; // construct y and x, and point them at each other
 
     // now have the two objects call each other back and forth a few times
     CPP2_UFCS(exx, std::move(x), 1);
