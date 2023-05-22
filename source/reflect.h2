@@ -17,9 +17,9 @@
 
 #include "parse.h"
 
-namespace cpp2 {
+cpp2: namespace = {
 
-namespace meta {
+meta: namespace = {
 
 
 //-----------------------------------------------------------------------
@@ -29,113 +29,105 @@ namespace meta {
 //-----------------------------------------------------------------------
 //
 
-class compiler_services
+compiler_services: @polymorphic_base @copyable type =
 {
-    std::vector<error_entry>* errors;
-    int                       errors_original_size;
-    std::deque<token>*        generated_tokens;
-    cpp2::parser              parser;
-    std::string               meta_function_name;
+    errors               : *std::vector<error_entry>;
+    errors_original_size : int;
+    generated_tokens     : *std::deque<token>;
+    parser               : cpp2::parser;
+    meta_function_name   : std::string = ();
 
-public:
-    compiler_services(
-        std::vector<error_entry>* errors_,
-        std::deque<token>*        generated_tokens_
+    operator=: (
+        out this,
+        errors_          : *std::vector<error_entry>,
+        generated_tokens_: *std::deque<token>
     )
-        : errors{errors_}
-        , errors_original_size{static_cast<int>(std::ssize(*errors))}
-        , generated_tokens{generated_tokens_}
-        , parser{*errors}
-    {
+    = {
+        errors = errors_;
+        errors_original_size = static_cast<int>(std::ssize(errors*));
+        generated_tokens = generated_tokens_;
+        parser = errors*;
     }
 
-    auto set_meta_function_name(std::string_view s) {
+    set_meta_function_name: (inout this, s: std::string_view) = {
         meta_function_name = s;
     }
 
-protected:
-    auto parse_statement(
-        std::string_view source
+    protected parse_statement: (
+        inout this,
+        copy source: std::string_view
     )
         -> std::unique_ptr<statement_node>
-    {
-        generated_lines.push_back({});
-        auto &lines = generated_lines.back();
+    = {
+        generated_lines.push_back( std::vector<source_line>() );
+        lines := generated_lines.back()&;
 
-        auto add_line = [&] (std::string_view s) {
-            lines.emplace_back( s, source_line::category::cpp2 );
+        add_line := :(s: std::string_view) = {
+            lines$*.emplace_back( s, source_line::category::cpp2 );
         };
 
         //  First split this string into source_lines
         //
-        if (auto newline_pos = source.find('\n');
-            source.length() > 1
+        (copy newline_pos := source.find('\n')) 
+        if  source.ssize() > 1
             && newline_pos != source.npos
-            )
         {
-            while (newline_pos != std::string_view::npos)
+            while newline_pos != std::string_view::npos
             {
                 add_line( source.substr(0, newline_pos) );
                 source.remove_prefix( newline_pos+1 );
                 newline_pos = source.find('\n');
             }
         }
-        if (!source.empty()) {
+
+        if !source.empty() {
             add_line( source );
         }
 
         //  Now lex this source fragment to generate
         //  a single grammar_map entry, whose .second
         //  is the vector of tokens
-        generated_lexers.emplace_back( *errors );
-        auto& tokens = generated_lexers.back();
-        tokens.lex( lines, true );
-        assert(std::ssize(tokens.get_map()) == 1);
+        generated_lexers.emplace_back( errors* );
+        tokens := generated_lexers.back()&;
+        tokens*.lex( lines*, true );
+
+        [[assert: std::ssize(tokens*.get_map()) == 1]]
 
         //  Now parse this single declaration from
         //  the lexed tokens
         return parser.parse_one_declaration(
-            tokens.get_map().begin()->second,
-            *generated_tokens
+            tokens*.get_map().begin()*.second,
+            generated_tokens*
         );
     }
 
-public:
-    virtual auto position() const
+    position: (virtual this)
         -> source_position
-    {
-        return {};
+    = {
+        return ();
     }
 
-    auto require(
-        bool             b,
-        std::string_view msg
-    ) const
-        -> void
-    {
-        if (!b) {
+    require:(
+        this,
+        b: bool,
+        msg: std::string_view
+    )
+    = {
+        if !b {
             error( msg );
         }
     }
 
-    auto error(std::string_view msg) const
-        -> void
-    {
-        auto message = std::string{msg};
-        if (!meta_function_name.empty()) {
+    error: (this, msg: std::string_view)
+    = {
+        message := msg as std::string;
+        if !meta_function_name.empty() {
             message = "while applying @" + meta_function_name + " - " + message;
         }
-        errors->emplace_back( position(), message);
+        errors*.emplace_back( position(), message);
     }
-};
-
-
-//=======================================================================
-//  Switch to Cpp2
 }
-}
-cpp2: namespace = {
-meta: namespace = {
+
 
 //-----------------------------------------------------------------------
 //

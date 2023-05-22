@@ -386,8 +386,10 @@ auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> declty
 {
     //  NOTE: This "!= T{}" test may or may not work for STL iterators. The standard
     //        doesn't guarantee that using == and != will reliably report whether an
-    //        STL iterator has the default-constructed value
-    Null.expects(p != CPP2_TYPEOF(p){}, "dynamic null dereference attempt detected" CPP2_SOURCE_LOCATION_ARG);
+    //        STL iterator has the default-constructed value. So use it only for raw *...
+    if constexpr (std::is_pointer_v<CPP2_TYPEOF(p)>) {
+        Null.expects(p != CPP2_TYPEOF(p){}, "dynamic null dereference attempt detected" CPP2_SOURCE_LOCATION_ARG);
+    }
     return CPP2_FORWARD(p);
 }
 

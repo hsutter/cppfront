@@ -4184,17 +4184,27 @@ private:
         }
     }
 
-    //G  expression:                // eliminated condition: - use expression:
+    //G  expression:                // eliminated 'condition:' - just use 'expression:'
     //G     assignment-expression
     //GTODO    try expression
     //G
-    auto expression(bool allow_angle_operators = true)
+    auto expression(bool allow_angle_operators = true, bool check_arrow = true)
         -> std::unique_ptr<expression_node>
     {
         auto n = std::make_unique<expression_node>();
         if (!(n->expr = assignment_expression(allow_angle_operators))) {
             return {};
         }
+
+        if (
+            check_arrow
+            && curr().type() == lexeme::Arrow
+            )
+        {
+            error("'->' is not Cpp2 deference syntax - write '*.' instead");
+            return {};
+        }
+
         return n;
     }
 
@@ -5073,7 +5083,7 @@ private:
             next();
         }
 
-        if (auto e = expression()) {
+        if (auto e = expression(true, false)) {
             n->expression = std::move(e);
         }
         else {

@@ -4481,7 +4481,7 @@ public:
 
                 auto found_explicit_init = false;
                 auto found_default_init  = false;
-                auto stmt_pos = source_position{};
+                auto stmt_pos = n.position();
 
                 auto initializer = std::string{};
 
