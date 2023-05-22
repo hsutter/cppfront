@@ -379,13 +379,15 @@ auto expand_string_literal(
                               "\"", // end sequence
                               string_parts::on_both_ends}; // add opening and closing sequence to generated string
 
+    bool escape = false;
     //  Now we're on the first character of the string itself
     for (
         ;
-        pos < length && (text[pos] != '"' || (text[pos-1] == '\\' && pos>=2 && text[pos-2] != '\\'));
+        pos < length && !(!escape && text[pos] == '"');
         ++pos
         )
     {
+        escape = (text[pos] == '\\' && !escape);
         //  Find the next )$
         if (
             text[pos] == '$'
@@ -426,7 +428,13 @@ auto expand_string_literal(
 
             //  Then put interpolated chunk into ret
             auto chunk = std::string{text.substr(open, pos - open)};
-            replace_all(chunk, "\\\"", "\"");
+            { // unescape chunk string
+                auto last_it = std::copy_if(std::begin(chunk), std::end(chunk), std::begin(chunk), [escape = false](const auto& e) mutable {
+                    escape = !escape && e == '\\';
+                    return !escape;
+                });
+                chunk.erase(last_it, std::end(chunk));
+            }
             parts.add_code("cpp2::to_string" + chunk);
 
             current_start = pos+1;
