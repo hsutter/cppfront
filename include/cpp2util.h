@@ -238,6 +238,7 @@
 
 namespace cpp2 {
 
+
 //-----------------------------------------------------------------------
 //
 //  Convenience names for fundamental types
@@ -519,9 +520,20 @@ template<typename T>
 //-----------------------------------------------------------------------
 //
 template<typename T>
+constexpr bool prefer_pass_by_value =
+    sizeof(T) <= 2*sizeof(void*)
+    && std::is_trivially_copy_constructible_v<T>
+    && !std::is_class_v<T>
+    && !std::is_union_v<T>
+    && !std::is_array_v<T>
+    && !std::is_function_v<T>
+    ;
+
+template<typename T>
+    requires (!std::is_void_v<T>)
 using in =
     std::conditional_t <
-        std::is_scalar_v<T>,
+        prefer_pass_by_value<T>,
         T const,
         T const&
     >;
@@ -1001,15 +1013,14 @@ auto as( X const& x ) -> C const& {
 }
 
 template< typename C, typename X >
-    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
-auto as( X* x ) -> C* {
-    return Dynamic_cast<C*>(x);
-}
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
-auto as( X const* x ) -> C const* {
-    return Dynamic_cast<C const*>(x);
+    requires (
+        std::is_pointer_v<C>
+        && std::is_pointer_v<X>
+        && std::is_base_of_v<CPP2_TYPEOF(*std::declval<X>()), CPP2_TYPEOF(*std::declval<C>())>
+        && !std::is_same_v<C, X>
+    )
+auto as( X x ) -> C {
+    return Dynamic_cast<C>(x);
 }
 
 

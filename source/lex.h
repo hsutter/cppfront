@@ -1649,6 +1649,31 @@ auto lex_line(
                 //
                 else if (auto j = peek_is_keyword()) {
                     store(j, lexeme::Keyword);
+
+                    if (tokens.back() == "const_cast") {
+                        errors.emplace_back(
+                            source_position(lineno, i),
+                            "'const_cast' is not supported in Cpp2 - the current C++ best practice is to never cast away const, and that is const_cast's only effective use"
+                        );
+                    }
+                    if (tokens.back() == "reinterpret_cast") {
+                        errors.emplace_back(
+                            source_position(lineno, i),
+                            "'reinterpret_cast' is not supported in Cpp2 - use std::bit_cast instead"
+                        );
+                    }
+                    if (tokens.back() == "static_cast") {
+                        errors.emplace_back(
+                            source_position(lineno, i),
+                            "'static_cast<T>(val)' is not supported in Cpp2 - use 'val as T' for safe conversions instead, or if necessary unsafe_narrow<T>(val) for a possibly-lossy narrowing conversion"
+                        );
+                    }
+                    if (tokens.back() == "dynamic_cast") {
+                        errors.emplace_back(
+                            source_position(lineno, i),
+                            "'dynamic_cast<Derived*>(pBase)' is not supported in Cpp2 - use 'pBase as *Derived' for safe dynamic conversions instead"
+                        );
+                    }
                 }
 
                 //  Identifier
@@ -1675,13 +1700,13 @@ auto lex_line(
                         if (tokens.back() == "union") {
                             errors.emplace_back(
                                 source_position(lineno, i),
-                                "unsafe 'union's are not supported in Cpp2 - use std::variant instead (or, in the future, the Cpp2 'union' metaclass function, but that is not yet implemented)"
+                                "unsafe 'union' is not supported in Cpp2 - use std::variant instead (or, in the future, the Cpp2 'union' metaclass function, but that is not yet implemented)"
                             );
                         }
                         if (tokens.back() == "delete") {
                             errors.emplace_back(
                                 source_position(lineno, i),
-                                "'delete' and owning raw pointers are not supported in Cpp2 - use unique.new<T>, shared.new<T>, or gc.new<T> instead (in that order)"
+                                "'delete' and owning raw pointers are not supported in Cpp2 - use unique.new<T> or shared.new<T> instead in that order (or, in the future, gc.new<T>, but that is not yet implemented)"
                             );
                         }
                     }

@@ -44,7 +44,7 @@ compiler_services: @polymorphic_base @copyable type =
     )
     = {
         errors = errors_;
-        errors_original_size = static_cast<int>(std::ssize(errors*));
+        errors_original_size = cpp2::unsafe_narrow<int>(std::ssize(errors*));
         generated_tokens = generated_tokens_;
         parser = errors*;
     }

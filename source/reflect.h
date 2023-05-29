@@ -596,7 +596,7 @@ namespace meta {
         std::deque<token>* generated_tokens_
     )
         : errors{ errors_ }
-        , errors_original_size{ static_cast<int>(std::ssize(*cpp2::assert_not_null(errors))) }
+        , errors_original_size{ cpp2::unsafe_narrow<int>(std::ssize(*cpp2::assert_not_null(errors))) }
         , generated_tokens{ generated_tokens_ }
         , parser{ *cpp2::assert_not_null(errors) }
 #line 45 "reflect.h2"
