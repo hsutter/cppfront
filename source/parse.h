@@ -1988,7 +1988,7 @@ struct declaration_node
     std::vector<std::unique_ptr<id_expression_node>> meta_functions;
     std::unique_ptr<parameter_declaration_list_node> template_parameters;
     source_position                                  requires_pos = {};
-    std::unique_ptr<expression_node>                 requires_clause_expression;
+    std::unique_ptr<logical_or_expression_node>      requires_clause_expression;
 
     source_position                 equal_sign = {};
     std::unique_ptr<statement_node> initializer;
@@ -5865,7 +5865,7 @@ private:
     //G     meta-functions-list '@' id-expression
     //G
     //G requires-clause:
-    //G     'requires' expression
+    //G     'requires' logical-or-expression
     //G
     //G template-parameter-declaration-list
     //G     '<' parameter-declaration-seq '>'
@@ -6112,7 +6112,7 @@ private:
         if (curr() == "requires") {
             n->requires_pos = curr().position();
             next();
-            auto e = expression();
+            auto e = logical_or_expression();
             if (!e) {
                 error("'requires' must be followed by an expression");
                 return {};
