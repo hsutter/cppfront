@@ -221,6 +221,10 @@ auto starts_with_operator(std::string_view s)
         break;case '/':
               case '=':
               case '!':
+              case '*':
+              case '%':
+              case '^':
+              case '~':
             if (c2 == '=') { return j+2; }
             return j+1;
 
@@ -239,7 +243,7 @@ auto starts_with_operator(std::string_view s)
         break;case '|':
               case '&':
             if (c2 == c1 && c3 == '=') { return j+3; }
-            if (c2 == c1) { return j+2; }
+            if (c2 == c1 || c2 == '=') { return j+2; }
             return j+1;
 
             //  >>= >> >= >
