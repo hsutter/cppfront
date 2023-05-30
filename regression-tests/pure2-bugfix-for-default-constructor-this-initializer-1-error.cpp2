@@ -1,0 +1,10 @@
+base: type = {
+  public x: i32         = -1;
+  operator=: (out this) = { }
+  operator=: (out this, y: i32) = x = y;
+}
+derived: @ struct type = {
+  y: i32;
+  this: base = 42;
+}
+main: () = { }

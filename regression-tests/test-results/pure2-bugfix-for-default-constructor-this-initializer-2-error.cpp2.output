@@ -1,0 +1,3 @@
+pure2-bugfix-for-default-constructor-this-initializer-2-error.cpp2...
+pure2-bugfix-for-default-constructor-this-initializer-2-error.cpp2(7,3): error: '@struct' scope object can have an initializer if it is ordered after all 'this' objects only
+

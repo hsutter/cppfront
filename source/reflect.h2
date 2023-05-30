@@ -68,7 +68,7 @@ compiler_services: @polymorphic_base @copyable type =
 
         //  First split this string into source_lines
         //
-        (copy newline_pos := source.find('\n')) 
+        (copy newline_pos := source.find('\n'))
         if  source.ssize() > 1
             && newline_pos != source.npos
         {
@@ -461,6 +461,11 @@ add_virtual_destructor: (inout t: meta::type_declaration) =
                "could not add virtual destructor");
 }
 
+add_default_constructor: (inout t: meta::type_declaration) =
+{
+    t.require( t.add_member( "operator=: (out this) = { }"),
+               "could not add default constructor");
+}
 
 //-----------------------------------------------------------------------
 //
@@ -676,15 +681,14 @@ basic_value: (inout t: meta::type_declaration) =
     }
 
     if !has_default_ctor {
-        t.require( t.add_member( "operator=: (out this) = { }"),
-                   "could not add default constructor");
+        add_default_constructor(t);
     }
 }
 
 //-----------------------------------------------------------------------
 //
 //     "A 'value' is a totally ordered basic_value..."
-// 
+//
 //          -- P0707R4, section 3
 //
 //  value - a value type that is totally ordered
@@ -879,6 +883,21 @@ auto parser::apply_type_meta_functions( declaration_node& n )
             return false;
         }
     }
+
+    // Ensure the initializers of members lowered as bases
+    // are used by injecting the default constructor here.
+    if (auto res = n.should_add_default_constructor(); res.value) {
+        if (!n.member_function_generation) {
+            error(
+                "'@struct' scope object can have an initializer if it is ordered after all 'this' objects only",
+                false,
+                res.pos_of_emitted_base_with_initializer
+            );
+            return false;
+        }
+        meta::add_default_constructor( rtype );
+    }
+
     return true;
 }
 
