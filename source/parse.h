@@ -22,6 +22,7 @@
 #include <memory>
 #include <variant>
 #include <iostream>
+#include <optional>
 
 
 namespace cpp2 {
@@ -682,18 +683,21 @@ struct unqualified_id_node
             std::unique_ptr<type_id_node>
         > arg;
     };
-    std::vector<term> template_args;
+    std::optional<std::vector<term>> template_args;
 
     auto template_args_count()
         -> int
     {
-        return std::ssize(template_args);
+        if (template_args.has_value())
+            return std::ssize(template_args.value());
+        // else
+        return 0;
     }
 
     auto get_token() const
         -> token const*
     {
-        if (template_args.empty()) {
+        if (!template_args.has_value()) {
             assert (identifier);
             return identifier;
         }
@@ -718,13 +722,14 @@ struct unqualified_id_node
         assert (identifier);
         v.start(*identifier, depth+1);
 
-        if (!template_args.empty()) {
+        if (template_args.has_value()) {
             //  Inform the visitor that this is a template args list
             v.start(template_args_tag{}, depth);
             assert(open_angle  != source_position{});
             assert(close_angle != source_position{});
-            assert(template_args.front().comma == source_position{});
-            for (auto& a : template_args) {
+            assert(template_args.value().empty()
+                   || template_args.value().front().comma == source_position{});
+            for (auto& a : template_args.value()) {
                 try_visit<expression>(a.arg, v, depth+1);
                 try_visit<type_id   >(a.arg, v, depth+1);
             }
@@ -925,9 +930,9 @@ auto unqualified_id_node::to_string() const
 {
     assert(identifier);
     auto ret = identifier->to_string(true);
-    if (!template_args.empty()) {
+    if (template_args.has_value()) {
         auto separator = std::string{"<"};
-        for (auto& t : template_args) {
+        for (auto& t : template_args.value()) {
             ret += separator;
             assert(t.arg.index() != empty);
             if (t.arg.index() == expression) {
@@ -4454,18 +4459,10 @@ private:
             //  Remember current position, in case this < is isn't a template argument list
             auto start_pos = pos;
 
-            //  And since we'll do this in two places, factor it into a local function
-            auto back_out_template_arg_list = [&]{
-                //  Aha, this wasn't a template argument list after all,
-                //  so back out just that part and return the identifier
-                n->open_angle = source_position{};
-                n->template_args.clear();
-                pos = start_pos;
-            };
-
             n->open_angle = curr().position();
             next();
-
+            
+            n->template_args.emplace();
             auto term = unqualified_id_node::term{};
 
             do {
@@ -4477,10 +4474,9 @@ private:
                     term.arg = std::move(i);
                 }
                 else {
-                    back_out_template_arg_list();
-                    return n;
+                    break;
                 }
-                n->template_args.push_back( std::move(term) );
+                n->template_args.value().push_back( std::move(term) );
             }
             //  Use the lambda trick to jam in a "next" clause
             while (
@@ -4492,7 +4488,11 @@ private:
                 //      next  term.comma = curr().position();
 
             if (curr().type() != lexeme::Greater) {
-                back_out_template_arg_list();
+                //  Aha, this wasn't a template argument list after all,
+                //  so back out just that part and return the identifier
+                n->open_angle = source_position{};
+                n->template_args.reset();
+                pos = start_pos;
                 return n;
             }
             n->close_angle = curr().position();

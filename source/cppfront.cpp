@@ -1666,10 +1666,10 @@ public:
         assert(n.identifier);
         emit(*n.identifier, is_qualified);  // inform the identifier if we know this is qualified
 
-        if (!n.template_args.empty()) {
+        if (n.template_args.has_value()) {
             printer.print_cpp2("<", n.open_angle);
             auto first = true;
-            for (auto& a : n.template_args) {
+            for (auto& a : n.template_args.value()) {
                 if (!first) {
                     printer.print_cpp2(",", a.comma);
                 }
