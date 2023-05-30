@@ -10,7 +10,7 @@ myclass : type = {
         print();
     }
 
-    operator=: (out this, s: std::string) = {
+    operator=: (implicit out this, s: std::string) = {
         this.data = 99;
         this.more = s;
         std::cout << "myclass: explicit from string\n";

@@ -1,0 +1,10 @@
+quantity: type = {
+  value: int = ();
+  operator=: (out this, val: int) = { value = val; }
+}
+
+main: () = {
+  x := quantity(0);
+  static_assert(!std::is_assignable_v<decltype((x)), int>);
+  _ = x;
+}

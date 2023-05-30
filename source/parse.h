@@ -1933,6 +1933,9 @@ struct function_type_node
     //
     auto is_function_with_this() const
         -> bool;
+    
+    auto is_function_with_implicit_this() const
+        -> bool;
 
     auto is_virtual_function() const
         -> bool;
@@ -2701,6 +2704,16 @@ public:
         //  else
         return false;
     }
+    
+    auto is_function_with_implicit_this() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_function_with_implicit_this();
+        }
+        //  else
+        return false;
+    }
 
     auto is_virtual_function() const
         -> bool
@@ -3089,6 +3102,20 @@ auto function_type_node::is_function_with_this() const
     if (
         (*parameters).ssize() > 0
         && (*parameters)[0]->has_name("this")
+        )
+    {
+        return true;
+    }
+    return false;
+}
+
+
+auto function_type_node::is_function_with_implicit_this() const
+    -> bool
+{
+    if (
+        is_function_with_this()
+        && (*parameters)[0]->is_implicit()
         )
     {
         return true;

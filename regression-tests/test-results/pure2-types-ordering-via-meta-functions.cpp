@@ -30,8 +30,6 @@ class mystruct;
 class my_integer {
     private: int v; 
     public: explicit my_integer(cpp2::in<int> val);
-#line 4 "pure2-types-ordering-via-meta-functions.cpp2"
-    public: auto operator=(cpp2::in<int> val) -> my_integer& ;
 
 public: [[nodiscard]] auto operator<=>(my_integer const& that) const -> std::strong_ordering = default;
 
@@ -43,8 +41,6 @@ public: [[nodiscard]] auto operator<=>(my_integer const& that) const -> std::str
 class case_insensitive_string {
     private: std::string v; // case insensitive
     public: explicit case_insensitive_string(cpp2::in<std::string> val);
-#line 9 "pure2-types-ordering-via-meta-functions.cpp2"
-    public: auto operator=(cpp2::in<std::string> val) -> case_insensitive_string& ;
 
 public: [[nodiscard]] auto operator<=>(case_insensitive_string const& that) const -> std::weak_ordering = default;
 
@@ -56,8 +52,6 @@ public: [[nodiscard]] auto operator<=>(case_insensitive_string const& that) cons
 class person_in_family_tree {
     private: int dummy_data; 
     public: explicit person_in_family_tree(cpp2::in<int> parents);
-#line 14 "pure2-types-ordering-via-meta-functions.cpp2"
-    public: auto operator=(cpp2::in<int> parents) -> person_in_family_tree& ;
 
 public: [[nodiscard]] auto operator<=>(person_in_family_tree const& that) const -> std::partial_ordering = default;
 
@@ -81,12 +75,6 @@ auto main() -> int;
                                         : v{ val }
 #line 4 "pure2-types-ordering-via-meta-functions.cpp2"
     {}
-#line 4 "pure2-types-ordering-via-meta-functions.cpp2"
-    auto my_integer::operator=(cpp2::in<int> val) -> my_integer& {
-                                        v = val;
-                                        return *this;
-#line 4 "pure2-types-ordering-via-meta-functions.cpp2"
-    }
 
 
 #line 9 "pure2-types-ordering-via-meta-functions.cpp2"
@@ -94,12 +82,6 @@ auto main() -> int;
                                                 : v{ val }
 #line 9 "pure2-types-ordering-via-meta-functions.cpp2"
     {}
-#line 9 "pure2-types-ordering-via-meta-functions.cpp2"
-    auto case_insensitive_string::operator=(cpp2::in<std::string> val) -> case_insensitive_string& {
-                                                v = val;
-                                                return *this;
-#line 9 "pure2-types-ordering-via-meta-functions.cpp2"
-    }
 
 
 #line 14 "pure2-types-ordering-via-meta-functions.cpp2"
@@ -107,12 +89,6 @@ auto main() -> int;
                                             : dummy_data{ parents }
 #line 14 "pure2-types-ordering-via-meta-functions.cpp2"
     {}
-#line 14 "pure2-types-ordering-via-meta-functions.cpp2"
-    auto person_in_family_tree::operator=(cpp2::in<int> parents) -> person_in_family_tree& {
-                                            dummy_data = parents;
-                                            return *this;
-#line 14 "pure2-types-ordering-via-meta-functions.cpp2"
-    }
 
 
 #line 21 "pure2-types-ordering-via-meta-functions.cpp2"

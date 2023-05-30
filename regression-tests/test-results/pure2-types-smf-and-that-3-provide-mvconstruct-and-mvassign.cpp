@@ -37,7 +37,7 @@ class myclass {
         
 
 #line 22 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
-    public: explicit myclass(cpp2::in<std::string> x);
+    public: myclass(cpp2::in<std::string> x);
         
 #line 22 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     public: auto operator=(cpp2::in<std::string> x) -> myclass& ;

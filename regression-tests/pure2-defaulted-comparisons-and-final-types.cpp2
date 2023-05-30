@@ -3,7 +3,7 @@ widget: final type =
 {
     v: int;
 
-    operator=: (out this, value: int) = { v = value; }
+    operator=: (implicit out this, value: int) = { v = value; }
 
     operator==: (this, that) -> bool;
 

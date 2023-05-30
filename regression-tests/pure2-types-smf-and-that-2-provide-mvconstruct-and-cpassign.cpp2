@@ -19,7 +19,7 @@ myclass : type = {
     //     std::cout << "assign - move        ";
     // }
 
-    operator=: (out this, x: std::string) = {
+    operator=: (implicit out this, x: std::string) = {
         name = x;
         std::cout << "ctor - from string   ";
     }

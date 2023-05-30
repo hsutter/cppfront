@@ -19,7 +19,7 @@ class widget final
  {
     private: int v; 
 
-    public: explicit widget(cpp2::in<int> value);
+    public: widget(cpp2::in<int> value);
 #line 6 "pure2-defaulted-comparisons-and-final-types.cpp2"
     public: auto operator=(cpp2::in<int> value) -> widget& ;
 
@@ -40,13 +40,13 @@ auto main() -> int;
 
 #line 6 "pure2-defaulted-comparisons-and-final-types.cpp2"
     widget::widget(cpp2::in<int> value)
-                                          : v{ value }
+                                                   : v{ value }
 #line 6 "pure2-defaulted-comparisons-and-final-types.cpp2"
     {}
 #line 6 "pure2-defaulted-comparisons-and-final-types.cpp2"
     auto widget::operator=(cpp2::in<int> value) -> widget& {
-                                          v = value;
-                                          return *this;
+                                                   v = value;
+                                                   return *this;
 #line 6 "pure2-defaulted-comparisons-and-final-types.cpp2"
     }
 

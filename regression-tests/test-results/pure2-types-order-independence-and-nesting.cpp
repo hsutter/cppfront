@@ -45,9 +45,6 @@ class X {
     //  Note: A constructor with an 'out' parameter
     public: explicit X(cpp2::out<Y> y);
         
-#line 10 "pure2-types-order-independence-and-nesting.cpp2"
-    public: auto operator=(cpp2::out<Y> y) -> X& ;
-        
 
 #line 34 "pure2-types-order-independence-and-nesting.cpp2"
     //  X::exx member function description here
@@ -66,8 +63,6 @@ class Y {
     private: X* px; 
 
     public: explicit Y(X* x);
-#line 49 "pure2-types-order-independence-and-nesting.cpp2"
-    public: auto operator=(X* x) -> Y& ;
 
     public: auto why(cpp2::in<int> count) const -> void;
         
@@ -139,16 +134,6 @@ namespace N {
         //  then do anything else the constructor wants to do
         std::cout << "made a safely initialized cycle\n";
     }
-#line 10 "pure2-types-order-independence-and-nesting.cpp2"
-    auto X::operator=(cpp2::out<Y> y) -> X& {
-        y.construct(&(*this));
-        py = &y.value();
-
-#line 31 "pure2-types-order-independence-and-nesting.cpp2"
-        std::cout << "made a safely initialized cycle\n";
-        return *this;
-#line 32 "pure2-types-order-independence-and-nesting.cpp2"
-    }
 
 #line 35 "pure2-types-order-independence-and-nesting.cpp2"
     auto X::exx(cpp2::in<int> count) const -> void{
@@ -164,12 +149,6 @@ namespace N {
                                    : px{ x }
 #line 49 "pure2-types-order-independence-and-nesting.cpp2"
      {  }
-#line 49 "pure2-types-order-independence-and-nesting.cpp2"
-    auto Y::operator=(X* x) -> Y&  { 
-                                   px = x;
-                                   return *this;
-#line 49 "pure2-types-order-independence-and-nesting.cpp2"
-     }
 
     auto Y::why(cpp2::in<int> count) const -> void { 
         CPP2_UFCS(exx, (*cpp2::assert_not_null(px)), count + 1);  }// use X object from Y

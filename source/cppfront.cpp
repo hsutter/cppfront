@@ -5464,9 +5464,10 @@ public:
                                 && !current_functions.back().declared_that_functions.inout_this_in_that
                                 )
                             ||
-                            //  A3) This is '(out   this, something-other-than-that)'
+                            //  A3) This is '(implicit out this, something-other-than-that)'
                             (
                                 n.is_constructor()
+                                && n.is_function_with_implicit_this()
                                 && !n.is_constructor_with_that()
                                 )
                             )
