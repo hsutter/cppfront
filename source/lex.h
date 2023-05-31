@@ -429,9 +429,9 @@ auto expand_string_literal(
             //  Then put interpolated chunk into ret
             auto chunk = std::string{text.substr(open, pos - open)};
             { // unescape chunk string
-                auto last_it = std::copy_if(std::begin(chunk), std::end(chunk), std::begin(chunk), [escape = false](const auto& e) mutable {
+                auto last_it = std::remove_if(std::begin(chunk), std::end(chunk), [escape = false](const auto& e) mutable {
                     escape = !escape && e == '\\';
-                    return !escape;
+                    return escape;
                 });
                 chunk.erase(last_it, std::end(chunk));
             }
