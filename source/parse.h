@@ -5480,6 +5480,7 @@ private:
                 !decl->has_name()
                 && "ICE: declaration should have been unnamed"
             );
+
             if (auto obj = std::get_if<declaration_node::an_object>(&decl->type)) {
                 if ((*obj)->is_wildcard()) {
                     error("an unnamed object at expression scope currently cannot have a deduced type (the reason to create an unnamed object is typically to create a temporary of a named type)");
@@ -5504,22 +5505,28 @@ private:
                     next();
                     return {};
                 }
-                if (
-                    peek(-1) && peek(-1)->type() != lexeme::RightBrace  // it is short function syntax
-                    && curr().type() != lexeme::LeftParen               // not imediatelly called
-                    && curr().type() != lexeme::RightParen              // not as a last argument to function
-                    && curr().type() != lexeme::Comma                   // not as first or in-the-middle, function argument
-                ) {
-                    // this is a fix for a short function syntax that should have double semicolon used
-                    // (check comment in expression_statement(bool semicolon_required))
-                    // We simulate double semicolon by moving back to single semicolon.
-                    next(-1);
-                }
             }
             else {
                 error("(temporary alpha limitation) an unnamed declaration at expression scope must be a function or an object");
                 next();
                 return {};
+            }
+
+            if (
+                peek(-1) && peek(-1)->type() != lexeme::RightBrace  // it is not a braced function expression
+                && curr().type() != lexeme::LeftParen               // not imediatelly called
+                && curr().type() != lexeme::RightParen              // not as a last argument to function
+                && curr().type() != lexeme::Comma                   // not as first or in-the-middle, function argument
+                && curr().type() != lexeme::Greater                 // not as the last argument to template
+                && curr().type() != lexeme::RightBracket            // not as the last index argument
+                && curr() != "is"                                   // not as the argument to is
+                && curr() != "as"                                   // not as the argument to as
+                && curr() != "do"                                   // not as `for`'s `next`.
+            ) {
+                // this is a fix for a short function syntax that should have double semicolon used
+                // (check comment in expression_statement(bool semicolon_required))
+                // We simulate double semicolon by moving back to single semicolon.
+                next(-1);
             }
 
             n->expr = std::move(decl);
