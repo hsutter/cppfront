@@ -5066,6 +5066,7 @@ public:
             n.template_parameters
             && (
                 printer.get_phase() <  printer.phase2_func_defs
+                || n.is_object()
                 || (
                     n.is_function()
                     && n.has_name()     // only if it is not unnambed function aka lambda
