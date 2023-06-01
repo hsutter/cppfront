@@ -4084,7 +4084,7 @@ private:
     //G postfix-expression:
     //G     primary-expression
     //G     postfix-expression postfix-operator     [Note: without whitespace before the operator]
-    //G     postfix-expression '[' expression-list ']'
+    //G     postfix-expression '[' expression-list? ']'
     //G     postfix-expression '(' expression-list? ')'
     //G     postfix-expression '.' id-expression
     //G
@@ -4161,13 +4161,8 @@ private:
             if (term.op->type() == lexeme::LeftBracket)
             {
                 term.expr_list = expression_list(term.op);
-                if (
-                    !term.expr_list
-                    || term.expr_list->expressions.empty()
-                    )
+                if (!term.expr_list)
                 {
-                    error("subscript expression [ ] must not be empty (if you were trying to name a C-style array type, use 'std::array' instead)");
-                    next();
                     return {};
                 }
                 if (curr().type() != lexeme::RightBracket)
