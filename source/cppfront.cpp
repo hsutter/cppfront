@@ -4962,6 +4962,13 @@ public:
             }
         }
 
+        auto const data_member_as_base_identifier = [](auto& decl) {
+            return decl->parent_declaration->name()->to_string(true)
+                + "_"
+                + decl->name()->to_string(true)
+                + "_as_base";
+        };
+
         //  If this is a class definition that has data members before bases,
         //  first we need to emit the aggregate that contains the members
         if (
@@ -4994,10 +5001,8 @@ public:
                 if (emit_as_base) {
                     printer.print_extra(
                         "\nstruct "
-                            + print_to_string(*decl->parent_declaration->name())
-                            + "_"
-                            + decl->name()->to_string(true)
-                            + "_as_base { "
+                            + data_member_as_base_identifier(decl)
+                            + " { "
                             + print_to_string( *decl->get_object_type() )
                             + " "
                             + decl->name()->to_string(true)
@@ -5012,22 +5017,26 @@ public:
             }
         }
 
-        //  In class definitions, emit the explicit access specifier if there
+        //  In class definitions, returns the explicit access specifier if there
         //  is one, or default to private for data and public for functions
-        if (printer.get_phase() == printer.phase1_type_defs_func_decls)
+        auto const access_specifier_string = [](auto& decl) -> std::string {
+            auto is_in_type = decl.parent_is_type();
+            assert (is_in_type);
+            if (!decl.is_default_access()) {
+                return to_string(decl.access);
+            }
+            if (decl.is_object()) {
+                return "private";
+            }
+            else {
+                return "public";
+            }
+        };
+
+        if (printer.get_phase() == printer.phase1_type_defs_func_decls
+            && is_in_type)
         {
-            if (!n.is_default_access()) {
-                assert (is_in_type);
-                printer.print_cpp2(to_string(n.access) + ": ", n.position());
-            }
-            else if (is_in_type) {
-                if (n.is_object()) {
-                    printer.print_cpp2("private: ", n.position());
-                }
-                else {
-                    printer.print_cpp2("public: ", n.position());
-                }
-            }
+            printer.print_cpp2(access_specifier_string(n) + ": ", n.position());
         }
 
         //  If this is a function definition and the function is inside
@@ -5121,6 +5130,21 @@ public:
             auto started_body           = false;
             auto found_constructor      = false;
             auto found_that_constructor = false;
+            auto emitted_as_base        = std::vector<const declaration_node*>{};
+            auto print_base_using_decls = [&]() {
+                for (auto decl : emitted_as_base)
+                {
+                    printer.print_cpp2(
+                        access_specifier_string(*decl)
+                            + ": using "
+                            + data_member_as_base_identifier(decl)
+                            + "::"
+                            + decl->name()->to_string(true)
+                            + ";\n",
+                        decl->location
+                    );
+                }
+            };
             assert(compound_stmt);
 
             for (auto& stmt : compound_stmt->statements)
@@ -5170,14 +5194,13 @@ public:
                         if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
                             printer.print_cpp2(
                                 separator
-                                    + " public "
-                                    + print_to_string(*decl->parent_declaration->name())
-                                    + "_"
-                                    + decl->name()->to_string(true)
-                                    + "_as_base",
+                                    + " private "
+                                    + data_member_as_base_identifier(decl),
                                 compound_stmt->position()
                             );
                             separator = ",";
+
+                            emitted_as_base.push_back(decl.get());
                         }
                     }
                 }
@@ -5188,6 +5211,7 @@ public:
                         if (!started_body) {
                             printer.print_cpp2(" {", compound_stmt->position());
                             started_body = true;
+                            print_base_using_decls();
                         }
                     }
                     emit(*decl);
@@ -5199,6 +5223,7 @@ public:
             {
                 if (!started_body) {
                     printer.print_cpp2(" {", compound_stmt->position());
+                    print_base_using_decls();
                 }
 
                 auto id     = print_to_string(*n.identifier);

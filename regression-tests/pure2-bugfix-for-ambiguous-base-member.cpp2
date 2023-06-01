@@ -1,0 +1,11 @@
+x: type = {
+  a: int = 1;
+}
+y: type = {
+  public a: int = 0;
+  this: x       = ();
+}
+main: () -> int = {
+  _ = y::a&;
+  return y().a;
+}
