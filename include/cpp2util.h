@@ -1773,7 +1773,7 @@ using cpp2::cpp2_new;
 // Workaround GCC 10 not supporting requires in forward declarations in some cases.
 // See commit 5a0d77f8e297902c0b9712c5aafb6208cfa4c139.
 #if !defined(__clang__) && defined(__GNUC__) && __GNUC__ == 10
-    #define CPP2_REQUIRES(...)
+    #define CPP2_REQUIRES(...) /* empty */
 #else
     #define CPP2_REQUIRES(...) requires (__VA_ARGS__)
 #endif
