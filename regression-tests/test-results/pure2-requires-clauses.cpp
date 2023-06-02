@@ -31,7 +31,11 @@ class X {
 };
 
 template<typename T, typename U> [[nodiscard]] auto f
-    (auto&& a, auto&& b) -> int; 
+    (auto&& a, auto&& b) -> int
+CPP2_REQUIRES (std::is_same_v<T,int> && std::is_same_v<U,int> && std::is_same_v<CPP2_TYPEOF(a), int> && std::is_same_v<CPP2_TYPEOF(b), int>)
+#line 10 "pure2-requires-clauses.cpp2"
+;
+    
 
 #line 18 "pure2-requires-clauses.cpp2"
 auto main() -> int;

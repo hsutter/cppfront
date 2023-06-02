@@ -11,7 +11,10 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-function-multiple-forward-arguments.cpp2"
-auto fun(auto&& s1, auto&& s2, auto&& s3) -> void;
+auto fun(auto&& s1, auto&& s2, auto&& s3) -> void
+CPP2_REQUIRES (std::is_same_v<CPP2_TYPEOF(s1), std::string> && std::is_same_v<CPP2_TYPEOF(s2), std::string> && std::is_same_v<CPP2_TYPEOF(s3), std::string>)
+#line 1 "pure2-function-multiple-forward-arguments.cpp2"
+;
     
 
 #line 5 "pure2-function-multiple-forward-arguments.cpp2"
