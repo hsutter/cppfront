@@ -3152,16 +3152,20 @@ public:
             && n.expr->get_postfix_expression_node()
             && n.expr->get_postfix_expression_node()->expr
         );
-        if (auto t = n.expr->get_postfix_expression_node()->expr->get_token();
-            t
-            && is_literal(t->type())
-            && t->type() != lexeme::StringLiteral
-            && t->type() != lexeme::FloatLiteral
-            && std::ssize(n.ops) > 0
-            && *n.ops[0].op == "as"
-            )
         {
-            as_on_literal = true;
+            auto& p = n.expr->get_postfix_expression_node()->expr;
+            if (auto t = p->get_token();
+                t
+                && is_literal(t->type())
+                && t->type() != lexeme::StringLiteral
+                && t->type() != lexeme::FloatLiteral
+                && !std::get<primary_expression_node::literal>(p->expr)->user_defined_suffix
+                && std::ssize(n.ops) > 0
+                && *n.ops[0].op == "as"
+                )
+            {
+                as_on_literal = true;
+            }
         }
 
         for (
