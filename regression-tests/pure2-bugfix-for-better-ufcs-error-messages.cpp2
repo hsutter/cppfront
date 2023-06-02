@@ -1,0 +1,13 @@
+vi: std::vector<int> = ();
+main: () = {
+  vi.push_back("oops");
+  vi.push_back();
+  vi.push_back<0>("oops");
+  vi.push_back<0>();
+  vi.push_back<0, 0>(0, 0);
+}
+i0: i32 = vi.push_back("oops");
+i1: i32 = vi.push_back();
+i2: i32 = vi.push_back<0>("oops");
+i3: i32 = vi.push_back<0>();
+i4: i32 = vi.push_back<0, 0>(0, 0);

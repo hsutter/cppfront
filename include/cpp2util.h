@@ -689,6 +689,16 @@ public:
     #define CPP2_FORCE_INLINE_LAMBDA __attribute__((always_inline))
 #endif
 
+#define CPP2_UFCS_ERROR_ID(X) X
+#define CPP2_UFCS_ERROR(FUNCNAME,PARAM1,COMMA,...) R"(
+  UFCS candidates are invalid:
+    1) )" #PARAM1 "." CPP2_UFCS_ERROR_ID(FUNCNAME) "(" #__VA_ARGS__ R"()
+    2) )" CPP2_UFCS_ERROR_ID(FUNCNAME) "(" #PARAM1 COMMA #__VA_ARGS__ R"()
+  Calling them unconditionally to have them diagnosed.)"
+#define CPP2_UFCS_ERROR_STR(...) #__VA_ARGS__
+#define CPP2_UFCS_ERROR_CAT(X, Y) #X CPP2_UFCS_ERROR_STR(Y)
+#define CPP2_UFCS_TEMPLATE_ERROR(FUNCNAME,TEMPARGS,PARAM1,COMMA,...) \
+    CPP2_UFCS_ERROR(CPP2_UFCS_ERROR_CAT(FUNCNAME, CPP2_UFCS_REMPARENS TEMPARGS), PARAM1, COMMA, __VA_ARGS__)
 
 //  Note: [&] is because a nested UFCS might be viewed as trying to capture 'this'
 
@@ -696,8 +706,16 @@ public:
 [&](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); }) { \
         return CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); \
-    } else { \
+    } else if constexpr (requires{ FUNCNAME(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); }) { \
         return FUNCNAME(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+    } else { \
+        { \
+            constexpr bool ufcs_invocable = std::is_void_v<CPP2_TYPEOF(obj)>; \
+            static_assert(ufcs_invocable, \
+                CPP2_UFCS_ERROR(#FUNCNAME, PARAM1, ", ", __VA_ARGS__)); \
+        } \
+        CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); \
+        FUNCNAME(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
     } \
 }(PARAM1, __VA_ARGS__)
 
@@ -705,8 +723,16 @@ public:
 [&](auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(); }) { \
         return CPP2_FORWARD(obj).FUNCNAME(); \
-    } else { \
+    } else if constexpr (requires{ FUNCNAME(CPP2_FORWARD(obj)); }) { \
         return FUNCNAME(CPP2_FORWARD(obj)); \
+    } else { \
+        { \
+            constexpr bool ufcs_invocable = std::is_void_v<CPP2_TYPEOF(obj)>; \
+            static_assert(ufcs_invocable, \
+                CPP2_UFCS_ERROR(#FUNCNAME, PARAM1, "")); \
+        } \
+        CPP2_FORWARD(obj).FUNCNAME(); \
+        FUNCNAME(CPP2_FORWARD(obj)); \
     } \
 }(PARAM1)
 
@@ -716,8 +742,16 @@ public:
 [&](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); }) { \
         return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); \
-    } else { \
+    } else if constexpr (requires{ FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj), CPP2_FORWARD(params)...); }) { \
         return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+    } else { \
+        { \
+            constexpr bool ufcs_invocable = std::is_void_v<CPP2_TYPEOF(obj)>; \
+            static_assert(ufcs_invocable, \
+                CPP2_UFCS_TEMPLATE_ERROR(FUNCNAME, TEMPARGS, PARAM1, ", ", __VA_ARGS__)); \
+        } \
+        CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); \
+        FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
     } \
 }(PARAM1, __VA_ARGS__)
 
@@ -725,8 +759,16 @@ public:
 [&](auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); }) { \
         return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
-    } else { \
+    } else if constexpr (requires{ FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj)); }) { \
         return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj)); \
+    } else { \
+        { \
+            constexpr bool ufcs_invocable = std::is_void_v<CPP2_TYPEOF(obj)>; \
+            static_assert(ufcs_invocable, \
+                CPP2_UFCS_TEMPLATE_ERROR(FUNCNAME, TEMPARGS, PARAM1, "")); \
+        } \
+        CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
+        FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj)); \
     } \
 }(PARAM1)
 
@@ -737,8 +779,16 @@ public:
 [](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); }) { \
         return CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); \
-    } else { \
+    } else if constexpr (requires{ FUNCNAME(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); }) { \
         return FUNCNAME(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+    } else { \
+        { \
+            constexpr bool ufcs_invocable = std::is_void_v<CPP2_TYPEOF(obj)>; \
+            static_assert(ufcs_invocable, \
+                CPP2_UFCS_ERROR(#FUNCNAME, PARAM1, ", ", __VA_ARGS__)); \
+        } \
+        CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); \
+        FUNCNAME(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
     } \
 }(PARAM1, __VA_ARGS__)
 
@@ -746,8 +796,16 @@ public:
 [](auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(); }) { \
         return CPP2_FORWARD(obj).FUNCNAME(); \
-    } else { \
+    } else if constexpr (requires{ FUNCNAME(CPP2_FORWARD(obj)); }) { \
         return FUNCNAME(CPP2_FORWARD(obj)); \
+    } else { \
+        { \
+            constexpr bool ufcs_invocable = std::is_void_v<CPP2_TYPEOF(obj)>; \
+            static_assert(ufcs_invocable, \
+                CPP2_UFCS_ERROR(#FUNCNAME, PARAM1, "")); \
+        } \
+        CPP2_FORWARD(obj).FUNCNAME(); \
+        FUNCNAME(CPP2_FORWARD(obj)); \
     } \
 }(PARAM1)
 
@@ -755,8 +813,16 @@ public:
 [](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); }) { \
         return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); \
-    } else { \
+    } else if constexpr (requires{ FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj), CPP2_FORWARD(params)...); }) { \
         return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+    } else { \
+        { \
+            constexpr bool ufcs_invocable = std::is_void_v<CPP2_TYPEOF(obj)>; \
+            static_assert(ufcs_invocable, \
+                CPP2_UFCS_TEMPLATE_ERROR(FUNCNAME, TEMPARGS, PARAM1, ", ", __VA_ARGS__)); \
+        } \
+        CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); \
+        FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
     } \
 }(PARAM1, __VA_ARGS__)
 
@@ -764,8 +830,16 @@ public:
 [](auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); }) { \
         return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
-    } else { \
+    } else if constexpr (requires{ FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj)); }) { \
         return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj)); \
+    } else { \
+        { \
+            constexpr bool ufcs_invocable = std::is_void_v<CPP2_TYPEOF(obj)>; \
+            static_assert(ufcs_invocable, \
+                CPP2_UFCS_TEMPLATE_ERROR(FUNCNAME, TEMPARGS, PARAM1, "")); \
+        } \
+        CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
+        FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj)); \
     } \
 }(PARAM1)
 
