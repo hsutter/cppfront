@@ -1,0 +1,7 @@
+f: (x) = {
+  [[assert: inspect x -> i32 {
+    is 1 = :() -> bool = 2;("");
+    is _               = 1;
+  } == 1]]
+}
+main: () = f(1);

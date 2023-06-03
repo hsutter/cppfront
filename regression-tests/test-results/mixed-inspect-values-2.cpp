@@ -39,8 +39,8 @@ constexpr auto empty = [](auto&& x){
     auto i {15}; 
 
     std::cout << [&] () -> std::string { auto&& __expr = i;
-        if (cpp2::is(__expr, (less_than(10)))) { if constexpr( requires{"i less than 10";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("i less than 10")),std::string> ) return "i less than 10"; else return std::string{}; else return std::string{}; }
-        else if (cpp2::is(__expr, in(11, 20))) { if constexpr( requires{"i is between 11 and 20";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("i is between 11 and 20")),std::string> ) return "i is between 11 and 20"; else return std::string{}; else return std::string{}; }
+        if (cpp2::is(__expr, (less_than(10)))) { if constexpr( requires{"i less than 10";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("i less than 10")),std::string> ) return "i less than 10"; cpp2::Type.expects(false, "Statement of chosen alternative is invalid."); }
+        else if (cpp2::is(__expr, in(11, 20))) { if constexpr( requires{"i is between 11 and 20";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("i is between 11 and 20")),std::string> ) return "i is between 11 and 20"; cpp2::Type.expects(false, "Statement of chosen alternative is invalid."); }
         else return "i is out of our interest"; }
     () << std::endl;
 

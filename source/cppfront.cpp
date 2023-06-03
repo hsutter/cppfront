@@ -1991,8 +1991,10 @@ public:
                     )
                 {
                     assert(alt->statement->is_expression());
-                    printer.print_cpp2("; else return " + result_type + "{}", alt->position());
-                    printer.print_cpp2("; else return " + result_type + "{}", alt->position());
+                    printer.print_cpp2(
+                        "; cpp2::Type.expects(false, \"Statement of chosen alternative is invalid.\")",
+                        alt->position()
+                    );
                 }
 
                 printer.print_cpp2(return_suffix, alt->position());
