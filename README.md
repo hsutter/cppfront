@@ -196,7 +196,7 @@ Finally, here is a roadmap diagram I made in 2016 that is still recognizably a r
 
 ![image](https://user-images.githubusercontent.com/1801526/189503047-0b0a4f0f-c5e7-42b2-a17d-37d80bef3970.png)
 
-I haven't updated this roadmap diagram since 2016, but it shows many of the talks and papers that have come since then from this work, and it's still a pretty up-to-date roadmap of the major parts of Cpp2. As of this writing, cppfront implements much of the top part of this roadmap, and I plan for more to follow.
+I haven't updated this roadmap diagram since 2016, but it shows many of the talks and papers that have come since then from this work, and it's still a pretty up-to-date roadmap of the major parts of Cpp2. As of spring 2023, cppfront implements most of this roadmap.
 
 I hope you enjoy reading about this personal experiment, and I hope that it might at least start a conversation about what could be possible _**within C++**_'s own evolution to make C++ 10x simpler, safer, and more toolable.
 
