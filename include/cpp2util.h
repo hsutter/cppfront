@@ -201,6 +201,7 @@
     #include <type_traits>
     #include <new>
     #include <memory>
+    #include <tuple>
     #include <string>
     #include <string_view>
     #include <vector>

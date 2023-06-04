@@ -669,7 +669,7 @@ auto lex_line(
             if (std::ssize(alt) > 0) {
                 errors.emplace_back(
                     pos,
-                    "'" + tokens.back().to_string(true) + "' - did you mean " + alt + "?"
+                    "'" + tokens.back().to_string(true) + "' - did you mean cpp2::" + alt + "?"
                 );
             }
             errors.emplace_back(
@@ -1665,7 +1665,7 @@ auto lex_line(
                     if (tokens.back() == "static_cast") {
                         errors.emplace_back(
                             source_position(lineno, i),
-                            "'static_cast<T>(val)' is not supported in Cpp2 - use 'val as T' for safe conversions instead, or if necessary unsafe_narrow<T>(val) for a possibly-lossy narrowing conversion"
+                            "'static_cast<T>(val)' is not supported in Cpp2 - use 'val as T' for safe conversions instead, or if necessary cpp2::unsafe_narrow<T>(val) for a possibly-lossy narrowing conversion"
                         );
                     }
                     if (tokens.back() == "dynamic_cast") {
