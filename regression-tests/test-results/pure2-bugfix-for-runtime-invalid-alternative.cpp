@@ -24,7 +24,7 @@ auto main() -> int;
 auto f(auto const& x) -> void{
   cpp2::Default.expects([&] () -> cpp2::i32 { auto&& __expr = x;
     if (cpp2::is(__expr, 1)) { if constexpr( requires{[]() -> bool { return 2; }("");} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(([]() -> bool { return 2; }(""))),cpp2::i32> ) return []() -> bool { return 2; }(""); cpp2::Type.expects(false, "Statement of chosen alternative is invalid."); }
-    else return 1; }
+    return 1; }
   ()==1, "");
 }
 auto main() -> int { f(1);  }

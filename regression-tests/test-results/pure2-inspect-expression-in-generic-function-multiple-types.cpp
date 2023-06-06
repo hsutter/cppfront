@@ -47,7 +47,7 @@ auto test_generic(auto const& x, auto const& msg) -> void{
         << [&] () -> std::string { auto&& __expr = x;
             if (cpp2::is<int>(__expr)) { if constexpr( requires{"integer " + std::to_string(cpp2::as<int>(x));} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("integer " + std::to_string(cpp2::as<int>(x)))),std::string> ) return "integer " + std::to_string(cpp2::as<int>(x)); cpp2::Type.expects(false, "Statement of chosen alternative is invalid."); }
             else if (cpp2::is<std::string>(__expr)) { if constexpr( requires{'"' + cpp2::as<std::string>(x) + '"';} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(('"' + cpp2::as<std::string>(x) + '"')),std::string> ) return '"' + cpp2::as<std::string>(x) + '"'; cpp2::Type.expects(false, "Statement of chosen alternative is invalid."); }
-            else return "not an int or string"; }
+            return "not an int or string"; }
         () 
         << "\n";
 }

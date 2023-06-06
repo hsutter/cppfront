@@ -1911,10 +1911,6 @@ public:
         for (auto first = true; auto&& alt : n.alternatives)
         {
             assert(alt && alt->is_as_keyword);
-            if (!first) {
-                printer.print_cpp2("else ", alt->position());
-            }
-            first = false;
 
             auto id = std::string{};
             printer.emit_to_string(&id);
@@ -1972,6 +1968,10 @@ public:
                     }
                 }
                 else {
+                    if (!first) {
+                        printer.print_cpp2("else ", alt->position());
+                    }
+                    first = false;
                     printer.print_cpp2("if " + constexpr_qualifier, alt->position());
                     if (alt->type_id) {
                         printer.print_cpp2("(cpp2::is<" + id + ">(__expr)) ", alt->position());

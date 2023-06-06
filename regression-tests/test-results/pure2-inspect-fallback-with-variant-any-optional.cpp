@@ -43,7 +43,7 @@ auto test_generic(auto const& x, auto const& msg) -> void{
             else if (cpp2::is<std::variant<int,std::string>>(__expr)) { if constexpr( requires{" matches std::variant<int, std::string>";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((" matches std::variant<int, std::string>")),std::string> ) return " matches std::variant<int, std::string>"; cpp2::Type.expects(false, "Statement of chosen alternative is invalid."); }
             else if (cpp2::is<std::any>(__expr)) { if constexpr( requires{" matches std::any";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((" matches std::any")),std::string> ) return " matches std::any"; cpp2::Type.expects(false, "Statement of chosen alternative is invalid."); }
             else if (cpp2::is<std::optional<std::string>>(__expr)) { if constexpr( requires{" matches std::optional<std::string>";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((" matches std::optional<std::string>")),std::string> ) return " matches std::optional<std::string>"; cpp2::Type.expects(false, "Statement of chosen alternative is invalid."); }
-            else return " no match"; }
+            return " no match"; }
         () 
         << "\n";
 }

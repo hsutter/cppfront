@@ -37,7 +37,7 @@ struct my_type {};
         else if (cpp2::is<std::array>(__expr)) { if constexpr( requires{"std::array";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("std::array")),std::string> ) return "std::array"; cpp2::Type.expects(false, "Statement of chosen alternative is invalid."); }
         else if (cpp2::is<std::variant>(__expr)) { if constexpr( requires{"std::variant";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("std::variant")),std::string> ) return "std::variant"; cpp2::Type.expects(false, "Statement of chosen alternative is invalid."); }
         else if (cpp2::is<my_type>(__expr)) { if constexpr( requires{"my_type";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("my_type")),std::string> ) return "my_type"; cpp2::Type.expects(false, "Statement of chosen alternative is invalid."); }
-        else return "unknown"; }
+        return "unknown"; }
     (); 
 }
 

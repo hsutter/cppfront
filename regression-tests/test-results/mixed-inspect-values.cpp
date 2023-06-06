@@ -62,7 +62,7 @@ auto test(auto const& x) -> void{
         else if (cpp2::is(__expr, std::move(forty_two))) { if constexpr( requires{"the answer";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("the answer")),std::string> ) return "the answer"; cpp2::Type.expects(false, "Statement of chosen alternative is invalid."); }
         else if (cpp2::is<int>(__expr)) { if constexpr( requires{"integer " + cpp2::to_string(x);} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("integer " + cpp2::to_string(x))),std::string> ) return "integer " + cpp2::to_string(x); cpp2::Type.expects(false, "Statement of chosen alternative is invalid."); }
         else if (cpp2::is<std::string>(__expr)) { if constexpr( requires{cpp2::as<std::string>(x);} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((cpp2::as<std::string>(x))),std::string> ) return cpp2::as<std::string>(x); cpp2::Type.expects(false, "Statement of chosen alternative is invalid."); }
-        else return "(no match)"; }
+        return "(no match)"; }
     () << "\n";
 }
 
