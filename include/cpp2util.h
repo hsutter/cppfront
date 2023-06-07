@@ -995,8 +995,14 @@ auto as( X const& x ) -> decltype(auto) {
 }
 
 template< typename C, typename X >
+    requires std::is_same_v<C, X>
+auto as( X& x ) -> decltype(auto) {
+    return x;
+}
+
+template< typename C, typename X >
 auto as( X const& x ) -> auto
-    requires (!std::is_same_v<C, X> && requires { C{x}; })
+    requires (!std::is_same_v<C, X> && !std::is_base_of_v<C, X> && requires { C{x}; })
 {
     //  Experiment: Recognize the nested `::value_type` pattern for some dynamic library types
     //  like std::optional, and try to prevent accidental narrowing conversions even when
@@ -1010,9 +1016,15 @@ auto as( X const& x ) -> auto
 }
 
 template< typename C, typename X >
-    requires std::is_base_of_v<C, X>
-auto as( X&& x ) -> C&& {
-    return CPP2_FORWARD(x);
+    requires (std::is_base_of_v<C, X> && !std::is_same_v<C, X>)
+auto as( X& x ) -> C& {
+    return x;
+}
+
+template< typename C, typename X >
+    requires (std::is_base_of_v<C, X> && !std::is_same_v<C, X>)
+auto as( X const& x ) -> C const& {
+    return x;
 }
 
 template< typename C, typename X >
