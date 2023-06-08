@@ -1,0 +1,3 @@
+pure2-statement-parse-error.cpp2...
+pure2-statement-parse-error.cpp2(3,9): error: Could not parse statement (at 'b')
+
