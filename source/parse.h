@@ -5787,6 +5787,7 @@ private:
 
         //  Handle optional this-specifier
         //
+        auto this_specifier_pos = pos; // For backtracking if it's to be an identifier.
         if (curr() == "implicit") {
             n->mod = parameter_declaration_node::modifier::implicit;
             next();
@@ -5806,6 +5807,7 @@ private:
 
         //  Handle optional parameter-direction
         //
+        auto parameter_direction_pos = pos; // For backtracking if it's to be an identifier.
         if (auto dir = to_passing_style(curr());
             dir != passing_style::invalid
             )
@@ -5841,6 +5843,23 @@ private:
             next();
         }
 
+        //  Before the main declaration
+        //  If we're not at an identifier, backtrack to a parsed one.
+        if (curr().type() != lexeme::Identifier && curr().type() != lexeme::Keyword) {
+            if (pos != parameter_direction_pos)
+            {
+                n->pass = passing_style::in;
+                pos = parameter_direction_pos;
+            }
+            else if (pos != this_specifier_pos)
+            {
+                auto mod = std::exchange(n->mod, parameter_declaration_node::modifier::none);
+                pos = this_specifier_pos;
+                if (mod == parameter_declaration_node::modifier::virtual_) {
+                    error("invalid parameter identifier");
+                }
+            }
+        }
         //  Now the main declaration
         //
         if (!(n->declaration = declaration(false, true, is_template))) {

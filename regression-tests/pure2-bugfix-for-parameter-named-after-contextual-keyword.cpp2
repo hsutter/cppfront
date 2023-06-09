@@ -1,0 +1,10 @@
+t: type = {
+  f: (in) -> _ = in;
+}
+g: (final) -> _ = final.first;
+h: (out, x) -> _ = out(x);
+main: () = {
+  [[assert: t::f(0) == 0]]
+  [[assert: g(std::make_pair(1, 2)) == 1]]
+  [[assert: h(:(y) -> _ = y, 3) == 3]]
+}

@@ -1,0 +1,3 @@
+pure2-bugfix-for-parameter-named-after-contextual-keyword-error.cpp2...
+pure2-bugfix-for-parameter-named-after-contextual-keyword-error.cpp2(1,5): error: invalid parameter identifier (at 'virtual')
+
