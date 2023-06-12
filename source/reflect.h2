@@ -63,7 +63,7 @@ compiler_services: @polymorphic_base @copyable type =
         lines := generated_lines.back()&;
 
         add_line := :(s: std::string_view) = {
-            lines$*.emplace_back( s, source_line::category::cpp2 );
+            _ = lines$*.emplace_back( s, source_line::category::cpp2 );
         };
 
         //  First split this string into source_lines
@@ -87,7 +87,7 @@ compiler_services: @polymorphic_base @copyable type =
         //  Now lex this source fragment to generate
         //  a single grammar_map entry, whose .second
         //  is the vector of tokens
-        generated_lexers.emplace_back( errors* );
+        _ = generated_lexers.emplace_back( errors* );
         tokens := generated_lexers.back()&;
         tokens*.lex( lines*, true );
 
@@ -124,7 +124,7 @@ compiler_services: @polymorphic_base @copyable type =
         if !meta_function_name.empty() {
             message = "while applying @" + meta_function_name + " - " + message;
         }
-        errors*.emplace_back( position(), message);
+        _ = errors*.emplace_back( position(), message);
     }
 }
 
@@ -179,6 +179,10 @@ declaration: @polymorphic_base @copyable type =
     is_protected     : (this) -> bool = n*.is_protected();
     is_private       : (this) -> bool = n*.is_private();
     is_default_access: (this) -> bool = n*.is_default_access();
+
+    default_to_public   : (inout this) = _ = n*.make_public();
+    default_to_protected: (inout this) = _ = n*.make_protected();
+    default_to_private  : (inout this) = _ = n*.make_private();
 
     make_public      : (inout this) -> bool = n*.make_public();
     make_protected   : (inout this) -> bool = n*.make_protected();
@@ -266,6 +270,8 @@ function_declaration: @copyable type =
 
     is_binary_comparison_function: (this) -> bool = n*.is_binary_comparison_function();
 
+    default_to_virtual           : (inout this) = _ = n*.make_function_virtual();
+
     make_virtual                 : (inout this) -> bool = n*.make_function_virtual();
 }
 
@@ -322,7 +328,7 @@ type_declaration: @copyable type =
     = {
         ret: std::vector<function_declaration> = ();
         for n*.get_type_scope_declarations(declaration_node::functions) do (d) {
-            ret.emplace_back( d, this );
+            _ = ret.emplace_back( d, this );
         }
         return ret;
     }
@@ -332,7 +338,7 @@ type_declaration: @copyable type =
     = {
         ret: std::vector<object_declaration> = ();
         for n*.get_type_scope_declarations(declaration_node::objects) do (d) {
-            ret.emplace_back( d, this );
+            _ = ret.emplace_back( d, this );
         }
         return ret;
     }
@@ -342,7 +348,7 @@ type_declaration: @copyable type =
     = {
         ret: std::vector<type_declaration> = ();
         for n*.get_type_scope_declarations(declaration_node::types) do (d) {
-            ret.emplace_back( d, this );
+            _ = ret.emplace_back( d, this );
         }
         return ret;
     }
@@ -352,7 +358,7 @@ type_declaration: @copyable type =
     = {
         ret: std::vector<declaration> = ();
         for n*.get_type_scope_declarations(declaration_node::all) do (d) {
-            ret.emplace_back( d, this );
+            _ = ret.emplace_back( d, this );
         }
         return ret;
     }
@@ -431,7 +437,7 @@ interface: (inout t: meta::type_declaration) =
                         "interface functions must not have a function body; remove the '=' initializer");
             mf.require( mf.make_public(),
                         "interface functions must be public");
-            mf.make_virtual();
+            mf.default_to_virtual();
             has_dtor |= mf.is_destructor();
         }
     }
@@ -468,7 +474,7 @@ polymorphic_base: (inout t: meta::type_declaration) =
     for t.get_member_functions() do (inout mf)
     {
         if mf.is_default_access() {
-            mf.make_public();
+            mf.default_to_public();
         }
         mf.require( !mf.is_copy_or_move(),
                     "polymorphic base types may not copy or move; consider a virtual clone() instead");

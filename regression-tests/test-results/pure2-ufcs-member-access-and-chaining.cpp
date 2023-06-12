@@ -14,21 +14,23 @@
 [[nodiscard]] auto main() -> int;
     
 
-#line 22 "pure2-ufcs-member-access-and-chaining.cpp2"
+#line 24 "pure2-ufcs-member-access-and-chaining.cpp2"
+auto no_return(cpp2::in<int> x) -> void;
+
 [[nodiscard]] auto ufcs(cpp2::in<int> i) -> int;
     struct fun__ret { int i; };
 
 
 
-#line 26 "pure2-ufcs-member-access-and-chaining.cpp2"
+#line 30 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto fun() -> fun__ret;
     
 
-#line 31 "pure2-ufcs-member-access-and-chaining.cpp2"
+#line 35 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto get_i(auto const& r) -> int;
     
 
-#line 35 "pure2-ufcs-member-access-and-chaining.cpp2"
+#line 39 "pure2-ufcs-member-access-and-chaining.cpp2"
 //  And a test for non-local UFCS, which shouldn't do a [&] capture
 [[nodiscard]] auto f(auto const& x) -> int;
 extern int y;
@@ -38,24 +40,28 @@ extern int y;
 #line 1 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto main() -> int{
     auto i {42}; 
-    CPP2_UFCS_0(ufcs, std::move(i));
+    (void) CPP2_UFCS_0(ufcs, std::move(i));
 
     auto j {fun()}; 
-    CPP2_UFCS_0(ufcs, j.i);
+    (void) CPP2_UFCS_0(ufcs, j.i);
 
-    CPP2_UFCS_0(ufcs, fun().i);
+    (void) CPP2_UFCS_0(ufcs, fun().i);
 
     auto k {fun().i}; 
-    CPP2_UFCS_0(ufcs, std::move(k));
+    (void) CPP2_UFCS_0(ufcs, std::move(k));
 
-    CPP2_UFCS_0(ufcs, get_i(j));
+    (void) CPP2_UFCS_0(ufcs, get_i(j));
 
-    CPP2_UFCS_0(ufcs, get_i(fun()));
+    (void) CPP2_UFCS_0(ufcs, get_i(fun()));
 
     auto res {CPP2_UFCS_0(ufcs, (42))}; 
 
-    CPP2_UFCS_0(ufcs, (std::move(j).i));
+    (void) CPP2_UFCS_0(ufcs, (std::move(j).i));
+
+    (void) CPP2_UFCS_0(no_return, 42);
 }
+
+auto no_return(cpp2::in<int> x) -> void{}
 
 [[nodiscard]] auto ufcs(cpp2::in<int> i) -> int{
     return i + 2; 
@@ -63,7 +69,7 @@ extern int y;
 
 [[nodiscard]] auto fun() -> fun__ret{
         cpp2::deferred_init<int> i;
-#line 27 "pure2-ufcs-member-access-and-chaining.cpp2"
+#line 31 "pure2-ufcs-member-access-and-chaining.cpp2"
     i.construct(42);
     return  { std::move(i.value()) }; 
 }
@@ -72,7 +78,7 @@ extern int y;
     return r.i; 
 }
 
-#line 36 "pure2-ufcs-member-access-and-chaining.cpp2"
+#line 40 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto f(auto const& x) -> int { return 0;  }
 int y {CPP2_UFCS_0_NONLOCAL(f, 0)}; 
 

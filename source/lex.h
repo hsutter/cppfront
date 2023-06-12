@@ -654,8 +654,8 @@ auto lex_line(
         if (num_merged_tokens > 1)
         {
             auto alt = std::string{};
-            if      (is_char      &&  is_signed)   { alt = "'i8' (usually best) or '__schar'"; }
-            else if (is_char      &&  is_unsigned) { alt = "'u8' (usually best) or '__uchar'"; }
+            if      (is_char      &&  is_signed)   { alt = "'i8' (usually best) or 'cpp2::__schar'"; }
+            else if (is_char      &&  is_unsigned) { alt = "'u8' (usually best) or 'cpp2::__uchar'"; }
             else if (is_short     && !is_unsigned) { alt = "'short'"      ; }
             else if (is_short     &&  is_unsigned) { alt = "'ushort'"     ; }
             else if (is_long == 1 && !is_unsigned) { alt = "'long'"       ; }
@@ -669,7 +669,7 @@ auto lex_line(
             if (std::ssize(alt) > 0) {
                 errors.emplace_back(
                     pos,
-                    "'" + tokens.back().to_string(true) + "' - did you mean cpp2::" + alt + "?"
+                    "'" + tokens.back().to_string(true) + "' - did you mean " + alt + "?"
                 );
             }
             errors.emplace_back(
@@ -984,7 +984,7 @@ auto lex_line(
     auto peek_is_cpp2_fundamental_type_keyword = [&]
     {
         const auto keys = std::regex(
-            "^i8|^i16|^i32|^i64|^u8|^u16|^u32|^u64"
+            "^i8|^i16|^i32|^i64|^longdouble|^longlong|^u8|^u16|^u32|^u64|^ulong|^ulonglong|^ushort"
         );
 
         return do_is_keyword(keys);
@@ -1001,7 +1001,7 @@ auto lex_line(
     auto reset_processing_of_the_line = [&]() {
         //  Redo processing of this whole line now that the string is expanded,
         //  which may have moved it in memory... move i back to the line start
-        //  and discard any tokens we already tokenized for this line
+        //  and _ = any tokens we already tokenized for this line
         i = colno_t{-1};
         while (
             !tokens.empty()

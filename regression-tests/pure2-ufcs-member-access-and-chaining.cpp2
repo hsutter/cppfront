@@ -1,23 +1,27 @@
 main: () -> int = {
     i := 42;
-    i.ufcs();
+    _ = i.ufcs();
 
     j := fun();
-    j.i.ufcs();
+    _ = j.i.ufcs();
 
-    fun().i.ufcs();
+    _ = fun().i.ufcs();
 
     k := fun().i;
-    k.ufcs();
+    _ = k.ufcs();
 
-    get_i(j).ufcs();
+    _ = get_i(j).ufcs();
 
-    get_i(fun()).ufcs();
+    _ = get_i(fun()).ufcs();
 
     res := (42).ufcs();
 
-    (j.i).ufcs();
+    _ = (j.i).ufcs();
+
+    _ = 42.no_return();
 }
+
+no_return: (x: int) = { }
 
 ufcs: (i:int) -> int = {
     return i+2;

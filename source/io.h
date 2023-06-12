@@ -853,6 +853,8 @@ public:
             //
             if (auto pre = is_preprocessor(buf, true);
                 pre.is_preprocessor
+                && !in_comment
+                && !in_raw_string_literal
                 )
             {
                 cpp1_found = true;

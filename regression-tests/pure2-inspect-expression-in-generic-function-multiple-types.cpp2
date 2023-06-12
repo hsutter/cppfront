@@ -8,7 +8,7 @@ main: () -> int = {
     test_generic(a,    "any");
     test_generic(o,    "optional<int>");
 
-    v.emplace<0>(1);
+    _ = v.emplace<0>(1);
     a = 2;
     o = 3;
     test_generic(42,   "int");

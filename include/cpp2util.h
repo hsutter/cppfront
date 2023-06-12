@@ -325,8 +325,8 @@ public:
     using handler = void (*)(CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM);
 
     constexpr contract_group  (handler h = {})  : reporter(h) { }
-    constexpr auto set_handler(handler h) -> handler;
-    constexpr auto get_handler() const    -> handler { return reporter; }
+    constexpr auto set_handler(handler h);
+    constexpr auto get_handler() const -> handler { return reporter; }
     constexpr auto expects    (bool b, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
                                           -> void { if (!b) reporter(msg CPP2_SOURCE_LOCATION_ARG); }
 private:
@@ -374,11 +374,9 @@ auto inline Testing = contract_group(
     }
 );
 
-constexpr auto contract_group::set_handler(handler h) -> handler {
+constexpr auto contract_group::set_handler(handler h) {
     Default.expects(h);
-    auto old = reporter;
     reporter = h;
-    return old;
 }
 
 
@@ -685,16 +683,33 @@ public:
 #ifdef _MSC_VER
     #define CPP2_FORCE_INLINE        __forceinline
     #define CPP2_FORCE_INLINE_LAMBDA [[msvc::forceinline]]
+    #define CPP2_LAMBDA_NO_DISCARD
 #else
     #define CPP2_FORCE_INLINE        __attribute__((always_inline))
     #define CPP2_FORCE_INLINE_LAMBDA __attribute__((always_inline))
+
+    #if defined(__clang_major__)
+        #if (__clang_major__ > 13 || (__clang_major__ == 13 && __clang_minor__ >= 2))
+            #define CPP2_LAMBDA_NO_DISCARD   [[nodiscard]]
+        #else
+            #define CPP2_LAMBDA_NO_DISCARD
+        #endif
+    #elif defined(__GNUC__)
+        #if __GNUC__ >= 9
+            #define CPP2_LAMBDA_NO_DISCARD   [[nodiscard]]
+        #else
+            #define CPP2_LAMBDA_NO_DISCARD
+        #endif
+    #else
+        #define CPP2_LAMBDA_NO_DISCARD
+    #endif
 #endif
 
 
 //  Note: [&] is because a nested UFCS might be viewed as trying to capture 'this'
 
 #define CPP2_UFCS(FUNCNAME,PARAM1,...) \
-[&](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
+[&] CPP2_LAMBDA_NO_DISCARD (auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); }) { \
         return CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); \
     } else { \
@@ -703,7 +718,7 @@ public:
 }(PARAM1, __VA_ARGS__)
 
 #define CPP2_UFCS_0(FUNCNAME,PARAM1) \
-[&](auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
+[&] CPP2_LAMBDA_NO_DISCARD (auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(); }) { \
         return CPP2_FORWARD(obj).FUNCNAME(); \
     } else { \
@@ -714,7 +729,7 @@ public:
 #define CPP2_UFCS_REMPARENS(...) __VA_ARGS__
 
 #define CPP2_UFCS_TEMPLATE(FUNCNAME,TEMPARGS,PARAM1,...) \
-[&](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
+[&] CPP2_LAMBDA_NO_DISCARD (auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); }) { \
         return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); \
     } else { \
@@ -723,7 +738,7 @@ public:
 }(PARAM1, __VA_ARGS__)
 
 #define CPP2_UFCS_TEMPLATE_0(FUNCNAME,TEMPARGS,PARAM1) \
-[&](auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
+[&] CPP2_LAMBDA_NO_DISCARD (auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); }) { \
         return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
     } else { \
@@ -735,7 +750,7 @@ public:
 //  But for non-local lambdas [&] is not allowed
 
 #define CPP2_UFCS_NONLOCAL(FUNCNAME,PARAM1,...) \
-[](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
+[] CPP2_LAMBDA_NO_DISCARD (auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); }) { \
         return CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); \
     } else { \
@@ -744,7 +759,7 @@ public:
 }(PARAM1, __VA_ARGS__)
 
 #define CPP2_UFCS_0_NONLOCAL(FUNCNAME,PARAM1) \
-[](auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
+[] CPP2_LAMBDA_NO_DISCARD (auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(); }) { \
         return CPP2_FORWARD(obj).FUNCNAME(); \
     } else { \
@@ -753,7 +768,7 @@ public:
 }(PARAM1)
 
 #define CPP2_UFCS_TEMPLATE_NONLOCAL(FUNCNAME,TEMPARGS,PARAM1,...) \
-[](auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
+[] CPP2_LAMBDA_NO_DISCARD (auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); }) { \
         return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); \
     } else { \
@@ -762,7 +777,7 @@ public:
 }(PARAM1, __VA_ARGS__)
 
 #define CPP2_UFCS_TEMPLATE_0_NONLOCAL(FUNCNAME,TEMPARGS,PARAM1) \
-[](auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
+[] CPP2_LAMBDA_NO_DISCARD (auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
     if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); }) { \
         return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
     } else { \
@@ -1347,26 +1362,26 @@ constexpr auto as( X const& x ) -> decltype(auto)
 //
 
 template <class F>
-class final_action_success
+class finally_success
 {
 public:
-    explicit final_action_success(const F& ff) noexcept : f{ff} { }
-    explicit final_action_success(F&& ff) noexcept : f{std::move(ff)} { }
+    explicit finally_success(const F& ff) noexcept : f{ff} { }
+    explicit finally_success(F&& ff) noexcept : f{std::move(ff)} { }
 
-    ~final_action_success() noexcept
+    ~finally_success() noexcept
     {
         if (invoke && ecount == std::uncaught_exceptions()) {
             f();
         }
     }
 
-    final_action_success(final_action_success&& that) noexcept
+    finally_success(finally_success&& that) noexcept
         : f(std::move(that.f)), invoke(std::exchange(that.invoke, false))
     { }
 
-    final_action_success(final_action_success const&) = delete;
-    void operator=      (final_action_success const&) = delete;
-    void operator=      (final_action_success&&)      = delete;
+    finally_success(finally_success const&) = delete;
+    void operator= (finally_success const&) = delete;
+    void operator= (finally_success&&)      = delete;
 
 private:
     F f;
@@ -1374,42 +1389,32 @@ private:
     bool invoke = true;
 };
 
-[[nodiscard]] auto finally_success(auto&& f) noexcept
-{
-    return final_action_success<CPP2_TYPEOF(f)>{CPP2_FORWARD(f)};
-}
-
 
 //
 //  Same, but clean up also on exceptional paths
 //
 
 template <class F>
-class final_action
+class finally
 {
 public:
-    explicit final_action(const F& ff) noexcept : f{ff} { }
-    explicit final_action(F&& ff) noexcept : f{std::move(ff)} { }
+    explicit finally(const F& ff) noexcept : f{ff} { }
+    explicit finally(F&& ff) noexcept : f{std::move(ff)} { }
 
-    ~final_action() noexcept { f(); }
+    ~finally() noexcept { f(); }
 
-    final_action(final_action&& that) noexcept
+    finally(finally&& that) noexcept
         : f(std::move(that.f)), invoke(std::exchange(that.invoke, false))
     { }
 
-    final_action  (final_action const&) = delete;
-    void operator=(final_action const&) = delete;
-    void operator=(final_action&&)      = delete;
+    finally       (finally const&) = delete;
+    void operator=(finally const&) = delete;
+    void operator=(finally&&)      = delete;
 
 private:
     F f;
     bool invoke = true;
 };
-
-[[nodiscard]] auto finally(auto&& f) noexcept
-{
-    return final_action<CPP2_TYPEOF(f)>{CPP2_FORWARD(f)};
-}
 
 
 //-----------------------------------------------------------------------

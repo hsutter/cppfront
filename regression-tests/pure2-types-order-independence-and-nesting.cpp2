@@ -34,7 +34,7 @@ X: type = {
     //  X::exx member function description here
     exx: (this, count: int) = {
         //  Exercise '_' anonymous objects too while we're at it
-        _ := finally( :()= std::cout << "leaving call to 'why((count)$)'\n"; );
+        _: finally = :()= std::cout << "leaving call to 'why((count)$)'\n";
         if count < 5 {
             py*.why( count+1 );     // use Y object from X
         }

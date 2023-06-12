@@ -3434,7 +3434,23 @@ public:
         {
             suppress_move_from_last_use = true;
         }
-        emit(*n.expr);
+        //  If it's "_ =" then emit (void)
+        bool suppress_operator = false;
+        if (
+            !n.terms.empty()
+            && n.terms.front().op->type() == lexeme::Assignment
+            && n.expr->get_postfix_expression_node()
+            && n.expr->get_postfix_expression_node()->get_first_token_ignoring_this()
+            && *n.expr->get_postfix_expression_node()->get_first_token_ignoring_this() == "_"
+            )
+        {
+            printer.print_cpp2( "(void)", n.position() );
+            suppress_operator = true;
+        }
+        else
+        {
+            emit(*n.expr);
+        }
         suppress_move_from_last_use = false;
 
         //  Check that this isn't an illegal pointer operation
@@ -3496,9 +3512,18 @@ public:
                 emit(*x.expr);
                 printer.print_cpp2( ")", n.position() );
             }
-            else {
-                printer.print_cpp2(" ", n.position());
-                emit(*x.op);
+            else
+            {
+                //  For the first operator only, if we are emitting a "_ =" discard
+                //  then we've already emitted the cast to void and don't need the =
+                if (suppress_operator) {
+                    assert( x.op->type() == lexeme::Assignment );
+                    suppress_operator = false;
+                }
+                else {
+                    printer.print_cpp2(" ", n.position());
+                    emit(*x.op);
+                }
                 printer.print_cpp2(" ", n.position());
                 emit(*x.expr);
             }
@@ -5741,6 +5766,14 @@ public:
 
             //  If this is anonymous object (named "_"), generate a unique name
             if (n.has_name("_")) {
+                if (n.has_wildcard_type()) {
+                    errors.emplace_back(
+                        n.identifier->position(),
+                        "an object can have an anonymous name or an anonymous type, but not both at the same type (rationale: if '_ := f();' were allowed to keep the returned object alive, that syntax would be dangerously close to '_ = f();' to discard the returned object, and such importantly opposite meanings deserve more than a one-character typo distance; and explicit discarding gets the nice syntax because it's likely more common)"
+                    );
+                    return;
+                }
+
                 printer.print_cpp2(
                     "auto_" + labelized_position(n.identifier->get_token()),
                     n.identifier->position()
