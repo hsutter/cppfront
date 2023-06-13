@@ -217,6 +217,7 @@
     #include <compare>
     #include <iterator>
     #include <concepts>
+    #include <system_error>
 
     #ifndef CPP2_NO_EXCEPTIONS
         #include <exception>
