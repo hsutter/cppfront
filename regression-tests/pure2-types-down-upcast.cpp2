@@ -1,0 +1,85 @@
+A: type = {
+  public i: int = 0;
+
+	const_foo: (virtual this) = { std::cout << "const foo \n"; }
+	mut_foo: (inout this) = { std::cout << "foo \n"; }
+}
+
+B: type = {
+  this: A = ();
+  public d: double = 0.0;
+}
+
+func_mut: (inout a: A) -> void  = { std::cout << "Call A mut: (a.i)$" << std::endl; }
+func_mut: (inout b: B) -> void  = { std::cout << "Call B mut: (b.d)$" << std::endl; }
+func_const: (a: A) -> void  = { std::cout << "Call A const: (a.i)$" << std::endl; }
+func_const: (b: B) -> void  = { std::cout << "Call B const: (b.d)$" << std::endl; }
+
+test_const_foo: () = {
+	s: A =();
+  sC: *const A = s&;
+  s.const_foo();
+  sC*.const_foo();
+	(s as A).const_foo();
+  (sC* as A).const_foo();
+  _ = s;
+  _ = sC;
+}
+
+test_mut_foo: () = {
+	s: A =();
+  s.mut_foo();
+	(s as A).mut_foo();
+  _ = s;
+}
+
+test_up: () = {
+  b: B = ();
+  bC: *const B = b&;
+
+  func_const(b);
+  func_const(b as B);
+  func_const(b as A);
+  func_const(bC*);
+  func_const(bC* as B);
+  func_const(bC* as A);
+
+  func_mut(b);
+  func_mut(b as B);
+  func_mut(b as A);
+
+  _ = b;
+  _ = bC;
+}
+
+test_down: () = {
+  b: B = ();
+  bC: *const B = b&;
+  a: *A = (b as A)&;
+  aC: *const  A = (b as A)&;
+
+  func_const(a*);
+  func_const(a* as B);
+  func_const(a* as A);
+  func_const(aC*);
+  func_const(aC* as B);
+  func_const(aC* as A);
+  func_mut(a*);
+  func_mut(a* as B);
+  func_mut(a* as A);
+
+  _ = b;
+  _ = bC;
+  _ = a;
+  _ = aC;
+}
+
+main: () -> int = {
+
+  test_const_foo();
+  test_mut_foo();
+  test_up();
+  test_down();
+
+  return 0;
+}
