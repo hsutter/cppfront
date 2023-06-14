@@ -999,6 +999,18 @@ public:
             return false;
         }
 
+        if (
+            n.parent_is_type()
+            && n.has_wildcard_type()
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "a type scope variable must have a declared type"
+            );
+            return false;
+        }
+
         {
             auto this_index = n.index_of_parameter_named("this");
             auto that_index = n.index_of_parameter_named("that");
@@ -1288,6 +1300,44 @@ public:
                 );
                 return false;
             }
+        }
+
+        if (n.is_type()) {
+            auto compound_stmt = n.initializer->get_if<compound_statement_node>();
+            assert (compound_stmt);
+            for (auto& stmt : compound_stmt->statements) {
+                if (!stmt->is_declaration()) {
+                    errors.emplace_back(
+                        stmt->position(),
+                        "a user-defined type body must contain only declarations, not other code"
+                    );
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+
+    auto check(statement_node const& n)
+        -> bool
+    {
+        if (auto expr_stmt = n.get_if<expression_statement_node>();
+            expr_stmt
+            && n.compound_parent
+            && (
+                expr_stmt->expr->is_identifier()
+                || expr_stmt->expr->is_id_expression()
+                || expr_stmt->expr->is_literal()
+                )
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "unused literal or identifier"
+            );
+            return false;
         }
 
         return true;

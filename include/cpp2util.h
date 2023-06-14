@@ -690,7 +690,8 @@ public:
     #define CPP2_FORCE_INLINE_LAMBDA __attribute__((always_inline))
 
     #if defined(__clang_major__)
-        #if (__clang_major__ > 13 || (__clang_major__ == 13 && __clang_minor__ >= 2))
+        //  Also check __cplusplus, only to satisfy Clang -pedantic-errors
+        #if __cplusplus >= 202302L && (__clang_major__ > 13 || (__clang_major__ == 13 && __clang_minor__ >= 2))
             #define CPP2_LAMBDA_NO_DISCARD   [[nodiscard]]
         #else
             #define CPP2_LAMBDA_NO_DISCARD
@@ -1351,13 +1352,12 @@ constexpr auto as( X const& x ) -> decltype(auto)
 
 //-----------------------------------------------------------------------
 //
-//  A variation of GSL's final_action_success and finally to run only on success
-//  (based on a PR I contributed to Microsoft GSL)
+//  A variation of GSL's final_action_success / finally
 //
-//  final_action_success ensures something is run at the end of a scope
+//  finally ensures something is run at the end of a scope always
+//
+//  finally_success ensures something is run at the end of a scope
 //      if no exception is thrown
-//
-//  finally_success is a convenience function to make a final_action_success_success
 //
 //-----------------------------------------------------------------------
 //
@@ -1390,10 +1390,6 @@ private:
     bool invoke = true;
 };
 
-
-//
-//  Same, but clean up also on exceptional paths
-//
 
 template <class F>
 class finally

@@ -144,11 +144,20 @@ struct primary_expression_node
         std::unique_ptr<literal_node>
     > expr;
 
+    auto is_identifier() const
+        -> bool;
+
+    auto is_id_expression() const
+        -> bool;
+
     auto is_expression_list() const
         -> bool;
 
     auto get_expression_list() const
         -> expression_list_node const*;
+
+    auto is_literal() const
+        -> bool;
 
     auto template_args_count() -> int;
     auto get_token() const -> token const*;
@@ -194,6 +203,12 @@ struct prefix_expression_node
     std::vector<token const*> ops;
     std::unique_ptr<postfix_expression_node> expr;
 
+    auto is_identifier() const
+        -> bool;
+
+    auto is_id_expression() const
+        -> bool;
+
     auto is_expression_list() const
         -> bool;
 
@@ -206,6 +221,9 @@ struct prefix_expression_node
         assert(expr);
         return expr.get();
     }
+
+    auto is_literal() const
+        -> bool;
 
     auto is_result_a_temporary_variable() const -> bool;
 
@@ -231,6 +249,18 @@ struct binary_expression_node
 
     //  API
     //
+    auto is_identifier() const
+        -> bool
+    {
+        return terms.empty() && expr->is_identifier();
+    }
+
+    auto is_id_expression() const
+        -> bool
+    {
+        return terms.empty() && expr->is_id_expression();
+    }
+
     auto is_expression_list() const
         -> bool
     {
@@ -244,6 +274,12 @@ struct binary_expression_node
             return expr->get_expression_list();
         }
         return {};
+    }
+
+    auto is_literal() const
+        -> bool
+    {
+        return terms.empty() && expr->is_literal();
     }
 
     //  Get left-hand postfix-expression
@@ -354,6 +390,18 @@ struct expression_node
 
     // API
     //
+    auto is_identifier() const
+        -> bool
+    {
+        return expr->is_identifier();
+    }
+
+    auto is_id_expression() const
+        -> bool
+    {
+        return expr->is_id_expression();
+    }
+
     auto is_expression_list() const
         -> bool
     {
@@ -367,6 +415,12 @@ struct expression_node
             return expr->get_expression_list();
         }
         return {};
+    }
+
+    auto is_literal() const
+        -> bool
+    {
+        return expr->is_literal();
     }
 
     auto get_lhs_rhs_if_simple_assignment() const
@@ -452,6 +506,18 @@ struct expression_list_node
     }
 };
 
+auto primary_expression_node::is_identifier() const
+    -> bool
+{
+    return expr.index() == identifier;
+}
+
+auto primary_expression_node::is_id_expression() const
+    -> bool
+{
+    return expr.index() == id_expression;
+}
+
 auto primary_expression_node::is_expression_list() const
     -> bool
 {
@@ -465,6 +531,12 @@ auto primary_expression_node::get_expression_list() const
         return std::get<expression_list>(expr).get();
     }
     return {};
+}
+
+auto primary_expression_node::is_literal() const
+    -> bool
+{
+    return expr.index() == literal;
 }
 
 
@@ -542,6 +614,18 @@ struct postfix_expression_node
 
     //  API
     //
+    auto is_identifier() const
+        -> bool
+    {
+        return ops.empty() && expr->is_identifier();
+    }
+
+    auto is_id_expression() const
+        -> bool
+    {
+        return ops.empty() && expr->is_id_expression();
+    }
+
     auto is_expression_list() const
         -> bool
     {
@@ -555,6 +639,12 @@ struct postfix_expression_node
             return expr->get_expression_list();
         }
         return {};
+    }
+
+    auto is_literal() const
+        -> bool
+    {
+        return ops.empty() && expr->is_literal();
     }
 
     auto get_first_token_ignoring_this() const
@@ -580,6 +670,18 @@ struct postfix_expression_node
     auto visit(auto& v, int depth) -> void;
 };
 
+auto prefix_expression_node::is_identifier() const
+    -> bool
+{
+    return ops.empty() && expr->is_identifier();
+}
+
+auto prefix_expression_node::is_id_expression() const
+    -> bool
+{
+    return ops.empty() && expr->is_id_expression();
+}
+
 auto prefix_expression_node::is_expression_list() const
     -> bool
 {
@@ -593,6 +695,12 @@ auto prefix_expression_node::get_expression_list() const
         return expr->get_expression_list();
     }
     return {};
+}
+
+auto prefix_expression_node::is_literal() const
+    -> bool
+{
+    return ops.empty() && expr->is_literal();
 }
 
 auto prefix_expression_node::is_result_a_temporary_variable() const -> bool {
@@ -960,6 +1068,18 @@ struct is_as_expression_node
     };
     std::vector<term> ops;
 
+    auto is_identifier() const
+        -> bool
+    {
+        return ops.empty() && expr->is_identifier();
+    }
+
+    auto is_id_expression() const
+        -> bool
+    {
+        return ops.empty() && expr->is_id_expression();
+    }
+
     auto is_expression_list() const
         -> bool
     {
@@ -973,6 +1093,12 @@ struct is_as_expression_node
             return expr->get_expression_list();
         }
         return {};
+    }
+
+    auto is_literal() const
+        -> bool
+    {
+        return ops.empty() && expr->is_literal();
     }
 
     auto get_postfix_expression_node() const
@@ -1381,6 +1507,11 @@ struct parameter_declaration_list_node;
 struct statement_node
 {
     std::unique_ptr<parameter_declaration_list_node> parameters;
+    compound_statement_node* compound_parent = nullptr;
+
+    statement_node(compound_statement_node* compound_parent_ = nullptr)
+        : compound_parent{ compound_parent_ }
+    { }
 
     enum active { expression=0, compound, selection, declaration, return_, iteration, contract, inspect, jump };
     std::variant<
@@ -5204,9 +5335,10 @@ private:
     //GTODO     try-block
     //G
     auto statement(
-        bool            semicolon_required = true,
-        source_position equal_sign         = source_position{},
-        bool            parameters_allowed = false
+        bool                     semicolon_required = true,
+        source_position          equal_sign         = source_position{},
+        bool                     parameters_allowed = false,
+        compound_statement_node* compound_parent    = nullptr
     )
         -> std::unique_ptr<statement_node>
     {
@@ -5215,7 +5347,7 @@ private:
             return {};
         }
 
-        auto n = std::make_unique<statement_node>();
+        auto n = std::make_unique<statement_node>(compound_parent);
 
         //  If a parameter list is allowed here, try to parse one
         if (parameters_allowed) {
@@ -5357,20 +5489,9 @@ private:
                 )
             )
         {
-            if (
-                (
-                    is_literal(curr().type())
-                    || curr().type() == lexeme::Identifier
-                )
-                && peek(1) && peek(1)->type() == lexeme::Semicolon
-            ) {
-                error("unused literal or identifier");
-                return {};
-            }
-
             //  Only inside a compound-statement, a
             //  contained statement() may have parameters
-            auto s = statement(true, source_position{}, true);
+            auto s = statement(true, source_position{}, true, n.get());
             if (!s) {
                 pos = start_pos;    // backtrack
                 return {};
@@ -6098,11 +6219,6 @@ private:
         //  Or nothing, declaring an object of deduced type,
         //  which we'll represent using an empty type-id
         else {
-            if (n->parent_is_type()) {
-                error("a type scope variable must have a declared type");
-                return {};
-            }
-
             n->type = std::make_unique<type_id_node>();
             assert (n->is_object());
             deduced_type = true;

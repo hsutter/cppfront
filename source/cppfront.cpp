@@ -3680,6 +3680,10 @@ public:
     )
         -> void
     {
+        if (!sema.check(n)) {
+            return;
+        }
+
         auto emit_parameters =
             !n.emitted
             && n.parameters
@@ -4769,7 +4773,13 @@ public:
     )
         -> void
     {
-        if (!sema.check(n)) {
+        //  Declarations are handled in multiple passes,
+        //  but we only want to do the sema checks once
+        if (
+            printer.get_phase() == printer.phase1_type_defs_func_decls
+            && !sema.check(n)
+            )
+        {
             return;
         }
 
@@ -4950,9 +4960,14 @@ public:
 
             for (auto& stmt : compound_stmt->statements)
             {
+                if (!stmt->is_declaration()) {
+                    //  We will already have emitted an error for this in sema.check
+                    return;
+                }
                 auto& decl = std::get<statement_node::declaration>(stmt->statement);
                 assert(decl);
                 assert(decl->name());
+
                 auto emit_as_base =
                     decl->get_decl_if_type_scope_object_name_before_a_base_type(*decl->name());
 
@@ -5092,10 +5107,7 @@ public:
             {
                 assert(stmt);
                 if (!stmt->is_declaration()) {
-                    errors.emplace_back(
-                        stmt->position(),
-                        "a user-defined type body must contain only declarations, not other code"
-                    );
+                    //  We will already have emitted an error for this in sema.check
                     return;
                 }
 

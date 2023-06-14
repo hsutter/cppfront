@@ -58,7 +58,7 @@ extern int y;
 
     (void) CPP2_UFCS_0(ufcs, (std::move(j).i));
 
-    (void) CPP2_UFCS_0(no_return, 42);
+    CPP2_UFCS_0(no_return, 42);
 }
 
 auto no_return(cpp2::in<int> x) -> void{}
