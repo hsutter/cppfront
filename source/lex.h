@@ -933,17 +933,19 @@ auto lex_line(
     //G     any Cpp1-and-Cpp2 keyword
     //G     one of: 'import' 'module' 'export' 'is' 'as'
     //G
-    auto do_is_keyword = [&](std::regex const& r) {
-        std::cmatch m;
-        if (std::regex_search(&line[i], m, r)) {
-            assert (m.position(0) == 0);
+    auto do_is_keyword = [&](std::vector<std::string_view> const& r) {
+        auto remaining_line = std::string_view(line).substr(unsafe_narrow<std::size_t>(i));
+        auto m = std::find_if(r.begin(), r.end(), [&](std::string_view s) {
+            return remaining_line.starts_with(s);
+        });
+        if (m != r.end()) {
             //  If we matched and what's next is EOL or a non-identifier char, we matched!
             if (
-                i+m[0].length() == std::ssize(line)                 // EOL
-                || !is_identifier_continue(line[i+m[0].length()])   // non-identifier char
+                i+std::ssize(*m) == std::ssize(line)                                            // EOL
+                || !is_identifier_continue(line[unsafe_narrow<std::size_t>(i)+std::size(*m)])   // non-identifier char
                 )
             {
-                return static_cast<int>(m[0].length());
+                return static_cast<int>(std::ssize(*m));
             }
         }
         return 0;
@@ -955,46 +957,46 @@ auto lex_line(
         //  reserve all the ones Cpp1 has both for compatibility and to not give up a keyword
         //  Some keywords like "delete" and "union" are not in this list because we reject them elsewhere
         //  Cpp2 also adds a couple, notably "is" and "as"
-        const auto keys = std::regex(
-            "^alignas|^alignof|^asm|^as|^auto|"
-            "^bool|^break|"
-            "^case|^catch|^char16_t|^char32_t|^char8_t|^char|^co_await|^co_return|"
-            "^co_yield|^concept|^const_cast|^consteval|^constexpr|^constinit|^const|^continue|"
-            "^decltype|^default|^double|^do|^dynamic_cast|"
-            "^else|^enum|^explicit|^export|^extern|"
-            "^float|^for|^friend|"
-            "^goto|"
-            "^if|^import|^inline|^int|^is|"
-            "^long|"
-            "^module|^mutable|"
-            "^namespace|^noexcept|"
-            "^operator|"
-            "^private|^protected|^public|"
-            "^register|^reinterpret_cast|^requires|^return|"
-            "^short|^signed|^sizeof|^static_assert|^static_cast|^static|^switch|"
-            "^template|^this|^thread_local|^throws|^throw|^try|^typedef|^typeid|^typename|"
-            "^unsigned|^using|"
-            "^virtual|^void|^volatile|"
-            "^wchar_t|^while"
-        );
+        static const auto keys = std::vector<std::string_view>{
+            "alignas", "alignof", "asm", "as", "auto",
+            "bool", "break",
+            "case", "catch", "char16_t", "char32_t", "char8_t", "char", "co_await", "co_return",
+            "co_yield", "concept", "const_cast", "consteval", "constexpr", "constinit", "const", "continue",
+            "decltype", "default", "double", "do", "dynamic_cast",
+            "else", "enum", "explicit", "export", "extern",
+            "float", "for", "friend",
+            "goto",
+            "if", "import", "inline", "int", "is",
+            "long",
+            "module", "mutable",
+            "namespace", "noexcept",
+            "operator",
+            "private", "protected", "public",
+            "register", "reinterpret_cast", "requires", "return",
+            "short", "signed", "sizeof", "static_assert", "static_cast", "static", "switch",
+            "template", "this", "thread_local", "throws", "throw", "try", "typedef", "typeid", "typename",
+            "unsigned", "using",
+            "virtual", "void", "volatile",
+            "wchar_t", "while"
+        };
 
         return do_is_keyword(keys);
     };
 
     auto peek_is_cpp2_fundamental_type_keyword = [&]
     {
-        const auto keys = std::regex(
-            "^i8|^i16|^i32|^i64|^longdouble|^longlong|^u8|^u16|^u32|^u64|^ulong|^ulonglong|^ushort"
-        );
+        static const auto keys = std::vector<std::string_view>{
+            "i8", "i16", "i32", "i64", "longdouble", "longlong", "u8", "u16", "u32", "u64", "ulong", "ulonglong", "ushort"
+        };
 
         return do_is_keyword(keys);
     };
 
     auto peek_is_cpp1_multi_token_fundamental_keyword = [&]
     {
-        const auto multi_keys = std::regex(
-            "^char16_t|^char32_t|^char8_t|^char|^double|^float|^int|^long|^short|^signed|^unsigned"
-        );
+        static const auto multi_keys = std::vector<std::string_view>{
+            "char16_t", "char32_t", "char8_t", "char", "double", "float", "int", "long", "short", "signed", "unsigned"
+        };
         return do_is_keyword(multi_keys);
     };
 
