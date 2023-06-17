@@ -681,7 +681,7 @@ public:
 //
 //-----------------------------------------------------------------------
 //
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang_major__)
     #define CPP2_FORCE_INLINE        __forceinline
     #define CPP2_FORCE_INLINE_LAMBDA [[msvc::forceinline]]
     #define CPP2_LAMBDA_NO_DISCARD
