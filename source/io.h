@@ -114,8 +114,8 @@ auto is_preprocessor(
 auto starts_with_import(std::string const& line)
     -> bool
 {
-    auto import_first = std::find_if_not(line.data(), &*line.end(), [](char c) { return std::isspace(c); });
-    auto import_last = std::find_if(import_first, &*line.end(), [](char c) { return std::isspace(c); });
+    auto import_first = std::find_if_not(line.data(), line.data()+line.length(), [](char c) { return std::isspace(c); });
+    auto import_last = std::find_if(import_first, line.data()+line.length(), [](char c) { return std::isspace(c); });
     return std::string_view{import_first, import_last} == "import";
 }
 
