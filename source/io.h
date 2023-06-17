@@ -22,7 +22,6 @@
 #include <fstream>
 #include <ostream>
 #include <iterator>
-#include <regex>
 #include <cctype>
 
 
@@ -115,16 +114,9 @@ auto is_preprocessor(
 auto starts_with_import(std::string const& line)
     -> bool
 {
-    const auto ws = std::regex("\\s+"); // whitespace
-    auto i = 1;
-    for (std::sregex_token_iterator iter(std::begin(line), std::end(line), ws, -1);
-        iter != std::sregex_token_iterator();
-        ++iter, ++i) {
-        if (iter->length() > 0) {
-            return *iter == "import";
-        }
-    }
-    return false;
+    auto import_first = std::find_if_not(line.data(), line.data()+line.length(), [](char c) { return std::isspace(c); });
+    auto import_last = std::find_if(import_first, line.data()+line.length(), [](char c) { return std::isspace(c); });
+    return std::string_view{import_first, import_last} == "import";
 }
 
 
