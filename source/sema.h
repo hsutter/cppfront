@@ -983,8 +983,97 @@ public:
     auto check(declaration_node const& n)
         -> bool
     {
-        //  If this is a nonvirtual and nondefaultable function,
-        //  it must have an initializer
+        //  An object of deduced type must have an initializer
+        if (
+            n.is_object()
+            && n.has_wildcard_type()
+            && !n.has_initializer()
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "an object with a deduced type must have an = initializer"
+            );
+            return false;
+        }
+
+        //  An object initializer must be an expression
+        if (
+            n.is_object()
+            && n.initializer
+            && !n.initializer->is_expression()
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "an object initializer must be an expression"
+            );
+            return false;
+        }
+
+        //  A type initializer must be a compound expression
+        if (
+            n.is_type()
+            && n.initializer
+            && !n.initializer->is_compound()
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "a user-defined type initializer must be a compound-expression consisting of declarations"
+            );
+            return false;
+        }
+
+        //  A namespace must be initialized with a compound expression
+        if (
+            n.is_namespace()
+            && (
+                !n.initializer
+                || !n.initializer->is_compound()
+                )
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "a namespace must be = initialized with a { } body containing declarations"
+            );
+            return false;
+        }
+
+        //  A function body must be an expression-statement or a compound-statement
+        if (
+            n.is_function()
+            && n.initializer
+            && n.initializer->is_return()
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "a function with a single-expression body doesn't need to say 'return' - either omit 'return' or write a full { }-enclosed function body"
+            );
+            return false;
+        }
+
+        //  An implicit constructor must have two parameters
+        if (n.is_constructor())
+        {
+            auto& params = std::get<declaration_node::a_function>(n.type)->parameters;
+            assert(params->ssize() > 0);
+            if (
+                params->parameters[0]->is_implicit()
+                && params->ssize() > 2
+                )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "an 'implicit' constructor must have exactly one additional parameter besides 'this'"
+                );
+                return false;
+            }
+        }
+
+        //  A nonvirtual and nondefaultable function must have an initializer
         if (
             n.is_function()
             && !n.is_virtual_function()
@@ -999,6 +1088,20 @@ public:
             return false;
         }
 
+        if (
+            n.is_type()
+            && !n.parent_is_namespace()
+            && !n.parent_is_type()
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "(temporary alpha limitation) a type must be in a namespace or type scope - function-local types are not yet supported"
+            );
+            return false;
+        }
+
+        //  A type scope variable must have a declared type
         if (
             n.parent_is_type()
             && n.has_wildcard_type()

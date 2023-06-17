@@ -216,6 +216,9 @@ declaration: @polymorphic_base @copyable type =
     parent_is_namespace  : (this) -> bool = n*.parent_is_namespace();
     parent_is_alias      : (this) -> bool = n*.parent_is_alias();
     parent_is_polymorphic: (this) -> bool = n*.parent_is_polymorphic();
+
+    make_constexpr       : (inout this) = n*.make_constexpr();
+    make_static          : (inout this) = n*.make_static();
 }
 
 
@@ -293,12 +296,22 @@ object_declaration: @copyable type =
         [[assert: n*.is_object()]]
     }
 
-    is_const: (this)->bool = n*.is_const();
+    is_const         : (this) -> bool        = n*.is_const();
+    has_wildcard_type: (this) -> bool        = n*.has_wildcard_type();
 
-    has_wildcard_type: (this)->bool = n*.has_wildcard_type();
+    type: (this) -> std::string = {
+        ret := n*.object_type();
+        require( !contains(ret, "(*ERROR*)"),
+                 "cannot to_string this type: " + ret);
+        return ret;
+    }
 
-    // TODO: auto get_type() const ->
-
+    initializer: (this) -> std::string = {
+        ret := n*.object_initializer();
+        require( !contains(ret, "(*ERROR*)"),
+                 "cannot to_string this initializer: " + ret);
+        return ret;
+    }
 }
 
 
@@ -378,7 +391,7 @@ type_declaration: @copyable type =
         inout_this_move_that = declared.inout_this_move_that != nullptr;
     }
 
-    add_member: ( inout this, source: std::string_view )
+    add_member: (inout this, source: std::string_view)
         -> bool
     = {
         decl := parse_statement(source);
@@ -387,6 +400,10 @@ type_declaration: @copyable type =
         }
         return false;
     }
+
+    remove_all_members: (inout this) = n*.type_remove_all_members();
+
+    disable_member_function_generation: (inout this) = n*.type_disable_member_function_generation();
 }
 
 
@@ -631,6 +648,7 @@ basic_value: (inout t: meta::type_declaration) =
 //-----------------------------------------------------------------------
 //
 //     "A 'value' is a totally ordered basic_value..."
+// 
 //          -- P0707R4, section 3
 //
 //  value - a value type that is totally ordered
@@ -677,7 +695,7 @@ partially_ordered_value: (inout t: meta::type_declaration) =
 //
 //  struct
 //
-//  a basic_value with only public bases, objects, and functions,
+//  a type with only public bases, objects, and functions,
 //  no virtual functions, and no user-defined constructors
 //  (i.e., no invariants) or assignment or destructors.
 //
@@ -695,7 +713,7 @@ struct: (inout t: meta::type_declaration) =
                        "a struct may not have a user-defined operator=");
         }
     }
-    basic_value(t);		// a plain_struct is-a basic_value
+    t.disable_member_function_generation();
 }
 
 

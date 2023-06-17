@@ -144,6 +144,8 @@ struct primary_expression_node
         std::unique_ptr<literal_node>
     > expr;
 
+    //  API
+    //
     auto is_identifier() const
         -> bool;
 
@@ -160,7 +162,14 @@ struct primary_expression_node
         -> bool;
 
     auto template_args_count() -> int;
+
     auto get_token() const -> token const*;
+
+    auto to_string() const
+        -> std::string;
+
+    //  Internals
+    //
     auto position() const -> source_position;
     auto visit(auto& v, int depth) -> void;
 };
@@ -170,17 +179,32 @@ struct literal_node {
     token const* literal             = {};
     token const* user_defined_suffix = {};
 
+    //  API
+    //
+    auto get_token() const
+        -> token const*
+    {
+        return literal;
+    }
+
+    auto to_string() const
+        -> std::string
+    {
+        assert (literal);
+        auto ret = literal->to_string(true);
+        if (user_defined_suffix) {
+            ret += user_defined_suffix->to_string(true);
+        }
+        return ret;
+    }
+
+    //  Internals
+    //
     auto position() const
         -> source_position
     {
         assert (literal);
         return literal->position();
-    }
-
-    auto get_token() const
-        -> token const*
-    {
-        return literal;
     }
 
     auto visit(auto& v, int depth) -> void
@@ -203,6 +227,8 @@ struct prefix_expression_node
     std::vector<token const*> ops;
     std::unique_ptr<postfix_expression_node> expr;
 
+    //  API
+    //
     auto is_identifier() const
         -> bool;
 
@@ -227,6 +253,11 @@ struct prefix_expression_node
 
     auto is_result_a_temporary_variable() const -> bool;
 
+    auto to_string() const
+        -> std::string;
+
+    //  Internals
+    //
     auto position() const -> source_position;
     auto visit(auto& v, int depth) -> void;
 };
@@ -338,6 +369,22 @@ struct binary_expression_node
         }
     }
 
+    auto to_string() const
+        -> std::string
+    {
+        assert (expr);
+        auto ret = expr->to_string();
+        for (auto const& x : terms) {
+            assert (x.op);
+            ret += " " + x.op->to_string(true);
+            assert (x.expr);
+            ret += " " + x.expr->to_string();
+        }
+        return ret;
+    }
+
+    //  Internals
+    //
     auto position() const
         -> source_position
     {
@@ -426,6 +473,15 @@ struct expression_node
     auto get_lhs_rhs_if_simple_assignment() const
         -> assignment_expression_lhs_rhs;
 
+    auto to_string() const
+        -> std::string
+    {
+        assert (expr);
+        return expr->to_string();
+    }
+
+    //  Internals
+    //
     auto position() const -> source_position
     {
         assert (expr);
@@ -545,6 +601,17 @@ struct expression_statement_node
     std::unique_ptr<expression_node> expr;
     bool has_semicolon = false;
 
+    //  API
+    //
+    auto to_string() const
+        -> std::string
+    {
+        assert (expr);
+        return expr->to_string();
+    }
+
+    //  Internals
+    //
     auto position() const
         -> source_position
     {
@@ -659,6 +726,9 @@ struct postfix_expression_node
         }
     }
 
+    auto to_string() const
+        -> std::string;
+
     //  Internals
     //
     auto position() const -> source_position
@@ -741,6 +811,21 @@ capture_group::~capture_group()
     //   => each node with a capture_group should declare it as the first member
     //      before any other node that could own a postfix_expression that could
     //      point back up to that capture_group
+}
+
+
+auto prefix_expression_node::to_string() const
+    -> std::string
+{
+    auto ret = std::string{};
+
+    for (auto const& x : ops) {
+        assert (x);
+        ret += x->as_string_view();
+    }
+
+    assert (expr);
+    return ret + expr->to_string();
 }
 
 
@@ -1068,6 +1153,8 @@ struct is_as_expression_node
     };
     std::vector<term> ops;
 
+    //  API
+    //
     auto is_identifier() const
         -> bool
     {
@@ -1117,6 +1204,26 @@ struct is_as_expression_node
         }
     }
 
+    auto to_string() const
+        -> std::string
+    {
+        assert (expr);
+        auto ret = expr->to_string();
+        for (auto const& x : ops) {
+            assert (x.op);
+            ret += " " + x.op->to_string(true);
+            if (x.type) {
+                ret += " " + x.type->to_string();
+            }
+            if (x.expr) {
+                ret += " " + x.expr->to_string();
+            }
+        }
+        return ret;
+    }
+
+    //  Internals
+    //
     auto position() const
         -> source_position
     {
@@ -1237,6 +1344,27 @@ auto postfix_expression_node::get_first_token_ignoring_this() const
         return ops[0].id_expr->get_token();
     }
     return expr->get_token();
+}
+
+
+auto postfix_expression_node::to_string() const
+    -> std::string
+{
+    assert (expr);
+    auto ret = expr->to_string();
+
+    for (auto const& x : ops) {
+        assert (x.op);
+        ret += x.op->as_string_view();
+        if (x.id_expr) {
+            ret += x.id_expr->to_string();
+        }
+        if (x.expr_list) {
+            return "(*ERROR*) temporary alpha limitation: type metafunctions cannot stringize expressions that involve nested expression-lists, declarations, or inspect expressions";
+        }
+    }
+
+    return ret;
 }
 
 
@@ -1572,6 +1700,17 @@ struct statement_node
         }
         //  Else
         return {};
+    }
+
+    auto to_string() const
+        -> std::string
+    {
+        switch (statement.index()) {
+        break;case expression:
+            return std::get<expression>(statement)->to_string();
+        break;default:
+            return "(*ERROR*) temporary alpha limitation: type metafunctions cannot stringize expressions that involve initializer statements other than expression-statements";
+        }
     }
 
     //  Internals
@@ -2126,12 +2265,71 @@ struct declaration_node
 
     declaration_node*               parent_declaration = {};
 
+    //  Attributes currently configurable only via metafunction API,
+    //  not directly in the base language grammar
+    bool member_function_generation = true;
+    bool is_constexpr               = false;
+    bool is_static                  = false;
+
+    //  Constructor
+    //
     declaration_node(declaration_node* parent)
         : parent_declaration{parent}
     { }
 
     //  API
     //
+    auto type_remove_all_members()
+        -> void
+    {
+        assert (is_type() && initializer->is_compound());
+        auto body = initializer->get_if<compound_statement_node>();
+        assert (body);
+
+        //  Drop all statements in the body
+        body->statements.clear();
+
+        //  Then also drop captures - (only) statements in
+        //  the body should have been able to refer to it
+        captures = {};
+    }
+
+    auto type_disable_member_function_generation()
+        -> void
+    {
+        member_function_generation = false;
+    }
+
+    auto make_constexpr()
+        -> void
+    {
+        is_constexpr = true;
+    }
+
+    auto make_static()
+        -> void
+    {
+        is_static = true;
+    }
+
+    auto object_type() const
+        -> std::string
+    {
+        if (!is_object()) {
+            return "(*ERROR*) not an object";
+        }
+        return std::get<an_object>(type)->to_string();
+    }
+
+    auto object_initializer() const
+        -> std::string
+    {
+        if (!is_object()) {
+            return "(*ERROR*) not an object";
+        }
+        return initializer->to_string();
+    }
+
     auto get_parent() const
         -> declaration_node*
     {
@@ -3152,6 +3350,38 @@ auto primary_expression_node::get_token() const
     // else (because we're deliberately ignoring the other
     //       options which are more than a single token)
     return {};
+}
+
+
+auto primary_expression_node::to_string() const
+    -> std::string
+{
+    switch (expr.index())
+    {
+    break;case empty:
+        return {};
+
+    break;case identifier: {
+        auto const& s = std::get<identifier>(expr);
+        assert (s);
+        return s->to_string();
+    }
+
+    break;case id_expression: {
+        auto const& s = std::get<id_expression>(expr);
+        assert (s);
+        return s->to_string();
+    }
+
+    break;case literal: {
+        auto const& i = std::get<literal>(expr);
+        assert (i);
+        return i->to_string();
+    }
+
+    break;default:
+        return "(*ERROR*) temporary alpha limitation: type metafunctions cannot stringize expressions that involve nested expression-lists, declarations, or inspect expressions";
+    }
 }
 
 
@@ -6009,6 +6239,22 @@ private:
         n->identifier = std::move(id);
         n->access     = access;
 
+        //  If we're in a type scope and the next token is ';', treat this as if
+        //  ': _;' without an initializer.
+        //  This is for type metafunctions that want to use the incomplete name-only
+        //  declaration, and transform it to something else. If unchanged the
+        //  incomplete declaration will be rejected later by sema.check rule.
+        if (
+            n->parent_is_type()
+            && curr().type() == lexeme::Semicolon
+            )
+        {
+            n->type = std::make_unique<type_id_node>();
+            assert (n->is_object());
+            next();
+            return n;
+        }
+
         //  For a template parameter, ':' is not required and
         //  we default to ': type'
         if (
@@ -6241,11 +6487,6 @@ private:
         //  If there is no =
         if (!done() && curr().type() != lexeme::Assignment)
         {
-            if (deduced_type) {
-                error("a variable with a deduced type must have an = initializer");
-                return {};
-            }
-
             if (
                 n->is_type()
                 && !is_template_parameter
@@ -6341,72 +6582,6 @@ private:
             }
         }
 
-        //  If this is an object with an initializer, the initializer must be an expression
-        if (
-            n->is_object()
-            && n->initializer
-            && !n->initializer->is_expression()
-            )
-        {
-            error(
-                "an object initializer must be an expression",
-                false,
-                {},
-                true
-            );
-            return {};
-        }
-
-        //  If this is a user-defined type with an initializer, the initializer must be a compound expression
-        if (
-            n->is_type()
-            && n->initializer
-            && !n->initializer->is_compound()
-            )
-        {
-            error(
-                "a user-defined type initializer must be a compound-expression consisting of declarations",
-                false,
-                {},
-                true
-            );
-            return {};
-        }
-
-        //  If this is a namespace, it must have an initializer, which must be a compound expression
-        if (
-            n->is_namespace()
-            && (
-                !n->initializer
-                || !n->initializer->is_compound()
-                )
-            )
-        {
-            error(
-                "a namespace must be = initialized with a { } body containing declarations",
-                false,
-                n->initializer->position(),
-                true
-            );
-            return {};
-        }
-
-        //  If this is a function, its body must be an expression-statement or
-        //  a compound-statement
-        if (
-            n->is_function()
-            && n->initializer
-            && n->initializer->is_return()
-            )
-        {
-            error(
-                "a function with a single-expression body doesn't need to say 'return' - either omit 'return' or write a full { }-enclosed function body",
-                false,
-                n->initializer->position()
-            );
-            return {};
-        }
-
         if (
             n->is_function()
             && n->initializer
@@ -6419,24 +6594,6 @@ private:
             } else if (n->initializer->is_expression()) {
                 error("a single-expression function should end with a single semicolon");
                 return {};
-            }
-        }
-
-        //  If this is an implicit constructor, it must have two parameters
-        if (n->is_constructor())
-        {
-            auto& params = std::get<declaration_node::a_function>(n->type)->parameters;
-            assert(params->ssize() > 0);
-            if (
-                params->parameters[0]->is_implicit()
-                && params->ssize() > 2
-                )
-            {
-                error(
-                    "an 'implicit' constructor must have exactly one additional parameter besides 'this'",
-                    false,
-                    params->parameters[2]->position()
-                );
             }
         }
 

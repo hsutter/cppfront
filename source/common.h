@@ -501,6 +501,15 @@ auto contains(
         != range.end();
 }
 
+auto contains(
+    std::string const& s,
+    auto const&        value
+)
+    -> bool
+{
+    return s.find(value);
+}
+
 
 //-----------------------------------------------------------------------
 //

@@ -68,14 +68,6 @@ public: [[nodiscard]] auto operator<=>(person_in_family_tree const& that) const 
 
 class mystruct {
     public: int val {0}; 
-    public: mystruct(mystruct const& that);
-
-public: auto operator=(mystruct const& that) -> mystruct& ;
-public: mystruct(mystruct&& that) noexcept;
-public: auto operator=(mystruct&& that) noexcept -> mystruct& ;
-public: explicit mystruct();
-
-#line 19 "pure2-types-ordering-via-meta-functions.cpp2"
 };
 
 auto main() -> int;
@@ -123,18 +115,6 @@ auto main() -> int;
     }
 
 
-    mystruct::mystruct(mystruct const& that)
-                                : val{ that.val }{}
-
-auto mystruct::operator=(mystruct const& that) -> mystruct& {
-                                val = that.val;
-                                return *this;}
-mystruct::mystruct(mystruct&& that) noexcept
-                                : val{ std::move(that).val }{}
-auto mystruct::operator=(mystruct&& that) noexcept -> mystruct& {
-                                val = std::move(that).val;
-                                return *this;}
-mystruct::mystruct(){}
 #line 21 "pure2-types-ordering-via-meta-functions.cpp2"
 auto main() -> int{
     my_integer a {1}; 

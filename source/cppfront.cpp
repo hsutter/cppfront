@@ -4488,7 +4488,8 @@ public:
 
             //  We'll use this common guidance in several errors,
             //  so write it once to keep the guidance consistent
-            auto error_msg = "an operator= body must start with a series of 'member = value;' initialization statements for each of the type-scope objects in the same order they are declared";
+            assert (n.parent_declaration && n.parent_declaration->name());
+            auto error_msg = "an operator= body must start with a series of 'member = value;' initialization statements for each of the type-scope objects in the same order they are declared, or the member must have a default initializer (in type '" + n.parent_declaration->name()->to_string(true) + "')";
 
             //  If this constructor's type has data members, handle their initialization
             //      - objects is the list of this type's declarations
@@ -4519,6 +4520,9 @@ public:
                 {
                     assert (*statement);
                     stmt_pos = (*statement)->position();
+                    if (stmt_pos.lineno < 0) {
+                        stmt_pos = n.position();
+                    }
 
                     auto lhs = std::string{};
                     auto rhs = std::string{};
@@ -4615,7 +4619,15 @@ public:
                 {
                     errors.emplace_back(
                         stmt_pos,
-                        "expected '" + object_name + " = ...' initialization statement - " + error_msg
+                        "in operator=, expected '" + object_name + " = ...' initialization statement (because type scope object '" + object_name + "' does not have a default initializer)"
+                    );
+                    errors.emplace_back(
+                        (*object)->position(),
+                        "see declaration for '" + object_name + "' here"
+                    );
+                    errors.emplace_back(
+                        stmt_pos,
+                        error_msg
                     );
                     return;
                 }
@@ -4731,7 +4743,15 @@ public:
             {
                 errors.emplace_back(
                     (*object)->position(),
-                    canonize_object_name(*object) + " was not initialized - " + error_msg
+                    canonize_object_name(*object) + " was not initialized - did you forget to write a default initializer, or assign to it in the operator= body?"
+                );
+                errors.emplace_back(
+                    (*object)->position(),
+                    "see declaration for '" + canonize_object_name(*object) + "' here"
+                );
+                errors.emplace_back(
+                    (*object)->position(),
+                    error_msg
                 );
                 return;
             }
@@ -4776,7 +4796,7 @@ public:
         //  Declarations are handled in multiple passes,
         //  but we only want to do the sema checks once
         if (
-            printer.get_phase() == printer.phase1_type_defs_func_decls
+            printer.get_phase() == printer.phase2_func_defs
             && !sema.check(n)
             )
         {
@@ -5191,21 +5211,24 @@ public:
                                 );
                 auto prefix = "\n" + std::string( indent, ' ' ) + "public: ";
 
-                //  If no constructor was defined, there should only be
-                //  a default constructor, so generate that
-                if (!found_constructor) {
-                    printer.print_extra( prefix + id + "() = default;" );
-                }
+                if (n.member_function_generation)
+                {
+                    //  If no constructor was defined, there should only be
+                    //  a default constructor, so generate that
+                    if (!found_constructor) {
+                        printer.print_extra( prefix + id + "() = default;" );
+                    }
 
-                //  If no 'that' constructor was defined, disable copy/move
-                //  so that Cpp1 doesn't silently generate it anyway
-                if (!found_that_constructor) {
-                    printer.print_extra( prefix + id + "(" + id + " const&) = delete; /* No 'that' constructor, suppress copy */" );
-                    printer.print_extra( prefix + "auto operator=(" + id + " const&) -> void = delete;" );
-                }
+                    //  If no 'that' constructor was defined, disable copy/move
+                    //  so that Cpp1 doesn't silently generate it anyway
+                    if (!found_that_constructor) {
+                        printer.print_extra( prefix + id + "(" + id + " const&) = delete; /* No 'that' constructor, suppress copy */" );
+                        printer.print_extra( prefix + "auto operator=(" + id + " const&) -> void = delete;" );
+                    }
 
-                if (!found_constructor || !found_that_constructor) {
-                    printer.print_extra( "\n" );
+                    if (!found_constructor || !found_that_constructor) {
+                        printer.print_extra( "\n" );
+                    }
                 }
 
                 printer.print_cpp2("};\n", compound_stmt->close_brace);
