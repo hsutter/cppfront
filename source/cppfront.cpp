@@ -4700,7 +4700,7 @@ public:
 
                         //  Flush any pending statements
                         for (auto& stmt : pending_statements) {
-                            current_functions.back().prolog.statements.push_back(stmt + ";");
+                            current_functions.back().prolog.statements.push_back(stmt);
                         }
                         pending_statements.clear();
 
@@ -4747,16 +4747,17 @@ public:
                             + "_as_base";
                     }
 
-                    //  If there are any pending statements, wedge them into this initializer
-                    //  using (holds nose) an immediately invoked lambda and the comma operator
+                    //  If there are any pending statements, wedge them into
+                    //  this initializer using an immediately invoked lambda
                     if (!pending_statements.empty())
                     {
-                        auto mem_init = separator + object_name + "{([&]{";
+                        auto object_type = print_to_string( *(*object)->get_object_type() );
+                        auto mem_init = separator + object_name + "{ [&]() -> " + object_type + " { ";
                         for (auto& stmt : pending_statements) {
-                            mem_init += stmt + ";";
+                            mem_init += stmt;
                         }
                         pending_statements.clear();
-                        mem_init += "}(), " + initializer + ")}";
+                        mem_init += "return " + initializer + "; }() }";
                         current_functions.back().prolog.mem_inits.push_back(std::move(mem_init));
                     }
                     else {
