@@ -4749,28 +4749,23 @@ public:
 
                     //  If there are any pending statements, wedge them into
                     //  this initializer using an immediately invoked lambda
+                    auto& mem_inits = current_functions.back().prolog.mem_inits;
                     if (!pending_statements.empty())
                     {
                         auto object_type = print_to_string( *(*object)->get_object_type() );
-                        auto mem_init = separator + object_name + "{ [&]() -> " + object_type + " { ";
+                        mem_inits.push_back(separator + object_name + "{ [&]() -> " + object_type + " {");
                         for (auto& stmt : pending_statements) {
-                            mem_init += stmt + "; ";
+                            mem_inits.push_back("      " + stmt + ";");
                         }
                         pending_statements.clear();
-                        mem_init += "return " + initializer + "; }() }";
-                        current_functions.back().prolog.mem_inits.push_back(std::move(mem_init));
+                        mem_inits.push_back("      return " + initializer + ";");
+                        mem_inits.push_back("  }() }");
                     }
                     else {
                         if (initializer == "{}") {
                             initializer = "";
                         }
-                        current_functions.back().prolog.mem_inits.push_back(
-                            separator +
-                            object_name +
-                            "{ " +
-                            initializer +
-                            " }"
-                        );
+                        mem_inits.push_back(separator + object_name + "{ " + initializer + " }");
                     }
                     separator = ", ";
                 }
