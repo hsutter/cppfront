@@ -1063,7 +1063,7 @@ auto copyable(meta::type_declaration& t) -> void
         CPP2_UFCS(error, t, "this type is partially copyable/movable - when you provide any of the more-specific operator= signatures, you must also provide the one with the general signature (out this, that); alternatively, consider removing all the operator= functions and let them all be generated for you with default memberwise semantics");
     }
     else {if (!(std::move(smfs).out_this_in_that)) {
-        CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "operator=: (out this, that) = { }"), 
+        CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "operator=: (out this, that) = { this = that; }"), 
                    "could not add general operator=:(out this, that)");
     }}
 }

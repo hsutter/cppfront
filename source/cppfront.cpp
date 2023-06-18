@@ -4492,14 +4492,20 @@ public:
 
             //  If this constructor's type has data members, handle their initialization
             //      - objects is the list of this type's declarations
-            //      - statements is the list of this constructor's statements
-            auto objects    = n.parent_declaration->get_type_scope_declarations(n.objects);
-            auto statements = n.get_initializer_statements();
-            auto out_inits  = std::vector<std::string>{};
+            //      - body_statements is the list of statements in this constructor's body
+            //      - pending_statements is the list of statements to insert before the next (possibly implicit) member initializer
+            //      - deferred_statements is the list of statements to insert before the next explicit member initializer
+            auto objects             = n.parent_declaration->get_type_scope_declarations(n.objects);
+            auto body_statements     = n.get_initializer_statements();
+            auto pending_statements  = std::vector<std::string>{};
+            auto deferred_statements = std::vector<std::string>{};
 
             auto object     = objects.begin();
-            auto statement  = statements.begin();
+            auto statement  = body_statements.begin();
             auto separator  = std::string{": "};
+
+            auto found_that_init = false;
+            auto default_until_object = objects.end(); // objects.end() means we're not yet skipping to anything
 
             while (object != objects.end())
             {
@@ -4514,12 +4520,17 @@ public:
 
                 auto initializer = std::string{};
 
-                //  If we're at an assignment statement, get the lhs and rhs
-                if (statement != statements.end())
+                if (default_until_object == object)
+                {
+                    default_until_object = objects.end(); // objects.end() means we're no longer skipping to anything
+                }
+
+                if (default_until_object == objects.end() && statement != body_statements.end())
                 {
                     assert (*statement);
                     stmt_pos = (*statement)->position();
 
+                    //  If we're at an assignment statement, get the lhs and rhs
                     auto lhs = std::string{};
                     auto rhs = std::string{};
                     {
@@ -4537,36 +4548,60 @@ public:
                         }
                     }
 
-                    //  If this is an initialization of an 'out' parameter, stash it
-                    if (n.has_out_parameter_named(lhs)){
-                        out_inits.push_back( print_to_string(**statement, false) );
-                        (*statement)->emitted = true;
-                        ++statement;
-                        continue;
-                    }
-
-                    //  Now we're ready to check whether this is an assignment to *object
-
+                    //  Now we're ready to check whether this is a member assignment
                     if (!lhs.empty())
                     {
-                        //  First, see if it's an assignment 'name = something'
-                        found_explicit_init = object_name == lhs;
-
-                        //  Otherwise, see if it's 'this.name = something'
-                        if (!found_explicit_init)
+                        //  First, check if it's 'this = that'
+                        if (lhs == "this" && rhs == (emitting_move_that_function ? "std::move(that)" : "that"))
                         {
-                            //  If it's of the form 'this.name', check 'name'
-                            if (
-                                starts_with( lhs, "(*this).")
-                                && object_name == lhs.substr(8)
-                                )
+                            if (!emitting_that_function)
                             {
-                                found_explicit_init = true;
+                                errors.emplace_back(
+                                    stmt_pos,
+                                    "'this = that' can only be used in functions where 'that' is a parameter"
+                                );
+                                return;
+                            }
+                            else if (object != objects.begin())
+                            {
+                                errors.emplace_back(
+                                    stmt_pos,
+                                    "'this = that' must appear before all other member initializers"
+                                );
+                                return;
+                            }
+                            else if (found_that_init)
+                            {
+                                errors.emplace_back(
+                                    stmt_pos,
+                                    "'this = that' may only appear once"
+                                );
+                                return;
+                            }
+                            else
+                            {
+                                // All the statements before 'this = that' need to be inserted
+                                // before the first member initializer whether or not it's explicit
+                                pending_statements = std::move(deferred_statements);
+
+                                found_that_init = true;
+                                (*statement)->emitted = true;
+                                ++statement;
+                                continue;
                             }
                         }
 
-                        if (found_explicit_init)
+                        //  Second, check if it's an assignment 'member = something' or 'this.member = something'
+                        auto lhs_name = lhs.substr(starts_with(lhs, "(*this).") ? 8 : 0);
+                        auto lhs_object = std::find_if(
+                            objects.begin(), objects.end(),
+                            [&](auto o) { return canonize_object_name(o) == lhs_name; }
+                        );
+
+                        //  Is it the current member?
+                        if (lhs_object == object)
                         {
+                            found_explicit_init = true;
                             initializer = rhs;
 
                             //  We've used this statement, so note it
@@ -4574,30 +4609,49 @@ public:
                             (*statement)->emitted = true;
                             ++statement;
                         }
+                        //  Is it a future member?
+                        else if (lhs_object != objects.end() && lhs_object > object)
+                        {
+                            // Default-initialize all the members before it
+                            default_until_object = lhs_object;
+                            continue;
+                        }
                     }
+
+                    //  Not an explicit init for the current member?
+                    if (!found_explicit_init)
+                    {
+                        // Queue it up to insert before the next explicit initializer
+                        deferred_statements.push_back( print_to_string(**statement, false) );
+                        (*statement)->emitted = true;
+                        ++statement;
+                        continue;
+                    }
+                }
+
+                // If explicit, upgrade deferred statements to pending
+                if (found_explicit_init)
+                {
+                    pending_statements.insert(
+                        pending_statements.end(),
+                        deferred_statements.begin(),
+                        deferred_statements.end()
+                    );
+                    deferred_statements.clear();
                 }
 
                 //  Otherwise, use a default... for a non-copy/move that's the member initializer
                 //  (for which we don't need to emit anything special because it will get used),
-                //  and for a copy/move function we default to "= that.same_member" (or, if this
-                //  is a base type, just "= that")
+                //  and for a copy/move function with 'this = that' we default to "= that.same_member"
+                //  (or, if this is a base type, just "= that")
                 if (!found_explicit_init)
                 {
-                    if (emitting_move_that_function)
+                    if (found_that_init)
                     {
-                        initializer = "std::move(that)";
+                        initializer = emitting_move_that_function ? "std::move(that)" : "that";
                         if (!(*object)->has_name("this")) {
                             initializer += "." + object_name;
                         }
-                        found_default_init = true;
-                    }
-                    else if (emitting_that_function)
-                    {
-                        initializer = "that";
-                        if (!(*object)->has_name("this")) {
-                            initializer += "." + object_name;
-                        }
-                        found_default_init = true;
                     }
                     else if ((*object)->initializer)
                     {
@@ -4607,9 +4661,10 @@ public:
                 }
 
                 //  If this is not an assignment to *object,
-                //  and there was no member initializer, complain
+                //  and there was no 'this = that' or member initializer, complain
                 if (
                     !found_explicit_init
+                    && !found_that_init
                     && !found_default_init
                     )
                 {
@@ -4622,6 +4677,7 @@ public:
 
                 assert(
                     found_explicit_init
+                    || found_that_init
                     || found_default_init
                 );
 
@@ -4631,48 +4687,55 @@ public:
                     initializer = "{}";
                 }
 
-                //  (a) ... if this is assignment, emit it in all cases
+                //  (a) ... if this is assignment, emit if explicit or 'this = that'
+                //          or we're generating from a constructor definition
                 if (is_assignment)
                 {
-                    assert ((*object)->name());
+                    if (
+                        found_explicit_init
+                        || found_that_init
+                        || n.is_constructor())
+                    {
+                        assert ((*object)->name());
 
-                    //  Flush any 'out' parameter initializations
-                    for (auto& init : out_inits) {
-                        current_functions.back().prolog.statements.push_back(init + ";");
-                    }
-                    out_inits = {};
+                        //  Flush any pending statements
+                        for (auto& stmt : pending_statements) {
+                            current_functions.back().prolog.statements.push_back(stmt + ";");
+                        }
+                        pending_statements.clear();
 
-                    //  Then add this statement
+                        //  Then add this statement
 
-                    //  Use ::operator= for base classes
-                    if ((*object)->has_name("this")) {
-                        current_functions.back().prolog.statements.push_back(
-                            print_to_string( *(*object)->get_object_type() ) +
-                            "::operator= ( " +
-                            initializer +
-                            " );"
-                        );
-                    }
-                    //  Else just use infix assignment
-                    else {
-                        current_functions.back().prolog.statements.push_back(
-                            object_name +
-                            " = " +
-                            initializer +
-                            ";"
-                        );
+                        //  Use ::operator= for base classes
+                        if ((*object)->has_name("this")) {
+                            current_functions.back().prolog.statements.push_back(
+                                print_to_string( *(*object)->get_object_type() ) +
+                                "::operator= ( " +
+                                initializer +
+                                " );"
+                            );
+                        }
+                        //  Else just use infix assignment
+                        else {
+                            current_functions.back().prolog.statements.push_back(
+                                object_name +
+                                " = " +
+                                initializer +
+                                ";"
+                            );
+                        }
                     }
                 }
                 //  (b) ... if this isn't assignment, only need to emit it if it was
-                //          explicit, or is a base type or 'that' initializer
+                //          explicit or 'this = that' or is a base type
                 else if (
                     found_explicit_init
+                    || found_that_init
                     || is_object_before_base
                     || (
                         (*object)->has_name("this")
                          && !initializer.empty()
                         )
-                    || emitting_that_function
                     )
                 {
                     if (is_object_before_base) {
@@ -4684,28 +4747,17 @@ public:
                             + "_as_base";
                     }
 
-                    //  Flush any 'out' parameter initializations
-                    auto out_inits_with_commas = [&]() -> std::string {
-                        auto ret = std::string{};
-                        for (auto& init : out_inits) {
-                            ret += init + ", ";
+                    //  If there are any pending statements, wedge them into this initializer
+                    //  using (holds nose) an immediately invoked lambda and the comma operator
+                    if (!pending_statements.empty())
+                    {
+                        auto mem_init = separator + object_name + "{([&]{";
+                        for (auto& stmt : pending_statements) {
+                            mem_init += stmt + ";";
                         }
-                        out_inits = {};
-                        return ret;
-                    }();
-
-                    //  If there were any, wedge them into this initializer
-                    //  using (holds nose) the comma operator and extra parens
-                    //  as we add this statement
-                    if (!out_inits_with_commas.empty()) {
-                        current_functions.back().prolog.mem_inits.push_back(
-                            separator +
-                            object_name +
-                            "{(" +
-                            out_inits_with_commas +
-                            initializer +
-                            " )}"
-                        );
+                        pending_statements.clear();
+                        mem_init += "}(), " + initializer + ")}";
+                        current_functions.back().prolog.mem_inits.push_back(std::move(mem_init));
                     }
                     else {
                         if (initializer == "{}") {
@@ -4736,9 +4788,14 @@ public:
                 return;
             }
 
-            //  Flush any possible remaining 'out' parameters
-            for (auto& init : out_inits) {
-                current_functions.back().prolog.statements.push_back(init + ";");
+            //  Flush any pending statements
+            for (auto& stmt : pending_statements) {
+                current_functions.back().prolog.statements.push_back(stmt + ";");
+            }
+
+            //  Flush any deferred statements
+            for (auto& stmt : deferred_statements) {
+                current_functions.back().prolog.statements.push_back(stmt + ";");
             }
         }
 

@@ -597,7 +597,7 @@ copyable: (inout t: meta::type_declaration) =
         t.error( "this type is partially copyable/movable - when you provide any of the more-specific operator= signatures, you must also provide the one with the general signature (out this, that); alternatively, consider removing all the operator= functions and let them all be generated for you with default memberwise semantics" );
     }
     else if !smfs.out_this_in_that {
-        t.require( t.add_member( "operator=: (out this, that) = { }"),
+        t.require( t.add_member( "operator=: (out this, that) = { this = that; }"),
                    "could not add general operator=:(out this, that)");
     }
 }
