@@ -114,19 +114,22 @@ auto is_preprocessor(
 auto starts_with_import(std::string const& line)
     -> bool
 {
-    auto import_first =
-        std::find_if_not(
-            line.data(),
-            line.data()+line.length(),
-            [](char c) { return std::isspace(c); }
-        );
-    auto import_last =
-        std::find_if(
-            import_first,
-            line.data()+line.length(),
-            [](char c) { return std::isspace(c); }
-        );
-    return std::string_view{import_first, import_last} == "import";
+    auto i = 0;
+
+    //  find first non-whitespace character
+    if (!move_next(line, i, isspace)) {
+        return false;
+    }
+
+    static constexpr auto import_keyword = std::string_view{"import"};
+
+    // the first token must begin with 'import'
+    if (!std::string_view(line).substr(i).starts_with(import_keyword)) {
+        return false;
+    }
+
+    // and not be immediately followed by an _identifier-continue_
+    return !is_identifier_continue(line[i + import_keyword.size()]);
 }
 
 
