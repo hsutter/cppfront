@@ -38,7 +38,7 @@ class myclass {
         
 
 #line 20 "pure2-types-basics.cpp2"
-    public: myclass(cpp2::in<int> x, cpp2::in<std::string> s);
+    public: explicit myclass(cpp2::in<int> x, cpp2::in<std::string> s);
         
 
 #line 27 "pure2-types-basics.cpp2"

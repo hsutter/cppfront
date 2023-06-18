@@ -1067,7 +1067,7 @@ public:
             {
                 errors.emplace_back(
                     n.position(),
-                    "an 'implicit' constructor must have exactly one additional parameter besides 'this'"
+                    "an 'implicit' constructor must have at most one additional parameter besides 'this'"
                 );
                 return false;
             }

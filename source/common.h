@@ -507,7 +507,7 @@ auto contains(
 )
     -> bool
 {
-    return s.find(value);
+    return s.find(value) != s.npos;
 }
 
 
