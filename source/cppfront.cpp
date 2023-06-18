@@ -4582,7 +4582,8 @@ public:
                             {
                                 // All the statements before 'this = that' need to be inserted
                                 // before the first member initializer whether or not it's explicit
-                                pending_statements = std::move(deferred_statements);
+                                pending_statements = deferred_statements;
+                                deferred_statements.clear();
 
                                 found_that_init = true;
                                 (*statement)->emitted = true;
