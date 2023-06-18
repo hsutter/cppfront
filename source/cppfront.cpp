@@ -4700,7 +4700,7 @@ public:
 
                         //  Flush any pending statements
                         for (auto& stmt : pending_statements) {
-                            current_functions.back().prolog.statements.push_back(stmt);
+                            current_functions.back().prolog.statements.push_back(stmt + ";");
                         }
                         pending_statements.clear();
 
@@ -4754,7 +4754,7 @@ public:
                         auto object_type = print_to_string( *(*object)->get_object_type() );
                         auto mem_init = separator + object_name + "{ [&]() -> " + object_type + " { ";
                         for (auto& stmt : pending_statements) {
-                            mem_init += stmt;
+                            mem_init += stmt + "; ";
                         }
                         pending_statements.clear();
                         mem_init += "return " + initializer + "; }() }";
