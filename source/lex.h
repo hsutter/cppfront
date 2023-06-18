@@ -226,10 +226,9 @@ public:
         source_position pos,
         lexeme          type
     )
-      : start   {start}
-      , count   {int16_t(count)}
-      , pos     {pos  }
-      , lex_type{type }
+      : sv      {start, unsafe_narrow<ulong>(count)}
+      , pos     {pos}
+      , lex_type{type}
     {
     }
 
@@ -238,18 +237,17 @@ public:
         source_position pos,
         lexeme          type
     )
-      : start   {sz}
-      , count   {__as<int16_t>(std::strlen(sz))}
-      , pos     {pos  }
-      , lex_type{type }
+      : sv      {sz}
+      , pos     {pos}
+      , lex_type{type}
     {
     }
 
     auto as_string_view() const
         -> std::string_view
     {
-        assert (start);
-        return {start, static_cast<unsigned>(count)};
+        assert (sv.data());
+        return sv;
     }
 
     operator std::string_view() const
@@ -272,7 +270,7 @@ public:
     auto to_string( bool text_only = false ) const
         -> std::string
     {
-        auto text = std::string{start, static_cast<unsigned>(count)};
+        auto text = std::string{sv};
         if (text_only) {
             return text;
         }
@@ -294,13 +292,13 @@ public:
         pos.colno += offset;
     }
 
-    auto position() const -> source_position { return pos;      }
+    auto position() const -> source_position { return pos;       }
 
-    auto length  () const -> int             { return count;    }
+    auto length  () const -> int             { return sv.size(); }
 
-    auto type    () const -> lexeme          { return lex_type; }
+    auto type    () const -> lexeme          { return lex_type;  }
 
-    auto set_type(lexeme l) -> void          { lex_type = l;    }
+    auto set_type(lexeme l) -> void          { lex_type = l;     }
 
     auto visit(auto& v, int depth) const
         -> void
@@ -309,12 +307,9 @@ public:
     }
 
 private:
-    //  Store (char*,count) because it's smaller than a string_view
-    //
-    char const*     start;
-    int16_t         count;
-    source_position pos;
-    lexeme          lex_type;
+    std::string_view sv;
+    source_position  pos;
+    lexeme           lex_type;
 };
 
 static_assert (CHAR_BIT == 8);

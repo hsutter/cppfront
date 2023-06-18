@@ -6028,8 +6028,7 @@ auto main(
             exit_status = EXIT_FAILURE;
         }
 
-        //  In any case, emit the debug information (during early development this is
-        //  on by default, later we'll flip the switch to turn it on instead of off)
+        //  And, if requested, the debug information
         if (enable_debug_output_files) {
             c.debug_print();
         }
