@@ -4582,8 +4582,8 @@ public:
                             {
                                 // All the statements before 'this = that' need to be inserted
                                 // before the first member initializer whether or not it's explicit
-                                pending_statements = deferred_statements;
-                                deferred_statements.clear();
+                                assert(pending_statements.empty());
+                                pending_statements.swap(deferred_statements);
 
                                 found_that_init = true;
                                 (*statement)->emitted = true;
@@ -4633,11 +4633,9 @@ public:
                 // If explicit, upgrade deferred statements to pending
                 if (found_explicit_init)
                 {
-                    pending_statements.insert(
-                        pending_statements.end(),
-                        deferred_statements.begin(),
-                        deferred_statements.end()
-                    );
+                    for (auto& stmt : deferred_statements) {
+                        pending_statements.push_back(std::move(stmt));
+                    }
                     deferred_statements.clear();
                 }
 
