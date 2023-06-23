@@ -1,0 +1,3 @@
+pure2-function-type-id-2-error.cpp2...
+pure2-function-type-id-2-error.cpp2(2,9): error: the parameter of a function type must be named '_'
+

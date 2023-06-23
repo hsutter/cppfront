@@ -1,0 +1,5 @@
+pure2-function-type-id-4-error.cpp2...
+pure2-function-type-id-4-error.cpp2(1,25): error: a function type can't have an anonymous return type
+pure2-function-type-id-4-error.cpp2(1,14): error: f - variable must be initialized on every branch path
+  ==> program violates initialization safety guarantee - see previous errors
+

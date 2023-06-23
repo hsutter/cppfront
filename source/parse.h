@@ -1098,6 +1098,8 @@ struct qualified_id_node
 };
 
 
+struct function_type_id_node;
+
 struct type_id_node
 {
     source_position pos;
@@ -1108,11 +1110,12 @@ struct type_id_node
     int dereference_cnt                     = {};
     token const* suspicious_initialization  = {};
 
-    enum active { empty=0, qualified, unqualified, keyword };
+    enum active { empty=0, qualified, unqualified, function, keyword };
     std::variant<
         std::monostate,
         std::unique_ptr<qualified_id_node>,
         std::unique_ptr<unqualified_id_node>,
+        std::unique_ptr<function_type_id_node>,
         token const*
     > id;
 
@@ -1182,6 +1185,8 @@ struct type_id_node
             return {};
         break;case unqualified:
             return get<unqualified>(id)->get_token();
+        break;case function:
+            return {};
         break;case keyword:
             return get<keyword>(id);
         break;default:
@@ -1206,6 +1211,7 @@ struct type_id_node
         }
         try_visit<qualified  >(id, v, depth);
         try_visit<unqualified>(id, v, depth);
+        try_visit<function   >(id, v, depth);
         try_visit<keyword    >(id, v, depth);
         v.end(*this, depth);
     }
@@ -2213,6 +2219,21 @@ struct function_type_node
     }
 };
 
+struct function_type_id_node {
+    std::unique_ptr<function_type_node> type;
+
+    function_type_id_node(decltype(type) v)
+        : type{std::move(v)}
+    { }
+
+    auto visit(auto& v, int depth)
+        -> void
+    {
+        v.start(*this, depth);
+        type->visit(v, depth+1);
+        v.end(*this, depth);
+    }
+};
 
 struct type_node
 {
@@ -4829,6 +4850,7 @@ private:
     //G type-id:
     //G     type-qualifier-seq? qualified-id
     //G     type-qualifier-seq? unqualified-id
+    //G     type-qualifier-seq? function-type
     //G
     //G type-qualifier-seq:
     //G     type-qualifier
@@ -4838,7 +4860,10 @@ private:
     //G     'const'
     //G     '*'
     //G
-    auto type_id()
+    auto type_id(
+        bool function_is_optional = false,
+        bool could_be_anonymous_returns = false
+    )
         -> std::unique_ptr<type_id_node>
     {
         auto n = std::make_unique<type_id_node>();
@@ -4871,9 +4896,61 @@ private:
             n->id  = std::move(id);
             assert (n->id.index() == type_id_node::unqualified);
         }
+        else if (
+            auto undo_function_parse =
+                [&, start_pos = pos]() {
+                    errors.clear();
+                    pos = start_pos;
+                };
+            auto f = function_type_id(nullptr, true, true)
+        ) {
+            if (!errors.empty() && (function_is_optional || could_be_anonymous_returns)) {
+                undo_function_parse();
+                return {};
+            }
+            if (f->type->parameters) {
+                for (auto& p: f->type->parameters->parameters) {
+                    assert(p->has_name());
+                    if (p->name()->as_string_view() != "_") {
+                        if (could_be_anonymous_returns && n->pc_qualifiers.empty()) {
+                            undo_function_parse();
+                            return {};
+                        }
+                        error(
+                            "the parameter of a function type must be named '_'",
+                            false,
+                            p->position()
+                        );
+                        return {};
+                    }
+                }
+            }
+            if (auto l = get_if<function_type_node::list>(&f->type->returns)) {
+                error(
+                    "a function type can't have an anonymous return type",
+                    false,
+                    (*l)->position()
+                );
+                return {};
+            }
+            if (!f->type->contracts.empty()) {
+                error(
+                    "a function type can't have contracts",
+                    false,
+                    f->type->contracts.front()->position()
+                );
+                return {};
+            }
+            n->pos = f->type->position();
+            n->id = std::move(f);
+            assert (n->id.index() == type_id_node::function);
+        }
         else {
             if (!n->pc_qualifiers.empty()) {
-            error("'*'/'const' type qualifiers must be followed by a type name or '_' wildcard");
+                error("'*'/'const' type qualifiers must be followed by a type name or '_' wildcard");
+            }
+            else if (function_is_optional) {
+                undo_function_parse();
             }
             return {};
         }
@@ -4935,7 +5012,7 @@ private:
             term.op = &curr();
             next();
 
-            if ((term.type = type_id()) != nullptr) {
+            if ((term.type = type_id(true)) != nullptr) {
                 ;
             }
             else if ((term.expr = expression()) != nullptr) {
@@ -5030,21 +5107,36 @@ private:
                             return decltype(expression()){};
                         }
                         return expression(false);   // false == disallow unparenthesized relational comparisons in template args
-                    }()
-                ) 
+                    }();
+                        e
+                        && (
+                            !e->is_expression_list()
+                            // an empty _expression-list_
+                            // is actually a function type
+                            // (Cpp1 `auto () -> void`) (so far, see CWG2450)
+                            || !e->get_expression_list()->expressions.empty()
+                           )
+                )
                 {
                     term.arg = std::move(e);
                 }
-                    
+
                 //  Else try parsing it as a type id
                 else if (auto i = type_id()) {
                     term.arg = std::move(i);
                 }
-                    
+
                 else {
-                    break;
+                    errors.clear();
+                    pos = start_pos;
+                    if (auto i = type_id()) {
+                        term.arg = std::move(i);
+                    }
+                    else {
+                        break;
+                    }
                 }
-                
+
                 n->template_args.push_back( std::move(term) );
             }
             //  Use the lambda trick to jam in a "next" clause
@@ -5598,7 +5690,7 @@ private:
         n->is_as_keyword = &curr();
         next();
 
-        if (auto id = type_id()) {
+        if (auto id = type_id(true)) {
             n->type_id = std::move(id);
         }
         else if (auto e = postfix_expression()) {
@@ -5975,7 +6067,8 @@ private:
         bool is_returns   = false,
         bool is_named     = true,
         bool is_template  = true,
-        bool is_statement = false
+        bool is_statement = false,
+        bool is_type_id   = false
     )
         -> std::unique_ptr<parameter_declaration_node>
     {
@@ -6131,7 +6224,7 @@ private:
             error("Cpp2 is currently exploring the path of not allowing default arguments - use overloading instead", false);
             return {};
         }
-        if (is_named && is_returns) {
+        if (is_named && (is_returns || is_type_id)) {
             auto tok = n->name();
             assert(tok);
             if (tok->type() != lexeme::Identifier) {
@@ -6139,8 +6232,11 @@ private:
                     false, tok->position());
             }
             else if (n->declaration->has_wildcard_type()) {
-                error("return parameter '" + tok->to_string(true) + "' must have a type",
-                    false, tok->position());
+                auto prefix = std::string{"function type parameter"};
+                if (is_returns) {
+                    prefix = "return parameter '" + tok->to_string(true) + "'";
+                }
+                error(prefix + " must have a type", false, tok->position());
             }
         }
         return n;
@@ -6158,7 +6254,8 @@ private:
         bool is_returns    = false,
         bool is_named      = true,
         bool is_template   = false,
-        bool is_statement  = false
+        bool is_statement  = false,
+        bool is_type_id    = false
     )
         -> std::unique_ptr<parameter_declaration_list_node>
     {
@@ -6186,7 +6283,7 @@ private:
         auto param = std::make_unique<parameter_declaration_node>();
 
         auto count = 1;
-        while ((param = parameter_declaration(is_returns, is_named, is_template, is_statement)) != nullptr)
+        while ((param = parameter_declaration(is_returns, is_named, is_template, is_statement, is_type_id)) != nullptr)
         {
             param->ordinal = count;
             ++count;
@@ -6335,14 +6432,17 @@ private:
     //G
     auto function_type(
         declaration_node* my_decl,
-        bool              is_named = true
+        bool              is_named = true,
+        bool              is_type_id = false
         )
         -> std::unique_ptr<function_type_node>
     {
         auto n = std::make_unique<function_type_node>( my_decl );
 
+        auto is_function_type_id = !my_decl;
+
         //  Parameters
-        auto parameters = parameter_declaration_list(false, is_named, false);
+        auto parameters = parameter_declaration_list(false, is_named, false, false, is_type_id);
         if (!parameters) {
             return {};
         }
@@ -6355,11 +6455,13 @@ private:
             )
         {
             if (
-                n->is_move()
-                || n->is_swap()
-                || n->is_destructor()
-                )
-            {
+                !is_function_type_id
+                && (
+                    n->is_move()
+                    || n->is_swap()
+                    || n->is_destructor()
+                   )
+            ) {
                 error( "(experimental restriction) Cpp2 currently does not allow a move, swap, or destructor function to be designated 'throws'" );
                 return {};
             }
@@ -6395,7 +6497,7 @@ private:
                     error(msg + "' must be followed by a type-id");
                 }
             }
-            else if (auto t = type_id()) {
+            else if (auto t = type_id(false, true)) {
                 if (
                     t->get_token()
                     && t->get_token()->to_string(true) == "auto"
@@ -6443,6 +6545,19 @@ private:
         }
 
         return n;
+    }
+
+    auto function_type_id(
+        declaration_node* my_decl,
+        bool              is_named = true,
+        bool              is_type_id = false
+        )
+        -> std::unique_ptr<function_type_id_node>
+    {
+        if (auto type = function_type(my_decl, is_named, is_type_id)) {
+            return std::make_unique<function_type_id_node>( std::move(type) );
+        }
+        return {};
     }
 
 
@@ -6642,17 +6757,25 @@ private:
         }
 
         //  Or a function type, declaring a function - and tell the function whether it's in a user-defined type
-        else if (auto t = function_type(n.get(), named))
+        else if (auto t = function_type_id(n.get(), named))
         {
-            n->type = std::move(t);
-            assert (n->is_function());
+            if (is_parameter) {
+                t->type->my_decl = nullptr;
+                auto type = std::make_unique<type_id_node>();
+                type->pos = t->type->position();
+                type->id = std::move(t);
+                n->type = std::move(type);
+            } else {
+                n->type = std::move(t->type);
+                assert (n->is_function());
 
-            if (!n->meta_functions.empty()) {
-                errors.emplace_back(
-                    n->meta_functions.front()->position(),
-                    "(temporary alpha limitation) metafunctions are currently not supported on functions, only on types"
-                );
-                return {};
+                if (!n->meta_functions.empty()) {
+                    errors.emplace_back(
+                        n->meta_functions.front()->position(),
+                        "(temporary alpha limitation) metafunctions are currently not supported on functions, only on types"
+                    );
+                    return {};
+                }
             }
         }
 

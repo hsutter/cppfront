@@ -975,6 +975,15 @@ public:
 };
 
 
+template <typename T>
+auto stack_value(T& var, std::type_identity_t<T> const& value)
+    -> auto
+{
+    return finally([&var, old = std::exchange(var, value)]() {
+        var = old;
+    });
+};
+
 //-----------------------------------------------------------------------
 //
 //  cppfront: a compiler instance
@@ -1771,6 +1780,7 @@ public:
     //
     auto emit(
         type_id_node const& n,
+        bool                anonymous_object = false,
         source_position     pos = {}
     )
         -> void
@@ -1779,18 +1789,28 @@ public:
             pos = n.position();
         }
 
+        auto wrap_type = anonymous_object && !n.pc_qualifiers.empty();
+
+        // A type that has more than 1 non-nested token may need to be wrapped.
+        if (wrap_type) {
+            printer.print_cpp2("std::type_identity_t<", pos);
+        }
         if (n.is_wildcard()) {
             printer.print_cpp2("auto", pos);
         }
         else {
             try_emit<type_id_node::unqualified>(n.id, false, false);
             try_emit<type_id_node::qualified  >(n.id);
+            try_emit<type_id_node::function   >(n.id);
             try_emit<type_id_node::keyword    >(n.id);
         }
 
         for (auto i = n.pc_qualifiers.rbegin(); i != n.pc_qualifiers.rend(); ++i) {
             if ((**i) == "const") { printer.print_cpp2(" ", pos); }
             emit(**i, false, pos);
+        }
+        if (wrap_type) {
+            printer.print_cpp2(">", pos);
         }
     }
 
@@ -2509,7 +2529,7 @@ public:
 
                 printer.add_pad_in_this_line( -5 );
 
-                emit(*type_id);
+                emit(*type_id, true);
                 printer.print_cpp2("{", decl->position());
 
                 assert(decl->initializer);
@@ -3742,7 +3762,7 @@ public:
             printer.print_extra( "{");
             for (auto& param : n.parameters->parameters) {
                 printer.print_extra( "\n");
-                printer.print_extra( print_to_string(*param) );
+                printer.print_extra( print_to_string(*param, false, false, true) );
             }
         }
 
@@ -3827,14 +3847,23 @@ public:
     //
     auto emit(
         parameter_declaration_node const& n,
-        bool                              is_returns            = false,
-        bool                              is_template_parameter = false
+        bool                              is_returns             = false,
+        bool                              is_template_parameter  = false,
+        bool                              is_statement_parameter = false,
+        bool                              in_function_type_id    = false
     )
         -> void
     {
-        //  Can't declare functions as parameters -- only pointers to functions which are objects
         assert( n.declaration );
-        assert( !n.declaration->is_function() );
+        //  Can't declare function values as parameters --  only pointers to functions which are objects
+        assert(
+            !n.declaration->is_function()
+            //  or lowered references to function
+            || (
+                n.pass != passing_style::out
+                && n.pass != passing_style::copy
+               )
+        );
 
         if (!check_shadowing_of_type_scope_names(*n.declaration)) {
             return;
@@ -4058,7 +4087,7 @@ public:
             function_requires_conditions.push_back(req);
         }
         else {
-            auto type_name = print_to_string( type_id );
+            auto& type_name = param_type;
             if (is_returns) {
                 printer.print_extra( type_name );
             }
@@ -4092,7 +4121,7 @@ public:
         if (is_returns) {
             printer.print_extra( " " + identifier);
         }
-        else {
+        else if (!in_function_type_id) {
             printer.print_cpp2( " " + identifier, n.declaration->identifier->position());
         }
 
@@ -4112,11 +4141,12 @@ public:
     auto emit(
         parameter_declaration_list_node const& n,
         bool                                   is_returns            = false,
-        bool                                   is_template_parameter = false
+        bool                                   is_template_parameter = false,
+        bool                                   in_function_type_id   = false
     )
         -> void
     {
-        in_parameter_list = true;
+        auto stack = stack_value(in_parameter_list, true);
 
         if (is_returns) {
             printer.print_extra( "{ " );
@@ -4140,7 +4170,7 @@ public:
             }
             prev_pos = x->position();
             assert(x);
-            emit(*x, is_returns, is_template_parameter);
+            emit(*x, is_returns, is_template_parameter, false, in_function_type_id);
             if (!x->declaration->has_name("this")) {
                 first = false;
             }
@@ -4161,8 +4191,6 @@ public:
             emit(*n.close_paren);
             printer.preempt_position_pop();
         }
-
-        in_parameter_list = false;
     }
 
 
@@ -4246,9 +4274,9 @@ public:
     auto emit(
         function_type_node const& n,
         token const*              ident,
-        bool                      is_main         = false,
-        bool                      is_ctor_or_dtor = false,
-        std::string               suffix1         = {}
+        bool                      is_main             = false,
+        bool                      is_ctor_or_dtor     = false,
+        std::string               suffix1             = {}
     )
         -> void
     {
@@ -4284,12 +4312,27 @@ public:
 
         printer.print_cpp2( suffix1, n.position() );
 
+        emit(n, function_returns_tag{}, ident, is_main, is_ctor_or_dtor, false);
+    }
+
+    auto emit(
+        function_type_node const& n,
+        function_returns_tag,
+        token const*              ident,
+        bool                      is_main,
+        bool                      is_ctor_or_dtor,
+        bool                      is_function_type_id
+    )
+        -> void
+    {
         //  Handle a special member function
         if (
-            n.is_assignment()
-            || generating_assignment_from == n.my_decl
-            )
-        {
+            !is_function_type_id
+            && (
+                n.is_assignment()
+                || generating_assignment_from == n.my_decl
+               )
+        ) {
             assert(
                 n.returns.index() == function_type_node::empty
                 && n.my_decl->parent_declaration->name()
@@ -4317,7 +4360,8 @@ public:
         else if (n.returns.index() == function_type_node::id)
         {
             auto is_type_scope_function_with_in_this =
-                n.my_decl->parent_is_type()
+                !is_function_type_id
+                && n.my_decl->parent_is_type()
                 && n.parameters->ssize() > 0
                 && (*n.parameters)[0]->direction() == passing_style::in
                 ;
@@ -4355,6 +4399,19 @@ public:
             printer.emit_to_string();
             printer.print_cpp2( function_return_name, ident->position() );
         }
+    }
+
+    auto emit(function_type_id_node const& n)
+        -> void
+    {
+        assert(n.type);
+        printer.print_cpp2( "cpp2::fn_t<auto ", n.type->position() );
+        emit(*n.type->parameters, false, false, true);
+        if (!n.type->throws) {
+            printer.print_cpp2( " noexcept", n.type->position() );
+        }
+        emit(*n.type, function_returns_tag{}, nullptr, false, false, true);
+        printer.print_cpp2( ">", n.type->position() );
     }
 
 
@@ -5846,7 +5903,7 @@ public:
             //  Emit "auto" for deduced types (of course)
             if (type->is_wildcard()) {
                 assert(n.initializer);
-                emit( *type, n.position() );
+                emit( *type, false, n.position() );
             }
             //  Otherwise, emit the type
             else {
