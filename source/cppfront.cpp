@@ -4497,8 +4497,8 @@ public:
             //      - deferred_statements is the list of statements to insert before the next explicit member initializer
             auto objects             = n.parent_declaration->get_type_scope_declarations(n.objects);
             auto body_statements     = n.get_initializer_statements();
-            auto pending_statements  = std::vector<std::string>{};
-            auto deferred_statements = std::vector<std::string>{};
+            auto pending_statements  = std::vector<statement_node*>{};
+            auto deferred_statements = std::vector<statement_node*>{};
 
             auto object     = objects.begin();
             auto statement  = body_statements.begin();
@@ -4623,8 +4623,7 @@ public:
                     if (!found_explicit_init)
                     {
                         // Queue it up to insert before the next explicit initializer
-                        deferred_statements.push_back( print_to_string(**statement, false) );
-                        (*statement)->emitted = true;
+                        deferred_statements.push_back( *statement );
                         ++statement;
                         continue;
                     }
@@ -4700,8 +4699,11 @@ public:
                         assert ((*object)->name());
 
                         //  Flush any pending statements
-                        for (auto& stmt : pending_statements) {
-                            current_functions.back().prolog.statements.push_back(stmt + ";");
+                        for (auto statement : pending_statements) {
+                            current_functions.back().prolog.statements.push_back(
+                                print_to_string(*statement, false) + ";"
+                            );
+                            statement->emitted = true;
                         }
                         pending_statements.clear();
 
@@ -4755,8 +4757,11 @@ public:
                     {
                         auto object_type = print_to_string( *(*object)->get_object_type() );
                         mem_inits.push_back(separator + object_name + "{ [&]() -> " + object_type + " {");
-                        for (auto& stmt : pending_statements) {
-                            mem_inits.push_back("      " + stmt + ";");
+                        for (auto statement : pending_statements) {
+                            mem_inits.push_back(
+                                "      " + print_to_string(*statement, false) + ";"
+                            );
+                            statement->emitted = true;
                         }
                         pending_statements.clear();
                         mem_inits.push_back("      return " + initializer + ";");
@@ -4783,16 +4788,6 @@ public:
                     canonize_object_name(*object) + " was not initialized - " + error_msg
                 );
                 return;
-            }
-
-            //  Flush any pending statements
-            for (auto& stmt : pending_statements) {
-                current_functions.back().prolog.statements.push_back(stmt + ";");
-            }
-
-            //  Flush any deferred statements
-            for (auto& stmt : deferred_statements) {
-                current_functions.back().prolog.statements.push_back(stmt + ";");
             }
         }
 
