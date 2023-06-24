@@ -272,7 +272,7 @@ auto f(cpp2::in<cpp2::i32> a1) -> void{
 
 #line 21 "pure2-types-smf-statements-between-member-inits.cpp2"
     t2::t2(t2 const& that)
-        : m1{ [&]() -> cpp2::i32 {
+        : m1{ [&]() -> decltype(auto) {
               f(1);
               f(2);
               return 3;
@@ -300,7 +300,7 @@ auto f(cpp2::in<cpp2::i32> a1) -> void{
     }
 #line 21 "pure2-types-smf-statements-between-member-inits.cpp2"
     t2::t2(t2&& that) noexcept
-        : m1{ [&]() -> cpp2::i32 {
+        : m1{ [&]() -> decltype(auto) {
               f(1);
               f(2);
               return 3;
@@ -328,7 +328,7 @@ auto f(cpp2::in<cpp2::i32> a1) -> void{
 
 #line 35 "pure2-types-smf-statements-between-member-inits.cpp2"
     t3::t3(t3 const& that)
-        : m2{ [&]() -> cpp2::i32 {
+        : m2{ [&]() -> decltype(auto) {
               f(1);
               f(2);
               return 3;
@@ -356,7 +356,7 @@ auto f(cpp2::in<cpp2::i32> a1) -> void{
     }
 #line 35 "pure2-types-smf-statements-between-member-inits.cpp2"
     t3::t3(t3&& that) noexcept
-        : m2{ [&]() -> cpp2::i32 {
+        : m2{ [&]() -> decltype(auto) {
               f(1);
               f(2);
               return 3;
@@ -384,12 +384,12 @@ auto f(cpp2::in<cpp2::i32> a1) -> void{
 
 #line 49 "pure2-types-smf-statements-between-member-inits.cpp2"
     t4::t4(t4 const& that)
-        : m1{ [&]() -> cpp2::i32 {
+        : m1{ [&]() -> decltype(auto) {
               f(1);
               f(2);
               return 3;
           }() }
-        , m2{ [&]() -> cpp2::i32 {
+        , m2{ [&]() -> decltype(auto) {
               f(4);
               f(5);
               return 6;
@@ -418,12 +418,12 @@ auto f(cpp2::in<cpp2::i32> a1) -> void{
     }
 #line 49 "pure2-types-smf-statements-between-member-inits.cpp2"
     t4::t4(t4&& that) noexcept
-        : m1{ [&]() -> cpp2::i32 {
+        : m1{ [&]() -> decltype(auto) {
               f(1);
               f(2);
               return 3;
           }() }
-        , m2{ [&]() -> cpp2::i32 {
+        , m2{ [&]() -> decltype(auto) {
               f(4);
               f(5);
               return 6;
@@ -453,7 +453,7 @@ auto f(cpp2::in<cpp2::i32> a1) -> void{
 
 #line 65 "pure2-types-smf-statements-between-member-inits.cpp2"
     t5::t5(t5 const& that)
-        : m1{ [&]() -> cpp2::i32 {
+        : m1{ [&]() -> decltype(auto) {
               f(1);
               f(2);
               return that.m1;
@@ -484,7 +484,7 @@ auto f(cpp2::in<cpp2::i32> a1) -> void{
     }
 #line 65 "pure2-types-smf-statements-between-member-inits.cpp2"
     t5::t5(t5&& that) noexcept
-        : m1{ [&]() -> cpp2::i32 {
+        : m1{ [&]() -> decltype(auto) {
               f(1);
               f(2);
               return std::move(that).m1;
@@ -513,7 +513,7 @@ auto f(cpp2::in<cpp2::i32> a1) -> void{
 
 #line 81 "pure2-types-smf-statements-between-member-inits.cpp2"
     t6::t6(t6 const& that)
-        : m1{ [&]() -> cpp2::i32 {
+        : m1{ [&]() -> decltype(auto) {
               f(1);
               f(2);
               f(3);
@@ -547,7 +547,7 @@ auto f(cpp2::in<cpp2::i32> a1) -> void{
     }
 #line 81 "pure2-types-smf-statements-between-member-inits.cpp2"
     t6::t6(t6&& that) noexcept
-        : m1{ [&]() -> cpp2::i32 {
+        : m1{ [&]() -> decltype(auto) {
               f(1);
               f(2);
               f(3);
@@ -580,12 +580,12 @@ auto f(cpp2::in<cpp2::i32> a1) -> void{
 
 #line 99 "pure2-types-smf-statements-between-member-inits.cpp2"
     t7::t7(t7 const& that)
-        : m1{ [&]() -> cpp2::i32 {
+        : m1{ [&]() -> decltype(auto) {
               f(1);
               f(2);
               return that.m1;
           }() }
-        , m2{ [&]() -> cpp2::i32 {
+        , m2{ [&]() -> decltype(auto) {
               f(3);
               f(4);
               return 5;
@@ -618,12 +618,12 @@ auto f(cpp2::in<cpp2::i32> a1) -> void{
     }
 #line 99 "pure2-types-smf-statements-between-member-inits.cpp2"
     t7::t7(t7&& that) noexcept
-        : m1{ [&]() -> cpp2::i32 {
+        : m1{ [&]() -> decltype(auto) {
               f(1);
               f(2);
               return std::move(that).m1;
           }() }
-        , m2{ [&]() -> cpp2::i32 {
+        , m2{ [&]() -> decltype(auto) {
               f(3);
               f(4);
               return 5;
@@ -653,14 +653,14 @@ auto f(cpp2::in<cpp2::i32> a1) -> void{
 
 #line 117 "pure2-types-smf-statements-between-member-inits.cpp2"
     t8::t8(t8 const& that)
-        : m1{ [&]() -> cpp2::i32 {
+        : m1{ [&]() -> decltype(auto) {
               f(1);
               f(2);
               f(3);
               f(4);
               return 5;
           }() }
-        , m2{ [&]() -> cpp2::i32 {
+        , m2{ [&]() -> decltype(auto) {
               f(6);
               f(7);
               return 8;
@@ -692,14 +692,14 @@ auto f(cpp2::in<cpp2::i32> a1) -> void{
     }
 #line 117 "pure2-types-smf-statements-between-member-inits.cpp2"
     t8::t8(t8&& that) noexcept
-        : m1{ [&]() -> cpp2::i32 {
+        : m1{ [&]() -> decltype(auto) {
               f(1);
               f(2);
               f(3);
               f(4);
               return 5;
           }() }
-        , m2{ [&]() -> cpp2::i32 {
+        , m2{ [&]() -> decltype(auto) {
               f(6);
               f(7);
               return 8;
@@ -731,13 +731,13 @@ auto f(cpp2::in<cpp2::i32> a1) -> void{
 
 #line 137 "pure2-types-smf-statements-between-member-inits.cpp2"
     t9::t9(cpp2::in<cpp2::i32> a1)
-        : m1{ [&]() -> cpp2::i32 {
+        : m1{ [&]() -> decltype(auto) {
               (void) a1;
               f(1);
               f(2);
               return 3;
           }() }
-        , m2{ [&]() -> cpp2::i32 {
+        , m2{ [&]() -> decltype(auto) {
               f(4);
               f(5);
               return 6;

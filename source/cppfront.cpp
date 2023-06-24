@@ -4757,8 +4757,7 @@ public:
                     auto& mem_inits = current_functions.back().prolog.mem_inits;
                     if (!pending_statements.empty())
                     {
-                        auto object_type = print_to_string( *(*object)->get_object_type() );
-                        mem_inits.push_back(separator + object_name + "{ [&]() -> " + object_type + " {");
+                        mem_inits.push_back(separator + object_name + "{ [&]() -> decltype(auto) {");
                         for (auto statement : pending_statements) {
                             mem_inits.push_back(
                                 "      " + print_to_string(*statement, false) + ";"

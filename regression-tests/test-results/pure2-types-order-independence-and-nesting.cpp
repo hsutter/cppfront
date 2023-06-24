@@ -114,7 +114,7 @@ namespace N {
 
 #line 10 "pure2-types-order-independence-and-nesting.cpp2"
     X::X(cpp2::out<Y> y)
-        : py{ [&]() -> Y* {
+        : py{ [&]() -> decltype(auto) {
               y.construct(&(*this));
               return &y.value();
           }() }
