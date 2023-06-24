@@ -114,7 +114,10 @@ namespace N {
 
 #line 10 "pure2-types-order-independence-and-nesting.cpp2"
     X::X(cpp2::out<Y> y)
-        : py{(y.construct(&(*this)), &y.value() )}
+        : py{ [&]() -> Y* {
+              y.construct(&(*this));
+              return &y.value();
+          }() }
 #line 10 "pure2-types-order-independence-and-nesting.cpp2"
     {
         //  === The following comments will stay close to, but not exactly at,

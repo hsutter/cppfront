@@ -29,28 +29,31 @@ class myclass {
     public: auto operator=(myclass&& that) noexcept -> myclass& ;
         
 
-#line 8 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+#line 9 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     // operator=: (out this, move that) = {
+    //     this = that;
     //     name = that.name + "(CM)";
     //     std::cout << "ctor - move          ";
     // }
 
     // operator=: (inout this,  that) = {
+    //     this = that;
     //     addr = that.addr + "(AC)";
     //     std::cout << "assign - copy        ";
     // }
 
     // operator=: (inout this, move that) = {
+    //     this = that;
     //     std::cout << "assign - move        ";
     // }
 
     public: explicit myclass(cpp2::in<std::string> x);
         
-#line 22 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+#line 26 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     public: auto operator=(cpp2::in<std::string> x) -> myclass& ;
         
 
-#line 27 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+#line 31 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     private: std::string name {"Henry"}; 
     private: std::string addr {"123 Ford Dr."}; 
 
@@ -60,7 +63,7 @@ class myclass {
         cpp2::in<std::string_view> suffix
         ) const -> void;
 
-#line 37 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+#line 41 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
 };
 
 auto main() -> int;
@@ -75,16 +78,18 @@ auto main() -> int;
         , addr{ that.addr }
 #line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     {
+
         std::cout << "ctor - copy (GENERAL)";
     }
 #line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     auto myclass::operator=(myclass const& that) -> myclass& {
         name = that.name;
         addr = that.addr;
-#line 5 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+
+#line 6 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
         std::cout << "ctor - copy (GENERAL)";
         return *this;
-#line 6 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+#line 7 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     }
 #line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     myclass::myclass(myclass&& that) noexcept
@@ -92,38 +97,40 @@ auto main() -> int;
         , addr{ std::move(that).addr }
 #line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     {
+
         std::cout << "ctor - copy (GENERAL)";
     }
 #line 4 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     auto myclass::operator=(myclass&& that) noexcept -> myclass& {
         name = std::move(that).name;
         addr = std::move(that).addr;
-#line 5 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+
+#line 6 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
         std::cout << "ctor - copy (GENERAL)";
         return *this;
-#line 6 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+#line 7 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     }
 
-#line 22 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+#line 26 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     myclass::myclass(cpp2::in<std::string> x)
         : name{ x }
-#line 22 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+#line 26 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     {
 
         std::cout << "ctor - from string   ";
     }
-#line 22 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+#line 26 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     auto myclass::operator=(cpp2::in<std::string> x) -> myclass& {
         name = x;
         addr = "123 Ford Dr.";
 
-#line 24 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+#line 28 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
         std::cout << "ctor - from string   ";
         return *this;
-#line 25 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+#line 29 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     }
 
-#line 30 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+#line 34 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
     auto myclass::print(
 
         cpp2::in<std::string_view> prefix, 
@@ -131,7 +138,7 @@ auto main() -> int;
         ) const -> void { 
     std::cout << prefix << "[ " + cpp2::to_string(name) + " | " + cpp2::to_string(addr) + " ]" << suffix;  }
 
-#line 39 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
+#line 43 "pure2-types-smf-and-that-5-provide-nothing-but-general-case.cpp2"
 auto main() -> int{
     std::cout << "Function invoked        Call syntax   Results\n";
     std::cout << "----------------------  ------------  ------------------------------------------------------\n";

@@ -2,20 +2,24 @@
 myclass : type = {
 
     operator=: (out this, that) = {
+        this = that;
         std::cout << "ctor - copy (GENERAL)";
     }
 
     operator=: (out this, move that) = {
+        this = that;
         name = that.name + "(CM)";
         std::cout << "ctor - move          ";
     }
 
     operator=: (inout this,  that) = {
+        this = that;
         addr = that.addr + "(AC)";
         std::cout << "assign - copy        ";
     }
 
     operator=: (inout this, move that) = {
+        this = that;
         std::cout << "assign - move        ";
     }
 
