@@ -4666,6 +4666,7 @@ public:
                     !found_explicit_init
                     && !found_that_init
                     && !found_default_init
+                    && !n.is_assignment()
                     )
                 {
                     errors.emplace_back(
@@ -4679,6 +4680,7 @@ public:
                     found_explicit_init
                     || found_that_init
                     || found_default_init
+                    || n.is_assignment()
                 );
 
                 //  Emit the initializer...
