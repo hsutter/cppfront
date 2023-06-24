@@ -4633,9 +4633,11 @@ public:
                 // If explicit, upgrade deferred statements to pending
                 if (found_explicit_init)
                 {
-                    for (auto& stmt : deferred_statements) {
-                        pending_statements.push_back(std::move(stmt));
-                    }
+                    pending_statements.insert(
+                        pending_statements.end(),
+                        std::make_move_iterator(deferred_statements.begin()),
+                        std::make_move_iterator(deferred_statements.end())
+                    );
                     deferred_statements.clear();
                 }
 
