@@ -1,0 +1,158 @@
+f: (a1: i32) = {
+    _ = a1;
+}
+
+t1: type = {
+    m1: i32 = 123;
+    m2: i32 = 456;
+
+    operator=: (out this, that) = {
+        // m1 = 123 implied
+        // m2 = 456 implied
+        f(1);
+        f(2);
+    }
+}
+
+t2: type = {
+    m1: i32 = 123;
+    m2: i32 = 456;
+
+    operator=: (out this, that) = {
+        f(1);
+        f(2);
+        m1 = 3;
+        // m2 = 456 implied
+        f(4);
+        f(5);
+    }
+}
+
+t3: type = {
+    m1: i32 = 123;
+    m2: i32 = 456;
+
+    operator=: (out this, that) = {
+        // m1 = 123 implied
+        f(1);
+        f(2);
+        m2 = 3;
+        f(4);
+        f(5);
+    }
+}
+
+t4: type = {
+    m1: i32 = 123;
+    m2: i32 = 456;
+
+    operator=: (out this, that) = {
+        f(1);
+        f(2);
+        m1 = 3;
+        f(4);
+        f(5);
+        m2 = 6;
+        f(7);
+        f(8);
+    }
+}
+
+t5: type = {
+    m1: i32 = 123;
+    m2: i32 = 456;
+
+    operator=: (out this, that) = {
+        f(1);
+        f(2);
+        this = that;
+        // m1 = that.m1 implied
+        // m2 = that.m2 implied
+        // This comment should show up before f(3)
+        f(3);
+        f(4);
+    }
+}
+
+t6: type = {
+    m1: i32 = 123;
+    m2: i32 = 456;
+
+    operator=: (out this, that) = {
+        f(1);
+        f(2);
+        this = that;
+        f(3);
+        f(4);
+        m1 = 5;
+        // m2 = that.m2 implied
+        // This comment should show up before f(6)
+        f(6);
+        f(7);
+    }
+}
+
+t7: type = {
+    m1: i32 = 123;
+    m2: i32 = 456;
+
+    operator=: (out this, that) = {
+        f(1);
+        f(2);
+        this = that;
+        // m1 = that.m1 implied
+        f(3);
+        f(4);
+        m2 = 5;
+        // This comment should show up before f(6)
+        f(6);
+        f(7);
+    }
+}
+
+t8: type = {
+    m1: i32 = 123;
+    m2: i32 = 456;
+
+    operator=: (out this, that) = {
+        f(1);
+        f(2);
+        this = that;
+        f(3);
+        f(4);
+        m1 = 5;
+        f(6);
+        f(7);
+        m2 = 8;
+        // This comment should show up before f(9)
+        f(9);
+        f(10);
+    }
+}
+
+t9: type = {
+    m1: i32 = 123;
+    m2: i32 = 456;
+
+    operator=: (implicit out this, a1: i32) = {
+        _ = a1;
+        f(1);
+        f(2);
+        m1 = 3;
+        f(4);
+        f(5);
+        m2 = 6;
+        // This comment should show up before f(7)
+        f(7);
+        f(8);
+    }
+
+    operator=: (inout this, that) = {
+        // This function shouldn't contain any member assignments.
+        // While it's a special member function that uses 'that',
+        // it's explicitly an assignment operator because of 'inout this',
+        // so we let the programmer avoid member assignment if they choose.
+        f(1);
+        f(2);
+    }
+}
