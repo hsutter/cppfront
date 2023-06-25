@@ -6467,6 +6467,10 @@ private:
 
         //  Next is optionally a requires clause
         if (curr() == "requires") {
+            if (!n->template_parameters) {
+                error("'requires' only valid for a template");
+                return {};
+            }
             n->requires_pos = curr().position();
             next();
             auto e = expression();

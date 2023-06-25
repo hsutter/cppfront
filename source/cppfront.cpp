@@ -5094,7 +5094,7 @@ public:
                 if (n.requires_clause_expression) {
                     printer.print_cpp2("requires( ", n.requires_pos);
                     emit(*n.requires_clause_expression);
-                    printer.print_cpp2(" )\n\n", n.requires_pos);
+                    printer.print_cpp2(" )\n", n.requires_pos);
                 }
 
                 printer.print_cpp2("class ", n.position());
