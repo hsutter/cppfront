@@ -4325,6 +4325,11 @@ public:
     )
         -> void
     {
+        auto return_type_introducer = std::string{" -> "};
+        if (is_function_type_id) {
+            return_type_introducer.clear();
+        }
+
         //  Handle a special member function
         if (
             !is_function_type_id
@@ -4338,7 +4343,7 @@ public:
                 && n.my_decl->parent_declaration->name()
             );
             printer.print_cpp2(
-                " -> " + print_to_string( *n.my_decl->parent_declaration->name() ) + "& ",
+                return_type_introducer + print_to_string( *n.my_decl->parent_declaration->name() ) + "& ",
                 n.position()
             );
         }
@@ -4348,11 +4353,11 @@ public:
         {
             if (is_main)
             {
-                printer.print_cpp2( " -> int", n.position() );
+                printer.print_cpp2( return_type_introducer + "int", n.position() );
             }
             else if(!is_ctor_or_dtor)
             {
-                printer.print_cpp2( " -> void", n.position() );
+                printer.print_cpp2( return_type_introducer + "void", n.position() );
             }
         }
 
@@ -4366,7 +4371,7 @@ public:
                 && (*n.parameters)[0]->direction() == passing_style::in
                 ;
 
-            printer.print_cpp2( " -> ", n.position() );
+            printer.print_cpp2( return_type_introducer, n.position() );
             auto& r = std::get<function_type_node::id>(n.returns);
             assert(r.type);
             if (r.pass == passing_style::forward) {
@@ -4390,7 +4395,7 @@ public:
 
         //  Otherwise, handle multiple/named returns
         else {
-            printer.print_cpp2( " -> ", n.position() );
+            printer.print_cpp2( return_type_introducer, n.position() );
             function_return_name = {};
             printer.emit_to_string(&function_return_name);
             assert(ident);
@@ -4405,12 +4410,12 @@ public:
         -> void
     {
         assert(n.type);
-        printer.print_cpp2( "cpp2::fn_t<auto ", n.type->position() );
+        printer.print_cpp2( "cpp2::fn_t<", n.type->position() );
+        emit(*n.type, function_returns_tag{}, nullptr, false, false, true);
         emit(*n.type->parameters, false, false, true);
         if (!n.type->throws) {
             printer.print_cpp2( " noexcept", n.type->position() );
         }
-        emit(*n.type, function_returns_tag{}, nullptr, false, false, true);
         printer.print_cpp2( ">", n.type->position() );
     }
 
