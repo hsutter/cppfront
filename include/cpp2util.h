@@ -879,21 +879,19 @@ auto is( X const& x ) -> bool {
 
 //  Values
 //
-inline constexpr auto is( auto const& x, auto const& value ) -> auto
+template< typename X, typename P >
+constexpr auto is( X const& x, P const& value ) -> auto
+    requires std::predicate<P const&, X const&>
 {
     //  Predicate case
-    if constexpr (requires{ bool{ value(x) }; }) {
-        return bool{ value(x) };
-    }
-    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
-        return std::false_type{};
-    }
+    return value(x);
+}
 
+constexpr auto is( auto const& x, auto const& value ) -> bool
+    requires requires{ bool{x == value}; }
+{
     //  Value case
-    else if constexpr (requires{ bool{x == value}; }) {
-        return bool{x == value};
-    }
-    else return std::false_type{};
+    return bool{x == value};
 }
 
 
@@ -1292,7 +1290,9 @@ constexpr auto is( X const& x ) -> bool
 
 //  is Value
 //
-inline constexpr auto is( std::any const& x, auto const& value ) -> bool
+template<typename X>
+    requires std::is_same_v<X,std::any>
+constexpr auto is( X const& x, auto const& value ) -> bool
 {
     //  Predicate case
     if constexpr (requires{ bool{ value(x) }; }) {

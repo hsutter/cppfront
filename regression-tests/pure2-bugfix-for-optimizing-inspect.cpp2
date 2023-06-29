@@ -1,0 +1,33 @@
+main: () = {
+  _ = :(x) = {
+    [[assert Testing: inspect x -> bool {
+      // Condition is `false_type` for `int`, alternative not instantiated.
+      is std::string = x.substr(0);
+      is _           = true;
+    }]]
+  }(1);
+
+  {
+    pred := :<T> (y: T) -> std::true_type = {
+      std::terminate();
+      return ();
+    };
+    [[assert Testing: inspect 1 -> bool {
+      // Condition is `true_type` for `int`, statement unconditionally executed.
+      is (pred) = true;
+      is _      = false;
+    }]]
+  }
+
+  _ = :(x) = {
+    pred := :<T> (y: T) -> bool requires std::is_same_v<T, long> = {
+      std::terminate();
+      return true;
+    };
+    [[assert Testing: inspect x -> bool {
+      // Condition is non-viable for `int`, alternative not instantiated.
+      is (pred) = x.substr(0);
+      is _      = true;
+    }]]
+  }(1);
+}
