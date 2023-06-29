@@ -53,7 +53,7 @@ requires (std::is_same_v<T,long>)
     }(), "");
   }(1);
 
-  // Exercise all `is` overloads.
+  // Exercise all built-in `is` overloads.
 
   (void) [](auto const& x) -> void{
     cpp2::Testing.expects([&] () -> bool { auto&& __expr = x;
@@ -141,5 +141,38 @@ requires (std::is_same_v<T,long>)
       return false;
     }(), "");
   }(1);
+
+  // Exercise `is` overloads for `std::` types.
+
+  {
+    auto f {[](auto const& x) -> void{
+{
+auto const& pred = []<typename T>(T const& y) -> bool
+requires (std::is_same_v<T,cpp2::i32>){std::terminate();return true; };
+
+#line 131 "pure2-bugfix-for-optimizing-inspect.cpp2"
+        cpp2::Testing.expects([&] () -> bool { auto&& __expr = x;
+          if constexpr (requires { cpp2::is(__expr, (std::span<cpp2::i32>{})); }) { if constexpr (!std::is_same_v<decltype(cpp2::is(__expr, (std::span<cpp2::i32>{}))), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is(__expr, (std::span<cpp2::i32>{}))), std::true_type>) { return CPP2_UFCS(substr, x, 0);  } else { if (cpp2::is(__expr, (std::span<cpp2::i32>{}))) { return CPP2_UFCS(substr, x, 0);  } } } }
+          if constexpr (requires { cpp2::is(__expr, pred); }) { if constexpr (!std::is_same_v<decltype(cpp2::is(__expr, pred)), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is(__expr, pred)), std::true_type>) { return CPP2_UFCS(substr, x, 0); } else { if (cpp2::is(__expr, pred)) { return CPP2_UFCS(substr, x, 0); } } } }
+          if constexpr (requires { cpp2::is(__expr, 1); }) { if constexpr (!std::is_same_v<decltype(cpp2::is(__expr, 1)), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is(__expr, 1)), std::true_type>) { return true; } else { if (cpp2::is(__expr, 1)) { return true; } } } }
+          return false;
+        }(), "");
+}
+{
+auto const& pred = []<typename T>(T const& y) -> std::true_type{std::terminate();return {  }; };
+
+#line 141 "pure2-bugfix-for-optimizing-inspect.cpp2"
+      {
+        cpp2::Testing.expects([&] () -> bool { auto&& __expr = x;
+          if constexpr (requires { cpp2::is(__expr, (pred)); }) { if constexpr (!std::is_same_v<decltype(cpp2::is(__expr, (pred))), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is(__expr, (pred))), std::true_type>) { return true;  } else { if (cpp2::is(__expr, (pred))) { return true;  } } } }
+          return false;
+        }(), "");
+      }
+}
+#line 147 "pure2-bugfix-for-optimizing-inspect.cpp2"
+    }}; 
+    f(std::any{   1});
+    std::move(f)(std::optional{1});
+  }
 }
 

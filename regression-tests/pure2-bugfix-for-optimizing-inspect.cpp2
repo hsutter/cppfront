@@ -31,7 +31,7 @@ main: () = {
     }]]
   }(1);
 
-  // Exercise all `is` overloads.
+  // Exercise all built-in `is` overloads.
 
   _ = :(x) = {
     [[assert Testing: inspect x -> bool {
@@ -119,4 +119,33 @@ main: () = {
       is _   = false;
     }]]
   }(1);
+
+  // Exercise `is` overloads for `std::` types.
+
+  {
+    f := :(x) = {
+      (pred := :<T> (y: T) -> bool requires std::is_same_v<T, i32> = {
+        std::terminate();
+        return true;
+      })
+        [[assert Testing: inspect x -> bool {
+          is (:std::span<i32> = ()) = x.substr(0);
+          is (pred)                 = x.substr(0);
+          is (1)                    = true;
+          is _                      = false;
+        }]]
+
+      (pred := :<T> (y: T) -> std::true_type = {
+        std::terminate();
+        return ();
+      }) {
+        [[assert Testing: inspect x -> bool {
+          is (pred) = true;
+          is _      = false;
+        }]]
+      }
+    };
+    f(:std::any      = 1);
+    f(:std::optional = 1);
+  }
 }

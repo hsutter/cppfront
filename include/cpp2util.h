@@ -1297,22 +1297,11 @@ constexpr auto is( X const& x ) -> bool
 template<typename X>
     requires std::is_same_v<X,std::any>
 constexpr auto is( X const& x, auto const& value ) -> bool
+    requires requires{ bool{ *std::any_cast<CPP2_TYPEOF(value)>(&x) == value }; }
 {
-    //  Predicate case
-    if constexpr (requires{ bool{ value(x) }; }) {
-        return value(x);
-    }
-    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
-        return false;
-    }
-
     //  Value case
-    else if constexpr (requires{ bool{ *std::any_cast<CPP2_TYPEOF(value)>(&x) == value }; }) {
-        auto pvalue = std::any_cast<CPP2_TYPEOF(value)>(&x);
-        return pvalue && *pvalue == value;
-    }
-    //  else
-    return false;
+    auto pvalue = std::any_cast<CPP2_TYPEOF(value)>(&x);
+    return pvalue && *pvalue == value;
 }
 
 
@@ -1345,20 +1334,10 @@ constexpr auto is( std::optional<U> const& x ) -> bool
 //
 template<typename T>
 constexpr auto is( std::optional<T> const& x, auto const& value ) -> bool
+    requires requires{ bool{ x.value() == value }; }
 {
-    //  Predicate case
-    if constexpr (requires{ bool{ value(x) }; }) {
-        return value(x);
-    }
-    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
-        return false;
-    }
-
     //  Value case
-    else if constexpr (requires{ bool{ x.value() == value }; }) {
-        return x.has_value() && x.value() == value;
-    }
-    return false;
+    return x.has_value() && x.value() == value;
 }
 
 
