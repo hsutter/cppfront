@@ -52,5 +52,46 @@ requires (std::is_same_v<T,long>)
       return true;
     }(), "");
   }(1);
+
+  // Exercise all `is` overloads.
+
+  (void) [](auto const& x) -> void{
+    cpp2::Testing.expects([&] () -> bool { auto&& __expr = x;
+      if constexpr (requires { cpp2::is<std::vector>(__expr); }) { if constexpr (!std::is_same_v<decltype(cpp2::is<std::vector>(__expr)), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is<std::vector>(__expr)), std::true_type>) { return CPP2_UFCS(substr, x, 0); } else { if (cpp2::is<std::vector>(__expr)) { return CPP2_UFCS(substr, x, 0); } } } }
+      if constexpr (requires { cpp2::is<std::array>(__expr); }) { if constexpr (!std::is_same_v<decltype(cpp2::is<std::array>(__expr)), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is<std::array>(__expr)), std::true_type>) { return CPP2_UFCS(substr, x, 0); } else { if (cpp2::is<std::array>(__expr)) { return CPP2_UFCS(substr, x, 0); } } } }
+      if constexpr (requires { cpp2::is<std::string>(__expr); }) { if constexpr (!std::is_same_v<decltype(cpp2::is<std::string>(__expr)), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is<std::string>(__expr)), std::true_type>) { return CPP2_UFCS(substr, x, 0); } else { if (cpp2::is<std::string>(__expr)) { return CPP2_UFCS(substr, x, 0); } } } }
+      if constexpr (requires { cpp2::is<std::exception>(__expr); }) { if constexpr (!std::is_same_v<decltype(cpp2::is<std::exception>(__expr)), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is<std::exception>(__expr)), std::true_type>) { return CPP2_UFCS(substr, x, 0);  } else { if (cpp2::is<std::exception>(__expr)) { return CPP2_UFCS(substr, x, 0);  } } } }
+      return true;
+    }(), "");
+  }(1);
+
+  (void) [](auto const& x) -> void{
+    cpp2::Testing.expects([&] () -> bool { auto&& __expr = x;
+      if constexpr (requires { cpp2::is<std::vector>(__expr); }) { if constexpr (!std::is_same_v<decltype(cpp2::is<std::vector>(__expr)), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is<std::vector>(__expr)), std::true_type>) { return true;  } else { if (cpp2::is<std::vector>(__expr)) { return true;  } } } }
+      return false;
+    }(), "");
+  }(std::vector{1});
+
+  (void) [](auto const& x) -> void{
+    cpp2::Testing.expects([&] () -> bool { auto&& __expr = x;
+      if constexpr (requires { cpp2::is<std::array>(__expr); }) { if constexpr (!std::is_same_v<decltype(cpp2::is<std::array>(__expr)), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is<std::array>(__expr)), std::true_type>) { return true;  } else { if (cpp2::is<std::array>(__expr)) { return true;  } } } }
+      return false;
+    }(), "");
+  }(std::array{1});
+
+  (void) [](auto const& x) -> void{
+    cpp2::Testing.expects([&] () -> bool { auto&& __expr = x;
+      if constexpr (requires { cpp2::is<int>(__expr); }) { if constexpr (!std::is_same_v<decltype(cpp2::is<int>(__expr)), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is<int>(__expr)), std::true_type>) { return true;  } else { if (cpp2::is<int>(__expr)) { return true;  } } } }
+      return false;
+    }(), "");
+  }(1);
+
+  (void) [](auto const& x) -> void{
+    (void) cpp2::is<std::exception>(x);
+    cpp2::Testing.expects([&] () -> bool { auto&& __expr = x;
+      if constexpr (requires { cpp2::is<std::exception>(__expr); }) { if constexpr (!std::is_same_v<decltype(cpp2::is<std::exception>(__expr)), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is<std::exception>(__expr)), std::true_type>) { return true;  } else { if (cpp2::is<std::exception>(__expr)) { return true;  } } } }
+      return false;
+    }(), "");
+  }(std::bad_exception{});
 }
 

@@ -30,4 +30,45 @@ main: () = {
       is _      = true;
     }]]
   }(1);
+
+  // Exercise all `is` overloads.
+
+  _ = :(x) = {
+    [[assert Testing: inspect x -> bool {
+      is std::vector    = x.substr(0);
+      is std::array     = x.substr(0);
+      is std::string    = x.substr(0);
+      is std::exception = x.substr(0);
+      is _              = true;
+    }]]
+  }(1);
+
+  _ = :(x) = {
+    [[assert Testing: inspect x -> bool {
+      is std::vector = true;
+      is _           = false;
+    }]]
+  }(:std::vector = (1));
+
+  _ = :(x) = {
+    [[assert Testing: inspect x -> bool {
+      is std::array = true;
+      is _          = false;
+    }]]
+  }(:std::array = (1));
+
+  _ = :(x) = {
+    [[assert Testing: inspect x -> bool {
+      is int = true;
+      is _   = false;
+    }]]
+  }(1);
+
+  _ = :(x) = {
+    _ = x is std::exception;
+    [[assert Testing: inspect x -> bool {
+      is std::exception = true;
+      is _              = false;
+    }]]
+  }(:std::bad_exception = ());
 }

@@ -847,7 +847,11 @@ auto is( X const& ) -> std::true_type {
 }
 
 template< typename C, typename X >
-    requires (std::is_base_of_v<C, X> && !std::is_same_v<C,X>)
+    requires (
+        std::is_base_of_v<C, X>
+        && !std::is_polymorphic_v<C>
+        && !std::is_polymorphic_v<X>
+        && !std::is_same_v<C,X>)
 auto is( X const& ) -> std::true_type {
     return {};
 }
