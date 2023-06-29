@@ -8,23 +8,18 @@ class Shape { public: virtual ~Shape() { } };
 class Circle : public Shape { };
 class Square : public Shape { };
 
-//--- printing helpers -----------------
+//--- printing setup -------------------
 
 print: ( msg: std::string, x: _ ) =
     std::cout << msg << x << "\n";
 
-print: ( msg: std::string, b: bool ) =
+
+main: () -> int =
 {
-    bmsg: * const char;
-    if b { bmsg = "true";  }
-    else { bmsg = "false"; }
-    std::cout << msg << bmsg << "\n";
-}
+    std::cout << std::boolalpha;
 
 //--- examples -------------------------
 
-main: () -> int = 
-{
     print( "1.1 is int? ", 1.1 is int );
     print( "1   is int? ", 1   is int );
 

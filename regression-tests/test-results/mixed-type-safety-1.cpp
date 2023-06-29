@@ -19,17 +19,13 @@ class Shape { public: virtual ~Shape() { } };
 class Circle : public Shape { };
 class Square : public Shape { };
 
-//--- printing helpers -----------------
+//--- printing setup -------------------
 
 #line 13 "mixed-type-safety-1.cpp2"
 auto print(cpp2::in<std::string> msg, auto const& x) -> void;
     
 
-auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
-
-#line 24 "mixed-type-safety-1.cpp2"
-//--- examples -------------------------
-
+#line 17 "mixed-type-safety-1.cpp2"
 [[nodiscard]] auto main() -> int;
 
 
@@ -40,17 +36,13 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
 auto print(cpp2::in<std::string> msg, auto const& x) -> void { 
     std::cout << msg << x << "\n";  }
 
-auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void
-{
-    cpp2::deferred_init<char const*> bmsg; 
-    if (b) { bmsg.construct("true");}
-    else {bmsg.construct("false"); }
-    std::cout << msg << std::move(bmsg.value()) << "\n";
-}
-
-#line 26 "mixed-type-safety-1.cpp2"
+#line 17 "mixed-type-safety-1.cpp2"
 [[nodiscard]] auto main() -> int
 {
+    std::cout << std::boolalpha;
+
+//--- examples -------------------------
+
     print("1.1 is int? ", cpp2::is<int>(1.1));
     print( "1   is int? ", cpp2::is<int>(1));
 

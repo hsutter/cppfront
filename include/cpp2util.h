@@ -191,7 +191,7 @@
         // in our -pure-cpp2 "import std;" simulation mode... if you need this,
         // use mixed mode (not -pure-cpp2) and #include all the headers you need
         // including this one
-        // 
+        //
         // #include <execution>
     #endif
 
@@ -464,7 +464,7 @@ template<typename T>
 auto Typeid() -> decltype(auto) {
 #ifdef CPP2_NO_RTTI
     Type.expects(
-        !"'any' dynamic casting is disabled with -fno-rtti", // more likely to appear on console 
+        !"'any' dynamic casting is disabled with -fno-rtti", // more likely to appear on console
          "'any' dynamic casting is disabled with -fno-rtti"  // make message available to hooked handlers
     );
 #else
@@ -807,55 +807,55 @@ using empty = void;
 //  Templates
 //
 template <template <typename...> class C, typename... Ts>
-constexpr auto is(C< Ts...> const& ) -> bool {
-    return true;
+constexpr auto is(C< Ts...> const& ) -> std::true_type {
+    return {};
 }
 
 #if defined(_MSC_VER)
     template <template <typename, typename...> class C, typename T>
-    constexpr auto is( T const& ) -> bool {
-        return false;
+    constexpr auto is( T const& ) -> std::false_type {
+        return {};
     }
 #else
     template <template <typename...> class C, typename T>
-    constexpr auto is( T const& ) -> bool {
-        return false;
+    constexpr auto is( T const& ) -> std::false_type {
+        return {};
     }
 #endif
 
 template <template <typename,auto> class C, typename T, auto V>
-constexpr auto is( C<T, V> const& ) -> bool {
-    return true;
+constexpr auto is( C<T, V> const& ) -> std::true_type {
+    return {};
 }
 
 template <template <typename,auto> class C, typename T>
-constexpr auto is( T const& ) -> bool {
-    return false;
+constexpr auto is( T const& ) -> std::false_type {
+    return {};
 }
 
 //  Types
 //
 template< typename C, typename X >
-auto is( X const& ) -> bool {
-    return false;
+auto is( X const& ) -> std::false_type {
+    return {};
 }
 
 template< typename C, typename X >
     requires std::is_same_v<C, X>
-auto is( X const& ) -> bool {
-    return true;
+auto is( X const& ) -> std::true_type {
+    return {};
 }
 
 template< typename C, typename X >
     requires (std::is_base_of_v<C, X> && !std::is_same_v<C,X>)
-auto is( X const& ) -> bool {
-    return true;
+auto is( X const& ) -> std::true_type {
+    return {};
 }
 
 template< typename C, typename X >
     requires (
-        ( std::is_base_of_v<X, C> || 
-          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>) 
+        ( std::is_base_of_v<X, C> ||
+          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>)
         ) && !std::is_same_v<C,X>)
 auto is( X const& x ) -> bool {
     return Dynamic_cast<C const*>(&x) != nullptr;
@@ -863,8 +863,8 @@ auto is( X const& x ) -> bool {
 
 template< typename C, typename X >
     requires (
-        ( std::is_base_of_v<X, C> || 
-          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>) 
+        ( std::is_base_of_v<X, C> ||
+          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>)
         ) && !std::is_same_v<C,X>)
 auto is( X const* x ) -> bool {
     return Dynamic_cast<C const*>(x) != nullptr;
@@ -879,21 +879,21 @@ auto is( X const& x ) -> bool {
 
 //  Values
 //
-inline constexpr auto is( auto const& x, auto const& value ) -> bool
+inline constexpr auto is( auto const& x, auto const& value ) -> auto
 {
     //  Predicate case
     if constexpr (requires{ bool{ value(x) }; }) {
-        return value(x);
+        return bool{ value(x) };
     }
     else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
-        return false;
+        return std::false_type{};
     }
 
     //  Value case
     else if constexpr (requires{ bool{x == value}; }) {
-        return x == value;
+        return bool{x == value};
     }
-    return false;
+    else return std::false_type{};
 }
 
 
@@ -1452,7 +1452,7 @@ inline auto to_string(std::string const& s) -> std::string const&
 
 template<typename T>
 inline auto to_string(T const& sv) -> std::string
-    requires (std::is_convertible_v<T, std::string_view> 
+    requires (std::is_convertible_v<T, std::string_view>
               && !std::is_convertible_v<T, const char*>)
 {
     return std::string{sv};
