@@ -1934,69 +1934,46 @@ public:
             {
                 //  Stringize the expression-statement now...
                 auto statement = std::string{};
+                if (is_expression) {
+                    statement = "return ";
+                }
                 printer.emit_to_string(&statement);
                 emit(*alt->statement);
                 printer.emit_to_string();
-                //  ... and jettison the final ; for an expression-statement
-                while (
-                    !statement.empty()
-                    && (
-                        statement.back() == ';'
-                        || isspace(statement.back())
-                        )
-                    )
-                {
-                    statement.pop_back();
-                }
 
                 replace_all( statement, "cpp2::as_<", "cpp2::as<" );
 
-                //  If this is an inspect-expression, we'll have to wrap each alternative
-                //  in an 'if constexpr' so that its type is ignored for mismatches with
-                //  the inspect-expression's type
-                auto return_prefix = std::string{};
-                auto return_suffix = std::string{";"};   // use this to tack the ; back on in the alternative body
-                if (is_expression) {
-                    return_prefix = "{ if constexpr( requires{" + statement + ";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((" + statement + "))," + result_type + "> ) return ";
-                    return_suffix += " }";
-                }
 
                 if (id == "auto") {
                     found_wildcard = true;
-                    if (is_expression) {
-                        printer.print_cpp2("return ", alt->position());
-                    }
+                    printer.print_cpp2(statement, alt->position());
                 }
                 else {
-                    if (!first) {
-                        printer.print_cpp2("else ", alt->position());
-                    }
-                    first = false;
-
-                    printer.print_cpp2("if " + constexpr_qualifier, alt->position());
+                    auto is_expression = std::string{};
                     if (alt->type_id) {
-                        printer.print_cpp2("(cpp2::is<" + id + ">(__expr)) ", alt->position());
+                        is_expression = "cpp2::is<" + id + ">(__expr)";
                     }
                     else {
                         assert (alt->value);
-                        printer.print_cpp2("(cpp2::is(__expr, " + id + ")) ", alt->position());
+                        is_expression = "cpp2::is(__expr, " + id + ")";
                     }
-                    printer.print_cpp2(return_prefix, alt->position());
+
+                    printer.print_cpp2("if constexpr (requires { ", alt->position());
+                    printer.print_cpp2(is_expression, alt->position());
+                    printer.print_cpp2("; }) { if constexpr (!std::is_same_v<decltype(", alt->position());
+                    printer.print_cpp2(is_expression, alt->position());
+                    printer.print_cpp2("), std::false_type>) { if constexpr (std::is_same_v<decltype(", alt->position());
+                    printer.print_cpp2(is_expression, alt->position());
+                    printer.print_cpp2("), std::true_type>) { ", alt->position());
+                    printer.print_cpp2(statement, alt->position());
+                    printer.print_cpp2(" } else { if ", alt->position());
+                    printer.print_cpp2(constexpr_qualifier, alt->position());
+                    printer.print_cpp2("(", alt->position());
+                    printer.print_cpp2(is_expression, alt->position());
+                    printer.print_cpp2(") { ", alt->position());
+                    printer.print_cpp2(statement, alt->position());
+                    printer.print_cpp2(" } } } }", alt->position());
                 }
-
-                printer.print_cpp2(statement, alt->position());
-
-                if (
-                    is_expression
-                    && id != "auto"
-                    )
-                {
-                    assert(alt->statement->is_expression());
-                    printer.print_cpp2("; else return " + result_type + "{}", alt->position());
-                    printer.print_cpp2("; else return " + result_type + "{}", alt->position());
-                }
-
-                printer.print_cpp2(return_suffix, alt->position());
             }
             else {
                 errors.emplace_back(
@@ -2016,9 +1993,7 @@ public:
                 return;
             }
         }
-        else {
-            printer.print_cpp2("}", n.close_brace);
-        }
+        printer.print_cpp2("}", n.close_brace);
 
         //  If this is an expression, finally actually invoke the lambda
         if (is_expression) {

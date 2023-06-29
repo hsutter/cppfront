@@ -33,12 +33,12 @@ struct my_type {};
 #line 8 "mixed-inspect-templates.cpp2"
 [[nodiscard]] auto fun(auto const& v) -> std::string{
     return [&] () -> std::string { auto&& __expr = v;
-        if (cpp2::is<std::vector>(__expr)) { if constexpr( requires{"std::vector";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("std::vector")),std::string> ) return "std::vector"; else return std::string{}; else return std::string{}; }
-        else if (cpp2::is<std::array>(__expr)) { if constexpr( requires{"std::array";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("std::array")),std::string> ) return "std::array"; else return std::string{}; else return std::string{}; }
-        else if (cpp2::is<std::variant>(__expr)) { if constexpr( requires{"std::variant";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("std::variant")),std::string> ) return "std::variant"; else return std::string{}; else return std::string{}; }
-        else if (cpp2::is<my_type>(__expr)) { if constexpr( requires{"my_type";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("my_type")),std::string> ) return "my_type"; else return std::string{}; else return std::string{}; }
-        return "unknown"; }
-    (); 
+        if constexpr (requires { cpp2::is<std::vector>(__expr); }) { if constexpr (!std::is_same_v<decltype(cpp2::is<std::vector>(__expr)), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is<std::vector>(__expr)), std::true_type>) { return "std::vector"; } else { if (cpp2::is<std::vector>(__expr)) { return "std::vector"; } } } }
+        if constexpr (requires { cpp2::is<std::array>(__expr); }) { if constexpr (!std::is_same_v<decltype(cpp2::is<std::array>(__expr)), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is<std::array>(__expr)), std::true_type>) { return "std::array"; } else { if (cpp2::is<std::array>(__expr)) { return "std::array"; } } } }
+        if constexpr (requires { cpp2::is<std::variant>(__expr); }) { if constexpr (!std::is_same_v<decltype(cpp2::is<std::variant>(__expr)), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is<std::variant>(__expr)), std::true_type>) { return "std::variant";  } else { if (cpp2::is<std::variant>(__expr)) { return "std::variant";  } } } }
+        if constexpr (requires { cpp2::is<my_type>(__expr); }) { if constexpr (!std::is_same_v<decltype(cpp2::is<my_type>(__expr)), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is<my_type>(__expr)), std::true_type>) { return "my_type"; } else { if (cpp2::is<my_type>(__expr)) { return "my_type"; } } } }
+        return "unknown";
+    }(); 
 }
 
 [[nodiscard]] auto fun2(auto const& v) -> std::string{

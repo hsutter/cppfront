@@ -56,13 +56,13 @@ auto test(auto const& x) -> void;
 auto test(auto const& x) -> void{
     auto forty_two {42}; 
     std::cout << [&] () -> std::string { auto&& __expr = x;
-        if (cpp2::is(__expr, 0)) { if constexpr( requires{"zero";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("zero")),std::string> ) return "zero"; else return std::string{}; else return std::string{}; }
-        else if (cpp2::is(__expr, (in(1, 2)))) { if constexpr( requires{"1 or 2";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("1 or 2")),std::string> ) return "1 or 2"; else return std::string{}; else return std::string{}; }
-        else if (cpp2::is(__expr, in_2_3)) { if constexpr( requires{"3";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("3")),std::string> ) return "3"; else return std::string{}; else return std::string{}; }
-        else if (cpp2::is(__expr, std::move(forty_two))) { if constexpr( requires{"the answer";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("the answer")),std::string> ) return "the answer"; else return std::string{}; else return std::string{}; }
-        else if (cpp2::is<int>(__expr)) { if constexpr( requires{"integer " + cpp2::to_string(x);} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("integer " + cpp2::to_string(x))),std::string> ) return "integer " + cpp2::to_string(x); else return std::string{}; else return std::string{}; }
-        else if (cpp2::is<std::string>(__expr)) { if constexpr( requires{cpp2::as<std::string>(x);} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((cpp2::as<std::string>(x))),std::string> ) return cpp2::as<std::string>(x); else return std::string{}; else return std::string{}; }
-        return "(no match)"; }
-    () << "\n";
+        if constexpr (requires { cpp2::is(__expr, 0); }) { if constexpr (!std::is_same_v<decltype(cpp2::is(__expr, 0)), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is(__expr, 0)), std::true_type>) { return "zero"; } else { if (cpp2::is(__expr, 0)) { return "zero"; } } } }
+        if constexpr (requires { cpp2::is(__expr, (in(1, 2))); }) { if constexpr (!std::is_same_v<decltype(cpp2::is(__expr, (in(1, 2)))), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is(__expr, (in(1, 2)))), std::true_type>) { return "1 or 2"; } else { if (cpp2::is(__expr, (in(1, 2)))) { return "1 or 2"; } } } }
+        if constexpr (requires { cpp2::is(__expr, in_2_3); }) { if constexpr (!std::is_same_v<decltype(cpp2::is(__expr, in_2_3)), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is(__expr, in_2_3)), std::true_type>) { return "3"; } else { if (cpp2::is(__expr, in_2_3)) { return "3"; } } } }
+        if constexpr (requires { cpp2::is(__expr, std::move(forty_two)); }) { if constexpr (!std::is_same_v<decltype(cpp2::is(__expr, std::move(forty_two))), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is(__expr, std::move(forty_two))), std::true_type>) { return "the answer";  } else { if (cpp2::is(__expr, std::move(forty_two))) { return "the answer";  } } } }
+        if constexpr (requires { cpp2::is<int>(__expr); }) { if constexpr (!std::is_same_v<decltype(cpp2::is<int>(__expr)), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is<int>(__expr)), std::true_type>) { return "integer " + cpp2::to_string(x); } else { if (cpp2::is<int>(__expr)) { return "integer " + cpp2::to_string(x); } } } }
+        if constexpr (requires { cpp2::is<std::string>(__expr); }) { if constexpr (!std::is_same_v<decltype(cpp2::is<std::string>(__expr)), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is<std::string>(__expr)), std::true_type>) { return cpp2::as<std::string>(x);  } else { if (cpp2::is<std::string>(__expr)) { return cpp2::as<std::string>(x);  } } } }
+        return "(no match)";
+    }() << "\n";
 }
 

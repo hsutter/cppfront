@@ -39,10 +39,10 @@ constexpr auto empty = [](auto&& x){
     auto i {15}; 
 
     std::cout << [&] () -> std::string { auto&& __expr = i;
-        if (cpp2::is(__expr, (less_than(10)))) { if constexpr( requires{"i less than 10";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("i less than 10")),std::string> ) return "i less than 10"; else return std::string{}; else return std::string{}; }
-        else if (cpp2::is(__expr, in(11, 20))) { if constexpr( requires{"i is between 11 and 20";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("i is between 11 and 20")),std::string> ) return "i is between 11 and 20"; else return std::string{}; else return std::string{}; }
-        return "i is out of our interest"; }
-    () << std::endl;
+        if constexpr (requires { cpp2::is(__expr, (less_than(10))); }) { if constexpr (!std::is_same_v<decltype(cpp2::is(__expr, (less_than(10)))), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is(__expr, (less_than(10)))), std::true_type>) { return "i less than 10";  } else { if (cpp2::is(__expr, (less_than(10)))) { return "i less than 10";  } } } }
+        if constexpr (requires { cpp2::is(__expr, in(11, 20)); }) { if constexpr (!std::is_same_v<decltype(cpp2::is(__expr, in(11, 20))), std::false_type>) { if constexpr (std::is_same_v<decltype(cpp2::is(__expr, in(11, 20))), std::true_type>) { return "i is between 11 and 20";  } else { if (cpp2::is(__expr, in(11, 20))) { return "i is between 11 and 20";  } } } }
+        return "i is out of our interest";
+    }() << std::endl;
 
     if (cpp2::is(i, (less_than(20)))) {
         std::cout << "less than 20" << std::endl;
