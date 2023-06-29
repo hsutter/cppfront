@@ -35,9 +35,18 @@ main: () = {
 
   _ = :(x) = {
     [[assert Testing: inspect x -> bool {
-      is std::vector    = x.substr(0);
-      is std::array     = x.substr(0);
-      is std::string    = x.substr(0);
+      is std::vector          = x.substr(0);
+      is std::array           = x.substr(0);
+      is std::string          = x.substr(0);
+      is std::exception       = x.substr(0);
+      is cpp2::empty          = x.substr(0);
+      is (std::ranges::empty) = x.substr(0);
+      is ("")                 = x.substr(0);
+      is _                    = true;
+    }]]
+  }(1);
+  _ = :(x) = {
+    [[assert Testing: inspect x& -> bool {
       is std::exception = x.substr(0);
       is _              = true;
     }]]
@@ -65,10 +74,49 @@ main: () = {
   }(1);
 
   _ = :(x) = {
-    _ = x is std::exception;
+    [[assert Testing: inspect x -> bool {
+      // FIXME
+      // Using `std::ranges::subrange<std::add_pointer_t<i32>>::view_interface` fails.
+      // The alternative is elided due to the `is` being ambiguous.
+      // Like in P2392, the cases of the built-in `is` should be a chain of conditions.
+      // Using overloads to implement that is tedious and error-prone.
+      is std::ranges::view_interface<std::ranges::subrange<std::add_pointer_t<i32>>> = true;
+      is _                                                                           = false;
+    }]]
+  }(:std::ranges::subrange<std::add_pointer_t<i32>> = ());
+
+  _ = :(x) = {
     [[assert Testing: inspect x -> bool {
       is std::exception = true;
       is _              = false;
     }]]
   }(:std::bad_exception = ());
+
+  _ = :(x) = {
+    [[assert Testing: inspect x& -> bool {
+      is std::exception = true;
+      is _              = false;
+    }]]
+  }(:std::bad_exception = ());
+
+  _ = :(x) = {
+    [[assert Testing: inspect x -> bool {
+      is cpp2::empty = true;
+      is _           = false;
+    }]]
+  }(:std::optional<i32> = ());
+
+  _ = :(x) = {
+    [[assert Testing: inspect x -> bool {
+      is (std::ranges::empty) = true;
+      is _                    = false;
+    }]]
+  }(:std::vector<i32> = ());
+
+  _ = :(x) = {
+    [[assert Testing: inspect x -> bool {
+      is (1) = true;
+      is _   = false;
+    }]]
+  }(1);
 }
