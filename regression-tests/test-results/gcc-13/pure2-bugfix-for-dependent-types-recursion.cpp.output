@@ -1,0 +1,13 @@
+pure2-bugfix-for-dependent-types-recursion.cpp2: In function ‘int main()’:
+pure2-bugfix-for-dependent-types-recursion.cpp2:2:13: error: ‘b’ does not name a type
+    2 |   a: type == b;
+      |             ^
+pure2-bugfix-for-dependent-types-recursion.cpp2:3:13: error: ‘a’ does not name a type
+    3 |   b: type == a;
+      |             ^
+pure2-bugfix-for-dependent-types-recursion.cpp2:4:21: error: ‘a’ has not been declared
+    4 |   _ = a::t;
+      |                     ^
+pure2-bugfix-for-dependent-types-recursion.cpp2:5:21: error: ‘b’ has not been declared
+    5 |   _ = b::t;
+      |                     ^

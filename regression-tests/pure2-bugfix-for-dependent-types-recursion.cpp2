@@ -1,0 +1,6 @@
+main: () = {
+  a: type == b;
+  b: type == a;
+  _ = a::t;
+  _ = b::t;
+}

@@ -1698,7 +1698,8 @@ public:
         unqualified_id_node const& n,
         bool in_synthesized_multi_return = false,
         bool is_local_name = true,
-        bool is_qualified = false
+        bool is_qualified = false,
+        bool is_dependent = false
     )
         -> void
     {   STACKINSTR
@@ -1745,6 +1746,10 @@ public:
         }
         if (add_forward) {
             printer.print_cpp2("CPP2_FORWARD(", {n.position().lineno, n.position().colno - 8});
+        }
+
+        if (is_dependent && n.open_angle != source_position{}) {
+            printer.print_cpp2("template ", n.position());
         }
 
         assert(n.identifier);
@@ -1809,11 +1814,271 @@ public:
     }
 
 
+    auto has_template_parameter_named(declaration_node const& decl, token const& id)
+        -> bool
+    {
+        if (auto& params = decl.template_parameters) {
+            return std::any_of(params->parameters.begin(), params->parameters.end(), [&](auto& param) {
+                assert(param->has_name());
+                return *param->name() == id;
+            });
+        }
+        return false;
+    }
+
+    auto is_template_parameter(token const& lookup_id)
+        -> bool
+    {
+        // If any parent declaration
+        return std::any_of(current_declarations.begin() + 1, current_declarations.end(), [&](auto& decl) {
+            return has_template_parameter_named(*decl, lookup_id);
+        });
+    }
+
+    std::vector<token const*> looking_up = {};
+
+    auto is_dependent_type_alias(token const& lookup_id)
+        -> bool
+    {
+        // Prevent recursion.
+        if (contains(looking_up, &lookup_id)) {
+            return false;
+        }
+        looking_up.push_back(&lookup_id);
+        auto guard = finally([&]{ looking_up.pop_back(); });
+
+        auto lookup = source_order_name_lookup(lookup_id);
+
+        if (
+            !lookup
+            || get_if<active_using_declaration>(&*lookup)
+            )
+        {
+            return false;
+        }
+
+        auto decl = get<declaration_node const*>(*lookup);
+        if (!decl->is_alias()) {
+            return false;
+        }
+
+        auto& alias = get<declaration_node::an_alias>(decl->type);
+
+        if (
+            !alias->is_type_alias()
+            || !decl->identifier
+            || *decl->identifier->identifier != lookup_id
+            )
+        {
+            return false;
+        }
+
+        auto& type_id = get<alias_node::a_type>(alias->initializer);
+        return is_dependent(*type_id);
+    }
+
+    auto is_dependent(const type_id_node& n)
+        -> bool
+    {
+        if (auto qual = get_if<id_expression_node::qualified>(&n.id)) {
+            return is_dependent(**qual);
+        }
+        else if (auto unqual = get_if<id_expression_node::unqualified>(&n.id)) {
+            return is_dependent(**unqual);
+        }
+        return false;
+    }
+
+    auto is_dependent(const id_expression_node& n)
+        -> bool
+    {
+        if (auto qual = get_if<id_expression_node::qualified>(&n.id)) {
+            return is_dependent(**qual);
+        }
+        else if (auto unqual = get_if<id_expression_node::unqualified>(&n.id)) {
+            return is_dependent(**unqual);
+        }
+        return false;
+    }
+
+    struct is_dependent_expression_visitor {
+        cppfront* self;
+
+        auto operator()(expression_node const& expr) const
+            -> bool
+        {
+            return (*this)(*expr.expr);
+        }
+
+        template<String Name, typename Term>
+        auto operator()(binary_expression_node<Name, Term> const& expr) const
+            -> bool
+        {
+            return (*this)(*expr.expr) || std::any_of(expr.terms.begin(), expr.terms.end(), *this);
+        }
+
+        template<class BinaryExpressionTerm>
+        auto operator()(BinaryExpressionTerm const& term) const
+            -> bool
+            requires requires { term.op; term.expr; }
+        {
+            return (*this)(*term.expr);
+        }
+
+        auto operator()(is_as_expression_node const& expr) const
+            -> bool
+        {
+            return (*this)(*expr.expr) || std::any_of(expr.ops.begin(), expr.ops.end(), *this);
+        }
+
+        auto operator()(is_as_expression_node::term const& expr) const
+            -> bool
+        {
+            if (expr.expr) {
+                return (*this)(*expr.expr);
+            }
+            return self->is_dependent(*expr.type);
+        }
+
+        auto operator()(prefix_expression_node const& expr) const
+            -> bool
+        {
+            return (*this)(*expr.expr);
+        }
+
+        auto operator()(postfix_expression_node const& expr) const
+            -> bool
+        {
+            return (*this)(*expr.expr) || std::any_of(expr.ops.begin(), expr.ops.end(), *this);
+        }
+
+        auto operator()(postfix_expression_node::term const& expr) const
+            -> bool
+        {
+            if (expr.id_expr) {
+                return (*this)(*expr.id_expr);
+            } else if (expr.expr_list) {
+                return (*this)(*expr.expr_list);
+            }
+            return false;
+        }
+
+        auto operator()(primary_expression_node const& expr) const
+            -> bool
+        {
+            return std::visit([&]<typename T>(T const& expr) {
+                if constexpr (std::is_same_v<T, std::monostate>
+                              || std::is_same_v<T, token const*>
+                              || std::is_same_v<T, std::unique_ptr<literal_node>>) {
+                    return false;
+                } else {
+                    return (*this)(*expr);
+                }
+            }, expr.expr);
+        }
+
+        auto operator()(expression_list_node const& expr) const
+            -> bool
+        {
+            return std::any_of(expr.expressions.begin(), expr.expressions.end(), *this);
+        }
+
+        auto operator()(expression_list_node::term const& term) const
+            -> bool
+        {
+            return (*this)(*term.expr);
+        }
+
+        auto operator()(id_expression_node const& expr) const
+            -> bool
+        {
+            return std::visit([&]<typename T>(T const& expr) {
+                if constexpr (std::is_same_v<T, std::monostate>) {
+                    return false;
+                } else {
+                    return self->is_dependent(*expr);
+                }
+            }, expr.id);
+        }
+
+        auto operator()(declaration_node const& n) const
+            -> bool
+        {
+            auto type_id = std::get_if<declaration_node::an_object>(&n.type);
+            if (
+                !type_id
+                || (*type_id)->is_wildcard()
+                )
+            {
+                return false; // (*this)(*term.initializer);
+            }
+            return self->is_dependent(**type_id);
+        }
+
+        auto operator()(inspect_expression_node const& expr) const
+            -> bool
+        {
+            return self->is_dependent(*expr.result_type);
+        }
+    };
+
+    auto is_dependent(
+        const unqualified_id_node& n,
+        bool /*is_qualified*/ = false,
+        bool is_first = true)
+        -> bool
+    {
+        if (is_first && n.open_angle == source_position{}) {
+            assert(n.identifier);
+            return is_template_parameter(*n.identifier)
+                   || is_dependent_type_alias(*n.identifier);
+        }
+        // If it's a _template-id_
+        if (n.open_angle != source_position{}) {
+            assert(n.identifier);
+            // and any of its template arguments is either
+            return std::any_of(n.template_args.begin(), n.template_args.end(), [&](template_argument const& arg) {
+                if (auto expr = get_if<template_argument::expression>(&arg.arg)) {
+                    // a dependent _expression_
+                    return is_dependent_expression_visitor{this}(**expr);
+                }
+                else if (auto type_id = get_if<template_argument::type_id>(&arg.arg)) {
+                    // or a dependent _type-id_.
+                    return is_dependent(**type_id);
+                }
+                return false;
+            });
+        }
+        return false;
+    }
+
+    auto is_dependent(const qualified_id_node& n, bool exclude_last = false)
+        -> bool
+    {
+        if (is_dependent(*n.ids[0].id, true, true)) {
+            return true;
+        }
+        return std::any_of(
+                   n.ids.begin() + 1,
+                   n.ids.end() - int{exclude_last && n.ids.size() > 1},
+                   [&](auto& id) {
+                       return is_dependent(*id.id, true, false);
+                   }
+               );
+    }
+
+    auto should_be_prefixed_with_typename(const qualified_id_node& n)
+        -> bool
+    {
+        return is_dependent(n, true);
+    }
+
     //-----------------------------------------------------------------------
     //
     auto emit(
         qualified_id_node const& n,
-        bool include_unqualified_id = true
+        bool include_unqualified_id = true,
+        bool requires_typename_keyword = false
         )
         -> void
     {   STACKINSTR
@@ -1838,12 +2103,20 @@ public:
         auto ident = std::string{};
         printer.emit_to_string(&ident);
 
+        if (requires_typename_keyword && should_be_prefixed_with_typename(n)) {
+            printer.print_cpp2("typename ", n.position());
+        }
+
+        auto is_dependent = false;
         for (auto const& id : std::span{n.ids}.first(n.ids.size() - !include_unqualified_id))
         {
             if (id.scope_op) {
                 emit(*id.scope_op);
             }
-            emit(*id.id, false, true, true);    // inform the unqualified-id that it's qualified
+            emit(*id.id, false, true, true, is_dependent);    // inform the unqualified-id that it's qualified
+            if (!is_dependent && this->is_dependent(*id.id)) {
+                is_dependent = true;
+            }
         }
 
         printer.emit_to_string();
@@ -1855,6 +2128,7 @@ public:
     //
     auto emit(
         type_id_node const& n,
+        bool                is_type_only_context = false,
         source_position     pos = {}
     )
         -> void
@@ -1868,7 +2142,7 @@ public:
         }
         else {
             try_emit<type_id_node::unqualified>(n.id, false, false);
-            try_emit<type_id_node::qualified  >(n.id);
+            try_emit<type_id_node::qualified  >(n.id, true, !is_type_only_context && n.type_only_context);
             try_emit<type_id_node::keyword    >(n.id);
         }
 
@@ -2815,7 +3089,7 @@ public:
     }
 
 
-    auto source_order_name_lookup(unqualified_id_node const& id)
+    auto source_order_name_lookup(std::string_view identifier)
     -> source_order_name_lookup_res
     {
         for (
@@ -2828,7 +3102,7 @@ public:
                 auto decl = get_if<declaration_node const*>(&*first);
                 decl
                 && *decl
-                && (*decl)->has_name(*id.identifier)
+                && (*decl)->has_name(identifier)
                 )
             {
                 return *decl;
@@ -2837,7 +3111,7 @@ public:
                 auto using_ = get_if<active_using_declaration>(&*first);
                 using_
                 && using_->identifier
-                && *using_->identifier == *id.identifier
+                && *using_->identifier == identifier
                 )
             {
                 return *using_;
@@ -2857,7 +3131,7 @@ public:
         }
 
         auto const& id = *get<id_expression_node::unqualified>(n.id);
-        auto lookup = source_order_name_lookup(id);
+        auto lookup = source_order_name_lookup(*id.identifier);
 
         if (
             !lookup
@@ -4124,6 +4398,84 @@ public:
     }
 
 
+    auto is_deducible_template_parameter(token const& lookup_id)
+        -> bool
+    {
+        assert( current_declarations.back() );
+        return has_template_parameter_named(*current_declarations.back(), lookup_id)
+               || (
+                   current_declarations.back()->parent_is_type()
+                   && current_declarations.back()->has_name("operator=")
+                   && has_template_parameter_named(*current_declarations.back()->get_parent(), lookup_id)
+                  );
+    }
+
+    auto is_deducible(const type_id_node& n)
+        -> bool
+    {
+        if (auto qual = get_if<type_id_node::qualified>(&n.id)) {
+            return is_deducible(**qual);
+        }
+        else if (auto unqual = get_if<type_id_node::unqualified>(&n.id)) {
+            return is_deducible(**unqual);
+        }
+        return false;
+    }
+
+    auto is_deducible(const id_expression_node& n)
+        -> bool
+    {
+        if (auto qual = get_if<id_expression_node::qualified>(&n.id)) {
+            return is_deducible(**qual);
+        }
+        else if (auto unqual = get_if<id_expression_node::unqualified>(&n.id)) {
+            return is_deducible(**unqual);
+        }
+        return false;
+    }
+
+    auto is_deducible(
+        const unqualified_id_node& n,
+        bool is_first = true)
+        -> bool
+    {
+        // If it's not a _template-id_
+        if (is_first && n.open_angle == source_position{}) {
+            assert(n.identifier);
+            // and it names a deducible template parameter.
+            return is_deducible_template_parameter(*n.identifier);
+        }
+        // If it's a _template-id_
+        if (n.open_angle != source_position{}) {
+            assert(n.identifier);
+            // and any of its template arguments is either
+            return std::any_of(n.template_args.begin(), n.template_args.end(), [&](template_argument const& arg) {
+              if (auto expr = get_if<template_argument::expression>(&arg.arg);
+                  expr && (*expr)->is_id_expression()) {
+                  // a deducible _id-expression_
+                  auto& pid = (*expr)->expr->expr->expr->expr->expr->expr->expr->expr->expr->expr->expr->expr->expr->expr->expr->expr->expr;
+                  if (auto id = get_if<primary_expression_node::id_expression>(&pid)) {
+                      return is_deducible(**id);
+                  }
+              }
+              else if (auto type_id = get_if<template_argument::type_id>(&arg.arg)) {
+                  // or a deducible _type-id_.
+                  return is_deducible(**type_id);
+              }
+              return false;
+         });
+        }
+        return false;
+    }
+
+    auto is_deducible(const qualified_id_node& n)
+        -> bool
+    {
+        assert(n.ids.size() > 0);
+        // Its non-terminal components are non-dependent and
+        // its terminal component is deducible.
+        return !is_dependent(n, true) && is_deducible(*n.ids.back().id);
+    }
     //-----------------------------------------------------------------------
     //
     auto emit(
@@ -4248,7 +4600,7 @@ public:
         auto const& type_id = *std::get<declaration_node::an_object>(n.declaration->type);
 
         if (is_template_parameter) {
-            emit( type_id );
+            emit( type_id, true );
             printer.print_cpp2(" ", type_id.position());
                 printer.print_cpp2( identifier, identifier_pos );
             return;
@@ -4259,50 +4611,7 @@ public:
 
         auto param_type = print_to_string(type_id);
 
-        //  If there are template parameters on this function or its enclosing
-        //  type, see if this parameter's name is an unqualified-id with a
-        //  template parameter name, or mentions a template parameter as a
-        //  template argument
-        auto has_template_parameter_type_named = [](
-            declaration_node const& decl,
-            std::string_view        name
-            )
-            -> bool
-        {
-            if (decl.template_parameters) {
-                for (auto& tparam : decl.template_parameters->parameters)
-                {
-                    assert(
-                        tparam
-                        && tparam->name()
-                    );
-                    //  For now just do a quick string match
-                    auto tparam_name = tparam->name()->to_string();
-                    if (
-                        tparam->declaration->is_type()
-                        && (
-                            name == tparam_name
-                            || name.find("<"+tparam_name) != std::string_view::npos
-                            || name.find(","+tparam_name) != std::string_view::npos
-                        )
-                        )
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        };
-
-        assert( current_declarations.back() );
-        auto is_dependent_parameter_type =
-            has_template_parameter_type_named( *current_declarations.back(), param_type )
-            || (
-                current_declarations.back()->parent_is_type()
-                && current_declarations.back()->has_name("operator=")
-                && has_template_parameter_type_named( *current_declarations.back()->get_parent(), param_type)
-                )
-            ;
+        auto is_deducible_parameter_type = is_deducible(type_id);
 
         //  First any prefix
 
@@ -4315,7 +4624,7 @@ public:
             !is_returns
             && !n.declaration->is_variadic
             && !type_id.is_wildcard()
-            && !is_dependent_parameter_type
+            && !is_deducible_parameter_type
             && !type_id.is_pointer_qualified()
             )
         {
@@ -4337,12 +4646,12 @@ public:
         }
         else if (
             type_id.is_wildcard()
-            || is_dependent_parameter_type
+            || is_deducible_parameter_type
             || n.declaration->is_variadic
             )
         {
             auto name = std::string{"auto"};
-            if (is_dependent_parameter_type) {
+            if (is_deducible_parameter_type) {
                 name = param_type;
             }
             else if (
@@ -4406,7 +4715,7 @@ public:
         if (
             !is_returns
             && !type_id.is_wildcard()
-            && !is_dependent_parameter_type
+            && !is_deducible_parameter_type
             && !type_id.is_pointer_qualified()
             && !n.declaration->is_variadic
             )
@@ -4718,7 +5027,7 @@ public:
             auto& r = std::get<function_type_node::id>(n.returns);
             assert(r.type);
 
-            auto return_type = print_to_string(*r.type);
+            auto return_type = print_to_string(*r.type, true);
 
             if (r.pass == passing_style::forward) {
                 if (r.type->is_wildcard()) {
@@ -5444,7 +5753,7 @@ public:
                         "using "
                             + print_to_string(*n.identifier)
                             + " = "
-                            + print_to_string( *std::get<alias_node::a_type>(a->initializer) )
+                            + print_to_string( *std::get<alias_node::a_type>(a->initializer), true )
                             + ";\n",
                         n.position()
                     );
@@ -5838,7 +6147,7 @@ public:
                     if (decl->has_name("this")) {
                         if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
                             printer.print_cpp2(
-                                separator + " public " + print_to_string(*decl->get_object_type()),
+                                separator + " public " + print_to_string(*decl->get_object_type(), true),
                                 compound_stmt->position()
                             );
                             separator = ",";
@@ -6541,7 +6850,7 @@ public:
             //  Emit "auto" for deduced types (of course)
             if (type->is_wildcard()) {
                 assert(n.initializer);
-                emit( *type, n.position() );
+                emit( *type, false, n.position() );
             }
             //  Otherwise, emit the type
             else {
@@ -6559,7 +6868,7 @@ public:
                     }
                 }
                 printer.preempt_position_push(n.position());
-                emit( *type );
+                emit( *type, n.parent_is_type() );
                 printer.preempt_position_pop();
                 //  one pointer is enough for now, pointer-to-function fun can be later
                 if (
