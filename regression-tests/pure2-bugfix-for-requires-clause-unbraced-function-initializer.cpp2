@@ -1,0 +1,2 @@
+f: <T> () requires std::regular<T> = g(T());
+main: ()                           = { }
