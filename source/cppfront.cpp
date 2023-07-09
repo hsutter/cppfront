@@ -5468,6 +5468,7 @@ public:
                             (
                                 n.is_constructor()
                                 && !n.is_constructor_with_that()
+                                && !contains( current_functions.back().declared_that_functions.assignments_from, n.nth_parameter_type_name(2) )
                                 )
                             )
                         {

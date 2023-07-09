@@ -2058,6 +2058,9 @@ struct function_type_node
         return false;
     }
 
+    auto nth_parameter_type_name(int n) const
+        -> std::string;
+
     auto has_in_parameter_named(std::string_view s) const
         -> bool
     {
@@ -2469,6 +2472,15 @@ public:
         return std::get<a_function>(type)->has_move_parameter_named(s);
     }
 
+    auto nth_parameter_type_name(int n) const
+        -> std::string
+    {
+        if (!is_function()) {
+            return "";
+        }
+        return std::get<a_function>(type)->nth_parameter_type_name(n);
+    }
+
     auto is_global   () const -> bool
         { return !parent_declaration;         }
 
@@ -2864,10 +2876,11 @@ public:
     }
 
     struct declared_that_funcs {
-        declaration_node const* out_this_in_that     = {};
-        declaration_node const* out_this_move_that   = {};
-        declaration_node const* inout_this_in_that   = {};
-        declaration_node const* inout_this_move_that = {};
+        declaration_node const*  out_this_in_that     = {};
+        declaration_node const*  out_this_move_that   = {};
+        declaration_node const*  inout_this_in_that   = {};
+        declaration_node const*  inout_this_move_that = {};
+        std::vector<std::string> assignments_from     = {};
     };
 
     auto find_declared_that_functions() const
@@ -2897,6 +2910,9 @@ public:
                 }
                 if (decl->is_assignment_with_move_that()) {
                     ret.inout_this_move_that = decl;
+                }
+                if (decl->is_assignment() && !decl->is_assignment_with_that()) {
+                    ret.assignments_from.emplace_back( decl->nth_parameter_type_name(2) );
                 }
             }
         }
@@ -3080,6 +3096,18 @@ auto parameter_declaration_node::has_name(std::string_view s) const
     -> bool
 {
     return declaration->has_name(s);
+}
+
+
+auto function_type_node::nth_parameter_type_name(int n) const
+    -> std::string
+{
+    if (std::ssize(parameters->parameters) >= n)
+    {
+        return parameters->parameters[n-1]->declaration->get_object_type()->to_string();
+    }
+    //  Else
+    return "";
 }
 
 
