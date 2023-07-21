@@ -3,6 +3,8 @@
 #include <vector>
 
 main: () -> int = {
+    std::set_terminate(std::abort);
+
     x: std::string;         // note: uninitialized!
 
     if flip_a_coin() {

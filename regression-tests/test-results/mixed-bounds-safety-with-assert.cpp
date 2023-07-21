@@ -14,10 +14,10 @@
 [[nodiscard]] auto main() -> int;
     
 
-#line 7 "mixed-bounds-safety-with-assert.cpp2"
+#line 9 "mixed-bounds-safety-with-assert.cpp2"
 auto print_subrange(auto const& rng, cpp2::in<int> start, cpp2::in<int> end) -> void;
     
-#line 19 "mixed-bounds-safety-with-assert.cpp2"
+#line 21 "mixed-bounds-safety-with-assert.cpp2"
 
 #include <vector>
 #include <span>
@@ -29,6 +29,8 @@ auto print_subrange(auto const& rng, cpp2::in<int> start, cpp2::in<int> end) -> 
 
 #line 2 "mixed-bounds-safety-with-assert.cpp2"
 [[nodiscard]] auto main() -> int{
+    std::set_terminate(std::abort);
+
     std::vector<int> v {1, 2, 3, 4, 5}; 
     print_subrange(std::move(v), 1, 13);
 }
