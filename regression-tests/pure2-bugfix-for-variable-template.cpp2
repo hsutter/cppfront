@@ -1,0 +1,2 @@
+v0: <V: _> const int = 0;
+main: () -> int      = v0<0>;
