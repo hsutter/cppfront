@@ -4163,6 +4163,7 @@ private:
                 term.expr_list = expression_list(term.op);
                 if (!term.expr_list)
                 {
+                    error("[ is not followed by a valid expression list");
                     return {};
                 }
                 if (curr().type() != lexeme::RightBracket)
