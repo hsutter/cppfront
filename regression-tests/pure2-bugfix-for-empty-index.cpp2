@@ -1,0 +1,10 @@
+t: type = {
+  operator[]: (inout this) -> i32 = 1;
+  operator[]: (inout this, x: _) -> i32 = 2;
+  operator[]: (inout this, x: _, y: _) -> i32 = 3;
+}
+main: () = {
+  [[assert: t()[] == 1]]
+  [[assert: t()[1] == 2]]
+  [[assert: t()[1, 2] == 3]]
+}

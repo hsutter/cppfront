@@ -3029,6 +3029,7 @@ public:
                 if (
                     flag_safe_subscripts
                     && i->op->type() == lexeme::LeftBracket
+                    && std::ssize(i->expr_list->expressions) == 1
                     )
                 {
                     suffix.emplace_back( ")", i->op->position() );
@@ -3065,6 +3066,7 @@ public:
                 if (
                     flag_safe_subscripts
                     && i->op->type() == lexeme::LeftBracket
+                    && std::ssize(i->expr_list->expressions) == 1
                     )
                 {
                     prefix.emplace_back( "cpp2::assert_in_bounds(", i->op->position() );
