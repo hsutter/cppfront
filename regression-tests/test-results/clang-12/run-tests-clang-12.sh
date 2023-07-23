@@ -22,4 +22,3 @@ done
 rm -f *.obj *.exp *.lib
 printf "\nDone: %s .cpp tests compiled\n" "$count"
 printf "\n      %s .cpp executables generated and run\n" "$exe_count"
-echo "$(date +"%T")"

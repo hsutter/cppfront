@@ -1024,17 +1024,17 @@ class cppfront
     //  their .epilog, by reference for performance while still having lifetime safety
     struct function_info
     {
-        declaration_node const*               decl                    = {};
-        declaration_node::declared_that_funcs declared_that_functions = {};
-        function_prolog                       prolog                  = {};
-        std::vector<std::string>              epilog                  = {};
+        declaration_node const*                    decl                         = {};
+        declaration_node::declared_value_set_funcs declared_value_set_functions = {};
+        function_prolog                            prolog                       = {};
+        std::vector<std::string>                   epilog                       = {};
 
         function_info(
             declaration_node const* decl_,
-            declaration_node::declared_that_funcs declared_that_functions_
+            declaration_node::declared_value_set_funcs declared_value_set_functions_
         )
             : decl{decl_}
-            , declared_that_functions{declared_that_functions_}
+            , declared_value_set_functions{declared_value_set_functions_}
         { }
     };
     class current_functions_
@@ -1043,7 +1043,7 @@ class cppfront
     public:
         auto push(
             declaration_node const*               decl,
-            declaration_node::declared_that_funcs thats
+            declaration_node::declared_value_set_funcs thats
         ) {
             list.emplace_back(decl, thats);
         }
@@ -5294,7 +5294,7 @@ public:
 
             current_functions.push(
                 &n,
-                n.find_parent_declared_that_functions()
+                n.find_parent_declared_value_set_functions()
                 );
             auto guard = finally([&]{ current_functions.pop(); });
 
@@ -5443,8 +5443,8 @@ public:
                             //  A1) This is '(out   this, that)'
                             //      and no  '(inout this, that)' was written by the user
                             (
-                                &n == current_functions.back().declared_that_functions.out_this_in_that
-                                && !current_functions.back().declared_that_functions.inout_this_in_that
+                                &n == current_functions.back().declared_value_set_functions.out_this_in_that
+                                && !current_functions.back().declared_value_set_functions.inout_this_in_that
                                 )
                             ||
                             //  A2) This is '(out   this, move that)'
@@ -5459,16 +5459,16 @@ public:
                             //      assignment than like move construction, because assignments are designed
                             //      structurally to set the value of an existing 'this' object)
                             (
-                                &n == current_functions.back().declared_that_functions.out_this_move_that
-                                && !current_functions.back().declared_that_functions.inout_this_move_that
-                                && !current_functions.back().declared_that_functions.inout_this_in_that
+                                &n == current_functions.back().declared_value_set_functions.out_this_move_that
+                                && !current_functions.back().declared_value_set_functions.inout_this_move_that
+                                && !current_functions.back().declared_value_set_functions.inout_this_in_that
                                 )
                             ||
                             //  A3) This is '(out   this, something-other-than-that)'
                             (
                                 n.is_constructor()
                                 && !n.is_constructor_with_that()
-                                && !contains( current_functions.back().declared_that_functions.assignments_from, n.nth_parameter_type_name(2) )
+                                && !contains( current_functions.back().declared_value_set_functions.assignments_from, n.nth_parameter_type_name(2) )
                                 )
                             )
                         {
@@ -5483,15 +5483,15 @@ public:
                                 //  M1) This is '(out   this,      that)'
                                 //      and no  '(out   this, move that)' was written by the user
                                 (
-                                    &n == current_functions.back().declared_that_functions.out_this_in_that
-                                    && !current_functions.back().declared_that_functions.out_this_move_that
+                                    &n == current_functions.back().declared_value_set_functions.out_this_in_that
+                                    && !current_functions.back().declared_value_set_functions.out_this_move_that
                                     )
                                 ||
                                 //  M2) This is '(inout this,      that)'
                                 //      and no  '(inout this, move that)' was written by the user
                                 (
-                                    &n == current_functions.back().declared_that_functions.inout_this_in_that
-                                    && !current_functions.back().declared_that_functions.inout_this_move_that
+                                    &n == current_functions.back().declared_value_set_functions.inout_this_in_that
+                                    && !current_functions.back().declared_value_set_functions.inout_this_move_that
                                     )
                                 )
                             {

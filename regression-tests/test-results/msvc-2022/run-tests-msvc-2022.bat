@@ -24,4 +24,3 @@ echo.
 echo Done: %count% .cpp tests compiled
 echo.
 echo.      %exe_count% executables generated and run
-echo %TIME%

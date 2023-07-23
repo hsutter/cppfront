@@ -2875,7 +2875,7 @@ public:
         return false;
     }
 
-    struct declared_that_funcs {
+    struct declared_value_set_funcs {
         declaration_node const*  out_this_in_that     = {};
         declaration_node const*  out_this_move_that   = {};
         declaration_node const*  inout_this_in_that   = {};
@@ -2883,8 +2883,8 @@ public:
         std::vector<std::string> assignments_from     = {};
     };
 
-    auto find_declared_that_functions() const
-        -> declared_that_funcs
+    auto find_declared_value_set_functions() const
+        -> declared_value_set_funcs
     {
         if (!initializer) {
             return {};
@@ -2893,7 +2893,7 @@ public:
         auto compound_stmt = initializer->get_if<compound_statement_node>();
         assert (compound_stmt);
 
-        auto ret = declared_that_funcs{};
+        auto ret = declared_value_set_funcs{};
         for (auto& o : compound_stmt->statements)
         {
             auto decl = o->get_if<declaration_node>();
@@ -2920,11 +2920,11 @@ public:
         return ret;
     }
 
-    auto find_parent_declared_that_functions() const
-        -> declared_that_funcs
+    auto find_parent_declared_value_set_functions() const
+        -> declared_value_set_funcs
     {
         if (parent_is_type()) {
-            return parent_declaration->find_declared_that_functions();
+            return parent_declaration->find_declared_value_set_functions();
         }
         //  else
         return {};

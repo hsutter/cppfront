@@ -128,6 +128,42 @@ compiler_services: @polymorphic_base @copyable type =
     }
 }
 
+/*
+//-----------------------------------------------------------------------
+//
+//  Type IDs
+//
+//-----------------------------------------------------------------------
+//
+
+//  All type_ids are wrappers around a pointer to node
+//
+type_id: @polymorphic_base @copyable type =
+{
+    this: compiler_services = ();
+
+    n: *type_id_node;
+
+    protected operator=: (
+        out this,
+        n_: *type_id_node,
+        s : compiler_services
+    )
+    = {
+        compiler_services = s;
+        n = n_;
+        [[assert: n, "a meta::type_id must point to a valid type_id_node, not null"]]
+    }
+
+    is_wildcard         : (this) -> bool        = n*.is_wildcard();
+    is_pointer_qualified: (this) -> bool        = n*.is_pointer_qualified();
+    template_args_count : (this) -> int         = n*.template_args_count();
+    to_string           : (this) -> std::string = n*.to_string();
+
+    position: (override this) -> source_position = n*.position();
+}
+*/
+
 
 //-----------------------------------------------------------------------
 //
@@ -376,7 +412,7 @@ type_declaration: @copyable type =
         return ret;
     }
 
-    query_declared_that_functions: (this)
+    query_declared_value_set_functions: (this)
         -> (
             out_this_in_that     : bool,
             out_this_move_that   : bool,
@@ -384,7 +420,7 @@ type_declaration: @copyable type =
             inout_this_move_that : bool
             )
     = {
-        declared := n*.find_declared_that_functions();
+        declared := n*.find_declared_value_set_functions();
         out_this_in_that     = declared.out_this_in_that     != nullptr;
         out_this_move_that   = declared.out_this_move_that   != nullptr;
         inout_this_in_that   = declared.inout_this_in_that   != nullptr;
@@ -460,7 +496,7 @@ interface: (inout t: meta::type_declaration) =
     }
 
     if !has_dtor {
-        add_virtual_destructor(t);
+        t.add_virtual_destructor();
     }
 }
 
@@ -504,7 +540,7 @@ polymorphic_base: (inout t: meta::type_declaration) =
     }
 
     if !has_dtor {
-        add_virtual_destructor(t);
+        t.add_virtual_destructor();
     }
 }
 
@@ -603,7 +639,7 @@ copyable: (inout t: meta::type_declaration) =
     //  they must also have written the most general one - we can't
     //  assume we can safely generate it for them since they've opted
     //  into customized semantics
-    smfs := t.query_declared_that_functions();
+    smfs := t.query_declared_value_set_functions();
     if  !smfs.out_this_in_that
         && (
             smfs.out_this_move_that
@@ -628,7 +664,7 @@ copyable: (inout t: meta::type_declaration) =
 //
 basic_value: (inout t: meta::type_declaration) =
 {
-    copyable(t);
+    t.copyable();
 
     has_default_ctor := false;
     for t.get_member_functions() do (inout mf) {
@@ -657,20 +693,20 @@ basic_value: (inout t: meta::type_declaration) =
 //
 value: (inout t: meta::type_declaration) =
 {
-    ordered(t);
-    basic_value(t);
+    t.ordered();
+    t.basic_value();
 }
 
 weakly_ordered_value: (inout t: meta::type_declaration) =
 {
-    weakly_ordered(t);
-    basic_value(t);
+    t.weakly_ordered();
+    t.basic_value();
 }
 
 partially_ordered_value: (inout t: meta::type_declaration) =
 {
-    partially_ordered(t);
-    basic_value(t);
+    t.partially_ordered();
+    t.basic_value();
 }
 
 
@@ -715,6 +751,66 @@ struct: (inout t: meta::type_declaration) =
     }
     t.disable_member_function_generation();
 }
+
+
+/*
+//-----------------------------------------------------------------------
+//
+//     "C enumerations constitute a curiously half-baked concept. ...
+//      the cleanest way out was to deem each enumeration a separate type."
+//
+//          -- Stroustrup (The Design and Evolution of C++, 11.7)
+//
+//     "An enumeration is a distinct type ... with named constants"
+//
+//          -- ISO C++ Standard
+//
+//-----------------------------------------------------------------------
+//
+//  basic_enum
+//
+//  a type together with named constants that are its possible values
+//
+basic_enum: (inout t: meta::type_declaration) =
+{
+    // default the underlying type to int, if not explicitly specified
+    underlying_type := "cpp2::strict_value<i8, t.name()$>";
+
+    //  Make all the user-written members constexpr static, and find the type
+    (copy first := true)
+    for t.get_members() do (inout m)
+    {
+        m.require( m.is_public() && m.is_object(),
+                   "all enumerator members must be public objects");
+
+        if m.is_object() {
+            mo := m.as_object();
+            if !mo.has_wildcard_type() {
+                mo.require( first,
+                            "an explicit underlying type may be specified only on the first member");
+                underlying_type = "cpp2::strict_value<i8, mo.type()$>";
+            }
+            else {
+                // TODO: set type to underlying_type
+            }
+            first = false;
+            mo.make_constexpr();
+            mo.make_static();
+        }
+    }
+
+    //  Generate the value member
+    t.require( t.add_member( "value: " + underlying_type + ";" ),
+                "could not add value member");
+
+    //  Generate the constructor
+    t.require( t.add_member( "operator=: (out this, value_: " + underlying_type + ") = { value = value_; }" ),
+                "could not add constructor");
+
+    //  A basic_enum is-a value
+    t.value();
+}
+*/
 
 
 //=======================================================================

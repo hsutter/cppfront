@@ -29,4 +29,3 @@ echo.      %total_count% total
 if %total_count% NEQ %count% (
     echo.      *** MISMATCH: should equal total tests run
 )
-echo %TIME%
