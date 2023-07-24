@@ -2,6 +2,8 @@
 #include <vector>
 
 main: () -> int = {
+    std::set_terminate(std::abort);
+
     v : std::vector = (1, 2, 3, 4, 5, -999);
     v.pop_back();
     std::cout << v[5] << "\n";

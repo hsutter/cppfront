@@ -1,5 +1,7 @@
 
 main: () -> int = {
+    std::set_terminate(std::abort);
+
     v: std::vector<int> = (1, 2, 3, 4, 5);
     print_subrange(v, 1, 13);
 }
