@@ -692,6 +692,18 @@ auto parser::apply_type_meta_functions( declaration_node& n )
         }
     }
 
+    return true;
+}
+
+auto parser::apply_internal_type_metafunctions( declaration_node& n )
+    -> bool
+{
+    assert(n.is_type());
+
+    //  Get the reflection state ready to pass to the function
+    auto cs = meta::compiler_services{ &errors, generated_tokens };
+    auto rtype = meta::type_declaration{ &n, cs };
+
     // Ensure the initializers of members lowered as bases
     // are used by injecting the default constructor here.
     if (auto res = n.should_add_default_constructor(); res.value) {

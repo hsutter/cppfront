@@ -6266,6 +6266,8 @@ private:
 
     auto apply_type_meta_functions( declaration_node& decl )
         -> bool;
+    auto apply_internal_type_metafunctions( declaration_node& decl )
+        -> bool;
 
 
     //G unnamed-declaration:
@@ -6642,6 +6644,13 @@ private:
                     "error encountered while applying type metafunctions",
                     false, {}, true
                 );
+                return {};
+            }
+            if (!apply_internal_type_metafunctions(*n)) {
+                error(
+                    "error encountered while applying internal type metafunctions",
+                    false, {}, true
+                    );
                 return {};
             }
         }
