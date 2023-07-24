@@ -4128,14 +4128,14 @@ private:
             {
                 auto op  = curr().to_string(true);
                 auto msg = "postfix unary " + op;
-                if      (curr().type() == lexeme::Multiply ) { msg += " (dereference)"         ; }
-                else if (curr().type() == lexeme::Ampersand) { msg += " (address-of)"          ; }
-                else if (curr().type() == lexeme::Tilde    ) { msg += " (unary bit-complement)"; }
+                if      (curr().type() == lexeme::Multiply ) { msg += " (dereference)"          ; }
+                else if (curr().type() == lexeme::Ampersand) { msg += " (address-of)"           ; }
+                else if (curr().type() == lexeme::Tilde    ) { msg += " (unary bit-complement)" ; }
                 msg += " cannot be immediately followed by a (, identifier, or literal - add whitespace before "
                     + op + " here if you meant binary " + op;
-                if      (curr().type() == lexeme::Multiply ) { msg += " (multiplication)"      ; }
-                else if (curr().type() == lexeme::Ampersand) { msg += " (bitwise and)"         ; }
-                else if (curr().type() == lexeme::Tilde    ) { msg += " (binarybit-complement)"; }
+                if      (curr().type() == lexeme::Multiply ) { msg += " (multiplication)"       ; }
+                else if (curr().type() == lexeme::Ampersand) { msg += " (bitwise and)"          ; }
+                else if (curr().type() == lexeme::Tilde    ) { msg += " (binary bit-complement)"; }
 
                 error(msg, false);
                 break;
