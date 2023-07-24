@@ -1526,9 +1526,7 @@ struct args_t : std::vector<std::string_view>
 inline auto make_args(int argc, char const* const* argv) -> args_t
 {
     auto ret = args_t{argc, argv};
-    for (auto i = 0; i < argc; ++i) {
-        ret[i] = std::string_view{argv[i]};
-    }
+    std::copy(argv, argv + argc, ret.data());
     return ret;
 }
 
