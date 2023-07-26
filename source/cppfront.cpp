@@ -197,7 +197,7 @@ class positional_printer
     std::vector<comment> const* pcomments       = {}; // Cpp2 comments data
     source const*               psource         = {};
     parser const*               pparser         = {};
-                                                
+
     source_position curr_pos                    = {}; // current (line,col) in output
     lineno_t        generated_pos_line          = {}; // current line in generated output
     int             last_line_indentation       = {};
@@ -1226,7 +1226,7 @@ public:
 
         //---------------------------------------------------------------------
         //  Do lowered file prolog
-        // 
+        //
         //  Only emit extra lines if we actually have Cpp2, because
         //  we want pure-Cpp1 files to pass through with zero changes
         if (source.has_cpp2())
@@ -1284,7 +1284,7 @@ public:
             }
         }
 
-        
+
         //---------------------------------------------------------------------
         //  Do phase1_type_defs_func_decls
         //
@@ -1641,7 +1641,7 @@ public:
         {
             add_move = false;
         }
-    
+
         if (
             emitting_move_that_function
             && *n.identifier == "that"
@@ -1911,10 +1911,6 @@ public:
         for (auto first = true; auto&& alt : n.alternatives)
         {
             assert(alt && alt->is_as_keyword);
-            if (!first) {
-                printer.print_cpp2("else ", alt->position());
-            }
-            first = false;
 
             auto id = std::string{};
             printer.emit_to_string(&id);
@@ -1938,64 +1934,46 @@ public:
             {
                 //  Stringize the expression-statement now...
                 auto statement = std::string{};
+                if (is_expression) {
+                    statement = "return ";
+                }
                 printer.emit_to_string(&statement);
                 emit(*alt->statement);
                 printer.emit_to_string();
-                //  ... and jettison the final ; for an expression-statement
-                while (
-                    !statement.empty()
-                    && (
-                        statement.back() == ';'
-                        || isspace(statement.back())
-                        )
-                    )
-                {
-                    statement.pop_back();
-                }
 
                 replace_all( statement, "cpp2::as_<", "cpp2::as<" );
 
-                //  If this is an inspect-expression, we'll have to wrap each alternative
-                //  in an 'if constexpr' so that its type is ignored for mismatches with
-                //  the inspect-expression's type
-                auto return_prefix = std::string{};
-                auto return_suffix = std::string{";"};   // use this to tack the ; back on in the alternative body
-                if (is_expression) {
-                    return_prefix = "{ if constexpr( requires{" + statement + ";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((" + statement + "))," + result_type + "> ) return ";
-                    return_suffix += " }";
-                }
 
                 if (id == "auto") {
                     found_wildcard = true;
-                    if (is_expression) {
-                        printer.print_cpp2("return ", alt->position());
-                    }
+                    printer.print_cpp2(statement, alt->position());
                 }
                 else {
-                    printer.print_cpp2("if " + constexpr_qualifier, alt->position());
+                    auto is_expression = std::string{};
                     if (alt->type_id) {
-                        printer.print_cpp2("(cpp2::is<" + id + ">(__expr)) ", alt->position());
+                        is_expression = "cpp2::is<" + id + ">(__expr)";
                     }
                     else {
                         assert (alt->value);
-                        printer.print_cpp2("(cpp2::is(__expr, " + id + ")) ", alt->position());
+                        is_expression = "cpp2::is(__expr, " + id + ")";
                     }
-                    printer.print_cpp2(return_prefix, alt->position());
+
+                    printer.print_cpp2("if constexpr (requires { ", alt->position());
+                    printer.print_cpp2(is_expression, alt->position());
+                    printer.print_cpp2("; }) { if constexpr (!std::is_same_v<decltype(", alt->position());
+                    printer.print_cpp2(is_expression, alt->position());
+                    printer.print_cpp2("), std::false_type>) { if constexpr (std::is_same_v<decltype(", alt->position());
+                    printer.print_cpp2(is_expression, alt->position());
+                    printer.print_cpp2("), std::true_type>) { ", alt->position());
+                    printer.print_cpp2(statement, alt->position());
+                    printer.print_cpp2(" } else { if ", alt->position());
+                    printer.print_cpp2(constexpr_qualifier, alt->position());
+                    printer.print_cpp2("(", alt->position());
+                    printer.print_cpp2(is_expression, alt->position());
+                    printer.print_cpp2(") { ", alt->position());
+                    printer.print_cpp2(statement, alt->position());
+                    printer.print_cpp2(" } } } }", alt->position());
                 }
-
-                printer.print_cpp2(statement, alt->position());
-
-                if (
-                    is_expression
-                    && id != "auto"
-                    )
-                {
-                    assert(alt->statement->is_expression());
-                    printer.print_cpp2("; else return " + result_type + "{}", alt->position());
-                    printer.print_cpp2("; else return " + result_type + "{}", alt->position());
-                }
-
-                printer.print_cpp2(return_suffix, alt->position());
             }
             else {
                 errors.emplace_back(
@@ -2015,9 +1993,7 @@ public:
                 return;
             }
         }
-        else {
-            printer.print_cpp2("}", n.close_brace);
-        }
+        printer.print_cpp2("}", n.close_brace);
 
         //  If this is an expression, finally actually invoke the lambda
         if (is_expression) {
@@ -2253,7 +2229,7 @@ public:
                     return;
                 } else if (
                     is_literal(tok->type()) || n.expression->expr->is_result_a_temporary_variable()
-                ) 
+                )
                 {
                     errors.emplace_back(
                         n.position(),
@@ -2545,7 +2521,7 @@ public:
     )
         -> bool
     {
-        if (!fun_node) { 
+        if (!fun_node) {
             return false;
         }
         if (addr_cnt > deref_cnt) {
@@ -2572,11 +2548,11 @@ public:
     )
         -> bool
     {
-        if (!type_id_node) { 
+        if (!type_id_node) {
             return false;
         }
         if (addr_cnt > deref_cnt) {
-            return true; 
+            return true;
         }
 
         if ( type_id_node->dereference_of ) {
@@ -2753,7 +2729,7 @@ public:
             {
                 auto& unqual = std::get<id_expression_node::unqualified>(id->id);
                 assert(unqual);
-                //  TODO: Generalize this: 
+                //  TODO: Generalize this:
                 //        - we don't recognize pointer types from Cpp1
                 //        - we don't deduce pointer types from parameter_declaration_list_node
                 if ( is_pointer_declaration(unqual->identifier) ) {
@@ -4817,7 +4793,7 @@ public:
         }
 
         //  If this is a generated declaration (negative source line number),
-        //  add a line break before 
+        //  add a line break before
         if (
             printer.get_phase() == printer.phase2_func_defs
             && n.position().lineno < 1
@@ -5453,7 +5429,7 @@ public:
                             //  A2) This is '(out   this, move that)'
                             //      and no  '(inout this, move that)' was written by the user
                             //  (*) and no  '(inout this,      that)' was written by the user (*)
-                            //  
+                            //
                             //  (*) This third test is to tie-break M2 and A2 in favor of M2. Both M2 and A2
                             //      can generate a missing '(inout this, move that)', and if we have both
                             //      options then we should prefer to use M2 (generate move assignment from
@@ -5640,7 +5616,7 @@ public:
                 printer.preempt_position_push( n.equal_sign );
 
                 //  *** NOTE =====================================================
-                // 
+                //
                 //      This branch to emit the requires-clause should maybe be
                 //      moved to location (A) above, so that it's also emitted
                 //      on the function declaration. But moving it to (A) triggers
@@ -5648,14 +5624,14 @@ public:
                 //      break using a 'forward' parameter of a concrete type and
                 //      also explicitly user-written requires-clauses that do
                 //      similar decltype tests.
-                // 
+                //
                 //      I don't want to neednessly break compatibility with a
                 //      decently conforming C++20 compiler that works well for
                 //      everything else that Cpp2 needs from C++20. If the
                 //      'requires' down here doesn't cause a problem, I'll keep
                 //      it here for now... if we do encounter a reason it needs to
                 //      also be on the declaration, move this code to (A).
-                // 
+                //
                 //  Handle requires clause - an explicit one the user wrote,
                 //  and/or any conditions we generated while processing the
                 //  parameters (i.e., forwarding a concrete type)
