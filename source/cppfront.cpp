@@ -5545,11 +5545,47 @@ public:
                 }
             }
 
-            //  *** LOCATION (A) -- SEE NOTE REGARDING (A) BELOW
+            auto const emit_requires_clause = [&]() {
+                if (
+                    n.requires_clause_expression
+                    || !function_requires_conditions.empty()
+                    )
+                {
+                    printer.print_extra("\n");
+                    printer.ignore_alignment( true, n.position().colno + 4 );
+                    if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
+                        // Workaround GCC 10 not supporting requires in forward declarations in some cases.
+                        // See commit 5a0d77f8e297902c0b9712c5aafb6208cfa4c139.
+                        printer.print_extra("CPP2_REQUIRES (");
+                    }
+                    else {
+                        printer.print_extra("requires (");
+                    }
+
+                    if (n.requires_clause_expression) {
+                        emit(*n.requires_clause_expression);
+                        if (!function_requires_conditions.empty()) {
+                            printer.print_extra(" && ");
+                        }
+                    }
+
+                    if (!function_requires_conditions.empty()) {
+                        printer.print_extra(function_requires_conditions.front());
+                        for (auto it = std::cbegin(function_requires_conditions)+1; it != std::cend(function_requires_conditions); ++it) {
+                            printer.print_extra(" && " + *it);
+                        }
+                    }
+
+                    printer.print_extra(")");
+                    function_requires_conditions = {};
+                    printer.ignore_alignment( false );
+                }
+            };
 
             //  If we're only emitting declarations, end the function declaration
             if (printer.get_phase() == printer.phase1_type_defs_func_decls)
             {
+                emit_requires_clause();
                 printer.print_cpp2( ";\n", n.position() );
                 //  Note: Not just early "return;" here because we may need to
                 //  recurse to emit the generated operator= declarations too,
@@ -5639,54 +5675,7 @@ public:
 
                 printer.preempt_position_push( n.equal_sign );
 
-                //  *** NOTE =====================================================
-                // 
-                //      This branch to emit the requires-clause should maybe be
-                //      moved to location (A) above, so that it's also emitted
-                //      on the function declaration. But moving it to (A) triggers
-                //      a bug in GCC 10.x (that was fixed in 11.x), where it would
-                //      break using a 'forward' parameter of a concrete type and
-                //      also explicitly user-written requires-clauses that do
-                //      similar decltype tests.
-                // 
-                //      I don't want to neednessly break compatibility with a
-                //      decently conforming C++20 compiler that works well for
-                //      everything else that Cpp2 needs from C++20. If the
-                //      'requires' down here doesn't cause a problem, I'll keep
-                //      it here for now... if we do encounter a reason it needs to
-                //      also be on the declaration, move this code to (A).
-                // 
-                //  Handle requires clause - an explicit one the user wrote,
-                //  and/or any conditions we generated while processing the
-                //  parameters (i.e., forwarding a concrete type)
-                if (
-                    n.requires_clause_expression
-                    || !function_requires_conditions.empty()
-                    )
-                {
-                    printer.print_extra("\n");
-                    printer.ignore_alignment( true, n.position().colno + 4 );
-                    printer.print_extra("requires (");
-
-                    if (n.requires_clause_expression) {
-                        emit(*n.requires_clause_expression);
-                        if (!function_requires_conditions.empty()) {
-                            printer.print_extra(" && ");
-                        }
-                    }
-
-                    if (!function_requires_conditions.empty()) {
-                        printer.print_extra(function_requires_conditions.front());
-                        for (auto it = std::cbegin(function_requires_conditions)+1; it != std::cend(function_requires_conditions); ++it) {
-                            printer.print_extra(" && " + *it);
-                        }
-                    }
-
-                    printer.print_extra(")");
-                    function_requires_conditions = {};
-                    printer.ignore_alignment( false );
-                }
-                //  *** END NOTE =================================================
+                emit_requires_clause();
 
                 emit(
                     *n.initializer,

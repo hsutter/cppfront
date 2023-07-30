@@ -23,7 +23,10 @@ auto parameter_styles(
     std::string& c, 
     std::string&& d, 
     auto&& e
-    ) -> void;
+    ) -> void
+CPP2_REQUIRES (std::is_same_v<CPP2_TYPEOF(e), std::string>)
+#line 8 "mixed-parameter-passing-with-forward.cpp2"
+;
 
 #line 42 "mixed-parameter-passing-with-forward.cpp2"
 [[nodiscard]] auto main() -> int;
