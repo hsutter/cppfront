@@ -721,7 +721,7 @@ struct postfix_expression_node
         if (ops.empty()) {
             return false;
         } else {
-            return (ops.front().op->type() == lexeme::Ampersand 
+            return (ops.front().op->type() == lexeme::Ampersand
                     || ops.front().op->type() == lexeme::Tilde);
         }
     }
@@ -1044,6 +1044,13 @@ struct type_id_node
             }
         }
         return false;
+    }
+
+    auto is_concept() const
+        -> bool
+    {
+        auto tok = get_token();
+        return tok && *tok == "concept";
     }
 
     auto template_args_count() const
@@ -2488,6 +2495,8 @@ public:
         { return type.index() == a_function;  }
     auto is_object   () const -> bool
         { return type.index() == an_object;   }
+    auto is_concept  () const -> bool
+        { return type.index() == an_object && get<an_object>(type)->is_concept();   }
     auto is_type     () const -> bool
         { return type.index() == a_type;      }
     auto is_namespace() const -> bool
@@ -3993,7 +4002,7 @@ private:
             //      || curr().type() == lexeme::LeftBrace
             )
         {
-            bool inside_initializer = ( 
+            bool inside_initializer = (
                 peek(-1) && peek(-1)->type() == lexeme::Assignment
             );
             auto open_paren = &curr();
@@ -4015,12 +4024,12 @@ private:
             next();
             if (
                    curr().type() != lexeme::Semicolon
-                && curr().type() != lexeme::RightParen 
-                && curr().type() != lexeme::RightBracket 
+                && curr().type() != lexeme::RightParen
+                && curr().type() != lexeme::RightBracket
                 && curr().type() != lexeme::Comma
             ) {
                 expr_list->inside_initializer = false;
-            } 
+            }
             n->expr = std::move(expr_list);
             return n;
         }
@@ -4374,7 +4383,7 @@ private:
     //G     shift-expression '<<' additive-expression
     //G     shift-expression '>>' additive-expression
     //G
-    auto shift_expression(bool allow_angle_operators = true) 
+    auto shift_expression(bool allow_angle_operators = true)
         -> auto
     {
         if (allow_angle_operators) {
@@ -4409,7 +4418,7 @@ private:
     //G     shift-expression
     //G     compare-expression '<=>' shift-expression
     //G
-    auto compare_expression(bool allow_angle_operators = true) 
+    auto compare_expression(bool allow_angle_operators = true)
         -> auto
     {
         return binary_expression<compare_expression_node> (
@@ -4425,7 +4434,7 @@ private:
     //G     relational-expression '<=' compare-expression
     //G     relational-expression '>=' compare-expression
     //G
-    auto relational_expression(bool allow_angle_operators = true) 
+    auto relational_expression(bool allow_angle_operators = true)
         -> auto
     {
         if (allow_angle_operators) {
@@ -4457,7 +4466,7 @@ private:
     //G     equality-expression '==' relational-expression
     //G     equality-expression '!=' relational-expression
     //G
-    auto equality_expression(bool allow_angle_operators = true) 
+    auto equality_expression(bool allow_angle_operators = true)
         -> auto
     {
         return binary_expression<equality_expression_node> (
@@ -4470,7 +4479,7 @@ private:
     //G     equality-expression
     //G     bit-and-expression '&' equality-expression
     //G
-    auto bit_and_expression(bool allow_angle_operators = true) 
+    auto bit_and_expression(bool allow_angle_operators = true)
         -> auto
     {
         return binary_expression<bit_and_expression_node> (
@@ -4483,7 +4492,7 @@ private:
     //G     bit-and-expression
     //G     bit-xor-expression '^' bit-and-expression
     //G
-    auto bit_xor_expression(bool allow_angle_operators = true) 
+    auto bit_xor_expression(bool allow_angle_operators = true)
         -> auto
     {
         return binary_expression<bit_xor_expression_node> (
@@ -4496,7 +4505,7 @@ private:
     //G     bit-xor-expression
     //G     bit-or-expression '|' bit-xor-expression
     //G
-    auto bit_or_expression(bool allow_angle_operators = true) 
+    auto bit_or_expression(bool allow_angle_operators = true)
         -> auto
     {
         return binary_expression<bit_or_expression_node> (
@@ -4509,7 +4518,7 @@ private:
     //G     bit-or-expression
     //G     logical-and-expression '&&' bit-or-expression
     //G
-    auto logical_and_expression(bool allow_angle_operators = true) 
+    auto logical_and_expression(bool allow_angle_operators = true)
         -> auto
     {
         return binary_expression<logical_and_expression_node> (
@@ -4524,7 +4533,7 @@ private:
     //G     logical-and-expression
     //G     logical-or-expression '||' logical-and-expression
     //G
-    auto logical_or_expression(bool allow_angle_operators = true) 
+    auto logical_or_expression(bool allow_angle_operators = true)
         -> auto
     {
         return binary_expression<logical_or_expression_node> (
@@ -4842,7 +4851,7 @@ private:
 
             n->open_angle = curr().position();
             next();
-            
+
             auto term = unqualified_id_node::term{};
 
             do {
@@ -6413,7 +6422,7 @@ private:
             }
             assert (n->is_type());
         }
-        
+
         //  Or a function type, declaring a function - and tell the function whether it's in a user-defined type
         else if (auto t = function_type(n.get(), named))
         {
@@ -6561,11 +6570,11 @@ private:
                 )
             {
                 auto& type = std::get<declaration_node::an_object>(n->type);
-                // object initialized by the address of the curr() object 
+                // object initialized by the address of the curr() object
                 if (peek(1)->type() == lexeme::Ampersand) {
                     type->address_of = &curr();
                 }
-                // object initialized by (potentially multiple) dereference of the curr() object 
+                // object initialized by (potentially multiple) dereference of the curr() object
                 else if (peek(1)->type() == lexeme::Multiply) {
                     type->dereference_of = &curr();
                     for (int i = 1; peek(i)->type() == lexeme::Multiply; ++i)
@@ -6770,7 +6779,7 @@ private:
                 return {};
             }
             if (
-                t->is_wildcard() 
+                t->is_wildcard()
                 || ( t->get_token() && t->get_token()->to_string(true) == "auto" )
             ) {
                 errors.emplace_back(
