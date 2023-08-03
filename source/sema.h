@@ -1216,7 +1216,19 @@ public:
         }
 
         if (
-            n.access != accessibility::default_
+            n.is_export()
+            && !n.parent_is_namespace()
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "an export declaration is only allowed at namespace scope"
+            );
+            return false;
+        }
+        else if (
+            !n.is_export()
+            && !n.is_default_access()
             && !n.parent_is_type()
             )
         {
@@ -1564,7 +1576,7 @@ public:
             //  Skip type scope (member) variables
             && !(n.parent_is_type() && n.is_object())
             //  Skip unnamed variables
-            && n.identifier 
+            && n.identifier
             //  Skip non-out parameters
             && (
                 !inside_parameter_list
