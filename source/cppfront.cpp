@@ -1223,6 +1223,70 @@ public:
         //  Generate a reasonable macroized name
         auto cpp1_FILENAME = to_upper_and_underbar(cpp1_filename);
 
+        lineno_t curr_lineno = 0;
+        auto hpp_includes = std::string{};
+
+        auto print_cpp2util = [&]() {
+            if (!tokens.get_map().empty()) {
+                printer.print_extra( "\n#include \"cpp2util.h\"\n\n" );
+            }
+        };
+
+        auto emit_cpp1_line = [&](auto const& line) {
+            if (
+                source.has_cpp2()
+                && line.cat == source_line::category::empty
+                )
+            {
+                ++ret.cpp2_lines;
+            }
+            else
+            {
+                ++ret.cpp1_lines;
+            }
+
+            if (
+                flag_cpp2_only
+                && !line.text.empty()
+                && line.cat != source_line::category::comment
+                && line.cat != source_line::category::module_directive
+                && line.cat != source_line::category::module_declaration
+                && line.cat != source_line::category::import
+                )
+            {
+                if (line.cat == source_line::category::preprocessor) {
+                    if (!line.text.ends_with(".h2\"")) {
+                        errors.emplace_back(
+                            source_position(curr_lineno, 1),
+                            "pure-cpp2 switch disables the preprocessor, including #include (except of .h2 files) - use import instead (note: 'import std;' is implicit in -pure-cpp2)"
+                        );
+                        return false;
+                    }
+                }
+                else {
+                    errors.emplace_back(
+                        source_position(curr_lineno, 1),
+                        "pure-cpp2 switch disables Cpp1 syntax"
+                    );
+                    return false;
+                }
+            }
+
+            if (
+                line.cat == source_line::category::preprocessor
+                && line.text.ends_with(".h2\"")
+                )
+            {
+                //  Strip off the 2"
+                auto h_include = line.text.substr(0, line.text.size()-2);
+                printer.print_cpp1( h_include + "\"", curr_lineno );
+                hpp_includes += h_include + "pp\"\n";
+            }
+            else {
+                printer.print_cpp1( line.text, curr_lineno );
+            }
+            return true;
+        };
 
         //---------------------------------------------------------------------
         //  Do lowered file prolog
@@ -1237,23 +1301,62 @@ public:
                 printer.print_extra( "#define " + cpp1_FILENAME+"__CPP2" + "\n\n" );
             }
 
-            if (flag_use_source_location) {
-                printer.print_extra( "#define CPP2_USE_SOURCE_LOCATION Yes\n" );
+            auto print_cpp2util_prolog = [&]() {
+                if (flag_use_source_location) {
+                    printer.print_extra( "#define CPP2_USE_SOURCE_LOCATION Yes\n" );
+                }
+                if (flag_cpp2_only) {
+                    printer.print_extra( "#define CPP2_USE_MODULES         Yes\n" );
+                }
+                if (flag_no_exceptions) {
+                    printer.print_extra( "#define CPP2_NO_EXCEPTIONS       Yes\n" );
+                }
+                if (flag_no_rtti) {
+                    printer.print_extra( "#define CPP2_NO_RTTI             Yes\n" );
+                }
+            };
+
+            auto printed_module_directive = false;
+
+            if (source.is_module()) {
+                if (!source.has_module_directive())
+                {
+                    printer.print_extra( "module;\n" );
+                    printed_module_directive = true;
+                    print_cpp2util_prolog();
+                    print_cpp2util();
+                }
+            } else {
+                print_cpp2util_prolog();
             }
-            if (flag_cpp2_only) {
-                printer.print_extra( "#define CPP2_USE_MODULES         Yes\n" );
-            }
-            if (flag_no_exceptions) {
-                printer.print_extra( "#define CPP2_NO_EXCEPTIONS       Yes\n" );
-            }
-            if (flag_no_rtti) {
-                printer.print_extra( "#define CPP2_NO_RTTI             Yes\n" );
+
+            // Module lines.
+            for (auto const& line : source.get_module_lines())
+            {
+                //  Skip dummy line we added to make 0-vs-1-based offsets readable
+                if (curr_lineno != 0)
+                {
+                    assert(line.cat != source_line::category::cpp2);
+
+                    if (!emit_cpp1_line(line)) {
+                        return {};
+                    }
+
+                    if (
+                        !printed_module_directive
+                        && line.cat == source_line::category::module_directive
+                        )
+                    {
+                        printed_module_directive = true;
+                        print_cpp2util_prolog();
+                        print_cpp2util();
+                    }
+                }
+                ++curr_lineno;
             }
         }
 
         auto map_iter = tokens.get_map().cbegin();
-        auto hpp_includes = std::string{};
-
 
         //---------------------------------------------------------------------
         //  Do phase0_type_decls
@@ -1267,9 +1370,8 @@ public:
             printer.print_extra( "\n//=== Cpp2 type declarations ====================================================\n\n" );
         }
 
-        if (!tokens.get_map().empty())
-        {
-            printer.print_extra( "\n#include \"cpp2util.h\"\n\n" );
+        if (!source.is_module()) {
+            print_cpp2util();
         }
 
         for (auto& section : tokens.get_map())
@@ -1300,66 +1402,15 @@ public:
         }
 
         assert (printer.get_phase() == positional_printer::phase1_type_defs_func_decls);
-        for (
-            lineno_t curr_lineno = 0;
-            auto const& line : source.get_lines()
-            )
+        for (auto const& line : source.get_non_module_lines())
         {
             //  Skip dummy line we added to make 0-vs-1-based offsets readable
             if (curr_lineno != 0)
             {
                 //  If it's a Cpp1 line, emit it
-                if (line.cat != source_line::category::cpp2)
-                {
-                    if (
-                        source.has_cpp2()
-                        && line.cat == source_line::category::empty
-                        )
-                    {
-                        ++ret.cpp2_lines;
-                    }
-                    else
-                    {
-                        ++ret.cpp1_lines;
-                    }
-
-                    if (
-                        flag_cpp2_only
-                        && !line.text.empty()
-                        && line.cat != source_line::category::comment
-                        && line.cat != source_line::category::import
-                        )
-                    {
-                        if (line.cat == source_line::category::preprocessor) {
-                            if (!line.text.ends_with(".h2\"")) {
-                                errors.emplace_back(
-                                    source_position(curr_lineno, 1),
-                                    "pure-cpp2 switch disables the preprocessor, including #include (except of .h2 files) - use import instead (note: 'import std;' is implicit in -pure-cpp2)"
-                                );
-                                return {};
-                            }
-                        }
-                        else {
-                            errors.emplace_back(
-                                source_position(curr_lineno, 1),
-                                "pure-cpp2 switch disables Cpp1 syntax"
-                            );
-                            return {};
-                        }
-                    }
-
-                    if (
-                        line.cat == source_line::category::preprocessor
-                        && line.text.ends_with(".h2\"")
-                        )
-                    {
-                        //  Strip off the 2"
-                        auto h_include = line.text.substr(0, line.text.size()-2);
-                        printer.print_cpp1( h_include + "\"", curr_lineno );
-                        hpp_includes += h_include + "pp\"\n";
-                    }
-                    else {
-                        printer.print_cpp1( line.text, curr_lineno );
+                if (line.cat != source_line::category::cpp2) {
+                    if (!emit_cpp1_line(line)) {
+                        return {};
                     }
                 }
 

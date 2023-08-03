@@ -48,7 +48,7 @@ struct source_line
 {
     std::string text;
 
-    enum class category { empty, preprocessor, comment, import, cpp1, cpp2, rawstring };
+    enum class category { empty, preprocessor, comment, module_directive, module_declaration, import, cpp1, cpp2, rawstring };
     category cat;
 
     bool all_tokens_are_densely_spaced = true; // to be overridden in lexing if they're not
@@ -73,13 +73,15 @@ struct source_line
         -> std::string
     {
         switch (cat) {
-        break;case category::empty:         return "/*   */ ";
-        break;case category::preprocessor:  return "/* # */ ";
-        break;case category::comment:       return "/* / */ ";
-        break;case category::import:        return "/* i */ ";
-        break;case category::cpp1:          return "/* 1 */ ";
-        break;case category::cpp2:          return "/* 2 */ ";
-        break;case category::rawstring:     return "/* R */ ";
+        break;case category::empty:              return "/*   */ ";
+        break;case category::preprocessor:       return "/* # */ ";
+        break;case category::comment:            return "/* / */ ";
+        break;case category::module_directive:   return "/* m#*/ ";
+        break;case category::module_declaration: return "/* m */ ";
+        break;case category::import:             return "/* i */ ";
+        break;case category::cpp1:               return "/* 1 */ ";
+        break;case category::cpp2:               return "/* 2 */ ";
+        break;case category::rawstring:          return "/* R */ ";
         break;default: assert(!"illegal category"); abort();
         }
     }
@@ -127,7 +129,7 @@ struct string_parts {
 
     string_parts(const std::string& beginseq,
                  const std::string& endseq,
-                 adds_sequences     strateg) 
+                 adds_sequences     strateg)
      : begin_seq{beginseq}
      , end_seq{endseq}
      , strategy{strateg}
@@ -144,16 +146,16 @@ struct string_parts {
     void clear() { parts.clear(); }
 
     auto generate() const -> std::string {
-        
-        if (parts.empty()) { 
-            return (strategy & on_the_beginning ? begin_seq : std::string{}) 
-                 + (strategy & on_the_end ? end_seq : std::string{}); 
+
+        if (parts.empty()) {
+            return (strategy & on_the_beginning ? begin_seq : std::string{})
+                 + (strategy & on_the_end ? end_seq : std::string{});
         }
 
-        auto result = std::visit(begin_visit{begin_seq, strategy}, 
+        auto result = std::visit(begin_visit{begin_seq, strategy},
                                  parts.front());
 
-        if (std::ssize(parts) > 1) { 
+        if (std::ssize(parts) > 1) {
             auto it1 = parts.cbegin();
             auto it2 = parts.cbegin()+1;
             for(;it2 != parts.cend(); ++it1, ++it2) {

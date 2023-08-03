@@ -23,6 +23,8 @@
 #include <ostream>
 #include <iterator>
 #include <cctype>
+#include <cstddef>
+#include <span>
 
 
 namespace cpp2 {
@@ -107,29 +109,35 @@ auto is_preprocessor(
 
 
 //---------------------------------------------------------------------------
-//  starts_with_import: returns whether the line starts with "import"
+//  starts_with_tokens: returns whether the line starts with the tokens
 //
 //  line    current line being processed
 //
-auto starts_with_import(std::string const& line)
+auto starts_with_tokens(std::string const& line, std::initializer_list<std::string_view> const tokens)
     -> bool
 {
     auto i = 0;
 
-    //  find first non-whitespace character
-    if (!move_next(line, i, isspace)) {
-        return false;
+    for (auto token: tokens) {
+        //  find first non-whitespace character
+        if (!move_next(line, i, isspace)) {
+            return false;
+        }
+
+        // now must begin with the token
+        if (!std::string_view(line).substr(i).starts_with(token)) {
+            return false;
+        }
+
+        // and not be immediately followed by an _identifier-continue_
+        if (is_identifier_continue(line[i + token.size()])) {
+            return false;
+        }
+
+        i += token.size();
     }
 
-    static constexpr auto import_keyword = std::string_view{"import"};
-
-    // the first token must begin with 'import'
-    if (!std::string_view(line).substr(i).starts_with(import_keyword)) {
-        return false;
-    }
-
-    // and not be immediately followed by an _identifier-continue_
-    return !is_identifier_continue(line[i + import_keyword.size()]);
+    return true;
 }
 
 
@@ -300,6 +308,9 @@ auto starts_with_identifier_colon(std::string const& line)
     }
     else if (s.starts_with("private")) {
         j += 7;
+    }
+    else if (s.starts_with("export")) {
+      j += 6;
     }
     while (
         j < std::ssize(s)
@@ -623,7 +634,7 @@ auto process_cpp_line(
                             }
                         }
                     }
-                    
+
                 break;case '\"':
                     //  If this isn't an escaped quote, toggle string literal state
                     if (
@@ -772,8 +783,10 @@ class source
 {
     std::vector<error_entry>& errors;
     std::vector<source_line>  lines;
-    bool                      cpp1_found = false;
-    bool                      cpp2_found = false;
+    std::ptrdiff_t            module_lines           = 0;
+    bool                      module_directive_found = false;
+    bool                      cpp1_found             = false;
+    bool                      cpp2_found             = false;
 
     static const int max_line_len = 90'000;
         //  do not reduce this - I encountered an 80,556-char
@@ -797,8 +810,26 @@ public:
 
 
     //-----------------------------------------------------------------------
+    //  is_module: Returns true if this file is a module unit
+    //  (note: module, export, and import lines don't count toward Cpp1 or Cpp2)
+    //
+    auto is_module() const -> bool {
+        return module_lines != 0;
+    }
+
+
+    //-----------------------------------------------------------------------
+    //  has_module_directive: Returns true if this file has a module directive
+    //  (note: module, export, and import lines don't count toward Cpp1 or Cpp2)
+    //
+    auto has_module_directive() const -> bool {
+        return module_directive_found;
+    }
+
+
+    //-----------------------------------------------------------------------
     //  has_cpp1: Returns true if this file has some Cpp1/preprocessor lines
-    //            (note: import lines don't count toward Cpp1 or Cpp2)
+    //  (note: module, export, and import lines don't count toward Cpp1 or Cpp2)
     //
     auto has_cpp1() const -> bool {
         return cpp1_found;
@@ -807,7 +838,7 @@ public:
 
     //-----------------------------------------------------------------------
     //  has_cpp2: Returns true if this file has some Cpp2 lines
-    //            (note: import lines don't count toward Cpp1 or Cpp2)
+    //  (note: module, export, and import lines don't count toward Cpp1 or Cpp2)
     //
     auto has_cpp2() const -> bool {
         return cpp2_found;
@@ -923,11 +954,23 @@ public:
                     }
                 }
 
-                //  Else still in Cpp1 code, but could be a comment, empty, or import
+                //  Else still in Cpp1 code, but could be a comment, empty, module, export, or import
                 //
                 else
                 {
-                    if (starts_with_import(lines.back().text)) {
+                    if (!is_module() && starts_with_tokens(lines.back().text, {"module", ";"})) {
+                        lines.back().cat = source_line::category::module_directive;
+                        module_directive_found = true;
+                    }
+                    else if (!is_module() && starts_with_tokens(lines.back().text, {"module"})) {
+                        lines.back().cat = source_line::category::module_declaration;
+                        module_lines = lines.size();
+                    }
+                    else if (!is_module() && starts_with_tokens(lines.back().text, {"export", "module"})) {
+                        lines.back().cat = source_line::category::module_declaration;
+                        module_lines = lines.size();
+                    }
+                    else if (starts_with_tokens(lines.back().text, {"import"})) {
                         lines.back().cat = source_line::category::import;
                     }
                     else {
@@ -1000,6 +1043,16 @@ public:
     auto get_lines() const -> std::vector<source_line> const&
     {
         return lines;
+    }
+
+    auto get_non_module_lines() const -> std::span<const source_line>
+    {
+      return std::span<const source_line>{lines.begin() + module_lines, lines.end()};
+    }
+
+    auto get_module_lines() const -> std::span<const source_line>
+    {
+      return std::span<const source_line>{lines.begin(), lines.begin() + module_lines};
     }
 
     //-----------------------------------------------------------------------
