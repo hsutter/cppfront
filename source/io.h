@@ -958,22 +958,25 @@ public:
                 //
                 else
                 {
-                    if (!is_module() && starts_with_tokens(lines.back().text, {"module", ";"})) {
+                    if (starts_with_tokens(lines.back().text, {"module", ";"})) {
                         lines.back().cat = source_line::category::module_directive;
                         module_directive_found = true;
                     }
                     else if (
-                        !is_module()
-                        && (
-                            starts_with_tokens(lines.back().text, {"module"})
-                            || starts_with_tokens(lines.back().text, {"export", "module"})
-                            )
+                        starts_with_tokens(lines.back().text, {"module"})
+                        || starts_with_tokens(lines.back().text, {"export", "module"})
                     ) {
                         lines.back().cat = source_line::category::module_declaration;
                         module_lines = std::ssize(lines);
                     }
-                    else if (starts_with_tokens(lines.back().text, {"import"})) {
+                    else if (
+                        starts_with_tokens(lines.back().text, {"import"})
+                        || starts_with_tokens(lines.back().text, {"export", "import"})
+                    ) {
                         lines.back().cat = source_line::category::import;
+                        if (is_module()) {
+                            module_lines = std::ssize(lines);
+                        }
                     }
                     else {
                         auto stats = process_cpp_line(
