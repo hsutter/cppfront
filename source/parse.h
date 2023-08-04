@@ -2234,7 +2234,7 @@ auto to_string(accessibility a)
     break;case accessibility::public_   : return "public";
     break;case accessibility::protected_: return "protected";
     break;case accessibility::private_  : return "private";
-    break;case accessibility::export_  : return "export";
+    break;case accessibility::export_   : return "export";
     break;default: assert(a == accessibility::default_);
     }
     return "default";

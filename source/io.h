@@ -962,13 +962,15 @@ public:
                         lines.back().cat = source_line::category::module_directive;
                         module_directive_found = true;
                     }
-                    else if (!is_module() && starts_with_tokens(lines.back().text, {"module"})) {
+                    else if (
+                        !is_module()
+                        && (
+                            starts_with_tokens(lines.back().text, {"module"})
+                            || starts_with_tokens(lines.back().text, {"export", "module"})
+                            )
+                    ) {
                         lines.back().cat = source_line::category::module_declaration;
-                        module_lines = lines.size();
-                    }
-                    else if (!is_module() && starts_with_tokens(lines.back().text, {"export", "module"})) {
-                        lines.back().cat = source_line::category::module_declaration;
-                        module_lines = lines.size();
+                        module_lines = std::ssize(lines);
                     }
                     else if (starts_with_tokens(lines.back().text, {"import"})) {
                         lines.back().cat = source_line::category::import;
@@ -1045,14 +1047,14 @@ public:
         return lines;
     }
 
-    auto get_non_module_lines() const -> std::span<const source_line>
-    {
-      return std::span<const source_line>{lines.begin() + module_lines, lines.end()};
-    }
-
     auto get_module_lines() const -> std::span<const source_line>
     {
-      return std::span<const source_line>{lines.begin(), lines.begin() + module_lines};
+        return {lines.begin(), lines.begin() + module_lines};
+    }
+
+    auto get_non_module_lines() const -> std::span<const source_line>
+    {
+        return {lines.begin() + module_lines, lines.end()};
     }
 
     //-----------------------------------------------------------------------
