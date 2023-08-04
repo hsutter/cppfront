@@ -1226,6 +1226,21 @@ public:
         lineno_t curr_lineno = 0;
         auto hpp_includes = std::string{};
 
+        auto print_cpp2util_prolog = [&]() {
+            if (flag_use_source_location) {
+                printer.print_extra( "#define CPP2_USE_SOURCE_LOCATION Yes\n" );
+            }
+            if (flag_cpp2_only) {
+                printer.print_extra( "#define CPP2_USE_MODULES         Yes\n" );
+            }
+            if (flag_no_exceptions) {
+                printer.print_extra( "#define CPP2_NO_EXCEPTIONS       Yes\n" );
+            }
+            if (flag_no_rtti) {
+                printer.print_extra( "#define CPP2_NO_RTTI             Yes\n" );
+            }
+        };
+
         auto print_cpp2util = [&]() {
             if (!tokens.get_map().empty()) {
                 printer.print_extra( "\n#include \"cpp2util.h\"\n\n" );
@@ -1288,6 +1303,8 @@ public:
             return true;
         };
 
+        auto printed_module_directive = false;
+
         //---------------------------------------------------------------------
         //  Do lowered file prolog
         //
@@ -1301,23 +1318,6 @@ public:
                 printer.print_extra( "#define " + cpp1_FILENAME+"__CPP2" + "\n\n" );
             }
 
-            auto print_cpp2util_prolog = [&]() {
-                if (flag_use_source_location) {
-                    printer.print_extra( "#define CPP2_USE_SOURCE_LOCATION Yes\n" );
-                }
-                if (flag_cpp2_only) {
-                    printer.print_extra( "#define CPP2_USE_MODULES         Yes\n" );
-                }
-                if (flag_no_exceptions) {
-                    printer.print_extra( "#define CPP2_NO_EXCEPTIONS       Yes\n" );
-                }
-                if (flag_no_rtti) {
-                    printer.print_extra( "#define CPP2_NO_RTTI             Yes\n" );
-                }
-            };
-
-            auto printed_module_directive = false;
-
             if (source.is_module()) {
                 if (!source.has_module_directive())
                 {
@@ -1329,31 +1329,33 @@ public:
             } else {
                 print_cpp2util_prolog();
             }
+        }
 
-            // Module lines.
-            for (auto const& line : source.get_module_lines())
+        // Module lines.
+        for (auto const& line : source.get_module_lines())
+        {
+            //  Skip dummy line we added to make 0-vs-1-based offsets readable
+            if (curr_lineno != 0)
             {
-                //  Skip dummy line we added to make 0-vs-1-based offsets readable
-                if (curr_lineno != 0)
+                assert(line.cat != source_line::category::cpp2);
+
+                if (!emit_cpp1_line(line)) {
+                    return {};
+                }
+
+                if (
+                    !printed_module_directive
+                    && line.cat == source_line::category::module_directive
+                    )
                 {
-                    assert(line.cat != source_line::category::cpp2);
-
-                    if (!emit_cpp1_line(line)) {
-                        return {};
-                    }
-
-                    if (
-                        !printed_module_directive
-                        && line.cat == source_line::category::module_directive
-                        )
-                    {
-                        printed_module_directive = true;
+                    printed_module_directive = true;
+                    if (source.has_cpp2()) {
                         print_cpp2util_prolog();
                         print_cpp2util();
                     }
                 }
-                ++curr_lineno;
             }
+            ++curr_lineno;
         }
 
         auto map_iter = tokens.get_map().cbegin();
@@ -1399,6 +1401,14 @@ public:
             )
         {
             printer.print_extra( "\n//=== Cpp2 type definitions and function declarations ===========================\n\n" );
+        }
+
+        if (
+            !source.has_cpp2()
+            && source.is_module()
+            )
+        {
+            curr_lineno -= std::ssize(source.get_module_lines()) - 1;
         }
 
         assert (printer.get_phase() == positional_printer::phase1_type_defs_func_decls);
