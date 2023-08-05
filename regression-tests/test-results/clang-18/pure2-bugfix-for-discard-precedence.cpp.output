@@ -1,0 +1,7 @@
+pure2-bugfix-for-discard-precedence.cpp2:8:19: error: invalid operands to binary expression ('void' and 'const cpp2::i32' (aka 'const int'))
+    8 |     (void) number += that.number;
+      |     ~~~~~~~~~~~~~ ^  ~~~~~~~~~~~
+pure2-bugfix-for-discard-precedence.cpp2:15:12: error: invalid operands to binary expression ('void' and '__libcpp_remove_reference_t<quantity &>' (aka 'quantity'))
+   15 |   (void) x += std::move(x);
+      |   ~~~~~~~~ ^  ~~~~~~~~~~~~
+2 errors generated.
