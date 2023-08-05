@@ -913,6 +913,11 @@ public:
             {
                 lines.push_back({ &buf[0], source_line::category::cpp1 });
 
+                auto starts_with_import = [&](auto& text) {
+                  return starts_with_tokens(text, {"import"})
+                         || starts_with_tokens(text, {"export", "import"});
+                };
+
                 //  Switch to cpp2 mode if we're not in a comment, not inside nested { },
                 //  and the line starts with "nonwhitespace :" but not "::"
                 //
@@ -920,6 +925,7 @@ public:
                     && !in_raw_string_literal
                     && braces.current_depth() < 1
                     && starts_with_identifier_colon(lines.back().text)
+                    && !starts_with_import(lines.back().text) // For a _module-partition_.
                     )
                 {
                     cpp2_found= true;
@@ -969,10 +975,7 @@ public:
                         lines.back().cat = source_line::category::module_declaration;
                         module_lines = std::ssize(lines);
                     }
-                    else if (
-                        starts_with_tokens(lines.back().text, {"import"})
-                        || starts_with_tokens(lines.back().text, {"export", "import"})
-                    ) {
+                    else if (starts_with_import(lines.back().text)) {
                         lines.back().cat = source_line::category::import;
                         if (is_module()) {
                             module_lines = std::ssize(lines);
