@@ -40,16 +40,16 @@ auto main() -> int;
 #line 3 "pure2-bugfix-for-discard-precedence.cpp2"
   {
 
-    (void)   _;
+    static_cast<void>(_);
   }
   [[nodiscard]] auto quantity::operator+=(quantity const& that) -> quantity&{
-    (void) number += that.number;
+    static_cast<void>(number += that.number);
     return (*this); 
   }
 
 #line 13 "pure2-bugfix-for-discard-precedence.cpp2"
 auto main() -> int{
   quantity x {std::in_place, 1729}; 
-  (void) x += std::move(x);
+  static_cast<void>(x += std::move(x));
 }
 

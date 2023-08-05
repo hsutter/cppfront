@@ -40,23 +40,23 @@ extern int y;
 #line 1 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto main() -> int{
     auto i {42}; 
-    (void) CPP2_UFCS_0(ufcs, std::move(i));
+    static_cast<void>(CPP2_UFCS_0(ufcs, std::move(i)));
 
     auto j {fun()}; 
-    (void) CPP2_UFCS_0(ufcs, j.i);
+    static_cast<void>(CPP2_UFCS_0(ufcs, j.i));
 
-    (void) CPP2_UFCS_0(ufcs, fun().i);
+    static_cast<void>(CPP2_UFCS_0(ufcs, fun().i));
 
     auto k {fun().i}; 
-    (void) CPP2_UFCS_0(ufcs, std::move(k));
+    static_cast<void>(CPP2_UFCS_0(ufcs, std::move(k)));
 
-    (void) CPP2_UFCS_0(ufcs, get_i(j));
+    static_cast<void>(CPP2_UFCS_0(ufcs, get_i(j)));
 
-    (void) CPP2_UFCS_0(ufcs, get_i(fun()));
+    static_cast<void>(CPP2_UFCS_0(ufcs, get_i(fun())));
 
     auto res {CPP2_UFCS_0(ufcs, (42))}; 
 
-    (void) CPP2_UFCS_0(ufcs, (std::move(j).i));
+    static_cast<void>(CPP2_UFCS_0(ufcs, (std::move(j).i)));
 
     CPP2_UFCS_0(no_return, 42);
 }
