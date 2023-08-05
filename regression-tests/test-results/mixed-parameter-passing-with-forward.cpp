@@ -24,7 +24,7 @@ auto parameter_styles(
     std::string&& d, 
     auto&& e
     ) -> void
-CPP2_REQUIRES (std::is_same_v<CPP2_TYPEOF(e), std::string>)
+CPP2_REQUIRES (cpp2::is<CPP2_TYPEOF(e), std::string>())
 #line 8 "mixed-parameter-passing-with-forward.cpp2"
 ;
 
@@ -45,7 +45,7 @@ auto parameter_styles(
     std::string&& d, 
     auto&& e
     ) -> void
-requires (std::is_same_v<CPP2_TYPEOF(e), std::string>)
+requires (cpp2::is<CPP2_TYPEOF(e), std::string>())
 #line 15 "mixed-parameter-passing-with-forward.cpp2"
 {
     int z {12}; 
