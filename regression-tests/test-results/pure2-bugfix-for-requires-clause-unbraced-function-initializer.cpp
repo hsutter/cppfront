@@ -11,7 +11,10 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-bugfix-for-requires-clause-unbraced-function-initializer.cpp2"
-template<typename T> auto f() -> void;
+template<typename T> auto f() -> void
+CPP2_REQUIRES (std::regular<T>)
+#line 1 "pure2-bugfix-for-requires-clause-unbraced-function-initializer.cpp2"
+;
 auto main() -> int;
 
 

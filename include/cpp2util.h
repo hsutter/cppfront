@@ -191,7 +191,7 @@
         // in our -pure-cpp2 "import std;" simulation mode... if you need this,
         // use mixed mode (not -pure-cpp2) and #include all the headers you need
         // including this one
-        // 
+        //
         // #include <execution>
     #endif
 
@@ -464,7 +464,7 @@ template<typename T>
 auto Typeid() -> decltype(auto) {
 #ifdef CPP2_NO_RTTI
     Type.expects(
-        !"'any' dynamic casting is disabled with -fno-rtti", // more likely to appear on console 
+        !"'any' dynamic casting is disabled with -fno-rtti", // more likely to appear on console
          "'any' dynamic casting is disabled with -fno-rtti"  // make message available to hooked handlers
     );
 #else
@@ -854,8 +854,8 @@ auto is( X const& ) -> bool {
 
 template< typename C, typename X >
     requires (
-        ( std::is_base_of_v<X, C> || 
-          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>) 
+        ( std::is_base_of_v<X, C> ||
+          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>)
         ) && !std::is_same_v<C,X>)
 auto is( X const& x ) -> bool {
     return Dynamic_cast<C const*>(&x) != nullptr;
@@ -863,8 +863,8 @@ auto is( X const& x ) -> bool {
 
 template< typename C, typename X >
     requires (
-        ( std::is_base_of_v<X, C> || 
-          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>) 
+        ( std::is_base_of_v<X, C> ||
+          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>)
         ) && !std::is_same_v<C,X>)
 auto is( X const* x ) -> bool {
     return Dynamic_cast<C const*>(x) != nullptr;
@@ -876,6 +876,10 @@ auto is( X const& x ) -> bool {
     return x == X();
 }
 
+template <typename T, typename U>
+constexpr auto is() -> bool {
+    return std::is_same_v<T, U>;
+}
 
 //  Values
 //
@@ -1452,7 +1456,7 @@ inline auto to_string(std::string const& s) -> std::string const&
 
 template<typename T>
 inline auto to_string(T const& sv) -> std::string
-    requires (std::is_convertible_v<T, std::string_view> 
+    requires (std::is_convertible_v<T, std::string_view>
               && !std::is_convertible_v<T, const char*>)
 {
     return std::string{sv};
