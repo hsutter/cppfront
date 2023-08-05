@@ -833,6 +833,16 @@ constexpr auto is( T const& ) -> bool {
     return false;
 }
 
+template <typename T, template <typename...> class C>
+constexpr auto is() -> bool {
+    return requires(T t) { []<typename... Ts>(C<Ts...> const&) { }(t); };
+}
+
+template <typename T, template <typename,auto> class C>
+constexpr auto is() -> bool {
+    return requires(T t) { []<typename U, auto V>(C<U, V> const&) { }(t); };
+}
+
 //  Types
 //
 template< typename C, typename X >

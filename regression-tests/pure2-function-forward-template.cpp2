@@ -1,0 +1,15 @@
+fun: (
+  forward s1: std::basic_string, forward s2: std::basic_string, forward s3: std::basic_string, //
+  forward a1: std::array, forward a2: std::array, forward a3: std::array) = {
+  std::cout << s1 << s2 << s3 << a1[0] << a2[0] << a3[0] << std::endl;
+}
+
+main: () = {
+  b: std::string = "b";
+  c: std::string = "c";
+  e: std::array  = ("e");
+  f: std::array  = ("f");
+  fun(std::string("a"), b, c, :std::array = ("d"), e, f);
+  _ = b;
+  _ = e;
+}
