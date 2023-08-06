@@ -1,0 +1,5 @@
+pure2-sizeof-new-error.cpp2...
+pure2-sizeof-new-error.cpp2(2,14): error: use 'new<i32>', not 'new i32'
+pure2-sizeof-new-error.cpp2(3,12): error: use 'new<i32>', not 'new i32'
+pure2-sizeof-new-error.cpp2(4,16): error: use 'sizeof<i32>', not 'sizeof i32'
+pure2-sizeof-new-error.cpp2(5,16): error: use 'sizeof<i32>', not 'sizeof i32'

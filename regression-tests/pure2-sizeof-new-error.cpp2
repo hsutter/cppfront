@@ -1,0 +1,6 @@
+main: () = {
+    p := new i32;
+    p = new(i32);
+    i := sizeof(i32);
+    i = sizeof i32;
+}

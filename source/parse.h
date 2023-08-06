@@ -4880,12 +4880,10 @@ private:
         }
 
         else {
-            if (*n->identifier == "new") {
-                error( "use 'new<" + curr().to_string(true) + ">', not 'new " + curr().to_string(true) + "'", false);
-                return {};
-            }
-            if (*n->identifier == "sizeof") {
-                error( "use 'sizeof(" + curr().to_string(true) + ")', not 'sizeof " + curr().to_string(true) + "'", false);
+            if (*n->identifier == "new" || *n->identifier == "sizeof") {
+                auto id = n->identifier->to_string(true);
+                auto& arg = (curr().type() == lexeme::LeftParen) ? *peek(1) : curr();
+                error( "use '" + id + "<" + arg.to_string(true) + ">', not '" + id + " " + arg.to_string(true) + "'", false);
                 return {};
             }
             if (*n->identifier == "co_await" || *n->identifier == "co_yield") {
