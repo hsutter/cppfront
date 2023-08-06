@@ -1,5 +1,6 @@
 #include <typeinfo>
 #include <iostream>
+#include <cassert>
 
 namespace my {
     using u16 = float;
@@ -13,9 +14,11 @@ test: (x:_) = {
 }
 
 main: (args) -> int = {
+    assert(sizeof<my::u16> == 4);
     y: my::u16 = 42;
     test(y);
 
+    assert(sizeof<u16> == 2);
     z: u16 = 42;
     test(z);
 

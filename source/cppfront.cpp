@@ -1666,7 +1666,14 @@ public:
         assert(n.identifier);
         emit(*n.identifier, is_qualified);  // inform the identifier if we know this is qualified
 
-        if (n.open_angle != source_position{}) {
+        if (*n.identifier == "sizeof") {
+            printer.print_cpp2("(", n.open_angle);
+            auto& a = n.template_args[0];
+            try_emit<unqualified_id_node::expression>(a.arg);
+            try_emit<unqualified_id_node::type_id   >(a.arg);
+            printer.print_cpp2(")", n.close_angle);
+        }
+        else if (n.open_angle != source_position{}) {
             printer.print_cpp2("<", n.open_angle);
             auto first = true;
             for (auto& a : n.template_args) {
