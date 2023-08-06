@@ -11,23 +11,24 @@
 
 #include <typeinfo>
 #include <iostream>
+#include <cassert>
 
 namespace my {
     using u16 = float;
 }
 
-#line 8 "mixed-fixed-type-aliases.cpp2"
+#line 9 "mixed-fixed-type-aliases.cpp2"
 auto test(auto const& x) -> void;
     
 
-#line 15 "mixed-fixed-type-aliases.cpp2"
+#line 16 "mixed-fixed-type-aliases.cpp2"
 [[nodiscard]] auto main(int const argc_, char const* const* const argv_) -> int;
     
 
 //=== Cpp2 function definitions =================================================
 
 
-#line 8 "mixed-fixed-type-aliases.cpp2"
+#line 9 "mixed-fixed-type-aliases.cpp2"
 auto test(auto const& x) -> void{
     std::cout 
         << std::boolalpha 
@@ -37,10 +38,12 @@ auto test(auto const& x) -> void{
 
 [[nodiscard]] auto main(int const argc_, char const* const* const argv_) -> int{
     auto args = cpp2::make_args(argc_, argv_); 
-#line 16 "mixed-fixed-type-aliases.cpp2"
+#line 17 "mixed-fixed-type-aliases.cpp2"
+    assert(sizeof(my::u16)==4);
     my::u16 y {42}; 
     test(std::move(y));
 
+    assert(sizeof(cpp2::u16)==2);
     cpp2::u16 z {42}; 
     test(std::move(z));
 
