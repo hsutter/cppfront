@@ -1029,6 +1029,8 @@ class cppfront
     bool violates_initialization_safety = false;
     bool suppress_move_from_last_use    = false;
 
+    declaration_node const* having_signature_emitted = {};
+
     declaration_node const*   generating_assignment_from  = {};
     declaration_node const*   generating_move_from        = {};
     bool                      emitting_that_function      = false;
@@ -1041,7 +1043,22 @@ class cppfront
     };
     std::vector<arg_info> current_args  = { {} };
 
+    struct cpp1_using_declaration {
+        token const* identifier = {};
+
+        explicit cpp1_using_declaration(using_statement_node const& n) {
+          if (auto id = get_if<id_expression_node::qualified>(&n.id->id)) {
+              identifier = (*id)->ids.back().id->identifier;
+          }
+        }
+    };
+
     std::vector<declaration_node const*> current_declarations = { {} };
+    // Like `current_declarations`, but for syntatic name lookup.
+    // So it also includes the following entities that are in scope.
+    // - Parameters.
+    // - Cpp1 using declarations.
+    std::vector<std::variant<declaration_node const*, cpp1_using_declaration>> seen_declarations = { {} };
 
     //  Maintain a stack of the functions we're currently processing, which can
     //  be up to MaxNestedFunctions in progress (if we run out, bump the Max).
@@ -2471,6 +2488,8 @@ public:
 
         if (n.for_namespace) {
             printer.print_cpp2(" namespace", n.position());
+        } else {
+            seen_declarations.push_back(cpp1_using_declaration{n});
         }
 
         printer.print_cpp2(" " + print_to_string(*n.id) + ";", n.position());
@@ -2772,6 +2791,65 @@ public:
         return is_pointer_declaration(decl, deref_cnt, addr_cnt);
     }
 
+
+    auto ufcs_possible(id_expression_node const& n)
+        -> bool
+    {
+        auto id = get_if<id_expression_node::unqualified>(&n.id);
+        if (!id)
+        {
+            return true;
+        }
+
+        for (
+            auto first = seen_declarations.rbegin(), last = seen_declarations.rend() - 1;
+            first != last;
+            ++first
+            )
+        {
+            if (
+                auto decl = get_if<declaration_node const*>(&*first);
+                decl
+                && *decl
+                && (*decl)->has_name(*(*id)->identifier)
+                )
+            {
+                if (
+                    !(*decl)->is_object()
+                    && !(*decl)->is_object_alias()
+                    )
+                {
+                    return true;
+                }
+
+                // Disable UFCS if name lookup would hard-error (#550)
+                // (when it finds that the function identifier being called
+                // is a variable with placeholder type and we are in its initializer.
+                if ((*decl)->is_object()) {
+                    auto type = &**get_if<declaration_node::an_object>(&(*decl)->type);
+                    return !type->is_wildcard()
+                           || !contains(current_declarations, *decl);
+                }
+                auto const& type = (**get_if<declaration_node::an_alias>(&(*decl)->type)).type_id;
+                return (type
+                        && !type->is_wildcard()
+                        )
+                       || !contains(current_declarations, *decl);
+            }
+            else if (
+                auto using_ = get_if<cpp1_using_declaration>(&*first);
+                using_
+                && using_->identifier
+                && *using_->identifier == *(*id)->identifier
+                )
+            {
+                return true;
+            }
+        }
+
+        return true;
+    }
+
     //-----------------------------------------------------------------------
     //
     auto emit(
@@ -3027,6 +3105,7 @@ public:
             else if(
                 i->op->type() == lexeme::Dot
                 && args
+                && ufcs_possible(*i->id_expr)
                 )
             {
                 auto funcname = print_to_string(*i->id_expr);
@@ -3038,17 +3117,6 @@ public:
                 //  If there are template arguments, use the _TEMPLATE version
                 if (std::ssize(i->id_expr->template_arguments()) > 0) {
                     ufcs_string += "_TEMPLATE";
-                    // we need to replace "fun<int,long,double>" to "fun, (<int,long,double>)" to be able to generate
-                    // from obj.fun<int, long, double>(1,2) this CPP2_UFCS_TEMPLATE(fun, (<int,long, double>), obj, 1, 2)
-                    auto split = funcname.find('<'); assert(split != std::string::npos);
-                    funcname.insert(split, ", (");
-                    assert(funcname.back() == '>');
-                    funcname += ')';
-                }
-
-                //  If there are no additional arguments, use the _0 version
-                if (args.value().text_chunks.empty()) {
-                    ufcs_string += "_0";
                 }
 
                 //  If we're in an object declaration (i.e., initializer)
@@ -3060,7 +3128,14 @@ public:
                 if (
                     current_declarations.back()->is_namespace()
                     || (
-                        current_declarations.back()->is_object()
+                        (
+                         current_declarations.back()->is_object()
+                         || current_declarations.back()->is_alias()
+                         || (
+                             current_declarations.back()->is_function()
+                             && current_declarations.back() == having_signature_emitted
+                             )
+                         )
                         && current_declarations.back()->parent_is_namespace()
                         )
                     )
@@ -3070,7 +3145,7 @@ public:
 
                 //  Second, emit the UFCS argument list
 
-                prefix.emplace_back(ufcs_string + "(" + funcname + ", ", args.value().open_pos );
+                prefix.emplace_back(ufcs_string + "(" + funcname + ")(", args.value().open_pos );
                 suffix.emplace_back(")", args.value().close_pos );
                 if (!args.value().text_chunks.empty()) {
                     for (auto&& e: args.value().text_chunks) {
@@ -3820,6 +3895,49 @@ public:
     }
 
 
+    template<typename T>
+    auto stack_value(
+        T& var,
+        std::type_identity_t<T> const& value
+    )
+        -> auto
+    {
+        return finally([&var, old = std::exchange(var, value)]() {
+            var = old;
+        });
+    }
+
+    template<typename T>
+    auto stack_element(
+        std::vector<T>& cont,
+        std::type_identity_t<T> const& value
+    )
+        -> auto
+    {
+        cont.push_back(value);
+        return finally([&]{ cont.pop_back(); });
+    }
+
+    template<typename T>
+    auto stack_size(std::vector<T>& cont)
+        -> auto
+    {
+        return finally([&, size = cont.size()]{ cont.resize(size); });
+    }
+
+    template<typename T>
+    auto stack_size_if(
+        std::vector<T>& cont,
+        bool cond
+    )
+        -> std::optional<decltype(stack_size(cont))>
+    {
+        if (cond) {
+            return stack_size(cont);
+        }
+        return {};
+    }
+
     //-----------------------------------------------------------------------
     //
     auto emit(
@@ -3841,6 +3959,7 @@ public:
             && n.parameters
             ;
 
+        auto stack = stack_size_if(seen_declarations, emit_parameters);
         if (emit_parameters) {
             printer.print_extra( "\n");
             printer.print_extra( "{");
@@ -3967,6 +4086,8 @@ public:
                 );
             }
         }
+
+        seen_declarations.push_back(&*n.declaration);
 
         //-----------------------------------------------------------------------
         //  Skip 'this' parameters
@@ -4252,6 +4373,7 @@ public:
             && n.declaration->initializer
             )
         {
+            auto stack = stack_element(current_declarations, &*n.declaration);
             printer.print_cpp2( " = ", n.declaration->initializer->position() );
             emit(*n.declaration->initializer);
         }
@@ -5135,6 +5257,11 @@ public:
             printer.print_extra("\n");
         }
 
+        auto stack0 = stack_value(having_signature_emitted, &n);
+        auto stack1 = stack_element(current_declarations, &n);
+        seen_declarations.push_back(&n);
+        auto stack2 = stack_size_if(seen_declarations, n.is_function());
+
         //  Handle aliases
 
         if (n.is_alias())
@@ -5332,8 +5459,6 @@ public:
             return;
         }
 
-        current_declarations.push_back(&n);
-        auto guard = finally([&]{ current_declarations.pop_back(); });
 
         //  If this is a function that has multiple return values,
         //  first we need to emit the struct that contains the returns
@@ -5771,6 +5896,8 @@ public:
                 );
             auto guard = finally([&]{ current_functions.pop(); });
 
+            auto stack = stack_size(seen_declarations);
+
             //  If this is at expression scope, we can't emit "[[nodiscard]] auto name"
             //  so print the provided intro instead, which will be a Cpp1 lambda-introducer
             if (capture_intro != "")
@@ -6155,6 +6282,7 @@ public:
 
                 emit_requires_clause();
 
+                having_signature_emitted = nullptr;
                 emit(
                     *n.initializer,
                     true, func->position(), func->returns.index() == function_type_node::empty,
