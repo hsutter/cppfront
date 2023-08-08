@@ -1,0 +1,7 @@
+pure2-function-forward-template.cpp2:16:17: error: static assertion failed due to requirement '!(cpp2::is())'
+   16 |   static_assert(!(cpp2::is<my_string,std::basic_string>()));
+      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pure2-function-forward-template.cpp2:17:17: error: static assertion failed due to requirement '!(cpp2::is())'
+   17 |   static_assert(!(cpp2::is<my_point,std::array>()));
+      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2 errors generated.

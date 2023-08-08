@@ -12,4 +12,14 @@ main: () = {
   fun(std::string("a"), b, c, :std::array = ("d"), e, f);
   _ = b;
   _ = e;
+
+  static_assert(!cpp2::is<my_string, std::basic_string>());
+  static_assert(!cpp2::is<my_point, std::array>());
+}
+
+my_string: @struct type = {
+  this: std::string;
+}
+my_point: @struct type = {
+  this: std::array<i32, 2>;
 }

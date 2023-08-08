@@ -7,6 +7,12 @@
 #include "cpp2util.h"
 
 
+#line 20 "pure2-function-forward-template.cpp2"
+class my_string;
+  
+
+class my_point;
+  
 
 //=== Cpp2 type definitions and function declarations ===========================
 
@@ -22,6 +28,15 @@ CPP2_REQUIRES (cpp2::is<CPP2_TYPEOF(s1), std::basic_string>() && cpp2::is<CPP2_T
 #line 7 "pure2-function-forward-template.cpp2"
 auto main() -> int;
   
+
+#line 20 "pure2-function-forward-template.cpp2"
+class my_string: public std::string {
+
+};
+class my_point: public std::array<cpp2::i32,2> {
+
+};
+
 
 //=== Cpp2 function definitions =================================================
 
@@ -43,5 +58,8 @@ auto main() -> int{
   fun(std::string("a"), b, std::move(c), std::array{"d"}, e, std::move(f));
   (void) std::move(b);
   (void) std::move(e);
+
+  static_assert(!(cpp2::is<my_string,std::basic_string>()));
+  static_assert(!(cpp2::is<my_point,std::array>()));
 }
 
