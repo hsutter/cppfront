@@ -835,13 +835,13 @@ constexpr auto is( T const& ) -> bool {
 
 template <typename T, template <typename...> class C>
 constexpr auto is() -> bool {
-    auto f = []<typename... Ts>(C<Ts...> const&) { };
+    auto f = []<typename... Ts>(C<Ts...> const&) requires std::is_same_v<T, C<Ts...>> { };
     return requires(T t) { f(t); };
 }
 
 template <typename T, template <typename,auto> class C>
 constexpr auto is() -> bool {
-    auto f = []<typename U, auto V>(C<U, V> const&) { };
+    auto f = []<typename U, auto V>(C<U, V> const&) requires std::is_same_v<T, C<U, V>> { };
     return requires(T t) { f(t); };
 }
 
