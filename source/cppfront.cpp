@@ -3452,7 +3452,7 @@ public:
         {
             suppress_move_from_last_use = true;
         }
-        //  If it's "_ =" then emit (void)
+        //  If it's "_ =" then emit static_cast<void>()
         bool emit_discard = false;
         if (
             !n.terms.empty()
