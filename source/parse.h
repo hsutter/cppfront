@@ -4884,7 +4884,11 @@ private:
                 error( "use 'new<" + curr().to_string(true) + ">', not 'new " + curr().to_string(true) + "'", false);
                 return {};
             }
-            if (*n->identifier == "sizeof") {
+            if (
+                *n->identifier == "sizeof"
+                && curr().type() != lexeme::LeftParen
+                )
+            {
                 error( "use 'sizeof(" + curr().to_string(true) + ")', not 'sizeof " + curr().to_string(true) + "'", false);
                 return {};
             }
