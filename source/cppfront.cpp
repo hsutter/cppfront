@@ -3532,7 +3532,6 @@ public:
                 if (
                     x.op->type() == lexeme::Assignment
                     && x.expr->is_expression_list()
-                    && std::ssize(x.expr->get_expression_list()->expressions) != 1
                     )
                 {
                     printer.print_cpp2( "{ ", n.position() );
