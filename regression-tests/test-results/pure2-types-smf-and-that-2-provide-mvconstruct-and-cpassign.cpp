@@ -148,7 +148,7 @@ auto main() -> int{
     CPP2_UFCS(print, z, "   cp-assign     ", " <- ");
     CPP2_UFCS(print, y, "", "\n");
 
-    z = std::move(y);
+    z = { std::move(y) };
     CPP2_UFCS(print, std::move(z), "   mv-assign     ", " <- ");
     CPP2_UFCS(print, std::move(y), "", "\n");
 }

@@ -3531,7 +3531,23 @@ public:
                     emit(*x.op);
                 }
                 printer.print_cpp2(" ", n.position());
-                emit(*x.expr);
+                
+                //  When assigning a single expression-list, we can
+                //  take over direct control of emitting it without needing to
+                //  go through the whole grammar, and surround it with braces
+                if (
+                    x.op->type() == lexeme::Assignment
+                    && x.expr->is_expression_list()
+                    )
+                {
+                    printer.print_cpp2( "{ ", n.position() );
+                    emit(*x.expr->get_expression_list(), false);
+                    printer.print_cpp2( " }", n.position() );
+                }
+                //  Otherwise, just emit the general expression as usual
+                else {
+                    emit(*x.expr);
+                }
             }
         }
     }
