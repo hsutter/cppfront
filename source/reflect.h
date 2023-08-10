@@ -829,7 +829,7 @@ compiler_services::compiler_services(compiler_services const& that)
 
     declaration_base::~declaration_base() noexcept{}
 declaration_base::declaration_base(declaration_base const& that)
-                                : compiler_services{ that }
+                                : compiler_services{ static_cast<compiler_services const&>(that) }
                                 , n{ that.n }{}
 
 #line 205 "reflect.h2"
@@ -891,7 +891,7 @@ declaration_base::declaration_base(declaration_base const& that)
 
     declaration::~declaration() noexcept{}
 declaration::declaration(declaration const& that)
-                                : declaration_base{ that }{}
+                                : declaration_base{ static_cast<declaration_base const&>(that) }{}
 
 #line 268 "reflect.h2"
     function_declaration::function_declaration(
@@ -945,7 +945,7 @@ declaration::declaration(declaration const& that)
     [[nodiscard]] auto function_declaration::make_virtual() -> bool { return CPP2_UFCS_0(make_function_virtual, (*cpp2::assert_not_null(n))); }
 
     function_declaration::function_declaration(function_declaration const& that)
-                                : declaration{ that }{}
+                                : declaration{ static_cast<declaration const&>(that) }{}
 
 #line 325 "reflect.h2"
     object_declaration::object_declaration(
@@ -978,7 +978,7 @@ declaration::declaration(declaration const& that)
     }
 
     object_declaration::object_declaration(object_declaration const& that)
-                                : declaration{ that }{}
+                                : declaration{ static_cast<declaration const&>(that) }{}
 
 #line 361 "reflect.h2"
     type_declaration::type_declaration(
@@ -1068,7 +1068,7 @@ declaration::declaration(declaration const& that)
     auto type_declaration::disable_member_function_generation() -> void { CPP2_UFCS_0(type_disable_member_function_generation, (*cpp2::assert_not_null(n)));  }
 
     type_declaration::type_declaration(type_declaration const& that)
-                                : declaration{ that }{}
+                                : declaration{ static_cast<declaration const&>(that) }{}
 
 #line 458 "reflect.h2"
 auto add_virtual_destructor(meta::type_declaration& t) -> void
