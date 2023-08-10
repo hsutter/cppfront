@@ -4590,23 +4590,34 @@ public:
                 //  Otherwise, use a default... for a non-copy/move that's the member initializer
                 //  (for which we don't need to emit anything special because it will get used),
                 //  and for a copy/move function we default to "= that.same_member" (or, if this
-                //  is a base type, just "= that")
+                //  is a base type, to assigning from the lowered base subobject)
                 if (!found_explicit_init)
                 {
-                    if (emitting_move_that_function)
+                    if (emitting_that_function && (*object)->has_name("this"))
                     {
-                        initializer = "std::move(that)";
-                        if (!(*object)->has_name("this")) {
-                            initializer += "." + object_name;
+                        auto pass = std::string{" const&"};
+                        if (emitting_move_that_function) {
+                            pass = "&&";
                         }
+                        initializer =
+                            "static_cast<"
+                            + object_name
+                            + pass
+                            + ">(that)";
+                        found_default_init = true;
+                    }
+                    else if (emitting_move_that_function)
+                    {
+                        initializer =
+                            "std::move(that)."
+                            + object_name;
                         found_default_init = true;
                     }
                     else if (emitting_that_function)
                     {
-                        initializer = "that";
-                        if (!(*object)->has_name("this")) {
-                            initializer += "." + object_name;
-                        }
+                        initializer =
+                            "that."
+                            + object_name;
                         found_default_init = true;
                     }
                     else if ((*object)->initializer)

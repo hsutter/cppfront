@@ -1,0 +1,18 @@
+Base: type = {
+  operator=: (out this) = { }
+  operator=: (out this, that)       = std::cout << "(out this, that)\n";
+  operator=: (implicit out this, x) = std::cout << "(implicit out this, x)\n";
+}
+
+Derived: type = {
+  this: Base            = ();
+  operator=: (out this) = { }
+  operator=: (out this, that)   = { }
+  operator=: (inout this, move that) = { }
+}
+
+main: () = {
+  d  := Derived();
+  d2 := d;
+  d2 = d;
+}
