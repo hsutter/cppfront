@@ -1073,13 +1073,16 @@ class cppfront
     struct function_return {
         parameter_declaration_list_node* param_list;
         passing_style                    pass;
+        bool                             is_deduced;
 
         function_return(
             parameter_declaration_list_node* param_list_,
-            passing_style                    pass_ = passing_style::invalid
+            passing_style                    pass_ = passing_style::invalid,
+            bool                             is_deduced_ = false
         )
             : param_list{param_list_}
             , pass{pass_}
+            , is_deduced{is_deduced_}
         { }
     };
     std::vector<function_return>         function_returns;
@@ -2217,12 +2220,17 @@ public:
         if (n.expression)
         {
             assert(!current_functions.empty());
+            auto is_forward_return =
+                !function_returns.empty()
+                && function_returns.back().pass == passing_style::forward;
+            auto is_deduced_return =
+                !function_returns.empty()
+                && function_returns.back().is_deduced;
 
-            //  If we're doing a forward return
+            //  If we're doing a forward return of a single-token name
             if (auto tok = n.expression->expr->get_postfix_expression_node()->expr->get_token();
                 tok
-                && !function_returns.empty()
-                && function_returns.back().pass == passing_style::forward
+                && is_forward_return
                 )
             {
                 //  Ensure we're not returning a local or an in/move parameter
@@ -2267,9 +2275,13 @@ public:
             //  take over direct control of emitting it without needing to
             //  go through the whole grammar, and surround it with braces
             if (n.expression->is_expression_list()) {
-                printer.print_cpp2( "{ ", n.position() );
+                if (!is_deduced_return) {
+                    printer.print_cpp2( "{ ", n.position() );
+                }
                 emit(*n.expression->get_expression_list(), false);
-                printer.print_cpp2( " }", n.position() );
+                if (!is_deduced_return) {
+                    printer.print_cpp2( " }", n.position() );
+                }
             }
             //  Otherwise, just emit the general expression as usual
             else {
@@ -3670,9 +3682,17 @@ public:
                 && n.expr->is_expression_list()
                 )
             {
-                printer.print_cpp2( "{ ", n.position() );
+                auto is_deduced_return =
+                    !function_returns.empty()
+                    && function_returns.back().is_deduced;
+
+                if (!is_deduced_return) {
+                    printer.print_cpp2( "{ ", n.position() );
+                }
                 emit(*n.expr->get_expression_list(), false);
-                printer.print_cpp2( " }", n.position() );
+                if (!is_deduced_return) {
+                    printer.print_cpp2( " }", n.position() );
+                }
             }
             //  Otherwise, just emit the general expression as usual
             else {
@@ -5634,7 +5654,8 @@ public:
                 else if (func->returns.index() == function_type_node::id) {
                     function_returns.emplace_back(
                         &single_anon,               // use special value as a note
-                        std::get<function_type_node::id>(func->returns).pass
+                        std::get<function_type_node::id>(func->returns).pass,
+                        std::get<function_type_node::id>(func->returns).type->is_wildcard()
                     );
                 }
                 else {
