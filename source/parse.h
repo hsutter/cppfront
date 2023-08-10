@@ -5777,6 +5777,9 @@ private:
     )
         -> std::unique_ptr<parameter_declaration_node>
     {
+        auto modifier        = std::string();
+        auto modifier_plural = "";
+
         auto n = std::make_unique<parameter_declaration_node>();
         n->pass = is_returns ? passing_style::out : passing_style::in;
         n->pos  = curr().position();
@@ -5784,18 +5787,22 @@ private:
         //  Handle optional this-specifier
         //
         if (curr() == "implicit") {
+            modifier = curr().as_string_view();
             n->mod = parameter_declaration_node::modifier::implicit;
             next();
         }
         else if (curr() == "virtual") {
+            modifier = curr().as_string_view();
             n->mod = parameter_declaration_node::modifier::virtual_;
             next();
         }
         else if (curr() == "override") {
+            modifier = curr().as_string_view();
             n->mod = parameter_declaration_node::modifier::override_;
             next();
         }
         else if (curr() == "final") {
+            modifier = curr().as_string_view();
             n->mod = parameter_declaration_node::modifier::final_;
             next();
         }
@@ -5806,6 +5813,12 @@ private:
             dir != passing_style::invalid
             )
         {
+            if (!modifier.empty()) {
+                modifier += " ";
+                modifier_plural = "s";
+            }
+            modifier += curr().as_string_view();
+
             if (is_returns)
             {
                 if (dir == passing_style::in) {
@@ -5840,6 +5853,9 @@ private:
         //  Now the main declaration
         //
         if (!(n->declaration = declaration(false, true, is_template))) {
+            if (!modifier.empty()) {
+                error( "'" + modifier + "' modifier" + modifier_plural + " must be followed by a valid parameter declaration", false);
+            }
             return {};
         }
 
