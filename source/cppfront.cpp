@@ -3525,12 +3525,14 @@ public:
                     emit(*x.op);
                 }
                 printer.print_cpp2(" ", n.position());
+                
                 //  When assigning a single expression-list, we can
                 //  take over direct control of emitting it without needing to
                 //  go through the whole grammar, and surround it with braces
                 if (
                     x.op->type() == lexeme::Assignment
                     && x.expr->is_expression_list()
+                    && x.expr->get_expression_list()->expressions.size() > 1
                     )
                 {
                     printer.print_cpp2( "{ ", n.position() );
