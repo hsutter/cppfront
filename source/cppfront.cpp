@@ -197,7 +197,7 @@ class positional_printer
     std::vector<comment> const* pcomments       = {}; // Cpp2 comments data
     source const*               psource         = {};
     parser const*               pparser         = {};
-                                                
+
     source_position curr_pos                    = {}; // current (line,col) in output
     lineno_t        generated_pos_line          = {}; // current line in generated output
     int             last_line_indentation       = {};
@@ -1229,7 +1229,7 @@ public:
 
         //---------------------------------------------------------------------
         //  Do lowered file prolog
-        // 
+        //
         //  Only emit extra lines if we actually have Cpp2, because
         //  we want pure-Cpp1 files to pass through with zero changes
         if (source.has_cpp2())
@@ -1287,7 +1287,7 @@ public:
             }
         }
 
-        
+
         //---------------------------------------------------------------------
         //  Do phase1_type_defs_func_decls
         //
@@ -1644,7 +1644,7 @@ public:
         {
             add_move = false;
         }
-    
+
         if (
             emitting_move_that_function
             && *n.identifier == "that"
@@ -2261,7 +2261,7 @@ public:
                     return;
                 } else if (
                     is_literal(tok->type()) || n.expression->expr->is_result_a_temporary_variable()
-                ) 
+                )
                 {
                     errors.emplace_back(
                         n.position(),
@@ -2557,7 +2557,7 @@ public:
     )
         -> bool
     {
-        if (!fun_node) { 
+        if (!fun_node) {
             return false;
         }
         if (addr_cnt > deref_cnt) {
@@ -2584,11 +2584,11 @@ public:
     )
         -> bool
     {
-        if (!type_id_node) { 
+        if (!type_id_node) {
             return false;
         }
         if (addr_cnt > deref_cnt) {
-            return true; 
+            return true;
         }
 
         if ( type_id_node->dereference_of ) {
@@ -2765,7 +2765,7 @@ public:
             {
                 auto& unqual = std::get<id_expression_node::unqualified>(id->id);
                 assert(unqual);
-                //  TODO: Generalize this: 
+                //  TODO: Generalize this:
                 //        - we don't recognize pointer types from Cpp1
                 //        - we don't deduce pointer types from parameter_declaration_list_node
                 if ( is_pointer_declaration(unqual->identifier) ) {
@@ -3452,8 +3452,8 @@ public:
         {
             suppress_move_from_last_use = true;
         }
-        //  If it's "_ =" then emit (void)
-        bool suppress_operator = false;
+        //  If it's "_ =" then emit static_cast<void>()
+        bool emit_discard = false;
         if (
             !n.terms.empty()
             && n.terms.front().op->type() == lexeme::Assignment
@@ -3462,8 +3462,8 @@ public:
             && *n.expr->get_postfix_expression_node()->get_first_token_ignoring_this() == "_"
             )
         {
-            printer.print_cpp2( "(void)", n.position() );
-            suppress_operator = true;
+            printer.print_cpp2( "static_cast<void>(", n.position() );
+            emit_discard = true;
         }
         else
         {
@@ -3514,6 +3514,7 @@ public:
             }
         }
 
+        auto first = true;
         for (auto const& x : n.terms) {
             assert(x.op);
             assert(x.expr);
@@ -3533,17 +3534,16 @@ public:
             else
             {
                 //  For the first operator only, if we are emitting a "_ =" discard
-                //  then we've already emitted the cast to void and don't need the =
-                if (suppress_operator) {
-                    assert( x.op->type() == lexeme::Assignment );
-                    suppress_operator = false;
-                }
-                else {
+                //  then we don't need the =
+                if (
+                    !emit_discard
+                    || !first
+                ) {
                     printer.print_cpp2(" ", n.position());
                     emit(*x.op);
+                    printer.print_cpp2(" ", n.position());
                 }
-                printer.print_cpp2(" ", n.position());
-                
+
                 //  When assigning a single expression-list, we can
                 //  take over direct control of emitting it without needing to
                 //  go through the whole grammar, and surround it with braces
@@ -3561,6 +3561,12 @@ public:
                     emit(*x.expr);
                 }
             }
+
+            first = false;
+        }
+        // Finish emitting the "_ =" discard.
+        if (emit_discard) {
+            printer.print_cpp2( ")", n.position() );
         }
     }
 
@@ -4868,7 +4874,7 @@ public:
         }
 
         //  If this is a generated declaration (negative source line number),
-        //  add a line break before 
+        //  add a line break before
         if (
             printer.get_phase() == printer.phase2_func_defs
             && n.position().lineno < 1
@@ -5504,7 +5510,7 @@ public:
                             //  A2) This is '(out   this, move that)'
                             //      and no  '(inout this, move that)' was written by the user
                             //  (*) and no  '(inout this,      that)' was written by the user (*)
-                            //  
+                            //
                             //  (*) This third test is to tie-break M2 and A2 in favor of M2. Both M2 and A2
                             //      can generate a missing '(inout this, move that)', and if we have both
                             //      options then we should prefer to use M2 (generate move assignment from

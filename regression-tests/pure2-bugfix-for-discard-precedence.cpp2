@@ -1,0 +1,16 @@
+quantity: type = {
+  number: i32;
+  operator=: (out this, _: std::in_place_t, x: i32) = {
+    number = x;
+    _      = _;
+  }
+  operator+=: (inout this, that) -> forward quantity = {
+    _ = number += that.number;
+    return this;
+  }
+}
+
+main: () = {
+  x: quantity = (std::in_place, 1729);
+  _ = x += x;
+}
