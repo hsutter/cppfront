@@ -5133,6 +5133,10 @@ public:
                     && printer.get_phase() == printer.phase2_func_defs
                     )
                 )
+            && (
+                !n.is_concept()
+                || printer.get_phase() == printer.phase1_type_defs_func_decls
+                )
             )
         {
             printer.print_cpp2("template", n.position());
@@ -5804,10 +5808,18 @@ public:
             )
         {
             auto& type = std::get<declaration_node::an_object>(n.type);
+            if (
+                printer.get_phase() == printer.phase2_func_defs
+                && type->is_concept()
+               )
+            {
+                return;
+            }
 
             if (
                 printer.get_phase() != printer.phase2_func_defs
                 && n.parent_is_namespace()
+                && !type->is_concept()
                 )
             {
                 printer.print_cpp2( "extern ", n.position() );
@@ -5871,6 +5883,7 @@ public:
             if (
                 n.parent_is_namespace()
                 && printer.get_phase() != printer.phase2_func_defs
+                && !type->is_concept()
                 )
             {
                 printer.print_cpp2( ";", n.position());
@@ -5882,14 +5895,20 @@ public:
             {
                 in_non_rvalue_context.push_back(true);
                 printer.add_pad_in_this_line(-100);
-                printer.print_cpp2( " {", n.position() );
+                if (type->is_concept()) {
+                    printer.print_cpp2( " = ", n.position() );
+                } else {
+                    printer.print_cpp2( " {", n.position() );
+                }
 
                 push_need_expression_list_parens(false);
                 assert( n.initializer );
                 emit( *n.initializer, false );
                 pop_need_expression_list_parens();
 
-                printer.print_cpp2( "}", n.position() );
+                if (!type->is_concept()) {
+                    printer.print_cpp2( "}", n.position() );
+                }
                 in_non_rvalue_context.pop_back();
             }
 

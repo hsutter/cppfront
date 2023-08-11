@@ -1046,6 +1046,13 @@ struct type_id_node
         return false;
     }
 
+    auto is_concept() const
+        -> bool
+    {
+        auto tok = get_token();
+        return tok && *tok == "concept";
+    }
+
     auto template_args_count() const
         -> int
     {
@@ -2488,6 +2495,8 @@ public:
         { return type.index() == a_function;  }
     auto is_object   () const -> bool
         { return type.index() == an_object;   }
+    auto is_concept  () const -> bool
+        { return type.index() == an_object && get<an_object>(type)->is_concept();   }
     auto is_type     () const -> bool
         { return type.index() == a_type;      }
     auto is_namespace() const -> bool
