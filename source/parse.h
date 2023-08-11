@@ -5379,7 +5379,7 @@ private:
 
                 // Only add error when no specific one already exist
                 if(!has_error()) {
-                    error("Could not parse statement", true);
+                    error("Invalid statement encountered inside a compound-statement", true);
                 }
                 pos = start_pos;    // backtrack
                 return {};
