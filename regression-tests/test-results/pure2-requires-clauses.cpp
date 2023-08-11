@@ -11,8 +11,7 @@
 template<typename T, typename U> 
 
     requires( std::is_same_v<T,int> 
-              && std::is_same_v<U,int> )
-class X;
+              && std::is_same_v<U,int> )class X;
 
 //=== Cpp2 type definitions and function declarations ===========================
 
@@ -21,8 +20,8 @@ class X;
 template<typename T, typename U> 
 
     requires( std::is_same_v<T,int> 
-              && std::is_same_v<U,int> )
-class X {
+              && std::is_same_v<U,int> )class X
+ {
     public: explicit X();
 
     public: X(X const&) = delete; /* No 'that' constructor, suppress copy */

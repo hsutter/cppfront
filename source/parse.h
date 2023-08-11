@@ -6510,7 +6510,17 @@ private:
         }
 
         //  Next is optionally a requires clause
-        if (curr() == "requires") {
+        if (curr() == "requires")
+        {
+            if (
+                n->is_type()
+                && !n->template_parameters
+                )
+            {
+                error("'requires' is only valid for a type with a template parameter list");
+                return {};
+            }
+
             n->requires_pos = curr().position();
             next();
             auto e = logical_or_expression();
