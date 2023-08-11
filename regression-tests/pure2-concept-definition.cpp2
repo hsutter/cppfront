@@ -1,5 +1,7 @@
-arithmetic: <T> concept = std::integral<T> || std::floating_point<T>;
-main: ()                = {
+arithmetic: <T> concept                          = std::integral<T> || std::floating_point<T>;
+t: @struct <T: type> type requires arithmetic<T> = { }
+main: ()                                         = {
   [[assert Testing: arithmetic<i32>]]
   [[assert Testing: arithmetic<float>]]
+  [[assert Testing: !arithmetic<t<i32>>]]
 }

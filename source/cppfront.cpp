@@ -4862,12 +4862,13 @@ public:
             return;
         }
 
-        //  In phase 0, only need to consider namespaces and types
+        //  In phase 0, only need to consider namespaces, types, and concepts
 
         if (
             printer.get_phase() == printer.phase0_type_decls
             && !n.is_namespace()
             && !n.is_type()
+            && !n.is_concept()
             )
         {
             return;
@@ -5135,7 +5136,7 @@ public:
                 )
             && (
                 !n.is_concept()
-                || printer.get_phase() == printer.phase1_type_defs_func_decls
+                || printer.get_phase() == printer.phase0_type_decls
                 )
             )
         {
@@ -5791,6 +5792,11 @@ public:
             n.is_object()
             && (
                 (
+                    n.is_concept()
+                    && printer.get_phase() == printer.phase0_type_decls
+                    )
+                ||
+                (
                     n.parent_is_namespace()
                     && printer.get_phase() >= printer.phase1_type_defs_func_decls
                     )
@@ -5809,7 +5815,7 @@ public:
         {
             auto& type = std::get<declaration_node::an_object>(n.type);
             if (
-                printer.get_phase() == printer.phase2_func_defs
+                printer.get_phase() != printer.phase0_type_decls
                 && type->is_concept()
                )
             {
