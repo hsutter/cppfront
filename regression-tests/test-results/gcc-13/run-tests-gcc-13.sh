@@ -8,10 +8,10 @@ exe_count=0
 gcc --version > gcc-version.output 2>&1
 for f in *.cpp
 do
-    printf "Starting gcc 13 %s\n" "$f"
+    let count=count+1
+    printf "[%s] Starting gcc 13 %s\n" "$count" "$f"
     g++ -I../../../include -std=c++20 -pthread -o test.exe $f > $f.output 2>&1
     rm -f $f
-    let count=count+1
     if test -f "test.exe"; then
         let exe_count=exe_count+1
         printf "    Starting executable\n"
