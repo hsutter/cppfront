@@ -6517,7 +6517,7 @@ private:
                 && !n->template_parameters
                 )
             {
-                error("'requires' is only valid for a type with a template parameter list");
+                error("'requires' is not allowed on a type that does not have a template parameter list");
                 return {};
             }
 
