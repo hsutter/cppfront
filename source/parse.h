@@ -4823,14 +4823,14 @@ private:
             auto term = unqualified_id_node::term{};
 
             do {
-                if (
-                    auto e = [&]() {
-                        // If the template-argument starts with * or const, it can only be
-                        // a type id, so skip the expression production
+                //  If it doesn't start with * or const (which can only be a type id),
+                //  try parsing it as an expression
+                if (auto e = [&]{
                         if (
-                          curr().type() == lexeme::Multiply // '*'
-                          || curr() == "const"              // 'const'
-                        ) {
+                            curr().type() == lexeme::Multiply // '*'
+                            || curr() == "const"              // 'const'
+                        )
+                        {
                             return decltype(expression()){};
                         }
                         return expression(false);   // false == disallow unparenthesized relational comparisons in template args
@@ -4839,12 +4839,16 @@ private:
                 {
                     term.arg = std::move(e);
                 }
+                    
+                //  Else try parsing it as a type id
                 else if (auto i = type_id()) {
                     term.arg = std::move(i);
                 }
+                    
                 else {
                     break;
                 }
+                
                 n->template_args.push_back( std::move(term) );
             }
             //  Use the lambda trick to jam in a "next" clause
