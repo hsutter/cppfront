@@ -3920,6 +3920,10 @@ private:
         error( msg.c_str(), include_curr_token, err_pos, fallback );
     }
 
+    bool has_error() {
+        return !errors.empty();
+    }
+
 
     //-----------------------------------------------------------------------
     //  Token navigation: Only these functions should access this->token_
@@ -5772,6 +5776,11 @@ private:
             //  contained statement() may have parameters
             auto s = statement(true, source_position{}, true, n.get());
             if (!s) {
+
+                // Only add error when no specific one already exist
+                if(!has_error()) {
+                    error("Invalid statement encountered inside a compound-statement", true);
+                }
                 pos = start_pos;    // backtrack
                 return {};
             }
