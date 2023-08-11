@@ -1,0 +1,4 @@
+mixed-bugfix-for-cpp2-comment-cpp1-sequence-error.cpp2...
+mixed-bugfix-for-cpp2-comment-cpp1-sequence-error.cpp2(2,1): error: unexpected text at end of Cpp2 code section (at 'int')
+mixed-bugfix-for-cpp2-comment-cpp1-sequence-error.cpp2(1,0): error: parse failed for section starting here
+
