@@ -4822,6 +4822,7 @@ private:
     //G
     //G template-argument:
     //G     # note: < > << >> are not allowed in expressions until new ( is opened
+    //G     'const' type-id
     //G     expression
     //G     type-id
     //G
@@ -4855,16 +4856,32 @@ private:
             auto term = unqualified_id_node::term{};
 
             do {
-                // disallow unparenthesized relational comparisons in template args
-                if (auto e = expression(false)) {
+                //  If it doesn't start with * or const (which can only be a type id),
+                //  try parsing it as an expression
+                if (auto e = [&]{
+                        if (
+                            curr().type() == lexeme::Multiply // '*'
+                            || curr() == "const"              // 'const'
+                        )
+                        {
+                            return decltype(expression()){};
+                        }
+                        return expression(false);   // false == disallow unparenthesized relational comparisons in template args
+                    }()
+                ) 
+                {
                     term.arg = std::move(e);
                 }
+                    
+                //  Else try parsing it as a type id
                 else if (auto i = type_id()) {
                     term.arg = std::move(i);
                 }
+                    
                 else {
                     break;
                 }
+                
                 n->template_args.push_back( std::move(term) );
             }
             //  Use the lambda trick to jam in a "next" clause
