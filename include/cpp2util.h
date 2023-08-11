@@ -616,7 +616,7 @@ public:
                 *t = T(CPP2_FORWARD(args)...);
             }
             else {
-                Default.expects(!"attempted to copy assign, but copy assignment is not available");
+                Default.expects(false, "attempted to copy assign, but copy assignment is not available");
             }
         }
         else {
@@ -626,7 +626,7 @@ public:
                     dt->value() = T(CPP2_FORWARD(args)...);
                 }
                 else {
-                    Default.expects(!"attempted to copy assign, but copy assignment is not available");
+                    Default.expects(false, "attempted to copy assign, but copy assignment is not available");
                 }
             }
             else {
@@ -643,7 +643,7 @@ public:
                 *t = T{CPP2_FORWARD(args)...};
             }
             else {
-                Default.expects(!"attempted to copy assign, but copy assignment is not available");
+                Default.expects(false, "attempted to copy assign, but copy assignment is not available");
             }
         }
         else {
@@ -653,7 +653,7 @@ public:
                     dt->value() = T{CPP2_FORWARD(args)...};
                 }
                 else {
-                    Default.expects(!"attempted to copy assign, but copy assignment is not available");
+                    Default.expects(false, "attempted to copy assign, but copy assignment is not available");
                 }
             }
             else {
