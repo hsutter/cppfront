@@ -4823,18 +4823,20 @@ private:
             auto term = unqualified_id_node::term{};
 
             do {
-                if (auto e = [&]() {
-                    // If the template-argument can only be a type id
-                    // skip the expression production, because it start with
-                    if (
-                      curr().type() == lexeme::Multiply // '*'
-                      || curr() == "const"              // 'const'
-                    ) {
-                        return decltype(expression()){};
-                    }
-                    // disallow unparenthesized relational comparisons in template args
-                    return expression(false);
-                    }()) {
+                if (
+                    auto e = [&]() {
+                        // If the template-argument starts with * or const, it can only be
+                        // a type id, so skip the expression production
+                        if (
+                          curr().type() == lexeme::Multiply // '*'
+                          || curr() == "const"              // 'const'
+                        ) {
+                            return decltype(expression()){};
+                        }
+                        return expression(false);   // false == disallow unparenthesized relational comparisons in template args
+                    }()
+                ) 
+                {
                     term.arg = std::move(e);
                 }
                 else if (auto i = type_id()) {
