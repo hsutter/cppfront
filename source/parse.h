@@ -280,6 +280,12 @@ struct binary_expression_node
 
     //  API
     //
+    auto terms_size() const
+        -> int
+    {
+        return std::ssize(terms);
+    }
+
     auto is_identifier() const
         -> bool
     {
@@ -1971,6 +1977,9 @@ struct function_type_node
     auto is_constructor_with_move_that() const
         -> bool;
 
+    auto is_compound_assignment() const
+        -> bool;
+
     auto is_assignment() const
         -> bool;
 
@@ -2844,6 +2853,16 @@ public:
         return false;
     }
 
+    auto is_compound_assignment() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_compound_assignment();
+        }
+        //  else
+        return false;
+    }
+
     auto is_assignment() const
         -> bool
     {
@@ -3290,6 +3309,33 @@ auto function_type_node::is_constructor_with_move_that() const
         && (*parameters).ssize() == 2
         && (*parameters)[1]->has_name("that")
         && (*parameters)[1]->direction() == passing_style::move
+        )
+    {
+        return true;
+    }
+    return false;
+}
+
+
+auto function_type_node::is_compound_assignment() const
+    -> bool
+{
+    if (
+        (
+            my_decl->has_name("operator+=")
+            || my_decl->has_name("operator-=")
+            || my_decl->has_name("operator*=")
+            || my_decl->has_name("operator/=")
+            || my_decl->has_name("operator%=")
+            || my_decl->has_name("operator&=")
+            || my_decl->has_name("operator|=")
+            || my_decl->has_name("operator^=")
+            || my_decl->has_name("operator<<=")
+            || my_decl->has_name("operator>>=")
+        )
+        && (*parameters).ssize() > 1
+        && (*parameters)[0]->has_name("this")
+        && (*parameters)[0]->direction() == passing_style::inout
         )
     {
         return true;
@@ -4555,7 +4601,7 @@ private:
     {
         if (allow_angle_operators)
         {
-            return binary_expression<assignment_expression_node> (
+            auto ret = binary_expression<assignment_expression_node> (
                 [this](token const& t, token const& next) -> token const* {
                     if (is_assignment_operator(t.type())) {
                         return &t;
@@ -4573,13 +4619,27 @@ private:
                 },
                 [=,this]{ return logical_or_expression(allow_angle_operators); }
             );
+
+            if (ret && ret->terms_size() > 1) {
+                error("assignment cannot be chained - instead of 'c = b = a;', write 'b = a; c = b;'");
+                return {};
+            }
+
+            return ret;
         }
         else
         {
-            return binary_expression<assignment_expression_node> (
+            auto ret = binary_expression<assignment_expression_node> (
                 [](token const&, token const&) -> token const* { return nullptr; },
                 [=,this]{ return logical_or_expression(allow_angle_operators); }
             );
+
+            if (ret && ret->terms_size() > 1) {
+                error("assignment cannot be chained - instead of 'c = b = a;', write 'b = a; c = b;'");
+                return {};
+            }
+
+            return ret;
         }
     }
 

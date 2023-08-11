@@ -19,7 +19,7 @@ class quantity {
     
 
 #line 7 "pure2-bugfix-for-discard-precedence.cpp2"
-  public: [[nodiscard]] auto operator+=(quantity const& that) -> quantity&;
+  public: auto operator+=(quantity const& that) -> quantity&;
     
   public: quantity(quantity const&) = delete; /* No 'that' constructor, suppress copy */
   public: auto operator=(quantity const&) -> void = delete;
@@ -42,14 +42,14 @@ auto main() -> int;
 
     static_cast<void>(_);
   }
-  [[nodiscard]] auto quantity::operator+=(quantity const& that) -> quantity&{
-    static_cast<void>(number += that.number);
+  auto quantity::operator+=(quantity const& that) -> quantity&{
+    number += that.number;
     return (*this); 
   }
 
 #line 13 "pure2-bugfix-for-discard-precedence.cpp2"
 auto main() -> int{
   quantity x {std::in_place, 1729}; 
-  static_cast<void>(x += std::move(x));
+  x += std::move(x);
 }
 

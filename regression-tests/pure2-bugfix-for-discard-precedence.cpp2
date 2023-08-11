@@ -5,12 +5,12 @@ quantity: type = {
     _      = _;
   }
   operator+=: (inout this, that) -> forward quantity = {
-    _ = number += that.number;
+    number += that.number;
     return this;
   }
 }
 
 main: () = {
   x: quantity = (std::in_place, 1729);
-  _ = x += x;
+  x += x;
 }
