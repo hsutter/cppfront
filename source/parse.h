@@ -263,13 +263,19 @@ struct prefix_expression_node
 };
 
 
+struct expression_node;
+
+
 template<
     String   Name,
     typename Term
 >
 struct binary_expression_node
 {
-    std::unique_ptr<Term> expr;
+    std::unique_ptr<Term>  expr;
+    expression_node const* my_expression = {};
+
+    binary_expression_node();
 
     struct term
     {
@@ -280,6 +286,15 @@ struct binary_expression_node
 
     //  API
     //
+    auto is_standalone_expression() const
+        -> bool
+    {
+        return
+            my_expression
+            && my_expression->is_standalone_expression()
+            ;
+    }
+
     auto terms_size() const
         -> int
     {
@@ -437,12 +452,29 @@ struct assignment_expression_lhs_rhs {
 };
 
 
+struct expression_statement_node;
+
 struct expression_node
 {
+    static inline std::vector<expression_node*> current_expressions = {};
+
     std::unique_ptr<assignment_expression_node> expr;
+    int num_subexpressions = 0;
+    expression_statement_node const* my_statement = {};
+
+    expression_node();
 
     // API
     //
+    auto is_standalone_expression() const
+        -> bool;
+
+    auto subexpression_count() const
+        -> int
+    {
+        return num_subexpressions;
+    }
+
     auto is_identifier() const
         -> bool
     {
@@ -502,6 +534,17 @@ struct expression_node
         v.end(*this, depth);
     }
 };
+
+
+template<
+    String   Name,
+    typename Term
+>
+binary_expression_node<Name, Term>::binary_expression_node() {
+    if (!expression_node::current_expressions.empty()) {
+        my_expression = expression_node::current_expressions.back();
+    }
+}
 
 
 enum class passing_style { in=0, copy, inout, out, move, forward, invalid };
@@ -604,11 +647,20 @@ auto primary_expression_node::is_literal() const
 
 struct expression_statement_node
 {
+    static inline std::vector<expression_statement_node*> current_expression_statements = {};
+
     std::unique_ptr<expression_node> expr;
     bool has_semicolon = false;
 
     //  API
     //
+    auto subexpression_count() const
+        -> int
+    {
+        assert (expr);
+        return expr->subexpression_count();
+    }
+
     auto to_string() const
         -> std::string
     {
@@ -634,6 +686,24 @@ struct expression_statement_node
         v.end(*this, depth);
     }
 };
+
+
+expression_node::expression_node()
+{
+    if (!expression_statement_node::current_expression_statements.empty()) {
+        my_statement = expression_statement_node::current_expression_statements.back();
+    }
+}
+
+
+auto expression_node::is_standalone_expression() const
+    -> bool
+{
+    return
+        my_statement
+        && my_statement->subexpression_count() == subexpression_count()
+        ;
+}
 
 
 struct capture {
@@ -4275,6 +4345,10 @@ private:
             return {};
         }
 
+        for (auto& e : expression_node::current_expressions) {
+            e->num_subexpressions += std::ssize(n->ops);
+        }
+
         return n;
     }
 
@@ -4621,7 +4695,7 @@ private:
             );
 
             if (ret && ret->terms_size() > 1) {
-                error("assignment cannot be chained - instead of 'c = b = a;', write 'b = a; c = b;'");
+                error("assignment cannot be chained - instead of 'c = b = a;', write 'b = a; c = b;'", false);
                 return {};
             }
 
@@ -4635,7 +4709,7 @@ private:
             );
 
             if (ret && ret->terms_size() > 1) {
-                error("assignment cannot be chained - instead of 'c = b = a;', write 'b = a; c = b;'");
+                error("assignment cannot be chained - instead of 'c = b = a;', write 'b = a; c = b;'", false);
                 return {};
             }
 
@@ -4651,6 +4725,11 @@ private:
         -> std::unique_ptr<expression_node>
     {
         auto n = std::make_unique<expression_node>();
+
+        {
+        expression_node::current_expressions.push_back(n.get());
+        auto guard = finally([&]{ expression_node::current_expressions.pop_back(); });
+
         if (!(n->expr = assignment_expression(allow_angle_operators))) {
             return {};
         }
@@ -4663,7 +4742,11 @@ private:
             error("'->' is not Cpp2 deference syntax - write '*.' instead");
             return {};
         }
+        }
 
+        for (auto& e : expression_node::current_expressions) {
+            ++e->num_subexpressions;
+        }
         return n;
     }
 
@@ -5127,6 +5210,10 @@ private:
         -> std::unique_ptr<expression_statement_node>
     {
         auto n = std::make_unique<expression_statement_node>();
+
+        expression_statement_node::current_expression_statements.push_back(n.get());
+        auto guard = finally([&]{ expression_statement_node::current_expression_statements.pop_back(); });
+
         if (!(n->expr = expression())) {
             return {};
         }
@@ -7233,9 +7320,11 @@ public:
         o << pre(indent) << "literal" << "\n";
     }
 
-    auto start(expression_node const&, int indent) -> void
+    auto start(expression_node const& n, int indent) -> void
     {
-        o << pre(indent) << "expression\n";
+        o << pre(indent) << "expression - "
+            << n.num_subexpressions << " subexpressions, my_statement ["
+            << static_cast<void const*>(n.my_statement) << "]\n";
     }
 
     auto start(expression_list_node::term const&n, int indent) -> void
@@ -7272,9 +7361,9 @@ public:
         o << pre(indent) << Name.value << "-expression\n";
     }
 
-    auto start(expression_statement_node const&, int indent) -> void
+    auto start(expression_statement_node const& n, int indent) -> void
     {
-        o << pre(indent) << "expression-statement\n";
+        o << pre(indent) << "expression-statement - [" << static_cast<void const*>(&n) << "]\n";
     }
 
     auto start(postfix_expression_node const&, int indent) -> void

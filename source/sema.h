@@ -62,14 +62,14 @@ struct declaration_sym {
 };
 
 struct identifier_sym {
-    bool assignment_to = false;
+    bool standalone_assignment_to = false;
     token const* identifier = {};
 
     identifier_sym(
         bool         a,
         token const* id
     )
-        : assignment_to{a}
+        : standalone_assignment_to{a}
         , identifier{id}
     { }
 
@@ -411,7 +411,7 @@ public:
                     o << "*** " << sym.identifier->position().to_string()
                       << " DEFINITE INITIALIZATION OF ";
                 }
-                else if (sym.assignment_to) {
+                else if (sym.standalone_assignment_to) {
                     o << "*** assignment to ";
                 }
                 else {
@@ -737,7 +737,7 @@ private:
                     //  If we're not inside a selection statement, we're at the top level --
                     //  just return true if it's an assignment to it, else return false
                     if (std::ssize(selection_stack) == 0) {
-                        if (sym.assignment_to) {
+                        if (sym.standalone_assignment_to) {
                             definite_initializations.push_back( sym.identifier );
                         }
                         else {
@@ -746,7 +746,7 @@ private:
                                 "local variable " + name
                                     + " is used before it was initialized");
                         }
-                        return sym.assignment_to;
+                        return sym.standalone_assignment_to;
                     }
 
                     //  Else if we're inside a selection statement but still in the condition
@@ -755,7 +755,7 @@ private:
                         //  If this is a top-level selection statement, handle it the same as
                         //  if we weren't an a selection statement
                         if (std::ssize(selection_stack) == 1) {
-                            if (sym.assignment_to) {
+                            if (sym.standalone_assignment_to) {
                                 definite_initializations.push_back( sym.identifier );
                             }
                             else {
@@ -764,14 +764,14 @@ private:
                                     "local variable " + name
                                         + " is used in a condition before it was initialized");
                             }
-                            return sym.assignment_to;
+                            return sym.standalone_assignment_to;
                         }
                         //  Else we can skip the rest of this selection statement, and record
                         //  this as the result of the next outer selection statement's current branch
                         else {
                             selection_stack.pop_back();
                             assert (std::ssize(selection_stack.back().branches) > 0);
-                            selection_stack.back().branches.back().result = sym.assignment_to;
+                            selection_stack.back().branches.back().result = sym.standalone_assignment_to;
 
                             int this_depth = symbols[pos].depth;
                             while (symbols[pos + 1].depth >= this_depth) {
@@ -783,7 +783,7 @@ private:
                     //  Else we're in a selection branch and can skip the rest of this branch
                     //  and record this as the result for the current branch
                     else {
-                        if (sym.assignment_to) {
+                        if (sym.standalone_assignment_to) {
                             definite_initializations.push_back( sym.identifier );
                         }
                         else {
@@ -792,7 +792,7 @@ private:
                                 "local variable " + name
                                     + " is used in a branch before it was initialized");
                         }
-                        selection_stack.back().branches.back().result = sym.assignment_to;
+                        selection_stack.back().branches.back().result = sym.standalone_assignment_to;
 
                         //  The depth of this branch should always be the depth of
                         //  the current selection statement + 1
@@ -1450,13 +1450,13 @@ public:
     //-----------------------------------------------------------------------
     //  Visitor functions
     //
-    int  scope_depth                   = 0;
-    bool started_assignment_expression = false;
-    bool started_postfix_expression    = false;
-    bool is_out_expression             = false;
-    bool inside_parameter_list         = false;
-    bool inside_returns_list           = false;
-    bool just_entered_for              = false;
+    int  scope_depth                              = 0;
+    bool started_standalone_assignment_expression = false;
+    bool started_postfix_expression               = false;
+    bool is_out_expression                        = false;
+    bool inside_parameter_list                    = false;
+    bool inside_returns_list                      = false;
+    bool just_entered_for                         = false;
     parameter_declaration_node const* inside_out_parameter = {};
 
     auto start(parameter_declaration_list_node const&, int) -> void
@@ -1588,10 +1588,10 @@ public:
 
         //  If this is the first identifier since we started a new assignment,
         //  expression, then it's the left-hand side (target) of the assignment
-        else if (started_assignment_expression)
+        else if (started_standalone_assignment_expression)
         {
             symbols.emplace_back( scope_depth, identifier_sym( true, &t ) );
-            started_assignment_expression = false;
+            started_standalone_assignment_expression = false;   // we were the consumer for this information
         }
 
         //  If this is the first identifier since we saw an `out` expression,
@@ -1681,10 +1681,14 @@ public:
 
     auto start(assignment_expression_node const& n, int)
     {
-        if (std::ssize(n.terms) > 0) {
+        if (
+            n.is_standalone_expression()
+            && std::ssize(n.terms) > 0
+            )
+        {
             assert (n.terms.front().op);
             if (n.terms.front().op->type() == lexeme::Assignment) {
-                started_assignment_expression = true;
+                started_standalone_assignment_expression = true;
             }
         }
     }
