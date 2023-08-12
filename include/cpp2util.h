@@ -566,8 +566,7 @@ public:
    ~deferred_init() noexcept       { destroy(); }
     auto value()    noexcept -> T& { Default.expects(init);  return t(); }
 
-    auto construct     (auto&& ...args) -> void { Default.expects(!init);  new (&data) T(CPP2_FORWARD(args)...);  init = true; }
-    auto construct_list(auto&& ...args) -> void { Default.expects(!init);  new (&data) T{CPP2_FORWARD(args)...};  init = true; }
+    auto construct(auto&& ...args) -> void { Default.expects(!init);  new (&data) T{CPP2_FORWARD(args)...};  init = true; }
 };
 
 
@@ -624,33 +623,6 @@ public:
             if (dt->init) {
                 if constexpr (requires { *t = T(CPP2_FORWARD(args)...); }) {
                     dt->value() = T(CPP2_FORWARD(args)...);
-                }
-                else {
-                    Default.expects(false, "attempted to copy assign, but copy assignment is not available");
-                }
-            }
-            else {
-                dt->construct(CPP2_FORWARD(args)...);
-                called_construct() = true;
-            }
-        }
-    }
-
-    auto construct_list(auto&& ...args) -> void {
-        if (has_t || called_construct()) {
-            if constexpr (requires { *t = T{CPP2_FORWARD(args)...}; }) {
-                Default.expects( t );
-                *t = T{CPP2_FORWARD(args)...};
-            }
-            else {
-                Default.expects(false, "attempted to copy assign, but copy assignment is not available");
-            }
-        }
-        else {
-            Default.expects( dt );
-            if (dt->init) {
-                if constexpr (requires { *t = T{CPP2_FORWARD(args)...}; }) {
-                    dt->value() = T{CPP2_FORWARD(args)...};
                 }
                 else {
                     Default.expects(false, "attempted to copy assign, but copy assignment is not available");

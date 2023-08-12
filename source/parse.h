@@ -286,14 +286,14 @@ struct binary_expression_node
 
     //  API
     //
-    auto is_standalone_expression() const
+    auto lhs_is_id_expression() const
         -> bool
     {
-        return
-            my_expression
-            && my_expression->is_standalone_expression()
-            ;
+        return expr->is_id_expression();
     }
+
+    auto is_standalone_expression() const
+        -> bool;
 
     auto terms_size() const
         -> int
@@ -544,6 +544,20 @@ binary_expression_node<Name, Term>::binary_expression_node() {
     if (!expression_node::current_expressions.empty()) {
         my_expression = expression_node::current_expressions.back();
     }
+}
+
+
+template<
+    String   Name,
+    typename Term
+>
+auto binary_expression_node<Name, Term>::is_standalone_expression() const
+    -> bool
+{
+    return
+        my_expression
+        && my_expression->is_standalone_expression()
+        ;
 }
 
 

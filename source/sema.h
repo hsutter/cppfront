@@ -1683,6 +1683,7 @@ public:
     {
         if (
             n.is_standalone_expression()
+            && n.lhs_is_id_expression()
             && std::ssize(n.terms) > 0
             )
         {
