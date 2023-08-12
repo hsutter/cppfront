@@ -623,7 +623,7 @@ auto process_cpp_line(
                             }
                         }
                     }
-                    
+
                 break;case '\"':
                     //  If this isn't an escaped quote, toggle string literal state
                     if (
@@ -746,7 +746,7 @@ auto process_cpp2_line(
                 }
 
             break;case '/':
-                if (prev == '/') { in_comment = false; return false; }
+                if (prev == '/') { in_comment = false; return found_end; }
 
             break;case '"':
                 if (prev != '\\') { in_string_literal = true; }
