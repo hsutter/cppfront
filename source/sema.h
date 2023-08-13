@@ -1392,8 +1392,9 @@ public:
         if (n.has_name("operator<=>")) {
             auto return_name = n.unnamed_return_type_to_string();
             if (
-                return_name.find("strong_ordering") == return_name.npos
-                && return_name.find("weak_ordering") == return_name.npos
+                return_name != "_"
+                && return_name.find("strong_ordering" ) == return_name.npos
+                && return_name.find("weak_ordering"   ) == return_name.npos
                 && return_name.find("partial_ordering") == return_name.npos
                 )
             {
