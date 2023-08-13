@@ -15,41 +15,42 @@ class quantity;
 #line 1 "pure2-bugfix-for-discard-precedence.cpp2"
 class quantity {
   private: cpp2::i32 number; 
-  public: explicit quantity(cpp2::in<std::in_place_t> i, cpp2::in<cpp2::i32> x);
-    
+  public: explicit quantity(cpp2::in<cpp2::i32> x);
+  
+#line 3 "pure2-bugfix-for-discard-precedence.cpp2"
+  public: auto operator=(cpp2::in<cpp2::i32> x) -> quantity& ;
+  public: [[nodiscard]] auto operator+(quantity const& that) -> quantity;
 
-#line 7 "pure2-bugfix-for-discard-precedence.cpp2"
-  public: auto operator+=(quantity const& that) -> quantity&;
-    
   public: quantity(quantity const&) = delete; /* No 'that' constructor, suppress copy */
   public: auto operator=(quantity const&) -> void = delete;
-
-
-#line 11 "pure2-bugfix-for-discard-precedence.cpp2"
+#line 5 "pure2-bugfix-for-discard-precedence.cpp2"
 };
 
-auto main() -> int;
+auto main(int const argc_, char const* const* const argv_) -> int;
   
 
 //=== Cpp2 function definitions =================================================
 
 
 #line 3 "pure2-bugfix-for-discard-precedence.cpp2"
-  quantity::quantity(cpp2::in<std::in_place_t> i, cpp2::in<cpp2::i32> x)
-    : number{ x }
+  quantity::quantity(cpp2::in<cpp2::i32> x)
+                                  : number{ x }
 #line 3 "pure2-bugfix-for-discard-precedence.cpp2"
-  {
+                                 {  }
+#line 3 "pure2-bugfix-for-discard-precedence.cpp2"
+  auto quantity::operator=(cpp2::in<cpp2::i32> x) -> quantity&  { 
+                                  number = x;
+                                  return *this;
+#line 3 "pure2-bugfix-for-discard-precedence.cpp2"
+                                 }
+  [[nodiscard]] auto quantity::operator+(quantity const& that) -> quantity { return quantity(number + that.number);  }
 
-    static_cast<void>(i);
-  }
-  auto quantity::operator+=(quantity const& that) -> quantity&{
-    number += that.number;
-    return (*this); 
-  }
-
-#line 13 "pure2-bugfix-for-discard-precedence.cpp2"
-auto main() -> int{
-  quantity x {std::in_place, 1729}; 
-  x += std::move(x);
+#line 7 "pure2-bugfix-for-discard-precedence.cpp2"
+auto main(int const argc_, char const* const* const argv_) -> int{
+  auto args = cpp2::make_args(argc_, argv_); 
+#line 8 "pure2-bugfix-for-discard-precedence.cpp2"
+  quantity x {1729}; 
+  static_cast<void>(x + std::move(x));// Not `(void) x + x`; would attempt to add a `void` to `x`.
+  static_cast<void>(args);// Not `void(args)`; would attempt to declare `args` with `void` type.
 }
 

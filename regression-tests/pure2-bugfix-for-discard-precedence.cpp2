@@ -1,16 +1,11 @@
 quantity: type = {
   number: i32;
-  operator=: (out this, i: std::in_place_t, x: i32) = {
-    number = x;
-    _      = i;
-  }
-  operator+=: (inout this, that) -> forward quantity = {
-    number += that.number;
-    return this;
-  }
+  operator=: (out this, x: i32) = number    = x;
+  operator+: (inout this, that) -> quantity = quantity(number + that.number);
 }
 
-main: () = {
-  x: quantity = (std::in_place, 1729);
-  x += x;
+main: (args) = {
+  x: quantity = (1729);
+  _           = x + x; // Not `(void) x + x`; would attempt to add a `void` to `x`.
+  _           = args;  // Not `void(args)`; would attempt to declare `args` with `void` type.
 }
