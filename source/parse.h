@@ -4731,7 +4731,7 @@ private:
         }
     }
 
-    //G  expression:                // eliminated 'condition:' - just use 'expression:'
+    //G expression:               // eliminated 'condition:' - just use 'expression:'
     //G     assignment-expression
     //GTODO    try expression
     //G
@@ -4972,6 +4972,7 @@ private:
 
     //G unqualified-id:
     //G     identifier
+    //G     keyword
     //G     template-id
     //GTODO     operator-function-id
     //G
@@ -5168,7 +5169,7 @@ private:
     }
 
 
-    //G id-expression
+    //G id-expression:
     //G     qualified-id
     //G     unqualified-id
     //G
@@ -6013,6 +6014,11 @@ private:
             dir != passing_style::invalid
             )
         {
+            if (is_template) {
+                error("a template parameter cannot have a passing style (it is always implicitly 'in')");
+                return {};
+            }
+
             if (!modifier.empty()) {
                 modifier += " ";
                 modifier_plural = "s";
