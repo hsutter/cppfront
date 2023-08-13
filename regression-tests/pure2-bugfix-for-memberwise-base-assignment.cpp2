@@ -1,7 +1,7 @@
 Base: type = {
   operator=: (out this) = { }
   operator=: (out this, that)       = std::cout << "(out this, that)\n";
-  operator=: (implicit out this, x) = std::cout << "(implicit out this, x)\n";
+  operator=: (implicit out this, _) = std::cout << "(implicit out this, _)\n";
 }
 
 Derived: type = {

@@ -19,7 +19,7 @@ myclass : type = {
 
     operator=: (out this, x: int, s: std::string) = {
         this.data = 77;
-        this.more = s + " plugh";
+        this.more = s + std::to_string(x) + " plugh";
         std::cout << "myclass: from int and string\n";
         print();
     }

@@ -21,7 +21,7 @@ main: () -> int = {
     42.no_return();
 }
 
-no_return: (x: int) = { }
+no_return: (_) = { }
 
 ufcs: (i:int) -> int = {
     return i+2;
@@ -37,5 +37,5 @@ get_i: (r:_) -> int = {
 }
 
 //  And a test for non-local UFCS, which shouldn't do a [&] capture
-f: (x)->int = 0;
+f: (_)->int = 0;
 y: int = 0.f();

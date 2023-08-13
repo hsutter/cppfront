@@ -8,9 +8,9 @@ struct X {
     X(X &&     that) : i{that.i} { std::cout << "move X " << i << "\n"; }
 };
 
-copy_from: (copy x:_) = { }
+copy_from: (copy _) = { }
 
-use: (x:_) = {}
+use: (_) = {}
 
 // invoking each of these with an rvalue std::pair argument ...
 apply_implicit_forward: (forward t: std::pair<X, X>) = {

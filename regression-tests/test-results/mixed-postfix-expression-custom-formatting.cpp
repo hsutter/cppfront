@@ -11,7 +11,7 @@
 
 
 #line 2 "mixed-postfix-expression-custom-formatting.cpp2"
-auto call(auto const& v, auto const& w, auto const& x, auto const& y, auto const& z) -> void;
+auto call([[maybe_unused]] auto const& param1, [[maybe_unused]] auto const& param2, [[maybe_unused]] auto const& param3, [[maybe_unused]] auto const& param4, [[maybe_unused]] auto const& param5) -> void;
 
 [[nodiscard]] auto test(auto const& a) -> std::string;
     
@@ -24,7 +24,7 @@ auto call(auto const& v, auto const& w, auto const& x, auto const& y, auto const
 
 
 #line 2 "mixed-postfix-expression-custom-formatting.cpp2"
-auto call(auto const& v, auto const& w, auto const& x, auto const& y, auto const& z) -> void{}
+auto call([[maybe_unused]] auto const& param1, [[maybe_unused]] auto const& param2, [[maybe_unused]] auto const& param3, [[maybe_unused]] auto const& param4, [[maybe_unused]] auto const& param5) -> void{}
 
 [[nodiscard]] auto test(auto const& a) -> std::string{
     return call(a, 

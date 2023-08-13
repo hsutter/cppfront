@@ -15,12 +15,12 @@
 #include <ctime>
 
 #line 6 "mixed-parameter-passing-with-forward.cpp2"
-auto copy_from(auto x) -> void;
+auto copy_from([[maybe_unused]] auto param1) -> void;
 
 auto parameter_styles(
-    cpp2::in<std::string> a, // "in" is default
+    [[maybe_unused]] cpp2::in<std::string> param1, // "in" is default
     std::string b, 
-    std::string& c, 
+    [[maybe_unused]] std::string& param3, 
     std::string&& d, 
     auto&& e
     ) -> void
@@ -36,12 +36,12 @@ CPP2_REQUIRES (std::is_same_v<CPP2_TYPEOF(e), std::string>)
 
 
 #line 6 "mixed-parameter-passing-with-forward.cpp2"
-auto copy_from(auto x) -> void{}
+auto copy_from([[maybe_unused]] auto param1) -> void{}
 
 auto parameter_styles(
-    cpp2::in<std::string> a, 
+    [[maybe_unused]] cpp2::in<std::string> param1, 
     std::string b, 
-    std::string& c, 
+    [[maybe_unused]] std::string& param3, 
     std::string&& d, 
     auto&& e
     ) -> void

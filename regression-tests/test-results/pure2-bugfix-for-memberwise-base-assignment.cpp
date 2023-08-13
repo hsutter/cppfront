@@ -19,19 +19,19 @@ class Derived;
 #line 1 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
 class Base {
   public: explicit Base();
-  public: Base(Base const& that);
+  public: Base([[maybe_unused]] Base const& that);
   
 #line 3 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
-  public: auto operator=(Base const& that) -> Base& ;
+  public: auto operator=([[maybe_unused]] Base const& that) -> Base& ;
   
 #line 3 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
-  public: Base(Base&& that) noexcept;
+  public: Base([[maybe_unused]] Base&& that) noexcept;
   
 #line 3 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
-  public: auto operator=(Base&& that) noexcept -> Base& ;
-  public: Base(auto const& x);
+  public: auto operator=([[maybe_unused]] Base&& that) noexcept -> Base& ;
+  public: Base([[maybe_unused]] auto const& param2);
 #line 4 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
-  public: auto operator=(auto const& x) -> Base& ;
+  public: auto operator=([[maybe_unused]] auto const& param2) -> Base& ;
 };
 
 class Derived: public Base {
@@ -49,22 +49,22 @@ auto main() -> int;
 
 #line 2 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
   Base::Base(){}
-  Base::Base (Base const& that) { std::cout << "(out this, that)\n"; }
+  Base::Base ([[maybe_unused]] Base const& that) { std::cout << "(out this, that)\n"; }
 #line 3 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
-  auto Base::operator=(Base const& that) -> Base&  { std::cout << "(out this, that)\n";
+  auto Base::operator=([[maybe_unused]] Base const& that) -> Base&  { std::cout << "(out this, that)\n";
                                       return *this;
 #line 3 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
                                      }
 #line 3 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
-  Base::Base (Base&& that) noexcept { std::cout << "(out this, that)\n"; }
+  Base::Base ([[maybe_unused]] Base&& that) noexcept { std::cout << "(out this, that)\n"; }
 #line 3 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
-  auto Base::operator=(Base&& that) noexcept -> Base&  { std::cout << "(out this, that)\n";
+  auto Base::operator=([[maybe_unused]] Base&& that) noexcept -> Base&  { std::cout << "(out this, that)\n";
                                       return *this;
 #line 3 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
                                      }
-  Base::Base(auto const& x) { std::cout << "(implicit out this, x)\n";  }
+  Base::Base([[maybe_unused]] auto const& param2) { std::cout << "(implicit out this, _)\n";  }
 #line 4 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
-  auto Base::operator=(auto const& x) -> Base&  { std::cout << "(implicit out this, x)\n";
+  auto Base::operator=([[maybe_unused]] auto const& param2) -> Base&  { std::cout << "(implicit out this, _)\n";
                                       return *this;
 #line 4 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
    }

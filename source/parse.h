@@ -1859,6 +1859,7 @@ struct parameter_declaration_node
 {
     source_position pos = {};
     passing_style pass  = passing_style::in;
+    int ordinal = 1;
 
     enum class modifier { none=0, implicit, virtual_, override_, final_ };
     modifier mod = modifier::none;
@@ -6184,8 +6185,12 @@ private:
 
         auto param = std::make_unique<parameter_declaration_node>();
 
+        auto count = 1;
         while ((param = parameter_declaration(is_returns, is_named, is_template, is_statement)) != nullptr)
         {
+            param->ordinal = count;
+            ++count;
+
             if (
                 std::ssize(n->parameters) > 1
                 && n->parameters.back()->has_name("that")

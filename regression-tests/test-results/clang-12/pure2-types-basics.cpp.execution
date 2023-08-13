@@ -11,7 +11,7 @@ myclass: explicit from string
 myclass: default
     data: 504, more: 3.141590
 myclass: from int and string
-    data: 77, more: hair plugh
+    data: 77, more: hair1 plugh
 x's state before assignments:     data: 1, more: 504
 myclass: implicit from int
     data: 84, more: 504

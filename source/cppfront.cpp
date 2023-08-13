@@ -3842,6 +3842,7 @@ public:
 
         if (n.mod == parameter_declaration_node::modifier::implicit)
         {
+            assert(!current_functions.empty());
             if (
                 n.pass != passing_style::out
                 || !current_functions.back().decl->has_name("operator=")
@@ -3893,8 +3894,16 @@ public:
             auto type_name = get_enclosing_type_name();
             assert(type_name);
 
+            //  If we're in an empty type that has no member object, mark 'that' as
+            //  [[maybe_unused]] to silence Cpp1 compiler warnings
+            assert(!current_functions.empty());
+            auto maybe_unused = std::string{};
+            if (current_functions.back().decl->get_parent()->get_type_scope_declarations(declaration_node::objects).empty()) {
+                maybe_unused = "[[maybe_unused]] ";
+            }
+
             printer.print_cpp2(
-                print_to_string( *type_name ) + pass + " that",
+                maybe_unused + print_to_string( *type_name ) + pass + " that",
                 n.position()
             );
             return;
@@ -3978,6 +3987,12 @@ public:
         auto identifier = print_to_string( *n.declaration->identifier );
 
         //  First any prefix
+
+        if (identifier == "_") {
+            printer.print_cpp2( "[[maybe_unused]] ", n.position() );
+            identifier = "param" + std::to_string(n.ordinal);
+        }
+
         if (
             !is_returns
             && !type_id.is_wildcard()
@@ -4055,6 +4070,7 @@ public:
         printer.preempt_position_pop();
 
         //  Then any suffix
+
         if (
             !is_returns
             && !type_id.is_wildcard()

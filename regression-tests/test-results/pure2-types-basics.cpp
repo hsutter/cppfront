@@ -138,7 +138,7 @@ namespace N {
 
     myclass::myclass(cpp2::in<int> x, cpp2::in<std::string> s)
         : data{ 77 }
-        , more{ s + " plugh" }
+        , more{ s + std::to_string(x) + " plugh" }
 #line 20 "pure2-types-basics.cpp2"
     {
 

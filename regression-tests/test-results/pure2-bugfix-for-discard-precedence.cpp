@@ -15,7 +15,7 @@ class quantity;
 #line 1 "pure2-bugfix-for-discard-precedence.cpp2"
 class quantity {
   private: cpp2::i32 number; 
-  public: explicit quantity(cpp2::in<std::in_place_t> _, cpp2::in<cpp2::i32> x);
+  public: explicit quantity(cpp2::in<std::in_place_t> i, cpp2::in<cpp2::i32> x);
     
 
 #line 7 "pure2-bugfix-for-discard-precedence.cpp2"
@@ -35,12 +35,12 @@ auto main() -> int;
 
 
 #line 3 "pure2-bugfix-for-discard-precedence.cpp2"
-  quantity::quantity(cpp2::in<std::in_place_t> _, cpp2::in<cpp2::i32> x)
+  quantity::quantity(cpp2::in<std::in_place_t> i, cpp2::in<cpp2::i32> x)
     : number{ x }
 #line 3 "pure2-bugfix-for-discard-precedence.cpp2"
   {
 
-    static_cast<void>(_);
+    static_cast<void>(i);
   }
   auto quantity::operator+=(quantity const& that) -> quantity&{
     number += that.number;

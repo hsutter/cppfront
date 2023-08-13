@@ -20,9 +20,9 @@ struct X {
 };
 
 #line 11 "mixed-forwarding.cpp2"
-auto copy_from(auto x) -> void;
+auto copy_from([[maybe_unused]] auto param1) -> void;
 
-auto use(auto const& x) -> void;
+auto use([[maybe_unused]] auto const& param1) -> void;
 
 // invoking each of these with an rvalue std::pair argument ...
 auto apply_implicit_forward(auto&& t) -> void
@@ -46,9 +46,9 @@ CPP2_REQUIRES (std::is_same_v<CPP2_TYPEOF(t), std::pair<X,X>>)
 
 
 #line 11 "mixed-forwarding.cpp2"
-auto copy_from(auto x) -> void{}
+auto copy_from([[maybe_unused]] auto param1) -> void{}
 
-auto use(auto const& x) -> void{}
+auto use([[maybe_unused]] auto const& param1) -> void{}
 
 #line 16 "mixed-forwarding.cpp2"
 auto apply_implicit_forward(auto&& t) -> void

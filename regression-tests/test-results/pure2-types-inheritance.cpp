@@ -39,7 +39,7 @@ public: virtual ~Human() noexcept;
 
 namespace N {
     template<int I> class Machine {
-        public: explicit Machine(cpp2::in<std::string> id);
+        public: explicit Machine([[maybe_unused]] cpp2::in<std::string> param2);
         public: virtual auto work() const -> void = 0;
     
     public: virtual ~Machine() noexcept;
@@ -97,7 +97,7 @@ auto main() -> int;
 #line 6 "pure2-types-inheritance.cpp2"
 namespace N {
 
-        template <int I> Machine<I>::Machine(cpp2::in<std::string> id){}
+        template <int I> Machine<I>::Machine([[maybe_unused]] cpp2::in<std::string> param2){}
 
         template <int I> Machine<I>::~Machine() noexcept{}
 

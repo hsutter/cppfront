@@ -1,5 +1,5 @@
 
-call: (v:_, w:_, x:_, y:_, z:_) = { }
+call: (_, _, _, _, _) = { }
 
 test: (a:_) -> std::string = {
     return call( a,

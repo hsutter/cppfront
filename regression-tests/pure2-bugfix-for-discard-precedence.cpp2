@@ -1,8 +1,8 @@
 quantity: type = {
   number: i32;
-  operator=: (out this, _: std::in_place_t, x: i32) = {
+  operator=: (out this, i: std::in_place_t, x: i32) = {
     number = x;
-    _      = _;
+    _      = i;
   }
   operator+=: (inout this, that) -> forward quantity = {
     number += that.number;

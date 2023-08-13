@@ -3,12 +3,12 @@
 #include <cstdlib>
 #include <ctime>
 
-copy_from: (copy x:_) = { }
+copy_from: (copy _) = { }
 
 parameter_styles: (
-    in    a: std::string, // "in" is default
+    in    _: std::string, // "in" is default
     copy  b: std::string,
-    inout c: std::string,
+    inout _: std::string,
     move  d: std::string
     )
 = {
