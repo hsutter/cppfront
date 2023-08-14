@@ -26,7 +26,7 @@ class quantity {
 #line 5 "pure2-bugfix-for-discard-precedence.cpp2"
 };
 
-auto main(int const argc_, char const* const* const argv_) -> int;
+auto main(int const argc_, char** argv_) -> int;
   
 
 //=== Cpp2 function definitions =================================================
@@ -46,7 +46,7 @@ auto main(int const argc_, char const* const* const argv_) -> int;
   [[nodiscard]] auto quantity::operator+(quantity const& that) -> quantity { return quantity(number + that.number);  }
 
 #line 7 "pure2-bugfix-for-discard-precedence.cpp2"
-auto main(int const argc_, char const* const* const argv_) -> int{
+auto main(int const argc_, char** argv_) -> int{
   auto args = cpp2::make_args(argc_, argv_); 
 #line 8 "pure2-bugfix-for-discard-precedence.cpp2"
   quantity x {1729}; 

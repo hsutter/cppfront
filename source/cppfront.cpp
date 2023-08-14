@@ -4260,7 +4260,7 @@ public:
             )
         {
             printer.print_cpp2(
-                "(int const argc_, char const* const* const argv_)",
+                "(int const argc_, char** argv_)",
                 n.parameters->position()
             );
             current_functions.back().prolog.statements.push_back(

@@ -205,6 +205,7 @@
     #include <string>
     #include <string_view>
     #include <vector>
+    #include <span>
     #include <iostream>
     #include <variant>
     #include <any>
@@ -1490,16 +1491,17 @@ inline auto to_string(std::tuple<Ts...> const& t) -> std::string
 //
 struct args_t : std::vector<std::string_view>
 {
-    args_t(int c, char const* const* v) : vector{static_cast<size_t>(c)}, argc{c}, argv{v} {}
+    args_t(int c, char** v) : vector{static_cast<size_t>(c)}, argc{c}, argv{v}, mutable_argv{v} {}
 
-    int                argc = 0;
-    char const* const* argv = nullptr;
+    int                argc         = 0;
+    char const* const* argv         = nullptr;
+    char**             mutable_argv = nullptr;
 };
 
-inline auto make_args(int argc, char const* const* argv) -> args_t
+inline auto make_args(int argc, char** argv) -> args_t
 {
     auto ret = args_t{argc, argv};
-    std::copy(argv, argv + argc, ret.data());
+    std::ranges::copy( std::span(argv, argc), ret.data() );
     return ret;
 }
 

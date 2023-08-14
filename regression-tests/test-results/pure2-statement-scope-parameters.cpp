@@ -12,14 +12,14 @@
 
 
 #line 2 "pure2-statement-scope-parameters.cpp2"
-auto main(int const argc_, char const* const* const argv_) -> int;
+auto main(int const argc_, char** argv_) -> int;
     
 
 //=== Cpp2 function definitions =================================================
 
 
 #line 2 "pure2-statement-scope-parameters.cpp2"
-auto main(int const argc_, char const* const* const argv_) -> int{
+auto main(int const argc_, char** argv_) -> int{
     auto args = cpp2::make_args(argc_, argv_); 
 #line 3 "pure2-statement-scope-parameters.cpp2"
     auto local_int {42}; 

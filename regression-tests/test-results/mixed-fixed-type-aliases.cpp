@@ -21,7 +21,7 @@ auto test(auto const& x) -> void;
     
 
 #line 15 "mixed-fixed-type-aliases.cpp2"
-[[nodiscard]] auto main(int const argc_, char const* const* const argv_) -> int;
+[[nodiscard]] auto main(int const argc_, char** argv_) -> int;
     
 
 //=== Cpp2 function definitions =================================================
@@ -35,7 +35,7 @@ auto test(auto const& x) -> void{
         << "\n";
 }
 
-[[nodiscard]] auto main(int const argc_, char const* const* const argv_) -> int{
+[[nodiscard]] auto main(int const argc_, char** argv_) -> int{
     auto args = cpp2::make_args(argc_, argv_); 
 #line 16 "mixed-fixed-type-aliases.cpp2"
     my::u16 y {42}; 
