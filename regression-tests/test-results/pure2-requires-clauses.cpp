@@ -42,6 +42,11 @@ template<typename T>
 CPP2_REQUIRES_ (std::same_as<T,cpp2::i32>) extern T const v;
 
 #line 20 "pure2-requires-clauses.cpp2"
+template<typename T> auto g() -> void
+CPP2_REQUIRES (true) ;
+#line 21 "pure2-requires-clauses.cpp2"
+[[nodiscard]] auto g() -> auto;
+
 auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -65,8 +70,13 @@ template<typename T>
 requires (std::same_as<T,cpp2::i32>) T const v {0}; 
 
 #line 20 "pure2-requires-clauses.cpp2"
+template<typename T> auto g() -> void
+requires (true) {}
+#line 21 "pure2-requires-clauses.cpp2"
+[[nodiscard]] auto g() -> auto { return requires {0; 
+}; }
 auto main() -> int{
-    X<int,int> auto_21_5 {}; 
+    X<int,int> auto_24_5 {}; 
     std::cout << f<int,int>(2, 5);
 }
 

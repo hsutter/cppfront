@@ -17,6 +17,9 @@ f:  <T: type, U: type>
 
 v: <T> const T requires std::same_as<T, i32> = 0;
 
+g: <T> () requires true = { }
+g: () (requires { _ = 0; });
+
 main: () = {
     _: X<int,int> = ();
     std::cout << f<int,int>(2,5);

@@ -129,13 +129,14 @@ struct expression_list_node;
 struct id_expression_node;
 struct declaration_node;
 struct inspect_expression_node;
+struct requires_expression_node;
 struct literal_node;
 struct template_argument;
 
 
 struct primary_expression_node
 {
-    enum active { empty=0, identifier, expression_list, id_expression, declaration, inspect, literal };
+    enum active { empty=0, identifier, expression_list, id_expression, declaration, inspect, requires_, literal };
     std::variant<
         std::monostate,
         token const*,
@@ -143,6 +144,7 @@ struct primary_expression_node
         std::unique_ptr<id_expression_node>,
         std::unique_ptr<declaration_node>,
         std::unique_ptr<inspect_expression_node>,
+        std::unique_ptr<requires_expression_node>,
         std::unique_ptr<literal_node>
     > expr;
     // Cache to work around <https://github.com/llvm/llvm-project/issues/73336>.
@@ -1795,6 +1797,83 @@ struct inspect_expression_node
 };
 
 
+struct parameter_declaration_list_node;
+
+struct requires_expression_node
+{
+    struct compound_requirement_node {
+        std::unique_ptr<expression_node> expression;
+        bool                             throws = true;
+        std::unique_ptr<type_id_node>    type_constraint;
+
+        auto position() const
+            -> source_position
+        {
+            assert(expression);
+            return expression->position();
+        }
+
+        auto visit(auto& v, int depth)
+            -> void
+        {
+            v.start(*this, depth);
+            assert (expression);
+            v.start(*expression, depth+1);
+            if (type_constraint) {
+                type_constraint->visit(v, depth+1);
+            }
+            v.end(*this, depth);
+        }
+    };
+
+    struct requirement_node {
+        enum active { type=0, expression, compound, nested, negative };
+        std::variant<
+            std::unique_ptr<type_id_node>,
+            std::unique_ptr<expression_node>,
+            std::unique_ptr<compound_requirement_node>,
+            std::unique_ptr<logical_or_expression_node>,
+            std::unique_ptr<requirement_node>
+        > requirement;
+
+        auto position() const
+            -> source_position
+        {
+            return std::visit([](auto const& r) {
+                assert(r);
+                return r->position();
+            }, requirement);
+        }
+
+        auto visit(auto& v, int depth)
+            -> void
+        {
+            v.start(*this, depth);
+            try_visit<type      >(requirement, v, depth);
+            try_visit<expression>(requirement, v, depth);
+            try_visit<compound  >(requirement, v, depth);
+            try_visit<nested    >(requirement, v, depth);
+            try_visit<negative  >(requirement, v, depth);
+            v.end(*this, depth);
+        }
+    };
+
+    token const*                                     identifier = {};
+    std::unique_ptr<parameter_declaration_list_node> parameters;
+    std::vector<std::unique_ptr<requirement_node>>   requirements;
+
+    auto position() const
+        -> source_position
+    {
+        assert(identifier);
+        return identifier->position();
+    }
+
+    auto visit(auto& v, int depth)
+        -> void;
+};
+
+
 struct contract_node
 {
     //  Declared first, because it should outlive any owned
@@ -2170,6 +2249,23 @@ auto statement_node::visit(auto& v, int depth)
     try_visit<contract   >(statement, v, depth);
     try_visit<inspect    >(statement, v, depth);
     try_visit<jump       >(statement, v, depth);
+    v.end(*this, depth);
+}
+
+
+auto requires_expression_node::visit(auto& v, int depth)
+    -> void
+{
+    v.start(*this, depth);
+    assert (identifier);
+    v.start(*identifier, depth+1);
+    if (parameters) {
+        parameters->visit(v, depth+1);
+    }
+    for (auto const& x : requirements) {
+        assert(x);
+        x->visit(v, depth+1);
+    }
     v.end(*this, depth);
 }
 
@@ -4041,6 +4137,12 @@ auto primary_expression_node::position() const
         return i->position();
     }
 
+    break;case requires_: {
+        auto const& i = std::get<requires_>(expr);
+        assert (i);
+        return i->position();
+    }
+
     break;case literal: {
         auto const& i = std::get<literal>(expr);
         assert (i);
@@ -4063,6 +4165,7 @@ auto primary_expression_node::visit(auto& v, int depth)
     try_visit<id_expression  >(expr, v, depth);
     try_visit<declaration    >(expr, v, depth);
     try_visit<inspect        >(expr, v, depth);
+    try_visit<requires_      >(expr, v, depth);
     try_visit<literal        >(expr, v, depth);
     v.end(*this, depth);
 }
@@ -4218,6 +4321,11 @@ struct translation_unit_node
 };
 
 
+struct type_requirement_tag {};
+struct simple_requirement_tag {};
+struct nested_requirement_tag {};
+struct negative_requirement_tag {};
+
 //-----------------------------------------------------------------------
 //
 //  pretty_print_visualize: pretty-prints Cpp2 ASTs
@@ -4267,6 +4375,20 @@ auto pretty_print_visualize(return_statement_node const& n, int indent)
 auto pretty_print_visualize(alternative_node const& n, int indent)
     -> std::string;
 auto pretty_print_visualize(inspect_expression_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(type_id_node const& n, type_requirement_tag, int indent)
+    -> std::string;
+auto pretty_print_visualize(expression_node const& n, simple_requirement_tag, int indent)
+    -> std::string;
+auto pretty_print_visualize(requires_expression_node::compound_requirement_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(logical_or_expression_node const& n, nested_requirement_tag, int indent)
+    -> std::string;
+auto pretty_print_visualize(requires_expression_node::requirement_node const& n, negative_requirement_tag, int indent)
+    -> std::string;
+auto pretty_print_visualize(requires_expression_node::requirement_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(requires_expression_node const& n, int indent)
     -> std::string;
 auto pretty_print_visualize(contract_node const& n, int indent)
     -> std::string;
@@ -4347,6 +4469,7 @@ auto pretty_print_visualize(primary_expression_node const& n, int indent)
     ret += try_pretty_print_visualize<primary_expression_node::id_expression  >(n.expr, indent);
     ret += try_pretty_print_visualize<primary_expression_node::declaration    >(n.expr, indent);
     ret += try_pretty_print_visualize<primary_expression_node::inspect        >(n.expr, indent);
+    ret += try_pretty_print_visualize<primary_expression_node::requires_      >(n.expr, indent);
     ret += try_pretty_print_visualize<primary_expression_node::literal        >(n.expr, indent);
 
     return ret;
@@ -4731,6 +4854,100 @@ auto pretty_print_visualize(inspect_expression_node const& n, int indent)
     }
 
     ret += std::string{"\n"} + pre(indent) + "}";
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(type_id_node const& n, type_requirement_tag, int indent)
+    -> std::string
+{
+    return pretty_print_visualize(n, indent) + ";";
+}
+
+auto pretty_print_visualize(expression_node const& n, simple_requirement_tag, int indent)
+    -> std::string
+{
+    return "_ = " + pretty_print_visualize(n, indent) + ';';
+}
+
+auto pretty_print_visualize(requires_expression_node::compound_requirement_node const& n, int indent)
+    -> std::string
+{
+    auto ret = "{ " + pretty_print_visualize(*n.expression, indent) + " }";
+
+    if (!n.throws) {
+        ret += " !throws";
+        if (n.type_constraint) {
+            ret += ",";
+        }
+    }
+
+    if (n.type_constraint) {
+        ret += " is " + pretty_print_visualize(*n.type_constraint, indent);
+    }
+
+    ret += ';';
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(logical_or_expression_node const& n, nested_requirement_tag, int indent)
+    -> std::string
+{
+    return "requires " + pretty_print_visualize(n, indent) + ';';
+}
+
+auto pretty_print_visualize(requires_expression_node::requirement_node const& n, negative_requirement_tag, int indent)
+    -> std::string
+{
+    return "!requires " + pretty_print_visualize(n, indent);
+}
+
+auto pretty_print_visualize(requires_expression_node::requirement_node const& n, int indent)
+    -> std::string
+{
+    auto ret = std::string{};
+
+    ret += try_pretty_print_visualize<requires_expression_node::requirement_node::type      >(n.requirement, type_requirement_tag{}, indent);
+    ret += try_pretty_print_visualize<requires_expression_node::requirement_node::expression>(n.requirement, simple_requirement_tag{}, indent);
+    ret += try_pretty_print_visualize<requires_expression_node::requirement_node::compound  >(n.requirement, indent);
+    ret += try_pretty_print_visualize<requires_expression_node::requirement_node::nested    >(n.requirement, nested_requirement_tag{}, indent);
+    ret += try_pretty_print_visualize<requires_expression_node::requirement_node::negative  >(n.requirement, negative_requirement_tag{}, indent);
+
+    return ret;
+}
+
+auto pretty_print_visualize(requires_expression_node const& n, int indent)
+    -> std::string
+{
+    assert (n.identifier);
+
+    auto ret = std::string{"requires"};
+
+    if (n.parameters) {
+        ret += pretty_print_visualize(*n.parameters, indent+1);
+    }
+
+    ret += " {";
+
+    auto requirement_indent = pre(indent + 1);
+    char separator = '\n';
+    if (n.requirements.size() <= 1) {
+        requirement_indent = {};
+        separator = ' ';
+    }
+
+    ret += separator;
+
+    for (auto& req: n.requirements) {
+        assert(req);
+        ret += requirement_indent + pretty_print_visualize(*req, indent+2) + separator;
+    }
+
+    ret += requirement_indent;
+    ret += '}';
 
     return ret;
 }
@@ -5487,6 +5704,7 @@ private:
 
     //G primary-expression:
     //G     inspect-expression
+    //G     requires-expression
     //G     id-expression
     //G     literal
     //G     '(' expression-list ')'
@@ -5501,6 +5719,12 @@ private:
         if (auto inspect = inspect_expression(true))
         {
             n->expr = std::move(inspect);
+            return n;
+        }
+
+        if (auto requires_ = requires_expression())
+        {
+            n->expr = std::move(requires_);
             return n;
         }
 
@@ -7169,6 +7393,210 @@ private:
     }
 
 
+    //G requires-expression:
+    //G     'requires' parameter-declaration-list? requirement-body
+    //G
+    //G requirement-body:
+    //G     '{' requirement-seq '}'
+    //G
+    //G requirement-seq:
+    //G     requirement
+    //G     requirement requirement-seq
+    //G
+    //G requirement:
+    //G     nested-requirement
+    //G     negative-requirement
+    //G     simple-requirement
+    //G     type-id ';'          // Cpp1 type-requirement
+    //G     compound-requirement
+    //G
+    //G simple-requirement:
+    //G     '_' '=' expression ';'
+    //G
+    //G compound-requirement:
+    //G     '{' expression '}' throws-specifier? ','? is-type-constraint? ';'
+    //G
+    //G nested-requirement:
+    //G     'requires' logical-or-expression ';'
+    //G
+    //G negative-requirement:
+    //G     '!' 'requires' requirement
+    //G
+    auto requirement()
+        -> std::unique_ptr<requires_expression_node::requirement_node>
+    {
+        auto as_requirement = [&](auto&& req) {
+            return std::make_unique<requires_expression_node::requirement_node>(requires_expression_node::requirement_node{std::move(req)});
+        };
+
+        auto curr_starts_negative_requirement = [&]() {
+            return curr().type() == lexeme::Not
+                   && peek(1)
+                   && *peek(1) == "requires";
+        };
+
+        if (curr() == "requires")
+        {
+            next();
+            if (curr_starts_negative_requirement()) {
+                error("a negative requirement is expressed without the leading 'requires' before '!'");
+            }
+            auto e = logical_or_expression();
+            if (!e) {
+                error("'requires' must be followed by an expression");
+                return {};
+            }
+            if (curr().type() != lexeme::Semicolon)
+            {
+                error("expected ';' at end of nested requirement");
+                return {};
+            }
+            next();
+            return as_requirement(std::move(e));
+        }
+        else if (curr_starts_negative_requirement())
+        {
+            next(2);
+            auto r = requirement();
+            if (!r) {
+                error("expected requirement");
+            }
+            return as_requirement(std::move(r));
+        }
+        else if (
+            curr() == "_"
+            && peek(1)
+            && peek(1)->type() == lexeme::Assignment
+            )
+        {
+            next(2);
+            auto e = expression();
+            if (!e)
+            {
+                error("expected expression of simple requirement");
+                return {};
+            }
+            if (curr().type() != lexeme::Semicolon)
+            {
+                error("expected ';' at end of simple requirement");
+                return {};
+            }
+            next();
+            return as_requirement(std::move(e));
+        }
+        else if (auto t = type_id())
+        {
+            if (curr().type() != lexeme::Semicolon)
+            {
+                error("expected ';' at end of type");
+                return {};
+            }
+            next();
+            return as_requirement(std::move(t));
+        }
+        else if (curr().type() == lexeme::LeftBrace)
+        {
+            next();
+            auto r = std::make_unique<requires_expression_node::compound_requirement_node>();
+            auto e = expression();
+            if (!e) {
+                error("expected expression of compound requirement");
+                return {};
+            }
+            r->expression = std::move(e);
+            if (curr().type() != lexeme::RightBrace)
+            {
+                error("expected closing '}' of compound requirement");
+                return {};
+            }
+            next();
+            if (curr().type() == lexeme::Not)
+            {
+                r->throws = false;
+                next();
+            }
+            if (curr() == "throws")
+            {
+                if (r->throws) {
+                    error("expected '!' before 'throws', or no 'throws' (the default)");
+                    return {};
+                }
+                next();
+            }
+            else if (!r->throws)
+            {
+                error("expected 'throws' after '!'");
+                return {};
+            }
+            auto has_comma = curr().type() == lexeme::Comma;
+            if (has_comma)
+            {
+                next();
+            }
+            if (curr() == "is")
+            {
+                next();
+                auto t = type_id();
+                if (!t) {
+                    error("expected type constraint");
+                    return {};
+                }
+                r->type_constraint = std::move(t);
+            }
+            else if (has_comma)
+            {
+                error("expected type constraint after ','");
+                return {};
+            }
+            if (curr().type() != lexeme::Semicolon)
+            {
+                error("expected ';' at end of compound requirement");
+                return {};
+            }
+            next();
+            return as_requirement(std::move(r));
+        }
+        // else
+        return {};
+    }
+
+    auto requires_expression()
+        -> std::unique_ptr<requires_expression_node>
+    {
+        if (curr() != "requires") {
+            return {};
+        }
+
+        auto n = std::make_unique<requires_expression_node>();
+        n->identifier = &curr();
+        next();
+
+        if (auto p = parameter_declaration_list()) {
+            n->parameters = std::move(p);
+        }
+
+        if (curr().type() != lexeme::LeftBrace) {
+            error("expected opening '{' of body of requires expression");
+            return {};
+        }
+        next();
+
+        while (curr().type() != lexeme::RightBrace) {
+            if (auto r = requirement()) {
+                n->requirements.push_back(std::move(r));
+            }
+            else if (curr().type() != lexeme::RightBrace)
+            {
+                error("expected closing '}' of body of requires expression");
+                return {};
+            }
+        }
+        next();
+
+        return n;
+    }
+
+
     //G jump-statement:
     //G     'break' identifier? ';'
     //G     'continue' identifier? ';'
@@ -7821,6 +8249,7 @@ private:
     //G
     //G throws-specifier:
     //G     'throws'
+    //G     '!' 'throws'
     //G
     //G return-list:
     //G     expression-statement
@@ -7876,7 +8305,9 @@ private:
             )
         {
             auto start_pos = pos;
-            auto at_an_expression = expression() != nullptr;
+            auto at_an_expression =
+                curr() != "requires"
+                && expression() != nullptr;
             pos = start_pos;    // backtrack no matter what, we're just peeking here
 
             if (at_an_expression) {
@@ -9064,6 +9495,11 @@ public:
     {
         o << pre(indent) << "inspect-expression\n";
         o << pre(indent+1) << "is_constexpr: " << _as<std::string>(n.is_constexpr) << "\n";
+    }
+
+    auto start(requires_expression_node const&, int indent) -> void
+    {
+        o << pre(indent) << "requires-expression\n";
     }
 
     auto start(return_statement_node const&, int indent) -> void
