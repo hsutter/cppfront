@@ -1,5 +1,6 @@
-#include <typeinfo>
+#include <filesystem>
 #include <iostream>
+#include <typeinfo>
 
 namespace my {
     using u16 = float;
@@ -20,5 +21,5 @@ main: (args) -> int = {
     test(z);
 
     for args do (arg)
-        std::cout << arg << "\n";
+        std::cout << std::filesystem::path(arg).filename() << "\n";
 }
