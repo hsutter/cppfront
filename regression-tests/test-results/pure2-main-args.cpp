@@ -22,6 +22,5 @@ auto main(int const argc_, char** argv_) -> int {
 #line 2 "pure2-main-args.cpp2"
     std::cout 
         << "args.argc            is " + cpp2::to_string(args.argc) + "\n" 
-        << "args.argv[0]         is " + cpp2::to_string(cpp2::assert_in_bounds(args.argv, 0)) + "\n" 
-        << "args.mutable_argv[0] is " + cpp2::to_string(cpp2::assert_in_bounds(args.mutable_argv, 0)) + "\n"; }
+        << "args.argv[0]         is " + cpp2::to_string(cpp2::assert_in_bounds(args.argv, 0)) + "\n"; }
 

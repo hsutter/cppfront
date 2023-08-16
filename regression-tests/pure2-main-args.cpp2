@@ -2,5 +2,4 @@ main: (args) =
     std::cout
         << "args.argc            is (args.argc)$\n"
         << "args.argv[0]         is (args.argv[0])$\n"
-        << "args.mutable_argv[0] is (args.mutable_argv[0])$\n"
         ;

@@ -1,3 +1,2 @@
 args.argc            is 1
 args.argv[0]         is ./test.exe
-args.mutable_argv[0] is ./test.exe

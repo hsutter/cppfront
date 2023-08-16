@@ -1491,17 +1491,17 @@ inline auto to_string(std::tuple<Ts...> const& t) -> std::string
 //
 struct args_t : std::vector<std::string_view>
 {
-    args_t(int c, char** v) : vector{static_cast<size_t>(c)}, argc{c}, argv{v}, mutable_argv{v} {}
+    args_t(int c, char** v) : vector{static_cast<size_t>(c)}, argc{c}, argv{v} {}
 
-    int                argc         = 0;
-    char const* const* argv         = nullptr;
-    char**             mutable_argv = nullptr;
+    int                argc = 0;
+    char**             argv = nullptr;
 };
 
 inline auto make_args(int argc, char** argv) -> args_t
 {
-    auto ret = args_t{argc, argv};
-    std::ranges::copy( std::span(argv, argc), ret.data() );
+    auto ret  = args_t{argc, argv};
+    auto args = std::span(argv, static_cast<size_t>(argc));
+    std::copy( args.begin(), args.end(), ret.data());
     return ret;
 }
 
