@@ -6,28 +6,27 @@
 
 #include "cpp2util.h"
 
-#line 1 "pure2-bugfix-for-non-local-initialization.cpp2"
-template<auto L, auto R> class pair;
 
+#line 2 "pure2-bugfix-for-non-local-initialization.cpp2"
+class t;
+  
 
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-bugfix-for-non-local-initialization.cpp2"
-template<auto L, auto R> class pair {
-      public: pair() = default;
-      public: pair(pair const&) = delete; /* No 'that' constructor, suppress copy */
-      public: auto operator=(pair const&) -> void = delete;
+using u = std::array<cpp2::i32,2>;
+class t: public std::integral_constant<u,u{17, 29}> {
 
-#line 1 "pure2-bugfix-for-non-local-initialization.cpp2"
 };
-auto g(cpp2::in<pair<cpp2::i32{0},cpp2::i32{0}>> x) -> void;
 auto main() -> int;
-
+  
 
 //=== Cpp2 function definitions =================================================
 
 
-#line 2 "pure2-bugfix-for-non-local-initialization.cpp2"
-auto g(cpp2::in<pair<cpp2::i32{0},cpp2::i32{0}>> x) -> void{}
-auto main() -> int{}
+#line 5 "pure2-bugfix-for-non-local-initialization.cpp2"
+auto main() -> int{
+  cpp2::Testing.expects(cpp2::assert_in_bounds(t::value, 0)==17, "");
+  cpp2::Testing.expects(cpp2::assert_in_bounds(t::value, 1)==29, "");
+}
 
