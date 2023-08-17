@@ -2569,6 +2569,7 @@ struct declaration_node
 
     std::vector<std::unique_ptr<id_expression_node>> metafunctions;
     std::unique_ptr<parameter_declaration_list_node> template_parameters;
+    std::unique_ptr<unqualified_id_node>             specialization_template_arguments;
     source_position                                  requires_pos = {};
     std::unique_ptr<logical_or_expression_node>      requires_clause_expression;
 
@@ -2853,6 +2854,8 @@ public:
 
     auto is_function_expression () const -> bool
         { return is_function() && !identifier;  }
+    auto is_specialization() const -> bool
+        { return specialization_template_arguments != nullptr;    }
 
     auto is_polymorphic() const // has base types or virtual functions
         -> bool
@@ -4963,6 +4966,11 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
         template_params += " " + pretty_print_visualize(*n.template_parameters, indent + 1, true);
     }
 
+    auto specialization_args = std::string{};
+    if (n.specialization_template_arguments) {
+        specialization_args += " " + pretty_print_visualize(*n.specialization_template_arguments, indent + 1);
+    }
+
     auto requires_clause = std::string{};
     if (n.requires_clause_expression) {
         requires_clause += " requires (" + pretty_print_visualize(*n.requires_clause_expression, indent) + ")";
@@ -5047,7 +5055,8 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
         auto& type_id = std::get<declaration_node::an_object>(n.type);
         assert(type_id);
         ret += metafunctions
-            + template_params;
+            + template_params
+            + specialization_args;
         if (!n.has_wildcard_type()) {
             ret += " " + pretty_print_visualize(*type_id, indent);
         }
@@ -5059,6 +5068,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
         assert(t);
         ret += metafunctions
             + template_params
+            + specialization_args
             + " " + pretty_print_visualize(*t)
             + initializer;
     }
@@ -5077,7 +5087,8 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
             object_type_id += " " + pretty_print_visualize(*a->type_id, indent);
         }
 
-        ret += template_params;
+        ret += template_params
+            + specialization_args;
         if (a->is_type_alias()) {
             auto& t = std::get<alias_node::a_type>(a->initializer);
             ret += " type"
@@ -6401,6 +6412,7 @@ private:
     //G
     //G template-argument-list:
     //G     template-argument-list ',' template-argument
+    //G     template-argument
     //G
     //G template-argument:
     //G     # note: < > << >> are not allowed in expressions until new ( is opened
@@ -7979,9 +7991,9 @@ private:
     //G unnamed-declaration:
     //G     ':' meta-functions-list? template-parameter-declaration-list? function-type requires-clause? '=' statement
     //G     ':' meta-functions-list? template-parameter-declaration-list? function-type statement
-    //G     ':' meta-functions-list? template-parameter-declaration-list? type-id? requires-clause? '=' statement
+    //G     ':' meta-functions-list? template-parameter-declaration-list? template-specialization-argument-list? type-id? requires-clause? '=' statement
     //G     ':' meta-functions-list? template-parameter-declaration-list? type-id
-    //G     ':' meta-functions-list? template-parameter-declaration-list? 'final'? 'type' requires-clause? '=' statement
+    //G     ':' meta-functions-list? template-parameter-declaration-list? template-specialization-argument-list? 'final'? 'type' requires-clause? '=' statement
     //G     ':' 'namespace' '=' statement
     //G
     //G meta-functions-list:
@@ -7993,7 +8005,10 @@ private:
     //G      'requires' logical-or-expression
     //G
     //G template-parameter-declaration-list
-    //G     '<' parameter-declaration-seq '>'
+    //G     '<' parameter-declaration-seq? '>'
+    //G
+    //G template-specialization-argument-list:
+    //G     'specialize' '<' template-argument-list '>'
     //G
     auto unnamed_declaration(
         source_position                      start,
@@ -8136,6 +8151,21 @@ private:
                 return {};
             }
             n->template_parameters = std::move(template_parameters);
+        }
+
+        //  Next is an optional template specialization argument list
+        if (
+            curr() == "specialize"
+            && peek(1)
+            && peek(1)->type() == lexeme::Less
+            )
+        {
+            auto specialization_template_arguments = unqualified_id();
+            if (!specialization_template_arguments) {
+              error("invalid template specialization argument list");
+              return {};
+            }
+            n->specialization_template_arguments = std::move(specialization_template_arguments);
         }
 
         auto guard =
@@ -8502,7 +8532,7 @@ private:
     //G alias:
     //G     ':' template-parameter-declaration-list? 'type' requires-clause? '==' type-id ';'
     //G     ':' 'namespace' '==' id-expression ';'
-    //G     ':' template-parameter-declaration-list? type-id? requires-clause? '==' expression ';'
+    //G     ':' template-parameter-declaration-list? template-specialization-argument-list? type-id? requires-clause? '==' expression ';'
     //G
     //GT     ':' function-type '==' expression ';'
     //GT        # See commit 63efa6ed21c4d4f4f136a7a73e9f6b2c110c81d7 comment
@@ -8531,12 +8561,34 @@ private:
             n->template_parameters = std::move(template_parameters);
         }
 
+        //  Next is an optional template specialization argument list
+        if (
+            curr() == "specialize"
+            && peek(1)
+            && peek(1)->type() == lexeme::Less
+            )
+        {
+            auto specialization_template_arguments = unqualified_id();
+            if (!specialization_template_arguments) {
+              pos = start_pos;    // backtrack
+              return {};
+            }
+            n->specialization_template_arguments = std::move(specialization_template_arguments);
+        }
+
         auto a = std::make_unique<alias_node>( &curr() );
 
         //  Next must be 'type', 'namespace', a type-id, or we're at the 'requires' or '=='
         if (curr() == "type")
         {
             next();
+            if (n->specialization_template_arguments) {
+                errors.emplace_back(
+                    curr().position(),
+                    "a type alias cannot be specialized"
+                );
+                return {};
+            }
         }
         else if (curr() == "namespace")
         {
@@ -8545,6 +8597,13 @@ private:
                 errors.emplace_back(
                     curr().position(),
                     "a namespace or namespace alias cannot have template parameters"
+                );
+                return {};
+            }
+            if (n->specialization_template_arguments) {
+                errors.emplace_back(
+                    curr().position(),
+                    "a namespace alias cannot be specialized"
                 );
                 return {};
             }

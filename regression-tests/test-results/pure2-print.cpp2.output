@@ -146,5 +146,11 @@ outer: type =
 
     all: <Args...: type>(in args...: Args) -> move bool = (... && args);
 }
+
+
+common_type: specialize<outer, outer> type = 
+{
+    public type: type == outer;
+}
  ok (all Cpp2, passes safety checks)
 
