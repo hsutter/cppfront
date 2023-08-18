@@ -1,0 +1,9 @@
+v: <T> concept = :() -> bool = true;();
+
+u: type == std::type_identity_t<decltype(:() = {})>;
+
+t: @struct type = {
+  this: std::type_identity_t<decltype(:() = {})>;
+}
+
+main: () = { }
