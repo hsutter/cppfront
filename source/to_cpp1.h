@@ -4129,7 +4129,8 @@ public:
     auto emit(
         parameter_declaration_node const& n,
         bool                              is_returns            = false,
-        bool                              is_template_parameter = false
+        bool                              is_template_parameter = false,
+        bool                              emit_identifier       = true
     )
         -> void
     {   STACKINSTR
@@ -4234,10 +4235,24 @@ public:
             if (identifier == "_") {
                 printer.print_cpp2( "UnnamedTypeParam" + std::to_string(n.ordinal), identifier_pos );
             }
-            else {
+            else if (emit_identifier) {
                 printer.print_cpp2( identifier, identifier_pos );
             }
 
+            return;
+        }
+
+        //-----------------------------------------------------------------------
+        //  Handle template parameters
+
+        if (n.declaration->is_template()) {
+            printer.print_cpp2("template ", identifier_pos);
+            emit(*n.declaration->template_parameters, is_returns, true, false, false);
+            printer.print_cpp2(" class", identifier_pos);
+            if (emit_identifier) {
+                printer.print_cpp2(" ", identifier_pos);
+                printer.print_cpp2( identifier, identifier_pos );
+            }
             return;
         }
 
@@ -4249,8 +4264,10 @@ public:
 
         if (is_template_parameter) {
             emit( type_id );
-            printer.print_cpp2(" ", type_id.position());
+            if (emit_identifier) {
+                printer.print_cpp2(" ", type_id.position());
                 printer.print_cpp2( identifier, identifier_pos );
+            }
             return;
         }
 
@@ -4463,7 +4480,8 @@ public:
         parameter_declaration_list_node const& n,
         bool                                   is_returns                 = false,
         bool                                   is_template_parameter      = false,
-        bool                                   generating_postfix_inc_dec = false
+        bool                                   generating_postfix_inc_dec = false,
+        bool                                   emit_identifier            = true
     )
         -> void
     {   STACKINSTR
@@ -4492,7 +4510,7 @@ public:
             }
             prev_pos = x->position();
             assert(x);
-            emit(*x, is_returns, is_template_parameter);
+            emit(*x, is_returns, is_template_parameter, emit_identifier);
             if (!x->declaration->has_name("this")) {
                 first = false;
             }
@@ -4639,7 +4657,7 @@ public:
             );
         }
         else {
-            emit(*n.parameters, false, false, generating_postfix_inc_dec); 
+            emit(*n.parameters, false, false, generating_postfix_inc_dec);
         }
 
         //  For an anonymous function, the emitted lambda is 'constexpr' or 'mutable'
