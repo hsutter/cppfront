@@ -14,11 +14,11 @@ class t;
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-bugfix-for-non-local-function-expression.cpp2"
-template<typename T> concept v = []() -> bool;
-(); 
-using u = std::type_identity_t<decltype([]() -> void;)>;
+template<typename T> concept v = []() -> bool { return true;  }(); 
 
-class t: public std::type_identity_t<decltype([]() -> void;)> {
+using u = std::type_identity_t<decltype([]() -> void{})>;
+
+class t: public std::type_identity_t<decltype([]() -> void{})> {
 
 };
 

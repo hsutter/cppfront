@@ -2598,6 +2598,9 @@ public:
     auto is_alias() const -> bool
         { return type.index() == an_alias;    }
 
+    auto is_function_expression () const -> bool
+        { return is_function() && !identifier;  }
+
     auto is_polymorphic() const // has base types or virtual functions
         -> bool
     {
@@ -5031,20 +5034,20 @@ private:
                         }
                         return expression(false);   // false == disallow unparenthesized relational comparisons in template args
                     }()
-                ) 
+                )
                 {
                     term.arg = std::move(e);
                 }
-                    
+
                 //  Else try parsing it as a type id
                 else if (auto i = type_id()) {
                     term.arg = std::move(i);
                 }
-                    
+
                 else {
                     break;
                 }
-                
+
                 n->template_args.push_back( std::move(term) );
             }
             //  Use the lambda trick to jam in a "next" clause

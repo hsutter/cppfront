@@ -5662,7 +5662,10 @@ public:
             };
 
             //  If we're only emitting declarations, end the function declaration
-            if (printer.get_phase() == printer.phase1_type_defs_func_decls)
+            if (
+                printer.get_phase() == printer.phase1_type_defs_func_decls
+                && !n.is_function_expression()
+                )
             {
                 emit_requires_clause();
                 printer.print_cpp2( ";\n", n.position() );
