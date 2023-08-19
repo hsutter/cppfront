@@ -1,4 +1,0 @@
-pure2-bugfix-for-variable-template-requires-clause.cpp2:4:17: error: static assertion failed due to requirement '!(std::invocable<(lambda at /home/johel/tmp/cppfront/Clang-mainDebug/regression-tests/pure2-bugfix-for-variable-template-requires-clause/pure2-bugfix-for-variable-template-requires-clause.cpp2:4:43), short>)'
-    4 |   static_assert(!(std::invocable<decltype([]<typename T>([[maybe_unused]] T const& param1) -> std::type_identity_t<decltype(v<T>)>{return v<T>; }),cpp2::i16>));  }
-      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-1 error generated.
