@@ -1,0 +1,4 @@
+v: <T> const T requires std::same_as<T, i32> = 0;
+
+main: () =
+  static_assert(!std::invocable<decltype(:<T> (_: T) -> std::type_identity_t<decltype(v<T>)> = { return v<T>; }), i16>);
