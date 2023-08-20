@@ -1,20 +1,20 @@
 main: () = {
   postfix_operators();
 
-  // Variables with type of a mix of `*`/`const` to `() throws -> void`.
-  f0: * () throws = :()       = {};
-  f1: const * () throws       = f0;
-  f2: * const () throws       = f0;
-  f3: const * const () throws = f0;
+  // Variables with type of a mix of `*`/`const` to `() -> void`.
+  f0: * () = :()       = {};
+  f1: const * ()       = f0;
+  f2: * const ()       = f0;
+  f3: const * const () = f0;
 
   // Uninitialized.
-  f4: * () throws;
+  f4: * ();
   f4 = f0;
 
-  f10: * * () throws             = f0&;
-  f11: const * * () throws       = f10;
-  f12: * const * () throws       = f10;
-  f13: const * const * () throws = f10;
+  f10: * * ()             = f0&;
+  f11: const * * ()       = f10;
+  f12: * const * ()       = f10;
+  f13: const * const * () = f10;
 
   i: i32                = 0;
   i0: * i32             = i&;
@@ -37,76 +37,76 @@ main: () = {
   _ = i3;
 
   // Variables with various kinds of parameter.
-  f5: * (_: i32) throws = :(x: i32) = {};
-  f6: * (_: std::any) throws = :(x: std::any) = {};
-  f7: * (move _: i32) throws = :(move x: i32) = {};
-  f8: * (out _: i32) throws = :(copy x) = {};
+  f5: * (_: i32) = :(x: i32) = {};
+  f6: * (_: std::any) = :(x: std::any) = {};
+  f7: * (move _: i32) = :(move x: i32) = {};
+  f8: * (out _: i32) = :(copy x) = {};
 
   // In alternative.
   [[assert: inspect f0 -> bool {
-    is ()          = (std::terminate(), false);
-    is () throws   = (std::terminate(), false);
-    is * () throws = true;
-    is _           = false;
+    is () !throws = (std::terminate(), false);
+    is ()         = (std::terminate(), false);
+    is * ()       = true;
+    is _          = false;
   }]]
   [[assert: inspect f0* -> bool {
-    is () throws = true;
-    is _         = false;
+    is () = true;
+    is _  = false;
   }]]
 
   // As block variable.
-  (f: * () throws = f0) { }
-  (f: () throws   = f0*) { }
+  (f: * () = f0) { }
+  (f: ()   = f0*) { }
 
   // As local function parameter.
-  _ = :(f: () throws) = {};
-  _ = :(f: * () throws) = {};
-  _ = :(f: * () throws -> * () throws) = {};
-  _ = :(f: * () throws -> * () throws -> * () throws) = {};
+  _ = :(f: ()) = {};
+  _ = :(f: * ()) = {};
+  _ = :(f: * () -> * ()) = {};
+  _ = :(f: * () -> * () -> * ()) = {};
 
   // In local function return type.
-  _ = :() -> forward() throws = f0$*;
-  _ = :() -> * () throws = nullptr;
-  _ = :() -> * () throws -> * () throws = nullptr;
+  _ = :() -> forward() = f0$*;
+  _ = :() -> * () = nullptr;
+  _ = :() -> * () -> * () = nullptr;
 
-  // Without `throws`.
-  _ = :* (copy _: std::string_view, copy _: CPP2_MESSAGE_PARAM) = cpp2::report_and_terminate;
+  // With `!throws`.
+  _ = :* (copy _: std::string_view, copy _: CPP2_MESSAGE_PARAM) !throws = cpp2::report_and_terminate;
 
   // As template argument.
-  _ = :std::type_identity_t<* () throws> = f0;
-  static_assert(std::is_function_v<() throws>);
+  _ = :std::type_identity_t<* ()> = f0;
+  static_assert(std::is_function_v<()>);
 }
 
 // As non-local function parameter.
-g: (f: () throws)                  = { }
-g: (f: * () throws)                = { }
-g: (f: * () throws -> * () throws) = { }
+g: (f: ())           = { }
+g: (f: * ())         = { }
+g: (f: * () -> * ()) = { }
 // As template parameter.
-g: <V: * () throws> ()                = { }
-g: <V: * () throws -> * () throws> () = { }
+g: <V: * ()> ()         = { }
+g: <V: * () -> * ()> () = { }
 
 // In non-local function return type.
-g1: () -> * () throws                      = nullptr;
-g1: <V: bool> () -> * () throws requires V = { return nullptr; }
-g2: () -> * () throws -> * () throws       = nullptr;
+g1: () -> * ()                      = nullptr;
+g1: <V: bool> () -> * () requires V = { return nullptr; }
+g2: () -> * () -> * ()              = nullptr;
 
 // clang-format off
 // Test case from #343.
-f2: () -> std::function<(_: std::string) throws -> std::string> = {
+f2: () -> std::function<(_: std::string) -> std::string> = {
   return :(s: std::string) -> std::string = { return s + " World!"; };
 }
 
 // Adapted from <https://github.com/hsutter/cppfront/wiki/Design-note%3A-Postfix-operators>.
-            f:   (x: i32)        -> * (_: i32) throws -> std::string = +:(x: i32) -> std::string = "";
+            f:   (x: i32) -> * (_: i32) -> std::string = :(x: i32) -> std::string = "";
 postfix_operators: () = {
-  [[assert: f is (_: i32) throws -> * (_: i32) throws -> std::string]]
-  //             /                  |  |
-  //            /                   |  |
-  [[assert: f(42)        is         * (_: i32) throws -> std::string]]
-  //               ________________/   |
-  //              /                    |
-  [[assert: f(42)*         is         (_: i32) throws -> std::string]]
-  //                   _______________/
+  [[assert: f is (_: i32) -> * (_: i32) -> std::string]]
+  //             /           |  |
+  //            /            |  |
+  [[assert: f(42)     is     * (_: i32) -> std::string]]
+  //               _________/   |
+  //              /             |
+  [[assert: f(42)*     is      (_: i32) -> std::string]]
+  //                   ________/
   //                  /
-  [[assert: (f(42)*)(1)                is                std::string]]
+  [[assert: (f(42)*)(1)         is         std::string]]
 } // clang-format on

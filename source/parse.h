@@ -6421,6 +6421,7 @@ private:
     //G
     //G throws-specifier:
     //G     'throws'
+    //G     '!' 'throws'
     //G
     //G return-list:
     //G     '->' type-id
@@ -6450,10 +6451,25 @@ private:
 
         //  Optional "throws"
         if (
+            curr().type() == lexeme::Not
+            && !is_type_id
+            )
+        {
+            error( "'!throws' function declarations are not supported (function types are OK)." );
+            return {};
+        }
+
+        if (
             curr().type() == lexeme::Keyword
             && curr() == "throws"
             )
         {
+            if (is_type_id)
+            {
+                error( "expected '!' before 'throws', or no 'throws' (the default for function type-id)" );
+                return {};
+            }
+
             if (
                 !is_function_type_id
                 && (
@@ -6468,6 +6484,19 @@ private:
 
             n->throws = true;
             next();
+        }
+        else if (
+            curr().type() == lexeme::Not
+            && peek(1)
+            && *peek(1) == "throws"
+            )
+        {
+            n->throws = false;
+            next(2);
+        }
+        else if (is_type_id)
+        {
+            n->throws = true;
         }
 
         //  Optional returns
@@ -6757,7 +6786,7 @@ private:
         }
 
         //  Or a function type, declaring a function - and tell the function whether it's in a user-defined type
-        else if (auto t = function_type_id(n.get(), named))
+        else if (auto t = function_type_id(n.get(), named, is_parameter))
         {
             if (is_parameter) {
                 t->type->my_decl = nullptr;

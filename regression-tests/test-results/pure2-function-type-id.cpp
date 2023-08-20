@@ -45,7 +45,7 @@ auto postfix_operators() -> void;
 auto main() -> int{
   postfix_operators();
 
-  // Variables with type of a mix of `*`/`const` to `() throws -> void`.
+  // Variables with type of a mix of `*`/`const` to `() -> void`.
   cpp2::fn_t<void()>* f0 {[]() -> void{}}; 
   cpp2::fn_t<void()>* const f1 {f0}; 
   cpp2::fn_t<void()> const* f2 {f0}; 
@@ -107,7 +107,7 @@ cpp2::fn_t<void()>* f = f0;
 {
 cpp2::in<cpp2::fn_t<void()>> f = *cpp2::assert_not_null(f0);
 #line 59 "pure2-function-type-id.cpp2"
-                         { }
+                  { }
 }
 
   // As local function parameter.
@@ -122,7 +122,7 @@ cpp2::in<cpp2::fn_t<void()>> f = *cpp2::assert_not_null(f0);
   (void) []() -> cpp2::fn_t<void()>* { return nullptr;  };
   (void) []() -> cpp2::fn_t<cpp2::fn_t<void()>*()>* { return nullptr;  };
 
-  // Without `throws`.
+  // With `!throws`.
   (void) std::type_identity_t<cpp2::fn_t<void(std::string_view, CPP2_MESSAGE_PARAM) noexcept>*>{cpp2::report_and_terminate};
 
   // As template argument.
@@ -152,16 +152,16 @@ requires (V)
 }
 
 #line 100 "pure2-function-type-id.cpp2"
-            [[nodiscard]] auto f(cpp2::in<cpp2::i32> x) -> cpp2::fn_t<std::string(cpp2::in<cpp2::i32>)>* { return +[](cpp2::in<cpp2::i32> x) -> std::string { return ""; }; }
+            [[nodiscard]] auto f(cpp2::in<cpp2::i32> x) -> cpp2::fn_t<std::string(cpp2::in<cpp2::i32>)>* { return [](cpp2::in<cpp2::i32> x) -> std::string { return ""; }; }
 auto postfix_operators() -> void{
   cpp2::Default.expects(cpp2::is<cpp2::fn_t<cpp2::fn_t<std::string(cpp2::in<cpp2::i32>)>*(cpp2::in<cpp2::i32>)>>(f), "");
-  //             /                  |  |
-  //            /                   |  |
+  //             /           |  |
+  //            /            |  |
   cpp2::Default.expects(cpp2::is<cpp2::fn_t<std::string(cpp2::in<cpp2::i32>)>*>(f(42)), "");
-  //               ________________/   |
-  //              /                    |
+  //               _________/   |
+  //              /             |
   cpp2::Default.expects(cpp2::is<cpp2::fn_t<std::string(cpp2::in<cpp2::i32>)>>(*cpp2::assert_not_null(f(42))), "");
-  //                   _______________/
+  //                   ________/
   //                  /
   cpp2::Default.expects(cpp2::is<std::string>((*cpp2::assert_not_null(f(42)))(1)), "");
 } // clang-format on
