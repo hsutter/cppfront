@@ -3766,6 +3766,15 @@ struct translation_unit_node
 };
 
 
+template <typename T>
+auto stack_value(T& var, std::type_identity_t<T> const& value)
+    -> auto
+{
+    return finally([&var, old = std::exchange(var, value)]() {
+        var = old;
+    });
+};
+
 //-----------------------------------------------------------------------
 //
 //  parser: parses a section of Cpp2 code
@@ -5096,6 +5105,7 @@ private:
             auto term = unqualified_id_node::term{};
 
             do {
+                auto stack = stack_value(start_pos, pos);
                 //  If it doesn't start with * or const (which can only be a type id),
                 //  try parsing it as an expression
                 if (auto e = [&]{
@@ -5121,14 +5131,11 @@ private:
                     term.arg = std::move(e);
                 }
 
-                //  Else try parsing it as a type id
-                else if (auto i = type_id()) {
-                    term.arg = std::move(i);
-                }
-
                 else {
                     errors.clear();
                     pos = start_pos;
+
+                    //  Else try parsing it as a type id
                     if (auto i = type_id()) {
                         term.arg = std::move(i);
                     }

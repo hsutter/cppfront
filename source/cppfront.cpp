@@ -975,15 +975,6 @@ public:
 };
 
 
-template <typename T>
-auto stack_value(T& var, std::type_identity_t<T> const& value)
-    -> auto
-{
-    return finally([&var, old = std::exchange(var, value)]() {
-        var = old;
-    });
-};
-
 //-----------------------------------------------------------------------
 //
 //  cppfront: a compiler instance
@@ -3762,7 +3753,7 @@ public:
             printer.print_extra( "{");
             for (auto& param : n.parameters->parameters) {
                 printer.print_extra( "\n");
-                printer.print_extra( print_to_string(*param, false, false, true) );
+                printer.print_extra( print_to_string(*param, false, false, false) );
             }
         }
 
@@ -3849,7 +3840,6 @@ public:
         parameter_declaration_node const& n,
         bool                              is_returns             = false,
         bool                              is_template_parameter  = false,
-        bool                              is_statement_parameter = false,
         bool                              in_function_type_id    = false
     )
         -> void
@@ -4017,7 +4007,11 @@ public:
 
         //  First any prefix
 
-        if (identifier == "_") {
+        if (
+            identifier == "_"
+            && !in_function_type_id
+            )
+        {
             printer.print_cpp2( "[[maybe_unused]] ", n.position() );
             identifier = "param" + std::to_string(n.ordinal);
         }
@@ -4170,7 +4164,7 @@ public:
             }
             prev_pos = x->position();
             assert(x);
-            emit(*x, is_returns, is_template_parameter, false, in_function_type_id);
+            emit(*x, is_returns, is_template_parameter, in_function_type_id);
             if (!x->declaration->has_name("this")) {
                 first = false;
             }

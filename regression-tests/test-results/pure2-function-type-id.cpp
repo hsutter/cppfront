@@ -25,7 +25,10 @@ template<cpp2::fn_t<cpp2::fn_t<void()>*()>* V> auto g() -> void;
 
 // In non-local function return type.
 [[nodiscard]] auto g1() -> cpp2::fn_t<void()>*;
-template<bool V> [[nodiscard]] auto g1() -> cpp2::fn_t<void()>*;
+template<bool V> [[nodiscard]] auto g1() -> cpp2::fn_t<void()>*
+CPP2_REQUIRES (V)
+#line 90 "pure2-function-type-id.cpp2"
+;
 [[nodiscard]] auto g2() -> cpp2::fn_t<cpp2::fn_t<void()>*()>*;
 
 // clang-format off
@@ -71,14 +74,14 @@ auto main() -> int{
   static_assert((std::is_const_v<decltype(f11)>)==std::is_const_v<decltype(i1)>);
   static_assert((std::is_const_v<decltype(f12)>)==std::is_const_v<decltype(i2)>);
   static_assert((std::is_const_v<decltype(f13)>)==std::is_const_v<decltype(i3)>);
-  (void) std::move(f10);
-  (void) std::move(f11);
-  (void) std::move(f12);
-  (void) std::move(f13);
-  (void) std::move(i0);
-  (void) std::move(i1);
-  (void) std::move(i2);
-  (void) std::move(i3);
+  static_cast<void>(std::move(f10));
+  static_cast<void>(std::move(f11));
+  static_cast<void>(std::move(f12));
+  static_cast<void>(std::move(f13));
+  static_cast<void>(std::move(i0));
+  static_cast<void>(std::move(i1));
+  static_cast<void>(std::move(i2));
+  static_cast<void>(std::move(i3));
 
   // Variables with various kinds of parameter.
   cpp2::fn_t<void(cpp2::in<cpp2::i32>)>* f5 {[](cpp2::in<cpp2::i32> x) -> void{}}; 
@@ -112,21 +115,21 @@ cpp2::in<cpp2::fn_t<void()>> f = *cpp2::assert_not_null(f0);
 
   // As local function parameter.
 #line 62 "pure2-function-type-id.cpp2"
-  (void) [](cpp2::in<cpp2::fn_t<void()>> f) -> void{};
-  (void) [](cpp2::fn_t<void()>* f) -> void{};
-  (void) [](cpp2::fn_t<cpp2::fn_t<void()>*()>* f) -> void{};
-  (void) [](cpp2::fn_t<cpp2::fn_t<cpp2::fn_t<void()>*()>*()>* f) -> void{};
+  static_cast<void>([](cpp2::in<cpp2::fn_t<void()>> f) -> void{});
+  static_cast<void>([](cpp2::fn_t<void()>* f) -> void{});
+  static_cast<void>([](cpp2::fn_t<cpp2::fn_t<void()>*()>* f) -> void{});
+  static_cast<void>([](cpp2::fn_t<cpp2::fn_t<cpp2::fn_t<void()>*()>*()>* f) -> void{});
 
   // In local function return type.
-  (void) [_0 = f0]() -> cpp2::fn_t<void()>& { return *cpp2::assert_not_null(_0);  };
-  (void) []() -> cpp2::fn_t<void()>* { return nullptr;  };
-  (void) []() -> cpp2::fn_t<cpp2::fn_t<void()>*()>* { return nullptr;  };
+  static_cast<void>([_0 = f0]() -> cpp2::fn_t<void()>& { return *cpp2::assert_not_null(_0);  });
+  static_cast<void>([]() -> cpp2::fn_t<void()>* { return nullptr;  });
+  static_cast<void>([]() -> cpp2::fn_t<cpp2::fn_t<void()>*()>* { return nullptr;  });
 
   // With `!throws`.
-  (void) std::type_identity_t<cpp2::fn_t<void(std::string_view, CPP2_MESSAGE_PARAM) noexcept>*>{cpp2::report_and_terminate};
+  static_cast<void>(std::type_identity_t<cpp2::fn_t<void(std::string_view, CPP2_MESSAGE_PARAM) noexcept>*>{cpp2::report_and_terminate});
 
   // As template argument.
-  (void) std::type_identity_t<cpp2::fn_t<void()>*>{std::move(f0)};
+  static_cast<void>(std::type_identity_t<cpp2::fn_t<void()>*>{std::move(f0)});
   static_assert(std::is_function_v<cpp2::fn_t<void()>>);
 }
 
