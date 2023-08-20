@@ -6440,8 +6440,6 @@ private:
     {
         auto n = std::make_unique<function_type_node>( my_decl );
 
-        auto is_function_type_id = !my_decl;
-
         //  Parameters
         auto parameters = parameter_declaration_list(false, is_named, false, false, is_type_id);
         if (!parameters) {
@@ -6471,13 +6469,11 @@ private:
             }
 
             if (
-                !is_function_type_id
-                && (
-                    n->is_move()
-                    || n->is_swap()
-                    || n->is_destructor()
-                   )
-            ) {
+                n->is_move()
+                || n->is_swap()
+                || n->is_destructor()
+                )
+            {
                 error( "(experimental restriction) Cpp2 currently does not allow a move, swap, or destructor function to be designated 'throws'" );
                 return {};
             }
