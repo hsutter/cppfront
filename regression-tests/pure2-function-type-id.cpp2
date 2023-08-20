@@ -1,0 +1,112 @@
+main: () = {
+  postfix_operators();
+
+  // Variables with type of a mix of `*`/`const` to `() -> void`.
+  f0: * () = :()       = {};
+  f1: const * ()       = f0;
+  f2: * const ()       = f0;
+  f3: const * const () = f0;
+
+  // Uninitialized.
+  f4: * ();
+  f4 = f0;
+
+  f10: * * ()             = f0&;
+  f11: const * * ()       = f10;
+  f12: * const * ()       = f10;
+  f13: const * const * () = f10;
+
+  i: i32                = 0;
+  i0: * i32             = i&;
+  i1: const * i32       = i0;
+  i2: * const i32       = i0;
+  i3: const * const i32 = i0;
+
+  // Assert consistent '*'/'const' with non-function type variables.
+  static_assert((std::is_const_v<decltype(f10)>) == std::is_const_v<decltype(i0)>);
+  static_assert((std::is_const_v<decltype(f11)>) == std::is_const_v<decltype(i1)>);
+  static_assert((std::is_const_v<decltype(f12)>) == std::is_const_v<decltype(i2)>);
+  static_assert((std::is_const_v<decltype(f13)>) == std::is_const_v<decltype(i3)>);
+  _ = f10;
+  _ = f11;
+  _ = f12;
+  _ = f13;
+  _ = i0;
+  _ = i1;
+  _ = i2;
+  _ = i3;
+
+  // Variables with various kinds of parameter.
+  f5: * (_: i32) = :(x: i32) = {};
+  f6: * (_: std::any) = :(x: std::any) = {};
+  f7: * (move _: i32) = :(move x: i32) = {};
+  f8: * (out _: i32) = :(copy x) = {};
+
+  // In alternative.
+  [[assert: inspect f0 -> bool {
+    is () !throws = (std::terminate(), false);
+    is ()         = (std::terminate(), false);
+    is * ()       = true;
+    is _          = false;
+  }]]
+  [[assert: inspect f0* -> bool {
+    is () = true;
+    is _  = false;
+  }]]
+
+  // As block variable.
+  (f: * () = f0) { }
+  (f: ()   = f0*) { }
+
+  // As local function parameter.
+  _ = :(f: ()) = {};
+  _ = :(f: * ()) = {};
+  _ = :(f: * () -> * ()) = {};
+  _ = :(f: * () -> * () -> * ()) = {};
+
+  // In local function return type.
+  _ = :() -> forward() = f0$*;
+  _ = :() -> * () = nullptr;
+  _ = :() -> * () -> * () = nullptr;
+
+  // With `!throws`.
+  _ = :* (copy _: std::string_view, copy _: CPP2_MESSAGE_PARAM) !throws = cpp2::report_and_terminate;
+
+  // As template argument.
+  _ = :std::type_identity_t<* ()> = f0;
+  static_assert(std::is_function_v<()>);
+}
+
+// As non-local function parameter.
+g: (f: ())           = { }
+g: (f: * ())         = { }
+g: (f: * () -> * ()) = { }
+// As template parameter.
+g: <V: * ()> ()         = { }
+g: <V: * () -> * ()> () = { }
+
+// In non-local function return type.
+g1: () -> * ()                      = nullptr;
+g1: <V: bool> () -> * () requires V = { return nullptr; }
+g2: () -> * () -> * ()              = nullptr;
+
+// clang-format off
+// Test case from #343.
+f2: () -> std::function<(_: std::string) -> std::string> = {
+  return :(s: std::string) -> std::string = { return s + " World!"; };
+}
+
+// Adapted from <https://github.com/hsutter/cppfront/wiki/Design-note%3A-Postfix-operators>.
+            f:   (x: i32) -> * (_: i32) -> std::string = :(x: i32) -> std::string = "";
+postfix_operators: () = {
+  [[assert: f is (_: i32) -> * (_: i32) -> std::string]]
+  //             /           |  |
+  //            /            |  |
+  [[assert: f(42)     is     * (_: i32) -> std::string]]
+  //               _________/   |
+  //              /             |
+  [[assert: f(42)*     is      (_: i32) -> std::string]]
+  //                   ________/
+  //                  /
+  [[assert: (f(42)*)(1)         is         std::string]]
+} // clang-format on

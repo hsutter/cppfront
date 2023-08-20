@@ -477,6 +477,7 @@ public:
                 if (is_uninitialized_decl(*sym)) {
                     if (
                         sym->declaration->is_object()
+                        && !sym->declaration->parent_is_object()
                         && !sym->declaration->parent_is_namespace()
                         )
                     {
@@ -1565,7 +1566,7 @@ public:
             //  Skip type scope (member) variables
             && !(n.parent_is_type() && n.is_object())
             //  Skip unnamed variables
-            && n.identifier 
+            && n.identifier
             //  Skip non-out parameters
             && (
                 !inside_parameter_list
