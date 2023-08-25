@@ -6075,7 +6075,7 @@ auto main(
     int exit_status = EXIT_SUCCESS;
     for (auto const& arg : cmdline.arguments())
     {
-        std::cout << arg.text << "...";
+        std::cerr << arg.text << "...";
 
         //  Load + lex + parse + sema
         cppfront c(arg.text);
@@ -6087,25 +6087,25 @@ auto main(
         if (c.had_no_errors())
         {
             if (!c.has_cpp1()) {
-                std::cout << " ok (all Cpp2, passes safety checks)\n";
+                std::cerr << " ok (all Cpp2, passes safety checks)\n";
             }
             else if (c.has_cpp2()) {
-                std::cout << " ok (mixed Cpp1/Cpp2, Cpp2 code passes safety checks)\n";
+                std::cerr << " ok (mixed Cpp1/Cpp2, Cpp2 code passes safety checks)\n";
             }
             else {
-                std::cout << " ok (all Cpp1)\n";
+                std::cerr << " ok (all Cpp1)\n";
             }
 
             if (flag_verbose) {
-                std::cout << "   Cpp1: " << count.cpp1_lines << " lines\n";
-                std::cout << "   Cpp2: " << count.cpp2_lines << " lines";
+                std::cerr << "   Cpp1: " << count.cpp1_lines << " lines\n";
+                std::cerr << "   Cpp2: " << count.cpp2_lines << " lines";
                 if (count.cpp1_lines + count.cpp2_lines > 0) {
-                    std::cout << " (" << 100 * count.cpp2_lines / (count.cpp1_lines + count.cpp2_lines) << "%)";
+                    std::cerr<< " (" << 100 * count.cpp2_lines / (count.cpp1_lines + count.cpp2_lines) << "%)";
                 }
-                std::cout << "\n";
+                std::cerr<< "\n";
             }
 
-            std::cout << "\n";
+            std::cerr << "\n";
         }
         //  Otherwise, print the errors
         else
