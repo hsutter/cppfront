@@ -21,10 +21,10 @@ auto main() -> int{
   using vec = std::vector<int>;
   vec v {0}; 
   v                   = {  };
-  cpp2::Default.expects(v==vec{}, "");
+  cpp2::Default.expects(v == vec{}, "");
   v                   = { 1 };
-  cpp2::Default.expects(v==vec{1}, "");
+  cpp2::Default.expects(v == vec{1}, "");
   v                   = { 2, 3 };
-  cpp2::Default.expects(std::move(v)==vec{2, 3}, "");
+  cpp2::Default.expects(std::move(v) == vec{2, 3}, "");
 }
 

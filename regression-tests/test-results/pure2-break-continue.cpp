@@ -82,7 +82,7 @@ auto while_continue_inner() -> void
 #line 25 "pure2-break-continue.cpp2"
         {
             std::cout << i << j << " ";
-            if (j==1) {
+            if (j == 1) {
                 goto CONTINUE_25_9;
             }
             std::cout << "inner ";
@@ -101,7 +101,7 @@ auto while_continue_outer() -> void
         auto j {0}; 
         for( ; cpp2::cmp_less(j,3); ++j ) {
             std::cout << i << j << " ";
-            if (j==1) {
+            if (j == 1) {
                 goto CONTINUE_39_5;
             }
             std::cout << "inner ";
@@ -120,7 +120,7 @@ auto while_break_inner() -> void
 #line 57 "pure2-break-continue.cpp2"
         {
             std::cout << i << j << " ";
-            if (j==1) {
+            if (j == 1) {
                 goto BREAK_57_9;
             }
             std::cout << "inner ";
@@ -139,7 +139,7 @@ auto while_break_outer() -> void
         auto j {0}; 
         for( ; cpp2::cmp_less(j,3); ++j ) {
             std::cout << i << j << " ";
-            if (j==1) {
+            if (j == 1) {
                 goto BREAK_71_5;
             }
             std::cout << "inner ";
@@ -158,7 +158,7 @@ auto do_continue_inner() -> void
 #line 89 "pure2-break-continue.cpp2"
         {
             std::cout << i << j << " ";
-            if (j==1) {
+            if (j == 1) {
                 goto CONTINUE_89_9;
             }
             std::cout << "inner ";
@@ -183,7 +183,7 @@ auto do_continue_outer() -> void
         auto j {0}; 
         do {
             std::cout << i << j << " ";
-            if (j==1) {
+            if (j == 1) {
                 goto CONTINUE_106_5;
             }
             std::cout << "inner ";
@@ -208,7 +208,7 @@ auto do_break_inner() -> void
 #line 127 "pure2-break-continue.cpp2"
         {
             std::cout << i << j << " ";
-            if (j==1) {
+            if (j == 1) {
                 goto BREAK_127_9;
             }
             std::cout << "inner ";
@@ -233,7 +233,7 @@ auto do_break_outer() -> void
         auto j {0}; 
         do {
             std::cout << i << j << " ";
-            if (j==1) {
+            if (j == 1) {
                 goto BREAK_144_5;
             }
             std::cout << "inner ";
@@ -259,7 +259,7 @@ auto for_continue_inner() -> void
 #line 166 "pure2-break-continue.cpp2"
         {
             std::cout << i << j << " ";
-            if (j==1) {
+            if (j == 1) {
                 goto CONTINUE_166_9;
             }
             std::cout << "inner ";
@@ -280,7 +280,7 @@ auto for_continue_outer() -> void
         std::vector vj {0, 1, 2}; 
         for ( auto const& j : vj ) {
             std::cout << i << j << " ";
-            if (j==1) {
+            if (j == 1) {
                 goto CONTINUE_182_5;
             }
             std::cout << "inner ";
@@ -301,7 +301,7 @@ auto for_break_inner() -> void
 #line 202 "pure2-break-continue.cpp2"
         {
             std::cout << i << j << " ";
-            if (j==1) {
+            if (j == 1) {
                 goto BREAK_202_9;
             }
             std::cout << "inner ";
@@ -322,7 +322,7 @@ auto for_break_outer() -> void
         std::vector vj {0, 1, 2}; 
         for ( auto const& j : vj ) {
             std::cout << i << j << " ";
-            if (j==1) {
+            if (j == 1) {
                 goto BREAK_218_5;
             }
             std::cout << "inner ";
