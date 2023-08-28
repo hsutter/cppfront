@@ -62,5 +62,5 @@ auto fill(
 auto print_decorated(auto const& x) -> void { std::cout << ">> [" << x << "]\n";  }
 
 #line 30 "mixed-initialization-safety-3.cpp2"
-[[nodiscard]] auto flip_a_coin() -> bool { return std::mt19937()() % 2==0;  }
+[[nodiscard]] auto flip_a_coin() -> bool { return std::mt19937()() % 2 == 0;  }
 
