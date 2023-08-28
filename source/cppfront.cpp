@@ -3299,7 +3299,9 @@ public:
                     switch (op.type()) {
                     break;case lexeme::EqualComparison:
                           case lexeme::NotEqualComparison:
+                        printer.print_cpp2( " ", n.position() );
                         emit(op);
+                        printer.print_cpp2( " ", n.position() );
                     break;default:
                         printer.print_cpp2( ",", n.position() );
                     }
