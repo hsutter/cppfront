@@ -19,5 +19,5 @@ auto main() -> int;
 
 
 #line 2 "pure2-bugfix-for-max-munch.cpp2"
-auto main() -> int { v<cpp2::i32> == v<cpp2::i32>;  }
+auto main() -> int { static_cast<void>(v<cpp2::i32> == v<cpp2::i64>);  }
 
