@@ -284,7 +284,7 @@ using __uchar   = unsigned char;    // normally use u8 instead
 //
 //-----------------------------------------------------------------------
 //
-template<size_t N>
+template<std::size_t N>
 struct String
 {
     constexpr String(const char (&str)[N])
@@ -902,7 +902,7 @@ inline constexpr auto is_narrowing_v =
 template <typename... Ts>
 inline constexpr auto program_violates_type_safety_guarantee = sizeof...(Ts) < 0;
 
-//  For literals we can check for safe 'narrowing' at a compile time (e.g., 1 as size_t)
+//  For literals we can check for safe 'narrowing' at a compile time (e.g., 1 as std::size_t)
 template< typename C, auto x >
 inline constexpr bool is_castable_v =
     std::is_integral_v<C> &&
@@ -1021,7 +1021,7 @@ auto as( X x ) -> C {
 
 //  Common internal helper
 //
-template<size_t I, typename... Ts>
+template<std::size_t I, typename... Ts>
 constexpr auto operator_as( std::variant<Ts...> && x ) -> decltype(auto) {
     if constexpr (I < std::variant_size_v<std::variant<Ts...>>) {
         return std::get<I>( x );
@@ -1031,7 +1031,7 @@ constexpr auto operator_as( std::variant<Ts...> && x ) -> decltype(auto) {
     }
 }
 
-template<size_t I, typename... Ts>
+template<std::size_t I, typename... Ts>
 constexpr auto operator_as( std::variant<Ts...> & x ) -> decltype(auto) {
     if constexpr (I < std::variant_size_v<std::variant<Ts...>>) {
         return std::get<I>( x );
@@ -1041,7 +1041,7 @@ constexpr auto operator_as( std::variant<Ts...> & x ) -> decltype(auto) {
     }
 }
 
-template<size_t I, typename... Ts>
+template<std::size_t I, typename... Ts>
 constexpr auto operator_as( std::variant<Ts...> const& x ) -> decltype(auto) {
     if constexpr (I < std::variant_size_v<std::variant<Ts...>>) {
         return std::get<I>( x );
@@ -1491,7 +1491,7 @@ inline auto to_string(std::tuple<Ts...> const& t) -> std::string
 //
 struct args_t : std::vector<std::string_view>
 {
-    args_t(int c, char** v) : vector{static_cast<size_t>(c)}, argc{c}, argv{v} {}
+    args_t(int c, char** v) : vector{static_cast<std::size_t>(c)}, argc{c}, argv{v} {}
 
     int                argc = 0;
     char**             argv = nullptr;
@@ -1500,7 +1500,7 @@ struct args_t : std::vector<std::string_view>
 inline auto make_args(int argc, char** argv) -> args_t
 {
     auto ret  = args_t{argc, argv};
-    auto args = std::span(argv, static_cast<size_t>(argc));
+    auto args = std::span(argv, static_cast<std::size_t>(argc));
     std::copy( args.begin(), args.end(), ret.data());
     return ret;
 }
@@ -1596,7 +1596,7 @@ inline auto fopen( const char* filename, const char* mode ) {
     if (!x) {
         Throw( std::make_error_condition(std::errc::no_such_file_or_directory), "'fopen' attempt failed");
     }
-    return c_raii( x, &fclose );
+    return c_raii( x, &std::fclose );
 }
 
 //  Caveat: There's little else in the C stdlib that allocates a resource...
