@@ -676,6 +676,11 @@ public:
         #else
             #define CPP2_LAMBDA_NO_DISCARD
         #endif
+        #if ((__GNUC__ * 100) + __GNUC_MINOR__) < 1003
+            //  GCC 10.2 doesn't support this feature (10.3 is fine)
+            #undef  CPP2_FORCE_INLINE_LAMBDA
+            #define CPP2_FORCE_INLINE_LAMBDA
+        #endif
     #else
         #define CPP2_LAMBDA_NO_DISCARD
     #endif
