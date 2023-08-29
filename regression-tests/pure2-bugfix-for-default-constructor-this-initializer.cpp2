@@ -1,0 +1,19 @@
+base: type = {
+  public x: i32         = -1;
+  operator=: (out this) = { }
+  operator=: (implicit out this, y: i32) = x = y;
+}
+derived: type = {
+  y: i32     = 2;
+  this: base = 42;
+}
+derived2: @ struct type = {
+  y: i32;
+  this: base;
+  z: i32 = 3;
+}
+main: () = {
+  [[assert: derived().y == 2]]
+  [[assert: derived().x == 42]]
+  _ = :derived2 = (1, 2, 3);
+}

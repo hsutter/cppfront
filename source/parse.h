@@ -2728,6 +2728,51 @@ public:
     }
 
 
+    struct should_add_default_constructor_res{
+        bool value;
+        source_position pos_of_emitted_base_with_initializer;
+    };
+    auto should_add_default_constructor() const
+        -> should_add_default_constructor_res
+    {
+        if (
+            !is_type()
+            || !initializer
+            || !initializer->is_compound()
+            )
+        {
+            return {false, {}};
+        }
+
+        source_position pos = {};
+        bool found_initializer = false;
+        bool found_initializer_in_base = false;
+        for (auto& stmt: std::get<statement_node::compound>(initializer->statement)->statements)
+        {
+            auto& decl = std::get<statement_node::declaration>(stmt->statement);
+            assert(decl);
+            if (decl->is_constructor()) {
+                return {false, {}};
+            }
+            if (!decl->is_object()) {
+                continue;
+            }
+            if (decl->has_initializer()) {
+                found_initializer = true;
+                if (!found_initializer_in_base) {
+                    pos = decl->position();
+                }
+            }
+            assert(decl->name());
+            if (decl->has_name("this") && found_initializer) {
+                found_initializer_in_base = true;
+            }
+        }
+
+        return {found_initializer_in_base, pos};
+    }
+
+
     auto get_decl_if_type_scope_object_name_before_a_base_type( std::string_view s ) const
         -> declaration_node const*
     {
@@ -6448,6 +6493,8 @@ private:
 
     auto apply_type_meta_functions( declaration_node& decl )
         -> bool;
+    auto apply_internal_type_metafunctions( declaration_node& decl )
+        -> bool;
 
 
     //G unnamed-declaration:
@@ -6834,6 +6881,13 @@ private:
                     "error encountered while applying type metafunctions",
                     false, {}, true
                 );
+                return {};
+            }
+            if (!apply_internal_type_metafunctions(*n)) {
+                error(
+                    "error encountered while applying internal type metafunctions",
+                    false, {}, true
+                    );
                 return {};
             }
         }
