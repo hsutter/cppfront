@@ -5637,7 +5637,12 @@ public:
                     if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
                         // Workaround GCC 10 not supporting requires in forward declarations in some cases.
                         // See commit 5a0d77f8e297902c0b9712c5aafb6208cfa4c139.
-                        printer.print_extra("CPP2_REQUIRES (");
+                        if (n.parent_is_type()) {
+                            printer.print_extra("CPP2_REQUIRES_MEMFN (");
+                        }
+                        else {
+                            printer.print_extra("CPP2_REQUIRES (");
+                        }
                     }
                     else {
                         printer.print_extra("requires (");
