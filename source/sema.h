@@ -818,7 +818,6 @@ private:
                 //  initializations on some path(s)
                 else {
                     assert (std::ssize(selection_stack) > 0);
-                    // selection_stack.back().debug_print(std::cout);
 
                     auto true_branches  = std::string{};
                     auto false_branches = std::string{};
