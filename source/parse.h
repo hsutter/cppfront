@@ -4414,7 +4414,7 @@ private:
     //
 
     //  The general /*binary*/-expression:
-    //     /*term*/-expression { { /* operators at this predecence level */ } /*term*/-expression }*
+    //     /*term*/-expression { { /* operators at this precedence level */ } /*term*/-expression }*
     //
     template<
         typename Binary,
