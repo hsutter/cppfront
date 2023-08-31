@@ -29,7 +29,7 @@ class widget {
 #line 4 "pure2-types-value-types-via-meta-functions.cpp2"
     public: auto operator=(cpp2::in<int> i) -> widget& ;
 
-public: [[nodiscard]] auto operator<=>(widget const& that) const -> std::strong_ordering = default;
+public: [[nodiscard]] auto operator<=>(widget const& that) const& -> std::strong_ordering = default;
 public: widget(widget const& that);
 public: auto operator=(widget const& that) -> widget& ;
 public: widget(widget&& that) noexcept;
@@ -45,7 +45,7 @@ class w_widget {
 #line 9 "pure2-types-value-types-via-meta-functions.cpp2"
     public: auto operator=(cpp2::in<int> i) -> w_widget& ;
 
-public: [[nodiscard]] auto operator<=>(w_widget const& that) const -> std::weak_ordering = default;
+public: [[nodiscard]] auto operator<=>(w_widget const& that) const& -> std::weak_ordering = default;
 public: w_widget(w_widget const& that);
 public: auto operator=(w_widget const& that) -> w_widget& ;
 public: w_widget(w_widget&& that) noexcept;
@@ -61,7 +61,7 @@ class p_widget {
 #line 14 "pure2-types-value-types-via-meta-functions.cpp2"
     public: auto operator=(cpp2::in<int> i) -> p_widget& ;
 
-public: [[nodiscard]] auto operator<=>(p_widget const& that) const -> std::partial_ordering = default;
+public: [[nodiscard]] auto operator<=>(p_widget const& that) const& -> std::partial_ordering = default;
 public: p_widget(p_widget const& that);
 public: auto operator=(p_widget const& that) -> p_widget& ;
 public: p_widget(p_widget&& that) noexcept;

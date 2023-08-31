@@ -46,7 +46,7 @@ class myclass {
         
 
 #line 34 "pure2-types-basics.cpp2"
-    public: auto print() const -> void;
+    public: auto print() const& -> void;
         
 
 #line 38 "pure2-types-basics.cpp2"
@@ -54,7 +54,7 @@ class myclass {
         
 
 #line 42 "pure2-types-basics.cpp2"
-    public: auto f(cpp2::in<int> x) const -> void;
+    public: auto f(cpp2::in<int> x) const& -> void;
         
 
 #line 46 "pure2-types-basics.cpp2"
@@ -157,7 +157,7 @@ namespace N {
         print();
     }
 
-    auto myclass::print() const -> void{
+    auto myclass::print() const& -> void{
         std::cout << "    data: " + cpp2::to_string(data) + ", more: " + cpp2::to_string(more) + "\n";
     }
 
@@ -165,7 +165,7 @@ namespace N {
         std::cout << "myclass: destructor\n";
     }
 
-    auto myclass::f(cpp2::in<int> x) const -> void{
+    auto myclass::f(cpp2::in<int> x) const& -> void{
         std::cout << "N::myclass::f with " + cpp2::to_string(x) + "\n";
     }
 

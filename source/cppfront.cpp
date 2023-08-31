@@ -5499,7 +5499,6 @@ public:
                 {
                     assert(
                         !is_main
-                        && suffix1.empty()
                         && suffix2.empty()
                         && "ICE: an operator= shouldn't have been able to generate a suffix (or be main)"
                     );
