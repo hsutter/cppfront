@@ -2,7 +2,7 @@
 //  "A better C than C" ... ?
 //
 main: () -> int = {
-    s: std::string = "Freddy";
+    s: std::string = "Fred";
     myfile := cpp2::fopen("xyzzy", "w");
     _ = myfile.fprintf( "Hello %s with UFCS!", s.c_str() );
 }
