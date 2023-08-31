@@ -4161,6 +4161,7 @@ private:
                    curr().type() != lexeme::Semicolon
                 && curr().type() != lexeme::RightParen
                 && curr().type() != lexeme::RightBracket
+                && curr().type() != lexeme::Greater
                 && curr().type() != lexeme::Comma
             ) {
                 expr_list->inside_initializer = false;
@@ -5031,20 +5032,20 @@ private:
                         }
                         return expression(false);   // false == disallow unparenthesized relational comparisons in template args
                     }()
-                ) 
+                )
                 {
                     term.arg = std::move(e);
                 }
-                    
+
                 //  Else try parsing it as a type id
                 else if (auto i = type_id()) {
                     term.arg = std::move(i);
                 }
-                    
+
                 else {
                     break;
                 }
-                
+
                 n->template_args.push_back( std::move(term) );
             }
             //  Use the lambda trick to jam in a "next" clause
