@@ -1,0 +1,10 @@
+t: @struct type = {
+  f: (this) -> i32      = 1;
+  f: (move this) -> i32 = 2;
+}
+main: () = {
+  // "Can't overload with `move this` on non-`operator=` function" <https://github.com/hsutter/cppfront/issues/651>.
+  x: t = ();
+  [[assert Testing: x.f() == 1]]
+  [[assert Testing: x.f() == 2]]
+}

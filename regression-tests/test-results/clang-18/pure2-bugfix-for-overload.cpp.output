@@ -1,0 +1,13 @@
+pure2-bugfix-for-overload.cpp2:3:30: error: cannot overload a member function with ref-qualifier '&&' with a member function without a ref-qualifier
+    3 |   public: [[nodiscard]] auto f() && -> cpp2::i32;
+      |                              ^
+pure2-bugfix-for-overload.cpp2:2:30: note: previous declaration is here
+    2 |   public: [[nodiscard]] auto f() const -> cpp2::i32;
+      |                              ^
+pure2-bugfix-for-overload.cpp2:3:25: error: cannot overload a member function with ref-qualifier '&&' with a member function without a ref-qualifier
+    3 |   [[nodiscard]] auto t::f() && -> cpp2::i32 { return 2;  }
+      |                         ^
+pure2-bugfix-for-overload.cpp2:2:25: note: previous declaration is here
+    2 |   [[nodiscard]] auto t::f() const -> cpp2::i32 { return 1; }
+      |                         ^
+2 errors generated.
