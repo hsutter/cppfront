@@ -14,7 +14,7 @@ class t;
 
 #line 1 "pure2-bugfix-for-overload.cpp2"
 class t {
-  public: [[nodiscard]] auto f() const -> cpp2::i32;
+  public: [[nodiscard]] auto f() const& -> cpp2::i32;
   public: [[nodiscard]] auto f() && -> cpp2::i32;
 };
 auto main() -> int;
@@ -24,7 +24,7 @@ auto main() -> int;
 
 
 #line 2 "pure2-bugfix-for-overload.cpp2"
-  [[nodiscard]] auto t::f() const -> cpp2::i32 { return 1; }
+  [[nodiscard]] auto t::f() const& -> cpp2::i32 { return 1; }
   [[nodiscard]] auto t::f() && -> cpp2::i32 { return 2;  }
 
 auto main() -> int{
