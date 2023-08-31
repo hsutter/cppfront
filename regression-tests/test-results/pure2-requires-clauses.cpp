@@ -37,6 +37,11 @@ CPP2_REQUIRES (std::is_same_v<T,int> && std::is_same_v<U,int> && std::is_same_v<
     
 
 #line 18 "pure2-requires-clauses.cpp2"
+template<typename T> 
+CPP2_REQUIRES_ (std::same_as<T,cpp2::i32>)
+#line 18 "pure2-requires-clauses.cpp2"
+extern T const v;
+
 auto main() -> int;
     
 
@@ -55,6 +60,11 @@ requires (std::is_same_v<T,int> && std::is_same_v<U,int> && std::is_same_v<CPP2_
 {
     return CPP2_FORWARD(a) * CPP2_FORWARD(b); 
 }
+
+template<typename T> 
+requires (std::same_as<T,cpp2::i32>)
+#line 18 "pure2-requires-clauses.cpp2"
+T const v {0}; 
 
 auto main() -> int{
     X<int,int> x {}; 

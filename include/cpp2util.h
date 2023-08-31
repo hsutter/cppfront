@@ -1755,10 +1755,10 @@ using cpp2::cpp2_new;
 // See commit 5a0d77f8e297902c0b9712c5aafb6208cfa4c139.
 #if !defined(__clang__) && defined(__GNUC__) && __GNUC__ == 10
     #define CPP2_REQUIRES(...) /* empty */
-    #define CPP2_REQUIRES_MEMFN(...) static_assert(false, "GCC 11 or higher is required to support type-scope functions that have a 'requires' clause. This includes a 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.")
+    #define CPP2_REQUIRES_(...) static_assert(false, "GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.")
 #else
     #define CPP2_REQUIRES(...) requires (__VA_ARGS__)
-    #define CPP2_REQUIRES_MEMFN(...) requires (__VA_ARGS__)
+    #define CPP2_REQUIRES_(...) requires (__VA_ARGS__)
 #endif
 
 #endif

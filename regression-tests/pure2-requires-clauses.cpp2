@@ -15,6 +15,8 @@ f:  <T: type, U: type>
     return a * b;
 }
 
+v: <T> const T requires std::same_as<T, i32> = 0;
+
 main: () = {
     x: X<int,int> = ();
     std::cout << f<int,int>(2,5);

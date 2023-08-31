@@ -16,12 +16,12 @@ class element;
 class element {
   private: std::string name; 
   public: explicit element(auto&& n)
-CPP2_REQUIRES_MEMFN (std::is_same_v<CPP2_TYPEOF(n), std::string>)
+CPP2_REQUIRES_ (std::is_same_v<CPP2_TYPEOF(n), std::string>)
 #line 3 "pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2"
   ;
 #line 3 "pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2"
   public: auto operator=(auto&& n) -> element& 
-CPP2_REQUIRES_MEMFN (std::is_same_v<CPP2_TYPEOF(n), std::string>)
+CPP2_REQUIRES_ (std::is_same_v<CPP2_TYPEOF(n), std::string>)
 #line 3 "pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2"
   ;
 
