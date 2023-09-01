@@ -12,7 +12,7 @@ namespace N {
 
 class myclass;
 
-#line 60 "pure2-types-basics.cpp2"
+#line 64 "pure2-types-basics.cpp2"
 }
 
 
@@ -46,18 +46,22 @@ class myclass {
         
 
 #line 34 "pure2-types-basics.cpp2"
-    public: auto print() const -> void;
+    public: auto print() const& -> void;
         
 
 #line 38 "pure2-types-basics.cpp2"
-    public: ~myclass() noexcept;
+    public: auto print() && -> void;
         
 
 #line 42 "pure2-types-basics.cpp2"
-    public: auto f(cpp2::in<int> x) const -> void;
+    public: ~myclass() noexcept;
         
 
 #line 46 "pure2-types-basics.cpp2"
+    public: auto f(cpp2::in<int> x) const& -> void;
+        
+
+#line 50 "pure2-types-basics.cpp2"
     private: int data {42 * 12}; 
     private: std::string more {std::to_string(42 * 12)}; 
 
@@ -68,7 +72,7 @@ class myclass {
         public: nested(nested const&) = delete; /* No 'that' constructor, suppress copy */
         public: auto operator=(nested const&) -> void = delete;
 
-#line 51 "pure2-types-basics.cpp2"
+#line 55 "pure2-types-basics.cpp2"
     };
 
     public: template<typename T, typename U> [[nodiscard]] static auto f1(T const& t, U const& u) -> auto;
@@ -78,7 +82,7 @@ class myclass {
 
     public: myclass(myclass const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(myclass const&) -> void = delete;
-#line 58 "pure2-types-basics.cpp2"
+#line 62 "pure2-types-basics.cpp2"
 };
 
 }
@@ -157,28 +161,32 @@ namespace N {
         print();
     }
 
-    auto myclass::print() const -> void{
+    auto myclass::print() const& -> void{
         std::cout << "    data: " + cpp2::to_string(data) + ", more: " + cpp2::to_string(more) + "\n";
+    }
+
+    auto myclass::print() && -> void{
+        std::cout << "    (move print) data: " + cpp2::to_string(data) + ", more: " + cpp2::to_string(more) + "\n";
     }
 
     myclass::~myclass() noexcept{
         std::cout << "myclass: destructor\n";
     }
 
-    auto myclass::f(cpp2::in<int> x) const -> void{
+    auto myclass::f(cpp2::in<int> x) const& -> void{
         std::cout << "N::myclass::f with " + cpp2::to_string(x) + "\n";
     }
 
-#line 50 "pure2-types-basics.cpp2"
+#line 54 "pure2-types-basics.cpp2"
         auto myclass::nested::g() -> void { std::cout << "N::myclass::nested::g\n";  }
 
-#line 53 "pure2-types-basics.cpp2"
+#line 57 "pure2-types-basics.cpp2"
     template<typename T, typename U> [[nodiscard]] auto myclass::f1(T const& t, U const& u) -> auto { return t + u; }
     template<typename T, typename U> [[nodiscard]] auto myclass::f2(T const& t, U const& u) -> auto { return t + u;  }
     template<auto T, auto U> [[nodiscard]] auto myclass::f3() -> auto { return T + U; }
     template<cpp2::i8 T, cpp2::i16 U> [[nodiscard]] auto myclass::f4() -> auto { return T + U; }
 
-#line 60 "pure2-types-basics.cpp2"
+#line 64 "pure2-types-basics.cpp2"
 }
 
 auto main() -> int{

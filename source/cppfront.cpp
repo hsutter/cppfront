@@ -5465,9 +5465,9 @@ public:
 
                     switch (this_->pass) {
                     break;case passing_style::in:
-                        suffix1 += " const";
+                        suffix1 += " const&";
                     break;case passing_style::inout:
-                        ;
+                        suffix1 += " &";
                     break;case passing_style::out:
                         ; // constructor is handled below
                     break;case passing_style::move:
@@ -5544,7 +5544,6 @@ public:
                 {
                     assert(
                         !is_main
-                        && suffix1.empty()
                         && suffix2.empty()
                         && "ICE: an operator= shouldn't have been able to generate a suffix (or be main)"
                     );

@@ -51,7 +51,7 @@ class X {
 
 #line 34 "pure2-types-order-independence-and-nesting.cpp2"
     //  X::exx member function description here
-    public: auto exx(cpp2::in<int> count) const -> void;
+    public: auto exx(cpp2::in<int> count) const& -> void;
         
     public: X(X const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(X const&) -> void = delete;
@@ -69,7 +69,7 @@ class Y {
 #line 49 "pure2-types-order-independence-and-nesting.cpp2"
     public: auto operator=(X* x) -> Y& ;
 
-    public: auto why(cpp2::in<int> count) const -> void;
+    public: auto why(cpp2::in<int> count) const& -> void;
         
     public: Y(Y const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(Y const&) -> void = delete;
@@ -151,7 +151,7 @@ namespace N {
     }
 
 #line 35 "pure2-types-order-independence-and-nesting.cpp2"
-    auto X::exx(cpp2::in<int> count) const -> void{
+    auto X::exx(cpp2::in<int> count) const& -> void{
         //  Exercise '_' anonymous objects too while we're at it
         cpp2::finally auto_37_9 {[&]() -> void { std::cout << "leaving call to 'why(" + cpp2::to_string(count) + ")'\n";  }}; 
         if (cpp2::cmp_less(count,5)) {
@@ -171,7 +171,7 @@ namespace N {
 #line 49 "pure2-types-order-independence-and-nesting.cpp2"
      }
 
-    auto Y::why(cpp2::in<int> count) const -> void { 
+    auto Y::why(cpp2::in<int> count) const& -> void { 
         CPP2_UFCS(exx, (*cpp2::assert_not_null(px)), count + 1);  }// use X object from Y
 
 #line 55 "pure2-types-order-independence-and-nesting.cpp2"

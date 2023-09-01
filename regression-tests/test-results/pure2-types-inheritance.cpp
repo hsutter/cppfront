@@ -27,7 +27,7 @@ class Cyborg;
 
 #line 2 "pure2-types-inheritance.cpp2"
 class Human {
-    public: virtual auto speak() const -> void = 0;
+    public: virtual auto speak() const& -> void = 0;
 
 public: virtual ~Human() noexcept;
 
@@ -40,7 +40,7 @@ public: virtual ~Human() noexcept;
 namespace N {
     template<int I> class Machine {
         public: explicit Machine([[maybe_unused]] cpp2::in<std::string> param2);
-        public: virtual auto work() const -> void = 0;
+        public: virtual auto work() const& -> void = 0;
     
     public: virtual ~Machine() noexcept;
 
@@ -61,13 +61,13 @@ class Cyborg: public Cyborg_name_as_base, public Human, public Cyborg_address_as
         
 
 #line 25 "pure2-types-inheritance.cpp2"
-    public: auto speak() const -> void override;
+    public: auto speak() const& -> void override;
         
 
-    public: auto work() const -> void override;
+    public: auto work() const& -> void override;
         
 
-    public: auto print() const -> void;
+    public: auto print() const& -> void;
         
 
     public: ~Cyborg() noexcept;
@@ -117,13 +117,13 @@ namespace N {
         std::cout << cpp2::to_string(name) + " checks in for the day's shift\n";
     }
 
-    auto Cyborg::speak() const -> void { 
+    auto Cyborg::speak() const& -> void { 
         std::cout << cpp2::to_string(name) + " cracks a few jokes with a coworker\n";  }
 
-    auto Cyborg::work() const -> void { 
+    auto Cyborg::work() const& -> void { 
         std::cout << cpp2::to_string(name) + " carries some half-tonne crates of Fe2O3 to cold storage\n";  }
 
-    auto Cyborg::print() const -> void { 
+    auto Cyborg::print() const& -> void { 
         std::cout << "printing: " + cpp2::to_string(name) + " lives at " + cpp2::to_string(address) + "\n";  }
 
     Cyborg::~Cyborg() noexcept { 

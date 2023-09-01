@@ -35,6 +35,10 @@ myclass : type = {
         std::cout << "    data: (data)$, more: (more)$\n";
     }
 
+    print: (move this) = {
+        std::cout << "    (move print) data: (data)$, more: (more)$\n";
+    }
+
     operator=: (move this) = {
         std::cout << "myclass: destructor\n";
     }

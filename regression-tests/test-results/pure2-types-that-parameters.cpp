@@ -33,7 +33,7 @@ class myclass {
         
 
 #line 16 "pure2-types-that-parameters.cpp2"
-    public: auto print() const -> void;
+    public: auto print() const& -> void;
         
 
 #line 20 "pure2-types-that-parameters.cpp2"
@@ -85,7 +85,7 @@ auto main() -> int;
 #line 14 "pure2-types-that-parameters.cpp2"
     }
 
-    auto myclass::print() const -> void{
+    auto myclass::print() const& -> void{
         std::cout << "name '" + cpp2::to_string(name) + "', addr '" + cpp2::to_string(addr) + "'\n";
     }
 

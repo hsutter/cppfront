@@ -23,9 +23,9 @@ class widget final
 #line 6 "pure2-defaulted-comparisons-and-final-types.cpp2"
     public: auto operator=(cpp2::in<int> value) -> widget& ;
 
-    public: [[nodiscard]] auto operator==(widget const& that) const -> bool = default;
+    public: [[nodiscard]] auto operator==(widget const& that) const& -> bool = default;
 
-    public: [[nodiscard]] auto operator<=>(widget const& that) const -> std::strong_ordering = default;
+    public: [[nodiscard]] auto operator<=>(widget const& that) const& -> std::strong_ordering = default;
 
     public: widget(widget const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(widget const&) -> void = delete;
