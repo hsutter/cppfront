@@ -20,8 +20,8 @@ class B;
 class A {
   public: int i {0}; 
 
- public: virtual auto const_foo() const -> void;
- public: auto mut_foo() -> void;
+ public: virtual auto const_foo() const& -> void;
+ public: auto mut_foo() & -> void;
 
   public: A() = default;
   public: A(A const&) = delete; /* No 'that' constructor, suppress copy */
@@ -67,8 +67,8 @@ auto test_down() -> void;
 
 
 #line 4 "pure2-types-down-upcast.cpp2"
- auto A::const_foo() const -> void{std::cout << "const foo \n"; }
- auto A::mut_foo() -> void{std::cout << "foo \n"; }
+ auto A::const_foo() const& -> void{std::cout << "const foo \n"; }
+ auto A::mut_foo() & -> void{std::cout << "foo \n"; }
 
 #line 13 "pure2-types-down-upcast.cpp2"
 auto func_mut(A&  a) ->   void  {std::cout << "Call A mut: " + cpp2::to_string(a.i) << std::endl;}
@@ -83,15 +83,15 @@ auto test_const_foo() -> void{
   CPP2_UFCS_0(const_foo, (*cpp2::assert_not_null(sC)));
  CPP2_UFCS_0(const_foo, (cpp2::as_<A>(s)));
   CPP2_UFCS_0(const_foo, (cpp2::as_<A>(*cpp2::assert_not_null(sC))));
-  (void) std::move(s);
-  (void) std::move(sC);
+  static_cast<void>(std::move(s));
+  static_cast<void>(std::move(sC));
 }
 
 auto test_mut_foo() -> void{
  A s {}; 
   CPP2_UFCS_0(mut_foo, s);
  CPP2_UFCS_0(mut_foo, (cpp2::as_<A>(s)));
-  (void) std::move(s);
+  static_cast<void>(std::move(s));
 }
 
 auto test_up() -> void{
@@ -109,8 +109,8 @@ auto test_up() -> void{
   func_mut(cpp2::as_<B>(b));
   func_mut(cpp2::as_<A>(b));
 
-  (void) std::move(b);
-  (void) std::move(bC);
+  static_cast<void>(std::move(b));
+  static_cast<void>(std::move(bC));
 }
 
 auto test_down() -> void{
@@ -129,10 +129,10 @@ auto test_down() -> void{
   func_mut(cpp2::as_<B>(*cpp2::assert_not_null(a)));
   func_mut(cpp2::as_<A>(*cpp2::assert_not_null(a)));
 
-  (void) std::move(b);
-  (void) std::move(bC);
-  (void) std::move(a);
-  (void) std::move(aC);
+  static_cast<void>(std::move(b));
+  static_cast<void>(std::move(bC));
+  static_cast<void>(std::move(a));
+  static_cast<void>(std::move(aC));
 }
 
 [[nodiscard]] auto main() -> int{
