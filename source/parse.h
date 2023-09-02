@@ -2598,6 +2598,9 @@ public:
     auto is_alias() const -> bool
         { return type.index() == an_alias;    }
 
+    auto is_function_expression () const -> bool
+        { return is_function() && !identifier;  }
+
     auto is_polymorphic() const // has base types or virtual functions
         -> bool
     {
