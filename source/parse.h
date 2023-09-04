@@ -2284,6 +2284,7 @@ struct namespace_node
 struct alias_node
 {
     token const* type = {};
+    std::unique_ptr<type_id_node> type_id;   // for objects
 
     enum active : std::uint8_t { a_type, a_namespace, an_object };
     std::variant<
@@ -2373,8 +2374,6 @@ struct declaration_node
     //  Attributes currently configurable only via metafunction API,
     //  not directly in the base language grammar
     bool member_function_generation = true;
-    bool is_constexpr               = false;
-    bool is_static                  = false;
 
     //  Constructor
     //
@@ -2405,24 +2404,13 @@ struct declaration_node
         member_function_generation = false;
     }
 
-    auto make_constexpr()
-        -> void
-    {
-        is_constexpr = true;
-    }
-
-    auto make_static()
-        -> void
-    {
-        is_static = true;
-    }
-
     auto object_type() const
         -> std::string
     {
         if (!is_object()) {
             return "(*ERROR*) not an object";
         }
+        //  Else
         return std::get<an_object>(type)->to_string();
     }
 
@@ -2432,7 +2420,11 @@ struct declaration_node
         if (!is_object()) {
             return "(*ERROR*) not an object";
         }
-        return initializer->to_string();
+        else if (initializer) {
+            return initializer->to_string();
+        }
+        //  Else
+        return "";
     }
 
     auto get_parent() const
@@ -6915,7 +6907,7 @@ private:
     //G alias
     //G     ':' template-parameter-declaration-list? 'type' '==' type-id ';'
     //G     ':' 'namespace' '==' qualified-id ';'
-    //G     ':' template-parameter-declaration-list? '_'? '==' expression ';'
+    //G     ':' template-parameter-declaration-list? type-id? '==' expression ';'
     //G
     //GT     ':' function-type '==' expression ';'
     //GT        # See commit 63efa6ed21c4d4f4f136a7a73e9f6b2c110c81d7 comment
@@ -6944,35 +6936,34 @@ private:
             n->template_parameters = std::move(template_parameters);
         }
 
-        if (
-            curr() != "type"
-            && curr() != "namespace"
-            && curr() != "_"
-            && curr().type() != lexeme::EqualComparison
-            )
-        {
-            pos = start_pos;    // backtrack
-            return {};
-        }
-
-        //  Pause parsing to check for some semantic diagnostics
-
-        if (
-            n->template_parameters
-            && curr() == "namespace"
-            )
-        {
-            errors.emplace_back(
-                curr().position(),
-                "a namespace cannot have template parameters"
-            );
-            return {};
-        }
-
-        //  Resume parsing
-
         auto a = std::make_unique<alias_node>( &curr() );
-        next();
+
+        //  Next must be 'type', 'namespace', a type-id, or we're at the '=='
+        if (curr() == "type")
+        {
+            next();
+        }
+        else if (curr() == "namespace")
+        {
+            next();
+            if (n->template_parameters) {
+                errors.emplace_back(
+                    curr().position(),
+                    "a namespace or namespace alias cannot have template parameters"
+                );
+                return {};
+            }
+        }
+        else if (curr().type() != lexeme::EqualComparison)
+        {
+            a->type_id = type_id();
+            if (!a->type_id) {
+                pos = start_pos;    // backtrack
+                return {};
+            }
+        }
+
+        //  Now we should be at the '==' if this is an alias
 
         if (curr().type() == lexeme::EqualComparison) {
             next();
@@ -6987,12 +6978,12 @@ private:
 
         if (
             n->parent_is_type()
-            && *a->type != "type"
+            && *a->type == "namespace"
             )
         {
             errors.emplace_back(
                 curr().position(),
-                "only a type alias may appear in a type scope - not a namespace or object alias"
+                "a namespace alias cannot appear in a type scope"
             );
             return {};
         }
@@ -7040,7 +7031,7 @@ private:
 
         //  Object alias
         else if (
-            *a->type == "_"
+            a->type_id
             || a->type->type() == lexeme::EqualComparison
             )
         {

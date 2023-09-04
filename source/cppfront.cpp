@@ -1579,6 +1579,8 @@ public:
             || n == "new"
             || n == "class"
             || n == "struct"
+            || n == "enum"
+            || n == "union"
             )
         {
             printer.print_cpp2("cpp2_"+n.to_string(true), pos);
@@ -4969,9 +4971,27 @@ public:
                 }
 
                 //  Handle object aliases
-                else if (a->is_object_alias()) {
+                else if (a->is_object_alias())
+                {
+                    auto intro = std::string{};
+                    if (n.parent_is_function()) {
+                        intro = "const&";
+                    }
+                    else if (n.parent_is_namespace() || n.parent_is_type()) {
+                        intro = "static constexpr";
+                    }
+                    else {
+                        assert(!"ICE: should be unreachable - an alias' parent should be a function, namespace, or type");
+                    }
+
+                    auto type = std::string{"auto"};
+                    if (a->type_id) {
+                        type = print_to_string(*a->type_id);
+                    }
+
                     printer.print_cpp2(
-                        "auto const& "
+                        type + " "
+                            + intro + " "
                             + print_to_string(*n.identifier)
                             + " = "
                             + print_to_string( *std::get<alias_node::an_object>(a->initializer) )

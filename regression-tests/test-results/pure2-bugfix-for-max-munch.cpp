@@ -11,7 +11,7 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-bugfix-for-max-munch.cpp2"
-template<typename T> auto const& v = 0;
+template<typename T> auto static constexpr v = 0;
 auto main() -> int;
 
 
