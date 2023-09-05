@@ -860,15 +860,20 @@ auto is( X const& x ) -> bool {
 //
 inline constexpr auto is( auto const& x, auto const& value ) -> bool
 {
+    //  Value with customized operator_is case
+    if constexpr (requires{ x.op_is(value); }) {
+        return x.op_is(value);
+    }
+
     //  Predicate case
-    if constexpr (requires{ bool{ value(x) }; }) {
+    else if constexpr (requires{ bool{ value(x) }; }) {
         return value(x);
     }
     else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
         return false;
     }
 
-    //  Value case
+    //  Value equality case
     else if constexpr (requires{ bool{x == value}; }) {
         return x == value;
     }
@@ -1536,6 +1541,19 @@ using alien_memory = T volatile;
 
 //-----------------------------------------------------------------------
 //
+//  An implementation of GSL's narrow_cast with a clearly 'unsafe' name
+//
+//-----------------------------------------------------------------------
+//
+template <typename C, typename X>
+constexpr auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
+{
+    return static_cast<C>(CPP2_FORWARD(x));
+}
+
+
+//-----------------------------------------------------------------------
+//
 //  strict_value: a strong typedef-like helper for value types
 //
 //  Intended for use as an underlying type for types/variables where you
@@ -1550,18 +1568,30 @@ using alien_memory = T volatile;
 //
 template <typename T, typename Tag>
 class strict_value {
-    T t;
+    T t = {};
 public:
-    template <typename U> requires std::is_same_v<T,U>
-    explicit constexpr strict_value(U const& u) : t{u} { }
+    explicit constexpr strict_value() { }
 
-    template <typename U> requires std::is_same_v<T,U>
+    template <typename U>
+    explicit constexpr strict_value(U const& u) : t{unsafe_narrow<T>(u)} { }
+
+    template <typename U> requires std::is_convertible_v<T,U>
     explicit constexpr operator U() const { return t; }
 
-    template <typename U> requires std::is_same_v<T,U>
+    template <typename U> requires std::is_convertible_v<T,U>
     explicit constexpr operator U()       { return t; }
 
     auto operator<=>( strict_value const& ) const -> std::strong_ordering = default;
+
+    auto operator|=( strict_value const& that ) -> strict_value { t |= that.t; return *this; }
+    auto operator&=( strict_value const& that ) -> strict_value { t &= that.t; return *this; }
+    auto operator^=( strict_value const& that ) -> strict_value { t ^= that.t; return *this; }
+
+    auto operator|( strict_value const& that ) const -> strict_value { return strict_value(t | that.t); }
+    auto operator&( strict_value const& that ) const -> strict_value { return strict_value(t & that.t); }
+    auto operator^( strict_value const& that ) const -> strict_value { return strict_value(t ^ that.t); }
+
+    auto is_default_value() const -> bool { return t == T{}; }
 };
 
 
@@ -1625,19 +1655,6 @@ inline auto fopen( const char* filename, const char* mode ) {
 //  ... is that it? I don't think it's useful to provide a c_raii just for fopen,
 //  but perhaps c_raii may be useful for bringing forward third-party C code too,
 //  with cpp2::fopen as a starting example.
-
-
-//-----------------------------------------------------------------------
-//
-//  An implementation of GSL's narrow_cast with a clearly 'unsafe' name
-//
-//-----------------------------------------------------------------------
-//
-template <typename C, typename X>
-auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
-{
-    return static_cast<C>(CPP2_FORWARD(x));
-}
 
 
 //-----------------------------------------------------------------------

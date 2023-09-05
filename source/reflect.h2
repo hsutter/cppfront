@@ -241,6 +241,8 @@ declaration: @polymorphic_base @copyable type =
     is_namespace: (this) -> bool = n*.is_namespace();
     is_alias    : (this) -> bool = n*.is_alias();
 
+    is_function_expression : (this) -> bool = n*.is_function_expression();
+
     as_function : (this) -> function_declaration = function_declaration(n, this);
     as_object   : (this) -> object_declaration   = object_declaration(n, this);
     as_type     : (this) -> type_declaration     = type_declaration(n, this);
@@ -252,9 +254,6 @@ declaration: @polymorphic_base @copyable type =
     parent_is_namespace  : (this) -> bool = n*.parent_is_namespace();
     parent_is_alias      : (this) -> bool = n*.parent_is_alias();
     parent_is_polymorphic: (this) -> bool = n*.parent_is_polymorphic();
-
-    make_constexpr       : (inout this) = n*.make_constexpr();
-    make_static          : (inout this) = n*.make_static();
 }
 
 
@@ -332,8 +331,8 @@ object_declaration: @copyable type =
         [[assert: n*.is_object()]]
     }
 
-    is_const         : (this) -> bool        = n*.is_const();
-    has_wildcard_type: (this) -> bool        = n*.has_wildcard_type();
+    is_const         : (this) -> bool = n*.is_const();
+    has_wildcard_type: (this) -> bool = n*.has_wildcard_type();
 
     type: (this) -> std::string = {
         ret := n*.object_type();
@@ -753,7 +752,6 @@ struct: (inout t: meta::type_declaration) =
 }
 
 
-/*
 //-----------------------------------------------------------------------
 //
 //     "C enumerations constitute a curiously half-baked concept. ...
@@ -771,46 +769,155 @@ struct: (inout t: meta::type_declaration) =
 //
 //  a type together with named constants that are its possible values
 //
-basic_enum: (inout t: meta::type_declaration) =
-{
-    // default the underlying type to int, if not explicitly specified
-    underlying_type := "cpp2::strict_value<i8, t.name()$>";
+enumerator_info: @struct type = {
+    name:  std::string;
+    value: std::string;
+}
 
-    //  Make all the user-written members constexpr static, and find the type
-    (copy first := true)
-    for t.get_members() do (inout m)
+basic_enum: (
+    inout t: meta::type_declaration,
+    generate_next_value
+    )
+    -> (underlying_type: std::string = "")
+= {
+    enumerators : std::vector<enumerator_info> = ();
+    min_value   : i64                          = 0;
+    max_value   : i64                          = 0;
+
+    //  1. Gather: The names of all the user-written members, and find/compute the type
+
+    (copy first := true, copy value: i64 = -1)
+    for t.get_members()  next first = false  do (m)
     {
-        m.require( m.is_public() && m.is_object(),
-                   "all enumerator members must be public objects");
+        m.require( (m.is_public() || m.is_default_access()) && m.is_object(),
+                   "an enum member cannot be protected or private");
 
         if m.is_object() {
             mo := m.as_object();
             if !mo.has_wildcard_type() {
-                mo.require( first,
-                            "an explicit underlying type may be specified only on the first member");
-                underlying_type = "cpp2::strict_value<i8, mo.type()$>";
+                mo.require( first, "an explicit underlying type may be specified only on the first member");
+                underlying_type = mo.type();
             }
-            else {
-                // TODO: set type to underlying_type
+
+            generate_next_value( value, mo.initializer() );
+
+            if value < min_value {
+                min_value = value;
             }
-            first = false;
-            mo.make_constexpr();
-            mo.make_static();
+            if value > max_value {
+                max_value = value;
+            }
+
+            //  Adding local variable 'e' to work around a Clang warning
+            e: enumerator_info = ( mo.name() as std::string, std::to_string(value) );
+            enumerators.push_back( e );
         }
     }
 
-    //  Generate the value member
-    t.require( t.add_member( "value: " + underlying_type + ";" ),
-                "could not add value member");
+    //  Compute the default underlying type, if it wasn't explicitly specified
+    if underlying_type == "" {
+        if min_value >= std::numeric_limits<i8>::min() && max_value <= std::numeric_limits<i8>::max() {
+            underlying_type = "i8";
+        }
+        else if min_value >= std::numeric_limits<i16>::min() && max_value <= std::numeric_limits<i16>::max() {
+            underlying_type = "i16";
+        }
+        else if min_value >= std::numeric_limits<i32>::min() && max_value <= std::numeric_limits<i32>::max() {
+            underlying_type = "i32";
+        }
+        else if min_value >= std::numeric_limits<i64>::min() && max_value <= std::numeric_limits<i64>::max() {
+            underlying_type = "i64";
+        }
+        else {
+            t.error( "values are outside the range representable by the largest supported underlying type (i64)" );
+        }
+    }
 
-    //  Generate the constructor
-    t.require( t.add_member( "operator=: (out this, value_: " + underlying_type + ") = { value = value_; }" ),
-                "could not add constructor");
+    strict_underlying_type := "cpp2::strict_value<(underlying_type)$, (t.name())$>";
+
+    //  2. Replace: Erase the contents and replace with modified contents
+
+    t.remove_all_members();
+    
+    t.require( t.add_member( "value: (strict_underlying_type)$ = ();" ),
+               "could not add value member");
+    
+    t.require( t.add_member( "private operator=: (out this, value_: (strict_underlying_type)$) = { value = value_; }" ),
+               "could not add constructor");
+    
+    for enumerators  do (e)
+    {
+        t.require( t.add_member( "public (e.name)$ :== (strict_underlying_type)$( (e.value)$ );"),
+                   "could not add enumerator" + e.name);
+    }
 
     //  A basic_enum is-a value
     t.value();
 }
-*/
+
+
+enum: (inout t: meta::type_declaration) =
+{
+    //  Let basic_enum do its thing, with an incrementing value generator
+    _ = t.basic_enum(
+        :(inout value: i64, specified_value: std::string) = {
+            if !specified_value.empty() {
+                value = std::strtoll(specified_value[0]&, nullptr, 10);
+            } else {
+                value++;
+            }
+        }
+    );
+}
+
+
+flag_enum: (inout t: meta::type_declaration) =
+{
+    //  Add "none" member as a regular name to signify "no flags set"
+    t.require( t.add_member( "none := 0;"),
+                "could not add 'none' enumerator");
+
+    //  Let basic_enum do its thing, with a power-of-two value generator
+    enuminfo := t.basic_enum(
+        :(inout value: i64, specified_value: std::string) = {
+            if !specified_value.empty() {
+                value = std::strtoll(specified_value[0]&, nullptr, 10);
+                if (value & (value - 1)) != 0 {
+                    t$.error( "a flag_enum value must be a power of two" );
+                }
+            } else {
+                if value < 1 {
+                    value = 1;
+                }
+                else {
+                    value *= 2;
+                }
+            }
+        }
+    );
+
+    //  Support |= &= ^=
+    t.require( t.add_member( "operator|=: (inout this, that) = { value |= that.value; }" ),
+               "could not add flag-bitor operator|=");
+    t.require( t.add_member( "operator&=: (inout this, that) = { value &= that.value; }" ),
+               "could not add flag-bitand operator&=");
+    t.require( t.add_member( "operator^=: (inout this, that) = { value ^= that.value; }" ),
+               "could not add flag-bitxor operator^=");
+
+    //  Support | & ^
+    t.require( t.add_member( "operator|: (this, that) -> _ = value | that.value;" ),
+               "could not add flag-bitor operator|");
+    t.require( t.add_member( "operator&: (this, that) -> _ = value & that.value;" ),
+               "could not add flag-bitor operator&");
+    t.require( t.add_member( "operator^: (this, that) -> _ = value ^ that.value;" ),
+               "could not add flag-bitor operator^");
+
+    ////  Make "is" have per-flag meaning instead of equality
+    //t.require( t.add_member( "is: (this, that) -> bool = { if that.value.is_default_value() { return value.is_default_value(); } return (value & that.value) == that.value;} " ),
+    //           "could not add flag-test operator is for flag_enum objects");
+    //t.require( t.add_member( "is: (this, val: (enuminfo.underlying_type)$) -> bool = { /* if val.is_default_value() { return value.is_default_value(); } return (value & val) == val; */ return true; } " ),
+    //           "could not add flag-test operator is for flag_denum enumerator values");
+}
 
 
 //=======================================================================
@@ -874,8 +981,14 @@ auto parser::apply_type_meta_functions( declaration_node& n )
         else if (meta->to_string() == "struct") {
             cpp2_struct( rtype );
         }
+        else if (meta->to_string() == "enum") {
+            cpp2_enum( rtype );
+        }
+        else if (meta->to_string() == "flag_enum") {
+            flag_enum( rtype );
+        }
         else {
-            error( "(temporary alpha limitation) unrecognized metafunction name '" + meta->to_string() + "' - currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct" );
+            error( "(temporary alpha limitation) unrecognized metafunction name '" + meta->to_string() + "' - currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum" );
             return false;
         }
     }

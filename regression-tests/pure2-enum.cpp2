@@ -1,0 +1,81 @@
+
+skat_game: @enum type = {
+    diamonds := 9;
+    hearts;  // 10
+    spades;  // 11
+    clubs;   // 12
+    grand    := 20;
+    null     := 23;
+}
+
+rgb: @enum type = {
+    red;     // 0
+    green;   // 1
+    blue;    // 2
+}
+
+file_attributes: @flag_enum type = {
+    cached;   // 1
+    current;  // 2
+    obsolete; // 4
+}
+
+main: () = {
+    // x : skat_game = 9;               // error, can't construct skat_game from integer
+
+    x := skat_game::clubs;
+
+    // if x == 9 { }                    // error, can't compare skat_game and integer
+    // if x == rgb::red { }             // error, can't compare skat_game and rgb color
+
+    std::cout << "with if else: ";
+    if x == skat_game::diamonds {       // ok, can compare two skat_games
+        std::cout << "diamonds";
+    }
+    else if skat_game::hearts == x {    // ok, in either order
+        std::cout << "hearts";
+    }
+    else if x is (skat_game::spades) {  // ok, using is
+        std::cout << "spades";
+    }
+    else if skat_game::clubs is (x) {   // ok, using is
+        std::cout << "clubs";
+    }
+    else {
+        std::cout << "not a suit";
+    }
+
+    std::cout << "\nwith inspect: " << inspect x -> std::string {
+        is (skat_game::diamonds) = "diamonds";
+        is (skat_game::hearts  ) = "hearts";
+        is (skat_game::spades  ) = "spades";
+        is (skat_game::clubs   ) = "clubs";
+        is _ = "not a suit";
+    } << std::endl;
+
+    // x = 9;                           // error, can't assign skat_game from integer
+    // x = rgb::red;                    // error, can't assign skat_game from rgb color
+
+    x = skat_game::diamonds;        // ok, can assign one skat_game from another
+
+    f := file_attributes::current | file_attributes::cached;
+    f &= file_attributes::cached  | file_attributes::obsolete;
+    f |= file_attributes::current;
+
+    f2 := file_attributes::cached;
+
+    std::cout << "f  as int  is (f  as int )$\n";
+    std::cout << "f2 as int  is (f2 as int )$\n";
+    std::cout << "f  == f2   is (f  == f2  )$\n";
+
+    // The following are still in progress
+
+    // std::cout << "f  is (f2) is (f  is (f2))$\n";
+    // std::cout << "f2 is (f ) is (f2 is (f ))$\n";
+
+    // if f is (file_attributes::cached  ) { std::cout << "cached ";   }
+    // if f is (file_attributes::current ) { std::cout << "current ";  }
+    // if f is (file_attributes::obsolete) { std::cout << "obsolete "; }
+    // if f is (file_attributes::none    ) { std::cout << "none ";     }
+    // std::cout << "\n";
+}

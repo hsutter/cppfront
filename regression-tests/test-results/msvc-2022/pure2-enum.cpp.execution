@@ -1,0 +1,5 @@
+with if else: clubs
+with inspect: clubs
+f  as int  is 3
+f2 as int  is 1
+f  == f2   is 0
