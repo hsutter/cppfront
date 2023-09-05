@@ -1,5 +1,14 @@
 with if else: clubs
 with inspect: clubs
-f  as int  is 3
+f  as int  is 1
 f2 as int  is 1
+f  is (f2) is 1
+f2 is (f ) is 1
+
+f  as int  is 7
+f2 as int  is 3
 f  == f2   is 0
+f  is (f2) is 0
+f2 is (f ) is 0
+(f & f2) == f2 is 1
+inspecting: includes all f2's flags ('cached' and 'current')

@@ -201,6 +201,7 @@
     #include <type_traits>
     #include <new>
     #include <memory>
+    #include <random>
     #include <tuple>
     #include <string>
     #include <string_view>
@@ -1566,7 +1567,7 @@ constexpr auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
 //
 //-----------------------------------------------------------------------
 //
-template <typename T, typename Tag>
+template <typename T, typename Tag, bool BitwiseOps>
 class strict_value {
     T t = {};
 public:
@@ -1583,16 +1584,22 @@ public:
 
     auto operator<=>( strict_value const& ) const -> std::strong_ordering = default;
 
-    auto operator|=( strict_value const& that ) -> strict_value { t |= that.t; return *this; }
-    auto operator&=( strict_value const& that ) -> strict_value { t &= that.t; return *this; }
-    auto operator^=( strict_value const& that ) -> strict_value { t ^= that.t; return *this; }
+    auto operator|=( strict_value const& that )       -> strict_value requires BitwiseOps { t |= that.t; return *this; }
+    auto operator&=( strict_value const& that )       -> strict_value requires BitwiseOps { t &= that.t; return *this; }
+    auto operator^=( strict_value const& that )       -> strict_value requires BitwiseOps { t ^= that.t; return *this; }
 
-    auto operator|( strict_value const& that ) const -> strict_value { return strict_value(t | that.t); }
-    auto operator&( strict_value const& that ) const -> strict_value { return strict_value(t & that.t); }
-    auto operator^( strict_value const& that ) const -> strict_value { return strict_value(t ^ that.t); }
+    auto operator| ( strict_value const& that ) const -> strict_value requires BitwiseOps { return strict_value(t | that.t); }
+    auto operator& ( strict_value const& that ) const -> strict_value requires BitwiseOps { return strict_value(t & that.t); }
+    auto operator^ ( strict_value const& that ) const -> strict_value requires BitwiseOps { return strict_value(t ^ that.t); }
 
     auto is_default_value() const -> bool { return t == T{}; }
 };
+
+template <typename T, typename Tag>
+auto has_flags(strict_value<T, Tag, true> flags)
+{
+    return [=](strict_value<T, Tag, true> value) { return (value & flags) == flags; };
+}
 
 
 //-----------------------------------------------------------------------

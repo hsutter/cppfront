@@ -6755,7 +6755,12 @@ private:
             }
             // But if there isn't one and it was required, diagnose an error
             else if (semicolon_required) {
-                error("missing semicolon at end of declaration or equal at start of initializer", true, {}, true);
+                if (curr().type() == lexeme::LeftBrace) {
+                    error("expected '=' before '{' - did you mean '= {' ?", true, {}, true);
+                }
+                else {
+                    error("missing ';' at end of declaration or '=' at start of initializer", true, {}, true);
+                }
                 return {};
             }
         }

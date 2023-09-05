@@ -776,7 +776,8 @@ enumerator_info: @struct type = {
 
 basic_enum: (
     inout t: meta::type_declaration,
-    generate_next_value
+    nextval,
+    bitwise: bool
     )
     -> (underlying_type: std::string = "")
 = {
@@ -799,7 +800,7 @@ basic_enum: (
                 underlying_type = mo.type();
             }
 
-            generate_next_value( value, mo.initializer() );
+            nextval( value, mo.initializer() );
 
             if value < min_value {
                 min_value = value;
@@ -816,37 +817,51 @@ basic_enum: (
 
     //  Compute the default underlying type, if it wasn't explicitly specified
     if underlying_type == "" {
-        if min_value >= std::numeric_limits<i8>::min() && max_value <= std::numeric_limits<i8>::max() {
-            underlying_type = "i8";
-        }
-        else if min_value >= std::numeric_limits<i16>::min() && max_value <= std::numeric_limits<i16>::max() {
-            underlying_type = "i16";
-        }
-        else if min_value >= std::numeric_limits<i32>::min() && max_value <= std::numeric_limits<i32>::max() {
-            underlying_type = "i32";
-        }
-        else if min_value >= std::numeric_limits<i64>::min() && max_value <= std::numeric_limits<i64>::max() {
-            underlying_type = "i64";
+        if !bitwise {
+
+            if min_value >= std::numeric_limits<i8>::min() && max_value <= std::numeric_limits<i8>::max() {
+                underlying_type = "i8";
+            }
+            else if min_value >= std::numeric_limits<i16>::min() && max_value <= std::numeric_limits<i16>::max() {
+                underlying_type = "i16";
+            }
+            else if min_value >= std::numeric_limits<i32>::min() && max_value <= std::numeric_limits<i32>::max() {
+                underlying_type = "i32";
+            }
+            else if min_value >= std::numeric_limits<i64>::min() && max_value <= std::numeric_limits<i64>::max() {
+                underlying_type = "i64";
+            }
+            else {
+                t.error( "values are outside the range representable by the largest supported underlying signed type (i64)" );
+            }
         }
         else {
-            t.error( "values are outside the range representable by the largest supported underlying type (i64)" );
+            umax := max_value as u64;
+            if umax <= std::numeric_limits<u8>::max() {
+                underlying_type = "u8";
+            }
+            else if umax <= std::numeric_limits<u16>::max() {
+                underlying_type = "u16";
+            }
+            else if umax <= std::numeric_limits<u32>::max() {
+                underlying_type = "u32";
+            }
+            else if umax <= std::numeric_limits<u64>::max() {
+                underlying_type = "u64";
+            }
+            else {
+                t.error( "values are outside the range representable by the largest supported underlying unsigned type (u64)" );
+            }
         }
     }
 
-    strict_underlying_type := "cpp2::strict_value<(underlying_type)$, (t.name())$>";
+    strict_underlying_type := "cpp2::strict_value<(underlying_type)$, (t.name())$, (bitwise)$>";
 
     //  2. Replace: Erase the contents and replace with modified contents
 
     t.remove_all_members();
     
-    t.require( t.add_member( "value: (strict_underlying_type)$ = ();" ),
-               "could not add value member");
-    
-    t.require( t.add_member( "private operator=: (out this, value_: (strict_underlying_type)$) = { value = value_; }" ),
-               "could not add constructor");
-    
-    for enumerators  do (e)
-    {
+    for enumerators do (e) {
         t.require( t.add_member( "public (e.name)$ :== (strict_underlying_type)$( (e.value)$ );"),
                    "could not add enumerator" + e.name);
     }
@@ -866,7 +881,8 @@ enum: (inout t: meta::type_declaration) =
             } else {
                 value++;
             }
-        }
+        },
+        false   // disable bitwise operations
     );
 }
 
@@ -893,30 +909,9 @@ flag_enum: (inout t: meta::type_declaration) =
                     value *= 2;
                 }
             }
-        }
+        },
+        true    // enable bitwise operations
     );
-
-    //  Support |= &= ^=
-    t.require( t.add_member( "operator|=: (inout this, that) = { value |= that.value; }" ),
-               "could not add flag-bitor operator|=");
-    t.require( t.add_member( "operator&=: (inout this, that) = { value &= that.value; }" ),
-               "could not add flag-bitand operator&=");
-    t.require( t.add_member( "operator^=: (inout this, that) = { value ^= that.value; }" ),
-               "could not add flag-bitxor operator^=");
-
-    //  Support | & ^
-    t.require( t.add_member( "operator|: (this, that) -> _ = value | that.value;" ),
-               "could not add flag-bitor operator|");
-    t.require( t.add_member( "operator&: (this, that) -> _ = value & that.value;" ),
-               "could not add flag-bitor operator&");
-    t.require( t.add_member( "operator^: (this, that) -> _ = value ^ that.value;" ),
-               "could not add flag-bitor operator^");
-
-    ////  Make "is" have per-flag meaning instead of equality
-    //t.require( t.add_member( "is: (this, that) -> bool = { if that.value.is_default_value() { return value.is_default_value(); } return (value & that.value) == that.value;} " ),
-    //           "could not add flag-test operator is for flag_enum objects");
-    //t.require( t.add_member( "is: (this, val: (enuminfo.underlying_type)$) -> bool = { /* if val.is_default_value() { return value.is_default_value(); } return (value & val) == val; */ return true; } " ),
-    //           "could not add flag-test operator is for flag_denum enumerator values");
 }
 
 

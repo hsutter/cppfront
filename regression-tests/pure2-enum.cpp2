@@ -60,22 +60,29 @@ main: () = {
 
     f := file_attributes::current | file_attributes::cached;
     f &= file_attributes::cached  | file_attributes::obsolete;
-    f |= file_attributes::current;
 
     f2 := file_attributes::cached;
 
     std::cout << "f  as int  is (f  as int )$\n";
     std::cout << "f2 as int  is (f2 as int )$\n";
+
+    std::cout << "f  is (f2) is (f  is (f2))$\n";
+    std::cout << "f2 is (f ) is (f2 is (f ))$\n\n";
+
+    f  |= file_attributes::current;
+    f  |= file_attributes::obsolete;
+    f2 |= file_attributes::current;
+
+    std::cout << "f  as int  is (f  as int )$\n";
+    std::cout << "f2 as int  is (f2 as int )$\n";
     std::cout << "f  == f2   is (f  == f2  )$\n";
+    std::cout << "f  is (f2) is (f  is (f2))$\n";
+    std::cout << "f2 is (f ) is (f2 is (f ))$\n";
+    std::cout << "(f & f2) == f2 is ((f & f2) == f2)$\n";
 
-    // The following are still in progress
-
-    // std::cout << "f  is (f2) is (f  is (f2))$\n";
-    // std::cout << "f2 is (f ) is (f2 is (f ))$\n";
-
-    // if f is (file_attributes::cached  ) { std::cout << "cached ";   }
-    // if f is (file_attributes::current ) { std::cout << "current ";  }
-    // if f is (file_attributes::obsolete) { std::cout << "obsolete "; }
-    // if f is (file_attributes::none    ) { std::cout << "none ";     }
-    // std::cout << "\n";
+    std::cout << "inspecting: " << inspect f -> std::string {
+        is (file_attributes::current) = "exactly 'current'";
+        is (cpp2::has_flags(f2))      = "includes all f2's flags ('cached' and 'current')";
+        is _                          = "no match";
+    } << "\n";
 }

@@ -35,7 +35,7 @@ class type_declaration;
 #line 772 "reflect.h2"
 class enumerator_info;
 
-#line 925 "reflect.h2"
+#line 920 "reflect.h2"
 }
 }
 
@@ -590,16 +590,17 @@ struct basic_enum__ret { std::string underlying_type; };
 #line 777 "reflect.h2"
 [[nodiscard]] auto basic_enum(
     meta::type_declaration& t, 
-    auto const& generate_next_value
+    auto const& nextval, 
+    cpp2::in<bool> bitwise
     ) -> basic_enum__ret;
 
-#line 859 "reflect.h2"
+#line 874 "reflect.h2"
 auto cpp2_enum(meta::type_declaration& t) -> void;
 
-#line 874 "reflect.h2"
+#line 890 "reflect.h2"
 auto flag_enum(meta::type_declaration& t) -> void;
 
-#line 923 "reflect.h2"
+#line 918 "reflect.h2"
 //=======================================================================
 //  Switch to Cpp1 and close subnamespace meta
 }
@@ -1239,12 +1240,13 @@ auto cpp2_struct(meta::type_declaration& t) -> void
 #line 777 "reflect.h2"
 [[nodiscard]] auto basic_enum(
     meta::type_declaration& t, 
-    auto const& generate_next_value
+    auto const& nextval, 
+    cpp2::in<bool> bitwise
     ) -> basic_enum__ret
 
 {
     std::string underlying_type {""};
-#line 783 "reflect.h2"
+#line 784 "reflect.h2"
     std::vector<enumerator_info> enumerators {}; 
     cpp2::i64 min_value {0}; 
     cpp2::i64 max_value {0}; 
@@ -1254,7 +1256,7 @@ cpp2::i64 value = -1;
 
     //  1. Gather: The names of all the user-written members, and find/compute the type
 
-#line 790 "reflect.h2"
+#line 791 "reflect.h2"
     for (                                        auto const& m : CPP2_UFCS_0(get_members, t) )  { do 
     {
         CPP2_UFCS(require, m, (CPP2_UFCS_0(is_public, m) || CPP2_UFCS_0(is_default_access, m)) && CPP2_UFCS_0(is_object, m), 
@@ -1267,7 +1269,7 @@ cpp2::i64 value = -1;
                 underlying_type = CPP2_UFCS_0(type, mo);
             }
 
-            generate_next_value(value, CPP2_UFCS_0(initializer, mo));
+            nextval(value, CPP2_UFCS_0(initializer, mo));
 
             if (cpp2::cmp_less(value,min_value)) {
                 min_value = value;
@@ -1284,39 +1286,53 @@ cpp2::i64 value = -1;
 }
 
     //  Compute the default underlying type, if it wasn't explicitly specified
-#line 818 "reflect.h2"
+#line 819 "reflect.h2"
     if (underlying_type == "") {
-        if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i8>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i8>::max())) {
-            underlying_type = "i8";
-        }
-        else {if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i16>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i16>::max())) {
-            underlying_type = "i16";
-        }
-        else {if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i32>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i32>::max())) {
-            underlying_type = "i32";
-        }
-        else {if (cpp2::cmp_greater_eq(std::move(min_value),std::numeric_limits<cpp2::i64>::min()) && cpp2::cmp_less_eq(std::move(max_value),std::numeric_limits<cpp2::i64>::max())) {
-            underlying_type = "i64";
+        if (!(bitwise)) {
+
+            if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i8>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i8>::max())) {
+                underlying_type = "i8";
+            }
+            else {if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i16>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i16>::max())) {
+                underlying_type = "i16";
+            }
+            else {if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i32>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i32>::max())) {
+                underlying_type = "i32";
+            }
+            else {if (cpp2::cmp_greater_eq(std::move(min_value),std::numeric_limits<cpp2::i64>::min()) && cpp2::cmp_less_eq(std::move(max_value),std::numeric_limits<cpp2::i64>::max())) {
+                underlying_type = "i64";
+            }
+            else {
+                CPP2_UFCS(error, t, "values are outside the range representable by the largest supported underlying signed type (i64)");
+            }}}}
         }
         else {
-            CPP2_UFCS(error, t, "values are outside the range representable by the largest supported underlying type (i64)");
-        }}}}
+            auto umax {cpp2::as_<cpp2::u64>(max_value)}; 
+            if (cpp2::cmp_less_eq(umax,std::numeric_limits<cpp2::u8>::max())) {
+                underlying_type = "u8";
+            }
+            else {if (cpp2::cmp_less_eq(umax,std::numeric_limits<cpp2::u16>::max())) {
+                underlying_type = "u16";
+            }
+            else {if (cpp2::cmp_less_eq(umax,std::numeric_limits<cpp2::u32>::max())) {
+                underlying_type = "u32";
+            }
+            else {if (cpp2::cmp_less_eq(std::move(umax),std::numeric_limits<cpp2::u64>::max())) {
+                underlying_type = "u64";
+            }
+            else {
+                CPP2_UFCS(error, t, "values are outside the range representable by the largest supported underlying unsigned type (u64)");
+            }}}}
+        }
     }
 
-    auto strict_underlying_type {"cpp2::strict_value<" + cpp2::to_string(underlying_type) + ", " + cpp2::to_string(CPP2_UFCS_0(name, t)) + ">"}; 
+    auto strict_underlying_type {"cpp2::strict_value<" + cpp2::to_string(underlying_type) + ", " + cpp2::to_string(CPP2_UFCS_0(name, t)) + ", " + cpp2::to_string(bitwise) + ">"}; 
 
     //  2. Replace: Erase the contents and replace with modified contents
 
     CPP2_UFCS_0(remove_all_members, t);
 
-    CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "value: " + cpp2::to_string(strict_underlying_type) + " = ();"), 
-               "could not add value member");
-
-    CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "private operator=: (out this, value_: " + cpp2::to_string(strict_underlying_type) + ") = { value = value_; }"), 
-               "could not add constructor");
-
-    for (                auto const& e : enumerators ) 
-    {
+    for ( auto const& e : enumerators ) {
         CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "public " + cpp2::to_string(e.name) + " :== " + cpp2::to_string(strict_underlying_type) + "( " + cpp2::to_string(e.value) + " );"), 
                    "could not add enumerator" + e.name);
     }
@@ -1325,7 +1341,7 @@ cpp2::i64 value = -1;
     CPP2_UFCS_0(value, t);
 return  { std::move(underlying_type) }; }
 
-#line 859 "reflect.h2"
+#line 874 "reflect.h2"
 auto cpp2_enum(meta::type_declaration& t) -> void
 {
     //  Let basic_enum do its thing, with an incrementing value generator
@@ -1336,11 +1352,12 @@ auto cpp2_enum(meta::type_declaration& t) -> void
             }else {
                 ++value;
             }
-        }
+        }, 
+        false   // disable bitwise operations
     ));
 }
 
-#line 874 "reflect.h2"
+#line 890 "reflect.h2"
 auto flag_enum(meta::type_declaration& t) -> void
 {
     //  Add "none" member as a regular name to signify "no flags set"
@@ -1363,33 +1380,12 @@ auto flag_enum(meta::type_declaration& t) -> void
                     value *= 2;
                 }
             }
-        }
+        }, 
+        true    // enable bitwise operations
     )}; 
-
-    //  Support |= &= ^=
-    CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "operator|=: (inout this, that) = { value |= that.value; }"), 
-               "could not add flag-bitor operator|=");
-    CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "operator&=: (inout this, that) = { value &= that.value; }"), 
-               "could not add flag-bitand operator&=");
-    CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "operator^=: (inout this, that) = { value ^= that.value; }"), 
-               "could not add flag-bitxor operator^=");
-
-    //  Support | & ^
-    CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "operator|: (this, that) -> _ = value | that.value;"), 
-               "could not add flag-bitor operator|");
-    CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "operator&: (this, that) -> _ = value & that.value;"), 
-               "could not add flag-bitor operator&");
-    CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "operator^: (this, that) -> _ = value ^ that.value;"), 
-               "could not add flag-bitor operator^");
-
-    ////  Make "is" have per-flag meaning instead of equality
-    //t.require( t.add_member( "is: (this, that) -> bool = { if that.value.is_default_value() { return value.is_default_value(); } return (value & that.value) == that.value;} " ),
-    //           "could not add flag-test operator is for flag_enum objects");
-    //t.require( t.add_member( "is: (this, val: (enuminfo.underlying_type)$) -> bool = { /* if val.is_default_value() { return value.is_default_value(); } return (value & val) == val; */ return true; } " ),
-    //           "could not add flag-test operator is for flag_denum enumerator values");
 }
 
-#line 925 "reflect.h2"
+#line 920 "reflect.h2"
 }
 }
 
