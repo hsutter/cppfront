@@ -941,49 +941,50 @@ auto parser::apply_type_meta_functions( declaration_node& n )
     //  For each metafunction, apply it
     for (auto& meta : n.meta_functions)
     {
-        rtype.set_meta_function_name( meta->to_string() );
+        auto name = meta->to_string();
+        rtype.set_meta_function_name( name );
 
-        if (meta->to_string() == "interface") {
+        if (name == "interface") {
             interface( rtype );
         }
-        else if (meta->to_string() == "polymorphic_base") {
+        else if (name == "polymorphic_base") {
             polymorphic_base( rtype );
         }
-        else if (meta->to_string() == "ordered") {
+        else if (name == "ordered") {
             ordered( rtype );
         }
-        else if (meta->to_string() == "weakly_ordered") {
+        else if (name == "weakly_ordered") {
             weakly_ordered( rtype );
         }
-        else if (meta->to_string() == "partially_ordered") {
+        else if (name == "partially_ordered") {
             partially_ordered( rtype );
         }
-        else if (meta->to_string() == "copyable") {
+        else if (name == "copyable") {
             copyable( rtype );
         }
-        else if (meta->to_string() == "basic_value") {
+        else if (name == "basic_value") {
             basic_value( rtype );
         }
-        else if (meta->to_string() == "value") {
+        else if (name == "value") {
             value( rtype );
         }
-        else if (meta->to_string() == "weakly_ordered_value") {
+        else if (name == "weakly_ordered_value") {
             weakly_ordered_value( rtype );
         }
-        else if (meta->to_string() == "partially_ordered_value") {
+        else if (name == "partially_ordered_value") {
             partially_ordered_value( rtype );
         }
-        else if (meta->to_string() == "struct") {
+        else if (name == "struct") {
             cpp2_struct( rtype );
         }
-        else if (meta->to_string() == "enum") {
+        else if (name == "enum") {
             cpp2_enum( rtype );
         }
-        else if (meta->to_string() == "flag_enum") {
+        else if (name == "flag_enum") {
             flag_enum( rtype );
         }
         else {
-            error( "(temporary alpha limitation) unrecognized metafunction name '" + meta->to_string() + "' - currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum" );
+            error( "(temporary alpha limitation) unrecognized metafunction name '" + name + "' - currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum" );
             return false;
         }
     }
