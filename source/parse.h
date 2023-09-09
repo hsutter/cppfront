@@ -6218,7 +6218,7 @@ private:
         }
 
         if (expect_another_param_decl) {
-            error("invalid parameter list: expected expr", true, {}, true);
+            error("invalid parameter list: a comma must be followed by another parameter", true, {}, true);
         }
 
         if (curr().type() != closer) {
