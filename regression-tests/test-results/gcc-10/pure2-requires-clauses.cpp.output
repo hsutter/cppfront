@@ -1,5 +1,5 @@
 In file included from pure2-requires-clauses.cpp:7:
-../../../include/cpp2util.h:1801:33: error: expected unqualified-id before ‘static_assert’
- 1801 |     #define CPP2_REQUIRES_(...) static_assert(false, "GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.")
+../../../include/cpp2util.h:1802:33: error: expected unqualified-id before ‘static_assert’
+ 1802 |     #define CPP2_REQUIRES_(...) static_assert(false, "GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.")
       |                                 ^~~~~~~~~~~~~
 pure2-requires-clauses.cpp2:19:1: note: in expansion of macro ‘CPP2_REQUIRES_’
