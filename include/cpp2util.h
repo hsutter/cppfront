@@ -553,8 +553,8 @@ using in =
 //
 template<typename T>
 class deferred_init {
-    bool init = false;
     alignas(T) std::byte data[sizeof(T)]; // or: std::aligned_storage_t<sizeof(T), alignof(T)> data
+    bool init = false;
 
     auto t() -> T& { return *std::launder(reinterpret_cast<T*>(&data)); }
 
@@ -1584,6 +1584,12 @@ public:
 
     auto operator<=>( strict_value const& ) const -> std::strong_ordering = default;
 
+    auto to_string() const -> std::string { return Tag::to_string(*this); }
+
+    friend auto operator<<(std::ostream& o, strict_value const& v) -> std::ostream& { return o << v.to_string(); }
+
+    //  Bitwise operations
+
     auto operator|=( strict_value const& that )       -> strict_value requires BitwiseOps { t |= that.t; return *this; }
     auto operator&=( strict_value const& that )       -> strict_value requires BitwiseOps { t &= that.t; return *this; }
     auto operator^=( strict_value const& that )       -> strict_value requires BitwiseOps { t ^= that.t; return *this; }
@@ -1592,7 +1598,8 @@ public:
     auto operator& ( strict_value const& that ) const -> strict_value requires BitwiseOps { return strict_value(t & that.t); }
     auto operator^ ( strict_value const& that ) const -> strict_value requires BitwiseOps { return strict_value(t ^ that.t); }
 
-    auto is_default_value() const -> bool { return t == T{}; }
+    auto set       ( strict_value const& that )       -> void         requires BitwiseOps { t |=  that.t; }
+    auto clear     ( strict_value const& that )       -> void         requires BitwiseOps { t &= ~that.t; }
 };
 
 template <typename T, typename Tag>

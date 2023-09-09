@@ -770,16 +770,19 @@ struct: (inout t: meta::type_declaration) =
 //  a type together with named constants that are its possible values
 //
 enumerator_info: @struct type = {
-    name:  std::string;
-    value: std::string;
+    name  : std::string;
+    value : std::string;
 }
 
 basic_enum: (
-    inout t: meta::type_declaration,
-    nextval,
-    bitwise: bool
+    inout t : meta::type_declaration,
+    nextval ,
+    bitwise : bool
     )
-    -> (underlying_type: std::string = "")
+    -> (
+        underlying_type        : std::string = "",
+        strict_underlying_type : std::string
+        )
 = {
     enumerators : std::vector<enumerator_info> = ();
     min_value   : i64                          = 0;
@@ -791,12 +794,12 @@ basic_enum: (
     for t.get_members()  next first = false  do (m)
     {
         m.require( (m.is_public() || m.is_default_access()) && m.is_object(),
-                   "an enum member cannot be protected or private");
+                   "an enumerator cannot be protected or private");
 
         if m.is_object() {
             mo := m.as_object();
             if !mo.has_wildcard_type() {
-                mo.require( first, "an explicit underlying type may be specified only on the first member");
+                mo.require( first, "an explicit underlying type may be specified only on the first enumerator");
                 underlying_type = mo.type();
             }
 
@@ -846,27 +849,44 @@ basic_enum: (
             else if umax <= std::numeric_limits<u32>::max() {
                 underlying_type = "u32";
             }
-            else if umax <= std::numeric_limits<u64>::max() {
-                underlying_type = "u64";
-            }
             else {
-                t.error( "values are outside the range representable by the largest supported underlying unsigned type (u64)" );
+                underlying_type = "u64";
             }
         }
     }
 
-    strict_underlying_type := "cpp2::strict_value<(underlying_type)$, (t.name())$, (bitwise)$>";
+    strict_underlying_type = "cpp2::strict_value<(underlying_type)$, (t.name())$, (bitwise)$>";
+
 
     //  2. Replace: Erase the contents and replace with modified contents
 
     t.remove_all_members();
     
+    //  Add the enumerators
     for enumerators do (e) {
         t.require( t.add_member( "public (e.name)$ :== (strict_underlying_type)$( (e.value)$ );"),
                    "could not add enumerator" + e.name);
     }
 
-    //  A basic_enum is-a value
+    //  Provide a 'size' function to count the number of enumerators
+    t.require( t.add_member( "size: () -> _ = (enumerators.ssize())$;"),
+               "could not add size");
+
+    //  Provide a 'to_string' function to print the enumerator names
+    //  TODO: will extend this to allow emitting multiple values for flag_enums
+    //  TODO: maybe make this a template so it's pay-for-use, but having a single dynamic
+    //        function is pretty cheap + the linker should discard unreachable functions
+    to_string: std::string = "to_string: (value: (strict_underlying_type)$) -> std::string = { \n";
+    for enumerators do (e) {
+        to_string += "    if value == (e.name)$ { return \"(e.name)$\"; }\n";
+    }
+    to_string += "    return \"(invalid (t.name())$ enumerator value)\";\n}\n";
+    t.require( t.add_member( to_string ),
+               "could not add to_string");
+
+
+    //  3. A basic_enum is-a value
+
     t.value();
 }
 
@@ -912,6 +932,7 @@ flag_enum: (inout t: meta::type_declaration) =
         },
         true    // enable bitwise operations
     );
+
 }
 
 

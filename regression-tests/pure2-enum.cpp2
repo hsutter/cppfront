@@ -28,6 +28,9 @@ main: () = {
     // if x == 9 { }                    // error, can't compare skat_game and integer
     // if x == rgb::red { }             // error, can't compare skat_game and rgb color
 
+    std::cout << "x.to_string() is (x.to_string())$\n";
+    std::cout << "using << prints " << x << "\n";
+
     std::cout << "with if else: ";
     if x == skat_game::diamonds {       // ok, can compare two skat_games
         std::cout << "diamonds";
@@ -51,7 +54,7 @@ main: () = {
         is (skat_game::spades  ) = "spades";
         is (skat_game::clubs   ) = "clubs";
         is _ = "not a suit";
-    } << std::endl;
+    } << "\n\n";
 
     // x = 9;                           // error, can't assign skat_game from integer
     // x = rgb::red;                    // error, can't assign skat_game from rgb color
@@ -69,7 +72,8 @@ main: () = {
     std::cout << "f  is (f2) is (f  is (f2))$\n";
     std::cout << "f2 is (f ) is (f2 is (f ))$\n\n";
 
-    f  |= file_attributes::current;
+    f.clear( f2 );
+    f.set( file_attributes::current | f2 );
     f  |= file_attributes::obsolete;
     f2 |= file_attributes::current;
 
@@ -83,6 +87,6 @@ main: () = {
     std::cout << "inspecting: " << inspect f -> std::string {
         is (file_attributes::current) = "exactly 'current'";
         is (cpp2::has_flags(f2))      = "includes all f2's flags ('cached' and 'current')";
-        is _                          = "no match";
+        is _                          = "something else";
     } << "\n";
 }

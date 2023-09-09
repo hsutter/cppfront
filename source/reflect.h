@@ -35,7 +35,7 @@ class type_declaration;
 #line 772 "reflect.h2"
 class enumerator_info;
 
-#line 920 "reflect.h2"
+#line 941 "reflect.h2"
 }
 }
 
@@ -585,7 +585,7 @@ class enumerator_info {
     public: std::string name; 
     public: std::string value; 
 };
-struct basic_enum__ret { std::string underlying_type; };
+struct basic_enum__ret { std::string underlying_type; std::string strict_underlying_type; };
 
 #line 777 "reflect.h2"
 [[nodiscard]] auto basic_enum(
@@ -594,13 +594,13 @@ struct basic_enum__ret { std::string underlying_type; };
     cpp2::in<bool> bitwise
     ) -> basic_enum__ret;
 
-#line 874 "reflect.h2"
+#line 894 "reflect.h2"
 auto cpp2_enum(meta::type_declaration& t) -> void;
 
-#line 890 "reflect.h2"
+#line 910 "reflect.h2"
 auto flag_enum(meta::type_declaration& t) -> void;
 
-#line 918 "reflect.h2"
+#line 939 "reflect.h2"
 //=======================================================================
 //  Switch to Cpp1 and close subnamespace meta
 }
@@ -1244,9 +1244,11 @@ auto cpp2_struct(meta::type_declaration& t) -> void
     cpp2::in<bool> bitwise
     ) -> basic_enum__ret
 
+#line 786 "reflect.h2"
 {
     std::string underlying_type {""};
-#line 784 "reflect.h2"
+        cpp2::deferred_init<std::string> strict_underlying_type;
+#line 787 "reflect.h2"
     std::vector<enumerator_info> enumerators {}; 
     cpp2::i64 min_value {0}; 
     cpp2::i64 max_value {0}; 
@@ -1256,16 +1258,16 @@ cpp2::i64 value = -1;
 
     //  1. Gather: The names of all the user-written members, and find/compute the type
 
-#line 791 "reflect.h2"
+#line 794 "reflect.h2"
     for (                                        auto const& m : CPP2_UFCS_0(get_members, t) )  { do 
     {
         CPP2_UFCS(require, m, (CPP2_UFCS_0(is_public, m) || CPP2_UFCS_0(is_default_access, m)) && CPP2_UFCS_0(is_object, m), 
-                   "an enum member cannot be protected or private");
+                   "an enumerator cannot be protected or private");
 
         if (CPP2_UFCS_0(is_object, m)) {
             auto mo {CPP2_UFCS_0(as_object, m)}; 
             if (!(CPP2_UFCS_0(has_wildcard_type, mo))) {
-                CPP2_UFCS(require, mo, first, "an explicit underlying type may be specified only on the first member");
+                CPP2_UFCS(require, mo, first, "an explicit underlying type may be specified only on the first enumerator");
                 underlying_type = CPP2_UFCS_0(type, mo);
             }
 
@@ -1286,7 +1288,7 @@ cpp2::i64 value = -1;
 }
 
     //  Compute the default underlying type, if it wasn't explicitly specified
-#line 819 "reflect.h2"
+#line 822 "reflect.h2"
     if (underlying_type == "") {
         if (!(bitwise)) {
 
@@ -1314,34 +1316,51 @@ cpp2::i64 value = -1;
             else {if (cpp2::cmp_less_eq(umax,std::numeric_limits<cpp2::u16>::max())) {
                 underlying_type = "u16";
             }
-            else {if (cpp2::cmp_less_eq(umax,std::numeric_limits<cpp2::u32>::max())) {
+            else {if (cpp2::cmp_less_eq(std::move(umax),std::numeric_limits<cpp2::u32>::max())) {
                 underlying_type = "u32";
             }
-            else {if (cpp2::cmp_less_eq(std::move(umax),std::numeric_limits<cpp2::u64>::max())) {
-                underlying_type = "u64";
-            }
             else {
-                CPP2_UFCS(error, t, "values are outside the range representable by the largest supported underlying unsigned type (u64)");
-            }}}}
+                underlying_type = "u64";
+            }}}
         }
     }
 
-    auto strict_underlying_type {"cpp2::strict_value<" + cpp2::to_string(underlying_type) + ", " + cpp2::to_string(CPP2_UFCS_0(name, t)) + ", " + cpp2::to_string(bitwise) + ">"}; 
+    strict_underlying_type.construct("cpp2::strict_value<" + cpp2::to_string(underlying_type) + ", " + cpp2::to_string(CPP2_UFCS_0(name, t)) + ", " + cpp2::to_string(bitwise) + ">");
 
+#line 861 "reflect.h2"
     //  2. Replace: Erase the contents and replace with modified contents
 
     CPP2_UFCS_0(remove_all_members, t);
 
+    //  Add the enumerators
     for ( auto const& e : enumerators ) {
-        CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "public " + cpp2::to_string(e.name) + " :== " + cpp2::to_string(strict_underlying_type) + "( " + cpp2::to_string(e.value) + " );"), 
+        CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "public " + cpp2::to_string(e.name) + " :== " + cpp2::to_string(strict_underlying_type.value()) + "( " + cpp2::to_string(e.value) + " );"), 
                    "could not add enumerator" + e.name);
     }
 
-    //  A basic_enum is-a value
-    CPP2_UFCS_0(value, t);
-return  { std::move(underlying_type) }; }
+    //  Provide a 'size' function to count the number of enumerators
+    CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "size: () -> _ = " + cpp2::to_string(CPP2_UFCS_0(ssize, enumerators)) + ";"), 
+               "could not add size");
 
-#line 874 "reflect.h2"
+    //  Provide a 'to_string' function to print the enumerator names
+    //  TODO: will extend this to allow emitting multiple values for flag_enums
+    //  TODO: maybe make this a template so it's pay-for-use, but having a single dynamic
+    //        function is pretty cheap + the linker should discard unreachable functions
+    std::string to_string {"to_string: (value: " + cpp2::to_string(strict_underlying_type.value()) + ") -> std::string = { \n"}; 
+    for ( auto const& e : enumerators ) {
+        to_string += "    if value == " + cpp2::to_string(e.name) + " { return \"" + cpp2::to_string(e.name) + "\"; }\n";
+    }
+    to_string += "    return \"(invalid " + cpp2::to_string(CPP2_UFCS_0(name, t)) + " enumerator value)\";\n}\n";
+    CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, std::move(to_string)), 
+               "could not add to_string");
+
+#line 888 "reflect.h2"
+    //  3. A basic_enum is-a value
+
+    CPP2_UFCS_0(value, t);
+return  { std::move(underlying_type), std::move(strict_underlying_type.value()) }; }
+
+#line 894 "reflect.h2"
 auto cpp2_enum(meta::type_declaration& t) -> void
 {
     //  Let basic_enum do its thing, with an incrementing value generator
@@ -1357,7 +1376,7 @@ auto cpp2_enum(meta::type_declaration& t) -> void
     ));
 }
 
-#line 890 "reflect.h2"
+#line 910 "reflect.h2"
 auto flag_enum(meta::type_declaration& t) -> void
 {
     //  Add "none" member as a regular name to signify "no flags set"
@@ -1383,9 +1402,10 @@ auto flag_enum(meta::type_declaration& t) -> void
         }, 
         true    // enable bitwise operations
     )}; 
+
 }
 
-#line 920 "reflect.h2"
+#line 941 "reflect.h2"
 }
 }
 
