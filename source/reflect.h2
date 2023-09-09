@@ -995,9 +995,6 @@ flag_enum: (inout t: meta::type_declaration) =
         :(inout value: i64, specified_value: std::string) = {
             if !specified_value.empty() {
                 value = std::strtoll(specified_value[0]&, nullptr, 10);
-                if (value & (value - 1)) != 0 {
-                    t$.error( "a flag_enum value must be a power of two" );
-                }
             } else {
                 if value < 1 {
                     value = 1;

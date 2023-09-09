@@ -38,7 +38,7 @@ class alias_declaration;
 #line 807 "reflect.h2"
 class enumerator_info;
 
-#line 1017 "reflect.h2"
+#line 1014 "reflect.h2"
 }
 }
 
@@ -630,8 +630,8 @@ struct basic_enum__ret { std::string underlying_type; std::string strict_underly
 //-----------------------------------------------------------------------
 //
 //    "An enum[...] is a totally ordered value type that stores a
-//     value of its enumerators’s type, and otherwise has only public
-//     member variables of its enumerators’s type, all of which are
+//     value of its enumerators's type, and otherwise has only public
+//     member variables of its enumerator's type, all of which are
 //     naturally scoped because they are members of a type."
 // 
 //          -- P0707R4, section 3
@@ -642,7 +642,7 @@ auto cpp2_enum(meta::type_declaration& t) -> void;
 //-----------------------------------------------------------------------
 //
 //     "flag_enum expresses an enumeration that stores values 
-//      corresponding to bitwise-or’d enumerators. The enumerators must
+//      corresponding to bitwise-or'd enumerators. The enumerators must
 //      be powers of two, and are automatically generated [...] A none
 //      value is provided [...] Operators | and & are provided to
 //      combine and extract values."
@@ -651,7 +651,7 @@ auto cpp2_enum(meta::type_declaration& t) -> void;
 //
 auto flag_enum(meta::type_declaration& t) -> void;
 
-#line 1015 "reflect.h2"
+#line 1012 "reflect.h2"
 //=======================================================================
 //  Switch to Cpp1 and close subnamespace meta
 }
@@ -1492,12 +1492,9 @@ auto flag_enum(meta::type_declaration& t) -> void
 
     //  Let basic_enum do its thing, with a power-of-two value generator
     static_cast<void>(CPP2_UFCS(basic_enum, t, 
-        [_0 = t](cpp2::i64& value, cpp2::in<std::string> specified_value) -> void{
+        [](cpp2::i64& value, cpp2::in<std::string> specified_value) -> void{
             if (!(CPP2_UFCS_0(empty, specified_value))) {
                 value = std::strtoll(&cpp2::assert_in_bounds(specified_value, 0), nullptr, 10);
-                if ((value & (value - 1)) != 0) {
-                    CPP2_UFCS(error, _0, "a flag_enum value must be a power of two");
-                }
             }else {
                 if (cpp2::cmp_less(value,1)) {
                     value = 1;
@@ -1511,7 +1508,7 @@ auto flag_enum(meta::type_declaration& t) -> void
     ));
 }
 
-#line 1017 "reflect.h2"
+#line 1014 "reflect.h2"
 }
 }
 

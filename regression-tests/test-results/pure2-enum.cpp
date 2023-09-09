@@ -73,6 +73,7 @@ class file_attributes {
 public: auto static constexpr cached = cpp2::strict_value<cpp2::u8,file_attributes,1>(1);
 public: auto static constexpr current = cpp2::strict_value<cpp2::u8,file_attributes,1>(2);
 public: auto static constexpr obsolete = cpp2::strict_value<cpp2::u8,file_attributes,1>(4);
+public: auto static constexpr cached_and_current = cpp2::strict_value<cpp2::u8,file_attributes,1>(3);
 public: auto static constexpr none = cpp2::strict_value<cpp2::u8,file_attributes,1>(0);
 public: [[nodiscard]] static auto size() -> auto;
 public: [[nodiscard]] static auto to_string(cpp2::in<cpp2::strict_value<cpp2::u8,file_attributes,1>> value) -> std::string;
@@ -88,7 +89,8 @@ public: explicit file_attributes();
               // 1
               // 2
               // 4
-#line 21 "pure2-enum.cpp2"
+
+#line 22 "pure2-enum.cpp2"
 };
 
 auto main() -> int;
@@ -142,7 +144,7 @@ rgb::rgb([[maybe_unused]] rgb&& that) noexcept{}
 auto rgb::operator=([[maybe_unused]] rgb&& that) noexcept -> rgb& {
                                 return *this;}
 rgb::rgb(){}
-[[nodiscard]] auto file_attributes::size() -> auto { return 4; }
+[[nodiscard]] auto file_attributes::size() -> auto { return 5; }
 [[nodiscard]] auto file_attributes::to_string(cpp2::in<cpp2::strict_value<cpp2::u8,file_attributes,1>> value) -> std::string{
 
 std::string ret {}; 
@@ -150,6 +152,7 @@ ret = "(";
 if (CPP2_UFCS(has, value, cached)) {ret += "cached";}
 if (CPP2_UFCS(has, value, current)) {ret += std::string(", ") + "current";}
 if (CPP2_UFCS(has, value, obsolete)) {ret += std::string(", ") + "obsolete";}
+if (CPP2_UFCS(has, value, cached_and_current)) {ret += std::string(", ") + "cached_and_current";}
 if (CPP2_UFCS(has, value, none)) {ret += std::string(", ") + "none";}
 if (CPP2_UFCS_0(empty, ret)) {ret = "(invalid file_attributes enumerator value)";}
 return ret + ")"; 
@@ -162,7 +165,7 @@ file_attributes::file_attributes([[maybe_unused]] file_attributes&& that) noexce
 auto file_attributes::operator=([[maybe_unused]] file_attributes&& that) noexcept -> file_attributes& {
                                 return *this;}
 file_attributes::file_attributes(){}
-#line 23 "pure2-enum.cpp2"
+#line 24 "pure2-enum.cpp2"
 auto main() -> int{
     // x : skat_game = 9;               // error, can't construct skat_game from integer
 
@@ -204,7 +207,7 @@ auto main() -> int{
 
     x = skat_game::diamonds;        // ok, can assign one skat_game from another
 
-    auto f {file_attributes::current | file_attributes::cached}; 
+    auto f {file_attributes::cached_and_current}; 
     f &= file_attributes::cached  | file_attributes::obsolete;
 
     auto f2 {file_attributes::cached}; 
