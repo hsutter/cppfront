@@ -1054,24 +1054,6 @@ public:
             return false;
         }
 
-        //  An implicit constructor must have two parameters
-        if (n.is_constructor())
-        {
-            auto& params = std::get<declaration_node::a_function>(n.type)->parameters;
-            assert(params->ssize() > 0);
-            if (
-                params->parameters[0]->is_implicit()
-                && params->ssize() > 2
-                )
-            {
-                errors.emplace_back(
-                    n.position(),
-                    "an 'implicit' constructor must have at most one additional parameter besides 'this'"
-                );
-                return false;
-            }
-        }
-
         //  A nonvirtual and nondefaultable function must have an initializer
         if (
             n.is_function()
