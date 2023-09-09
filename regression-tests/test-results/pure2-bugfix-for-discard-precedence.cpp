@@ -6,13 +6,11 @@
 
 #include "cpp2util.h"
 
-#line 1 "pure2-bugfix-for-discard-precedence.cpp2"
 class quantity;
   
 
 //=== Cpp2 type definitions and function declarations ===========================
 
-#line 1 "pure2-bugfix-for-discard-precedence.cpp2"
 class quantity {
   private: cpp2::i32 number; 
   public: explicit quantity(cpp2::in<cpp2::i32> x);

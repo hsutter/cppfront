@@ -6,7 +6,6 @@
 
 #include "cpp2util.h"
 
-#line 1 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
 class Base;
   
 
@@ -16,7 +15,6 @@ class Derived;
 
 //=== Cpp2 type definitions and function declarations ===========================
 
-#line 1 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
 class Base {
   public: explicit Base();
   public: Base([[maybe_unused]] Base const& that);

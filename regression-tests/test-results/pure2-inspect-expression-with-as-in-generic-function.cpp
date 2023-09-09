@@ -10,7 +10,6 @@
 
 //=== Cpp2 type definitions and function declarations ===========================
 
-#line 1 "pure2-inspect-expression-with-as-in-generic-function.cpp2"
 [[nodiscard]] auto main() -> int;
     
 
@@ -20,7 +19,6 @@ auto print_an_int(auto const& x) -> void;
 
 //=== Cpp2 function definitions =================================================
 
-#line 1 "pure2-inspect-expression-with-as-in-generic-function.cpp2"
 [[nodiscard]] auto main() -> int{
     print_an_int("syzygy");
     print_an_int(1);

@@ -23,7 +23,6 @@ auto decorate_and_print(auto& thing) -> void;
     
 #line 30 "pure2-intro-example-three-loops.cpp2"
 
-#line 1 "pure2-intro-example-three-loops.cpp2"
 
 //=== Cpp2 function definitions =================================================
 

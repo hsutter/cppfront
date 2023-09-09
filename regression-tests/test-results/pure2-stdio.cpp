@@ -18,7 +18,6 @@
     
 #line 10 "pure2-stdio.cpp2"
 
-#line 1 "pure2-stdio.cpp2"
 
 //=== Cpp2 function definitions =================================================
 

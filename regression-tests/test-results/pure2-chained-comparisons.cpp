@@ -10,13 +10,11 @@
 
 //=== Cpp2 type definitions and function declarations ===========================
 
-#line 1 "pure2-chained-comparisons.cpp2"
 [[nodiscard]] auto main() -> int;
     
 
 //=== Cpp2 function definitions =================================================
 
-#line 1 "pure2-chained-comparisons.cpp2"
 [[nodiscard]] auto main() -> int{
     std::cout << std::boolalpha;
     auto i {0}; for( ; cpp2::cmp_less(i,3); ++i ) {

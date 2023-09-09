@@ -10,13 +10,11 @@
 
 //=== Cpp2 type definitions and function declarations ===========================
 
-#line 1 "pure2-bugfix-for-assign-expression-list.cpp2"
 auto main() -> int;
   
 
 //=== Cpp2 function definitions =================================================
 
-#line 1 "pure2-bugfix-for-assign-expression-list.cpp2"
 auto main() -> int{
   using vec = std::vector<int>;
   vec v {0}; 

@@ -77,6 +77,8 @@ main: () = {
     f  |= file_attributes::obsolete;
     f2 |= file_attributes::current;
 
+    std::cout << "f  is " << f  << "\n";
+    std::cout << "f2 is " << f2 << "\n";
     std::cout << "f  as int  is (f  as int )$\n";
     std::cout << "f2 as int  is (f2 as int )$\n";
     std::cout << "f  == f2   is (f  == f2  )$\n";

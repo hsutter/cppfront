@@ -10,7 +10,6 @@
 
 //=== Cpp2 type definitions and function declarations ===========================
 
-#line 1 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto main() -> int;
     
 
@@ -37,7 +36,6 @@ extern int y;
 
 //=== Cpp2 function definitions =================================================
 
-#line 1 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto main() -> int{
     auto i {42}; 
     static_cast<void>(CPP2_UFCS_0(ufcs, std::move(i)));

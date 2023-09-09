@@ -18,7 +18,6 @@
 auto print_and_decorate(auto const& thing) -> void;
     
 
-#line 1 "pure2-bounds-safety-span.cpp2"
 
 //=== Cpp2 function definitions =================================================
 

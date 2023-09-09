@@ -13,7 +13,6 @@ class t;
 
 //=== Cpp2 type definitions and function declarations ===========================
 
-#line 1 "pure2-bugfix-for-non-local-initialization.cpp2"
 using u = std::array<cpp2::i32,2>;
 class t: public std::integral_constant<u,u{17, 29}> {
 

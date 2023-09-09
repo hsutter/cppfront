@@ -10,7 +10,6 @@
 
 //=== Cpp2 type definitions and function declarations ===========================
 
-#line 1 "pure2-intro-example-hello-2022.cpp2"
 [[nodiscard]] auto main() -> int;
     
 
@@ -24,7 +23,6 @@ auto println(auto const& x, auto const& len) -> void;
 
 //=== Cpp2 function definitions =================================================
 
-#line 1 "pure2-intro-example-hello-2022.cpp2"
 [[nodiscard]] auto main() -> int{
     std::vector<std::string> vec {
             "hello", "2022"}; 

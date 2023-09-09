@@ -383,7 +383,7 @@ private:
         -> void
     {
         //  Ignore requests from generated code (negative line numbers)
-        if (line < 1) {
+        if (line < 2) {
             return;
         }
 

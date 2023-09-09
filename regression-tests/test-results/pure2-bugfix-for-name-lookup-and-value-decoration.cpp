@@ -12,7 +12,6 @@
 
 struct vals__ret { int i; };
 
-#line 1 "pure2-bugfix-for-name-lookup-and-value-decoration.cpp2"
 [[nodiscard]] auto vals() -> vals__ret;
     
 
@@ -22,7 +21,6 @@ struct vals__ret { int i; };
 
 //=== Cpp2 function definitions =================================================
 
-#line 1 "pure2-bugfix-for-name-lookup-and-value-decoration.cpp2"
 [[nodiscard]] auto vals() -> vals__ret{
         cpp2::deferred_init<int> i;
 #line 2 "pure2-bugfix-for-name-lookup-and-value-decoration.cpp2"

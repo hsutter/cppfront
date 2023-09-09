@@ -6,13 +6,11 @@
 
 #include "cpp2util.h"
 
-#line 1 "pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2"
 class element;
   
 
 //=== Cpp2 type definitions and function declarations ===========================
 
-#line 1 "pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2"
 class element {
   private: std::string name; 
   public: explicit element(auto&& n)

@@ -10,13 +10,11 @@
 
 //=== Cpp2 type definitions and function declarations ===========================
 
-#line 1 "pure2-initialization-safety-with-else-if.cpp2"
 auto main(int const argc_, char** argv_) -> int;
     
 
 //=== Cpp2 function definitions =================================================
 
-#line 1 "pure2-initialization-safety-with-else-if.cpp2"
 auto main(int const argc_, char** argv_) -> int{
     auto args = cpp2::make_args(argc_, argv_); 
 #line 2 "pure2-initialization-safety-with-else-if.cpp2"

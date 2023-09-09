@@ -10,7 +10,6 @@
 
 //=== Cpp2 type definitions and function declarations ===========================
 
-#line 1 "pure2-concept-definition.cpp2"
 template<typename T> concept arithmetic = std::integral<T> || std::floating_point<T>; 
 auto main() -> int;
   

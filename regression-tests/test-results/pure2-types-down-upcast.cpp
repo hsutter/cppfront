@@ -6,7 +6,6 @@
 
 #include "cpp2util.h"
 
-#line 1 "pure2-types-down-upcast.cpp2"
 class A;
   
 
@@ -16,7 +15,6 @@ class B;
 
 //=== Cpp2 type definitions and function declarations ===========================
 
-#line 1 "pure2-types-down-upcast.cpp2"
 class A {
   public: int i {0}; 
 

@@ -23,7 +23,6 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
     
 #line 35 "pure2-type-safety-1.cpp2"
 
-#line 1 "pure2-type-safety-1.cpp2"
 
 //=== Cpp2 function definitions =================================================
 

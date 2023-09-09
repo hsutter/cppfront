@@ -10,13 +10,11 @@
 
 //=== Cpp2 type definitions and function declarations ===========================
 
-#line 1 "pure2-raw-string-literal-and-interpolation.cpp2"
 [[nodiscard]] auto main() -> int;
     
 
 //=== Cpp2 function definitions =================================================
 
-#line 1 "pure2-raw-string-literal-and-interpolation.cpp2"
 [[nodiscard]] auto main() -> int{
     auto i {42}; 
     std::map<std::string,int> m {}; 

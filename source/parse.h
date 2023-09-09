@@ -2590,6 +2590,13 @@ public:
     auto is_alias() const -> bool
         { return type.index() == an_alias;    }
 
+    auto is_type_alias     () const -> bool
+        { return is_alias() && std::get<an_alias>(type)->is_type_alias(); }
+    auto is_namespace_alias() const -> bool
+        { return is_alias() && std::get<an_alias>(type)->is_namespace_alias(); }
+    auto is_object_alias   () const -> bool
+        { return is_alias() && std::get<an_alias>(type)->is_object_alias(); }
+
     auto is_function_expression () const -> bool
         { return is_function() && !identifier;  }
 
@@ -2625,7 +2632,8 @@ public:
         functions = 1,
         objects   = 2,
         types     = 4,
-        all       = functions|objects|types
+        aliases   = 8,
+        all       = functions|objects|types|aliases
     };
 
 private:
@@ -2660,9 +2668,10 @@ private:
                     && "ICE: a type shouldn't be able to contain a namespace"
                 );
                 if (
-                    (w & functions && decl->is_function())
-                    || (w & objects && decl->is_object())
-                    || (w & types && decl->is_type())
+                    (w & functions  && decl->is_function())
+                    || (w & objects && decl->is_object()  )
+                    || (w & types   && decl->is_type()    )
+                    || (w & aliases && decl->is_alias()   )
                     )
                 {
                     ret.push_back(decl);
@@ -7512,6 +7521,21 @@ public:
     auto start(template_args_tag const&, int indent) -> void
     {
         o << pre(indent) << "template arguments\n";
+    }
+
+    auto start(alias_node const& n, int indent) -> void
+    {
+        o << pre(indent) << "alias\n";
+        switch (n.initializer.index()) {
+        break;case alias_node::a_type:
+            o << pre(indent+1) << "type\n";
+        break;case alias_node::a_namespace:
+            o << pre(indent+1) << "namespace\n";
+        break;case alias_node::an_object:
+            o << pre(indent+1) << "object\n";
+        break;default:
+            o << pre(indent+1) << "ICE - invalid variant state\n";
+        }
     }
 
     auto start(declaration_node const& n, int indent) -> void

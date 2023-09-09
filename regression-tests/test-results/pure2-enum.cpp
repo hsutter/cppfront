@@ -98,20 +98,23 @@ auto main() -> int;
 
 
 
-    #line 1 "pure2-enum.cpp2"
-[[nodiscard]] auto skat_game::size() -> auto { return 6; }
+    [[nodiscard]] auto skat_game::size() -> auto { return 6; }
 [[nodiscard]] auto skat_game::to_string(cpp2::in<cpp2::strict_value<cpp2::i8,skat_game,0>> value) -> std::string{
-    if (value == diamonds) {return "diamonds"; }
-    if (value == hearts) {return "hearts"; }
-    if (value == spades) {return "spades"; }
-    if (value == clubs) {return "clubs"; }
-    if (value == grand) {return "grand"; }
-    if (value == null) {return "null"; }
-    return "(invalid skat_game enumerator value)"; 
-    }
 
-    #line 1 "pure2-enum.cpp2"
+    std::string ret {}; 
+    if (value == diamonds) {ret = "diamonds";}
+    else {if (value == hearts) {ret = "hearts";}
+    else {if (value == spades) {ret = "spades";}
+    else {if (value == clubs) {ret = "clubs";}
+    else {if (value == grand) {ret = "grand";}
+    else {if (value == null) {ret = "null";}}}}}}
+if (CPP2_UFCS_0(empty, ret)) {ret = "(invalid skat_game enumerator value)";}
+return ret; 
+}
+
+
 skat_game::skat_game([[maybe_unused]] skat_game const& that){}
+
 auto skat_game::operator=([[maybe_unused]] skat_game const& that) -> skat_game& {
                                 return *this;}
 skat_game::skat_game([[maybe_unused]] skat_game&& that) noexcept{}
@@ -120,13 +123,19 @@ auto skat_game::operator=([[maybe_unused]] skat_game&& that) noexcept -> skat_ga
 skat_game::skat_game(){}
 [[nodiscard]] auto rgb::size() -> auto { return 3; }
 [[nodiscard]] auto rgb::to_string(cpp2::in<cpp2::strict_value<cpp2::i8,rgb,0>> value) -> std::string{
-    if (value == red) {return "red"; }
-    if (value == green) {return "green"; }
-    if (value == blue) {return "blue"; }
-    return "(invalid rgb enumerator value)"; 
-    }
 
-    rgb::rgb([[maybe_unused]] rgb const& that){}
+std::string ret {}; 
+if (value == red) {ret = "red";}
+else {if (value == green) {ret = "green";}
+else {if (value == blue) {ret = "blue";}
+}}
+if (CPP2_UFCS_0(empty, ret)) {ret = "(invalid rgb enumerator value)";}
+return ret; 
+}
+
+
+rgb::rgb([[maybe_unused]] rgb const& that){}
+
 auto rgb::operator=([[maybe_unused]] rgb const& that) -> rgb& {
                                 return *this;}
 rgb::rgb([[maybe_unused]] rgb&& that) noexcept{}
@@ -135,14 +144,18 @@ auto rgb::operator=([[maybe_unused]] rgb&& that) noexcept -> rgb& {
 rgb::rgb(){}
 [[nodiscard]] auto file_attributes::size() -> auto { return 4; }
 [[nodiscard]] auto file_attributes::to_string(cpp2::in<cpp2::strict_value<cpp2::u8,file_attributes,1>> value) -> std::string{
-    if (value == cached) {return "cached"; }
-    if (value == current) {return "current"; }
-    if (value == obsolete) {return "obsolete"; }
-    if (value == none) {return "none"; }
-    return "(invalid file_attributes enumerator value)"; 
-    }
 
-    file_attributes::file_attributes([[maybe_unused]] file_attributes const& that){}
+std::string ret {}; 
+ret = "(";
+if (CPP2_UFCS(has, value, cached)) {ret += "cached";}
+if (CPP2_UFCS(has, value, current)) {ret += std::string(", ") + "current";}
+if (CPP2_UFCS(has, value, obsolete)) {ret += std::string(", ") + "obsolete";}
+if (CPP2_UFCS(has, value, none)) {ret += std::string(", ") + "none";}
+if (CPP2_UFCS_0(empty, ret)) {ret = "(invalid file_attributes enumerator value)";}
+return ret + ")"; 
+}
+
+file_attributes::file_attributes([[maybe_unused]] file_attributes const& that){}
 auto file_attributes::operator=([[maybe_unused]] file_attributes const& that) -> file_attributes& {
                                 return *this;}
 file_attributes::file_attributes([[maybe_unused]] file_attributes&& that) noexcept{}
@@ -207,6 +220,8 @@ auto main() -> int{
     f  |= file_attributes::obsolete;
     f2 |= file_attributes::current;
 
+    std::cout << "f  is " << f  << "\n";
+    std::cout << "f2 is " << f2 << "\n";
     std::cout << "f  as int  is " + cpp2::to_string(cpp2::as_<int>(f)) + "\n";
     std::cout << "f2 as int  is " + cpp2::to_string(cpp2::as_<int>(f2)) + "\n";
     std::cout << "f  == f2   is " + cpp2::to_string(f  == f2  ) + "\n";

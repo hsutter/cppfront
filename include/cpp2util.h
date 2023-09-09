@@ -1599,6 +1599,8 @@ public:
     auto operator& ( strict_value const& that ) const -> strict_value requires BitwiseOps { return strict_value(t & that.t); }
     auto operator^ ( strict_value const& that ) const -> strict_value requires BitwiseOps { return strict_value(t ^ that.t); }
 
+    auto has       ( strict_value const& that ) const -> bool         requires BitwiseOps { return t & that.t; }
+
     auto set       ( strict_value const& that )       -> void         requires BitwiseOps { t |=  that.t; }
     auto clear     ( strict_value const& that )       -> void         requires BitwiseOps { t &= ~that.t; }
 };

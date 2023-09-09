@@ -246,6 +246,8 @@ declaration: @polymorphic_base @copyable type =
     as_function : (this) -> function_declaration = function_declaration(n, this);
     as_object   : (this) -> object_declaration   = object_declaration(n, this);
     as_type     : (this) -> type_declaration     = type_declaration(n, this);
+    as_alias    : (this) -> alias_declaration    = alias_declaration(n, this);
+
     get_parent  : (this) -> declaration          = declaration(n, this);
 
     parent_is_function   : (this) -> bool = n*.parent_is_function();
@@ -401,6 +403,16 @@ type_declaration: @copyable type =
         return ret;
     }
 
+    get_member_aliases: (this)
+        -> std::vector<alias_declaration>
+    = {
+        ret: std::vector<alias_declaration> = ();
+        for n*.get_type_scope_declarations(declaration_node::aliases) do (d) {
+            _ = ret.emplace_back( d, this );
+        }
+        return ret;
+    }
+
     get_members: (this)
         -> std::vector<declaration>
     = {
@@ -439,6 +451,29 @@ type_declaration: @copyable type =
     remove_all_members: (inout this) = n*.type_remove_all_members();
 
     disable_member_function_generation: (inout this) = n*.type_disable_member_function_generation();
+}
+
+
+//-----------------------------------------------------------------------
+//  Alias declarations
+//
+alias_declaration: @copyable type =
+{
+    this: declaration = ();
+
+    operator=: (
+        out this,
+        n_: *declaration_node,
+        s : compiler_services
+    ) =
+    {
+        declaration = (n_, s);
+        [[assert: n*.is_alias()]]
+    }
+
+    is_type_alias      : (this) -> bool = n*.is_type_alias();
+    is_namespace_alias : (this) -> bool = n*.is_namespace_alias();
+    is_object_alias    : (this) -> bool = n*.is_object_alias();
 }
 
 
@@ -872,18 +907,41 @@ basic_enum: (
     t.require( t.add_member( "size: () -> _ = (enumerators.ssize())$;"),
                "could not add size");
 
-    //  Provide a 'to_string' function to print the enumerator names
-    //  TODO: will extend this to allow emitting multiple values for flag_enums
-    //  TODO: maybe make this a template so it's pay-for-use, but having a single dynamic
-    //        function is pretty cheap + the linker should discard unreachable functions
+    //  Provide a 'to_string' function to print enumerator name(s)
     to_string: std::string = "to_string: (value: (strict_underlying_type)$) -> std::string = { \n";
+    to_string += "    ret: std::string = ();\n";
+    first := true;
+
     for enumerators do (e) {
-        to_string += "    if value == (e.name)$ { return \"(e.name)$\"; }\n";
+        if bitwise {
+            comma: std::string = "std::string(\", \") + ";
+            if first {
+                to_string += "    ret = \"(\";\n";
+                comma = "";
+            }
+            to_string += "    if value.has((e.name)$) { ret += (comma)$\"(e.name)$\"; }\n";
+        }
+        else {
+            else_: std::string = "else ";
+            if first {
+                else_ = "";
+            }
+            to_string += "    (else_)$if value == (e.name)$ { ret = \"(e.name)$\"; }\n";
+        }
+        first = false;
     }
-    to_string += "    return \"(invalid (t.name())$ enumerator value)\";\n}\n";
+
+    to_string += "    if ret.empty() { ret = \"(invalid (t.name())$ enumerator value)\"; }\n";
+
+    if bitwise {
+        to_string += "    return ret+\")\";\n}\n";
+    }
+    else {
+        to_string += "    return ret;\n}\n";
+    }
+
     t.require( t.add_member( to_string ),
                "could not add to_string");
-
 
     //  3. A basic_enum is-a value
 
@@ -891,6 +949,15 @@ basic_enum: (
 }
 
 
+//-----------------------------------------------------------------------
+//
+//    "An enum[...] is a totally ordered value type that stores a
+//     value of its enumerators's type, and otherwise has only public
+//     member variables of its enumerator's type, all of which are
+//     naturally scoped because they are members of a type."
+// 
+//          -- P0707R4, section 3
+//
 enum: (inout t: meta::type_declaration) =
 {
     //  Let basic_enum do its thing, with an incrementing value generator
@@ -907,6 +974,16 @@ enum: (inout t: meta::type_declaration) =
 }
 
 
+//-----------------------------------------------------------------------
+//
+//     "flag_enum expresses an enumeration that stores values 
+//      corresponding to bitwise-or'd enumerators. The enumerators must
+//      be powers of two, and are automatically generated [...] A none
+//      value is provided [...] Operators | and & are provided to
+//      combine and extract values."
+// 
+//          -- P0707R4, section 3
+//
 flag_enum: (inout t: meta::type_declaration) =
 {
     //  Add "none" member as a regular name to signify "no flags set"
@@ -914,7 +991,7 @@ flag_enum: (inout t: meta::type_declaration) =
                 "could not add 'none' enumerator");
 
     //  Let basic_enum do its thing, with a power-of-two value generator
-    enuminfo := t.basic_enum(
+    _ = t.basic_enum(
         :(inout value: i64, specified_value: std::string) = {
             if !specified_value.empty() {
                 value = std::strtoll(specified_value[0]&, nullptr, 10);
@@ -932,7 +1009,6 @@ flag_enum: (inout t: meta::type_declaration) =
         },
         true    // enable bitwise operations
     );
-
 }
 
 
