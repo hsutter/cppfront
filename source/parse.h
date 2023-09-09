@@ -6182,8 +6182,11 @@ private:
         auto param = std::make_unique<parameter_declaration_node>();
 
         auto count = 1;
+        auto expect_another_param_decl = false;
+
         while ((param = parameter_declaration(is_returns, is_named, is_template, is_statement)) != nullptr)
         {
+            expect_another_param_decl = false;
             param->ordinal = count;
             ++count;
 
@@ -6209,7 +6212,13 @@ private:
                 }
                 return {};
             }
+
+            expect_another_param_decl = true;
             next();
+        }
+
+        if (expect_another_param_decl) {
+            error("invalid parameter list: a comma must be followed by another parameter", true, {}, true);
         }
 
         if (curr().type() != closer) {
