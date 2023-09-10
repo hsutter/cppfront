@@ -1,5 +1,4 @@
 
-
 skat_game: @enum type = {
     diamonds := 9;
     hearts;  // 10
@@ -70,6 +69,14 @@ main: () = {
     f &= file_attributes::cached  | file_attributes::obsolete;
 
     f2 := file_attributes::cached;
+
+    std::cout << "f  is " << f  << "\n";
+    std::cout << "f2 is " << f2 << "\n";
+
+    f2.clear( f2 );
+    std::cout << "f2 is " << f2 << "\n";
+    f2.set(file_attributes::cached);
+    std::cout << "f2 is " << f2 << "\n";
 
     std::cout << "f  as int  is (f  as int )$\n";
     std::cout << "f2 as int  is (f2 as int )$\n";

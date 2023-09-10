@@ -38,7 +38,7 @@ class alias_declaration;
 #line 807 "reflect.h2"
 class value_member_info;
 
-#line 1030 "reflect.h2"
+#line 1115 "reflect.h2"
 }
 }
 
@@ -627,7 +627,7 @@ struct basic_enum__ret { std::string underlying_type; std::string strict_underly
     cpp2::in<bool> bitwise
     ) -> basic_enum__ret;
 
-#line 967 "reflect.h2"
+#line 974 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //    "An enum[...] is a totally ordered value type that stores a
@@ -639,7 +639,7 @@ struct basic_enum__ret { std::string underlying_type; std::string strict_underly
 //
 auto cpp2_enum(meta::type_declaration& t) -> void;
 
-#line 992 "reflect.h2"
+#line 999 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "flag_enum expresses an enumeration that stores values 
@@ -652,8 +652,34 @@ auto cpp2_enum(meta::type_declaration& t) -> void;
 //
 auto flag_enum(meta::type_declaration& t) -> void;
 
-#line 1027 "reflect.h2"
+#line 1034 "reflect.h2"
+//-----------------------------------------------------------------------
+//
+//     "As with void*, programmers should know that unions [...] are
+//      inherently dangerous, should be avoided wherever possible,
+//      and should be handled with special care when actually needed."
+//
+//          -- Stroustrup (The Design and Evolution of C++, 14.3.4.1)
+//
+//     "C++17 needs a type-safe union... The implications of the 
+//      consensus `variant` design are well understood and have been 
+//      explored over several LEWG discussions, over a thousand emails, 
+//      a joint LEWG/EWG session, and not to mention 12 years of 
+//      experience with Boost and other libraries."
+//
+//          -- Axel Naumann, in P0088 (wg21.link/p0088),
+//             the adopted proposal for C++17 std::variant
+//
+//-----------------------------------------------------------------------
+//
+//  union
 // 
+//  a type that contains exactly one of a fixed set of values at a time
+// 
+
+auto cpp2_union(meta::type_declaration& t) -> void;
+
+#line 1113 "reflect.h2"
 //=======================================================================
 //  Switch to Cpp1 and close subnamespace meta
 }
@@ -722,8 +748,11 @@ auto parser::apply_type_meta_functions( declaration_node& n )
         else if (name == "flag_enum") {
             flag_enum( rtype );
         }
+        else if (name == "union") {
+            cpp2_union( rtype );
+        }
         else {
-            error( "(temporary alpha limitation) unrecognized metafunction name '" + name + "' - currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum" );
+            error( "(temporary alpha limitation) unrecognized metafunction name '" + name + "' - currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum, union" );
             return false;
         }
     }
@@ -1442,16 +1471,23 @@ cpp2::i64 value = -1;
     to_string += "    ret: std::string = ();\n";
     auto first {true}; 
 
+    if (bitwise) {
+        to_string += "    comma: std::string = ();\n";
+    }
+
     for ( 
 
           auto const& e : enumerators )  { do {
         if (bitwise) {
-            std::string comma {"std::string(\", \") + "}; 
             if (first) {
                 to_string += "    ret = \"(\";\n";
-                comma = "";
             }
-            to_string += "    if value & (" + cpp2::to_string(e.name) + ") { ret += " + cpp2::to_string(comma) + "\"" + cpp2::to_string(e.name) + "\"; }\n";
+            if (e.name == "none") { // a "none" flag should match if no bits set
+                to_string += "    if value == " + cpp2::to_string(e.name) + " { ret += comma + \"" + cpp2::to_string(e.name) + "\"; comma = \", \"; }\n";
+            }
+            else {                  // other flags need to be &-ed
+                to_string += "    if (value & " + cpp2::to_string(e.name) + ") == " + cpp2::to_string(e.name) + " { ret += comma + \"" + cpp2::to_string(e.name) + "\"; comma = \", \"; }\n";
+            }
         }
         else {
             std::string else_ {"else "}; 
@@ -1477,13 +1513,13 @@ cpp2::i64 value = -1;
     CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "    to_string: (this) -> std::string = { return " + cpp2::to_string(CPP2_UFCS_0(name, t)) + "::to_string(this); }"), 
                "could not add to_string member function");
 
-#line 961 "reflect.h2"
+#line 968 "reflect.h2"
     //  3. A basic_enum is-a value type
 
     CPP2_UFCS_0(basic_value, t);
 return  { std::move(underlying_type), std::move(strict_underlying_type.value()) }; }
 
-#line 976 "reflect.h2"
+#line 983 "reflect.h2"
 auto cpp2_enum(meta::type_declaration& t) -> void
 {
     //  Let basic_enum do its thing, with an incrementing value generator
@@ -1499,7 +1535,7 @@ auto cpp2_enum(meta::type_declaration& t) -> void
     ));
 }
 
-#line 1002 "reflect.h2"
+#line 1009 "reflect.h2"
 auto flag_enum(meta::type_declaration& t) -> void
 {
     //  Add "none" member as a regular name to signify "no flags set"
@@ -1524,7 +1560,63 @@ auto flag_enum(meta::type_declaration& t) -> void
     ));
 }
 
-#line 1030 "reflect.h2"
+#line 1058 "reflect.h2"
+auto cpp2_union(meta::type_declaration& t) -> void
+{
+    std::vector<value_member_info> alternatives {}; 
+
+    //  1. Gather: All the user-written members, and find/compute the max size
+
+    //(copy first := true)
+    for ( 
+    //next first = false  
+          auto const& m : CPP2_UFCS_0(get_members, t) ) 
+    {
+        CPP2_UFCS(require, m, (CPP2_UFCS_0(is_public, m) || CPP2_UFCS_0(is_default_access, m)) && CPP2_UFCS_0(is_object, m), 
+                   "a union alternative cannot be protected or private");
+
+        if (CPP2_UFCS_0(is_object, m)) {
+            auto mo {CPP2_UFCS_0(as_object, m)}; 
+
+            //  Adding local variable 'e' to work around a Clang warning
+            value_member_info e {cpp2::as_<std::string>(CPP2_UFCS_0(name, mo)), CPP2_UFCS_0(type, mo), cpp2::as_<std::string>(CPP2_UFCS_0(initializer, mo))}; 
+            CPP2_UFCS(push_back, alternatives, e);
+        }
+    }
+
+#line 1082 "reflect.h2"
+    //  2. Replace: Erase the contents and replace with modified contents
+
+    CPP2_UFCS_0(remove_all_members, t);
+
+    //  Compute the size
+    std::string Size {"Size :== cpp2::max( "}; 
+{
+std::string comma = "";
+
+#line 1090 "reflect.h2"
+    for ( 
+
+          auto const& e : alternatives )  { do {
+        Size += comma + "sizeof(" + cpp2::to_string(e.type) + ")";
+    } while (false); comma = ", "; }
+}
+
+#line 1096 "reflect.h2"
+    Size += " );\n";
+    CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, std::move(Size)), 
+               "could not add Size");
+
+#line 1102 "reflect.h2"
+    //  TODO
+
+#line 1106 "reflect.h2"
+    ////  3. A basic_enum is-a value
+
+    //t.value();
+}
+
+#line 1115 "reflect.h2"
 }
 }
 

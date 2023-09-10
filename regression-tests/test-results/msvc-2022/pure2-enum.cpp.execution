@@ -4,6 +4,10 @@ using << prints clubs
 with if else: clubs
 with inspect: clubs
 
+f  is (cached)
+f2 is (cached)
+f2 is (none)
+f2 is (cached)
 f  as int  is 1
 f2 as int  is 1
 f  is (f2) is 1

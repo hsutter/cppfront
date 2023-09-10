@@ -286,7 +286,7 @@ using __uchar   = unsigned char;    // normally use u8 instead
 //-----------------------------------------------------------------------
 //
 
-auto max(auto... values) {
+constexpr auto max(auto... values) {
     return std::max( { values... } );
 }
 

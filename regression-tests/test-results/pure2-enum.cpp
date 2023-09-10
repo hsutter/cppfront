@@ -7,22 +7,22 @@
 #include "cpp2util.h"
 
 
-#line 3 "pure2-enum.cpp2"
+#line 2 "pure2-enum.cpp2"
 class skat_game;
     
 
-#line 12 "pure2-enum.cpp2"
+#line 11 "pure2-enum.cpp2"
 class rgb;
     
 
-#line 18 "pure2-enum.cpp2"
+#line 17 "pure2-enum.cpp2"
 class file_attributes;
     
 
 //=== Cpp2 type definitions and function declarations ===========================
 
 
-#line 3 "pure2-enum.cpp2"
+#line 2 "pure2-enum.cpp2"
 class skat_game: public cpp2::strict_value<cpp2::i8,skat_game,0> {
 public: skat_game(cpp2::in<cpp2::strict_value<cpp2::i8,skat_game,0>> value);
 public: auto static constexpr diamonds = cpp2::strict_value<cpp2::i8,skat_game,0>(9);
@@ -42,7 +42,7 @@ public: explicit skat_game();
              // 11
              // 12
 
-#line 10 "pure2-enum.cpp2"
+#line 9 "pure2-enum.cpp2"
 };
 
 class rgb: public cpp2::strict_value<cpp2::i8,rgb,0> {
@@ -59,7 +59,7 @@ public: explicit rgb();
              // 0
              // 1
              // 2
-#line 16 "pure2-enum.cpp2"
+#line 15 "pure2-enum.cpp2"
 };
 
 class file_attributes: public cpp2::strict_value<cpp2::u8,file_attributes,1> {
@@ -79,7 +79,7 @@ public: explicit file_attributes();
               // 2
               // 4
 
-#line 23 "pure2-enum.cpp2"
+#line 22 "pure2-enum.cpp2"
 };
 
 auto main() -> int;
@@ -142,12 +142,14 @@ file_attributes::file_attributes(cpp2::in<cpp2::strict_value<cpp2::u8,file_attri
 [[nodiscard]] auto file_attributes::to_string(cpp2::in<cpp2::strict_value<cpp2::u8,file_attributes,1>> value) -> std::string{
 
 std::string ret {}; 
+
+std::string comma {}; 
 ret = "(";
-if (value & (cached)) {ret += "cached";}
-if (value & (current)) {ret += std::string(", ") + "current";}
-if (value & (obsolete)) {ret += std::string(", ") + "obsolete";}
-if (value & (cached_and_current)) {ret += std::string(", ") + "cached_and_current";}
-if (value & (none)) {ret += std::string(", ") + "none";}
+if ((value & cached) == cached) {ret += comma + "cached";comma = ", ";}
+if ((value & current) == current) {ret += comma + "current";comma = ", ";}
+if ((value & obsolete) == obsolete) {ret += comma + "obsolete";comma = ", ";}
+if ((value & cached_and_current) == cached_and_current) {ret += comma + "cached_and_current";comma = ", ";}
+if (value == none) {ret += comma + "none";comma = ", ";}
 if (CPP2_UFCS_0(empty, ret)) {ret = "(invalid file_attributes enumerator value)";}
 return ret + ")"; 
 }
@@ -158,7 +160,7 @@ file_attributes::file_attributes(file_attributes const& that)
 file_attributes::file_attributes()
                           : cpp2::strict_value<cpp2::u8,file_attributes,1>{  }{}
 
-#line 25 "pure2-enum.cpp2"
+#line 24 "pure2-enum.cpp2"
 auto main() -> int{
     // x : skat_game = 9;               // error, can't construct skat_game from integer
 
@@ -207,6 +209,14 @@ auto main() -> int{
     f &= file_attributes::cached  | file_attributes::obsolete;
 
     auto f2 {file_attributes::cached}; 
+
+    std::cout << "f  is " << f  << "\n";
+    std::cout << "f2 is " << f2 << "\n";
+
+    CPP2_UFCS(clear, f2, f2);
+    std::cout << "f2 is " << f2 << "\n";
+    CPP2_UFCS(set, f2, file_attributes::cached);
+    std::cout << "f2 is " << f2 << "\n";
 
     std::cout << "f  as int  is " + cpp2::to_string(cpp2::as_<int>(f)) + "\n";
     std::cout << "f2 as int  is " + cpp2::to_string(cpp2::as_<int>(f2)) + "\n";
