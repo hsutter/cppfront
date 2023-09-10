@@ -804,8 +804,9 @@ struct: (inout t: meta::type_declaration) =
 //
 //  a type together with named constants that are its possible values
 //
-enumerator_info: @struct type = {
+value_member_info: @struct type = {
     name  : std::string;
+    type  : std::string;
     value : std::string;
 }
 
@@ -819,14 +820,16 @@ basic_enum: (
         strict_underlying_type : std::string
         )
 = {
-    enumerators : std::vector<enumerator_info> = ();
-    min_value   : i64                          = 0;
-    max_value   : i64                          = 0;
+    enumerators : std::vector<value_member_info> = ();
+    min_value   : i64                            = 0;
+    max_value   : i64                            = 0;
 
     //  1. Gather: The names of all the user-written members, and find/compute the type
 
     (copy first := true, copy value: i64 = -1)
-    for t.get_members()  next first = false  do (m)
+    for  t.get_members()
+    next first = false  
+    do   (m)
     {
         m.require( (m.is_public() || m.is_default_access()) && m.is_object(),
                    "an enumerator cannot be protected or private");
@@ -848,7 +851,7 @@ basic_enum: (
             }
 
             //  Adding local variable 'e' to work around a Clang warning
-            e: enumerator_info = ( mo.name() as std::string, std::to_string(value) );
+            e: value_member_info = ( mo.name() as std::string, "", std::to_string(value) );
             enumerators.push_back( e );
         }
     }
@@ -890,13 +893,20 @@ basic_enum: (
         }
     }
 
-    strict_underlying_type = "cpp2::strict_value<(underlying_type)$, (t.name())$, (bitwise)$>";
+    strict_underlying_type = "cpp2::strict_value<(underlying_type)$,(t.name())$,(bitwise)$>";
 
 
     //  2. Replace: Erase the contents and replace with modified contents
 
     t.remove_all_members();
-    
+
+    //  Add the base value and a constructor
+    t.require( t.add_member( "    this: (strict_underlying_type)$ = ();"),
+                "could not add enumeration base value");
+
+    t.require( t.add_member( "    operator=: (implicit out this, value: (strict_underlying_type)$) = { (strict_underlying_type)$ = value; }"),
+                "could not add enumeration constructor");
+
     //  Add the enumerators
     for enumerators do (e) {
         t.require( t.add_member( "public (e.name)$ :== (strict_underlying_type)$( (e.value)$ );"),
@@ -912,14 +922,16 @@ basic_enum: (
     to_string += "    ret: std::string = ();\n";
     first := true;
 
-    for enumerators do (e) {
+    for  enumerators  
+    next first = false  
+    do   (e) {
         if bitwise {
             comma: std::string = "std::string(\", \") + ";
             if first {
                 to_string += "    ret = \"(\";\n";
                 comma = "";
             }
-            to_string += "    if value.has((e.name)$) { ret += (comma)$\"(e.name)$\"; }\n";
+            to_string += "    if value & ((e.name)$) { ret += (comma)$\"(e.name)$\"; }\n";
         }
         else {
             else_: std::string = "else ";
@@ -928,7 +940,6 @@ basic_enum: (
             }
             to_string += "    (else_)$if value == (e.name)$ { ret = \"(e.name)$\"; }\n";
         }
-        first = false;
     }
 
     to_string += "    if ret.empty() { ret = \"(invalid (t.name())$ enumerator value)\"; }\n";
@@ -941,11 +952,15 @@ basic_enum: (
     }
 
     t.require( t.add_member( to_string ),
-               "could not add to_string");
+               "could not add to_string static function");
 
-    //  3. A basic_enum is-a value
+    t.require( t.add_member( "    to_string: (this) -> std::string = { return (t.name())$::to_string(this); }"),
+               "could not add to_string member function");
 
-    t.value();
+
+    //  3. A basic_enum is-a value type
+
+    t.basic_value();
 }
 
 
@@ -1009,6 +1024,7 @@ flag_enum: (inout t: meta::type_declaration) =
 }
 
 
+// 
 //=======================================================================
 //  Switch to Cpp1 and close subnamespace meta
 }

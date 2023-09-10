@@ -7,23 +7,24 @@
 #include "cpp2util.h"
 
 
-#line 2 "pure2-enum.cpp2"
+#line 3 "pure2-enum.cpp2"
 class skat_game;
     
 
-#line 11 "pure2-enum.cpp2"
+#line 12 "pure2-enum.cpp2"
 class rgb;
     
 
-#line 17 "pure2-enum.cpp2"
+#line 18 "pure2-enum.cpp2"
 class file_attributes;
     
 
 //=== Cpp2 type definitions and function declarations ===========================
 
 
-#line 2 "pure2-enum.cpp2"
-class skat_game {
+#line 3 "pure2-enum.cpp2"
+class skat_game: public cpp2::strict_value<cpp2::i8,skat_game,0> {
+public: skat_game(cpp2::in<cpp2::strict_value<cpp2::i8,skat_game,0>> value);
 public: auto static constexpr diamonds = cpp2::strict_value<cpp2::i8,skat_game,0>(9);
 public: auto static constexpr hearts = cpp2::strict_value<cpp2::i8,skat_game,0>(10);
 public: auto static constexpr spades = cpp2::strict_value<cpp2::i8,skat_game,0>(11);
@@ -32,44 +33,37 @@ public: auto static constexpr grand = cpp2::strict_value<cpp2::i8,skat_game,0>(2
 public: auto static constexpr null = cpp2::strict_value<cpp2::i8,skat_game,0>(23);
 public: [[nodiscard]] static auto size() -> auto;
 public: [[nodiscard]] static auto to_string(cpp2::in<cpp2::strict_value<cpp2::i8,skat_game,0>> value) -> std::string;
-public: [[nodiscard]] auto operator<=>([[maybe_unused]] skat_game const& that) const& -> std::strong_ordering = default;
-public: skat_game([[maybe_unused]] skat_game const& that);
-
-public: auto operator=([[maybe_unused]] skat_game const& that) -> skat_game& ;
-public: skat_game([[maybe_unused]] skat_game&& that) noexcept;
-public: auto operator=([[maybe_unused]] skat_game&& that) noexcept -> skat_game& ;
+public: [[nodiscard]] auto to_string() const& -> std::string;
+public: skat_game(skat_game const& that);
 public: explicit skat_game();
 
-#line 4 "pure2-enum.cpp2"
+
              // 10
              // 11
              // 12
 
-#line 9 "pure2-enum.cpp2"
+#line 10 "pure2-enum.cpp2"
 };
 
-class rgb {
+class rgb: public cpp2::strict_value<cpp2::i8,rgb,0> {
+public: rgb(cpp2::in<cpp2::strict_value<cpp2::i8,rgb,0>> value);
 public: auto static constexpr red = cpp2::strict_value<cpp2::i8,rgb,0>(0);
 public: auto static constexpr green = cpp2::strict_value<cpp2::i8,rgb,0>(1);
 public: auto static constexpr blue = cpp2::strict_value<cpp2::i8,rgb,0>(2);
 public: [[nodiscard]] static auto size() -> auto;
 public: [[nodiscard]] static auto to_string(cpp2::in<cpp2::strict_value<cpp2::i8,rgb,0>> value) -> std::string;
-public: [[nodiscard]] auto operator<=>([[maybe_unused]] rgb const& that) const& -> std::strong_ordering = default;
-public: rgb([[maybe_unused]] rgb const& that);
-
-public: auto operator=([[maybe_unused]] rgb const& that) -> rgb& ;
-public: rgb([[maybe_unused]] rgb&& that) noexcept;
-public: auto operator=([[maybe_unused]] rgb&& that) noexcept -> rgb& ;
+public: [[nodiscard]] auto to_string() const& -> std::string;
+public: rgb(rgb const& that);
 public: explicit rgb();
 
-#line 12 "pure2-enum.cpp2"
              // 0
              // 1
              // 2
-#line 15 "pure2-enum.cpp2"
+#line 16 "pure2-enum.cpp2"
 };
 
-class file_attributes {
+class file_attributes: public cpp2::strict_value<cpp2::u8,file_attributes,1> {
+public: file_attributes(cpp2::in<cpp2::strict_value<cpp2::u8,file_attributes,1>> value);
 public: auto static constexpr cached = cpp2::strict_value<cpp2::u8,file_attributes,1>(1);
 public: auto static constexpr current = cpp2::strict_value<cpp2::u8,file_attributes,1>(2);
 public: auto static constexpr obsolete = cpp2::strict_value<cpp2::u8,file_attributes,1>(4);
@@ -77,20 +71,15 @@ public: auto static constexpr cached_and_current = cpp2::strict_value<cpp2::u8,f
 public: auto static constexpr none = cpp2::strict_value<cpp2::u8,file_attributes,1>(0);
 public: [[nodiscard]] static auto size() -> auto;
 public: [[nodiscard]] static auto to_string(cpp2::in<cpp2::strict_value<cpp2::u8,file_attributes,1>> value) -> std::string;
-public: [[nodiscard]] auto operator<=>([[maybe_unused]] file_attributes const& that) const& -> std::strong_ordering = default;
-public: file_attributes([[maybe_unused]] file_attributes const& that);
-
-public: auto operator=([[maybe_unused]] file_attributes const& that) -> file_attributes& ;
-public: file_attributes([[maybe_unused]] file_attributes&& that) noexcept;
-public: auto operator=([[maybe_unused]] file_attributes&& that) noexcept -> file_attributes& ;
+public: [[nodiscard]] auto to_string() const& -> std::string;
+public: file_attributes(file_attributes const& that);
 public: explicit file_attributes();
 
-#line 18 "pure2-enum.cpp2"
               // 1
               // 2
               // 4
 
-#line 22 "pure2-enum.cpp2"
+#line 23 "pure2-enum.cpp2"
 };
 
 auto main() -> int;
@@ -100,7 +89,9 @@ auto main() -> int;
 
 
 
-    [[nodiscard]] auto skat_game::size() -> auto { return 6; }
+    skat_game::skat_game(cpp2::in<cpp2::strict_value<cpp2::i8,skat_game,0>> value)
+                                                                                  : cpp2::strict_value<cpp2::i8,skat_game,0>{ value }{}
+[[nodiscard]] auto skat_game::size() -> auto { return 6; }
 [[nodiscard]] auto skat_game::to_string(cpp2::in<cpp2::strict_value<cpp2::i8,skat_game,0>> value) -> std::string{
 
     std::string ret {}; 
@@ -114,67 +105,72 @@ if (CPP2_UFCS_0(empty, ret)) {ret = "(invalid skat_game enumerator value)";}
 return ret; 
 }
 
+[[nodiscard]] auto skat_game::to_string() const& -> std::string{return skat_game::to_string((*this)); }
+skat_game::skat_game(skat_game const& that)
+                                : cpp2::strict_value<cpp2::i8,skat_game,0>{ static_cast<cpp2::strict_value<cpp2::i8,skat_game,0> const&>(that) }{}
+skat_game::skat_game()
+                          : cpp2::strict_value<cpp2::i8,skat_game,0>{  }{}
+rgb::rgb(cpp2::in<cpp2::strict_value<cpp2::i8,rgb,0>> value)
+                                                                            : cpp2::strict_value<cpp2::i8,rgb,0>{ value }{}
 
-skat_game::skat_game([[maybe_unused]] skat_game const& that){}
 
-auto skat_game::operator=([[maybe_unused]] skat_game const& that) -> skat_game& {
-                                return *this;}
-skat_game::skat_game([[maybe_unused]] skat_game&& that) noexcept{}
-auto skat_game::operator=([[maybe_unused]] skat_game&& that) noexcept -> skat_game& {
-                                return *this;}
-skat_game::skat_game(){}
+
 [[nodiscard]] auto rgb::size() -> auto { return 3; }
 [[nodiscard]] auto rgb::to_string(cpp2::in<cpp2::strict_value<cpp2::i8,rgb,0>> value) -> std::string{
 
 std::string ret {}; 
 if (value == red) {ret = "red";}
 else {if (value == green) {ret = "green";}
-else {if (value == blue) {ret = "blue";}
-}}
+else {if (value == blue) {ret = "blue";}}}
 if (CPP2_UFCS_0(empty, ret)) {ret = "(invalid rgb enumerator value)";}
 return ret; 
 }
 
+[[nodiscard]] auto rgb::to_string() const& -> std::string{return rgb::to_string((*this)); }
+rgb::rgb(rgb const& that)
+                                : cpp2::strict_value<cpp2::i8,rgb,0>{ static_cast<cpp2::strict_value<cpp2::i8,rgb,0> const&>(that) }{}
+rgb::rgb()
+                          : cpp2::strict_value<cpp2::i8,rgb,0>{  }{}
+file_attributes::file_attributes(cpp2::in<cpp2::strict_value<cpp2::u8,file_attributes,1>> value)
+                                                                                        : cpp2::strict_value<cpp2::u8,file_attributes,1>{ value }{}
 
-rgb::rgb([[maybe_unused]] rgb const& that){}
 
-auto rgb::operator=([[maybe_unused]] rgb const& that) -> rgb& {
-                                return *this;}
-rgb::rgb([[maybe_unused]] rgb&& that) noexcept{}
-auto rgb::operator=([[maybe_unused]] rgb&& that) noexcept -> rgb& {
-                                return *this;}
-rgb::rgb(){}
+
+
+
 [[nodiscard]] auto file_attributes::size() -> auto { return 5; }
 [[nodiscard]] auto file_attributes::to_string(cpp2::in<cpp2::strict_value<cpp2::u8,file_attributes,1>> value) -> std::string{
 
 std::string ret {}; 
 ret = "(";
-if (CPP2_UFCS(has, value, cached)) {ret += "cached";}
-if (CPP2_UFCS(has, value, current)) {ret += std::string(", ") + "current";}
-if (CPP2_UFCS(has, value, obsolete)) {ret += std::string(", ") + "obsolete";}
-if (CPP2_UFCS(has, value, cached_and_current)) {ret += std::string(", ") + "cached_and_current";}
-if (CPP2_UFCS(has, value, none)) {ret += std::string(", ") + "none";}
+if (value & (cached)) {ret += "cached";}
+if (value & (current)) {ret += std::string(", ") + "current";}
+if (value & (obsolete)) {ret += std::string(", ") + "obsolete";}
+if (value & (cached_and_current)) {ret += std::string(", ") + "cached_and_current";}
+if (value & (none)) {ret += std::string(", ") + "none";}
 if (CPP2_UFCS_0(empty, ret)) {ret = "(invalid file_attributes enumerator value)";}
 return ret + ")"; 
 }
 
-file_attributes::file_attributes([[maybe_unused]] file_attributes const& that){}
-auto file_attributes::operator=([[maybe_unused]] file_attributes const& that) -> file_attributes& {
-                                return *this;}
-file_attributes::file_attributes([[maybe_unused]] file_attributes&& that) noexcept{}
-auto file_attributes::operator=([[maybe_unused]] file_attributes&& that) noexcept -> file_attributes& {
-                                return *this;}
-file_attributes::file_attributes(){}
-#line 24 "pure2-enum.cpp2"
+[[nodiscard]] auto file_attributes::to_string() const& -> std::string{return file_attributes::to_string((*this)); }
+file_attributes::file_attributes(file_attributes const& that)
+                                : cpp2::strict_value<cpp2::u8,file_attributes,1>{ static_cast<cpp2::strict_value<cpp2::u8,file_attributes,1> const&>(that) }{}
+file_attributes::file_attributes()
+                          : cpp2::strict_value<cpp2::u8,file_attributes,1>{  }{}
+
+#line 25 "pure2-enum.cpp2"
 auto main() -> int{
     // x : skat_game = 9;               // error, can't construct skat_game from integer
 
-    auto x {skat_game::clubs}; 
+    skat_game x {skat_game::clubs}; 
+    auto x2 {skat_game::diamonds}; 
+    x2 = x;
 
     // if x == 9 { }                    // error, can't compare skat_game and integer
     // if x == rgb::red { }             // error, can't compare skat_game and rgb color
 
     std::cout << "x.to_string() is " + cpp2::to_string(CPP2_UFCS_0(to_string, x)) + "\n";
+    std::cout << "x2.to_string() is " + cpp2::to_string(CPP2_UFCS_0(to_string, std::move(x2))) + "\n";
     std::cout << "using << prints " << x << "\n";
 
     std::cout << "with if else: ";
@@ -207,7 +203,7 @@ auto main() -> int{
 
     x = skat_game::diamonds;        // ok, can assign one skat_game from another
 
-    auto f {file_attributes::cached_and_current}; 
+    file_attributes f {file_attributes::cached_and_current}; 
     f &= file_attributes::cached  | file_attributes::obsolete;
 
     auto f2 {file_attributes::cached}; 

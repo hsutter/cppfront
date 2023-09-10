@@ -1694,12 +1694,6 @@ auto lex_line(
                                 "'NULL' is not supported in Cpp2 - for a local pointer variable, leave it uninitialized instead, and set it to a non-null value when you have one"
                             );
                         }
-                        if (tokens.back() == "union") {
-                            errors.emplace_back(
-                                source_position(lineno, i),
-                                "unsafe 'union' is not supported in Cpp2 - use std::variant instead (or, in the future, the Cpp2 'union' metaclass function, but that is not yet implemented)"
-                            );
-                        }
                         if (tokens.back() == "delete") {
                             errors.emplace_back(
                                 source_position(lineno, i),

@@ -281,6 +281,18 @@ using __uchar   = unsigned char;    // normally use u8 instead
 
 //-----------------------------------------------------------------------
 //
+//  General helpers
+//
+//-----------------------------------------------------------------------
+//
+
+auto max(auto... values) {
+    return std::max( { values... } );
+}
+
+
+//-----------------------------------------------------------------------
+//
 //  String: A helper workaround for passing a string literal as a
 //  template argument
 //
@@ -1797,8 +1809,14 @@ inline constexpr auto as_() -> decltype(auto)
 
 using cpp2::cpp2_new;
 
-// Workaround GCC 10 not supporting requires in forward declarations in some cases.
-// See commit 5a0d77f8e297902c0b9712c5aafb6208cfa4c139.
+
+//  Stabilize line numbers for "compatibility" static assertions that we know
+//  will fire for some compilers, to keep regression test outputs cleaner
+#line 9999
+
+//  GCC 10 doesn't support 'requires' in forward declarations in some cases
+//  Workaround: Disable the requires clause where that gets reasonable behavior
+//  Diagnostic: static_assert the other cases that can't be worked around
 #if !defined(__clang__) && defined(__GNUC__) && __GNUC__ == 10
     #define CPP2_REQUIRES(...) /* empty */
     #define CPP2_REQUIRES_(...) static_assert(false, "GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.")

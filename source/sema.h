@@ -1095,6 +1095,25 @@ public:
             return false;
         }
 
+        //  A 'this' declaration must be an ordinary parameter or a type-scope object
+        if (n.identifier && *n.identifier->identifier == "this")
+        {
+            if (
+                n.is_template_parameter
+                || (
+                    !n.is_parameter
+                    && !n.parent_is_type()
+                    )
+                )
+            {
+                errors.emplace_back(
+                    n.identifier->position(),
+                    "'this' may only be declared as an ordinary function parameter or type-scope (base) object"
+                );
+                return {};
+            }
+        }
+
         {
             auto this_index = n.index_of_parameter_named("this");
             auto that_index = n.index_of_parameter_named("that");

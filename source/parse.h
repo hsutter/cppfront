@@ -2375,6 +2375,10 @@ struct declaration_node
     //  not directly in the base language grammar
     bool member_function_generation = true;
 
+    //  Cache some context
+    bool is_template_parameter = false;
+    bool is_parameter          = false;
+
     //  Constructor
     //
     declaration_node(declaration_node* parent)
@@ -6595,6 +6599,10 @@ private:
         }
         next();
 
+        if (curr() == "union") {
+            error("unsafe 'union' is not supported in Cpp2 - write '@union' to apply Cpp2's safe 'union' type metafunction instead, or use std::variant");
+        }
+
         //  Next is an optional metafunctions clause
         while (curr() == "@") {
             next();
@@ -7261,23 +7269,9 @@ private:
             return {};
         }
 
-        if (*n->identifier->identifier == "this")
-        {
-            if (
-                is_template_parameter
-                || (
-                    !is_parameter
-                    && !n->parent_is_type()
-                    )
-                )
-            {
-                errors.emplace_back(
-                    n->identifier->position(),
-                    "'this' may only be declared as an ordinary function parameter or type-scope (base) object"
-                );
-                return {};
-            }
-        }
+        //  Cache some context
+        n->is_template_parameter = is_template_parameter;
+        n->is_parameter          = is_parameter;
 
         return n;
     }
