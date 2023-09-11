@@ -2349,6 +2349,7 @@ struct declaration_node
     capture_group captures;
 
     source_position pos;
+    source_position location; // Actual source location, accounting for explicit, non-default access specifier.
     std::unique_ptr<unqualified_id_node> identifier;
     accessibility access = accessibility::default_;
 
@@ -7119,6 +7120,7 @@ private:
 
         //  Remember current position, because we need to look ahead
         auto start_pos = pos;
+        auto location = curr().position();
 
         auto n = std::unique_ptr<declaration_node>{};
 
@@ -7250,6 +7252,7 @@ private:
                 pos = start_pos;    // backtrack
                 return {};
             }
+            n->location = location;
         }
 
         //  Note: Do this after trying to parse this as a declaration, for parse backtracking

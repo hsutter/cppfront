@@ -1,0 +1,14 @@
+x: type = { }
+y: type = {
+  a: int         = 0;
+  public b: int  = 0;
+  private c: int = 0;
+  this: x        = ();
+}
+main: () -> int = {
+  static_assert(!std::invocable<decltype(:(v) -> std::void_t<decltype(v.a)> = {}), y>);
+  static_assert(!std::invocable<decltype(:(v) -> std::void_t<decltype(v.c)> = {}), y>);
+  static_assert(!std::invocable<decltype(:<T> (v: T) -> std::void_t<decltype(T::a&)> = {}), y>);
+  _ = y::b&;
+  return y().b;
+}

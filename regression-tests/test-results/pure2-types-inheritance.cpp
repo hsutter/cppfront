@@ -54,7 +54,10 @@ namespace N {
 struct Cyborg_name_as_base { std::string name; };
 struct Cyborg_address_as_base { std::string address; };
 #line 13 "pure2-types-inheritance.cpp2"
-class Cyborg: public Cyborg_name_as_base, public Human, public Cyborg_address_as_base, public N::Machine<99> {
+class Cyborg: private Cyborg_name_as_base, public Human, private Cyborg_address_as_base, public N::Machine<99> {
+    private: using Cyborg_name_as_base::name;
+
+    private: using Cyborg_address_as_base::address;
 
 #line 19 "pure2-types-inheritance.cpp2"
     public: explicit Cyborg(cpp2::in<std::string> n);
