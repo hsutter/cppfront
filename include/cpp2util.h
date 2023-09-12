@@ -894,6 +894,12 @@ inline constexpr auto is( auto const& x, auto const& value ) -> bool
     return false;
 }
 
+// Free function predicate case
+template< typename X >
+constexpr auto is( X const& x, bool (&value)(X const&) ) -> bool
+{
+    return value(x);
+}
 
 //-------------------------------------------------------------------------------------------------------------
 //  Built-in as
