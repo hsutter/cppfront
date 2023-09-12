@@ -1,0 +1,26 @@
+
+name_or_number: @union type = {
+    name: std::string;
+    num : i32;
+}
+
+print_name: (non: name_or_number) = {
+    if non.is_name() {
+        std::cout << non.get_name() << "\n";
+    }
+    else {
+        std::cout << "(not a name)\n";
+    }
+}
+
+main: () = {
+    x: name_or_number = ();
+    std::cout << "sizeof(x) is (sizeof(x))$\n";
+
+    x.print_name();
+
+    s: std::string = "xyzzy";
+    x.set_name( s );
+
+    x.print_name();
+}

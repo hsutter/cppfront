@@ -1,0 +1,14 @@
+pure2-union.cpp2:6:42: error: expected ‘;’ at end of member declaration
+In file included from pure2-union.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-union.cpp2:7:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-union.cpp2:11:41: error: expected ‘;’ at end of member declaration
+In file included from pure2-union.cpp:7:
+../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
+pure2-union.cpp2:12:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-union.cpp2:28:6: error: no declaration matches ‘void name_or_number::set_name(auto:82&&) & requires  is_same_v<typename std::remove_cv<typename std::remove_reference<decltype(name_or_number::set_name::value)>::type>::type, std::__cxx11::string>’
+pure2-union.cpp2:6:14: note: candidate is: ‘template<class auto:80> void name_or_number::set_name(auto:80&&) &’
+pure2-union.cpp2:2:7: note: ‘class name_or_number’ defined here
+pure2-union.cpp2:35:6: error: no declaration matches ‘void name_or_number::set_num(auto:83&&) & requires  is_same_v<typename std::remove_cv<typename std::remove_reference<decltype(name_or_number::set_num::value)>::type>::type, cpp2::i32>’
+pure2-union.cpp2:11:14: note: candidate is: ‘template<class auto:81> void name_or_number::set_num(auto:81&&) &’
+pure2-union.cpp2:2:7: note: ‘class name_or_number’ defined here
