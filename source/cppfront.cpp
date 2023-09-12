@@ -2514,7 +2514,14 @@ public:
                 emit(*type_id);
                 printer.print_cpp2("{", decl->position());
 
-                assert(decl->initializer);
+                if (!decl->initializer) {
+                    errors.emplace_back(
+                        decl->position(),
+                        "an anonymous object declaration must have '=' and an initializer"
+                    );
+                    return;
+                }
+
                 emit(*decl->initializer, false);
 
                 printer.print_cpp2("}", decl->position());
@@ -3888,8 +3895,6 @@ public:
                 )
             {
                 pass = "&&";
-                //assert(emitting_move_that_function);    // this should already have been set
-                ////emitting_move_that_function = true;
             }
 
             auto func_name = get_enclosing_function_name();
@@ -3918,6 +3923,12 @@ public:
 
         if (n.declaration->is_type()) {
             printer.print_cpp2("typename ", n.declaration->identifier->position());
+            if (n.declaration->is_variadic) {
+                printer.print_cpp2(
+                    "...",
+                    n.declaration->identifier->position()
+                );
+            }
             assert (n.declaration->identifier);
             emit(*n.declaration->identifier);
             return;
@@ -3999,6 +4010,7 @@ public:
 
         if (
             !is_returns
+            && !n.declaration->is_variadic
             && !type_id.is_wildcard()
             && !is_dependent_parameter_type
             && !type_id.is_pointer_qualified()
@@ -4023,6 +4035,7 @@ public:
         else if (
             type_id.is_wildcard()
             || is_dependent_parameter_type
+            || n.declaration->is_variadic
             )
         {
             auto name = std::string{"auto"};
@@ -4080,6 +4093,7 @@ public:
             && !type_id.is_wildcard()
             && !is_dependent_parameter_type
             && !type_id.is_pointer_qualified()
+            && !n.declaration->is_variadic
             )
         {
             switch (n.pass) {
@@ -4097,7 +4111,23 @@ public:
             printer.print_extra( " " + identifier);
         }
         else {
-            printer.print_cpp2( " " + identifier, n.declaration->identifier->position());
+            printer.print_cpp2( " ", n.declaration->identifier->position());
+            if (n.declaration->is_variadic)
+            {
+                if (n.direction() == passing_style::out) {
+                    errors.emplace_back(
+                        n.declaration->position(),
+                        "a variadic parameter cannot be 'out'"
+                    );
+                    return;
+                }
+
+                printer.print_cpp2(
+                    "...",
+                    n.declaration->identifier->position()
+                );
+            }
+            printer.print_cpp2( identifier, n.declaration->identifier->position());
         }
 
         if (
@@ -5167,7 +5197,7 @@ public:
                 || n.is_object()
                 || (
                     n.is_function()
-                    && n.has_name()     // only if it is not unnambed function aka lambda
+                    && n.has_name()     // only if it is not unnamed function aka lambda
                     && n.initializer    // only if the function has a definition (is not abstract)
                     && printer.get_phase() == printer.phase2_func_defs
                     )

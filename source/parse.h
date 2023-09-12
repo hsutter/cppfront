@@ -55,7 +55,7 @@ auto is_prefix_operator(token const& tok)
 
 
 //G postfix-operator:
-//G     one of  '++' '--' '*' '&' '~' '$'
+//G     one of  '++' '--' '*' '&' '~' '$' '...'
 //G
 auto is_postfix_operator(lexeme l)
     -> bool
@@ -67,6 +67,7 @@ auto is_postfix_operator(lexeme l)
           case lexeme::Ampersand:
           case lexeme::Tilde:
           case lexeme::Dollar:
+          case lexeme::Ellipsis:
         return true;
     break;default:
         return false;
@@ -2346,11 +2347,11 @@ struct declaration_node
 {
     //  The capture_group is declared first, because it should outlive
     //  any owned postfix_expressions that could refer to it
-    capture_group captures;
-
-    source_position pos;
+    capture_group                        captures;
+    source_position                      pos;
+    bool                                 is_variadic = false;
     std::unique_ptr<unqualified_id_node> identifier;
-    accessibility access = accessibility::default_;
+    accessibility                        access = accessibility::default_;
 
     enum active : std::uint8_t { a_function, an_object, a_type, a_namespace, an_alias };
     std::variant<
@@ -6224,7 +6225,7 @@ private:
                     pos = start_pos;    // backtrack
                 }
                 else {
-                    error("expected , in parameter list", true, {}, true);
+                    error("expected ',' in parameter list", true, {}, true);
                 }
                 return {};
             }
@@ -6496,15 +6497,17 @@ private:
         bool                                 is_parameter          = false,
         bool                                 is_template_parameter = false,
         std::unique_ptr<unqualified_id_node> id                    = {},
-        accessibility                        access                = {}
+        accessibility                        access                = {},
+        bool                                 is_variadic           = false
     )
         -> std::unique_ptr<declaration_node>
     {
         auto n = std::make_unique<declaration_node>( current_declarations.back() );
         n->pos = start;
 
-        n->identifier = std::move(id);
-        n->access     = access;
+        n->identifier  = std::move(id);
+        n->access      = access;
+        n->is_variadic = is_variadic;
 
         //  If we're in a type scope and the next token is ';', treat this as if
         //  ': _;' without an initializer.
@@ -7164,6 +7167,12 @@ private:
                 return {};
             }
 
+            auto is_variadic = false;
+            if (curr().type() == lexeme::Ellipsis) {
+                is_variadic = true;
+                next();
+            }
+
             //  Provide some useful Cpp1->Cpp2 migration diagnostics for common mistakes
             //
             if (
@@ -7232,6 +7241,14 @@ private:
                     return {};
                 }
 
+                if (is_variadic) {
+                    errors.emplace_back(
+                        curr().position(),
+                        "an alias declaration may not be variadic"
+                    );
+                    return {};
+                }
+
                 n->pos        = start_pos;
                 n->identifier = std::move(id);
                 n->access     = access;
@@ -7247,7 +7264,8 @@ private:
                 is_parameter,
                 is_template_parameter,
                 std::move(id),
-                access
+                access,
+                is_variadic
             );
             if (!n) {
                 pos = start_pos;    // backtrack
@@ -7539,6 +7557,7 @@ public:
     {
         o << pre(indent) << "declaration [" << &n << "]\n";
         o << pre(indent+1) << "parent: [" << n.parent_declaration << "]\n";
+        o << pre(indent+1) << "is_variadic: [" << std::boolalpha << n.is_variadic << "]\n";
         switch (n.type.index()) {
         break;case declaration_node::a_function:
             o << pre(indent+1) << "function\n";

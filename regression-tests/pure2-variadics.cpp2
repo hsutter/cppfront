@@ -1,0 +1,17 @@
+
+x: <Ts...: type> type = {
+    tup: std::tuple<Ts...> = ();
+}
+
+make_string: <Args...: type> (forward args...: Args) -> _ = :std::string = args...;
+
+make: <T, Args...: type> (forward args...: Args) -> _ = :T = args...;
+
+main: ()
+= {
+    a: x<int, long, std::string> = ();
+
+    std::cout << std::string("xyzzy", 3) << "\n";
+    std::cout << make_string("plugh", :u8=3) << "\n";
+    std::cout << make<std::string>("abracadabra", :u8=3) << "\n";
+}
