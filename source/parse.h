@@ -5992,7 +5992,10 @@ private:
         auto modifier_plural = "";
 
         auto n = std::make_unique<parameter_declaration_node>();
-        n->pass = is_returns ? passing_style::out : passing_style::in;
+        n->pass =
+            is_returns   ? passing_style::out  :
+            is_statement ? passing_style::copy :
+            passing_style::in;
         n->pos  = curr().position();
 
         //  Handle optional this-specifier

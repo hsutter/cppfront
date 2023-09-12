@@ -68,7 +68,7 @@ compiler_services: @polymorphic_base @copyable type =
 
         //  First split this string into source_lines
         //
-        (copy newline_pos := source.find('\n')) 
+        (newline_pos := source.find('\n')) 
         if  source.ssize() > 1
             && newline_pos != source.npos
         {
@@ -826,7 +826,7 @@ basic_enum: (
 
     //  1. Gather: The names of all the user-written members, and find/compute the type
 
-    (copy first := true, copy value: i64 = -1)
+    (first := true, copy value: i64 = -1)
     for  t.get_members()
     next first = false  
     do   (m)
@@ -851,7 +851,7 @@ basic_enum: (
             }
 
             //  Adding local variable 'e' to work around a Clang warning
-            e: value_member_info = ( mo.name() as std::string, "", std::to_string(value) );
+            e: value_member_info = ( mo.name() as std::string, "", value as std::string );
             enumerators.push_back( e );
         }
     }
@@ -909,57 +909,55 @@ basic_enum: (
 
     //  Add the enumerators
     for enumerators do (e) {
-        t.require( t.add_member( "public (e.name)$ :== (strict_underlying_type)$( (e.value)$ );"),
+        t.require( t.add_member( "    public (e.name)$ :== (strict_underlying_type)$( (e.value)$ );"),
                    "could not add enumerator" + e.name);
     }
 
     //  Provide a 'size' function to count the number of enumerators
-    t.require( t.add_member( "size: () -> _ = (enumerators.ssize())$;"),
+    t.require( t.add_member( "    size: () -> _ = (enumerators.ssize())$;"),
                "could not add size");
 
     //  Provide a 'to_string' function to print enumerator name(s)
-    to_string: std::string = "to_string: (value: (strict_underlying_type)$) -> std::string = { \n";
-    to_string += "    ret: std::string = ();\n";
-    first := true;
+    (to_string: std::string = "    to_string: (value: (strict_underlying_type)$) -> std::string = { \n")
+    {
+        to_string += "    ret: std::string = ();\n";
 
-    if bitwise {
-        to_string += "    comma: std::string = ();\n";
-    }
-
-    for  enumerators  
-    next first = false  
-    do   (e) {
         if bitwise {
-            if first {
-                to_string += "    ret = \"(\";\n";
+            to_string += "    comma: std::string = ();\n";
+        }
+
+        (first := true)
+        for  enumerators  
+        next first = false  
+        do   (e) {
+            if bitwise {
+                if first {
+                    to_string += "    ret = \"(\";\n";
+                }
+                if e.name == "none" {   // a "none" flag should match if no bits set
+                    to_string += "    if value == (e.name)$ { ret += comma + \"(e.name)$\"; comma = \", \"; }\n";
+                }
+                else {                  // other flags need to be &-ed
+                    to_string += "    if (value & (e.name)$) == (e.name)$ { ret += comma + \"(e.name)$\"; comma = \", \"; }\n";
+                }
             }
-            if e.name == "none" {   // a "none" flag should match if no bits set
-                to_string += "    if value == (e.name)$ { ret += comma + \"(e.name)$\"; comma = \", \"; }\n";
+            else {
+                to_string += "if value == (e.name)$ { ret = \"(e.name)$\"; }\n";
             }
-            else {                  // other flags need to be &-ed
-                to_string += "    if (value & (e.name)$) == (e.name)$ { ret += comma + \"(e.name)$\"; comma = \", \"; }\n";
-            }
+        }
+
+        to_string += "    if ret.empty() { ret = \"(invalid (t.name())$ enumerator value)\"; }\n";
+
+        if bitwise {
+            to_string += "    return ret+\")\";\n}\n";
         }
         else {
-            else_: std::string = "else ";
-            if first {
-                else_ = "";
-            }
-            to_string += "    (else_)$if value == (e.name)$ { ret = \"(e.name)$\"; }\n";
+            to_string += "    return ret;\n}\n";
         }
-    }
 
-    to_string += "    if ret.empty() { ret = \"(invalid (t.name())$ enumerator value)\"; }\n";
-
-    if bitwise {
-        to_string += "    return ret+\")\";\n}\n";
+        t.require( t.add_member( to_string ),
+                   "could not add to_string static function");
     }
-    else {
-        to_string += "    return ret;\n}\n";
-    }
-
-    t.require( t.add_member( to_string ),
-               "could not add to_string static function");
 
     t.require( t.add_member( "    to_string: (this) -> std::string = { return (t.name())$::to_string(this); }"),
                "could not add to_string member function");
@@ -1061,9 +1059,9 @@ union: (inout t : meta::type_declaration)
 
     //  1. Gather: All the user-written members, and find/compute the max size
 
-    //(copy first := true)
+    (value := 0)
     for  t.get_members()
-    //next first = false  
+    next value++
     do   (m)
     {
         m.require( (m.is_public() || m.is_default_access()) && m.is_object(),
@@ -1071,43 +1069,103 @@ union: (inout t : meta::type_declaration)
 
         if m.is_object() {
             mo := m.as_object();
+            mo.require( mo.initializer().empty(),
+                        "a union alternative cannot have an initializer");
 
             //  Adding local variable 'e' to work around a Clang warning
-            e: value_member_info = ( mo.name() as std::string, mo.type(), mo.initializer() as std::string );
+            e: value_member_info = ( mo.name() as std::string, mo.type(), value as std::string );
             alternatives.push_back( e );
         }
+    }
+
+    discriminator_type: std::string = ();
+    if alternatives.ssize() < std::numeric_limits<i8>::max() {
+        discriminator_type = "i8";
+    }
+    else if alternatives.ssize() < std::numeric_limits<i16>::max() {
+        discriminator_type = "i16";
+    }
+    else if alternatives.ssize() < std::numeric_limits<i32>::max() {
+        discriminator_type = "i32";
+    }
+    else {
+        discriminator_type = "i64";
     }
 
 
     //  2. Replace: Erase the contents and replace with modified contents
 
     t.remove_all_members();
-    
-    //  Compute the size
-    Size: std::string = "Size :== cpp2::max( ";
 
-    (copy comma: std::string = "")
-    for  alternatives  
-    next comma = ", "  
-    do   (e) {
-        Size += comma + "sizeof((e.type)$)";
+    //  Provide storage
+    (storage: std::string = "    storage__: std::array<std::byte, cpp2::max( ")
+    {
+
+        (comma: std::string = "")
+        for  alternatives  
+        next comma = ", "  
+        do   (e) {
+            storage += comma + "sizeof((e.type)$)";
+        }
+
+        storage += " )> = ();\n";
+        t.require( t.add_member( storage ),
+                   "could not add storage");
     }
 
-    Size += " );\n";
-    t.require( t.add_member( Size ),
-               "could not add Size");
+    //  Provide discriminator
+    t.require( t.add_member( "    discriminator__: (discriminator_type)$ = -1;\n"),
+               "could not add discriminator");
 
+    //  Add the alternatives: is_alternative, get_alternative, and set_alternative
+    for alternatives 
+    do  (a)
+    {
+        t.require( t.add_member( "    public is_(a.name)$: (this) -> bool = discriminator__ == (a.value)$;\n"),
+                   "could not add is_" + a.name);
 
+        t.require( t.add_member( "    public get_(a.name)$: (this) -> forward _ [[pre: is_(a.name)$()]] = reinterpret_cast<* const (a.type)$>(storage__&)*;\n"),
+                   "could not add get_" + a.name);
 
-    //  TODO
+        t.require( t.add_member( "    public get_(a.name)$: (inout this) -> forward _ [[pre: is_(a.name)$()]] = reinterpret_cast<*(a.type)$>(storage__&)*;\n"),
+                   "could not add get_" + a.name);
 
+        t.require( t.add_member( "    public set_(a.name)$: (inout this, forward value: (a.type)$) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(storage__&), value); } else { reinterpret_cast<*(a.type)$>(storage__&)* = value; } discriminator__ = (a.value)$; }\n"),
+                   "could not add set_" + a.name);
+    }
 
+    ////  Add operator<<
+    //(stream: std::string = "    operator<<: (inout o: std::ostream, that) -> forward std::ostream = {\n")
+    //{
+    //    (first := true)
+    //    for  alternatives 
+    //    next first = false  
+    //    do   (a) {
+    //        stream += "if discriminator__ == (a.value)$ { o << reinterpret_cast<*(a.type)$>(storage__&)*; }\n";
+    //    }
 
-    ////  3. A basic_enum is-a value
+    //    stream += "    return o;\n}\n";
+    //    t.require( t.add_member( stream ),
+    //               "could not add operator<<");
+    //}
 
-    //t.value();
+    //  Add destroy
+    (destroy: std::string = "    private destroy: (inout this) = {\n")
+    {
+        for  alternatives 
+        do   (a) {
+            destroy += "if discriminator__ == (a.value)$ { std::destroy_at( reinterpret_cast<*(a.type)$>(storage__&) ); }\n";
+        }
+
+        destroy += "}\n";
+        t.require( t.add_member( destroy ),
+                   "could not add destroy");
+    }
+
+    //  Add the destructor
+    t.require( t.add_member( "    operator=: (move this) = { destroy(); } " ),
+               "could not add destructor");
 }
-
 
 
 //=======================================================================

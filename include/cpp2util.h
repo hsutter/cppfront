@@ -1521,6 +1521,20 @@ inline auto to_string(std::tuple<Ts...> const& t) -> std::string
 
 //-----------------------------------------------------------------------
 //
+//  and "as std::string" for the same cases
+//
+template< typename C >
+auto as(auto& x) -> C
+    requires (std::is_same_v<C, std::string>
+              && requires { cpp2::to_string(x); })
+{
+    return cpp2::to_string(x);
+}
+
+
+
+//-----------------------------------------------------------------------
+//
 //  args: see main() arguments as vector<string_view>
 //
 //-----------------------------------------------------------------------

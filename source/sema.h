@@ -1150,13 +1150,6 @@ public:
                     );
                     return false;
                 }
-                if (this_index != 0) {
-                    errors.emplace_back(
-                        n.position(),
-                        "'that' must come after an initial 'this' parameter"
-                    );
-                    return false;
-                }
             }
         }
 

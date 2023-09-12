@@ -96,70 +96,61 @@ auto main() -> int;
 
     std::string ret {}; 
     if (value == diamonds) {ret = "diamonds";}
-    else {if (value == hearts) {ret = "hearts";}
-    else {if (value == spades) {ret = "spades";}
-    else {if (value == clubs) {ret = "clubs";}
-    else {if (value == grand) {ret = "grand";}
-    else {if (value == null) {ret = "null";}}}}}}
-if (CPP2_UFCS_0(empty, ret)) {ret = "(invalid skat_game enumerator value)";}
-return ret; 
-}
+    if (value == hearts) {ret = "hearts";}
+    if (value == spades) {ret = "spades";}
+    if (value == clubs) {ret = "clubs";}
+    if (value == grand) {ret = "grand";}
+    if (value == null) {ret = "null";}
+    if (CPP2_UFCS_0(empty, ret)) {ret = "(invalid skat_game enumerator value)";}
+    return ret; 
+    }
 
-[[nodiscard]] auto skat_game::to_string() const& -> std::string{return skat_game::to_string((*this)); }
+    [[nodiscard]] auto skat_game::to_string() const& -> std::string{return skat_game::to_string((*this)); }
 skat_game::skat_game(skat_game const& that)
                                 : cpp2::strict_value<cpp2::i8,skat_game,0>{ static_cast<cpp2::strict_value<cpp2::i8,skat_game,0> const&>(that) }{}
 skat_game::skat_game()
                           : cpp2::strict_value<cpp2::i8,skat_game,0>{  }{}
 rgb::rgb(cpp2::in<cpp2::strict_value<cpp2::i8,rgb,0>> value)
                                                                             : cpp2::strict_value<cpp2::i8,rgb,0>{ value }{}
-
-
-
 [[nodiscard]] auto rgb::size() -> auto { return 3; }
 [[nodiscard]] auto rgb::to_string(cpp2::in<cpp2::strict_value<cpp2::i8,rgb,0>> value) -> std::string{
 
-std::string ret {}; 
-if (value == red) {ret = "red";}
-else {if (value == green) {ret = "green";}
-else {if (value == blue) {ret = "blue";}}}
-if (CPP2_UFCS_0(empty, ret)) {ret = "(invalid rgb enumerator value)";}
-return ret; 
-}
+    std::string ret {}; 
+    if (value == red) {ret = "red";}
+    if (value == green) {ret = "green";}
+    if (value == blue) {ret = "blue";}
+    if (CPP2_UFCS_0(empty, ret)) {ret = "(invalid rgb enumerator value)";}
+    return ret; 
+    }
 
-[[nodiscard]] auto rgb::to_string() const& -> std::string{return rgb::to_string((*this)); }
+    [[nodiscard]] auto rgb::to_string() const& -> std::string{return rgb::to_string((*this)); }
 rgb::rgb(rgb const& that)
                                 : cpp2::strict_value<cpp2::i8,rgb,0>{ static_cast<cpp2::strict_value<cpp2::i8,rgb,0> const&>(that) }{}
 rgb::rgb()
                           : cpp2::strict_value<cpp2::i8,rgb,0>{  }{}
 file_attributes::file_attributes(cpp2::in<cpp2::strict_value<cpp2::u8,file_attributes,1>> value)
                                                                                         : cpp2::strict_value<cpp2::u8,file_attributes,1>{ value }{}
-
-
-
-
-
 [[nodiscard]] auto file_attributes::size() -> auto { return 5; }
 [[nodiscard]] auto file_attributes::to_string(cpp2::in<cpp2::strict_value<cpp2::u8,file_attributes,1>> value) -> std::string{
 
-std::string ret {}; 
+    std::string ret {}; 
 
-std::string comma {}; 
-ret = "(";
-if ((value & cached) == cached) {ret += comma + "cached";comma = ", ";}
-if ((value & current) == current) {ret += comma + "current";comma = ", ";}
-if ((value & obsolete) == obsolete) {ret += comma + "obsolete";comma = ", ";}
-if ((value & cached_and_current) == cached_and_current) {ret += comma + "cached_and_current";comma = ", ";}
-if (value == none) {ret += comma + "none";comma = ", ";}
-if (CPP2_UFCS_0(empty, ret)) {ret = "(invalid file_attributes enumerator value)";}
-return ret + ")"; 
-}
+    std::string comma {}; 
+    ret = "(";
+    if ((value & cached) == cached) {ret += comma + "cached";comma = ", ";}
+    if ((value & current) == current) {ret += comma + "current";comma = ", ";}
+    if ((value & obsolete) == obsolete) {ret += comma + "obsolete";comma = ", ";}
+    if ((value & cached_and_current) == cached_and_current) {ret += comma + "cached_and_current";comma = ", ";}
+    if (value == none) {ret += comma + "none";comma = ", ";}
+    if (CPP2_UFCS_0(empty, ret)) {ret = "(invalid file_attributes enumerator value)";}
+    return ret + ")"; 
+    }
 
-[[nodiscard]] auto file_attributes::to_string() const& -> std::string{return file_attributes::to_string((*this)); }
+    [[nodiscard]] auto file_attributes::to_string() const& -> std::string{return file_attributes::to_string((*this)); }
 file_attributes::file_attributes(file_attributes const& that)
                                 : cpp2::strict_value<cpp2::u8,file_attributes,1>{ static_cast<cpp2::strict_value<cpp2::u8,file_attributes,1> const&>(that) }{}
 file_attributes::file_attributes()
                           : cpp2::strict_value<cpp2::u8,file_attributes,1>{  }{}
-
 #line 24 "pure2-enum.cpp2"
 auto main() -> int{
     // x : skat_game = 9;               // error, can't construct skat_game from integer

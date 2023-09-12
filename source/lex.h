@@ -1653,12 +1653,6 @@ auto lex_line(
                             "'const_cast' is not supported in Cpp2 - the current C++ best practice is to never cast away const, and that is const_cast's only effective use"
                         );
                     }
-                    if (tokens.back() == "reinterpret_cast") {
-                        errors.emplace_back(
-                            source_position(lineno, i),
-                            "'reinterpret_cast' is not supported in Cpp2 - use std::bit_cast instead"
-                        );
-                    }
                     if (tokens.back() == "static_cast") {
                         errors.emplace_back(
                             source_position(lineno, i),

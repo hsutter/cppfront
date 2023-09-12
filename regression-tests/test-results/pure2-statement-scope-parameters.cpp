@@ -24,7 +24,7 @@ auto main(int const argc_, char** argv_) -> int{
 #line 3 "pure2-statement-scope-parameters.cpp2"
     auto local_int {42}; 
 {
-auto const& i = local_int;
+auto i = local_int;
 
     //  'in' (read-only) statement scope variable
 #line 6 "pure2-statement-scope-parameters.cpp2"

@@ -4480,6 +4480,7 @@ public:
         if (
             printer.get_phase() == printer.phase2_func_defs
             && n.parent_is_type()
+//            && !n.name()->as_string_view().starts_with("operator")
             )
         {
             //  If this function is inside templated type(s),
@@ -5530,12 +5531,17 @@ public:
                     }
                 }
                 //  Else if there isn't a 'this' parameter, but this function is in a type scope,
-                //  it's a Cpp1 static function so we need to say so (on the declaration only)
+                //  it's a Cpp1 non-member function so we need to say so (on the declaration only)
                 else if (
                     is_in_type
                     && printer.get_phase() != printer.phase2_func_defs
                     ) {
-                    prefix += "static ";
+                    //if (n.name()->as_string_view().starts_with("operator")) {
+                    //    prefix += "friend ";
+                    //}
+                    //else {
+                        prefix += "static ";
+                    //}
                 }
 
                 //  If there's a return type, it's [[nodiscard]] implicitly and all the time
