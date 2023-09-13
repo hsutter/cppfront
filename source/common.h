@@ -359,6 +359,7 @@ auto is_identifier_continue(char c)
 }
 
 //G identifier:
+//G     '__identifier__' keyword    [Note: without whitespace before the keyword]
 //G     identifier-start
 //G     identifier identifier-continue
 //G     'operator' operator

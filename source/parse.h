@@ -7106,7 +7106,7 @@ private:
 
 
     //G declaration:
-    //G     access-specifier? identifier unnamed-declaration
+    //G     access-specifier? identifier '...'? unnamed-declaration
     //G     access-specifier? identifier alias
     //G
     //G access-specifier:

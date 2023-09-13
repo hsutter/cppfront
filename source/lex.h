@@ -306,6 +306,16 @@ public:
         v.start(*this, depth);
     }
 
+    auto remove_prefix_if(std::string_view prefix) {
+        if (
+            sv.size() > prefix.size()
+            && sv.starts_with(prefix)
+            )
+        {
+            sv.remove_prefix(prefix.size());
+        }
+    }
+
 private:
     std::string_view sv;
     source_position  pos;
@@ -1682,6 +1692,9 @@ auto lex_line(
                     else
                     {
                         store(j, lexeme::Identifier);
+
+                        tokens.back().remove_prefix_if("__identifier__");
+
                         if (tokens.back() == "NULL") {
                             errors.emplace_back(
                                 source_position(lineno, i),
