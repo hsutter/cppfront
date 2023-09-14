@@ -820,24 +820,10 @@ public:
     } \
 }
 
-#if 1 // When not rebasing, enable this branch.
 #define CPP2_UFCS(...)                   CPP2_UFCS_(&,,__VA_ARGS__)
 #define CPP2_UFCS_TEMPLATE(...)          CPP2_UFCS_(&,template,__VA_ARGS__)
 #define CPP2_UFCS_NONLOCAL(...)          CPP2_UFCS_(,,__VA_ARGS__)
 #define CPP2_UFCS_TEMPLATE_NONLOCAL(...) CPP2_UFCS_(,template,__VA_ARGS__)
-#else // When rebasing, enable this branch.
-// `git restore --staged` and `git restore` conflicting sources.
-// Compile `cppfront`. Regenerate conflicting sources. Disable this branch. Complete rebase.
-#define CPP2_UFCS_REMPARENS(...) __VA_ARGS__
-#define CPP2_UFCS(FUNCNAME,PARAM1,...) CPP2_UFCS_(&,,FUNCNAME)(PARAM1,__VA_ARGS__)
-#define CPP2_UFCS_0(FUNCNAME,PARAM1) CPP2_UFCS_(&,,FUNCNAME)(PARAM1)
-#define CPP2_UFCS_TEMPLATE(FUNCNAME,TEMPARGS,PARAM1,...) CPP2_UFCS_(&,template,FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS)(PARAM1,__VA_ARGS__)
-#define CPP2_UFCS_TEMPLATE_0(FUNCNAME,TEMPARGS,PARAM1) CPP2_UFCS_(&,template,FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS)(PARAM1)
-#define CPP2_UFCS_NONLOCAL(FUNCNAME,PARAM1,...) CPP2_UFCS_(,,FUNCNAME)(PARAM1,__VA_ARGS__)
-#define CPP2_UFCS_0_NONLOCAL(FUNCNAME,PARAM1) CPP2_UFCS_(,,FUNCNAME)(PARAM1)
-#define CPP2_UFCS_TEMPLATE_NONLOCAL(FUNCNAME,TEMPARGS,PARAM1,...) CPP2_UFCS_(,template,FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS)(PARAM1,__VA_ARGS__)
-#define CPP2_UFCS_TEMPLATE_0_NONLOCAL(FUNCNAME,TEMPARGS,PARAM1) CPP2_UFCS_(,template,FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS)(PARAM1)
-#endif
 
 
 //-----------------------------------------------------------------------
