@@ -826,7 +826,9 @@ basic_enum: (
 
     //  1. Gather: The names of all the user-written members, and find/compute the type
 
-    (first := true, copy value: i64 = -1)
+    found_non_numeric := false;
+
+    (first := true, value: std::string = "-1")
     for  t.get_members()
     next first = false  
     do   (m)
@@ -841,25 +843,36 @@ basic_enum: (
                 underlying_type = mo.type();
             }
 
-            nextval( value, mo.initializer() );
+            init := mo.initializer();
 
-            if value < min_value {
-                min_value = value;
+            is_default_or_numeric := is_empty_or_a_decimal_number(init);
+            found_non_numeric |= !init.empty() && !is_default_or_numeric;
+            m.require( !is_default_or_numeric || !found_non_numeric || mo.has_name("none"),
+                "(mo.name())$: enumerators with non-numeric values must come after all default and numeric values");
+
+            nextval( value, init );
+
+            v := std::strtoll(value[0]&, nullptr, 10);  // for non-numeric values we'll just get 0 which is okay for now
+            if v < min_value {
+                min_value = v;
             }
-            if value > max_value {
-                max_value = value;
+            if v > max_value {
+                max_value = v;
             }
 
             //  Adding local variable 'e' to work around a Clang warning
-            e: value_member_info = ( mo.name() as std::string, "", value as std::string );
+            e: value_member_info = ( mo.name() as std::string, "", value );
             enumerators.push_back( e );
         }
     }
 
     //  Compute the default underlying type, if it wasn't explicitly specified
-    if underlying_type == "" {
-        if !bitwise {
+    if underlying_type == "" 
+    {
+        t.require( !found_non_numeric,
+            "if you write an enumerator with a non-numeric value, you must specify the underlying type");
 
+        if !bitwise {
             if min_value >= std::numeric_limits<i8>::min() && max_value <= std::numeric_limits<i8>::max() {
                 underlying_type = "i8";
             }
@@ -877,7 +890,7 @@ basic_enum: (
             }
         }
         else {
-            umax := max_value as u64;
+            umax := max_value * 2 as u64;
             if umax <= std::numeric_limits<u8>::max() {
                 underlying_type = "u8";
             }
@@ -930,19 +943,21 @@ basic_enum: (
         for  enumerators  
         next first = false  
         do   (e) {
-            if bitwise {
-                if first {
-                    to_string += "    ret = \"(\";\n";
+            if e.name != "_" {  // ignore unnamed values
+                if bitwise {
+                    if first {
+                        to_string += "    ret = \"(\";\n";
+                    }
+                    if e.name == "none" {   // a "none" flag should match if no bits set
+                        to_string += "    if value == (e.name)$ { ret += comma + \"(e.name)$\"; comma = \", \"; }\n";
+                    }
+                    else {                  // other flags need to be &-ed
+                        to_string += "    if (value & (e.name)$) == (e.name)$ { ret += comma + \"(e.name)$\"; comma = \", \"; }\n";
+                    }
                 }
-                if e.name == "none" {   // a "none" flag should match if no bits set
-                    to_string += "    if value == (e.name)$ { ret += comma + \"(e.name)$\"; comma = \", \"; }\n";
+                else {
+                    to_string += "if value == (e.name)$ { ret = \"(e.name)$\"; }\n";
                 }
-                else {                  // other flags need to be &-ed
-                    to_string += "    if (value & (e.name)$) == (e.name)$ { ret += comma + \"(e.name)$\"; comma = \", \"; }\n";
-                }
-            }
-            else {
-                to_string += "if value == (e.name)$ { ret = \"(e.name)$\"; }\n";
             }
         }
 
@@ -982,11 +997,12 @@ enum: (inout t: meta::type_declaration) =
 {
     //  Let basic_enum do its thing, with an incrementing value generator
     _ = t.basic_enum(
-        :(inout value: i64, specified_value: std::string) = {
+        :(inout value: std::string, specified_value: std::string) = {
             if !specified_value.empty() {
-                value = std::strtoll(specified_value[0]&, nullptr, 10);
+                value = specified_value;
             } else {
-                value++;
+                v := std::strtoll(value[0]&, nullptr, 10);
+                value = (v + 1) as std::string;
             }
         },
         false   // disable bitwise operations
@@ -1012,15 +1028,16 @@ flag_enum: (inout t: meta::type_declaration) =
 
     //  Let basic_enum do its thing, with a power-of-two value generator
     _ = t.basic_enum(
-        :(inout value: i64, specified_value: std::string) = {
+        :(inout value: std::string, specified_value: std::string) = {
             if !specified_value.empty() {
-                value = std::strtoll(specified_value[0]&, nullptr, 10);
+                value = specified_value;
             } else {
-                if value < 1 {
-                    value = 1;
+                v := std::strtoll(value[0]&, nullptr, 10);
+                if v < 1 {
+                    value = "1";
                 }
                 else {
-                    value *= 2;
+                    value = (v * 2) as std::string;
                 }
             }
         },
@@ -1130,8 +1147,11 @@ union: (inout t : meta::type_declaration)
         t.require( t.add_member( "    public get_(a.name)$: (inout this) -> forward _ [[pre: is_(a.name)$()]] = reinterpret_cast<*(a.type)$>(storage__&)*;\n"),
                    "could not add get_" + a.name);
 
-        t.require( t.add_member( "    public set_(a.name)$: (inout this, forward value: (a.type)$) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(storage__&), value); } else { reinterpret_cast<*(a.type)$>(storage__&)* = value; } discriminator__ = (a.value)$; }\n"),
+        t.require( t.add_member( "    public set_(a.name)$: (inout this, value: (a.type)$) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(storage__&), value); } else { reinterpret_cast<*(a.type)$>(storage__&)* = value; } discriminator__ = (a.value)$; }\n"),
                    "could not add set_" + a.name);
+
+        //t.require( t.add_member( "    public set_(a.name)$: (inout this, forward args...: _) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(storage__&), args...); } else { reinterpret_cast<*(a.type)$>(storage__&)* = value; } discriminator__ = :(a.type)$ = (args...); }\n"),
+        //           "could not add variadic set_" + a.name);
     }
 
     ////  Add operator<<

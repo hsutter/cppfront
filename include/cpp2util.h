@@ -1613,7 +1613,7 @@ public:
     template <typename U> requires std::is_convertible_v<T,U>
     explicit constexpr operator U()       { return t; }
 
-    auto operator<=>( strict_value const& ) const -> std::strong_ordering = default;
+    constexpr auto operator<=>( strict_value const& ) const -> std::strong_ordering = default;
 
     auto to_string() const -> std::string { return Tag::to_string(*this); }
 
@@ -1621,18 +1621,18 @@ public:
 
     //  Bitwise operations
 
-    auto operator|=( strict_value const& that )       -> strict_value requires BitwiseOps { t |= that.t; return *this; }
-    auto operator&=( strict_value const& that )       -> strict_value requires BitwiseOps { t &= that.t; return *this; }
-    auto operator^=( strict_value const& that )       -> strict_value requires BitwiseOps { t ^= that.t; return *this; }
+    constexpr auto operator|=( strict_value const& that )       -> strict_value requires BitwiseOps { t |= that.t; return *this; }
+    constexpr auto operator&=( strict_value const& that )       -> strict_value requires BitwiseOps { t &= that.t; return *this; }
+    constexpr auto operator^=( strict_value const& that )       -> strict_value requires BitwiseOps { t ^= that.t; return *this; }
 
-    auto operator| ( strict_value const& that ) const -> strict_value requires BitwiseOps { return strict_value(t | that.t); }
-    auto operator& ( strict_value const& that ) const -> strict_value requires BitwiseOps { return strict_value(t & that.t); }
-    auto operator^ ( strict_value const& that ) const -> strict_value requires BitwiseOps { return strict_value(t ^ that.t); }
+    constexpr auto operator| ( strict_value const& that ) const -> strict_value requires BitwiseOps { return strict_value(t | that.t); }
+    constexpr auto operator& ( strict_value const& that ) const -> strict_value requires BitwiseOps { return strict_value(t & that.t); }
+    constexpr auto operator^ ( strict_value const& that ) const -> strict_value requires BitwiseOps { return strict_value(t ^ that.t); }
 
-    auto has       ( strict_value const& that ) const -> bool         requires BitwiseOps { return t & that.t; }
+    constexpr auto has       ( strict_value const& that ) const -> bool         requires BitwiseOps { return t & that.t; }
 
-    auto set       ( strict_value const& that )       -> void         requires BitwiseOps { t |=  that.t; }
-    auto clear     ( strict_value const& that )       -> void         requires BitwiseOps { t &= ~that.t; }
+    constexpr auto set       ( strict_value const& that )       -> void         requires BitwiseOps { t |=  that.t; }
+    constexpr auto clear     ( strict_value const& that )       -> void         requires BitwiseOps { t &= ~that.t; }
 };
 
 template <typename T, typename Tag>

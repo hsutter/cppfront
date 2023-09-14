@@ -38,7 +38,7 @@ class alias_declaration;
 #line 807 "reflect.h2"
 class value_member_info;
 
-#line 1173 "reflect.h2"
+#line 1193 "reflect.h2"
 }
 }
 
@@ -627,7 +627,7 @@ struct basic_enum__ret { std::string underlying_type; std::string strict_underly
     cpp2::in<bool> bitwise
     ) -> basic_enum__ret;
 
-#line 972 "reflect.h2"
+#line 987 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //    "An enum[...] is a totally ordered value type that stores a
@@ -639,7 +639,7 @@ struct basic_enum__ret { std::string underlying_type; std::string strict_underly
 //
 auto cpp2_enum(meta::type_declaration& t) -> void;
 
-#line 997 "reflect.h2"
+#line 1013 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "flag_enum expresses an enumeration that stores values 
@@ -652,7 +652,7 @@ auto cpp2_enum(meta::type_declaration& t) -> void;
 //
 auto flag_enum(meta::type_declaration& t) -> void;
 
-#line 1032 "reflect.h2"
+#line 1049 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "As with void*, programmers should know that unions [...] are
@@ -679,7 +679,7 @@ auto flag_enum(meta::type_declaration& t) -> void;
 
 auto cpp2_union(meta::type_declaration& t) -> void;
 
-#line 1171 "reflect.h2"
+#line 1191 "reflect.h2"
 //=======================================================================
 //  Switch to Cpp1 and close subnamespace meta
 }
@@ -1367,13 +1367,15 @@ auto cpp2_struct(meta::type_declaration& t) -> void
     std::vector<value_member_info> enumerators {}; 
     cpp2::i64 min_value {0}; 
     cpp2::i64 max_value {0}; 
-{
-auto first = true;
-cpp2::i64 value = -1;
 
     //  1. Gather: The names of all the user-written members, and find/compute the type
 
-#line 830 "reflect.h2"
+    auto found_non_numeric {false}; 
+{
+auto first = true;
+std::string value = "-1";
+
+#line 832 "reflect.h2"
     for ( 
 
           auto const& m : CPP2_UFCS_0(get_members, t) )  { do 
@@ -1388,27 +1390,38 @@ cpp2::i64 value = -1;
                 underlying_type = CPP2_UFCS_0(type, mo);
             }
 
-            nextval(value, CPP2_UFCS_0(initializer, mo));
+            auto init {CPP2_UFCS_0(initializer, mo)}; 
 
-            if (cpp2::cmp_less(value,min_value)) {
-                min_value = value;
+            auto is_default_or_numeric {is_empty_or_a_decimal_number(init)}; 
+            found_non_numeric |= !(CPP2_UFCS_0(empty, init)) && !(is_default_or_numeric);
+            CPP2_UFCS(require, m, !(is_default_or_numeric) || !(found_non_numeric) || CPP2_UFCS(has_name, mo, "none"), 
+                cpp2::to_string(CPP2_UFCS_0(name, mo)) + ": enumerators with non-numeric values must come after all default and numeric values");
+
+            nextval(value, init);
+
+            auto v {std::strtoll(&cpp2::assert_in_bounds(value, 0), nullptr, 10)}; // for non-numeric values we'll just get 0 which is okay for now
+            if (cpp2::cmp_less(v,min_value)) {
+                min_value = v;
             }
-            if (cpp2::cmp_greater(value,max_value)) {
-                max_value = value;
+            if (cpp2::cmp_greater(v,max_value)) {
+                max_value = v;
             }
 
             //  Adding local variable 'e' to work around a Clang warning
-            value_member_info e {cpp2::as_<std::string>(CPP2_UFCS_0(name, mo)), "", cpp2::as_<std::string>(value)}; 
+            value_member_info e {cpp2::as_<std::string>(CPP2_UFCS_0(name, mo)), "", value}; 
             CPP2_UFCS(push_back, enumerators, e);
         }
     } while (false); first = false; }
 }
 
     //  Compute the default underlying type, if it wasn't explicitly specified
-#line 860 "reflect.h2"
-    if (underlying_type == "") {
-        if (!(bitwise)) {
+#line 870 "reflect.h2"
+    if (underlying_type == "") 
+    {
+        CPP2_UFCS(require, t, !(std::move(found_non_numeric)), 
+            "if you write an enumerator with a non-numeric value, you must specify the underlying type");
 
+        if (!(bitwise)) {
             if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i8>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i8>::max())) {
                 underlying_type = "i8";
             }
@@ -1426,7 +1439,7 @@ cpp2::i64 value = -1;
             }}}}
         }
         else {
-            auto umax {cpp2::as_<cpp2::u64>(max_value)}; 
+            auto umax {max_value * cpp2::as_<cpp2::u64, 2>()}; 
             if (cpp2::cmp_less_eq(umax,std::numeric_limits<cpp2::u8>::max())) {
                 underlying_type = "u8";
             }
@@ -1444,7 +1457,7 @@ cpp2::i64 value = -1;
 
     strict_underlying_type.construct("cpp2::strict_value<" + cpp2::to_string(underlying_type) + "," + cpp2::to_string(CPP2_UFCS_0(name, t)) + "," + cpp2::to_string(bitwise) + ">");
 
-#line 899 "reflect.h2"
+#line 912 "reflect.h2"
     //  2. Replace: Erase the contents and replace with modified contents
 
     CPP2_UFCS_0(remove_all_members, t);
@@ -1470,7 +1483,7 @@ std::string to_string = "    to_string: (value: " + cpp2::to_string(strict_under
 
     //  Provide a 'to_string' function to print enumerator name(s)
 
-#line 922 "reflect.h2"
+#line 935 "reflect.h2"
     {
         to_string += "    ret: std::string = ();\n";
 
@@ -1480,28 +1493,30 @@ std::string to_string = "    to_string: (value: " + cpp2::to_string(strict_under
 {
 auto first = true;
 
-#line 930 "reflect.h2"
+#line 943 "reflect.h2"
         for ( 
 
               auto const& e : enumerators )  { do {
-            if (bitwise) {
-                if (first) {
-                    to_string += "    ret = \"(\";\n";
+            if (e.name != "_") {// ignore unnamed values
+                if (bitwise) {
+                    if (first) {
+                        to_string += "    ret = \"(\";\n";
+                    }
+                    if (e.name == "none") { // a "none" flag should match if no bits set
+                        to_string += "    if value == " + cpp2::to_string(e.name) + " { ret += comma + \"" + cpp2::to_string(e.name) + "\"; comma = \", \"; }\n";
+                    }
+                    else {                  // other flags need to be &-ed
+                        to_string += "    if (value & " + cpp2::to_string(e.name) + ") == " + cpp2::to_string(e.name) + " { ret += comma + \"" + cpp2::to_string(e.name) + "\"; comma = \", \"; }\n";
+                    }
                 }
-                if (e.name == "none") { // a "none" flag should match if no bits set
-                    to_string += "    if value == " + cpp2::to_string(e.name) + " { ret += comma + \"" + cpp2::to_string(e.name) + "\"; comma = \", \"; }\n";
+                else {
+                    to_string += "if value == " + cpp2::to_string(e.name) + " { ret = \"" + cpp2::to_string(e.name) + "\"; }\n";
                 }
-                else {                  // other flags need to be &-ed
-                    to_string += "    if (value & " + cpp2::to_string(e.name) + ") == " + cpp2::to_string(e.name) + " { ret += comma + \"" + cpp2::to_string(e.name) + "\"; comma = \", \"; }\n";
-                }
-            }
-            else {
-                to_string += "if value == " + cpp2::to_string(e.name) + " { ret = \"" + cpp2::to_string(e.name) + "\"; }\n";
             }
         } while (false); first = false; }
 }
 
-#line 949 "reflect.h2"
+#line 964 "reflect.h2"
         to_string += "    if ret.empty() { ret = \"(invalid " + cpp2::to_string(CPP2_UFCS_0(name, t)) + " enumerator value)\"; }\n";
 
         if (bitwise) {
@@ -1516,33 +1531,34 @@ auto first = true;
     }
 }
 
-#line 962 "reflect.h2"
+#line 977 "reflect.h2"
     CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "    to_string: (this) -> std::string = { return " + cpp2::to_string(CPP2_UFCS_0(name, t)) + "::to_string(this); }"), 
                "could not add to_string member function");
 
-#line 966 "reflect.h2"
+#line 981 "reflect.h2"
     //  3. A basic_enum is-a value type
 
     CPP2_UFCS_0(basic_value, t);
 return  { std::move(underlying_type), std::move(strict_underlying_type.value()) }; }
 
-#line 981 "reflect.h2"
+#line 996 "reflect.h2"
 auto cpp2_enum(meta::type_declaration& t) -> void
 {
     //  Let basic_enum do its thing, with an incrementing value generator
     static_cast<void>(CPP2_UFCS(basic_enum, t, 
-        [](cpp2::i64& value, cpp2::in<std::string> specified_value) -> void{
+        [](std::string& value, cpp2::in<std::string> specified_value) -> void{
             if (!(CPP2_UFCS_0(empty, specified_value))) {
-                value = std::strtoll(&cpp2::assert_in_bounds(specified_value, 0), nullptr, 10);
+                value = specified_value;
             }else {
-                ++value;
+                auto v {std::strtoll(&cpp2::assert_in_bounds(value, 0), nullptr, 10)}; 
+                value = cpp2::as_<std::string>((std::move(v) + 1));
             }
         }, 
         false   // disable bitwise operations
     ));
 }
 
-#line 1007 "reflect.h2"
+#line 1023 "reflect.h2"
 auto flag_enum(meta::type_declaration& t) -> void
 {
     //  Add "none" member as a regular name to signify "no flags set"
@@ -1551,15 +1567,16 @@ auto flag_enum(meta::type_declaration& t) -> void
 
     //  Let basic_enum do its thing, with a power-of-two value generator
     static_cast<void>(CPP2_UFCS(basic_enum, t, 
-        [](cpp2::i64& value, cpp2::in<std::string> specified_value) -> void{
+        [](std::string& value, cpp2::in<std::string> specified_value) -> void{
             if (!(CPP2_UFCS_0(empty, specified_value))) {
-                value = std::strtoll(&cpp2::assert_in_bounds(specified_value, 0), nullptr, 10);
+                value = specified_value;
             }else {
-                if (cpp2::cmp_less(value,1)) {
-                    value = 1;
+                auto v {std::strtoll(&cpp2::assert_in_bounds(value, 0), nullptr, 10)}; 
+                if (cpp2::cmp_less(v,1)) {
+                    value = "1";
                 }
                 else {
-                    value *= 2;
+                    value = cpp2::as_<std::string>((std::move(v) * 2));
                 }
             }
         }, 
@@ -1567,7 +1584,7 @@ auto flag_enum(meta::type_declaration& t) -> void
     ));
 }
 
-#line 1056 "reflect.h2"
+#line 1073 "reflect.h2"
 auto cpp2_union(meta::type_declaration& t) -> void
 {
     std::vector<value_member_info> alternatives {}; 
@@ -1576,7 +1593,7 @@ auto value = 0;
 
     //  1. Gather: All the user-written members, and find/compute the max size
 
-#line 1063 "reflect.h2"
+#line 1080 "reflect.h2"
     for ( 
 
           auto const& m : CPP2_UFCS_0(get_members, t) )  { do 
@@ -1596,7 +1613,7 @@ auto value = 0;
     } while (false); ++value; }
 }
 
-#line 1081 "reflect.h2"
+#line 1098 "reflect.h2"
     std::string discriminator_type {}; 
     if (cpp2::cmp_less(CPP2_UFCS_0(ssize, alternatives),std::numeric_limits<cpp2::i8>::max())) {
         discriminator_type = "i8";
@@ -1611,7 +1628,7 @@ auto value = 0;
         discriminator_type = "i64";
     }}}
 
-#line 1096 "reflect.h2"
+#line 1113 "reflect.h2"
     //  2. Replace: Erase the contents and replace with modified contents
 
     CPP2_UFCS_0(remove_all_members, t);
@@ -1620,12 +1637,12 @@ std::string storage = "    storage__: std::array<std::byte, cpp2::max( ";
 
     //  Provide storage
 
-#line 1102 "reflect.h2"
+#line 1119 "reflect.h2"
     {
 {
 std::string comma = "";
 
-#line 1105 "reflect.h2"
+#line 1122 "reflect.h2"
         for ( 
 
               auto const& e : alternatives )  { do {
@@ -1633,7 +1650,7 @@ std::string comma = "";
         } while (false); comma = ", "; }
 }
 
-#line 1111 "reflect.h2"
+#line 1128 "reflect.h2"
         storage += " )> = ();\n";
         CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, storage), 
                    "could not add storage");
@@ -1641,7 +1658,7 @@ std::string comma = "";
 }
 
     //  Provide discriminator
-#line 1117 "reflect.h2"
+#line 1134 "reflect.h2"
     CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "    discriminator__: " + cpp2::to_string(std::move(discriminator_type)) + " = -1;\n"), 
                "could not add discriminator");
 
@@ -1658,8 +1675,11 @@ std::string comma = "";
         CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "    public get_" + cpp2::to_string(a.name) + ": (inout this) -> forward _ [[pre: is_" + cpp2::to_string(a.name) + "()]] = reinterpret_cast<*" + cpp2::to_string(a.type) + ">(storage__&)*;\n"), 
                    "could not add get_" + a.name);
 
-        CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "    public set_" + cpp2::to_string(a.name) + ": (inout this, forward value: " + cpp2::to_string(a.type) + ") = { if !is_" + cpp2::to_string(a.name) + "() { destroy(); std::construct_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(storage__&), value); } else { reinterpret_cast<*" + cpp2::to_string(a.type) + ">(storage__&)* = value; } discriminator__ = " + cpp2::to_string(a.value) + "; }\n"), 
+        CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "    public set_" + cpp2::to_string(a.name) + ": (inout this, value: " + cpp2::to_string(a.type) + ") = { if !is_" + cpp2::to_string(a.name) + "() { destroy(); std::construct_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(storage__&), value); } else { reinterpret_cast<*" + cpp2::to_string(a.type) + ">(storage__&)* = value; } discriminator__ = " + cpp2::to_string(a.value) + "; }\n"), 
                    "could not add set_" + a.name);
+
+        //t.require( t.add_member( "    public set_(a.name)$: (inout this, forward args...: _) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(storage__&), args...); } else { reinterpret_cast<*(a.type)$>(storage__&)* = value; } discriminator__ = :(a.type)$ = (args...); }\n"),
+        //           "could not add variadic set_" + a.name);
     }
 {
 std::string destroy = "    private destroy: (inout this) = {\n";
@@ -1681,7 +1701,7 @@ std::string destroy = "    private destroy: (inout this) = {\n";
 
     //  Add destroy
 
-#line 1154 "reflect.h2"
+#line 1174 "reflect.h2"
     {
         for ( 
               auto const& a : alternatives ) {
@@ -1695,12 +1715,12 @@ std::string destroy = "    private destroy: (inout this) = {\n";
 }
 
     //  Add the destructor
-#line 1166 "reflect.h2"
+#line 1186 "reflect.h2"
     CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "    operator=: (move this) = { destroy(); } "), 
                "could not add destructor");
 }
 
-#line 1173 "reflect.h2"
+#line 1193 "reflect.h2"
 }
 }
 

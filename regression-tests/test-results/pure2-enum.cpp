@@ -67,7 +67,7 @@ public: file_attributes(cpp2::in<cpp2::strict_value<cpp2::u8,file_attributes,tru
 public: auto static constexpr cached = cpp2::strict_value<cpp2::u8,file_attributes,true>(1);
 public: auto static constexpr current = cpp2::strict_value<cpp2::u8,file_attributes,true>(2);
 public: auto static constexpr obsolete = cpp2::strict_value<cpp2::u8,file_attributes,true>(4);
-public: auto static constexpr cached_and_current = cpp2::strict_value<cpp2::u8,file_attributes,true>(3);
+public: auto static constexpr cached_and_current = cpp2::strict_value<cpp2::u8,file_attributes,true>(cached | current);
 public: auto static constexpr none = cpp2::strict_value<cpp2::u8,file_attributes,true>(0);
 public: [[nodiscard]] static auto size() -> auto;
 public: [[nodiscard]] static auto to_string(cpp2::in<cpp2::strict_value<cpp2::u8,file_attributes,true>> value) -> std::string;
@@ -75,9 +75,9 @@ public: [[nodiscard]] auto to_string() const& -> std::string;
 public: file_attributes(file_attributes const& that);
 public: explicit file_attributes();
 
-              // 1
-              // 2
-              // 4
+                // 1
+                // 2
+                // 4
 
 #line 22 "pure2-enum.cpp2"
 };

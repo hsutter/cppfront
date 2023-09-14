@@ -478,6 +478,20 @@ auto to_upper_and_underbar(std::string_view s)
 }
 
 
+auto is_empty_or_a_decimal_number(std::string_view s)
+    -> bool
+{
+    auto size = std::ssize(s);
+    if (size == 0) { return true; }
+
+    auto i = 0;
+    while (i < size && isspace(s[i]) ) { ++i; }
+    while (i < size && isdigit(s[i]) ) { ++i; }
+    while (i < size && isspace(s[i]) ) { ++i; }
+    return i == size;
+}
+
+
 auto starts_with(
     std::string const& s,
     std::string_view   sv
