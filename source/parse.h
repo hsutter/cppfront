@@ -4632,25 +4632,33 @@ private:
     //G     equality-expression '==' relational-expression
     //G     equality-expression '!=' relational-expression
     //G
-    auto equality_expression(bool allow_angle_operators = true)
+    auto equality_expression(bool allow_angle_operators = true, bool allow_equality = true)
         -> auto
     {
-        return binary_expression<equality_expression_node> (
-            [](token const& t){ return t.type() == lexeme::EqualComparison || t.type() == lexeme::NotEqualComparison; },
-            [=,this]{ return relational_expression(allow_angle_operators); }
-        );
+        if (allow_equality) {
+            return binary_expression<equality_expression_node> (
+                [](token const& t){ return t.type() == lexeme::EqualComparison || t.type() == lexeme::NotEqualComparison; },
+                [=,this]{ return relational_expression(allow_angle_operators); }
+            );
+        }
+        else {
+            return binary_expression<equality_expression_node> (
+                [](token const& t){ return t.type() == lexeme::NotEqualComparison; },
+                [=,this]{ return relational_expression(allow_angle_operators); }
+            );
+        }
     }
 
     //G bit-and-expression:
     //G     equality-expression
     //G     bit-and-expression '&' equality-expression
     //G
-    auto bit_and_expression(bool allow_angle_operators = true)
+    auto bit_and_expression(bool allow_angle_operators = true, bool allow_equality = true)
         -> auto
     {
         return binary_expression<bit_and_expression_node> (
             [](token const& t){ return t.type() == lexeme::Ampersand; },
-            [=,this]{ return equality_expression(allow_angle_operators); }
+            [=,this]{ return equality_expression(allow_angle_operators, allow_equality); }
         );
     }
 
@@ -4658,12 +4666,12 @@ private:
     //G     bit-and-expression
     //G     bit-xor-expression '^' bit-and-expression
     //G
-    auto bit_xor_expression(bool allow_angle_operators = true)
+    auto bit_xor_expression(bool allow_angle_operators = true, bool allow_equality = true)
         -> auto
     {
         return binary_expression<bit_xor_expression_node> (
             [](token const& t){ return t.type() == lexeme::Caret; },
-            [=,this]{ return bit_and_expression(allow_angle_operators); }
+            [=,this]{ return bit_and_expression(allow_angle_operators, allow_equality); }
         );
     }
 
@@ -4671,12 +4679,12 @@ private:
     //G     bit-xor-expression
     //G     bit-or-expression '|' bit-xor-expression
     //G
-    auto bit_or_expression(bool allow_angle_operators = true)
+    auto bit_or_expression(bool allow_angle_operators = true, bool allow_equality = true)
         -> auto
     {
         return binary_expression<bit_or_expression_node> (
             [](token const& t){ return t.type() == lexeme::Pipe; },
-            [=,this]{ return bit_xor_expression(allow_angle_operators); }
+            [=,this]{ return bit_xor_expression(allow_angle_operators, allow_equality); }
         );
     }
 
@@ -4684,12 +4692,12 @@ private:
     //G     bit-or-expression
     //G     logical-and-expression '&&' bit-or-expression
     //G
-    auto logical_and_expression(bool allow_angle_operators = true)
+    auto logical_and_expression(bool allow_angle_operators = true, bool allow_equality = true)
         -> auto
     {
         return binary_expression<logical_and_expression_node> (
             [](token const& t){ return t.type() == lexeme::LogicalAnd; },
-            [=,this]{ return bit_or_expression(allow_angle_operators); }
+            [=,this]{ return bit_or_expression(allow_angle_operators, allow_equality); }
         );
     }
 
@@ -4699,12 +4707,12 @@ private:
     //G     logical-and-expression
     //G     logical-or-expression '||' logical-and-expression
     //G
-    auto logical_or_expression(bool allow_angle_operators = true)
+    auto logical_or_expression(bool allow_angle_operators = true, bool allow_equality = true)
         -> auto
     {
         return binary_expression<logical_or_expression_node> (
             [](token const& t){ return t.type() == lexeme::LogicalOr; },
-            [=,this]{ return logical_and_expression(allow_angle_operators); }
+            [=,this]{ return logical_and_expression(allow_angle_operators, allow_equality); }
         );
     }
 
@@ -6764,6 +6772,12 @@ private:
                 return {};
             }
 
+            if (n->is_namespace())
+            {
+                error("'requires' is not allowed on a namespace");
+                return {};
+            }
+
             n->requires_pos = curr().position();
             next();
             auto e = logical_or_expression();
@@ -6950,9 +6964,9 @@ private:
 
 
     //G alias
-    //G     ':' template-parameter-declaration-list? 'type' '==' type-id ';'
+    //G     ':' template-parameter-declaration-list? 'type' requires-clause? '==' type-id ';'
     //G     ':' 'namespace' '==' qualified-id ';'
-    //G     ':' template-parameter-declaration-list? type-id? '==' expression ';'
+    //G     ':' template-parameter-declaration-list? type-id? requires-clause? '==' expression ';'
     //G
     //GT     ':' function-type '==' expression ';'
     //GT        # See commit 63efa6ed21c4d4f4f136a7a73e9f6b2c110c81d7 comment
@@ -6983,7 +6997,7 @@ private:
 
         auto a = std::make_unique<alias_node>( &curr() );
 
-        //  Next must be 'type', 'namespace', a type-id, or we're at the '=='
+        //  Next must be 'type', 'namespace', a type-id, or we're at the 'requires' or '=='
         if (curr() == "type")
         {
             next();
@@ -6999,13 +7013,41 @@ private:
                 return {};
             }
         }
-        else if (curr().type() != lexeme::EqualComparison)
+        else if (curr().type() != lexeme::EqualComparison && curr() != "requires")
         {
             a->type_id = type_id();
             if (!a->type_id) {
                 pos = start_pos;    // backtrack
                 return {};
             }
+        }
+
+        //  Next is optionally a requires clause
+        if (curr() == "requires")
+        {
+            if (
+                n->is_type_alias()
+                && !n->template_parameters
+                )
+            {
+                error("'requires' is not allowed on a type alias that does not have a template parameter list");
+                return {};
+            }
+
+            if (n->is_namespace_alias())
+            {
+                error("'requires' is not allowed on a namespace alias");
+                return {};
+            }
+
+            n->requires_pos = curr().position();
+            next();
+            auto e = logical_or_expression(true, false);
+            if (!e) {
+                error("'requires' must be followed by an expression");
+                return {};
+            }
+            n->requires_clause_expression = std::move(e);
         }
 
         //  Now we should be at the '==' if this is an alias
