@@ -820,7 +820,7 @@ public:
     } \
 }
 
-#if 0 // When not rebasing, enable this branch.
+#if 1 // When not rebasing, enable this branch.
 #define CPP2_UFCS(...)                   CPP2_UFCS_(&,,__VA_ARGS__)
 #define CPP2_UFCS_TEMPLATE(...)          CPP2_UFCS_(&,template,__VA_ARGS__)
 #define CPP2_UFCS_NONLOCAL(...)          CPP2_UFCS_(,,__VA_ARGS__)
