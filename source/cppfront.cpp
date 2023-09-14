@@ -5143,9 +5143,9 @@ public:
                 && parent->is_type()
                 )
             {
-                if (parent->requires_clause_expression) {
+                if (parent->requires_clause.expression) {
                     parent_template_parameters =
-                        "requires( " + print_to_string(*parent->requires_clause_expression) + " )\n"
+                        "requires( " + print_to_string(*parent->requires_clause.expression) + " )\n"
                         + parent_template_parameters;
                 }
                 if (parent->template_parameters) {
@@ -5193,10 +5193,10 @@ public:
 
             if (printer.get_phase() != printer.phase2_func_defs)
             {
-                if (n.requires_clause_expression) {
-                    printer.print_cpp2("requires( ", n.requires_pos);
-                    emit(*n.requires_clause_expression);
-                    printer.print_cpp2(" )\n", n.requires_pos);
+                if (n.requires_clause.expression) {
+                    printer.print_cpp2("requires( ", n.requires_clause.pos);
+                    emit(*n.requires_clause.expression);
+                    printer.print_cpp2(" )\n", n.requires_clause.pos);
                 }
 
                 printer.print_cpp2("class ", n.position());
@@ -5341,7 +5341,7 @@ public:
         //  Helper for declarations that can have requires-clauses
         auto const emit_requires_clause = [&]() {
             if (
-                n.requires_clause_expression
+                n.requires_clause.expression
                 || !function_requires_conditions.empty()
                 )
             {
@@ -5361,8 +5361,8 @@ public:
                     printer.print_extra("requires (");
                 }
 
-                if (n.requires_clause_expression) {
-                    emit(*n.requires_clause_expression);
+                if (n.requires_clause.expression) {
+                    emit(*n.requires_clause.expression);
                     if (!function_requires_conditions.empty()) {
                         printer.print_extra(" && ");
                     }

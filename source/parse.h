@@ -22,6 +22,7 @@
 #include <memory>
 #include <variant>
 #include <iostream>
+#include <optional>
 
 
 namespace cpp2 {
@@ -2363,8 +2364,13 @@ struct declaration_node
 
     std::vector<std::unique_ptr<id_expression_node>> meta_functions;
     std::unique_ptr<parameter_declaration_list_node> template_parameters;
-    source_position                                  requires_pos = {};
-    std::unique_ptr<logical_or_expression_node>      requires_clause_expression;
+
+    struct requires_clause_t {
+        source_position                             pos = {};
+        std::unique_ptr<logical_or_expression_node> expression;
+    };
+    requires_clause_t requires_clause;
+
 
     source_position                 equal_sign = {};
     std::unique_ptr<statement_node> initializer;
@@ -6464,6 +6470,35 @@ private:
     }
 
 
+    auto requires_clause( declaration_node const& n )
+        -> std::optional<declaration_node::requires_clause_t>
+    {
+        if (curr() != "requires") {
+            return {};
+        }
+
+        if (
+            n.is_type()
+            && !n.template_parameters
+            )
+        {
+            error("'requires' is not allowed on a type that does not have a template parameter list");
+            return {};
+        }
+
+        auto res = declaration_node::requires_clause_t{};
+        res.pos = curr().position();
+        next();
+        auto e = logical_or_expression();
+        if (!e) {
+            error("'requires' must be followed by an expression");
+            return {};
+        }
+        res.expression = std::move(e);
+        return res;
+    }
+
+
     auto apply_type_meta_functions( declaration_node& decl )
         -> bool;
 
@@ -6739,25 +6774,8 @@ private:
         }
 
         //  Next is optionally a requires clause
-        if (curr() == "requires")
-        {
-            if (
-                n->is_type()
-                && !n->template_parameters
-                )
-            {
-                error("'requires' is not allowed on a type that does not have a template parameter list");
-                return {};
-            }
-
-            n->requires_pos = curr().position();
-            next();
-            auto e = logical_or_expression();
-            if (!e) {
-                error("'requires' must be followed by an expression");
-                return {};
-            }
-            n->requires_clause_expression = std::move(e);
+        if (auto r = requires_clause(*n)) {
+            n->requires_clause = std::move(r).value();
         }
 
         //  Next is optionally = followed by an initializer
