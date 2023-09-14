@@ -4893,6 +4893,51 @@ public:
             return;
         }
 
+
+        //  Helper for declarations that can have requires-clauses
+        auto const emit_requires_clause = [&]() {
+            if (
+                n.requires_clause.expression
+                || !function_requires_conditions.empty()
+                )
+            {
+                printer.print_extra("\n");
+                printer.ignore_alignment( true, n.position().colno + 4 );
+                if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
+                    // Workaround GCC 10 not supporting requires in forward declarations in some cases.
+                    // See commit 5a0d77f8e297902c0b9712c5aafb6208cfa4c139.
+                    if (n.is_object() || n.parent_is_type()) {
+                        printer.print_extra("CPP2_REQUIRES_ (");
+                    }
+                    else {
+                        printer.print_extra("CPP2_REQUIRES (");
+                    }
+                }
+                else {
+                    printer.print_extra("requires (");
+                }
+
+                if (n.requires_clause.expression) {
+                    emit(*n.requires_clause.expression);
+                    if (!function_requires_conditions.empty()) {
+                        printer.print_extra(" && ");
+                    }
+                }
+
+                if (!function_requires_conditions.empty()) {
+                    printer.print_extra(function_requires_conditions.front());
+                    for (auto it = std::cbegin(function_requires_conditions)+1; it != std::cend(function_requires_conditions); ++it) {
+                        printer.print_extra(" && " + *it);
+                    }
+                }
+
+                printer.print_extra(")");
+                function_requires_conditions = {};
+                printer.ignore_alignment( false );
+            }
+        };
+
+
         //  If this is a generated declaration (negative source line number),
         //  add a line break before
         if (
@@ -4945,6 +4990,7 @@ public:
                     emit(*n.template_parameters, false, true);
                     printer.print_cpp2(" ", n.position());
                 }
+                emit_requires_clause();
 
                 //  Handle type aliases
                 if (a->is_type_alias()) {
@@ -5336,50 +5382,6 @@ public:
                 printer.print_cpp2("};\n", compound_stmt->close_brace);
             }
         }
-
-
-        //  Helper for declarations that can have requires-clauses
-        auto const emit_requires_clause = [&]() {
-            if (
-                n.requires_clause.expression
-                || !function_requires_conditions.empty()
-                )
-            {
-                printer.print_extra("\n");
-                printer.ignore_alignment( true, n.position().colno + 4 );
-                if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
-                    // Workaround GCC 10 not supporting requires in forward declarations in some cases.
-                    // See commit 5a0d77f8e297902c0b9712c5aafb6208cfa4c139.
-                    if (n.is_object() || n.parent_is_type()) {
-                        printer.print_extra("CPP2_REQUIRES_ (");
-                    }
-                    else {
-                        printer.print_extra("CPP2_REQUIRES (");
-                    }
-                }
-                else {
-                    printer.print_extra("requires (");
-                }
-
-                if (n.requires_clause.expression) {
-                    emit(*n.requires_clause.expression);
-                    if (!function_requires_conditions.empty()) {
-                        printer.print_extra(" && ");
-                    }
-                }
-
-                if (!function_requires_conditions.empty()) {
-                    printer.print_extra(function_requires_conditions.front());
-                    for (auto it = std::cbegin(function_requires_conditions)+1; it != std::cend(function_requires_conditions); ++it) {
-                        printer.print_extra(" && " + *it);
-                    }
-                }
-
-                printer.print_extra(")");
-                function_requires_conditions = {};
-                printer.ignore_alignment( false );
-            }
-        };
 
 
         //  Namespace
