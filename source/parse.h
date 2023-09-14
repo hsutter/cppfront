@@ -4620,11 +4620,15 @@ private:
     //G     equality-expression '==' relational-expression
     //G     equality-expression '!=' relational-expression
     //G
-    auto equality_expression(bool allow_angle_operators = true)
+    auto equality_expression(
+        bool allow_angle_operators = true,
+        bool allow_equal_operator  = true
+    )
         -> auto
     {
         return binary_expression<equality_expression_node> (
-            [](token const& t){ return t.type() == lexeme::EqualComparison || t.type() == lexeme::NotEqualComparison; },
+            [=](token const& t){ return (t.type() == lexeme::EqualComparison && allow_equal_operator)
+                                        || t.type() == lexeme::NotEqualComparison; },
             [=,this]{ return relational_expression(allow_angle_operators); }
         );
     }
@@ -4633,12 +4637,15 @@ private:
     //G     equality-expression
     //G     bit-and-expression '&' equality-expression
     //G
-    auto bit_and_expression(bool allow_angle_operators = true)
+    auto bit_and_expression(
+        bool allow_angle_operators = true,
+        bool allow_equal_operator  = true
+    )
         -> auto
     {
         return binary_expression<bit_and_expression_node> (
             [](token const& t){ return t.type() == lexeme::Ampersand; },
-            [=,this]{ return equality_expression(allow_angle_operators); }
+            [=,this]{ return equality_expression(allow_angle_operators, allow_equal_operator); }
         );
     }
 
@@ -4646,12 +4653,15 @@ private:
     //G     bit-and-expression
     //G     bit-xor-expression '^' bit-and-expression
     //G
-    auto bit_xor_expression(bool allow_angle_operators = true)
+    auto bit_xor_expression(
+        bool allow_angle_operators = true,
+        bool allow_equal_operator  = true
+    )
         -> auto
     {
         return binary_expression<bit_xor_expression_node> (
             [](token const& t){ return t.type() == lexeme::Caret; },
-            [=,this]{ return bit_and_expression(allow_angle_operators); }
+            [=,this]{ return bit_and_expression(allow_angle_operators, allow_equal_operator); }
         );
     }
 
@@ -4659,12 +4669,15 @@ private:
     //G     bit-xor-expression
     //G     bit-or-expression '|' bit-xor-expression
     //G
-    auto bit_or_expression(bool allow_angle_operators = true)
+    auto bit_or_expression(
+        bool allow_angle_operators = true,
+        bool allow_equal_operator  = true
+    )
         -> auto
     {
         return binary_expression<bit_or_expression_node> (
             [](token const& t){ return t.type() == lexeme::Pipe; },
-            [=,this]{ return bit_xor_expression(allow_angle_operators); }
+            [=,this]{ return bit_xor_expression(allow_angle_operators, allow_equal_operator); }
         );
     }
 
@@ -4672,12 +4685,15 @@ private:
     //G     bit-or-expression
     //G     logical-and-expression '&&' bit-or-expression
     //G
-    auto logical_and_expression(bool allow_angle_operators = true)
+    auto logical_and_expression(
+        bool allow_angle_operators = true,
+        bool allow_equal_operator  = true
+    )
         -> auto
     {
         return binary_expression<logical_and_expression_node> (
             [](token const& t){ return t.type() == lexeme::LogicalAnd; },
-            [=,this]{ return bit_or_expression(allow_angle_operators); }
+            [=,this]{ return bit_or_expression(allow_angle_operators, allow_equal_operator); }
         );
     }
 
@@ -4687,12 +4703,15 @@ private:
     //G     logical-and-expression
     //G     logical-or-expression '||' logical-and-expression
     //G
-    auto logical_or_expression(bool allow_angle_operators = true)
+    auto logical_or_expression(
+        bool allow_angle_operators = true,
+        bool allow_equal_operator  = true
+    )
         -> auto
     {
         return binary_expression<logical_or_expression_node> (
             [](token const& t){ return t.type() == lexeme::LogicalOr; },
-            [=,this]{ return logical_and_expression(allow_angle_operators); }
+            [=,this]{ return logical_and_expression(allow_angle_operators, allow_equal_operator); }
         );
     }
 
@@ -6470,7 +6489,10 @@ private:
     }
 
 
-    auto requires_clause( declaration_node const& n )
+    auto requires_clause(
+        declaration_node const& n,
+        bool allow_equal_operator = true
+        )
         -> std::optional<declaration_node::requires_clause_t>
     {
         if (curr() != "requires") {
@@ -6489,7 +6511,7 @@ private:
         auto res = declaration_node::requires_clause_t{};
         res.pos = curr().position();
         next();
-        auto e = logical_or_expression();
+        auto e = logical_or_expression(true, allow_equal_operator);
         if (!e) {
             error("'requires' must be followed by an expression");
             return {};
@@ -7020,7 +7042,7 @@ private:
                 pos = start_pos;    // backtrack
                 return {};
             }
-            if (auto r = requires_clause(*n)) {
+            if (auto r = requires_clause(*n, false)) {
                 n->requires_clause = std::move(r).value();
             }
         }

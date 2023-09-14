@@ -41,6 +41,8 @@ template<typename T>
 CPP2_REQUIRES_ (std::same_as<T,cpp2::i32>)
 #line 18 "pure2-requires-clauses.cpp2"
 extern T const v;
+template<typename T> T static constexpr v2 = 0;
+template<typename T> using t = T;
 
 auto main() -> int;
     
@@ -66,6 +68,7 @@ requires (std::same_as<T,cpp2::i32>)
 #line 18 "pure2-requires-clauses.cpp2"
 T const v {0}; 
 
+#line 22 "pure2-requires-clauses.cpp2"
 auto main() -> int{
     X<int,int> x {}; 
     std::cout << f<int,int>(2, 5);
