@@ -6500,7 +6500,8 @@ private:
     //G     meta-functions-list '@' id-expression
     //G
     //G requires-clause:
-    //G     'requires' logical-or-expression
+    //G      # note: for aliases, == is not allowed in expressions until new ( is opened
+    //G      'requires' logical-or-expression
     //G
     //G template-parameter-declaration-list
     //G     '<' parameter-declaration-seq '>'
