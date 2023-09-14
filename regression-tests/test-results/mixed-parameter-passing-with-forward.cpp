@@ -30,7 +30,7 @@ CPP2_REQUIRES (std::is_convertible_v<CPP2_TYPEOF(e), std::add_const_t<std::strin
 #line 8 "mixed-parameter-passing-with-forward.cpp2"
 ;
 
-#line 42 "mixed-parameter-passing-with-forward.cpp2"
+#line 46 "mixed-parameter-passing-with-forward.cpp2"
 [[nodiscard]] auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -52,16 +52,20 @@ requires (std::is_convertible_v<CPP2_TYPEOF(e), std::add_const_t<std::string>&>)
 #line 15 "mixed-parameter-passing-with-forward.cpp2"
 {
     int z {12}; 
+    std::pair y {17, 29}; 
 
     ++z;
+    --y.first;
     b += "plugh";
 
     if (std::rand() % 2) {
         ++z;
+        --y.first;
         copy_from(cpp2::move(b));// definite last use
     }
     else {
         copy_from(&b);  // NB: better not move from this (why not?)
+        copy_from(&y.second);  // Ditto
         copy_from(cpp2::move(d));
         copy_from(++z);
         copy_from(CPP2_FORWARD(e));
@@ -77,6 +81,6 @@ requires (std::is_convertible_v<CPP2_TYPEOF(e), std::add_const_t<std::string>&>)
 
 }
 
-#line 42 "mixed-parameter-passing-with-forward.cpp2"
+#line 46 "mixed-parameter-passing-with-forward.cpp2"
 [[nodiscard]] auto main() -> int{}
 

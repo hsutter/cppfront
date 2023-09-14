@@ -3592,6 +3592,16 @@ public:
             n.ops.front().op->type() == lexeme::MinusMinus
             || n.ops.front().op->type() == lexeme::PlusPlus
             || n.ops.front().op->type() == lexeme::Ampersand
+            || (
+                std::ssize(n.ops) >= 2
+                && n.ops.front().op->type() == lexeme::Dot
+                &&
+                (
+                    n.ops[1].op->type() == lexeme::MinusMinus
+                    || n.ops[1].op->type() == lexeme::PlusPlus
+                    || n.ops[1].op->type() == lexeme::Ampersand
+                )
+              )
             )
         {
             suppress_move_from_last_use = true;
