@@ -21,7 +21,7 @@ namespace my {
 auto test(auto const& x) -> void;
     
 
-#line 16 "mixed-fixed-type-aliases.cpp2"
+#line 15 "mixed-fixed-type-aliases.cpp2"
 [[nodiscard]] auto main(int const argc_, char** argv_) -> int;
     
 
@@ -31,14 +31,13 @@ auto test(auto const& x) -> void;
 #line 9 "mixed-fixed-type-aliases.cpp2"
 auto test(auto const& x) -> void{
     std::cout 
-        << std::boolalpha 
-        << std::is_floating_point_v<CPP2_TYPEOF(x)> 
+        << cpp2::as_<std::string>(std::is_floating_point_v<CPP2_TYPEOF(x)>) 
         << "\n";
 }
 
 [[nodiscard]] auto main(int const argc_, char** argv_) -> int{
     auto args = cpp2::make_args(argc_, argv_); 
-#line 17 "mixed-fixed-type-aliases.cpp2"
+#line 16 "mixed-fixed-type-aliases.cpp2"
     my::u16 y {42}; 
     test(std::move(y));
 

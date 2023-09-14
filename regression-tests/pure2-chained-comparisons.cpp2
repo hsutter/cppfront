@@ -1,5 +1,4 @@
 main: () -> int = {
-    std::cout << std::boolalpha;
     i:=0; while i<3 next i++ {
         j:=0; while j<3 next j++ {
             k:=0; while k<3 next k++ {
@@ -7,9 +6,9 @@ main: () -> int = {
                     << i << " "
                     << j << " "
                     << k << ": "
-                    << (i == j == k) << " "
-                    << (i <  j <= k) << " "
-                    << (i >= j >  k) << "\n";
+                    << (i == j == k) as std::string << " "
+                    << (i <  j <= k) as std::string << " "
+                    << (i >= j >  k) as std::string << "\n";
             }
         }
     }

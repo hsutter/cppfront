@@ -3607,6 +3607,7 @@ public:
             && !n.inside_initializer
             && parens_ok
             ;
+        add_parens |= n.is_fold_expression();
         if (add_parens) {
             printer.print_cpp2( *n.open_paren, n.position());
         }
@@ -3697,6 +3698,7 @@ public:
             if (
                 generating_return
                 && n.expr->is_expression_list()
+                && !n.expr->get_expression_list()->is_fold_expression()
                 )
             {
                 auto is_deduced_return =
@@ -6193,5 +6195,6 @@ auto main(
             c.debug_print();
         }
     }
+
     return exit_status;
 }

@@ -8,8 +8,7 @@ namespace my {
 
 test: (x:_) = {
     std::cout
-        << std::boolalpha
-        << std::is_floating_point_v<CPP2_TYPEOF(x)>
+        << std::is_floating_point_v<CPP2_TYPEOF(x)> as std::string
         << "\n";
 }
 

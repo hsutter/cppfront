@@ -607,6 +607,23 @@ struct expression_list_node
     };
     std::vector< term > expressions;
 
+
+    //  API
+    //
+    auto is_fold_expression() const
+        -> bool
+    {
+        auto found_ellipsis = false;
+        for (auto& x : expressions) {
+            auto s = x.expr->to_string();
+            found_ellipsis |= s.find("...") != s.npos;
+        }
+        return found_ellipsis;
+    }
+
+
+    //  Internals
+    //
     auto position() const
         -> source_position
     {
@@ -4986,6 +5003,7 @@ private:
     //G     keyword
     //G     template-id
     //GTODO     operator-function-id
+    //G     ...
     //G
     //G template-id:
     //G     identifier '<' template-argument-list? '>'
@@ -5007,6 +5025,7 @@ private:
             curr().type() != lexeme::Identifier
             && curr().type() != lexeme::Keyword
             && curr().type() != lexeme::Cpp2FixedType
+            && curr().type() != lexeme::Ellipsis
             )
         {
             return {};
@@ -5952,7 +5971,7 @@ private:
 
                 // Only add error when no specific one already exist
                 if(!has_error()) {
-                    error("Invalid statement encountered inside a compound-statement", true);
+                    error("invalid statement encountered inside a compound-statement", true);
                 }
                 pos = start_pos;    // backtrack
                 return {};
@@ -5989,8 +6008,9 @@ private:
     )
         -> std::unique_ptr<parameter_declaration_node>
     {
-        auto modifier        = std::string();
-        auto modifier_plural = "";
+        //  Remember current position, because we may need to backtrack if this is just
+        //  a parenthesized expression statement, not a statement parameter list
+        auto start_pos = pos;
 
         auto n = std::make_unique<parameter_declaration_node>();
         n->pass =
@@ -6002,22 +6022,18 @@ private:
         //  Handle optional this-specifier
         //
         if (curr() == "implicit") {
-            modifier = curr().as_string_view();
             n->mod = parameter_declaration_node::modifier::implicit;
             next();
         }
         else if (curr() == "virtual") {
-            modifier = curr().as_string_view();
             n->mod = parameter_declaration_node::modifier::virtual_;
             next();
         }
         else if (curr() == "override") {
-            modifier = curr().as_string_view();
             n->mod = parameter_declaration_node::modifier::override_;
             next();
         }
         else if (curr() == "final") {
-            modifier = curr().as_string_view();
             n->mod = parameter_declaration_node::modifier::final_;
             next();
         }
@@ -6032,12 +6048,6 @@ private:
                 error("a template parameter cannot have a passing style (it is always implicitly 'in')");
                 return {};
             }
-
-            if (!modifier.empty()) {
-                modifier += " ";
-                modifier_plural = "s";
-            }
-            modifier += curr().as_string_view();
 
             if (is_returns)
             {
@@ -6073,9 +6083,7 @@ private:
         //  Now the main declaration
         //
         if (!(n->declaration = declaration(false, true, is_template))) {
-            if (!modifier.empty()) {
-                error( "'" + modifier + "' modifier" + modifier_plural + " must be followed by a valid parameter declaration", false);
-            }
+            pos = start_pos;    // backtrack
             return {};
         }
 

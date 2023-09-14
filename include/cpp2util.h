@@ -286,9 +286,12 @@ using __uchar   = unsigned char;    // normally use u8 instead
 //-----------------------------------------------------------------------
 //
 
-constexpr auto max(auto... values) {
+inline constexpr auto max(auto... values) {
     return std::max( { values... } );
 }
+
+template <class T, class... Ts>
+inline constexpr auto is_any = std::disjunction_v<std::is_same<T, Ts>...>;
 
 
 //-----------------------------------------------------------------------
@@ -783,6 +786,108 @@ public:
 
 //-----------------------------------------------------------------------
 //
+//  to_string for string interpolation
+//
+//-----------------------------------------------------------------------
+//
+inline auto to_string(...) -> std::string
+{
+    return "(customize me - no cpp2::to_string overload exists for this type)";
+}
+
+inline auto to_string(std::same_as<std::any> auto const&) -> std::string
+{
+    return "std::any";
+}
+
+inline auto to_string(bool b) -> std::string
+{
+    return b ? "true" : "false";
+}
+
+template<typename T>
+inline auto to_string(T const& t) -> std::string
+    requires requires { std::to_string(t); }
+{
+    return std::to_string(t);
+}
+
+inline auto to_string(char const& t) -> std::string
+{
+    return std::string{t};
+}
+
+inline auto to_string(char const* s) -> std::string
+{
+    return std::string{s};
+}
+
+inline auto to_string(std::string const& s) -> std::string const&
+{
+    return s;
+}
+
+template<typename T>
+inline auto to_string(T const& sv) -> std::string
+    requires (std::is_convertible_v<T, std::string_view> 
+              && !std::is_convertible_v<T, const char*>)
+{
+    return std::string{sv};
+}
+
+template <typename... Ts>
+inline auto to_string(std::variant<Ts...> const& v) -> std::string;
+
+template < typename T, typename U>
+inline auto to_string(std::pair<T,U> const& p) -> std::string;
+
+template < typename... Ts>
+inline auto to_string(std::tuple<Ts...> const& t) -> std::string;
+
+template<typename T>
+inline auto to_string(std::optional<T> const& o) -> std::string {
+    if (o.has_value()) {
+        return cpp2::to_string(o.value());
+    }
+    return "(empty)";
+}
+
+template <typename... Ts>
+inline auto to_string(std::variant<Ts...> const& v) -> std::string
+{
+    if (v.valueless_by_exception()) return "(empty)";
+    //  Need to guard this with is_any otherwise the get_if is illegal
+    if constexpr (is_any<std::monostate, Ts...>) if (std::get_if<std::monostate>(&v) != nullptr) return "(empty)";
+
+    return std::visit([](auto&& arg) -> std::string {
+        return cpp2::to_string(arg);
+    }, v);
+}
+
+template < typename T, typename U>
+inline auto to_string(std::pair<T,U> const& p) -> std::string
+{
+    return "(" + cpp2::to_string(p.first) + ", " + cpp2::to_string(p.second) + ")";
+}
+
+template < typename... Ts>
+inline auto to_string(std::tuple<Ts...> const& t) -> std::string
+{
+    if constexpr (sizeof...(Ts) == 0) {
+        return "()";
+    } else {
+        std::string out = "(" + cpp2::to_string(std::get<0>(t));
+        std::apply([&out](auto&&, auto&&... args) {
+            ((out += ", " + cpp2::to_string(args)), ...);
+        }, t);
+        out += ")";
+        return out;
+    }
+}
+
+
+//-----------------------------------------------------------------------
+//
 //  is and as
 //
 //-----------------------------------------------------------------------
@@ -1000,9 +1105,20 @@ auto as( X& x ) -> decltype(auto) {
     return x;
 }
 
+
+template< typename C, typename X >
+auto as(X const& x) -> C
+    requires (std::is_same_v<C, std::string> && std::is_integral_v<X>)
+{
+    return cpp2::to_string(x);
+}
+
+
 template< typename C, typename X >
 auto as( X const& x ) -> auto
-    requires (!std::is_same_v<C, X> && !std::is_base_of_v<C, X> && requires { C{x}; })
+    requires (!std::is_same_v<C, X> && !std::is_base_of_v<C, X> && requires { C{x}; }
+              && !(std::is_same_v<C, std::string> && std::is_integral_v<X>) // exclude above case
+             )
 {
     //  Experiment: Recognize the nested `::value_type` pattern for some dynamic library types
     //  like std::optional, and try to prevent accidental narrowing conversions even when
@@ -1158,9 +1274,6 @@ constexpr auto is( std::variant<Ts...> const& x, auto const& value ) -> bool
 
 //  as
 //
-template <class T, class... Ts>
-inline constexpr auto is_any = std::disjunction_v<std::is_same<T, Ts>...>;
-
 template<typename T, typename... Ts>
 auto is( std::variant<Ts...> const& x ) {
     if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) { if (x.index() ==  0) return true; }
@@ -1422,115 +1535,6 @@ private:
     F f;
     bool invoke = true;
 };
-
-
-//-----------------------------------------------------------------------
-//
-//  to_string for string interpolation
-//
-//-----------------------------------------------------------------------
-//
-inline auto to_string(...) -> std::string {
-    return "(customize me - no cpp2::to_string overload exists for this type)";
-}
-
-inline auto to_string(std::same_as<std::any> auto const&) -> std::string {
-    return "std::any";
-}
-
-template<typename T>
-inline auto to_string(T const& t) -> std::string
-    requires requires { std::to_string(t); }
-{
-    return std::to_string(t);
-}
-
-inline auto to_string(char const& t) -> std::string
-{
-    return std::string{t};
-}
-
-inline auto to_string(char const* s) -> std::string
-{
-    return std::string{s};
-}
-
-inline auto to_string(std::string const& s) -> std::string const&
-{
-    return s;
-}
-
-template<typename T>
-inline auto to_string(T const& sv) -> std::string
-    requires (std::is_convertible_v<T, std::string_view> 
-              && !std::is_convertible_v<T, const char*>)
-{
-    return std::string{sv};
-}
-
-template <typename... Ts>
-inline auto to_string(std::variant<Ts...> const& v) -> std::string;
-
-template < typename T, typename U>
-inline auto to_string(std::pair<T,U> const& p) -> std::string;
-
-template < typename... Ts>
-inline auto to_string(std::tuple<Ts...> const& t) -> std::string;
-
-template<typename T>
-inline auto to_string(std::optional<T> const& o) -> std::string {
-    if (o.has_value()) {
-        return cpp2::to_string(o.value());
-    }
-    return "(empty)";
-}
-
-template <typename... Ts>
-inline auto to_string(std::variant<Ts...> const& v) -> std::string
-{
-    if (v.valueless_by_exception()) return "(empty)";
-    //  Need to guard this with is_any otherwise the get_if is illegal
-    if constexpr (is_any<std::monostate, Ts...>) if (std::get_if<std::monostate>(&v) != nullptr) return "(empty)";
-
-    return std::visit([](auto&& arg) -> std::string {
-        return cpp2::to_string(arg);
-    }, v);
-}
-
-template < typename T, typename U>
-inline auto to_string(std::pair<T,U> const& p) -> std::string
-{
-    return "(" + cpp2::to_string(p.first) + ", " + cpp2::to_string(p.second) + ")";
-}
-
-template < typename... Ts>
-inline auto to_string(std::tuple<Ts...> const& t) -> std::string
-{
-    if constexpr (sizeof...(Ts) == 0) {
-        return "()";
-    } else {
-        std::string out = "(" + cpp2::to_string(std::get<0>(t));
-        std::apply([&out](auto&&, auto&&... args) {
-            ((out += ", " + cpp2::to_string(args)), ...);
-        }, t);
-        out += ")";
-        return out;
-    }
-}
-
-
-//-----------------------------------------------------------------------
-//
-//  and "as std::string" for the same cases
-//
-template< typename C >
-auto as(auto& x) -> C
-    requires (std::is_same_v<C, std::string>
-              && requires { cpp2::to_string(x); })
-{
-    return cpp2::to_string(x);
-}
-
 
 
 //-----------------------------------------------------------------------
