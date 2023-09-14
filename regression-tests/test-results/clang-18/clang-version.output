@@ -1,4 +1,0 @@
-clang version 18.0.0 (https://git.uplinklabs.net/mirrors/llvm-project.git c0abd3814564a568dfc607c216e6407eaa314f46)
-Target: x86_64-pc-linux-gnu
-Thread model: posix
-InstalledDir: /home/johel/root/clang-main/bin
