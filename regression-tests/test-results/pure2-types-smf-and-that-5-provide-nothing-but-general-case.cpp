@@ -130,24 +130,24 @@ auto main() -> int{
     std::cout << "----------------------  ------------  ------------------------------------------------------\n";
 
     myclass x {"Henry"}; 
-    CPP2_UFCS(print, x, "   construct     ", "\n");
+    CPP2_UFCS(print)(x, "   construct     ", "\n");
     x = "Clara";
-    CPP2_UFCS(print, x, "   assign        ", "\n");
+    CPP2_UFCS(print)(x, "   assign        ", "\n");
 
     auto y {x}; 
-    CPP2_UFCS(print, y, "   cp-construct  ", " <- ");
-    CPP2_UFCS(print, x, "", "\n");
+    CPP2_UFCS(print)(y, "   cp-construct  ", " <- ");
+    CPP2_UFCS(print)(x, "", "\n");
 
     auto z {std::move(x)}; 
-    CPP2_UFCS(print, z, "   mv-construct  ", " <- ");
-    CPP2_UFCS(print, std::move(x), "", "\n");
+    CPP2_UFCS(print)(z, "   mv-construct  ", " <- ");
+    CPP2_UFCS(print)(std::move(x), "", "\n");
 
     z = y;
-    CPP2_UFCS(print, z, "   cp-assign     ", " <- ");
-    CPP2_UFCS(print, y, "", "\n");
+    CPP2_UFCS(print)(z, "   cp-assign     ", " <- ");
+    CPP2_UFCS(print)(y, "", "\n");
 
     z = { std::move(y) };
-    CPP2_UFCS(print, std::move(z), "   mv-assign     ", " <- ");
-    CPP2_UFCS(print, std::move(y), "", "\n");
+    CPP2_UFCS(print)(std::move(z), "   mv-assign     ", " <- ");
+    CPP2_UFCS(print)(std::move(y), "", "\n");
 }
 

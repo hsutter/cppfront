@@ -6,7 +6,9 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
 class identity;
+#line 2 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
   
 
 #line 5 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
@@ -23,7 +25,9 @@ namespace ns {
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
 class identity {
+#line 2 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
   public: [[nodiscard]] constexpr auto operator()(auto&& x) const& -> auto&&;
 };
 
@@ -34,7 +38,7 @@ class t {
 class u {};
 
 namespace ns {
-[[nodiscard]] constexpr auto f([[maybe_unused]] auto const& param1) -> int;
+[[nodiscard]] constexpr auto f([[maybe_unused]] auto const& unnamed_param_1) -> int;
 } // namespace ns
 
 // v: @struct type = {
@@ -43,10 +47,10 @@ namespace ns {
 // }
 
 auto main() -> int;
-  
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
 
 #line 2 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
   [[nodiscard]] constexpr auto identity::operator()(auto&& x) const& -> auto&& { return CPP2_FORWARD(x);  }
@@ -56,7 +60,7 @@ auto main() -> int;
 
 #line 11 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
 namespace ns {
-[[nodiscard]] constexpr auto f([[maybe_unused]] auto const& param1) -> int { return 1;  }
+[[nodiscard]] constexpr auto f([[maybe_unused]] auto const& unnamed_param_1) -> int { return 1;  }
 }
 
 #line 20 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
@@ -129,8 +133,8 @@ cpp2::in<identity> f = identity();
   {
     auto f {[]() -> void{
       static_assert(t().f() == 0);
-      auto g {[]<typename T>([[maybe_unused]] T const& param1) -> std::void_t<decltype(T().f())>{}}; 
-      static_assert(!(std::is_invocable_v<decltype(g),u>));
+      auto g {[]<typename T>([[maybe_unused]] T const& unnamed_param_1) -> std::void_t<decltype(T().f())>{}}; 
+      static_assert(!(std::is_invocable_v<decltype(std::move(g)),u>));
       using ns::f;
     }}; 
     static_cast<void>(std::move(f));
@@ -153,13 +157,13 @@ cpp2::in<identity> f = identity();
     auto f {[]() -> void{
       static_cast<void>([]() -> void{
         static_assert(t().f() == 0);
-        auto g {[]<typename T>([[maybe_unused]] T const& param1) -> std::void_t<decltype(T().f())>{}}; 
-        static_assert(!(std::is_invocable_v<decltype(g),u>));
+        auto g {[]<typename T>([[maybe_unused]] T const& unnamed_param_1) -> std::void_t<decltype(T().f())>{}}; 
+        static_assert(!(std::is_invocable_v<decltype(std::move(g)),u>));
       });
       {
         static_assert(t().f() == 0);
-        auto g {[]<typename T>([[maybe_unused]] T const& param1) -> std::void_t<decltype(T().f())>{}}; 
-        static_assert(!(std::is_invocable_v<decltype(g),u>));
+        auto g {[]<typename T>([[maybe_unused]] T const& unnamed_param_1) -> std::void_t<decltype(T().f())>{}}; 
+        static_assert(!(std::is_invocable_v<decltype(std::move(g)),u>));
       }
       using ns::f;
     }}; 

@@ -107,26 +107,26 @@ name_or_number::name_or_number(){}
 name_or_number::name_or_number(name_or_number const& that)
         : _storage{  }
         , _discriminator{ -1 }{
-if (CPP2_UFCS_0(is_name, that)) {set_name(CPP2_UFCS_0(name, that));}
-if (CPP2_UFCS_0(is_num, that)) {set_num(CPP2_UFCS_0(num, that));}
+if (CPP2_UFCS(is_name)(that)) {set_name(CPP2_UFCS(name)(that));}
+if (CPP2_UFCS(is_num)(that)) {set_num(CPP2_UFCS(num)(that));}
 }
 
 name_or_number::name_or_number(name_or_number&& that) noexcept
         : _storage{  }
         , _discriminator{ -1 }{
-if (CPP2_UFCS_0(is_name, std::move(that))) {set_name(CPP2_UFCS_0(name, std::move(that)));}
-if (CPP2_UFCS_0(is_num, std::move(that))) {set_num(CPP2_UFCS_0(num, std::move(that)));}
+if (CPP2_UFCS(is_name)(std::move(that))) {set_name(CPP2_UFCS(name)(std::move(that)));}
+if (CPP2_UFCS(is_num)(std::move(that))) {set_num(CPP2_UFCS(num)(std::move(that)));}
 }
 
 auto name_or_number::operator=(name_or_number const& that) -> name_or_number& {
-if (CPP2_UFCS_0(is_name, that)) {set_name(CPP2_UFCS_0(name, that));}
-if (CPP2_UFCS_0(is_num, that)) {set_num(CPP2_UFCS_0(num, that));}
+if (CPP2_UFCS(is_name)(that)) {set_name(CPP2_UFCS(name)(that));}
+if (CPP2_UFCS(is_num)(that)) {set_num(CPP2_UFCS(num)(that));}
         return *this;
 }
 
 auto name_or_number::operator=(name_or_number&& that) noexcept -> name_or_number& {
-if (CPP2_UFCS_0(is_name, std::move(that))) {set_name(CPP2_UFCS_0(name, std::move(that)));}
-if (CPP2_UFCS_0(is_num, std::move(that))) {set_num(CPP2_UFCS_0(num, std::move(that)));}
+if (CPP2_UFCS(is_name)(std::move(that))) {set_name(CPP2_UFCS(name)(std::move(that)));}
+if (CPP2_UFCS(is_num)(std::move(that))) {set_num(CPP2_UFCS(num)(std::move(that)));}
         return *this;
 }
 #line 12 "pure2-union.cpp2"
@@ -163,33 +163,33 @@ template <typename T> name_or_other<T>::name_or_other(){}
 template <typename T> name_or_other<T>::name_or_other(name_or_other const& that)
         : _storage{  }
         , _discriminator{ -1 }{
-    if (CPP2_UFCS_0(is_name, that)) {set_name(CPP2_UFCS_0(name, that));}
-    if (CPP2_UFCS_0(is_other, that)) {set_other(CPP2_UFCS_0(other, that));}
+    if (CPP2_UFCS(is_name)(that)) {set_name(CPP2_UFCS(name)(that));}
+    if (CPP2_UFCS(is_other)(that)) {set_other(CPP2_UFCS(other)(that));}
     }
 
 
     template <typename T> name_or_other<T>::name_or_other(name_or_other&& that) noexcept
         : _storage{  }
         , _discriminator{ -1 }{
-    if (CPP2_UFCS_0(is_name, std::move(that))) {set_name(CPP2_UFCS_0(name, std::move(that)));}
-    if (CPP2_UFCS_0(is_other, std::move(that))) {set_other(CPP2_UFCS_0(other, std::move(that)));}
+    if (CPP2_UFCS(is_name)(std::move(that))) {set_name(CPP2_UFCS(name)(std::move(that)));}
+    if (CPP2_UFCS(is_other)(std::move(that))) {set_other(CPP2_UFCS(other)(std::move(that)));}
     }
 
     template <typename T> auto name_or_other<T>::operator=(name_or_other const& that) -> name_or_other& {
-    if (CPP2_UFCS_0(is_name, that)) {set_name(CPP2_UFCS_0(name, that));}
-    if (CPP2_UFCS_0(is_other, that)) {set_other(CPP2_UFCS_0(other, that));}
+    if (CPP2_UFCS(is_name)(that)) {set_name(CPP2_UFCS(name)(that));}
+    if (CPP2_UFCS(is_other)(that)) {set_other(CPP2_UFCS(other)(that));}
         return *this;
     }
 
     template <typename T> auto name_or_other<T>::operator=(name_or_other&& that) noexcept -> name_or_other& {
-    if (CPP2_UFCS_0(is_name, std::move(that))) {set_name(CPP2_UFCS_0(name, std::move(that)));}
-    if (CPP2_UFCS_0(is_other, std::move(that))) {set_other(CPP2_UFCS_0(other, std::move(that)));}
+    if (CPP2_UFCS(is_name)(std::move(that))) {set_name(CPP2_UFCS(name)(std::move(that)));}
+    if (CPP2_UFCS(is_other)(std::move(that))) {set_other(CPP2_UFCS(other)(std::move(that)));}
         return *this;
     }
 #line 19 "pure2-union.cpp2"
 auto print_name(cpp2::in<name_or_number> non) -> void{
-    if (CPP2_UFCS_0(is_name, non)) {
-        std::cout << CPP2_UFCS_0(name, non) << "\n";
+    if (CPP2_UFCS(is_name)(non)) {
+        std::cout << CPP2_UFCS(name)(non) << "\n";
     }
     else {
         std::cout << "(not a name)\n";
@@ -200,16 +200,16 @@ auto main() -> int{
     name_or_number x {}; 
     std::cout << "sizeof(x) is " + cpp2::to_string(sizeof(x)) + "\n";
 
-    CPP2_UFCS_0(print_name, x);
+    CPP2_UFCS(print_name)(x);
 
-    CPP2_UFCS(set_name, x, "xyzzy", cpp2::as_<cpp2::u8, 3>());
+    CPP2_UFCS(set_name)(x, "xyzzy", cpp2::as_<cpp2::u8, 3>());
 
-    CPP2_UFCS_0(print_name, std::move(x));
+    CPP2_UFCS(print_name)(std::move(x));
 
     {
         name_or_other<int> val {}; 
-        CPP2_UFCS(set_other, val, 42);
-        std::cout << CPP2_UFCS_0(to_string, std::move(val));
+        CPP2_UFCS(set_other)(val, 42);
+        std::cout << CPP2_UFCS(to_string)(std::move(val));
     }
 }
 

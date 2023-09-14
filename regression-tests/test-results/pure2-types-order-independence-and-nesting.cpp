@@ -152,7 +152,7 @@ namespace N {
         //  Exercise '_' anonymous objects too while we're at it
         cpp2::finally auto_37_9 {[&]() -> void { std::cout << "leaving call to 'why(" + cpp2::to_string(count) + ")'\n";  }}; 
         if (cpp2::cmp_less(count,5)) {
-            CPP2_UFCS(why, (*cpp2::assert_not_null(py)), count + 1);// use Y object from X
+            CPP2_UFCS(why)((*cpp2::assert_not_null(py)), count + 1);// use Y object from X
         }
     }
 
@@ -166,7 +166,7 @@ namespace N {
 
 #line 51 "pure2-types-order-independence-and-nesting.cpp2"
     auto Y::why(cpp2::in<int> count) const& -> void { 
-        CPP2_UFCS(exx, (*cpp2::assert_not_null(px)), count + 1);  }// use X object from Y
+        CPP2_UFCS(exx)((*cpp2::assert_not_null(px)), count + 1);  }// use X object from Y
 
 #line 55 "pure2-types-order-independence-and-nesting.cpp2"
 namespace M {
@@ -186,7 +186,7 @@ auto main() -> int
     N::X x {cpp2::out(&y)}; // construct y and x, and point them at each other
 
     // now have the two objects call each other back and forth a few times
-    CPP2_UFCS(exx, std::move(x), 1);
+    CPP2_UFCS(exx)(std::move(x), 1);
 
     // and test a nested template out-of-line definition
     N::M::A<int,int>::B<42>::f<int,43>("welt");

@@ -5,6 +5,7 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-bugfix-for-ufcs-non-local.cpp2"
 
 #line 9 "mixed-bugfix-for-ufcs-non-local.cpp2"
 namespace ns {
@@ -15,6 +16,7 @@ namespace ns {
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-bugfix-for-ufcs-non-local.cpp2"
 namespace ns {
 
 template<bool> struct t { };
@@ -38,7 +40,7 @@ bool inline constexpr v2 = CPP2_UFCS_NONLOCAL(f)(o);
 
 template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> auto g() -> void;
 
-auto g([[maybe_unused]] cpp2::in<t<CPP2_UFCS_NONLOCAL(f)(o)>> param1) -> void;
+auto g([[maybe_unused]] cpp2::in<t<CPP2_UFCS_NONLOCAL(f)(o)>> unnamed_param_1) -> void;
 
 auto g() -> void;
 
@@ -63,6 +65,7 @@ auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-bugfix-for-ufcs-non-local.cpp2"
 
 #line 9 "mixed-bugfix-for-ufcs-non-local.cpp2"
 namespace ns {
@@ -70,13 +73,12 @@ namespace ns {
 #line 21 "mixed-bugfix-for-ufcs-non-local.cpp2"
 template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> auto g() -> void{}// Fails on GCC ([GCC109781][]).
 
-auto g([[maybe_unused]] cpp2::in<t<CPP2_UFCS_NONLOCAL(f)(o)>> param1) -> void{}// Fails on Clang 12 (lambda in unevaluated context).
+auto g([[maybe_unused]] cpp2::in<t<CPP2_UFCS_NONLOCAL(f)(o)>> unnamed_param_1) -> void{}// Fails on Clang 12 (lambda in unevaluated context).
 
 auto g() -> void{
-                     cpp2::Default.expects(CPP2_UFCS(f)(o), "");
-#line 25 "mixed-bugfix-for-ufcs-non-local.cpp2"
-}
+                     cpp2::Default.expects(CPP2_UFCS_NONLOCAL(f)(o), ""); }
 
+#line 27 "mixed-bugfix-for-ufcs-non-local.cpp2"
 [[nodiscard]] auto h() -> t<CPP2_UFCS_NONLOCAL(f)(o)> { return o;  }// Fails on Clang 12 (lambda in unevaluated context).
 
 #line 39 "mixed-bugfix-for-ufcs-non-local.cpp2"

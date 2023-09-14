@@ -32,7 +32,7 @@
 
     std::string y {"\n"}; 
     std::ranges::for_each(vec, [_0 = (&y)](auto const& x) -> void { 
-        std::cout << CPP2_UFCS_0(c_str, (*cpp2::assert_not_null(_0))) << x << *cpp2::assert_not_null(_0);  }
+        std::cout << CPP2_UFCS(c_str)((*cpp2::assert_not_null(_0))) << x << *cpp2::assert_not_null(_0);  }
     );
 
     auto callback {[](auto& x) -> void { x += "-ish";  }}; 
