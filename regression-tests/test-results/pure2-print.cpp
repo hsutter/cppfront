@@ -99,11 +99,11 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
             if (cpp2::cmp_less(*cpp2::assert_not_null(p),0)) {
                 ret = -*cpp2::assert_not_null(std::move(p));
             }
-            ret += strlen(s) - 10 + CPP2_UFCS_0(strlen, std::move(s)) * (16 / (3 & 2)) % 3;
+            ret += strlen(s) - 10 + CPP2_UFCS(strlen)(std::move(s)) * (16 / (3 & 2)) % 3;
 
             map<int const,string> m {}; 
             CPP2_ASSERT_IN_BOUNDS(m, 0) = cpp2::as_<string>("har");
-            ret -= CPP2_UFCS_0(length, h("x", m));
+            ret -= CPP2_UFCS(length)(h("x", m));
             static_cast<void>(std::move(m));
 
             return ret; 
@@ -113,22 +113,22 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
 
 #line 34 "pure2-print.cpp2"
         {
-            cpp2::Default.expects(CPP2_UFCS_0(empty, m) == false || false, "message");
-            cpp2::Bounds.expects([_0 = 0, _1 = CPP2_UFCS_0(ssize, m), _2 = 100]{ return cpp2::cmp_less(_0,_1) && cpp2::cmp_less(_1,_2); }() && true != false, "");
+            cpp2::Default.expects(CPP2_UFCS(empty)(m) == false || false, "message");
+            cpp2::Bounds.expects([_0 = 0, _1 = CPP2_UFCS(ssize)(m), _2 = 100]{ return cpp2::cmp_less(_0,_1) && cpp2::cmp_less(_1,_2); }() && true != false, "");
 #line 35 "pure2-print.cpp2"
             auto a {[]() mutable -> void{}}; 
             auto b {[]() mutable -> void{}}; 
             auto c {[]() mutable -> void{}}; 
 
-            for( ; CPP2_UFCS_0(empty, s); a() ) {break; }
+            for( ; CPP2_UFCS(empty)(s); a() ) {break; }
 
-            do {} while ( CPP2_UFCS_0(empty, s) && [&]{ b() ; return true; }() );
+            do {} while ( CPP2_UFCS(empty)(s) && [&]{ b() ; return true; }() );
 
             for ( [[maybe_unused]] auto const& unnamed_param_1 : m ) { { do {goto CONTINUE_43_13; } while (false); c(); } CPP2_CONTINUE_BREAK(43_13) }
 
 #line 45 "pure2-print.cpp2"
-            if (cpp2::is(!(CPP2_UFCS_0(empty, s)), (true))) {std::move(a)(); }
-            else {if (!(CPP2_UFCS_0(empty, m))) {std::move(b)(); }
+            if (cpp2::is(!(CPP2_UFCS(empty)(s)), (true))) {std::move(a)(); }
+            else {if (!(CPP2_UFCS(empty)(m))) {std::move(b)(); }
             else {std::move(c)(); }}
 
             cpp2::Default.expects(true, "");
@@ -167,9 +167,9 @@ requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...)) {(std::cout << ..
 
 #line 80 "pure2-print.cpp2"
         ::outer::mytype var {}; 
-        cout << CPP2_UFCS(g, var, 42) << "\n";
+        cout << CPP2_UFCS(g)(var, 42) << "\n";
 
-        cout << [&] () -> namespace_alias::string { auto&& _expr = CPP2_UFCS(g, std::move(var), 42);
+        cout << [&] () -> namespace_alias::string { auto&& _expr = CPP2_UFCS(g)(std::move(var), 42);
             if (cpp2::is(_expr, 43)) { if constexpr( requires{"forty-and-three";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("forty-and-three")),namespace_alias::string> ) return "forty-and-three"; else return namespace_alias::string{}; else return namespace_alias::string{}; }
             else return "default case"; }
         () << "\n";
