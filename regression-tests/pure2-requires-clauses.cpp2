@@ -16,6 +16,8 @@ f:  <T: type, U: type>
 }
 
 v: <T> const T requires std::same_as<T, i32> = 0;
+v2: <T> T requires std::same_as<T, i32> == 0;
+t: <T> type requires std::same_as<T, i32> == T;
 
 main: () = {
     x: X<int,int> = ();

@@ -6954,9 +6954,9 @@ private:
 
 
     //G alias
-    //G     ':' template-parameter-declaration-list? 'type' '==' type-id ';'
+    //G     ':' template-parameter-declaration-list? 'type' requires-clause? '==' type-id ';'
     //G     ':' 'namespace' '==' qualified-id ';'
-    //G     ':' template-parameter-declaration-list? type-id? '==' expression ';'
+    //G     ':' template-parameter-declaration-list? type-id? requires-clause? '==' expression ';'
     //G
     //GT     ':' function-type '==' expression ';'
     //GT        # See commit 63efa6ed21c4d4f4f136a7a73e9f6b2c110c81d7 comment
@@ -6991,6 +6991,9 @@ private:
         if (curr() == "type")
         {
             next();
+            if (auto r = requires_clause(*n, false)) {
+                n->requires_clause = std::move(r).value();
+            }
         }
         else if (curr() == "namespace")
         {
@@ -7002,6 +7005,13 @@ private:
                 );
                 return {};
             }
+            if (curr() == "requires") {
+                errors.emplace_back(
+                    curr().position(),
+                    "a namespace or namespace alias cannot have a requires clause"
+                );
+                return {};
+            }
         }
         else if (curr().type() != lexeme::EqualComparison)
         {
@@ -7009,6 +7019,9 @@ private:
             if (!a->type_id) {
                 pos = start_pos;    // backtrack
                 return {};
+            }
+            if (auto r = requires_clause(*n)) {
+                n->requires_clause = std::move(r).value();
             }
         }
 
