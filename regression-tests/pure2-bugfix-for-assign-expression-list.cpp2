@@ -1,5 +1,13 @@
+vec: type == std::vector<int>;
+
+my_vec: type = {
+  v: vec = ();
+  operator=: (out this, _: std::integral_constant<int, 0>) = v = ();
+  operator=: (out this, _: std::integral_constant<int, 1>) = v = (1);
+  operator=: (out this, _: std::integral_constant<int, 2>) = v = (2, 3);
+}
+
 main: () = {
-  vec: type == std::vector<int>;
   v: vec              = (0);
   v                   = ();
   assert( v == :vec = () );

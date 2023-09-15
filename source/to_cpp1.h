@@ -5451,6 +5451,14 @@ public:
                         if (found_explicit_init)
                         {
                             initializer = rhs;
+                            if (
+                                is_assignment
+                                && std::get<statement_node::expression>((*statement)->statement)
+                                       ->expr->expr->terms[0].expr->is_expression_list()
+                                )
+                            {
+                                initializer = "{ " + rhs + " }";
+                            }
 
                             //  We've used this statement, so note it
                             //  and move 'statement' forward
