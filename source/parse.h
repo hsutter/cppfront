@@ -2005,6 +2005,9 @@ auto statement_node::visit(auto& v, int depth)
     -> void
 {
     v.start(*this, depth);
+    if (parameters) {
+        parameters->visit(v, depth+1);
+    }
     try_visit<expression >(statement, v, depth);
     try_visit<compound   >(statement, v, depth);
     try_visit<selection  >(statement, v, depth);
@@ -2359,6 +2362,8 @@ auto to_string(accessibility a)
     return "default";
 }
 
+
+struct declaration_identifier_tag { };
 
 struct declaration_node
 {
@@ -3193,9 +3198,11 @@ public:
     {
         v.start(*this, depth);
 
+        v.start(declaration_identifier_tag{}, depth);
         if (identifier) {
             identifier->visit(v, depth+1);
         }
+        v.end(declaration_identifier_tag{}, depth);
 
         try_visit<a_function >(type, v, depth+1);
         try_visit<an_object  >(type, v, depth+1);
@@ -3645,6 +3652,8 @@ auto primary_expression_node::visit(auto& v, int depth)
 }
 
 
+struct next_expression_tag { };
+
 auto iteration_statement_node::visit(auto& v, int depth)
     -> void
 {
@@ -3659,7 +3668,9 @@ auto iteration_statement_node::visit(auto& v, int depth)
         statements->visit(v, depth+1);
     }
     if (next_expression) {
+        v.start(next_expression_tag{}, depth);
         next_expression->visit(v, depth+1);
+        v.end(next_expression_tag{}, depth);
     }
     if (condition) {
         assert(!range && !body);
@@ -3769,6 +3780,48 @@ struct translation_unit_node
         v.end(*this, depth);
     }
 };
+
+
+//-----------------------------------------------------------------------
+//
+//  print(*_node): pretty-prints Cpp2 ASTs
+//
+//-----------------------------------------------------------------------
+//
+//auto print(primary_expression_node const&)
+//    -> std::string
+//{
+//    auto ret = std::string{};
+//    return ret;
+//}
+//auto print(literal_node const&)
+//auto print(prefix_expression_node const&)
+//auto print(binary_expression_node const&)
+//auto print(expression_node const&)
+//auto print(expression_list_node const&)
+//auto print(expression_statement_node const&)
+//auto print(postfix_expression_node const&)
+//auto print(unqualified_id_node const&)
+//auto print(qualified_id_node const&)
+//auto print(type_id_node const&)
+//auto print(is_as_expression_node const&)
+//auto print(id_expression_node const&)
+//auto print(compound_statement_node const&)
+//auto print(selection_statement_node const&)
+//auto print(iteration_statement_node const&)
+//auto print(return_statement_node const&)
+//auto print(alternative_node const&)
+//auto print(inspect_expression_node const&)
+//auto print(contract_node const&)
+//auto print(jump_statement_node const&)
+//auto print(statement_node const&)
+//auto print(parameter_declaration_node const&)
+//auto print(parameter_declaration_list_node const&)
+//auto print(function_type_node const&)
+//auto print(type_node const&)
+//auto print(namespace_node const&)
+//auto print(alias_node const&)
+//auto print(declaration_node const&)
 
 
 //-----------------------------------------------------------------------
@@ -7587,6 +7640,16 @@ public:
     auto start(template_args_tag const&, int indent) -> void
     {
         o << pre(indent) << "template arguments\n";
+    }
+
+    auto start(declaration_identifier_tag const&, int indent) -> void
+    {
+        o << pre(indent) << "declaration identifier\n";
+    }
+
+    auto start(next_expression_tag const&, int indent) -> void
+    {
+        o << pre(indent) << "next expression\n";
     }
 
     auto start(alias_node const& n, int indent) -> void

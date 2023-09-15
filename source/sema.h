@@ -305,7 +305,11 @@ public:
         //  Then look backward to find the first declaration of
         //  this name that is not deeper (in a nested scope)
         //  and is in the same function
-        for (auto ri = std::make_reverse_iterator(i+1); ri != symbols.crend(); ++ri )
+        for (
+            auto ri = std::make_reverse_iterator(i+1);
+            ri != symbols.crend() && ri->position() <= t.position();    // TODO: See pure2-deducing-pointers-error.cpp2
+            ++ri
+            )
         {
             if (
                 ri->sym.index() == symbol::active::declaration
@@ -1448,10 +1452,22 @@ public:
     bool started_standalone_assignment_expression = false;
     bool started_postfix_expression               = false;
     bool is_out_expression                        = false;
+    bool inside_next_expression                   = false;
     bool inside_parameter_list                    = false;
+    bool inside_parameter_identifier              = false;
     bool inside_returns_list                      = false;
     bool just_entered_for                         = false;
     parameter_declaration_node const* inside_out_parameter = {};
+
+    auto start(next_expression_tag const&, int) -> void
+    {
+        inside_next_expression = true;
+    }
+
+    auto end(next_expression_tag  const&, int) -> void
+    {
+        inside_next_expression = false;
+    }
 
     auto start(parameter_declaration_list_node const&, int) -> void
     {
@@ -1461,6 +1477,16 @@ public:
     auto end(parameter_declaration_list_node const&, int) -> void
     {
         inside_parameter_list = false;
+    }
+
+    auto start(declaration_identifier_tag const&, int) -> void
+    {
+        inside_parameter_identifier = inside_parameter_list;
+    }
+
+    auto end(declaration_identifier_tag const&, int) -> void
+    {
+        inside_parameter_identifier = false;
     }
 
     auto start(parameter_declaration_node const& n, int) -> void
@@ -1598,12 +1624,12 @@ public:
             is_out_expression = false;
         }
 
-        //  Otherwise it's just an identifier use (if it's outside the parameter list) and
+        //  Otherwise it's just an identifier use (if it's not a parameter name) and
         //  it's the first identifier of a postfix_expressions (not a member name or something else)
         else if (started_postfix_expression)
         {
             started_postfix_expression = false;
-            if (!inside_parameter_list)
+            if (!inside_parameter_identifier && !inside_next_expression)
             {
                 //  Put this into the table if it's a use of an object in scope
                 //  or it's a 'copy' parameter (but to be a use it must be after

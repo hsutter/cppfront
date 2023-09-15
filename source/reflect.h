@@ -1526,7 +1526,7 @@ auto first = true;
             to_string += "    return ret;\n}\n";
         }
 
-        CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, to_string), 
+        CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, std::move(to_string)), 
                    "could not add to_string static function");
     }
 }
@@ -1652,7 +1652,7 @@ std::string comma = "";
 
 #line 1128 "reflect.h2"
         storage += " )> = ();\n";
-        CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, storage), 
+        CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, std::move(storage)), 
                    "could not add storage");
     }
 }
@@ -1709,7 +1709,7 @@ std::string destroy = "    private destroy: (inout this) = {\n";
         }
 
         destroy += "}\n";
-        CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, destroy), 
+        CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, std::move(destroy)), 
                    "could not add destroy");
     }
 }
