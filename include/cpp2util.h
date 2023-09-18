@@ -517,14 +517,14 @@ struct {
     [[nodiscard]] auto cpp2_new(auto&& ...args) const -> std::unique_ptr<T> {
         return std::make_unique<T>(CPP2_FORWARD(args)...);
     }
-} unique;
+} inline unique;
 
 [[maybe_unused]] struct {
     template<typename T>
     [[nodiscard]] auto cpp2_new(auto&& ...args) const -> std::shared_ptr<T> {
         return std::make_shared<T>(CPP2_FORWARD(args)...);
     }
-} shared;
+} inline shared;
 
 template<typename T>
 [[nodiscard]] auto cpp2_new(auto&& ...args) -> std::unique_ptr<T> {
@@ -1009,7 +1009,7 @@ inline constexpr auto is( auto const& x, auto const& value ) -> bool
 struct nonesuch_ {
     auto operator==(auto const&) -> bool { return false; }
 };
-constexpr static nonesuch_ nonesuch;
+constexpr inline nonesuch_ nonesuch;
 
 //  The 'as' cast functions are <To, From> so use that order here
 //  If it's confusing, we can switch this to <From, To>

@@ -192,9 +192,9 @@ struct literal_node {
         -> std::string
     {
         assert (literal);
-        auto ret = literal->to_string(true);
+        auto ret = literal->to_string();
         if (user_defined_suffix) {
-            ret += user_defined_suffix->to_string(true);
+            ret += user_defined_suffix->to_string();
         }
         return ret;
     }
@@ -398,7 +398,7 @@ struct binary_expression_node
         auto ret = expr->to_string();
         for (auto const& x : terms) {
             assert (x.op);
-            ret += " " + x.op->to_string(true);
+            ret += " " + x.op->to_string();
             assert (x.expr);
             ret += " " + x.expr->to_string();
         }
@@ -1182,7 +1182,7 @@ struct type_id_node
         break;case unqualified:
             return std::get<unqualified>(id)->to_string();
         break;case keyword:
-            return std::get<keyword>(id)->to_string(true);
+            return std::get<keyword>(id)->to_string();
         break;default:
             assert(!"ICE: invalid type_id state");
         }
@@ -1233,7 +1233,7 @@ auto unqualified_id_node::to_string() const
     -> std::string
 {
     assert(identifier);
-    auto ret = identifier->to_string(true);
+    auto ret = identifier->to_string();
     if (open_angle != source_position{}) {
         auto separator = std::string{"<"};
         for (auto& t : template_args) {
@@ -1327,7 +1327,7 @@ struct is_as_expression_node
         auto ret = expr->to_string();
         for (auto const& x : ops) {
             assert (x.op);
-            ret += " " + x.op->to_string(true);
+            ret += " " + x.op->to_string();
             if (x.type) {
                 ret += " " + x.type->to_string();
             }
@@ -3784,44 +3784,874 @@ struct translation_unit_node
 
 //-----------------------------------------------------------------------
 //
-//  print(*_node): pretty-prints Cpp2 ASTs
+//  pretty_print_visualize: pretty-prints Cpp2 ASTs
 //
 //-----------------------------------------------------------------------
 //
-//auto print(primary_expression_node const&)
-//    -> std::string
-//{
-//    auto ret = std::string{};
-//    return ret;
-//}
-//auto print(literal_node const&)
-//auto print(prefix_expression_node const&)
-//auto print(binary_expression_node const&)
-//auto print(expression_node const&)
-//auto print(expression_list_node const&)
-//auto print(expression_statement_node const&)
-//auto print(postfix_expression_node const&)
-//auto print(unqualified_id_node const&)
-//auto print(qualified_id_node const&)
-//auto print(type_id_node const&)
-//auto print(is_as_expression_node const&)
-//auto print(id_expression_node const&)
-//auto print(compound_statement_node const&)
-//auto print(selection_statement_node const&)
-//auto print(iteration_statement_node const&)
-//auto print(return_statement_node const&)
-//auto print(alternative_node const&)
-//auto print(inspect_expression_node const&)
-//auto print(contract_node const&)
-//auto print(jump_statement_node const&)
-//auto print(statement_node const&)
-//auto print(parameter_declaration_node const&)
-//auto print(parameter_declaration_list_node const&)
-//auto print(function_type_node const&)
-//auto print(type_node const&)
-//auto print(namespace_node const&)
-//auto print(alias_node const&)
-//auto print(declaration_node const&)
+auto pretty_print_visualize(token const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(primary_expression_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(literal_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(prefix_expression_node const& n, int indent)
+    -> std::string;
+template<
+    String   Name,
+    typename Term
+>
+auto pretty_print_visualize(binary_expression_node<Name,Term> const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(expression_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(expression_list_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(expression_statement_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(postfix_expression_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(unqualified_id_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(qualified_id_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(type_id_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(is_as_expression_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(id_expression_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(compound_statement_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(selection_statement_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(iteration_statement_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(return_statement_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(alternative_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(inspect_expression_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(contract_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(jump_statement_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(statement_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(parameter_declaration_node const& n, int indent, bool is_template_param = false)
+    -> std::string;
+auto pretty_print_visualize(parameter_declaration_list_node const& n, int indent, bool is_template_param_list = false)
+    -> std::string;
+auto pretty_print_visualize(function_type_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(type_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(namespace_node const& n, int indent)
+    -> std::string;
+auto pretty_print_visualize(declaration_node const& n, int indent, bool include_metafunctions_list = false)
+    -> std::string;
+
+
+
+//-----------------------------------------------------------------------
+//  pre: Get an indentation prefix
+//
+inline static int         indent_spaces  = 2;
+inline static std::string indent_str     = std::string( 1024, ' ' );    // "1K should be enough for everyone"
+
+auto pre(int indent)
+    -> std::string_view
+{
+    assert (indent >= 0);
+    return {
+        indent_str.c_str(),
+        as<size_t>( std::min( indent*indent_spaces, __as<int>(std::ssize(indent_str))) )
+    };
+}
+
+
+//-----------------------------------------------------------------------
+//  try_pretty_print_visualize
+//
+//  Helper to emit whatever is in a variant where each
+//  alternative is a smart pointer
+//
+template <int I>
+auto try_pretty_print_visualize(
+    auto&     v,
+    auto&&... more
+)
+    -> std::string
+{
+    if (v.index() == I) {
+        auto const& alt = std::get<I>(v);
+        assert (alt);
+        return pretty_print_visualize (*alt, CPP2_FORWARD(more)...);
+    }
+    return "";
+}
+
+
+auto pretty_print_visualize(token const& t, int)
+    -> std::string
+{
+    return t.to_string();
+}
+
+
+auto pretty_print_visualize(primary_expression_node const& n, int indent)
+    -> std::string
+{
+    auto ret = std::string{};
+
+    ret += try_pretty_print_visualize<primary_expression_node::identifier     >(n.expr, indent);
+    ret += try_pretty_print_visualize<primary_expression_node::expression_list>(n.expr, indent);
+    ret += try_pretty_print_visualize<primary_expression_node::id_expression  >(n.expr, indent);
+    ret += try_pretty_print_visualize<primary_expression_node::declaration    >(n.expr, indent);
+    ret += try_pretty_print_visualize<primary_expression_node::inspect        >(n.expr, indent);
+    ret += try_pretty_print_visualize<primary_expression_node::literal        >(n.expr, indent);
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(literal_node const& n, int)
+    -> std::string
+{
+    //  TODO: This is an initial visualizer implementation, and still
+    //        skips a few rarer things (such as raw string literals)
+
+    assert(n.literal);
+
+    auto ret = n.literal->to_string();
+
+    if (n.user_defined_suffix) {
+        ret += n.user_defined_suffix->as_string_view();
+    }
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(prefix_expression_node const& n, int indent)
+    -> std::string
+{
+    assert(n.expr);
+
+    auto ret = std::string{};
+
+    for (auto& op : n.ops) {
+        assert(op);
+        ret += op->as_string_view();
+    }
+
+    ret += pretty_print_visualize(*n.expr, indent);
+
+    return ret;
+}
+
+
+template<
+    String   Name,
+    typename Term
+>
+auto pretty_print_visualize(binary_expression_node<Name,Term> const& n, int indent)
+    -> std::string
+{
+    assert(n.expr);
+
+    auto ret = pretty_print_visualize(*n.expr, indent);
+    for (auto& term : n.terms) {
+        assert(term.op && term.expr);
+        ret += " " + term.op->to_string()
+            + " " + pretty_print_visualize(*term.expr, indent);
+    }
+    return ret;
+}
+
+
+auto pretty_print_visualize(expression_node const& n, int indent)
+    -> std::string
+{
+    assert(n.expr);
+    return pretty_print_visualize(*n.expr, indent);
+}
+
+
+auto pretty_print_visualize(expression_list_node const& n, int indent)
+    -> std::string
+{
+    assert(n.open_paren && n.close_paren);
+
+    auto ret = n.open_paren->to_string();
+
+    for (auto i = 0; auto& expr : n.expressions) {
+        assert(expr.expr);
+        if (
+            expr.pass == passing_style::out
+            || expr.pass == passing_style::move
+            || expr.pass == passing_style::forward
+            )
+        {
+            ret += to_string_view(expr.pass) + std::string{" "};
+        }
+        ret += pretty_print_visualize(*expr.expr, indent);
+        if (++i < std::ssize(n.expressions)) {
+            ret += ", ";
+        }
+    }
+
+    ret += n.close_paren->as_string_view();
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(expression_statement_node const& n, int indent)
+    -> std::string
+{
+    assert(n.expr);
+
+    auto ret = pretty_print_visualize(*n.expr, indent);
+
+    if (n.has_semicolon) {
+        ret += ";";
+    }
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(postfix_expression_node const& n, int indent)
+    -> std::string
+{
+    assert(n.expr);
+
+    auto ret = pretty_print_visualize(*n.expr, indent);
+
+    for (auto& op : n.ops)
+    {
+        assert(op.op);
+        if (op.expr_list) {
+            assert (op.op_close);
+            ret += pretty_print_visualize(*op.expr_list, indent);
+        }
+        else {
+            ret += op.op->as_string_view();
+            if (op.id_expr) {
+                ret += pretty_print_visualize(*op.id_expr, indent);
+            }
+        }
+    }
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(unqualified_id_node const& n, int indent)
+    -> std::string
+{
+    assert(n.identifier);
+
+    auto ret = n.identifier->to_string();
+
+    if (n.open_angle != source_position{})
+    {
+        ret += "<";
+        for (bool first = true; auto& arg : n.template_args)
+        {
+            if (!first) {
+                ret += ", ";
+            }
+            first = false;
+            ret += try_pretty_print_visualize<unqualified_id_node::expression>(arg.arg, indent);
+            ret += try_pretty_print_visualize<unqualified_id_node::type_id   >(arg.arg, indent);
+        }
+        ret += ">";
+    }
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(qualified_id_node const& n, int indent)
+    -> std::string
+{
+    auto ret = std::string{};
+
+    for (auto& id : n.ids) {
+        if (id.scope_op) { ret += id.scope_op->as_string_view(); }
+        assert (id.id);
+        ret += pretty_print_visualize(*id.id, indent);
+    }
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(type_id_node const& n, int indent)
+    -> std::string
+{
+    auto ret = std::string{};
+
+    for (auto& qual : n.pc_qualifiers) {
+        assert(qual);
+        ret += qual->as_string_view();
+        ret += " ";
+    }
+
+    if (n.id.index() == type_id_node::empty) { ret += "_"; }
+    ret += try_pretty_print_visualize<type_id_node::qualified  >(n.id, indent);
+    ret += try_pretty_print_visualize<type_id_node::unqualified>(n.id, indent);
+    ret += try_pretty_print_visualize<type_id_node::keyword    >(n.id, indent);
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(is_as_expression_node const& n, int indent)
+    -> std::string
+{
+    assert (n.expr);
+
+    auto ret = pretty_print_visualize(*n.expr, indent);
+
+    for (auto& op : n.ops) {
+        if (op.op)   { ret += " " + op.op->to_string() + " "; }
+        if (op.type) { ret += pretty_print_visualize(*op.type, indent); }
+        if (op.expr) { ret += pretty_print_visualize(*op.expr, indent); }
+    }
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(id_expression_node const& n, int indent)
+    -> std::string
+{
+    auto ret = std::string{};
+
+    ret += try_pretty_print_visualize<id_expression_node::qualified  >(n.id, indent);
+    ret += try_pretty_print_visualize<id_expression_node::unqualified>(n.id, indent);
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(compound_statement_node const& n, int indent)
+    -> std::string
+{
+    auto ret = std::string{"\n"} + pre(indent) + "{";
+
+    for (auto& stmt : n.statements) {
+        assert (stmt);
+        ret += pretty_print_visualize(*stmt, indent+1);
+    }
+
+    ret += std::string{"\n"} + pre(indent) + "}";
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(selection_statement_node const& n, int indent)
+    -> std::string
+{
+    assert (n.identifier && n.expression && n.true_branch && n.false_branch);
+
+    auto ret = std::string{};
+
+    ret += std::string{"\n"} + pre(indent) + n.identifier->as_string_view() + " ";
+
+    if (n.is_constexpr) {
+        ret += "constexpr ";
+    }
+
+    ret += pretty_print_visualize(*n.expression, indent)
+        + pretty_print_visualize(*n.true_branch, indent);
+
+    if (n.has_source_false_branch) {
+        ret += std::string{"\n"} + pre(indent) + "else "
+            + pretty_print_visualize(*n.false_branch, indent);
+    }
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(iteration_statement_node const& n, int indent)
+    -> std::string
+{
+    //  First compute the common parts
+
+    auto next_expr = std::string{};
+    if (n.next_expression) {
+        next_expr += std::string{"\n"} + pre(indent+1) + "next " + pretty_print_visualize(*n.next_expression, indent);
+    }
+
+    auto stmts = std::string{};
+    if (n.statements) {
+        stmts += pretty_print_visualize(*n.statements, indent+1);
+    }
+
+    //  Then slot them in where appropriate
+
+    auto ret = std::string{};
+    assert (n.identifier);
+
+    ret += std::string{"\n"} + pre(indent);
+    if (n.label) {
+        ret += n.label->to_string()
+            + ": ";
+    }
+
+    if (*n.identifier == "while") {
+        assert (n.condition);
+        ret += "while "
+            + pretty_print_visualize(*n.condition, indent) + next_expr + stmts;
+    }
+    else if (*n.identifier == "do") {
+        assert (n.condition);
+        ret += "do "
+            + stmts
+            + "\n" + pre(indent) + "while "
+            + pretty_print_visualize(*n.condition, indent)
+            + next_expr + ";";
+    }
+    else {
+        assert (n.range && n.parameter && n.body);
+        ret += "for "
+            + pretty_print_visualize(*n.range, indent)
+            + next_expr
+            + "\n" + pre(indent) + "do (" + pretty_print_visualize(*n.parameter, indent + 1) + ")"
+            + pretty_print_visualize(*n.body, indent+1);
+    }
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(return_statement_node const& n, int indent)
+    -> std::string
+{
+    auto ret = std::string{"\n"} + pre(indent) + "return";
+
+    if (n.expression) {
+        ret += " " + pretty_print_visualize(*n.expression, indent);
+    }
+
+    ret += ";";
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(alternative_node const& n, int indent)
+    -> std::string
+{
+    auto ret = std::string{};
+    assert (n.is_as_keyword);
+    ret += std::string{"\n"} + pre(indent);
+    if (n.name) {
+        ret += pretty_print_visualize(*n.name, indent) + ": ";
+    }
+    ret += n.is_as_keyword->as_string_view();
+    if (n.type_id) {
+        ret += " " + pretty_print_visualize(*n.type_id, indent);
+    }
+    if (n.value) {
+        ret += " " + pretty_print_visualize(*n.value, indent);
+    }
+    ret += " = " + pretty_print_visualize(*n.statement, indent+1);
+    return ret;
+}
+
+
+auto pretty_print_visualize(inspect_expression_node const& n, int indent)
+    -> std::string
+{
+    assert (n.expression);
+
+    auto ret = std::string{"inspect"};
+
+    if (n.is_constexpr) {
+        ret += " constexpr";
+    }
+
+    ret += " " + pretty_print_visualize(*n.expression, indent);
+
+    if (n.result_type) {
+        ret += " -> " + pretty_print_visualize(*n.result_type, indent);
+    }
+
+    ret += " {";
+
+    for (auto& alt : n.alternatives) {
+        assert(alt);
+        ret += pretty_print_visualize(*alt, indent+1);
+    }
+
+    ret += std::string{"\n"} + pre(indent) + "}";
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(contract_node const& n, int indent)
+    -> std::string
+{
+    assert (n.kind && n.condition);
+
+    auto ret = std::string{"\n"} + pre(indent) + "[[" + n.kind->as_string_view();
+
+    if (n.group) {
+        ret += " " + pretty_print_visualize(*n.group, indent);
+    }
+
+    ret += ": " + pretty_print_visualize(*n.condition, indent);
+
+    if (n.message) {
+        ret += " " + n.message->to_string();
+    }
+
+    ret += "]]";
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(jump_statement_node const& n, int indent)
+    -> std::string
+{
+    assert (n.keyword);
+
+    auto ret = std::string{"\n"} + pre(indent) + n.keyword->as_string_view();
+
+    if (n.label) {
+        ret += " " + n.label->to_string();
+    }
+
+    ret += ";";
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(statement_node const& n, int indent)
+    -> std::string
+{
+    auto ret = std::string{};
+
+    if (n.is_expression())
+    {
+        if (n.compound_parent) {
+            ret += std::string{"\n"} + pre(indent);
+        }
+        auto& expr = std::get<statement_node::expression>(n.statement);
+        assert (expr);
+        ret += pretty_print_visualize(*expr, indent);
+    }
+    else
+    {
+        if (n.parameters) {
+            ret += std::string{"\n"} + pre(indent) + pretty_print_visualize(*n.parameters, indent);
+        }
+
+        ret += try_pretty_print_visualize<statement_node::compound   >(n.statement, indent);
+        ret += try_pretty_print_visualize<statement_node::selection  >(n.statement, indent);
+        ret += try_pretty_print_visualize<statement_node::declaration>(n.statement, indent);
+        ret += try_pretty_print_visualize<statement_node::return_    >(n.statement, indent);
+        ret += try_pretty_print_visualize<statement_node::iteration  >(n.statement, indent);
+        ret += try_pretty_print_visualize<statement_node::contract   >(n.statement, indent);
+        ret += try_pretty_print_visualize<statement_node::inspect    >(n.statement, indent);
+        ret += try_pretty_print_visualize<statement_node::jump       >(n.statement, indent);
+    }
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(parameter_declaration_node const& n, int indent, bool is_template_param_list /* = false */ )
+    -> std::string
+{
+    assert (n.declaration);
+
+    auto ret = std::string{};
+
+    if (!is_template_param_list) {
+        switch (n.mod) {
+        break;case parameter_declaration_node::modifier::implicit : ret += "implicit ";
+        break;case parameter_declaration_node::modifier::virtual_ : ret += "virtual ";
+        break;case parameter_declaration_node::modifier::override_: ret += "override ";
+        break;case parameter_declaration_node::modifier::final_   : ret += "final ";
+        break;default: ; // none
+        }
+
+        ret += to_string_view(n.pass);
+        ret += " ";
+    }
+
+    ret += pretty_print_visualize(*n.declaration, indent);
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(parameter_declaration_list_node const& n, int indent, bool is_template_param_list /* = false */)
+    -> std::string
+{
+    assert(n.open_paren && n.close_paren);
+
+    auto ret = n.open_paren->to_string();
+
+    auto space = std::string{};
+    if (std::ssize(n.parameters) > 1) {
+        space += std::string{"\n"} + pre(indent+1);
+    }
+
+    for (auto i = 0; auto& param : n.parameters) {
+        ret += space + pretty_print_visualize(*param, indent+1, is_template_param_list);
+        if (++i < std::ssize(n.parameters)) {
+            ret += ", ";
+        }
+    }
+
+    if (std::ssize(n.parameters) > 1) {
+        ret += std::string{"\n"} + pre(indent);
+    }
+    ret += n.close_paren->to_string();
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(function_type_node const& n, int indent)
+    -> std::string
+{
+    assert (n.parameters);
+
+    auto ret = pretty_print_visualize(*n.parameters, indent);
+
+    if (n.throws) {
+        ret += " throws";
+    }
+
+    if (n.has_non_void_return_type()) {
+        ret += " -> ";
+        ret += try_pretty_print_visualize<function_type_node::list>(n.returns, indent+1);
+        if (n.returns.index() == function_type_node::id) {
+            auto& single = std::get<function_type_node::id>(n.returns);
+            ret += to_string_view(single.pass)
+                + std::string{" "} + pretty_print_visualize(*single.type, indent+1);
+        }
+    }
+
+    for (auto& contract: n.contracts) {
+        assert(contract);
+        ret += pretty_print_visualize(*contract, indent+1);
+    }
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(type_node const& n)
+    -> std::string
+{
+    assert (n.type);
+
+    auto ret = std::string{};
+
+    if (n.final) {
+        ret += "final ";
+    }
+
+    ret += "type";
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(namespace_node const&)
+    -> std::string
+{
+    return "namespace";
+}
+
+
+auto pretty_print_visualize(declaration_node const& n, int indent, bool include_metafunctions_list /* = false */ )
+    -> std::string
+{
+    indent_spaces = 4;
+
+    //  First compute the common parts
+
+    auto metafunctions = std::string{};
+    if (include_metafunctions_list) {
+        for (auto& meta : n.meta_functions) {
+            metafunctions += " @" + pretty_print_visualize(*meta, indent);
+        }
+    }
+
+    auto template_params = std::string{};
+    if (n.template_parameters) {
+        template_params += " " + pretty_print_visualize(*n.template_parameters, indent + 1, true);
+    }
+
+    auto requires_clause = std::string{};
+    if (n.requires_clause_expression) {
+        requires_clause += " requires (" + pretty_print_visualize(*n.requires_clause_expression, indent) + ")";
+    }
+
+    auto initializer = std::string{};
+    if (n.initializer) {
+        auto adjusted_indent = indent;
+        if (!n.name()) {
+            ++adjusted_indent;
+        }
+        initializer += "= " + pretty_print_visualize(*n.initializer, adjusted_indent);
+    }
+
+    //  Then slot them in where appropriate
+
+    auto ret = std::string{""};
+
+    //  Add an extra newline for spacing, unless this declaration
+    //  is within a function body or is the first member of a type
+    if (
+        !n.parent_is_function()
+        && !n.parent_is_object()
+        && !n.is_parameter
+        )
+    {
+        static declaration_node const* last_parent_type = {};
+        if (n.parent_is_type()) {
+            if (last_parent_type != n.get_parent()) {
+                last_parent_type = n.get_parent();
+            }
+            else {
+                ret += "\n";
+            }
+        }
+        else {
+            ret += "\n";
+        }
+    }
+    if (!n.is_parameter && n.name()) {
+        ret += std::string{"\n"} + pre(indent);
+    }
+
+    switch (n.access) {
+    break;case accessibility::public_    : ret += "public ";
+    break;case accessibility::protected_ : ret += "protected ";
+    break;case accessibility::private_   : ret += "private ";
+    break;default: ; // default accessibility
+    }
+
+    if (n.identifier) {
+        ret += pretty_print_visualize(*n.identifier, indent);
+    }
+
+    if (n.is_parameter && (n.has_name("this") || n.has_name("that"))) {
+        return ret;
+    }
+
+    if (n.is_variadic) {
+        ret += "...";
+    }
+
+    ret += ":";
+
+    if (n.is_function()) {
+        auto& func = std::get<declaration_node::a_function>(n.type);
+        assert(func);
+        ret += metafunctions
+            + template_params
+            + pretty_print_visualize(*func, indent)
+            + requires_clause
+            + " " + initializer;
+    }
+    else if (n.is_object()) {
+        auto& type_id = std::get<declaration_node::an_object>(n.type);
+        assert(type_id);
+        ret += metafunctions
+            + template_params;
+        if (!n.has_wildcard_type()) {
+            ret += " " + pretty_print_visualize(*type_id, indent);
+        }
+        if (!initializer.empty()) {
+            ret += requires_clause
+                + " " + initializer;
+        }
+    }
+    else if (n.is_type()) {
+        auto& t = std::get<declaration_node::a_type>(n.type);
+        assert(t);
+        ret += metafunctions
+            + template_params
+            + " " + pretty_print_visualize(*t)
+            + " " + initializer;
+    }
+    else if (n.is_namespace()) {
+        auto& t = std::get<declaration_node::a_type>(n.type);
+        assert(t);
+        ret += "namespace = "
+            + initializer;
+    }
+    else if (n.is_alias()) {
+        auto& a = std::get<declaration_node::an_alias>(n.type);
+        assert(a);
+
+        auto object_type_id = std::string{};
+        if (a->type_id) {
+            object_type_id += pretty_print_visualize(*a->type_id, indent) + " ";
+        }
+
+        ret += template_params;
+        if (a->is_type_alias()) {
+            auto& t = std::get<alias_node::a_type>(a->initializer);
+            ret += template_params
+                + "type"
+                + requires_clause
+                + "== "
+                + pretty_print_visualize(*t, indent)
+                + ";";
+        }
+        else if (a->is_namespace_alias()) {
+            auto& id = std::get<alias_node::a_namespace>(a->initializer);
+            assert(id);
+            ret += "== "
+                + pretty_print_visualize(*id, indent)
+                + ";";
+        }
+        else if (a->is_object_alias()) {
+            auto& expr = std::get<alias_node::an_object>(a->initializer);
+            assert(expr);
+            ret += template_params
+                + object_type_id
+                + requires_clause
+                + "== "
+                + pretty_print_visualize(*expr, indent)
+                + ";";
+        }
+    }
+
+    return ret;
+}
+
+
+auto pretty_print_visualize(translation_unit_node const& n)
+    -> std::string
+{
+    auto ret = std::string{};
+
+    for (auto& decl : n.declarations) {
+        assert(decl);
+        ret += pretty_print_visualize(*decl, 0);
+    }
+
+    return ret;
+}
 
 
 //-----------------------------------------------------------------------
@@ -4109,7 +4939,7 @@ private:
         auto i = done() ? -1 : 0;
         assert (peek(i));
         if (include_curr_token) {
-            m += std::string(" (at '") + peek(i)->to_string(true) + "')";
+            m += std::string(" (at '") + peek(i)->to_string() + "')";
         }
         if (
             err_pos == source_position{}
@@ -4187,7 +5017,7 @@ private:
     //G     id-expression
     //G     literal
     //G     '(' expression-list ')'
-    //G     '{' expression-list '}'
+    //GT     '{' expression-list '}'
     //G     unnamed-declaration
     //G
     auto primary_expression()
@@ -4350,7 +5180,7 @@ private:
                     )
                 )
             {
-                auto op  = curr().to_string(true);
+                auto op  = curr().to_string();
                 auto msg = "postfix unary " + op;
                 if      (curr().type() == lexeme::Multiply ) { msg += " (dereference)"          ; }
                 else if (curr().type() == lexeme::Ampersand) { msg += " (address-of)"           ; }
@@ -4434,7 +5264,7 @@ private:
         {
             auto next_word = std::string{};
             if (peek(1)) {
-                next_word = peek(1)->to_string(true);
+                next_word = peek(1)->to_string();
             }
             error("'this' is not a pointer - write 'this." + next_word + "' instead of 'this->" + next_word + "'");
             return {};
@@ -5160,15 +5990,7 @@ private:
 
         else {
             if (*n->identifier == "new") {
-                error( "use 'new<" + curr().to_string(true) + ">', not 'new " + curr().to_string(true) + "'", false);
-                return {};
-            }
-            if (
-                *n->identifier == "sizeof"
-                && curr().type() != lexeme::LeftParen
-                )
-            {
-                error( "use 'sizeof(" + curr().to_string(true) + ")', not 'sizeof " + curr().to_string(true) + "'", false);
+                error( "use 'new<" + curr().to_string() + ">', not 'new " + curr().to_string() + "'", false);
                 return {};
             }
             if (*n->identifier == "co_await" || *n->identifier == "co_yield") {
@@ -5668,7 +6490,7 @@ private:
     //G     alt-name? as-type-cast '=' statement
     //G
     //G alt-name:
-    //G     unqualified-id :
+    //G     unqualified-id ':'
     //G
     auto alternative()
         -> std::unique_ptr<alternative_node>
@@ -6217,11 +7039,11 @@ private:
             auto tok = n->name();
             assert(tok);
             if (tok->type() != lexeme::Identifier) {
-                error("expected identifier, not '" + tok->to_string(true) + "'",
+                error("expected identifier, not '" + tok->to_string() + "'",
                     false, tok->position());
             }
             else if (n->declaration->has_wildcard_type()) {
-                error("return parameter '" + tok->to_string(true) + "' must have a type",
+                error("return parameter '" + tok->to_string() + "' must have a type",
                     false, tok->position());
             }
         }
@@ -6489,12 +7311,12 @@ private:
             else if (auto t = type_id()) {
                 if (
                     t->get_token()
-                    && t->get_token()->to_string(true) == "auto"
+                    && t->get_token()->to_string() == "auto"
                     )
                 {
                     auto name = std::string{"v"};
                     if (my_decl && my_decl->name()) {
-                        name = my_decl->name()->to_string(true);
+                        name = my_decl->name()->to_string();
                     }
                     errors.emplace_back(
                         curr().position(),
@@ -6775,12 +7597,12 @@ private:
         {
             if (
                 t->get_token()
-                && t->get_token()->to_string(true) == "auto"
+                && t->get_token()->to_string() == "auto"
                 )
             {
                 auto name = std::string{"v"};
                 if (n->name()) {
-                    name = n->name()->to_string(true);
+                    name = n->name()->to_string();
                 }
                 errors.emplace_back(
                     curr().position(),
@@ -7019,7 +7841,7 @@ private:
 
     //G alias
     //G     ':' template-parameter-declaration-list? 'type' requires-clause? '==' type-id ';'
-    //G     ':' 'namespace' '==' qualified-id ';'
+    //G     ':' 'namespace' '==' id-expression ';'
     //G     ':' template-parameter-declaration-list? type-id? requires-clause? '==' expression ';'
     //G
     //GT     ':' function-type '==' expression ';'
@@ -7144,7 +7966,7 @@ private:
             }
             if (
                 t->is_wildcard()
-                || ( t->get_token() && t->get_token()->to_string(true) == "auto" )
+                || ( t->get_token() && t->get_token()->to_string() == "auto" )
             ) {
                 errors.emplace_back(
                     curr().position(),
@@ -7287,7 +8109,7 @@ private:
             {
                 auto name = std::string{"v"};
                 if (peek(0) && peek(0)->type() == lexeme::Identifier) {
-                    name = peek(0)->to_string(true);
+                    name = peek(0)->to_string();
                 }
                 errors.emplace_back(
                     curr().position(),
@@ -7303,7 +8125,7 @@ private:
             {
                 auto name = std::string{"N"};
                 if (peek(0)) {
-                    name = peek(0)->to_string(true);
+                    name = peek(0)->to_string();
                 }
                 errors.emplace_back(
                     curr().position(),
@@ -7322,7 +8144,7 @@ private:
             {
                 auto name = std::string{"C"};
                 if (peek(0)) {
-                    name = peek(0)->to_string(true);
+                    name = peek(0)->to_string();
                 }
                 errors.emplace_back(
                     curr().position(),
@@ -7441,23 +8263,7 @@ struct printing_visitor
     //
     std::ostream& o;
 
-    printing_visitor(std::ostream& out) : o{out} { }
-
-    //-----------------------------------------------------------------------
-    //  pre: Get an indentation prefix
-    //
-    inline static int         indent_spaces  = 2;
-    inline static std::string indent_str     = std::string( 1024, ' ' );    // "1K should be enough for everyone"
-
-    auto pre(int indent)
-        -> std::string_view
-    {
-        assert (indent >= 0);
-        return {
-            indent_str.c_str(),
-            as<size_t>( std::min( indent*indent_spaces, __as<int>(std::ssize(indent_str))) )
-        };
-    }
+    printing_visitor(std::ostream& out) : o{out} { indent_spaces = 2; }
 };
 
 
@@ -7474,7 +8280,7 @@ class parse_tree_printer : printing_visitor
 public:
     auto start(token const& n, int indent) -> void
     {
-        o << pre(indent) << n.to_string() << "\n";
+        o << pre(indent) << __as<std::string>(n.type()) << ": " << n.to_string() << "\n";
     }
 
     auto start(literal_node const&, int indent) -> void

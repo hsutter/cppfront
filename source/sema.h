@@ -393,7 +393,7 @@ public:
                 }
 
                 if (sym.start && sym.identifier) {
-                    o << sym.identifier->to_string(true);
+                    o << sym.identifier->to_string();
                 }
 
                 if (is_uninitialized_decl(sym)) {
@@ -421,7 +421,7 @@ public:
                 else {
                     o << "*** use of ";
                 }
-                o << sym.identifier->to_string(true);
+                o << sym.identifier->to_string();
             }
 
             break;case symbol::active::selection: {
@@ -669,7 +669,7 @@ private:
         //  If this is a member variable in a constructor, the name doesn't
         //  appear lexically right in the constructor, so prepending "this."
         //  to the printed name might make the error more readable to the programmer
-        auto name = decl->identifier->to_string(true);
+        auto name = decl->identifier->to_string();
         if (decl->declaration->parent_is_type()) {
             name += " (aka this." + name + ")";
         }
@@ -715,7 +715,7 @@ private:
                 {
                     errors.emplace_back(
                         sym.identifier->position(),
-                        "local variable " + sym.identifier->to_string(true)
+                        "local variable " + sym.identifier->to_string()
                             + " cannot have the same name as an uninitialized"
                               " variable in the same function");
                 }
@@ -729,7 +729,7 @@ private:
                     errors.emplace_back(
                         sym.identifier->position(),
                         "local variable " + name
-                            + " must be initialized before " + sym.identifier->to_string(true)
+                            + " must be initialized before " + sym.identifier->to_string()
                             + " (local variables must be initialized in the order they are declared)"
                     );
                     return false;
@@ -881,7 +881,7 @@ private:
                         auto const& sym = std::get<symbol::active::selection>(symbols[pos].sym);
                         errors.emplace_back(
                             sym.selection->identifier->position(),
-                            "\"" + sym.selection->identifier->to_string(true)
+                            "\"" + sym.selection->identifier->to_string()
                                 + "\" initializes " + name
                                 + " on:" + true_branches
                                 + "\nbut not on:" + false_branches
@@ -946,7 +946,7 @@ public:
             {
                 errors.emplace_back(
                     n.position(),
-                    "use '" + decl->identifier->to_string(true) + ".' to refer to an object member"
+                    "use '" + decl->identifier->to_string() + ".' to refer to an object member"
                 );
                 return false;
             }
@@ -973,7 +973,7 @@ public:
             {
                 errors.emplace_back(
                     n.position(),
-                    "use '" + decl->identifier->to_string(true) + "::' to refer to a type member"
+                    "use '" + decl->identifier->to_string() + "::' to refer to a type member"
                 );
                 return false;
             }
@@ -1247,7 +1247,7 @@ public:
             )
         {
             assert (n.identifier->get_token());
-            auto name = n.identifier->get_token()->to_string(true);
+            auto name = n.identifier->get_token()->to_string();
             errors.emplace_back(
                 n.position(),
                 "(temporary alpha limitation) local functions like '" + name + ": (/*params*/) = {/*body*/}' are not currently supported - write a local variable initialized with an unnamed function like '" + name + " := :(/*params*/) = {/*body*/};' instead (add '=' and ';')"
@@ -1381,7 +1381,7 @@ public:
         {
             errors.emplace_back(
                 n.position(),
-                n.name()->to_string(true) + " must return bool"
+                n.name()->to_string() + " must return bool"
             );
             return false;
         }

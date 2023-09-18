@@ -43,8 +43,6 @@ auto cmdline_processor::print(std::string_view s, int width)
 auto pad(int padding)
     -> std::string_view
 {
-    static std::string indent_str = std::string( 1024, ' ' );    // "1K should be enough for everyone"
-
     if (padding < 1) {
         return "";
     }
@@ -1583,7 +1581,7 @@ public:
             || n == "union"
             )
         {
-            printer.print_cpp2("cpp2_"+n.to_string(true), pos);
+            printer.print_cpp2("cpp2_"+n.to_string(), pos);
         }
         else {
             printer.print_cpp2(n, pos, true);
@@ -2197,7 +2195,7 @@ public:
             && !iteration_statements.back().used
             )
         {
-            auto name = iteration_statements.back().stmt->label->to_string(true);
+            auto name = iteration_statements.back().stmt->label->to_string();
             errors.emplace_back(
                 iteration_statements.back().stmt->position(),
                 name + ": a named loop must have its name used (did you forget 'break " + name + ";' or 'continue " + name + "';?)"
@@ -2374,7 +2372,7 @@ public:
             {
                 errors.emplace_back(
                     n.position(),
-                    "a named " + n.keyword->to_string(true) + " must use the name of an enclosing local loop label"
+                    "a named " + n.keyword->to_string() + " must use the name of an enclosing local loop label"
                 );
                 return;
             }
@@ -2736,7 +2734,7 @@ public:
                     {
                         errors.emplace_back(
                             n.position(),
-                            "attempting to move twice from 'that." + member->to_string(true) + "'"
+                            "attempting to move twice from 'that." + member->to_string() + "'"
                         );
                         return;
                     }
@@ -2759,7 +2757,7 @@ public:
             {
                 errors.emplace_back(
                     n.position(),
-                    n.expr->get_token()->to_string(true) + " is not a forwarding parameter name"
+                    n.expr->get_token()->to_string() + " is not a forwarding parameter name"
                 );
             }
         }
@@ -2805,7 +2803,7 @@ public:
                         {
                             errors.emplace_back(
                                 op->position(),
-                                op->to_string(true) + " - pointer arithmetic is illegal - use std::span or gsl::span instead"
+                                op->to_string() + " - pointer arithmetic is illegal - use std::span or gsl::span instead"
                             );
                             violates_bounds_safety = true;
                         }
@@ -2815,7 +2813,7 @@ public:
                         {
                             errors.emplace_back(
                                 op->position(),
-                                op->to_string(true) + " - pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first"
+                                op->to_string() + " - pointer bitwise manipulation is illegal - use std::bit_cast to convert to raw bytes first"
                             );
                         }
                     }
@@ -3011,7 +3009,7 @@ public:
                 {
                     prefix.emplace_back( "(", i->op->position() );
                 }
-                prefix.emplace_back( i->op->to_string(true), i->op->position());
+                prefix.emplace_back( i->op->to_string(), i->op->position());
 
                 //  Enable null dereference checks
                 if (
@@ -3056,7 +3054,7 @@ public:
                     suffix.emplace_back( ")", i->op->position() );
                 }
                 else if (i->op_close) {
-                    suffix.emplace_back( i->op_close->to_string(true), i->op_close->position() );
+                    suffix.emplace_back( i->op_close->to_string(), i->op_close->position() );
                 }
 
                 if (i->id_expr) {
@@ -3094,7 +3092,7 @@ public:
                     suffix.emplace_back( ", ", i->op->position() );
                 }
                 else {
-                    suffix.emplace_back( i->op->to_string(true), i->op->position() );
+                    suffix.emplace_back( i->op->to_string(), i->op->position() );
                 }
             }
         }
@@ -3216,7 +3214,7 @@ public:
                     }
                 }
                 else {
-                    auto op_name = i->op->to_string(true);
+                    auto op_name = i->op->to_string();
                     if (op_name == "as") {
                         op_name = "as_";    // use the static_assert-checked 'as' by default...
                     }                       // we'll override this inside inspect-expressions
@@ -3228,7 +3226,7 @@ public:
             else
             {
                 assert(i->expr);
-                prefix += "cpp2::" + i->op->to_string(true) + "(";
+                prefix += "cpp2::" + i->op->to_string() + "(";
                 suffix = ", " + print_to_string(*i->expr) + ")" + suffix;
             }
         }
@@ -3506,7 +3504,7 @@ public:
             {
                 errors.emplace_back(
                     n.terms.front().op->position(),
-                    n.terms.front().op->to_string(true) + " - pointer assignment from null or integer is illegal"
+                    n.terms.front().op->to_string() + " - pointer assignment from null or integer is illegal"
                 );
                 violates_lifetime_safety = true;
             }
@@ -3519,7 +3517,7 @@ public:
             {
                 errors.emplace_back(
                     n.terms.front().op->position(),
-                    n.terms.front().op->to_string(true) + " - pointer arithmetic is illegal - use std::span or gsl::span instead"
+                    n.terms.front().op->to_string() + " - pointer arithmetic is illegal - use std::span or gsl::span instead"
                 );
                 violates_bounds_safety = true;
             }
@@ -3976,7 +3974,7 @@ public:
                         && tparam->name()
                     );
                     //  For now just do a quick string match
-                    auto tparam_name = tparam->name()->to_string(true);
+                    auto tparam_name = tparam->name()->to_string();
                     if (
                         tparam->declaration->is_type()
                         && (
@@ -4531,7 +4529,7 @@ public:
                     auto separator = std::string{"<"};
                     for (auto& tparam : parent->template_parameters->parameters) {
                         assert (tparam->has_name());
-                        list += separator + tparam->name()->to_string(true);
+                        list += separator + tparam->name()->to_string();
                         separator = ",";
                     }
                     list += ">";
@@ -4583,7 +4581,7 @@ public:
                 -> std::string
             {
                 assert(obj->has_name());
-                auto ret = obj->name()->to_string(true);
+                auto ret = obj->name()->to_string();
                 if (ret == "this") {
                     ret = print_to_string( *obj->get_object_type() );
                 }
@@ -4593,7 +4591,7 @@ public:
             //  We'll use this common guidance in several errors,
             //  so write it once to keep the guidance consistent
             assert (n.parent_declaration && n.parent_declaration->name());
-            auto error_msg = "an operator= body must start with a series of 'member = value;' initialization statements for each of the type-scope objects in the same order they are declared, or the member must have a default initializer (in type '" + n.parent_declaration->name()->to_string(true) + "')";
+            auto error_msg = "an operator= body must start with a series of 'member = value;' initialization statements for each of the type-scope objects in the same order they are declared, or the member must have a default initializer (in type '" + n.parent_declaration->name()->to_string() + "')";
 
             //  If this constructor's type has data members, handle their initialization
             //      - objects is the list of this type's declarations
@@ -4807,7 +4805,7 @@ public:
                         object_name =
                             print_to_string( *is_object_before_base->parent_declaration->name() )
                             + "_"
-                            + (*object)->name()->to_string(true)
+                            + (*object)->name()->to_string()
                             + "_as_base";
                     }
 
@@ -5176,11 +5174,11 @@ public:
                         "\nstruct "
                             + print_to_string(*decl->parent_declaration->name())
                             + "_"
-                            + decl->name()->to_string(true)
+                            + decl->name()->to_string()
                             + "_as_base { "
                             + print_to_string( *decl->get_object_type() )
                             + " "
-                            + decl->name()->to_string(true)
+                            + decl->name()->to_string()
                             + "; };"
                     );
                     found = true;
@@ -5358,7 +5356,7 @@ public:
                                     + " public "
                                     + print_to_string(*decl->parent_declaration->name())
                                     + "_"
-                                    + decl->name()->to_string(true)
+                                    + decl->name()->to_string()
                                     + "_as_base",
                                 compound_stmt->position()
                             );

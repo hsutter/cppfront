@@ -526,6 +526,33 @@ auto contains(
 }
 
 
+//  In keep trying to write string+string_view, and it ought to Just Work without
+//  the current workarounds. Not having that is a minor impediment to using safe
+//  and efficient string_views, which we should be encouraging. So for my own use
+//  and to remove that minor impediment to writing safe and efficient code, I'm
+//  just going to add this until we get P2591 in C++26(?) -- See: wg21.link/p2591
+//
+template<class charT, class traits, class Allocator>
+[[nodiscard]] constexpr auto operator+(
+    std::basic_string<charT, traits, Allocator> lhs,
+    std::type_identity_t<std::basic_string_view<charT, traits>> rhs
+    )
+    -> std::basic_string<charT, traits, Allocator>
+{
+    return lhs.append(rhs);
+}
+
+template<class charT, class traits, class Allocator>
+[[nodiscard]] constexpr auto operator+(
+    std::type_identity_t<std::basic_string_view<charT, traits>> lhs,
+    std::basic_string<charT, traits, Allocator> rhs
+    )
+    -> std::basic_string<charT, traits, Allocator>
+{
+    return rhs.insert(0, lhs);
+}
+
+
 //-----------------------------------------------------------------------
 //
 //  Command line handling

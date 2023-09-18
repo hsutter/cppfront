@@ -267,16 +267,10 @@ public:
         return s == this->operator std::string_view();
     }
 
-    auto to_string( bool text_only = false ) const
+    auto to_string() const
         -> std::string
     {
-        auto text = std::string{sv};
-        if (text_only) {
-            return text;
-        }
-        else {
-            return __as<std::string>(lex_type) + std::string(": ") + text;
-        }
+        return std::string{sv};
     }
 
     friend auto operator<< (auto& o, token const& t)
@@ -631,7 +625,7 @@ auto lex_line(
             && tokens.back().type() == lexeme::Cpp1MultiKeyword
             )
         {
-            auto text = tokens.back().to_string(true);
+            auto text = tokens.back().to_string();
             if (text == "char"    ) { ++is_char    ; }
             if (text == "short"   ) { ++is_short   ; }
             if (text == "int"     ) { ++is_int     ; }
@@ -674,12 +668,12 @@ auto lex_line(
             if (std::ssize(alt) > 0) {
                 errors.emplace_back(
                     pos,
-                    "'" + tokens.back().to_string(true) + "' - did you mean " + alt + "?"
+                    "'" + tokens.back().to_string() + "' - did you mean " + alt + "?"
                 );
             }
             errors.emplace_back(
                 pos,
-                "'" + tokens.back().to_string(true) + "' is an old-style C/C++ multi-word keyword type\n"
+                "'" + tokens.back().to_string() + "' is an old-style C/C++ multi-word keyword type\n"
                 "    - most such types should be used only for interoperability with older code\n"
                 "    - using those when you need them is fine, but name them with these short names instead:\n"
                 "        short, ushort, int, uint, long, ulong, longlong, ulonglong, longdouble, __schar, __uchar\n"
@@ -709,7 +703,7 @@ auto lex_line(
                 && (tokens[i].type() == lexeme::GreaterEq || tokens[i].type() == lexeme::Greater || tokens[i].type() == lexeme::Assignment))
             {
                 //  Merge all three tokens into an identifier
-                generated_text.push_back( "operator" + tokens[i-1].to_string(true) + tokens[i].to_string(true) );
+                generated_text.push_back( "operator" + tokens[i-1].to_string() + tokens[i].to_string() );
                 tokens.pop_back();
                 tokens.pop_back();
                 auto pos = tokens.back().position();
@@ -726,7 +720,7 @@ auto lex_line(
             else if (is_operator(tokens[i-1].type()))
             {
                 //  Merge just "operator" + the symbol into an identifier,
-                generated_text.push_back( "operator" + tokens[i-1].to_string(true) );
+                generated_text.push_back( "operator" + tokens[i-1].to_string() );
                 //  and preserve the last token separately
                 auto last_token = tokens.back();
 
@@ -750,7 +744,7 @@ auto lex_line(
                 )
             {
                 //  Merge just "operator" + the symbols into an identifier,
-                generated_text.push_back( "operator" + tokens[i-1].to_string(true) + tokens[i].to_string(true) );
+                generated_text.push_back( "operator" + tokens[i-1].to_string() + tokens[i].to_string() );
 
                 tokens.pop_back();
                 tokens.pop_back();

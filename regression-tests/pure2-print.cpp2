@@ -1,0 +1,90 @@
+
+//  Exercise the pretty-print visualizer for the various grammar elements
+
+outer: @print type = {
+
+    mytype: final type =
+    {
+        protected f: () -> int = 42;
+
+        g: (virtual this, i:int) -> int = {
+            s := "string literal";
+            ret: int = i;
+            p: const * const int = ret&;
+            if p* < 0 {
+                ret = -p*;
+            }
+            ret += strlen(s) - 10 + s.strlen() * (16 / (3 & 2)) % 3;
+
+            m: std::map<const int,std::string> = ();
+            m[0] = "har" as std::string;
+            ret -= h("x", m).length();
+            _ = m;
+
+            return ret;
+        }
+
+        private h: (s: std::string, inout m: std::map<const int,std::string> ) -> std::string
+            [[pre: m.empty() == false || false]]
+            [[pre Bounds: 0 < m.ssize() < 100 && true != false]]
+        = {
+            a := :()={};
+            b := :()={};
+            c := :()={};
+
+            while s.empty() next a() { break; }
+
+            do { } while s.empty() next b();
+
+            label: for m next c() do (_) { continue label; }
+
+            if !s.empty() is (true) { a(); }
+            else if !m.empty() { b(); }
+            else { c(); }
+
+            [[assert: true]]
+
+            return :() -> std::string = (s + m[0])$; ();
+        }
+
+        values: <T> (this, t: T) throws -> (offset: int, name: std::string) = {
+            offset = 53;
+            name = "plugh";
+        }
+
+        operator=: (out this) = { }
+
+        operator=: (out this, that) = { }
+
+        operator=: (implicit out this, _: int) = { }
+
+        variadic: (x...: int) = { }
+    }
+
+    test: () = {
+        var: ::outer::mytype = ();
+        std::cout << var.g(42) << "\n";
+
+        std::cout << inspect var.g(42) -> std::string {
+            is 43 = "forty-and-three";
+            is _  = "default case";
+        } << "\n";
+
+    }
+
+    x: <Ts...: type> type = {
+        tup: std::tuple<Ts...> = ();
+    }
+
+    print: <Args...: type> (inout out: std::ostream, args...: Args) requires sizeof...(Args) >= 0 = {
+        (out << ... << args);
+    }
+
+    all: <Args...: type> (args...: Args) -> bool =
+        (... && args);
+
+}
+
+main: () = {
+    outer::test();
+}

@@ -1,0 +1,7 @@
+pure2-print.cpp2:50:80: warning: unused parameter 't' [-Wunused-parameter]
+        template<typename T> [[nodiscard]] auto outer::mytype::values(T const& t) const& -> values__ret{
+                                                                               ^
+pure2-print.cpp2:61:53: warning: unused parameter 'x' [-Wunused-parameter]
+        auto outer::mytype::variadic(auto const& ...x) -> void{}
+                                                    ^
+2 warnings generated.

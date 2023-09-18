@@ -18,7 +18,7 @@
     
 
 #line 17 "pure2-intro-example-hello-2022.cpp2"
-auto println(auto const& x, auto const& len) -> void;
+auto print_it(auto const& x, auto const& len) -> void;
     
 
 //=== Cpp2 function definitions =================================================
@@ -30,7 +30,7 @@ auto println(auto const& x, auto const& len) -> void;
 
     for ( auto& str : view ) {
         auto len {decorate(str)}; 
-        println(str, len);
+        print_it(str, len);
     }
 }
 
@@ -39,7 +39,7 @@ auto println(auto const& x, auto const& len) -> void;
     return CPP2_UFCS_0(ssize, thing); 
 }
 
-auto println(auto const& x, auto const& len) -> void { 
+auto print_it(auto const& x, auto const& len) -> void { 
     std::cout 
         << ">> " << x 
         << " - length " 

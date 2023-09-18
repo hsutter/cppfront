@@ -192,6 +192,8 @@ declaration_base: @polymorphic_base @copyable type =
     }
 
     position: (override this) -> source_position = n*.position();
+
+    print: (this) -> std::string = n*.pretty_print_visualize(0);
 }
 
 
@@ -1188,6 +1190,16 @@ union: (inout t : meta::type_declaration)
 }
 
 
+//-----------------------------------------------------------------------
+//
+//  print - output a pretty-printed visualization of t
+//
+print: (t: meta::type_declaration) =
+{
+    std::cout << t.print() << "\n";
+}
+
+
 //=======================================================================
 //  Switch to Cpp1 and close subnamespace meta
 }
@@ -1259,8 +1271,11 @@ auto parser::apply_type_meta_functions( declaration_node& n )
         else if (name == "union") {
             cpp2_union( rtype );
         }
+        else if (name == "print") {
+            print( rtype );
+        }
         else {
-            error( "(temporary alpha limitation) unrecognized metafunction name '" + name + "' - currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum, union" );
+            error( "(temporary alpha limitation) unrecognized metafunction name '" + name + "' - currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum, union, print" );
             return false;
         }
     }

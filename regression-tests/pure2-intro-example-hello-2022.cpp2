@@ -5,7 +5,7 @@ main: () -> int = {
 
     for view do (inout str) {
         len := decorate(str);
-        println(str, len);
+        print_it(str, len);
     }
 }
 
@@ -14,7 +14,7 @@ decorate: (inout thing: _ ) -> int = {
     return thing.ssize();
 }
 
-println: (x: _, len: _) =
+print_it: (x: _, len: _) =
     std::cout
         << ">> " << x
         << " - length "

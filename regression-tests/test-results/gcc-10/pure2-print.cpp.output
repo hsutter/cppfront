@@ -1,0 +1,6 @@
+In file included from pure2-print.cpp:7:
+../../../include/cpp2util.h:10005:33: error: expected initializer before ‘static_assert’
+pure2-print.cpp2:80:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-print.cpp2:79:37: error: no declaration matches ‘void outer::print(std::ostream&, const Args& ...) requires  cpp2::cmp_greater_eq(sizeof (Args)..., 0)’
+pure2-print.cpp2:79:37: note: no functions named ‘void outer::print(std::ostream&, const Args& ...) requires  cpp2::cmp_greater_eq(sizeof (Args)..., 0)’
+pure2-print.cpp2:4:7: note: ‘class outer’ defined here

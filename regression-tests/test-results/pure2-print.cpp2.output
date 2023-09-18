@@ -1,0 +1,141 @@
+pure2-print.cpp2...
+
+outer: type = 
+{
+    mytype: final type = 
+    {
+        protected f:() -> move int = 42;
+
+        g:(
+            virtual in this, 
+            in i: int
+        ) -> move int = 
+        {
+            s: = "string literal";
+            ret: int = i;
+            p: const * const int = ret&;
+            if p* < 0
+            {
+                ret = -p*;
+            }
+            ret += strlen(s) - 10 + s.strlen() * (16 / (3 & 2)) % 3;
+            m: std::map<const int, std::string> = ();
+            m[0] = "har" as std::string;
+            ret -= h("x", m).length();
+            _ = m;
+            return ret;
+        }
+
+        private h:(
+            in s: std::string, 
+            inout m: std::map<const int, std::string>
+        ) -> move std::string
+            [[pre: m.empty() == false || false]]
+            [[pre Bounds: 0 < m.ssize() < 100 && true != false]] = 
+        {
+            a: = :() = 
+                {
+                };
+            b: = :() = 
+                {
+                };
+            c: = :() = 
+                {
+                };
+            while s.empty()
+                next a()
+                {
+                    break;
+                }
+            do 
+                {
+                }
+            while s.empty()
+                next b();
+            label: for m
+                next c()
+            do (in _:)
+                {
+                    continue label;
+                }
+            if !s.empty() is (true)
+            {
+                a();
+            }
+            else 
+            {
+                if !m.empty()
+                {
+                    b();
+                }
+                else 
+                {
+                    c();
+                }
+            }
+            [[assert: true]]
+            return :() -> move std::string = (s + m[0])$;();
+        }
+
+        values: <T: type >(
+            in this, 
+            in t: T
+        ) throws -> (
+                out offset: int, 
+                out name: std::string
+            ) = 
+        {
+            offset = 53;
+            name = "plugh";
+            return;
+        }
+
+        operator=:(out this) = 
+        {
+        }
+
+        operator=:(
+            out this, 
+            in that
+        ) = 
+        {
+        }
+
+        operator=:(
+            implicit out this, 
+            in _: int
+        ) = 
+        {
+        }
+
+        variadic:(in x...: int) = 
+        {
+        }
+    }
+
+    test:() = 
+    {
+        var: ::outer::mytype = ();
+        std::cout << var.g(42) << "\n";
+        std::cout << inspect var.g(42) -> std::string {
+            is 43 = "forty-and-three";
+            is _ = "default case";
+        } << "\n";
+    }
+    x: <Ts...: type > type = 
+    {
+        tup: std::tuple<Ts...> = ();
+    }
+
+    print: <Args...: type >(
+        inout out: std::ostream, 
+        in args...: Args
+    ) requires (sizeof...(Args) >= 0) = 
+    {
+        (out << ... << args);
+    }
+
+    all: <Args...: type >(in args...: Args) -> move bool = (... && args);
+}
+ ok (all Cpp2, passes safety checks)
+
