@@ -4604,33 +4604,31 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
 
         auto object_type_id = std::string{};
         if (a->type_id) {
-            object_type_id += pretty_print_visualize(*a->type_id, indent) + " ";
+            object_type_id += " " + pretty_print_visualize(*a->type_id, indent);
         }
 
         ret += template_params;
         if (a->is_type_alias()) {
             auto& t = std::get<alias_node::a_type>(a->initializer);
-            ret += template_params
-                + "type"
+            ret += " type"
                 + requires_clause
-                + "== "
+                + " == "
                 + pretty_print_visualize(*t, indent)
                 + ";";
         }
         else if (a->is_namespace_alias()) {
             auto& id = std::get<alias_node::a_namespace>(a->initializer);
             assert(id);
-            ret += "== "
+            ret += " namespace == "
                 + pretty_print_visualize(*id, indent)
                 + ";";
         }
         else if (a->is_object_alias()) {
             auto& expr = std::get<alias_node::an_object>(a->initializer);
             assert(expr);
-            ret += template_params
-                + object_type_id
+            ret += object_type_id
                 + requires_clause
-                + "== "
+                + " == "
                 + pretty_print_visualize(*expr, indent)
                 + ";";
         }

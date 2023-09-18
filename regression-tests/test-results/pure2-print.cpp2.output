@@ -2,6 +2,7 @@ pure2-print.cpp2...
 
 outer: type = 
 {
+    object_alias: <T: type > T requires (true) == 42;
     mytype: final type = 
     {
         protected f:() -> move int = 42;
@@ -115,9 +116,13 @@ outer: type =
 
     test:() = 
     {
+        namespace_alias: namespace == ::std;
+        type_alias: type == std::array<int, 10>;
+        object_alias_1: i8 == 42;
+        object_alias_2: == 42;
         var: ::outer::mytype = ();
         std::cout << var.g(42) << "\n";
-        std::cout << inspect var.g(42) -> std::string {
+        std::cout << inspect var.g(42) -> namespace_alias::string {
             is 43 = "forty-and-three";
             is _ = "default case";
         } << "\n";
