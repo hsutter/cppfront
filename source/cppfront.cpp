@@ -1677,8 +1677,8 @@ public:
                     printer.print_cpp2(",", a.comma);
                 }
                 first = false;
-                try_emit<unqualified_id_node::expression>(a.arg);
-                try_emit<unqualified_id_node::type_id   >(a.arg);
+                try_emit<template_argument::expression>(a.arg);
+                try_emit<template_argument::type_id   >(a.arg);
             }
             printer.print_cpp2(">", n.close_angle);
         }
@@ -2946,7 +2946,7 @@ public:
                 auto ufcs_string = std::string("CPP2_UFCS");
 
                 //  If there are template arguments, use the _TEMPLATE version
-                if (i->id_expr->template_args_count() > 0) {
+                if (std::ssize(i->id_expr->template_arguments()) > 0) {
                     ufcs_string += "_TEMPLATE";
                     // we need to replace "fun<int,long,double>" to "fun, (<int,long,double>)" to be able to generate
                     // from obj.fun<int, long, double>(1,2) this CPP2_UFCS_TEMPLATE(fun, (<int,long, double>), obj, 1, 2)

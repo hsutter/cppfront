@@ -14,8 +14,8 @@ rgb: @enum type = {
     blue;    // 2
 }
 
-file_attributes: @flag_enum type = {
-    cached: u8; // 1
+file_attributes: @flag_enum<u8> type = {
+    cached;     // 1
     current;    // 2
     obsolete;   // 4
     cached_and_current := cached | current;

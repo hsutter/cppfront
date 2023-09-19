@@ -35,7 +35,8 @@ compiler_services: @polymorphic_base @copyable type =
     errors_original_size : int;
     generated_tokens     : *std::deque<token>;
     parser               : cpp2::parser;
-    meta_function_name   : std::string = ();
+    metafunction_name    : std::string = ();
+    metafunction_args    : std::vector<std::string> = ();
 
     operator=: (
         out this,
@@ -49,8 +50,16 @@ compiler_services: @polymorphic_base @copyable type =
         parser = errors*;
     }
 
-    set_meta_function_name: (inout this, s: std::string_view) = {
-        meta_function_name = s;
+    set_metafunction_name: (inout this, name: std::string_view, args: std::vector<std::string>) = {
+        metafunction_name = name;
+        metafunction_args = args;
+    }
+
+    get_argument: (this, index: i16) -> std::string = {
+        if (0 <= index < metafunction_args.ssize()) {
+            return metafunction_args[index];
+        }
+        return "";
     }
 
     protected parse_statement: (
@@ -121,8 +130,8 @@ compiler_services: @polymorphic_base @copyable type =
     error: (this, msg: std::string_view)
     = {
         message := msg as std::string;
-        if !meta_function_name.empty() {
-            message = "while applying @" + meta_function_name + " - " + message;
+        if !metafunction_name.empty() {
+            message = "while applying @" + metafunction_name + " - " + message;
         }
         _ = errors*.emplace_back( position(), message);
     }
@@ -157,7 +166,7 @@ type_id: @polymorphic_base @copyable type =
 
     is_wildcard         : (this) -> bool        = n*.is_wildcard();
     is_pointer_qualified: (this) -> bool        = n*.is_pointer_qualified();
-    template_args_count : (this) -> int         = n*.template_args_count();
+    template_args_count : (this) -> int         = n*.template_arguments().ssize();
     to_string           : (this) -> std::string = n*.to_string();
 
     position: (override this) -> source_position = n*.position();
@@ -828,11 +837,12 @@ basic_enum: (
 
     //  1. Gather: The names of all the user-written members, and find/compute the type
 
+    underlying_type = t.get_argument(0);    // use the first template argument, if there was one
+
     found_non_numeric := false;
 
-    (first := true, value: std::string = "-1")
+    (value: std::string = "-1")
     for  t.get_members()
-    next first = false  
     do   (m)
     {
         m.require( (m.is_public() || m.is_default_access()) && m.is_object(),
@@ -841,8 +851,7 @@ basic_enum: (
         if m.is_object() {
             mo := m.as_object();
             if !mo.has_wildcard_type() {
-                mo.require( first, "an explicit underlying type may be specified only on the first enumerator");
-                underlying_type = mo.type();
+                mo.error( "an explicit underlying type should be specified as a template argument to the metafunction - try 'enum<u16>' or 'flag_enum<u64>'");
             }
 
             init := mo.initializer();
@@ -1214,7 +1223,7 @@ namespace cpp2 {
 //-----------------------------------------------------------------------
 //
 
-auto parser::apply_type_meta_functions( declaration_node& n )
+auto parser::apply_type_metafunctions( declaration_node& n )
     -> bool
 {
     assert(n.is_type());
@@ -1224,11 +1233,22 @@ auto parser::apply_type_meta_functions( declaration_node& n )
     auto rtype = meta::type_declaration{ &n, cs };
 
     //  For each metafunction, apply it
-    for (auto& meta : n.meta_functions)
+    for (auto& meta : n.metafunctions)
     {
+        //  Convert the name and any template arguments to strings
+        //  and record that in rtype
         auto name = meta->to_string();
-        rtype.set_meta_function_name( name );
+        name = name.substr(0, name.find('<'));
 
+        auto args = std::vector<std::string>{};
+        for (auto& arg : meta->template_arguments()) {
+            args.push_back( arg.to_string() );
+        }
+
+        rtype.set_metafunction_name( name, args );
+
+        //  Dispatch
+        //
         if (name == "interface") {
             interface( rtype );
         }

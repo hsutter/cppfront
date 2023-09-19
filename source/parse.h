@@ -130,6 +130,7 @@ struct id_expression_node;
 struct declaration_node;
 struct inspect_expression_node;
 struct literal_node;
+struct template_argument;
 
 
 struct primary_expression_node
@@ -166,7 +167,7 @@ struct primary_expression_node
     auto is_literal() const
         -> bool;
 
-    auto template_args_count() -> int;
+    auto template_arguments() const -> std::vector<template_argument>&;
 
     auto get_token() const -> token const*;
 
@@ -1011,30 +1012,38 @@ auto prefix_expression_node::visit(auto& v, int depth)
 struct type_id_node;
 struct template_args_tag { };
 
+struct template_argument
+{
+    enum active { empty=0, expression, type_id };
+    source_position comma;
+    std::variant<
+        std::monostate,
+        std::unique_ptr<expression_node>,
+        std::unique_ptr<type_id_node>
+    > arg;
+
+    auto to_string() const
+        -> std::string;
+
+    //  So that template_arguments() accessors can return a reference to an empty arg list
+    static inline std::vector<template_argument> no_template_args;
+};
+
 
 struct unqualified_id_node
 {
     token const* identifier      = {};  // required
 
-    enum active { empty=0, expression, type_id };
-
     // These are used only if it's a template-id
     source_position open_angle  = {};
     source_position close_angle = {};
-    struct term {
-        source_position comma;
-        std::variant<
-            std::monostate,
-            std::unique_ptr<expression_node>,
-            std::unique_ptr<type_id_node>
-        > arg;
-    };
-    std::vector<term> template_args;
 
-    auto template_args_count()
-        -> int
+    std::vector<template_argument> template_args;
+
+    auto template_arguments()
+        -> std::vector<template_argument>&
     {
-        return std::ssize(template_args);
+        return template_args;
     }
 
     auto get_token() const
@@ -1073,8 +1082,8 @@ struct unqualified_id_node
             assert(template_args.empty()
                    || template_args.front().comma == source_position{});
             for (auto& a : template_args) {
-                try_visit<expression>(a.arg, v, depth+1);
-                try_visit<type_id   >(a.arg, v, depth+1);
+                try_visit<template_argument::expression>(a.arg, v, depth+1);
+                try_visit<template_argument::type_id   >(a.arg, v, depth+1);
             }
             v.end(template_args_tag{}, depth);
         }
@@ -1093,6 +1102,12 @@ struct qualified_id_node
         term( token const* o ) : scope_op{o} { }
     };
     std::vector<term> ids;
+
+    auto template_arguments() const
+        -> std::vector<template_argument>&
+    {
+        return ids.back().id->template_arguments();
+    }
 
     auto get_token() const
         -> token const*
@@ -1207,14 +1222,14 @@ struct type_id_node
         return tok && *tok == "concept";
     }
 
-    auto template_args_count() const
-        -> int
+    auto template_arguments() const
+        -> std::vector<template_argument>&
     {
         if (id.index() == unqualified) {
-            return std::get<unqualified>(id)->template_args_count();
+            return std::get<unqualified>(id)->template_arguments();
         }
         // else
-        return 0;
+        return std::get<qualified>(id)->template_arguments();
     }
 
     auto to_string() const
@@ -1284,18 +1299,35 @@ auto unqualified_id_node::to_string() const
         auto separator = std::string{"<"};
         for (auto& t : template_args) {
             ret += separator;
-            assert(t.arg.index() != empty);
-            if (t.arg.index() == expression) {
+            assert(t.arg.index() != template_argument::empty);
+            if (t.arg.index() == template_argument::expression) {
                 ret += "(expression)";
             }
-            else if (t.arg.index() == type_id) {
-                ret += std::get<type_id>(t.arg)->to_string();
+            else if (t.arg.index() == template_argument::type_id) {
+                ret += std::get<template_argument::type_id>(t.arg)->to_string();
             }
             separator = ",";
         }
         ret += ">";
     }
     return ret;
+}
+
+auto template_argument::to_string() const
+    -> std::string
+{
+    switch (arg.index()) {
+    break;case empty:
+        return {};
+    break;case expression:
+        return std::get<expression>(arg)->to_string();
+    break;case type_id:
+        return std::get<type_id>(arg)->to_string();
+    break;default:
+        assert(!"ICE: invalid template_argument state");
+    }
+    // else
+    return {};
 }
 
 
@@ -1434,14 +1466,14 @@ struct id_expression_node
         std::unique_ptr<unqualified_id_node>
     > id;
 
-    auto template_args_count()
-        -> int
+    auto template_arguments() const
+        -> std::vector<template_argument>&
     {
         if (is_unqualified()) {
-            return std::get<unqualified>(id)->template_args_count();
+            return std::get<unqualified>(id)->template_arguments();
         }
         // else
-        return 0;
+        return std::get<qualified>(id)->template_arguments();
     }
 
     auto is_fold_expression() const
@@ -2466,7 +2498,7 @@ struct declaration_node
         std::unique_ptr<alias_node>
     > type;
 
-    std::vector<std::unique_ptr<id_expression_node>> meta_functions;
+    std::vector<std::unique_ptr<id_expression_node>> metafunctions;
     std::unique_ptr<parameter_declaration_list_node> template_parameters;
     source_position                                  requires_pos = {};
     std::unique_ptr<logical_or_expression_node>      requires_clause_expression;
@@ -3292,7 +3324,7 @@ public:
         try_visit<a_namespace>(type, v, depth+1);
         try_visit<an_alias   >(type, v, depth+1);
 
-        for (auto& m : meta_functions) {
+        for (auto& m : metafunctions) {
             assert(m);
             m->visit(v, depth+1);
         }
@@ -3608,14 +3640,14 @@ auto function_type_node::is_destructor() const
 }
 
 
-auto primary_expression_node::template_args_count()
-    -> int
+auto primary_expression_node::template_arguments() const
+    -> std::vector<template_argument>&
 {
     if (expr.index() == id_expression) {
-        return std::get<id_expression>(expr)->template_args_count();
+        return std::get<id_expression>(expr)->template_arguments();
     }
     // else
-    return 0;
+    return template_argument::no_template_args;
 }
 
 
@@ -4146,8 +4178,8 @@ auto pretty_print_visualize(unqualified_id_node const& n, int indent)
                 ret += ", ";
             }
             first = false;
-            ret += try_pretty_print_visualize<unqualified_id_node::expression>(arg.arg, indent);
-            ret += try_pretty_print_visualize<unqualified_id_node::type_id   >(arg.arg, indent);
+            ret += try_pretty_print_visualize<template_argument::expression>(arg.arg, indent);
+            ret += try_pretty_print_visualize<template_argument::type_id   >(arg.arg, indent);
         }
         ret += ">";
     }
@@ -4570,7 +4602,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
 
     auto metafunctions = std::string{};
     if (include_metafunctions_list) {
-        for (auto& meta : n.meta_functions) {
+        for (auto& meta : n.metafunctions) {
             metafunctions += " @" + pretty_print_visualize(*meta, indent);
         }
     }
@@ -6016,7 +6048,7 @@ private:
             n->open_angle = curr().position();
             next();
 
-            auto term = unqualified_id_node::term{};
+            auto term = template_argument{};
 
             do {
                 //  If it doesn't start with * or const (which can only be a type id),
@@ -7439,7 +7471,7 @@ private:
     }
 
 
-    auto apply_type_meta_functions( declaration_node& decl )
+    auto apply_type_metafunctions( declaration_node& decl )
         -> bool;
 
 
@@ -7589,7 +7621,7 @@ private:
                 error("'@' must be followed by a a metafunction name", false);
                 return {};
             }
-            n->meta_functions.push_back( std::move(idx) );
+            n->metafunctions.push_back( std::move(idx) );
         }
 
         //  Next is an optional template parameter list
@@ -7647,9 +7679,9 @@ private:
             n->type = std::move(t);
             assert (n->is_function());
 
-            if (!n->meta_functions.empty()) {
+            if (!n->metafunctions.empty()) {
                 errors.emplace_back(
-                    n->meta_functions.front()->position(),
+                    n->metafunctions.front()->position(),
                     "(temporary alpha limitation) metafunctions are currently not supported on functions, only on types"
                 );
                 return {};
@@ -7663,9 +7695,9 @@ private:
             assert (n->type.index() == declaration_node::a_namespace);
             next();
 
-            if (!n->meta_functions.empty()) {
+            if (!n->metafunctions.empty()) {
                 errors.emplace_back(
-                    n->meta_functions.front()->position(),
+                    n->metafunctions.front()->position(),
                     "(temporary alpha limitation) metafunctions are currently not supported on namespaces, only on types"
                 );
                 return {};
@@ -7694,9 +7726,9 @@ private:
             n->type = std::move(t);
             assert (n->is_object());
 
-            if (!n->meta_functions.empty()) {
+            if (!n->metafunctions.empty()) {
                 errors.emplace_back(
-                    n->meta_functions.front()->position(),
+                    n->metafunctions.front()->position(),
                     "(temporary alpha limitation) metafunctions are currently not supported on objects, only on types"
                 );
                 return {};
@@ -7840,7 +7872,7 @@ private:
 
         //  If this is a type with metafunctions, apply those
         if (n->is_type()) {
-            if (!apply_type_meta_functions(*n)) {
+            if (!apply_type_metafunctions(*n)) {
                 error(
                     "error encountered while applying type metafunctions",
                     false, {}, true
