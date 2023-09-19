@@ -20,10 +20,12 @@ private: std::array<std::byte,cpp2::max(sizeof(std::string), sizeof(cpp2::i32))>
 public: [[nodiscard]] auto get_name() const& -> auto&&;
 public: [[nodiscard]] auto get_name() & -> auto&&;
 public: auto set_name(cpp2::in<std::string> value) & -> void;
+public: auto set_name(auto&& ...args) & -> void;
 public: [[nodiscard]] auto is_num() const& -> bool;
 public: [[nodiscard]] auto get_num() const& -> auto&&;
 public: [[nodiscard]] auto get_num() & -> auto&&;
 public: auto set_num(cpp2::in<cpp2::i32> value) & -> void;
+public: auto set_num(auto&& ...args) & -> void;
 private: auto destroy() & -> void;
 public: ~name_or_number() noexcept;
 
@@ -52,12 +54,14 @@ auto main() -> int;
 [[nodiscard]] auto name_or_number::get_name() & -> auto&& { 
                                                                     cpp2::Default.expects(is_name(), "");return *cpp2::assert_not_null(reinterpret_cast<std::string*>(&storage__)); }
 auto name_or_number::set_name(cpp2::in<std::string> value) & -> void{if (!(is_name())) {destroy();std::construct_at(reinterpret_cast<std::string*>(&storage__), value);}else {*cpp2::assert_not_null(reinterpret_cast<std::string*>(&storage__)) = value;}discriminator__ = 0;}
+auto name_or_number::set_name(auto&& ...args) & -> void{if (!(is_name())) {destroy();std::construct_at(reinterpret_cast<std::string*>(&storage__), args...);}else {*cpp2::assert_not_null(reinterpret_cast<std::string*>(&storage__)) = std::string{args...};}discriminator__ = 0;}
 [[nodiscard]] auto name_or_number::is_num() const& -> bool { return discriminator__ == 1; }
 [[nodiscard]] auto name_or_number::get_num() const& -> auto&& { 
                                                             cpp2::Default.expects(is_num(), "");return *cpp2::assert_not_null(reinterpret_cast<cpp2::i32 const*>(&storage__)); }
 [[nodiscard]] auto name_or_number::get_num() & -> auto&& { 
                                                                   cpp2::Default.expects(is_num(), "");return *cpp2::assert_not_null(reinterpret_cast<cpp2::i32*>(&storage__)); }
 auto name_or_number::set_num(cpp2::in<cpp2::i32> value) & -> void{if (!(is_num())) {destroy();std::construct_at(reinterpret_cast<cpp2::i32*>(&storage__), value);}else {*cpp2::assert_not_null(reinterpret_cast<cpp2::i32*>(&storage__)) = value;}discriminator__ = 1;}
+auto name_or_number::set_num(auto&& ...args) & -> void{if (!(is_num())) {destroy();std::construct_at(reinterpret_cast<cpp2::i32*>(&storage__), args...);}else {*cpp2::assert_not_null(reinterpret_cast<cpp2::i32*>(&storage__)) = cpp2::i32{args...};}discriminator__ = 1;}
 auto name_or_number::destroy() & -> void{
     if (discriminator__ == 0) {std::destroy_at(reinterpret_cast<std::string*>(&storage__));}
     if (discriminator__ == 1) {std::destroy_at(reinterpret_cast<cpp2::i32*>(&storage__));}
@@ -80,8 +84,7 @@ auto main() -> int{
 
     CPP2_UFCS_0(print_name, x);
 
-    std::string s {"xyzzy"}; 
-    CPP2_UFCS(set_name, x, std::move(s));
+    CPP2_UFCS(set_name, x, "xyzzy", cpp2::as_<cpp2::u8, 3>());
 
     CPP2_UFCS_0(print_name, std::move(x));
 }

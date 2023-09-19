@@ -145,8 +145,12 @@ struct primary_expression_node
         std::unique_ptr<literal_node>
     > expr;
 
+
     //  API
     //
+    auto is_fold_expression() const
+        -> bool;
+
     auto is_identifier() const
         -> bool;
 
@@ -230,6 +234,9 @@ struct prefix_expression_node
 
     //  API
     //
+    auto is_fold_expression() const
+        -> bool;
+
     auto is_identifier() const
         -> bool;
 
@@ -285,8 +292,21 @@ struct binary_expression_node
     };
     std::vector<term> terms;
 
+
     //  API
     //
+    auto is_fold_expression() const
+        -> bool
+    {
+        //  This is a fold-expression if any subexpression
+        //  has an identifier named "..."
+        auto ret = expr->is_fold_expression();
+        for (auto& x : terms) {
+            ret |= x.expr->is_fold_expression();
+        }
+        return ret;
+    }
+
     auto lhs_is_id_expression() const
         -> bool
     {
@@ -405,6 +425,7 @@ struct binary_expression_node
         return ret;
     }
 
+
     //  Internals
     //
     auto position() const
@@ -467,6 +488,14 @@ struct expression_node
 
     // API
     //
+    auto is_fold_expression() const
+        -> bool
+    {
+        //  This is a fold-expression if any subexpression
+        //  has an identifier named "..."
+        return expr->is_fold_expression();
+    }
+
     auto is_standalone_expression() const
         -> bool;
 
@@ -613,12 +642,13 @@ struct expression_list_node
     auto is_fold_expression() const
         -> bool
     {
-        auto found_ellipsis = false;
+        //  This is a fold-expression if any subexpression
+        //  has an identifier named "..."
+        auto ret = false;
         for (auto& x : expressions) {
-            auto s = x.expr->to_string();
-            found_ellipsis |= s.find("...") != s.npos;
+            ret |= x.expr->is_fold_expression();
         }
-        return found_ellipsis;
+        return ret;
     }
 
 
@@ -789,6 +819,14 @@ struct postfix_expression_node
 
     //  API
     //
+    auto is_fold_expression() const
+        -> bool
+    {
+        //  This is a fold-expression if any subexpression
+        //  has an identifier named "..."
+        return expr->is_fold_expression();
+    }
+
     auto is_identifier() const
         -> bool
     {
@@ -847,6 +885,14 @@ struct postfix_expression_node
 
     auto visit(auto& v, int depth) -> void;
 };
+
+auto prefix_expression_node::is_fold_expression() const
+    -> bool
+{
+    //  This is a fold-expression if any subexpression
+    //  has an identifier named "..."
+    return expr->is_fold_expression();
+}
 
 auto prefix_expression_node::is_identifier() const
     -> bool
@@ -1269,8 +1315,17 @@ struct is_as_expression_node
     };
     std::vector<term> ops;
 
+
     //  API
     //
+    auto is_fold_expression() const
+        -> bool
+    {
+        //  This is a fold-expression if any subexpression
+        //  has an identifier named "..."
+        return expr->is_fold_expression();
+    }
+
     auto is_identifier() const
         -> bool
     {
@@ -1389,6 +1444,15 @@ struct id_expression_node
         return 0;
     }
 
+    auto is_fold_expression() const
+        -> bool
+    {
+        //  This is a fold-expression if any subexpression has
+        //  has an identifier named "..."
+        auto tok = get_token();
+        return tok && *tok == "...";
+    }
+
     auto is_empty() const
         -> bool
     {
@@ -1445,6 +1509,24 @@ struct id_expression_node
         v.end(*this, depth);
     }
 };
+
+
+auto primary_expression_node::is_fold_expression() const
+    -> bool
+{
+    //  This is a fold-expression if any subexpression has
+    //  has an identifier named "..."
+    switch (expr.index()) {
+    break;case identifier:
+        return *std::get<identifier>(expr) == "...";
+    break;case expression_list:
+        return std::get<expression_list>(expr)->is_fold_expression();
+    break;case id_expression:
+        return std::get<id_expression>(expr)->is_fold_expression();
+    break;default: ; // the others can't contain folds
+    }
+    return false;
+}
 
 
 auto postfix_expression_node::get_first_token_ignoring_this() const

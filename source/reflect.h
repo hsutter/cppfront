@@ -706,6 +706,8 @@ namespace cpp2 {
 auto parser::apply_type_meta_functions( declaration_node& n )
     -> bool
 {
+    assert(n.is_type());
+
     //  Get the reflection state ready to pass to the function
     auto cs = meta::compiler_services{ &errors, generated_tokens };
     auto rtype = meta::type_declaration{ &n, cs };
@@ -1690,8 +1692,8 @@ std::string comma = "";
         CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "    public set_" + cpp2::to_string(a.name) + ": (inout this, value: " + cpp2::to_string(a.type) + ") = { if !is_" + cpp2::to_string(a.name) + "() { destroy(); std::construct_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(storage__&), value); } else { reinterpret_cast<*" + cpp2::to_string(a.type) + ">(storage__&)* = value; } discriminator__ = " + cpp2::to_string(a.value) + "; }\n"), 
                    "could not add set_" + a.name);
 
-        //t.require( t.add_member( "    public set_(a.name)$: (inout this, forward args...: _) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(storage__&), args...); } else { reinterpret_cast<*(a.type)$>(storage__&)* = value; } discriminator__ = :(a.type)$ = (args...); }\n"),
-        //           "could not add variadic set_" + a.name);
+        CPP2_UFCS(require, t, CPP2_UFCS(add_member, t, "    public set_" + cpp2::to_string(a.name) + ": (inout this, forward args...: _) = { if !is_" + cpp2::to_string(a.name) + "() { destroy(); std::construct_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(storage__&), args...); } else { reinterpret_cast<*" + cpp2::to_string(a.type) + ">(storage__&)* = :" + cpp2::to_string(a.type) + " = (args...); } discriminator__ = " + cpp2::to_string(a.value) + "; }\n"), 
+                   "could not add variadic set_" + a.name);
     }
 {
 std::string destroy = "    private destroy: (inout this) = {\n";

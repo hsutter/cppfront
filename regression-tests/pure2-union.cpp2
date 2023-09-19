@@ -19,8 +19,7 @@ main: () = {
 
     x.print_name();
 
-    s: std::string = "xyzzy";
-    x.set_name( s );
+    x.set_name( "xyzzy", 3 as u8 );
 
     x.print_name();
 }
