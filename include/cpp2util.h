@@ -82,10 +82,10 @@
         #include <clocale>
         #include <cmath>
         #include <codecvt>
-        #include <condition_variable>
         #include <compare>
         #include <complex>
         #include <concepts>
+        #include <condition_variable>
         #ifdef __cpp_lib_coroutine
             #include <coroutine>
         #endif
@@ -113,7 +113,7 @@
         // in our -pure-cpp2 "import std;" simulation mode... if you need this,
         // use mixed mode (not -pure-cpp2) and #include all the headers you need
         // including this one
-        // 
+        //
         // #include <execution>
         #include <filesystem>
         #if defined(__cpp_lib_format) || (defined(_MSC_VER) && _MSC_VER >= 1929)
@@ -153,15 +153,15 @@
         #include <ranges>
         #include <ratio>
         #include <regex>
-        #ifdef __cpp_lib_source_location
-            #include <source_location>
-        #endif
         #include <scoped_allocator>
         #ifdef __cpp_lib_semaphore
             #include <semaphore>
         #endif
         #include <set>
         #include <shared_mutex>
+        #ifdef __cpp_lib_source_location
+            #include <source_location>
+        #endif
         #include <span>
         #ifdef __cpp_lib_spanstream
             #include <spanstream>
@@ -197,39 +197,128 @@
 //  Otherwise, we're not in -pure-cpp2 and so just #include
 //  what we need in this header to make this self-contained
 #else
+    #include <version> // has the _cpp_* preprocessor defs, include first
     #include <algorithm>
     #include <any>
+    #include <array>
+    #include <atomic>
+    #ifdef __cpp_lib_barrier
+        #include <barrier>
+    #endif
+    #include <bit>
+    #include <bitset>
+    #include <cassert>
+    #include <cctype>
+    #include <cerrno>
+    #include <cfenv>
+    #include <cfloat>
+    #include <charconv>
+    #include <chrono>
+    #include <cinttypes>
+    #include <climits>
+    #include <clocale>
+    #include <cmath>
+    #include <codecvt>
     #include <compare>
+    #include <complex>
     #include <concepts>
+    #include <condition_variable>
+    #ifdef __cpp_lib_coroutine
+        #include <coroutine>
+    #endif
+    #include <csetjmp>
+    #include <csignal>
+    #include <cstdarg>
     #include <cstddef>
     #include <cstdint>
     #include <cstdio>
+    #include <cstdlib>
+    #include <cstring>
+    #include <ctime>
+    #if __has_include(<cuchar>)
+        #include <cuchar>
+    #endif
+    #include <cwchar>
+    #include <cwctype>
+    #include <deque>
     #ifndef CPP2_NO_EXCEPTIONS
         #include <exception>
     #endif
+    #include <filesystem>
     #if defined(__cpp_lib_format) || (defined(_MSC_VER) && _MSC_VER >= 1929)
         #include <format>
     #endif
+    #include <forward_list>
+    #include <fstream>
+    #include <functional>
+    #include <future>
+    #include <initializer_list>
+    #include <iomanip>
+    #include <ios>
+    #include <iosfwd>
     #include <iostream>
+    #include <iso646.h>
+    #include <istream>
     #include <iterator>
+    #ifdef __cpp_lib_latch
+        #include <latch>
+    #endif
     #include <limits>
+    #include <list>
+    #include <locale>
+    #include <map>
     #include <memory>
+    #ifdef __cpp_lib_memory_resource
+        #include <memory_resource>
+    #endif
+    #include <mutex>
     #include <new>
-    #include <random>
+    #include <numbers>
+    #include <numeric>
     #include <optional>
+    #include <ostream>
+    #include <queue>
+    #include <random>
+    #include <ranges>
+    #include <ratio>
+    #include <regex>
+    #include <scoped_allocator>
+    #ifdef __cpp_lib_semaphore
+        #include <semaphore>
+    #endif
+    #include <set>
+    #include <shared_mutex>
     #if defined(CPP2_USE_SOURCE_LOCATION)
         #include <source_location>
     #endif
     #include <span>
+    #ifdef __cpp_lib_spanstream
+        #include <spanstream>
+    #endif
+    #include <sstream>
+    #include <stack>
+    #include <stdexcept>
+    #ifdef __cpp_lib_jthread
+        #include <stop_token>
+    #endif
+    #include <streambuf>
     #include <string>
     #include <string_view>
+    #ifdef __cpp_lib_syncstream
+        #include <syncstream>
+    #endif
     #include <system_error>
+    #include <thread>
     #include <tuple>
     #include <type_traits>
+    #include <typeindex>
     #ifndef CPP2_NO_RTTI
         #include <typeinfo>
     #endif
+    #include <unordered_map>
+    #include <unordered_set>
     #include <utility>
+    #include <valarray>
     #include <variant>
     #include <vector>
 #endif
@@ -483,7 +572,7 @@ template<typename T>
 auto Typeid() -> decltype(auto) {
 #ifdef CPP2_NO_RTTI
     Type.expects(
-        !"'any' dynamic casting is disabled with -fno-rtti", // more likely to appear on console 
+        !"'any' dynamic casting is disabled with -fno-rtti", // more likely to appear on console
          "'any' dynamic casting is disabled with -fno-rtti"  // make message available to hooked handlers
     );
 #else
@@ -829,7 +918,7 @@ inline auto to_string(std::string const& s) -> std::string const&
 
 template<typename T>
 inline auto to_string(T const& sv) -> std::string
-    requires (std::is_convertible_v<T, std::string_view> 
+    requires (std::is_convertible_v<T, std::string_view>
               && !std::is_convertible_v<T, const char*>)
 {
     return std::string{sv};
@@ -969,8 +1058,8 @@ auto is( X const& ) -> bool {
 
 template< typename C, typename X >
     requires (
-        ( std::is_base_of_v<X, C> || 
-          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>) 
+        ( std::is_base_of_v<X, C> ||
+          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>)
         ) && !std::is_same_v<C,X>)
 auto is( X const& x ) -> bool {
     return Dynamic_cast<C const*>(&x) != nullptr;
@@ -978,8 +1067,8 @@ auto is( X const& x ) -> bool {
 
 template< typename C, typename X >
     requires (
-        ( std::is_base_of_v<X, C> || 
-          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>) 
+        ( std::is_base_of_v<X, C> ||
+          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>)
         ) && !std::is_same_v<C,X>)
 auto is( X const* x ) -> bool {
     return Dynamic_cast<C const*>(x) != nullptr;
@@ -1610,7 +1699,7 @@ constexpr auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
 //  Returns a function object that takes a 'value' of the same type as
 //  'flags', and evaluates to true if and only if 'value' has set all of
 //  the bits set in 'flags'
-// 
+//
 //-----------------------------------------------------------------------
 //
 template <typename T>
