@@ -167,7 +167,7 @@ struct primary_expression_node
     auto is_literal() const
         -> bool;
 
-    auto template_arguments() const -> std::vector<template_argument>&;
+    auto template_arguments() const -> std::vector<template_argument> const&;
 
     auto get_token() const -> token const*;
 
@@ -1026,6 +1026,8 @@ struct template_argument
         -> std::string;
 };
 
+// Used by functions that must return a reference to an empty arg list
+inline std::vector<template_argument> const no_template_args;
 
 struct unqualified_id_node
 {
@@ -1037,8 +1039,8 @@ struct unqualified_id_node
 
     std::vector<template_argument> template_args;
 
-    auto template_arguments()
-        -> std::vector<template_argument>&
+    auto template_arguments() const
+        -> std::vector<template_argument> const&
     {
         return template_args;
     }
@@ -1101,7 +1103,7 @@ struct qualified_id_node
     std::vector<term> ids;
 
     auto template_arguments() const
-        -> std::vector<template_argument>&
+        -> std::vector<template_argument> const&
     {
         return ids.back().id->template_arguments();
     }
@@ -1220,7 +1222,7 @@ struct type_id_node
     }
 
     auto template_arguments() const
-        -> std::vector<template_argument>&
+        -> std::vector<template_argument> const&
     {
         if (id.index() == unqualified) {
             return std::get<unqualified>(id)->template_arguments();
@@ -1464,7 +1466,7 @@ struct id_expression_node
     > id;
 
     auto template_arguments() const
-        -> std::vector<template_argument>&
+        -> std::vector<template_argument> const&
     {
         if (is_unqualified()) {
             return std::get<unqualified>(id)->template_arguments();
@@ -3638,11 +3640,8 @@ auto function_type_node::is_destructor() const
 
 
 auto primary_expression_node::template_arguments() const
-    -> std::vector<template_argument>&
+    -> std::vector<template_argument> const&
 {
-    // So that the function can return a reference to an empty arg list
-    static std::vector<template_argument> no_template_args;
-
     if (expr.index() == id_expression) {
         return std::get<id_expression>(expr)->template_arguments();
     }
