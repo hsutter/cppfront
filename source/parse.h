@@ -1024,9 +1024,6 @@ struct template_argument
 
     auto to_string() const
         -> std::string;
-
-    //  So that template_arguments() accessors can return a reference to an empty arg list
-    static inline std::vector<template_argument> no_template_args;
 };
 
 
@@ -3643,11 +3640,14 @@ auto function_type_node::is_destructor() const
 auto primary_expression_node::template_arguments() const
     -> std::vector<template_argument>&
 {
+    // So that the function can return a reference to an empty arg list
+    static std::vector<template_argument> no_template_args;
+
     if (expr.index() == id_expression) {
         return std::get<id_expression>(expr)->template_arguments();
     }
     // else
-    return template_argument::no_template_args;
+    return no_template_args;
 }
 
 
