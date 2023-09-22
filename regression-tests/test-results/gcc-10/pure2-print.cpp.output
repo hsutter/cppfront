@@ -3,6 +3,8 @@ In file included from pure2-print.cpp:7:
 pure2-print.cpp2:7:1: note: in expansion of macro ‘CPP2_REQUIRES_’
 ../../../include/cpp2util.h:10005:33: error: expected initializer before ‘static_assert’
 pure2-print.cpp2:89:1: note: in expansion of macro ‘CPP2_REQUIRES_’
+pure2-print.cpp2:6:24: error: ‘constexpr const T outer::object_alias’ is not a static data member of ‘class outer’
+pure2-print.cpp2:6:31: error: template definition of non-template ‘constexpr const T outer::object_alias’
 pure2-print.cpp2:88:37: error: no declaration matches ‘void outer::print(std::ostream&, const Args& ...) requires  cpp2::cmp_greater_eq(sizeof (Args)..., 0)’
 pure2-print.cpp2:88:37: note: no functions named ‘void outer::print(std::ostream&, const Args& ...) requires  cpp2::cmp_greater_eq(sizeof (Args)..., 0)’
 pure2-print.cpp2:4:7: note: ‘class outer’ defined here

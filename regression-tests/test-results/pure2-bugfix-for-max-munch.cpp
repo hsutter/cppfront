@@ -10,7 +10,7 @@
 
 //=== Cpp2 type definitions and function declarations ===========================
 
-template<typename T> auto static constexpr v = 0;
+template<typename T> auto inline constexpr v = 0;
 auto main() -> int;
 
 

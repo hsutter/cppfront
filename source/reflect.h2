@@ -55,7 +55,7 @@ compiler_services: @polymorphic_base @copyable type =
         metafunction_args = args;
     }
 
-    get_argument: (this, index: i16) -> std::string = {
+    get_argument: (this, index: int) -> std::string = {
         if (0 <= index < metafunction_args.ssize()) {
             return metafunction_args[index];
         }
@@ -450,13 +450,11 @@ type_declaration: @copyable type =
     }
 
     add_member: (inout this, source: std::string_view)
-        -> bool
     = {
         decl := parse_statement(source);
-        if decl {
-            return n*.add_type_member(decl);
+        if !decl || !n*.add_type_member(decl) {
+            error( std::string("error attempting to add member:\n") + source );
         }
-        return false;
     }
 
     remove_all_members: (inout this) = n*.type_remove_all_members();
@@ -502,8 +500,7 @@ alias_declaration: @copyable type =
 //
 add_virtual_destructor: (inout t: meta::type_declaration) =
 {
-    t.require( t.add_member( "operator=: (virtual move this) = { }"),
-               "could not add virtual destructor");
+    t.add_member( "operator=: (virtual move this) = { }");
 }
 
 
@@ -630,8 +627,7 @@ ordered_impl: (
     }
 
     if !has_spaceship {
-        t.require( t.add_member( "operator<=>: (this, that) -> std::" + (ordering as std::string) + ";" ),
-                   "could not add operator<=> with std::" + (ordering as std::string) );
+        t.add_member( "operator<=>: (this, that) -> std::" + (ordering as std::string) + ";" );
     }
 }
 
@@ -695,8 +691,7 @@ copyable: (inout t: meta::type_declaration) =
         t.error( "this type is partially copyable/movable - when you provide any of the more-specific operator= signatures, you must also provide the one with the general signature (out this, that); alternatively, consider removing all the operator= functions and let them all be generated for you with default memberwise semantics" );
     }
     else if !smfs.out_this_in_that {
-        t.require( t.add_member( "operator=: (out this, that) = { }"),
-                   "could not add general operator=:(out this, that)");
+        t.add_member( "operator=: (out this, that) = { }");
     }
 }
 
@@ -721,8 +716,7 @@ basic_value: (inout t: meta::type_declaration) =
     }
 
     if !has_default_ctor {
-        t.require( t.add_member( "operator=: (out this) = { }"),
-                   "could not add default constructor");
+        t.add_member( "operator=: (out this) = { }");
     }
 }
 
@@ -826,14 +820,11 @@ basic_enum: (
     nextval ,
     bitwise : bool
     )
-    -> (
-        underlying_type        : std::string = "",
-        strict_underlying_type : std::string
-        )
 = {
-    enumerators : std::vector<value_member_info> = ();
-    min_value   : i64                            = 0;
-    max_value   : i64                            = 0;
+    enumerators     : std::vector<value_member_info> = ();
+    min_value       : i64                            = ();
+    max_value       : i64                            = ();
+    underlying_type : std::string;
 
     //  1. Gather: The names of all the user-written members, and find/compute the type
 
@@ -917,81 +908,76 @@ basic_enum: (
         }
     }
 
-    strict_underlying_type = "cpp2::strict_value<(underlying_type)$,(t.name())$,(bitwise)$>";
-
 
     //  2. Replace: Erase the contents and replace with modified contents
+    //
+    //  Note that most values and functions are declared as '==' compile-time values, i.e. Cpp1 'constexpr'
 
     t.remove_all_members();
 
-    //  Add the base value and a constructor
-    t.require( t.add_member( "    this: (strict_underlying_type)$ = ();"),
-                "could not add enumeration base value");
+    //  Generate all the common material: value and common functions
+    t.add_member( "    enumeration_count : (underlying_type)$ == (enumerators.ssize())$;");
+    t.add_member( "    value__           : (underlying_type)$;");
+    t.add_member( "    private operator= : (implicit out this, val) == value__ = cpp2::unsafe_narrow<(underlying_type)$>(val);");
+    t.add_member( "    get_raw_value     : (this) -> (underlying_type)$ == value__;");
+    t.add_member( "    operator=         : (out this, that) == { }");
+    t.add_member( "    operator<=>       : (this, that) -> std::strong_ordering;");
 
-    t.require( t.add_member( "    operator=: (implicit out this, value: (strict_underlying_type)$) = { (strict_underlying_type)$ = value; }"),
-                "could not add enumeration constructor");
+    //  Generate the bitwise operations and 'none' value, if appropriate
+    if bitwise{
+        e: value_member_info = ( "none", "", "0");
+        enumerators.push_back( e );
+
+        t.add_member( "    operator|=: ( inout this, that )                 == value__ |= that.value__;");
+        t.add_member( "    operator&=: ( inout this, that )                 == value__ &= that.value__;");
+        t.add_member( "    operator^=: ( inout this, that )                 == value__ ^= that.value__;");
+        t.add_member( "    operator| : (       this, that ) -> (t.name())$  == value__ |  that.value__;");
+        t.add_member( "    operator& : (       this, that ) -> (t.name())$  == value__ &  that.value__;");
+        t.add_member( "    operator^ : (       this, that ) -> (t.name())$  == value__ ^  that.value__;");
+        t.add_member( "    has       : ( inout this, that ) -> bool         == value__ &  that.value__;");
+        t.add_member( "    set       : ( inout this, that )                 == value__ |= that.value__;");
+        t.add_member( "    clear     : ( inout this, that )                 == value__ &= that.value__~;");
+    }
 
     //  Add the enumerators
     for enumerators do (e) {
-        t.require( t.add_member( "    public (e.name)$ :== (strict_underlying_type)$( (e.value)$ );"),
-                   "could not add enumerator" + e.name);
+        t.add_member( "    (e.name)$ : (t.name())$ == (e.value)$;");
     }
 
-    //  Provide a 'size' function to count the number of enumerators
-    t.require( t.add_member( "    size: () -> _ = (enumerators.ssize())$;"),
-               "could not add size");
-
     //  Provide a 'to_string' function to print enumerator name(s)
-    (to_string: std::string = "    to_string: (value: (strict_underlying_type)$) -> std::string = { \n")
+    (to_string: std::string = "    to_string: (this) -> std::string = { \n")
     {
-        to_string += "    ret: std::string = ();\n";
-
         if bitwise {
-            to_string += "    comma: std::string = ();\n";
+            to_string += "    ret   : std::string = \"(\";\n";
+            to_string += "    comma : std::string = ();\n";
+            to_string += "    if this == none { return \"(none)\"; }\n";
         }
 
-        (first := true)
         for  enumerators  
-        next first = false  
         do   (e) {
             if e.name != "_" {  // ignore unnamed values
                 if bitwise {
-                    if first {
-                        to_string += "    ret = \"(\";\n";
-                    }
-                    if e.name == "none" {   // a "none" flag should match if no bits set
-                        to_string += "    if value == (e.name)$ { ret += comma + \"(e.name)$\"; comma = \", \"; }\n";
-                    }
-                    else {                  // other flags need to be &-ed
-                        to_string += "    if (value & (e.name)$) == (e.name)$ { ret += comma + \"(e.name)$\"; comma = \", \"; }\n";
+                    if e.name != "none" {
+                        to_string += "    if (this & (e.name)$) == (e.name)$ { ret += comma + \"(e.name)$\"; comma = \", \"; }\n";
                     }
                 }
                 else {
-                    to_string += "if value == (e.name)$ { ret = \"(e.name)$\"; }\n";
+                    to_string += "    if this == (e.name)$ { return \"(e.name)$\"; }\n";
                 }
             }
         }
-
-        to_string += "    if ret.empty() { ret = \"(invalid (t.name())$ enumerator value)\"; }\n";
 
         if bitwise {
             to_string += "    return ret+\")\";\n}\n";
         }
         else {
-            to_string += "    return ret;\n}\n";
+            to_string += "    return \"invalid (t.name())$ value\";\n}\n";
         }
 
-        t.require( t.add_member( to_string ),
-                   "could not add to_string static function");
+        t.add_member( to_string );
     }
 
-    t.require( t.add_member( "    to_string: (this) -> std::string = { return (t.name())$::to_string(this); }"),
-               "could not add to_string member function");
-
-
-    //  3. A basic_enum is-a value type
-
-    t.basic_value();
+    t.add_member( "    operator<< : (inout o: std::ostream, val: (t.name())$) -> forward std::ostream = { o << val.to_string(); return o; }");
 }
 
 
@@ -1007,7 +993,7 @@ basic_enum: (
 enum: (inout t: meta::type_declaration) =
 {
     //  Let basic_enum do its thing, with an incrementing value generator
-    _ = t.basic_enum(
+    t.basic_enum(
         :(inout value: std::string, specified_value: std::string) = {
             if !specified_value.empty() {
                 value = specified_value;
@@ -1033,12 +1019,8 @@ enum: (inout t: meta::type_declaration) =
 //
 flag_enum: (inout t: meta::type_declaration) =
 {
-    //  Add "none" member as a regular name to signify "no flags set"
-    t.require( t.add_member( "none := 0;"),
-                "could not add 'none' enumerator");
-
     //  Let basic_enum do its thing, with a power-of-two value generator
-    _ = t.basic_enum(
+    t.basic_enum(
         :(inout value: std::string, specified_value: std::string) = {
             if !specified_value.empty() {
                 value = specified_value;
@@ -1137,48 +1119,26 @@ union: (inout t : meta::type_declaration)
         }
 
         storage += " )> = ();\n";
-        t.require( t.add_member( storage ),
-                   "could not add storage");
+        t.add_member( storage );
     }
 
     //  Provide discriminator
-    t.require( t.add_member( "    discriminator__: (discriminator_type)$ = -1;\n"),
-               "could not add discriminator");
+    t.add_member( "    discriminator__: (discriminator_type)$ = -1;\n");
 
     //  Add the alternatives: is_alternative, get_alternative, and set_alternative
     for alternatives 
     do  (a)
     {
-        t.require( t.add_member( "    public is_(a.name)$: (this) -> bool = discriminator__ == (a.value)$;\n"),
-                   "could not add is_" + a.name);
+        t.add_member( "    public is_(a.name)$: (this) -> bool = discriminator__ == (a.value)$;\n");
 
-        t.require( t.add_member( "    public get_(a.name)$: (this) -> forward _ [[pre: is_(a.name)$()]] = reinterpret_cast<* const (a.type)$>(storage__&)*;\n"),
-                   "could not add get_" + a.name);
+        t.add_member( "    public get_(a.name)$: (this) -> forward _ [[pre: is_(a.name)$()]] = reinterpret_cast<* const (a.type)$>(storage__&)*;\n");
 
-        t.require( t.add_member( "    public get_(a.name)$: (inout this) -> forward _ [[pre: is_(a.name)$()]] = reinterpret_cast<*(a.type)$>(storage__&)*;\n"),
-                   "could not add get_" + a.name);
+        t.add_member( "    public get_(a.name)$: (inout this) -> forward _ [[pre: is_(a.name)$()]] = reinterpret_cast<*(a.type)$>(storage__&)*;\n");
 
-        t.require( t.add_member( "    public set_(a.name)$: (inout this, value: (a.type)$) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(storage__&), value); } else { reinterpret_cast<*(a.type)$>(storage__&)* = value; } discriminator__ = (a.value)$; }\n"),
-                   "could not add set_" + a.name);
+        t.add_member( "    public set_(a.name)$: (inout this, value: (a.type)$) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(storage__&), value); } else { reinterpret_cast<*(a.type)$>(storage__&)* = value; } discriminator__ = (a.value)$; }\n");
 
-        t.require( t.add_member( "    public set_(a.name)$: (inout this, forward args...: _) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(storage__&), args...); } else { reinterpret_cast<*(a.type)$>(storage__&)* = :(a.type)$ = (args...); } discriminator__ = (a.value)$; }\n"),
-                   "could not add variadic set_" + a.name);
+        t.add_member( "    public set_(a.name)$: (inout this, forward args...: _) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(storage__&), args...); } else { reinterpret_cast<*(a.type)$>(storage__&)* = :(a.type)$ = (args...); } discriminator__ = (a.value)$; }\n");
     }
-
-    ////  Add operator<<
-    //(stream: std::string = "    operator<<: (inout o: std::ostream, that) -> forward std::ostream = {\n")
-    //{
-    //    (first := true)
-    //    for  alternatives 
-    //    next first = false  
-    //    do   (a) {
-    //        stream += "if discriminator__ == (a.value)$ { o << reinterpret_cast<*(a.type)$>(storage__&)*; }\n";
-    //    }
-
-    //    stream += "    return o;\n}\n";
-    //    t.require( t.add_member( stream ),
-    //               "could not add operator<<");
-    //}
 
     //  Add destroy
     (destroy: std::string = "    private destroy: (inout this) = {\n")
@@ -1189,13 +1149,11 @@ union: (inout t : meta::type_declaration)
         }
 
         destroy += "}\n";
-        t.require( t.add_member( destroy ),
-                   "could not add destroy");
+        t.add_member( destroy );
     }
 
     //  Add the destructor
-    t.require( t.add_member( "    operator=: (move this) = { destroy(); } " ),
-               "could not add destructor");
+    t.add_member( "    operator=: (move this) = { destroy(); } " );
 }
 
 

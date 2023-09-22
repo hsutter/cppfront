@@ -4887,11 +4887,9 @@ public:
         //  For an assignment operator, similar to emitting an ordinary function
         else
         {
-            assert (
-                prefix.empty()
-                && !current_functions.empty()
-            );
+            assert (!current_functions.empty());
             current_functions.back().epilog.push_back( "return *this;");
+            printer.print_cpp2( prefix, n.position() );
             printer.print_cpp2( "auto " + type_qualification_if_any_for(n) + print_to_string( *n.name() ), n.position());
             emit( *func, n.name() );
         }
@@ -4988,11 +4986,19 @@ public:
             auto& a = std::get<declaration_node::an_alias>(n.type);
             assert(a);
 
-            //  Non-local aliases are emitted in phase 1, locals in phase 2
+            //  Namespace-scope aliases are emitted in phase 1,
+            //  type-scope object aliases in both phases 1 and 2, and
+            //  function-scope aliases in phase 2
             if (
                 (
                     !n.parent_is_function()
                     && printer.get_phase() == printer.phase1_type_defs_func_decls
+                    )
+                ||
+                (
+                    n.parent_is_type()
+                    && n.is_object_alias()
+                    && printer.get_phase() == printer.phase2_func_defs
                     )
                 ||
                 (
@@ -5008,7 +5014,11 @@ public:
                 );
 
                 //  If we're in a type scope, handle the access specifier
-                if (n.parent_is_type()) {
+                if (
+                    n.parent_is_type()
+                    && printer.get_phase() == printer.phase1_type_defs_func_decls
+                    )
+                {
                     if (!n.is_default_access()) {
                         printer.print_cpp2(to_string(n.access) + ": ", n.position());
                     }
@@ -5051,34 +5061,66 @@ public:
                     );
                 }
 
-                //  Handle object aliases
+                //  Handle object aliases:
+                //      - at function scope, it's const&
+                //      - at namespace scope, it's inline constexpr
+                //      - at type scope, it's also inline constexpr but see note (*) below
                 else if (a->is_object_alias())
                 {
-                    auto intro = std::string{};
-                    if (n.parent_is_function()) {
-                        intro = "const&";
-                    }
-                    else if (n.parent_is_namespace() || n.parent_is_type()) {
-                        intro = "static constexpr";
-                    }
-                    else {
-                        assert(!"ICE: should be unreachable - an alias' parent should be a function, namespace, or type");
-                    }
-
                     auto type = std::string{"auto"};
                     if (a->type_id) {
                         type = print_to_string(*a->type_id);
                     }
 
-                    printer.print_cpp2(
-                        type + " "
-                            + intro + " "
-                            + print_to_string(*n.identifier)
-                            + " = "
-                            + print_to_string( *std::get<alias_node::an_object>(a->initializer) )
-                            + ";\n",
-                        n.position()
-                    );
+                    //  If this is at type scope, Cpp1 requires an out-of-line declaration dance
+                    //  for some cases to work - see https://stackoverflow.com/questions/11928089/
+                    if (n.parent_is_type())
+                    {
+                        assert (n.parent_declaration->name());
+
+                        if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
+                            printer.print_cpp2(
+                                "static const "
+                                    + type + " "
+                                    + print_to_string(*n.identifier)
+                                    + ";\n",
+                                n.position()
+                            );
+                        }
+                        else if (printer.get_phase() == printer.phase2_func_defs) {
+                            printer.print_cpp2(
+                                "inline constexpr "
+                                    + type + " "
+                                    + n.parent_declaration->name()->to_string() + "::"
+                                    + print_to_string(*n.identifier)
+                                    + " = "
+                                    + print_to_string( *std::get<alias_node::an_object>(a->initializer) )
+                                    + ";\n",
+                                n.position()
+                            );
+                        }
+                    }
+                    //  Otherwise, at function and namespace scope we can just declare
+                    else
+                    {
+                        auto intro = std::string{};
+                        if (n.parent_is_function()) {
+                            intro = "const&";
+                        }
+                        else if (n.parent_is_namespace()) {
+                            intro = "inline constexpr";
+                        }
+
+                        printer.print_cpp2(
+                            type + " "
+                                + intro + " "
+                                + print_to_string(*n.identifier)
+                                + " = "
+                                + print_to_string( *std::get<alias_node::an_object>(a->initializer) )
+                                + ";\n",
+                            n.position()
+                        );
+                    }
                 }
 
                 else {
@@ -5469,6 +5511,8 @@ public:
                 )
             )
         {
+            auto emit_as_friend = n.name() && n.name()->as_string_view().starts_with("operator<<");
+
             //  Start fresh (there may be one spurious leftover
             //  requires-condition created during the declarations pass)
             function_requires_conditions = {};
@@ -5500,6 +5544,10 @@ public:
                 std::string prefix  = {};
                 std::string suffix1 = {};
                 std::string suffix2 = {};
+
+                if (n.is_constexpr) {
+                    prefix += "constexpr ";
+                }
 
                 if (
                     !n.has_initializer()
@@ -5572,12 +5620,12 @@ public:
                     is_in_type
                     && printer.get_phase() != printer.phase2_func_defs
                     ) {
-                    //if (n.name()->as_string_view().starts_with("operator")) {
-                    //    prefix += "friend ";
-                    //}
-                    //else {
+                    if (emit_as_friend) {
+                        prefix += "friend ";
+                    }
+                    else {
                         prefix += "static ";
-                    //}
+                    }
                 }
 
                 //  If there's a return type, it's [[nodiscard]] implicitly and all the time
@@ -5589,6 +5637,10 @@ public:
                     && (
                         printer.get_phase() == printer.phase1_type_defs_func_decls
                         || n.has_initializer()  // so we're printing it in phase 2
+                        )
+                    && (
+                        !emit_as_friend         // can't have an attribute on a friend declaration-not-definition
+                        || printer.get_phase() != printer.phase1_type_defs_func_decls
                         )
                     )
                 {
@@ -5725,7 +5777,15 @@ public:
                     )
                 {
                     printer.print_cpp2( prefix, n.position() );
-                    printer.print_cpp2( "auto " + type_qualification_if_any_for(n), n.position() );
+                    printer.print_cpp2( "auto ", n.position() );
+                    if (
+                        !emit_as_friend
+                        || printer.get_phase() != printer.phase2_func_defs
+                        )
+                    {
+                        printer.print_cpp2( type_qualification_if_any_for(n), n.position() );
+                    }
+
                     emit( *n.name() );
                     emit( *func, n.name(), is_main, false, suffix1 );
                     printer.print_cpp2( suffix2, n.position() );

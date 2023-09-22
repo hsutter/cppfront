@@ -65,10 +65,17 @@ main: () = {
 
     x = skat_game::diamonds;        // ok, can assign one skat_game from another
 
+    std::cout << "file_attributes::cached.get_raw_value() is (file_attributes::cached.get_raw_value())$\n";
+    std::cout << "file_attributes::current.get_raw_value() is (file_attributes::current.get_raw_value())$\n";
+    std::cout << "file_attributes::obsolete.get_raw_value() is (file_attributes::obsolete.get_raw_value())$\n";
+    std::cout << "file_attributes::cached_and_current.get_raw_value() is (file_attributes::cached_and_current.get_raw_value())$\n";
+
     f: file_attributes = file_attributes::cached_and_current;
-    f &= file_attributes::cached  | file_attributes::obsolete;
+    f &= file_attributes::cached | file_attributes::obsolete;
+    std::cout << "f. get_raw_value() is (f. get_raw_value())$\n";
 
     f2 := file_attributes::cached;
+    std::cout << "f2.get_raw_value() is (f2.get_raw_value())$\n";
 
     std::cout << "f  is " << f  << "\n";
     std::cout << "f2 is " << f2 << "\n";
@@ -78,8 +85,8 @@ main: () = {
     f2.set(file_attributes::cached);
     std::cout << "f2 is " << f2 << "\n";
 
-    std::cout << "f  as int  is (f  as int )$\n";
-    std::cout << "f2 as int  is (f2 as int )$\n";
+    std::cout << "f. get_raw_value() is (f. get_raw_value())$\n";
+    std::cout << "f2.get_raw_value() is (f2.get_raw_value())$\n";
 
     std::cout << "f  is (f2) is (f  is (f2))$\n";
     std::cout << "f2 is (f ) is (f2 is (f ))$\n\n";
@@ -91,14 +98,14 @@ main: () = {
 
     std::cout << "f  is " << f  << "\n";
     std::cout << "f2 is " << f2 << "\n";
-    std::cout << "f  as int  is (f  as int )$\n";
-    std::cout << "f2 as int  is (f2 as int )$\n";
+    std::cout << "f. get_raw_value() is (f. get_raw_value())$\n";
+    std::cout << "f2.get_raw_value() is (f2.get_raw_value())$\n";
     std::cout << "f  == f2   is (f  == f2  )$\n";
     std::cout << "f  is (f2) is (f  is (f2))$\n";
     std::cout << "f2 is (f ) is (f2 is (f ))$\n";
     std::cout << "(f & f2) == f2 is ((f & f2) == f2)$\n";
 
-    std::cout << "inspecting: " << inspect f -> std::string {
+    std::cout << "inspecting f: " << inspect f -> std::string {
         is (file_attributes::current) = "exactly 'current'";
         is (cpp2::has_flags(f2))      = "includes all f2's flags ('cached' and 'current')";
         is _                          = "something else";

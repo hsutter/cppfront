@@ -23,21 +23,27 @@ class file_attributes;
 
 
 #line 2 "pure2-enum.cpp2"
-class skat_game: public cpp2::strict_value<cpp2::i8,skat_game,false> {
-public: skat_game(cpp2::in<cpp2::strict_value<cpp2::i8,skat_game,false>> value);
-public: auto static constexpr diamonds = cpp2::strict_value<cpp2::i8,skat_game,false>(9);
-public: auto static constexpr hearts = cpp2::strict_value<cpp2::i8,skat_game,false>(10);
-public: auto static constexpr spades = cpp2::strict_value<cpp2::i8,skat_game,false>(11);
-public: auto static constexpr clubs = cpp2::strict_value<cpp2::i8,skat_game,false>(12);
-public: auto static constexpr grand = cpp2::strict_value<cpp2::i8,skat_game,false>(20);
-public: auto static constexpr null = cpp2::strict_value<cpp2::i8,skat_game,false>(23);
-public: [[nodiscard]] static auto size() -> auto;
-public: [[nodiscard]] static auto to_string(cpp2::in<cpp2::strict_value<cpp2::i8,skat_game,false>> value) -> std::string;
+class skat_game {
+public: static const cpp2::i8 enumeration_count;
+private: cpp2::i8 value__; private: constexpr skat_game(auto const& val);
+
+private: constexpr auto operator=(auto const& val) -> skat_game& ;
+public: [[nodiscard]] constexpr auto get_raw_value() const& -> cpp2::i8;
+public: constexpr skat_game(skat_game const& that);
+public: constexpr auto operator=(skat_game const& that) -> skat_game& ;
+public: constexpr skat_game(skat_game&& that) noexcept;
+public: constexpr auto operator=(skat_game&& that) noexcept -> skat_game& ;
+public: [[nodiscard]] auto operator<=>(skat_game const& that) const& -> std::strong_ordering = default;
+public: static const skat_game diamonds;
+public: static const skat_game hearts;
+public: static const skat_game spades;
+public: static const skat_game clubs;
+public: static const skat_game grand;
+public: static const skat_game null;
 public: [[nodiscard]] auto to_string() const& -> std::string;
-public: skat_game(skat_game const& that);
-public: explicit skat_game();
+public: friend auto operator<<(std::ostream& o, cpp2::in<skat_game> val) -> std::ostream&;
 
-
+#line 4 "pure2-enum.cpp2"
              // 10
              // 11
              // 12
@@ -45,36 +51,59 @@ public: explicit skat_game();
 #line 9 "pure2-enum.cpp2"
 };
 
-class rgb: public cpp2::strict_value<cpp2::i8,rgb,false> {
-public: rgb(cpp2::in<cpp2::strict_value<cpp2::i8,rgb,false>> value);
-public: auto static constexpr red = cpp2::strict_value<cpp2::i8,rgb,false>(0);
-public: auto static constexpr green = cpp2::strict_value<cpp2::i8,rgb,false>(1);
-public: auto static constexpr blue = cpp2::strict_value<cpp2::i8,rgb,false>(2);
-public: [[nodiscard]] static auto size() -> auto;
-public: [[nodiscard]] static auto to_string(cpp2::in<cpp2::strict_value<cpp2::i8,rgb,false>> value) -> std::string;
-public: [[nodiscard]] auto to_string() const& -> std::string;
-public: rgb(rgb const& that);
-public: explicit rgb();
+class rgb {
+public: static const cpp2::i8 enumeration_count;
+private: cpp2::i8 value__; private: constexpr rgb(auto const& val);
 
+private: constexpr auto operator=(auto const& val) -> rgb& ;
+public: [[nodiscard]] constexpr auto get_raw_value() const& -> cpp2::i8;
+public: constexpr rgb(rgb const& that);
+public: constexpr auto operator=(rgb const& that) -> rgb& ;
+public: constexpr rgb(rgb&& that) noexcept;
+public: constexpr auto operator=(rgb&& that) noexcept -> rgb& ;
+public: [[nodiscard]] auto operator<=>(rgb const& that) const& -> std::strong_ordering = default;
+public: static const rgb red;
+public: static const rgb green;
+public: static const rgb blue;
+public: [[nodiscard]] auto to_string() const& -> std::string;
+public: friend auto operator<<(std::ostream& o, cpp2::in<rgb> val) -> std::ostream&;
+
+#line 12 "pure2-enum.cpp2"
              // 0
              // 1
              // 2
 #line 15 "pure2-enum.cpp2"
 };
 
-class file_attributes: public cpp2::strict_value<cpp2::u8,file_attributes,true> {
-public: file_attributes(cpp2::in<cpp2::strict_value<cpp2::u8,file_attributes,true>> value);
-public: auto static constexpr cached = cpp2::strict_value<cpp2::u8,file_attributes,true>(1);
-public: auto static constexpr current = cpp2::strict_value<cpp2::u8,file_attributes,true>(2);
-public: auto static constexpr obsolete = cpp2::strict_value<cpp2::u8,file_attributes,true>(4);
-public: auto static constexpr cached_and_current = cpp2::strict_value<cpp2::u8,file_attributes,true>(cached | current);
-public: auto static constexpr none = cpp2::strict_value<cpp2::u8,file_attributes,true>(0);
-public: [[nodiscard]] static auto size() -> auto;
-public: [[nodiscard]] static auto to_string(cpp2::in<cpp2::strict_value<cpp2::u8,file_attributes,true>> value) -> std::string;
-public: [[nodiscard]] auto to_string() const& -> std::string;
-public: file_attributes(file_attributes const& that);
-public: explicit file_attributes();
+class file_attributes {
+public: static const cpp2::u8 enumeration_count;
+private: cpp2::u8 value__; private: constexpr file_attributes(auto const& val);
 
+private: constexpr auto operator=(auto const& val) -> file_attributes& ;
+public: [[nodiscard]] constexpr auto get_raw_value() const& -> cpp2::u8;
+public: constexpr file_attributes(file_attributes const& that);
+public: constexpr auto operator=(file_attributes const& that) -> file_attributes& ;
+public: constexpr file_attributes(file_attributes&& that) noexcept;
+public: constexpr auto operator=(file_attributes&& that) noexcept -> file_attributes& ;
+public: [[nodiscard]] auto operator<=>(file_attributes const& that) const& -> std::strong_ordering = default;
+public: constexpr auto operator|=(file_attributes const& that) & -> void;
+public: constexpr auto operator&=(file_attributes const& that) & -> void;
+public: constexpr auto operator^=(file_attributes const& that) & -> void;
+public: [[nodiscard]] constexpr auto operator|(file_attributes const& that) const& -> file_attributes;
+public: [[nodiscard]] constexpr auto operator&(file_attributes const& that) const& -> file_attributes;
+public: [[nodiscard]] constexpr auto operator^(file_attributes const& that) const& -> file_attributes;
+public: [[nodiscard]] constexpr auto has(file_attributes const& that) & -> bool;
+public: constexpr auto set(file_attributes const& that) & -> void;
+public: constexpr auto clear(file_attributes const& that) & -> void;
+public: static const file_attributes cached;
+public: static const file_attributes current;
+public: static const file_attributes obsolete;
+public: static const file_attributes cached_and_current;
+public: static const file_attributes none;
+public: [[nodiscard]] auto to_string() const& -> std::string;
+public: friend auto operator<<(std::ostream& o, cpp2::in<file_attributes> val) -> std::ostream&;
+
+#line 18 "pure2-enum.cpp2"
                 // 1
                 // 2
                 // 4
@@ -89,68 +118,130 @@ auto main() -> int;
 
 
 
-    skat_game::skat_game(cpp2::in<cpp2::strict_value<cpp2::i8,skat_game,false>> value)
-                                                                                      : cpp2::strict_value<cpp2::i8,skat_game,false>{ value }{}
-[[nodiscard]] auto skat_game::size() -> auto { return 6; }
-[[nodiscard]] auto skat_game::to_string(cpp2::in<cpp2::strict_value<cpp2::i8,skat_game,false>> value) -> std::string{
+    inline constexpr cpp2::i8 skat_game::enumeration_count = 6;
 
-    std::string ret {}; 
-    if (value == diamonds) {ret = "diamonds";}
-    if (value == hearts) {ret = "hearts";}
-    if (value == spades) {ret = "spades";}
-    if (value == clubs) {ret = "clubs";}
-    if (value == grand) {ret = "grand";}
-    if (value == null) {ret = "null";}
-    if (CPP2_UFCS_0(empty, ret)) {ret = "(invalid skat_game enumerator value)";}
-    return ret; 
+constexpr skat_game::skat_game(auto const& val)
+                                                    : value__{ cpp2::unsafe_narrow<cpp2::i8>(val) } {  }
+constexpr auto skat_game::operator=(auto const& val) -> skat_game&  { 
+                                                    value__ = cpp2::unsafe_narrow<cpp2::i8>(val);
+                                                    return *this; }
+[[nodiscard]] constexpr auto skat_game::get_raw_value() const& -> cpp2::i8 { return value__; }
+constexpr skat_game::skat_game(skat_game const& that)
+                                              : value__{ that.value__ }{}
+constexpr auto skat_game::operator=(skat_game const& that) -> skat_game& {
+                                              value__ = that.value__;
+                                              return *this;}
+constexpr skat_game::skat_game(skat_game&& that) noexcept
+                                              : value__{ std::move(that).value__ }{}
+constexpr auto skat_game::operator=(skat_game&& that) noexcept -> skat_game& {
+                                              value__ = std::move(that).value__;
+                                              return *this;}
+inline constexpr skat_game skat_game::diamonds = 9;
+
+inline constexpr skat_game skat_game::hearts = 10;
+
+inline constexpr skat_game skat_game::spades = 11;
+
+inline constexpr skat_game skat_game::clubs = 12;
+
+inline constexpr skat_game skat_game::grand = 20;
+
+inline constexpr skat_game skat_game::null = 23;
+
+[[nodiscard]] auto skat_game::to_string() const& -> std::string{
+    if ((*this) == diamonds) {return "diamonds"; }
+    if ((*this) == hearts) {return "hearts"; }
+    if ((*this) == spades) {return "spades"; }
+    if ((*this) == clubs) {return "clubs"; }
+    if ((*this) == grand) {return "grand"; }
+    if ((*this) == null) {return "null"; }
+    return "invalid skat_game value"; 
     }
 
-    [[nodiscard]] auto skat_game::to_string() const& -> std::string{return skat_game::to_string((*this)); }
-skat_game::skat_game(skat_game const& that)
-                                : cpp2::strict_value<cpp2::i8,skat_game,false>{ static_cast<cpp2::strict_value<cpp2::i8,skat_game,false> const&>(that) }{}
-skat_game::skat_game()
-                          : cpp2::strict_value<cpp2::i8,skat_game,false>{  }{}
-rgb::rgb(cpp2::in<cpp2::strict_value<cpp2::i8,rgb,false>> value)
-                                                                                : cpp2::strict_value<cpp2::i8,rgb,false>{ value }{}
-[[nodiscard]] auto rgb::size() -> auto { return 3; }
-[[nodiscard]] auto rgb::to_string(cpp2::in<cpp2::strict_value<cpp2::i8,rgb,false>> value) -> std::string{
+    [[nodiscard]] auto operator<<(std::ostream& o, cpp2::in<skat_game> val) -> std::ostream&{o << CPP2_UFCS_0(to_string, val);return o; }
+inline constexpr cpp2::i8 rgb::enumeration_count = 3;
 
-    std::string ret {}; 
-    if (value == red) {ret = "red";}
-    if (value == green) {ret = "green";}
-    if (value == blue) {ret = "blue";}
-    if (CPP2_UFCS_0(empty, ret)) {ret = "(invalid rgb enumerator value)";}
-    return ret; 
+constexpr rgb::rgb(auto const& val)
+                                                    : value__{ cpp2::unsafe_narrow<cpp2::i8>(val) } {  }
+constexpr auto rgb::operator=(auto const& val) -> rgb&  { 
+                                                    value__ = cpp2::unsafe_narrow<cpp2::i8>(val);
+                                                    return *this; }
+[[nodiscard]] constexpr auto rgb::get_raw_value() const& -> cpp2::i8 { return value__; }
+constexpr rgb::rgb(rgb const& that)
+                                              : value__{ that.value__ }{}
+constexpr auto rgb::operator=(rgb const& that) -> rgb& {
+                                              value__ = that.value__;
+                                              return *this;}
+constexpr rgb::rgb(rgb&& that) noexcept
+                                              : value__{ std::move(that).value__ }{}
+constexpr auto rgb::operator=(rgb&& that) noexcept -> rgb& {
+                                              value__ = std::move(that).value__;
+                                              return *this;}
+inline constexpr rgb rgb::red = 0;
+
+inline constexpr rgb rgb::green = 1;
+
+inline constexpr rgb rgb::blue = 2;
+
+[[nodiscard]] auto rgb::to_string() const& -> std::string{
+    if ((*this) == red) {return "red"; }
+    if ((*this) == green) {return "green"; }
+    if ((*this) == blue) {return "blue"; }
+    return "invalid rgb value"; 
     }
 
-    [[nodiscard]] auto rgb::to_string() const& -> std::string{return rgb::to_string((*this)); }
-rgb::rgb(rgb const& that)
-                                : cpp2::strict_value<cpp2::i8,rgb,false>{ static_cast<cpp2::strict_value<cpp2::i8,rgb,false> const&>(that) }{}
-rgb::rgb()
-                          : cpp2::strict_value<cpp2::i8,rgb,false>{  }{}
-file_attributes::file_attributes(cpp2::in<cpp2::strict_value<cpp2::u8,file_attributes,true>> value)
-                                                                                           : cpp2::strict_value<cpp2::u8,file_attributes,true>{ value }{}
-[[nodiscard]] auto file_attributes::size() -> auto { return 5; }
-[[nodiscard]] auto file_attributes::to_string(cpp2::in<cpp2::strict_value<cpp2::u8,file_attributes,true>> value) -> std::string{
+    [[nodiscard]] auto operator<<(std::ostream& o, cpp2::in<rgb> val) -> std::ostream&{o << CPP2_UFCS_0(to_string, val);return o; }
+inline constexpr cpp2::u8 file_attributes::enumeration_count = 4;
 
-    std::string ret {}; 
+constexpr file_attributes::file_attributes(auto const& val)
+                                                    : value__{ cpp2::unsafe_narrow<cpp2::u8>(val) } {  }
+constexpr auto file_attributes::operator=(auto const& val) -> file_attributes&  { 
+                                                    value__ = cpp2::unsafe_narrow<cpp2::u8>(val);
+                                                    return *this; }
+[[nodiscard]] constexpr auto file_attributes::get_raw_value() const& -> cpp2::u8 { return value__; }
+constexpr file_attributes::file_attributes(file_attributes const& that)
+                                              : value__{ that.value__ }{}
+constexpr auto file_attributes::operator=(file_attributes const& that) -> file_attributes& {
+                                              value__ = that.value__;
+                                              return *this;}
+constexpr file_attributes::file_attributes(file_attributes&& that) noexcept
+                                              : value__{ std::move(that).value__ }{}
+constexpr auto file_attributes::operator=(file_attributes&& that) noexcept -> file_attributes& {
+                                              value__ = std::move(that).value__;
+                                              return *this;}
+constexpr auto file_attributes::operator|=(file_attributes const& that) & -> void { value__ |= that.value__; }
+constexpr auto file_attributes::operator&=(file_attributes const& that) & -> void { value__ &= that.value__; }
+constexpr auto file_attributes::operator^=(file_attributes const& that) & -> void { value__ ^= that.value__; }
+[[nodiscard]] constexpr auto file_attributes::operator|(file_attributes const& that) const& -> file_attributes { return value__ | that.value__; }
+[[nodiscard]] constexpr auto file_attributes::operator&(file_attributes const& that) const& -> file_attributes { return value__ & that.value__; }
+[[nodiscard]] constexpr auto file_attributes::operator^(file_attributes const& that) const& -> file_attributes { return value__ ^ that.value__; }
+[[nodiscard]] constexpr auto file_attributes::has(file_attributes const& that) & -> bool { return value__ & that.value__; }
+constexpr auto file_attributes::set(file_attributes const& that) & -> void { value__ |= that.value__; }
+constexpr auto file_attributes::clear(file_attributes const& that) & -> void { value__ &= ~that.value__; }
+inline constexpr file_attributes file_attributes::cached = 1;
+
+inline constexpr file_attributes file_attributes::current = 2;
+
+inline constexpr file_attributes file_attributes::obsolete = 4;
+
+inline constexpr file_attributes file_attributes::cached_and_current = cached | current;
+
+inline constexpr file_attributes file_attributes::none = 0;
+
+[[nodiscard]] auto file_attributes::to_string() const& -> std::string{
+
+    std::string ret {"("}; 
 
     std::string comma {}; 
-    ret = "(";
-    if ((value & cached) == cached) {ret += comma + "cached";comma = ", ";}
-    if ((value & current) == current) {ret += comma + "current";comma = ", ";}
-    if ((value & obsolete) == obsolete) {ret += comma + "obsolete";comma = ", ";}
-    if ((value & cached_and_current) == cached_and_current) {ret += comma + "cached_and_current";comma = ", ";}
-    if (value == none) {ret += comma + "none";comma = ", ";}
-    if (CPP2_UFCS_0(empty, ret)) {ret = "(invalid file_attributes enumerator value)";}
+    if ((*this) == none) {return "(none)"; }
+    if (((*this) & cached) == cached) {ret += comma + "cached";comma = ", ";}
+    if (((*this) & current) == current) {ret += comma + "current";comma = ", ";}
+    if (((*this) & obsolete) == obsolete) {ret += comma + "obsolete";comma = ", ";}
+    if (((*this) & cached_and_current) == cached_and_current) {ret += comma + "cached_and_current";comma = ", ";}
     return ret + ")"; 
     }
 
-    [[nodiscard]] auto file_attributes::to_string() const& -> std::string{return file_attributes::to_string((*this)); }
-file_attributes::file_attributes(file_attributes const& that)
-                                : cpp2::strict_value<cpp2::u8,file_attributes,true>{ static_cast<cpp2::strict_value<cpp2::u8,file_attributes,true> const&>(that) }{}
-file_attributes::file_attributes()
-                          : cpp2::strict_value<cpp2::u8,file_attributes,true>{  }{}
+    [[nodiscard]] auto operator<<(std::ostream& o, cpp2::in<file_attributes> val) -> std::ostream&{o << CPP2_UFCS_0(to_string, val);return o; }
 #line 24 "pure2-enum.cpp2"
 auto main() -> int{
     // x : skat_game = 9;               // error, can't construct skat_game from integer
@@ -196,10 +287,17 @@ auto main() -> int{
 
     x = skat_game::diamonds;        // ok, can assign one skat_game from another
 
+    std::cout << "file_attributes::cached.get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, file_attributes::cached)) + "\n";
+    std::cout << "file_attributes::current.get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, file_attributes::current)) + "\n";
+    std::cout << "file_attributes::obsolete.get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, file_attributes::obsolete)) + "\n";
+    std::cout << "file_attributes::cached_and_current.get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, file_attributes::cached_and_current)) + "\n";
+
     file_attributes f {file_attributes::cached_and_current}; 
-    f &= file_attributes::cached  | file_attributes::obsolete;
+    f &= file_attributes::cached | file_attributes::obsolete;
+    std::cout << "f. get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f)) + "\n";
 
     auto f2 {file_attributes::cached}; 
+    std::cout << "f2.get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f2)) + "\n";
 
     std::cout << "f  is " << f  << "\n";
     std::cout << "f2 is " << f2 << "\n";
@@ -209,8 +307,8 @@ auto main() -> int{
     CPP2_UFCS(set, f2, file_attributes::cached);
     std::cout << "f2 is " << f2 << "\n";
 
-    std::cout << "f  as int  is " + cpp2::to_string(cpp2::as_<int>(f)) + "\n";
-    std::cout << "f2 as int  is " + cpp2::to_string(cpp2::as_<int>(f2)) + "\n";
+    std::cout << "f. get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f)) + "\n";
+    std::cout << "f2.get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f2)) + "\n";
 
     std::cout << "f  is (f2) is " + cpp2::to_string(cpp2::is(f, (f2))) + "\n";
     std::cout << "f2 is (f ) is " + cpp2::to_string(cpp2::is(f2, (f))) + "\n\n";
@@ -222,14 +320,14 @@ auto main() -> int{
 
     std::cout << "f  is " << f  << "\n";
     std::cout << "f2 is " << f2 << "\n";
-    std::cout << "f  as int  is " + cpp2::to_string(cpp2::as_<int>(f)) + "\n";
-    std::cout << "f2 as int  is " + cpp2::to_string(cpp2::as_<int>(f2)) + "\n";
+    std::cout << "f. get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f)) + "\n";
+    std::cout << "f2.get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f2)) + "\n";
     std::cout << "f  == f2   is " + cpp2::to_string(f  == f2  ) + "\n";
     std::cout << "f  is (f2) is " + cpp2::to_string(cpp2::is(f, (f2))) + "\n";
     std::cout << "f2 is (f ) is " + cpp2::to_string(cpp2::is(f2, (f))) + "\n";
     std::cout << "(f & f2) == f2 is " + cpp2::to_string((f & f2) == f2) + "\n";
 
-    std::cout << "inspecting: " << [&] () -> std::string { auto&& __expr = std::move(f);
+    std::cout << "inspecting f: " << [&] () -> std::string { auto&& __expr = std::move(f);
         if (cpp2::is(__expr, (file_attributes::current))) { if constexpr( requires{"exactly 'current'";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("exactly 'current'")),std::string> ) return "exactly 'current'"; else return std::string{}; else return std::string{}; }
         else if (cpp2::is(__expr, cpp2::has_flags(std::move(f2)))) { if constexpr( requires{"includes all f2's flags ('cached' and 'current')";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("includes all f2's flags ('cached' and 'current')")),std::string> ) return "includes all f2's flags ('cached' and 'current')"; else return std::string{}; else return std::string{}; }
         else return "something else"; }

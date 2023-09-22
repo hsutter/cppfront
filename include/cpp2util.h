@@ -1586,59 +1586,20 @@ constexpr auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
 
 //-----------------------------------------------------------------------
 //
-//  strict_value: a strong typedef-like helper for value types
+//  has_flags:  query whether a flag_enum value has all flags in 'flags' set
 //
-//  Intended for use as an underlying type for types/variables where you
-//  don't want implicit conversions or comparisons to happen between
-//  values even if they may share the same underlying type (e.g.,
-//  Color::Red and CardGame::Poker may both be represented as an `int`
-//  but shouldn't be interconvertible or intercomparable)
+//  flags       set of flags to check
 //
-//  Used by the `enum` and `flag_enum` metafunctions
-//
+//  Returns a function object that takes a 'value' of the same type as
+//  'flags', and evaluates to true if and only if 'value' has set all of
+//  the bits set in 'flags'
+// 
 //-----------------------------------------------------------------------
 //
-template <typename T, typename Tag, bool BitwiseOps>
-class strict_value {
-    T t = {};
-public:
-    explicit constexpr strict_value() { }
-
-    template <typename U>
-    explicit constexpr strict_value(U const& u) : t{unsafe_narrow<T>(u)} { }
-
-    template <typename U> requires std::is_convertible_v<T,U>
-    explicit constexpr operator U() const { return t; }
-
-    template <typename U> requires std::is_convertible_v<T,U>
-    explicit constexpr operator U()       { return t; }
-
-    constexpr auto operator<=>( strict_value const& ) const -> std::strong_ordering = default;
-
-    auto to_string() const -> std::string { return Tag::to_string(*this); }
-
-    friend auto operator<<(std::ostream& o, strict_value const& v) -> std::ostream& { return o << v.to_string(); }
-
-    //  Bitwise operations
-
-    constexpr auto operator|=( strict_value const& that )       -> strict_value requires BitwiseOps { t |= that.t; return *this; }
-    constexpr auto operator&=( strict_value const& that )       -> strict_value requires BitwiseOps { t &= that.t; return *this; }
-    constexpr auto operator^=( strict_value const& that )       -> strict_value requires BitwiseOps { t ^= that.t; return *this; }
-
-    constexpr auto operator| ( strict_value const& that ) const -> strict_value requires BitwiseOps { return strict_value(t | that.t); }
-    constexpr auto operator& ( strict_value const& that ) const -> strict_value requires BitwiseOps { return strict_value(t & that.t); }
-    constexpr auto operator^ ( strict_value const& that ) const -> strict_value requires BitwiseOps { return strict_value(t ^ that.t); }
-
-    constexpr auto has       ( strict_value const& that ) const -> bool         requires BitwiseOps { return t & that.t; }
-
-    constexpr auto set       ( strict_value const& that )       -> void         requires BitwiseOps { t |=  that.t; }
-    constexpr auto clear     ( strict_value const& that )       -> void         requires BitwiseOps { t &= ~that.t; }
-};
-
-template <typename T, typename Tag>
-auto has_flags(strict_value<T, Tag, true> flags)
+template <typename T>
+auto has_flags(T flags)
 {
-    return [=](strict_value<T, Tag, true> value) { return (value & flags) == flags; };
+    return [=](T value) { return (value & flags) == flags; };
 }
 
 

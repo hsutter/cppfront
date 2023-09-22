@@ -22,7 +22,7 @@ class outer {
     public: template<typename T> 
 CPP2_REQUIRES_ (true)
 #line 6 "pure2-print.cpp2"
-    T static constexpr object_alias = 42;
+    static const T object_alias;
 
     public: class mytype final
      {
@@ -86,6 +86,12 @@ auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
 
+
+#line 6 "pure2-print.cpp2"
+    template<typename T> 
+requires (true)
+#line 6 "pure2-print.cpp2"
+    inline constexpr T outer::object_alias = 42;
 
 #line 10 "pure2-print.cpp2"
         [[nodiscard]] auto outer::mytype::f() -> int { return 42;  }

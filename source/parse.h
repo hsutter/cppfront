@@ -2486,6 +2486,7 @@ struct declaration_node
     capture_group                        captures;
     source_position                      pos;
     bool                                 is_variadic = false;
+    bool                                 is_constexpr = false;
     std::unique_ptr<unqualified_id_node> identifier;
     accessibility                        access = accessibility::default_;
 
@@ -4622,6 +4623,9 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
         auto adjusted_indent = indent;
         if (!n.name()) {
             ++adjusted_indent;
+        }
+        if (n.is_function() && n.is_constexpr) {
+            initializer += "=";
         }
         initializer += "= " + pretty_print_visualize(*n.initializer, adjusted_indent);
     }
@@ -7776,10 +7780,14 @@ private:
             n->requires_clause_expression = std::move(e);
         }
 
-        //  Next is optionally = followed by an initializer
+        //  Next is optionally = or == followed by an initializer
 
-        //  If there is no =
-        if (!done() && curr().type() != lexeme::Assignment)
+        //  If there is no = or ==
+        if (
+            !done()
+            && curr().type() != lexeme::Assignment
+            && curr().type() != lexeme::EqualComparison
+            )
         {
             if (
                 n->is_type()
@@ -7807,9 +7815,17 @@ private:
             }
         }
 
-        //  There was an =, so eat it and continue
+        //  There was an = or ==, so eat it and continue
         else {
             n->equal_sign = curr().position();
+
+            if (curr().type() == lexeme::EqualComparison) {
+                if (!n->is_function()) {
+                    error("syntax error at '==' - did you mean '='?");
+                }
+                n->is_constexpr = true;
+            }
+
             next();
 
             if (auto t = std::get_if<declaration_node::an_object>(&n->type);
@@ -7951,7 +7967,7 @@ private:
     }
 
 
-    //G alias
+    //G alias:
     //G     ':' template-parameter-declaration-list? 'type' requires-clause? '==' type-id ';'
     //G     ':' 'namespace' '==' id-expression ';'
     //G     ':' template-parameter-declaration-list? type-id? requires-clause? '==' expression ';'
@@ -8590,6 +8606,7 @@ public:
         o << pre(indent) << "declaration [" << &n << "]\n";
         o << pre(indent+1) << "parent: [" << n.parent_declaration << "]\n";
         o << pre(indent+1) << "is_variadic: [" << std::boolalpha << n.is_variadic << "]\n";
+        o << pre(indent+1) << "is_constexpr: " << __as<std::string>(n.is_constexpr) << "\n";
         switch (n.type.index()) {
         break;case declaration_node::a_function:
             o << pre(indent+1) << "function\n";
