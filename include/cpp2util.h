@@ -115,7 +115,7 @@
         #endif
         #include <cwchar>
         #include <cwctype>
-        #ifdef __cpp_lib_format
+        #if defined(__cpp_lib_format) || (defined(_MSC_VER) && _MSC_VER >= 1929)
             #include <format>
         #endif
         #include <string>
@@ -221,6 +221,9 @@
     #include <concepts>
     #include <system_error>
     #include <limits>
+    #if defined(__cpp_lib_format) || (defined(_MSC_VER) && _MSC_VER >= 1929)
+        #include <format>
+    #endif
 
     #ifndef CPP2_NO_EXCEPTIONS
         #include <exception>
@@ -884,6 +887,23 @@ inline auto to_string(std::tuple<Ts...> const& t) -> std::string
         return out;
     }
 }
+
+//  MSVC supports it but doesn't define __cpp_lib_format until the ABI stablizes, but here
+//  don't care about that, so consider it as supported since VS 2019 16.10 (_MSC_VER 1929)
+#if defined(__cpp_lib_format) || (defined(_MSC_VER) && _MSC_VER >= 1929)
+inline auto to_string(auto&& value, std::string_view fmt) -> std::string
+{
+    return std::vformat(fmt, std::make_format_args(CPP2_FORWARD(value)));
+}
+#else
+inline auto to_string(auto&& value, std::string_view) -> std::string
+{
+    //  This Cpp1 implementation does not support <format>-ted string interpolation
+    //  so the best we can do is ignore the formatting request (degraded operation
+    //  seems better than a dynamic error message string or a hard error)
+    return to_string(CPP2_FORWARD(value));
+}
+#endif
 
 
 //-----------------------------------------------------------------------

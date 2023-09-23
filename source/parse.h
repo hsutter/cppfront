@@ -1883,7 +1883,9 @@ struct statement_node
         std::unique_ptr<jump_statement_node>
     > statement;
 
-    bool emitted = false;   // note field used during lowering
+    bool emitted = false;               // a note field that's used during lowering to Cpp1
+
+    bool marked_for_removal = false;    // for use during metafunctions which may replace members
 
     //  API
     //
@@ -2516,6 +2518,7 @@ struct declaration_node
     std::unique_ptr<statement_node> initializer;
 
     declaration_node*               parent_declaration = {};
+    statement_node*                 my_statement = {};
 
     //  Attributes currently configurable only via metafunction API,
     //  not directly in the base language grammar
@@ -7554,16 +7557,18 @@ private:
         bool                                 is_template_parameter = false,
         std::unique_ptr<unqualified_id_node> id                    = {},
         accessibility                        access                = {},
-        bool                                 is_variadic           = false
+        bool                                 is_variadic           = false,
+        statement_node const*                my_stmt               = {}
     )
         -> std::unique_ptr<declaration_node>
     {
         auto n = std::make_unique<declaration_node>( current_declarations.back() );
         n->pos = start;
 
-        n->identifier  = std::move(id);
-        n->access      = access;
-        n->is_variadic = is_variadic;
+        n->identifier   = std::move(id);
+        n->access       = access;
+        n->is_variadic  = is_variadic;
+        n->my_statement = my_stmt;
 
         //  If we're in a type scope and the next token is ';', treat this as if
         //  ': _;' without an initializer.
@@ -8217,9 +8222,10 @@ private:
     //G     private
     //G
     auto declaration(
-        bool semicolon_required    = true,
-        bool is_parameter          = false,
-        bool is_template_parameter = false
+        bool                  semicolon_required    = true,
+        bool                  is_parameter          = false,
+        bool                  is_template_parameter = false,
+        statement_node const* my_stmt               = {}
     )
         -> std::unique_ptr<declaration_node>
     {
@@ -8367,7 +8373,8 @@ private:
                 is_template_parameter,
                 std::move(id),
                 access,
-                is_variadic
+                is_variadic,
+                my_stmt
             );
             if (!n) {
                 pos = start_pos;    // backtrack

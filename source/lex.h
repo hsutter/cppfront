@@ -434,6 +434,37 @@ auto expand_string_literal(
                 });
                 chunk.erase(last_it, std::end(chunk));
             }
+
+            //  This chunk string is now in the form "(some_capture_text)",
+            //  which might include a :formatter suffix like "(capture_text:formatter)"
+
+            if (std::ssize(chunk) < 1)
+            {
+                errors.emplace_back(
+                    source_position( src_pos.lineno, src_pos.colno + pos ),
+                    "string interpolation must not be empty"
+                );
+                return {};
+            }
+            if (chunk.ends_with(':'))
+            {
+                errors.emplace_back(
+                    source_position( src_pos.lineno, src_pos.colno + pos ),
+                    "string interpolation ':' must be followed by a std::formatter specifier"
+                );
+                return {};
+            }
+
+            //  If there's a :formatter suffix, decorate it as: ,"{:formatter}"
+            if (auto colon = chunk.find_last_of(':');
+                colon != chunk.npos
+                && chunk[colon-1] != ':'    // ignore :: scope resolution
+                )
+            {
+                chunk.insert(colon, ",\"{");
+                chunk.insert(chunk.size()-1, "}\"");
+            }
+
             parts.add_code("cpp2::to_string" + chunk);
 
             current_start = pos+1;
