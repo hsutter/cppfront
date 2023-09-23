@@ -104,12 +104,11 @@ class compiler_services
     protected: [[nodiscard]] auto parse_statement(
 
         std::string_view source
-    ) & -> 
-        std::unique_ptr<statement_node>;
+    ) & -> std::unique_ptr<statement_node>;
 
 #line 113 "reflect.h2"
-    public: [[nodiscard]] virtual auto position() const& -> 
-        source_position; 
+    public: [[nodiscard]] virtual auto position() const& -> source_position;
+        
 
 #line 119 "reflect.h2"
     public: auto require(
@@ -367,24 +366,24 @@ class type_declaration
     public: [[nodiscard]] auto is_final() const& -> bool;
     public: [[nodiscard]] auto make_final() & -> bool;
 
-    public: [[nodiscard]] auto get_member_functions() const& -> 
-        std::vector<function_declaration>; 
+    public: [[nodiscard]] auto get_member_functions() const& -> std::vector<function_declaration>;
+        
 
 #line 397 "reflect.h2"
-    public: [[nodiscard]] auto get_member_objects() const& -> 
-        std::vector<object_declaration>; 
+    public: [[nodiscard]] auto get_member_objects() const& -> std::vector<object_declaration>;
+        
 
 #line 407 "reflect.h2"
-    public: [[nodiscard]] auto get_member_types() const& -> 
-        std::vector<type_declaration>; 
+    public: [[nodiscard]] auto get_member_types() const& -> std::vector<type_declaration>;
+        
 
 #line 417 "reflect.h2"
-    public: [[nodiscard]] auto get_member_aliases() const& -> 
-        std::vector<alias_declaration>; 
+    public: [[nodiscard]] auto get_member_aliases() const& -> std::vector<alias_declaration>;
+        
 
 #line 427 "reflect.h2"
-    public: [[nodiscard]] auto get_members() const& -> 
-        std::vector<declaration>; struct query_declared_value_set_functions__ret { bool out_this_in_that; bool out_this_move_that; bool inout_this_in_that; bool inout_this_move_that; };
+    public: [[nodiscard]] auto get_members() const& -> std::vector<declaration>;
+        struct query_declared_value_set_functions__ret { bool out_this_in_that; bool out_this_move_that; bool inout_this_in_that; bool inout_this_move_that; };
 
 
 
@@ -828,8 +827,8 @@ namespace meta {
     [[nodiscard]] auto compiler_services::parse_statement(
 
         std::string_view source
-    ) & -> 
-        std::unique_ptr<statement_node>
+    ) & -> std::unique_ptr<statement_node>
+
     {
         CPP2_UFCS(push_back, generated_lines, std::vector<source_line>());
         auto lines {&CPP2_UFCS_0(back, generated_lines)}; 
@@ -878,8 +877,8 @@ auto newline_pos = CPP2_UFCS(find, source, '\n');
         ); 
     }
 
-    [[nodiscard]] auto compiler_services::position() const& -> 
-        source_position
+    [[nodiscard]] auto compiler_services::position() const& -> source_position
+
     {
         return {  }; 
     }
@@ -1103,8 +1102,8 @@ declaration::declaration(declaration const& that)
     [[nodiscard]] auto type_declaration::is_final() const& -> bool { return CPP2_UFCS_0(is_type_final, (*cpp2::assert_not_null(n))); }
     [[nodiscard]] auto type_declaration::make_final() & -> bool { return CPP2_UFCS_0(make_type_final, (*cpp2::assert_not_null(n))); }
 
-    [[nodiscard]] auto type_declaration::get_member_functions() const& -> 
-        std::vector<function_declaration>
+    [[nodiscard]] auto type_declaration::get_member_functions() const& -> std::vector<function_declaration>
+
     {
         std::vector<function_declaration> ret {}; 
         for ( auto const& d : CPP2_UFCS(get_type_scope_declarations, (*cpp2::assert_not_null(n)), declaration_node::functions) ) {
@@ -1113,8 +1112,8 @@ declaration::declaration(declaration const& that)
         return ret; 
     }
 
-    [[nodiscard]] auto type_declaration::get_member_objects() const& -> 
-        std::vector<object_declaration>
+    [[nodiscard]] auto type_declaration::get_member_objects() const& -> std::vector<object_declaration>
+
     {
         std::vector<object_declaration> ret {}; 
         for ( auto const& d : CPP2_UFCS(get_type_scope_declarations, (*cpp2::assert_not_null(n)), declaration_node::objects) ) {
@@ -1123,8 +1122,8 @@ declaration::declaration(declaration const& that)
         return ret; 
     }
 
-    [[nodiscard]] auto type_declaration::get_member_types() const& -> 
-        std::vector<type_declaration>
+    [[nodiscard]] auto type_declaration::get_member_types() const& -> std::vector<type_declaration>
+
     {
         std::vector<type_declaration> ret {}; 
         for ( auto const& d : CPP2_UFCS(get_type_scope_declarations, (*cpp2::assert_not_null(n)), declaration_node::types) ) {
@@ -1133,8 +1132,8 @@ declaration::declaration(declaration const& that)
         return ret; 
     }
 
-    [[nodiscard]] auto type_declaration::get_member_aliases() const& -> 
-        std::vector<alias_declaration>
+    [[nodiscard]] auto type_declaration::get_member_aliases() const& -> std::vector<alias_declaration>
+
     {
         std::vector<alias_declaration> ret {}; 
         for ( auto const& d : CPP2_UFCS(get_type_scope_declarations, (*cpp2::assert_not_null(n)), declaration_node::aliases) ) {
@@ -1143,8 +1142,8 @@ declaration::declaration(declaration const& that)
         return ret; 
     }
 
-    [[nodiscard]] auto type_declaration::get_members() const& -> 
-        std::vector<declaration>
+    [[nodiscard]] auto type_declaration::get_members() const& -> std::vector<declaration>
+
     {
         std::vector<declaration> ret {}; 
         for ( auto const& d : CPP2_UFCS(get_type_scope_declarations, (*cpp2::assert_not_null(n)), declaration_node::all) ) {

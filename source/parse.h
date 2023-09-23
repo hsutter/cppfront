@@ -2197,6 +2197,9 @@ struct function_type_node
     auto is_constructor_with_move_that() const
         -> bool;
 
+    auto is_comparison() const
+        -> bool;
+
     auto is_compound_assignment() const
         -> bool;
 
@@ -2250,6 +2253,12 @@ struct function_type_node
             }
         }
         return returns.index() != empty;
+    }
+
+    auto parameter_count() const
+        -> int
+    {
+        return std::ssize(parameters->parameters);
     }
 
     auto index_of_parameter_named(std::string_view s) const
@@ -2660,6 +2669,15 @@ public:
         -> bool
     {
         return initializer != nullptr;
+    }
+
+    auto parameter_count() const
+        -> int
+    {
+        if (!is_function()) {
+            return -1;
+        }
+        return std::get<a_function>(type)->parameter_count();
     }
 
     auto index_of_parameter_named(std::string_view s) const
@@ -3079,6 +3097,16 @@ public:
     {
         if (auto func = std::get_if<a_function>(&type)) {
             return (*func)->is_constructor_with_move_that();
+        }
+        //  else
+        return false;
+    }
+
+    auto is_comparison() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_comparison();
         }
         //  else
         return false;
@@ -3542,6 +3570,27 @@ auto function_type_node::is_constructor_with_move_that() const
         && (*parameters).ssize() == 2
         && (*parameters)[1]->has_name("that")
         && (*parameters)[1]->direction() == passing_style::move
+        )
+    {
+        return true;
+    }
+    return false;
+}
+
+
+auto function_type_node::is_comparison() const
+    -> bool
+{
+    if (
+        (
+            my_decl->has_name("operator==")
+            || my_decl->has_name("operator!=")
+            || my_decl->has_name("operator<")
+            || my_decl->has_name("operator<=")
+            || my_decl->has_name("operator>")
+            || my_decl->has_name("operator>=")
+            || my_decl->has_name("operator<=>")
+        )
         )
     {
         return true;

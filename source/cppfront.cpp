@@ -4033,7 +4033,7 @@ public:
             && n.pass == passing_style::in
             )
         {
-            printer.print_cpp2( print_to_string(type_id), n.position() );
+            printer.print_cpp2( param_type, n.position() );
         }
         else if (
             type_id.is_wildcard()
@@ -4045,6 +4045,7 @@ public:
             if (is_dependent_parameter_type) {
                 name = param_type;
             }
+
             switch (n.pass) {
             break;case passing_style::in     : printer.print_cpp2( name+" const&", n.position() );
             break;case passing_style::copy   : printer.print_cpp2( name,           n.position() );
@@ -4071,19 +4072,16 @@ public:
             auto req = std::string{ "std::is_same_v<CPP2_TYPEOF(" };
             req += *name;
             req += "), ";
-            printer.emit_to_string(&req);
-            emit( type_id );
-            printer.emit_to_string();
+            req += param_type;
             req += ">";
             function_requires_conditions.push_back(req);
         }
         else {
-            auto type_name = print_to_string( type_id );
             if (is_returns) {
-                printer.print_extra( type_name );
+                printer.print_extra( param_type );
             }
             else {
-                printer.print_cpp2( type_name, type_id.position() );
+                printer.print_cpp2( param_type, type_id.position() );
             }
         }
 
@@ -4362,12 +4360,15 @@ public:
             printer.print_cpp2( " -> ", n.position() );
             auto& r = std::get<function_type_node::id>(n.returns);
             assert(r.type);
+
+            auto return_type = print_to_string(*r.type);
+
             if (r.pass == passing_style::forward) {
                 if (r.type->is_wildcard()) {
                     printer.print_cpp2( "auto&&", n.position() );
                 }
                 else {
-                    emit(*r.type);
+                    printer.print_cpp2( return_type, n.position() );
                     if (is_type_scope_function_with_in_this) {
                         printer.print_cpp2( " const&", n.position() );
                     }
@@ -4377,7 +4378,7 @@ public:
                 }
             }
             else {
-                emit(*r.type);
+                printer.print_cpp2( return_type, n.position() );
             }
         }
 
@@ -5511,7 +5512,30 @@ public:
                 )
             )
         {
-            auto emit_as_friend = n.name() && n.name()->as_string_view().starts_with("operator<<");
+            auto is_streaming_operator = [](std::string_view sv) {
+                return
+                    sv == "operator<<"
+                    || sv == "operator>>"
+                    ;
+                };
+
+            auto is_binary_arithmetic_operator = [](std::string_view sv) {
+                return
+                    sv == "operator+"
+                    || sv == "operator-"
+                    || sv == "operator*"
+                    || sv == "operator/"
+                    || sv == "operator%"
+                    ;
+                };
+
+            auto emit_as_friend =
+                n.name()
+                && (
+                    is_streaming_operator( n.name()->as_string_view() )
+                    || (!n.is_function_with_this() && is_binary_arithmetic_operator( n.name()->as_string_view() ))
+                    )
+                ;
 
             //  Start fresh (there may be one spurious leftover
             //  requires-condition created during the declarations pass)

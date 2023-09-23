@@ -1255,6 +1255,80 @@ public:
             return false;
         }
 
+        //  Ban overloading operators &&, ||, and , (comma)
+        if (
+            n.identifier
+            && n.is_function()
+            && (
+                n.has_name("operator&&")
+                || n.has_name("operator||")
+                || (n.has_name("operator&") && n.parameter_count() < 2)
+                || n.has_name("operator,")
+                )
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "overloading '" + n.name()->to_string() + "' is not allowed"
+            );
+            return false;
+        }
+
+        //  Ban overloading unary &
+        if (
+            n.identifier
+            && n.is_function()
+            && n.has_name("operator&")
+            && n.parameter_count() < 2
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "overloading unary '" + n.name()->to_string() + "' is not allowed"
+            );
+            return false;
+        }
+
+        //  Require that comparison operators, bitwise binary operators,
+        //  assignment operators, and comparison operators must be members
+        if (
+            n.identifier
+            && !n.is_function_with_this()
+            && (
+                n.has_name("operator==")
+                || n.has_name("operator!=")
+                || n.has_name("operator<")
+                || n.has_name("operator<=")
+                || n.has_name("operator>")
+                || n.has_name("operator>=")
+                || n.has_name("operator<=>")
+                || n.has_name("operator&")
+                || n.has_name("operator|")
+                || n.has_name("operator^")
+                || n.is_comparison()
+                //  The following would be rejected anyway by the Cpp1 compiler,
+                //  but including them here gives nicer and earlier error messages
+                || n.has_name("operator~")
+                || n.has_name("operator+=")
+                || n.has_name("operator-=")
+                || n.has_name("operator*=")
+                || n.has_name("operator/=")
+                || n.has_name("operator%=")
+                || n.has_name("operator&=")
+                || n.has_name("operator|=")
+                || n.has_name("operator^=")
+                || n.has_name("operator<<=")
+                || n.has_name("operator>>=")
+                )
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                n.name()->to_string() + " must have 'this' as the first parameter"
+            );
+            return false;
+        }
+
         //  If this is the main function, it must be 'main: ()' or 'main: (args)'
         if (
             n.identifier
