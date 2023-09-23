@@ -2536,6 +2536,16 @@ struct declaration_node
 
     //  API
     //
+    auto type_member_mark_for_removal()
+        -> bool
+    {
+        if (my_statement) {
+            my_statement->marked_for_removal = true;
+            return true;
+        }
+        return false;
+    }
+
     auto type_remove_all_members()
         -> void
     {
@@ -6930,7 +6940,7 @@ private:
             return n;
         }
 
-        else if (auto s = declaration()) {
+        else if (auto s = declaration(true, false, false, n.get())) {
             n->statement = std::move(s);
             assert (n->is_declaration());
             return n;
@@ -7558,7 +7568,7 @@ private:
         std::unique_ptr<unqualified_id_node> id                    = {},
         accessibility                        access                = {},
         bool                                 is_variadic           = false,
-        statement_node const*                my_stmt               = {}
+        statement_node*                      my_stmt               = {}
     )
         -> std::unique_ptr<declaration_node>
     {
@@ -8222,10 +8232,10 @@ private:
     //G     private
     //G
     auto declaration(
-        bool                  semicolon_required    = true,
-        bool                  is_parameter          = false,
-        bool                  is_template_parameter = false,
-        statement_node const* my_stmt               = {}
+        bool            semicolon_required    = true,
+        bool            is_parameter          = false,
+        bool            is_template_parameter = false,
+        statement_node* my_stmt               = {}
     )
         -> std::unique_ptr<declaration_node>
     {
