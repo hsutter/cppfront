@@ -2546,19 +2546,39 @@ struct declaration_node
         return false;
     }
 
+    auto type_remove_marked_members()
+        -> void
+    {
+        assert (is_type() && initializer && initializer->is_compound());
+        auto compound_stmt = initializer->get_if<compound_statement_node>();
+        assert (compound_stmt);
+
+        //  Note: This loop is a careful use of the brittle STL "erase" idiom. Do not change this
+        //        loop without carefully ensuring it remains safe against iterator invalidation.
+        //        (Especially don't change this to a for loop with a "++i" iteration-expression.)
+        auto i = compound_stmt->statements.begin();
+        while (i != compound_stmt->statements.end())
+        {
+            if ((*i)->marked_for_removal) {
+                i = compound_stmt->statements.erase(i); // these two branches ...
+            }
+            else {
+                ++i;                                    // ... must stay together
+            }
+        }
+    }
+
     auto type_remove_all_members()
         -> void
     {
-        assert (is_type() && initializer->is_compound());
+        assert (is_type() && initializer && initializer->is_compound());
         auto body = initializer->get_if<compound_statement_node>();
         assert (body);
 
-        //  Drop all statements in the body
+        //  Drop all statements in the body, which should self-deregister all our 'captures'
+        //  - (only) statements in the body should have been able to refer to 'captures'
         body->statements.clear();
-
-        //  Then also drop captures - (only) statements in
-        //  the body should have been able to refer to it
-        captures = {};
+        assert(captures.members.empty());
     }
 
     auto type_disable_member_function_generation()

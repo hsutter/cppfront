@@ -267,6 +267,13 @@ declaration: @polymorphic_base @copyable type =
     parent_is_namespace  : (this) -> bool = n*.parent_is_namespace();
     parent_is_alias      : (this) -> bool = n*.parent_is_alias();
     parent_is_polymorphic: (this) -> bool = n*.parent_is_polymorphic();
+
+    mark_for_removal_from_enclosing_type: (inout this) 
+        [[pre: parent_is_type()]]                   // this precondition should be sufficient ...
+    = {
+        test := n*.type_member_mark_for_removal();
+        [[assert: test]]                            // ... to ensure this assert is true
+    }
 }
 
 
@@ -457,7 +464,8 @@ type_declaration: @copyable type =
         }
     }
 
-    remove_all_members: (inout this) = n*.type_remove_all_members();
+    remove_marked_members: (inout this) = n*.type_remove_marked_members();
+    remove_all_members   : (inout this) = n*.type_remove_all_members();
 
     disable_member_function_generation: (inout this) = n*.type_disable_member_function_generation();
 }
@@ -835,37 +843,38 @@ basic_enum: (
     (value: std::string = "-1")
     for  t.get_members()
     do   (m)
+    if   m.is_object()
     {
-        m.require( (m.is_public() || m.is_default_access()) && m.is_object(),
+        m.require( m.is_public() || m.is_default_access(),
                    "an enumerator cannot be protected or private");
 
-        if m.is_object() {
-            mo := m.as_object();
-            if !mo.has_wildcard_type() {
-                mo.error( "an explicit underlying type should be specified as a template argument to the metafunction - try 'enum<u16>' or 'flag_enum<u64>'");
-            }
-
-            init := mo.initializer();
-
-            is_default_or_numeric := is_empty_or_a_decimal_number(init);
-            found_non_numeric |= !init.empty() && !is_default_or_numeric;
-            m.require( !is_default_or_numeric || !found_non_numeric || mo.has_name("none"),
-                "(mo.name())$: enumerators with non-numeric values must come after all default and numeric values");
-
-            nextval( value, init );
-
-            v := std::strtoll(value[0]&, nullptr, 10);  // for non-numeric values we'll just get 0 which is okay for now
-            if v < min_value {
-                min_value = v;
-            }
-            if v > max_value {
-                max_value = v;
-            }
-
-            //  Adding local variable 'e' to work around a Clang warning
-            e: value_member_info = ( mo.name() as std::string, "", value );
-            enumerators.push_back( e );
+        mo := m.as_object();
+        if !mo.has_wildcard_type() {
+            mo.error( "an explicit underlying type should be specified as a template argument to the metafunction - try 'enum<u16>' or 'flag_enum<u64>'");
         }
+
+        init := mo.initializer();
+
+        is_default_or_numeric := is_empty_or_a_decimal_number(init);
+        found_non_numeric |= !init.empty() && !is_default_or_numeric;
+        m.require( !is_default_or_numeric || !found_non_numeric || mo.has_name("none"),
+            "(mo.name())$: enumerators with non-numeric values must come after all default and numeric values");
+
+        nextval( value, init );
+
+        v := std::strtoll(value[0]&, nullptr, 10);  // for non-numeric values we'll just get 0 which is okay for now
+        if v < min_value {
+            min_value = v;
+        }
+        if v > max_value {
+            max_value = v;
+        }
+
+        //  Adding local variable 'e' to work around a Clang warning
+        e: value_member_info = ( mo.name() as std::string, "", value );
+        enumerators.push_back( e );
+
+        mo.mark_for_removal_from_enclosing_type();
     }
 
     //  Compute the default underlying type, if it wasn't explicitly specified
@@ -913,7 +922,7 @@ basic_enum: (
     //
     //  Note that most values and functions are declared as '==' compile-time values, i.e. Cpp1 'constexpr'
 
-    t.remove_all_members();
+    t.remove_marked_members();
 
     //  Generate all the common material: value and common functions
     t.add_member( "    enumeration_count : (underlying_type)$ == (enumerators.ssize())$;");

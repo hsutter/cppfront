@@ -8,10 +8,19 @@ skat_game: @enum type = {
     null     := 23;
 }
 
-rgb: @enum type = {
-    red;     // 0
-    green;   // 1
-    blue;    // 2
+duality: @enum type = {
+    first;
+    second;
+
+    flip: (inout this, val: duality) = {
+        if val == first {
+            value__ = second.value__;
+        }
+        else {
+            [[assert: value__ == second.value__]]
+            value__ = first.value__;
+        }
+    }
 }
 
 file_attributes: @flag_enum<u8> type = {
@@ -22,6 +31,11 @@ file_attributes: @flag_enum<u8> type = {
 }
 
 main: () = {
+    janus := duality::second;
+    std::cout << "janus is initially (janus.to_string())$\n";
+    janus.flip( janus );
+    std::cout << "janus is flipped to (janus.to_string())$\n";
+
     // x : skat_game = 9;               // error, can't construct skat_game from integer
 
     x: skat_game = skat_game::clubs;

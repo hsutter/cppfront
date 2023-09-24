@@ -12,10 +12,10 @@ class skat_game;
     
 
 #line 11 "pure2-enum.cpp2"
-class rgb;
+class duality;
     
 
-#line 17 "pure2-enum.cpp2"
+#line 26 "pure2-enum.cpp2"
 class file_attributes;
     
 
@@ -51,28 +51,27 @@ public: friend auto operator<<(std::ostream& o, cpp2::in<skat_game> val) -> std:
 #line 9 "pure2-enum.cpp2"
 };
 
-class rgb {
-public: static const cpp2::i8 enumeration_count;
-private: cpp2::i8 value__; private: constexpr rgb(auto const& val);
+class duality {
 
-private: constexpr auto operator=(auto const& val) -> rgb& ;
-public: [[nodiscard]] constexpr auto get_raw_value() const& -> cpp2::i8;
-public: constexpr rgb(rgb const& that);
-public: constexpr auto operator=(rgb const& that) -> rgb& ;
-public: constexpr rgb(rgb&& that) noexcept;
-public: constexpr auto operator=(rgb&& that) noexcept -> rgb& ;
-public: [[nodiscard]] auto operator<=>(rgb const& that) const& -> std::strong_ordering = default;
-public: static const rgb red;
-public: static const rgb green;
-public: static const rgb blue;
-public: [[nodiscard]] auto to_string() const& -> std::string;
-public: friend auto operator<<(std::ostream& o, cpp2::in<rgb> val) -> std::ostream&;
-
-#line 12 "pure2-enum.cpp2"
-             // 0
-             // 1
-             // 2
 #line 15 "pure2-enum.cpp2"
+    public: auto flip(cpp2::in<duality> val) & -> void;
+        
+        public: static const cpp2::i8 enumeration_count;
+private: cpp2::i8 value__; private: constexpr duality(auto const& val);
+
+private: constexpr auto operator=(auto const& val) -> duality& ;
+public: [[nodiscard]] constexpr auto get_raw_value() const& -> cpp2::i8;
+public: constexpr duality(duality const& that);
+public: constexpr auto operator=(duality const& that) -> duality& ;
+public: constexpr duality(duality&& that) noexcept;
+public: constexpr auto operator=(duality&& that) noexcept -> duality& ;
+public: [[nodiscard]] auto operator<=>(duality const& that) const& -> std::strong_ordering = default;
+public: static const duality first;
+public: static const duality second;
+public: [[nodiscard]] auto to_string() const& -> std::string;
+public: friend auto operator<<(std::ostream& o, cpp2::in<duality> val) -> std::ostream&;
+
+#line 24 "pure2-enum.cpp2"
 };
 
 class file_attributes {
@@ -103,12 +102,12 @@ public: static const file_attributes none;
 public: [[nodiscard]] auto to_string() const& -> std::string;
 public: friend auto operator<<(std::ostream& o, cpp2::in<file_attributes> val) -> std::ostream&;
 
-#line 18 "pure2-enum.cpp2"
+#line 27 "pure2-enum.cpp2"
                 // 1
                 // 2
                 // 4
 
-#line 22 "pure2-enum.cpp2"
+#line 31 "pure2-enum.cpp2"
 };
 
 auto main() -> int;
@@ -159,38 +158,48 @@ inline constexpr skat_game skat_game::null = 23;
     }
 
     [[nodiscard]] auto operator<<(std::ostream& o, cpp2::in<skat_game> val) -> std::ostream&{o << CPP2_UFCS_0(to_string, val);return o; }
-inline constexpr cpp2::i8 rgb::enumeration_count = 3;
-
-constexpr rgb::rgb(auto const& val)
-                                                    : value__{ cpp2::unsafe_narrow<cpp2::i8>(val) } {  }
-constexpr auto rgb::operator=(auto const& val) -> rgb&  { 
-                                                    value__ = cpp2::unsafe_narrow<cpp2::i8>(val);
-                                                    return *this; }
-[[nodiscard]] constexpr auto rgb::get_raw_value() const& -> cpp2::i8 { return value__; }
-constexpr rgb::rgb(rgb const& that)
-                                              : value__{ that.value__ }{}
-constexpr auto rgb::operator=(rgb const& that) -> rgb& {
-                                              value__ = that.value__;
-                                              return *this;}
-constexpr rgb::rgb(rgb&& that) noexcept
-                                              : value__{ std::move(that).value__ }{}
-constexpr auto rgb::operator=(rgb&& that) noexcept -> rgb& {
-                                              value__ = std::move(that).value__;
-                                              return *this;}
-inline constexpr rgb rgb::red = 0;
-
-inline constexpr rgb rgb::green = 1;
-
-inline constexpr rgb rgb::blue = 2;
-
-[[nodiscard]] auto rgb::to_string() const& -> std::string{
-    if ((*this) == red) {return "red"; }
-    if ((*this) == green) {return "green"; }
-    if ((*this) == blue) {return "blue"; }
-    return "invalid rgb value"; 
+#line 15 "pure2-enum.cpp2"
+    auto duality::flip(cpp2::in<duality> val) & -> void{
+        if (val == first) {
+            value__ = second.value__;
+        }
+        else {
+            cpp2::Default.expects(value__ == second.value__, "");
+            value__ = first.value__;
+        }
     }
 
-    [[nodiscard]] auto operator<<(std::ostream& o, cpp2::in<rgb> val) -> std::ostream&{o << CPP2_UFCS_0(to_string, val);return o; }
+    inline constexpr cpp2::i8 duality::enumeration_count = 2;
+
+
+constexpr duality::duality(auto const& val)
+                                                    : value__{ cpp2::unsafe_narrow<cpp2::i8>(val) } {  }
+
+constexpr auto duality::operator=(auto const& val) -> duality&  { 
+                                                    value__ = cpp2::unsafe_narrow<cpp2::i8>(val);
+                                                    return *this; }
+[[nodiscard]] constexpr auto duality::get_raw_value() const& -> cpp2::i8 { return value__; }
+constexpr duality::duality(duality const& that)
+                                              : value__{ that.value__ }{}
+constexpr auto duality::operator=(duality const& that) -> duality& {
+                                              value__ = that.value__;
+                                              return *this;}
+constexpr duality::duality(duality&& that) noexcept
+                                              : value__{ std::move(that).value__ }{}
+constexpr auto duality::operator=(duality&& that) noexcept -> duality& {
+                                              value__ = std::move(that).value__;
+                                              return *this;}
+inline constexpr duality duality::first = 0;
+
+inline constexpr duality duality::second = 1;
+
+[[nodiscard]] auto duality::to_string() const& -> std::string{
+    if ((*this) == first) {return "first"; }
+    if ((*this) == second) {return "second"; }
+    return "invalid duality value"; 
+    }
+
+    [[nodiscard]] auto operator<<(std::ostream& o, cpp2::in<duality> val) -> std::ostream&{o << CPP2_UFCS_0(to_string, val);return o; }
 inline constexpr cpp2::u8 file_attributes::enumeration_count = 4;
 
 constexpr file_attributes::file_attributes(auto const& val)
@@ -242,8 +251,13 @@ inline constexpr file_attributes file_attributes::none = 0;
     }
 
     [[nodiscard]] auto operator<<(std::ostream& o, cpp2::in<file_attributes> val) -> std::ostream&{o << CPP2_UFCS_0(to_string, val);return o; }
-#line 24 "pure2-enum.cpp2"
+#line 33 "pure2-enum.cpp2"
 auto main() -> int{
+    auto janus {duality::second}; 
+    std::cout << "janus is initially " + cpp2::to_string(CPP2_UFCS_0(to_string, janus)) + "\n";
+    CPP2_UFCS(flip, janus, janus);
+    std::cout << "janus is flipped to " + cpp2::to_string(CPP2_UFCS_0(to_string, std::move(janus))) + "\n";
+
     // x : skat_game = 9;               // error, can't construct skat_game from integer
 
     skat_game x {skat_game::clubs}; 
