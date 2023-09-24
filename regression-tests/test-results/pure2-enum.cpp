@@ -157,7 +157,7 @@ inline constexpr skat_game skat_game::null = 23;
     return "invalid skat_game value"; 
     }
 
-    [[nodiscard]] auto operator<<(std::ostream& o, cpp2::in<skat_game> val) -> std::ostream&{o << CPP2_UFCS_0(to_string, val);return o; }
+    auto operator<<(std::ostream& o, cpp2::in<skat_game> val) -> std::ostream&{o << CPP2_UFCS_0(to_string, val);return o; }
 #line 15 "pure2-enum.cpp2"
     auto duality::flip(cpp2::in<duality> val) & -> void{
         if (val == first) {
@@ -199,7 +199,7 @@ inline constexpr duality duality::second = 1;
     return "invalid duality value"; 
     }
 
-    [[nodiscard]] auto operator<<(std::ostream& o, cpp2::in<duality> val) -> std::ostream&{o << CPP2_UFCS_0(to_string, val);return o; }
+    auto operator<<(std::ostream& o, cpp2::in<duality> val) -> std::ostream&{o << CPP2_UFCS_0(to_string, val);return o; }
 inline constexpr cpp2::u8 file_attributes::enumeration_count = 4;
 
 constexpr file_attributes::file_attributes(auto const& val)
@@ -250,7 +250,7 @@ inline constexpr file_attributes file_attributes::none = 0;
     return ret + ")"; 
     }
 
-    [[nodiscard]] auto operator<<(std::ostream& o, cpp2::in<file_attributes> val) -> std::ostream&{o << CPP2_UFCS_0(to_string, val);return o; }
+    auto operator<<(std::ostream& o, cpp2::in<file_attributes> val) -> std::ostream&{o << CPP2_UFCS_0(to_string, val);return o; }
 #line 33 "pure2-enum.cpp2"
 auto main() -> int{
     auto janus {duality::second}; 

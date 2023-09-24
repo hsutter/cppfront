@@ -5666,6 +5666,10 @@ public:
                         !emit_as_friend         // can't have an attribute on a friend declaration-not-definition
                         || printer.get_phase() != printer.phase1_type_defs_func_decls
                         )
+                    && !(
+                        n.name()
+                        && is_streaming_operator(n.name()->as_string_view())
+                        )
                     )
                 {
                     printer.print_cpp2( "[[nodiscard]] ", n.position() );
