@@ -24,7 +24,6 @@ class file_attributes;
 
 #line 2 "pure2-enum.cpp2"
 class skat_game {
-public: static const cpp2::i8 enumeration_count;
 private: cpp2::i8 value__; private: constexpr skat_game(auto const& val);
 
 private: constexpr auto operator=(auto const& val) -> skat_game& ;
@@ -56,8 +55,7 @@ class duality {
 #line 15 "pure2-enum.cpp2"
     public: auto flip(cpp2::in<duality> val) & -> void;
         
-        public: static const cpp2::i8 enumeration_count;
-private: cpp2::i8 value__; private: constexpr duality(auto const& val);
+        private: cpp2::i8 value__; private: constexpr duality(auto const& val);
 
 private: constexpr auto operator=(auto const& val) -> duality& ;
 public: [[nodiscard]] constexpr auto get_raw_value() const& -> cpp2::i8;
@@ -75,7 +73,6 @@ public: friend auto operator<<(std::ostream& o, cpp2::in<duality> val) -> std::o
 };
 
 class file_attributes {
-public: static const cpp2::u8 enumeration_count;
 private: cpp2::u8 value__; private: constexpr file_attributes(auto const& val);
 
 private: constexpr auto operator=(auto const& val) -> file_attributes& ;
@@ -117,9 +114,7 @@ auto main() -> int;
 
 
 
-    inline constexpr cpp2::i8 skat_game::enumeration_count = 6;
-
-constexpr skat_game::skat_game(auto const& val)
+    constexpr skat_game::skat_game(auto const& val)
                                                     : value__{ cpp2::unsafe_narrow<cpp2::i8>(val) } {  }
 constexpr auto skat_game::operator=(auto const& val) -> skat_game&  { 
                                                     value__ = cpp2::unsafe_narrow<cpp2::i8>(val);
@@ -169,10 +164,8 @@ inline constexpr skat_game skat_game::null = 23;
         }
     }
 
-    inline constexpr cpp2::i8 duality::enumeration_count = 2;
 
-
-constexpr duality::duality(auto const& val)
+    constexpr duality::duality(auto const& val)
                                                     : value__{ cpp2::unsafe_narrow<cpp2::i8>(val) } {  }
 
 constexpr auto duality::operator=(auto const& val) -> duality&  { 
@@ -200,8 +193,6 @@ inline constexpr duality duality::second = 1;
     }
 
     auto operator<<(std::ostream& o, cpp2::in<duality> val) -> std::ostream&{o << CPP2_UFCS_0(to_string, val);return o; }
-inline constexpr cpp2::u8 file_attributes::enumeration_count = 4;
-
 constexpr file_attributes::file_attributes(auto const& val)
                                                     : value__{ cpp2::unsafe_narrow<cpp2::u8>(val) } {  }
 constexpr auto file_attributes::operator=(auto const& val) -> file_attributes&  { 

@@ -4705,10 +4705,14 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
         if (!n.name()) {
             ++adjusted_indent;
         }
+        initializer = " =";
         if (n.is_function() && n.is_constexpr) {
             initializer += "=";
         }
-        initializer += "= " + pretty_print_visualize(*n.initializer, adjusted_indent);
+        initializer += " " + pretty_print_visualize(*n.initializer, adjusted_indent);
+    }
+    else if (!n.is_parameter) {
+        initializer = ";";
     }
 
     //  Then slot them in where appropriate
@@ -4768,7 +4772,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
             + template_params
             + pretty_print_visualize(*func, indent)
             + requires_clause
-            + " " + initializer;
+            + initializer;
     }
     else if (n.is_object()) {
         auto& type_id = std::get<declaration_node::an_object>(n.type);
@@ -4778,10 +4782,8 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
         if (!n.has_wildcard_type()) {
             ret += " " + pretty_print_visualize(*type_id, indent);
         }
-        if (!initializer.empty()) {
-            ret += requires_clause
-                + " " + initializer;
-        }
+        ret += requires_clause
+            + initializer;
     }
     else if (n.is_type()) {
         auto& t = std::get<declaration_node::a_type>(n.type);
@@ -4789,7 +4791,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
         ret += metafunctions
             + template_params
             + " " + pretty_print_visualize(*t)
-            + " " + initializer;
+            + initializer;
     }
     else if (n.is_namespace()) {
         auto& t = std::get<declaration_node::a_type>(n.type);

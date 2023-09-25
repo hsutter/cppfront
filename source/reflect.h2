@@ -843,7 +843,7 @@ basic_enum: (
     (value: std::string = "-1")
     for  t.get_members()
     do   (m)
-    if   m.is_object()
+    if   m.is_object() && !m.has_name("this")
     {
         m.require( m.is_public() || m.is_default_access(),
                    "an enumerator cannot be protected or private");
@@ -925,7 +925,6 @@ basic_enum: (
     t.remove_marked_members();
 
     //  Generate all the common material: value and common functions
-    t.add_member( "    enumeration_count : (underlying_type)$ == (enumerators.ssize())$;");
     t.add_member( "    value__           : (underlying_type)$;");
     t.add_member( "    private operator= : (implicit out this, val) == value__ = cpp2::unsafe_narrow<(underlying_type)$>(val);");
     t.add_member( "    get_raw_value     : (this) -> (underlying_type)$ == value__;");

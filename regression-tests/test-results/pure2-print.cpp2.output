@@ -2,7 +2,7 @@ pure2-print.cpp2...
 
 outer: type = 
 {
-    object_alias: <T: type > T requires (true) == 42;
+    object_alias: <T: type> T requires (true) == 42;
     mytype: final type = 
     {
         protected f:() -> move int = 42;
@@ -78,7 +78,7 @@ outer: type =
             return :() -> move std::string = (s + m[0])$;();
         }
 
-        values: <T: type >(
+        values: <T: type>(
             in this, 
             in t: T
         ) throws -> (
@@ -127,12 +127,12 @@ outer: type =
             is _ = "default case";
         } << "\n";
     }
-    x: <Ts...: type > type = 
+    x: <Ts...: type> type = 
     {
         tup: std::tuple<Ts...> = ();
     }
 
-    print: <Args...: type >(
+    print: <Args...: type>(
         inout out: std::ostream, 
         in args...: Args
     ) requires (sizeof...(Args) >= 0) = 
@@ -140,7 +140,7 @@ outer: type =
         (out << ... << args);
     }
 
-    all: <Args...: type >(in args...: Args) -> move bool = (... && args);
+    all: <Args...: type>(in args...: Args) -> move bool = (... && args);
 }
  ok (all Cpp2, passes safety checks)
 

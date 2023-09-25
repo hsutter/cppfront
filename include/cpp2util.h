@@ -61,130 +61,52 @@
     //  ... this should approximate "import std;" on those compilers
     #else
         #include <version>
+        #include <algorithm>
+        #include <any>
+        #include <array>
+        #include <atomic>
+        #ifdef __cpp_lib_barrier
+            #include <barrier>
+        #endif
+        #include <bit>
+        #include <bitset>
+        #include <cassert>
+        #include <cctype>
+        #include <cerrno>
+        #include <cfenv>
+        #include <cfloat>
+        #include <charconv>
+        #include <chrono>
+        #include <cinttypes>
+        #include <climits>
+        #include <clocale>
+        #include <cmath>
+        #include <codecvt>
+        #include <condition_variable>
+        #include <compare>
+        #include <complex>
         #include <concepts>
         #ifdef __cpp_lib_coroutine
             #include <coroutine>
         #endif
-        #include <any>
-        #include <bitset>
-        #include <chrono>
-        #include <compare>
         #include <csetjmp>
         #include <csignal>
         #include <cstdarg>
         #include <cstddef>
-        #include <cstdlib>
-        #include <ctime>
-        #include <functional>
-        #include <initializer_list>
-        #include <optional>
-        #ifdef __cpp_lib_source_location
-            #include <source_location>
-        #endif
-        #include <tuple>
-        #include <type_traits>
-        #include <typeindex>
-        #ifndef CPP2_NO_RTTI
-            #include <typeinfo>
-        #endif
-        #include <utility>
-        #include <variant>
-        #include <memory>
-        #ifdef __cpp_lib_memory_resource
-            #include <memory_resource>
-        #endif
-        #include <new>
-        #include <scoped_allocator>
-        #include <cfloat>
-        #include <cinttypes>
-        #include <climits>
         #include <cstdint>
-        #include <limits>
-        #include <cassert>
-        #include <cerrno>
-        #ifndef CPP2_NO_EXCEPTIONS
-            #include <exception>
-        #endif
-        #include <stdexcept>
-        #include <system_error>
-        #include <cctype>
-        #include <charconv>
+        #include <cstdio>
+        #include <cstdlib>
         #include <cstring>
+        #include <ctime>
         #if __has_include(<cuchar>)
             #include <cuchar>
         #endif
         #include <cwchar>
         #include <cwctype>
-        #if defined(__cpp_lib_format) || (defined(_MSC_VER) && _MSC_VER >= 1929)
-            #include <format>
-        #endif
-        #include <string>
-        #include <string_view>
-        #include <array>
         #include <deque>
-        #include <forward_list>
-        #include <list>
-        #include <map>
-        #include <queue>
-        #include <set>
-        #include <span>
-        #include <stack>
-        #include <unordered_map>
-        #include <unordered_set>
-        #include <vector>
-        #include <iterator>
-        #include <ranges>
-        #include <algorithm>
-        #include <bit>
-        #include <cfenv>
-        #include <cmath>
-        #include <complex>
-        #include <numbers>
-        #include <numeric>
-        #include <random>
-        #include <ratio>
-        #include <valarray>
-        #include <clocale>
-        #include <codecvt>
-        #include <locale>
-        #include <cstdio>
-        #include <fstream>
-        #include <iomanip>
-        #include <ios>
-        #include <iosfwd>
-        #include <iostream>
-        #include <istream>
-        #include <ostream>
-        #ifdef __cpp_lib_spanstream
-            #include <spanstream>
+        #ifndef CPP2_NO_EXCEPTIONS
+            #include <exception>
         #endif
-        #include <sstream>
-        #include <streambuf>
-        #ifdef __cpp_lib_syncstream
-            #include <syncstream>
-        #endif
-        #include <filesystem>
-        #include <regex>
-        #include <atomic>
-        #ifdef __cpp_lib_barrier
-            #include <barrier>
-        #endif
-        #include <condition_variable>
-        #include <future>
-        #ifdef __cpp_lib_latch
-            #include <latch>
-        #endif
-        #include <mutex>
-        #ifdef __cpp_lib_semaphore
-            #include <semaphore>
-        #endif
-        #include <shared_mutex>
-        #ifdef __cpp_lib_jthread
-            #include <stop_token>
-        #endif
-        #include <thread>
-        #include <iso646.h>
-
         // libstdc++ currently has a dependency on linking TBB if <execution> is
         // included, and TBB seems to be not automatically installed and linkable
         // on some GCC installations, so let's not pull in that little-used header
@@ -193,48 +115,123 @@
         // including this one
         // 
         // #include <execution>
+        #include <filesystem>
+        #if defined(__cpp_lib_format) || (defined(_MSC_VER) && _MSC_VER >= 1929)
+            #include <format>
+        #endif
+        #include <forward_list>
+        #include <fstream>
+        #include <functional>
+        #include <future>
+        #include <initializer_list>
+        #include <iomanip>
+        #include <ios>
+        #include <iosfwd>
+        #include <iostream>
+        #include <iso646.h>
+        #include <istream>
+        #include <iterator>
+        #ifdef __cpp_lib_latch
+            #include <latch>
+        #endif
+        #include <limits>
+        #include <list>
+        #include <locale>
+        #include <map>
+        #include <memory>
+        #ifdef __cpp_lib_memory_resource
+            #include <memory_resource>
+        #endif
+        #include <mutex>
+        #include <new>
+        #include <numbers>
+        #include <numeric>
+        #include <optional>
+        #include <ostream>
+        #include <queue>
+        #include <random>
+        #include <ranges>
+        #include <ratio>
+        #include <regex>
+        #ifdef __cpp_lib_source_location
+            #include <source_location>
+        #endif
+        #include <scoped_allocator>
+        #ifdef __cpp_lib_semaphore
+            #include <semaphore>
+        #endif
+        #include <set>
+        #include <shared_mutex>
+        #include <span>
+        #ifdef __cpp_lib_spanstream
+            #include <spanstream>
+        #endif
+        #include <sstream>
+        #include <stack>
+        #include <stdexcept>
+        #ifdef __cpp_lib_jthread
+            #include <stop_token>
+        #endif
+        #include <streambuf>
+        #include <string>
+        #include <string_view>
+        #ifdef __cpp_lib_syncstream
+            #include <syncstream>
+        #endif
+        #include <system_error>
+        #include <thread>
+        #include <tuple>
+        #include <type_traits>
+        #include <typeindex>
+        #ifndef CPP2_NO_RTTI
+            #include <typeinfo>
+        #endif
+        #include <unordered_map>
+        #include <unordered_set>
+        #include <utility>
+        #include <valarray>
+        #include <variant>
+        #include <vector>
     #endif
 
 //  Otherwise, we're not in -pure-cpp2 and so just #include
 //  what we need in this header to make this self-contained
 #else
-    #include <type_traits>
-    #include <new>
-    #include <memory>
-    #include <random>
-    #include <tuple>
-    #include <string>
-    #include <string_view>
-    #include <vector>
-    #include <span>
-    #include <iostream>
-    #include <variant>
-    #include <any>
-    #include <optional>
-    #include <cstddef>
-    #include <utility>
-    #include <cstdio>
-    #include <cstdint>
     #include <algorithm>
+    #include <any>
     #include <compare>
-    #include <iterator>
     #include <concepts>
-    #include <system_error>
-    #include <limits>
-    #if defined(__cpp_lib_format) || (defined(_MSC_VER) && _MSC_VER >= 1929)
-        #include <format>
-    #endif
-
+    #include <cstddef>
+    #include <cstdint>
+    #include <cstdio>
     #ifndef CPP2_NO_EXCEPTIONS
         #include <exception>
     #endif
-    #ifndef CPP2_NO_RTTI
-        #include <typeinfo>
+    #if defined(__cpp_lib_format) || (defined(_MSC_VER) && _MSC_VER >= 1929)
+        #include <format>
     #endif
-
+    #include <iostream>
+    #include <iterator>
+    #include <limits>
+    #include <memory>
+    #include <new>
+    #include <random>
+    #include <optional>
     #if defined(CPP2_USE_SOURCE_LOCATION)
         #include <source_location>
     #endif
+    #include <span>
+    #include <string>
+    #include <string_view>
+    #include <system_error>
+    #include <tuple>
+    #include <type_traits>
+    #ifndef CPP2_NO_RTTI
+        #include <typeinfo>
+    #endif
+    #include <utility>
+    #include <variant>
+    #include <vector>
 #endif
 
 
