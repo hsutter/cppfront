@@ -38,7 +38,7 @@ class alias_declaration;
 #line 820 "reflect.h2"
 class value_member_info;
 
-#line 1180 "reflect.h2"
+#line 1181 "reflect.h2"
 }
 }
 
@@ -688,14 +688,14 @@ auto flag_enum(meta::type_declaration& t) -> void;
 
 auto cpp2_union(meta::type_declaration& t) -> void;
 
-#line 1168 "reflect.h2"
+#line 1169 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  print - output a pretty-printed visualization of t
 //
 auto print(cpp2::in<meta::type_declaration> t) -> void;
 
-#line 1178 "reflect.h2"
+#line 1179 "reflect.h2"
 //=======================================================================
 //  Switch to Cpp1 and close subnamespace meta
 }
@@ -1504,9 +1504,9 @@ std::string value = "-1";
     CPP2_UFCS_0(remove_marked_members, t);
 
     //  Generate all the common material: value and common functions
-    CPP2_UFCS(add_member, t, "    value__           : " + cpp2::to_string(underlying_type.value()) + ";");
-    CPP2_UFCS(add_member, t, "    private operator= : (implicit out this, val) == value__ = cpp2::unsafe_narrow<" + cpp2::to_string(underlying_type.value()) + ">(val);");
-    CPP2_UFCS(add_member, t, "    get_raw_value     : (this) -> " + cpp2::to_string(std::move(underlying_type.value())) + " == value__;");
+    CPP2_UFCS(add_member, t, "    _value            : " + cpp2::to_string(underlying_type.value()) + ";");
+    CPP2_UFCS(add_member, t, "    private operator= : (implicit out this, val) == _value = cpp2::unsafe_narrow<" + cpp2::to_string(underlying_type.value()) + ">(val);");
+    CPP2_UFCS(add_member, t, "    get_raw_value     : (this) -> " + cpp2::to_string(std::move(underlying_type.value())) + " == _value;");
     CPP2_UFCS(add_member, t, "    operator=         : (out this, that) == { }");
     CPP2_UFCS(add_member, t, "    operator<=>       : (this, that) -> std::strong_ordering;");
 
@@ -1515,15 +1515,15 @@ std::string value = "-1";
         value_member_info e {"none", "", "0"}; 
         CPP2_UFCS(push_back, enumerators, std::move(e));
 
-        CPP2_UFCS(add_member, t, "    operator|=: ( inout this, that )                 == value__ |= that.value__;");
-        CPP2_UFCS(add_member, t, "    operator&=: ( inout this, that )                 == value__ &= that.value__;");
-        CPP2_UFCS(add_member, t, "    operator^=: ( inout this, that )                 == value__ ^= that.value__;");
-        CPP2_UFCS(add_member, t, "    operator| : (       this, that ) -> " + cpp2::to_string(CPP2_UFCS_0(name, t)) + "  == value__ |  that.value__;");
-        CPP2_UFCS(add_member, t, "    operator& : (       this, that ) -> " + cpp2::to_string(CPP2_UFCS_0(name, t)) + "  == value__ &  that.value__;");
-        CPP2_UFCS(add_member, t, "    operator^ : (       this, that ) -> " + cpp2::to_string(CPP2_UFCS_0(name, t)) + "  == value__ ^  that.value__;");
-        CPP2_UFCS(add_member, t, "    has       : ( inout this, that ) -> bool         == value__ &  that.value__;");
-        CPP2_UFCS(add_member, t, "    set       : ( inout this, that )                 == value__ |= that.value__;");
-        CPP2_UFCS(add_member, t, "    clear     : ( inout this, that )                 == value__ &= that.value__~;");
+        CPP2_UFCS(add_member, t, "    operator|=: ( inout this, that )                 == _value |= that._value;");
+        CPP2_UFCS(add_member, t, "    operator&=: ( inout this, that )                 == _value &= that._value;");
+        CPP2_UFCS(add_member, t, "    operator^=: ( inout this, that )                 == _value ^= that._value;");
+        CPP2_UFCS(add_member, t, "    operator| : (       this, that ) -> " + cpp2::to_string(CPP2_UFCS_0(name, t)) + "  == _value |  that._value;");
+        CPP2_UFCS(add_member, t, "    operator& : (       this, that ) -> " + cpp2::to_string(CPP2_UFCS_0(name, t)) + "  == _value &  that._value;");
+        CPP2_UFCS(add_member, t, "    operator^ : (       this, that ) -> " + cpp2::to_string(CPP2_UFCS_0(name, t)) + "  == _value ^  that._value;");
+        CPP2_UFCS(add_member, t, "    has       : ( inout this, that ) -> bool         == _value &  that._value;");
+        CPP2_UFCS(add_member, t, "    set       : ( inout this, that )                 == _value |= that._value;");
+        CPP2_UFCS(add_member, t, "    clear     : ( inout this, that )                 == _value &= that._value~;");
     }
 
     //  Add the enumerators
@@ -1624,8 +1624,9 @@ auto value = 0;
     for ( 
 
           auto const& m : CPP2_UFCS_0(get_members, t) )  { do 
+    if (  CPP2_UFCS_0(is_object, m) && !(CPP2_UFCS(has_name, m, "this"))) 
     {
-        CPP2_UFCS(require, m, (CPP2_UFCS_0(is_public, m) || CPP2_UFCS_0(is_default_access, m)) && CPP2_UFCS_0(is_object, m), 
+        CPP2_UFCS(require, m, CPP2_UFCS_0(is_public, m) || CPP2_UFCS_0(is_default_access, m), 
                    "a union alternative cannot be protected or private");
 
         if (CPP2_UFCS_0(is_object, m)) {
@@ -1640,7 +1641,7 @@ auto value = 0;
     } while (false); ++value; }
 }
 
-#line 1099 "reflect.h2"
+#line 1100 "reflect.h2"
     std::string discriminator_type {}; 
     if (cpp2::cmp_less(CPP2_UFCS_0(ssize, alternatives),std::numeric_limits<cpp2::i8>::max())) {
         discriminator_type = "i8";
@@ -1655,21 +1656,21 @@ auto value = 0;
         discriminator_type = "i64";
     }}}
 
-#line 1114 "reflect.h2"
+#line 1115 "reflect.h2"
     //  2. Replace: Erase the contents and replace with modified contents
 
     CPP2_UFCS_0(remove_all_members, t);
 {
-std::string storage = "    storage__: std::array<std::byte, cpp2::max( ";
+std::string storage = "    _storage: std::aligned_storage_t<cpp2::max( ";
 
     //  Provide storage
 
-#line 1120 "reflect.h2"
+#line 1121 "reflect.h2"
     {
 {
 std::string comma = "";
 
-#line 1123 "reflect.h2"
+#line 1124 "reflect.h2"
         for ( 
 
               auto const& e : alternatives )  { do {
@@ -1677,40 +1678,40 @@ std::string comma = "";
         } while (false); comma = ", "; }
 }
 
-#line 1129 "reflect.h2"
+#line 1130 "reflect.h2"
         storage += " )> = ();\n";
         CPP2_UFCS(add_member, t, std::move(storage));
     }
 }
 
     //  Provide discriminator
-#line 1134 "reflect.h2"
+#line 1135 "reflect.h2"
     CPP2_UFCS(add_member, t, "    discriminator__: " + cpp2::to_string(std::move(discriminator_type)) + " = -1;\n");
 
     //  Add the alternatives: is_alternative, get_alternative, and set_alternative
     for ( 
          auto const& a : alternatives ) 
     {
-        CPP2_UFCS(add_member, t, "    public is_" + cpp2::to_string(a.name) + ": (this) -> bool = discriminator__ == " + cpp2::to_string(a.value) + ";\n");
+        CPP2_UFCS(add_member, t, "    is_" + cpp2::to_string(a.name) + ": (this) -> bool = discriminator__ == " + cpp2::to_string(a.value) + ";\n");
 
-        CPP2_UFCS(add_member, t, "    public get_" + cpp2::to_string(a.name) + ": (this) -> forward _ [[pre: is_" + cpp2::to_string(a.name) + "()]] = reinterpret_cast<* const " + cpp2::to_string(a.type) + ">(storage__&)*;\n");
+        CPP2_UFCS(add_member, t, "    " + cpp2::to_string(a.name) + ": (this) -> forward _ = reinterpret_cast<* const " + cpp2::to_string(a.type) + ">(_storage&)*;\n");
 
-        CPP2_UFCS(add_member, t, "    public get_" + cpp2::to_string(a.name) + ": (inout this) -> forward _ [[pre: is_" + cpp2::to_string(a.name) + "()]] = reinterpret_cast<*" + cpp2::to_string(a.type) + ">(storage__&)*;\n");
+        CPP2_UFCS(add_member, t, "    " + cpp2::to_string(a.name) + ": (inout this) -> forward _ = reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&)*;\n");
 
-        CPP2_UFCS(add_member, t, "    public set_" + cpp2::to_string(a.name) + ": (inout this, value: " + cpp2::to_string(a.type) + ") = { if !is_" + cpp2::to_string(a.name) + "() { destroy(); std::construct_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(storage__&), value); } else { reinterpret_cast<*" + cpp2::to_string(a.type) + ">(storage__&)* = value; } discriminator__ = " + cpp2::to_string(a.value) + "; }\n");
+        CPP2_UFCS(add_member, t, "    set_" + cpp2::to_string(a.name) + ": (inout this, value: " + cpp2::to_string(a.type) + ") = { if !is_" + cpp2::to_string(a.name) + "() { destroy(); std::construct_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&), value); } else { reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&)* = value; } discriminator__ = " + cpp2::to_string(a.value) + "; }\n");
 
-        CPP2_UFCS(add_member, t, "    public set_" + cpp2::to_string(a.name) + ": (inout this, forward args...: _) = { if !is_" + cpp2::to_string(a.name) + "() { destroy(); std::construct_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(storage__&), args...); } else { reinterpret_cast<*" + cpp2::to_string(a.type) + ">(storage__&)* = :" + cpp2::to_string(a.type) + " = (args...); } discriminator__ = " + cpp2::to_string(a.value) + "; }\n");
+        CPP2_UFCS(add_member, t, "    set_" + cpp2::to_string(a.name) + ": (inout this, forward args...: _) = { if !is_" + cpp2::to_string(a.name) + "() { destroy(); std::construct_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&), args...); } else { reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&)* = :" + cpp2::to_string(a.type) + " = (args...); } discriminator__ = " + cpp2::to_string(a.value) + "; }\n");
     }
 {
 std::string destroy = "    private destroy: (inout this) = {\n";
 
     //  Add destroy
 
-#line 1153 "reflect.h2"
+#line 1154 "reflect.h2"
     {
         for ( 
               auto const& a : alternatives ) {
-            destroy += "if discriminator__ == " + cpp2::to_string(a.value) + " { std::destroy_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(storage__&) ); }\n";
+            destroy += "if discriminator__ == " + cpp2::to_string(a.value) + " { std::destroy_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&) ); }\n";
         }
 
         destroy += "}\n";
@@ -1719,17 +1720,17 @@ std::string destroy = "    private destroy: (inout this) = {\n";
 }
 
     //  Add the destructor
-#line 1164 "reflect.h2"
+#line 1165 "reflect.h2"
     CPP2_UFCS(add_member, t, "    operator=: (move this) = { destroy(); } ");
 }
 
-#line 1172 "reflect.h2"
+#line 1173 "reflect.h2"
 auto print(cpp2::in<meta::type_declaration> t) -> void
 {
     std::cout << CPP2_UFCS_0(print, t) << "\n";
 }
 
-#line 1180 "reflect.h2"
+#line 1181 "reflect.h2"
 }
 }
 

@@ -925,9 +925,9 @@ basic_enum: (
     t.remove_marked_members();
 
     //  Generate all the common material: value and common functions
-    t.add_member( "    value__           : (underlying_type)$;");
-    t.add_member( "    private operator= : (implicit out this, val) == value__ = cpp2::unsafe_narrow<(underlying_type)$>(val);");
-    t.add_member( "    get_raw_value     : (this) -> (underlying_type)$ == value__;");
+    t.add_member( "    _value            : (underlying_type)$;");
+    t.add_member( "    private operator= : (implicit out this, val) == _value = cpp2::unsafe_narrow<(underlying_type)$>(val);");
+    t.add_member( "    get_raw_value     : (this) -> (underlying_type)$ == _value;");
     t.add_member( "    operator=         : (out this, that) == { }");
     t.add_member( "    operator<=>       : (this, that) -> std::strong_ordering;");
 
@@ -936,15 +936,15 @@ basic_enum: (
         e: value_member_info = ( "none", "", "0");
         enumerators.push_back( e );
 
-        t.add_member( "    operator|=: ( inout this, that )                 == value__ |= that.value__;");
-        t.add_member( "    operator&=: ( inout this, that )                 == value__ &= that.value__;");
-        t.add_member( "    operator^=: ( inout this, that )                 == value__ ^= that.value__;");
-        t.add_member( "    operator| : (       this, that ) -> (t.name())$  == value__ |  that.value__;");
-        t.add_member( "    operator& : (       this, that ) -> (t.name())$  == value__ &  that.value__;");
-        t.add_member( "    operator^ : (       this, that ) -> (t.name())$  == value__ ^  that.value__;");
-        t.add_member( "    has       : ( inout this, that ) -> bool         == value__ &  that.value__;");
-        t.add_member( "    set       : ( inout this, that )                 == value__ |= that.value__;");
-        t.add_member( "    clear     : ( inout this, that )                 == value__ &= that.value__~;");
+        t.add_member( "    operator|=: ( inout this, that )                 == _value |= that._value;");
+        t.add_member( "    operator&=: ( inout this, that )                 == _value &= that._value;");
+        t.add_member( "    operator^=: ( inout this, that )                 == _value ^= that._value;");
+        t.add_member( "    operator| : (       this, that ) -> (t.name())$  == _value |  that._value;");
+        t.add_member( "    operator& : (       this, that ) -> (t.name())$  == _value &  that._value;");
+        t.add_member( "    operator^ : (       this, that ) -> (t.name())$  == _value ^  that._value;");
+        t.add_member( "    has       : ( inout this, that ) -> bool         == _value &  that._value;");
+        t.add_member( "    set       : ( inout this, that )                 == _value |= that._value;");
+        t.add_member( "    clear     : ( inout this, that )                 == _value &= that._value~;");
     }
 
     //  Add the enumerators
@@ -1081,8 +1081,9 @@ union: (inout t : meta::type_declaration)
     for  t.get_members()
     next value++
     do   (m)
+    if   m.is_object() && !m.has_name("this")
     {
-        m.require( (m.is_public() || m.is_default_access()) && m.is_object(),
+        m.require( m.is_public() || m.is_default_access(),
                    "a union alternative cannot be protected or private");
 
         if m.is_object() {
@@ -1116,7 +1117,7 @@ union: (inout t : meta::type_declaration)
     t.remove_all_members();
 
     //  Provide storage
-    (storage: std::string = "    storage__: std::array<std::byte, cpp2::max( ")
+    (storage: std::string = "    _storage: std::aligned_storage_t<cpp2::max( ")
     {
 
         (comma: std::string = "")
@@ -1137,15 +1138,15 @@ union: (inout t : meta::type_declaration)
     for alternatives 
     do  (a)
     {
-        t.add_member( "    public is_(a.name)$: (this) -> bool = discriminator__ == (a.value)$;\n");
+        t.add_member( "    is_(a.name)$: (this) -> bool = discriminator__ == (a.value)$;\n");
 
-        t.add_member( "    public get_(a.name)$: (this) -> forward _ [[pre: is_(a.name)$()]] = reinterpret_cast<* const (a.type)$>(storage__&)*;\n");
+        t.add_member( "    (a.name)$: (this) -> forward _ = reinterpret_cast<* const (a.type)$>(_storage&)*;\n");
 
-        t.add_member( "    public get_(a.name)$: (inout this) -> forward _ [[pre: is_(a.name)$()]] = reinterpret_cast<*(a.type)$>(storage__&)*;\n");
+        t.add_member( "    (a.name)$: (inout this) -> forward _ = reinterpret_cast<*(a.type)$>(_storage&)*;\n");
 
-        t.add_member( "    public set_(a.name)$: (inout this, value: (a.type)$) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(storage__&), value); } else { reinterpret_cast<*(a.type)$>(storage__&)* = value; } discriminator__ = (a.value)$; }\n");
+        t.add_member( "    set_(a.name)$: (inout this, value: (a.type)$) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(_storage&), value); } else { reinterpret_cast<*(a.type)$>(_storage&)* = value; } discriminator__ = (a.value)$; }\n");
 
-        t.add_member( "    public set_(a.name)$: (inout this, forward args...: _) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(storage__&), args...); } else { reinterpret_cast<*(a.type)$>(storage__&)* = :(a.type)$ = (args...); } discriminator__ = (a.value)$; }\n");
+        t.add_member( "    set_(a.name)$: (inout this, forward args...: _) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(_storage&), args...); } else { reinterpret_cast<*(a.type)$>(_storage&)* = :(a.type)$ = (args...); } discriminator__ = (a.value)$; }\n");
     }
 
     //  Add destroy
@@ -1153,7 +1154,7 @@ union: (inout t : meta::type_declaration)
     {
         for  alternatives 
         do   (a) {
-            destroy += "if discriminator__ == (a.value)$ { std::destroy_at( reinterpret_cast<*(a.type)$>(storage__&) ); }\n";
+            destroy += "if discriminator__ == (a.value)$ { std::destroy_at( reinterpret_cast<*(a.type)$>(_storage&) ); }\n";
         }
 
         destroy += "}\n";

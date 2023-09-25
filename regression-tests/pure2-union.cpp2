@@ -6,7 +6,7 @@ name_or_number: @union type = {
 
 print_name: (non: name_or_number) = {
     if non.is_name() {
-        std::cout << non.get_name() << "\n";
+        std::cout << non.name() << "\n";
     }
     else {
         std::cout << "(not a name)\n";
