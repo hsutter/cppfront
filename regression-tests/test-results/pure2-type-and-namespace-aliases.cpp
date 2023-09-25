@@ -79,7 +79,7 @@ auto myfunc() -> void{
 }
 
 #line 27 "pure2-type-and-namespace-aliases.cpp2"
-    inline constexpr int myclass2::value = 42;
+    template <typename T> inline CPP2_CONSTEXPR int myclass2<T>::value = 42;
 
 #line 30 "pure2-type-and-namespace-aliases.cpp2"
 auto main() -> int{
