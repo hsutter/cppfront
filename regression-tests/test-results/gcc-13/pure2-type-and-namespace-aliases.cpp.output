@@ -1,0 +1,3 @@
+pure2-type-and-namespace-aliases.cpp2:27:26: error: ‘template<class T> class myclass2’ used without template arguments
+   27 |     value: int == 42;
+      |                          ^
