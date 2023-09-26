@@ -1867,7 +1867,6 @@ public:
             emit(*x);
         }
 
-        assert (!current_functions.empty());
         emit_epilog_statements( function_epilog, n.body_indent+1);
 
         printer.print_cpp2( "}", n.close_brace );
@@ -5073,7 +5072,7 @@ public:
                         type = print_to_string(*a->type_id);
                     }
 
-                    //  If this is at type scope, Cpp1 requires an out-of-line declaration dance
+                    //  (*) If this is at type scope, Cpp1 requires an out-of-line declaration dance
                     //  for some cases to work - see https://stackoverflow.com/questions/11928089/
                     if (n.parent_is_type())
                     {
@@ -5089,10 +5088,25 @@ public:
                             );
                         }
                         else if (printer.get_phase() == printer.phase2_func_defs) {
+                            //  The following logic is not yet complete, so give a diagnostic for now
+                            if (n.parent_declaration->parent_is_type()) {
+                                errors.emplace_back(
+                                    n.position(),
+                                    "(temporary alpha limitation) an object alias cannot yet appear inside a nested type"
+                                );
+                                return;
+                            }
+
+                            auto parent_qualifier = std::string{};
+                            auto parent = n.parent_declaration;
+                            while (parent && parent->is_type()) {
+                                parent_qualifier.insert(0, parent->name()->to_string() + "::");
+                                parent = parent->parent_declaration;
+                            }
                             printer.print_cpp2(
                                 "inline constexpr "
                                     + type + " "
-                                    + n.parent_declaration->name()->to_string() + "::"
+                                    + parent_qualifier
                                     + print_to_string(*n.identifier)
                                     + " = "
                                     + print_to_string( *std::get<alias_node::an_object>(a->initializer) )
