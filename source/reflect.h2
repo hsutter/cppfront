@@ -245,12 +245,14 @@ declaration: @polymorphic_base @copyable type =
 
     has_initializer: (this) -> bool = n*.has_initializer();
 
-    is_global   : (this) -> bool = n*.is_global();
-    is_function : (this) -> bool = n*.is_function();
-    is_object   : (this) -> bool = n*.is_object();
-    is_type     : (this) -> bool = n*.is_type();
-    is_namespace: (this) -> bool = n*.is_namespace();
-    is_alias    : (this) -> bool = n*.is_alias();
+    is_global        : (this) -> bool = n*.is_global();
+    is_function      : (this) -> bool = n*.is_function();
+    is_object        : (this) -> bool = n*.is_object();
+    is_base_object   : (this) -> bool = n*.is_base_object();
+    is_member_object : (this) -> bool = n*.is_member_object();
+    is_type          : (this) -> bool = n*.is_type();
+    is_namespace     : (this) -> bool = n*.is_namespace();
+    is_alias         : (this) -> bool = n*.is_alias();
 
     is_function_expression : (this) -> bool = n*.is_function_expression();
 
@@ -843,7 +845,7 @@ basic_enum: (
     (value: std::string = "-1")
     for  t.get_members()
     do   (m)
-    if   m.is_object() && !m.has_name("this")
+    if   m.is_member_object()
     {
         m.require( m.is_public() || m.is_default_access(),
                    "an enumerator cannot be protected or private");
@@ -926,13 +928,13 @@ basic_enum: (
 
     //  Generate all the common material: value and common functions
     t.add_member( "    _value            : (underlying_type)$;");
-    t.add_member( "    private operator= : (implicit out this, val) == _value = cpp2::unsafe_narrow<(underlying_type)$>(val);");
+    t.add_member( "    private operator= : (implicit out this, val: i64) == _value = cpp2::unsafe_narrow<(underlying_type)$>(val);");
     t.add_member( "    get_raw_value     : (this) -> (underlying_type)$ == _value;");
     t.add_member( "    operator=         : (out this, that) == { }");
     t.add_member( "    operator<=>       : (this, that) -> std::strong_ordering;");
 
     //  Generate the bitwise operations and 'none' value, if appropriate
-    if bitwise{
+    if bitwise {
         e: value_member_info = ( "none", "", "0");
         enumerators.push_back( e );
 
@@ -1081,7 +1083,7 @@ union: (inout t : meta::type_declaration)
     for  t.get_members()
     next value++
     do   (m)
-    if   m.is_object() && !m.has_name("this")
+    if   m.is_member_object()
     {
         m.require( m.is_public() || m.is_default_access(),
                    "a union alternative cannot be protected or private");
@@ -1154,10 +1156,11 @@ union: (inout t : meta::type_declaration)
     {
         for  alternatives
         do   (a) {
-            destroy += "if _discriminator == (a.value)$ { std::destroy_at( reinterpret_cast<*(a.type)$>(_storage&) ); }\n";
+            destroy += "        if _discriminator == (a.value)$ { std::destroy_at( reinterpret_cast<*(a.type)$>(_storage&) ); }\n";
         }
 
-        destroy += "}\n";
+        destroy += "        _discriminator = -1;\n";
+        destroy += "    }\n";
         t.add_member( destroy );
     }
 
@@ -1173,6 +1176,88 @@ union: (inout t : meta::type_declaration)
 print: (t: meta::type_declaration) =
 {
     std::cout << t.print() << "\n";
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  apply_metafunctions
+//
+apply_metafunctions: (
+    inout n     : declaration_node,
+    inout rtype : type_declaration
+    )
+    -> (unrecognized_names: std::vector<std::string> = ())
+= {
+    [[assert: n.is_type()]]
+
+    //  For each metafunction, apply it
+    for n.metafunctions
+    do  (meta)
+    {
+        //  Convert the name and any template arguments to strings
+        //  and record that in rtype
+        name := meta*.to_string();
+        name = name.substr(0, name.find('<'));
+
+        args: std::vector<std::string> = ();
+        for meta*.template_arguments()
+        do  (arg) 
+            args.push_back( arg.to_string() );
+
+        rtype.set_metafunction_name( name, args );
+
+        //  Dispatch
+        //
+        if name == "interface" {
+            interface( rtype );
+        }
+        else if name == "polymorphic_base" {
+            polymorphic_base( rtype );
+        }
+        else if name == "ordered" {
+            ordered( rtype );
+        }
+        else if name == "weakly_ordered" {
+            weakly_ordered( rtype );
+        }
+        else if name == "partially_ordered" {
+            partially_ordered( rtype );
+        }
+        else if name == "copyable" {
+            copyable( rtype );
+        }
+        else if name == "basic_value" {
+            basic_value( rtype );
+        }
+        else if name == "value" {
+            value( rtype );
+        }
+        else if name == "weakly_ordered_value" {
+            weakly_ordered_value( rtype );
+        }
+        else if name == "partially_ordered_value" {
+            partially_ordered_value( rtype );
+        }
+        else if name == "struct" {
+            cpp2_struct( rtype );
+        }
+        else if name == "enum" {
+            cpp2_enum( rtype );
+        }
+        else if name == "flag_enum" {
+            flag_enum( rtype );
+        }
+        else if name == "union" {
+            cpp2_union( rtype );
+        }
+        else if name == "print" {
+            print( rtype );
+        }
+        else {
+            unrecognized_names.push_back( name );
+        }
+    }
 }
 
 
@@ -1199,73 +1284,21 @@ auto parser::apply_type_metafunctions( declaration_node& n )
     auto cs = meta::compiler_services{ &errors, generated_tokens };
     auto rtype = meta::type_declaration{ &n, cs };
 
-    //  For each metafunction, apply it
-    for (auto& meta : n.metafunctions)
-    {
-        //  Convert the name and any template arguments to strings
-        //  and record that in rtype
-        auto name = meta->to_string();
-        name = name.substr(0, name.find('<'));
-
-        auto args = std::vector<std::string>{};
-        for (auto& arg : meta->template_arguments()) {
-            args.push_back( arg.to_string() );
+    auto [rejected] = apply_metafunctions(n, rtype);
+    if (!rejected.empty()) {
+        auto msg = std::string("unrecognized metafunction name");
+        if (std::ssize(rejected) > 1) {
+            msg += "s";
         }
-
-        rtype.set_metafunction_name( name, args );
-
-        //  Dispatch
-        //
-        if (name == "interface") {
-            interface( rtype );
+        msg += ":";
+        for (auto const& name : rejected) {
+            msg += " " + name;
         }
-        else if (name == "polymorphic_base") {
-            polymorphic_base( rtype );
-        }
-        else if (name == "ordered") {
-            ordered( rtype );
-        }
-        else if (name == "weakly_ordered") {
-            weakly_ordered( rtype );
-        }
-        else if (name == "partially_ordered") {
-            partially_ordered( rtype );
-        }
-        else if (name == "copyable") {
-            copyable( rtype );
-        }
-        else if (name == "basic_value") {
-            basic_value( rtype );
-        }
-        else if (name == "value") {
-            value( rtype );
-        }
-        else if (name == "weakly_ordered_value") {
-            weakly_ordered_value( rtype );
-        }
-        else if (name == "partially_ordered_value") {
-            partially_ordered_value( rtype );
-        }
-        else if (name == "struct") {
-            cpp2_struct( rtype );
-        }
-        else if (name == "enum") {
-            cpp2_enum( rtype );
-        }
-        else if (name == "flag_enum") {
-            flag_enum( rtype );
-        }
-        else if (name == "union") {
-            cpp2_union( rtype );
-        }
-        else if (name == "print") {
-            print( rtype );
-        }
-        else {
-            error( "(temporary alpha limitation) unrecognized metafunction name '" + name + "' - currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum, union, print" );
-            return false;
-        }
+        error( msg, false );
+        error( "(temporary alpha limitation) currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum, union, print", false );
+        return false;
     }
+
     return true;
 }
 

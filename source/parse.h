@@ -2773,6 +2773,10 @@ public:
         { return type.index() == a_function;  }
     auto is_object   () const -> bool
         { return type.index() == an_object;   }
+    auto is_base_object() const -> bool
+        { return is_object() && has_name("this"); }
+    auto is_member_object() const -> bool
+        { return is_object() && !has_name("this"); }
     auto is_concept  () const -> bool
         { return type.index() == an_object && get<an_object>(type)->is_concept();   }
     auto is_type     () const -> bool

@@ -61,6 +61,7 @@ auto name_or_number::set_num(auto&& ...args) & -> void{if (!(is_num())) {destroy
 auto name_or_number::destroy() & -> void{
     if (_discriminator == 0) {std::destroy_at(reinterpret_cast<std::string*>(&_storage));}
     if (_discriminator == 1) {std::destroy_at(reinterpret_cast<cpp2::i32*>(&_storage));}
+    _discriminator = -1;
     }
 
     name_or_number::~name_or_number() noexcept{destroy();}

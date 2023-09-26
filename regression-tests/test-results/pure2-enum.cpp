@@ -24,9 +24,9 @@ class file_attributes;
 
 #line 2 "pure2-enum.cpp2"
 class skat_game {
-private: cpp2::i8 _value; private: constexpr skat_game(auto const& val);
+private: cpp2::i8 _value; private: constexpr skat_game(cpp2::in<cpp2::i64> val);
 
-private: constexpr auto operator=(auto const& val) -> skat_game& ;
+private: constexpr auto operator=(cpp2::in<cpp2::i64> val) -> skat_game& ;
 public: [[nodiscard]] constexpr auto get_raw_value() const& -> cpp2::i8;
 public: constexpr skat_game(skat_game const& that);
 public: constexpr auto operator=(skat_game const& that) -> skat_game& ;
@@ -55,9 +55,9 @@ class janus {
 #line 15 "pure2-enum.cpp2"
     public: auto flip() & -> void;
         
-        private: cpp2::i8 _value; private: constexpr janus(auto const& val);
+        private: cpp2::i8 _value; private: constexpr janus(cpp2::in<cpp2::i64> val);
 
-private: constexpr auto operator=(auto const& val) -> janus& ;
+private: constexpr auto operator=(cpp2::in<cpp2::i64> val) -> janus& ;
 public: [[nodiscard]] constexpr auto get_raw_value() const& -> cpp2::i8;
 public: constexpr janus(janus const& that);
 public: constexpr auto operator=(janus const& that) -> janus& ;
@@ -73,9 +73,9 @@ public: friend auto operator<<(std::ostream& o, cpp2::in<janus> val) -> std::ost
 };
 
 class file_attributes {
-private: cpp2::u8 _value; private: constexpr file_attributes(auto const& val);
+private: cpp2::u8 _value; private: constexpr file_attributes(cpp2::in<cpp2::i64> val);
 
-private: constexpr auto operator=(auto const& val) -> file_attributes& ;
+private: constexpr auto operator=(cpp2::in<cpp2::i64> val) -> file_attributes& ;
 public: [[nodiscard]] constexpr auto get_raw_value() const& -> cpp2::u8;
 public: constexpr file_attributes(file_attributes const& that);
 public: constexpr auto operator=(file_attributes const& that) -> file_attributes& ;
@@ -114,11 +114,11 @@ auto main() -> int;
 
 
 
-    constexpr skat_game::skat_game(auto const& val)
-                                                    : _value{ cpp2::unsafe_narrow<cpp2::i8>(val) } {  }
-constexpr auto skat_game::operator=(auto const& val) -> skat_game&  { 
-                                                    _value = cpp2::unsafe_narrow<cpp2::i8>(val);
-                                                    return *this; }
+    constexpr skat_game::skat_game(cpp2::in<cpp2::i64> val)
+                                                         : _value{ cpp2::unsafe_narrow<cpp2::i8>(val) } {  }
+constexpr auto skat_game::operator=(cpp2::in<cpp2::i64> val) -> skat_game&  { 
+                                                         _value = cpp2::unsafe_narrow<cpp2::i8>(val);
+                                                         return *this; }
 [[nodiscard]] constexpr auto skat_game::get_raw_value() const& -> cpp2::i8 { return _value; }
 constexpr skat_game::skat_game(skat_game const& that)
                                               : _value{ that._value }{}
@@ -160,12 +160,12 @@ inline constexpr skat_game skat_game::null = 23;
     }
 
 
-    constexpr janus::janus(auto const& val)
-                                                    : _value{ cpp2::unsafe_narrow<cpp2::i8>(val) } {  }
+    constexpr janus::janus(cpp2::in<cpp2::i64> val)
+                                                         : _value{ cpp2::unsafe_narrow<cpp2::i8>(val) } {  }
 
-constexpr auto janus::operator=(auto const& val) -> janus&  { 
-                                                    _value = cpp2::unsafe_narrow<cpp2::i8>(val);
-                                                    return *this; }
+constexpr auto janus::operator=(cpp2::in<cpp2::i64> val) -> janus&  { 
+                                                         _value = cpp2::unsafe_narrow<cpp2::i8>(val);
+                                                         return *this; }
 [[nodiscard]] constexpr auto janus::get_raw_value() const& -> cpp2::i8 { return _value; }
 constexpr janus::janus(janus const& that)
                                               : _value{ that._value }{}
@@ -188,11 +188,11 @@ inline constexpr janus janus::future = 1;
     }
 
     auto operator<<(std::ostream& o, cpp2::in<janus> val) -> std::ostream&{o << CPP2_UFCS_0(to_string, val);return o; }
-constexpr file_attributes::file_attributes(auto const& val)
-                                                    : _value{ cpp2::unsafe_narrow<cpp2::u8>(val) } {  }
-constexpr auto file_attributes::operator=(auto const& val) -> file_attributes&  { 
-                                                    _value = cpp2::unsafe_narrow<cpp2::u8>(val);
-                                                    return *this; }
+constexpr file_attributes::file_attributes(cpp2::in<cpp2::i64> val)
+                                                         : _value{ cpp2::unsafe_narrow<cpp2::u8>(val) } {  }
+constexpr auto file_attributes::operator=(cpp2::in<cpp2::i64> val) -> file_attributes&  { 
+                                                         _value = cpp2::unsafe_narrow<cpp2::u8>(val);
+                                                         return *this; }
 [[nodiscard]] constexpr auto file_attributes::get_raw_value() const& -> cpp2::u8 { return _value; }
 constexpr file_attributes::file_attributes(file_attributes const& that)
                                               : _value{ that._value }{}
