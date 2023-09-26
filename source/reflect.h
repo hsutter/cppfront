@@ -1629,15 +1629,15 @@ auto value = 0;
         CPP2_UFCS(require, m, CPP2_UFCS_0(is_public, m) || CPP2_UFCS_0(is_default_access, m), 
                    "a union alternative cannot be protected or private");
 
-        if (CPP2_UFCS_0(is_object, m)) {
-            auto mo {CPP2_UFCS_0(as_object, m)}; 
-            CPP2_UFCS(require, mo, CPP2_UFCS_0(empty, CPP2_UFCS_0(initializer, mo)), 
-                        "a union alternative cannot have an initializer");
+        auto mo {CPP2_UFCS_0(as_object, m)}; 
+        CPP2_UFCS(require, mo, CPP2_UFCS_0(empty, CPP2_UFCS_0(initializer, mo)), 
+                    "a union alternative cannot have an initializer");
 
-            //  Adding local variable 'e' to work around a Clang warning
-            value_member_info e {cpp2::as_<std::string>(CPP2_UFCS_0(name, mo)), CPP2_UFCS_0(type, mo), cpp2::as_<std::string>(value)}; 
-            CPP2_UFCS(push_back, alternatives, e);
-        }
+        //  Adding local variable 'e' to work around a Clang warning
+        value_member_info e {cpp2::as_<std::string>(CPP2_UFCS_0(name, mo)), CPP2_UFCS_0(type, mo), cpp2::as_<std::string>(value)}; 
+        CPP2_UFCS(push_back, alternatives, e);
+
+        CPP2_UFCS_0(mark_for_removal_from_enclosing_type, mo);
     } while (false); ++value; }
 }
 
@@ -1659,7 +1659,7 @@ auto value = 0;
 #line 1115 "reflect.h2"
     //  2. Replace: Erase the contents and replace with modified contents
 
-    CPP2_UFCS_0(remove_all_members, t);
+    CPP2_UFCS_0(remove_marked_members, t);
 {
 std::string storage = "    _storage: std::aligned_storage_t<cpp2::max( ";
 
@@ -1686,21 +1686,21 @@ std::string comma = "";
 
     //  Provide discriminator
 #line 1135 "reflect.h2"
-    CPP2_UFCS(add_member, t, "    discriminator__: " + cpp2::to_string(std::move(discriminator_type)) + " = -1;\n");
+    CPP2_UFCS(add_member, t, "    _discriminator: " + cpp2::to_string(std::move(discriminator_type)) + " = -1;\n");
 
     //  Add the alternatives: is_alternative, get_alternative, and set_alternative
     for ( 
          auto const& a : alternatives ) 
     {
-        CPP2_UFCS(add_member, t, "    is_" + cpp2::to_string(a.name) + ": (this) -> bool = discriminator__ == " + cpp2::to_string(a.value) + ";\n");
+        CPP2_UFCS(add_member, t, "    is_" + cpp2::to_string(a.name) + ": (this) -> bool = _discriminator == " + cpp2::to_string(a.value) + ";\n");
 
-        CPP2_UFCS(add_member, t, "    " + cpp2::to_string(a.name) + ": (this) -> forward _ = reinterpret_cast<* const " + cpp2::to_string(a.type) + ">(_storage&)*;\n");
+        CPP2_UFCS(add_member, t, "    " + cpp2::to_string(a.name) + ": (this) -> forward " + cpp2::to_string(a.type) + " = reinterpret_cast<* const " + cpp2::to_string(a.type) + ">(_storage&)*;\n");
 
-        CPP2_UFCS(add_member, t, "    " + cpp2::to_string(a.name) + ": (inout this) -> forward _ = reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&)*;\n");
+        CPP2_UFCS(add_member, t, "    " + cpp2::to_string(a.name) + ": (inout this) -> forward " + cpp2::to_string(a.type) + " = reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&)*;\n");
 
-        CPP2_UFCS(add_member, t, "    set_" + cpp2::to_string(a.name) + ": (inout this, value: " + cpp2::to_string(a.type) + ") = { if !is_" + cpp2::to_string(a.name) + "() { destroy(); std::construct_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&), value); } else { reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&)* = value; } discriminator__ = " + cpp2::to_string(a.value) + "; }\n");
+        CPP2_UFCS(add_member, t, "    set_" + cpp2::to_string(a.name) + ": (inout this, value: " + cpp2::to_string(a.type) + ") = { if !is_" + cpp2::to_string(a.name) + "() { destroy(); std::construct_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&), value); } else { reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&)* = value; } _discriminator = " + cpp2::to_string(a.value) + "; }\n");
 
-        CPP2_UFCS(add_member, t, "    set_" + cpp2::to_string(a.name) + ": (inout this, forward args...: _) = { if !is_" + cpp2::to_string(a.name) + "() { destroy(); std::construct_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&), args...); } else { reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&)* = :" + cpp2::to_string(a.type) + " = (args...); } discriminator__ = " + cpp2::to_string(a.value) + "; }\n");
+        CPP2_UFCS(add_member, t, "    set_" + cpp2::to_string(a.name) + ": (inout this, forward args...: _) = { if !is_" + cpp2::to_string(a.name) + "() { destroy(); std::construct_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&), args...); } else { reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&)* = :" + cpp2::to_string(a.type) + " = (args...); } _discriminator = " + cpp2::to_string(a.value) + "; }\n");
     }
 {
 std::string destroy = "    private destroy: (inout this) = {\n";
@@ -1711,7 +1711,7 @@ std::string destroy = "    private destroy: (inout this) = {\n";
     {
         for ( 
               auto const& a : alternatives ) {
-            destroy += "if discriminator__ == " + cpp2::to_string(a.value) + " { std::destroy_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&) ); }\n";
+            destroy += "if _discriminator == " + cpp2::to_string(a.value) + " { std::destroy_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&) ); }\n";
         }
 
         destroy += "}\n";

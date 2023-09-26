@@ -1086,15 +1086,15 @@ union: (inout t : meta::type_declaration)
         m.require( m.is_public() || m.is_default_access(),
                    "a union alternative cannot be protected or private");
 
-        if m.is_object() {
-            mo := m.as_object();
-            mo.require( mo.initializer().empty(),
-                        "a union alternative cannot have an initializer");
+        mo := m.as_object();
+        mo.require( mo.initializer().empty(),
+                    "a union alternative cannot have an initializer");
 
-            //  Adding local variable 'e' to work around a Clang warning
-            e: value_member_info = ( mo.name() as std::string, mo.type(), value as std::string );
-            alternatives.push_back( e );
-        }
+        //  Adding local variable 'e' to work around a Clang warning
+        e: value_member_info = ( mo.name() as std::string, mo.type(), value as std::string );
+        alternatives.push_back( e );
+
+        mo.mark_for_removal_from_enclosing_type();
     }
 
     discriminator_type: std::string = ();
@@ -1114,7 +1114,7 @@ union: (inout t : meta::type_declaration)
 
     //  2. Replace: Erase the contents and replace with modified contents
 
-    t.remove_all_members();
+    t.remove_marked_members();
 
     //  Provide storage
     (storage: std::string = "    _storage: std::aligned_storage_t<cpp2::max( ")
@@ -1132,29 +1132,29 @@ union: (inout t : meta::type_declaration)
     }
 
     //  Provide discriminator
-    t.add_member( "    discriminator__: (discriminator_type)$ = -1;\n");
+    t.add_member( "    _discriminator: (discriminator_type)$ = -1;\n");
 
     //  Add the alternatives: is_alternative, get_alternative, and set_alternative
     for alternatives 
     do  (a)
     {
-        t.add_member( "    is_(a.name)$: (this) -> bool = discriminator__ == (a.value)$;\n");
+        t.add_member( "    is_(a.name)$: (this) -> bool = _discriminator == (a.value)$;\n");
 
-        t.add_member( "    (a.name)$: (this) -> forward _ = reinterpret_cast<* const (a.type)$>(_storage&)*;\n");
+        t.add_member( "    (a.name)$: (this) -> forward (a.type)$ = reinterpret_cast<* const (a.type)$>(_storage&)*;\n");
 
-        t.add_member( "    (a.name)$: (inout this) -> forward _ = reinterpret_cast<*(a.type)$>(_storage&)*;\n");
+        t.add_member( "    (a.name)$: (inout this) -> forward (a.type)$ = reinterpret_cast<*(a.type)$>(_storage&)*;\n");
 
-        t.add_member( "    set_(a.name)$: (inout this, value: (a.type)$) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(_storage&), value); } else { reinterpret_cast<*(a.type)$>(_storage&)* = value; } discriminator__ = (a.value)$; }\n");
+        t.add_member( "    set_(a.name)$: (inout this, value: (a.type)$) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(_storage&), value); } else { reinterpret_cast<*(a.type)$>(_storage&)* = value; } _discriminator = (a.value)$; }\n");
 
-        t.add_member( "    set_(a.name)$: (inout this, forward args...: _) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(_storage&), args...); } else { reinterpret_cast<*(a.type)$>(_storage&)* = :(a.type)$ = (args...); } discriminator__ = (a.value)$; }\n");
+        t.add_member( "    set_(a.name)$: (inout this, forward args...: _) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(_storage&), args...); } else { reinterpret_cast<*(a.type)$>(_storage&)* = :(a.type)$ = (args...); } _discriminator = (a.value)$; }\n");
     }
 
     //  Add destroy
     (destroy: std::string = "    private destroy: (inout this) = {\n")
     {
-        for  alternatives 
+        for  alternatives
         do   (a) {
-            destroy += "if discriminator__ == (a.value)$ { std::destroy_at( reinterpret_cast<*(a.type)$>(_storage&) ); }\n";
+            destroy += "if _discriminator == (a.value)$ { std::destroy_at( reinterpret_cast<*(a.type)$>(_storage&) ); }\n";
         }
 
         destroy += "}\n";
