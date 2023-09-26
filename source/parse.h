@@ -1300,7 +1300,7 @@ auto unqualified_id_node::to_string() const
             ret += separator;
             assert(t.arg.index() != template_argument::empty);
             if (t.arg.index() == template_argument::expression) {
-                ret += "(expression)";
+                ret += std::get<template_argument::expression>(t.arg)->to_string();
             }
             else if (t.arg.index() == template_argument::type_id) {
                 ret += std::get<template_argument::type_id>(t.arg)->to_string();
@@ -7206,13 +7206,14 @@ private:
             !is_returns
             && n->declaration->is_const()
             && n->pass != passing_style::copy
+            && n->pass != passing_style::inout
             )
         {
             switch (n->pass) {
             break;case passing_style::in:
                 error( "an 'in' parameter is always const, 'const' isn't needed and isn't allowed", false );
             break;case passing_style::inout:
-                error( "an 'inout' parameter can't be const, if you do want it to be const then use 'in' instead", false );
+                // error( "an 'inout' parameter can't be const, if you do want it to be const then use 'in' instead", false );
             break;case passing_style::out:
                 error( "an 'out' parameter can't be const, otherwise it can't be initialized in the function body", false );
             break;case passing_style::move:
