@@ -37,6 +37,7 @@ compiler_services: @polymorphic_base @copyable type =
     parser               : cpp2::parser;
     metafunction_name    : std::string = ();
     metafunction_args    : std::vector<std::string> = ();
+    metafunctions_used   : bool = false;
 
     operator=: (
         out this,
@@ -51,16 +52,20 @@ compiler_services: @polymorphic_base @copyable type =
     }
 
     set_metafunction_name: (inout this, name: std::string_view, args: std::vector<std::string>) = {
-        metafunction_name = name;
-        metafunction_args = args;
+        metafunction_name  = name;
+        metafunction_args  = args;
+        metafunctions_used = args.empty();
     }
 
-    get_argument: (this, index: int) -> std::string = {
+    get_argument: (inout this, index: int) -> std::string = {
+        metafunctions_used = true;
         if (0 <= index < metafunction_args.ssize()) {
             return metafunction_args[index];
         }
         return "";
     }
+
+    arguments_were_used: (this) -> bool = metafunctions_used;
 
     protected parse_statement: (
         inout this,
@@ -1185,9 +1190,10 @@ print: (t: meta::type_declaration) =
 //
 apply_metafunctions: (
     inout n     : declaration_node,
-    inout rtype : type_declaration
+    inout rtype : type_declaration,
+    error
     )
-    -> (unrecognized_names: std::vector<std::string> = ())
+    -> bool
 = {
     [[assert: n.is_type()]]
 
@@ -1255,9 +1261,22 @@ apply_metafunctions: (
             print( rtype );
         }
         else {
-            unrecognized_names.push_back( name );
+            error( "unrecognized metafunction name: " + name );
+            error( "(temporary alpha limitation) currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum, union, print" );
+            return false;
+        }
+
+        if (
+            !args.empty() 
+            && !rtype.arguments_were_used()
+            ) 
+        {
+            error( name + " did not use its template arguments - did you mean to write '" + name + "<" + args[0] + ": type>' ?");
+            return false;
         }
     }
+
+    return true;
 }
 
 
@@ -1284,22 +1303,11 @@ auto parser::apply_type_metafunctions( declaration_node& n )
     auto cs = meta::compiler_services{ &errors, generated_tokens };
     auto rtype = meta::type_declaration{ &n, cs };
 
-    auto [rejected] = apply_metafunctions(n, rtype);
-    if (!rejected.empty()) {
-        auto msg = std::string("unrecognized metafunction name");
-        if (std::ssize(rejected) > 1) {
-            msg += "s";
-        }
-        msg += ":";
-        for (auto const& name : rejected) {
-            msg += " " + name;
-        }
-        error( msg, false );
-        error( "(temporary alpha limitation) currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum, union, print", false );
-        return false;
-    }
-
-    return true;
+    return apply_metafunctions(
+        n, 
+        rtype,
+        [&](std::string const& msg) { error( msg, false ); }
+    );
 }
 
 
