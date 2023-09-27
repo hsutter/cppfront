@@ -12,7 +12,7 @@ janus: @enum type = {
     past;
     future;
 
-    flip: (inout this) = {
+    flip: (inout this) == {
         if this == past { this = future; }
         else { this = past; }
     }

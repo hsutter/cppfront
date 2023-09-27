@@ -53,7 +53,7 @@ public: friend auto operator<<(std::ostream& o, cpp2::in<skat_game> val) -> std:
 class janus {
 
 #line 15 "pure2-enum.cpp2"
-    public: auto flip() & -> void;
+    public: constexpr auto flip() & -> void;
         
         private: cpp2::i8 _value; private: constexpr janus(cpp2::in<cpp2::i64> val);
 
@@ -154,7 +154,7 @@ inline constexpr skat_game skat_game::null = 23;
 
     auto operator<<(std::ostream& o, cpp2::in<skat_game> val) -> std::ostream&{o << CPP2_UFCS_0(to_string, val);return o; }
 #line 15 "pure2-enum.cpp2"
-    auto janus::flip() & -> void{
+    constexpr auto janus::flip() & -> void{
         if ((*this) == past) {(*this) = future; }
         else {(*this) = past; }
     }
