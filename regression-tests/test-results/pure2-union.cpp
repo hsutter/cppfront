@@ -11,6 +11,10 @@
 class name_or_number;
     
 
+#line 7 "pure2-union.cpp2"
+template<typename T> class name_or_other;
+
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 
@@ -37,10 +41,37 @@ public: ~name_or_number() noexcept;
 #line 5 "pure2-union.cpp2"
 };
 
+template<typename T> class name_or_other
+ {
+
+#line 12 "pure2-union.cpp2"
+    public: [[nodiscard]] auto to_string() const& -> std::string;
+        
+        private: std::aligned_storage_t<cpp2::max(sizeof(std::string), sizeof(T))> _storage {}; private: cpp2::i8 _discriminator {-1}; public: [[nodiscard]] auto is_name() const& -> bool;
+public: [[nodiscard]] auto name() const& -> std::string const&;
+public: [[nodiscard]] auto name() & -> std::string&;
+public: auto set_name(cpp2::in<std::string> value) & -> void;
+public: auto set_name(auto&& ...args) & -> void;
+public: [[nodiscard]] auto is_other() const& -> bool;
+public: [[nodiscard]] auto other() const& -> T const&;
+public: [[nodiscard]] auto other() & -> T&;
+public: auto set_other(cpp2::in<T> value) & -> void;
+public: auto set_other(auto&& ...args) & -> void;
+private: auto destroy() & -> void;
+public: ~name_or_other() noexcept;
+
+    public: name_or_other() = default;
+    public: name_or_other(name_or_other const&) = delete; /* No 'that' constructor, suppress copy */
+    public: auto operator=(name_or_other const&) -> void = delete;
+
+
+#line 16 "pure2-union.cpp2"
+};
+
 auto print_name(cpp2::in<name_or_number> non) -> void;
     
 
-#line 16 "pure2-union.cpp2"
+#line 27 "pure2-union.cpp2"
 auto main() -> int;
     
 
@@ -69,7 +100,37 @@ auto name_or_number::destroy() & -> void{
     }
 
     name_or_number::~name_or_number() noexcept{destroy();}
-#line 7 "pure2-union.cpp2"
+#line 12 "pure2-union.cpp2"
+    template <typename T> [[nodiscard]] auto name_or_other<T>::to_string() const& -> std::string{
+        if (is_name()) {return name(); }
+        else         { return cpp2::as_<std::string>(other()); }
+    }
+
+
+
+    template <typename T> [[nodiscard]] auto name_or_other<T>::is_name() const& -> bool { return _discriminator == 0; }
+template <typename T> [[nodiscard]] auto name_or_other<T>::name() const& -> std::string const& { 
+                                                             cpp2::Default.expects(is_name(), "");return *cpp2::assert_not_null(reinterpret_cast<std::string const*>(&_storage)); }
+template <typename T> [[nodiscard]] auto name_or_other<T>::name() & -> std::string& { 
+                                                                   cpp2::Default.expects(is_name(), "");return *cpp2::assert_not_null(reinterpret_cast<std::string*>(&_storage)); }
+template <typename T> auto name_or_other<T>::set_name(cpp2::in<std::string> value) & -> void{if (!(is_name())) {destroy();std::construct_at(reinterpret_cast<std::string*>(&_storage), value);}else {*cpp2::assert_not_null(reinterpret_cast<std::string*>(&_storage)) = value;}_discriminator = 0;}
+template <typename T> auto name_or_other<T>::set_name(auto&& ...args) & -> void{if (!(is_name())) {destroy();std::construct_at(reinterpret_cast<std::string*>(&_storage), args...);}else {*cpp2::assert_not_null(reinterpret_cast<std::string*>(&_storage)) = std::string{args...};}_discriminator = 0;}
+template <typename T> [[nodiscard]] auto name_or_other<T>::is_other() const& -> bool { return _discriminator == 1; }
+template <typename T> [[nodiscard]] auto name_or_other<T>::other() const& -> T const& { 
+                                                     cpp2::Default.expects(is_other(), "");return *cpp2::assert_not_null(reinterpret_cast<T const*>(&_storage)); }
+template <typename T> [[nodiscard]] auto name_or_other<T>::other() & -> T& { 
+                                                           cpp2::Default.expects(is_other(), "");return *cpp2::assert_not_null(reinterpret_cast<T*>(&_storage)); }
+template <typename T> auto name_or_other<T>::set_other(cpp2::in<T> value) & -> void{if (!(is_other())) {destroy();std::construct_at(reinterpret_cast<T*>(&_storage), value);}else {*cpp2::assert_not_null(reinterpret_cast<T*>(&_storage)) = value;}_discriminator = 1;}
+template <typename T> auto name_or_other<T>::set_other(auto&& ...args) & -> void{if (!(is_other())) {destroy();std::construct_at(reinterpret_cast<T*>(&_storage), args...);}else {*cpp2::assert_not_null(reinterpret_cast<T*>(&_storage)) = T{args...};}_discriminator = 1;}
+template <typename T> auto name_or_other<T>::destroy() & -> void{
+    if (_discriminator == 0) {std::destroy_at(reinterpret_cast<std::string*>(&_storage));}
+    if (_discriminator == 1) {std::destroy_at(reinterpret_cast<T*>(&_storage));}
+    _discriminator = -1;
+    }
+
+    template <typename T> name_or_other<T>::~name_or_other() noexcept{destroy();}
+
+#line 18 "pure2-union.cpp2"
 auto print_name(cpp2::in<name_or_number> non) -> void{
     if (CPP2_UFCS_0(is_name, non)) {
         std::cout << CPP2_UFCS_0(name, non) << "\n";
@@ -88,5 +149,11 @@ auto main() -> int{
     CPP2_UFCS(set_name, x, "xyzzy", cpp2::as_<cpp2::u8, 3>());
 
     CPP2_UFCS_0(print_name, std::move(x));
+
+    {
+        name_or_other<int> val {}; 
+        CPP2_UFCS(set_other, val, 42);
+        std::cout << CPP2_UFCS_0(to_string, std::move(val));
+    }
 }
 

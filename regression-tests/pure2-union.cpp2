@@ -4,6 +4,18 @@ name_or_number: @union type = {
     num : i32;
 }
 
+name_or_other: @union <T:type> type
+= {
+    name  : std::string;
+    other : T;
+
+    to_string: (this) -> std::string = {
+        if is_name()       { return name(); }
+        else if is_other() { return other() as std::string; }
+        else               { return "invalid value"; }
+    }
+}
+
 print_name: (non: name_or_number) = {
     if non.is_name() {
         std::cout << non.name() << "\n";
@@ -22,4 +34,10 @@ main: () = {
     x.set_name( "xyzzy", 3 as u8 );
 
     x.print_name();
+
+    {
+        val: name_or_other<int> = ();
+        val.set_other(42);
+        std::cout << val.to_string();
+    }
 }
