@@ -718,13 +718,6 @@ auto print(cpp2::in<meta::type_declaration> t) -> void;
 namespace cpp2 {
 
 
-//-----------------------------------------------------------------------
-//
-//  Now finish the rest of the parser definition
-//
-//-----------------------------------------------------------------------
-//
-
 auto parser::apply_type_metafunctions( declaration_node& n )
     -> bool
 {
@@ -1774,7 +1767,7 @@ auto print(cpp2::in<meta::type_declaration> t) -> void
             && !(CPP2_UFCS_0(arguments_were_used, rtype)))) 
 
         {
-            error(name + " did not use its template arguments - did you mean to write '" + name + "<" + cpp2::assert_in_bounds(args, 0) + ": type>' ?");
+            error(name + " did not use its template arguments - did you mean to write '" + name + " <" + cpp2::assert_in_bounds(args, 0) + "> type' (with the spaces)?");
             return false; 
         }
     }

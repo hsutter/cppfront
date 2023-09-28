@@ -6128,10 +6128,15 @@ private:
         auto n = std::make_unique<unqualified_id_node>();
 
         n->identifier = &curr();
+        auto one_past_identifier_end_pos = curr().position();
+        one_past_identifier_end_pos.colno += curr().length();
         next();
 
         //  Handle the template-argument-list if there is one
-        if (curr().type() == lexeme::Less)
+        if (
+            curr().type() == lexeme::Less
+            && curr().position() == one_past_identifier_end_pos
+            )
         {
             //  Remember current position, in case this < is isn't a template argument list
             auto start_pos = pos;
