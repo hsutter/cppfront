@@ -22,8 +22,8 @@
 //  Common types
 //===========================================================================
 
-#ifndef __CPP2_COMMON
-#define __CPP2_COMMON
+#ifndef CPP2_COMMON_H
+#define CPP2_COMMON_H
 
 #include <string>
 #include <string_view>
@@ -399,7 +399,7 @@ auto is_separator_or(auto pred, char c)
 //
 template<typename T>
     requires std::is_same_v<T, std::string>
-auto __as(bool b)
+auto _as(bool b)
     -> T
 {
     return b ? "true" : "false";
@@ -409,7 +409,7 @@ auto __as(bool b)
 //  Explicit cast
 //
 template<typename T>
-auto __as(auto x)
+auto _as(auto x)
     -> T
 {
     return T(x);
@@ -430,7 +430,7 @@ auto strip_path(std::string const& file)
     {
         --i;
     }
-    return {file, __as<size_t>(i+1)};
+    return {file, _as<size_t>(i+1)};
 }
 
 
@@ -647,13 +647,13 @@ public:
             }
 
             for (auto& flag : flags) {
-                auto length_to_match = std::max(flag.unique_prefix, __as<int>(arg->text.length())-1);
+                auto length_to_match = std::max(flag.unique_prefix, _as<int>(arg->text.length())-1);
                 if (
                     flag.opt_out
                     && arg->text.ends_with("-")
                     )
                 {
-                    length_to_match = std::max(flag.unique_prefix, __as<int>(arg->text.length())-2);
+                    length_to_match = std::max(flag.unique_prefix, _as<int>(arg->text.length())-2);
                 }
 
                 //  Allow a switch to start with either - or /
@@ -726,7 +726,7 @@ public:
             print("  -");
             auto n = flag.name.substr(0, flag.unique_prefix);
             if (flag.unique_prefix < std::ssize(flag.name)) {
-                auto name_length = __as<int>(std::min(flag.name.find(' '), flag.name.size()));
+                auto name_length = _as<int>(std::min(flag.name.find(' '), flag.name.size()));
                 n += "[";
                 n += flag.name.substr(flag.unique_prefix, name_length - flag.unique_prefix);
                 n += "]";

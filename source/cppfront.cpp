@@ -49,7 +49,7 @@ auto pad(int padding)
 
     return {
         indent_str.c_str(),
-        __as<size_t>( std::min( padding, __as<int>(std::ssize(indent_str))) )
+        _as<size_t>( std::min( padding, _as<int>(std::ssize(indent_str))) )
     };
 }
 
@@ -1234,8 +1234,8 @@ public:
         {
             printer.print_extra( "\n" );
             if (cpp1_filename.back() == 'h') {
-                printer.print_extra( "#ifndef " + cpp1_FILENAME+"__CPP2\n");
-                printer.print_extra( "#define " + cpp1_FILENAME+"__CPP2" + "\n\n" );
+                printer.print_extra( "#ifndef " + cpp1_FILENAME+"_CPP2\n");
+                printer.print_extra( "#define " + cpp1_FILENAME+"_CPP2" + "\n\n" );
             }
 
             if (flag_use_source_location) {
@@ -1421,13 +1421,13 @@ public:
                 return {};
             }
 
-            printer.print_extra( "\n#ifndef " + cpp1_FILENAME+"__CPP2" );
+            printer.print_extra( "\n#ifndef " + cpp1_FILENAME+"_CPP2" );
             printer.print_extra( "\n#error This file is part of a '.h2' header compiled to be consumed from another -pure-cpp2 file. To use this file, write '#include \"" + cpp1_filename + "2\"' in a '.h2' or '.cpp2' file compiled with -pure-cpp2."  );
             printer.print_extra( "\n#endif\n" );
 
             cpp1_FILENAME += "PP";
-            printer.print_extra( "\n#ifndef " + cpp1_FILENAME+"__CPP2" );
-            printer.print_extra( "\n#define " + cpp1_FILENAME+"__CPP2" + "\n\n" );
+            printer.print_extra( "\n#ifndef " + cpp1_FILENAME+"_CPP2" );
+            printer.print_extra( "\n#define " + cpp1_FILENAME+"_CPP2" + "\n\n" );
 
             printer.print_extra( hpp_includes );
         }
@@ -1896,7 +1896,7 @@ public:
             printer.emit_to_string();
             printer.print_cpp2("[&] () -> " + result_type + " ", n.position());
         }
-        printer.print_cpp2("{ " + constexpr_qualifier + "auto&& __expr = ", n.position());
+        printer.print_cpp2("{ " + constexpr_qualifier + "auto&& _expr = ", n.position());
 
         assert(n.expression);
         emit(*n.expression);
@@ -1976,11 +1976,11 @@ public:
                 else {
                     printer.print_cpp2("if " + constexpr_qualifier, alt->position());
                     if (alt->type_id) {
-                        printer.print_cpp2("(cpp2::is<" + id + ">(__expr)) ", alt->position());
+                        printer.print_cpp2("(cpp2::is<" + id + ">(_expr)) ", alt->position());
                     }
                     else {
                         assert (alt->value);
-                        printer.print_cpp2("(cpp2::is(__expr, " + id + ")) ", alt->position());
+                        printer.print_cpp2("(cpp2::is(_expr, " + id + ")) ", alt->position());
                     }
                     printer.print_cpp2(return_prefix, alt->position());
                 }
@@ -2162,7 +2162,7 @@ public:
 
             //  If there's a next-expression, smuggle it in via a nested do/while(false) loop
             //  (nested "continue" will work, but "break" won't until we do extra work to implement
-            //  that using a flag and implementing "break" as "__for_break = true; continue;")
+            //  that using a flag and implementing "break" as "_for_break = true; continue;")
             if (n.next_expression) {
                 printer.print_cpp2(" { do ", n.position());
             }
@@ -4388,7 +4388,7 @@ public:
             printer.emit_to_string(&function_return_name);
             assert(ident);
             printer.print_cpp2( *ident, ident->position() );
-            printer.print_cpp2( "__ret", ident->position() );
+            printer.print_cpp2( "_ret", ident->position() );
             printer.emit_to_string();
             printer.print_cpp2( function_return_name, ident->position() );
         }
@@ -5097,16 +5097,46 @@ public:
                                 return;
                             }
 
-                            auto parent_qualifier = std::string{};
+                            auto parent_template_params = std::string{};
+                            auto parent_template_args   = std::string{};
+                            auto parent_qualifier       = std::string{};
+
                             auto parent = n.parent_declaration;
-                            while (parent && parent->is_type()) {
-                                parent_qualifier.insert(0, parent->name()->to_string() + "::");
+                            while (parent && parent->is_type())
+                            {
+                                if (!parent_qualifier.empty()) {
+                                    parent_qualifier.insert(0, "::");
+                                }
+                                parent_qualifier.insert(0, parent->name()->to_string());
+
+                                if (parent->template_parameters) {
+                                    parent_template_params.insert(0, "template" + print_to_string(*parent->template_parameters));
+                                    for (auto const& param : parent->template_parameters->parameters) {
+                                        assert(param->name());
+                                        if (parent_template_args.empty()) {
+                                            parent_template_args = "<>";
+                                        }
+                                        else {
+                                            parent_template_args.insert(parent_template_args.size()-1, ",");
+                                        }
+                                        parent_template_args.insert(parent_template_args.size()-1, param->name()->as_string_view());
+                                    }
+                                }
+
                                 parent = parent->parent_declaration;
                             }
+
+                            if (!parent_template_params.empty()) {
+                                parent_template_params += " ";
+                            }
+
                             printer.print_cpp2(
-                                "inline constexpr "
-                                    + type + " "
-                                    + parent_qualifier
+                                parent_template_params
+                                    + "inline CPP2_CONSTEXPR "
+                                    + type
+                                    + parent_template_args
+                                    + " " + parent_qualifier
+                                    + parent_template_args + "::"
                                     + print_to_string(*n.identifier)
                                     + " = "
                                     + print_to_string( *std::get<alias_node::an_object>(a->initializer) )
@@ -5191,7 +5221,7 @@ public:
                 assert(std::ssize(r->parameters) > 0);
                 printer.print_extra( "struct " );
                 printer.print_extra( *n.name() );
-                printer.print_extra( "__ret " );
+                printer.print_extra( "_ret " );
                 emit(*r, true);
                 printer.print_extra( "\n" );
             }

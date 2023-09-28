@@ -15,8 +15,8 @@
 //  Semantic analysis
 //===========================================================================
 
-#ifndef __CPP2_SEMA
-#define __CPP2_SEMA
+#ifndef CPP2_SEMA_H
+#define CPP2_SEMA_H
 
 #include "reflect.h"
 

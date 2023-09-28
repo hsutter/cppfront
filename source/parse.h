@@ -15,8 +15,8 @@
 //  Parser
 //===========================================================================
 
-#ifndef __CPP2_PARSE
-#define __CPP2_PARSE
+#ifndef CPP2_PARSE_H
+#define CPP2_PARSE_H
 
 #include "lex.h"
 #include <memory>
@@ -4065,7 +4065,7 @@ auto pre(int indent)
     assert (indent >= 0);
     return {
         indent_str.c_str(),
-        as<size_t>( std::min( indent*indent_spaces, __as<int>(std::ssize(indent_str))) )
+        as<size_t>( std::min( indent*indent_spaces, _as<int>(std::ssize(indent_str))) )
     };
 }
 
@@ -5207,7 +5207,7 @@ private:
         -> void
     {
         assert (tokens);
-        pos = std::min( pos+num, __as<int>(std::ssize(*tokens)) );
+        pos = std::min( pos+num, _as<int>(std::ssize(*tokens)) );
     }
 
 
@@ -8513,7 +8513,7 @@ class parse_tree_printer : printing_visitor
 public:
     auto start(token const& n, int indent) -> void
     {
-        o << pre(indent) << __as<std::string>(n.type()) << ": " << n.to_string() << "\n";
+        o << pre(indent) << _as<std::string>(n.type()) << ": " << n.to_string() << "\n";
     }
 
     auto start(literal_node const&, int indent) -> void
@@ -8605,7 +8605,7 @@ public:
     auto start(selection_statement_node const& n, int indent) -> void
     {
         o << pre(indent) << "selection-statement\n";
-        o << pre(indent+1) << "is_constexpr: " << __as<std::string>(n.is_constexpr) << "\n";
+        o << pre(indent+1) << "is_constexpr: " << _as<std::string>(n.is_constexpr) << "\n";
     }
 
     auto start(alternative_node const&, int indent) -> void
@@ -8621,7 +8621,7 @@ public:
     auto start(inspect_expression_node const& n, int indent) -> void
     {
         o << pre(indent) << "inspect-expression\n";
-        o << pre(indent+1) << "is_constexpr: " << __as<std::string>(n.is_constexpr) << "\n";
+        o << pre(indent+1) << "is_constexpr: " << _as<std::string>(n.is_constexpr) << "\n";
     }
 
     auto start(return_statement_node const&, int indent) -> void
@@ -8662,7 +8662,7 @@ public:
     auto start(function_type_node const& n, int indent) -> void
     {
         o << pre(indent) << "function\n";
-        o << pre(indent+1) << "throws: " << __as<std::string>(n.throws) << "\n";
+        o << pre(indent+1) << "throws: " << _as<std::string>(n.throws) << "\n";
         if (n.returns.index() == function_type_node::id) {
             auto& r = std::get<function_type_node::id>(n.returns);
             if (r.pass != passing_style::invalid) {
@@ -8711,7 +8711,7 @@ public:
         o << pre(indent) << "declaration [" << &n << "]\n";
         o << pre(indent+1) << "parent: [" << n.parent_declaration << "]\n";
         o << pre(indent+1) << "is_variadic: [" << std::boolalpha << n.is_variadic << "]\n";
-        o << pre(indent+1) << "is_constexpr: " << __as<std::string>(n.is_constexpr) << "\n";
+        o << pre(indent+1) << "is_constexpr: " << _as<std::string>(n.is_constexpr) << "\n";
         switch (n.type.index()) {
         break;case declaration_node::a_function:
             o << pre(indent+1) << "function\n";

@@ -10,16 +10,16 @@
 
 //=== Cpp2 type definitions and function declarations ===========================
 
-struct f__ret { int ri; };
+struct f_ret { int ri; };
 
 #line 2 "pure2-look-up-parameter-across-unnamed-function.cpp2"
-[[nodiscard]] auto f() -> f__ret;
-    struct g__ret { int ri; };
+[[nodiscard]] auto f() -> f_ret;
+    struct g_ret { int ri; };
 
 
 
 #line 8 "pure2-look-up-parameter-across-unnamed-function.cpp2"
-[[nodiscard]] auto g() -> g__ret;
+[[nodiscard]] auto g() -> g_ret;
     
 
 #line 15 "pure2-look-up-parameter-across-unnamed-function.cpp2"
@@ -30,7 +30,7 @@ struct f__ret { int ri; };
 
 
 #line 2 "pure2-look-up-parameter-across-unnamed-function.cpp2"
-[[nodiscard]] auto f() -> f__ret{
+[[nodiscard]] auto f() -> f_ret{
     int ri {0};
 #line 3 "pure2-look-up-parameter-across-unnamed-function.cpp2"
     auto pred {[](auto const& e) -> bool{return e == 1; }}; 
@@ -38,7 +38,7 @@ struct f__ret { int ri; };
     return  { std::move(ri) }; // "return;" is implicit"
 }
 
-[[nodiscard]] auto g() -> g__ret{
+[[nodiscard]] auto g() -> g_ret{
         cpp2::deferred_init<int> ri;
 #line 9 "pure2-look-up-parameter-across-unnamed-function.cpp2"
     ri.construct(0);

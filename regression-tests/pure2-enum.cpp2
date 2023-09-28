@@ -41,7 +41,6 @@ main: () = {
 
     std::cout << "x.to_string() is (x.to_string())$\n";
     std::cout << "x2.to_string() is (x2.to_string())$\n";
-    std::cout << "using << prints " << x << "\n";
 
     std::cout << "with if else: ";
     if x == skat_game::diamonds {       // ok, can compare two skat_games
@@ -85,13 +84,13 @@ main: () = {
     f2 := file_attributes::cached;
     std::cout << "f2.get_raw_value() is (f2.get_raw_value())$\n";
 
-    std::cout << "f  is " << f  << "\n";
-    std::cout << "f2 is " << f2 << "\n";
+    std::cout << "f  is " << f.to_string() << "\n";
+    std::cout << "f2 is " << f2.to_string() << "\n";
 
     f2.clear( f2 );
-    std::cout << "f2 is " << f2 << "\n";
+    std::cout << "f2 is " << f2.to_string() << "\n";
     f2.set(file_attributes::cached);
-    std::cout << "f2 is " << f2 << "\n";
+    std::cout << "f2 is " << f2.to_string() << "\n";
 
     std::cout << "f. get_raw_value() is (f. get_raw_value())$\n";
     std::cout << "f2.get_raw_value() is (f2.get_raw_value())$\n";
@@ -104,8 +103,8 @@ main: () = {
     f  |= file_attributes::obsolete;
     f2 |= file_attributes::current;
 
-    std::cout << "f  is " << f  << "\n";
-    std::cout << "f2 is " << f2 << "\n";
+    std::cout << "f  is " << f.to_string() << "\n";
+    std::cout << "f2 is " << f2.to_string() << "\n";
     std::cout << "f. get_raw_value() is (f. get_raw_value())$\n";
     std::cout << "f2.get_raw_value() is (f2.get_raw_value())$\n";
     std::cout << "f  == f2   is (f  == f2  )$\n";

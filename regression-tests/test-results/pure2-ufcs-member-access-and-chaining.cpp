@@ -17,12 +17,12 @@
 auto no_return([[maybe_unused]] auto const& param1) -> void;
 
 [[nodiscard]] auto ufcs(cpp2::in<int> i) -> int;
-    struct fun__ret { int i; };
+    struct fun_ret { int i; };
 
 
 
 #line 30 "pure2-ufcs-member-access-and-chaining.cpp2"
-[[nodiscard]] auto fun() -> fun__ret;
+[[nodiscard]] auto fun() -> fun_ret;
     
 
 #line 35 "pure2-ufcs-member-access-and-chaining.cpp2"
@@ -65,7 +65,7 @@ auto no_return([[maybe_unused]] auto const& param1) -> void{}
     return i + 2; 
 }
 
-[[nodiscard]] auto fun() -> fun__ret{
+[[nodiscard]] auto fun() -> fun_ret{
         cpp2::deferred_init<int> i;
 #line 31 "pure2-ufcs-member-access-and-chaining.cpp2"
     i.construct(42);

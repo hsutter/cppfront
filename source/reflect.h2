@@ -991,8 +991,6 @@ basic_enum: (
 
         t.add_member( to_string );
     }
-
-    t.add_member( "    operator<< : (inout o: std::ostream, val: (t.name())$) -> forward std::ostream = { o << val.to_string(); return o; }");
 }
 
 

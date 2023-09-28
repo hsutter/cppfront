@@ -33,12 +33,12 @@ CPP2_REQUIRES_ (true)
 
 #line 29 "pure2-print.cpp2"
         private: [[nodiscard]] static auto h(cpp2::in<std::string> s, std::map<int const,std::string>& m) -> std::string;
-            struct values__ret { int offset; std::string name; };
+            struct values_ret { int offset; std::string name; };
 
 
 
 #line 52 "pure2-print.cpp2"
-        public: template<typename T> [[nodiscard]] auto values(T const& t) const& -> values__ret;
+        public: template<typename T> [[nodiscard]] auto values(T const& t) const& -> values_ret;
             
 
 #line 57 "pure2-print.cpp2"
@@ -91,7 +91,7 @@ auto main() -> int;
     template<typename T> 
 requires (true)
 #line 6 "pure2-print.cpp2"
-    inline constexpr T outer::object_alias = 42;
+    inline CPP2_CONSTEXPR T outer::object_alias = 42;
 
 #line 10 "pure2-print.cpp2"
         [[nodiscard]] auto outer::mytype::f() -> int { return 42;  }
@@ -142,7 +142,7 @@ requires (true)
             return [_0 = (s + cpp2::assert_in_bounds(m, 0))]() -> std::string { return _0;  }(); 
         }
 
-        template<typename T> [[nodiscard]] auto outer::mytype::values(T const& t) const& -> values__ret{
+        template<typename T> [[nodiscard]] auto outer::mytype::values(T const& t) const& -> values_ret{
                 cpp2::deferred_init<int> offset;
                 cpp2::deferred_init<std::string> name;
 #line 53 "pure2-print.cpp2"
@@ -171,8 +171,8 @@ requires (true)
         ::outer::mytype var {}; 
         std::cout << CPP2_UFCS(g, var, 42) << "\n";
 
-        std::cout << [&] () -> namespace_alias::string { auto&& __expr = CPP2_UFCS(g, std::move(var), 42);
-            if (cpp2::is(__expr, 43)) { if constexpr( requires{"forty-and-three";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("forty-and-three")),namespace_alias::string> ) return "forty-and-three"; else return namespace_alias::string{}; else return namespace_alias::string{}; }
+        std::cout << [&] () -> namespace_alias::string { auto&& _expr = CPP2_UFCS(g, std::move(var), 42);
+            if (cpp2::is(_expr, 43)) { if constexpr( requires{"forty-and-three";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("forty-and-three")),namespace_alias::string> ) return "forty-and-three"; else return namespace_alias::string{}; else return namespace_alias::string{}; }
             else return "default case"; }
         () << "\n";
     }

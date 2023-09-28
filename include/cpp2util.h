@@ -17,8 +17,8 @@
 //      #include'd by generated Cpp1 code
 //===========================================================================
 
-#ifndef __CPP2_UTIL
-#define __CPP2_UTIL
+#ifndef CPP2_UTIL_H
+#define CPP2_UTIL_H
 
 //  If this implementation doesn't support source_location yet, disable it
 //  TODO: technically this test should have <version> included first, but GEFN
@@ -241,6 +241,14 @@
                                     // these redundant goto's to avoid 'unused label' warnings
 
 
+#if defined(_MSC_VER)
+   // MSVC can't handle 'inline constexpr' yet in all cases
+    #define CPP2_CONSTEXPR const
+#else
+    #define CPP2_CONSTEXPR constexpr
+#endif
+
+
 namespace cpp2 {
 
 
@@ -265,18 +273,18 @@ using u32       = std::uint32_t      ;
 using u64       = std::uint64_t      ;
 
 //  Discouraged: Variable precision names
-//                short
-using ushort    = unsigned short;
-//                int
-using ulong     = unsigned long;
-//                long
-using longlong  = long long;
-using ulonglong = unsigned long long;
+//                 short
+using ushort     = unsigned short;
+//                 int
+using ulong      = unsigned long;
+//                 long
+using longlong   = long long;
+using ulonglong  = unsigned long long;
 using longdouble = long double;
 
 //  Strongly discouraged, for compatibility/interop only
-using __schar   = signed char;      // normally use i8 instead
-using __uchar   = unsigned char;    // normally use u8 instead
+using _schar     = signed char;      // normally use i8 instead
+using _uchar     = unsigned char;    // normally use u8 instead
 
 
 //-----------------------------------------------------------------------

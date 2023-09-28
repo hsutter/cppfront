@@ -40,7 +40,6 @@ public: static const skat_game clubs;
 public: static const skat_game grand;
 public: static const skat_game null;
 public: [[nodiscard]] auto to_string() const& -> std::string;
-public: friend auto operator<<(std::ostream& o, cpp2::in<skat_game> val) -> std::ostream&;
 
 #line 4 "pure2-enum.cpp2"
              // 10
@@ -67,7 +66,6 @@ public: [[nodiscard]] auto operator<=>(janus const& that) const& -> std::strong_
 public: static const janus past;
 public: static const janus future;
 public: [[nodiscard]] auto to_string() const& -> std::string;
-public: friend auto operator<<(std::ostream& o, cpp2::in<janus> val) -> std::ostream&;
 
 #line 19 "pure2-enum.cpp2"
 };
@@ -97,7 +95,6 @@ public: static const file_attributes obsolete;
 public: static const file_attributes cached_and_current;
 public: static const file_attributes none;
 public: [[nodiscard]] auto to_string() const& -> std::string;
-public: friend auto operator<<(std::ostream& o, cpp2::in<file_attributes> val) -> std::ostream&;
 
 #line 22 "pure2-enum.cpp2"
                 // 1
@@ -130,17 +127,17 @@ constexpr skat_game::skat_game(skat_game&& that) noexcept
 constexpr auto skat_game::operator=(skat_game&& that) noexcept -> skat_game& {
                                               _value = std::move(that)._value;
                                               return *this;}
-inline constexpr skat_game skat_game::diamonds = 9;
+inline CPP2_CONSTEXPR skat_game skat_game::diamonds = 9;
 
-inline constexpr skat_game skat_game::hearts = 10;
+inline CPP2_CONSTEXPR skat_game skat_game::hearts = 10;
 
-inline constexpr skat_game skat_game::spades = 11;
+inline CPP2_CONSTEXPR skat_game skat_game::spades = 11;
 
-inline constexpr skat_game skat_game::clubs = 12;
+inline CPP2_CONSTEXPR skat_game skat_game::clubs = 12;
 
-inline constexpr skat_game skat_game::grand = 20;
+inline CPP2_CONSTEXPR skat_game skat_game::grand = 20;
 
-inline constexpr skat_game skat_game::null = 23;
+inline CPP2_CONSTEXPR skat_game skat_game::null = 23;
 
 [[nodiscard]] auto skat_game::to_string() const& -> std::string{
     if ((*this) == diamonds) {return "diamonds"; }
@@ -151,8 +148,6 @@ inline constexpr skat_game skat_game::null = 23;
     if ((*this) == null) {return "null"; }
     return "invalid skat_game value"; 
     }
-
-    auto operator<<(std::ostream& o, cpp2::in<skat_game> val) -> std::ostream&{o << CPP2_UFCS_0(to_string, val);return o; }
 #line 15 "pure2-enum.cpp2"
     constexpr auto janus::flip() & -> void{
         if ((*this) == past) {(*this) = future; }
@@ -177,9 +172,9 @@ constexpr janus::janus(janus&& that) noexcept
 constexpr auto janus::operator=(janus&& that) noexcept -> janus& {
                                               _value = std::move(that)._value;
                                               return *this;}
-inline constexpr janus janus::past = 0;
+inline CPP2_CONSTEXPR janus janus::past = 0;
 
-inline constexpr janus janus::future = 1;
+inline CPP2_CONSTEXPR janus janus::future = 1;
 
 [[nodiscard]] auto janus::to_string() const& -> std::string{
     if ((*this) == past) {return "past"; }
@@ -187,8 +182,7 @@ inline constexpr janus janus::future = 1;
     return "invalid janus value"; 
     }
 
-    auto operator<<(std::ostream& o, cpp2::in<janus> val) -> std::ostream&{o << CPP2_UFCS_0(to_string, val);return o; }
-constexpr file_attributes::file_attributes(cpp2::in<cpp2::i64> val)
+    constexpr file_attributes::file_attributes(cpp2::in<cpp2::i64> val)
                                                          : _value{ cpp2::unsafe_narrow<cpp2::u8>(val) } {  }
 constexpr auto file_attributes::operator=(cpp2::in<cpp2::i64> val) -> file_attributes&  { 
                                                          _value = cpp2::unsafe_narrow<cpp2::u8>(val);
@@ -213,15 +207,15 @@ constexpr auto file_attributes::operator^=(file_attributes const& that) & -> voi
 [[nodiscard]] constexpr auto file_attributes::has(file_attributes const& that) & -> bool { return _value & that._value; }
 constexpr auto file_attributes::set(file_attributes const& that) & -> void { _value |= that._value; }
 constexpr auto file_attributes::clear(file_attributes const& that) & -> void { _value &= ~that._value; }
-inline constexpr file_attributes file_attributes::cached = 1;
+inline CPP2_CONSTEXPR file_attributes file_attributes::cached = 1;
 
-inline constexpr file_attributes file_attributes::current = 2;
+inline CPP2_CONSTEXPR file_attributes file_attributes::current = 2;
 
-inline constexpr file_attributes file_attributes::obsolete = 4;
+inline CPP2_CONSTEXPR file_attributes file_attributes::obsolete = 4;
 
-inline constexpr file_attributes file_attributes::cached_and_current = cached | current;
+inline CPP2_CONSTEXPR file_attributes file_attributes::cached_and_current = cached | current;
 
-inline constexpr file_attributes file_attributes::none = 0;
+inline CPP2_CONSTEXPR file_attributes file_attributes::none = 0;
 
 [[nodiscard]] auto file_attributes::to_string() const& -> std::string{
 
@@ -235,8 +229,6 @@ inline constexpr file_attributes file_attributes::none = 0;
     if (((*this) & cached_and_current) == cached_and_current) {ret += comma + "cached_and_current";comma = ", ";}
     return ret + ")"; 
     }
-
-    auto operator<<(std::ostream& o, cpp2::in<file_attributes> val) -> std::ostream&{o << CPP2_UFCS_0(to_string, val);return o; }
 #line 28 "pure2-enum.cpp2"
 auto main() -> int{
     auto j {janus::past}; 
@@ -254,7 +246,6 @@ auto main() -> int{
 
     std::cout << "x.to_string() is " + cpp2::to_string(CPP2_UFCS_0(to_string, x)) + "\n";
     std::cout << "x2.to_string() is " + cpp2::to_string(CPP2_UFCS_0(to_string, std::move(x2))) + "\n";
-    std::cout << "using << prints " << x << "\n";
 
     std::cout << "with if else: ";
     if (x == skat_game::diamonds) {     // ok, can compare two skat_games
@@ -273,11 +264,11 @@ auto main() -> int{
         std::cout << "not a suit";
     }}}}
 
-    std::cout << "\nwith inspect: " << [&] () -> std::string { auto&& __expr = x;
-        if (cpp2::is(__expr, (skat_game::diamonds))) { if constexpr( requires{"diamonds";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("diamonds")),std::string> ) return "diamonds"; else return std::string{}; else return std::string{}; }
-        else if (cpp2::is(__expr, skat_game::hearts)) { if constexpr( requires{"hearts";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("hearts")),std::string> ) return "hearts"; else return std::string{}; else return std::string{}; }
-        else if (cpp2::is(__expr, skat_game::spades)) { if constexpr( requires{"spades";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("spades")),std::string> ) return "spades"; else return std::string{}; else return std::string{}; }
-        else if (cpp2::is(__expr, skat_game::clubs)) { if constexpr( requires{"clubs";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("clubs")),std::string> ) return "clubs"; else return std::string{}; else return std::string{}; }
+    std::cout << "\nwith inspect: " << [&] () -> std::string { auto&& _expr = x;
+        if (cpp2::is(_expr, (skat_game::diamonds))) { if constexpr( requires{"diamonds";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("diamonds")),std::string> ) return "diamonds"; else return std::string{}; else return std::string{}; }
+        else if (cpp2::is(_expr, skat_game::hearts)) { if constexpr( requires{"hearts";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("hearts")),std::string> ) return "hearts"; else return std::string{}; else return std::string{}; }
+        else if (cpp2::is(_expr, skat_game::spades)) { if constexpr( requires{"spades";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("spades")),std::string> ) return "spades"; else return std::string{}; else return std::string{}; }
+        else if (cpp2::is(_expr, skat_game::clubs)) { if constexpr( requires{"clubs";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("clubs")),std::string> ) return "clubs"; else return std::string{}; else return std::string{}; }
         else return "not a suit"; }
     () << "\n\n";
 
@@ -298,13 +289,13 @@ auto main() -> int{
     auto f2 {file_attributes::cached}; 
     std::cout << "f2.get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f2)) + "\n";
 
-    std::cout << "f  is " << f  << "\n";
-    std::cout << "f2 is " << f2 << "\n";
+    std::cout << "f  is " << CPP2_UFCS_0(to_string, f) << "\n";
+    std::cout << "f2 is " << CPP2_UFCS_0(to_string, f2) << "\n";
 
     CPP2_UFCS(clear, f2, f2);
-    std::cout << "f2 is " << f2 << "\n";
+    std::cout << "f2 is " << CPP2_UFCS_0(to_string, f2) << "\n";
     CPP2_UFCS(set, f2, file_attributes::cached);
-    std::cout << "f2 is " << f2 << "\n";
+    std::cout << "f2 is " << CPP2_UFCS_0(to_string, f2) << "\n";
 
     std::cout << "f. get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f)) + "\n";
     std::cout << "f2.get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f2)) + "\n";
@@ -317,8 +308,8 @@ auto main() -> int{
     f  |= file_attributes::obsolete;
     f2 |= file_attributes::current;
 
-    std::cout << "f  is " << f  << "\n";
-    std::cout << "f2 is " << f2 << "\n";
+    std::cout << "f  is " << CPP2_UFCS_0(to_string, f) << "\n";
+    std::cout << "f2 is " << CPP2_UFCS_0(to_string, f2) << "\n";
     std::cout << "f. get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f)) + "\n";
     std::cout << "f2.get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f2)) + "\n";
     std::cout << "f  == f2   is " + cpp2::to_string(f  == f2  ) + "\n";
@@ -326,9 +317,9 @@ auto main() -> int{
     std::cout << "f2 is (f ) is " + cpp2::to_string(cpp2::is(f2, (f))) + "\n";
     std::cout << "(f & f2) == f2 is " + cpp2::to_string((f & f2) == f2) + "\n";
 
-    std::cout << "inspecting f: " << [&] () -> std::string { auto&& __expr = std::move(f);
-        if (cpp2::is(__expr, (file_attributes::current))) { if constexpr( requires{"exactly 'current'";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("exactly 'current'")),std::string> ) return "exactly 'current'"; else return std::string{}; else return std::string{}; }
-        else if (cpp2::is(__expr, cpp2::has_flags(std::move(f2)))) { if constexpr( requires{"includes all f2's flags ('cached' and 'current')";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("includes all f2's flags ('cached' and 'current')")),std::string> ) return "includes all f2's flags ('cached' and 'current')"; else return std::string{}; else return std::string{}; }
+    std::cout << "inspecting f: " << [&] () -> std::string { auto&& _expr = std::move(f);
+        if (cpp2::is(_expr, (file_attributes::current))) { if constexpr( requires{"exactly 'current'";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("exactly 'current'")),std::string> ) return "exactly 'current'"; else return std::string{}; else return std::string{}; }
+        else if (cpp2::is(_expr, cpp2::has_flags(std::move(f2)))) { if constexpr( requires{"includes all f2's flags ('cached' and 'current')";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("includes all f2's flags ('cached' and 'current')")),std::string> ) return "includes all f2's flags ('cached' and 'current')"; else return std::string{}; else return std::string{}; }
         else return "something else"; }
     () << "\n";
 }
