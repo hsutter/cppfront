@@ -1,4 +1,6 @@
 
+#include "parse.h"
+
 //  Copyright (c) Herb Sutter
 //  SPDX-License-Identifier: CC-BY-NC-ND-4.0
 
@@ -14,8 +16,6 @@
 //===========================================================================
 //  Reflection and meta
 //===========================================================================
-
-#include "parse.h"
 
 cpp2: namespace = {
 
@@ -259,6 +259,10 @@ declaration: @polymorphic_base @copyable type =
     is_namespace     : (this) -> bool = n*.is_namespace();
     is_alias         : (this) -> bool = n*.is_alias();
 
+    is_type_alias      : (this) -> bool = n*.is_type_alias();
+    is_namespace_alias : (this) -> bool = n*.is_namespace_alias();
+    is_object_alias    : (this) -> bool = n*.is_object_alias();
+
     is_function_expression : (this) -> bool = n*.is_function_expression();
 
     as_function : (this) -> function_declaration = function_declaration(n, this);
@@ -494,10 +498,6 @@ alias_declaration: @copyable type =
         declaration = (n_, s);
         [[assert: n*.is_alias()]]
     }
-
-    is_type_alias      : (this) -> bool = n*.is_type_alias();
-    is_namespace_alias : (this) -> bool = n*.is_namespace_alias();
-    is_object_alias    : (this) -> bool = n*.is_object_alias();
 }
 
 
@@ -888,7 +888,7 @@ basic_enum: (
     if underlying_type == "" 
     {
         t.require( !found_non_numeric,
-            "if you write an enumerator with a non-numeric value, you must specify the underlying type");
+            "if you write an enumerator with a non-numeric-literal value, you must specify the enumeration's underlying type");
 
         if !bitwise {
             if min_value >= std::numeric_limits<i8>::min() && max_value <= std::numeric_limits<i8>::max() {
@@ -1278,28 +1278,6 @@ apply_metafunctions: (
 }
 
 
-//=======================================================================
-//  Switch to Cpp1 and close subnamespace meta
 }
-}
-namespace cpp2 {
-
-
-auto parser::apply_type_metafunctions( declaration_node& n )
-    -> bool
-{
-    assert(n.is_type());
-
-    //  Get the reflection state ready to pass to the function
-    auto cs = meta::compiler_services{ &errors, generated_tokens };
-    auto rtype = meta::type_declaration{ &n, cs };
-
-    return apply_metafunctions(
-        n, 
-        rtype,
-        [&](std::string const& msg) { error( msg, false ); }
-    );
-}
-
 
 }

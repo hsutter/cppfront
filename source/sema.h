@@ -23,6 +23,23 @@
 
 namespace cpp2 {
 
+auto parser::apply_type_metafunctions( declaration_node& n )
+    -> bool
+{
+    assert(n.is_type());
+
+    //  Get the reflection state ready to pass to the function
+    auto cs = meta::compiler_services{ &errors, generated_tokens };
+    auto rtype = meta::type_declaration{ &n, cs };
+
+    return apply_metafunctions(
+        n, 
+        rtype,
+        [&](std::string const& msg) { error( msg, false ); }
+    );
+}
+
+
 //-----------------------------------------------------------------------
 //
 //  Symbol/scope table
