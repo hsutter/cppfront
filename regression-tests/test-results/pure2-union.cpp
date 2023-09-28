@@ -46,7 +46,7 @@ template<typename T> class name_or_other
 
 #line 12 "pure2-union.cpp2"
     public: [[nodiscard]] auto to_string() const& -> std::string;
-        
+
         private: std::aligned_storage_t<cpp2::max(sizeof(std::string), sizeof(T))> _storage {}; private: cpp2::i8 _discriminator {-1}; public: [[nodiscard]] auto is_name() const& -> bool;
 public: [[nodiscard]] auto name() const& -> std::string const&;
 public: [[nodiscard]] auto name() & -> std::string&;
@@ -63,15 +63,13 @@ public: ~name_or_other() noexcept;
     public: name_or_other() = default;
     public: name_or_other(name_or_other const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(name_or_other const&) -> void = delete;
-
-
-#line 16 "pure2-union.cpp2"
+#line 17 "pure2-union.cpp2"
 };
 
 auto print_name(cpp2::in<name_or_number> non) -> void;
     
 
-#line 27 "pure2-union.cpp2"
+#line 28 "pure2-union.cpp2"
 auto main() -> int;
     
 
@@ -102,8 +100,9 @@ auto name_or_number::destroy() & -> void{
     name_or_number::~name_or_number() noexcept{destroy();}
 #line 12 "pure2-union.cpp2"
     template <typename T> [[nodiscard]] auto name_or_other<T>::to_string() const& -> std::string{
-        if (is_name()) {return name(); }
-        else         { return cpp2::as_<std::string>(other()); }
+        if (is_name())       { return name(); }
+        else {if (is_other()) {return cpp2::as_<std::string>(other()); }
+        else               { return "invalid value"; }}
     }
 
 
@@ -130,7 +129,7 @@ template <typename T> auto name_or_other<T>::destroy() & -> void{
 
     template <typename T> name_or_other<T>::~name_or_other() noexcept{destroy();}
 
-#line 18 "pure2-union.cpp2"
+#line 19 "pure2-union.cpp2"
 auto print_name(cpp2::in<name_or_number> non) -> void{
     if (CPP2_UFCS_0(is_name, non)) {
         std::cout << CPP2_UFCS_0(name, non) << "\n";

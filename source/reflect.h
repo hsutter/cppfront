@@ -109,7 +109,7 @@ class compiler_services
     ) & -> std::unique_ptr<statement_node>;
 
 #line 118 "reflect.h2"
-    public: [[nodiscard]] virtual auto position() const& -> source_position;
+    public: [[nodiscard]] virtual auto position() const -> source_position;
         
 
 #line 124 "reflect.h2"
@@ -188,7 +188,7 @@ class declaration_base
     );
 
 #line 208 "reflect.h2"
-    public: [[nodiscard]] auto position() const& -> source_position override;
+    public: [[nodiscard]] auto position() const -> source_position override;
 
     public: [[nodiscard]] auto print() const& -> std::string;
 
@@ -838,7 +838,7 @@ auto newline_pos = CPP2_UFCS(find, source, '\n');
         ); 
     }
 
-    [[nodiscard]] auto compiler_services::position() const& -> source_position
+    [[nodiscard]] auto compiler_services::position() const -> source_position
 
     {
         return {  }; 
@@ -889,7 +889,7 @@ compiler_services::compiler_services(compiler_services const& that)
         cpp2::Default.expects(n, "a meta::declaration must point to a valid declaration_node, not null");
     }
 
-    [[nodiscard]] auto declaration_base::position() const& -> source_position { return CPP2_UFCS_0(position, (*cpp2::assert_not_null(n)));  }
+    [[nodiscard]] auto declaration_base::position() const -> source_position { return CPP2_UFCS_0(position, (*cpp2::assert_not_null(n)));  }
 
     [[nodiscard]] auto declaration_base::print() const& -> std::string { return CPP2_UFCS(pretty_print_visualize, (*cpp2::assert_not_null(n)), 0);  }
 

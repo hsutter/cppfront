@@ -5608,9 +5608,16 @@ public:
 
                     switch (this_->pass) {
                     break;case passing_style::in:
-                        suffix1 += " const&";
+                        suffix1 += " const";
+                        //  Cpp1 ref-qualifiers don't belong on virtual functions
+                        if (!this_->is_polymorphic()) {
+                            suffix1 += "&";
+                        }
                     break;case passing_style::inout:
-                        suffix1 += " &";
+                        //  Cpp1 ref-qualifiers don't belong on virtual functions
+                        if (!this_->is_polymorphic()) {
+                            suffix1 += " &";
+                        }
                     break;case passing_style::out:
                         ; // constructor is handled below
                     break;case passing_style::move:

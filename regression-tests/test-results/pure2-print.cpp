@@ -28,7 +28,7 @@ CPP2_REQUIRES_ (true)
      {
         protected: [[nodiscard]] static auto f() -> int;
 
-        public: [[nodiscard]] virtual auto g(cpp2::in<int> i) const& -> int;
+        public: [[nodiscard]] virtual auto g(cpp2::in<int> i) const -> int;
             
 
 #line 29 "pure2-print.cpp2"
@@ -96,7 +96,7 @@ requires (true)
 #line 10 "pure2-print.cpp2"
         [[nodiscard]] auto outer::mytype::f() -> int { return 42;  }
 
-        [[nodiscard]] auto outer::mytype::g(cpp2::in<int> i) const& -> int{
+        [[nodiscard]] auto outer::mytype::g(cpp2::in<int> i) const -> int{
             auto s {"string literal"}; 
             int ret {i}; 
             int const* const p {&ret}; 
