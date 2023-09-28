@@ -8312,6 +8312,14 @@ private:
                 return {};
             }
 
+            if (id->to_string() == "...") {
+                errors.emplace_back(
+                    curr().position(),
+                    "a variadic declaration must have a name - did you forget to write a name before '...'?"
+                );
+                pos = start_pos;    // backtrack
+            }
+
             auto is_variadic = false;
             if (curr().type() == lexeme::Ellipsis) {
                 is_variadic = true;
