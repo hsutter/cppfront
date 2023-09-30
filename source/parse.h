@@ -7981,6 +7981,23 @@ private:
             }
         }
 
+        //  A type initializer must be a compound expression
+        if (
+            n->is_type()
+            && !is_parameter
+            && (
+                !n->initializer
+                || !n->initializer->is_compound()
+                )
+            )
+        {
+            errors.emplace_back(
+                n->position(),
+                "a user-defined type initializer must be a compound-expression consisting of declarations"
+            );
+            return {};
+        }
+
         //  If this is a type with metafunctions, apply those
         if (n->is_type()) {
             if (!apply_type_metafunctions(*n)) {

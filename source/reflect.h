@@ -937,7 +937,7 @@ declaration_base::declaration_base(declaration_base const& that)
     auto declaration::mark_for_removal_from_enclosing_type() & -> void
 
     {
-        cpp2::Default.expects(parent_is_type(), "");
+        cpp2::Type.expects(parent_is_type(), "");
 #line 285 "reflect.h2"
         auto test {CPP2_UFCS_0(type_member_mark_for_removal, (*cpp2::assert_not_null(n)))}; 
         cpp2::Default.expects(std::move(test), ""); // ... to ensure this assert is true

@@ -1031,20 +1031,6 @@ public:
             return false;
         }
 
-        //  A type initializer must be a compound expression
-        if (
-            n.is_type()
-            && n.initializer
-            && !n.initializer->is_compound()
-            )
-        {
-            errors.emplace_back(
-                n.position(),
-                "a user-defined type initializer must be a compound-expression consisting of declarations"
-            );
-            return false;
-        }
-
         //  A namespace must be initialized with a compound expression
         if (
             n.is_namespace()

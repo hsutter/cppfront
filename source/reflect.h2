@@ -280,7 +280,7 @@ declaration: @polymorphic_base @copyable type =
     parent_is_polymorphic: (this) -> bool = n*.parent_is_polymorphic();
 
     mark_for_removal_from_enclosing_type: (inout this) 
-        [[pre: parent_is_type()]]                   // this precondition should be sufficient ...
+        [[pre Type: parent_is_type()]]              // this precondition should be sufficient ...
     = {
         test := n*.type_member_mark_for_removal();
         [[assert: test]]                            // ... to ensure this assert is true
