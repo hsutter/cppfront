@@ -38,7 +38,7 @@ class alias_declaration;
 #line 827 "reflect.h2"
 class value_member_info;
 
-#line 1281 "reflect.h2"
+#line 1280 "reflect.h2"
 }
 
 }
@@ -693,14 +693,14 @@ auto flag_enum(meta::type_declaration& t) -> void;
 
 auto cpp2_union(meta::type_declaration& t) -> void;
 
-#line 1175 "reflect.h2"
+#line 1174 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  print - output a pretty-printed visualization of t
 //
 auto print(cpp2::in<meta::type_declaration> t) -> void;
 
-#line 1185 "reflect.h2"
+#line 1184 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  apply_metafunctions
@@ -711,7 +711,7 @@ auto print(cpp2::in<meta::type_declaration> t) -> void;
     auto const& error
     ) -> bool;
 
-#line 1281 "reflect.h2"
+#line 1280 "reflect.h2"
 }
 
 }
@@ -1552,8 +1552,8 @@ auto value = 0;
 #line 1086 "reflect.h2"
     for ( 
 
-          auto const& m : CPP2_UFCS_0(get_members, t) )  { do 
-    if (  CPP2_UFCS_0(is_member_object, m)) 
+           auto const& m : CPP2_UFCS_0(get_members, t) )  { do 
+    if (   CPP2_UFCS_0(is_member_object, m)) 
     {
         CPP2_UFCS(require, m, CPP2_UFCS_0(is_public, m) || CPP2_UFCS_0(is_default_access, m), 
                    "a union alternative cannot be protected or private");
@@ -1599,7 +1599,7 @@ std::string storage = "    _storage: std::aligned_storage_t<cpp2::max( ";
 {
 std::string comma = "";
 
-#line 1129 "reflect.h2"
+#line 1128 "reflect.h2"
         for ( 
 
               auto const& e : alternatives )  { do {
@@ -1607,14 +1607,14 @@ std::string comma = "";
         } while (false); comma = ", "; }
 }
 
-#line 1135 "reflect.h2"
+#line 1134 "reflect.h2"
         storage += " )> = ();\n";
         CPP2_UFCS(add_member, t, std::move(storage));
     }
 }
 
     //  Provide discriminator
-#line 1140 "reflect.h2"
+#line 1139 "reflect.h2"
     CPP2_UFCS(add_member, t, "    _discriminator: " + cpp2::to_string(std::move(discriminator_type)) + " = -1;\n");
 
     //  Add the alternatives: is_alternative, get_alternative, and set_alternative
@@ -1636,7 +1636,7 @@ std::string destroy = "    private destroy: (inout this) = {\n";
 
     //  Add destroy
 
-#line 1159 "reflect.h2"
+#line 1158 "reflect.h2"
     {
         for ( 
               auto const& a : alternatives ) {
@@ -1650,17 +1650,17 @@ std::string destroy = "    private destroy: (inout this) = {\n";
 }
 
     //  Add the destructor
-#line 1171 "reflect.h2"
+#line 1170 "reflect.h2"
     CPP2_UFCS(add_member, t, "    operator=: (move this) = { destroy(); } ");
 }
 
-#line 1179 "reflect.h2"
+#line 1178 "reflect.h2"
 auto print(cpp2::in<meta::type_declaration> t) -> void
 {
     std::cout << CPP2_UFCS_0(print, t) << "\n";
 }
 
-#line 1189 "reflect.h2"
+#line 1188 "reflect.h2"
 [[nodiscard]] auto apply_metafunctions(
     declaration_node& n, 
     type_declaration& rtype, 
@@ -1752,7 +1752,7 @@ auto print(cpp2::in<meta::type_declaration> t) -> void
     return true; 
 }
 
-#line 1281 "reflect.h2"
+#line 1280 "reflect.h2"
 }
 
 }

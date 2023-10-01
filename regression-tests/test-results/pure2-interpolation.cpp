@@ -37,7 +37,7 @@ class item {
 #line 9 "pure2-interpolation.cpp2"
 [[nodiscard]] auto main() -> int{
 {
-auto x = 0;
+auto const& x = 0;
 
 #line 11 "pure2-interpolation.cpp2"
     {
@@ -55,13 +55,13 @@ auto x = 0;
     }
 }
 {
-auto x = item();
+auto const& x = item();
 
 #line 25 "pure2-interpolation.cpp2"
     {
         std::cout << std::left << std::setw(20) << CPP2_UFCS_0(name, x) << " color " << std::left << std::setw(10) << CPP2_UFCS_0(color, x) << " price " << std::setw(10) << std::setprecision(3) << CPP2_UFCS_0(price, x) << " in stock = " << std::boolalpha << (cpp2::cmp_greater(CPP2_UFCS_0(count, x),0)) << "\n";
 
-        std::cout << cpp2::to_string(CPP2_UFCS_0(name, x), "{:20}") + " color " + cpp2::to_string(CPP2_UFCS_0(color, x), "{:10}") + " price " + cpp2::to_string(CPP2_UFCS_0(price, x), "{: <10.2f}") + " in stock = " + cpp2::to_string(cpp2::cmp_greater(CPP2_UFCS_0(count, std::move(x)),0)) + "\n";
+        std::cout << cpp2::to_string(CPP2_UFCS_0(name, x), "{:20}") + " color " + cpp2::to_string(CPP2_UFCS_0(color, x), "{:10}") + " price " + cpp2::to_string(CPP2_UFCS_0(price, x), "{: <10.2f}") + " in stock = " + cpp2::to_string(cpp2::cmp_greater(CPP2_UFCS_0(count, x),0)) + "\n";
     }
 }
 

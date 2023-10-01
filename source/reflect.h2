@@ -82,7 +82,7 @@ compiler_services: @polymorphic_base @copyable type =
 
         //  First split this string into source_lines
         //
-        (newline_pos := source.find('\n')) 
+        (copy newline_pos := source.find('\n')) 
         if  source.ssize() > 1
             && newline_pos != source.npos
         {
@@ -847,7 +847,7 @@ basic_enum: (
 
     found_non_numeric := false;
 
-    (value: std::string = "-1")
+    (copy value: std::string = "-1")
     for  t.get_members()
     do   (m)
     if   m.is_member_object()
@@ -960,7 +960,7 @@ basic_enum: (
     }
 
     //  Provide a 'to_string' function to print enumerator name(s)
-    (to_string: std::string = "    to_string: (this) -> std::string = { \n")
+    (copy to_string: std::string = "    to_string: (this) -> std::string = { \n")
     {
         if bitwise {
             to_string += "    ret   : std::string = \"(\";\n";
@@ -1082,11 +1082,11 @@ union: (inout t : meta::type_declaration)
 
     //  1. Gather: All the user-written members, and find/compute the max size
 
-    (value := 0)
-    for  t.get_members()
-    next value++
-    do   (m)
-    if   m.is_member_object()
+    (copy value := 0)
+    for   t.get_members()
+    next  value++
+    do    (m)
+    if    m.is_member_object()
     {
         m.require( m.is_public() || m.is_default_access(),
                    "a union alternative cannot be protected or private");
@@ -1122,10 +1122,9 @@ union: (inout t : meta::type_declaration)
     t.remove_marked_members();
 
     //  Provide storage
-    (storage: std::string = "    _storage: std::aligned_storage_t<cpp2::max( ")
+    (copy storage: std::string = "    _storage: std::aligned_storage_t<cpp2::max( ")
     {
-
-        (comma: std::string = "")
+        (copy comma: std::string = "")
         for  alternatives  
         next comma = ", "  
         do   (e) {
@@ -1155,7 +1154,7 @@ union: (inout t : meta::type_declaration)
     }
 
     //  Add destroy
-    (destroy: std::string = "    private destroy: (inout this) = {\n")
+    (copy destroy: std::string = "    private destroy: (inout this) = {\n")
     {
         for  alternatives
         do   (a) {
