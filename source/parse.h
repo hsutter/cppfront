@@ -5808,8 +5808,7 @@ private:
     //G     assignment-expression assignment-operator logical-or-expression
     //G
     auto assignment_expression(
-        bool allow_angle_operators                   = true,
-        bool allow_assignment_or_equality_expression = true
+        bool allow_angle_operators = true
     )
         -> std::unique_ptr<assignment_expression_node>
     {
@@ -5834,10 +5833,7 @@ private:
                     return nullptr;
                 },
                 [=,this]{
-                    return logical_or_expression(
-                        allow_angle_operators,
-                        allow_assignment_or_equality_expression
-                    );
+                    return logical_or_expression(allow_angle_operators);
                 }
             );
         }
@@ -5846,20 +5842,13 @@ private:
             ret = binary_expression<assignment_expression_node> (
                 [](token const&, token const&) -> token const* { return nullptr; },
                 [=,this]{
-                    return logical_or_expression(
-                        allow_angle_operators,
-                        allow_assignment_or_equality_expression
-                    );
+                    return logical_or_expression(allow_angle_operators);
                 }
             );
         }
 
         if (ret && ret->terms_size() > 1) {
             error("assignment cannot be chained - instead of 'c = b = a;', write 'b = a; c = b;'", false);
-            return {};
-        }
-
-        if (ret && ret->terms_size() > 0 && !allow_assignment_or_equality_expression) {
             return {};
         }
 
@@ -5871,9 +5860,8 @@ private:
     //GTODO    try expression
     //G
     auto expression(
-        bool allow_angle_operators                   = true,
-        bool check_arrow                             = true,
-        bool allow_assignment_or_equality_expression = true
+        bool allow_angle_operators = true,
+        bool check_arrow           = true
     )
         -> std::unique_ptr<expression_node>
     {
@@ -5883,7 +5871,7 @@ private:
         expression_node::current_expressions.push_back(n.get());
         auto guard = finally([&]{ expression_node::current_expressions.pop_back(); });
 
-        if (!(n->expr = assignment_expression(allow_angle_operators, allow_assignment_or_equality_expression))) {
+        if (!(n->expr = assignment_expression(allow_angle_operators))) {
             return {};
         }
 
@@ -6360,8 +6348,7 @@ private:
     //G     expression
     //G
     auto expression_statement(
-        bool semicolon_required,
-        bool allow_assignment_or_equality_statement = true
+        bool semicolon_required
     )
         -> std::unique_ptr<expression_statement_node>
     {
@@ -6370,7 +6357,7 @@ private:
         expression_statement_node::current_expression_statements.push_back(n.get());
         auto guard = finally([&]{ expression_statement_node::current_expression_statements.pop_back(); });
 
-        if (!(n->expr = expression(true, true, allow_assignment_or_equality_statement))) {
+        if (!(n->expr = expression(true, true))) {
             return {};
         }
 
@@ -7468,7 +7455,8 @@ private:
     //G     'throws'
     //G
     //G return-list:
-    //G     '->' type-id?
+    //G     expression-statement
+    //G     '->' type-id
     //G     '->' parameter_declaration_list
     //G
     //G contract-seq:
@@ -7510,68 +7498,30 @@ private:
             next();
         }
 
+
+        //  If we're not at a '->' and what follows is an expression-statement,
+        //  this is a ":(params) expr;" shorthand function syntax
+        if (curr().type() != lexeme::Arrow)
+        {
+            auto start_pos = pos;
+            auto at_an_expression_statement = expression_statement(true) != nullptr;
+            pos = start_pos;    // backtrack no matter what, we're just peeking here
+
+            if (at_an_expression_statement) {
+                n->returns = function_type_node::single_type_id{ std::make_unique<type_id_node>() };
+                assert(n->returns.index() == function_type_node::id);
+                n->my_decl->terse_no_equals = true;
+                return n;
+            }
+        }
+
+
         //  Optional returns
         if (curr().type() == lexeme::Arrow)
         {
             next();
 
-            //  Experiment: If we're not at a '(' or '*' and there isn't a '[' '[' contract
-            //  start before the next semicolon, check for a ":(params) -> expr;" shorthand
-            //  syntax by speculatively parsing an expression-statement that isn't an assignment
-            //
-            //  If this experiment is interesting, it would be easy to relax the `(` restriction
-            //  to allow parenthesized expressions. This is just a simple implementation to try
-            //  out the idea
-            auto at_an_expression_statement = false;
-            if (
-                curr().type() != lexeme::LeftParen
-                && curr().type() != lexeme::Multiply
-                )
-            {
-                auto i = 0;
-                auto ptok = peek(0);
-                while (ptok = peek(i))
-                {
-                    if (
-                        ptok->type() == lexeme::LeftBracket
-                        && peek(i+1)
-                        && peek(i+1)->type() == lexeme::LeftBracket
-                        )
-                    {
-                        break;
-                    }
-                    if (ptok->type() == lexeme::Semicolon)
-                    {
-                        break;
-                    }
-                    ++i;
-                }
-                if (ptok && ptok->type() == lexeme::Semicolon)
-                {
-                    auto start_pos = pos;
-                    auto expr = expression_statement(true, false);
-                    at_an_expression_statement = 
-                        expr
-                        && expr->expr
-                        && !(expr->expr->is_identifier() || expr->expr->is_id_expression())
-                        ;
-                    pos = start_pos;    // backtrack no matter what, we're just peeking here
-                }
-            }
-
-            if (at_an_expression_statement)
-            {
-                //  This is the ":(params) -> expr;" shorthand syntax for when the programmer
-                //  accepts the defaults they would other spell out longhand as "-> _ = expr;"
-                //  (i.e., a deduced return type, no contracts, and single-return-statement body)
-                n->returns = function_type_node::single_type_id{ std::make_unique<type_id_node>() };
-                assert(n->returns.index() == function_type_node::id);
-
-                n->my_decl->terse_no_equals = true;
-                return n;
-            }
-
-            else if (auto pass = to_passing_style(curr());
+            if (auto pass = to_passing_style(curr());
                 pass != passing_style::invalid
                 )
             {

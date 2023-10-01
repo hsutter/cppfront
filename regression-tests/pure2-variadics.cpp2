@@ -13,9 +13,9 @@ all: <Args...: type> (args...: Args) -> bool =
     //  Unary left fold expression
     (... && args);
 
-make_string: <Args...: type> (forward args...: Args) -> _ = :std::string = args...;
+make_string: <Args...> (forward args...: Args)  :std::string = args...;
 
-make: <T, Args...: type> (forward args...: Args) -> _ = :T = args...;
+make:     <T, Args...> (forward args...: Args)  :T = args...;
 
 main: ()
 = {

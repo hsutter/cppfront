@@ -182,7 +182,7 @@ namespace N {
 
 #line 57 "pure2-types-basics.cpp2"
     template<typename T, typename U> [[nodiscard]] auto myclass::f1(T const& t, U const& u) -> auto { return t + u; }
-    template<typename T, typename U> [[nodiscard]] auto myclass::f2(T const& t, U const& u) -> auto { return t + u;  }
+    template<typename T, typename U> [[nodiscard]] auto myclass::f2(T const& t, U const& u) -> auto { return t + u; }
     template<auto T, auto U> [[nodiscard]] auto myclass::f3() -> auto { return T + U; }
     template<cpp2::i8 T, cpp2::i16 U> [[nodiscard]] auto myclass::f4() -> auto { return T + U; }
 
