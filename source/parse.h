@@ -2497,6 +2497,7 @@ struct declaration_node
     source_position                      pos;
     bool                                 is_variadic = false;
     bool                                 is_constexpr = false;
+    bool                                 terse_no_equals = false;
     std::unique_ptr<unqualified_id_node> identifier;
     accessibility                        access = accessibility::default_;
 
@@ -5806,12 +5807,17 @@ private:
     //G     logical-or-expression
     //G     assignment-expression assignment-operator logical-or-expression
     //G
-    auto assignment_expression(bool allow_angle_operators = true)
+    auto assignment_expression(
+        bool allow_angle_operators                   = true,
+        bool allow_assignment_or_equality_expression = true
+    )
         -> std::unique_ptr<assignment_expression_node>
     {
+        auto ret = std::unique_ptr<assignment_expression_node>{};
+
         if (allow_angle_operators)
         {
-            auto ret = binary_expression<assignment_expression_node> (
+            ret = binary_expression<assignment_expression_node> (
                 [this](token const& t, token const& next) -> token const* {
                     if (is_assignment_operator(t.type())) {
                         return &t;
@@ -5827,37 +5833,48 @@ private:
                     }
                     return nullptr;
                 },
-                [=,this]{ return logical_or_expression(allow_angle_operators); }
+                [=,this]{
+                    return logical_or_expression(
+                        allow_angle_operators,
+                        allow_assignment_or_equality_expression
+                    );
+                }
             );
-
-            if (ret && ret->terms_size() > 1) {
-                error("assignment cannot be chained - instead of 'c = b = a;', write 'b = a; c = b;'", false);
-                return {};
-            }
-
-            return ret;
         }
         else
         {
-            auto ret = binary_expression<assignment_expression_node> (
+            ret = binary_expression<assignment_expression_node> (
                 [](token const&, token const&) -> token const* { return nullptr; },
-                [=,this]{ return logical_or_expression(allow_angle_operators); }
+                [=,this]{
+                    return logical_or_expression(
+                        allow_angle_operators,
+                        allow_assignment_or_equality_expression
+                    );
+                }
             );
-
-            if (ret && ret->terms_size() > 1) {
-                error("assignment cannot be chained - instead of 'c = b = a;', write 'b = a; c = b;'", false);
-                return {};
-            }
-
-            return ret;
         }
+
+        if (ret && ret->terms_size() > 1) {
+            error("assignment cannot be chained - instead of 'c = b = a;', write 'b = a; c = b;'", false);
+            return {};
+        }
+
+        if (ret && ret->terms_size() > 0 && !allow_assignment_or_equality_expression) {
+            return {};
+        }
+
+        return ret;
     }
 
     //G expression:               // eliminated 'condition:' - just use 'expression:'
     //G     assignment-expression
     //GTODO    try expression
     //G
-    auto expression(bool allow_angle_operators = true, bool check_arrow = true)
+    auto expression(
+        bool allow_angle_operators                   = true,
+        bool check_arrow                             = true,
+        bool allow_assignment_or_equality_expression = true
+    )
         -> std::unique_ptr<expression_node>
     {
         auto n = std::make_unique<expression_node>();
@@ -5866,7 +5883,7 @@ private:
         expression_node::current_expressions.push_back(n.get());
         auto guard = finally([&]{ expression_node::current_expressions.pop_back(); });
 
-        if (!(n->expr = assignment_expression(allow_angle_operators))) {
+        if (!(n->expr = assignment_expression(allow_angle_operators, allow_assignment_or_equality_expression))) {
             return {};
         }
 
@@ -6342,7 +6359,10 @@ private:
     //G     expression ';'
     //G     expression
     //G
-    auto expression_statement(bool semicolon_required)
+    auto expression_statement(
+        bool semicolon_required,
+        bool allow_assignment_or_equality_statement = true
+    )
         -> std::unique_ptr<expression_statement_node>
     {
         auto n = std::make_unique<expression_statement_node>();
@@ -6350,7 +6370,7 @@ private:
         expression_statement_node::current_expression_statements.push_back(n.get());
         auto guard = finally([&]{ expression_statement_node::current_expression_statements.pop_back(); });
 
-        if (!(n->expr = expression())) {
+        if (!(n->expr = expression(true, true, allow_assignment_or_equality_statement))) {
             return {};
         }
 
@@ -7448,7 +7468,7 @@ private:
     //G     'throws'
     //G
     //G return-list:
-    //G     '->' type-id
+    //G     '->' type-id?
     //G     '->' parameter_declaration_list
     //G
     //G contract-seq:
@@ -7495,7 +7515,63 @@ private:
         {
             next();
 
-            if (auto pass = to_passing_style(curr());
+            //  Experiment: If we're not at a '(' or '*' and there isn't a '[' '[' contract
+            //  start before the next semicolon, check for a ":(params) -> expr;" shorthand
+            //  syntax by speculatively parsing an expression-statement that isn't an assignment
+            //
+            //  If this experiment is interesting, it would be easy to relax the `(` restriction
+            //  to allow parenthesized expressions. This is just a simple implementation to try
+            //  out the idea
+            auto at_an_expression_statement = false;
+            if (
+                curr().type() != lexeme::LeftParen
+                && curr().type() != lexeme::Multiply
+                )
+            {
+                auto i = 0;
+                auto ptok = peek(0);
+                while (ptok = peek(i))
+                {
+                    if (
+                        ptok->type() == lexeme::LeftBracket
+                        && peek(i+1)
+                        && peek(i+1)->type() == lexeme::LeftBracket
+                        )
+                    {
+                        break;
+                    }
+                    if (ptok->type() == lexeme::Semicolon)
+                    {
+                        break;
+                    }
+                    ++i;
+                }
+                if (ptok && ptok->type() == lexeme::Semicolon)
+                {
+                    auto start_pos = pos;
+                    auto expr = expression_statement(true, false);
+                    at_an_expression_statement = 
+                        expr
+                        && expr->expr
+                        && !(expr->expr->is_identifier() || expr->expr->is_id_expression())
+                        ;
+                    pos = start_pos;    // backtrack no matter what, we're just peeking here
+                }
+            }
+
+            if (at_an_expression_statement)
+            {
+                //  This is the ":(params) -> expr;" shorthand syntax for when the programmer
+                //  accepts the defaults they would other spell out longhand as "-> _ = expr;"
+                //  (i.e., a deduced return type, no contracts, and single-return-statement body)
+                n->returns = function_type_node::single_type_id{ std::make_unique<type_id_node>() };
+                assert(n->returns.index() == function_type_node::id);
+
+                n->my_decl->terse_no_equals = true;
+                return n;
+            }
+
+            else if (auto pass = to_passing_style(curr());
                 pass != passing_style::invalid
                 )
             {
@@ -7517,7 +7593,9 @@ private:
                     error(msg + "' must be followed by a type-id");
                 }
             }
-            else if (auto t = type_id()) {
+
+            else if (auto t = type_id())
+            {
                 if (
                     t->get_token()
                     && t->get_token()->to_string() == "auto"
@@ -7536,7 +7614,9 @@ private:
                 n->returns = function_type_node::single_type_id{ std::move(t), passing_style::move };
                 assert(n->returns.index() == function_type_node::id);
             }
-            else if (auto returns_list = parameter_declaration_list(true, is_named)) {
+
+            else if (auto returns_list = parameter_declaration_list(true, is_named))
+            {
                 if (std::ssize(returns_list->parameters) < 1) {
                     error("an explicit return value list cannot be empty");
                     return {};
@@ -7544,7 +7624,9 @@ private:
                 n->returns = std::move(returns_list);
                 assert(n->returns.index() == function_type_node::list);
             }
-            else {
+
+            else
+            {
                 error("missing function return after ->");
                 return {};
             }
@@ -7574,6 +7656,7 @@ private:
 
     //G unnamed-declaration:
     //G     ':' meta-functions-list? template-parameter-declaration-list? function-type requires-clause? '=' statement
+    //G     ':' meta-functions-list? template-parameter-declaration-list? function-type statement
     //G     ':' meta-functions-list? template-parameter-declaration-list? type-id? requires-clause? '=' statement
     //G     ':' meta-functions-list? template-parameter-declaration-list? type-id
     //G     ':' meta-functions-list? template-parameter-declaration-list? 'final'? 'type' requires-clause? '=' statement
@@ -7847,138 +7930,153 @@ private:
             deduced_type = true;
         }
 
-        //  Next is optionally a requires clause
-        if (curr() == "requires")
+        //  If we've already validated that this is a function where the `->`
+        //  is followed by a valid expression-statement, parse that again
+        if (n->terse_no_equals)
         {
-            if (
-                n->is_type()
-                && !n->template_parameters
-                )
-            {
-                error("'requires' is not allowed on a type that does not have a template parameter list");
-                return {};
-            }
-
-            if (n->is_namespace())
-            {
-                error("'requires' is not allowed on a namespace");
-                return {};
-            }
-
-            n->requires_pos = curr().position();
-            next();
-            auto e = logical_or_expression();
-            if (!e) {
-                error("'requires' must be followed by an expression");
-                return {};
-            }
-            n->requires_clause_expression = std::move(e);
-        }
-
-        //  Next is optionally = or == followed by an initializer
-
-        //  If there is no = or ==
-        if (
-            !done()
-            && curr().type() != lexeme::Assignment
-            && curr().type() != lexeme::EqualComparison
-            )
-        {
-            if (
-                n->is_type()
-                && !is_template_parameter
-                )
-            {
-                error("a user-defined type must have an = initializer");
-                return {};
-            }
-
-            //  Then there may be a semicolon
-            //  If there is a semicolon, eat it
-            if (!done() && curr().type() == lexeme::Semicolon) {
-                next();
-            }
-            // But if there isn't one and it was required, diagnose an error
-            else if (semicolon_required) {
-                if (curr().type() == lexeme::LeftBrace) {
-                    error("expected '=' before '{' - did you mean '= {' ?", true, {}, true);
-                }
-                else {
-                    error("missing ';' at end of declaration or '=' at start of initializer", true, {}, true);
-                }
-                return {};
-            }
-        }
-
-        //  There was an = or ==, so eat it and continue
-        else {
             n->equal_sign = curr().position();
+            n->initializer = statement(semicolon_required, n->equal_sign);
+            assert( n->initializer && "ICE: should have already validated that there's a valid expression-statement here" );
+        }
 
-            if (curr().type() == lexeme::EqualComparison) {
-                if (!n->is_function()) {
-                    error("syntax error at '==' - did you mean '='?");
+        else
+        {
+
+            //  Next is optionally a requires clause (if not using the "-> expr;" syntax)
+            if (curr() == "requires")
+            {
+                if (
+                    n->is_type()
+                    && !n->template_parameters
+                    )
+                {
+                    error("'requires' is not allowed on a type that does not have a template parameter list");
+                    return {};
                 }
-                n->is_constexpr = true;
+
+                if (n->is_namespace())
+                {
+                    error("'requires' is not allowed on a namespace");
+                    return {};
+                }
+
+                n->requires_pos = curr().position();
+                next();
+                auto e = logical_or_expression();
+                if (!e) {
+                    error("'requires' must be followed by an expression");
+                    return {};
+                }
+                n->requires_clause_expression = std::move(e);
             }
 
-            next();
+            //  Next is optionally = or == followed by an initializer
 
-            if (auto t = std::get_if<declaration_node::an_object>(&n->type);
-                t
-                && (*t)->is_pointer_qualified()
+            //  If there is no = or ==
+            if (
+                !done()
+                && curr().type() != lexeme::Assignment
+                && curr().type() != lexeme::EqualComparison
                 )
             {
                 if (
-                    curr() == "nullptr"
-                    || isdigit(std::string_view(curr())[0])
-                    || (
-                        curr() == "("
-                        && peek(1)
-                        && *peek(1) == ")"
-                        )
+                    n->is_type()
+                    && !is_template_parameter
                     )
                 {
-                    error("pointer cannot be initialized to null or int - leave it uninitialized and then set it to a non-null value when you have one");
-                    violates_lifetime_safety = true;
-                    throw std::runtime_error("null initialization detected");
+                    error("a user-defined type must have an = initializer");
+                    return {};
+                }
+
+                //  Then there may be a semicolon
+                //  If there is a semicolon, eat it
+                if (!done() && curr().type() == lexeme::Semicolon) {
+                    next();
+                }
+                // But if there isn't one and it was required, diagnose an error
+                else if (semicolon_required) {
+                    if (curr().type() == lexeme::LeftBrace) {
+                        error("expected '=' before '{' - did you mean '= {' ?", true, {}, true);
+                    }
+                    else {
+                        error("missing ';' at end of declaration or '=' at start of initializer", true, {}, true);
+                    }
+                    return {};
                 }
             }
 
-            //  deduced_type == true means that the type will be deduced,
-            //  represented using an empty type-id
-            if (
-                deduced_type
-                && peek(1)
-                )
+            //  There was an = or ==, so eat it and continue
+            else
             {
-                auto& type = std::get<declaration_node::an_object>(n->type);
-                // object initialized by the address of the curr() object
-                if (peek(1)->type() == lexeme::Ampersand) {
-                    type->address_of = &curr();
+                n->equal_sign = curr().position();
+
+                if (curr().type() == lexeme::EqualComparison) {
+                    if (!n->is_function()) {
+                        error("syntax error at '==' - did you mean '='?");
+                    }
+                    n->is_constexpr = true;
                 }
-                // object initialized by (potentially multiple) dereference of the curr() object
-                else if (peek(1)->type() == lexeme::Multiply) {
-                    type->dereference_of = &curr();
-                    for (int i = 1; peek(i)->type() == lexeme::Multiply; ++i)
-                        type->dereference_cnt += 1;
+
+                next();
+
+                if (auto t = std::get_if<declaration_node::an_object>(&n->type);
+                    t
+                    && (*t)->is_pointer_qualified()
+                    )
+                {
+                    if (
+                        curr() == "nullptr"
+                        || isdigit(std::string_view(curr())[0])
+                        || (
+                            curr() == "("
+                            && peek(1)
+                            && *peek(1) == ")"
+                            )
+                        )
+                    {
+                        error("pointer cannot be initialized to null or int - leave it uninitialized and then set it to a non-null value when you have one");
+                        violates_lifetime_safety = true;
+                        throw std::runtime_error("null initialization detected");
+                    }
                 }
-                else if (
-                    // object initialized by the result of the function call (and it is not unnamed function)
-                    (peek(1)->type() == lexeme::LeftParen && curr().type() != lexeme::Colon)
-                    || curr().type() == lexeme::Identifier // or by the object (variable that the type need to be checked)
-                ) {
-                    type->suspicious_initialization = &curr();
+
+                //  deduced_type == true means that the type will be deduced,
+                //  represented using an empty type-id
+                if (
+                    deduced_type
+                    && peek(1)
+                    )
+                {
+                    auto& type = std::get<declaration_node::an_object>(n->type);
+                    // object initialized by the address of the curr() object
+                    if (peek(1)->type() == lexeme::Ampersand) {
+                        type->address_of = &curr();
+                    }
+                    // object initialized by (potentially multiple) dereference of the curr() object
+                    else if (peek(1)->type() == lexeme::Multiply) {
+                        type->dereference_of = &curr();
+                        for (int i = 1; peek(i)->type() == lexeme::Multiply; ++i)
+                            type->dereference_cnt += 1;
+                    }
+                    else if (
+                        // object initialized by the result of the function call (and it is not unnamed function)
+                        (peek(1)->type() == lexeme::LeftParen && curr().type() != lexeme::Colon)
+                        || curr().type() == lexeme::Identifier // or by the object (variable that the type need to be checked)
+                    ) {
+                        type->suspicious_initialization = &curr();
+                    }
+                }
+
+                if (!(n->initializer = statement(semicolon_required, n->equal_sign))) {
+                    error(
+                        "ill-formed initializer",
+                        true, {}, true
+                    );
+                    next();
+                    return {};
                 }
             }
 
-            if (!(n->initializer = statement(semicolon_required, n->equal_sign))) {
-                error(
-                    "ill-formed initializer",
-                    true, {}, true
-                );
-                next();
-                return {};
-            }
         }
 
         //  A type initializer must be a compound expression
