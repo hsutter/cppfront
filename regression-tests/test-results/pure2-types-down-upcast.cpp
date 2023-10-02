@@ -18,7 +18,7 @@ class B;
 class A {
   public: int i {0}; 
 
- public: virtual auto const_foo() const& -> void;
+ public: virtual auto const_foo() const -> void;
  public: auto mut_foo() & -> void;
 
   public: A() = default;
@@ -65,7 +65,7 @@ auto test_down() -> void;
 
 
 #line 4 "pure2-types-down-upcast.cpp2"
- auto A::const_foo() const& -> void{std::cout << "const foo \n"; }
+ auto A::const_foo() const -> void{std::cout << "const foo \n"; }
  auto A::mut_foo() & -> void{std::cout << "foo \n"; }
 
 #line 13 "pure2-types-down-upcast.cpp2"

@@ -1,4 +1,6 @@
 
+#include "parse.h"
+
 //  Copyright (c) Herb Sutter
 //  SPDX-License-Identifier: CC-BY-NC-ND-4.0
 
@@ -14,8 +16,6 @@
 //===========================================================================
 //  Reflection and meta
 //===========================================================================
-
-#include "parse.h"
 
 cpp2: namespace = {
 
@@ -37,6 +37,7 @@ compiler_services: @polymorphic_base @copyable type =
     parser               : cpp2::parser;
     metafunction_name    : std::string = ();
     metafunction_args    : std::vector<std::string> = ();
+    metafunctions_used   : bool = false;
 
     operator=: (
         out this,
@@ -51,16 +52,20 @@ compiler_services: @polymorphic_base @copyable type =
     }
 
     set_metafunction_name: (inout this, name: std::string_view, args: std::vector<std::string>) = {
-        metafunction_name = name;
-        metafunction_args = args;
+        metafunction_name  = name;
+        metafunction_args  = args;
+        metafunctions_used = args.empty();
     }
 
-    get_argument: (this, index: int) -> std::string = {
+    get_argument: (inout this, index: int) -> std::string = {
+        metafunctions_used = true;
         if (0 <= index < metafunction_args.ssize()) {
             return metafunction_args[index];
         }
         return "";
     }
+
+    arguments_were_used: (this) -> bool = metafunctions_used;
 
     protected parse_statement: (
         inout this,
@@ -77,7 +82,7 @@ compiler_services: @polymorphic_base @copyable type =
 
         //  First split this string into source_lines
         //
-        (newline_pos := source.find('\n')) 
+        (copy newline_pos := source.find('\n')) 
         if  source.ssize() > 1
             && newline_pos != source.npos
         {
@@ -245,12 +250,18 @@ declaration: @polymorphic_base @copyable type =
 
     has_initializer: (this) -> bool = n*.has_initializer();
 
-    is_global   : (this) -> bool = n*.is_global();
-    is_function : (this) -> bool = n*.is_function();
-    is_object   : (this) -> bool = n*.is_object();
-    is_type     : (this) -> bool = n*.is_type();
-    is_namespace: (this) -> bool = n*.is_namespace();
-    is_alias    : (this) -> bool = n*.is_alias();
+    is_global        : (this) -> bool = n*.is_global();
+    is_function      : (this) -> bool = n*.is_function();
+    is_object        : (this) -> bool = n*.is_object();
+    is_base_object   : (this) -> bool = n*.is_base_object();
+    is_member_object : (this) -> bool = n*.is_member_object();
+    is_type          : (this) -> bool = n*.is_type();
+    is_namespace     : (this) -> bool = n*.is_namespace();
+    is_alias         : (this) -> bool = n*.is_alias();
+
+    is_type_alias      : (this) -> bool = n*.is_type_alias();
+    is_namespace_alias : (this) -> bool = n*.is_namespace_alias();
+    is_object_alias    : (this) -> bool = n*.is_object_alias();
 
     is_function_expression : (this) -> bool = n*.is_function_expression();
 
@@ -269,7 +280,7 @@ declaration: @polymorphic_base @copyable type =
     parent_is_polymorphic: (this) -> bool = n*.parent_is_polymorphic();
 
     mark_for_removal_from_enclosing_type: (inout this) 
-        [[pre: parent_is_type()]]                   // this precondition should be sufficient ...
+        [[pre Type: parent_is_type()]]              // this precondition should be sufficient ...
     = {
         test := n*.type_member_mark_for_removal();
         [[assert: test]]                            // ... to ensure this assert is true
@@ -487,10 +498,6 @@ alias_declaration: @copyable type =
         declaration = (n_, s);
         [[assert: n*.is_alias()]]
     }
-
-    is_type_alias      : (this) -> bool = n*.is_type_alias();
-    is_namespace_alias : (this) -> bool = n*.is_namespace_alias();
-    is_object_alias    : (this) -> bool = n*.is_object_alias();
 }
 
 
@@ -840,10 +847,10 @@ basic_enum: (
 
     found_non_numeric := false;
 
-    (value: std::string = "-1")
+    (copy value: std::string = "-1")
     for  t.get_members()
     do   (m)
-    if   m.is_object() && !m.has_name("this")
+    if   m.is_member_object()
     {
         m.require( m.is_public() || m.is_default_access(),
                    "an enumerator cannot be protected or private");
@@ -881,7 +888,7 @@ basic_enum: (
     if underlying_type == "" 
     {
         t.require( !found_non_numeric,
-            "if you write an enumerator with a non-numeric value, you must specify the underlying type");
+            "if you write an enumerator with a non-numeric-literal value, you must specify the enumeration's underlying type");
 
         if !bitwise {
             if min_value >= std::numeric_limits<i8>::min() && max_value <= std::numeric_limits<i8>::max() {
@@ -925,26 +932,26 @@ basic_enum: (
     t.remove_marked_members();
 
     //  Generate all the common material: value and common functions
-    t.add_member( "    value__           : (underlying_type)$;");
-    t.add_member( "    private operator= : (implicit out this, val) == value__ = cpp2::unsafe_narrow<(underlying_type)$>(val);");
-    t.add_member( "    get_raw_value     : (this) -> (underlying_type)$ == value__;");
+    t.add_member( "    _value            : (underlying_type)$;");
+    t.add_member( "    private operator= : (implicit out this, val: i64) == _value = cpp2::unsafe_narrow<(underlying_type)$>(val);");
+    t.add_member( "    get_raw_value     : (this) -> (underlying_type)$ == _value;");
     t.add_member( "    operator=         : (out this, that) == { }");
     t.add_member( "    operator<=>       : (this, that) -> std::strong_ordering;");
 
     //  Generate the bitwise operations and 'none' value, if appropriate
-    if bitwise{
+    if bitwise {
         e: value_member_info = ( "none", "", "0");
         enumerators.push_back( e );
 
-        t.add_member( "    operator|=: ( inout this, that )                 == value__ |= that.value__;");
-        t.add_member( "    operator&=: ( inout this, that )                 == value__ &= that.value__;");
-        t.add_member( "    operator^=: ( inout this, that )                 == value__ ^= that.value__;");
-        t.add_member( "    operator| : (       this, that ) -> (t.name())$  == value__ |  that.value__;");
-        t.add_member( "    operator& : (       this, that ) -> (t.name())$  == value__ &  that.value__;");
-        t.add_member( "    operator^ : (       this, that ) -> (t.name())$  == value__ ^  that.value__;");
-        t.add_member( "    has       : ( inout this, that ) -> bool         == value__ &  that.value__;");
-        t.add_member( "    set       : ( inout this, that )                 == value__ |= that.value__;");
-        t.add_member( "    clear     : ( inout this, that )                 == value__ &= that.value__~;");
+        t.add_member( "    operator|=: ( inout this, that )                 == _value |= that._value;");
+        t.add_member( "    operator&=: ( inout this, that )                 == _value &= that._value;");
+        t.add_member( "    operator^=: ( inout this, that )                 == _value ^= that._value;");
+        t.add_member( "    operator| : (       this, that ) -> (t.name())$  == _value |  that._value;");
+        t.add_member( "    operator& : (       this, that ) -> (t.name())$  == _value &  that._value;");
+        t.add_member( "    operator^ : (       this, that ) -> (t.name())$  == _value ^  that._value;");
+        t.add_member( "    has       : ( inout this, that ) -> bool         == _value &  that._value;");
+        t.add_member( "    set       : ( inout this, that )                 == _value |= that._value;");
+        t.add_member( "    clear     : ( inout this, that )                 == _value &= that._value~;");
     }
 
     //  Add the enumerators
@@ -953,7 +960,7 @@ basic_enum: (
     }
 
     //  Provide a 'to_string' function to print enumerator name(s)
-    (to_string: std::string = "    to_string: (this) -> std::string = { \n")
+    (copy to_string: std::string = "    to_string: (this) -> std::string = { \n")
     {
         if bitwise {
             to_string += "    ret   : std::string = \"(\";\n";
@@ -984,8 +991,6 @@ basic_enum: (
 
         t.add_member( to_string );
     }
-
-    t.add_member( "    operator<< : (inout o: std::ostream, val: (t.name())$) -> forward std::ostream = { o << val.to_string(); return o; }");
 }
 
 
@@ -1077,23 +1082,24 @@ union: (inout t : meta::type_declaration)
 
     //  1. Gather: All the user-written members, and find/compute the max size
 
-    (value := 0)
-    for  t.get_members()
-    next value++
-    do   (m)
+    (copy value := 0)
+    for   t.get_members()
+    next  value++
+    do    (m)
+    if    m.is_member_object()
     {
-        m.require( (m.is_public() || m.is_default_access()) && m.is_object(),
+        m.require( m.is_public() || m.is_default_access(),
                    "a union alternative cannot be protected or private");
 
-        if m.is_object() {
-            mo := m.as_object();
-            mo.require( mo.initializer().empty(),
-                        "a union alternative cannot have an initializer");
+        mo := m.as_object();
+        mo.require( mo.initializer().empty(),
+                    "a union alternative cannot have an initializer");
 
-            //  Adding local variable 'e' to work around a Clang warning
-            e: value_member_info = ( mo.name() as std::string, mo.type(), value as std::string );
-            alternatives.push_back( e );
-        }
+        //  Adding local variable 'e' to work around a Clang warning
+        e: value_member_info = ( mo.name() as std::string, mo.type(), value as std::string );
+        alternatives.push_back( e );
+
+        mo.mark_for_removal_from_enclosing_type();
     }
 
     discriminator_type: std::string = ();
@@ -1113,13 +1119,12 @@ union: (inout t : meta::type_declaration)
 
     //  2. Replace: Erase the contents and replace with modified contents
 
-    t.remove_all_members();
+    t.remove_marked_members();
 
     //  Provide storage
-    (storage: std::string = "    storage__: std::array<std::byte, cpp2::max( ")
+    (copy storage: std::string = "    _storage: std::aligned_storage_t<cpp2::max( ")
     {
-
-        (comma: std::string = "")
+        (copy comma: std::string = "")
         for  alternatives  
         next comma = ", "  
         do   (e) {
@@ -1131,32 +1136,33 @@ union: (inout t : meta::type_declaration)
     }
 
     //  Provide discriminator
-    t.add_member( "    discriminator__: (discriminator_type)$ = -1;\n");
+    t.add_member( "    _discriminator: (discriminator_type)$ = -1;\n");
 
     //  Add the alternatives: is_alternative, get_alternative, and set_alternative
     for alternatives 
     do  (a)
     {
-        t.add_member( "    public is_(a.name)$: (this) -> bool = discriminator__ == (a.value)$;\n");
+        t.add_member( "    is_(a.name)$: (this) -> bool = _discriminator == (a.value)$;\n");
 
-        t.add_member( "    public get_(a.name)$: (this) -> forward _ [[pre: is_(a.name)$()]] = reinterpret_cast<* const (a.type)$>(storage__&)*;\n");
+        t.add_member( "    (a.name)$: (this) -> forward (a.type)$ [[pre: is_(a.name)$()]] = reinterpret_cast<* const (a.type)$>(_storage&)*;\n");
 
-        t.add_member( "    public get_(a.name)$: (inout this) -> forward _ [[pre: is_(a.name)$()]] = reinterpret_cast<*(a.type)$>(storage__&)*;\n");
+        t.add_member( "    (a.name)$: (inout this) -> forward (a.type)$ [[pre: is_(a.name)$()]] = reinterpret_cast<*(a.type)$>(_storage&)*;\n");
 
-        t.add_member( "    public set_(a.name)$: (inout this, value: (a.type)$) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(storage__&), value); } else { reinterpret_cast<*(a.type)$>(storage__&)* = value; } discriminator__ = (a.value)$; }\n");
+        t.add_member( "    set_(a.name)$: (inout this, value: (a.type)$) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(_storage&), value); } else { reinterpret_cast<*(a.type)$>(_storage&)* = value; } _discriminator = (a.value)$; }\n");
 
-        t.add_member( "    public set_(a.name)$: (inout this, forward args...: _) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(storage__&), args...); } else { reinterpret_cast<*(a.type)$>(storage__&)* = :(a.type)$ = (args...); } discriminator__ = (a.value)$; }\n");
+        t.add_member( "    set_(a.name)$: (inout this, forward args...: _) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(_storage&), args...); } else { reinterpret_cast<*(a.type)$>(_storage&)* = :(a.type)$ = (args...); } _discriminator = (a.value)$; }\n");
     }
 
     //  Add destroy
-    (destroy: std::string = "    private destroy: (inout this) = {\n")
+    (copy destroy: std::string = "    private destroy: (inout this) = {\n")
     {
-        for  alternatives 
+        for  alternatives
         do   (a) {
-            destroy += "if discriminator__ == (a.value)$ { std::destroy_at( reinterpret_cast<*(a.type)$>(storage__&) ); }\n";
+            destroy += "        if _discriminator == (a.value)$ { std::destroy_at( reinterpret_cast<*(a.type)$>(_storage&) ); }\n";
         }
 
-        destroy += "}\n";
+        destroy += "        _discriminator = -1;\n";
+        destroy += "    }\n";
         t.add_member( destroy );
     }
 
@@ -1175,98 +1181,102 @@ print: (t: meta::type_declaration) =
 }
 
 
-//=======================================================================
-//  Switch to Cpp1 and close subnamespace meta
-}
-}
-namespace cpp2 {
-
-
 //-----------------------------------------------------------------------
 //
-//  Now finish the rest of the parser definition
+//  apply_metafunctions
 //
-//-----------------------------------------------------------------------
-//
-
-auto parser::apply_type_metafunctions( declaration_node& n )
+apply_metafunctions: (
+    inout n     : declaration_node,
+    inout rtype : type_declaration,
+    error
+    )
     -> bool
-{
-    assert(n.is_type());
-
-    //  Get the reflection state ready to pass to the function
-    auto cs = meta::compiler_services{ &errors, generated_tokens };
-    auto rtype = meta::type_declaration{ &n, cs };
+= {
+    [[assert: n.is_type()]]
 
     //  For each metafunction, apply it
-    for (auto& meta : n.metafunctions)
+    for n.metafunctions
+    do  (meta)
     {
         //  Convert the name and any template arguments to strings
         //  and record that in rtype
-        auto name = meta->to_string();
+        name := meta*.to_string();
         name = name.substr(0, name.find('<'));
 
-        auto args = std::vector<std::string>{};
-        for (auto& arg : meta->template_arguments()) {
+        args: std::vector<std::string> = ();
+        for meta*.template_arguments()
+        do  (arg) 
             args.push_back( arg.to_string() );
-        }
 
         rtype.set_metafunction_name( name, args );
 
         //  Dispatch
         //
-        if (name == "interface") {
+        if name == "interface" {
             interface( rtype );
         }
-        else if (name == "polymorphic_base") {
+        else if name == "polymorphic_base" {
             polymorphic_base( rtype );
         }
-        else if (name == "ordered") {
+        else if name == "ordered" {
             ordered( rtype );
         }
-        else if (name == "weakly_ordered") {
+        else if name == "weakly_ordered" {
             weakly_ordered( rtype );
         }
-        else if (name == "partially_ordered") {
+        else if name == "partially_ordered" {
             partially_ordered( rtype );
         }
-        else if (name == "copyable") {
+        else if name == "copyable" {
             copyable( rtype );
         }
-        else if (name == "basic_value") {
+        else if name == "basic_value" {
             basic_value( rtype );
         }
-        else if (name == "value") {
+        else if name == "value" {
             value( rtype );
         }
-        else if (name == "weakly_ordered_value") {
+        else if name == "weakly_ordered_value" {
             weakly_ordered_value( rtype );
         }
-        else if (name == "partially_ordered_value") {
+        else if name == "partially_ordered_value" {
             partially_ordered_value( rtype );
         }
-        else if (name == "struct") {
+        else if name == "struct" {
             cpp2_struct( rtype );
         }
-        else if (name == "enum") {
+        else if name == "enum" {
             cpp2_enum( rtype );
         }
-        else if (name == "flag_enum") {
+        else if name == "flag_enum" {
             flag_enum( rtype );
         }
-        else if (name == "union") {
+        else if name == "union" {
             cpp2_union( rtype );
         }
-        else if (name == "print") {
+        else if name == "print" {
             print( rtype );
         }
         else {
-            error( "(temporary alpha limitation) unrecognized metafunction name '" + name + "' - currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum, union, print" );
+            error( "unrecognized metafunction name: " + name );
+            error( "(temporary alpha limitation) currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum, union, print" );
+            return false;
+        }
+
+        if (
+            !args.empty() 
+            && !rtype.arguments_were_used()
+            ) 
+        {
+            error( name + " did not use its template arguments - did you mean to write '" + name + " <" + args[0] + "> type' (with the spaces)?");
             return false;
         }
     }
+
     return true;
 }
 
+
+}
 
 }

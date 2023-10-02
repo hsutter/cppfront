@@ -15,8 +15,8 @@
 //  Source loader
 //===========================================================================
 
-#ifndef __CPP2_LOAD
-#define __CPP2_LOAD
+#ifndef CPP2_IO_H
+#define CPP2_IO_H
 
 #include "common.h"
 #include <fstream>

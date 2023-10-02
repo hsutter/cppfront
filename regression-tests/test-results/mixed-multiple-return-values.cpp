@@ -13,10 +13,10 @@
 #include <iostream>
 #include <random>
 #include <string>
-struct f__ret { int i; std::string s; };
+struct f_ret { int i; std::string s; };
 
 #line 6 "mixed-multiple-return-values.cpp2"
-[[nodiscard]] auto f() -> f__ret;
+[[nodiscard]] auto f() -> f_ret;
     
 
 #line 22 "mixed-multiple-return-values.cpp2"
@@ -40,7 +40,7 @@ bool flip_a_coin() {
 
 
 #line 6 "mixed-multiple-return-values.cpp2"
-[[nodiscard]] auto f() -> f__ret{
+[[nodiscard]] auto f() -> f_ret{
         cpp2::deferred_init<int> i;
         cpp2::deferred_init<std::string> s;
     //  note: i and s are uninitialized!

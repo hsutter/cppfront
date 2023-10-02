@@ -17,8 +17,8 @@
 //      #include'd by generated Cpp1 code
 //===========================================================================
 
-#ifndef __CPP2_UTIL
-#define __CPP2_UTIL
+#ifndef CPP2_UTIL_H
+#define CPP2_UTIL_H
 
 //  If this implementation doesn't support source_location yet, disable it
 //  TODO: technically this test should have <version> included first, but GEFN
@@ -115,14 +115,26 @@
         // including this one
         //
         // #include <execution>
+        #ifdef __cpp_lib_expected
+            #include <expected>
+        #endif
         #include <filesystem>
         #if defined(__cpp_lib_format) || (defined(_MSC_VER) && _MSC_VER >= 1929)
             #include <format>
+        #endif
+        #ifdef __cpp_lib_flat_map
+            #include <flat_map>
+        #endif
+        #ifdef __cpp_lib_flat_set
+            #include <flat_set>
         #endif
         #include <forward_list>
         #include <fstream>
         #include <functional>
         #include <future>
+        #ifdef __cpp_lib_generator
+            #include <generator>
+        #endif
         #include <initializer_list>
         #include <iomanip>
         #include <ios>
@@ -138,6 +150,7 @@
         #include <list>
         #include <locale>
         #include <map>
+        //  md_span - not yet listed in SD-6 for feature test flags
         #include <memory>
         #ifdef __cpp_lib_memory_resource
             #include <memory_resource>
@@ -148,6 +161,9 @@
         #include <numeric>
         #include <optional>
         #include <ostream>
+        #ifdef __cpp_lib_print
+            #include <print>
+        #endif
         #include <queue>
         #include <random>
         #include <ranges>
@@ -168,7 +184,14 @@
         #endif
         #include <sstream>
         #include <stack>
+        #ifdef __cpp_lib_stacktrace
+            #include <stacktrace>
+        #endif
+        #ifdef __cpp_lib_stdatomic_h
+            #include <stdatomic.h>
+        #endif
         #include <stdexcept>
+        //  stdfloat - not yet listed in SD-6 for feature test flags
         #ifdef __cpp_lib_jthread
             #include <stop_token>
         #endif
@@ -330,6 +353,14 @@
                                     // these redundant goto's to avoid 'unused label' warnings
 
 
+#if defined(_MSC_VER)
+   // MSVC can't handle 'inline constexpr' yet in all cases
+    #define CPP2_CONSTEXPR const
+#else
+    #define CPP2_CONSTEXPR constexpr
+#endif
+
+
 namespace cpp2 {
 
 
@@ -354,18 +385,18 @@ using u32       = std::uint32_t      ;
 using u64       = std::uint64_t      ;
 
 //  Discouraged: Variable precision names
-//                short
-using ushort    = unsigned short;
-//                int
-using ulong     = unsigned long;
-//                long
-using longlong  = long long;
-using ulonglong = unsigned long long;
+//                 short
+using ushort     = unsigned short;
+//                 int
+using ulong      = unsigned long;
+//                 long
+using longlong   = long long;
+using ulonglong  = unsigned long long;
 using longdouble = long double;
 
 //  Strongly discouraged, for compatibility/interop only
-using __schar   = signed char;      // normally use i8 instead
-using __uchar   = unsigned char;    // normally use u8 instead
+using _schar     = signed char;      // normally use i8 instead
+using _uchar     = unsigned char;    // normally use u8 instead
 
 
 //-----------------------------------------------------------------------
@@ -658,7 +689,7 @@ using in =
 //
 template<typename T>
 class deferred_init {
-    alignas(T) std::byte data[sizeof(T)]; // or: std::aligned_storage_t<sizeof(T), alignof(T)> data
+    alignas(T) std::byte data[sizeof(T)];
     bool init = false;
 
     auto t() -> T& { return *std::launder(reinterpret_cast<T*>(&data)); }

@@ -15,8 +15,8 @@
 //  Lexer
 //===========================================================================
 
-#ifndef __CPP2_LEX
-#define __CPP2_LEX
+#ifndef CPP2_LEX_H
+#define CPP2_LEX_H
 
 #include "io.h"
 #include <map>
@@ -128,7 +128,7 @@ auto close_paren_type(lexeme l)
 
 template<typename T>
     requires std::is_same_v<T, std::string>
-auto __as(lexeme l)
+auto _as(lexeme l)
     -> std::string
 {
     switch (l) {
@@ -684,8 +684,8 @@ auto lex_line(
         if (num_merged_tokens > 1)
         {
             auto alt = std::string{};
-            if      (is_char      &&  is_signed)   { alt = "'i8' (usually best) or 'cpp2::__schar'"; }
-            else if (is_char      &&  is_unsigned) { alt = "'u8' (usually best) or 'cpp2::__uchar'"; }
+            if      (is_char      &&  is_signed)   { alt = "'i8' (usually best) or 'cpp2::_schar'"; }
+            else if (is_char      &&  is_unsigned) { alt = "'u8' (usually best) or 'cpp2::_uchar'"; }
             else if (is_short     && !is_unsigned) { alt = "'short'"      ; }
             else if (is_short     &&  is_unsigned) { alt = "'ushort'"     ; }
             else if (is_long == 1 && !is_unsigned) { alt = "'long'"       ; }
@@ -707,7 +707,7 @@ auto lex_line(
                 "'" + tokens.back().to_string() + "' is an old-style C/C++ multi-word keyword type\n"
                 "    - most such types should be used only for interoperability with older code\n"
                 "    - using those when you need them is fine, but name them with these short names instead:\n"
-                "        short, ushort, int, uint, long, ulong, longlong, ulonglong, longdouble, __schar, __uchar\n"
+                "        short, ushort, int, uint, long, ulong, longlong, ulonglong, longdouble, _schar, _uchar\n"
                 "    - see also cpp2util.h > \"Convenience names for integer types\""
             );
         }
@@ -1203,7 +1203,7 @@ auto lex_line(
                     comments.push_back({
                         comment::comment_kind::line_comment,
                         {lineno, i},
-                        {lineno, __as<colno_t>(std::ssize(line))},
+                        {lineno, _as<colno_t>(std::ssize(line))},
                         std::string(&line[i], std::ssize(line) - i)
                         });
                     in_comment = false;
@@ -1940,7 +1940,7 @@ public:
             for (auto const& token : entry) {
                 o << "    " << token << " (" << token.position().lineno
                     << "," << token.position().colno << ") "
-                    << __as<std::string>(token.type()) << "\n";
+                    << _as<std::string>(token.type()) << "\n";
             }
 
         }
@@ -1958,7 +1958,7 @@ public:
         for (auto const& token : generated_tokens) {
             o << "    " << token << " (" << token.position().lineno
                 << "," << token.position().colno << ") "
-                << __as<std::string>(token.type()) << "\n";
+                << _as<std::string>(token.type()) << "\n";
         }
 
         o << "--- Generated text\n";

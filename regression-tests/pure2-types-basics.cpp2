@@ -54,10 +54,10 @@ myclass : type = {
         g: () = std::cout << "N::myclass::nested::g\n";
     }
 
-    f1: <T     , U     > (t:T, u:U) -> _ = t+u;
-    f2: <T:type, U:type> (t:T, u:U) -> _ = t+u;
-    f3: <T:_   , U:_   > ()         -> _ = T+U;
-    f4: <T:i8  , U:i16 > ()         -> _ = T+U;
+    f1: <T     , U     > (t:T, u:U)  t+u;
+    f2: <T:type, U:type> (t:T, u:U)  t+u;
+    f3: <T:_   , U:_   > ()          T+U;
+    f4: <T:i8  , U:i16 > ()          T+U;
 
 }
 
