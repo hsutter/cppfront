@@ -1349,7 +1349,8 @@ public:
                 params.empty()
                 //  Or there's a single wildcard in-param named 'args'
                 || (
-                    params[0]->has_name("args")
+                    params.size() == 1
+                    && params[0]->has_name("args")
                     && params[0]->pass == passing_style::in
                     && params[0]->declaration->is_object()
                     && std::get<declaration_node::an_object>(params[0]->declaration->type)->is_wildcard()
