@@ -23,6 +23,7 @@
 #include <climits>
 #include <deque>
 #include <cstring>
+#include <functional>
 
 
 namespace cpp2 {
@@ -575,7 +576,18 @@ static auto generated_lines = std::deque<std::vector<source_line>>{};
 
 static auto multiline_raw_strings = std::deque<multiline_raw_string>{};
 
-auto lex_line(
+    void parseIdentifier(const int lineno, std::vector<token> &tokens, std::vector<error_entry> &errors, colno_t i,
+                         const std::function<int(int)> & peek, const std::function<void(int, lexeme)> &store,
+                         int j);
+
+    void parseKeywords(const int lineno, std::vector<token> &tokens, std::vector<error_entry> &errors, colno_t i,
+                       const std::function<void(int, lexeme)>& store, int j);
+
+/*  void
+    parseIdentifier(const int lineno, std::vector<token> &tokens, const std::vector<error_entry> &errors, colno_t i,
+                    const std::function<int(int)>& peek, std::function<void(int, lexeme)>store, int j);
+*/
+    auto lex_line(
     std::string&               mutable_line,
     int const                  lineno,
     bool&                      in_comment,
@@ -739,12 +751,12 @@ auto lex_line(
                 tokens.pop_back();
                 auto pos = tokens.back().position();
                 tokens.pop_back();
-                tokens.push_back({
+                tokens.emplace_back(
                     &generated_text.back()[0],
                     std::ssize(generated_text.back()),
                     pos,
                     lexeme::Identifier
-                    });
+                    );
             }
 
             //  Else if token after "operator" is a single-token operator symbol
@@ -759,12 +771,12 @@ auto lex_line(
                 tokens.pop_back();
                 auto pos = tokens.back().position();
                 tokens.pop_back();
-                tokens.push_back({
+                tokens.emplace_back(
                     &generated_text.back()[0],
                     std::ssize(generated_text.back()),
                     pos,
                     lexeme::Identifier
-                    });
+                    );
                 tokens.push_back(last_token);
             }
 
@@ -781,12 +793,12 @@ auto lex_line(
                 tokens.pop_back();
                 auto pos = tokens.back().position();
                 tokens.pop_back();
-                tokens.push_back({
+                tokens.emplace_back(
                     &generated_text.back()[0],
                     std::ssize(generated_text.back()),
                     pos,
                     lexeme::Identifier
-                    });
+                    );
             }
 
         }
@@ -1158,12 +1170,12 @@ auto lex_line(
             const auto& text = raw_string_multiline.value().should_interpolate ? raw_string_multiline.value().text.substr(1) : raw_string_multiline.value().text;
             multiline_raw_strings.emplace_back(multiline_raw_string{ text, {lineno, i} });
 
-            tokens.push_back({
+            tokens.emplace_back(
                 &multiline_raw_strings.back().text[0],
                 std::ssize(multiline_raw_strings.back().text),
                 raw_string_multiline.value().start,
                 lexeme::StringLiteral
-            });
+            );
             raw_string_multiline.reset();
             continue;
         }
@@ -1363,7 +1375,7 @@ auto lex_line(
                         auto opening_seq = line.substr(i, paren_pos - i + 1);
                         auto closing_seq = ")"+line.substr(seq_pos, paren_pos-seq_pos)+"\"";
 
-                        if (auto closing_pos = line.find(closing_seq, paren_pos+1); closing_pos != line.npos) {
+                        if (auto closing_pos = line.find(closing_seq, paren_pos+1); closing_pos != std::string::npos) {
                             if (interpolate_raw_string(
                                     opening_seq,
                                     closing_seq,
@@ -1373,12 +1385,12 @@ auto lex_line(
                                 continue;
                             }
 
-                            tokens.push_back({
+                            tokens.emplace_back(
                                                 &line[R_pos],
                                                 i - R_pos + 1,
                                                 source_position(lineno, R_pos + 1),
                                                 lexeme::StringLiteral
-                                            });
+                                            );
                         } else {
                             raw_string_multiline.emplace(raw_string{source_position{lineno, i}, opening_seq, opening_seq, closing_seq, true });
 
@@ -1578,7 +1590,7 @@ auto lex_line(
                             auto opening_seq = line.substr(i, paren_pos - i + 1);
                             auto closing_seq = ")"+line.substr(seq_pos, paren_pos-seq_pos)+"\"";
 
-                            if (auto closing_pos = line.find(closing_seq, paren_pos+1); closing_pos != line.npos) {
+                            if (auto closing_pos = line.find(closing_seq, paren_pos+1); closing_pos != std::string::npos) {
                                 store(closing_pos+std::ssize(closing_seq)-i, lexeme::StringLiteral);
                             } else {
                                 raw_string_multiline.emplace(raw_string{source_position{lineno, i}, opening_seq, opening_seq, closing_seq });
@@ -1680,59 +1692,14 @@ auto lex_line(
                 //  Other keyword
                 //
                 else if (auto j = peek_is_keyword()) {
-                    store(j, lexeme::Keyword);
-
-                    if (tokens.back() == "const_cast") {
-                        errors.emplace_back(
-                            source_position(lineno, i),
-                            "'const_cast' is not supported in Cpp2 - the current C++ best practice is to never cast away const, and that is const_cast's only effective use"
-                        );
-                    }
-                    if (tokens.back() == "static_cast") {
-                        errors.emplace_back(
-                            source_position(lineno, i),
-                            "'static_cast<T>(val)' is not supported in Cpp2 - use 'val as T' for safe conversions instead, or if necessary cpp2::unsafe_narrow<T>(val) for a possibly-lossy narrowing conversion"
-                        );
-                    }
-                    if (tokens.back() == "dynamic_cast") {
-                        errors.emplace_back(
-                            source_position(lineno, i),
-                            "'dynamic_cast<Derived*>(pBase)' is not supported in Cpp2 - use 'pBase as *Derived' for safe dynamic conversions instead"
-                        );
-                    }
+                    parseKeywords(lineno, tokens, errors, i, store, j);
                 }
 
                 //  Identifier
                 //
                 else if (auto j = starts_with_identifier({&line[i], std::size(line)-i}))
                 {
-                    if (
-                        !isspace(peek(-1))
-                        && !tokens.empty()
-                        && is_literal(tokens.back().type())
-                        )
-                    {
-                        store(j, lexeme::UserDefinedLiteralSuffix);
-                    }
-                    else
-                    {
-                        store(j, lexeme::Identifier);
-
-                        tokens.back().remove_prefix_if("__identifier__");
-
-                        if (tokens.back() == "NULL") {
-                            errors.emplace_back(
-                                source_position(lineno, i),
-                                "'NULL' is not supported in Cpp2 - for a local pointer variable, leave it uninitialized instead, and set it to a non-null value when you have one"
-                            );
-                        }
-                        if (tokens.back() == "delete") {
-                            errors.emplace_back(
-                                source_position(lineno, i),
-                                "'delete' and owning raw pointers are not supported in Cpp2 - use unique.new<T> or shared.new<T> instead in that order (or, in the future, gc.new<T>, but that is not yet implemented)"
-                            );
-                        }
-                    }
+                    parseIdentifier(lineno, tokens, errors, i, peek, store, j);
                 }
 
                 //  Anything else should be whitespace
@@ -1753,13 +1720,70 @@ END:
     if (in_comment) {
         current_comment += "\n";
     }
-    if (raw_string_multiline && line.size() == 0) {
+    if (raw_string_multiline && line.empty()) {
         raw_string_multiline.value().text += '\n';
     }
 
     assert (std::ssize(tokens) >= original_size);
     return std::ssize(tokens) != original_size;
 }
+
+    void parseKeywords(const int lineno, std::vector<token> &tokens, std::vector<error_entry> &errors, colno_t i,
+                       const std::function<void(int, lexeme)>& store, int j) {
+        store(j, lexeme::Keyword);
+
+        if (tokens.back() == "const_cast") {
+            errors.emplace_back(
+                source_position(lineno, i),
+                "'const_cast' is not supported in Cpp2 - the current C++ best practice is to never cast away const, and that is const_cast's only effective use"
+            );
+        }
+        if (tokens.back() == "static_cast") {
+            errors.emplace_back(
+                source_position(lineno, i),
+                "'static_cast<T>(val)' is not supported in Cpp2 - use 'val as T' for safe conversions instead, or if necessary cpp2::unsafe_narrow<T>(val) for a possibly-lossy narrowing conversion"
+            );
+        }
+        if (tokens.back() == "dynamic_cast") {
+            errors.emplace_back(
+                source_position(lineno, i),
+                "'dynamic_cast<Derived*>(pBase)' is not supported in Cpp2 - use 'pBase as *Derived' for safe dynamic conversions instead"
+            );
+        }
+    }
+
+    void parseIdentifier(const int lineno, std::vector<token> &tokens, std::vector<error_entry> &errors, colno_t i,
+                     const std::function<int(int)> & peek, const std::function<void(int, lexeme)> &store,
+                     int j) {
+    if (
+            !isspace(peek(-1))
+            && !tokens.empty()
+            && is_literal(tokens.back().type())
+            )
+    {
+        store(j, lexeme::UserDefinedLiteralSuffix);
+    }
+    else
+    {
+        store(j, lexeme::Identifier);
+
+        tokens.back().remove_prefix_if("__identifier__");
+
+        if (tokens.back() == "NULL") {
+            errors.emplace_back(
+                    source_position(lineno, i),
+                    "'NULL' is not supported in Cpp2 - for a local pointer variable, leave it uninitialized instead, and set it to a non-null value when you have one"
+            );
+        }
+        if (tokens.back() == "delete") {
+            errors.emplace_back(
+                    source_position(lineno, i),
+                    "'delete' and owning raw pointers are not supported in Cpp2 - use unique.new<T> or shared.new<T> instead in that order (or, in the future, gc.new<T>, but that is not yet implemented)"
+            );
+        }
+    }
+}
+
 
 
 //-----------------------------------------------------------------------

@@ -27,6 +27,7 @@
 
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 #include <cstdint>
 #include <cctype>
@@ -125,21 +126,21 @@ struct string_parts {
     struct raw_string { std::string text; };
     enum adds_sequences { no_ends = 0, on_the_beginning = 1, on_the_end = 2, on_both_ends = 3 };
 
-    string_parts(const std::string& beginseq,
-                 const std::string& endseq,
+    string_parts(std::string  beginseq,
+                 std::string  endseq,
                  adds_sequences     strateg) 
-     : begin_seq{beginseq}
-     , end_seq{endseq}
+     : begin_seq{std::move(beginseq)}
+     , end_seq{std::move(endseq)}
      , strategy{strateg}
     {
         if (!(strategy & on_the_beginning)) {
-            parts.push_back(raw_string{""});
+            parts.emplace_back(raw_string{""});
         }
     }
 
-    void add_code(const std::string& text) { parts.push_back(cpp_code{text});}
-    void add_string(const std::string& text) { parts.push_back(raw_string{text});}
-    void add_string(const std::string_view& text) { parts.push_back(raw_string{std::string(text)});}
+    void add_code(const std::string& text) { parts.emplace_back(cpp_code{text});}
+    void add_string(const std::string& text) { parts.emplace_back(raw_string{text});}
+    void add_string(const std::string_view& text) { parts.emplace_back(raw_string{std::string(text)});}
 
     void clear() { parts.clear(); }
 
