@@ -7455,8 +7455,11 @@ private:
     //G
     //G return-list:
     //G     expression-statement
-    //G     '->' type-id
-    //G     '->' parameter_declaration_list
+    //G     '->' return-direction? type-id
+    //G     '->' parameter-declaration-list
+    //G
+    //G return-direction: one of
+    //G     'forward' 'move'
     //G
     //G contract-seq:
     //G     contract
