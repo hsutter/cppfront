@@ -17,9 +17,8 @@
 
 #include "sema.h"
 #include <iostream>
-#include <cstdio>
 #include <optional>
-
+#include "positional_printer.hpp"
 namespace cpp2 {
 
 //  Defined out of line here just to avoid bringing <iostream> into the headers,
@@ -40,27 +39,7 @@ auto cmdline_processor::print(std::string_view s, int width)
 //
 //-----------------------------------------------------------------------
 
-auto pad(int padding)
-    -> std::string_view
-{
-    if (padding < 1) {
-        return "";
-    }
 
-    return {
-        indent_str.c_str(),
-        _as<size_t>( std::min( padding, _as<int>(std::ssize(indent_str))) )
-    };
-}
-
-
-//-----------------------------------------------------------------------
-//
-//  positional_printer: a Syntax 1 pretty printer
-//
-//-----------------------------------------------------------------------
-//
-static auto flag_clean_cpp1 = false;
 static cmdline_processor::register_flag cmd_noline(
     9,
     "clean-cpp1",
@@ -149,11 +128,7 @@ static cmdline_processor::register_flag cmd_no_rtti(
     []{ flag_no_rtti = true; }
 );
 
-struct text_with_pos{
-    std::string     text;
-    source_position pos;
-    text_with_pos(std::string const& t, source_position p) : text{t}, pos{p} { }
-};
+
 
 // Defined out of line so we can use flag_print_colon_errors.
 auto error_entry::print(
@@ -185,7 +160,7 @@ auto error_entry::print(
     o << " error: " << msg << "\n";
 }
 
-#include "positional_printer.hpp"
+
 //-----------------------------------------------------------------------
 //
 //  cppfront: a compiler instance
@@ -4174,7 +4149,7 @@ public:
         //  In phase 0, only need to consider namespaces and types
 
         if (
-            printer.get_phase() == printer.phase0_type_decls
+            printer.get_phase() == cpp2::positional_printer::phase0_type_decls
             && !n.is_namespace()
             && !n.is_type()
             )
@@ -4185,7 +4160,7 @@ public:
         //  If this is a generated declaration (negative source line number),
         //  add a line break before
         if (
-            printer.get_phase() == printer.phase2_func_defs
+            printer.get_phase() == cpp2::positional_printer::phase2_func_defs
             && n.position().lineno < 1
             )
         {
@@ -4205,18 +4180,18 @@ public:
             if (
                 (
                     !n.parent_is_function()
-                    && printer.get_phase() == printer.phase1_type_defs_func_decls
+                    && printer.get_phase() == cpp2::positional_printer::phase1_type_defs_func_decls
                     )
                 ||
                 (
                     n.parent_is_type()
                     && n.is_object_alias()
-                    && printer.get_phase() == printer.phase2_func_defs
+                    && printer.get_phase() == cpp2::positional_printer::phase2_func_defs
                     )
                 ||
                 (
                     n.parent_is_function()
-                    && printer.get_phase() == printer.phase2_func_defs
+                    && printer.get_phase() == cpp2::positional_printer::phase2_func_defs
                     )
                 )
             {
@@ -4229,7 +4204,7 @@ public:
                 //  If we're in a type scope, handle the access specifier
                 if (
                     n.parent_is_type()
-                    && printer.get_phase() == printer.phase1_type_defs_func_decls
+                    && printer.get_phase() == cpp2::positional_printer::phase1_type_defs_func_decls
                     )
                 {
                     if (!n.is_default_access()) {
@@ -4291,7 +4266,7 @@ public:
                     {
                         assert (n.parent_declaration->name());
 
-                        if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
+                        if (printer.get_phase() == cpp2::positional_printer::phase1_type_defs_func_decls) {
                             printer.print_cpp2(
                                 "static const "
                                     + type + " "
@@ -4300,7 +4275,7 @@ public:
                                 n.position()
                             );
                         }
-                        else if (printer.get_phase() == printer.phase2_func_defs) {
+                        else if (printer.get_phase() == cpp2::positional_printer::phase2_func_defs) {
                             //  The following logic is not yet complete, so give a diagnostic for now
                             if (n.parent_declaration->parent_is_type()) {
                                 errors.emplace_back(
@@ -4421,7 +4396,7 @@ public:
         //  If this is a function that has multiple return values,
         //  first we need to emit the struct that contains the returns
         if (
-            printer.get_phase() == printer.phase1_type_defs_func_decls
+            printer.get_phase() == cpp2::positional_printer::phase1_type_defs_func_decls
             && n.is_function()
             )
         {
@@ -4444,7 +4419,7 @@ public:
         //  first we need to emit the aggregate that contains the members
         if (
             n.is_type()
-            && printer.get_phase() == printer.phase1_type_defs_func_decls
+            && printer.get_phase() == cpp2::positional_printer::phase1_type_defs_func_decls
             )
         {
             assert(
@@ -4492,7 +4467,7 @@ public:
 
         //  In class definitions, emit the explicit access specifier if there
         //  is one, or default to private for data and public for functions
-        if (printer.get_phase() == printer.phase1_type_defs_func_decls)
+        if (printer.get_phase() == cpp2::positional_printer::phase1_type_defs_func_decls)
         {
             if (!n.is_default_access()) {
                 assert (is_in_type);
@@ -4512,7 +4487,7 @@ public:
         //  type(s) that have template parameters and/or requires clauses,
         //  emit those outer template parameters and requires clauses too
         if (
-            printer.get_phase() == printer.phase2_func_defs
+            printer.get_phase() == cpp2::positional_printer::phase2_func_defs
             && n.is_function()
             && n.initializer    // only if the function has a definition (is not abstract)
             )
@@ -4543,18 +4518,18 @@ public:
         if (
             n.template_parameters
             && (
-                printer.get_phase() <  printer.phase2_func_defs
+                printer.get_phase() <  cpp2::positional_printer::phase2_func_defs
                 || n.is_object()
                 || (
                     n.is_function()
                     && n.has_name()     // only if it is not unnamed function aka lambda
                     && n.initializer    // only if the function has a definition (is not abstract)
-                    && printer.get_phase() == printer.phase2_func_defs
+                    && printer.get_phase() == cpp2::positional_printer::phase2_func_defs
                     )
                 )
             && (
                 !n.is_concept()
-                || printer.get_phase() == printer.phase1_type_defs_func_decls
+                || printer.get_phase() == cpp2::positional_printer::phase1_type_defs_func_decls
                 )
             )
         {
@@ -4572,7 +4547,7 @@ public:
             );
             auto& compound_stmt = std::get<statement_node::compound>(n.initializer->statement);
 
-            if (printer.get_phase() != printer.phase2_func_defs)
+            if (printer.get_phase() != cpp2::positional_printer::phase2_func_defs)
             {
                 if (n.requires_clause_expression) {
                     printer.print_cpp2("requires( ", n.requires_pos);
@@ -4584,7 +4559,7 @@ public:
                 emit(*n.identifier);
 
                 //  Type declaration
-                if (printer.get_phase() == printer.phase0_type_decls) {
+                if (printer.get_phase() == cpp2::positional_printer::phase0_type_decls) {
                     printer.print_cpp2( ";\n", n.position() );
                     return;
                 }
@@ -4592,7 +4567,7 @@ public:
 
             if (
                 n.is_type_final()
-                && printer.get_phase() == printer.phase1_type_defs_func_decls
+                && printer.get_phase() == cpp2::positional_printer::phase1_type_defs_func_decls
                 )
             {
                 printer.print_cpp2( " final", n.position() );
@@ -4640,7 +4615,7 @@ public:
                     }
 
                     if (decl->has_name("this")) {
-                        if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
+                        if (printer.get_phase() == cpp2::positional_printer::phase1_type_defs_func_decls) {
                             printer.print_cpp2(
                                 separator + " public " + print_to_string(*decl->get_object_type()),
                                 compound_stmt->position()
@@ -4650,7 +4625,7 @@ public:
                     }
                     else
                     {
-                        if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
+                        if (printer.get_phase() == cpp2::positional_printer::phase1_type_defs_func_decls) {
                             printer.print_cpp2(
                                 separator
                                     + " public "
@@ -4667,7 +4642,7 @@ public:
                 //  Then we'll switch to start the body == other members
                 else
                 {
-                    if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
+                    if (printer.get_phase() == cpp2::positional_printer::phase1_type_defs_func_decls) {
                         if (!started_body) {
                             printer.print_cpp2(" {", compound_stmt->position());
                             started_body = true;
@@ -4678,7 +4653,7 @@ public:
             }
 
             //  Ensure we emit the { even if there are only bases in the type
-            if (printer.get_phase() == printer.phase1_type_defs_func_decls)
+            if (printer.get_phase() == cpp2::positional_printer::phase1_type_defs_func_decls)
             {
                 if (!started_body) {
                     printer.print_cpp2(" {", compound_stmt->position());
@@ -4763,7 +4738,7 @@ public:
         else if (
             n.is_function()
             && (
-                printer.get_phase() < printer.phase2_func_defs
+                printer.get_phase() < cpp2::positional_printer::phase2_func_defs
                 || n.initializer    // only emit definition if the function has one (is not abstract)
                 || n.is_defaultable_function()
                 )
@@ -4809,7 +4784,7 @@ public:
 
             //  If this is at expression scope, we can't emit "[[nodiscard]] auto name"
             //  so print the provided intro instead, which will be a Cpp1 lambda-introducer
-            if (capture_intro != "")
+            if (!capture_intro.empty())
             {
                 assert (!n.identifier);
                 printer.print_cpp2(capture_intro, n.position());
@@ -4876,7 +4851,7 @@ public:
 
                     //  Note: Include a phase check because Cpp1 does not allow
                     //        these on out-of-line definitions
-                    if (printer.get_phase() != printer.phase2_func_defs)
+                    if (printer.get_phase() != cpp2::positional_printer::phase2_func_defs)
                     {
                         switch (this_->mod) {
                         break;case parameter_declaration_node::modifier::implicit:
@@ -4906,7 +4881,7 @@ public:
                 //  it's a Cpp1 non-member function so we need to say so (on the declaration only)
                 else if (
                     is_in_type
-                    && printer.get_phase() != printer.phase2_func_defs
+                    && printer.get_phase() != cpp2::positional_printer::phase2_func_defs
                     ) {
                     if (emit_as_friend) {
                         prefix += "friend ";
@@ -4923,12 +4898,12 @@ public:
                     && !func->is_assignment()
                     && !func->is_compound_assignment()
                     && (
-                        printer.get_phase() == printer.phase1_type_defs_func_decls
+                        printer.get_phase() == cpp2::positional_printer::phase1_type_defs_func_decls
                         || n.has_initializer()  // so we're printing it in phase 2
                         )
                     && (
                         !emit_as_friend         // can't have an attribute on a friend declaration-not-definition
-                        || printer.get_phase() != printer.phase1_type_defs_func_decls
+                        || printer.get_phase() != cpp2::positional_printer::phase1_type_defs_func_decls
                         )
                     && !(
                         n.name()
@@ -5072,7 +5047,7 @@ public:
                     printer.print_cpp2( "auto ", n.position() );
                     if (
                         !emit_as_friend
-                        || printer.get_phase() != printer.phase2_func_defs
+                        || printer.get_phase() != cpp2::positional_printer::phase2_func_defs
                         )
                     {
                         printer.print_cpp2( type_qualification_if_any_for(n), n.position() );
@@ -5086,7 +5061,7 @@ public:
 
             //  If we're only emitting declarations, end the function declaration
             if (
-                printer.get_phase() == printer.phase1_type_defs_func_decls
+                printer.get_phase() == cpp2::positional_printer::phase1_type_defs_func_decls
                 && !n.is_function_expression()
                 )
             {
@@ -5236,24 +5211,24 @@ public:
             && (
                 (
                     n.parent_is_namespace()
-                    && printer.get_phase() >= printer.phase1_type_defs_func_decls
+                    && printer.get_phase() >= cpp2::positional_printer::phase1_type_defs_func_decls
                     )
                 ||
                 (
                     n.parent_is_type()
-                    && printer.get_phase() == printer.phase1_type_defs_func_decls
+                    && printer.get_phase() == cpp2::positional_printer::phase1_type_defs_func_decls
                     )
                 ||
                 (
                     n.parent_is_function()
-                    && printer.get_phase() == printer.phase2_func_defs
+                    && printer.get_phase() == cpp2::positional_printer::phase2_func_defs
                     )
                 )
             )
         {
             auto& type = std::get<declaration_node::an_object>(n.type);
             if (
-                printer.get_phase() == printer.phase2_func_defs
+                printer.get_phase() == cpp2::positional_printer::phase2_func_defs
                 && type->is_concept()
                )
             {
@@ -5263,7 +5238,7 @@ public:
             emit_requires_clause();
 
             if (
-                printer.get_phase() != printer.phase2_func_defs
+                printer.get_phase() != cpp2::positional_printer::phase2_func_defs
                 && n.parent_is_namespace()
                 && !type->is_concept()
                 )
@@ -5328,7 +5303,7 @@ public:
 
             if (
                 n.parent_is_namespace()
-                && printer.get_phase() != printer.phase2_func_defs
+                && printer.get_phase() != cpp2::positional_printer::phase2_func_defs
                 && !type->is_concept()
                 )
             {
