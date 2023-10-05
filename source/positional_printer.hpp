@@ -25,7 +25,8 @@ namespace cpp2 {
 //
 //-----------------------------------------------------------------------
 //
-    static auto flag_clean_cpp1 = false;//TODO sharing it to cppfront too, when make modules
+    // TODO sharing it to cppfront too, when make modules
+    static auto flag_clean_cpp1 = false;
     class positional_printer {
         //  Core information
         std::ofstream out_file = {}; // Cpp1 syntax output file
