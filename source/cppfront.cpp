@@ -19,6 +19,7 @@
 #include <iostream>
 #include <optional>
 #include "positional_printer.hpp"
+#include "positional_printer_utils.hpp"
 namespace cpp2 {
 
 //  Defined out of line here just to avoid bringing <iostream> into the headers,

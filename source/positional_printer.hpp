@@ -7,6 +7,7 @@
 //includes for next modularizing
 #include <iostream>
 #include <utility>
+#include "positional_printer_utils.hpp"
 #include "source_position.h"
 #include "parse.h"
 namespace cpp2 {
@@ -17,18 +18,6 @@ namespace cpp2 {
         source_position pos;
         text_with_pos(std::string  t, source_position p) : text{std::move(t)}, pos{p} { }
     };
-    auto pad(int padding)
-    -> std::string_view
-    {
-        if (padding < 1) {
-            return "";
-        }
-
-        return {
-                indent_str.c_str(),
-                _as<size_t>( std::min( padding, _as<int>(std::ssize(indent_str))) )
-        };
-    }
 
 //-----------------------------------------------------------------------
 //
@@ -36,7 +25,7 @@ namespace cpp2 {
 //
 //-----------------------------------------------------------------------
 //
-    static auto flag_clean_cpp1 = false;
+    static auto flag_clean_cpp1 = false;//TODO sharing it to cppfront too, when make modules
     class positional_printer {
         //  Core information
         std::ofstream out_file = {}; // Cpp1 syntax output file
