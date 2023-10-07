@@ -6770,14 +6770,6 @@ private:
             return {};
         }
 
-        if (!is_expression) {
-            errors.emplace_back(
-                curr().position(),
-                "(temporary alpha limitation) cppfront is still learning 'inspect' - only inspect expressions are currently supported"
-            );
-            return {};
-        }
-
         auto n = std::make_unique<inspect_expression_node>();
         n->identifier = &curr();
         next();

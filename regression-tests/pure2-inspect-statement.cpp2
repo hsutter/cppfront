@@ -1,0 +1,18 @@
+v : std::any = ();
+
+f: () -> int =
+    inspect v {
+        is 1 = return 1;
+        is int = return 2;
+        is _ = return 3;
+    }
+
+main: () =
+{
+    v = 1;
+    [[assert: f() == 1]]
+    v = 10;
+    [[assert: f() == 2]]
+    v = true;
+    [[assert: f() == 3]]
+}
