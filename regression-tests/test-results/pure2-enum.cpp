@@ -24,9 +24,9 @@ class file_attributes;
 
 #line 2 "pure2-enum.cpp2"
 class skat_game {
-private: cpp2::i8 _value; private: constexpr skat_game(cpp2::in<cpp2::i64> val);
+private: cpp2::i8 _value; private: constexpr skat_game(cpp2::in<cpp2::i64> _val);
 
-private: constexpr auto operator=(cpp2::in<cpp2::i64> val) -> skat_game& ;
+private: constexpr auto operator=(cpp2::in<cpp2::i64> _val) -> skat_game& ;
 public: [[nodiscard]] constexpr auto get_raw_value() const& -> cpp2::i8;
 public: constexpr skat_game(skat_game const& that);
 public: constexpr auto operator=(skat_game const& that) -> skat_game& ;
@@ -54,9 +54,9 @@ class janus {
 #line 15 "pure2-enum.cpp2"
     public: constexpr auto flip() & -> void;
         
-        private: cpp2::i8 _value; private: constexpr janus(cpp2::in<cpp2::i64> val);
+        private: cpp2::i8 _value; private: constexpr janus(cpp2::in<cpp2::i64> _val);
 
-private: constexpr auto operator=(cpp2::in<cpp2::i64> val) -> janus& ;
+private: constexpr auto operator=(cpp2::in<cpp2::i64> _val) -> janus& ;
 public: [[nodiscard]] constexpr auto get_raw_value() const& -> cpp2::i8;
 public: constexpr janus(janus const& that);
 public: constexpr auto operator=(janus const& that) -> janus& ;
@@ -71,9 +71,9 @@ public: [[nodiscard]] auto to_string() const& -> std::string;
 };
 
 class file_attributes {
-private: cpp2::u8 _value; private: constexpr file_attributes(cpp2::in<cpp2::i64> val);
+private: cpp2::u8 _value; private: constexpr file_attributes(cpp2::in<cpp2::i64> _val);
 
-private: constexpr auto operator=(cpp2::in<cpp2::i64> val) -> file_attributes& ;
+private: constexpr auto operator=(cpp2::in<cpp2::i64> _val) -> file_attributes& ;
 public: [[nodiscard]] constexpr auto get_raw_value() const& -> cpp2::u8;
 public: constexpr file_attributes(file_attributes const& that);
 public: constexpr auto operator=(file_attributes const& that) -> file_attributes& ;
@@ -111,11 +111,11 @@ auto main() -> int;
 
 
 
-    constexpr skat_game::skat_game(cpp2::in<cpp2::i64> val)
-                                                         : _value{ cpp2::unsafe_narrow<cpp2::i8>(val) } {  }
-constexpr auto skat_game::operator=(cpp2::in<cpp2::i64> val) -> skat_game&  { 
-                                                         _value = cpp2::unsafe_narrow<cpp2::i8>(val);
-                                                         return *this; }
+    constexpr skat_game::skat_game(cpp2::in<cpp2::i64> _val)
+                                                          : _value{ cpp2::unsafe_narrow<cpp2::i8>(_val) } {  }
+constexpr auto skat_game::operator=(cpp2::in<cpp2::i64> _val) -> skat_game&  { 
+                                                          _value = cpp2::unsafe_narrow<cpp2::i8>(_val);
+                                                          return *this; }
 [[nodiscard]] constexpr auto skat_game::get_raw_value() const& -> cpp2::i8 { return _value; }
 constexpr skat_game::skat_game(skat_game const& that)
                                               : _value{ that._value }{}
@@ -155,12 +155,12 @@ inline CPP2_CONSTEXPR skat_game skat_game::null = 23;
     }
 
 
-    constexpr janus::janus(cpp2::in<cpp2::i64> val)
-                                                         : _value{ cpp2::unsafe_narrow<cpp2::i8>(val) } {  }
+    constexpr janus::janus(cpp2::in<cpp2::i64> _val)
+                                                          : _value{ cpp2::unsafe_narrow<cpp2::i8>(_val) } {  }
 
-constexpr auto janus::operator=(cpp2::in<cpp2::i64> val) -> janus&  { 
-                                                         _value = cpp2::unsafe_narrow<cpp2::i8>(val);
-                                                         return *this; }
+constexpr auto janus::operator=(cpp2::in<cpp2::i64> _val) -> janus&  { 
+                                                          _value = cpp2::unsafe_narrow<cpp2::i8>(_val);
+                                                          return *this; }
 [[nodiscard]] constexpr auto janus::get_raw_value() const& -> cpp2::i8 { return _value; }
 constexpr janus::janus(janus const& that)
                                               : _value{ that._value }{}
@@ -182,11 +182,11 @@ inline CPP2_CONSTEXPR janus janus::future = 1;
     return "invalid janus value"; 
     }
 
-    constexpr file_attributes::file_attributes(cpp2::in<cpp2::i64> val)
-                                                         : _value{ cpp2::unsafe_narrow<cpp2::u8>(val) } {  }
-constexpr auto file_attributes::operator=(cpp2::in<cpp2::i64> val) -> file_attributes&  { 
-                                                         _value = cpp2::unsafe_narrow<cpp2::u8>(val);
-                                                         return *this; }
+    constexpr file_attributes::file_attributes(cpp2::in<cpp2::i64> _val)
+                                                          : _value{ cpp2::unsafe_narrow<cpp2::u8>(_val) } {  }
+constexpr auto file_attributes::operator=(cpp2::in<cpp2::i64> _val) -> file_attributes&  { 
+                                                          _value = cpp2::unsafe_narrow<cpp2::u8>(_val);
+                                                          return *this; }
 [[nodiscard]] constexpr auto file_attributes::get_raw_value() const& -> cpp2::u8 { return _value; }
 constexpr file_attributes::file_attributes(file_attributes const& that)
                                               : _value{ that._value }{}
@@ -219,15 +219,15 @@ inline CPP2_CONSTEXPR file_attributes file_attributes::none = 0;
 
 [[nodiscard]] auto file_attributes::to_string() const& -> std::string{
 
-    std::string ret {"("}; 
+    std::string _ret {"("}; 
 
-    std::string comma {}; 
+    std::string _comma {}; 
     if ((*this) == none) {return "(none)"; }
-    if (((*this) & cached) == cached) {ret += comma + "cached";comma = ", ";}
-    if (((*this) & current) == current) {ret += comma + "current";comma = ", ";}
-    if (((*this) & obsolete) == obsolete) {ret += comma + "obsolete";comma = ", ";}
-    if (((*this) & cached_and_current) == cached_and_current) {ret += comma + "cached_and_current";comma = ", ";}
-    return ret + ")"; 
+    if (((*this) & cached) == cached) {_ret += _comma + "cached";_comma = ", ";}
+    if (((*this) & current) == current) {_ret += _comma + "current";_comma = ", ";}
+    if (((*this) & obsolete) == obsolete) {_ret += _comma + "obsolete";_comma = ", ";}
+    if (((*this) & cached_and_current) == cached_and_current) {_ret += _comma + "cached_and_current";_comma = ", ";}
+    return _ret + ")"; 
     }
 #line 28 "pure2-enum.cpp2"
 auto main() -> int{

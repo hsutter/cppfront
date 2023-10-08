@@ -38,7 +38,7 @@ CPP2_REQUIRES_ (true)
 
 
 #line 52 "pure2-print.cpp2"
-        public: template<typename T> [[nodiscard]] auto values(T const& t) const& -> values_ret;
+        public: template<typename T> [[nodiscard]] auto values([[maybe_unused]] T const& param2) const& -> values_ret;
             
 
 #line 57 "pure2-print.cpp2"
@@ -48,7 +48,10 @@ CPP2_REQUIRES_ (true)
 
         public: mytype([[maybe_unused]] cpp2::in<int> param2);
 
-        public: static auto variadic(auto const& ...x) -> void;
+        public: static auto variadic(auto const& ...x) -> void
+CPP2_REQUIRES_ ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...))
+#line 63 "pure2-print.cpp2"
+        ;
     };
 
     public: static auto test() -> void;
@@ -142,7 +145,7 @@ requires (true)
             return [_0 = (s + cpp2::assert_in_bounds(m, 0))]() -> std::string { return _0;  }(); 
         }
 
-        template<typename T> [[nodiscard]] auto outer::mytype::values(T const& t) const& -> values_ret{
+        template<typename T> [[nodiscard]] auto outer::mytype::values([[maybe_unused]] T const& param2) const& -> values_ret{
                 cpp2::deferred_init<int> offset;
                 cpp2::deferred_init<std::string> name;
 #line 53 "pure2-print.cpp2"
@@ -156,7 +159,10 @@ requires (true)
 
         outer::mytype::mytype([[maybe_unused]] cpp2::in<int> param2){}
 
-        auto outer::mytype::variadic(auto const& ...x) -> void{}
+        auto outer::mytype::variadic(auto const& ...x) -> void
+requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...))
+#line 63 "pure2-print.cpp2"
+        {(std::cout << ... << x); }
 
 #line 66 "pure2-print.cpp2"
     auto outer::test() -> void{

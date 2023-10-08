@@ -80,7 +80,7 @@ outer: type =
 
         values: <T: type>(
             in this, 
-            in t: T
+            in _: T
         ) throws -> (
                 out offset: int, 
                 out name: std::string
@@ -111,6 +111,7 @@ outer: type =
 
         variadic:(in x...: int) = 
         {
+            (std::cout << ... << x);
         }
     }
 
