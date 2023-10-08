@@ -6003,6 +6003,10 @@ private:
             }
             return {};
         }
+        if (curr().type() == lexeme::Multiply) {
+            error("'T*' is not a valid Cpp2 type; use '*T' for a pointer instead", false);
+            return {};
+        }
 
         return n;
     }
