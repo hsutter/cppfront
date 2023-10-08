@@ -604,7 +604,7 @@ polymorphic_base: (inout t: meta::type_declaration) =
                     "polymorphic base types may not copy or move; consider a virtual clone() instead");
         if mf.is_destructor() {
             has_dtor = true;
-            mf.require( (mf.is_public() && mf.is_virtual())
+            mf.require( ((mf.is_public() || mf.is_default_access()) && mf.is_virtual())
                         || (mf.is_protected() && !mf.is_virtual()),
                         "a polymorphic base type destructor must be public and virtual, or protected and nonvirtual");
         }
@@ -740,7 +740,7 @@ basic_value: (inout t: meta::type_declaration) =
         has_default_ctor |= mf.is_default_constructor();
         mf.require( !mf.is_protected() && !mf.is_virtual(),
                     "a value type may not have a protected or virtual function");
-        mf.require( !mf.is_destructor() || mf.is_public(),
+        mf.require( !mf.is_destructor() || mf.is_public() || mf.is_default_access(),
                     "a value type may not have a non-public destructor");
     }
 

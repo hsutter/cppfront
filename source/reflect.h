@@ -1216,7 +1216,7 @@ auto polymorphic_base(meta::type_declaration& t) -> void
                     "polymorphic base types may not copy or move; consider a virtual clone() instead");
         if (CPP2_UFCS_0(is_destructor, mf)) {
             has_dtor = true;
-            CPP2_UFCS(require, mf, (CPP2_UFCS_0(is_public, mf) && CPP2_UFCS_0(is_virtual, mf)) 
+            CPP2_UFCS(require, mf, ((CPP2_UFCS_0(is_public, mf) || CPP2_UFCS_0(is_default_access, mf)) && CPP2_UFCS_0(is_virtual, mf)) 
                         || (CPP2_UFCS_0(is_protected, mf) && !(CPP2_UFCS_0(is_virtual, mf))), 
                         "a polymorphic base type destructor must be public and virtual, or protected and nonvirtual");
         }
@@ -1302,7 +1302,7 @@ auto basic_value(meta::type_declaration& t) -> void
         has_default_ctor |= CPP2_UFCS_0(is_default_constructor, mf);
         CPP2_UFCS(require, mf, !(CPP2_UFCS_0(is_protected, mf)) && !(CPP2_UFCS_0(is_virtual, mf)), 
                     "a value type may not have a protected or virtual function");
-        CPP2_UFCS(require, mf, !(CPP2_UFCS_0(is_destructor, mf)) || CPP2_UFCS_0(is_public, mf), 
+        CPP2_UFCS(require, mf, !(CPP2_UFCS_0(is_destructor, mf)) || CPP2_UFCS_0(is_public, mf) || CPP2_UFCS_0(is_default_access, mf), 
                     "a value type may not have a non-public destructor");
     }
 
