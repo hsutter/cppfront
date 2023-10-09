@@ -60,6 +60,9 @@
     //  isn't yet supported by all of { VS 2022, g++-10, clang++-12 }
     //  ... this should approximate "import std;" on those compilers
     #else
+        #ifdef _MSC_VER
+            #include "intrin.h"
+        #endif
         #include <version>
         #include <algorithm>
         #include <any>
@@ -150,7 +153,9 @@
         #include <list>
         #include <locale>
         #include <map>
-        //  md_span - not yet listed in SD-6 for feature test flags
+        #ifdef __cpp_lib_mdspan
+            #include <mdspan>
+        #endif
         #include <memory>
         #ifdef __cpp_lib_memory_resource
             #include <memory_resource>
@@ -191,7 +196,9 @@
             #include <stdatomic.h>
         #endif
         #include <stdexcept>
-        //  stdfloat - not yet listed in SD-6 for feature test flags
+        #if __has_include(<stdfloat>)
+            #include <stdfloat>
+        #endif
         #ifdef __cpp_lib_jthread
             #include <stop_token>
         #endif
@@ -220,6 +227,9 @@
 //  Otherwise, we're not in -pure-cpp2 and so just #include
 //  what we need in this header to make this self-contained
 #else
+    #ifdef _MSC_VER
+        #include "intrin.h"
+    #endif
     #include <algorithm>
     #include <any>
     #include <compare>
@@ -260,6 +270,7 @@
 
 #define CPP2_TYPEOF(x)              std::remove_cvref_t<decltype(x)>
 #define CPP2_FORWARD(x)             std::forward<decltype(x)>(x)
+#define CPP2_PACK_EMPTY(x)          (sizeof...(x) == 0)
 #define CPP2_CONTINUE_BREAK(NAME)   goto CONTINUE_##NAME; CONTINUE_##NAME: continue; goto BREAK_##NAME; BREAK_##NAME: break;
                                     // these redundant goto's to avoid 'unused label' warnings
 

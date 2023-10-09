@@ -721,12 +721,16 @@ auto process_cpp2_line(
         else {
             switch (line[i]) {
             break;case '{':
-                braces.found_open_brace(lineno);
+                if (prev != '\'') { // ignore character literals
+                    braces.found_open_brace(lineno);
+                }
 
             break;case '}':
-                braces.found_close_brace( source_position(lineno, i) );
-                if (braces.current_depth() < 1) {
-                    found_end = true;
+                if (prev != '\'') { // ignore character literals
+                    braces.found_close_brace( source_position(lineno, i) );
+                    if (braces.current_depth() < 1) {
+                        found_end = true;
+                    }
                 }
 
             break;case ';':

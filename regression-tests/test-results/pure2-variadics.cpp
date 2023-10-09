@@ -25,7 +25,7 @@ template<typename ...Ts> class x {
 #line 5 "pure2-variadics.cpp2"
 };
 
-template<typename ...Args> auto print(std::ostream& out, Args const& ...args) -> void;
+template<typename ...Args> auto left_fold_print(std::ostream& out, Args const& ...args) -> void;
     
 
 #line 12 "pure2-variadics.cpp2"
@@ -44,7 +44,7 @@ auto main() -> int;
 
 
 #line 7 "pure2-variadics.cpp2"
-template<typename ...Args> auto print(std::ostream& out, Args const& ...args) -> void{
+template<typename ...Args> auto left_fold_print(std::ostream& out, Args const& ...args) -> void{
     //  Binary left fold expression
     (out << ... << args);
 }
@@ -65,7 +65,7 @@ auto main() -> int
     std::cout << make_string("plugh", cpp2::u8{3}) << "\n";
     std::cout << make<std::string>("abracadabra", cpp2::u8{3}) << "\n";
 
-    print(std::cout, 3.14, "word", -1500);
+    left_fold_print(std::cout, 3.14, "word", -1500);
 
     std::cout << "\nfirst all() returned " + cpp2::to_string(all(true, true, true, false));
     std::cout << "\nsecond all() returned " << cpp2::as_<std::string>(all(true, true, true, true));

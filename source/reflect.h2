@@ -57,6 +57,8 @@ compiler_services: @polymorphic_base @copyable type =
         metafunctions_used = args.empty();
     }
 
+    get_metafunction_name: (this) -> std::string_view = metafunction_name;
+
     get_argument: (inout this, index: int) -> std::string = {
         metafunctions_used = true;
         if (0 <= index < metafunction_args.ssize()) {
@@ -398,6 +400,18 @@ type_declaration: @copyable type =
         [[assert: n*.is_type()]]
     }
 
+    reserve_names: (this, name: std::string_view, forward etc...) = 
+    {                           // etc is not declared ':string_view' for compatibility with GCC 10.x
+        for get_members()
+        do  (m) {
+            m.require( !m.has_name( name ),
+                       "in a '(get_metafunction_name())$' type, the name '(name)$' is reserved for use by the '(get_metafunction_name())$' implementation");
+        }
+        if constexpr !CPP2_PACK_EMPTY(etc) {
+            reserve_names( etc... );
+        }
+    }
+
     is_polymorphic: (this)       -> bool = n*.is_polymorphic();
     is_final      : (this)       -> bool = n*.is_type_final();
     make_final    : (inout this) -> bool = n*.make_type_final();
@@ -590,7 +604,7 @@ polymorphic_base: (inout t: meta::type_declaration) =
                     "polymorphic base types may not copy or move; consider a virtual clone() instead");
         if mf.is_destructor() {
             has_dtor = true;
-            mf.require( (mf.is_public() && mf.is_virtual())
+            mf.require( ((mf.is_public() || mf.is_default_access()) && mf.is_virtual())
                         || (mf.is_protected() && !mf.is_virtual()),
                         "a polymorphic base type destructor must be public and virtual, or protected and nonvirtual");
         }
@@ -726,7 +740,7 @@ basic_value: (inout t: meta::type_declaration) =
         has_default_ctor |= mf.is_default_constructor();
         mf.require( !mf.is_protected() && !mf.is_virtual(),
                     "a value type may not have a protected or virtual function");
-        mf.require( !mf.is_destructor() || mf.is_public(),
+        mf.require( !mf.is_destructor() || mf.is_public() || mf.is_default_access(),
                     "a value type may not have a non-public destructor");
     }
 
@@ -841,6 +855,11 @@ basic_enum: (
     max_value       : i64                            = ();
     underlying_type : std::string;
 
+    t.reserve_names( "operator=", "operator<=>" );
+    if bitwise {
+        t.reserve_names( "has", "set", "clear", "to_string", "get_raw_value", "none" );
+    }
+
     //  1. Gather: The names of all the user-written members, and find/compute the type
 
     underlying_type = t.get_argument(0);    // use the first template argument, if there was one
@@ -853,7 +872,7 @@ basic_enum: (
     if   m.is_member_object()
     {
         m.require( m.is_public() || m.is_default_access(),
-                   "an enumerator cannot be protected or private");
+                    "an enumerator cannot be protected or private");
 
         mo := m.as_object();
         if !mo.has_wildcard_type() {
@@ -933,7 +952,7 @@ basic_enum: (
 
     //  Generate all the common material: value and common functions
     t.add_member( "    _value            : (underlying_type)$;");
-    t.add_member( "    private operator= : (implicit out this, val: i64) == _value = cpp2::unsafe_narrow<(underlying_type)$>(val);");
+    t.add_member( "    private operator= : (implicit out this, _val: i64) == _value = cpp2::unsafe_narrow<(underlying_type)$>(_val);");
     t.add_member( "    get_raw_value     : (this) -> (underlying_type)$ == _value;");
     t.add_member( "    operator=         : (out this, that) == { }");
     t.add_member( "    operator<=>       : (this, that) -> std::strong_ordering;");
@@ -963,8 +982,8 @@ basic_enum: (
     (copy to_string: std::string = "    to_string: (this) -> std::string = { \n")
     {
         if bitwise {
-            to_string += "    ret   : std::string = \"(\";\n";
-            to_string += "    comma : std::string = ();\n";
+            to_string += "    _ret   : std::string = \"(\";\n";
+            to_string += "    _comma : std::string = ();\n";
             to_string += "    if this == none { return \"(none)\"; }\n";
         }
 
@@ -973,7 +992,7 @@ basic_enum: (
             if e.name != "_" {  // ignore unnamed values
                 if bitwise {
                     if e.name != "none" {
-                        to_string += "    if (this & (e.name)$) == (e.name)$ { ret += comma + \"(e.name)$\"; comma = \", \"; }\n";
+                        to_string += "    if (this & (e.name)$) == (e.name)$ { _ret += _comma + \"(e.name)$\"; _comma = \", \"; }\n";
                     }
                 }
                 else {
@@ -983,7 +1002,7 @@ basic_enum: (
         }
 
         if bitwise {
-            to_string += "    return ret+\")\";\n}\n";
+            to_string += "    return _ret+\")\";\n}\n";
         }
         else {
             to_string += "    return \"invalid (t.name())$ value\";\n}\n";
@@ -1091,6 +1110,10 @@ union: (inout t : meta::type_declaration)
         m.require( m.is_public() || m.is_default_access(),
                    "a union alternative cannot be protected or private");
 
+        m.require( !m.name().starts_with("is_")
+                   && !m.name().starts_with("set_"),
+                   "a union alternative's name cannot start with 'is_' or 'set_' - that could cause user confusion with the 'is_alternative' and 'set_alternative' generated functions");
+
         mo := m.as_object();
         mo.require( mo.initializer().empty(),
                     "a union alternative cannot have an initializer");
@@ -1148,13 +1171,13 @@ union: (inout t : meta::type_declaration)
 
         t.add_member( "    (a.name)$: (inout this) -> forward (a.type)$ [[pre: is_(a.name)$()]] = reinterpret_cast<*(a.type)$>(_storage&)*;\n");
 
-        t.add_member( "    set_(a.name)$: (inout this, value: (a.type)$) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(_storage&), value); } else { reinterpret_cast<*(a.type)$>(_storage&)* = value; } _discriminator = (a.value)$; }\n");
+        t.add_member( "    set_(a.name)$: (inout this, _value: (a.type)$) = { if !is_(a.name)$() { _destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(_storage&), _value); } else { reinterpret_cast<*(a.type)$>(_storage&)* = _value; } _discriminator = (a.value)$; }\n");
 
-        t.add_member( "    set_(a.name)$: (inout this, forward args...: _) = { if !is_(a.name)$() { destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(_storage&), args...); } else { reinterpret_cast<*(a.type)$>(_storage&)* = :(a.type)$ = (args...); } _discriminator = (a.value)$; }\n");
+        t.add_member( "    set_(a.name)$: (inout this, forward _args...: _) = { if !is_(a.name)$() { _destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(_storage&), _args...); } else { reinterpret_cast<*(a.type)$>(_storage&)* = :(a.type)$ = (_args...); } _discriminator = (a.value)$; }\n");
     }
 
     //  Add destroy
-    (copy destroy: std::string = "    private destroy: (inout this) = {\n")
+    (copy destroy: std::string = "    private _destroy: (inout this) = {\n")
     {
         for  alternatives
         do   (a) {
@@ -1167,7 +1190,7 @@ union: (inout t : meta::type_declaration)
     }
 
     //  Add the destructor
-    t.add_member( "    operator=: (move this) = { destroy(); } " );
+    t.add_member( "    operator=: (move this) = { _destroy(); } " );
 }
 
 
@@ -1193,6 +1216,14 @@ apply_metafunctions: (
     -> bool
 = {
     [[assert: n.is_type()]]
+
+    //  Check for _names reserved for the metafunction implementation
+    for  rtype.get_members()
+    do   (m)
+    {
+        m.require( !m.name().starts_with("_") || m.name().ssize() > 1,
+                    "a type that applies a metafunction cannot have a body that declares a name that starts with '_' - those names are reserved for the metafunction implementation");
+    }
 
     //  For each metafunction, apply it
     for n.metafunctions

@@ -4,7 +4,7 @@ x: <Ts...: type> type = {
     tup: std::tuple<Ts...> = ();
 }
 
-print: <Args...: type> (inout out: std::ostream, args...: Args) = {
+left_fold_print: <Args...: type> (inout out: std::ostream, args...: Args) = {
     //  Binary left fold expression
     (out << ... << args);
 }
@@ -25,7 +25,7 @@ main: ()
     std::cout << make_string("plugh", :u8=3) << "\n";
     std::cout << make<std::string>("abracadabra", :u8=3) << "\n";
 
-    print( std::cout, 3.14, "word", -1500 );
+    left_fold_print( std::cout, 3.14, "word", -1500 );
 
     std::cout << "\nfirst all() returned (all(true, true, true, false))$";
     std::cout << "\nsecond all() returned " << all(true, true, true, true) as std::string;

@@ -3233,6 +3233,20 @@ public:
             if (is_dependent_parameter_type) {
                 name = param_type;
             }
+            else if (
+                n.declaration->is_variadic
+                && !type_id.is_wildcard()
+                )
+            {
+                auto name = n.declaration->identifier->get_token();
+                assert(name);
+                auto req = std::string{"(std::is_convertible_v<CPP2_TYPEOF("};
+                req += *name;
+                req += "), ";
+                req += param_type;
+                req += "> && ...)";
+                function_requires_conditions.push_back(req);
+            }
 
             switch (n.pass) {
             break;case passing_style::in     : printer.print_cpp2( name+" const&", n.position() );
@@ -3257,7 +3271,7 @@ public:
 
             auto name = n.declaration->identifier->get_token();
             assert(name);
-            auto req = std::string{ "std::is_same_v<CPP2_TYPEOF(" };
+            auto req = std::string{"std::is_same_v<CPP2_TYPEOF("};
             req += *name;
             req += "), ";
             req += param_type;

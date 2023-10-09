@@ -49,7 +49,7 @@ outer: @print type = {
             return :() -> std::string = (s + m[0])$; ();
         }
 
-        values: <T> (this, t: T) throws -> (offset: int, name: std::string) = {
+        values: <T> (this, _: T) throws -> (offset: int, name: std::string) = {
             offset = 53;
             name = "plugh";
         }
@@ -60,7 +60,7 @@ outer: @print type = {
 
         operator=: (implicit out this, _: int) = { }
 
-        variadic: (x...: int) = { }
+        variadic: (x...: int) = { (std::cout << ... << x); }
     }
 
     test: () = {

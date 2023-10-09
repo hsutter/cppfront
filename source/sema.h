@@ -1341,17 +1341,19 @@ public:
             )
         {
             auto& func = std::get<declaration_node::a_function>(n.type);
+            auto& params = func->parameters->parameters;
 
             //  It's more readable to express this as positive condition here...
             if (
                 //  There are no parameters
-                func->parameters->parameters.empty()
+                params.empty()
                 //  Or there's a single wildcard in-param named 'args'
                 || (
-                    func->parameters->parameters[0]->has_name("args")
-                    && func->parameters->parameters[0]->pass == passing_style::in
-                    && func->parameters->parameters[0]->declaration->is_object()
-                    && std::get<declaration_node::an_object>(func->parameters->parameters[0]->declaration->type)->is_wildcard()
+                    params.size() == 1
+                    && params[0]->has_name("args")
+                    && params[0]->pass == passing_style::in
+                    && params[0]->declaration->is_object()
+                    && std::get<declaration_node::an_object>(params[0]->declaration->type)->is_wildcard()
                     )
                 )
             {
@@ -1361,7 +1363,7 @@ public:
             else
             {
                 errors.emplace_back(
-                    func->parameters->parameters[0]->position(),
+                    params[0]->position(),
                     "'main' must be declared as 'main: ()' with zero parameters, or 'main: (args)' with one parameter named 'args' for which the type 'std::vector<std::string_view>' will be deduced"
                 );
                 return false;
