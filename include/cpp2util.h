@@ -21,49 +21,49 @@
 #define CPP2_UTIL_H
 
 //  If this implementation doesn't support source_location yet, disable it
-//  TODO: technically this test should have <version> included first, but GEFN
+#include <version>
 #if !defined(_MSC_VER) && !defined(__cpp_lib_source_location)
     #undef CPP2_USE_SOURCE_LOCATION
 #endif
 
-//  If the cppfront user requested -pure-cpp2, this will be set
-//  and we should be using modules only
-#ifdef CPP2_USE_MODULES
+//  If the cppfront user requested making the entire C++ standard library
+//  available via module import or header include, do that
+#if defined(CPP2_IMPORT_STD) || defined(CPP2_INCLUDE_STD)
 
-    //  If we have real modules, use those the best we can
-    //  as implementations are still underway
-    #ifdef __cpp_modules
+    //  If C++23 'import std;' was requested and is available, use that
+    #if defined(CPP2_IMPORT_STD) && defined(__cpp_modules)
 
         #ifndef _MSC_VER
             //  This is the ideal -- note that we just voted "import std;"
             //  into draft C++23 in late July 2022, so implementers haven't
-            //  had time to catch up yet. As of this writing (September 2022)
-            //  no compiler will take this path yet, but they're on the way...
+            //  had time to catch up yet
             import std;
         #else // MSVC
             //  Note: When C++23 "import std;" is available, we will switch to that here
             //  In the meantime, this is what works on MSVC which is the only compiler
             //  I've been able to get access to that implements modules enough to demo
             //  (but we'll have more full-C++20 compilers soon!)
+            #ifdef _MSC_VER
+                #include "intrin.h"
+            #endif
             import std.core;
-            import std.regex;
             import std.filesystem;
             import std.memory;
+            import std.regex;
             import std.threading;
 
             //  Suppress spurious MSVC modules warning
             #pragma warning(disable:5050)
         #endif
 
-    //  Otherwise, "fake it till you make it"... include (nearly) all the
-    //  standard headers, with a feature test #ifdef for each header that
+    //  Otherwise, as a fallback if 'import std;' was requested, or else
+    //  because 'include all std' was requested, include all the standard
+    //  headers, with a feature test #ifdef for each header that
     //  isn't yet supported by all of { VS 2022, g++-10, clang++-12 }
-    //  ... this should approximate "import std;" on those compilers
     #else
         #ifdef _MSC_VER
             #include "intrin.h"
         #endif
-        #include <version>
         #include <algorithm>
         #include <any>
         #include <array>
@@ -85,10 +85,10 @@
         #include <clocale>
         #include <cmath>
         #include <codecvt>
-        #include <condition_variable>
         #include <compare>
         #include <complex>
         #include <concepts>
+        #include <condition_variable>
         #ifdef __cpp_lib_coroutine
             #include <coroutine>
         #endif
@@ -174,15 +174,15 @@
         #include <ranges>
         #include <ratio>
         #include <regex>
-        #ifdef __cpp_lib_source_location
-            #include <source_location>
-        #endif
         #include <scoped_allocator>
         #ifdef __cpp_lib_semaphore
             #include <semaphore>
         #endif
         #include <set>
         #include <shared_mutex>
+        #ifdef __cpp_lib_source_location
+            #include <source_location>
+        #endif
         #include <span>
         #ifdef __cpp_lib_spanstream
             #include <spanstream>
@@ -224,8 +224,7 @@
         #include <vector>
     #endif
 
-//  Otherwise, we're not in -pure-cpp2 and so just #include
-//  what we need in this header to make this self-contained
+//  Otherwise, just #include the facilities used in this header
 #else
     #ifdef _MSC_VER
         #include "intrin.h"

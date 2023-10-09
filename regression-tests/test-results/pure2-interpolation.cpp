@@ -1,5 +1,5 @@
 
-#define CPP2_USE_MODULES         Yes
+#define CPP2_IMPORT_STD          Yes
 
 //=== Cpp2 type declarations ====================================================
 
