@@ -170,8 +170,8 @@ requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...))
 
         using type_alias = std::array<int,10>;
 
-        cpp2::i8 const& object_alias_1 = 42;
-        auto const& object_alias_2 = 42;
+        cpp2::i8 constexpr object_alias_1 = 42;
+        auto constexpr object_alias_2 = 42;
 
 #line 75 "pure2-print.cpp2"
         ::outer::mytype var {}; 

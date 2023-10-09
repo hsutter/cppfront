@@ -5192,7 +5192,7 @@ public:
                     {
                         auto intro = std::string{};
                         if (n.parent_is_function()) {
-                            intro = "const&";
+                            intro = "constexpr";
                         }
                         else if (n.parent_is_namespace()) {
                             intro = "inline constexpr";
