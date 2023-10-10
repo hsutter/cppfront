@@ -20,18 +20,18 @@ struct f_ret { int i; std::string s; };
     
 
 #line 22 "mixed-multiple-return-values.cpp2"
-auto print(cpp2::in<std::string> name, auto const& value) -> void;
+auto do_print(cpp2::in<std::string> name, auto const& value) -> void;
     
 
 int main() {
     auto [a,b] = f();
-    print("a", a);
-    print("b", b);
+    do_print("a", a);
+    do_print("b", b);
 }
 
 bool flip_a_coin() {
     // Change std::mt19937 to std::random_device for non-deterministic PRNG
-    static std::mt19937 rand; 
+    static std::mt19937 rand;
     return rand() % 2 == 0;
 }
 
@@ -59,6 +59,6 @@ bool flip_a_coin() {
     return  { std::move(i.value()), std::move(s.value()) }; 
 }
 
-auto print(cpp2::in<std::string> name, auto const& value) -> void { 
+auto do_print(cpp2::in<std::string> name, auto const& value) -> void { 
     std::cout << name << " is " << value << "\n";  }
 

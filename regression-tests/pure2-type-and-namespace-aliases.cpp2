@@ -17,8 +17,7 @@ N3: namespace == ::std::literals;
 myfunc: () = {
     v: N1::pmr_vec<myclass::str> = ("xyzzy", "plugh");
 
-    v2 :== v;
-
+    (v2 := v)
     for v2 do (s)
         std::cout << "(s)$\n";
 }

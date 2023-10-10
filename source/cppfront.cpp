@@ -48,12 +48,28 @@ static cmdline_processor::register_flag cmd_noline(
     []{ flag_clean_cpp1 = true; }
 );
 
+static auto flag_import_std = false;
+static cmdline_processor::register_flag cmd_import_std(
+    0,
+    "import-std",
+    "import the entire C++ standard library via 'import std;'",
+    []{ flag_import_std = true; }
+);
+
+static auto flag_include_std = false;
+static cmdline_processor::register_flag cmd_include_std(
+    0,
+    "include-std",
+    "#include the entire C++ standard library - ignored if -import-std is set",
+    []{ flag_include_std = true; }
+);
+
 static auto flag_cpp2_only = false;
 static cmdline_processor::register_flag cmd_cpp2_only(
     0,
     "pure-cpp2",
-    "Allow Cpp2 syntax only",
-    []{ flag_cpp2_only = true; }
+    "Allow Cpp2 syntax only - also sets -import-std",
+    []{ flag_cpp2_only = true; flag_import_std = true; }
 );
 
 static auto flag_safe_null_pointers = true;
@@ -92,7 +108,7 @@ static auto flag_cpp1_filename = std::string{};
 static cmdline_processor::register_flag cmd_cpp1_filename(
     9,
     "output filename",
-    "Output to 'filename' (can be 'stdout') (default is *.cpp/*.h)",
+    "Output to 'filename' (can be 'stdout') - default is *.cpp/*.h",
     nullptr,
     [](std::string const& name) { flag_cpp1_filename = name; }
 );
@@ -101,7 +117,7 @@ static auto flag_print_colon_errors = false;
 static cmdline_processor::register_flag cmd_print_colon_errors(
     9,
     "format-colon-errors",
-    "Emit ':line:col:' format for messages (lights up some tools)",
+    "Emit ':line:col:' format for messages - lights up some tools",
     []{ flag_print_colon_errors = true; }
 );
 
@@ -117,7 +133,7 @@ static auto flag_no_exceptions = false;
 static cmdline_processor::register_flag cmd_no_exceptions(
     4,
     "fno-exceptions",
-    "Disable C++ EH, failed 'as' for 'variant' will assert",
+    "Disable C++ EH - failed 'as' for 'variant' will assert",
     []{ flag_no_exceptions = true; }
 );
 
@@ -125,7 +141,7 @@ static auto flag_no_rtti = false;
 static cmdline_processor::register_flag cmd_no_rtti(
     4,
     "fno-rtti",
-    "Disable C++ RTTI, using 'as' for '*'/'std::any' will assert",
+    "Disable C++ RTTI - using 'as' for '*'/'std::any' will assert",
     []{ flag_no_rtti = true; }
 );
 
@@ -418,8 +434,13 @@ public:
         //  Do lowered file prolog
         //
         //  Only emit extra lines if we actually have Cpp2, because
-        //  we want pure-Cpp1 files to pass through with zero changes
-        if (source.has_cpp2())
+        //  we want Cpp1-only files to pass through with zero changes
+        //  (unless the user requested import/include of std)
+        if (
+            source.has_cpp2()
+            || flag_import_std
+            || flag_include_std
+            )
         {
             printer.print_extra( "\n" );
             if (cpp1_filename.back() == 'h') {
@@ -430,8 +451,11 @@ public:
             if (flag_use_source_location) {
                 printer.print_extra( "#define CPP2_USE_SOURCE_LOCATION Yes\n" );
             }
-            if (flag_cpp2_only) {
-                printer.print_extra( "#define CPP2_USE_MODULES         Yes\n" );
+            if (flag_import_std) {
+                printer.print_extra( "#define CPP2_IMPORT_STD          Yes\n" );
+            }
+            if (flag_include_std) {
+                printer.print_extra( "#define CPP2_INCLUDE_STD         Yes\n" );
             }
             if (flag_no_exceptions) {
                 printer.print_extra( "#define CPP2_NO_EXCEPTIONS       Yes\n" );
@@ -457,7 +481,11 @@ public:
             printer.print_extra( "\n//=== Cpp2 type declarations ====================================================\n\n" );
         }
 
-        if (!tokens.get_map().empty())
+        if (
+            !tokens.get_map().empty()
+            || flag_import_std
+            || flag_include_std
+            )
         {
             printer.print_extra( "\n#include \"cpp2util.h\"\n\n" );
         }
@@ -4353,7 +4381,7 @@ public:
                     {
                         auto intro = std::string{};
                         if (n.parent_is_function()) {
-                            intro = "const&";
+                            intro = "constexpr";
                         }
                         else if (n.parent_is_namespace()) {
                             intro = "inline constexpr";

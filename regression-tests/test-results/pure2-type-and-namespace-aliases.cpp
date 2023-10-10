@@ -1,5 +1,5 @@
 
-#define CPP2_USE_MODULES         Yes
+#define CPP2_IMPORT_STD          Yes
 
 //=== Cpp2 type declarations ====================================================
 
@@ -43,7 +43,7 @@ namespace N3 = ::std::literals;
 auto myfunc() -> void;
     
 
-#line 26 "pure2-type-and-namespace-aliases.cpp2"
+#line 25 "pure2-type-and-namespace-aliases.cpp2"
 auto main() -> int;
     
 
@@ -58,18 +58,21 @@ namespace N {
 #line 17 "pure2-type-and-namespace-aliases.cpp2"
 auto myfunc() -> void{
     N1::pmr_vec<myclass::str> v {"xyzzy", "plugh"}; 
+{
+auto const& v2 = std::move(v);
 
-    auto const& v2 = std::move(v);
-
+#line 21 "pure2-type-and-namespace-aliases.cpp2"
     for ( auto const& s : v2 ) 
         std::cout << cpp2::to_string(s) + "\n";
+}
+#line 23 "pure2-type-and-namespace-aliases.cpp2"
 }
 
 auto main() -> int{
     using view = std::string_view;
     namespace N4 = std::literals;
 
-    auto const& myfunc2 = myfunc;
+    auto constexpr myfunc2 = myfunc;
     myfunc2();
 }
 

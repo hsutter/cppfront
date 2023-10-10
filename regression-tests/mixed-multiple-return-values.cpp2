@@ -19,17 +19,17 @@ f: () -> (i: int, s: std::string) = {
     return;
 }
 
-print: (name: std::string, value:_)
+do_print: (name: std::string, value:_)
     = std::cout << name << " is " << value << "\n";
 
 int main() {
     auto [a,b] = f();
-    print("a", a);
-    print("b", b);
+    do_print("a", a);
+    do_print("b", b);
 }
 
 bool flip_a_coin() {
     // Change std::mt19937 to std::random_device for non-deterministic PRNG
-    static std::mt19937 rand; 
+    static std::mt19937 rand;
     return rand() % 2 == 0;
 }
