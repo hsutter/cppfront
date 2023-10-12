@@ -346,7 +346,7 @@ auto starts_with_identifier_colon(std::string const& line)
 //  braces_tracker: to track brace depth
 //
 //  Normally we don't emit diagnostics for Cpp1 code, but we do for a
-//  brace mismatch since we're relying on balanced { } to find Cpp2 code
+//  brace mismatch since we're relying on balanced {()} to find Cpp2 code
 //
 class braces_tracker
 {
@@ -391,6 +391,7 @@ class braces_tracker
         }
     };
     std::vector<pre_if_depth_info> preprocessor = { {} };  // sentinel
+    char                           current_open_type = ' ';
     std::vector<lineno_t>          open_braces;
     std::vector<error_entry>&      errors;
 
@@ -399,28 +400,39 @@ public:
         : errors{errors}
     { }
 
-    //  --- Brace matching functions - { and }
+    //  --- Brace matching functions - { and }, or ( and )
 
-    auto found_open_brace(lineno_t lineno) -> void {
+    auto found_open_brace(lineno_t lineno, char brace) -> void {
         assert(std::ssize(preprocessor) > 0);
-        open_braces.push_back(lineno);
-        preprocessor.back().found_open_brace();
+        if (open_braces.empty()) {
+            current_open_type = brace;
+        }
+        if (current_open_type == brace) {
+            open_braces.push_back(lineno);
+            preprocessor.back().found_open_brace();
+        }
     }
 
-    auto found_close_brace(source_position pos) -> void {
+    auto found_close_brace(source_position pos, char brace) -> void {
         assert(std::ssize(preprocessor) > 0);
 
-        if (std::ssize(open_braces) < 1) {
-            errors.emplace_back(
-                pos,
-                "closing } does not match a prior {"
-            );
-        }
-        else {
-            open_braces.pop_back();
-        }
+        if (
+            (current_open_type == '{' && brace == '}')
+            || (current_open_type == '(' && brace == ')')
+            )
+        {
+            if (std::ssize(open_braces) < 1) {
+                errors.emplace_back(
+                    pos,
+                    "closing } does not match a prior {"
+                );
+            }
+            else {
+                open_braces.pop_back();
+            }
 
-        preprocessor.back().found_close_brace();
+            preprocessor.back().found_close_brace();
+        }
     }
 
     auto found_eof(source_position pos) const -> void {
@@ -471,7 +483,7 @@ public:
         //  braces_to_ignore() will be the positive number of those net open braces
         //  that this loop will now throw away
         for (auto i = 0; i < preprocessor.back().braces_to_ignore(); ++i) {
-            found_close_brace( source_position{} );
+            found_close_brace( source_position{}, current_open_type == '{' ? '}' : ')' );
         }
 
         preprocessor.pop_back();
@@ -638,12 +650,12 @@ auto process_cpp_line(
 
                 break;case '{':
                     if (!in_literal()) {
-                        braces.found_open_brace(lineno);
+                        braces.found_open_brace(lineno, '{');
                     }
 
                 break;case '}':
                     if (!in_literal()) {
-                        braces.found_close_brace(source_position(lineno, i));
+                        braces.found_close_brace(source_position(lineno, i), '}');
                     }
 
                 break;case '*':
@@ -703,34 +715,45 @@ auto process_cpp2_line(
 
     auto prev = ' ';
     auto in_string_literal = false;
+    auto in_char_literal   = false;
 
-    for (auto i = colno_t{0}; i < ssize(line); ++i) {
-
-        if (in_comment) {
+    for (auto i = colno_t{0}; i < ssize(line); ++i)
+    {
+        if (in_comment)
+        {
             switch (line[i]) {
             break;case '/': if (prev == '*') { in_comment = false; }
             break;default: ;
             }
-        } else if (in_string_literal) {
+        }
+        else if (in_string_literal)
+        {
             switch (line[i]) {
             break;case '"': if (prev != '\\') { in_string_literal = false; }
             break;default: ;
             }
         }
-
-        else {
+        else if (in_char_literal)
+        {
             switch (line[i]) {
+            break;case '\'': if (prev != '\\') { in_char_literal = false; }
+            break;default: ;
+            }
+        }
+        else
+        {
+            switch (line[i])
+            {
+            //  For finding Cpp2 definition endings, count () as {}
             break;case '{':
-                if (prev != '\'') { // ignore character literals
-                    braces.found_open_brace(lineno);
-                }
+                  case '(':
+                braces.found_open_brace( lineno, line[i] );
 
             break;case '}':
-                if (prev != '\'') { // ignore character literals
-                    braces.found_close_brace( source_position(lineno, i) );
-                    if (braces.current_depth() < 1) {
-                        found_end = true;
-                    }
+                  case ')':
+                braces.found_close_brace( source_position(lineno, i), line[i]);
+                if (braces.current_depth() < 1 && line[i] != ')') {
+                    found_end = true;
                 }
 
             break;case ';':
@@ -754,6 +777,9 @@ auto process_cpp2_line(
 
             break;case '"':
                 if (prev != '\\') { in_string_literal = true; }
+
+            break;case '\'':
+                if (prev != '\\') { in_char_literal = true; }
 
             break;default: ;
             }
