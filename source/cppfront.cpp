@@ -69,6 +69,14 @@ static cmdline_processor::register_flag cmd_noline(
     []{ flag_clean_cpp1 = true; }
 );
 
+static auto flag_absolute_line_directives = false;
+static cmdline_processor::register_flag cmd_absolute_line_directives(
+    9,
+    "absolute-line-directives",
+    "Emit absolute paths in #line directives",
+    [] { flag_absolute_line_directives = true; }
+);
+
 static auto flag_import_std = false;
 static cmdline_processor::register_flag cmd_import_std(
     0,
@@ -636,7 +644,9 @@ public:
     )
         -> void
     {
-        cpp2_filename = std::filesystem::absolute(std::filesystem::path(cpp2_filename_)).string();
+        cpp2_filename = (flag_absolute_line_directives) ?
+            std::filesystem::absolute(std::filesystem::path(cpp2_filename_)).string() :
+            cpp2_filename_;
         assert(
             !is_open()
             && !pcomments
