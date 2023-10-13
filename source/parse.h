@@ -5877,6 +5877,7 @@ private:
 
         if (
             check_arrow
+            && !done()
             && curr().type() == lexeme::Arrow
             )
         {
@@ -7886,12 +7887,13 @@ private:
             deduced_type = true;
         }
 
-        //  If we've already validated that this is a function where the `->`
-        //  is followed by a valid expression-statement, parse that again
+        //  If we've already validated that this is a function where the parameter
+        //  list is followed by a valid expression-statement, parse that again
+        //  (requiring a semicolon as we validated when determining terse_no_equals)
         if (n->terse_no_equals)
         {
             n->equal_sign = curr().position();
-            n->initializer = statement(semicolon_required, n->equal_sign);
+            n->initializer = statement(/*ignore semicolon_required*/ true, n->equal_sign);
             assert( n->initializer && "ICE: should have already validated that there's a valid expression-statement here" );
         }
 
