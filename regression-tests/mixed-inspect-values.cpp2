@@ -26,6 +26,7 @@ main: ()->int = {
     test(-42);
     test("xyzzy" as std::string);
     test(3.14);
+    test("");
 }
 
 test: (x:_) = {
@@ -37,6 +38,7 @@ test: (x:_) = {
         is (forty_two) = "the answer";
         is int         = "integer " + cpp2::to_string(x);
         is std::string = x as std::string;
+        if x is std::optional = "an optional";
         is _           = "(no match)";
     } << "\n";
 }

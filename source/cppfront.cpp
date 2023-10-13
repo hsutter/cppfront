@@ -1952,39 +1952,50 @@ public:
             if (alt->type_id) {
                 emit(*alt->type_id);
             }
-            else {
-                assert(alt->value);
+            else if (alt->value) {
                 emit(*alt->value);
+            }
+            else if (alt->test) {
+                emit(*alt->test);
+            }
+            else {
+                assert(!"ICE: unexpected case");
             }
             printer.emit_to_string();
 
             assert (
                 *alt->is_as_keyword == "is"
                 || *alt->is_as_keyword == "as"
+                || *alt->is_as_keyword == "if"
             );
             // TODO: pick up 'as' next, for now just do 'is'
 
-            if (*alt->is_as_keyword == "is")
-            {
-                //  Stringize the expression-statement now...
-                auto statement = std::string{};
-                printer.emit_to_string(&statement);
-                emit(*alt->statement);
-                printer.emit_to_string();
-                //  ... and jettison the final ; for an expression-statement
-                while (
-                    !statement.empty()
-                    && (
-                        statement.back() == ';'
-                        || isspace(statement.back())
-                        )
+            //  Stringize the expression-statement now...
+            auto statement = std::string{};
+            printer.emit_to_string(&statement);
+            emit(*alt->statement);
+            printer.emit_to_string();
+            //  ... and jettison the final ; for an expression-statement
+            while (
+                !statement.empty()
+                && (
+                    statement.back() == ';'
+                    || isspace(statement.back())
                     )
-                {
-                    statement.pop_back();
-                }
+                )
+            {
+                statement.pop_back();
+            }
 
-                replace_all( statement, "cpp2::as_<", "cpp2::as<" );
+            replace_all( statement, "cpp2::as_<", "cpp2::as<" );
 
+            if (*alt->is_as_keyword == "if")
+            {
+                printer.print_cpp2("if " + constexpr_qualifier + "(" + id + ") ", alt->position());
+                printer.print_cpp2("return " + statement + ";", alt->position());
+            }
+            else if (*alt->is_as_keyword == "is")
+            {
                 //  If this is an inspect-expression, we'll have to wrap each alternative
                 //  in an 'if constexpr' so that its type is ignored for mismatches with
                 //  the inspect-expression's type
