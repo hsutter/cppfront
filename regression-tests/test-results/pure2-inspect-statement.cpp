@@ -25,7 +25,7 @@ std::any v {};
 [[nodiscard]] auto f() -> int
     { auto&& _expr = v;
         if (cpp2::is(_expr, 1)) return 1;
-        else if (cpp2::is<int>(_expr)) return 2;
+        else if (cpp2::is<int>(_expr)) {return 2; }
         else return 3;
     }
 

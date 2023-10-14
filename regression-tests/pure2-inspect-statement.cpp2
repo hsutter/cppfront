@@ -3,7 +3,7 @@ v : std::any = ();
 f: () -> int =
     inspect v {
         is 1 = return 1;
-        is int = return 2;
+        is int = { return 2; }
         is _ = return 3;
     }
 

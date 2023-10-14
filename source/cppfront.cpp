@@ -1944,6 +1944,7 @@ public:
                 emit(*alt->statement);
                 printer.emit_to_string();
                 //  ... and jettison the final ; for an expression-statement
+                auto return_suffix = std::string{};
                 while (
                     !statement.empty()
                     && (
@@ -1953,6 +1954,7 @@ public:
                     )
                 {
                     statement.pop_back();
+                    return_suffix = ";";   // use this to tack the ; back on in the alternative body
                 }
 
                 replace_all( statement, "cpp2::as_<", "cpp2::as<" );
@@ -1961,7 +1963,6 @@ public:
                 //  in an 'if constexpr' so that its type is ignored for mismatches with
                 //  the inspect-expression's type
                 auto return_prefix = std::string{};
-                auto return_suffix = std::string{";"};   // use this to tack the ; back on in the alternative body
                 if (is_expression) {
                     return_prefix = "{ if constexpr( requires{" + statement + ";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((" + statement + "))," + result_type + "> ) return ";
                     return_suffix += " }";
