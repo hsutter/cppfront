@@ -49,7 +49,7 @@ main: () = {
     else if skat_game::hearts == x {    // ok, in either order
         std::cout << "hearts";
     }
-    else if x is (skat_game::spades) {  // ok, using is
+    else if (x) is (skat_game::spades) {  // ok, using is
         std::cout << "spades";
     }
     else if skat_game::clubs is (x) {   // ok, using is
@@ -95,8 +95,8 @@ main: () = {
     std::cout << "f. get_raw_value() is (f. get_raw_value())$\n";
     std::cout << "f2.get_raw_value() is (f2.get_raw_value())$\n";
 
-    std::cout << "f  is (f2) is (f  is (f2))$\n";
-    std::cout << "f2 is (f ) is (f2 is (f ))$\n\n";
+    std::cout << "(f ) is (f2) is ((f ) is (f2))$\n";
+    std::cout << "(f2) is (f ) is ((f2) is (f ))$\n\n";
 
     f.clear( f2 );
     f.set( file_attributes::current | f2 );
@@ -108,8 +108,8 @@ main: () = {
     std::cout << "f. get_raw_value() is (f. get_raw_value())$\n";
     std::cout << "f2.get_raw_value() is (f2.get_raw_value())$\n";
     std::cout << "f  == f2   is (f  == f2  )$\n";
-    std::cout << "f  is (f2) is (f  is (f2))$\n";
-    std::cout << "f2 is (f ) is (f2 is (f ))$\n";
+    std::cout << "(f ) is (f2) is ((f ) is (f2))$\n";
+    std::cout << "(f2) is (f ) is ((f2) is (f ))$\n";
     std::cout << "(f & f2) == f2 is ((f & f2) == f2)$\n";
 
     std::cout << "inspecting f: " << inspect f -> std::string {

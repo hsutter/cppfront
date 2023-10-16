@@ -16,10 +16,10 @@ fun: (v : _) -> std::string = {
 }
 
 fun2: (v : _) -> std::string = {
-    if v is std::vector  { return "std::vector";  }
-    if v is std::array   { return "std::array";   }
-    if v is std::variant { return "std::variant"; }
-    if v is my_type      { return "my_type";      }
+    if (v) is std::vector  { return "std::vector";  }
+    if (v) is std::array   { return "std::array";   }
+    if (v) is std::variant { return "std::variant"; }
+    if (v) is my_type      { return "my_type";      }
     return "unknown";
 }
 

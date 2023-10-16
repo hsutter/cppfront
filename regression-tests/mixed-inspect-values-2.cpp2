@@ -25,11 +25,11 @@ main: () -> int = {
         is _ = "i is out of our interest";
     } << std::endl;
 
-    if i is (less_than(20)) {
+    if (i) is (less_than(20)) {
         std::cout << "less than 20" << std::endl;
     }
 
-    if i is (in(10,30)) {
+    if (i) is (in(10,30)) {
         std::cout << "i is between 10 and 30" << std::endl;
     }
 
@@ -39,7 +39,7 @@ main: () -> int = {
         std::cout << "v is empty" << std::endl;
     }
 
-    if v is (empty) {
+    if (v) is (empty) {
         std::cout << "v is empty" << std::endl;
     }
 }

@@ -6033,6 +6033,17 @@ private:
         -> std::unique_ptr<is_as_expression_node>
     {
         auto n = std::make_unique<is_as_expression_node>();
+
+        if (
+            curr().type() == lexeme::Identifier
+            && peek(1)
+            && *peek(1) == "is"
+            )
+        {
+            error("(temporary alpha limitation) testing a type with 'is' is not supported yet (or perhaps use '(identifier) is' to test an expression)");
+            return {};
+        }
+
         n->expr = prefix_expression();
         if (!(n->expr)) {
             return {};
