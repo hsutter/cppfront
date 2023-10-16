@@ -6015,10 +6015,10 @@ private:
 
     //G is-as-expression:
     //G     prefix-expression
+    //GTODO     type-id is-type-constraint
     //G     is-as-expression is-type-constraint
     //G     is-as-expression is-value-constraint
     //G     is-as-expression as-type-cast
-    //GTODO     type-id is-type-constraint
     //G
     //G is-type-constraint
     //G     'is' type-id
