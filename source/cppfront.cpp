@@ -1943,18 +1943,16 @@ public:
                 printer.emit_to_string(&statement);
                 emit(*alt->statement);
                 printer.emit_to_string();
-                //  ... and jettison the final ; for an expression-statement
+                //  ... and jettison any final ; for an expression-statement
                 auto return_suffix = std::string{};
-                while (
-                    !statement.empty()
-                    && (
-                        statement.back() == ';'
-                        || isspace(statement.back())
-                        )
-                    )
+                while (!statement.empty())
                 {
+                    if (statement.back() == ';') {
+                        return_suffix = ';'; // tack the ; back on in the alternative body
+                    } else if (!isspace(statement.back())) {
+                        break;
+                    }
                     statement.pop_back();
-                    return_suffix = ";";   // use this to tack the ; back on in the alternative body
                 }
 
                 replace_all( statement, "cpp2::as_<", "cpp2::as<" );
