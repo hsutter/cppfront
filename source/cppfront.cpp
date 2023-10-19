@@ -72,7 +72,7 @@ static auto flag_import_std = false;
 static cmdline_processor::register_flag cmd_import_std(
     0,
     "import-std",
-    "import the entire C++ standard library via 'import std;'",
+    "import all std:: via 'import std;' - ignored if -include-std is set",
     []{ flag_import_std = true; }
 );
 
@@ -80,7 +80,7 @@ static auto flag_include_std = false;
 static cmdline_processor::register_flag cmd_include_std(
     0,
     "include-std",
-    "#include the entire C++ standard library - ignored if -import-std is set",
+    "#include all std:: headers",
     []{ flag_include_std = true; }
 );
 
@@ -1262,15 +1262,18 @@ public:
             if (flag_use_source_location) {
                 printer.print_extra( "#define CPP2_USE_SOURCE_LOCATION Yes\n" );
             }
-            if (flag_import_std) {
-                printer.print_extra( "#define CPP2_IMPORT_STD          Yes\n" );
-            }
+
             if (flag_include_std) {
                 printer.print_extra( "#define CPP2_INCLUDE_STD         Yes\n" );
             }
+            else if (flag_import_std) {
+                printer.print_extra( "#define CPP2_IMPORT_STD          Yes\n" );
+            }
+
             if (flag_no_exceptions) {
                 printer.print_extra( "#define CPP2_NO_EXCEPTIONS       Yes\n" );
             }
+
             if (flag_no_rtti) {
                 printer.print_extra( "#define CPP2_NO_RTTI             Yes\n" );
             }
