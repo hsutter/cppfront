@@ -8025,7 +8025,19 @@ private:
                     }
                 }
 
-                if (!(n->initializer = statement(semicolon_required, n->equal_sign))) {
+                if (n->is_object()) {
+                    //  An object initializer must be an expression
+                    auto es = expression_statement(semicolon_required);
+                    if (es) {
+                        n->initializer = std::make_unique<statement_node>();
+                        n->initializer->statement = std::move(es);
+                    } else {
+                        error("ill-formed object initializer", true, {}, true);
+                        next();
+                        return {};
+                    }
+                }
+                else if (!(n->initializer = statement(semicolon_required, n->equal_sign))) {
                     error(
                         "ill-formed initializer",
                         true, {}, true

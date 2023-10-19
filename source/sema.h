@@ -1018,18 +1018,13 @@ public:
         }
 
         //  An object initializer must be an expression
-        if (
-            n.is_object()
-            && n.initializer
-            && !n.initializer->is_expression()
+        assert(
+            !n.is_object()
+            || (
+                !n.initializer
+                || n.initializer->is_expression()
             )
-        {
-            errors.emplace_back(
-                n.position(),
-                "an object initializer must be an expression"
-            );
-            return false;
-        }
+        );
 
         //  A namespace must be initialized with a compound expression
         if (
