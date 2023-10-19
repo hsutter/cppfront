@@ -19,6 +19,7 @@
 #include <iostream>
 #include <cstdio>
 #include <optional>
+#include <filesystem>
 
 namespace cpp2 {
 
@@ -66,6 +67,14 @@ static cmdline_processor::register_flag cmd_noline(
     "clean-cpp1",
     "Emit clean Cpp1 without #line directives",
     []{ flag_clean_cpp1 = true; }
+);
+
+static auto flag_absolute_line_directives = false;
+static cmdline_processor::register_flag cmd_absolute_line_directives(
+    9,
+    "absolute-line-directives",
+    "Emit absolute paths in #line directives",
+    [] { flag_absolute_line_directives = true; }
 );
 
 static auto flag_import_std = false;
@@ -221,6 +230,11 @@ class positional_printer
     bool            just_printed_line_directive = false;
     bool            printed_extra               = false;
     char            last_printed_char           = {};
+
+    struct line_directive_info {
+        lineno_t out_pos_line;                        // output lineno where the line directive was printed
+        lineno_t line;                                // the lineno in the line directive
+    } prev_line_directive = {};
 
     struct req_act_info {
         colno_t requested;
@@ -401,6 +415,15 @@ private:
             return;
         }
 
+        //  Don't print duplicate line directives on subsequent lines
+        if (
+            prev_line_directive.out_pos_line == curr_pos.lineno
+            && prev_line_directive.line == line
+            )
+        {
+            return;
+        }
+
         //  Otherwise, implement the request
         prev_line_info = { curr_pos.lineno, { } };
         ensure_at_start_of_new_line();
@@ -411,6 +434,7 @@ private:
             *out << "#line " << line << " " << std::quoted(cpp2_filename) << "\n";
         }
         just_printed_line_directive = true;
+        prev_line_directive = { curr_pos.lineno, line };
     }
 
     //  Catch up with comment/blank lines
@@ -620,7 +644,9 @@ public:
     )
         -> void
     {
-        cpp2_filename = cpp2_filename_;
+        cpp2_filename = (flag_absolute_line_directives) ?
+            std::filesystem::absolute(std::filesystem::path(cpp2_filename_)).string() :
+            cpp2_filename_;
         assert(
             !is_open()
             && !pcomments
@@ -5601,6 +5627,12 @@ public:
                 )
             )
         {
+            //  Print a line directive before every function definition
+            //  (needed to enable debugging with lldb).
+            if (n.initializer) {
+                printer.print_extra("");
+            }
+
             auto is_streaming_operator = [](std::string_view sv) {
                 return
                     sv == "operator<<"
@@ -5932,7 +5964,6 @@ public:
             //  Else emit the definition
             else if (n.initializer)
             {
-
                 if (func->returns.index() == function_type_node::list) {
                     auto& r = std::get<function_type_node::list>(func->returns);
                     function_returns.emplace_back(r.get());
