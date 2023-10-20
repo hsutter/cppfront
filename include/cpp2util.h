@@ -309,8 +309,9 @@ using u64       = std::uint64_t      ;
 //                 short
 using ushort     = unsigned short;
 //                 int
-using ulong      = unsigned long;
+using uint       = unsigned int;
 //                 long
+using ulong      = unsigned long;
 using longlong   = long long;
 using ulonglong  = unsigned long long;
 using longdouble = long double;
