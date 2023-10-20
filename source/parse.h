@@ -7516,15 +7516,18 @@ private:
         }
 
 
-        //  If we're not at a '->' and what follows is an expression-statement,
-        //  this is a ":(params) expr;" shorthand function syntax
-        if (curr().type() != lexeme::Arrow)
+        //  If we're not at a '->' or 'requires' and what follows is an expression,
+        //  this is a ":(params) expr" shorthand function syntax
+        if (
+            curr().type() != lexeme::Arrow
+            && curr() != "requires"
+            )
         {
             auto start_pos = pos;
-            auto at_an_expression_statement = expression_statement(true) != nullptr;
+            auto at_an_expression = expression() != nullptr;
             pos = start_pos;    // backtrack no matter what, we're just peeking here
 
-            if (at_an_expression_statement) {
+            if (at_an_expression) {
                 n->returns = function_type_node::single_type_id{ std::make_unique<type_id_node>() };
                 assert(n->returns.index() == function_type_node::id);
                 n->my_decl->terse_no_equals = true;
@@ -7903,7 +7906,7 @@ private:
         if (n->terse_no_equals)
         {
             n->equal_sign = curr().position();
-            n->initializer = statement(/*ignore semicolon_required*/ true, n->equal_sign);
+            n->initializer = statement(/*ignore semicolon_required*/ false, n->equal_sign);
             assert( n->initializer && "ICE: should have already validated that there's a valid expression-statement here" );
         }
 
