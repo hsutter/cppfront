@@ -556,14 +556,26 @@ auto Typeid() -> decltype(auto) {
 struct {
     template<typename T>
     [[nodiscard]] auto cpp2_new(auto&& ...args) const -> std::unique_ptr<T> {
-        return std::make_unique<T>(CPP2_FORWARD(args)...);
+        if constexpr (requires { T{CPP2_FORWARD(args)...}; }) {
+            //  This is because apparently make_unique can't deal with list
+            //  initialization of aggregates, even after P0960
+            return std::unique_ptr<T>( new T{CPP2_FORWARD(args)...} );
+        }
+        else {
+            return std::make_unique<T>(CPP2_FORWARD(args)...);
+        }
     }
 } inline unique;
 
 [[maybe_unused]] struct {
     template<typename T>
     [[nodiscard]] auto cpp2_new(auto&& ...args) const -> std::shared_ptr<T> {
-        return std::make_shared<T>(CPP2_FORWARD(args)...);
+        if constexpr (requires { T{CPP2_FORWARD(args)...}; }) {
+            return unique.cpp2_new<T>(CPP2_FORWARD(args)...);
+        }
+        else {
+            return std::make_shared<T>(CPP2_FORWARD(args)...);
+        }
     }
 } inline shared;
 
