@@ -6709,13 +6709,23 @@ private:
     //G     alt-name? is-value-constraint '=' statement
     //G     alt-name? as-type-cast '=' statement
     //G
-    //G alt-name:
+    //GTODO alt-name:
     //G     unqualified-id ':'
     //G
     auto alternative()
         -> std::unique_ptr<alternative_node>
     {
         auto n = std::make_unique<alternative_node>();
+
+        if (
+            curr().type() == lexeme::Identifier
+            && peek(1)
+            && peek(1)->type() == lexeme::Colon
+            )
+        {
+            error("(temporary alpha limitation) declaring an identifier is not supported yet");
+            return {};
+        }
 
         //  Now we should be as "is" or "as"
         //  (initial partial implementation, just "is/as id-expression")
