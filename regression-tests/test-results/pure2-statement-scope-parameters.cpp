@@ -20,7 +20,7 @@ auto main(int const argc_, char** argv_) -> int;
 
 #line 2 "pure2-statement-scope-parameters.cpp2"
 auto main(int const argc_, char** argv_) -> int{
-    auto args = cpp2::make_args(argc_, argv_); 
+    auto const args = cpp2::make_args(argc_, argv_); 
 #line 3 "pure2-statement-scope-parameters.cpp2"
     auto local_int {42}; 
 {

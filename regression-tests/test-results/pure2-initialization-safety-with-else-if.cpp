@@ -16,7 +16,7 @@ auto main(int const argc_, char** argv_) -> int;
 //=== Cpp2 function definitions =================================================
 
 auto main(int const argc_, char** argv_) -> int{
-    auto args = cpp2::make_args(argc_, argv_); 
+    auto const args = cpp2::make_args(argc_, argv_); 
 #line 2 "pure2-initialization-safety-with-else-if.cpp2"
     cpp2::deferred_init<int*> p; 
 

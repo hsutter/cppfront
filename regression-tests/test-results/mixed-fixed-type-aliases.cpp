@@ -36,7 +36,7 @@ auto test(auto const& x) -> void{
 }
 
 [[nodiscard]] auto main(int const argc_, char** argv_) -> int{
-    auto args = cpp2::make_args(argc_, argv_); 
+    auto const args = cpp2::make_args(argc_, argv_); 
 #line 16 "mixed-fixed-type-aliases.cpp2"
     my::u16 y {42}; 
     test(std::move(y));
