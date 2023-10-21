@@ -16,6 +16,10 @@ namespace N {
 class myclass;
     
 
+#line 25 "pure2-type-and-namespace-aliases.cpp2"
+template<typename T> class myclass2;
+    
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 
@@ -44,6 +48,15 @@ auto myfunc() -> void;
     
 
 #line 25 "pure2-type-and-namespace-aliases.cpp2"
+template<typename T> class myclass2 {
+    public: static const int value;
+
+    public: myclass2() = default;
+    public: myclass2(myclass2 const&) = delete; /* No 'that' constructor, suppress copy */
+    public: auto operator=(myclass2 const&) -> void = delete;
+#line 27 "pure2-type-and-namespace-aliases.cpp2"
+};
+
 auto main() -> int;
     
 
@@ -68,6 +81,10 @@ auto const& v2 = std::move(v);
 #line 23 "pure2-type-and-namespace-aliases.cpp2"
 }
 
+#line 26 "pure2-type-and-namespace-aliases.cpp2"
+    template<typename T> inline CPP2_CONSTEXPR int<T> myclass2<T>::value = 42;
+
+#line 29 "pure2-type-and-namespace-aliases.cpp2"
 auto main() -> int{
     using view = std::string_view;
     namespace N4 = std::literals;
