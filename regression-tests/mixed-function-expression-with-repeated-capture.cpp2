@@ -12,9 +12,9 @@ main: () -> int = {
 
     y := "\n";
     std::ranges::for_each
-        ( view, :(x:_) = { std::cout << y$ << x << y$; } );
+        ( view, :(x) = std::cout << y$ << x << y$ );
 
-    callback := :(inout x:_) = x += "-ish";
+    callback := :(inout x) = x += "-ish";
     std::ranges::for_each( view, callback );
 
     for view do (str)

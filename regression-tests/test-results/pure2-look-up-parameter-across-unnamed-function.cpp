@@ -33,7 +33,7 @@ struct f_ret { int ri; };
 [[nodiscard]] auto f() -> f_ret{
     int ri {0};
 #line 3 "pure2-look-up-parameter-across-unnamed-function.cpp2"
-    auto pred {[](auto const& e) -> bool{return e == 1; }}; 
+    auto pred {[](auto const& e) -> auto { return e == 1;  }}; 
     ri = 42;
     return  { std::move(ri) }; // "return;" is implicit"
 }
@@ -42,7 +42,7 @@ struct f_ret { int ri; };
         cpp2::deferred_init<int> ri;
 #line 9 "pure2-look-up-parameter-across-unnamed-function.cpp2"
     ri.construct(0);
-    auto pred {[](auto const& e) -> bool{return e == 1; }}; 
+    auto pred {[](auto const& e) -> auto { return e == 1;  }}; 
     ri.value() = 42;
     return  { std::move(ri.value()) }; 
 }

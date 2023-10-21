@@ -11,11 +11,11 @@ main: () -> int = {
     view: std::span = vec;
 
     y: std::string = "\n";
-    std::ranges::for_each( view, :(x:_) = {
-        std::cout << (y&$)*.c_str() << x << y&$*;
-    } );
+    std::ranges::for_each( view, :(x) =
+        std::cout << y&$*.c_str() << x << y&$*;
+    );
 
-    callback := :(inout x:_) = x += "-ish";
+    callback := :(inout x) = x += "-ish";
     std::ranges::for_each( view, callback );
 
     for view do (str)

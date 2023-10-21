@@ -11,9 +11,9 @@ main: () -> int = {
     view: std::span = vec;
 
     std::ranges::for_each
-        ( view, :(x:_) = { std::cout << x << "\n"; } );
+        ( view, :(x) = std::cout << x << "\n" );
 
-    callback := :(inout x:_) = x += "-ish";
+    callback := :(inout x) = x += "-ish";
     std::ranges::for_each( view, callback );
 
     for view do (str)

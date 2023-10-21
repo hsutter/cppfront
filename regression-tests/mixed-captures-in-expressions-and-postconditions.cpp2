@@ -7,7 +7,7 @@ main: () -> int = {
             = ("hello", "2022");
 
     y: std::string = "\n";
-    callback := :(x:_) = { std::cout << x << y&$*; };
+    callback := :(x) = std::cout << x << y&$*;
 
     std::ranges::for_each( vec, callback );
     y = "-ish\n";

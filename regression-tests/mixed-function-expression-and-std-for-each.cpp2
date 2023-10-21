@@ -13,11 +13,11 @@ main: () -> int = {
     std::for_each(
         view.begin(),
         view.end(),
-        :(inout x:_) = x += "-ish";
+        :(inout x) = x += "-ish";
     );
 
     //  Initializing from a function expression
-    callback := :(inout x:_) = x += " maybe";
+    callback := :(inout x) = x += " maybe";
     std::for_each(
         view.begin(),
         view.end(),
