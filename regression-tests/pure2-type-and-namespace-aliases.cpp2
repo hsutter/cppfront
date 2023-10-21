@@ -23,10 +23,6 @@ myfunc: () = {
         std::cout << "(s)$\n";
 }
 
-myclass2: <T> type = {
-    value: int == 42;
-}
-
 main: () = {
     view: type == std::string_view;
     N4: namespace == std::literals;
