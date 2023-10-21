@@ -5190,7 +5190,7 @@ public:
                             );
                         }
                     }
-                    //  Otherwise, at function and namespace scope we can just declare
+                    //  Otherwise, at function and namespace scope we can just define
                     else
                     {
                         auto intro = std::string{};
