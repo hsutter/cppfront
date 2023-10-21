@@ -4949,6 +4949,30 @@ public:
     )
         -> void
     {
+        // Helper for declarations with parent *template-head*s.
+        auto const emit_parent_template_parameters = [&]() {
+            auto parent_template_parameters = std::string{};
+            auto parent = n.parent_declaration;
+            while (
+                parent
+                && parent->is_type()
+                )
+            {
+                if (parent->requires_clause_expression) {
+                    parent_template_parameters =
+                        "requires( " + print_to_string(*parent->requires_clause_expression) + " )\n"
+                        + parent_template_parameters;
+                }
+                if (parent->template_parameters) {
+                    parent_template_parameters =
+                        "template " + print_to_string( *parent->template_parameters, false, true )
+                        + " " + parent_template_parameters;
+                }
+                parent = parent->parent_declaration;
+            }
+            printer.print_cpp2(parent_template_parameters, n.position());
+        };
+
         //  Helper for declarations that can have requires-clauses
         auto const emit_requires_clause = [&]() {
             if (
@@ -5142,46 +5166,12 @@ public:
                                 return;
                             }
 
-                            auto parent_template_params = std::string{};
-                            auto parent_template_args   = std::string{};
-                            auto parent_qualifier       = std::string{};
-
-                            auto parent = n.parent_declaration;
-                            while (parent && parent->is_type())
-                            {
-                                if (!parent_qualifier.empty()) {
-                                    parent_qualifier.insert(0, "::");
-                                }
-                                parent_qualifier.insert(0, parent->name()->to_string());
-
-                                if (parent->template_parameters) {
-                                    parent_template_params.insert(0, "template" + print_to_string(*parent->template_parameters));
-                                    for (auto const& param : parent->template_parameters->parameters) {
-                                        assert(param->name());
-                                        if (parent_template_args.empty()) {
-                                            parent_template_args = "<>";
-                                        }
-                                        else {
-                                            parent_template_args.insert(parent_template_args.size()-1, ",");
-                                        }
-                                        parent_template_args.insert(parent_template_args.size()-1, param->name()->as_string_view());
-                                    }
-                                }
-
-                                parent = parent->parent_declaration;
-                            }
-
-                            if (!parent_template_params.empty()) {
-                                parent_template_params += " ";
-                            }
-
+                            emit_parent_template_parameters();
                             printer.print_cpp2(
-                                parent_template_params
-                                    + "inline CPP2_CONSTEXPR "
+                                "inline CPP2_CONSTEXPR "
                                     + type
-                                    + parent_template_args
-                                    + " " + parent_qualifier
-                                    + parent_template_args + "::"
+                                    + " "
+                                    + type_qualification_if_any_for(n)
                                     + print_to_string(*n.identifier)
                                     + " = "
                                     + print_to_string( *std::get<alias_node::an_object>(a->initializer) )
@@ -5349,26 +5339,7 @@ public:
             && n.initializer    // only if the function has a definition (is not abstract)
             )
         {
-            auto parent_template_parameters = std::string{};
-            auto parent = n.parent_declaration;
-            while (
-                parent
-                && parent->is_type()
-                )
-            {
-                if (parent->requires_clause_expression) {
-                    parent_template_parameters =
-                        "requires( " + print_to_string(*parent->requires_clause_expression) + " )\n"
-                        + parent_template_parameters;
-                }
-                if (parent->template_parameters) {
-                    parent_template_parameters =
-                        "template " + print_to_string( *parent->template_parameters, false, true )
-                        + " " + parent_template_parameters;
-                }
-                parent = parent->parent_declaration;
-            }
-            printer.print_cpp2(parent_template_parameters, n.position());
+            emit_parent_template_parameters();
         }
 
         //  Now, emit our own template parameters
