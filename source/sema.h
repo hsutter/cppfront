@@ -1277,21 +1277,6 @@ public:
             return false;
         }
 
-        //  Ban overloading unary &
-        if (
-            n.identifier
-            && n.is_function()
-            && n.has_name("operator&")
-            && n.parameter_count() < 2
-            )
-        {
-            errors.emplace_back(
-                n.position(),
-                "overloading unary '" + n.name()->to_string() + "' is not allowed"
-            );
-            return false;
-        }
-
         //  Require that ~/comparison/assignment operators must be members
         if (
             n.identifier
