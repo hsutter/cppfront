@@ -557,6 +557,8 @@ auto Typeid() -> decltype(auto) {
 struct {
     template<typename T>
     [[nodiscard]] auto cpp2_new(auto&& ...args) const -> std::unique_ptr<T> {
+        //  Prefer { } to ( ) so that initializing a vector<int> with
+        //  (10), (10, 20), and (10, 20, 30) is consistent
         if constexpr (requires { T{CPP2_FORWARD(args)...}; }) {
             //  This is because apparently make_unique can't deal with list
             //  initialization of aggregates, even after P0960
@@ -571,7 +573,23 @@ struct {
 [[maybe_unused]] struct {
     template<typename T>
     [[nodiscard]] auto cpp2_new(auto&& ...args) const -> std::shared_ptr<T> {
+        //  Prefer { } to ( ) as noted for unique.new
+        // 
+        //  Note this does mean we don't get the make_shared optimization a lot
+        //  of the time -- we can restore that as soon as make_shared improves to
+        //  allow list initialization. But the make_shared optimization isn't a
+        //  huge deal anyway: it saves one allocation, but most of the cost of
+        //  shared_ptrs is copying them and the allocation cost saving is probably
+        //  outweighed by just a couple of shared_ptr copies; also, the make_shared
+        //  optimization has the potential downside of keeping the raw storage
+        //  alive longer when there are weak_ptrs. So, yes, we can and should
+        //  restore the make_shared optimization as soon as make_shared supports
+        //  list init, but I don't think it's all that important AFAIK
         if constexpr (requires { T{CPP2_FORWARD(args)...}; }) {
+            //  Why this calls 'unique.new': The workaround to use { } initialization
+            //  requires calling naked 'new' to allocate the object separately anyway,
+            //  so reuse the unique.new path that already does that (less code
+            //  duplication, plus encapsulate the naked 'new' in one place)
             return unique.cpp2_new<T>(CPP2_FORWARD(args)...);
         }
         else {
