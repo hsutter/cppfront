@@ -2422,6 +2422,22 @@ public:
 
     //-----------------------------------------------------------------------
     //
+    auto emit(using_statement_node const& n)
+        -> void
+    {
+        assert(n.keyword);
+        emit(*n.keyword);
+
+        if (n.for_namespace) {
+            printer.print_cpp2(" namespace", n.position());
+        }
+
+        printer.print_cpp2(" " + print_to_string(*n.id) + ";", n.position());
+    }
+
+
+    //-----------------------------------------------------------------------
+    //
     auto build_capture_lambda_intro_for(
         capture_group&  captures,
         source_position pos
@@ -3826,6 +3842,7 @@ public:
         try_emit<statement_node::declaration>(n.statement);
         try_emit<statement_node::return_    >(n.statement);
         try_emit<statement_node::iteration  >(n.statement);
+        try_emit<statement_node::using_     >(n.statement);
         try_emit<statement_node::contract   >(n.statement);
         try_emit<statement_node::inspect    >(n.statement, false);
         try_emit<statement_node::jump       >(n.statement);

@@ -12,6 +12,7 @@ outer: type =
             in i: int
         ) -> move int = 
         {
+            using namespace ::std;
             s: = "string literal";
             ret: int = i;
             p: const * const int = ret&;
@@ -20,8 +21,8 @@ outer: type =
                 ret = -p*;
             }
             ret += strlen(s) - 10 + s.strlen() * (16 / (3 & 2)) % 3;
-            m: std::map<const int, std::string> = ();
-            m[0] = "har" as std::string;
+            m: map<const int, string> = ();
+            m[0] = "har" as string;
             ret -= h("x", m).length();
             _ = m;
             return ret;
@@ -118,6 +119,8 @@ outer: type =
     test:() = 
     {
         namespace_alias: namespace == ::std;
+        using std::array;
+        using std::cout;
         type_alias: type == std::array<int, 10>;
         object_alias_1: i8 == 42;
         object_alias_2: == 42;

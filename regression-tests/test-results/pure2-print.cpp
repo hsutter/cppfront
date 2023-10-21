@@ -31,17 +31,17 @@ CPP2_REQUIRES_ (true)
         public: [[nodiscard]] virtual auto g(cpp2::in<int> i) const -> int;
             
 
-#line 29 "pure2-print.cpp2"
+#line 31 "pure2-print.cpp2"
         private: [[nodiscard]] static auto h(cpp2::in<std::string> s, std::map<int const,std::string>& m) -> std::string;
             struct values_ret { int offset; std::string name; };
 
 
 
-#line 52 "pure2-print.cpp2"
+#line 54 "pure2-print.cpp2"
         public: template<typename T> [[nodiscard]] auto values([[maybe_unused]] T const& param2) const& -> values_ret;
             
 
-#line 57 "pure2-print.cpp2"
+#line 59 "pure2-print.cpp2"
         public: explicit mytype();
 
         public: mytype([[maybe_unused]] mytype const& that);
@@ -50,30 +50,30 @@ CPP2_REQUIRES_ (true)
 
         public: static auto variadic(auto const& ...x) -> void
 CPP2_REQUIRES_ ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...))
-#line 63 "pure2-print.cpp2"
+#line 65 "pure2-print.cpp2"
         ;
     };
 
     public: static auto test() -> void;
         
 
-#line 84 "pure2-print.cpp2"
+#line 89 "pure2-print.cpp2"
     public: template<typename ...Ts> class x {
         private: std::tuple<Ts...> tup {}; 
         public: x() = default;
         public: x(x const&) = delete; /* No 'that' constructor, suppress copy */
         public: auto operator=(x const&) -> void = delete;
 
-#line 86 "pure2-print.cpp2"
+#line 91 "pure2-print.cpp2"
     };
 
     public: template<typename ...Args> static auto print(std::ostream& out, Args const& ...args) -> void
 CPP2_REQUIRES_ (cpp2::cmp_greater_eq(sizeof(Args)...,0))
-#line 88 "pure2-print.cpp2"
+#line 93 "pure2-print.cpp2"
     ;
         
 
-#line 92 "pure2-print.cpp2"
+#line 97 "pure2-print.cpp2"
     public: template<typename ...Args> [[nodiscard]] static auto all(Args const& ...args) -> bool;
         
     public: outer() = default;
@@ -81,7 +81,7 @@ CPP2_REQUIRES_ (cpp2::cmp_greater_eq(sizeof(Args)...,0))
     public: auto operator=(outer const&) -> void = delete;
 
 
-#line 95 "pure2-print.cpp2"
+#line 100 "pure2-print.cpp2"
 };
 
 auto main() -> int;
@@ -100,6 +100,8 @@ requires (true)
         [[nodiscard]] auto outer::mytype::f() -> int { return 42;  }
 
         [[nodiscard]] auto outer::mytype::g(cpp2::in<int> i) const -> int{
+            using namespace ::std;
+
             auto s {"string literal"}; 
             int ret {i}; 
             int const* const p {&ret}; 
@@ -108,8 +110,8 @@ requires (true)
             }
             ret += strlen(s) - 10 + CPP2_UFCS_0(strlen, std::move(s)) * (16 / (3 & 2)) % 3;
 
-            std::map<int const,std::string> m {}; 
-            cpp2::assert_in_bounds(m, 0) = cpp2::as_<std::string>("har");
+            map<int const,string> m {}; 
+            cpp2::assert_in_bounds(m, 0) = cpp2::as_<string>("har");
             ret -= CPP2_UFCS_0(length, h("x", m));
             static_cast<void>(std::move(m));
 
@@ -118,11 +120,11 @@ requires (true)
 
         [[nodiscard]] auto outer::mytype::h(cpp2::in<std::string> s, std::map<int const,std::string>& m) -> std::string
 
-#line 32 "pure2-print.cpp2"
+#line 34 "pure2-print.cpp2"
         {
             cpp2::Default.expects(CPP2_UFCS_0(empty, m) == false || false, "");
             cpp2::Bounds.expects([_0 = 0, _1 = CPP2_UFCS_0(ssize, m), _2 = 100]{ return cpp2::cmp_less(_0,_1) && cpp2::cmp_less(_1,_2); }() && true != false, "");
-#line 33 "pure2-print.cpp2"
+#line 35 "pure2-print.cpp2"
             auto a {[]() -> void{}}; 
             auto b {[]() -> void{}}; 
             auto c {[]() -> void{}}; 
@@ -132,10 +134,10 @@ requires (true)
             do {} while ( CPP2_UFCS_0(empty, s) && [&]{ b() ; return true; }() );
 
             for ( [[maybe_unused]] auto const& param1 : m ) {
-#line 41 "pure2-print.cpp2"
-             { do {goto CONTINUE_41_13; } while (false); c(); } CPP2_CONTINUE_BREAK(41_13) }
-
 #line 43 "pure2-print.cpp2"
+             { do {goto CONTINUE_43_13; } while (false); c(); } CPP2_CONTINUE_BREAK(43_13) }
+
+#line 45 "pure2-print.cpp2"
             if (cpp2::is(!(CPP2_UFCS_0(empty, s)), (true))) {std::move(a)(); }
             else {if (!(CPP2_UFCS_0(empty, m))) {std::move(b)(); }
             else {std::move(c)(); }}
@@ -148,7 +150,7 @@ requires (true)
         template<typename T> [[nodiscard]] auto outer::mytype::values([[maybe_unused]] T const& param2) const& -> values_ret{
                 cpp2::deferred_init<int> offset;
                 cpp2::deferred_init<std::string> name;
-#line 53 "pure2-print.cpp2"
+#line 55 "pure2-print.cpp2"
             offset.construct(53);
             name.construct("plugh");
         return  { std::move(offset.value()), std::move(name.value()) }; }
@@ -161,19 +163,22 @@ requires (true)
 
         auto outer::mytype::variadic(auto const& ...x) -> void
 requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...))
-#line 63 "pure2-print.cpp2"
+#line 65 "pure2-print.cpp2"
         {(std::cout << ... << x); }
 
-#line 66 "pure2-print.cpp2"
+#line 68 "pure2-print.cpp2"
     auto outer::test() -> void{
         namespace namespace_alias = ::std;
+
+        using std::array;
+        using std::cout;
 
         using type_alias = std::array<int,10>;
 
         cpp2::i8 constexpr object_alias_1 = 42;
         auto constexpr object_alias_2 = 42;
 
-#line 75 "pure2-print.cpp2"
+#line 80 "pure2-print.cpp2"
         ::outer::mytype var {}; 
         std::cout << CPP2_UFCS(g, var, 42) << "\n";
 
@@ -183,10 +188,10 @@ requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...))
         () << "\n";
     }
 
-#line 88 "pure2-print.cpp2"
+#line 93 "pure2-print.cpp2"
     template<typename ...Args> auto outer::print(std::ostream& out, Args const& ...args) -> void
 requires (cpp2::cmp_greater_eq(sizeof(Args)...,0))
-#line 88 "pure2-print.cpp2"
+#line 93 "pure2-print.cpp2"
     {
         (out << ... << args);
     }
@@ -194,7 +199,7 @@ requires (cpp2::cmp_greater_eq(sizeof(Args)...,0))
     template<typename ...Args> [[nodiscard]] auto outer::all(Args const& ...args) -> bool { 
         return (... && args);  }
 
-#line 97 "pure2-print.cpp2"
+#line 102 "pure2-print.cpp2"
 auto main() -> int{
     outer::test();
 }

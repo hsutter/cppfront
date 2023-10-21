@@ -1859,6 +1859,30 @@ struct jump_statement_node
 };
 
 
+struct using_statement_node
+{
+    token const*                        keyword = {};
+    bool                                for_namespace = false;
+    std::unique_ptr<id_expression_node> id;
+
+    auto position() const
+        -> source_position
+    {
+        assert(keyword);
+        return keyword->position();
+    }
+
+    auto visit(auto& v, int depth)
+        -> void
+    {
+        v.start(*this, depth);
+        assert(id);
+        id->visit(v, depth+1);
+        v.end(*this, depth);
+    }
+};
+
+
 struct parameter_declaration_list_node;
 
 struct statement_node
@@ -1870,7 +1894,7 @@ struct statement_node
         : compound_parent{ compound_parent_ }
     { }
 
-    enum active { expression=0, compound, selection, declaration, return_, iteration, contract, inspect, jump };
+    enum active { expression=0, compound, selection, declaration, return_, iteration, using_, contract, inspect, jump };
     std::variant<
         std::unique_ptr<expression_statement_node>,
         std::unique_ptr<compound_statement_node>,
@@ -1878,6 +1902,7 @@ struct statement_node
         std::unique_ptr<declaration_node>,
         std::unique_ptr<return_statement_node>,
         std::unique_ptr<iteration_statement_node>,
+        std::unique_ptr<using_statement_node>,
         std::unique_ptr<contract_node>,
         std::unique_ptr<inspect_expression_node>,
         std::unique_ptr<jump_statement_node>
@@ -1895,6 +1920,7 @@ struct statement_node
     auto is_declaration() const -> bool { return statement.index() == declaration; }
     auto is_return     () const -> bool { return statement.index() == return_;     }
     auto is_iteration  () const -> bool { return statement.index() == iteration;   }
+    auto is_using      () const -> bool { return statement.index() == using_;      }
     auto is_contract   () const -> bool { return statement.index() == contract;    }
     auto is_inspect    () const -> bool { return statement.index() == inspect;     }
     auto is_jump       () const -> bool { return statement.index() == jump;        }
@@ -4037,6 +4063,8 @@ auto pretty_print_visualize(contract_node const& n, int indent)
     -> std::string;
 auto pretty_print_visualize(jump_statement_node const& n, int indent)
     -> std::string;
+auto pretty_print_visualize(using_statement_node const& n, int indent)
+    -> std::string;
 auto pretty_print_visualize(statement_node const& n, int indent)
     -> std::string;
 auto pretty_print_visualize(parameter_declaration_node const& n, int indent, bool is_template_param = false)
@@ -4538,6 +4566,23 @@ auto pretty_print_visualize(jump_statement_node const& n, int indent)
 }
 
 
+auto pretty_print_visualize(using_statement_node const& n, int indent)
+    -> std::string
+{
+    assert (n.keyword);
+
+    auto ret = std::string{"\n"} + pre(indent) + n.keyword->as_string_view() + " ";
+
+    if (n.for_namespace) {
+        ret += "namespace ";
+    }
+
+    ret += pretty_print_visualize(*n.id, indent) + ";";
+
+    return ret;
+}
+
+
 auto pretty_print_visualize(statement_node const& n, int indent)
     -> std::string
 {
@@ -4563,6 +4608,7 @@ auto pretty_print_visualize(statement_node const& n, int indent)
         ret += try_pretty_print_visualize<statement_node::declaration>(n.statement, indent);
         ret += try_pretty_print_visualize<statement_node::return_    >(n.statement, indent);
         ret += try_pretty_print_visualize<statement_node::iteration  >(n.statement, indent);
+        ret += try_pretty_print_visualize<statement_node::using_     >(n.statement, indent);
         ret += try_pretty_print_visualize<statement_node::contract   >(n.statement, indent);
         ret += try_pretty_print_visualize<statement_node::inspect    >(n.statement, indent);
         ret += try_pretty_print_visualize<statement_node::jump       >(n.statement, indent);
@@ -6909,8 +6955,47 @@ private:
     }
 
 
+    //G using-statement:
+    //G     'using' id-expression ';'
+    //G     'using' 'namespace' id-expression ';'
+    //G
+    auto using_statement()
+        -> std::unique_ptr<using_statement_node>
+    {
+        auto n = std::make_unique<using_statement_node>();
+
+        if (curr() != "using") {
+            return {};
+        }
+        n->keyword = &curr();
+        next();
+
+        if (curr() == "namespace") {
+            n->for_namespace = true;
+            next();
+        }
+
+        auto id = id_expression();
+        if (!id) {
+            error(std::string{"expected valid id-expression after 'using"} + (n->for_namespace ? " namespace" : "") + "'");
+            return {};
+        }
+
+        n->id = std::move(id);
+
+        if (curr().type() != lexeme::Semicolon) {
+            error("expected ; at end of using-statement");
+            return {};
+        }
+        next();
+
+        return n;
+    }
+
+
     //G statement:
     //G     selection-statement
+    //G     using-statement
     //G     inspect-expression
     //G     return-statement
     //G     jump-statement
@@ -6960,6 +7045,12 @@ private:
         if (auto s = selection_statement()) {
             n->statement = std::move(s);
             assert (n->is_selection());
+            return n;
+        }
+
+        else if (auto s = using_statement()) {
+            n->statement = std::move(s);
+            assert (n->is_using());
             return n;
         }
 
@@ -8702,6 +8793,11 @@ public:
     auto start(jump_statement_node const&, int indent) -> void
     {
         o << pre(indent) << "jump\n";
+    }
+
+    auto start(using_statement_node const& n, int indent) -> void
+    {
+        o << pre(indent) << "using" << (n.for_namespace? " namespace" : "") << "\n";
     }
 
     auto start(inspect_expression_node const& n, int indent) -> void

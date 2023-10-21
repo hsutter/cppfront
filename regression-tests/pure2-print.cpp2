@@ -10,6 +10,8 @@ outer: @print type = {
         protected f: () -> int = 42;
 
         g: (virtual this, i:int) -> int = {
+            using namespace ::std;
+
             s := "string literal";
             ret: int = i;
             p: const * const int = ret&;
@@ -18,8 +20,8 @@ outer: @print type = {
             }
             ret += strlen(s) - 10 + s.strlen() * (16 / (3 & 2)) % 3;
 
-            m: std::map<const int,std::string> = ();
-            m[0] = "har" as std::string;
+            m: map<const int,string> = ();
+            m[0] = "har" as string;
             ret -= h("x", m).length();
             _ = m;
 
@@ -65,6 +67,9 @@ outer: @print type = {
 
     test: () = {
         namespace_alias: namespace == ::std;
+
+        using std::array;
+        using std::cout;
 
         type_alias: type == std::array<int,10>;
 
