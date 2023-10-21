@@ -1292,36 +1292,24 @@ public:
             return false;
         }
 
-        //  Require that comparison operators, bitwise binary operators,
-        //  assignment operators, and comparison operators must be members
+        //  Require that ~/comparison/assignment operators must be members
         if (
             n.identifier
             && !n.is_function_with_this()
             && (
-                n.has_name("operator==")
-                || n.has_name("operator!=")
-                || n.has_name("operator<")
-                || n.has_name("operator<=")
-                || n.has_name("operator>")
-                || n.has_name("operator>=")
-                || n.has_name("operator<=>")
-                || n.has_name("operator&")
-                || n.has_name("operator|")
-                || n.has_name("operator^")
-                || n.is_comparison()
+                //  Note re comparisons: The reason I'm restricting comparisons to be members
+                //  is because with comparison symmetry (since C++20, derived from Cpp2)
+                //  there's no longer a need for a type author to write them as nonmembers,
+                //  and I want to discourage that habit by banning nonmembers. However, there
+                //  could be a motivation to write them as nonmembers in the case where the
+                //  type author doesn't provide them -- if that turns out to be important we
+                //  can remove the restriction on nonmember comparisons here
+                n.is_comparison()
+
                 //  The following would be rejected anyway by the Cpp1 compiler,
                 //  but including them here gives nicer and earlier error messages
                 || n.has_name("operator~")
-                || n.has_name("operator+=")
-                || n.has_name("operator-=")
-                || n.has_name("operator*=")
-                || n.has_name("operator/=")
-                || n.has_name("operator%=")
-                || n.has_name("operator&=")
-                || n.has_name("operator|=")
-                || n.has_name("operator^=")
-                || n.has_name("operator<<=")
-                || n.has_name("operator>>=")
+                || n.is_compound_assignment()
                 )
             )
         {
