@@ -82,7 +82,7 @@ auto const& v2 = std::move(v);
 }
 
 #line 26 "pure2-type-and-namespace-aliases.cpp2"
-    template<typename T> inline CPP2_CONSTEXPR int<T> myclass2<T>::value = 42;
+    template <typename T> inline CPP2_CONSTEXPR int myclass2<T>::value = 42;
 
 #line 29 "pure2-type-and-namespace-aliases.cpp2"
 auto main() -> int{
