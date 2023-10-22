@@ -173,16 +173,16 @@ requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...))
         using std::array;
         using std::cout;
 
-        using type_alias = std::array<int,10>;
+        using type_alias = array<int,10>;
 
         cpp2::i8 constexpr object_alias_1 = 42;
         auto constexpr object_alias_2 = 42;
 
 #line 80 "pure2-print.cpp2"
         ::outer::mytype var {}; 
-        std::cout << CPP2_UFCS(g, var, 42) << "\n";
+        cout << CPP2_UFCS(g, var, 42) << "\n";
 
-        std::cout << [&] () -> namespace_alias::string { auto&& _expr = CPP2_UFCS(g, std::move(var), 42);
+        cout << [&] () -> namespace_alias::string { auto&& _expr = CPP2_UFCS(g, std::move(var), 42);
             if (cpp2::is(_expr, 43)) { if constexpr( requires{"forty-and-three";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("forty-and-three")),namespace_alias::string> ) return "forty-and-three"; else return namespace_alias::string{}; else return namespace_alias::string{}; }
             else return "default case"; }
         () << "\n";

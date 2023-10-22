@@ -71,16 +71,16 @@ outer: @print type = {
         using std::array;
         using std::cout;
 
-        type_alias: type == std::array<int,10>;
+        type_alias: type == array<int,10>;
 
         object_alias_1: i8 == 42;
         object_alias_2: == 42;
 
 
         var: ::outer::mytype = ();
-        std::cout << var.g(42) << "\n";
+        cout << var.g(42) << "\n";
 
-        std::cout << inspect var.g(42) -> namespace_alias::string {
+        cout << inspect var.g(42) -> namespace_alias::string {
             is 43 = "forty-and-three";
             is _  = "default case";
         } << "\n";
