@@ -959,6 +959,15 @@ inline auto to_string(auto&& value, std::string_view) -> std::string
 //  TODO: Does this really warrant a new synonym? Perhaps "is void" is enough
 using empty = void;
 
+//  Type is Type
+//
+
+template <typename X, typename C>
+auto is() -> std::false_type { return {}; }
+
+template <typename X, typename C>
+    requires std::same_as<X, C> || std::derived_from<X,C>
+auto is() -> std::true_type { return {}; }
 
 //  Templates
 //
