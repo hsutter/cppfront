@@ -1737,6 +1737,7 @@ struct alternative_node
     //  One of these will be used
     std::unique_ptr<type_id_node>            type_id;
     std::unique_ptr<postfix_expression_node> value;
+    std::unique_ptr<logical_or_expression_node> test; // 'if' condition
 
     source_position                      equal_sign;
     std::unique_ptr<statement_node>      statement;
@@ -1992,9 +1993,14 @@ auto alternative_node::visit(auto& v, int depth)
     if (type_id) {
         type_id->visit(v, depth+1);
     }
-    else {
-        assert (value);
+    else if (value) {
         value->visit(v, depth+1);
+    }
+    else if (test) {
+        test->visit(v, depth+1);
+    }
+    else {
+        assert(!"ICE: missing case");
     }
     assert (statement);
     statement->visit(v, depth+1);
@@ -6754,6 +6760,7 @@ private:
     //G     alt-name? is-type-constraint '=' statement
     //G     alt-name? is-value-constraint '=' statement
     //G     alt-name? as-type-cast '=' statement
+    //G     alt-name? 'if' logical-or-expression '=' statement
     //G
     //GTODO alt-name:
     //G     unqualified-id ':'
@@ -6778,6 +6785,7 @@ private:
         if (
             curr() != "is"
             && curr() != "as"
+            && curr() != "if"
             )
         {
             return {};
@@ -6786,7 +6794,16 @@ private:
         n->is_as_keyword = &curr();
         next();
 
-        if (auto id = type_id()) {
+        if (*n->is_as_keyword == "if") {
+            // support any expression that can be on LHS of an assignment-expression
+            auto e = logical_or_expression();
+            if (!e) {
+                error("expected expression after 'if' in inspect alternative", true, {}, true);
+                return {};
+            }
+            n->test = std::move(e);
+        }
+        else if (auto id = type_id()) {
             n->type_id = std::move(id);
         }
         else if (auto e = postfix_expression()) {
