@@ -1191,6 +1191,22 @@ union: (inout t : meta::type_declaration)
 
     //  Add the destructor
     t.add_member( "    operator=: (move this) = { _destroy(); } " );
+
+    //  Add default constructor
+    t.add_member( "    operator=: (out this) = { _discriminator = -1; } " );
+
+    //  Add value-set
+    (copy value_set: std::string = "    operator=: (out this, that) = {\n")
+    {
+        for  alternatives
+        do   (a) {
+            value_set += "        if that.is_(a.name)$() { set_(a.name)$( that.(a.name)$() ); }\n";
+        }
+
+        value_set += "        _discriminator = that._discriminator;\n";
+        value_set += "    }\n";
+        t.add_member( value_set );
+    }
 }
 
 
