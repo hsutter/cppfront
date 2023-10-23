@@ -1332,6 +1332,8 @@ auto template_argument::to_string() const
 
 struct is_as_expression_node
 {
+    //  One of these will be used for LHS
+    std::unique_ptr<type_id_node> type;
     std::unique_ptr<prefix_expression_node> expr;
 
     struct term
@@ -1429,16 +1431,26 @@ struct is_as_expression_node
     auto position() const
         -> source_position
     {
-        assert (expr);
-        return expr->position();
+        if (type) {
+            return type->position();
+        } else if (expr) {
+            return expr->position();
+        } else {
+            assert(!"ICE: missing case");
+        }
     }
 
     auto visit(auto& v, int depth)
         -> void
     {
         v.start(*this, depth);
-        assert (expr);
-        expr->visit(v, depth+1);
+        if (type) {
+            type->visit(v, depth+1);
+        } else if (expr) {
+            expr->visit(v, depth+1);
+        } else {
+            assert(!"ICE: missing case");
+        }
         for (auto const& x : ops) {
             assert (x.op);
             v.start(*x.op, depth+1);
@@ -5965,7 +5977,7 @@ private:
     //G     'const'
     //G     '*'
     //G
-    auto type_id()
+    auto type_id(bool speculative = false)
         -> std::unique_ptr<type_id_node>
     {
         auto n = std::make_unique<type_id_node>();
@@ -6004,7 +6016,7 @@ private:
             }
             return {};
         }
-        if (curr().type() == lexeme::Multiply) {
+        if (!speculative && curr().type() == lexeme::Multiply) {
             error("'T*' is not a valid Cpp2 type; use '*T' for a pointer instead", false);
             return {};
         }
@@ -6034,19 +6046,17 @@ private:
     {
         auto n = std::make_unique<is_as_expression_node>();
 
-        if (
-            curr().type() == lexeme::Identifier
-            && peek(1)
-            && *peek(1) == "is"
-            )
-        {
-            error("(temporary alpha limitation) testing a type with 'is' is not supported yet (or perhaps use '(identifier) is' to test an expression)");
-            return {};
+        auto start_pos = pos;
+        // 'T is'
+        if ((n->type = type_id(true)) && curr() != "is") {
+            n->type.release();
         }
-
-        n->expr = prefix_expression();
-        if (!(n->expr)) {
-            return {};
+        if (!n->type) {
+            pos = start_pos; // backtrack
+            n->expr = prefix_expression();
+            if (!(n->expr)) {
+                return {};
+            }
         }
 
         auto is_found = false;
