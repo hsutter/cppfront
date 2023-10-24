@@ -3201,11 +3201,11 @@ public:
                 && *n.ops[0].op == "is"
                 && n.ops[0].type
             );
-            printer.print_cpp2("cpp2::is<", n.position());
+            printer.print_cpp2("bool(cpp2::is<", n.position());
             emit(*n.type);
             printer.print_cpp2(", ", n.position());
             emit(*n.ops[0].type);
-            printer.print_cpp2(">()", n.position());
+            printer.print_cpp2(">())", n.position());
             return;
         }
         else if (n.expr)
