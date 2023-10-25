@@ -6094,7 +6094,17 @@ private:
                 ;
             }
             else if ((term.expr = expression()) != nullptr) {
-                ;
+                if (n->type) {
+                    assert(is_found);
+                    error("expected type-id after type-id 'is', not an expression", false, term.expr->position());
+                    if (
+                        n->type->pc_qualifiers.empty()
+                        && n->type->id.index() == type_id_node::unqualified
+                    ) {
+                        error("did you mean to use '(identifier) is' to test an expression?", false, n->type->position());
+                    }
+                    return {};
+                }
             }
 
             if (

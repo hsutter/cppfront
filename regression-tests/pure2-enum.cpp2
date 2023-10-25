@@ -52,7 +52,7 @@ main: () = {
     else if (x) is (skat_game::spades) {  // ok, using is
         std::cout << "spades";
     }
-    else if skat_game::clubs is (x) {   // ok, using is
+    else if (skat_game::clubs) is (x) {   // ok, using is
         std::cout << "clubs";
     }
     else {
