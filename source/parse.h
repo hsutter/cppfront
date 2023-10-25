@@ -1438,10 +1438,9 @@ struct is_as_expression_node
     {
         if (type) {
             return type->position();
-        } else if (expr) {
-            return expr->position();
         } else {
-            assert(!"ICE: missing case");
+            assert (expr);
+            return expr->position();
         }
     }
 
@@ -1451,10 +1450,9 @@ struct is_as_expression_node
         v.start(*this, depth);
         if (type) {
             type->visit(v, depth+1);
-        } else if (expr) {
-            expr->visit(v, depth+1);
         } else {
-            assert(!"ICE: missing case");
+            assert (expr);
+            expr->visit(v, depth+1);
         }
         for (auto const& x : ops) {
             assert (x.op);
