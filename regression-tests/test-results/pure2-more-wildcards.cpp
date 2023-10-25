@@ -29,7 +29,7 @@
     auto* p {&x}; 
     auto const* q {&p}; 
 
-    if (cpp2::is(x, (less_than(20)))) {
+    if (cpp2::is((x), (less_than(20)))) {
         std::cout << "yes, less\n";
     }
 

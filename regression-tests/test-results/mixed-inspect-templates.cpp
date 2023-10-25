@@ -42,10 +42,10 @@ struct my_type {};
 }
 
 [[nodiscard]] auto fun2(auto const& v) -> std::string{
-    if (cpp2::is<std::vector>(v)) {return "std::vector"; }
-    if (cpp2::is<std::array>(v)) {return "std::array"; }
-    if (cpp2::is<std::variant>(v)) {return "std::variant"; }
-    if (cpp2::is<my_type>(v)) {return "my_type";    }
+    if (cpp2::is<std::vector>((v))) {return "std::vector"; }
+    if (cpp2::is<std::array>((v))) {return "std::array"; }
+    if (cpp2::is<std::variant>((v))) {return "std::variant"; }
+    if (cpp2::is<my_type>((v))) {return "my_type";    }
     return "unknown"; 
 }
 

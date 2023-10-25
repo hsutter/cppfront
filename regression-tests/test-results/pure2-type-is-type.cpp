@@ -1,4 +1,5 @@
 
+#define CPP2_IMPORT_STD          Yes
 
 //=== Cpp2 type declarations ====================================================
 
