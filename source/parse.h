@@ -1356,25 +1356,25 @@ struct is_as_expression_node
     {
         //  This is a fold-expression if any subexpression
         //  has an identifier named "..."
-        return expr->is_fold_expression();
+        return expr && expr->is_fold_expression();
     }
 
     auto is_identifier() const
         -> bool
     {
-        return ops.empty() && expr->is_identifier();
+        return expr && ops.empty() && expr->is_identifier();
     }
 
     auto is_id_expression() const
         -> bool
     {
-        return ops.empty() && expr->is_id_expression();
+        return expr && ops.empty() && expr->is_id_expression();
     }
 
     auto is_expression_list() const
         -> bool
     {
-        return ops.empty() && expr->is_expression_list();
+        return expr && ops.empty() && expr->is_expression_list();
     }
 
     auto get_expression_list() const
@@ -1389,7 +1389,7 @@ struct is_as_expression_node
     auto is_literal() const
         -> bool
     {
-        return ops.empty() && expr->is_literal();
+        return expr && ops.empty() && expr->is_literal();
     }
 
     auto get_postfix_expression_node() const
@@ -1404,15 +1404,20 @@ struct is_as_expression_node
             assert(expr);
             return expr->is_result_a_temporary_variable();
         } else {
-            return true;
+            return expr != nullptr;
         }
     }
 
     auto to_string() const
         -> std::string
     {
-        assert (expr);
-        auto ret = expr->to_string();
+        auto ret = std::string{};
+        if (type) {
+            ret = type->to_string();
+        } else {
+            assert (expr);
+            ret = expr->to_string();
+        }
         for (auto const& x : ops) {
             assert (x.op);
             ret += " " + x.op->to_string();
