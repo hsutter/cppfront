@@ -38,6 +38,7 @@ CPP2_REQUIRES (std::is_same_v<CPP2_TYPEOF(e), std::string>)
 #line 6 "mixed-parameter-passing-with-forward.cpp2"
 auto copy_from([[maybe_unused]] auto param1) -> void{}
 
+#line 8 "mixed-parameter-passing-with-forward.cpp2"
 auto parameter_styles(
     [[maybe_unused]] cpp2::in<std::string> param1, 
     std::string b, 
@@ -74,5 +75,6 @@ requires (std::is_same_v<CPP2_TYPEOF(e), std::string>)
 
 }
 
+#line 42 "mixed-parameter-passing-with-forward.cpp2"
 [[nodiscard]] auto main() -> int{}
 

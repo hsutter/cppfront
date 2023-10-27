@@ -73,6 +73,7 @@ auto for_break_outer() -> void;
     std::cout <<   "\nfor_break_outer:\n  ";    for_break_outer();
 }
 
+#line 20 "pure2-break-continue.cpp2"
 auto while_continue_inner() -> void
 {
     auto i {0}; 
@@ -92,6 +93,7 @@ auto while_continue_inner() -> void
     }
 }
 
+#line 36 "pure2-break-continue.cpp2"
 auto while_continue_outer() -> void
 {
     auto i {0}; 
@@ -111,6 +113,7 @@ auto while_continue_outer() -> void
 #line 50 "pure2-break-continue.cpp2"
 }
 
+#line 52 "pure2-break-continue.cpp2"
 auto while_break_inner() -> void
 {
     auto i {0}; 
@@ -130,6 +133,7 @@ auto while_break_inner() -> void
     }
 }
 
+#line 68 "pure2-break-continue.cpp2"
 auto while_break_outer() -> void
 {
     auto i {0}; 
@@ -149,6 +153,7 @@ auto while_break_outer() -> void
 #line 82 "pure2-break-continue.cpp2"
 }
 
+#line 84 "pure2-break-continue.cpp2"
 auto do_continue_inner() -> void
 {
     auto i {0}; 
@@ -174,6 +179,7 @@ auto do_continue_inner() -> void
     cpp2::cmp_less(i,3) && [&]{ ++i ; return true; }() );
 }
 
+#line 103 "pure2-break-continue.cpp2"
 auto do_continue_outer() -> void
 {
     auto i {0}; 
@@ -199,6 +205,7 @@ auto do_continue_outer() -> void
     cpp2::cmp_less(i,3) && [&]{ ++i ; return true; }() );
 }
 
+#line 122 "pure2-break-continue.cpp2"
 auto do_break_inner() -> void
 {
     auto i {0}; 
@@ -224,6 +231,7 @@ auto do_break_inner() -> void
     cpp2::cmp_less(i,3) && [&]{ ++i ; return true; }() );
 }
 
+#line 141 "pure2-break-continue.cpp2"
 auto do_break_outer() -> void
 {
     auto i {0}; 
@@ -249,6 +257,7 @@ auto do_break_outer() -> void
     cpp2::cmp_less(i,3) && [&]{ ++i ; return true; }() );
 }
 
+#line 160 "pure2-break-continue.cpp2"
 auto for_continue_inner() -> void
 {
     std::vector vi {0, 1, 2}; 
@@ -270,6 +279,7 @@ auto for_continue_inner() -> void
     } while (false); ++counter; }
 }
 
+#line 178 "pure2-break-continue.cpp2"
 auto for_continue_outer() -> void
 {
     std::vector vi {0, 1, 2}; 
@@ -291,6 +301,7 @@ auto for_continue_outer() -> void
 #line 194 "pure2-break-continue.cpp2"
 }
 
+#line 196 "pure2-break-continue.cpp2"
 auto for_break_inner() -> void
 {
     std::vector vi {0, 1, 2}; 
@@ -312,6 +323,7 @@ auto for_break_inner() -> void
     } while (false); ++counter; }
 }
 
+#line 214 "pure2-break-continue.cpp2"
 auto for_break_outer() -> void
 {
     std::vector vi {0, 1, 2}; 

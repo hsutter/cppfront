@@ -52,6 +52,7 @@ auto main() -> int;
     template <typename T, typename U> requires( std::is_same_v<T,int> && std::is_same_v<U,int> )
 X<T,U>::X(){}
 
+#line 10 "pure2-requires-clauses.cpp2"
 template<typename T, typename U> [[nodiscard]] auto f
     (auto&& a, auto&& b) -> int
 requires (std::is_same_v<T,int> && std::is_same_v<U,int> && std::is_same_v<CPP2_TYPEOF(a), int> && std::is_same_v<CPP2_TYPEOF(b), int>)
@@ -66,6 +67,7 @@ requires (std::same_as<T,cpp2::i32>)
 #line 18 "pure2-requires-clauses.cpp2"
 T const v {0}; 
 
+#line 20 "pure2-requires-clauses.cpp2"
 auto main() -> int{
     X<int,int> x {}; 
     std::cout << f<int,int>(2, 5);

@@ -49,5 +49,6 @@ requires (std::is_same_v<CPP2_TYPEOF(n), std::string>)
 #line 3 "pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2"
   }
 
+#line 5 "pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2"
 auto main() -> int{}
 

@@ -17,5 +17,6 @@ extern std::plus<> const plus;
 //=== Cpp2 function definitions =================================================
 
 std::plus<> const plus {}; 
+#line 2 "pure2-bugfix-for-optional-template-argument-list.cpp2"
 [[nodiscard]] auto main() -> int { return std::plus<>()(0, 0); }
 

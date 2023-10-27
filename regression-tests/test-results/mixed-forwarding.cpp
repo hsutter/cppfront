@@ -48,6 +48,7 @@ CPP2_REQUIRES (std::is_same_v<CPP2_TYPEOF(t), std::pair<X,X>>)
 #line 11 "mixed-forwarding.cpp2"
 auto copy_from([[maybe_unused]] auto param1) -> void{}
 
+#line 13 "mixed-forwarding.cpp2"
 auto use([[maybe_unused]] auto const& param1) -> void{}
 
 #line 16 "mixed-forwarding.cpp2"
@@ -58,6 +59,7 @@ requires (std::is_same_v<CPP2_TYPEOF(t), std::pair<X,X>>)
     copy_from(t.first);             // copies
     copy_from(CPP2_FORWARD(t).second);// moves
 }
+#line 20 "mixed-forwarding.cpp2"
 auto apply_explicit_forward(auto&& t) -> void
 requires (std::is_same_v<CPP2_TYPEOF(t), std::pair<X,X>>)
 #line 20 "mixed-forwarding.cpp2"
@@ -66,6 +68,7 @@ requires (std::is_same_v<CPP2_TYPEOF(t), std::pair<X,X>>)
     copy_from(CPP2_FORWARD(t).second);// moves
 }
 
+#line 25 "mixed-forwarding.cpp2"
 [[nodiscard]] auto main() -> int{
     std::pair<X,X> t1 {1, 2}; 
     apply_implicit_forward(t1);

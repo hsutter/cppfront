@@ -17,5 +17,6 @@ template<auto V> extern int const v0;
 //=== Cpp2 function definitions =================================================
 
 template<auto V> int const v0 {0}; 
+#line 2 "pure2-bugfix-for-variable-template.cpp2"
 [[nodiscard]] auto main() -> int { return v0<0>; }
 

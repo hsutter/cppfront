@@ -19,5 +19,6 @@ auto main() -> int;
 
 template<typename T> auto f() -> void
 requires (std::regular<T>) { g(T());  }
+#line 2 "pure2-bugfix-for-requires-clause-unbraced-function-initializer.cpp2"
 auto main() -> int                 {}
 

@@ -49,14 +49,18 @@ template<typename ...Args> auto left_fold_print(std::ostream& out, Args const& .
     (out << ... << args);
 }
 
+#line 12 "pure2-variadics.cpp2"
 template<typename ...Args> [[nodiscard]] auto all(Args const& ...args) -> bool { 
     //  Unary left fold expression
     return (... && args);  }
 
+#line 16 "pure2-variadics.cpp2"
 template     <typename ...Args> [[nodiscard]] auto make_string(Args&& ...args) -> auto { return std::string{CPP2_FORWARD(args)...}; }
 
+#line 18 "pure2-variadics.cpp2"
 template  <typename T, typename ...Args> [[nodiscard]] auto make(Args&& ...args) -> auto { return T{CPP2_FORWARD(args)...}; }
 
+#line 20 "pure2-variadics.cpp2"
 auto main() -> int
 {
     x<int,long,std::string> a {}; 

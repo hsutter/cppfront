@@ -212,6 +212,7 @@ auto print_name(cpp2::in<name_or_number> non) -> void{
     }
 }
 
+#line 28 "pure2-union.cpp2"
 auto main() -> int{
     name_or_number x {}; 
     std::cout << "sizeof(x) is " + cpp2::to_string(sizeof(x)) + "\n";

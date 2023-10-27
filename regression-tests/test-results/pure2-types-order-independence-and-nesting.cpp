@@ -171,6 +171,7 @@ namespace N {
 #line 49 "pure2-types-order-independence-and-nesting.cpp2"
      }
 
+#line 51 "pure2-types-order-independence-and-nesting.cpp2"
     auto Y::why(cpp2::in<int> count) const& -> void { 
         CPP2_UFCS(exx, (*cpp2::assert_not_null(px)), count + 1);  }// use X object from Y
 

@@ -46,6 +46,7 @@ auto try_pointer_stuff() -> void{
                 // to show -n
 }
 
+#line 21 "mixed-lifetime-safety-and-null-contracts.cpp2"
 auto call_my_framework(char const* msg) -> void{
     std::cout 
         << "sending error to my framework... [" 

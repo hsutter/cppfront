@@ -38,6 +38,7 @@ auto main() -> int {
     return s; 
 }
 
+#line 11 "mixed-hello.cpp2"
 auto decorate(std::string& s) -> void{
     s = "[" + s + "]";
 }

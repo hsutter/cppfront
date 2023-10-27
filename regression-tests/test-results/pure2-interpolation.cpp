@@ -30,8 +30,11 @@ class item {
 
 #line 3 "pure2-interpolation.cpp2"
     [[nodiscard]] auto item::name() const& -> std::string { return "Dog kennel";  }
+#line 4 "pure2-interpolation.cpp2"
     [[nodiscard]] auto item::color() const& -> std::string { return "mauve";  }
+#line 5 "pure2-interpolation.cpp2"
     [[nodiscard]] auto item::price() const& -> double { return 3.14;  }
+#line 6 "pure2-interpolation.cpp2"
     [[nodiscard]] auto item::count() const& -> int { return 42;  }
 
 #line 9 "pure2-interpolation.cpp2"

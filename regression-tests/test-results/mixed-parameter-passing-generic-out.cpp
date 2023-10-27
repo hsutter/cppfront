@@ -37,6 +37,7 @@ auto f(auto x_) -> void{
     x.construct(42);
 }
 
+#line 15 "mixed-parameter-passing-generic-out.cpp2"
 [[nodiscard]] auto main() -> int{
     cpp2::deferred_init<int> a; 
     f(cpp2::out(&a));

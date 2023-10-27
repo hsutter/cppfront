@@ -34,6 +34,7 @@ auto parameter_styles(
 #line 6 "mixed-parameter-passing.cpp2"
 auto copy_from([[maybe_unused]] auto param1) -> void{}
 
+#line 8 "mixed-parameter-passing.cpp2"
 auto parameter_styles(
     [[maybe_unused]] cpp2::in<std::string> param1, 
     std::string b, 
@@ -66,5 +67,6 @@ auto parameter_styles(
 
 }
 
+#line 40 "mixed-parameter-passing.cpp2"
 [[nodiscard]] auto main() -> int{}
 

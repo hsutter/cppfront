@@ -48,6 +48,7 @@ bool flip_a_coin() {
     print_and_decorate(*cpp2::assert_not_null(std::move(p.value())));
 }
 
+#line 21 "mixed-lifetime-safety-pointer-init-4.cpp2"
 auto print_and_decorate(auto const& thing) -> void { 
     std::cout << ">> " << thing << "\n";  }
 

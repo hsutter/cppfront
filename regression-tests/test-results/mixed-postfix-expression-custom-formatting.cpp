@@ -26,6 +26,7 @@ auto call([[maybe_unused]] auto const& param1, [[maybe_unused]] auto const& para
 #line 2 "mixed-postfix-expression-custom-formatting.cpp2"
 auto call([[maybe_unused]] auto const& param1, [[maybe_unused]] auto const& param2, [[maybe_unused]] auto const& param3, [[maybe_unused]] auto const& param4, [[maybe_unused]] auto const& param5) -> void{}
 
+#line 4 "mixed-postfix-expression-custom-formatting.cpp2"
 [[nodiscard]] auto test(auto const& a) -> std::string{
     return call(a, 
         ++*cpp2::assert_not_null(CPP2_UFCS(b, a, a.c)), "hello", /* polite
@@ -37,5 +38,6 @@ auto call([[maybe_unused]] auto const& param1, [[maybe_unused]] auto const& para
         ); 
 }
 
+#line 15 "mixed-postfix-expression-custom-formatting.cpp2"
 [[nodiscard]] auto main() -> int{}
 

@@ -59,6 +59,7 @@ bool flip_a_coin() {
     return  { std::move(i.value()), std::move(s.value()) }; 
 }
 
+#line 22 "mixed-multiple-return-values.cpp2"
 auto do_print(cpp2::in<std::string> name, auto const& value) -> void { 
     std::cout << name << " is " << value << "\n";  }
 

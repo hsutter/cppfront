@@ -38,6 +38,7 @@ struct f_ret { int ri; };
     return  { std::move(ri) }; // "return;" is implicit"
 }
 
+#line 8 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 [[nodiscard]] auto g() -> g_ret{
         cpp2::deferred_init<int> ri;
 #line 9 "pure2-look-up-parameter-across-unnamed-function.cpp2"
@@ -47,6 +48,7 @@ struct f_ret { int ri; };
     return  { std::move(ri.value()) }; 
 }
 
+#line 15 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 [[nodiscard]] auto main() -> int{
     std::cout << f().ri + g().ri << "\n";
 }

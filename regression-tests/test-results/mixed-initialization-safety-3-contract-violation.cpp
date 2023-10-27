@@ -52,6 +52,7 @@ bool flip_a_coin() {
     print_decorated(std::move(x.value()));
 }
 
+#line 18 "mixed-initialization-safety-3-contract-violation.cpp2"
 auto fill(
     cpp2::out<std::string> x, 
     cpp2::in<std::string> value, 
@@ -64,5 +65,6 @@ auto fill(
     x.construct(CPP2_UFCS(substr, value, 0, count));
 }
 
+#line 28 "mixed-initialization-safety-3-contract-violation.cpp2"
 auto print_decorated(auto const& x) -> void { std::cout << ">> [" << x << "]\n";  }
 

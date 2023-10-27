@@ -41,6 +41,7 @@ auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void;
 
 std::vector<int> vec {}; 
 
+#line 19 "mixed-captures-in-expressions-and-postconditions.cpp2"
 auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void
 
 #line 22 "mixed-captures-in-expressions-and-postconditions.cpp2"

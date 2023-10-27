@@ -41,6 +41,7 @@ auto main(int const argc_, char** argv_) -> int;
                                   return *this;
 #line 3 "pure2-bugfix-for-discard-precedence.cpp2"
                                  }
+#line 4 "pure2-bugfix-for-discard-precedence.cpp2"
   [[nodiscard]] auto quantity::operator+(quantity const& that) & -> quantity { return quantity(number + that.number);  }
 
 #line 7 "pure2-bugfix-for-discard-precedence.cpp2"

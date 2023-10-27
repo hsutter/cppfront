@@ -35,6 +35,7 @@ auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> vo
         std::cout << i << "\n";
 }
 
+#line 10 "mixed-bounds-safety-with-assert-2.cpp2"
 auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> void
 {
     cpp2::Bounds.expects(cpp2::cmp_less_eq(0,start), "");

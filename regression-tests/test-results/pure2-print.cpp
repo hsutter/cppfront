@@ -99,6 +99,7 @@ requires (true)
 #line 10 "pure2-print.cpp2"
         [[nodiscard]] auto outer::mytype::f() -> int { return 42;  }
 
+#line 12 "pure2-print.cpp2"
         [[nodiscard]] auto outer::mytype::g(cpp2::in<int> i) const -> int{
             using namespace ::std;
 
@@ -118,6 +119,7 @@ requires (true)
             return ret; 
         }
 
+#line 31 "pure2-print.cpp2"
         [[nodiscard]] auto outer::mytype::h(cpp2::in<std::string> s, std::map<int const,std::string>& m) -> std::string
 
 #line 34 "pure2-print.cpp2"
@@ -147,6 +149,7 @@ requires (true)
             return [_0 = (s + cpp2::assert_in_bounds(m, 0))]() -> std::string { return _0;  }(); 
         }
 
+#line 54 "pure2-print.cpp2"
         template<typename T> [[nodiscard]] auto outer::mytype::values([[maybe_unused]] T const& param2) const& -> values_ret{
                 cpp2::deferred_init<int> offset;
                 cpp2::deferred_init<std::string> name;
@@ -155,12 +158,16 @@ requires (true)
             name.construct("plugh");
         return  { std::move(offset.value()), std::move(name.value()) }; }
 
+#line 59 "pure2-print.cpp2"
         outer::mytype::mytype(){}
 
+#line 61 "pure2-print.cpp2"
         outer::mytype::mytype([[maybe_unused]] mytype const& that){}
 
+#line 63 "pure2-print.cpp2"
         outer::mytype::mytype([[maybe_unused]] cpp2::in<int> param2){}
 
+#line 65 "pure2-print.cpp2"
         auto outer::mytype::variadic(auto const& ...x) -> void
 requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...))
 #line 65 "pure2-print.cpp2"
@@ -196,6 +203,7 @@ requires (cpp2::cmp_greater_eq(sizeof(Args)...,0))
         (out << ... << args);
     }
 
+#line 97 "pure2-print.cpp2"
     template<typename ...Args> [[nodiscard]] auto outer::all(Args const& ...args) -> bool { 
         return (... && args);  }
 

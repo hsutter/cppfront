@@ -59,12 +59,15 @@ extern int y;
     CPP2_UFCS_0(no_return, 42);
 }
 
+#line 24 "pure2-ufcs-member-access-and-chaining.cpp2"
 auto no_return([[maybe_unused]] auto const& param1) -> void{}
 
+#line 26 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto ufcs(cpp2::in<int> i) -> int{
     return i + 2; 
 }
 
+#line 30 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto fun() -> fun_ret{
         cpp2::deferred_init<int> i;
 #line 31 "pure2-ufcs-member-access-and-chaining.cpp2"
@@ -72,6 +75,7 @@ auto no_return([[maybe_unused]] auto const& param1) -> void{}
     return  { std::move(i.value()) }; 
 }
 
+#line 35 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto get_i(auto const& r) -> int{
     return r.i; 
 }
