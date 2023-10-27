@@ -19,6 +19,7 @@
 #include <iostream>
 #include <cstdio>
 #include <optional>
+#include <filesystem>
 
 namespace cpp2 {
 
@@ -66,6 +67,14 @@ static cmdline_processor::register_flag cmd_noline(
     "clean-cpp1",
     "Emit clean Cpp1 without #line directives",
     []{ flag_clean_cpp1 = true; }
+);
+
+static auto flag_absolute_line_directives = false;
+static cmdline_processor::register_flag cmd_absolute_line_directives(
+    9,
+    "absolute-line-directives",
+    "Emit absolute paths in #line directives",
+    [] { flag_absolute_line_directives = true; }
 );
 
 static auto flag_import_std = false;
@@ -222,6 +231,11 @@ class positional_printer
     bool            printed_extra               = false;
     char            last_printed_char           = {};
 
+    struct line_directive_info {
+        lineno_t out_pos_line;                        // output lineno where the line directive was printed
+        lineno_t line;                                // the lineno in the line directive
+    } prev_line_directive = {};
+
     struct req_act_info {
         colno_t requested;
         colno_t offset;
@@ -261,6 +275,7 @@ private:
         }
         curr_pos     = {};
         next_comment = 0;   // start over with the comments
+        reset_line_directive_tracking();
     }
 
     std::vector<std::string*>                emit_string_targets;       // option to emit to string instead of out file
@@ -401,6 +416,15 @@ private:
             return;
         }
 
+        //  Don't print duplicate line directives on subsequent lines
+        if (
+            prev_line_directive.out_pos_line == curr_pos.lineno
+            && prev_line_directive.line == line
+            )
+        {
+            return;
+        }
+
         //  Otherwise, implement the request
         prev_line_info = { curr_pos.lineno, { } };
         ensure_at_start_of_new_line();
@@ -411,6 +435,7 @@ private:
             *out << "#line " << line << " " << std::quoted(cpp2_filename) << "\n";
         }
         just_printed_line_directive = true;
+        prev_line_directive = { curr_pos.lineno, line };
     }
 
     //  Catch up with comment/blank lines
@@ -620,7 +645,9 @@ public:
     )
         -> void
     {
-        cpp2_filename = cpp2_filename_;
+        cpp2_filename = (flag_absolute_line_directives) ?
+            std::filesystem::absolute(std::filesystem::path(cpp2_filename_)).string() :
+            cpp2_filename_;
         assert(
             !is_open()
             && !pcomments
@@ -738,11 +765,28 @@ public:
         //  If we are out of sync with the current logical line number,
         //  emit a #line directive to re-sync
         if (curr_pos.lineno != line) {
-            print_line_directive( line );
+
+            //  Don't print line directives for function definitions here. We take
+            //  care of that in emit, so doing here too would result in duplicates.
+            if (phase != phase2_func_defs) {
+                print_line_directive(line);
+            }
+
             curr_pos.lineno = line;
+            reset_line_directive_tracking();
         }
 
         assert (curr_pos.colno == 1);
+    }
+
+
+    //-----------------------------------------------------------------------
+    //  Forget whether or not we've printed a line directive
+    //
+    auto reset_line_directive_tracking()
+        -> void
+    {
+        prev_line_directive = {};
     }
 
 
@@ -4937,6 +4981,20 @@ public:
             }
         }
 
+        //  If we're emitting any initializers then we want line directives
+        //  preceding both the function's name and its body, because inserting
+        //  initializers will cause the original & emitted code to be out-of-sync.
+        if (
+            !current_functions.empty()
+            && (
+                !current_functions.back().prolog.mem_inits.empty()
+                || !current_functions.back().prolog.statements.empty()
+                )
+            )
+        {
+            printer.reset_line_directive_tracking();
+        }
+
         //  For a constructor, print the type name instead of the operator= function name
         assert(n.parent_is_type());
         if (!is_assignment)
@@ -5345,6 +5403,18 @@ public:
                     printer.print_cpp2("public: ", n.position());
                 }
             }
+        }
+
+        //  Print a line directive before every function definition, excluding lambdas.
+        //  This is needed to enable debugging with lldb.
+        if (
+            printer.get_phase() == printer.phase2_func_defs
+            && n.is_function()
+            && n.has_name()
+            && n.initializer
+            )
+        {
+            printer.print_extra("");
         }
 
         //  If this is a function definition and the function is inside
