@@ -254,10 +254,10 @@ auto main() -> int{
     else {if (skat_game::hearts == x) { // ok, in either order
         std::cout << "hearts";
     }
-    else {if (cpp2::is(x, (skat_game::spades))) {// ok, using is
+    else {if (cpp2::is((x), (skat_game::spades))) {// ok, using is
         std::cout << "spades";
     }
-    else {if (cpp2::is(skat_game::clubs, (x))) {// ok, using is
+    else {if (cpp2::is((skat_game::clubs), (x))) {// ok, using is
         std::cout << "clubs";
     }
     else {
@@ -300,8 +300,8 @@ auto main() -> int{
     std::cout << "f. get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f)) + "\n";
     std::cout << "f2.get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f2)) + "\n";
 
-    std::cout << "f  is (f2) is " + cpp2::to_string(cpp2::is(f, (f2))) + "\n";
-    std::cout << "f2 is (f ) is " + cpp2::to_string(cpp2::is(f2, (f))) + "\n\n";
+    std::cout << "(f ) is (f2) is " + cpp2::to_string(cpp2::is((f), (f2))) + "\n";
+    std::cout << "(f2) is (f ) is " + cpp2::to_string(cpp2::is((f2), (f))) + "\n\n";
 
     CPP2_UFCS(clear, f, f2);
     CPP2_UFCS(set, f, file_attributes::current | f2);
@@ -313,8 +313,8 @@ auto main() -> int{
     std::cout << "f. get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f)) + "\n";
     std::cout << "f2.get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f2)) + "\n";
     std::cout << "f  == f2   is " + cpp2::to_string(f  == f2  ) + "\n";
-    std::cout << "f  is (f2) is " + cpp2::to_string(cpp2::is(f, (f2))) + "\n";
-    std::cout << "f2 is (f ) is " + cpp2::to_string(cpp2::is(f2, (f))) + "\n";
+    std::cout << "(f ) is (f2) is " + cpp2::to_string(cpp2::is((f), (f2))) + "\n";
+    std::cout << "(f2) is (f ) is " + cpp2::to_string(cpp2::is((f2), (f))) + "\n";
     std::cout << "(f & f2) == f2 is " + cpp2::to_string((f & f2) == f2) + "\n";
 
     std::cout << "inspecting f: " << [&] () -> std::string { auto&& _expr = std::move(f);

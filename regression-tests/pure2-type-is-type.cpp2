@@ -1,0 +1,18 @@
+main: () =
+{
+    T: type == int;
+    b := *T is *int;
+    [[assert: b]]
+
+    b = bool is T;
+    [[assert: !b]]
+
+    b = T is long;
+    [[assert: !b]]
+
+    b = std::runtime_error is std::exception;
+    [[assert: b]]
+
+    b = std::exception is std::runtime_error;
+    [[assert: !b]]
+}

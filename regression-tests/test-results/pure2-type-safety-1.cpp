@@ -52,7 +52,7 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
 
 auto test_generic(auto const& x, auto const& msg) -> void{
     std::string msgx {msg}; 
-    print(std::move(msgx) + " is int? ", cpp2::is<int>(x));
+    print(std::move(msgx) + " is int? ", cpp2::is<int>((x)));
 }
 
 auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void{

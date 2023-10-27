@@ -1332,6 +1332,8 @@ auto template_argument::to_string() const
 
 struct is_as_expression_node
 {
+    //  One of these will be used for LHS
+    std::unique_ptr<type_id_node> type;
     std::unique_ptr<prefix_expression_node> expr;
 
     struct term
@@ -1354,25 +1356,25 @@ struct is_as_expression_node
     {
         //  This is a fold-expression if any subexpression
         //  has an identifier named "..."
-        return expr->is_fold_expression();
+        return expr && expr->is_fold_expression();
     }
 
     auto is_identifier() const
         -> bool
     {
-        return ops.empty() && expr->is_identifier();
+        return expr && ops.empty() && expr->is_identifier();
     }
 
     auto is_id_expression() const
         -> bool
     {
-        return ops.empty() && expr->is_id_expression();
+        return expr && ops.empty() && expr->is_id_expression();
     }
 
     auto is_expression_list() const
         -> bool
     {
-        return ops.empty() && expr->is_expression_list();
+        return expr && ops.empty() && expr->is_expression_list();
     }
 
     auto get_expression_list() const
@@ -1387,7 +1389,7 @@ struct is_as_expression_node
     auto is_literal() const
         -> bool
     {
-        return ops.empty() && expr->is_literal();
+        return expr && ops.empty() && expr->is_literal();
     }
 
     auto get_postfix_expression_node() const
@@ -1402,15 +1404,20 @@ struct is_as_expression_node
             assert(expr);
             return expr->is_result_a_temporary_variable();
         } else {
-            return true;
+            return expr != nullptr;
         }
     }
 
     auto to_string() const
         -> std::string
     {
-        assert (expr);
-        auto ret = expr->to_string();
+        auto ret = std::string{};
+        if (type) {
+            ret = type->to_string();
+        } else {
+            assert (expr);
+            ret = expr->to_string();
+        }
         for (auto const& x : ops) {
             assert (x.op);
             ret += " " + x.op->to_string();
@@ -1429,16 +1436,24 @@ struct is_as_expression_node
     auto position() const
         -> source_position
     {
-        assert (expr);
-        return expr->position();
+        if (type) {
+            return type->position();
+        } else {
+            assert (expr);
+            return expr->position();
+        }
     }
 
     auto visit(auto& v, int depth)
         -> void
     {
         v.start(*this, depth);
-        assert (expr);
-        expr->visit(v, depth+1);
+        if (type) {
+            type->visit(v, depth+1);
+        } else {
+            assert (expr);
+            expr->visit(v, depth+1);
+        }
         for (auto const& x : ops) {
             assert (x.op);
             v.start(*x.op, depth+1);
@@ -6011,7 +6026,7 @@ private:
     //G     'const'
     //G     '*'
     //G
-    auto type_id()
+    auto type_id(bool speculative = false)
         -> std::unique_ptr<type_id_node>
     {
         auto n = std::make_unique<type_id_node>();
@@ -6050,7 +6065,7 @@ private:
             }
             return {};
         }
-        if (curr().type() == lexeme::Multiply) {
+        if (!speculative && curr().type() == lexeme::Multiply) {
             error("'T*' is not a valid Cpp2 type; use '*T' for a pointer instead", false);
             return {};
         }
@@ -6061,10 +6076,10 @@ private:
 
     //G is-as-expression:
     //G     prefix-expression
+    //G     type-id is-type-constraint
     //G     is-as-expression is-type-constraint
     //G     is-as-expression is-value-constraint
     //G     is-as-expression as-type-cast
-    //GTODO     type-id is-type-constraint
     //G
     //G is-type-constraint
     //G     'is' type-id
@@ -6079,9 +6094,18 @@ private:
         -> std::unique_ptr<is_as_expression_node>
     {
         auto n = std::make_unique<is_as_expression_node>();
-        n->expr = prefix_expression();
-        if (!(n->expr)) {
-            return {};
+
+        auto start_pos = pos;
+        // 'T is'
+        if ((n->type = type_id(true)) && curr() != "is") {
+            n->type.release();
+        }
+        if (!n->type) {
+            pos = start_pos; // backtrack
+            n->expr = prefix_expression();
+            if (!(n->expr)) {
+                return {};
+            }
         }
 
         auto is_found = false;
@@ -6116,7 +6140,17 @@ private:
                 ;
             }
             else if ((term.expr = expression()) != nullptr) {
-                ;
+                if (n->type) {
+                    assert(is_found);
+                    error("expected type-id after type-id 'is', not an expression", false, term.expr->position());
+                    if (
+                        n->type->pc_qualifiers.empty()
+                        && n->type->id.index() == type_id_node::unqualified
+                    ) {
+                        error("did you mean to use '(identifier) is' to test an expression?", false, n->type->position());
+                    }
+                    return {};
+                }
             }
 
             if (

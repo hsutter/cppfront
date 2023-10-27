@@ -3214,12 +3214,25 @@ public:
         auto wildcard_found = false;
         bool as_on_literal  = false;
 
-        assert(
-            n.expr
-            && n.expr->get_postfix_expression_node()
-            && n.expr->get_postfix_expression_node()->expr
-        );
+        if (n.type) {
+            assert(
+                n.ops.size() == 1
+                && *n.ops[0].op == "is"
+                && n.ops[0].type
+            );
+            printer.print_cpp2("bool(cpp2::is<", n.position());
+            emit(*n.type);
+            printer.print_cpp2(", ", n.position());
+            emit(*n.ops[0].type);
+            printer.print_cpp2(">())", n.position());
+            return;
+        }
+        else if (n.expr)
         {
+            assert(
+                n.expr->get_postfix_expression_node()
+                && n.expr->get_postfix_expression_node()->expr
+            );
             auto& p = n.expr->get_postfix_expression_node()->expr;
             if (auto t = p->get_token();
                 t

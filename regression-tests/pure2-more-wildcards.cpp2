@@ -7,11 +7,11 @@ main: () -> int
     p: *       _ = x&;
     q: * const _ = p&;
 
-    if x is (less_than(20)) {
+    if (x) is (less_than(20)) {
         std::cout << "yes, less\n";
     }
 
-    if x is _ {
+    if (x) is _ {
         std::cout << "yes, always\n";
     }
 }
