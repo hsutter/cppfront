@@ -6030,7 +6030,7 @@ private:
 
     //G is-as-expression:
     //G     prefix-expression
-    //GTODO     type-id is-type-constraint
+    //G     type-id is-type-constraint
     //G     is-as-expression is-type-constraint
     //G     is-as-expression is-value-constraint
     //G     is-as-expression as-type-cast
