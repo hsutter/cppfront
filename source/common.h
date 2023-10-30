@@ -821,7 +821,9 @@ public:
         -> void
     {
         help_requested = true;
-        print("\ncppfront compiler v0.3.0   Build "
+        print("\ncppfront compiler "
+            #include "version.info"
+        "   Build "
             #include "build.info"
         );
         print("\nCopyright(c) Herb Sutter   All rights reserved\n");
