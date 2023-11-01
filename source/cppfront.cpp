@@ -5011,6 +5011,7 @@ public:
             current_functions.back().epilog.push_back( "return *this;");
             printer.print_cpp2( prefix, n.position() );
             printer.print_cpp2( "auto " + type_qualification_if_any_for(n) + print_to_string( *n.name() ), n.position());
+            printer.reset_line_directive_tracking();
             emit( *func, n.name() );
         }
     }
