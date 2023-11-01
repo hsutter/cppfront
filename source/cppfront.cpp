@@ -53,6 +53,26 @@ auto pad(int padding)
     };
 }
 
+auto cpp_identifier_replacement(std::string_view const& name) 
+    -> std::optional<std::string>
+{
+    constexpr std::string_view non_identifier_chars = "<=>*+-/";
+    auto pos = name.find_first_of(non_identifier_chars, 0); 
+    if (pos == std::string_view::npos) {
+        return {};
+    }
+
+    std::string cleaned_name;
+    std::size_t last_pos = 0;
+    do {
+        cleaned_name.append(name, last_pos, pos - last_pos);
+        cleaned_name.append("__");
+        cleaned_name.append(std::to_string(name[pos]));
+        last_pos = pos + 1;
+        pos = name.find_first_of(non_identifier_chars, last_pos);
+    } while (pos != std::string_view::npos );
+    return cleaned_name;
+}
 
 //-----------------------------------------------------------------------
 //
@@ -4449,7 +4469,12 @@ public:
             function_return_name = {};
             printer.emit_to_string(&function_return_name);
             assert(ident);
-            printer.print_cpp2( *ident, ident->position() );
+            auto cpp_identifier = cpp_identifier_replacement(*ident);
+            if (cpp_identifier) {
+              printer.print_cpp2(*cpp_identifier, ident->position());  
+            } else {
+              printer.print_cpp2(*ident, ident->position());  
+            }
             printer.print_cpp2( "_ret", ident->position() );
             printer.emit_to_string();
             printer.print_cpp2( function_return_name, ident->position() );
@@ -5272,7 +5297,12 @@ public:
                 assert(r);
                 assert(std::ssize(r->parameters) > 0);
                 printer.print_extra( "struct " );
-                printer.print_extra( *n.name() );
+                auto cpp_identifier = cpp_identifier_replacement(*n.name());
+                if (cpp_identifier) {
+                  printer.print_extra(*cpp_identifier);  
+                } else {
+                  printer.print_extra(*n.name());  
+                }
                 printer.print_extra( "_ret " );
                 emit(*r, true);
                 printer.print_extra( "\n" );
