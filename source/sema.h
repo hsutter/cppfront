@@ -1592,7 +1592,7 @@ public:
         inside_returns_list = false;
     }
 
-    auto start(iteration_statement_node const& n, int) -> void
+    auto prepare_for_loop_body(iteration_statement_node const &n) -> void
     {
         if (*n.identifier == "for") {
             just_entered_for = true;

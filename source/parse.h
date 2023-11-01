@@ -3906,6 +3906,7 @@ auto iteration_statement_node::visit(auto& v, int depth)
     else {
         assert(range && parameter && body);
         range->visit(v, depth+1);
+        v.prepare_for_loop_body(*this);
         parameter->visit(v, depth+1);
         body->visit(v, depth+1);
     }
@@ -8962,6 +8963,11 @@ public:
     auto end(auto const&, int) -> void
     {
         //  Ignore other node types
+    }
+
+    auto prepare_for_loop_body(iteration_statement_node const &n) -> void 
+    {
+        // only important for sema
     }
 };
 
