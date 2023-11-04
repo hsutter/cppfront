@@ -97,6 +97,8 @@ outer: @print type = {
     all: <Args...: type> (args...: Args) -> bool =
         (... && args);
 
+    using std::endian::native;
+
 }
 
 main: () = {

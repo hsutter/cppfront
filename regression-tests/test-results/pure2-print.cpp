@@ -76,12 +76,14 @@ CPP2_REQUIRES_ (cpp2::cmp_greater_eq(sizeof(Args)...,0))
 #line 97 "pure2-print.cpp2"
     public: template<typename ...Args> [[nodiscard]] static auto all(Args const& ...args) -> bool;
         
+
+    using std::endian::native;
     public: outer() = default;
     public: outer(outer const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(outer const&) -> void = delete;
 
 
-#line 100 "pure2-print.cpp2"
+#line 102 "pure2-print.cpp2"
 };
 
 auto main() -> int;
@@ -199,7 +201,7 @@ requires (cpp2::cmp_greater_eq(sizeof(Args)...,0))
     template<typename ...Args> [[nodiscard]] auto outer::all(Args const& ...args) -> bool { 
         return (... && args);  }
 
-#line 102 "pure2-print.cpp2"
+#line 104 "pure2-print.cpp2"
 auto main() -> int{
     outer::test();
 }

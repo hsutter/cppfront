@@ -33,7 +33,7 @@ auto parser::apply_type_metafunctions( declaration_node& n )
     auto rtype = meta::type_declaration{ &n, cs };
 
     return apply_metafunctions(
-        n, 
+        n,
         rtype,
         [&](std::string const& msg) { error( msg, false ); }
     );
@@ -1459,10 +1459,14 @@ public:
             auto compound_stmt = n.initializer->get_if<compound_statement_node>();
             assert (compound_stmt);
             for (auto& stmt : compound_stmt->statements) {
-                if (!stmt->is_declaration()) {
+                if (
+                    !stmt->is_declaration()
+                    && !stmt->is_using()
+                    )
+                {
                     errors.emplace_back(
                         stmt->position(),
-                        "a user-defined type body must contain only declarations, not other code"
+                        "a user-defined type body must contain only declarations or using statements, not other code"
                     );
                     return false;
                 }
@@ -1636,7 +1640,7 @@ public:
             //  Skip type scope (member) variables
             && !(n.parent_is_type() && n.is_object())
             //  Skip unnamed variables
-            && n.identifier 
+            && n.identifier
             //  Skip non-out parameters
             && (
                 !inside_parameter_list

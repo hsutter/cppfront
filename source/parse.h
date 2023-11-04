@@ -3960,6 +3960,12 @@ auto statement_node::position() const
         return s->position();
     }
 
+    break;case using_: {
+        auto const& s = std::get<using_>(statement);
+        assert (s);
+        return s->position();
+    }
+
     break;default:
         assert (!"illegal statement_node state");
         return { 0, 0 };

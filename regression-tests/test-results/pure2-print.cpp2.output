@@ -145,6 +145,7 @@ outer: type =
     }
 
     all: <Args...: type>(in args...: Args) -> move bool = (... && args);
+    using std::endian::native;
 }
  ok (all Cpp2, passes safety checks)
 

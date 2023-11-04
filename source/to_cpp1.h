@@ -5305,7 +5305,11 @@ public:
 
             for (auto& stmt : compound_stmt->statements)
             {
-                if (!stmt->is_declaration()) {
+                if (stmt->is_using()) {
+                    continue;
+                }
+                if (!stmt->is_declaration())
+                {
                     //  We will already have emitted an error for this in sema.check
                     return;
                 }
@@ -5437,10 +5441,35 @@ public:
             for (auto& stmt : compound_stmt->statements)
             {
                 assert(stmt);
-                if (!stmt->is_declaration()) {
+                if (
+                    !stmt->is_declaration()
+                    && !stmt->is_using()
+                    )
+                {
                     //  We will already have emitted an error for this in sema.check
                     return;
                 }
+
+                if (stmt->is_using())
+                {
+                    if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
+                        if (!started_body) {
+                            printer.print_cpp2(" {", compound_stmt->position());
+                            started_body = true;
+                        }
+                        auto& using_ = *std::get<statement_node::using_>(stmt->statement);
+                        if (using_.for_namespace) {
+                            errors.emplace_back(
+                                stmt->position(),
+                                "a type scope must not contain a 'using namespace' statement"
+                            );
+                            return;
+                        }
+                        emit(using_);
+                    }
+                    continue;
+                }
+                // else
 
                 auto& decl = std::get<statement_node::declaration>(stmt->statement);
                 assert(decl);
@@ -5461,6 +5490,14 @@ public:
                     ;
                 if (emit_as_base)
                 {
+                    if (started_body) {
+                        errors.emplace_back(
+                            stmt->position(),
+                            "(temporary alpha limitation) expected only objects before 'this' members"
+                        );
+                        return;
+                    }
+
                     //  Do the sema check for these declarations here, because we're
                     //  handling them here instead of going through emit() for them
                     if (!sema.check(*decl)) {
@@ -5572,16 +5609,30 @@ public:
             assert(compound_stmt);
             for (auto& stmt : compound_stmt->statements) {
                 assert(stmt);
-                if (!stmt->is_declaration()) {
+                if (
+                    !stmt->is_declaration()
+                    && !stmt->is_using()
+                    )
+                {
                     errors.emplace_back(
                         stmt->position(),
-                        "a namespace scope must contain only declarations, not other code"
+                        "a namespace scope must contain only declarations or using statements, not other code"
                     );
                     return;
                 }
-                auto& decl = std::get<statement_node::declaration>(stmt->statement);
-                assert(decl);
-                emit(*decl);
+
+                if (stmt->is_using())
+                {
+                    auto& using_ = std::get<statement_node::using_>(stmt->statement);
+                    assert(using_);
+                    emit(*using_);
+                }
+                else
+                {
+                    auto& decl = std::get<statement_node::declaration>(stmt->statement);
+                    assert(decl);
+                    emit(*decl);
+                }
             }
 
             printer.print_cpp2("}\n", compound_stmt->close_brace);
