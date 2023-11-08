@@ -7,8 +7,8 @@ main: () -> int = {
 }
 
 print_subrange: (rng:_, start:int, end:int) = {
-    assert<Bounds>( 0 <= start )
-    assert<Bounds>( end <= rng.ssize() )
+    assert<Bounds>( 0 <= start );
+    assert<Bounds>( end <= rng.ssize() );
 
     count := 0;
     for  rng

@@ -107,7 +107,7 @@ compiler_services: @polymorphic_base @copyable type =
         tokens := generated_lexers.back()&;
         tokens*.lex( lines*, true );
 
-        assert( std::ssize(tokens* .get_map()) == 1 )
+        assert( std::ssize(tokens* .get_map()) == 1 );
 
         //  Now parse this single declaration from
         //  the lexed tokens
@@ -168,7 +168,7 @@ type_id: @polymorphic_base @copyable type =
     = {
         compiler_services = s;
         n = n_;
-        assert( n, "a meta::type_id must point to a valid type_id_node, not null" )
+        assert( n, "a meta::type_id must point to a valid type_id_node, not null" );
     }
 
     is_wildcard         : (this) -> bool        = n*.is_wildcard();
@@ -204,7 +204,7 @@ declaration_base: @polymorphic_base @copyable type =
     = {
         compiler_services = s;
         n = n_;
-        assert( n, "a meta::declaration must point to a valid declaration_node, not null" )
+        assert( n, "a meta::declaration must point to a valid declaration_node, not null" );
     }
 
     position: (override this) -> source_position = n*.position();
@@ -285,7 +285,7 @@ declaration: @polymorphic_base @copyable type =
         pre<Type>( parent_is_type() )               // this precondition should be sufficient ...
     = {
         test := n*.type_member_mark_for_removal();
-        assert( test )                              // ... to ensure this assert is true
+        assert( test );                             // ... to ensure this assert is true
     }
 }
 
@@ -304,7 +304,7 @@ function_declaration: @copyable type =
     ) =
     {
         declaration = (n_, s);
-        assert( n*.is_function() )
+        assert( n*.is_function() );
     }
 
     index_of_parameter_named     : (this, s: std::string_view) -> int  = n*.index_of_parameter_named(s);
@@ -361,7 +361,7 @@ object_declaration: @copyable type =
     ) =
     {
         declaration = (n_, s);
-        assert( n*.is_object() )
+        assert( n*.is_object() );
     }
 
     is_const         : (this) -> bool = n*.is_const();
@@ -397,7 +397,7 @@ type_declaration: @copyable type =
     ) =
     {
         declaration = (n_, s);
-        assert( n*.is_type() )
+        assert( n*.is_type() );
     }
 
     reserve_names: (this, name: std::string_view, forward etc...) = 
@@ -510,7 +510,7 @@ alias_declaration: @copyable type =
     ) =
     {
         declaration = (n_, s);
-        assert( n*.is_alias() )
+        assert( n*.is_alias() );
     }
 }
 
@@ -1239,7 +1239,7 @@ apply_metafunctions: (
     )
     -> bool
 = {
-    assert( n.is_type() )
+    assert( n.is_type() );
 
     //  Check for _names reserved for the metafunction implementation
     for  rtype.get_members()

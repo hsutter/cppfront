@@ -46,7 +46,7 @@ outer: @print type = {
             else if !m.empty() { b(); }
             else { c(); }
 
-            assert( true )
+            assert( true );
 
             return :() -> std::string = (s + m[0])$; ();
         }

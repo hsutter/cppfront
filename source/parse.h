@@ -7001,9 +7001,12 @@ private:
     //G     jump-statement
     //G     iteration-statement
     //G     compound-statement
-    //G     contract
+    //G     contract-statement
     //G     declaration
     //G     expression-statement
+    //G
+    //G contract-statement
+    //G     contract ';'
     //
     //GTODO     try-block
     //G
@@ -7089,6 +7092,11 @@ private:
                 error("only 'assert' contracts are allowed at statement scope");
                 return {};
             }
+            if (curr().type() != lexeme::Semicolon) {
+                error("missing ';' after contract-statement");
+                return {};
+            }
+            next();
             n->statement = std::move(s);
             assert (n->is_contract());
             return n;
@@ -7467,8 +7475,8 @@ private:
 
 
     //G contract:
-    //G     contract-kind contract-group? ':' logical-or-expression ']' ']'
-    //G     contract-kind contract-group? ':' logical-or-expression ',' string-literal ']' ']'
+    //G     contract-kind contract-group? ':' '(' logical-or-expression ')'
+    //G     contract-kind contract-group? ':' '(' logical-or-expression ',' string-literal ')'
     //G
     //G contract-group:
     //G     '<' id-expression '>'
@@ -7539,17 +7547,6 @@ private:
             return {};
         }
         next();
-
-        //  Allow optional ';' after an assert, which is really an empty
-        //  statement (I'm not putting it in the grammar) and so this is
-        //  to skip the "empty statement" check and error
-        if (
-            *n->kind == "assert"
-            && curr().type() == lexeme::Semicolon
-            )
-        {
-            next();
-        }
 
         return n;
     }

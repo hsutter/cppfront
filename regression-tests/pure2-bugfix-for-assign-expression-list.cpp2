@@ -2,9 +2,9 @@ main: () = {
   vec: type == std::vector<int>;
   v: vec              = (0);
   v                   = ();
-  assert( v == :vec = () )
+  assert( v == :vec = () );
   v                   = (1);
-  assert( v == :vec = (1) )
+  assert( v == :vec = (1) );
   v                   = (2, 3);
-  assert( v == :vec = (2, 3) )
+  assert( v == :vec = (2, 3) );
 }

@@ -156,7 +156,7 @@ type_id: @polymorphic_base @copyable type =
     = {
         compiler_services = s;
         n = n_;
-        assert( n, "a meta::type_id must point to a valid type_id_node, not null" )
+        assert( n, "a meta::type_id must point to a valid type_id_node, not null" );
     }
 
     is_wildcard         : (this) -> bool        = n.is_wildcard();
