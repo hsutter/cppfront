@@ -4531,19 +4531,19 @@ auto pretty_print_visualize(contract_node const& n, int indent)
 {
     assert (n.kind && n.condition);
 
-    auto ret = std::string{"\n"} + pre(indent) + "[[" + n.kind->as_string_view();
+    auto ret = std::string{"\n"} + pre(indent) + n.kind->as_string_view();
 
     if (n.group) {
-        ret += " " + pretty_print_visualize(*n.group, indent);
+        ret += "<" + pretty_print_visualize(*n.group, indent) + ">";
     }
 
-    ret += ": " + pretty_print_visualize(*n.condition, indent);
+    ret += "( " + pretty_print_visualize(*n.condition, indent);
 
     if (n.message) {
-        ret += " " + n.message->to_string();
+        ret += ", " + n.message->to_string();
     }
 
-    ret += "]]";
+    ret += " )";
 
     return ret;
 }
@@ -7001,9 +7001,9 @@ private:
     //G     jump-statement
     //G     iteration-statement
     //G     compound-statement
+    //G     contract
     //G     declaration
     //G     expression-statement
-    //G     contract
     //
     //GTODO     try-block
     //G
@@ -7084,6 +7084,16 @@ private:
             return n;
         }
 
+        else if (auto s = contract()) {
+            if (*s->kind != "assert") {
+                error("only 'assert' contracts are allowed at statement scope");
+                return {};
+            }
+            n->statement = std::move(s);
+            assert (n->is_contract());
+            return n;
+        }
+
         else if (auto s = declaration(true, false, false, n.get())) {
             n->statement = std::move(s);
             assert (n->is_declaration());
@@ -7093,16 +7103,6 @@ private:
         else if (auto s = expression_statement(semicolon_required)) {
             n->statement = std::move(s);
             assert (n->is_expression());
-            return n;
-        }
-
-        else if (auto s = contract()) {
-            if (*s->kind != "assert") {
-                error("only 'assert' contracts are allowed at statement scope");
-                return {};
-            }
-            n->statement = std::move(s);
-            assert (n->is_contract());
             return n;
         }
 
@@ -7467,8 +7467,11 @@ private:
 
 
     //G contract:
-    //G     '[' '[' contract-kind id-expression? ':' logical-or-expression ']' ']'
-    //G     '[' '[' contract-kind id-expression? ':' logical-or-expression ',' string-literal ']' ']'
+    //G     contract-kind contract-group? ':' logical-or-expression ']' ']'
+    //G     contract-kind contract-group? ':' logical-or-expression ',' string-literal ']' ']'
+    //G
+    //G contract-group:
+    //G     '<' id-expression '>'
     //G
     //G contract-kind: one of
     //G     'pre' 'post' 'assert'
@@ -7476,26 +7479,8 @@ private:
     auto contract()
         -> std::unique_ptr<contract_node>
     {
-        //  Note: For now I'm using [[ ]] mainly so that existing Cpp1 syntax highlighters
-        //        don't get confused... I initially implemented single [ ], but then
-        //        my editor's default Cpp1 highlighter didn't colorize the following
-        //        multiline // comment correctly as a comment
-
-        //  If there's no [ [ then this isn't a contract
-        if (
-            done()
-            || curr().type() != lexeme::LeftBracket
-            || !peek(1)
-            || peek(1)->type() != lexeme::LeftBracket
-            )
-        {
-            return {};
-        }
-
         auto n = std::make_unique<contract_node>(curr().position());
         auto guard = capture_groups_stack_guard(this, &n->captures);
-        next();
-        next();
 
         if (
             curr() != "pre"
@@ -7503,18 +7488,30 @@ private:
             && curr() != "assert"
             )
         {
-            error("[ begins a contract and must be followed by 'pre', 'post', or 'assert'");
             return {};
         }
         n->kind = &curr();
         next();
 
-        if (auto id = id_expression()) {
-            n->group = std::move(id);
+        if (curr().type() == lexeme::Less) {
+            next();
+            if (auto id = id_expression()) {
+                n->group = std::move(id);
+            }
+            else {
+                error("invalid contract group after '<'");
+                return {};
+            }
+
+            if (curr().type() != lexeme::Greater) {
+                error("expected '>' after contract group");
+                return {};
+            }
+            next();
         }
 
-        if (curr().type() != lexeme::Colon) {
-            error("expected : before the contract condition");
+        if (curr().type() != lexeme::LeftParen) {
+            error("expected '(' before the contract condition");
             return {};
         }
         next();
@@ -7537,17 +7534,22 @@ private:
             next();
         }
 
-        if (
-            curr().type() != lexeme::RightBracket
-            || !peek(1)
-            || peek(1)->type() != lexeme::RightBracket
-            )
-        {
-            error("expected ]] at the end of the contract");
+        if (curr().type() != lexeme::RightParen) {
+            error("expected ')' at the end of the contract");
             return {};
         }
         next();
-        next();
+
+        //  Allow optional ';' after an assert, which is really an empty
+        //  statement (I'm not putting it in the grammar) and so this is
+        //  to skip the "empty statement" check and error
+        if (
+            *n->kind == "assert"
+            && curr().type() == lexeme::Semicolon
+            )
+        {
+            next();
+        }
 
         return n;
     }
@@ -7607,11 +7609,12 @@ private:
         }
 
 
-        //  If we're not at a '->' or 'requires' and what follows is an expression,
-        //  this is a ":(params) expr" shorthand function syntax
+        //  If we're not at a '->' or 'requires' or contract and what follows is
+        //  an expression, this is a ":(params) expr" shorthand function syntax
         if (
             curr().type() != lexeme::Arrow
             && curr() != "requires"
+            && (curr() != "pre" && curr() != "post")
             )
         {
             auto start_pos = pos;

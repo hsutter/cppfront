@@ -82,16 +82,16 @@ auto main() -> int;
 
     [[nodiscard]] auto name_or_number::is_name() const& -> bool { return _discriminator == 0; }
 [[nodiscard]] auto name_or_number::name() const& -> std::string const& { 
-                                                             cpp2::Default.expects(is_name(), "");return *cpp2::assert_not_null(reinterpret_cast<std::string const*>(&_storage)); }
+                                                         cpp2::Default.expects(is_name(), "");return *cpp2::assert_not_null(reinterpret_cast<std::string const*>(&_storage)); }
 [[nodiscard]] auto name_or_number::name() & -> std::string& { 
-                                                                   cpp2::Default.expects(is_name(), "");return *cpp2::assert_not_null(reinterpret_cast<std::string*>(&_storage)); }
+                                                               cpp2::Default.expects(is_name(), "");return *cpp2::assert_not_null(reinterpret_cast<std::string*>(&_storage)); }
 auto name_or_number::set_name(cpp2::in<std::string> _value) & -> void{if (!(is_name())) {_destroy();std::construct_at(reinterpret_cast<std::string*>(&_storage), _value);}else {*cpp2::assert_not_null(reinterpret_cast<std::string*>(&_storage)) = _value;}_discriminator = 0;}
 auto name_or_number::set_name(auto&& ..._args) & -> void{if (!(is_name())) {_destroy();std::construct_at(reinterpret_cast<std::string*>(&_storage), _args...);}else {*cpp2::assert_not_null(reinterpret_cast<std::string*>(&_storage)) = std::string{_args...};}_discriminator = 0;}
 [[nodiscard]] auto name_or_number::is_num() const& -> bool { return _discriminator == 1; }
 [[nodiscard]] auto name_or_number::num() const& -> cpp2::i32 const& { 
-                                                   cpp2::Default.expects(is_num(), "");return *cpp2::assert_not_null(reinterpret_cast<cpp2::i32 const*>(&_storage)); }
+                                               cpp2::Default.expects(is_num(), "");return *cpp2::assert_not_null(reinterpret_cast<cpp2::i32 const*>(&_storage)); }
 [[nodiscard]] auto name_or_number::num() & -> cpp2::i32& { 
-                                                         cpp2::Default.expects(is_num(), "");return *cpp2::assert_not_null(reinterpret_cast<cpp2::i32*>(&_storage)); }
+                                                     cpp2::Default.expects(is_num(), "");return *cpp2::assert_not_null(reinterpret_cast<cpp2::i32*>(&_storage)); }
 auto name_or_number::set_num(cpp2::in<cpp2::i32> _value) & -> void{if (!(is_num())) {_destroy();std::construct_at(reinterpret_cast<cpp2::i32*>(&_storage), _value);}else {*cpp2::assert_not_null(reinterpret_cast<cpp2::i32*>(&_storage)) = _value;}_discriminator = 1;}
 auto name_or_number::set_num(auto&& ..._args) & -> void{if (!(is_num())) {_destroy();std::construct_at(reinterpret_cast<cpp2::i32*>(&_storage), _args...);}else {*cpp2::assert_not_null(reinterpret_cast<cpp2::i32*>(&_storage)) = cpp2::i32{_args...};}_discriminator = 1;}
 auto name_or_number::_destroy() & -> void{
@@ -138,16 +138,16 @@ name_or_number::name_or_number(name_or_number const& that)
 
     template <typename T> [[nodiscard]] auto name_or_other<T>::is_name() const& -> bool { return _discriminator == 0; }
 template <typename T> [[nodiscard]] auto name_or_other<T>::name() const& -> std::string const& { 
-                                                             cpp2::Default.expects(is_name(), "");return *cpp2::assert_not_null(reinterpret_cast<std::string const*>(&_storage)); }
+                                                         cpp2::Default.expects(is_name(), "");return *cpp2::assert_not_null(reinterpret_cast<std::string const*>(&_storage)); }
 template <typename T> [[nodiscard]] auto name_or_other<T>::name() & -> std::string& { 
-                                                                   cpp2::Default.expects(is_name(), "");return *cpp2::assert_not_null(reinterpret_cast<std::string*>(&_storage)); }
+                                                               cpp2::Default.expects(is_name(), "");return *cpp2::assert_not_null(reinterpret_cast<std::string*>(&_storage)); }
 template <typename T> auto name_or_other<T>::set_name(cpp2::in<std::string> _value) & -> void{if (!(is_name())) {_destroy();std::construct_at(reinterpret_cast<std::string*>(&_storage), _value);}else {*cpp2::assert_not_null(reinterpret_cast<std::string*>(&_storage)) = _value;}_discriminator = 0;}
 template <typename T> auto name_or_other<T>::set_name(auto&& ..._args) & -> void{if (!(is_name())) {_destroy();std::construct_at(reinterpret_cast<std::string*>(&_storage), _args...);}else {*cpp2::assert_not_null(reinterpret_cast<std::string*>(&_storage)) = std::string{_args...};}_discriminator = 0;}
 template <typename T> [[nodiscard]] auto name_or_other<T>::is_other() const& -> bool { return _discriminator == 1; }
 template <typename T> [[nodiscard]] auto name_or_other<T>::other() const& -> T const& { 
-                                                     cpp2::Default.expects(is_other(), "");return *cpp2::assert_not_null(reinterpret_cast<T const*>(&_storage)); }
+                                                 cpp2::Default.expects(is_other(), "");return *cpp2::assert_not_null(reinterpret_cast<T const*>(&_storage)); }
 template <typename T> [[nodiscard]] auto name_or_other<T>::other() & -> T& { 
-                                                           cpp2::Default.expects(is_other(), "");return *cpp2::assert_not_null(reinterpret_cast<T*>(&_storage)); }
+                                                       cpp2::Default.expects(is_other(), "");return *cpp2::assert_not_null(reinterpret_cast<T*>(&_storage)); }
 template <typename T> auto name_or_other<T>::set_other(cpp2::in<T> _value) & -> void{if (!(is_other())) {_destroy();std::construct_at(reinterpret_cast<T*>(&_storage), _value);}else {*cpp2::assert_not_null(reinterpret_cast<T*>(&_storage)) = _value;}_discriminator = 1;}
 template <typename T> auto name_or_other<T>::set_other(auto&& ..._args) & -> void{if (!(is_other())) {_destroy();std::construct_at(reinterpret_cast<T*>(&_storage), _args...);}else {*cpp2::assert_not_null(reinterpret_cast<T*>(&_storage)) = T{_args...};}_discriminator = 1;}
 template <typename T> auto name_or_other<T>::_destroy() & -> void{

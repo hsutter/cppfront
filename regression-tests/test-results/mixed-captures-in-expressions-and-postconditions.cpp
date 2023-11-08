@@ -21,7 +21,7 @@
 extern std::vector<int> vec;
 
 auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void;
-
+    
 
 //=== Cpp2 function definitions =================================================
 

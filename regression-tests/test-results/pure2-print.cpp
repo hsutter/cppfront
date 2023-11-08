@@ -122,7 +122,7 @@ requires (true)
 
 #line 34 "pure2-print.cpp2"
         {
-            cpp2::Default.expects(CPP2_UFCS_0(empty, m) == false || false, "");
+            cpp2::Default.expects(CPP2_UFCS_0(empty, m) == false || false, "message");
             cpp2::Bounds.expects([_0 = 0, _1 = CPP2_UFCS_0(ssize, m), _2 = 100]{ return cpp2::cmp_less(_0,_1) && cpp2::cmp_less(_1,_2); }() && true != false, "");
 #line 35 "pure2-print.cpp2"
             auto a {[]() -> void{}}; 
