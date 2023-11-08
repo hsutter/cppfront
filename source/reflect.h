@@ -38,7 +38,7 @@ class alias_declaration;
 #line 841 "reflect.h2"
 class value_member_info;
 
-#line 1327 "reflect.h2"
+#line 1335 "reflect.h2"
 }
 
 }
@@ -699,14 +699,14 @@ auto flag_enum(meta::type_declaration& t) -> void;
 
 auto cpp2_union(meta::type_declaration& t) -> void;
 
-#line 1213 "reflect.h2"
+#line 1221 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  print - output a pretty-printed visualization of t
 //
 auto print(cpp2::in<meta::type_declaration> t) -> void;
 
-#line 1223 "reflect.h2"
+#line 1231 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  apply_metafunctions
@@ -717,7 +717,7 @@ auto print(cpp2::in<meta::type_declaration> t) -> void;
     auto const& error
     ) -> bool;
 
-#line 1327 "reflect.h2"
+#line 1335 "reflect.h2"
 }
 
 }
@@ -1680,14 +1680,14 @@ std::string destroy = "    private _destroy: (inout this) = {\n";
 
     //  Add the destructor
 #line 1193 "reflect.h2"
-    CPP2_UFCS(add_member, t, "    operator=: (move this) = { _destroy(); } ");
+    CPP2_UFCS(add_member, t, "    operator=: (move this) = { _destroy(); }");
 
     //  Add default constructor
-    CPP2_UFCS(add_member, t, "    operator=: (out this) = { _discriminator = -1; } ");
+    CPP2_UFCS(add_member, t, "    operator=: (out this) = { }");
 {
-std::string value_set = "    operator=: (out this, that) = {\n";
+std::string value_set = "";
 
-    //  Add value-set
+    //  Add copy/move construction and assignment
 
 #line 1200 "reflect.h2"
     {
@@ -1695,22 +1695,30 @@ std::string value_set = "    operator=: (out this, that) = {\n";
               auto const& a : alternatives ) {
             value_set += "        if that.is_" + cpp2::to_string(a.name) + "() { set_" + cpp2::to_string(a.name) + "( that." + cpp2::to_string(a.name) + "() ); }\n";
         }
-
-        value_set += "        _discriminator = that._discriminator;\n";
         value_set += "    }\n";
-        CPP2_UFCS(add_member, t, std::move(value_set));
+
+        CPP2_UFCS(add_member, t, std::string("    operator=: (out this, that) = {\n") 
+                    + "        _storage = ();\n" 
+                    + "        _discriminator = -1;\n" 
+                    + value_set
+                    );
+        CPP2_UFCS(add_member, t, std::string("    operator=: (inout this, that) = {\n") 
+                    + "        _storage = _;\n" 
+                    + "        _discriminator = _;\n" 
+                    + std::move(value_set)
+                    );
     }
 }
-#line 1210 "reflect.h2"
+#line 1218 "reflect.h2"
 }
 
-#line 1217 "reflect.h2"
+#line 1225 "reflect.h2"
 auto print(cpp2::in<meta::type_declaration> t) -> void
 {
     std::cout << CPP2_UFCS_0(print, t) << "\n";
 }
 
-#line 1227 "reflect.h2"
+#line 1235 "reflect.h2"
 [[nodiscard]] auto apply_metafunctions(
     declaration_node& n, 
     type_declaration& rtype, 
@@ -1810,7 +1818,7 @@ auto print(cpp2::in<meta::type_declaration> t) -> void
     return true; 
 }
 
-#line 1327 "reflect.h2"
+#line 1335 "reflect.h2"
 }
 
 }

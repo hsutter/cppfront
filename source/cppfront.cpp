@@ -4812,7 +4812,32 @@ public:
                     || found_default_init
                 );
 
-                //  Emit the initializer...
+                //  Emit the initializer if it it isn't '_' (don't care) and ...
+                if (initializer == "_") {
+                    //  I'll walk the walk: I've said publicly that _structured_ goto is perfectly
+                    //  kosher -- it's only _unstructured_ goto that's harmful (and Dijkstra knew it),
+                    //  which means:
+                    //      - jumping into a block or statement (I'm looking at you, Duff's Device)
+                    //      - jumping backwards (that's an unstructured loop == spaghetti control flow)
+                    //      - jumping across a variable declaration (C++ already bans this)
+                    // 
+                    //  But jumping forward-and-outward, skipping no declarations, is righteous.
+                    //
+                    //  Here, using goto is the right tool for the job, and is better code because:
+                    //      - it avoids a gratuitous extra level of nesting inside an
+                    //        'if (initializer != "_")' block of the next 100 lines (and please don't
+                    //        start the other diatribe about that the next 100 lines should be a
+                    //        separate named function - no it shouldn't)
+                    //      - which extra indent of identical code would make GitHub's diff for this
+                    //        commit super hard to read (diff does not deal well with blocks of code
+                    //        that simply change indentation level - in fact seeing that diff without
+                    //        the goto was the tipping point to just switch to goto here)
+                    //  ... but sadly I feel the need to defend it.
+                    //
+                    //  As Scott would say (and has said), "so sue me"
+                    //
+                    goto skip_initializer;
+                }
 
                 if (initializer.empty()) {
                     initializer = "{}";
@@ -4908,6 +4933,8 @@ public:
                     }
                     separator = ", ";
                 }
+
+            skip_initializer: ;
 
                 //  And on to the next data member...
                 ++object;

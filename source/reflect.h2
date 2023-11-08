@@ -1190,22 +1190,30 @@ union: (inout t : meta::type_declaration)
     }
 
     //  Add the destructor
-    t.add_member( "    operator=: (move this) = { _destroy(); } " );
+    t.add_member( "    operator=: (move this) = { _destroy(); }" );
 
     //  Add default constructor
-    t.add_member( "    operator=: (out this) = { _discriminator = -1; } " );
+    t.add_member( "    operator=: (out this) = { }" );
 
-    //  Add value-set
-    (copy value_set: std::string = "    operator=: (out this, that) = {\n")
+    //  Add copy/move construction and assignment
+    (copy value_set: std::string = "")
     {
         for  alternatives
         do   (a) {
             value_set += "        if that.is_(a.name)$() { set_(a.name)$( that.(a.name)$() ); }\n";
         }
-
-        value_set += "        _discriminator = that._discriminator;\n";
         value_set += "    }\n";
-        t.add_member( value_set );
+
+        t.add_member( std::string("    operator=: (out this, that) = {\n")
+                    + "        _storage = ();\n"
+                    + "        _discriminator = -1;\n"
+                    + value_set
+                    );
+        t.add_member( std::string("    operator=: (inout this, that) = {\n")
+                    + "        _storage = _;\n"
+                    + "        _discriminator = _;\n"
+                    + value_set
+                    );
     }
 }
 

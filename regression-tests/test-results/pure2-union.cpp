@@ -35,8 +35,8 @@ public: ~name_or_number() noexcept;
 public: explicit name_or_number();
 public: name_or_number(name_or_number const& that);
 
-public: auto operator=(name_or_number const& that) -> name_or_number& ;
 public: name_or_number(name_or_number&& that) noexcept;
+public: auto operator=(name_or_number const& that) -> name_or_number& ;
 public: auto operator=(name_or_number&& that) noexcept -> name_or_number& ;
 
 #line 5 "pure2-union.cpp2"
@@ -62,8 +62,8 @@ private: auto _destroy() & -> void;
 public: ~name_or_other() noexcept;
 public: explicit name_or_other();
 public: name_or_other(name_or_other const& that);
-public: auto operator=(name_or_other const& that) -> name_or_other& ;
 public: name_or_other(name_or_other&& that) noexcept;
+public: auto operator=(name_or_other const& that) -> name_or_other& ;
 public: auto operator=(name_or_other&& that) noexcept -> name_or_other& ;
 
 #line 17 "pure2-union.cpp2"
@@ -101,39 +101,30 @@ auto name_or_number::_destroy() & -> void{
     }
 
     name_or_number::~name_or_number() noexcept{_destroy();}
-name_or_number::name_or_number()
-                              : _discriminator{ -1 }{}
+name_or_number::name_or_number(){}
 name_or_number::name_or_number(name_or_number const& that)
-        : _storage{ that._storage }
-        , _discriminator{ that._discriminator }{
+        : _storage{  }
+        , _discriminator{ -1 }{
     if (CPP2_UFCS_0(is_name, that)) {set_name(CPP2_UFCS_0(name, that));}
     if (CPP2_UFCS_0(is_num, that)) {set_num(CPP2_UFCS_0(num, that));}
-    _discriminator = that._discriminator;
-    }
-
-    auto name_or_number::operator=(name_or_number const& that) -> name_or_number& {
-        _storage = that._storage;
-        _discriminator = that._discriminator;
-    if (CPP2_UFCS_0(is_name, that)) {set_name(CPP2_UFCS_0(name, that));}
-    if (CPP2_UFCS_0(is_num, that)) {set_num(CPP2_UFCS_0(num, that));}
-    _discriminator = that._discriminator;
-        return *this;
     }
 
     name_or_number::name_or_number(name_or_number&& that) noexcept
-        : _storage{ std::move(that)._storage }
-        , _discriminator{ std::move(that)._discriminator }{
+        : _storage{  }
+        , _discriminator{ -1 }{
     if (CPP2_UFCS_0(is_name, std::move(that))) {set_name(CPP2_UFCS_0(name, std::move(that)));}
     if (CPP2_UFCS_0(is_num, std::move(that))) {set_num(CPP2_UFCS_0(num, std::move(that)));}
-    _discriminator = std::move(that)._discriminator;
+    }
+
+    auto name_or_number::operator=(name_or_number const& that) -> name_or_number& {
+    if (CPP2_UFCS_0(is_name, that)) {set_name(CPP2_UFCS_0(name, that));}
+    if (CPP2_UFCS_0(is_num, that)) {set_num(CPP2_UFCS_0(num, that));}
+        return *this;
     }
 
     auto name_or_number::operator=(name_or_number&& that) noexcept -> name_or_number& {
-        _storage = std::move(that)._storage;
-        _discriminator = std::move(that)._discriminator;
     if (CPP2_UFCS_0(is_name, std::move(that))) {set_name(CPP2_UFCS_0(name, std::move(that)));}
     if (CPP2_UFCS_0(is_num, std::move(that))) {set_num(CPP2_UFCS_0(num, std::move(that)));}
-    _discriminator = std::move(that)._discriminator;
         return *this;
     }
 #line 12 "pure2-union.cpp2"
@@ -166,40 +157,31 @@ template <typename T> auto name_or_other<T>::_destroy() & -> void{
     }
 
     template <typename T> name_or_other<T>::~name_or_other() noexcept{_destroy();}
-template <typename T> name_or_other<T>::name_or_other()
-                              : _discriminator{ -1 }{}
+template <typename T> name_or_other<T>::name_or_other(){}
 template <typename T> name_or_other<T>::name_or_other(name_or_other const& that)
-        : _storage{ that._storage }
-        , _discriminator{ that._discriminator }{
+        : _storage{  }
+        , _discriminator{ -1 }{
     if (CPP2_UFCS_0(is_name, that)) {set_name(CPP2_UFCS_0(name, that));}
     if (CPP2_UFCS_0(is_other, that)) {set_other(CPP2_UFCS_0(other, that));}
-    _discriminator = that._discriminator;
     }
 
 
+    template <typename T> name_or_other<T>::name_or_other(name_or_other&& that) noexcept
+        : _storage{  }
+        , _discriminator{ -1 }{
+    if (CPP2_UFCS_0(is_name, std::move(that))) {set_name(CPP2_UFCS_0(name, std::move(that)));}
+    if (CPP2_UFCS_0(is_other, std::move(that))) {set_other(CPP2_UFCS_0(other, std::move(that)));}
+    }
+
     template <typename T> auto name_or_other<T>::operator=(name_or_other const& that) -> name_or_other& {
-        _storage = that._storage;
-        _discriminator = that._discriminator;
     if (CPP2_UFCS_0(is_name, that)) {set_name(CPP2_UFCS_0(name, that));}
     if (CPP2_UFCS_0(is_other, that)) {set_other(CPP2_UFCS_0(other, that));}
-    _discriminator = that._discriminator;
         return *this;
     }
 
-    template <typename T> name_or_other<T>::name_or_other(name_or_other&& that) noexcept
-        : _storage{ std::move(that)._storage }
-        , _discriminator{ std::move(that)._discriminator }{
-    if (CPP2_UFCS_0(is_name, std::move(that))) {set_name(CPP2_UFCS_0(name, std::move(that)));}
-    if (CPP2_UFCS_0(is_other, std::move(that))) {set_other(CPP2_UFCS_0(other, std::move(that)));}
-    _discriminator = std::move(that)._discriminator;
-    }
-
     template <typename T> auto name_or_other<T>::operator=(name_or_other&& that) noexcept -> name_or_other& {
-        _storage = std::move(that)._storage;
-        _discriminator = std::move(that)._discriminator;
     if (CPP2_UFCS_0(is_name, std::move(that))) {set_name(CPP2_UFCS_0(name, std::move(that)));}
     if (CPP2_UFCS_0(is_other, std::move(that))) {set_other(CPP2_UFCS_0(other, std::move(that)));}
-    _discriminator = std::move(that)._discriminator;
         return *this;
     }
 #line 19 "pure2-union.cpp2"
