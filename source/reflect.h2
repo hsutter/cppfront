@@ -1,6 +1,4 @@
 
-#include "parse.h"
-
 //  Copyright (c) Herb Sutter
 //  SPDX-License-Identifier: CC-BY-NC-ND-4.0
 
@@ -16,6 +14,8 @@
 //===========================================================================
 //  Reflection and meta
 //===========================================================================
+
+#include "parse.h"
 
 cpp2: namespace = {
 

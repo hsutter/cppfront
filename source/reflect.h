@@ -47,8 +47,6 @@ class value_member_info;
 //=== Cpp2 type definitions and function declarations ===========================
 
 
-#include "parse.h"
-
 //  Copyright (c) Herb Sutter
 //  SPDX-License-Identifier: CC-BY-NC-ND-4.0
 
@@ -60,10 +58,12 @@ class value_member_info;
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#line 16 "reflect.h2"
+
 //===========================================================================
 //  Reflection and meta
 //===========================================================================
+
+#include "parse.h"
 
 #line 20 "reflect.h2"
 namespace cpp2 {
