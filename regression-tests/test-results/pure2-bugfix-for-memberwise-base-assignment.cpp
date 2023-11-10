@@ -27,9 +27,9 @@ class Base {
   
 #line 3 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
   public: auto operator=([[maybe_unused]] Base&& that) noexcept -> Base& ;
-  public: Base([[maybe_unused]] auto const& param2);
+  public: Base([[maybe_unused]] auto const& unnamed_param_2);
 #line 4 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
-  public: auto operator=([[maybe_unused]] auto const& param2) -> Base& ;
+  public: auto operator=([[maybe_unused]] auto const& unnamed_param_2) -> Base& ;
 };
 
 class Derived: public Base {
@@ -60,9 +60,9 @@ auto main() -> int;
                                       return *this;
 #line 3 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
                                      }
-  Base::Base([[maybe_unused]] auto const& param2) { std::cout << "(implicit out this, _)\n";  }
+  Base::Base([[maybe_unused]] auto const& unnamed_param_2) { std::cout << "(implicit out this, _)\n";  }
 #line 4 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
-  auto Base::operator=([[maybe_unused]] auto const& param2) -> Base&  { std::cout << "(implicit out this, _)\n";
+  auto Base::operator=([[maybe_unused]] auto const& unnamed_param_2) -> Base&  { std::cout << "(implicit out this, _)\n";
                                       return *this;
 #line 4 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
    }

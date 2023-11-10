@@ -38,7 +38,7 @@ CPP2_REQUIRES_ (true)
 
 
 #line 54 "pure2-print.cpp2"
-        public: template<typename T> [[nodiscard]] auto values([[maybe_unused]] T const& param2) const& -> values_ret;
+        public: template<typename T> [[nodiscard]] auto values([[maybe_unused]] T const& unnamed_param_2) const& -> values_ret;
             
 
 #line 59 "pure2-print.cpp2"
@@ -46,7 +46,7 @@ CPP2_REQUIRES_ (true)
 
         public: mytype([[maybe_unused]] mytype const& that);
 
-        public: mytype([[maybe_unused]] cpp2::in<int> param2);
+        public: mytype([[maybe_unused]] cpp2::in<int> unnamed_param_2);
 
         public: static auto variadic(auto const& ...x) -> void
 CPP2_REQUIRES_ ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...))
@@ -133,7 +133,7 @@ requires (true)
 
             do {} while ( CPP2_UFCS_0(empty, s) && [&]{ b() ; return true; }() );
 
-            for ( [[maybe_unused]] auto const& param1 : m ) {
+            for ( [[maybe_unused]] auto const& unnamed_param_1 : m ) {
 #line 43 "pure2-print.cpp2"
              { do {goto CONTINUE_43_13; } while (false); c(); } CPP2_CONTINUE_BREAK(43_13) }
 
@@ -147,7 +147,7 @@ requires (true)
             return [_0 = (s + cpp2::assert_in_bounds(m, 0))]() -> std::string { return _0;  }(); 
         }
 
-        template<typename T> [[nodiscard]] auto outer::mytype::values([[maybe_unused]] T const& param2) const& -> values_ret{
+        template<typename T> [[nodiscard]] auto outer::mytype::values([[maybe_unused]] T const& unnamed_param_2) const& -> values_ret{
                 cpp2::deferred_init<int> offset;
                 cpp2::deferred_init<std::string> name;
 #line 55 "pure2-print.cpp2"
@@ -159,7 +159,7 @@ requires (true)
 
         outer::mytype::mytype([[maybe_unused]] mytype const& that){}
 
-        outer::mytype::mytype([[maybe_unused]] cpp2::in<int> param2){}
+        outer::mytype::mytype([[maybe_unused]] cpp2::in<int> unnamed_param_2){}
 
         auto outer::mytype::variadic(auto const& ...x) -> void
 requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...))

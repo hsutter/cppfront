@@ -14,7 +14,7 @@
     
 
 #line 24 "pure2-ufcs-member-access-and-chaining.cpp2"
-auto no_return([[maybe_unused]] auto const& param1) -> void;
+auto no_return([[maybe_unused]] auto const& unnamed_param_1) -> void;
 
 [[nodiscard]] auto ufcs(cpp2::in<int> i) -> int;
     struct fun_ret { int i; };
@@ -31,7 +31,7 @@ auto no_return([[maybe_unused]] auto const& param1) -> void;
 
 #line 39 "pure2-ufcs-member-access-and-chaining.cpp2"
 //  And a test for non-local UFCS, which shouldn't do a [&] capture
-[[nodiscard]] auto f([[maybe_unused]] auto const& param1) -> int;
+[[nodiscard]] auto f([[maybe_unused]] auto const& unnamed_param_1) -> int;
 extern int y;
 
 //=== Cpp2 function definitions =================================================
@@ -59,7 +59,7 @@ extern int y;
     CPP2_UFCS_0(no_return, 42);
 }
 
-auto no_return([[maybe_unused]] auto const& param1) -> void{}
+auto no_return([[maybe_unused]] auto const& unnamed_param_1) -> void{}
 
 [[nodiscard]] auto ufcs(cpp2::in<int> i) -> int{
     return i + 2; 
@@ -77,6 +77,6 @@ auto no_return([[maybe_unused]] auto const& param1) -> void{}
 }
 
 #line 40 "pure2-ufcs-member-access-and-chaining.cpp2"
-[[nodiscard]] auto f([[maybe_unused]] auto const& param1) -> int { return 0;  }
+[[nodiscard]] auto f([[maybe_unused]] auto const& unnamed_param_1) -> int { return 0;  }
 int y {CPP2_UFCS_0_NONLOCAL(f, 0)}; 
 

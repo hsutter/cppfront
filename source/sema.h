@@ -1000,6 +1000,34 @@ public:
     }
 
 
+    auto check(parameter_declaration_node const& n)
+        -> bool
+    {
+        auto type_name = std::string{};
+        if (n.declaration->has_declared_return_type()) {
+            type_name = n.declaration->get_object_type()->to_string();
+        }
+
+        if (
+            n.ordinal == 2
+            && !n.has_name("that")
+            && n.declaration->parent_declaration
+            && n.declaration->parent_declaration->has_name("operator=")
+            && n.declaration->parent_declaration->parent_declaration
+            && n.declaration->parent_declaration->parent_declaration->name()
+            && type_name == *n.declaration->parent_declaration->parent_declaration->name()
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "if an 'operator=' second parameter is of the same type (here '" + type_name + "'), it must be named 'that'"
+            );
+            return false;
+        }
+
+        return true;
+    }
+
     auto check(declaration_node const& n)
         -> bool
     {

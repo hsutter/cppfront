@@ -25,7 +25,7 @@
 
 namespace cpp2 {
 
-//  Defined out of line here just to avoid bringing <iostream> into the headers,
+//  Defined out of line here just to avoid bringing <iostream> in before this,
 //  so that we can't accidentally start depending on iostreams in earlier phases
 auto cmdline_processor::print(std::string_view s, int width)
     -> void
@@ -3896,6 +3896,10 @@ public:
     )
         -> void
     {
+        if (!sema.check(n)) {
+            return;
+        }
+
         //  Can't declare functions as parameters -- only pointers to functions which are objects
         assert( n.declaration );
         assert( !n.declaration->is_function() );
@@ -3903,6 +3907,10 @@ public:
         if (!check_shadowing_of_type_scope_names(*n.declaration)) {
             return;
         }
+
+        assert( n.declaration->identifier );
+        auto identifier     = print_to_string( *n.declaration->identifier );
+        auto identifier_pos = n.position();
 
         if (n.mod == parameter_declaration_node::modifier::implicit)
         {
@@ -3975,15 +3983,22 @@ public:
         //  Handle type parameters
 
         if (n.declaration->is_type()) {
-            printer.print_cpp2("typename ", n.declaration->identifier->position());
+            assert( is_template_parameter );
+            printer.print_cpp2("typename ", identifier_pos);
             if (n.declaration->is_variadic) {
                 printer.print_cpp2(
                     "...",
-                    n.declaration->identifier->position()
+                    identifier_pos
                 );
             }
-            assert (n.declaration->identifier);
-            emit(*n.declaration->identifier);
+
+            if (identifier == "_") {
+                printer.print_cpp2( "UnnamedTypeParam" + std::to_string(n.ordinal), identifier_pos );
+            }
+            else {
+                printer.print_cpp2( identifier, identifier_pos );
+            }
+
             return;
         }
 
@@ -3996,8 +4011,7 @@ public:
         if (is_template_parameter) {
             emit( type_id );
             printer.print_cpp2(" ", type_id.position());
-            assert (n.declaration->identifier);
-            emit(*n.declaration->identifier);
+                printer.print_cpp2( identifier, identifier_pos );
             return;
         }
 
@@ -4051,14 +4065,11 @@ public:
                 )
             ;
 
-        assert( n.declaration->identifier );
-        auto identifier = print_to_string( *n.declaration->identifier );
-
         //  First any prefix
 
         if (identifier == "_") {
-            printer.print_cpp2( "[[maybe_unused]] ", n.position() );
-            identifier = "param" + std::to_string(n.ordinal);
+            printer.print_cpp2( "[[maybe_unused]] ", identifier_pos );
+            identifier = "unnamed_param_" + std::to_string(n.ordinal);
         }
 
         if (
@@ -4173,10 +4184,10 @@ public:
         }
 
         if (is_returns) {
-            printer.print_extra( " " + identifier);
+            printer.print_extra( " " + identifier );
         }
         else {
-            printer.print_cpp2( " ", n.declaration->identifier->position());
+            printer.print_cpp2( " ", identifier_pos );
             if (n.declaration->is_variadic)
             {
                 if (n.direction() == passing_style::out) {
@@ -4189,10 +4200,10 @@ public:
 
                 printer.print_cpp2(
                     "...",
-                    n.declaration->identifier->position()
+                    identifier_pos
                 );
             }
-            printer.print_cpp2( identifier, n.declaration->identifier->position());
+            printer.print_cpp2( identifier, identifier_pos );
         }
 
         if (
