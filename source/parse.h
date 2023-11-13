@@ -751,14 +751,6 @@ struct expression_statement_node
 };
 
 
-expression_node::expression_node()
-{
-    if (!expression_statement_node::current_expression_statements.empty()) {
-        my_statement = expression_statement_node::current_expression_statements.back();
-    }
-}
-
-
 auto expression_node::is_standalone_expression() const
     -> bool
 {
@@ -811,12 +803,7 @@ struct postfix_expression_node
     std::vector<term> ops;
     capture_group* cap_grp = {};
 
-    ~postfix_expression_node()
-    {
-        if (cap_grp) {
-            cap_grp->remove(this);
-        }
-    }
+    ~postfix_expression_node();
 
     //  API
     //
@@ -1454,6 +1441,14 @@ struct is_as_expression_node
 };
 
 
+expression_node::expression_node()
+{
+    if (!expression_statement_node::current_expression_statements.empty()) {
+        my_statement = expression_statement_node::current_expression_statements.back();
+    }
+}
+
+
 struct id_expression_node
 {
     source_position pos;
@@ -1542,6 +1537,14 @@ struct id_expression_node
 };
 
 
+postfix_expression_node::~postfix_expression_node()
+{
+    if (cap_grp) {
+        cap_grp->remove(this);
+    }
+}
+
+
 auto primary_expression_node::is_fold_expression() const
     -> bool
 {
@@ -1627,9 +1630,7 @@ struct compound_statement_node
 
     colno_t body_indent = 0;
 
-    compound_statement_node(source_position o = source_position{})
-        : open_brace{o}
-    { }
+    compound_statement_node(source_position o = source_position{});
 
     auto position() const
         -> source_position
@@ -1890,9 +1891,7 @@ struct statement_node
     std::unique_ptr<parameter_declaration_list_node> parameters;
     compound_statement_node* compound_parent = nullptr;
 
-    statement_node(compound_statement_node* compound_parent_ = nullptr)
-        : compound_parent{ compound_parent_ }
-    { }
+    statement_node(compound_statement_node* compound_parent_ = nullptr);
 
     enum active { expression=0, compound, selection, declaration, return_, iteration, using_, contract, inspect, jump };
     std::variant<
@@ -2185,9 +2184,7 @@ struct function_type_node
 
     std::vector<std::unique_ptr<contract_node>> contracts;
 
-    function_type_node(declaration_node* decl)
-        : my_decl{decl}
-    { }
+    function_type_node(declaration_node* decl);
 
     //  API
     //
@@ -3428,6 +3425,21 @@ public:
         v.end(*this, depth);
     }
 };
+
+
+compound_statement_node::compound_statement_node(source_position o)
+    : open_brace{o}
+{ }
+
+
+statement_node::statement_node(compound_statement_node* compound_parent_)
+    : compound_parent{ compound_parent_ }
+{ }
+
+
+function_type_node::function_type_node(declaration_node* decl)
+    : my_decl{decl}
+{ }
 
 
 auto parameter_declaration_node::has_name() const
