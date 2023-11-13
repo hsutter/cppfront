@@ -862,9 +862,21 @@ public:
 //
 //-----------------------------------------------------------------------
 //
+//  For use when returning "no such thing", such as
+//  when customizing "as" for std::variant
+struct nonesuch_ {
+    auto operator==(auto const&) -> bool { return false; }
+};
+constexpr inline nonesuch_ nonesuch;
+
 inline auto to_string(...) -> std::string
 {
     return "(customize me - no cpp2::to_string overload exists for this type)";
+}
+
+inline auto to_string(nonesuch_) -> std::string
+{
+    return "(invalid type)";
 }
 
 inline auto to_string(std::same_as<std::any> auto const&) -> std::string
@@ -1092,13 +1104,6 @@ inline constexpr auto is( auto const& x, auto const& value ) -> bool
 //-------------------------------------------------------------------------------------------------------------
 //  Built-in as
 //
-
-//  For use when returning "no such thing", such as
-//  when customizing "as" for std::variant
-struct nonesuch_ {
-    auto operator==(auto const&) -> bool { return false; }
-};
-constexpr inline nonesuch_ nonesuch;
 
 //  The 'as' cast functions are <To, From> so use that order here
 //  If it's confusing, we can switch this to <From, To>
@@ -1786,33 +1791,79 @@ CPP2_FORCE_INLINE constexpr auto cmp_mixed_signedness_check() -> void
         //  static_assert to reject the comparison is the right way to go.
         static_assert(
             program_violates_type_safety_guarantee<T, U>,
-            "mixed signed/unsigned comparison is unsafe - prefer using .ssize() instead of .size(), consider using std::cmp_less instead, or consider explicitly casting one of the values to change signedness by using 'as' or 'cpp2::unsafe_narrow'");
+            "mixed signed/unsigned comparison is unsafe - prefer using .ssize() instead of .size(), consider using std::cmp_less instead, or consider explicitly casting one of the values to change signedness by using 'as' or 'cpp2::unsafe_narrow'"
+            );
     }
 }
 
+
 CPP2_FORCE_INLINE constexpr auto cmp_less(auto&& t, auto&& u) -> decltype(auto)
+    requires requires {CPP2_FORWARD(t) < CPP2_FORWARD(u);}
 {
     cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
     return CPP2_FORWARD(t) < CPP2_FORWARD(u);
 }
 
+CPP2_FORCE_INLINE constexpr auto cmp_less(auto&& t, auto&& u) -> decltype(auto)
+{
+    static_assert(
+        program_violates_type_safety_guarantee<decltype(t), decltype(u)>,
+        "attempted to compare '<' for incompatible types"
+        );
+    return nonesuch;
+}
+
+
 CPP2_FORCE_INLINE constexpr auto cmp_less_eq(auto&& t, auto&& u) -> decltype(auto)
+    requires requires {CPP2_FORWARD(t) <= CPP2_FORWARD(u);}
 {
     cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
     return CPP2_FORWARD(t) <= CPP2_FORWARD(u);
 }
 
+CPP2_FORCE_INLINE constexpr auto cmp_less_eq(auto&& t, auto&& u) -> decltype(auto)
+{
+    static_assert(
+        program_violates_type_safety_guarantee<decltype(t), decltype(u)>,
+        "attempted to compare '<=' for incompatible types"
+        );
+    return nonesuch;
+}
+
+
 CPP2_FORCE_INLINE constexpr auto cmp_greater(auto&& t, auto&& u) -> decltype(auto)
+    requires requires {CPP2_FORWARD(t) > CPP2_FORWARD(u);}
 {
     cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
     return CPP2_FORWARD(t) > CPP2_FORWARD(u);
 }
 
+CPP2_FORCE_INLINE constexpr auto cmp_greater(auto&& t, auto&& u) -> decltype(auto)
+{
+    static_assert(
+        program_violates_type_safety_guarantee<decltype(t), decltype(u)>,
+        "attempted to compare '>' for incompatible types"
+        );
+    return nonesuch;
+}
+
+
 CPP2_FORCE_INLINE constexpr auto cmp_greater_eq(auto&& t, auto&& u) -> decltype(auto)
+    requires requires {CPP2_FORWARD(t) >= CPP2_FORWARD(u);}
 {
     cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
     return CPP2_FORWARD(t) >= CPP2_FORWARD(u);
 }
+
+CPP2_FORCE_INLINE constexpr auto cmp_greater_eq(auto&& t, auto&& u) -> decltype(auto)
+{
+    static_assert(
+        program_violates_type_safety_guarantee<decltype(t), decltype(u)>,
+        "attempted to compare '>=' for incompatible types"
+        );
+    return nonesuch;
+}
+
 
 
 //-----------------------------------------------------------------------
