@@ -3968,8 +3968,26 @@ auto statement_node::position() const
         return s->position();
     }
 
+    break;case using_: {
+        auto const& s = std::get<using_>(statement);
+        assert (s);
+        return s->position();
+    }
+
     break;case contract: {
         auto const& s = std::get<contract>(statement);
+        assert (s);
+        return s->position();
+    }
+
+    break;case inspect: {
+        auto const& s = std::get<inspect>(statement);
+        assert (s);
+        return s->position();
+    }
+
+    break;case jump: {
+        auto const& s = std::get<jump>(statement);
         assert (s);
         return s->position();
     }

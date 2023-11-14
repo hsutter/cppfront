@@ -5316,30 +5316,29 @@ public:
 
             for (auto& stmt : compound_stmt->statements)
             {
-                if (!stmt->is_declaration()) {
-                    //  We will already have emitted an error for this in sema.check
-                    return;
-                }
-                auto& decl = std::get<statement_node::declaration>(stmt->statement);
-                assert(decl);
-                assert(decl->name());
+                if (stmt->is_declaration())
+                {
+                    auto& decl = std::get<statement_node::declaration>(stmt->statement);
+                    assert(decl);
+                    assert(decl->name());
 
-                auto emit_as_base =
-                    decl->get_decl_if_type_scope_object_name_before_a_base_type(*decl->name());
+                    auto emit_as_base =
+                        decl->get_decl_if_type_scope_object_name_before_a_base_type(*decl->name());
 
-                if (emit_as_base) {
-                    printer.print_extra(
-                        "\nstruct "
-                            + print_to_string(*decl->parent_declaration->name())
-                            + "_"
-                            + decl->name()->to_string()
-                            + "_as_base { "
-                            + print_to_string( *decl->get_object_type() )
-                            + " "
-                            + decl->name()->to_string()
-                            + "; };"
-                    );
-                    found = true;
+                    if (emit_as_base) {
+                        printer.print_extra(
+                            "\nstruct "
+                                + print_to_string(*decl->parent_declaration->name())
+                                + "_"
+                                + decl->name()->to_string()
+                                + "_as_base { "
+                                + print_to_string( *decl->get_object_type() )
+                                + " "
+                                + decl->name()->to_string()
+                                + "; };"
+                        );
+                        found = true;
+                    }
                 }
             }
 
@@ -5438,20 +5437,50 @@ public:
             }
 
             //  Type definition
-
             auto separator              = std::string{":"};
             auto started_body           = false;
+            auto saved_for_body         = std::vector<std::pair<std::string, source_position>>{};
             auto found_constructor      = false;
             auto found_that_constructor = false;
             assert(compound_stmt);
 
+            auto start_body = [&]{
+                if (!started_body) {
+                    printer.print_cpp2(" {", compound_stmt->position());
+                    started_body = true;
+                    for (auto& [line, pos] : saved_for_body) {
+                        printer.print_cpp2(line + "\n", pos);
+                    }
+                }
+            };
+
             for (auto& stmt : compound_stmt->statements)
             {
                 assert(stmt);
-                if (!stmt->is_declaration()) {
+                if (
+                    !stmt->is_declaration()
+                    && !stmt->is_using()
+                    )
+                {
                     //  We will already have emitted an error for this in sema.check
                     return;
                 }
+
+                //  If it's a using statement, save it up if we haven't started the body yet
+
+                if (stmt->is_using()) {
+                    auto& use = std::get<statement_node::using_>(stmt->statement);
+                    assert(use);
+                    if (started_body) {
+                        emit(*use);
+                    }
+                    else {
+                        saved_for_body.emplace_back( print_to_string(*use), use->position() );
+                    }
+                    continue;
+                }
+
+                //  Else it's a declaration...
 
                 auto& decl = std::get<statement_node::declaration>(stmt->statement);
                 assert(decl);
@@ -5507,21 +5536,16 @@ public:
                 else
                 {
                     if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
-                        if (!started_body) {
-                            printer.print_cpp2(" {", compound_stmt->position());
-                            started_body = true;
-                        }
+                        start_body();
                     }
                     emit(*decl);
                 }
             }
 
-            //  Ensure we emit the { even if there are only bases in the type
             if (printer.get_phase() == printer.phase1_type_defs_func_decls)
             {
-                if (!started_body) {
-                    printer.print_cpp2(" {", compound_stmt->position());
-                }
+                //  Ensure we emit the { even if there are only bases in the type
+                start_body();
 
                 auto id     = print_to_string(*n.identifier);
                 auto indent = static_cast<size_t>(
@@ -5583,16 +5607,23 @@ public:
             assert(compound_stmt);
             for (auto& stmt : compound_stmt->statements) {
                 assert(stmt);
-                if (!stmt->is_declaration()) {
+                if (stmt->is_declaration()) {
+                    auto& decl = std::get<statement_node::declaration>(stmt->statement);
+                    assert(decl);
+                    emit(*decl);
+                }
+                else if (stmt->is_using()) {
+                    auto& use = std::get<statement_node::using_>(stmt->statement);
+                    assert(use);
+                    emit(*use);
+                }
+                else {
                     errors.emplace_back(
                         stmt->position(),
-                        "a namespace scope must contain only declarations, not other code"
+                        "a namespace scope must contain only declarations or 'using' statements, not other code"
                     );
                     return;
                 }
-                auto& decl = std::get<statement_node::declaration>(stmt->statement);
-                assert(decl);
-                emit(*decl);
             }
 
             printer.print_cpp2("}\n", compound_stmt->close_brace);

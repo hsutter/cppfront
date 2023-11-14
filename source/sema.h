@@ -1487,10 +1487,14 @@ public:
             auto compound_stmt = n.initializer->get_if<compound_statement_node>();
             assert (compound_stmt);
             for (auto& stmt : compound_stmt->statements) {
-                if (!stmt->is_declaration()) {
+                if (
+                    !stmt->is_declaration()
+                    && !stmt->is_using()
+                    )
+                {
                     errors.emplace_back(
                         stmt->position(),
-                        "a user-defined type body must contain only declarations, not other code"
+                        "a user-defined type body must contain only declarations or 'using' statements, not other code"
                     );
                     return false;
                 }
