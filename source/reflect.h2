@@ -359,6 +359,18 @@ function_declaration: @copyable type =
     default_to_virtual           : (inout this) = _ = n*.make_function_virtual();
 
     make_virtual                 : (inout this) -> bool = n*.make_function_virtual();
+
+    add_initializer: (move this, source: std::string_view)
+      pre(!has_initializer())
+      pre(parent_is_type())
+    = {
+        prefix := n*.pretty_print_visualize(0);
+        prefix.back() = ' '; // Remove final ';'.
+        p := get_parent().as_type();
+        p.add_member(prefix + source);
+        _ = p;
+        mark_for_removal_from_enclosing_type();
+    }
 }
 
 
