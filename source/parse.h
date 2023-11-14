@@ -3383,6 +3383,16 @@ public:
         return false;
     }
 
+    auto get_function_parameters()
+        -> std::span<std::unique_ptr<parameter_declaration_node>>
+    {
+        if (!is_function()) {
+            return {};
+        }
+        // else
+        return std::get<a_function>(type)->parameters->parameters;
+    }
+
     auto unnamed_return_type_to_string() const
         -> std::string
     {
