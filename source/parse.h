@@ -1294,7 +1294,9 @@ auto unqualified_id_node::to_string() const
             }
             separator = ",";
         }
-        ret += ">";
+        if (std::ssize(template_args) > 0) {
+            ret += ">";
+        }
     }
     return ret;
 }
@@ -6237,6 +6239,14 @@ private:
                     term.arg = std::move(i);
                 }
 
+                //  Else if we already got at least one template-argument, this is a
+                //  ',' followed by something that isn't a valid template-arg
+                else if (std::ssize(n->template_args) > 0) {
+                    error( "expected a template argument after ','", false);
+                    return {};
+                }
+
+                //  Else this is an empty '<>' list which is okay
                 else {
                     break;
                 }
@@ -7873,7 +7883,7 @@ private:
             next();
             auto idx = id_expression();
             if (!idx) {
-                error("'@' must be followed by a a metafunction name", false);
+                error("'@' must be followed by a metafunction name", false);
                 return {};
             }
             n->metafunctions.push_back( std::move(idx) );
