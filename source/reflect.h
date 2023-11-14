@@ -934,7 +934,7 @@ declaration_base::declaration_base(declaration_base const& that)
     [[nodiscard]] auto declaration::as_type() const& -> type_declaration { return type_declaration(n, (*this)); }
     [[nodiscard]] auto declaration::as_alias() const& -> alias_declaration { return alias_declaration(n, (*this)); }
 
-    [[nodiscard]] auto declaration::get_parent() const& -> declaration { return declaration(n, (*this)); }
+    [[nodiscard]] auto declaration::get_parent() const& -> declaration { return declaration((*cpp2::assert_not_null(n)).parent_declaration, (*this)); }
 
     [[nodiscard]] auto declaration::parent_is_function() const& -> bool { return CPP2_UFCS(parent_is_function)((*cpp2::assert_not_null(n))); }
     [[nodiscard]] auto declaration::parent_is_object() const& -> bool { return CPP2_UFCS(parent_is_object)((*cpp2::assert_not_null(n))); }
