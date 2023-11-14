@@ -6,6 +6,9 @@
 #include "cpp2util.h"
 
 
+#line 15 "mixed-fixed-type-aliases.cpp2"
+template<typename T> class mytype;
+    
 
 //=== Cpp2 type definitions and function declarations ===========================
 
@@ -22,6 +25,10 @@ auto test(auto const& x) -> void;
     
 
 #line 15 "mixed-fixed-type-aliases.cpp2"
+template<typename T> class mytype {
+    public: template<typename U> static const bool myvalue;
+};
+
 [[nodiscard]] auto main(int const argc_, char** argv_) -> int;
     
 
@@ -35,9 +42,13 @@ auto test(auto const& x) -> void{
         << "\n";
 }
 
+#line 16 "mixed-fixed-type-aliases.cpp2"
+    template <typename T> template<typename U> inline CPP2_CONSTEXPR bool mytype<T>::myvalue = true;
+
+#line 19 "mixed-fixed-type-aliases.cpp2"
 [[nodiscard]] auto main(int const argc_, char** argv_) -> int{
     auto const args = cpp2::make_args(argc_, argv_); 
-#line 16 "mixed-fixed-type-aliases.cpp2"
+#line 20 "mixed-fixed-type-aliases.cpp2"
     my::u16 y {42}; 
     test(std::move(y));
 
@@ -46,5 +57,7 @@ auto test(auto const& x) -> void{
 
     for ( auto const& arg : args ) 
         std::cout << CPP2_UFCS_0(filename, std::filesystem::path(arg)) << "\n";
+
+    std::cout << cpp2::to_string(mytype<int>::myvalue<int>) + "\n";
 }
 

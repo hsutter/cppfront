@@ -5133,6 +5133,15 @@ public:
                 }
 
                 //  Emit template parameters if any
+                if (
+                    a->is_object_alias()
+                    && n.parent_is_type()
+                    && printer.get_phase() == printer.phase2_func_defs
+                    )
+                {
+                    emit_parent_template_parameters();
+                }
+
                 if (n.template_parameters) {
                     printer.print_cpp2("template", n.position());
                     emit(*n.template_parameters, false, true);
@@ -5202,7 +5211,6 @@ public:
                                 return;
                             }
 
-                            emit_parent_template_parameters();
                             printer.print_cpp2(
                                 "inline CPP2_CONSTEXPR "
                                     + type

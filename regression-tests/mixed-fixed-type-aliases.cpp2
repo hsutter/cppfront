@@ -12,6 +12,10 @@ test: (x:_) = {
         << "\n";
 }
 
+mytype: @struct <T> type = {
+    myvalue: <U> bool == true;
+}
+
 main: (args) -> int = {
     y: my::u16 = 42;
     test(y);
@@ -21,4 +25,6 @@ main: (args) -> int = {
 
     for args do (arg)
         std::cout << std::filesystem::path(arg).filename() << "\n";
+
+    std::cout << "(mytype<int>::myvalue<int>)$\n";
 }
