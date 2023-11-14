@@ -14,7 +14,7 @@
 #line 2 "pure2-bounds-safety-span.cpp2"
 [[nodiscard]] auto main() -> int;
 
-#line 14 "pure2-bounds-safety-span.cpp2"
+#line 15 "pure2-bounds-safety-span.cpp2"
 auto print_and_decorate(auto const& thing) -> void;
     
 
@@ -28,6 +28,7 @@ auto print_and_decorate(auto const& thing) -> void;
     std::vector<std::string> words {"decorated", "hello", "world"}; 
 
     std::span<std::string> s {words}; 
+    static_cast<void>(std::move(words));
 
     auto i {0}; 
     for( ; cpp2::cmp_less(i,CPP2_UFCS_0(ssize, s)); ++i ) {

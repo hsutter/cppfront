@@ -26,24 +26,21 @@
 [[nodiscard]] auto main() -> int{
     std::vector<std::string> vec {
             "hello", "2022"}; 
-    std::span view {vec}; 
 
     //  Passing a function expression
-    std::for_each(
-        CPP2_UFCS_0(begin, view), 
-        CPP2_UFCS_0(end, view), 
+    std::ranges::for_each(
+        vec, 
         [](auto& x) -> void { x += "-ish";  }
     );
 
     //  Initializing from a function expression
     auto callback {[](auto& x) -> void { x += " maybe";  }}; 
-    std::for_each(
-        CPP2_UFCS_0(begin, view), 
-        CPP2_UFCS_0(end, view), 
+    std::ranges::for_each(
+        vec, 
         std::move(callback)
     );
 
-    for ( auto const& str : view ) {
+    for ( auto const& str : vec ) {
         std::cout << str << "\n";
     }
 }

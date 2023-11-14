@@ -27,17 +27,16 @@
 [[nodiscard]] auto main() -> int{
     std::vector<std::string> vec {
             "hello", "2023"}; 
-    std::span view {vec}; 
 
     std::string y {"\n"}; 
-    std::ranges::for_each(view, [_0 = (&y)](auto const& x) -> void { 
+    std::ranges::for_each(vec, [_0 = (&y)](auto const& x) -> void { 
         std::cout << CPP2_UFCS_0(c_str, (*cpp2::assert_not_null(_0))) << x << *cpp2::assert_not_null(_0);  }
     );
 
     auto callback {[](auto& x) -> void { x += "-ish";  }}; 
-    std::ranges::for_each(view, std::move(callback));
+    std::ranges::for_each(vec, std::move(callback));
 
-    for ( auto const& str : view ) 
+    for ( auto const& str : vec ) 
         std::cout << str << "\n";
 }
 

@@ -4,6 +4,7 @@ main: () -> int
     words: std::vector<std::string> = ( "decorated", "hello", "world" );
 
     s: std::span<std::string> = words;
+    _ = words;
 
     i := 0;
     while i < s.ssize() next i++ {

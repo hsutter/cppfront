@@ -7,24 +7,21 @@
 main: () -> int = {
     vec: std::vector<std::string>
             = ("hello", "2022");
-    view: std::span = vec;
 
     //  Passing a function expression
-    std::for_each(
-        view.begin(),
-        view.end(),
-        :(inout x) = x += "-ish";
+    std::ranges::for_each(
+        vec,
+        :(inout x) = x += "-ish"
     );
 
     //  Initializing from a function expression
     callback := :(inout x) = x += " maybe";
-    std::for_each(
-        view.begin(),
-        view.end(),
+    std::ranges::for_each(
+        vec,
         callback
     );
 
-    for view do (str) {
+    for vec do (str) {
         std::cout << str << "\n";
     }
 }

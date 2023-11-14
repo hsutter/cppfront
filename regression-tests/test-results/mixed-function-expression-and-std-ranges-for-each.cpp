@@ -27,15 +27,14 @@
 [[nodiscard]] auto main() -> int{
     std::vector<std::string> vec {
             "hello", "2022"}; 
-    std::span view {vec}; 
 
     std::ranges::for_each
-        (view, [](auto const& x) -> void { std::cout << x << "\n";  });
+        (vec, [](auto const& x) -> void { std::cout << x << "\n";  });
 
     auto callback {[](auto& x) -> void { x += "-ish";  }}; 
-    std::ranges::for_each(view, std::move(callback));
+    std::ranges::for_each(vec, std::move(callback));
 
-    for ( auto const& str : view ) 
+    for ( auto const& str : vec ) 
         std::cout << str << "\n";
 }
 

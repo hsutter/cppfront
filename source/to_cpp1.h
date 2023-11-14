@@ -2100,6 +2100,7 @@ public:
     {
         assert(n.identifier);
         in_non_rvalue_context.push_back(true);
+        auto guard = finally([&]{ in_non_rvalue_context.pop_back(); });
 
         iteration_statements.push_back({ &n, false});
         auto labelname = labelized_position(n.label);
@@ -2134,8 +2135,6 @@ public:
             if (!labelname.empty()) {
                 printer.print_extra(" CPP2_CONTINUE_BREAK("+labelname+") }");
             }
-
-            in_non_rvalue_context.pop_back();
         }
 
         //  Handle do
@@ -2166,8 +2165,6 @@ public:
                 printer.print_cpp2(" ; return true; }() ", n.position());
             }
             printer.print_cpp2(");", n.position());
-
-            in_non_rvalue_context.pop_back();
         }
 
         //  Handle for
@@ -2214,8 +2211,6 @@ public:
             if (!labelname.empty()) {
                 printer.print_extra(" CPP2_CONTINUE_BREAK("+labelname+") }");
             }
-
-            in_non_rvalue_context.pop_back();
         }
 
         else {
@@ -6217,7 +6212,6 @@ public:
             //  If there's an initializer, emit it
             if (n.initializer)
             {
-                in_non_rvalue_context.push_back(true);
                 printer.add_pad_in_this_line(-100);
                 if (type->is_concept()) {
                     printer.print_cpp2( " = ", n.position() );
@@ -6233,7 +6227,6 @@ public:
                 if (!type->is_concept()) {
                     printer.print_cpp2( "}", n.position() );
                 }
-                in_non_rvalue_context.pop_back();
             }
 
             printer.print_cpp2( "; ", n.position() );
