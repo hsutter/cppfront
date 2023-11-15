@@ -31,7 +31,7 @@
 #if defined(CPP2_IMPORT_STD) || defined(CPP2_INCLUDE_STD)
 
     //  If C++23 'import std;' was requested and is available, use that
-    #if defined(CPP2_IMPORT_STD) && defined(__cpp_modules)
+    #if defined(CPP2_IMPORT_STD) && defined(__cpp_lib_modules)
 
         #ifndef _MSC_VER
             //  This is the ideal -- note that we just voted "import std;"
