@@ -1205,11 +1205,12 @@ public:
             n.has_name("_")
             && !n.is_object()
             && !n.is_namespace()
+            && !n.is_object_alias()
             )
         {
             errors.emplace_back(
                 n.identifier->position(),
-                "'_' (wildcard) may not be the name of a function or type - it may only be used as the name of an anonymous object or anonymous namespace"
+                "'_' (wildcard) may not be the name of a function or type - it may only be used as the name of an anonymous object, object alias, or namespace"
             );
             return false;
         }
