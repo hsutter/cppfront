@@ -59,7 +59,7 @@ template  <typename T, typename ...Args> [[nodiscard]] auto make(Args&& ...args)
 
 auto main() -> int
 {
-    x<int,long,std::string> a {}; 
+    x<int,long,std::string> auto_22_5 {}; 
 
     std::cout << std::string("xyzzy", 3) << "\n";
     std::cout << make_string("plugh", cpp2::u8{3}) << "\n";

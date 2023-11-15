@@ -197,9 +197,9 @@ auto main() -> int{
     std::cout << "f2: " + cpp2::to_string(CPP2_UFCS(f2, x, 2, 2)) + "\n";
     std::cout << "f3: " + cpp2::to_string(CPP2_UFCS_TEMPLATE_0(f3, (<3,3>), x)) + "\n";
     std::cout << "f4: " + cpp2::to_string(CPP2_UFCS_TEMPLATE_0(f4, (<4,4>), x)) + "\n";
-    N::myclass x2 {"abracadabra"}; 
-    N::myclass x3 {}; 
-    N::myclass x4 {1, "hair"}; 
+    N::myclass auto_74_5 {"abracadabra"}; 
+    N::myclass auto_75_5 {}; 
+    N::myclass auto_76_5 {1, "hair"}; 
 
     // Invoke the single-param operator=s as actual assignments
     std::cout << "x's state before assignments: ";

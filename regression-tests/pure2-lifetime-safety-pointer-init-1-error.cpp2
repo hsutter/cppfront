@@ -12,8 +12,9 @@ main: () -> int = {
     }
 
     print_and_decorate( p* );
+    print_and_decorate( x );
 }
 
-print_and_decorate: (thing:_) =
+print_and_decorate: (thing) =
     std::cout << ">> " << thing << "\n";
 

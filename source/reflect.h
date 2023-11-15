@@ -1436,7 +1436,7 @@ std::string value = "-1";
             }}}}
         }
         else {
-            auto umax {max_value * cpp2::as_<cpp2::u64, 2>()}; 
+            auto umax {std::move(max_value) * cpp2::as_<cpp2::u64, 2>()}; 
             if (cpp2::cmp_less_eq(umax,std::numeric_limits<cpp2::u8>::max())) {
                 underlying_type.value() = "u8";
             }

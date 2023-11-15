@@ -663,6 +663,23 @@ private:
                 }
             }
         }
+
+        //  If we arrived back at the declaration without finding a use
+        //  and this isn't generated code (ignore that for now)
+        //  and this is a user-named object (not 'this', 'that', or '_')
+        if (
+            i == pos                        
+            && id->position().lineno > 0    
+            && *id != "this"                
+            && *id != "that"
+            && *id != "_"
+            )
+        {
+            errors.emplace_back(
+                id->position(),
+                "local variable " + id->to_string() + " is not used; consider changing its name to '_' to make it explicitly anonymous, or removing it entirely if its side effects are not needed"
+            );
+        }
     }
 
 

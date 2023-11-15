@@ -19,6 +19,8 @@ main: () -> int = {
     _ = (j.i).ufcs();
 
     42.no_return();
+
+    res.no_return();
 }
 
 no_return: (_) = { }

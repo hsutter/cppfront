@@ -144,6 +144,6 @@ auto main() -> int{
         std::cout << "more\n";
     }
 
-    mystruct s {}; 
+    mystruct auto_49_5 {}; 
 }
 
