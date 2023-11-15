@@ -6,16 +6,19 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-raw-string-literal-and-interpolation.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-raw-string-literal-and-interpolation.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-raw-string-literal-and-interpolation.cpp2"
 [[nodiscard]] auto main() -> int{
+#line 2 "pure2-raw-string-literal-and-interpolation.cpp2"
     auto i {42}; 
     std::map<std::string,int> m {}; 
     cpp2::assert_in_bounds(m, "one") = 1;

@@ -6,21 +6,25 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-bounds-safety-span.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-bounds-safety-span.cpp2"
 
 #line 2 "pure2-bounds-safety-span.cpp2"
 [[nodiscard]] auto main() -> int;
 
 #line 15 "pure2-bounds-safety-span.cpp2"
 auto print_and_decorate(auto const& thing) -> void;
-    
+#line 17 "pure2-bounds-safety-span.cpp2"
 
+#line 1 "pure2-bounds-safety-span.cpp2"
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-bounds-safety-span.cpp2"
 
 #line 2 "pure2-bounds-safety-span.cpp2"
 [[nodiscard]] auto main() -> int

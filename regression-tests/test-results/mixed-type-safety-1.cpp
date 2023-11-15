@@ -5,10 +5,12 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-type-safety-1.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-type-safety-1.cpp2"
 #include <iostream>
 #include <string>
 #include <variant>
@@ -23,8 +25,8 @@ class Square : public Shape { };
 
 #line 13 "mixed-type-safety-1.cpp2"
 auto print(cpp2::in<std::string> msg, auto const& x) -> void;
-    
 
+#line 16 "mixed-type-safety-1.cpp2"
 auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
 
 #line 24 "mixed-type-safety-1.cpp2"
@@ -32,9 +34,9 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
 
 [[nodiscard]] auto main() -> int;
 
-
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-type-safety-1.cpp2"
 
 #line 13 "mixed-type-safety-1.cpp2"
 auto print(cpp2::in<std::string> msg, auto const& x) -> void { 

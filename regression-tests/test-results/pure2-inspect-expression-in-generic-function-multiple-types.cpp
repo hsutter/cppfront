@@ -6,20 +6,22 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-inspect-expression-in-generic-function-multiple-types.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-inspect-expression-in-generic-function-multiple-types.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 
 #line 20 "pure2-inspect-expression-in-generic-function-multiple-types.cpp2"
 auto test_generic(auto const& x, auto const& msg) -> void;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-inspect-expression-in-generic-function-multiple-types.cpp2"
 [[nodiscard]] auto main() -> int{
+#line 2 "pure2-inspect-expression-in-generic-function-multiple-types.cpp2"
     std::variant<int,int,double> v {42.0}; 
     std::any a {cpp2::as_<std::string>("xyzzy")}; 
     std::optional<int> o {}; 

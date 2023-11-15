@@ -400,7 +400,7 @@ private:
         -> void
     {
         //  Ignore requests from generated code (negative line numbers)
-        if (line < 2) {
+        if (line < 1) {
             return;
         }
 
@@ -519,7 +519,11 @@ private:
         flush_comments( pos );
 
         //  If we're not on the right line
-        if (printed_extra) {
+        if (
+            printed_extra
+            && !on_same_line
+            )
+        {
             print_line_directive(pos.lineno);
             curr_pos.lineno = pos.lineno;
             printed_extra = false;
@@ -732,7 +736,7 @@ public:
     //  Used when we start a new Cpp2 section, or when we emit the same item
     //  more than once (notably when we emit operator= more than once)
     //
-    auto reset_line_to(lineno_t line)
+    auto reset_line_to(lineno_t line, bool force = false)
         -> void
     {
         //  Always start a Cpp2 section on its own new line
@@ -740,7 +744,11 @@ public:
 
         //  If we are out of sync with the current logical line number,
         //  emit a #line directive to re-sync
-        if (curr_pos.lineno != line) {
+        if (
+            force
+            || curr_pos.lineno != line
+            )
+        {
             print_line_directive( line );
             curr_pos.lineno = line;
         }
@@ -941,7 +949,7 @@ public:
         else {
             ignore_align        = false;
             ignore_align_indent = 0;
-            curr_pos.lineno     = ignore_align_lineno+1;  // pop state
+            curr_pos.lineno     = ignore_align_lineno;  // pop state
         }
     }
 
@@ -1307,6 +1315,8 @@ public:
             printer.print_extra( "\n#include \"cpp2util.h\"\n\n" );
         }
 
+        printer.reset_line_to(1, true);
+
         for (auto& section : tokens.get_map())
         {
             assert (!section.second.empty());
@@ -1333,6 +1343,8 @@ public:
         {
             printer.print_extra( "\n//=== Cpp2 type definitions and function declarations ===========================\n\n" );
         }
+
+        printer.reset_line_to(1, true);
 
         assert (printer.get_phase() == positional_printer::phase1_type_defs_func_decls);
         for (
@@ -1476,6 +1488,8 @@ public:
         if (!flag_clean_cpp1) {
             printer.print_extra( "\n//=== Cpp2 function definitions =================================================\n\n" );
         }
+
+        printer.reset_line_to(1, true);
 
         for (auto& section : tokens.get_map())
         {
@@ -5041,7 +5055,7 @@ public:
                     }
                 }
 
-                printer.print_extra(")");
+                printer.print_extra(") ");
                 function_requires_conditions = {};
                 printer.ignore_alignment( false );
             }
@@ -5293,7 +5307,7 @@ public:
                 auto& r = std::get<function_type_node::list>(func->returns);
                 assert(r);
                 assert(std::ssize(r->parameters) > 0);
-                printer.print_extra( "struct " );
+                printer.print_extra( "\nstruct " );
                 printer.print_extra( *n.name() );
                 printer.print_extra( "_ret " );
                 emit(*r, true);
@@ -5487,6 +5501,20 @@ public:
 
                 auto& decl = std::get<statement_node::declaration>(stmt->statement);
                 assert(decl);
+
+                if (
+                    decl->is_alias()
+                    && printer.get_phase() == printer.phase1_type_defs_func_decls
+                    )
+                {
+                    if (started_body) {
+                        emit(*decl);
+                    }
+                    else {
+                        saved_for_body.emplace_back( print_to_string(*decl), decl->position() );
+                    }
+                    continue;
+                }
 
                 if (decl->is_constructor()) {
                     found_constructor = true;
@@ -5964,7 +5992,12 @@ public:
                 )
             {
                 emit_requires_clause();
-                printer.print_cpp2( ";\n", n.position() );
+                if (n.position().lineno < 0) {
+                    printer.print_cpp2( ";\n", n.position() );
+                }
+                else {
+                    printer.print_cpp2( ";", n.position() );
+                }
                 //  Note: Not just early "return;" here because we may need to
                 //  recurse to emit the generated operator= declarations too,
                 //  so all the definition work goes into a big 'else' branch

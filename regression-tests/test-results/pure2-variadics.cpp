@@ -6,6 +6,7 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-variadics.cpp2"
 
 #line 3 "pure2-variadics.cpp2"
 template<typename ...Ts> class x;
@@ -13,6 +14,7 @@ template<typename ...Ts> class x;
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-variadics.cpp2"
 
 //  Type pack expansion
 #line 3 "pure2-variadics.cpp2"
@@ -26,11 +28,9 @@ template<typename ...Ts> class x {
 };
 
 template<typename ...Args> auto left_fold_print(std::ostream& out, Args const& ...args) -> void;
-    
 
 #line 12 "pure2-variadics.cpp2"
 template<typename ...Args> [[nodiscard]] auto all(Args const& ...args) -> bool;
-    
 
 #line 16 "pure2-variadics.cpp2"
 template     <typename ...Args> [[nodiscard]] auto make_string(Args&& ...args) -> auto;
@@ -39,9 +39,9 @@ template  <typename T, typename ...Args> [[nodiscard]] auto make(Args&& ...args)
 
 auto main() -> int;
 
-
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-variadics.cpp2"
 
 #line 7 "pure2-variadics.cpp2"
 template<typename ...Args> auto left_fold_print(std::ostream& out, Args const& ...args) -> void{

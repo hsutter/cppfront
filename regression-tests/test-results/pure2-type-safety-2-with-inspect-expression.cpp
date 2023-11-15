@@ -6,20 +6,22 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-type-safety-2-with-inspect-expression.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-type-safety-2-with-inspect-expression.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 
 #line 20 "pure2-type-safety-2-with-inspect-expression.cpp2"
 auto test_generic(auto const& x, auto const& msg) -> void;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-type-safety-2-with-inspect-expression.cpp2"
 [[nodiscard]] auto main() -> int{
+#line 2 "pure2-type-safety-2-with-inspect-expression.cpp2"
     std::variant<int,double,int> v {42.0}; 
     std::any a {"xyzzy"}; 
     std::optional<int> o {}; 

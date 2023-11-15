@@ -2985,6 +2985,9 @@ public:
         auto found_later_base_type = false;
 
         for (auto& o : objects) {
+            if (o->is_alias()) {
+                continue;
+            }
             if (o->has_name(s)) {
                 found_name = true;
                 ret        = o;

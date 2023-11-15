@@ -6,6 +6,7 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-enum.cpp2"
 
 #line 2 "pure2-enum.cpp2"
 class skat_game;
@@ -21,6 +22,7 @@ class file_attributes;
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-enum.cpp2"
 
 #line 2 "pure2-enum.cpp2"
 class skat_game {
@@ -53,8 +55,7 @@ class janus {
 
 #line 15 "pure2-enum.cpp2"
     public: constexpr auto flip() & -> void;
-        
-        private: cpp2::i8 _value; private: constexpr janus(cpp2::in<cpp2::i64> _val);
+    private: cpp2::i8 _value; private: constexpr janus(cpp2::in<cpp2::i64> _val);
 
 private: constexpr auto operator=(cpp2::in<cpp2::i64> _val) -> janus& ;
 public: [[nodiscard]] constexpr auto get_raw_value() const& -> cpp2::i8;
@@ -105,13 +106,14 @@ public: [[nodiscard]] auto to_string() const& -> std::string;
 };
 
 auto main() -> int;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-enum.cpp2"
 
 
-    constexpr skat_game::skat_game(cpp2::in<cpp2::i64> _val)
+#line 1 "pure2-enum.cpp2"
+constexpr skat_game::skat_game(cpp2::in<cpp2::i64> _val)
                                                           : _value{ cpp2::unsafe_narrow<cpp2::i8>(_val) } {  }
 constexpr auto skat_game::operator=(cpp2::in<cpp2::i64> _val) -> skat_game&  { 
                                                           _value = cpp2::unsafe_narrow<cpp2::i8>(_val);
@@ -140,14 +142,14 @@ inline CPP2_CONSTEXPR skat_game skat_game::grand = 20;
 inline CPP2_CONSTEXPR skat_game skat_game::null = 23;
 
 [[nodiscard]] auto skat_game::to_string() const& -> std::string{
-    if ((*this) == diamonds) {return "diamonds"; }
-    if ((*this) == hearts) {return "hearts"; }
-    if ((*this) == spades) {return "spades"; }
-    if ((*this) == clubs) {return "clubs"; }
-    if ((*this) == grand) {return "grand"; }
-    if ((*this) == null) {return "null"; }
-    return "invalid skat_game value"; 
-    }
+if ((*this) == diamonds) {return "diamonds"; }
+if ((*this) == hearts) {return "hearts"; }
+if ((*this) == spades) {return "spades"; }
+if ((*this) == clubs) {return "clubs"; }
+if ((*this) == grand) {return "grand"; }
+if ((*this) == null) {return "null"; }
+return "invalid skat_game value"; 
+}
 #line 15 "pure2-enum.cpp2"
     constexpr auto janus::flip() & -> void{
         if ((*this) == past) {(*this) = future; }

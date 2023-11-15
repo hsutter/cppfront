@@ -8,6 +8,7 @@
 
 #include "cpp2util.h"
 
+#line 1 "reflect.h2"
 
 #line 20 "reflect.h2"
 namespace cpp2 {
@@ -46,6 +47,7 @@ class value_member_info;
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "reflect.h2"
 
 //  Copyright (c) Herb Sutter
 //  SPDX-License-Identifier: CC-BY-NC-ND-4.0
@@ -101,7 +103,6 @@ class compiler_services
     public: [[nodiscard]] auto get_metafunction_name() const& -> std::string_view;
 
     public: [[nodiscard]] auto get_argument(cpp2::in<int> index) & -> std::string;
-        
 
 #line 70 "reflect.h2"
     public: [[nodiscard]] auto arguments_were_used() const& -> bool;
@@ -113,7 +114,6 @@ class compiler_services
 
 #line 120 "reflect.h2"
     public: [[nodiscard]] virtual auto position() const -> source_position;
-        
 
 #line 126 "reflect.h2"
     public: auto require(
@@ -124,7 +124,6 @@ class compiler_services
 
 #line 137 "reflect.h2"
     public: auto error(cpp2::in<std::string_view> msg) const& -> void;
-    
     public: virtual ~compiler_services() noexcept;
 public: compiler_services(compiler_services const& that);
 
@@ -194,9 +193,9 @@ class declaration_base
     public: [[nodiscard]] auto position() const -> source_position override;
 
     public: [[nodiscard]] auto print() const& -> std::string;
-
-public: virtual ~declaration_base() noexcept;
+    public: virtual ~declaration_base() noexcept;
 public: declaration_base(declaration_base const& that);
+
 #line 213 "reflect.h2"
 };
 
@@ -232,7 +231,6 @@ class declaration
     public: [[nodiscard]] auto has_name(cpp2::in<std::string_view> s) const& -> bool;
 
     public: [[nodiscard]] auto name() const& -> std::string_view;
-        
 
 #line 253 "reflect.h2"
     public: [[nodiscard]] auto has_initializer() const& -> bool;
@@ -267,10 +265,10 @@ class declaration
     public: [[nodiscard]] auto parent_is_polymorphic() const& -> bool;
 
     public: auto mark_for_removal_from_enclosing_type() & -> void;
-        
-        public: virtual ~declaration() noexcept;
+    public: virtual ~declaration() noexcept;
 public: declaration(declaration const& that);
-                                            // this precondition should be sufficient ...
+
+                                                    // this precondition should be sufficient ...
 
 #line 290 "reflect.h2"
 };
@@ -297,7 +295,7 @@ class function_declaration
     public: [[nodiscard]] auto has_move_parameter_named(cpp2::in<std::string_view> s) const& -> bool;
 
     public: [[nodiscard]] auto has_parameter_with_name_and_pass(cpp2::in<std::string_view> s, cpp2::in<passing_style> pass) const& -> bool;
-                                                  
+
     public: [[nodiscard]] auto is_function_with_this() const& -> bool;
     public: [[nodiscard]] auto is_virtual() const& -> bool;
     public: [[nodiscard]] auto is_defaultable() const& -> bool;
@@ -327,8 +325,8 @@ class function_declaration
     public: auto default_to_virtual() & -> void;
 
     public: [[nodiscard]] auto make_virtual() & -> bool;
+    public: function_declaration(function_declaration const& that);
 
-public: function_declaration(function_declaration const& that);
 #line 347 "reflect.h2"
 };
 
@@ -351,12 +349,10 @@ class object_declaration
     public: [[nodiscard]] auto has_wildcard_type() const& -> bool;
 
     public: [[nodiscard]] auto type() const& -> std::string;
-        
 
 #line 377 "reflect.h2"
     public: [[nodiscard]] auto initializer() const& -> std::string;
-        
-        public: object_declaration(object_declaration const& that);
+    public: object_declaration(object_declaration const& that);
 
 
 #line 383 "reflect.h2"
@@ -378,7 +374,6 @@ class type_declaration
 
 #line 403 "reflect.h2"
     public: auto reserve_names(cpp2::in<std::string_view> name, auto&& ...etc) const& -> void;
-    
 
 #line 415 "reflect.h2"
     public: [[nodiscard]] auto is_polymorphic() const& -> bool;
@@ -386,41 +381,35 @@ class type_declaration
     public: [[nodiscard]] auto make_final() & -> bool;
 
     public: [[nodiscard]] auto get_member_functions() const& -> std::vector<function_declaration>;
-        
 
 #line 429 "reflect.h2"
     public: [[nodiscard]] auto get_member_objects() const& -> std::vector<object_declaration>;
-        
 
 #line 439 "reflect.h2"
     public: [[nodiscard]] auto get_member_types() const& -> std::vector<type_declaration>;
-        
 
 #line 449 "reflect.h2"
     public: [[nodiscard]] auto get_member_aliases() const& -> std::vector<alias_declaration>;
-        
 
 #line 459 "reflect.h2"
     public: [[nodiscard]] auto get_members() const& -> std::vector<declaration>;
-        struct query_declared_value_set_functions_ret { bool out_this_in_that; bool out_this_move_that; bool inout_this_in_that; bool inout_this_move_that; };
+struct query_declared_value_set_functions_ret { bool out_this_in_that; bool out_this_move_that; bool inout_this_in_that; bool inout_this_move_that; };
 
 
 
 #line 469 "reflect.h2"
     public: [[nodiscard]] auto query_declared_value_set_functions() const& -> query_declared_value_set_functions_ret;
-        
 
 #line 484 "reflect.h2"
     public: auto add_member(cpp2::in<std::string_view> source) & -> void;
-    
 
 #line 492 "reflect.h2"
     public: auto remove_marked_members() & -> void;
     public: auto remove_all_members() & -> void;
 
     public: auto disable_member_function_generation() & -> void;
+    public: type_declaration(type_declaration const& that);
 
-public: type_declaration(type_declaration const& that);
 #line 496 "reflect.h2"
 };
 
@@ -725,6 +714,7 @@ auto print(cpp2::in<meta::type_declaration> t) -> void;
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "reflect.h2"
 
 #line 20 "reflect.h2"
 namespace cpp2 {

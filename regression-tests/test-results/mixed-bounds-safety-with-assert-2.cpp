@@ -5,14 +5,15 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-bounds-safety-with-assert-2.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-bounds-safety-with-assert-2.cpp2"
 
 #line 2 "mixed-bounds-safety-with-assert-2.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 
 #line 10 "mixed-bounds-safety-with-assert-2.cpp2"
 auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> void;
@@ -25,6 +26,7 @@ auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> vo
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-bounds-safety-with-assert-2.cpp2"
 
 #line 2 "mixed-bounds-safety-with-assert-2.cpp2"
 [[nodiscard]] auto main() -> int{

@@ -5,10 +5,12 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-ufcs-multiple-template-arguments.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-ufcs-multiple-template-arguments.cpp2"
 #include <string>
 #include <iostream>
 
@@ -28,10 +30,10 @@ struct X {
 
 #line 18 "mixed-ufcs-multiple-template-arguments.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-ufcs-multiple-template-arguments.cpp2"
 
 #line 18 "mixed-ufcs-multiple-template-arguments.cpp2"
 [[nodiscard]] auto main() -> int{

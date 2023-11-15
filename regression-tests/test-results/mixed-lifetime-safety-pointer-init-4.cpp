@@ -5,21 +5,22 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-lifetime-safety-pointer-init-4.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-lifetime-safety-pointer-init-4.cpp2"
 
 #include <iostream>
 #include <random>
 
 #line 5 "mixed-lifetime-safety-pointer-init-4.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 
 #line 21 "mixed-lifetime-safety-pointer-init-4.cpp2"
 auto print_and_decorate(auto const& thing) -> void;
-    
+#line 23 "mixed-lifetime-safety-pointer-init-4.cpp2"
 
 bool flip_a_coin() {
     // Change std::mt19937 to std::random_device for non-deterministic PRNG
@@ -30,6 +31,7 @@ bool flip_a_coin() {
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-lifetime-safety-pointer-init-4.cpp2"
 
 #line 5 "mixed-lifetime-safety-pointer-init-4.cpp2"
 [[nodiscard]] auto main() -> int{

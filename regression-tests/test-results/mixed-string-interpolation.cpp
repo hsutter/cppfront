@@ -5,10 +5,12 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-string-interpolation.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-string-interpolation.cpp2"
 #include <iostream>
 #include <string_view>
 #include <utility>
@@ -18,10 +20,10 @@ struct custom_struct_with_no_stringize_customization { } custom;
 
 #line 8 "mixed-string-interpolation.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-string-interpolation.cpp2"
 
 #line 8 "mixed-string-interpolation.cpp2"
 [[nodiscard]] auto main() -> int{

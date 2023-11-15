@@ -6,6 +6,7 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
 
 #line 2 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
 class myclass;
@@ -13,19 +14,17 @@ class myclass;
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
 
 #line 2 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
 class myclass {
 
     public: myclass(myclass const& that);
-        
 #line 4 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     public: auto operator=(myclass const& that) -> myclass& ;
-        
 
 #line 8 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     public: myclass(myclass&& that) noexcept;
-        
 
 #line 13 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     // operator=: (inout this,  that) = {
@@ -34,14 +33,11 @@ class myclass {
     // }
 
     public: auto operator=(myclass&& that) noexcept -> myclass& ;
-        
 
 #line 22 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     public: explicit myclass(cpp2::in<std::string> x);
-        
 #line 22 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     public: auto operator=(cpp2::in<std::string> x) -> myclass& ;
-        
 
 #line 27 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     private: std::string name {"Henry"}; 
@@ -57,17 +53,16 @@ class myclass {
 };
 
 auto main() -> int;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
 
 #line 4 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     myclass::myclass(myclass const& that)
         : name{ that.name }
-        , addr{ that.addr }
-#line 4 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
-    {
+        , addr{ that.addr }{
+#line 5 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
         std::cout << "ctor - copy (GENERAL)";
     }
 #line 4 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
@@ -82,10 +77,9 @@ auto main() -> int;
 
     myclass::myclass(myclass&& that) noexcept
         : name{ std::move(that).name + "(CM)" }
-        , addr{ std::move(that).addr }
-#line 8 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
-    {
+        , addr{ std::move(that).addr }{
 
+#line 10 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
         std::cout << "ctor - move          ";
     }
 
@@ -100,10 +94,9 @@ auto main() -> int;
     }
 
     myclass::myclass(cpp2::in<std::string> x)
-        : name{ x }
-#line 22 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
-    {
+        : name{ x }{
 
+#line 24 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
         std::cout << "ctor - from string   ";
     }
 #line 22 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"

@@ -5,10 +5,12 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-float-literals.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-float-literals.cpp2"
 void literals_cpp1() {
   // integers
   std::cout << 123 << std::endl;
@@ -67,14 +69,13 @@ void literals_cpp1() {
 
 #line 57 "mixed-float-literals.cpp2"
 auto literals_cpp2() -> void;
-  
 
 #line 114 "mixed-float-literals.cpp2"
 [[nodiscard]] auto main() -> int;
-  
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-float-literals.cpp2"
 
 #line 57 "mixed-float-literals.cpp2"
 auto literals_cpp2() -> void{

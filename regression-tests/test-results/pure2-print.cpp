@@ -6,6 +6,7 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-print.cpp2"
 
 #line 4 "pure2-print.cpp2"
 class outer;
@@ -13,33 +14,30 @@ class outer;
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-print.cpp2"
 
 //  Exercise the pretty-print visualizer for the various grammar elements
 
 #line 4 "pure2-print.cpp2"
 class outer {
 
-    public: template<typename T> 
-CPP2_REQUIRES_ (true)
 #line 6 "pure2-print.cpp2"
-    static const T object_alias;
-
+    public: template<typename T> 
+CPP2_REQUIRES_ (true) static const T object_alias;
     public: class mytype final
      {
         protected: [[nodiscard]] static auto f() -> int;
 
         public: [[nodiscard]] virtual auto g(cpp2::in<int> i) const -> int;
-            
 
 #line 31 "pure2-print.cpp2"
         private: [[nodiscard]] static auto h(cpp2::in<std::string> s, std::map<int const,std::string>& m) -> std::string;
-            struct values_ret { int offset; std::string name; };
+struct values_ret { int offset; std::string name; };
 
 
 
 #line 54 "pure2-print.cpp2"
         public: template<typename T> [[nodiscard]] auto values([[maybe_unused]] T const& unnamed_param_2) const& -> values_ret;
-            
 
 #line 59 "pure2-print.cpp2"
         public: explicit mytype();
@@ -49,13 +47,11 @@ CPP2_REQUIRES_ (true)
         public: mytype([[maybe_unused]] cpp2::in<int> unnamed_param_2);
 
         public: static auto variadic(auto const& ...x) -> void
-CPP2_REQUIRES_ ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...))
-#line 65 "pure2-print.cpp2"
-        ;
+CPP2_REQUIRES_ ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...)) ;
+#line 66 "pure2-print.cpp2"
     };
 
     public: static auto test() -> void;
-        
 
 #line 89 "pure2-print.cpp2"
     public: template<typename ...Ts> class x {
@@ -68,14 +64,10 @@ CPP2_REQUIRES_ ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...))
     };
 
     public: template<typename ...Args> static auto print(std::ostream& out, Args const& ...args) -> void
-CPP2_REQUIRES_ (cpp2::cmp_greater_eq(sizeof(Args)...,0))
-#line 93 "pure2-print.cpp2"
-    ;
-        
+CPP2_REQUIRES_ (cpp2::cmp_greater_eq(sizeof(Args)...,0)) ;
 
 #line 97 "pure2-print.cpp2"
     public: template<typename ...Args> [[nodiscard]] static auto all(Args const& ...args) -> bool;
-        
     public: outer() = default;
     public: outer(outer const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(outer const&) -> void = delete;
@@ -85,16 +77,15 @@ CPP2_REQUIRES_ (cpp2::cmp_greater_eq(sizeof(Args)...,0))
 };
 
 auto main() -> int;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-print.cpp2"
 
 #line 6 "pure2-print.cpp2"
     template<typename T> 
-requires (true)
-#line 6 "pure2-print.cpp2"
-    inline CPP2_CONSTEXPR T outer::object_alias = 42;
+requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
+#line 7 "pure2-print.cpp2"
 
 #line 10 "pure2-print.cpp2"
         [[nodiscard]] auto outer::mytype::f() -> int { return 42;  }
@@ -133,9 +124,7 @@ requires (true)
 
             do {} while ( CPP2_UFCS_0(empty, s) && [&]{ b() ; return true; }() );
 
-            for ( [[maybe_unused]] auto const& unnamed_param_1 : m ) {
-#line 43 "pure2-print.cpp2"
-             { do {goto CONTINUE_43_13; } while (false); c(); } CPP2_CONTINUE_BREAK(43_13) }
+            for ( [[maybe_unused]] auto const& unnamed_param_1 : m ) { { do {goto CONTINUE_43_13; } while (false); c(); } CPP2_CONTINUE_BREAK(43_13) }
 
 #line 45 "pure2-print.cpp2"
             if (cpp2::is(!(CPP2_UFCS_0(empty, s)), (true))) {std::move(a)(); }
@@ -162,9 +151,7 @@ requires (true)
         outer::mytype::mytype([[maybe_unused]] cpp2::in<int> unnamed_param_2){}
 
         auto outer::mytype::variadic(auto const& ...x) -> void
-requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...))
-#line 65 "pure2-print.cpp2"
-        {(std::cout << ... << x); }
+requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...)) {(std::cout << ... << x); }
 
 #line 68 "pure2-print.cpp2"
     auto outer::test() -> void{
@@ -190,9 +177,8 @@ requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...))
 
 #line 93 "pure2-print.cpp2"
     template<typename ...Args> auto outer::print(std::ostream& out, Args const& ...args) -> void
-requires (cpp2::cmp_greater_eq(sizeof(Args)...,0))
-#line 93 "pure2-print.cpp2"
-    {
+requires (cpp2::cmp_greater_eq(sizeof(Args)...,0)) {
+#line 94 "pure2-print.cpp2"
         (out << ... << args);
     }
 

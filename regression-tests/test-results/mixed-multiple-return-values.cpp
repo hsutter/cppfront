@@ -5,23 +5,25 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-multiple-return-values.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-multiple-return-values.cpp2"
 
 #include <iostream>
 #include <random>
 #include <string>
+
 struct f_ret { int i; std::string s; };
 
 #line 6 "mixed-multiple-return-values.cpp2"
 [[nodiscard]] auto f() -> f_ret;
-    
 
 #line 22 "mixed-multiple-return-values.cpp2"
 auto do_print(cpp2::in<std::string> name, auto const& value) -> void;
-    
+#line 24 "mixed-multiple-return-values.cpp2"
 
 int main() {
     auto [a,b] = f();
@@ -38,6 +40,7 @@ bool flip_a_coin() {
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-multiple-return-values.cpp2"
 
 #line 6 "mixed-multiple-return-values.cpp2"
 [[nodiscard]] auto f() -> f_ret{

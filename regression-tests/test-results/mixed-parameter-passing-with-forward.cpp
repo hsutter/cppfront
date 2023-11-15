@@ -5,10 +5,12 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-parameter-passing-with-forward.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-parameter-passing-with-forward.cpp2"
 
 #include <string>
 #include <cstdlib>
@@ -24,16 +26,16 @@ auto parameter_styles(
     std::string&& d, 
     auto&& e
     ) -> void
-CPP2_REQUIRES (std::is_same_v<CPP2_TYPEOF(e), std::string>)
+CPP2_REQUIRES (std::is_same_v<CPP2_TYPEOF(e), std::string>) 
 #line 8 "mixed-parameter-passing-with-forward.cpp2"
 ;
 
 #line 42 "mixed-parameter-passing-with-forward.cpp2"
 [[nodiscard]] auto main() -> int;
 
-
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-parameter-passing-with-forward.cpp2"
 
 #line 6 "mixed-parameter-passing-with-forward.cpp2"
 auto copy_from([[maybe_unused]] auto unnamed_param_1) -> void{}
@@ -45,7 +47,7 @@ auto parameter_styles(
     std::string&& d, 
     auto&& e
     ) -> void
-requires (std::is_same_v<CPP2_TYPEOF(e), std::string>)
+requires (std::is_same_v<CPP2_TYPEOF(e), std::string>) 
 #line 15 "mixed-parameter-passing-with-forward.cpp2"
 {
     int z {12}; 

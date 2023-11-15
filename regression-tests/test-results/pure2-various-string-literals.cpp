@@ -6,16 +6,19 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-various-string-literals.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-various-string-literals.cpp2"
 auto main() -> int;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-various-string-literals.cpp2"
 auto main() -> int{
+#line 2 "pure2-various-string-literals.cpp2"
     auto s1 {u"u\""}; 
     auto s2 {U"U\""}; 
     auto s3 {u8"u8\""}; 

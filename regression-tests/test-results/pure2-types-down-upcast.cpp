@@ -6,7 +6,9 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-types-down-upcast.cpp2"
 class A;
+#line 2 "pure2-types-down-upcast.cpp2"
   
 
 #line 8 "pure2-types-down-upcast.cpp2"
@@ -15,15 +17,17 @@ class B;
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-types-down-upcast.cpp2"
 class A {
+#line 2 "pure2-types-down-upcast.cpp2"
   public: int i {0}; 
 
  public: virtual auto const_foo() const -> void;
  public: auto mut_foo() & -> void;
-
   public: A() = default;
   public: A(A const&) = delete; /* No 'that' constructor, suppress copy */
   public: auto operator=(A const&) -> void = delete;
+
 #line 6 "pure2-types-down-upcast.cpp2"
 };
 
@@ -43,26 +47,22 @@ auto func_const(cpp2::in<A> a) -> void;
 auto func_const(cpp2::in<B> b) -> void;
 
 auto test_const_foo() -> void;
- 
 
 #line 29 "pure2-types-down-upcast.cpp2"
 auto test_mut_foo() -> void;
- 
 
 #line 36 "pure2-types-down-upcast.cpp2"
 auto test_up() -> void;
-  
 
 #line 55 "pure2-types-down-upcast.cpp2"
 auto test_down() -> void;
-  
 
 #line 77 "pure2-types-down-upcast.cpp2"
 [[nodiscard]] auto main() -> int;
 
-
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-types-down-upcast.cpp2"
 
 #line 4 "pure2-types-down-upcast.cpp2"
  auto A::const_foo() const -> void{std::cout << "const foo \n"; }

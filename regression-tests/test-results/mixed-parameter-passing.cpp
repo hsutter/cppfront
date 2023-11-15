@@ -5,10 +5,12 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-parameter-passing.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-parameter-passing.cpp2"
 
 #include <string>
 #include <cstdlib>
@@ -27,9 +29,9 @@ auto parameter_styles(
 #line 40 "mixed-parameter-passing.cpp2"
 [[nodiscard]] auto main() -> int;
 
-
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-parameter-passing.cpp2"
 
 #line 6 "mixed-parameter-passing.cpp2"
 auto copy_from([[maybe_unused]] auto unnamed_param_1) -> void{}

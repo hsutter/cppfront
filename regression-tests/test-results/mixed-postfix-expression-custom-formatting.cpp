@@ -5,23 +5,24 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-postfix-expression-custom-formatting.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-postfix-expression-custom-formatting.cpp2"
 
 #line 2 "mixed-postfix-expression-custom-formatting.cpp2"
 auto call([[maybe_unused]] auto const& unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2, [[maybe_unused]] auto const& unnamed_param_3, [[maybe_unused]] auto const& unnamed_param_4, [[maybe_unused]] auto const& unnamed_param_5) -> void;
 
 [[nodiscard]] auto test(auto const& a) -> std::string;
-    
 
 #line 15 "mixed-postfix-expression-custom-formatting.cpp2"
 [[nodiscard]] auto main() -> int;
 
-
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-postfix-expression-custom-formatting.cpp2"
 
 #line 2 "mixed-postfix-expression-custom-formatting.cpp2"
 auto call([[maybe_unused]] auto const& unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2, [[maybe_unused]] auto const& unnamed_param_3, [[maybe_unused]] auto const& unnamed_param_4, [[maybe_unused]] auto const& unnamed_param_5) -> void{}

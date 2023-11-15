@@ -5,10 +5,12 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-postexpression-with-capture.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-postexpression-with-capture.cpp2"
 #include <vector>
 #include <ranges>
 #include <string>
@@ -18,16 +20,15 @@
 
 #line 8 "mixed-postexpression-with-capture.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 
 #line 12 "mixed-postexpression-with-capture.cpp2"
 extern std::vector<int> vec;
 
 auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-postexpression-with-capture.cpp2"
 
 #line 8 "mixed-postexpression-with-capture.cpp2"
 [[nodiscard]] auto main() -> int{

@@ -5,6 +5,7 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-fixed-type-aliases.cpp2"
 
 #line 15 "mixed-fixed-type-aliases.cpp2"
 template<typename T> class mytype;
@@ -12,6 +13,7 @@ template<typename T> class mytype;
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-fixed-type-aliases.cpp2"
 #include <filesystem>
 #include <iostream>
 #include <typeinfo>
@@ -22,7 +24,6 @@ namespace my {
 
 #line 9 "mixed-fixed-type-aliases.cpp2"
 auto test(auto const& x) -> void;
-    
 
 #line 15 "mixed-fixed-type-aliases.cpp2"
 template<typename T> class mytype {
@@ -30,10 +31,10 @@ template<typename T> class mytype {
 };
 
 [[nodiscard]] auto main(int const argc_, char** argv_) -> int;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-fixed-type-aliases.cpp2"
 
 #line 9 "mixed-fixed-type-aliases.cpp2"
 auto test(auto const& x) -> void{

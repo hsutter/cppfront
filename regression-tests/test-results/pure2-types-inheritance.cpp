@@ -6,6 +6,7 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-types-inheritance.cpp2"
 
 #line 2 "pure2-types-inheritance.cpp2"
 class Human;
@@ -24,16 +25,17 @@ class Cyborg;
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-types-inheritance.cpp2"
 
 #line 2 "pure2-types-inheritance.cpp2"
 class Human {
     public: virtual auto speak() const -> void = 0;
-
-public: virtual ~Human() noexcept;
+    public: virtual ~Human() noexcept;
 
     public: Human() = default;
     public: Human(Human const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(Human const&) -> void = delete;
+
 #line 4 "pure2-types-inheritance.cpp2"
 };
 
@@ -41,8 +43,7 @@ namespace N {
     template<int I> class Machine {
         public: explicit Machine([[maybe_unused]] cpp2::in<std::string> unnamed_param_2);
         public: virtual auto work() const -> void = 0;
-    
-    public: virtual ~Machine() noexcept;
+        public: virtual ~Machine() noexcept;
 
         public: Machine(Machine const&) = delete; /* No 'that' constructor, suppress copy */
         public: auto operator=(Machine const&) -> void = delete;
@@ -58,42 +59,39 @@ class Cyborg: public Cyborg_name_as_base, public Human, public Cyborg_address_as
 
 #line 19 "pure2-types-inheritance.cpp2"
     public: explicit Cyborg(cpp2::in<std::string> n);
-        
 
 #line 25 "pure2-types-inheritance.cpp2"
     public: auto speak() const -> void override;
-        
 
+#line 28 "pure2-types-inheritance.cpp2"
     public: auto work() const -> void override;
-        
 
+#line 31 "pure2-types-inheritance.cpp2"
     public: auto print() const& -> void;
-        
 
+#line 34 "pure2-types-inheritance.cpp2"
     public: ~Cyborg() noexcept;
-        
     public: Cyborg(Cyborg const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(Cyborg const&) -> void = delete;
+
 
 #line 36 "pure2-types-inheritance.cpp2"
 };
 
 auto make_speak(cpp2::in<Human> h) -> void;
-    
 
 #line 43 "pure2-types-inheritance.cpp2"
 auto do_work(cpp2::in<N::Machine<99>> m) -> void;
-    
 
 #line 48 "pure2-types-inheritance.cpp2"
 auto main() -> int;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-types-inheritance.cpp2"
 
 
-    Human::~Human() noexcept{}
+Human::~Human() noexcept{}
 #line 6 "pure2-types-inheritance.cpp2"
 namespace N {
 
@@ -109,9 +107,7 @@ namespace N {
         : Cyborg_name_as_base{ n }
         , Human{  }
         , Cyborg_address_as_base{ "123 Main St." }
-        , N::Machine<99>{ "Acme Corp. engineer tech" }
-#line 19 "pure2-types-inheritance.cpp2"
-    {
+        , N::Machine<99>{ "Acme Corp. engineer tech" }{
 
 #line 22 "pure2-types-inheritance.cpp2"
         std::cout << cpp2::to_string(name) + " checks in for the day's shift\n";

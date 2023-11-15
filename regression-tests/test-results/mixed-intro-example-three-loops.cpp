@@ -1,3 +1,5 @@
+#line 1 "mixed-intro-example-three-loops.cpp2"
+#line 1 "mixed-intro-example-three-loops.cpp2"
 #include <iostream>
 #include <iomanip>
 #include <vector>

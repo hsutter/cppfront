@@ -6,21 +6,24 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-stdio.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-stdio.cpp2"
 
 //  "A better C than C" ... ?
 //
 #line 4 "pure2-stdio.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 #line 10 "pure2-stdio.cpp2"
 
+#line 1 "pure2-stdio.cpp2"
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-stdio.cpp2"
 
 #line 4 "pure2-stdio.cpp2"
 [[nodiscard]] auto main() -> int{

@@ -5,10 +5,12 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-inspect-with-typeof-of-template-arg-list.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-inspect-with-typeof-of-template-arg-list.cpp2"
 
 template <int i, int j>
 auto calc() {
@@ -17,14 +19,13 @@ auto calc() {
 
 #line 7 "mixed-inspect-with-typeof-of-template-arg-list.cpp2"
 [[nodiscard]] auto fun(auto const& v) -> int;
-    
 
 #line 14 "mixed-inspect-with-typeof-of-template-arg-list.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-inspect-with-typeof-of-template-arg-list.cpp2"
 
 #line 7 "mixed-inspect-with-typeof-of-template-arg-list.cpp2"
 [[nodiscard]] auto fun(auto const& v) -> int{

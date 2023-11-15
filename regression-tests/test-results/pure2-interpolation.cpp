@@ -6,6 +6,7 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-interpolation.cpp2"
 
 #line 2 "pure2-interpolation.cpp2"
 class item;
@@ -13,6 +14,7 @@ class item;
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-interpolation.cpp2"
 
 #line 2 "pure2-interpolation.cpp2"
 class item {
@@ -24,9 +26,9 @@ class item {
 
 [[nodiscard]] auto main() -> int;
 
-
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-interpolation.cpp2"
 
 #line 3 "pure2-interpolation.cpp2"
     [[nodiscard]] auto item::name() const& -> std::string { return "Dog kennel";  }

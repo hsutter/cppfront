@@ -5,10 +5,12 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-out-destruction.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-out-destruction.cpp2"
 #include <iostream>
 
 struct X {
@@ -52,6 +54,7 @@ int main() {
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-out-destruction.cpp2"
 
 #line 22 "mixed-out-destruction.cpp2"
 auto f00() -> void     {   C auto_22_28 {"f00"}; cpp2::deferred_init<X> x; f01(cpp2::out(&x));}

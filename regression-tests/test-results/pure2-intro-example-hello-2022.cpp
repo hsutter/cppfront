@@ -6,24 +6,25 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-intro-example-hello-2022.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-intro-example-hello-2022.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 
 #line 11 "pure2-intro-example-hello-2022.cpp2"
 [[nodiscard]] auto decorate(auto& thing) -> int;
-    
 
 #line 16 "pure2-intro-example-hello-2022.cpp2"
 auto print_it(auto const& x, auto const& len) -> void;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-intro-example-hello-2022.cpp2"
 [[nodiscard]] auto main() -> int{
+#line 2 "pure2-intro-example-hello-2022.cpp2"
     std::vector<std::string> vec {
             "hello", "2022"}; 
 
