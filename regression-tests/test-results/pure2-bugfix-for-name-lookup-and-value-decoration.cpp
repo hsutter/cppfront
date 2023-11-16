@@ -13,7 +13,8 @@
 
 #line 1 "pure2-bugfix-for-name-lookup-and-value-decoration.cpp2"
 
-struct vals_ret { int i; };
+struct vals_ret { int i; 
+operator auto() const { return i; }};
 
 [[nodiscard]] auto vals() -> vals_ret;
 

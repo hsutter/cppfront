@@ -2460,7 +2460,8 @@ public:
     //
     auto build_capture_lambda_intro_for(
         capture_group&  captures,
-        source_position pos
+        source_position pos,
+        bool            include_default_reference_capture = false
     )
         -> std::string
     {
@@ -2499,9 +2500,11 @@ public:
         auto num_captures = 0;
 
         if (
-            !current_functions.empty()
-            && current_functions.back().decl->is_function_with_this()
-            && !current_functions.back().decl->parent_is_namespace()
+            (!current_functions.empty()
+                && current_functions.back().decl->is_function_with_this()
+                && !current_functions.back().decl->parent_is_namespace()
+                )
+            || include_default_reference_capture
             )
         {
             //  Note: & is needed (when allowed, not at namespace scope) because a
@@ -4239,7 +4242,8 @@ public:
     auto emit(
         parameter_declaration_list_node const& n,
         bool                                   is_returns            = false,
-        bool                                   is_template_parameter = false
+        bool                                   is_template_parameter = false,
+        std::string                            extra_text            = ""
     )
         -> void
     {
@@ -4277,7 +4281,7 @@ public:
         }
 
         if (is_returns) {
-            printer.print_extra( "};\n" );
+            printer.print_extra( extra_text + "};\n" );
         }
         else {
             //  Position heuristic (aka hack): Avoid emitting extra whitespace before )
@@ -4307,7 +4311,7 @@ public:
         //  For a postcondition, we'll wrap it in a final_action_success lambda
         //
         if (*n.kind == "post") {
-            auto lambda_intro = build_capture_lambda_intro_for(n.captures, n.position());
+            auto lambda_intro = build_capture_lambda_intro_for(n.captures, n.position(), true);
             printer.print_cpp2(
                 "auto post_" + std::to_string(n.position().lineno) + "_" +
                     std::to_string(n.position().colno) + " = cpp2::finally_success(" +
@@ -5318,7 +5322,16 @@ public:
                 printer.print_extra( "\nstruct " );
                 printer.print_extra( *n.name() );
                 printer.print_extra( "_ret " );
-                emit(*r, true);
+
+                auto extra = std::string{};
+                if (std::ssize(r->parameters) == 1) {
+                    assert (r->parameters[0]->declaration->name());
+                    extra += "\noperator auto() const { return "
+                        + r->parameters[0]->declaration->name()->to_string()
+                        + "; }";
+                }
+
+                emit(*r, true, false, extra);
                 printer.print_extra( "\n" );
             }
         }
@@ -6030,15 +6043,6 @@ public:
                     function_returns.emplace_back(nullptr);        // no return type at all
                 }
 
-                for (auto&& c : func->contracts)
-                {
-                    auto print = std::string();
-                    printer.emit_to_string(&print);
-                    emit(*c);
-                    printer.emit_to_string();
-                    current_functions.back().prolog.statements.push_back(print);
-                }
-
                 if (func->returns.index() == function_type_node::list)
                 {
                     auto& r = std::get<function_type_node::list>(func->returns);
@@ -6091,6 +6095,15 @@ public:
                         loc += ";";
                         current_functions.back().prolog.statements.push_back(loc);
                     }
+                }
+
+                for (auto&& c : func->contracts)
+                {
+                    auto print = std::string();
+                    printer.emit_to_string(&print);
+                    emit(*c);
+                    printer.emit_to_string();
+                    current_functions.back().prolog.statements.push_back(print);
                 }
 
                 printer.preempt_position_push( n.equal_sign );

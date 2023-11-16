@@ -13,11 +13,13 @@
 
 #line 1 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 
-struct f_ret { int ri; };
+struct f_ret { int ri; 
+operator auto() const { return ri; }};
 
 #line 2 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 [[nodiscard]] auto f() -> f_ret;
-struct g_ret { int ri; };
+struct g_ret { int ri; 
+operator auto() const { return ri; }};
 
 
 

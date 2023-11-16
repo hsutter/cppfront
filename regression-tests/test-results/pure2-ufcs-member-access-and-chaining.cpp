@@ -18,7 +18,8 @@
 auto no_return([[maybe_unused]] auto const& unnamed_param_1) -> void;
 
 [[nodiscard]] auto ufcs(cpp2::in<int> i) -> int;
-struct fun_ret { int i; };
+struct fun_ret { int i; 
+operator auto() const { return i; }};
 
 
 
