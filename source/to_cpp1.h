@@ -1315,7 +1315,13 @@ public:
             printer.print_extra( "\n#include \"cpp2util.h\"\n\n" );
         }
 
-        printer.reset_line_to(1, true);
+        if (
+            source.has_cpp2()
+            && !flag_clean_cpp1
+            )
+        {
+            printer.reset_line_to(1, true);
+        }
 
         for (auto& section : tokens.get_map())
         {
@@ -1342,9 +1348,8 @@ public:
             )
         {
             printer.print_extra( "\n//=== Cpp2 type definitions and function declarations ===========================\n\n" );
+            printer.reset_line_to(1, true);
         }
-
-        printer.reset_line_to(1, true);
 
         assert (printer.get_phase() == positional_printer::phase1_type_defs_func_decls);
         for (
@@ -1485,11 +1490,14 @@ public:
         printer.finalize_phase();
         printer.next_phase();
 
-        if (!flag_clean_cpp1) {
+        if (
+            source.has_cpp2()
+            && !flag_clean_cpp1
+            )
+        {
             printer.print_extra( "\n//=== Cpp2 function definitions =================================================\n\n" );
+            printer.reset_line_to(1, true);
         }
-
-        printer.reset_line_to(1, true);
 
         for (auto& section : tokens.get_map())
         {
