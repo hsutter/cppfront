@@ -66,6 +66,13 @@ compiler_services: @polymorphic_base @copyable type =
         }
         return "";
     }
+    get_arguments: (inout this) -> std::vector<std::string> = {
+        ret: std::vector<std::string> = ();
+        (copy count := 0)
+        while !ret.emplace_back(get_argument(count)).empty() { count++; } // No `next` (#832).
+        ret.pop_back();
+        return ret;
+    }
 
     arguments_were_used: (this) -> bool = metafunctions_used;
 
