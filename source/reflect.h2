@@ -460,6 +460,21 @@ type_declaration: @copyable type =
         return ret;
     }
 
+    get_member_functions_needing_initializer: (this)
+        -> std::vector<function_declaration>
+    = {
+        ret: std::vector<function_declaration> = ();
+        for n*.get_type_scope_declarations(declaration_node::functions)
+        do (d)
+        if !d*.has_initializer()
+           && !d*.is_virtual_function()
+           && !d*.is_defaultable_function()
+        {
+            _ = ret.emplace_back( d, this );
+        }
+        return ret;
+    }
+
     get_member_objects: (this)
         -> std::vector<object_declaration>
     = {
