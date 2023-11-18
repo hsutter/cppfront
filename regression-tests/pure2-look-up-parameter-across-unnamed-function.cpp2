@@ -15,5 +15,5 @@ g: () -> (ri : int) = {
 }
 
 main: ()->int = {
-    std::cout << f().ri + g().ri << "\n";
+    std::cout << f() + g() << "\n";
 }

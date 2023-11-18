@@ -2376,9 +2376,17 @@ public:
             && function_returns.back().param_list
             )
         {
-            //auto stmt = function_return_name + " { "; // we shouldn't need this with { } init
-            auto stmt = std::string(" { ");
             auto& parameters = function_returns.back().param_list->parameters;
+
+            auto stmt = std::string{};
+
+            //  Put braces only around multiple named returns, which are a struct
+            //  - single named returns are emitted as ordinary returns, and extra
+            //  { } would be legal but generate a noisy warning on some compilers
+            if (std::ssize(parameters) > 1) {
+                stmt += std::string(" { ");
+            }
+
             for (bool first = true; auto& param : parameters) {
                 if (!first) {
                     stmt += ", ";
@@ -2390,7 +2398,11 @@ public:
                 emit(*param->declaration->identifier, true);
                 printer.emit_to_string();
             }
-            stmt += " }";
+
+            if (std::ssize(parameters) > 1) {
+                stmt += std::string(" }");
+            }
+
             printer.print_cpp2(stmt, n.position());
         }
 
@@ -4242,8 +4254,7 @@ public:
     auto emit(
         parameter_declaration_list_node const& n,
         bool                                   is_returns            = false,
-        bool                                   is_template_parameter = false,
-        std::string                            extra_text            = ""
+        bool                                   is_template_parameter = false
     )
         -> void
     {
@@ -4281,7 +4292,7 @@ public:
         }
 
         if (is_returns) {
-            printer.print_extra( extra_text + "};\n" );
+            printer.print_extra( "};\n" );
         }
         else {
             //  Position heuristic (aka hack): Avoid emitting extra whitespace before )
@@ -5315,23 +5326,34 @@ public:
             auto& func = std::get<declaration_node::a_function>(n.type);
             assert(func);
 
-            if (func->returns.index() == function_type_node::list) {
+            if (func->returns.index() == function_type_node::list)
+            {
                 auto& r = std::get<function_type_node::list>(func->returns);
                 assert(r);
                 assert(std::ssize(r->parameters) > 0);
-                printer.print_extra( "\nstruct " );
-                printer.print_extra( *n.name() );
-                printer.print_extra( "_ret " );
 
-                auto extra = std::string{};
-                if (std::ssize(r->parameters) == 1) {
-                    assert (r->parameters[0]->declaration->name());
-                    extra += "\noperator auto() const { return "
-                        + r->parameters[0]->declaration->name()->to_string()
-                        + "; }";
+                auto func_name = n.name()->to_string();
+
+                //  If it's a single named value, emit it as an aonymous return value
+                if (std::ssize(r->parameters) == 1)
+                {
+                    printer.print_extra(
+                        "\nusing "
+                        + func_name + "_ret = "
+                        + r->parameters[0]->declaration->get_object_type()->to_string()
+                        + ";"
+                    );
                 }
-
-                emit(*r, true, false, extra);
+                //  Else just emit it as an ordinary struct
+                else
+                {
+                    printer.print_extra(
+                        "\nstruct "
+                        + n.name()->to_string()
+                        + "_ret "
+                    );
+                    emit(*r, true);
+                }
                 printer.print_extra( "\n" );
             }
         }

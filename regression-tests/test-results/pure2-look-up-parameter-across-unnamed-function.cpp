@@ -13,14 +13,10 @@
 
 #line 1 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 
-struct f_ret { int ri; 
-operator auto() const { return ri; }};
-
+using f_ret = int;
 #line 2 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 [[nodiscard]] auto f() -> f_ret;
-struct g_ret { int ri; 
-operator auto() const { return ri; }};
-
+using g_ret = int;
 
 
 #line 9 "pure2-look-up-parameter-across-unnamed-function.cpp2"
@@ -40,7 +36,7 @@ operator auto() const { return ri; }};
     auto pred {[](auto const& e) -> auto { return e == 1;  }}; 
     ri = 42;
     std::move(pred)(ri);
-    return  { std::move(ri) }; // "return;" is implicit"
+    return std::move(ri); // "return;" is implicit"
 }
 
 [[nodiscard]] auto g() -> g_ret{
@@ -50,10 +46,10 @@ operator auto() const { return ri; }};
     auto pred {[](auto const& e) -> auto { return e == 1;  }}; 
     ri.value() = 42;
     std::move(pred)(ri.value());
-    return  { std::move(ri.value()) }; 
+    return std::move(ri.value()); 
 }
 
 [[nodiscard]] auto main() -> int{
-    std::cout << f().ri + g().ri << "\n";
+    std::cout << f() + g() << "\n";
 }
 

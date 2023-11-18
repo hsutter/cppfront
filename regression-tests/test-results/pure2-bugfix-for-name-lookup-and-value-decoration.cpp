@@ -13,9 +13,7 @@
 
 #line 1 "pure2-bugfix-for-name-lookup-and-value-decoration.cpp2"
 
-struct vals_ret { int i; 
-operator auto() const { return i; }};
-
+using vals_ret = int;
 [[nodiscard]] auto vals() -> vals_ret;
 
 #line 6 "pure2-bugfix-for-name-lookup-and-value-decoration.cpp2"
@@ -28,11 +26,11 @@ operator auto() const { return i; }};
         cpp2::deferred_init<int> i;
 #line 2 "pure2-bugfix-for-name-lookup-and-value-decoration.cpp2"
     i.construct(42);
-    return  { std::move(i.value()) }; 
+    return std::move(i.value()); 
 }
 
 [[nodiscard]] auto main() -> int{
     auto v {vals()}; 
-    std::move(v).i;
+    static_cast<void>(std::move(v));
 }
 
