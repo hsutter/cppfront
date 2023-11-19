@@ -6058,7 +6058,6 @@ public:
             //  Else emit the definition
             else if (n.initializer)
             {
-
                 if (func->returns.index() == function_type_node::list) {
                     auto& r = std::get<function_type_node::list>(func->returns);
                     function_returns.emplace_back(r.get());
@@ -6209,6 +6208,11 @@ public:
                 (
                     n.parent_is_function()
                     && printer.get_phase() == printer.phase2_func_defs
+                    )
+                ||
+                (
+                    n.is_inside_global_unnamed_function()
+                    && printer.get_phase() == printer.phase1_type_defs_func_decls
                     )
                 )
             )

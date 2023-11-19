@@ -279,6 +279,11 @@ declaration: @polymorphic_base @copyable type =
     parent_is_type       : (this) -> bool = n*.parent_is_type();
     parent_is_namespace  : (this) -> bool = n*.parent_is_namespace();
     parent_is_alias      : (this) -> bool = n*.parent_is_alias();
+
+    parent_is_type_alias      : (this) -> bool = n*.parent_is_type_alias();
+    parent_is_namespace_alias : (this) -> bool = n*.parent_is_namespace_alias();
+    parent_is_object_alias    : (this) -> bool = n*.parent_is_object_alias();
+
     parent_is_polymorphic: (this) -> bool = n*.parent_is_polymorphic();
 
     mark_for_removal_from_enclosing_type: (inout this) 

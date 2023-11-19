@@ -2850,6 +2850,23 @@ public:
         { return !parent_declaration || parent_declaration->type.index() == a_namespace; }
     auto parent_is_alias      () const -> bool
         { return  parent_declaration && parent_declaration->type.index() == an_alias;    }
+
+    auto parent_is_type_alias     () const -> bool
+        { return parent_declaration && parent_declaration->is_alias() && std::get<an_alias>(parent_declaration->type)->is_type_alias(); }
+    auto parent_is_namespace_alias() const -> bool
+        { return parent_declaration && parent_declaration->is_alias() && std::get<an_alias>(parent_declaration->type)->is_namespace_alias(); }
+    auto parent_is_object_alias   () const -> bool
+        { return parent_declaration && parent_declaration->is_alias() && std::get<an_alias>(parent_declaration->type)->is_object_alias(); }
+
+    auto is_inside_global_unnamed_function() const -> bool {
+        auto parent = parent_declaration;
+        //  Get outside all nested function expressions
+        while (parent && parent->is_function() && !parent->has_name()) {
+            parent = parent->parent_declaration;
+        }
+        return !parent;
+    }
+
     auto parent_is_polymorphic() const -> bool
         { return  parent_declaration && parent_declaration->is_polymorphic(); }
 
