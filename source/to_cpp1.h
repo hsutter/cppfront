@@ -1050,15 +1050,18 @@ class cppfront
     struct function_info
     {
         declaration_node const*                    decl                         = {};
+        function_type_node const*                  func                         = {};
         declaration_node::declared_value_set_funcs declared_value_set_functions = {};
         function_prolog                            prolog                       = {};
         std::vector<std::string>                   epilog                       = {};
 
         function_info(
-            declaration_node const* decl_,
+            declaration_node const*                    decl_,
+            function_type_node const*                  func_,
             declaration_node::declared_value_set_funcs declared_value_set_functions_
         )
             : decl{decl_}
+            , func{func_}
             , declared_value_set_functions{declared_value_set_functions_}
         { }
     };
@@ -1067,10 +1070,11 @@ class cppfront
         std::deque<function_info> list = { {} };
     public:
         auto push(
-            declaration_node const*               decl,
+            declaration_node const*                    decl,
+            function_type_node const*                  func,
             declaration_node::declared_value_set_funcs thats
         ) {
-            list.emplace_back(decl, thats);
+            list.emplace_back(decl, func, thats);
         }
 
         auto pop() {
@@ -2261,6 +2265,11 @@ public:
     auto emit(return_statement_node const& n)
         -> void
     {
+        assert (!current_functions.empty());
+        if (current_functions.back().func->has_postconditions()) {
+            printer.print_cpp2( "cpp2_finally_presuccess.run(); ", n.position() );
+        }
+
         assert(n.identifier);
         assert(*n.identifier == "return");
         printer.print_cpp2("return ", n.position());
@@ -4319,13 +4328,12 @@ public:
     {
         assert (n.kind);
 
-        //  For a postcondition, we'll wrap it in a final_action_success lambda
+        //  For a postcondition, we'll wrap it in a lambda and register it
         //
         if (*n.kind == "post") {
             auto lambda_intro = build_capture_lambda_intro_for(n.captures, n.position(), true);
             printer.print_cpp2(
-                "auto post_" + std::to_string(n.position().lineno) + "_" +
-                    std::to_string(n.position().colno) + " = cpp2::finally_success(" +
+                "cpp2_finally_presuccess.add(" +
                     lambda_intro + "{",
                 n.position()
             );
@@ -4374,7 +4382,7 @@ public:
         }
         printer.print_cpp2(");", n.position());
 
-        //  For a postcondition, close out the final_action_success lambda
+        //  For a postcondition, close out the lambda
         //
         if (*n.kind == "post") {
             printer.print_cpp2( "} );", n.position()
@@ -5747,6 +5755,7 @@ public:
 
             current_functions.push(
                 &n,
+                func.get(),
                 n.find_parent_declared_value_set_functions()
                 );
             auto guard = finally([&]{ current_functions.pop(); });
@@ -6063,6 +6072,10 @@ public:
                 }
                 else {
                     function_returns.emplace_back(nullptr);        // no return type at all
+                }
+
+                if (func->has_postconditions()) {
+                    current_functions.back().prolog.statements.push_back("cpp2::finally_presuccess cpp2_finally_presuccess;");
                 }
 
                 if (func->returns.index() == function_type_node::list)

@@ -2190,6 +2190,9 @@ struct function_type_node
 
     //  API
     //
+    auto has_postconditions() const
+        -> bool;
+
     auto is_function_with_this() const
         -> bool;
 
@@ -3479,6 +3482,16 @@ auto function_type_node::nth_parameter_type_name(int n) const
     return "";
 }
 
+
+auto function_type_node::has_postconditions() const
+    -> bool
+{
+    return
+        std::ranges::find_if(
+            contracts,
+            [](auto const& e){ return *e->kind == "post"; }
+        ) != contracts.end();
+}
 
 auto function_type_node::is_function_with_this() const
     -> bool

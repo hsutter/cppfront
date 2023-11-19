@@ -7,6 +7,8 @@
 
 main: () -> int = {
     insert_at( 0, 42 );
+    std::cout << make_string() + "plugh\n";
+    std::cout << make_strings().a + make_strings().b + "\n";
 }
 
 vec: std::vector<int> = ();
@@ -17,3 +19,20 @@ insert_at: (where: int, val: int)
 = {
     vec.push_back(val);
 }
+
+make_string: () -> (ret: std::string = "xyzzy")
+    post (ret.length() == ret.length()$ + 5)
+= {
+    ret += " and ";
+}
+
+make_strings: ()
+-> (
+    a: std::string = "xyzzy",
+    b: std::string = "plugh"
+    )
+    post (a.length() == b.length() == 5)
+= {
+    // 'return' is generated when omitted like this
+}
+

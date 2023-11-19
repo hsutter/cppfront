@@ -242,6 +242,7 @@
     #if defined(__cpp_lib_format) || (defined(_MSC_VER) && _MSC_VER >= 1929)
         #include <format>
     #endif
+    #include <functional>
     #include <iostream>
     #include <iterator>
     #include <limits>
@@ -1576,6 +1577,11 @@ constexpr auto as( X const& x ) -> decltype(auto)
 //  finally_success ensures something is run at the end of a scope
 //      if no exception is thrown
 //
+//  finally_presuccess ensures a group of add'd operations are run
+//      immediately before (not after) the return if no exception is
+//      thrown - right now this is used only for postconditions, so
+//      they can inspect named return values before they're moved from
+//
 //-----------------------------------------------------------------------
 //
 
@@ -1627,6 +1633,39 @@ public:
 
 private:
     F f;
+    bool invoke = true;
+};
+
+
+class finally_presuccess
+{
+public:
+    finally_presuccess() = default;
+
+    auto add(const auto& f) { fs.push_back(f); }
+
+    //  In compiled Cpp2 code, this function will be called
+    //  immediately before 'return' (both explicit and implicit)
+    auto run() {
+        if (invoke && ecount == std::uncaught_exceptions()) {
+            for (auto const& f : fs) {
+                f();
+            }
+        }
+        invoke = false;
+    }
+
+    ~finally_presuccess() noexcept {
+        run();
+    }
+
+    finally_presuccess(finally_presuccess const&) = delete;
+    void operator=    (finally_presuccess const&) = delete;
+    void operator=    (finally_presuccess &&)     = delete;
+
+private:
+    std::vector<std::function<void()>> fs;
+    int  ecount = std::uncaught_exceptions();
     bool invoke = true;
 };
 

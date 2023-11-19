@@ -21,10 +21,24 @@
 #line 8 "mixed-postexpression-with-capture.cpp2"
 [[nodiscard]] auto main() -> int;
 
-#line 12 "mixed-postexpression-with-capture.cpp2"
+#line 14 "mixed-postexpression-with-capture.cpp2"
 extern std::vector<int> vec;
 
 auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void;
+using make_string_ret = std::string;
+
+
+#line 23 "mixed-postexpression-with-capture.cpp2"
+[[nodiscard]] auto make_string() -> make_string_ret;
+struct make_strings_ret { std::string a; std::string b; };
+
+
+
+#line 29 "mixed-postexpression-with-capture.cpp2"
+[[nodiscard]] auto make_strings() -> make_strings_ret;
+#line 38 "mixed-postexpression-with-capture.cpp2"
+
+#line 1 "mixed-postexpression-with-capture.cpp2"
 
 //=== Cpp2 function definitions =================================================
 
@@ -33,17 +47,45 @@ auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void;
 #line 8 "mixed-postexpression-with-capture.cpp2"
 [[nodiscard]] auto main() -> int{
     insert_at(0, 42);
+    std::cout << make_string() + "plugh\n";
+    std::cout << make_strings().a + make_strings().b + "\n";
 }
 
 std::vector<int> vec {}; 
 
 auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void
 
-#line 17 "mixed-postexpression-with-capture.cpp2"
+#line 19 "mixed-postexpression-with-capture.cpp2"
 {
+    cpp2::finally_presuccess cpp2_finally_presuccess;
     cpp2::Default.expects(cpp2::cmp_less_eq(0,where) && cpp2::cmp_less_eq(where,CPP2_UFCS_0(ssize, vec)), "");
-    auto post_16_5 = cpp2::finally_success([&, _1 = CPP2_UFCS_0(size, vec)]{cpp2::Default.expects(CPP2_UFCS_0(size, vec) == _1 + 1, "");} );
-#line 18 "mixed-postexpression-with-capture.cpp2"
+    cpp2_finally_presuccess.add([&, _1 = CPP2_UFCS_0(size, vec)]{cpp2::Default.expects(CPP2_UFCS_0(size, vec) == _1 + 1, "");} );
+#line 20 "mixed-postexpression-with-capture.cpp2"
     CPP2_UFCS(push_back, vec, val);
+}
+
+[[nodiscard]] auto make_string() -> make_string_ret
+
+{
+    cpp2::finally_presuccess cpp2_finally_presuccess;
+    std::string ret {"xyzzy"};
+    cpp2_finally_presuccess.add([&, _1 = CPP2_UFCS_0(length, ret)]{cpp2::Default.expects(CPP2_UFCS_0(length, ret) == _1 + 5, "");} );
+#line 26 "mixed-postexpression-with-capture.cpp2"
+    ret += " and ";
+cpp2_finally_presuccess.run(); return std::move(ret); }
+
+[[nodiscard]] auto make_strings() -> make_strings_ret
+
+#line 35 "mixed-postexpression-with-capture.cpp2"
+{
+cpp2::finally_presuccess cpp2_finally_presuccess;
+std::string a {"xyzzy"};
+std::string b {"plugh"};
+cpp2_finally_presuccess.add([&]{cpp2::Default.expects([_0 = CPP2_UFCS_0(length, a), _1 = CPP2_UFCS_0(length, b), _2 = 5]{ return _0==_1 && _1==_2; }(), "");} );
+#line 30 "mixed-postexpression-with-capture.cpp2"
+cpp2_finally_presuccess.run(); return  { std::move(a), std::move(b) }; 
+
+#line 36 "mixed-postexpression-with-capture.cpp2"
+    // 'return' is generated when omitted like this
 }
 
