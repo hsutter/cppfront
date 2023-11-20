@@ -21,8 +21,8 @@
 #line 2 "pure2-raw-string-literal-and-interpolation.cpp2"
     auto i {42}; 
     std::map<std::string,int> m {}; 
-    cpp2::assert_in_bounds(m, "one") = 1;
-    cpp2::assert_in_bounds(m, "two") = 2;
+    CPP2_ASSERT_IN_BOUNDS(m, "one") = 1;
+    CPP2_ASSERT_IN_BOUNDS(m, "two") = 2;
 
     std::string str {"this is a string"}; 
 
@@ -38,7 +38,7 @@ lines)test"};
 that can last for multiple
 lines
 )test" + cpp2::to_string(i) + R"test( R"(this can be added too)"
-calculations like m["one"] + m["two"] = )test" + cpp2::to_string(cpp2::assert_in_bounds(m, "one") + cpp2::assert_in_bounds(m, "two")) + R"test( also works
+calculations like m["one"] + m["two"] = )test" + cpp2::to_string(CPP2_ASSERT_IN_BOUNDS(m, "one") + CPP2_ASSERT_IN_BOUNDS(m, "two")) + R"test( also works
 )test" + cpp2::to_string("at the beginning of the line") +  R"test(!!!)test"}; 
 
     std::string raw_str_inter_multi {R"(
@@ -50,6 +50,6 @@ calculations like m["one"] + m["two"] = )test" + cpp2::to_string(cpp2::assert_in
     std::cout << std::move(raw_str_multi) << std::endl;
     std::cout << std::move(raw_str_inter) << std::endl;
     std::cout << std::move(raw_str_inter_multi) << std::endl;
-    std::cout << (cpp2::to_string(cpp2::assert_in_bounds(m, "one")) + R"(.)" + cpp2::to_string(cpp2::assert_in_bounds(m, "two")) + R"(.)" + cpp2::to_string(cpp2::assert_in_bounds(std::move(m), "three")) + R"(.)" + cpp2::to_string(std::move(i))) << std::endl;
+    std::cout << (cpp2::to_string(CPP2_ASSERT_IN_BOUNDS(m, "one")) + R"(.)" + cpp2::to_string(CPP2_ASSERT_IN_BOUNDS(m, "two")) + R"(.)" + cpp2::to_string(CPP2_ASSERT_IN_BOUNDS(std::move(m), "three")) + R"(.)" + cpp2::to_string(std::move(i))) << std::endl;
 }
 

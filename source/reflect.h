@@ -753,7 +753,7 @@ namespace meta {
     [[nodiscard]] auto compiler_services::get_argument(cpp2::in<int> index) & -> std::string{
         metafunctions_used = true;
         if (([_0 = 0, _1 = index, _2 = CPP2_UFCS_0(ssize, metafunction_args)]{ return cpp2::cmp_less_eq(_0,_1) && cpp2::cmp_less(_1,_2); }())) {
-            return cpp2::assert_in_bounds(metafunction_args, index); 
+            return CPP2_ASSERT_IN_BOUNDS(metafunction_args, index); 
         }
         return ""; 
     }
@@ -1395,7 +1395,7 @@ std::string value = "-1";
 
         nextval(value, init);
 
-        auto v {std::strtoll(&cpp2::assert_in_bounds(value, 0), nullptr, 10)}; // for non-numeric values we'll just get 0 which is okay for now
+        auto v {std::strtoll(&CPP2_ASSERT_IN_BOUNDS(value, 0), nullptr, 10)}; // for non-numeric values we'll just get 0 which is okay for now
         if (cpp2::cmp_less(v,min_value)) {
             min_value = v;
         }
@@ -1535,7 +1535,7 @@ auto cpp2_enum(meta::type_declaration& t) -> void
             if (!(CPP2_UFCS_0(empty, specified_value))) {
                 value = specified_value;
             }else {
-                auto v {std::strtoll(&cpp2::assert_in_bounds(value, 0), nullptr, 10)}; 
+                auto v {std::strtoll(&CPP2_ASSERT_IN_BOUNDS(value, 0), nullptr, 10)}; 
                 value = cpp2::as_<std::string>((std::move(v) + 1));
             }
         }, 
@@ -1552,7 +1552,7 @@ auto flag_enum(meta::type_declaration& t) -> void
             if (!(CPP2_UFCS_0(empty, specified_value))) {
                 value = specified_value;
             }else {
-                auto v {std::strtoll(&cpp2::assert_in_bounds(value, 0), nullptr, 10)}; 
+                auto v {std::strtoll(&CPP2_ASSERT_IN_BOUNDS(value, 0), nullptr, 10)}; 
                 if (cpp2::cmp_less(v,1)) {
                     value = "1";
                 }
@@ -1810,7 +1810,7 @@ auto print(cpp2::in<meta::type_declaration> t) -> void
             && !(CPP2_UFCS_0(arguments_were_used, rtype)))) 
 
         {
-            error(name + " did not use its template arguments - did you mean to write '" + name + " <" + cpp2::assert_in_bounds(args, 0) + "> type' (with the spaces)?");
+            error(name + " did not use its template arguments - did you mean to write '" + name + " <" + CPP2_ASSERT_IN_BOUNDS(args, 0) + "> type' (with the spaces)?");
             return false; 
         }
     }

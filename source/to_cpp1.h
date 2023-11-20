@@ -3178,7 +3178,7 @@ public:
                     && std::ssize(i->expr_list->expressions) == 1
                     )
                 {
-                    prefix.emplace_back( "cpp2::assert_in_bounds(", i->op->position() );
+                    prefix.emplace_back( "CPP2_ASSERT_IN_BOUNDS(", i->op->position() );
                     suffix.emplace_back( ", ", i->op->position() );
                 }
                 else {
@@ -5342,7 +5342,7 @@ public:
 
                 auto func_name = n.name()->to_string();
 
-                //  If it's a single named value, emit it as an aonymous return value
+                //  If it's a single named value, emit it as an anonymous return value
                 if (std::ssize(r->parameters) == 1)
                 {
                     printer.print_extra(

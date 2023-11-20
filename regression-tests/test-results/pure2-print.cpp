@@ -102,7 +102,7 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
             ret += strlen(s) - 10 + CPP2_UFCS_0(strlen, std::move(s)) * (16 / (3 & 2)) % 3;
 
             map<int const,string> m {}; 
-            cpp2::assert_in_bounds(m, 0) = cpp2::as_<string>("har");
+            CPP2_ASSERT_IN_BOUNDS(m, 0) = cpp2::as_<string>("har");
             ret -= CPP2_UFCS_0(length, h("x", m));
             static_cast<void>(std::move(m));
 
@@ -133,7 +133,7 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
 
             cpp2::Default.expects(true, "");
 
-            return [_0 = (s + cpp2::assert_in_bounds(m, 0))]() -> std::string { return _0;  }(); 
+            return [_0 = (s + CPP2_ASSERT_IN_BOUNDS(m, 0))]() -> std::string { return _0;  }(); 
         }
 
         template<typename T> [[nodiscard]] auto outer::mytype::values([[maybe_unused]] T const& unnamed_param_2) const& -> values_ret{
