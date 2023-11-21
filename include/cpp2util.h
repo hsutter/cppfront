@@ -785,6 +785,12 @@ public:
     #endif
 #endif
 
+// Ideally, the expression `CPP2_UFCS_IS_NOTHROW` expands to
+// is in the _noexcept-specifier_ of the UFCS lambda.
+// To workaround [GCC bug 101043](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101043),
+// we instead make it a template parameter of the UFCS lambda.
+// But using a template parameter, Clang also ICEs on an application.
+// So we use these `NOTHROW` macros to fall back to the ideal for when not using GCC.
 #define CPP2_UFCS_IS_NOTHROW(TEMPKW,...) \
    requires { requires requires { std::declval<Obj>().TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
               requires noexcept(std::declval<Obj>().TEMPKW __VA_ARGS__(std::declval<Params>()...)); } \
@@ -793,8 +799,6 @@ public:
 #define CPP2_UFCS_IS_NOTHROW_PARAM(TEMPKW,...) /*empty*/
 #define CPP2_UFCS_IS_NOTHROW_ARG(TEMPKW,...) CPP2_UFCS_IS_NOTHROW(TEMPKW,__VA_ARGS__)
 #if defined(__GNUC__) && !defined(__clang__)
-    // Workaround <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101043>.
-    // This isn't the default because Clang also ICEs on an application.
     #undef CPP2_UFCS_IS_NOTHROW_PARAM
     #undef CPP2_UFCS_IS_NOTHROW_ARG
     #define CPP2_UFCS_IS_NOTHROW_PARAM(TEMPKW,...) , bool IsNothrow = CPP2_UFCS_IS_NOTHROW(TEMPKW,__VA_ARGS__)
