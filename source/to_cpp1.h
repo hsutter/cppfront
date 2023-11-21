@@ -1053,12 +1053,15 @@ class cppfront
         }
     };
 
+    using unqualified_name_lookup_res =
+        std::optional<std::variant<declaration_node const*, cpp1_using_declaration>>;
+
     std::vector<declaration_node const*> current_declarations = { {} };
     // Like `current_declarations`, but for syntatic name lookup.
     // So it also includes the following entities that are in scope.
     // - Parameters.
     // - Cpp1 using declarations.
-    std::vector<std::variant<declaration_node const*, cpp1_using_declaration>> seen_declarations = { {} };
+    std::vector<unqualified_name_lookup_res::value_type> seen_declarations = { {} };
 
     //  Maintain a stack of the functions we're currently processing, which can
     //  be up to MaxNestedFunctions in progress (if we run out, bump the Max).
@@ -2792,15 +2795,9 @@ public:
     }
 
 
-    auto ufcs_possible(id_expression_node const& n)
-        -> bool
+    auto unqualified_name_lookup(unqualified_id_node const& id)
+        -> unqualified_name_lookup_res
     {
-        auto id = get_if<id_expression_node::unqualified>(&n.id);
-        if (!id)
-        {
-            return true;
-        }
-
         for (
             auto first = seen_declarations.rbegin(), last = seen_declarations.rend() - 1;
             first != last;
@@ -2811,43 +2808,77 @@ public:
                 auto decl = get_if<declaration_node const*>(&*first);
                 decl
                 && *decl
-                && (*decl)->has_name(*(*id)->identifier)
+                && (*decl)->has_name(*id.identifier)
                 )
             {
-                if (
-                    !(*decl)->is_object()
-                    && !(*decl)->is_object_alias()
-                    )
-                {
-                    return true;
-                }
-
-                // Disable UFCS if name lookup would hard-error (#550)
-                // (when it finds that the function identifier being called
-                // is a variable with placeholder type and we are in its initializer.
-                if ((*decl)->is_object()) {
-                    auto type = &**get_if<declaration_node::an_object>(&(*decl)->type);
-                    return !type->is_wildcard()
-                           || !contains(current_declarations, *decl);
-                }
-                auto const& type = (**get_if<declaration_node::an_alias>(&(*decl)->type)).type_id;
-                return (type
-                        && !type->is_wildcard()
-                        )
-                       || !contains(current_declarations, *decl);
+                return *decl;
             }
             else if (
                 auto using_ = get_if<cpp1_using_declaration>(&*first);
                 using_
                 && using_->identifier
-                && *using_->identifier == *(*id)->identifier
+                && *using_->identifier == *id.identifier
+                )
+            {
+                return *using_;
+            }
+        }
+
+        return {};
+    }
+
+
+    // Disable UFCS if name lookup would hard-error (#550)
+    // (when it finds that the function identifier being called
+    // is a variable with placeholder type and we are in its initializer.
+    auto ufcs_possible(id_expression_node const& n)
+        -> bool
+    {
+        if (!n.is_unqualified())
+        {
+            return true;
+        }
+
+        auto const& id = *get<id_expression_node::unqualified>(n.id);
+        auto lookup = unqualified_name_lookup(id);
+
+        if (!lookup)
+        {
+            return true;
+        }
+
+        if (
+            auto decl = get_if<declaration_node const*>(&*lookup);
+            decl
+            && *decl
+            && (*decl)->has_name(*id.identifier)
+            )
+        {
+            if (
+                !(*decl)->is_object()
+                && !(*decl)->is_object_alias()
                 )
             {
                 return true;
             }
-        }
 
-        return true;
+            if ((*decl)->is_object()) {
+                auto type = &**get_if<declaration_node::an_object>(&(*decl)->type);
+                return !type->is_wildcard()
+                       || !contains(current_declarations, *decl);
+            }
+            auto const& type = (**get_if<declaration_node::an_alias>(&(*decl)->type)).type_id;
+            return (
+                    type
+                    && !type->is_wildcard()
+                    )
+                   || !contains(current_declarations, *decl);
+        }
+        // else
+
+        auto using_ = get<cpp1_using_declaration>(*lookup);
+        return using_.identifier
+               && *using_.identifier == *id.identifier;
     }
 
     //-----------------------------------------------------------------------
