@@ -57,7 +57,7 @@ auto test(auto const& x) -> void{
     test(std::move(z));
 
     for ( auto const& arg : args ) 
-        std::cout << CPP2_UFCS_0(filename, std::filesystem::path(arg)) << "\n";
+        std::cout << CPP2_UFCS(filename)(std::filesystem::path(arg)) << "\n";
 
     std::cout << cpp2::to_string(mytype<int>::myvalue<int>) + "\n";
 }

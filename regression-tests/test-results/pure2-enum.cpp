@@ -234,7 +234,7 @@ inline CPP2_CONSTEXPR file_attributes file_attributes::none = 0;
 #line 28 "pure2-enum.cpp2"
 auto main() -> int{
     auto j {janus::past}; 
-    CPP2_UFCS_0(flip, j);
+    CPP2_UFCS(flip)(j);
     static_cast<void>(std::move(j));
 
     // x : skat_game = 9;               // error, can't construct skat_game from integer
@@ -246,8 +246,8 @@ auto main() -> int{
     // if x == 9 { }                    // error, can't compare skat_game and integer
     // if x == rgb::red { }             // error, can't compare skat_game and rgb color
 
-    std::cout << "x.to_string() is " + cpp2::to_string(CPP2_UFCS_0(to_string, x)) + "\n";
-    std::cout << "x2.to_string() is " + cpp2::to_string(CPP2_UFCS_0(to_string, std::move(x2))) + "\n";
+    std::cout << "x.to_string() is " + cpp2::to_string(CPP2_UFCS(to_string)(x)) + "\n";
+    std::cout << "x2.to_string() is " + cpp2::to_string(CPP2_UFCS(to_string)(std::move(x2))) + "\n";
 
     std::cout << "with if else: ";
     if (x == skat_game::diamonds) {     // ok, can compare two skat_games
@@ -279,41 +279,41 @@ auto main() -> int{
 
     x = skat_game::diamonds;        // ok, can assign one skat_game from another
 
-    std::cout << "file_attributes::cached.get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, file_attributes::cached)) + "\n";
-    std::cout << "file_attributes::current.get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, file_attributes::current)) + "\n";
-    std::cout << "file_attributes::obsolete.get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, file_attributes::obsolete)) + "\n";
-    std::cout << "file_attributes::cached_and_current.get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, file_attributes::cached_and_current)) + "\n";
+    std::cout << "file_attributes::cached.get_raw_value() is " + cpp2::to_string(CPP2_UFCS(get_raw_value)(file_attributes::cached)) + "\n";
+    std::cout << "file_attributes::current.get_raw_value() is " + cpp2::to_string(CPP2_UFCS(get_raw_value)(file_attributes::current)) + "\n";
+    std::cout << "file_attributes::obsolete.get_raw_value() is " + cpp2::to_string(CPP2_UFCS(get_raw_value)(file_attributes::obsolete)) + "\n";
+    std::cout << "file_attributes::cached_and_current.get_raw_value() is " + cpp2::to_string(CPP2_UFCS(get_raw_value)(file_attributes::cached_and_current)) + "\n";
 
     file_attributes f {file_attributes::cached_and_current}; 
     f &= file_attributes::cached | file_attributes::obsolete;
-    std::cout << "f. get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f)) + "\n";
+    std::cout << "f. get_raw_value() is " + cpp2::to_string(CPP2_UFCS(get_raw_value)(f)) + "\n";
 
     auto f2 {file_attributes::cached}; 
-    std::cout << "f2.get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f2)) + "\n";
+    std::cout << "f2.get_raw_value() is " + cpp2::to_string(CPP2_UFCS(get_raw_value)(f2)) + "\n";
 
-    std::cout << "f  is " << CPP2_UFCS_0(to_string, f) << "\n";
-    std::cout << "f2 is " << CPP2_UFCS_0(to_string, f2) << "\n";
+    std::cout << "f  is " << CPP2_UFCS(to_string)(f) << "\n";
+    std::cout << "f2 is " << CPP2_UFCS(to_string)(f2) << "\n";
 
-    CPP2_UFCS(clear, f2, f2);
-    std::cout << "f2 is " << CPP2_UFCS_0(to_string, f2) << "\n";
-    CPP2_UFCS(set, f2, file_attributes::cached);
-    std::cout << "f2 is " << CPP2_UFCS_0(to_string, f2) << "\n";
+    CPP2_UFCS(clear)(f2, f2);
+    std::cout << "f2 is " << CPP2_UFCS(to_string)(f2) << "\n";
+    CPP2_UFCS(set)(f2, file_attributes::cached);
+    std::cout << "f2 is " << CPP2_UFCS(to_string)(f2) << "\n";
 
-    std::cout << "f. get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f)) + "\n";
-    std::cout << "f2.get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f2)) + "\n";
+    std::cout << "f. get_raw_value() is " + cpp2::to_string(CPP2_UFCS(get_raw_value)(f)) + "\n";
+    std::cout << "f2.get_raw_value() is " + cpp2::to_string(CPP2_UFCS(get_raw_value)(f2)) + "\n";
 
     std::cout << "f  is (f2) is " + cpp2::to_string(cpp2::is(f, (f2))) + "\n";
     std::cout << "f2 is (f ) is " + cpp2::to_string(cpp2::is(f2, (f))) + "\n\n";
 
-    CPP2_UFCS(clear, f, f2);
-    CPP2_UFCS(set, f, file_attributes::current | f2);
+    CPP2_UFCS(clear)(f, f2);
+    CPP2_UFCS(set)(f, file_attributes::current | f2);
     f  |= file_attributes::obsolete;
     f2 |= file_attributes::current;
 
-    std::cout << "f  is " << CPP2_UFCS_0(to_string, f) << "\n";
-    std::cout << "f2 is " << CPP2_UFCS_0(to_string, f2) << "\n";
-    std::cout << "f. get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f)) + "\n";
-    std::cout << "f2.get_raw_value() is " + cpp2::to_string(CPP2_UFCS_0(get_raw_value, f2)) + "\n";
+    std::cout << "f  is " << CPP2_UFCS(to_string)(f) << "\n";
+    std::cout << "f2 is " << CPP2_UFCS(to_string)(f2) << "\n";
+    std::cout << "f. get_raw_value() is " + cpp2::to_string(CPP2_UFCS(get_raw_value)(f)) + "\n";
+    std::cout << "f2.get_raw_value() is " + cpp2::to_string(CPP2_UFCS(get_raw_value)(f2)) + "\n";
     std::cout << "f  == f2   is " + cpp2::to_string(f  == f2  ) + "\n";
     std::cout << "f  is (f2) is " + cpp2::to_string(cpp2::is(f, (f2))) + "\n";
     std::cout << "f2 is (f ) is " + cpp2::to_string(cpp2::is(f2, (f))) + "\n";

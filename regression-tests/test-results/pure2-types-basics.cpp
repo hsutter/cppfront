@@ -177,19 +177,19 @@ namespace N {
 
 auto main() -> int{
     N::myclass x {1}; 
-    CPP2_UFCS(f, x, 53);
+    CPP2_UFCS(f)(x, 53);
     N::myclass::nested::g();
-    std::cout << "f1: " + cpp2::to_string(CPP2_UFCS(f1, x, 1, 1)) + "\n";
-    std::cout << "f2: " + cpp2::to_string(CPP2_UFCS(f2, x, 2, 2)) + "\n";
-    std::cout << "f3: " + cpp2::to_string(CPP2_UFCS_TEMPLATE_0(f3, (<3,3>), x)) + "\n";
-    std::cout << "f4: " + cpp2::to_string(CPP2_UFCS_TEMPLATE_0(f4, (<4,4>), x)) + "\n";
+    std::cout << "f1: " + cpp2::to_string(CPP2_UFCS(f1)(x, 1, 1)) + "\n";
+    std::cout << "f2: " + cpp2::to_string(CPP2_UFCS(f2)(x, 2, 2)) + "\n";
+    std::cout << "f3: " + cpp2::to_string(CPP2_UFCS_TEMPLATE(f3<3,3>)(x)) + "\n";
+    std::cout << "f4: " + cpp2::to_string(CPP2_UFCS_TEMPLATE(f4<4,4>)(x)) + "\n";
     N::myclass auto_74_5 {"abracadabra"}; 
     N::myclass auto_75_5 {}; 
     N::myclass auto_76_5 {1, "hair"}; 
 
     // Invoke the single-param operator=s as actual assignments
     std::cout << "x's state before assignments: ";
-    CPP2_UFCS_0(print, x);
+    CPP2_UFCS(print)(x);
     x = 84;
     x = "syzygy";
     x = 84;

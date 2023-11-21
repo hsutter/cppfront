@@ -41,6 +41,6 @@ struct X {
     std::cout << substr<4,8>(test_string) << "\n";
 
     X x {std::move(test_string)}; 
-    std::cout << CPP2_UFCS_TEMPLATE_0(substr, (<4,8>), std::move(x)) << "\n";
+    std::cout << CPP2_UFCS_TEMPLATE(substr<4,8>)(std::move(x)) << "\n";
 }
 

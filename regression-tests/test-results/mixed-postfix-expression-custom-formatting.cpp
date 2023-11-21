@@ -29,12 +29,12 @@ auto call([[maybe_unused]] auto const& unnamed_param_1, [[maybe_unused]] auto co
 
 [[nodiscard]] auto test(auto const& a) -> std::string{
     return call(a, 
-        ++*cpp2::assert_not_null(CPP2_UFCS(b, a, a.c)), "hello", /* polite
+        ++*cpp2::assert_not_null(CPP2_UFCS(b)(a, a.c)), "hello", /* polite
                           greeting
                           goes here */" there", 
-        CPP2_UFCS(e, a.d, ++CPP2_UFCS_0(g, *cpp2::assert_not_null(a.f)), // because f is foobar
-              CPP2_UFCS_0(i, a.h), 
-              CPP2_UFCS(j, a, a.k, a.l))
+        CPP2_UFCS(e)(a.d, ++CPP2_UFCS(g)(*cpp2::assert_not_null(a.f)), // because f is foobar
+              CPP2_UFCS(i)(a.h), 
+              CPP2_UFCS(j)(a, a.k, a.l))
         ); 
 }
 

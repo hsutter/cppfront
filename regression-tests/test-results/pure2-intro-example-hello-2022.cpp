@@ -36,7 +36,7 @@ auto print_it(auto const& x, auto const& len) -> void;
 
 [[nodiscard]] auto decorate(auto& thing) -> int{
     thing = "[" + thing + "]";
-    return CPP2_UFCS_0(ssize, thing); 
+    return CPP2_UFCS(ssize)(thing); 
 }
 
 auto print_it(auto const& x, auto const& len) -> void { 

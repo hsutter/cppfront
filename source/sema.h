@@ -29,7 +29,7 @@ auto parser::apply_type_metafunctions( declaration_node& n )
     assert(n.is_type());
 
     //  Get the reflection state ready to pass to the function
-    auto cs = meta::compiler_services{ &errors, generated_tokens };
+    auto cs = meta::compiler_services{ &errors, generated_tokens, &metafunction_declarations };
     auto rtype = meta::type_declaration{ &n, cs };
 
     return apply_metafunctions(
