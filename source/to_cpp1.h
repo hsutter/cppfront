@@ -3991,7 +3991,7 @@ public:
             && n.parameters
             ;
 
-        auto stack = stack_size_if(seen_declarations, emit_parameters);
+        auto guard = stack_size_if(seen_declarations, emit_parameters);
         if (emit_parameters) {
             printer.print_extra( "\n");
             printer.print_extra( "{");
@@ -4405,7 +4405,7 @@ public:
             && n.declaration->initializer
             )
         {
-            auto stack = stack_element(current_declarations, &*n.declaration);
+            auto guard = stack_element(current_declarations, &*n.declaration);
             printer.print_cpp2( " = ", n.declaration->initializer->position() );
             emit(*n.declaration->initializer);
         }
@@ -5289,10 +5289,10 @@ public:
             printer.print_extra("\n");
         }
 
-        auto stack0 = stack_value(having_signature_emitted, &n);
-        auto stack1 = stack_element(current_declarations, &n);
+        auto guard0 = stack_value(having_signature_emitted, &n);
+        auto guard1 = stack_element(current_declarations, &n);
         seen_declarations.push_back(&n);
-        auto stack2 = stack_size_if(seen_declarations, n.is_function());
+        auto guard2 = stack_size_if(seen_declarations, n.is_function());
 
         //  Handle aliases
 
@@ -5926,9 +5926,9 @@ public:
                 func.get(),
                 n.find_parent_declared_value_set_functions()
                 );
-            auto guard = finally([&]{ current_functions.pop(); });
+            auto guard0 = finally([&]{ current_functions.pop(); });
 
-            auto stack = stack_size(seen_declarations);
+            auto guard1 = stack_size(seen_declarations);
 
             //  If this is at expression scope, we can't emit "[[nodiscard]] auto name"
             //  so print the provided intro instead, which will be a Cpp1 lambda-introducer
