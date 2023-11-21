@@ -20,11 +20,11 @@ class t;
 //  Standalone Cpp1 repro: https://godbolt.org/z/dznnYTvc6
 
 #line 5 "pure2-bugfix-for-non-local-function-expression.cpp2"
-template<typename T> concept v = []() -> bool { return true;  }(); 
+template<typename T> concept v = []() mutable -> bool { return true;  }(); 
 
-using u = std::type_identity_t<decltype([]() -> void{})>;
+using u = std::type_identity_t<decltype([]() mutable -> void{})>;
 
-class t: public std::type_identity_t<decltype([]() -> void{})> {
+class t: public std::type_identity_t<decltype([]() mutable -> void{})> {
 
 };
 

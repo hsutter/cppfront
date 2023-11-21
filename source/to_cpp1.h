@@ -4421,6 +4421,12 @@ public:
             emit(*n.parameters);
         }
 
+        //  For an anonymous function, make the emitted lambda 'mutable'
+        if (!n.my_decl->has_name())
+        {
+            printer.print_cpp2( " mutable", n.position() );
+        }
+
         //  For now, adding implicit noexcept only for move/swap/dtor functions
         if (
             n.is_move()

@@ -1079,7 +1079,7 @@ auto is( X const& x ) -> bool {
 
 //  Values
 //
-inline constexpr auto is( auto const& x, auto const& value ) -> bool
+inline constexpr auto is( auto const& x, auto&& value ) -> bool
 {
     //  Value with customized operator_is case
     if constexpr (requires{ x.op_is(value); }) {
@@ -1313,7 +1313,7 @@ auto is( std::variant<Ts...> const& x );
 //  is Value
 //
 template<typename... Ts>
-constexpr auto is( std::variant<Ts...> const& x, auto const& value ) -> bool
+constexpr auto is( std::variant<Ts...> const& x, auto&& value ) -> bool
 {
     //  Predicate case
     if constexpr      (requires{ bool{ value(operator_as< 0>(x)) }; }) { if (x.index() ==  0) return value(operator_as< 0>(x)); }
@@ -1494,7 +1494,7 @@ constexpr auto is( X const& x ) -> bool
 
 //  is Value
 //
-inline constexpr auto is( std::any const& x, auto const& value ) -> bool
+inline constexpr auto is( std::any const& x, auto&& value ) -> bool
 {
     //  Predicate case
     if constexpr (requires{ bool{ value(x) }; }) {
@@ -1542,7 +1542,7 @@ constexpr auto is( std::optional<U> const& x ) -> bool
 //  is Value
 //
 template<typename T>
-constexpr auto is( std::optional<T> const& x, auto const& value ) -> bool
+constexpr auto is( std::optional<T> const& x, auto&& value ) -> bool
 {
     //  Predicate case
     if constexpr (requires{ bool{ value(x) }; }) {

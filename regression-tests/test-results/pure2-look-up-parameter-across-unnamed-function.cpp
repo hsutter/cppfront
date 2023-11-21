@@ -33,7 +33,7 @@ using g_ret = int;
 [[nodiscard]] auto f() -> f_ret{
     int ri {0};
 #line 3 "pure2-look-up-parameter-across-unnamed-function.cpp2"
-    auto pred {[](auto const& e) -> auto { return e == 1;  }}; 
+    auto pred {[](auto const& e) mutable -> auto { return e == 1;  }}; 
     ri = 42;
     std::move(pred)(ri);
     return std::move(ri); // "return;" is implicit"
@@ -43,7 +43,7 @@ using g_ret = int;
         cpp2::deferred_init<int> ri;
 #line 10 "pure2-look-up-parameter-across-unnamed-function.cpp2"
     ri.construct(0);
-    auto pred {[](auto const& e) -> auto { return e == 1;  }}; 
+    auto pred {[](auto const& e) mutable -> auto { return e == 1;  }}; 
     ri.value() = 42;
     std::move(pred)(ri.value());
     return std::move(ri.value()); 

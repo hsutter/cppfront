@@ -116,9 +116,9 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
             cpp2::Default.expects(CPP2_UFCS_0(empty, m) == false || false, "message");
             cpp2::Bounds.expects([_0 = 0, _1 = CPP2_UFCS_0(ssize, m), _2 = 100]{ return cpp2::cmp_less(_0,_1) && cpp2::cmp_less(_1,_2); }() && true != false, "");
 #line 35 "pure2-print.cpp2"
-            auto a {[]() -> void{}}; 
-            auto b {[]() -> void{}}; 
-            auto c {[]() -> void{}}; 
+            auto a {[]() mutable -> void{}}; 
+            auto b {[]() mutable -> void{}}; 
+            auto c {[]() mutable -> void{}}; 
 
             for( ; CPP2_UFCS_0(empty, s); a() ) {break; }
 
@@ -133,7 +133,7 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
 
             cpp2::Default.expects(true, "");
 
-            return [_0 = (s + CPP2_ASSERT_IN_BOUNDS(m, 0))]() -> std::string { return _0;  }(); 
+            return [_0 = (s + CPP2_ASSERT_IN_BOUNDS(m, 0))]() mutable -> std::string { return _0;  }(); 
         }
 
         template<typename T> [[nodiscard]] auto outer::mytype::values([[maybe_unused]] T const& unnamed_param_2) const& -> values_ret{

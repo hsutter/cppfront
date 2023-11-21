@@ -769,7 +769,7 @@ namespace meta {
         CPP2_UFCS(push_back, generated_lines, std::vector<source_line>());
         auto lines {&CPP2_UFCS_0(back, generated_lines)}; 
 
-        auto add_line {[&, _1 = lines](cpp2::in<std::string_view> s) -> void{
+        auto add_line {[&, _1 = lines](cpp2::in<std::string_view> s) mutable -> void{
             static_cast<void>(CPP2_UFCS(emplace_back, (*cpp2::assert_not_null(_1)), s, source_line::category::cpp2));
         }}; 
 {
@@ -1531,7 +1531,7 @@ auto cpp2_enum(meta::type_declaration& t) -> void
 {
     //  Let basic_enum do its thing, with an incrementing value generator
     CPP2_UFCS(basic_enum, t, 
-        [](std::string& value, cpp2::in<std::string> specified_value) -> void{
+        [](std::string& value, cpp2::in<std::string> specified_value) mutable -> void{
             if (!(CPP2_UFCS_0(empty, specified_value))) {
                 value = specified_value;
             }else {
@@ -1548,7 +1548,7 @@ auto flag_enum(meta::type_declaration& t) -> void
 {
     //  Let basic_enum do its thing, with a power-of-two value generator
     CPP2_UFCS(basic_enum, t, 
-        [](std::string& value, cpp2::in<std::string> specified_value) -> void{
+        [](std::string& value, cpp2::in<std::string> specified_value) mutable -> void{
             if (!(CPP2_UFCS_0(empty, specified_value))) {
                 value = specified_value;
             }else {

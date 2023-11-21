@@ -32,9 +32,9 @@
 
     auto y {"\n"}; 
     std::ranges::for_each
-        (vec, [_0 = std::move(y)](auto const& x) -> void { std::cout << x << _0;  });
+        (vec, [_0 = std::move(y)](auto const& x) mutable -> void { std::cout << x << _0;  });
 
-    auto callback {[](auto& x) -> void { x += "-ish";  }}; 
+    auto callback {[](auto& x) mutable -> void { x += "-ish";  }}; 
     std::ranges::for_each(vec, std::move(callback));
 
     for ( auto const& str : vec ) 
