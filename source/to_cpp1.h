@@ -3927,6 +3927,8 @@ public:
     }
 
 
+    // Consider moving these `stack` functions to `common.h` to enable more general use.
+
     template<typename T>
     auto stack_value(
         T& var,
