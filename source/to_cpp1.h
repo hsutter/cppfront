@@ -2839,43 +2839,42 @@ public:
         auto const& id = *get<id_expression_node::unqualified>(n.id);
         auto lookup = unqualified_name_lookup(id);
 
-        if (!lookup)
+        if (
+            !lookup
+            || get_if<cpp1_using_declaration>(&*lookup)
+            )
         {
             return false;
         }
 
+        auto decl = get<declaration_node const*>(*lookup);
         if (
-            auto decl = get_if<declaration_node const*>(&*lookup);
             decl
-            && *decl
-            && (*decl)->has_name(*id.identifier)
+            && decl->has_name(*id.identifier)
             )
         {
             if (
-                !(*decl)->is_object()
-                && !(*decl)->is_object_alias()
+                !decl->is_object()
+                && !decl->is_object_alias()
                 )
             {
                 return false;
             }
 
-            if ((*decl)->is_object()) {
-                auto type = &**get_if<declaration_node::an_object>(&(*decl)->type);
+            if (decl->is_object()) {
+                auto type = &**get_if<declaration_node::an_object>(&decl->type);
                 return type->is_wildcard()
-                       && contains(current_declarations, *decl);
+                       && contains(current_declarations, decl);
             }
-            auto const& type = (**get_if<declaration_node::an_alias>(&(*decl)->type)).type_id;
+            auto const& type = (**get_if<declaration_node::an_alias>(&decl->type)).type_id;
             return (
                     !type
                     || type->is_wildcard()
                     )
-                   && contains(current_declarations, *decl);
+                   && contains(current_declarations, decl);
         }
-        // else
 
-        auto using_ = get<cpp1_using_declaration>(*lookup);
-        return !using_.identifier
-               || *using_.identifier != *id.identifier;
+        return false;
     }
 
     //-----------------------------------------------------------------------
