@@ -2828,10 +2828,7 @@ public:
     }
 
 
-    // Disable UFCS if name lookup would hard-error (#550)
-    // (when it finds that the function identifier being called
-    // is a variable with placeholder type and we are in its initializer.
-    auto ufcs_possible(id_expression_node const& n)
+    auto lookup_finds_variable_with_placeholder_type_under_initialization(id_expression_node const& n)
         -> bool
     {
         if (!n.is_unqualified())
@@ -3136,7 +3133,11 @@ public:
             else if(
                 i->op->type() == lexeme::Dot
                 && args
-                && ufcs_possible(*i->id_expr)
+                // Disable UFCS if name lookup would hard-error (#550).
+                // That happens when it finds that the function identifier being called
+                // is a variable with a placeholder type and we are in its initializer.
+                // So lower it to a member call instead, the only possible valid meaning.
+                && lookup_finds_variable_with_placeholder_type_under_initialization(*i->id_expr)
                 )
             {
                 auto funcname = print_to_string(*i->id_expr);
