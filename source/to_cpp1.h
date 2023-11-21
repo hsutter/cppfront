@@ -2833,7 +2833,7 @@ public:
     {
         if (!n.is_unqualified())
         {
-            return true;
+            return false;
         }
 
         auto const& id = *get<id_expression_node::unqualified>(n.id);
@@ -2841,7 +2841,7 @@ public:
 
         if (!lookup)
         {
-            return true;
+            return false;
         }
 
         if (
@@ -2856,26 +2856,26 @@ public:
                 && !(*decl)->is_object_alias()
                 )
             {
-                return true;
+                return false;
             }
 
             if ((*decl)->is_object()) {
                 auto type = &**get_if<declaration_node::an_object>(&(*decl)->type);
-                return !type->is_wildcard()
-                       || !contains(current_declarations, *decl);
+                return type->is_wildcard()
+                       && contains(current_declarations, *decl);
             }
             auto const& type = (**get_if<declaration_node::an_alias>(&(*decl)->type)).type_id;
             return (
-                    type
-                    && !type->is_wildcard()
+                    !type
+                    || type->is_wildcard()
                     )
-                   || !contains(current_declarations, *decl);
+                   && contains(current_declarations, *decl);
         }
         // else
 
         auto using_ = get<cpp1_using_declaration>(*lookup);
-        return using_.identifier
-               && *using_.identifier == *id.identifier;
+        return !using_.identifier
+               || *using_.identifier != *id.identifier;
     }
 
     //-----------------------------------------------------------------------
@@ -3137,7 +3137,7 @@ public:
                 // That happens when it finds that the function identifier being called
                 // is a variable with a placeholder type and we are in its initializer.
                 // So lower it to a member call instead, the only possible valid meaning.
-                && lookup_finds_variable_with_placeholder_type_under_initialization(*i->id_expr)
+                && !lookup_finds_variable_with_placeholder_type_under_initialization(*i->id_expr)
                 )
             {
                 auto funcname = print_to_string(*i->id_expr);
