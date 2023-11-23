@@ -3169,6 +3169,10 @@ public:
                          )
                         && current_declarations.back()->parent_is_namespace()
                         )
+                    || (
+                        current_declarations.back()->is_alias()
+                        && current_declarations.back()->parent_is_type()
+                        )
                     )
                 {
                     ufcs_string += "_NONLOCAL";

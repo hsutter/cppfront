@@ -11,6 +11,10 @@
 namespace ns {
 
 #line 39 "mixed-bugfix-for-ufcs-non-local.cpp2"
+class u;
+  
+
+#line 43 "mixed-bugfix-for-ufcs-non-local.cpp2"
 }
 
 
@@ -56,6 +60,10 @@ using c = t<CPP2_UFCS_NONLOCAL(f)(o)>;// Fails on Clang 12 (lambda in unevaluate
 
 auto inline constexpr d = t<CPP2_UFCS_NONLOCAL(f)(o)>();// Fails on Clang 12 (lambda in unevaluated context).
 
+class u {
+  public: static const bool b;
+};
+
 } // namespace ns
 
 auto main() -> int;
@@ -81,7 +89,10 @@ auto g() -> void{
 #line 27 "mixed-bugfix-for-ufcs-non-local.cpp2"
 [[nodiscard]] auto h() -> t<CPP2_UFCS_NONLOCAL(f)(o)> { return o;  }// Fails on Clang 12 (lambda in unevaluated context).
 
-#line 39 "mixed-bugfix-for-ufcs-non-local.cpp2"
+#line 40 "mixed-bugfix-for-ufcs-non-local.cpp2"
+  inline CPP2_CONSTEXPR bool u::b = CPP2_UFCS_NONLOCAL(f)(o);
+
+#line 43 "mixed-bugfix-for-ufcs-non-local.cpp2"
 }
 
 auto main() -> int{}

@@ -36,6 +36,10 @@ c: type == t<o.f()>; // Fails on Clang 12 (lambda in unevaluated context).
 
 d: _ == t<o.f()>(); // Fails on Clang 12 (lambda in unevaluated context).
 
+u: @struct type = {
+  b: bool == o.f();
+}
+
 } // namespace ns
 
 main: () = { }
