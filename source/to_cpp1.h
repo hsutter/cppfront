@@ -3157,8 +3157,9 @@ public:
                         //  And split the unqualified id in the function name as two macro arguments
                         auto& id = *get<id_expression_node::qualified>(i->id_expr->id);
                         funcname =
-                            print_to_string(id, false)
-                            + "::,"
+                            "("
+                            + print_to_string(id, false)
+                            + "::),"
                             + print_to_string(*cpp2::assert_not_null(id.ids.back().id), false, true, true);
                     }
                     ufcs_string += "_TEMPLATE";

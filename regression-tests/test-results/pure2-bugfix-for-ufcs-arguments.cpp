@@ -12,6 +12,14 @@
 class t;
   
 
+#line 58 "pure2-bugfix-for-ufcs-arguments.cpp2"
+namespace ns {
+template<int T, int U> class t;
+  
+
+}
+
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-bugfix-for-ufcs-arguments.cpp2"
@@ -50,8 +58,16 @@ extern cpp2::i32 auto_35_1;
 
 auto main() -> int;
 
-#line 54 "pure2-bugfix-for-ufcs-arguments.cpp2"
-extern cpp2::i32 auto_54_1;
+#line 55 "pure2-bugfix-for-ufcs-arguments.cpp2"
+extern cpp2::i32 auto_55_1;
+extern cpp2::i32 auto_56_1;
+
+namespace ns {
+template<int T, int U> class t {
+  public: template<int V> [[nodiscard]] static auto f([[maybe_unused]] cpp2::in<int> unnamed_param_1) -> cpp2::i32;
+};
+} // namespace ns
+
 
 //=== Cpp2 function definitions =================================================
 
@@ -107,8 +123,16 @@ auto main() -> int{
   static_cast<void>(CPP2_UFCS_TEMPLATE(f<t,t>)(a<t,t>, 0, 0));
 
   static_cast<void>([](auto const& a, auto const& f) -> void{static_cast<void>(CPP2_UFCS(f)(CPP2_UFCS(f)(a, a))); });
-  static_cast<void>(CPP2_UFCS_QUALIFIED_TEMPLATE(std::,min<int>)(0, 0));
+  static_cast<void>(CPP2_UFCS_QUALIFIED_TEMPLATE((std::),min<int>)(0, 0));
+  static_cast<void>(CPP2_UFCS_QUALIFIED_TEMPLATE((ns::t<0,0>::),f<0>)(0));
 }
 
-cpp2::i32 auto_54_1 {CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL(std::,min<int>)(0, 0)}; 
+cpp2::i32 auto_55_1 {CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL((std::),min<int>)(0, 0)}; 
+cpp2::i32 auto_56_1 {CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL((ns::t<0,0>::),f<0>)(0)}; 
+
+namespace ns {
+
+  template <int T, int U> template<int V> [[nodiscard]] auto t<T,U>::f([[maybe_unused]] cpp2::in<int> unnamed_param_1) -> cpp2::i32 { return 0;  }
+
+}
 

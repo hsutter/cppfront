@@ -785,6 +785,8 @@ public:
     #endif
 #endif
 
+#define CPP2_UFCS_REMPARENS(...) __VA_ARGS__
+
 // Ideally, the expression `CPP2_UFCS_IS_NOTHROW` expands to
 // is in the _noexcept-specifier_ of the UFCS lambda.
 // To workaround [GCC bug 101043](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101043),
@@ -792,10 +794,10 @@ public:
 // But using a template parameter, Clang also ICEs on an application.
 // So we use these `NOTHROW` macros to fall back to the ideal for when not using GCC.
 #define CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,...) \
-   requires { requires requires { std::declval<Obj>().QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
-              requires noexcept(std::declval<Obj>().QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...)); } \
-|| requires { requires !requires { std::declval<Obj>().QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
-              requires noexcept(QUALID __VA_ARGS__(std::declval<Obj>(), std::declval<Params>()...)); }
+   requires { requires requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
+              requires noexcept(std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...)); } \
+|| requires { requires !requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
+              requires noexcept(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(std::declval<Obj>(), std::declval<Params>()...)); }
 #define CPP2_UFCS_IS_NOTHROW_PARAM(QUALID,TEMPKW,...) /*empty*/
 #define CPP2_UFCS_IS_NOTHROW_ARG(QUALID,TEMPKW,...) CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,__VA_ARGS__)
 #if defined(__GNUC__) && !defined(__clang__)
@@ -815,20 +817,20 @@ public:
 [LAMBDADEFCAPT]<typename Obj, typename... Params CPP2_UFCS_IS_NOTHROW_PARAM(QUALID,TEMPKW,__VA_ARGS__)> \
   CPP2_LAMBDA_NO_DISCARD (Obj&& obj, Params&& ...params) CPP2_FORCE_INLINE_LAMBDA_CLANG \
   noexcept(CPP2_UFCS_IS_NOTHROW_ARG(QUALID,TEMPKW,__VA_ARGS__)) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) \
-    requires requires { CPP2_FORWARD(obj).QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); } \
-             || requires { QUALID __VA_ARGS__(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); } { \
-    if constexpr (requires{ CPP2_FORWARD(obj).QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
-        return CPP2_FORWARD(obj).QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
+    requires requires { CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); } \
+             || requires { CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); } { \
+    if constexpr (requires{ CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
+        return CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
     } else { \
-        return QUALID __VA_ARGS__(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+        return CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
     } \
 }
 
-#define CPP2_UFCS(...)                                    CPP2_UFCS_(&,,,__VA_ARGS__)
-#define CPP2_UFCS_TEMPLATE(...)                           CPP2_UFCS_(&,,template,__VA_ARGS__)
+#define CPP2_UFCS(...)                                    CPP2_UFCS_(&,(),,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE(...)                           CPP2_UFCS_(&,(),template,__VA_ARGS__)
 #define CPP2_UFCS_QUALIFIED_TEMPLATE(QUALID,...)          CPP2_UFCS_(&,QUALID,template,__VA_ARGS__)
-#define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,,,__VA_ARGS__)
-#define CPP2_UFCS_TEMPLATE_NONLOCAL(...)                  CPP2_UFCS_(,,template,__VA_ARGS__)
+#define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,(),,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE_NONLOCAL(...)                  CPP2_UFCS_(,(),template,__VA_ARGS__)
 #define CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL(QUALID,...) CPP2_UFCS_(,QUALID,template,__VA_ARGS__)
 
 
