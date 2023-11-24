@@ -6312,6 +6312,7 @@ public:
                 {
                     auto print = std::string();
                     printer.emit_to_string(&print);
+                    auto guard = stack_value(having_signature_emitted, nullptr);
                     emit(*c);
                     printer.emit_to_string();
                     current_functions.back().prolog.statements.push_back(print);

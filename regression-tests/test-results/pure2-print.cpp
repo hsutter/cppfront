@@ -113,8 +113,8 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
 
 #line 34 "pure2-print.cpp2"
         {
-            cpp2::Default.expects(CPP2_UFCS_NONLOCAL(empty)(m) == false || false, "message");
-            cpp2::Bounds.expects([_0 = 0, _1 = CPP2_UFCS_NONLOCAL(ssize)(m), _2 = 100]{ return cpp2::cmp_less(_0,_1) && cpp2::cmp_less(_1,_2); }() && true != false, "");
+            cpp2::Default.expects(CPP2_UFCS(empty)(m) == false || false, "message");
+            cpp2::Bounds.expects([_0 = 0, _1 = CPP2_UFCS(ssize)(m), _2 = 100]{ return cpp2::cmp_less(_0,_1) && cpp2::cmp_less(_1,_2); }() && true != false, "");
 #line 35 "pure2-print.cpp2"
             auto a {[]() mutable -> void{}}; 
             auto b {[]() mutable -> void{}}; 

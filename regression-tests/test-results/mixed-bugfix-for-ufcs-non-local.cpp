@@ -14,7 +14,7 @@ namespace ns {
 class u;
   
 
-#line 44 "mixed-bugfix-for-ufcs-non-local.cpp2"
+#line 45 "mixed-bugfix-for-ufcs-non-local.cpp2"
 }
 
 
@@ -63,6 +63,7 @@ auto inline constexpr d = t<CPP2_UFCS_NONLOCAL(f)(o)>();// Fails on Clang 12 (la
 class u {
   public: static const bool b;
   public: static const bool c;
+  public: static auto g(auto const& s, auto const& sz) -> void;
 };
 
 } // namespace ns
@@ -85,7 +86,7 @@ template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> auto g() -> void{}// Fails on GCC ([GCC1
 auto g([[maybe_unused]] cpp2::in<t<CPP2_UFCS_NONLOCAL(f)(o)>> unnamed_param_1) -> void{}// Fails on Clang 12 (lambda in unevaluated context).
 
 auto g() -> void{
-                     cpp2::Default.expects(CPP2_UFCS_NONLOCAL(f)(o), ""); }
+                     cpp2::Default.expects(CPP2_UFCS(f)(o), ""); }
 
 #line 27 "mixed-bugfix-for-ufcs-non-local.cpp2"
 [[nodiscard]] auto h() -> t<CPP2_UFCS_NONLOCAL(f)(o)> { return o;  }// Fails on Clang 12 (lambda in unevaluated context).
@@ -93,8 +94,10 @@ auto g() -> void{
 #line 40 "mixed-bugfix-for-ufcs-non-local.cpp2"
   inline CPP2_CONSTEXPR bool u::b = CPP2_UFCS_NONLOCAL(f)(o);
   inline CPP2_CONSTEXPR bool u::c = [](cpp2::in<std::type_identity_t<decltype(CPP2_UFCS_NONLOCAL(f)(o))>> x) -> auto { return x; }(true);
+  auto u::g(auto const& s, auto const& sz) -> void{
+                                  cpp2::Default.expects(CPP2_UFCS(sz)(s) != 0, ""); }
 
-#line 44 "mixed-bugfix-for-ufcs-non-local.cpp2"
+#line 45 "mixed-bugfix-for-ufcs-non-local.cpp2"
 }
 
 auto main() -> int{}
