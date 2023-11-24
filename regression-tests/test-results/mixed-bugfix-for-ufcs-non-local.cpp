@@ -14,7 +14,7 @@ namespace ns {
 class u;
   
 
-#line 43 "mixed-bugfix-for-ufcs-non-local.cpp2"
+#line 44 "mixed-bugfix-for-ufcs-non-local.cpp2"
 }
 
 
@@ -62,6 +62,7 @@ auto inline constexpr d = t<CPP2_UFCS_NONLOCAL(f)(o)>();// Fails on Clang 12 (la
 
 class u {
   public: static const bool b;
+  public: static const bool c;
 };
 
 } // namespace ns
@@ -91,8 +92,9 @@ auto g() -> void{
 
 #line 40 "mixed-bugfix-for-ufcs-non-local.cpp2"
   inline CPP2_CONSTEXPR bool u::b = CPP2_UFCS_NONLOCAL(f)(o);
+  inline CPP2_CONSTEXPR bool u::c = [](cpp2::in<std::type_identity_t<decltype(CPP2_UFCS_NONLOCAL(f)(o))>> x) -> auto { return x; }(true);
 
-#line 43 "mixed-bugfix-for-ufcs-non-local.cpp2"
+#line 44 "mixed-bugfix-for-ufcs-non-local.cpp2"
 }
 
 auto main() -> int{}
