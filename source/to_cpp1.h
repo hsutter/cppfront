@@ -3159,14 +3159,7 @@ public:
                 if (
                     current_declarations.back()->is_namespace()
                     || (
-                        (
-                         current_declarations.back()->is_object()
-                         || current_declarations.back()->is_alias()
-                         || (
-                             current_declarations.back()->is_function()
-                             && current_declarations.back() == having_signature_emitted
-                             )
-                         )
+                        current_declarations.back()->is_object()
                         && current_declarations.back()->parent_is_namespace()
                         )
                     || (
@@ -3177,7 +3170,10 @@ public:
                              && current_declarations.back() == having_signature_emitted
                              )
                          )
-                        && current_declarations.back()->parent_is_type()
+                        && (
+                            current_declarations.back()->parent_is_namespace()
+                            || current_declarations.back()->parent_is_type()
+                            )
                         )
                     )
                 {
