@@ -50,6 +50,9 @@ extern cpp2::i32 auto_35_1;
 
 auto main() -> int;
 
+#line 54 "pure2-bugfix-for-ufcs-arguments.cpp2"
+extern cpp2::i32 auto_54_1;
+
 //=== Cpp2 function definitions =================================================
 
 #line 1 "pure2-bugfix-for-ufcs-arguments.cpp2"
@@ -104,5 +107,8 @@ auto main() -> int{
   static_cast<void>(CPP2_UFCS_TEMPLATE(f<t,t>)(a<t,t>, 0, 0));
 
   static_cast<void>([](auto const& a, auto const& f) -> void{static_cast<void>(CPP2_UFCS(f)(CPP2_UFCS(f)(a, a))); });
+  static_cast<void>(CPP2_UFCS_QUALIFIED_TEMPLATE(std::,min<int>)(0, 0));
 }
+
+cpp2::i32 auto_54_1 {CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL(std::,min<int>)(0, 0)}; 
 

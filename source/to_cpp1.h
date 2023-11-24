@@ -1810,7 +1810,10 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(qualified_id_node const& n)
+    auto emit(
+        qualified_id_node const& n,
+        bool include_unqualified_id = true
+        )
         -> void
     {
         if (!sema.check(n)) {
@@ -1834,7 +1837,7 @@ public:
         auto ident = std::string{};
         printer.emit_to_string(&ident);
 
-        for (auto const& id : n.ids)
+        for (auto const& id : std::span{n.ids}.first(n.ids.size() - !include_unqualified_id))
         {
             if (id.scope_op) {
                 emit(*id.scope_op);
@@ -1879,7 +1882,7 @@ public:
     //
     auto emit(
         id_expression_node const& n,
-        bool                      is_local_name = true
+        bool                      is_local_name          = true
     )
         -> void
     {
@@ -3139,6 +3142,7 @@ public:
                 && !lookup_finds_variable_with_placeholder_type_under_initialization(*i->id_expr)
                 )
             {
+                //  The function name is the argument to the macro
                 auto funcname = print_to_string(*i->id_expr);
 
                 //  First, build the UFCS macro name
@@ -3147,6 +3151,16 @@ public:
 
                 //  If there are template arguments, use the _TEMPLATE version
                 if (std::ssize(i->id_expr->template_arguments()) > 0) {
+                    //  If it is qualified, use the _QUALIFIED version
+                    if (i->id_expr->is_qualified()) {
+                        ufcs_string += "_QUALIFIED";
+                        //  And split the unqualified id in the function name as two macro arguments
+                        auto& id = *get<id_expression_node::qualified>(i->id_expr->id);
+                        funcname =
+                            print_to_string(id, false)
+                            + "::,"
+                            + print_to_string(*cpp2::assert_not_null(id.ids.back().id), false, true, true);
+                    }
                     ufcs_string += "_TEMPLATE";
                 }
 
