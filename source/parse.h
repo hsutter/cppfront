@@ -7633,11 +7633,8 @@ private:
     //G
     //G return-list:
     //G     expression-statement
-    //G     '->' return-direction? type-id
+    //G     '->' parameter-direction? type-id
     //G     '->' parameter-declaration-list
-    //G
-    //G return-direction: one of
-    //G     'forward' 'move'
     //G
     //G contract-seq:
     //G     contract
