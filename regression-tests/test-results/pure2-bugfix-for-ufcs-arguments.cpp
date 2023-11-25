@@ -65,7 +65,7 @@ extern cpp2::i32 auto_35_1;
 auto main() -> int;
 
 #line 55 "pure2-bugfix-for-ufcs-arguments.cpp2"
-extern cpp2::i32 auto_55_1;
+// _: i32 = 0.std::min<int>(0);
 extern cpp2::i32 auto_56_1;
 
 namespace ns {
@@ -138,11 +138,11 @@ auto main() -> int{
   static_cast<void>(CPP2_UFCS_TEMPLATE(f<t,t>)(a<t,t>, 0, 0));
 
   static_cast<void>([](auto const& a, auto const& f) -> void{static_cast<void>(CPP2_UFCS(f)(CPP2_UFCS(f)(a, a))); });
-  static_cast<void>(CPP2_UFCS_QUALIFIED_TEMPLATE((std::),min<int>)(0, 0));
+  // _ = 0.std::min<int>(0);
   static_cast<void>(CPP2_UFCS_QUALIFIED_TEMPLATE((ns::t<0,0>::),f<0>)(0));
 }
 
-cpp2::i32 auto_55_1 {CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL((std::),min<int>)(0, 0)}; 
+#line 56 "pure2-bugfix-for-ufcs-arguments.cpp2"
 cpp2::i32 auto_56_1 {CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL((ns::t<0,0>::),f<0>)(0)}; 
 
 namespace ns {

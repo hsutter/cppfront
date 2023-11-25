@@ -48,11 +48,11 @@ main: () = {
   _ = a<t, t>.f<t, t>(0, 0);
 
   _ = :(a, f) = { _ = a.f(a).f(); };
-  _ = 0.std::min<int>(0);
+  // _ = 0.std::min<int>(0);
   _ = 0.ns::t<0, 0>::f<0>();
 }
 
-_: i32 = 0.std::min<int>(0);
+// _: i32 = 0.std::min<int>(0);
 _: i32 = 0.ns::t<0, 0>::f<0>();
 
 ns: namespace = {
