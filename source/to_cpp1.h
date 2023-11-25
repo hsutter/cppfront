@@ -1043,10 +1043,10 @@ class cppfront
     };
     std::vector<arg_info> current_args  = { {} };
 
-    struct cpp1_using_declaration {
+    struct active_using_declaration {
         token const* identifier = {};
 
-        explicit cpp1_using_declaration(using_statement_node const& n) {
+        explicit active_using_declaration(using_statement_node const& n) {
           if (auto id = get_if<id_expression_node::qualified>(&n.id->id)) {
               identifier = (*id)->ids.back().id->identifier;
           }
@@ -1054,14 +1054,14 @@ class cppfront
     };
 
     using unqualified_name_lookup_res =
-        std::optional<std::variant<declaration_node const*, cpp1_using_declaration>>;
+        std::optional<std::variant<declaration_node const*, active_using_declaration>>;
 
+    //  Stack of the currently active nested declarations we're inside
     std::vector<declaration_node const*> current_declarations = { {} };
-    // Like `current_declarations`, but for syntatic name lookup.
-    // So it also includes the following entities that are in scope.
-    // - Parameters.
-    // - Cpp1 using declarations.
-    std::vector<unqualified_name_lookup_res::value_type> seen_declarations = { {} };
+
+    //  Stack of the currently active nested names we're inside:
+    //  Like 'current_declarations' + also parameters and using declarations
+    std::vector<unqualified_name_lookup_res::value_type> current_names = { {} };
 
     //  Maintain a stack of the functions we're currently processing, which can
     //  be up to MaxNestedFunctions in progress (if we run out, bump the Max).
@@ -2495,7 +2495,7 @@ public:
         if (n.for_namespace) {
             printer.print_cpp2(" namespace", n.position());
         } else {
-            seen_declarations.push_back(cpp1_using_declaration{n});
+            current_names.push_back(active_using_declaration{n});
         }
 
         printer.print_cpp2(" " + print_to_string(*n.id) + ";", n.position());
@@ -2802,7 +2802,7 @@ public:
         -> unqualified_name_lookup_res
     {
         for (
-            auto first = seen_declarations.rbegin(), last = seen_declarations.rend() - 1;
+            auto first = current_names.rbegin(), last = current_names.rend() - 1;
             first != last;
             ++first
             )
@@ -2817,7 +2817,7 @@ public:
                 return *decl;
             }
             else if (
-                auto using_ = get_if<cpp1_using_declaration>(&*first);
+                auto using_ = get_if<active_using_declaration>(&*first);
                 using_
                 && using_->identifier
                 && *using_->identifier == *id.identifier
@@ -2844,7 +2844,7 @@ public:
 
         if (
             !lookup
-            || get_if<cpp1_using_declaration>(&*lookup)
+            || get_if<active_using_declaration>(&*lookup)
             )
         {
             return false;
@@ -3114,8 +3114,8 @@ public:
                 }
             }
 
-            // Going backwards if we found LeftParen it might be UFCS
-            // expr_list is emitted to 'args' for future use
+            //  Going backwards if we found LeftParen it might be UFCS
+            //  expr_list is emitted to 'args' for future use
             if (i->op->type() == lexeme::LeftParen) {
 
                 assert(i->op);
@@ -3130,15 +3130,15 @@ public:
                 flush_args();
                 args.emplace(std::move(local_args));
             }
-            // Going backwards if we found Dot and there is args variable
-            // it means that it should be handled by UFCS
+            //  Going backwards if we found Dot and there is args variable
+            //  it means that it should be handled by UFCS
             else if(
                 i->op->type() == lexeme::Dot
                 && args
-                // Disable UFCS if name lookup would hard-error (#550).
-                // That happens when it finds that the function identifier being called
-                // is a variable with a placeholder type and we are in its initializer.
-                // So lower it to a member call instead, the only possible valid meaning.
+                //  Disable UFCS if name lookup would hard-error (#550).
+                //  That happens when it finds that the function identifier being called is the name
+                //  of a variable with deduced type and we are in its initializer (e.g., x := y.x();)
+                //  So lower it to a member call instead, the only possible valid meaning.
                 && !lookup_finds_variable_with_placeholder_type_under_initialization(*i->id_expr)
                 )
             {
@@ -4013,7 +4013,7 @@ public:
             && n.parameters
             ;
 
-        auto guard = stack_size_if(seen_declarations, emit_parameters);
+        auto guard = stack_size_if(current_names, emit_parameters);
         if (emit_parameters) {
             printer.print_extra( "\n");
             printer.print_extra( "{");
@@ -4141,7 +4141,7 @@ public:
             }
         }
 
-        seen_declarations.push_back(&*n.declaration);
+        current_names.push_back(&*n.declaration);
 
         //-----------------------------------------------------------------------
         //  Skip 'this' parameters
@@ -5313,8 +5313,8 @@ public:
 
         auto guard0 = stack_value(having_signature_emitted, &n);
         auto guard1 = stack_element(current_declarations, &n);
-        seen_declarations.push_back(&n);
-        auto guard2 = stack_size_if(seen_declarations, n.is_function());
+        current_names.push_back(&n);
+        auto guard2 = stack_size_if(current_names, n.is_function());
 
         //  Handle aliases
 
@@ -5950,7 +5950,7 @@ public:
                 );
             auto guard0 = finally([&]{ current_functions.pop(); });
 
-            auto guard1 = stack_size(seen_declarations);
+            auto guard1 = stack_size(current_names);
 
             //  If this is at expression scope, we can't emit "[[nodiscard]] auto name"
             //  so print the provided intro instead, which will be a Cpp1 lambda-introducer

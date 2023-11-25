@@ -10,7 +10,7 @@ ns: namespace = {
 
 // Variables.
 
-v0: <_: t<o.f()>> bool == false; // Fails on GCC ([GCC109781][]).
+v0: <_: t<o.f()>> bool == false; // Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
 
 v1: t<o.f()> == t<true>(); // Fails on Clang 12 (lambda in unevaluated context).
 
@@ -18,7 +18,7 @@ v2: bool == o.f();
 
 // Functions.
 
-g: <_: t<o.f()>> () = { } // Fails on GCC ([GCC109781][]).
+g: <_: t<o.f()>> () = { } // Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
 
 g: (_: t<o.f()>) = { } // Fails on Clang 12 (lambda in unevaluated context).
 
@@ -28,17 +28,17 @@ h: () -> t<o.f()> = o; // Fails on Clang 12 (lambda in unevaluated context).
 
 // Aliases.
 
-a: <_: t<o.f()>> type == bool; // Fails on GCC ([GCC109781][]).
+a: <_: t<o.f()>> type == bool; // Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
 
 b: <_: t<o.f()>> _ == false; // Fails on GCC ([GCC109781][]).
 
-c: type == t<o.f()>; // Fails on Clang 12 (lambda in unevaluated context).
+c: type == t<o.f()>; // Fails on Clang 12 (lambda in unevaluated context) and Clang 12 (a lambda expression cannot appear in this context)
 
 d: _ == t<o.f()>(); // Fails on Clang 12 (lambda in unevaluated context).
 
 u: @struct type = {
   b: bool == o.f();
-  c: bool == :(x: std::type_identity_t<decltype(o.f())>) x;(true);
+  c: bool == :(x: std::type_identity_t<decltype(o.f())>) x;(true); // Fails on Clang 12 (lambda in unevaluated context).
   g: (s, sz) pre(s.sz() != 0) = { }
 }
 
