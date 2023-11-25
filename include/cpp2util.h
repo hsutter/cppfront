@@ -788,37 +788,61 @@ public:
 #define CPP2_UFCS_REMPARENS(...) __VA_ARGS__
 
 // Ideally, the expression `CPP2_UFCS_IS_NOTHROW` expands to
-// is in the _noexcept-specifier_ of the UFCS lambda.
+// is in the _noexcept-specifier_ of the UFCS lambda, but without 'std::declval'.
 // To workaround [GCC bug 101043](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101043),
 // we instead make it a template parameter of the UFCS lambda.
 // But using a template parameter, Clang also ICEs on an application.
 // So we use these `NOTHROW` macros to fall back to the ideal for when not using GCC.
 #define CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,...) \
-   requires { requires requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
-              requires noexcept(std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...)); } \
+   requires { requires  requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
+              requires    noexcept(std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...)); } \
 || requires { requires !requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
               requires noexcept(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(std::declval<Obj>(), std::declval<Params>()...)); }
-#define CPP2_UFCS_IS_NOTHROW_PARAM(QUALID,TEMPKW,...) /*empty*/
-#define CPP2_UFCS_IS_NOTHROW_ARG(QUALID,TEMPKW,...) CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,__VA_ARGS__)
+#define CPP2_UFCS_IS_NOTHROW_PARAM(...)               /*empty*/
+#define CPP2_UFCS_IS_NOTHROW_ARG(QUALID,TEMPKW,...)   CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,__VA_ARGS__)
 #if defined(__GNUC__) && !defined(__clang__)
-    #undef CPP2_UFCS_IS_NOTHROW_PARAM
-    #undef CPP2_UFCS_IS_NOTHROW_ARG
+    #undef  CPP2_UFCS_IS_NOTHROW_PARAM
+    #undef  CPP2_UFCS_IS_NOTHROW_ARG
     #define CPP2_UFCS_IS_NOTHROW_PARAM(QUALID,TEMPKW,...) , bool IsNothrow = CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,__VA_ARGS__)
-    #define CPP2_UFCS_IS_NOTHROW_ARG(QUALID,TEMPKW,...)   IsNothrow
+    #define CPP2_UFCS_IS_NOTHROW_ARG(...)                 IsNothrow
     #if __GNUC__ < 11
-        #undef CPP2_UFCS_IS_NOTHROW_PARAM
-        #undef CPP2_UFCS_IS_NOTHROW_ARG
+        #undef  CPP2_UFCS_IS_NOTHROW_PARAM
+        #undef  CPP2_UFCS_IS_NOTHROW_ARG
         #define CPP2_UFCS_IS_NOTHROW_PARAM(...)    /*empty*/
         #define CPP2_UFCS_IS_NOTHROW_ARG(...)      false // GCC 10 UFCS is always potentially-throwing.
     #endif
 #endif
 
+// Ideally, the expression `CPP2_UFCS_CONSTRAINT_ARG` expands to
+// is in the _requires-clause_ of the UFCS lambda.
+// To workaround an MSVC bug within a member function 'F' where UFCS is also for 'F'
+// (<https://github.com/hsutter/cppfront/pull/506#issuecomment-1826086952>),
+// we instead make it a template parameter of the UFCS lambda.
+// But using a template parameter, Clang also ICEs and GCC rejects a local 'F'.
+// Also, Clang rejects the SFINAE test case when using 'std::declval'.
+// So we use these `CONSTRAINT` macros to fall back to the ideal for when not using MSVC.
+#define CPP2_UFCS_CONSTRAINT_PARAM(...)               /*empty*/
+#define CPP2_UFCS_CONSTRAINT_ARG(QUALID,TEMPKW,...) \
+   requires { CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); } \
+|| requires { CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); }
+#if defined(_MSC_VER)
+    #undef  CPP2_UFCS_CONSTRAINT_PARAM
+    #undef  CPP2_UFCS_CONSTRAINT_ARG
+    #define CPP2_UFCS_CONSTRAINT_PARAM(QUALID,TEMPKW,...) , bool IsViable = \
+   requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); } \
+|| requires { CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(std::declval<Obj>(), std::declval<Params>()...); }
+    #define CPP2_UFCS_CONSTRAINT_ARG(...)                 IsViable
+#endif
+
 #define CPP2_UFCS_(LAMBDADEFCAPT,QUALID,TEMPKW,...) \
-[LAMBDADEFCAPT]<typename Obj, typename... Params CPP2_UFCS_IS_NOTHROW_PARAM(QUALID,TEMPKW,__VA_ARGS__)> \
+[LAMBDADEFCAPT]< \
+    typename Obj, typename... Params \
+    CPP2_UFCS_IS_NOTHROW_PARAM(QUALID,TEMPKW,__VA_ARGS__) \
+    CPP2_UFCS_CONSTRAINT_PARAM(QUALID,TEMPKW,__VA_ARGS__) \
+  > \
   CPP2_LAMBDA_NO_DISCARD (Obj&& obj, Params&& ...params) CPP2_FORCE_INLINE_LAMBDA_CLANG \
   noexcept(CPP2_UFCS_IS_NOTHROW_ARG(QUALID,TEMPKW,__VA_ARGS__)) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) \
-    requires requires { CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); } \
-             || requires { CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); } { \
+    requires CPP2_UFCS_CONSTRAINT_ARG(QUALID,TEMPKW,__VA_ARGS__) { \
     if constexpr (requires{ CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
         return CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
     } else { \

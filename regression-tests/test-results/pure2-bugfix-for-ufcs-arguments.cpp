@@ -19,6 +19,12 @@ template<int T, int U> class t;
 
 }
 
+class A;
+  
+
+#line 68 "pure2-bugfix-for-ufcs-arguments.cpp2"
+class B;
+  
 
 //=== Cpp2 type definitions and function declarations ===========================
 
@@ -67,6 +73,15 @@ template<int T, int U> class t {
   public: template<int V> [[nodiscard]] static auto f([[maybe_unused]] cpp2::in<int> unnamed_param_1) -> cpp2::i32;
 };
 } // namespace ns
+
+class A {
+  public: auto f() const& -> void;
+};
+
+class B {
+  public: A m; 
+  public: auto f() const& -> void;
+};
 
 
 //=== Cpp2 function definitions =================================================
@@ -135,4 +150,10 @@ namespace ns {
   template <int T, int U> template<int V> [[nodiscard]] auto t<T,U>::f([[maybe_unused]] cpp2::in<int> unnamed_param_1) -> cpp2::i32 { return 0;  }
 
 }
+
+#line 65 "pure2-bugfix-for-ufcs-arguments.cpp2"
+  auto A::f() const& -> void{}
+
+#line 70 "pure2-bugfix-for-ufcs-arguments.cpp2"
+  auto B::f() const& -> void { CPP2_UFCS(f)(m);  }
 

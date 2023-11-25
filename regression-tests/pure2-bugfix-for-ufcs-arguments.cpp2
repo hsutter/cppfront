@@ -60,3 +60,12 @@ t: @struct <T: int, U: int> type = {
   f: <V: int> (_: int) -> i32 = 0;
 }
 } // namespace ns
+
+A: @struct type = {
+  f: (this) = { }
+}
+
+B: @struct type = {
+  m: A;
+  f: (this) = m.f();
+}
