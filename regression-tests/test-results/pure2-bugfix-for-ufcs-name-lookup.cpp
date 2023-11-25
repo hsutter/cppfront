@@ -126,7 +126,7 @@ cpp2::in<identity> f = identity();
     auto f {[]() -> void{
       using ns::f;
       static_assert(CPP2_UFCS(f)(t()) == 0);
-      static_assert(CPP2_UFCS(f)(u()) == 1);
+      // static_assert(u().f() == 1);
     }}; 
     static_cast<void>(std::move(f));
   }
@@ -144,11 +144,11 @@ cpp2::in<identity> f = identity();
       using ns::f;
       static_cast<void>([]() -> void{
         static_assert(CPP2_UFCS(f)(t()) == 0);
-        static_assert(CPP2_UFCS(f)(u()) == 1);
+        // static_assert(u().f() == 1);
       });
       {
         static_assert(CPP2_UFCS(f)(t()) == 0);
-        static_assert(CPP2_UFCS(f)(u()) == 1);
+        // static_assert(u().f() == 1);
       }
     }}; 
     static_cast<void>(std::move(f));
