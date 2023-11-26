@@ -1053,15 +1053,15 @@ class cppfront
         }
     };
 
-    using unqualified_name_lookup_res =
+    using source_order_name_lookup_res =
         std::optional<std::variant<declaration_node const*, active_using_declaration>>;
 
     //  Stack of the currently active nested declarations we're inside
     std::vector<declaration_node const*> current_declarations = { {} };
 
-    //  Stack of the currently active nested names we're inside:
+    //  Stack of the currently active names for source order name lookup:
     //  Like 'current_declarations' + also parameters and using declarations
-    std::vector<unqualified_name_lookup_res::value_type> current_names = { {} };
+    std::vector<source_order_name_lookup_res::value_type> current_names = { {} };
 
     //  Maintain a stack of the functions we're currently processing, which can
     //  be up to MaxNestedFunctions in progress (if we run out, bump the Max).
@@ -2798,8 +2798,8 @@ public:
     }
 
 
-    auto unqualified_name_lookup(unqualified_id_node const& id)
-        -> unqualified_name_lookup_res
+    auto source_order_name_lookup(unqualified_id_node const& id)
+    -> source_order_name_lookup_res
     {
         for (
             auto first = current_names.rbegin(), last = current_names.rend() - 1;
@@ -2840,7 +2840,7 @@ public:
         }
 
         auto const& id = *get<id_expression_node::unqualified>(n.id);
-        auto lookup = unqualified_name_lookup(id);
+        auto lookup = source_order_name_lookup(id);
 
         if (
             !lookup
