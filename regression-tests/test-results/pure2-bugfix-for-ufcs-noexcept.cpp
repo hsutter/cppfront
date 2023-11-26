@@ -33,6 +33,6 @@ auto main() -> int;
   auto t::swap([[maybe_unused]] t const& that) noexcept -> void{}// Non-`virtual` blocked on #508, idiomatic form on #507.
 
 auto main() -> int{
-  static_assert(noexcept(CPP2_UFCS(swap)(t(), t())));// Fails on Clang 12 (lambda in unevaluated context).
+  static_assert(noexcept(CPP2_UFCS(swap)(t(), t())));// Fails on Clang 12 (lambda in unevaluated context) and GCC 10 (static assertion failed)
 }
 

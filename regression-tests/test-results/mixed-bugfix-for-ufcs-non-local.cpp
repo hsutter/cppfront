@@ -34,7 +34,7 @@ namespace ns {
 
 // Variables.
 
-template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> bool inline constexpr v0 = false;// Fails on GCC ([GCC109781][]).
+template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> bool inline constexpr v0 = false;// Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
 
 t<CPP2_UFCS_NONLOCAL(f)(o)> inline constexpr v1 = t<true>();// Fails on Clang 12 (lambda in unevaluated context).
 
@@ -52,11 +52,11 @@ auto g() -> void;
 
 // Aliases.
 
-template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> using a = bool;// Fails on GCC ([GCC109781][]).
+template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> using a = bool;// Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
 
 template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> auto inline constexpr b = false;// Fails on GCC ([GCC109781][]).
 
-using c = t<CPP2_UFCS_NONLOCAL(f)(o)>;// Fails on Clang 12 (lambda in unevaluated context).
+using c = t<CPP2_UFCS_NONLOCAL(f)(o)>;// Fails on Clang 12 (lambda in unevaluated context) and Clang 12 (a lambda expression cannot appear in this context)
 
 auto inline constexpr d = t<CPP2_UFCS_NONLOCAL(f)(o)>();// Fails on Clang 12 (lambda in unevaluated context).
 
@@ -81,7 +81,7 @@ auto main() -> int;
 namespace ns {
 
 #line 21 "mixed-bugfix-for-ufcs-non-local.cpp2"
-template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> auto g() -> void{}// Fails on GCC ([GCC109781][]).
+template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> auto g() -> void{}// Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
 
 auto g([[maybe_unused]] cpp2::in<t<CPP2_UFCS_NONLOCAL(f)(o)>> unnamed_param_1) -> void{}// Fails on Clang 12 (lambda in unevaluated context).
 
@@ -93,7 +93,7 @@ auto g() -> void{
 
 #line 40 "mixed-bugfix-for-ufcs-non-local.cpp2"
   inline CPP2_CONSTEXPR bool u::b = CPP2_UFCS_NONLOCAL(f)(o);
-  inline CPP2_CONSTEXPR bool u::c = [](cpp2::in<std::type_identity_t<decltype(CPP2_UFCS_NONLOCAL(f)(o))>> x) -> auto { return x; }(true);
+  inline CPP2_CONSTEXPR bool u::c = [](cpp2::in<std::type_identity_t<decltype(CPP2_UFCS_NONLOCAL(f)(o))>> x) -> auto { return x; }(true);// Fails on Clang 12 (lambda in unevaluated context).
   auto u::g(auto const& s, auto const& sz) -> void{
                                   cpp2::Default.expects(CPP2_UFCS(sz)(s) != 0, ""); }
 
