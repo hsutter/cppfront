@@ -19,6 +19,10 @@ f: (_) -> int == 1;
 
 main: () = {
   {
+    f: int = t().f();
+    assert(f == 0);
+  }
+  {
     f := t().f();
     assert(f == 0);
   }

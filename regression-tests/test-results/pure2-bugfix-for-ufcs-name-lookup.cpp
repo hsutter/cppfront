@@ -66,6 +66,10 @@ namespace ns {
 #line 20 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
 auto main() -> int{
   {
+    int f {CPP2_UFCS(f)(t())}; 
+    cpp2::Default.expects(std::move(f) == 0, "");
+  }
+  {
     auto f {t().f()}; 
     cpp2::Default.expects(std::move(f) == 0, "");
   }
@@ -75,15 +79,15 @@ auto main() -> int{
   }
 {
 auto const& f = t().f();
-#line 29 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
+#line 33 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
   cpp2::Default.expects(f == 0, "");
 }
 {
 auto const& f = t().f();
-#line 30 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
+#line 34 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
   cpp2::Default.expects(f == 0, "");
 }
-#line 31 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
+#line 35 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
   {
     auto constexpr f = t().f();
     static_assert(f == 0);
@@ -110,15 +114,15 @@ auto const& f = t().f();
     auto f {[]() -> void{
 {
 cpp2::in<identity> f = identity();
-#line 55 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
+#line 59 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
       cpp2::Default.expects(CPP2_UFCS(f)(t()) == 0, "");
 }
 {
 cpp2::in<identity> f = identity();
-#line 56 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
+#line 60 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
       static_cast<void>(CPP2_UFCS(f)(u()));
 }
-#line 57 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
+#line 61 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
     }}; 
     static_cast<void>(std::move(f));
   }
