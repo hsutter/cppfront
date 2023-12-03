@@ -4606,11 +4606,12 @@ public:
                 //  functions that have captures, the intent is that '==' implies "the result
                 //  always the same (depends only on the arguments)." Specifically, the result
                 //  doesn't depend on the captured state, so the captured state should be const.
-                //  But until we want to take a dependency on C++23 (P2242) to make more lambdas
-                //  work with 'constexpr' even when not invoked in constexpr contexts, we will
-                //  emit it as const/whitespace instead for now.
+                //  But until we want to take a dependency on post-C++20 constexpr relaxation
+                //  to make more code work with 'constexpr' even when not invoked in constexpr
+                //  contexts, we will emit it as const/whitespace instead for now.
                 //
-                //  printer.print_cpp2( " constexpr", n.position() );   // deliberately disabled until future
+                //  printer.print_cpp2( " constexpr", n.position() );
+                //      // consider enabling when P2242, P2280, and similar papers are widely implemented
             }
             else {
                 printer.print_cpp2( " mutable", n.position() );
