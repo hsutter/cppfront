@@ -26,7 +26,7 @@
     std::set_terminate(std::abort);
 
     std::vector v {1, 2, 3, 4, 5, -999}; 
-    CPP2_UFCS_0(pop_back, v);
+    CPP2_UFCS(pop_back)(v);
     std::cout << CPP2_ASSERT_IN_BOUNDS(std::move(v), 5) << "\n";
 }
 

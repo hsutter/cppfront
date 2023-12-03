@@ -9,7 +9,7 @@ pure2-print.cpp2:66:1: note: in expansion of macro ‘CPP2_REQUIRES_’
 pure2-print.cpp2:94:1: note: in expansion of macro ‘CPP2_REQUIRES_’
 pure2-print.cpp2:7:41: error: ‘constexpr const T outer::object_alias’ is not a static data member of ‘class outer’
 pure2-print.cpp2:7:48: error: template definition of non-template ‘constexpr const T outer::object_alias’
-pure2-print.cpp2:65:14: error: no declaration matches ‘void outer::mytype::variadic(const auto:98& ...) requires (is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(outer::mytype::variadic::x)>::type>::type, int> && ...)’
+pure2-print.cpp2:65:14: error: no declaration matches ‘void outer::mytype::variadic(const auto:90& ...) requires (is_convertible_v<typename std::remove_cv<typename std::remove_reference<decltype(outer::mytype::variadic::x)>::type>::type, int> && ...)’
 pure2-print.cpp2:65:29: note: candidate is: ‘template<class ... auto:89> static void outer::mytype::variadic(const auto:89& ...)’
 pure2-print.cpp2:8:19: note: ‘class outer::mytype’ defined here
 pure2-print.cpp2:93:37: error: no declaration matches ‘void outer::print(std::ostream&, const Args& ...) requires  cpp2::cmp_greater_eq(sizeof (Args)..., 0)’

@@ -116,7 +116,7 @@
         // in our -pure-cpp2 "import std;" simulation mode... if you need this,
         // use mixed mode (not -pure-cpp2) and #include all the headers you need
         // including this one
-        // 
+        //
         // #include <execution>
         #ifdef __cpp_lib_expected
             #include <expected>
@@ -526,7 +526,7 @@ template<typename T>
 auto Typeid() -> decltype(auto) {
 #ifdef CPP2_NO_RTTI
     Type.expects(
-        !"'any' dynamic casting is disabled with -fno-rtti", // more likely to appear on console 
+        !"'any' dynamic casting is disabled with -fno-rtti", // more likely to appear on console
          "'any' dynamic casting is disabled with -fno-rtti"  // make message available to hooked handlers
     );
 #else
@@ -575,7 +575,7 @@ struct {
     template<typename T>
     [[nodiscard]] auto cpp2_new(auto&& ...args) const -> std::shared_ptr<T> {
         //  Prefer { } to ( ) as noted for unique.new
-        // 
+        //
         //  Note this does mean we don't get the make_shared optimization a lot
         //  of the time -- we can restore that as soon as make_shared improves to
         //  allow list initialization. But the make_shared optimization isn't a
@@ -745,13 +745,22 @@ public:
 //
 //-----------------------------------------------------------------------
 //
+// Workaround <https://github.com/llvm/llvm-project/issues/70556>.
+#define CPP2_FORCE_INLINE_LAMBDA_CLANG /* empty */
+
 #if defined(_MSC_VER) && !defined(__clang_major__)
-    #define CPP2_FORCE_INLINE        __forceinline
-    #define CPP2_FORCE_INLINE_LAMBDA [[msvc::forceinline]]
+    #define CPP2_FORCE_INLINE              __forceinline
+    #define CPP2_FORCE_INLINE_LAMBDA       [[msvc::forceinline]]
     #define CPP2_LAMBDA_NO_DISCARD
 #else
-    #define CPP2_FORCE_INLINE        __attribute__((always_inline))
-    #define CPP2_FORCE_INLINE_LAMBDA __attribute__((always_inline))
+    #define CPP2_FORCE_INLINE              __attribute__((always_inline))
+    #if defined(__clang__)
+        #define CPP2_FORCE_INLINE_LAMBDA       /* empty */
+        #undef CPP2_FORCE_INLINE_LAMBDA_CLANG
+        #define CPP2_FORCE_INLINE_LAMBDA_CLANG __attribute__((always_inline))
+    #else
+        #define CPP2_FORCE_INLINE_LAMBDA       __attribute__((always_inline))
+    #endif
 
     #if defined(__clang_major__)
         //  Also check __cplusplus, only to satisfy Clang -pedantic-errors
@@ -776,85 +785,77 @@ public:
     #endif
 #endif
 
-
-//  Note: [&] is because a nested UFCS might be viewed as trying to capture 'this'
-
-#define CPP2_UFCS(FUNCNAME,PARAM1,...) \
-[&] CPP2_LAMBDA_NO_DISCARD (auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); }) { \
-        return CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); \
-    } else { \
-        return FUNCNAME(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
-    } \
-}(PARAM1, __VA_ARGS__)
-
-#define CPP2_UFCS_0(FUNCNAME,PARAM1) \
-[&] CPP2_LAMBDA_NO_DISCARD (auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(); }) { \
-        return CPP2_FORWARD(obj).FUNCNAME(); \
-    } else { \
-        return FUNCNAME(CPP2_FORWARD(obj)); \
-    } \
-}(PARAM1)
-
 #define CPP2_UFCS_REMPARENS(...) __VA_ARGS__
 
-#define CPP2_UFCS_TEMPLATE(FUNCNAME,TEMPARGS,PARAM1,...) \
-[&] CPP2_LAMBDA_NO_DISCARD (auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); }) { \
-        return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); \
+// Ideally, the expression `CPP2_UFCS_IS_NOTHROW` expands to
+// is in the _noexcept-specifier_ of the UFCS lambda, but without 'std::declval'.
+// To workaround [GCC bug 101043](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101043),
+// we instead make it a template parameter of the UFCS lambda.
+// But using a template parameter, Clang also ICEs on an application.
+// So we use these `NOTHROW` macros to fall back to the ideal for when not using GCC.
+#define CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,...) \
+   requires { requires  requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
+              requires    noexcept(std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...)); } \
+|| requires { requires !requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
+              requires noexcept(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(std::declval<Obj>(), std::declval<Params>()...)); }
+#define CPP2_UFCS_IS_NOTHROW_PARAM(...)               /*empty*/
+#define CPP2_UFCS_IS_NOTHROW_ARG(QUALID,TEMPKW,...)   CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,__VA_ARGS__)
+#if defined(__GNUC__) && !defined(__clang__)
+    #undef  CPP2_UFCS_IS_NOTHROW_PARAM
+    #undef  CPP2_UFCS_IS_NOTHROW_ARG
+    #define CPP2_UFCS_IS_NOTHROW_PARAM(QUALID,TEMPKW,...) , bool IsNothrow = CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,__VA_ARGS__)
+    #define CPP2_UFCS_IS_NOTHROW_ARG(...)                 IsNothrow
+    #if __GNUC__ < 11
+        #undef  CPP2_UFCS_IS_NOTHROW_PARAM
+        #undef  CPP2_UFCS_IS_NOTHROW_ARG
+        #define CPP2_UFCS_IS_NOTHROW_PARAM(...)    /*empty*/
+        #define CPP2_UFCS_IS_NOTHROW_ARG(...)      false // GCC 10 UFCS is always potentially-throwing.
+    #endif
+#endif
+
+// Ideally, the expression `CPP2_UFCS_CONSTRAINT_ARG` expands to
+// is in the _requires-clause_ of the UFCS lambda.
+// To workaround an MSVC bug within a member function 'F' where UFCS is also for 'F'
+// (<https://github.com/hsutter/cppfront/pull/506#issuecomment-1826086952>),
+// we instead make it a template parameter of the UFCS lambda.
+// But using a template parameter, Clang also ICEs and GCC rejects a local 'F'.
+// Also, Clang rejects the SFINAE test case when using 'std::declval'.
+// So we use these `CONSTRAINT` macros to fall back to the ideal for when not using MSVC.
+#define CPP2_UFCS_CONSTRAINT_PARAM(...)               /*empty*/
+#define CPP2_UFCS_CONSTRAINT_ARG(QUALID,TEMPKW,...) \
+   requires { CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); } \
+|| requires { CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); }
+#if defined(_MSC_VER)
+    #undef  CPP2_UFCS_CONSTRAINT_PARAM
+    #undef  CPP2_UFCS_CONSTRAINT_ARG
+    #define CPP2_UFCS_CONSTRAINT_PARAM(QUALID,TEMPKW,...) , bool IsViable = \
+   requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); } \
+|| requires { CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(std::declval<Obj>(), std::declval<Params>()...); }
+    #define CPP2_UFCS_CONSTRAINT_ARG(...)                 IsViable
+#endif
+
+#define CPP2_UFCS_(LAMBDADEFCAPT,QUALID,TEMPKW,...) \
+[LAMBDADEFCAPT]< \
+    typename Obj, typename... Params \
+    CPP2_UFCS_IS_NOTHROW_PARAM(QUALID,TEMPKW,__VA_ARGS__) \
+    CPP2_UFCS_CONSTRAINT_PARAM(QUALID,TEMPKW,__VA_ARGS__) \
+  > \
+  CPP2_LAMBDA_NO_DISCARD (Obj&& obj, Params&& ...params) CPP2_FORCE_INLINE_LAMBDA_CLANG \
+  noexcept(CPP2_UFCS_IS_NOTHROW_ARG(QUALID,TEMPKW,__VA_ARGS__)) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) \
+    requires CPP2_UFCS_CONSTRAINT_ARG(QUALID,TEMPKW,__VA_ARGS__) { \
+    if constexpr (requires{ CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
+        return CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
     } else { \
-        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+        return CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
     } \
-}(PARAM1, __VA_ARGS__)
+}
 
-#define CPP2_UFCS_TEMPLATE_0(FUNCNAME,TEMPARGS,PARAM1) \
-[&] CPP2_LAMBDA_NO_DISCARD (auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); }) { \
-        return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
-    } else { \
-        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj)); \
-    } \
-}(PARAM1)
-
-
-//  But for non-local lambdas [&] is not allowed
-
-#define CPP2_UFCS_NONLOCAL(FUNCNAME,PARAM1,...) \
-[] CPP2_LAMBDA_NO_DISCARD (auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); }) { \
-        return CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); \
-    } else { \
-        return FUNCNAME(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
-    } \
-}(PARAM1, __VA_ARGS__)
-
-#define CPP2_UFCS_0_NONLOCAL(FUNCNAME,PARAM1) \
-[] CPP2_LAMBDA_NO_DISCARD (auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(); }) { \
-        return CPP2_FORWARD(obj).FUNCNAME(); \
-    } else { \
-        return FUNCNAME(CPP2_FORWARD(obj)); \
-    } \
-}(PARAM1)
-
-#define CPP2_UFCS_TEMPLATE_NONLOCAL(FUNCNAME,TEMPARGS,PARAM1,...) \
-[] CPP2_LAMBDA_NO_DISCARD (auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); }) { \
-        return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); \
-    } else { \
-        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
-    } \
-}(PARAM1, __VA_ARGS__)
-
-#define CPP2_UFCS_TEMPLATE_0_NONLOCAL(FUNCNAME,TEMPARGS,PARAM1) \
-[] CPP2_LAMBDA_NO_DISCARD (auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); }) { \
-        return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
-    } else { \
-        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj)); \
-    } \
-}(PARAM1)
+#define CPP2_UFCS(...)                                    CPP2_UFCS_(&,(),,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE(...)                           CPP2_UFCS_(&,(),template,__VA_ARGS__)
+#define CPP2_UFCS_QUALIFIED_TEMPLATE(QUALID,...)          CPP2_UFCS_(&,QUALID,template,__VA_ARGS__)
+#define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,(),,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE_NONLOCAL(...)                  CPP2_UFCS_(,(),template,__VA_ARGS__)
+#define CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL(QUALID,...) CPP2_UFCS_(,QUALID,template,__VA_ARGS__)
 
 
 //-----------------------------------------------------------------------
@@ -914,7 +915,7 @@ inline auto to_string(std::string const& s) -> std::string const&
 
 template<typename T>
 inline auto to_string(T const& sv) -> std::string
-    requires (std::is_convertible_v<T, std::string_view> 
+    requires (std::is_convertible_v<T, std::string_view>
               && !std::is_convertible_v<T, const char*>)
 {
     return std::string{sv};
@@ -1054,8 +1055,8 @@ auto is( X const& ) -> bool {
 
 template< typename C, typename X >
     requires (
-        ( std::is_base_of_v<X, C> || 
-          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>) 
+        ( std::is_base_of_v<X, C> ||
+          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>)
         ) && !std::is_same_v<C,X>)
 auto is( X const& x ) -> bool {
     return Dynamic_cast<C const*>(&x) != nullptr;
@@ -1063,8 +1064,8 @@ auto is( X const& x ) -> bool {
 
 template< typename C, typename X >
     requires (
-        ( std::is_base_of_v<X, C> || 
-          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>) 
+        ( std::is_base_of_v<X, C> ||
+          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>)
         ) && !std::is_same_v<C,X>)
 auto is( X const* x ) -> bool {
     return Dynamic_cast<C const*>(x) != nullptr;
@@ -1726,7 +1727,7 @@ constexpr auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
 //  Returns a function object that takes a 'value' of the same type as
 //  'flags', and evaluates to true if and only if 'value' has set all of
 //  the bits set in 'flags'
-// 
+//
 //-----------------------------------------------------------------------
 //
 template <typename T>

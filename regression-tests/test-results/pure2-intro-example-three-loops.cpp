@@ -44,7 +44,7 @@ auto decorate_and_print(auto& thing) -> void{
     std::span<std::string> view {words}; 
 
     auto i {cpp2_new<int>(0)}; 
-    for( ; cpp2::cmp_less(*cpp2::assert_not_null(i),CPP2_UFCS_0(ssize, view)); ++*cpp2::assert_not_null(i) ) {
+    for( ; cpp2::cmp_less(*cpp2::assert_not_null(i),CPP2_UFCS(ssize)(view)); ++*cpp2::assert_not_null(i) ) {
         print(CPP2_ASSERT_IN_BOUNDS(view, *cpp2::assert_not_null(i)));
     }
 

@@ -1029,6 +1029,8 @@ class cppfront
     bool violates_initialization_safety = false;
     bool suppress_move_from_last_use    = false;
 
+    declaration_node const* having_signature_emitted = {};
+
     declaration_node const*   generating_assignment_from  = {};
     declaration_node const*   generating_move_from        = {};
     bool                      emitting_that_function      = false;
@@ -1041,7 +1043,25 @@ class cppfront
     };
     std::vector<arg_info> current_args  = { {} };
 
+    struct active_using_declaration {
+        token const* identifier = {};
+
+        explicit active_using_declaration(using_statement_node const& n) {
+          if (auto id = get_if<id_expression_node::qualified>(&n.id->id)) {
+              identifier = (*id)->ids.back().id->identifier;
+          }
+        }
+    };
+
+    using source_order_name_lookup_res =
+        std::optional<std::variant<declaration_node const*, active_using_declaration>>;
+
+    //  Stack of the currently active nested declarations we're inside
     std::vector<declaration_node const*> current_declarations = { {} };
+
+    //  Stack of the currently active names for source order name lookup:
+    //  Like 'current_declarations' + also parameters and using declarations
+    std::vector<source_order_name_lookup_res::value_type> current_names = { {} };
 
     //  Maintain a stack of the functions we're currently processing, which can
     //  be up to MaxNestedFunctions in progress (if we run out, bump the Max).
@@ -1790,7 +1810,10 @@ public:
 
     //-----------------------------------------------------------------------
     //
-    auto emit(qualified_id_node const& n)
+    auto emit(
+        qualified_id_node const& n,
+        bool include_unqualified_id = true
+        )
         -> void
     {
         if (!sema.check(n)) {
@@ -1814,7 +1837,7 @@ public:
         auto ident = std::string{};
         printer.emit_to_string(&ident);
 
-        for (auto const& id : n.ids)
+        for (auto const& id : std::span{n.ids}.first(n.ids.size() - !include_unqualified_id))
         {
             if (id.scope_op) {
                 emit(*id.scope_op);
@@ -1859,7 +1882,7 @@ public:
     //
     auto emit(
         id_expression_node const& n,
-        bool                      is_local_name = true
+        bool                      is_local_name          = true
     )
         -> void
     {
@@ -2471,6 +2494,8 @@ public:
 
         if (n.for_namespace) {
             printer.print_cpp2(" namespace", n.position());
+        } else {
+            current_names.push_back(active_using_declaration{n});
         }
 
         printer.print_cpp2(" " + print_to_string(*n.id) + ";", n.position());
@@ -2772,6 +2797,89 @@ public:
         return is_pointer_declaration(decl, deref_cnt, addr_cnt);
     }
 
+
+    auto source_order_name_lookup(unqualified_id_node const& id)
+    -> source_order_name_lookup_res
+    {
+        for (
+            auto first = current_names.rbegin(), last = current_names.rend() - 1;
+            first != last;
+            ++first
+            )
+        {
+            if (
+                auto decl = get_if<declaration_node const*>(&*first);
+                decl
+                && *decl
+                && (*decl)->has_name(*id.identifier)
+                )
+            {
+                return *decl;
+            }
+            else if (
+                auto using_ = get_if<active_using_declaration>(&*first);
+                using_
+                && using_->identifier
+                && *using_->identifier == *id.identifier
+                )
+            {
+                return *using_;
+            }
+        }
+
+        return {};
+    }
+
+
+    auto lookup_finds_variable_with_placeholder_type_under_initialization(id_expression_node const& n)
+        -> bool
+    {
+        if (!n.is_unqualified())
+        {
+            return false;
+        }
+
+        auto const& id = *get<id_expression_node::unqualified>(n.id);
+        auto lookup = source_order_name_lookup(id);
+
+        if (
+            !lookup
+            || get_if<active_using_declaration>(&*lookup)
+            )
+        {
+            return false;
+        }
+
+        auto decl = get<declaration_node const*>(*lookup);
+        if (
+            decl
+            && decl->has_name(*id.identifier)
+            )
+        {
+            if (
+                !decl->is_object()
+                && !decl->is_object_alias()
+                )
+            {
+                return false;
+            }
+
+            if (decl->is_object()) {
+                auto type = &**get_if<declaration_node::an_object>(&decl->type);
+                return type->is_wildcard()
+                       && contains(current_declarations, decl);
+            }
+            auto const& type = (**get_if<declaration_node::an_alias>(&decl->type)).type_id;
+            return (
+                    !type
+                    || type->is_wildcard()
+                    )
+                   && contains(current_declarations, decl);
+        }
+
+        return false;
+    }
+
     //-----------------------------------------------------------------------
     //
     auto emit(
@@ -3006,8 +3114,8 @@ public:
                 }
             }
 
-            // Going backwards if we found LeftParen it might be UFCS
-            // expr_list is emitted to 'args' for future use
+            //  Going backwards if we found LeftParen it might be UFCS
+            //  expr_list is emitted to 'args' for future use
             if (i->op->type() == lexeme::LeftParen) {
 
                 assert(i->op);
@@ -3022,13 +3130,19 @@ public:
                 flush_args();
                 args.emplace(std::move(local_args));
             }
-            // Going backwards if we found Dot and there is args variable
-            // it means that it should be handled by UFCS
+            //  Going backwards if we found Dot and there is args variable
+            //  it means that it should be handled by UFCS
             else if(
                 i->op->type() == lexeme::Dot
                 && args
+                //  Disable UFCS if name lookup would hard-error (#550).
+                //  That happens when it finds that the function identifier being called is the name
+                //  of a variable with deduced type and we are in its initializer (e.g., x := y.x();)
+                //  So lower it to a member call instead, the only possible valid meaning.
+                && !lookup_finds_variable_with_placeholder_type_under_initialization(*i->id_expr)
                 )
             {
+                //  The function name is the argument to the macro
                 auto funcname = print_to_string(*i->id_expr);
 
                 //  First, build the UFCS macro name
@@ -3037,18 +3151,18 @@ public:
 
                 //  If there are template arguments, use the _TEMPLATE version
                 if (std::ssize(i->id_expr->template_arguments()) > 0) {
+                    //  If it is qualified, use the _QUALIFIED version
+                    if (i->id_expr->is_qualified()) {
+                        ufcs_string += "_QUALIFIED";
+                        //  And split the unqualified id in the function name as two macro arguments
+                        auto& id = *get<id_expression_node::qualified>(i->id_expr->id);
+                        funcname =
+                            "("
+                            + print_to_string(id, false)
+                            + "::),"
+                            + print_to_string(*cpp2::assert_not_null(id.ids.back().id), false, true, true);
+                    }
                     ufcs_string += "_TEMPLATE";
-                    // we need to replace "fun<int,long,double>" to "fun, (<int,long,double>)" to be able to generate
-                    // from obj.fun<int, long, double>(1,2) this CPP2_UFCS_TEMPLATE(fun, (<int,long, double>), obj, 1, 2)
-                    auto split = funcname.find('<'); assert(split != std::string::npos);
-                    funcname.insert(split, ", (");
-                    assert(funcname.back() == '>');
-                    funcname += ')';
-                }
-
-                //  If there are no additional arguments, use the _0 version
-                if (args.value().text_chunks.empty()) {
-                    ufcs_string += "_0";
                 }
 
                 //  If we're in an object declaration (i.e., initializer)
@@ -3063,6 +3177,19 @@ public:
                         current_declarations.back()->is_object()
                         && current_declarations.back()->parent_is_namespace()
                         )
+                    || (
+                        (
+                         current_declarations.back()->is_alias()
+                         || (
+                             current_declarations.back()->is_function()
+                             && current_declarations.back() == having_signature_emitted
+                             )
+                         )
+                        && (
+                            current_declarations.back()->parent_is_namespace()
+                            || current_declarations.back()->parent_is_type()
+                            )
+                        )
                     )
                 {
                     ufcs_string += "_NONLOCAL";
@@ -3070,7 +3197,7 @@ public:
 
                 //  Second, emit the UFCS argument list
 
-                prefix.emplace_back(ufcs_string + "(" + funcname + ", ", args.value().open_pos );
+                prefix.emplace_back(ufcs_string + "(" + funcname + ")(", args.value().open_pos );
                 suffix.emplace_back(")", args.value().close_pos );
                 if (!args.value().text_chunks.empty()) {
                     for (auto&& e: args.value().text_chunks) {
@@ -3820,6 +3947,51 @@ public:
     }
 
 
+    // Consider moving these `stack` functions to `common.h` to enable more general use.
+
+    template<typename T>
+    auto stack_value(
+        T& var,
+        std::type_identity_t<T> const& value
+    )
+        -> auto
+    {
+        return finally([&var, old = std::exchange(var, value)]() {
+            var = old;
+        });
+    }
+
+    template<typename T>
+    auto stack_element(
+        std::vector<T>& cont,
+        std::type_identity_t<T> const& value
+    )
+        -> auto
+    {
+        cont.push_back(value);
+        return finally([&]{ cont.pop_back(); });
+    }
+
+    template<typename T>
+    auto stack_size(std::vector<T>& cont)
+        -> auto
+    {
+        return finally([&, size = cont.size()]{ cont.resize(size); });
+    }
+
+    template<typename T>
+    auto stack_size_if(
+        std::vector<T>& cont,
+        bool cond
+    )
+        -> std::optional<decltype(stack_size(cont))>
+    {
+        if (cond) {
+            return stack_size(cont);
+        }
+        return {};
+    }
+
     //-----------------------------------------------------------------------
     //
     auto emit(
@@ -3841,6 +4013,7 @@ public:
             && n.parameters
             ;
 
+        auto guard = stack_size_if(current_names, emit_parameters);
         if (emit_parameters) {
             printer.print_extra( "\n");
             printer.print_extra( "{");
@@ -3967,6 +4140,8 @@ public:
                 );
             }
         }
+
+        current_names.push_back(&*n.declaration);
 
         //-----------------------------------------------------------------------
         //  Skip 'this' parameters
@@ -4252,6 +4427,7 @@ public:
             && n.declaration->initializer
             )
         {
+            auto guard = stack_element(current_declarations, &*n.declaration);
             printer.print_cpp2( " = ", n.declaration->initializer->position() );
             emit(*n.declaration->initializer);
         }
@@ -5135,6 +5311,11 @@ public:
             printer.print_extra("\n");
         }
 
+        auto guard0 = stack_value(having_signature_emitted, &n);
+        auto guard1 = stack_element(current_declarations, &n);
+        current_names.push_back(&n);
+        auto guard2 = stack_size_if(current_names, n.is_function());
+
         //  Handle aliases
 
         if (n.is_alias())
@@ -5332,8 +5513,6 @@ public:
             return;
         }
 
-        current_declarations.push_back(&n);
-        auto guard = finally([&]{ current_declarations.pop_back(); });
 
         //  If this is a function that has multiple return values,
         //  first we need to emit the struct that contains the returns
@@ -5769,7 +5948,9 @@ public:
                 func.get(),
                 n.find_parent_declared_value_set_functions()
                 );
-            auto guard = finally([&]{ current_functions.pop(); });
+            auto guard0 = finally([&]{ current_functions.pop(); });
+
+            auto guard1 = stack_size(current_names);
 
             //  If this is at expression scope, we can't emit "[[nodiscard]] auto name"
             //  so print the provided intro instead, which will be a Cpp1 lambda-introducer
@@ -6146,6 +6327,7 @@ public:
                 {
                     auto print = std::string();
                     printer.emit_to_string(&print);
+                    auto guard = stack_value(having_signature_emitted, nullptr);
                     emit(*c);
                     printer.emit_to_string();
                     current_functions.back().prolog.statements.push_back(print);
@@ -6155,6 +6337,7 @@ public:
 
                 emit_requires_clause();
 
+                having_signature_emitted = nullptr;
                 emit(
                     *n.initializer,
                     true, func->position(), func->returns.index() == function_type_node::empty,

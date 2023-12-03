@@ -40,7 +40,7 @@ auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> vo
 auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> void
 {
     cpp2::Bounds.expects(cpp2::cmp_less_eq(0,start), "");
-    cpp2::Bounds.expects(cpp2::cmp_less_eq(end,CPP2_UFCS_0(ssize, rng)), "");
+    cpp2::Bounds.expects(cpp2::cmp_less_eq(end,CPP2_UFCS(ssize)(rng)), "");
 
     auto count {0}; 
     for ( 
