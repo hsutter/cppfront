@@ -4421,10 +4421,15 @@ public:
             emit(*n.parameters);
         }
 
-        //  For an anonymous function, make the emitted lambda 'mutable'
+        //  For an anonymous function, the emitted lambda is 'constexpr' or 'mutable'
         if (!n.my_decl->has_name())
         {
-            printer.print_cpp2( " mutable", n.position() );
+            if (n.my_decl->is_constexpr) {
+                printer.print_cpp2( " constexpr", n.position() );
+            }
+            else {
+                printer.print_cpp2( " mutable", n.position() );
+            }
         }
 
         //  For now, adding implicit noexcept only for move/swap/dtor functions
