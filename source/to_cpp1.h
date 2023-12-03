@@ -4601,7 +4601,16 @@ public:
         if (!n.my_decl->has_name())
         {
             if (n.my_decl->is_constexpr) {
-                printer.print_cpp2( " constexpr", n.position() );
+                //  The current design path we're trying out is for all '==' functions to be
+                //  emitted as Cpp1 'constexpr', including anonymous functions. For anonymous
+                //  functions that have captures, the intent is that '==' implies "the result
+                //  always the same (depends only on the arguments)." Specifically, the result
+                //  doesn't depend on the captured state, so the captured state should be const.
+                //  But until we want to take a dependency on C++23 (P2242) to make more lambdas
+                //  work with 'constexpr' even when not invoked in constexpr contexts, we will
+                //  emit it as const/whitespace instead for now.
+                //
+                //  printer.print_cpp2( " constexpr", n.position() );   // deliberately disabled until future
             }
             else {
                 printer.print_cpp2( " mutable", n.position() );
