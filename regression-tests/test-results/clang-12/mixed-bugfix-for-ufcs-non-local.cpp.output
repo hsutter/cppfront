@@ -1,5 +1,5 @@
 mixed-bugfix-for-ufcs-non-local.cpp2:13:12: error: a lambda expression cannot appear in this context
-template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> bool inline constexpr v0 = false;// Fails on GCC ([GCC109781][]).
+template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> bool inline constexpr v0 = false;// Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
            ^
 ../../../include/cpp2util.h:856:59: note: expanded from macro 'CPP2_UFCS_NONLOCAL'
 #define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,(),,__VA_ARGS__)
@@ -44,7 +44,7 @@ mixed-bugfix-for-ufcs-non-local.cpp2:27:29: error: a lambda expression cannot ap
 #define CPP2_UFCS_(LAMBDADEFCAPT,QUALID,TEMPKW,...) \
                                                     ^
 mixed-bugfix-for-ufcs-non-local.cpp2:31:12: error: a lambda expression cannot appear in this context
-template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> using a = bool;// Fails on GCC ([GCC109781][]).
+template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> using a = bool;// Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
            ^
 ../../../include/cpp2util.h:856:59: note: expanded from macro 'CPP2_UFCS_NONLOCAL'
 #define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,(),,__VA_ARGS__)
@@ -62,7 +62,7 @@ template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> auto inline constexpr b = false;// Fails
 #define CPP2_UFCS_(LAMBDADEFCAPT,QUALID,TEMPKW,...) \
                                                     ^
 mixed-bugfix-for-ufcs-non-local.cpp2:35:13: error: a lambda expression cannot appear in this context
-using c = t<CPP2_UFCS_NONLOCAL(f)(o)>;// Fails on Clang 12 (lambda in unevaluated context).
+using c = t<CPP2_UFCS_NONLOCAL(f)(o)>;// Fails on Clang 12 (lambda in unevaluated context) and Clang 12 (a lambda expression cannot appear in this context)
             ^
 ../../../include/cpp2util.h:856:59: note: expanded from macro 'CPP2_UFCS_NONLOCAL'
 #define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,(),,__VA_ARGS__)
@@ -80,7 +80,7 @@ auto inline constexpr d = t<CPP2_UFCS_NONLOCAL(f)(o)>();// Fails on Clang 12 (la
 #define CPP2_UFCS_(LAMBDADEFCAPT,QUALID,TEMPKW,...) \
                                                     ^
 mixed-bugfix-for-ufcs-non-local.cpp2:21:12: error: a lambda expression cannot appear in this context
-template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> auto g() -> void{}// Fails on GCC ([GCC109781][]).
+template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> auto g() -> void{}// Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
            ^
 ../../../include/cpp2util.h:856:59: note: expanded from macro 'CPP2_UFCS_NONLOCAL'
 #define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,(),,__VA_ARGS__)
@@ -107,7 +107,7 @@ mixed-bugfix-for-ufcs-non-local.cpp2:27:29: error: a lambda expression cannot ap
 #define CPP2_UFCS_(LAMBDADEFCAPT,QUALID,TEMPKW,...) \
                                                     ^
 mixed-bugfix-for-ufcs-non-local.cpp2:41:79: error: lambda expression in an unevaluated operand
-  inline CPP2_CONSTEXPR bool u::c = [](cpp2::in<std::type_identity_t<decltype(CPP2_UFCS_NONLOCAL(f)(o))>> x) -> auto { return x; }(true);
+  inline CPP2_CONSTEXPR bool u::c = [](cpp2::in<std::type_identity_t<decltype(CPP2_UFCS_NONLOCAL(f)(o))>> x) mutable -> auto { return x; }(true);// Fails on Clang 12 (lambda in unevaluated context).
                                                                               ^
 ../../../include/cpp2util.h:856:59: note: expanded from macro 'CPP2_UFCS_NONLOCAL'
 #define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,(),,__VA_ARGS__)
