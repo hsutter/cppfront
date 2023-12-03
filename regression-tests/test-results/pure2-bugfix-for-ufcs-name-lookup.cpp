@@ -97,7 +97,7 @@ auto const& f = t().f();
     static_assert(f == 0);
   }
   {
-    auto f {[](auto const& f) -> auto{
+    auto f {[](auto const& f) mutable -> auto{
       cpp2::Default.expects(CPP2_UFCS(f)(t()) == 0, "");
       return CPP2_UFCS(f)(u()); 
     }(identity())}; 
@@ -111,7 +111,7 @@ auto const& f = t().f();
     // _ = f;
   }
   {
-    auto f {[]() -> void{
+    auto f {[]() mutable -> void{
 {
 cpp2::in<identity> f = identity();
 #line 59 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
@@ -127,7 +127,7 @@ cpp2::in<identity> f = identity();
     static_cast<void>(std::move(f));
   }
   {
-    auto f {[]() -> void{
+    auto f {[]() mutable -> void{
       using ns::f;
       static_assert(CPP2_UFCS(f)(t()) == 0);
       // static_assert(u().f() == 1);
@@ -135,18 +135,18 @@ cpp2::in<identity> f = identity();
     static_cast<void>(std::move(f));
   }
   {
-    auto f {[]() -> void{
+    auto f {[]() mutable -> void{
       static_assert(t().f() == 0);
-      auto g {[]<typename T>([[maybe_unused]] T const& unnamed_param_1) -> std::void_t<decltype(T().f())>{}}; 
+      auto g {[]<typename T>([[maybe_unused]] T const& unnamed_param_1) mutable -> std::void_t<decltype(T().f())>{}}; 
       static_assert(!(std::is_invocable_v<decltype(std::move(g)),u>));
       using ns::f;
     }}; 
     static_cast<void>(std::move(f));
   }
   {
-    auto f {[]() -> void{
+    auto f {[]() mutable -> void{
       using ns::f;
-      static_cast<void>([]() -> void{
+      static_cast<void>([]() mutable -> void{
         static_assert(CPP2_UFCS(f)(t()) == 0);
         // static_assert(u().f() == 1);
       });
@@ -158,15 +158,15 @@ cpp2::in<identity> f = identity();
     static_cast<void>(std::move(f));
   }
   {
-    auto f {[]() -> void{
-      static_cast<void>([]() -> void{
+    auto f {[]() mutable -> void{
+      static_cast<void>([]() mutable -> void{
         static_assert(t().f() == 0);
-        auto g {[]<typename T>([[maybe_unused]] T const& unnamed_param_1) -> std::void_t<decltype(T().f())>{}}; 
+        auto g {[]<typename T>([[maybe_unused]] T const& unnamed_param_1) mutable -> std::void_t<decltype(T().f())>{}}; 
         static_assert(!(std::is_invocable_v<decltype(std::move(g)),u>));
       });
       {
         static_assert(t().f() == 0);
-        auto g {[]<typename T>([[maybe_unused]] T const& unnamed_param_1) -> std::void_t<decltype(T().f())>{}}; 
+        auto g {[]<typename T>([[maybe_unused]] T const& unnamed_param_1) mutable -> std::void_t<decltype(T().f())>{}}; 
         static_assert(!(std::is_invocable_v<decltype(std::move(g)),u>));
       }
       using ns::f;
