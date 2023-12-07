@@ -4480,7 +4480,7 @@ auto pretty_print_visualize(iteration_statement_node const& n, int indent)
 
     auto next_expr = std::string{};
     if (n.next_expression) {
-        next_expr += std::string{"\n"} + pre(indent+1) + "next " + pretty_print_visualize(*n.next_expression, indent);
+        next_expr += std::string{"\n"} + pre(indent) + "next " + pretty_print_visualize(*n.next_expression, indent);
     }
 
     auto stmts = std::string{};
@@ -4508,9 +4508,10 @@ auto pretty_print_visualize(iteration_statement_node const& n, int indent)
         assert (n.condition);
         ret += "do "
             + stmts
+            + next_expr
             + "\n" + pre(indent) + "while "
             + pretty_print_visualize(*n.condition, indent)
-            + next_expr + ";";
+            + ";";
     }
     else {
         assert (n.range && n.parameter && n.body);
@@ -4609,6 +4610,10 @@ auto pretty_print_visualize(contract_node const& n, int indent)
     }
 
     ret += " )";
+
+    if (*n.kind == "assert") {
+        ret += ";";
+    }
 
     return ret;
 }
@@ -6644,7 +6649,7 @@ private:
 
     //G iteration-statement:
     //G     label? 'while' logical-or-expression next-clause? compound-statement
-    //G     label? 'do' compound-statement 'while' logical-or-expression next-clause? ';'
+    //G     label? 'do' compound-statement next-clause? 'while' logical-or-expression ';'
     //G     label? 'for' expression next-clause? 'do' unnamed-declaration
     //G
     //G label:
@@ -6743,13 +6748,13 @@ private:
         else if (*n->identifier == "do")
         {
             if (!handle_compound_statement  ()) { return {}; }
+            if (!handle_optional_next_clause()) { return {}; }
             if (curr() != "while") {
                 error("do loop body must be followed by 'while'");
                 return {};
             }
             next();
             if (!handle_logical_expression  ()) { return {}; }
-            if (!handle_optional_next_clause()) { return {}; }
             if (curr().type() != lexeme::Semicolon) {
                 error("missing ; after do..while loop condition");
                 next();

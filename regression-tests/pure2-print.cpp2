@@ -38,7 +38,7 @@ outer: @print type = {
 
             while s.empty() next a() { break; }
 
-            do { } while s.empty() next b();
+            do { } next b() while s.empty();
 
             label: for m next c() do (_) { continue label; }
 

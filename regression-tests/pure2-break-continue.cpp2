@@ -93,11 +93,11 @@ do_continue_inner: () =
             }
             std::cout << "inner ";
         }
-        while j<3 next j++;
+        next j++ while j<3;
 
         std::cout << "outer ";
     }
-    while i<3 next i++;
+    next i++ while i<3;
 }
 
 do_continue_outer: () =
@@ -112,11 +112,11 @@ do_continue_outer: () =
             }
             std::cout << "inner ";
         }
-        while j<3 next j++;
+        next j++ while j<3;
 
         std::cout << "outer ";
     }
-    while i<3 next i++;
+    next i++ while i<3;
 }
 
 do_break_inner: () =
@@ -131,11 +131,11 @@ do_break_inner: () =
             }
             std::cout << "inner ";
         }
-        while j<3 next j++;
+        next j++ while j<3;
 
         std::cout << "outer ";
     }
-    while i<3 next i++;
+    next i++ while i<3;
 }
 
 do_break_outer: () =
@@ -150,11 +150,11 @@ do_break_outer: () =
             }
             std::cout << "inner ";
         }
-        while j<3 next j++;
+        next j++ while j<3;
 
         std::cout << "outer ";
     }
-    while i<3 next i++;
+    next i++ while i<3;
 }
 
 for_continue_inner: () =

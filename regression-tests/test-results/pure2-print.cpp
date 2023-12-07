@@ -122,7 +122,7 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
 
             for( ; CPP2_UFCS(empty)(s); a() ) {break; }
 
-            do {} while ( CPP2_UFCS(empty)(s) && [&]{ b() ; return true; }() );
+            do {} while ( [&]{ b() ; return true; }() && CPP2_UFCS(empty)(s));
 
             for ( [[maybe_unused]] auto const& unnamed_param_1 : m ) { { do {goto CONTINUE_43_13; } while (false); c(); } CPP2_CONTINUE_BREAK(43_13) }
 

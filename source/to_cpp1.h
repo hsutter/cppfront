@@ -2205,14 +2205,14 @@ public:
                 printer.print_extra(" CPP2_CONTINUE_BREAK("+labelname+") }");
             }
             printer.print_cpp2(" while ( ", n.position());
-            emit(*n.condition);
             if (n.next_expression) {
                 //  Gotta say, this feels kind of nifty... short-circuit eval
                 //  and smuggling work into a condition via a lambda, O my...
-                printer.print_cpp2(" && [&]{ ", n.position());
+                printer.print_cpp2("[&]{ ", n.position());
                 emit(*n.next_expression);
-                printer.print_cpp2(" ; return true; }() ", n.position());
+                printer.print_cpp2(" ; return true; }() && ", n.position());
             }
+            emit(*n.condition);
             printer.print_cpp2(");", n.position());
         }
 
@@ -2231,10 +2231,26 @@ public:
             //        but some major compilers seem to have random troubles with that;
             //        the workaround to avoid their bugs for now is to emit a { } block
             //        around the Cpp1 range-for and make the scope variable a normal local
+
             printer.print_cpp2("for ( ", n.position());
+
             emit(*n.parameter);
+
             printer.print_cpp2(" : ", n.position());
-            emit(*n.range);
+
+            //  If this expression is just a single expression-list, we can
+            //  take over direct control of emitting it without needing to
+            //  go through the whole grammar, and surround it with braces
+            if (n.range->is_expression_list()) {
+                printer.print_cpp2( "{ ", n.position() );
+                emit(*n.range->get_expression_list(), false);
+                printer.print_cpp2( " }", n.position() );
+            }
+            //  Otherwise, just emit the general expression as usual
+            else {
+                emit(*n.range);
+            }
+
             printer.print_cpp2(" ) ", n.position());
             if (!labelname.empty()) {
                 printer.print_extra("{");

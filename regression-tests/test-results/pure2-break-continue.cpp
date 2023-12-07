@@ -161,14 +161,14 @@ auto do_continue_inner() -> void
             std::cout << "inner ";
         } CPP2_CONTINUE_BREAK(89_9) }
 #line 89 "pure2-break-continue.cpp2"
-         while ( 
+         while ( [&]{ 
 
 #line 96 "pure2-break-continue.cpp2"
-        cpp2::cmp_less(j,3) && [&]{ ++j ; return true; }() );
+        ++j ; return true; }() && cpp2::cmp_less(j,3));
 
         std::cout << "outer ";
-    } while ( 
-    cpp2::cmp_less(i,3) && [&]{ ++i ; return true; }() );
+    } while ( [&]{ 
+    ++i ; return true; }() && cpp2::cmp_less(i,3));
 }
 
 auto do_continue_outer() -> void
@@ -183,16 +183,16 @@ auto do_continue_outer() -> void
                 goto CONTINUE_106_5;
             }
             std::cout << "inner ";
-        } while ( 
-        cpp2::cmp_less(j,3) && [&]{ ++j ; return true; }() );
+        } while ( [&]{ 
+        ++j ; return true; }() && cpp2::cmp_less(j,3));
 
         std::cout << "outer ";
     } CPP2_CONTINUE_BREAK(106_5) }
 #line 106 "pure2-break-continue.cpp2"
-     while ( 
+     while ( [&]{ 
 
 #line 119 "pure2-break-continue.cpp2"
-    cpp2::cmp_less(i,3) && [&]{ ++i ; return true; }() );
+    ++i ; return true; }() && cpp2::cmp_less(i,3));
 }
 
 auto do_break_inner() -> void
@@ -209,14 +209,14 @@ auto do_break_inner() -> void
             std::cout << "inner ";
         } CPP2_CONTINUE_BREAK(127_9) }
 #line 127 "pure2-break-continue.cpp2"
-         while ( 
+         while ( [&]{ 
 
 #line 134 "pure2-break-continue.cpp2"
-        cpp2::cmp_less(j,3) && [&]{ ++j ; return true; }() );
+        ++j ; return true; }() && cpp2::cmp_less(j,3));
 
         std::cout << "outer ";
-    } while ( 
-    cpp2::cmp_less(i,3) && [&]{ ++i ; return true; }() );
+    } while ( [&]{ 
+    ++i ; return true; }() && cpp2::cmp_less(i,3));
 }
 
 auto do_break_outer() -> void
@@ -231,16 +231,16 @@ auto do_break_outer() -> void
                 goto BREAK_144_5;
             }
             std::cout << "inner ";
-        } while ( 
-        cpp2::cmp_less(j,3) && [&]{ ++j ; return true; }() );
+        } while ( [&]{ 
+        ++j ; return true; }() && cpp2::cmp_less(j,3));
 
         std::cout << "outer ";
     } CPP2_CONTINUE_BREAK(144_5) }
 #line 144 "pure2-break-continue.cpp2"
-     while ( 
+     while ( [&]{ 
 
 #line 157 "pure2-break-continue.cpp2"
-    cpp2::cmp_less(i,3) && [&]{ ++i ; return true; }() );
+    ++i ; return true; }() && cpp2::cmp_less(i,3));
 }
 
 auto for_continue_inner() -> void

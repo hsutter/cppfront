@@ -45,17 +45,17 @@ outer: type =
                 {
                 };
             while s.empty()
-                next a()
+            next a()
                 {
                     break;
                 }
             do 
                 {
                 }
-            while s.empty()
-                next b();
+            next b()
+            while s.empty();
             label: for m
-                next c()
+            next c()
             do (in _:)
                 {
                     continue label;
@@ -75,7 +75,7 @@ outer: type =
                     c();
                 }
             }
-            assert( true )
+            assert( true );
             return :() -> move std::string = (s + m[0])$;();
         }
 

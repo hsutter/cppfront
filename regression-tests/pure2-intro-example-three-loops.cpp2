@@ -19,7 +19,7 @@ main: () -> int = {
 
     do {
         std::cout << std::setw(4) << "**";
-    } while i* > 1 next i*--;
+    } next i*-- while i*>0;
 
     std::cout << "\n";
     for words do (inout word)

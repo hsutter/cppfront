@@ -50,7 +50,7 @@ auto decorate_and_print(auto& thing) -> void{
 
     do {
         std::cout << std::setw(4) << "**";
-    } while ( cpp2::cmp_greater(*cpp2::assert_not_null(i),1) && [&]{ --*cpp2::assert_not_null(i) ; return true; }() );
+    } while ( [&]{ --*cpp2::assert_not_null(i) ; return true; }() && cpp2::cmp_greater(*cpp2::assert_not_null(i),0));
 
     std::cout << "\n";
     for ( auto& word : words ) 
