@@ -461,10 +461,11 @@ auto assert_in_bounds_impl(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_
     requires (std::is_integral_v<CPP2_TYPEOF(arg)> &&
              requires { std::size(x); std::ssize(x); x[arg]; std::begin(x) + 2; })
 {
-    Bounds.expects(0 <= arg && arg < [&]() -> auto {
+    auto max = [&]() -> auto {
         if constexpr (std::is_signed_v<CPP2_TYPEOF(arg)>) { return std::ssize(x); }
         else { return std::size(x); }
-    }(), "out of bounds access attempt detected" CPP2_SOURCE_LOCATION_ARG);
+    };
+    Bounds.expects(0 <= arg && arg < max(), ("out of bounds access attempt detected - attempted index " + std::to_string(arg) + ", [min,max] range is [0," + std::to_string(max()-1) + "]").c_str()  CPP2_SOURCE_LOCATION_ARG);
 }
 
 auto assert_in_bounds_impl(auto&&, auto&& CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> void
