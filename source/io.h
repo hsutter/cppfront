@@ -719,6 +719,7 @@ auto process_cpp2_line(
     auto prev2 = ' ';
     auto in_string_literal = false;
     auto in_char_literal   = false;
+    auto in_numeric_literal = false;
 
     for (auto i = colno_t{0}; i < ssize(line); ++i)
     {
@@ -782,10 +783,22 @@ auto process_cpp2_line(
                 if (prev != '\\' || prev2 == '\\') { in_string_literal = true; }
 
             break;case '\'':
-                if (prev != '\\' || prev2 == '\\') { in_char_literal = true; }
+                if (!in_numeric_literal && (prev != '\\' || prev2 == '\\'))
+                {
+                    in_char_literal = true;
+                }
 
             break;default: ;
             }
+            if (in_numeric_literal)
+            {
+                // Note: this allows _ but that will be caught elsewhere
+                if (!is_identifier_continue(line[i]) && line[i] != '\'')
+                    in_numeric_literal = false;
+            }
+            // either decimal or other numeric literal starting with 0
+            else if (line[i] >= '0' && line[i] <= '9')
+                in_numeric_literal = true;
         }
 
         prev2 = prev;

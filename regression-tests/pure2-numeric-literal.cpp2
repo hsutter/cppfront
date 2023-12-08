@@ -1,0 +1,8 @@
+// } on same line
+niam: () = { _ = 0'1; }
+
+main: () = {
+    x := 0'1; // OK
+    if 1 { x = 1'2; } // same
+    assert(x == 12);
+}
