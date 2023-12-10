@@ -64,7 +64,7 @@ auto pad(int padding)
 //-----------------------------------------------------------------------
 //
 static auto flag_clean_cpp1 = false;
-static cmdline_processor::register_flag cmd_noline(
+static cmdline_processor::register_flag cmd_clean_cpp1(
     9,
     "clean-cpp1",
     "Emit clean Cpp1 without #line directives",
@@ -1619,7 +1619,7 @@ public:
         source_position pos          = {}
     )
         -> void
-    {
+    {   STACKINSTR
         if (pos == source_position{}) {
             pos = n.position();
         }
@@ -1678,7 +1678,7 @@ public:
         source_position     pos = {}
     )
         -> void
-    {
+    {   STACKINSTR
         if (pos == source_position{}) {
             pos = n.position();
         }
@@ -1700,7 +1700,7 @@ public:
         bool is_qualified = false
     )
         -> void
-    {
+    {   STACKINSTR
         auto last_use = is_definite_last_use(n.identifier);
 
         bool add_forward =
@@ -1815,7 +1815,7 @@ public:
         bool include_unqualified_id = true
         )
         -> void
-    {
+    {   STACKINSTR
         if (!sema.check(n)) {
             return;
         }
@@ -1857,7 +1857,7 @@ public:
         source_position     pos = {}
     )
         -> void
-    {
+    {   STACKINSTR
         if (pos == source_position{}) {
             pos = n.position();
         }
@@ -1885,7 +1885,7 @@ public:
         bool                      is_local_name          = true
     )
         -> void
-    {
+    {   STACKINSTR
         try_emit<id_expression_node::qualified  >(n.id);
         try_emit<id_expression_node::unqualified>(n.id, false, is_local_name);
     }
@@ -1896,7 +1896,7 @@ public:
         colno_t                indent
     )
         -> void
-    {
+    {   STACKINSTR
         for (auto& line : prolog.mem_inits) {
             printer.print_extra("\n");
             printer.print_extra(pad(indent-1));
@@ -1909,7 +1909,7 @@ public:
         colno_t                indent
     )
         -> void
-    {
+    {   STACKINSTR
         for (auto& line : prolog.statements) {
             printer.print_extra("\n");
             printer.print_extra(pad(indent-1));
@@ -1922,7 +1922,7 @@ public:
         colno_t                         indent
     )
         -> void
-    {
+    {   STACKINSTR
         for (auto& line : epilog) {
             printer.print_extra("\n");
             printer.print_extra(pad(indent-1));
@@ -1938,7 +1938,7 @@ public:
         std::vector<std::string> const& function_epilog = {}
     )
         -> void
-    {
+    {   STACKINSTR
         emit_prolog_mem_inits(function_prolog, n.body_indent+1);
 
         printer.print_cpp2( "{", n.open_brace );
@@ -1963,7 +1963,7 @@ public:
         bool                           is_expression
     )
         -> void
-    {
+    {   STACKINSTR
         auto constexpr_qualifier = std::string{};
         if (n.is_constexpr) {
             constexpr_qualifier = "constexpr ";
@@ -2115,7 +2115,7 @@ public:
     //
     auto emit(selection_statement_node const& n)
         -> void
-    {
+    {   STACKINSTR
         assert(n.identifier);
         emit(*n.identifier);
 
@@ -2146,7 +2146,7 @@ public:
     //
     auto emit(iteration_statement_node const& n)
         -> void
-    {
+    {   STACKINSTR
         assert(n.identifier);
         in_non_rvalue_context.push_back(true);
         auto guard = finally([&]{ in_non_rvalue_context.pop_back(); });
@@ -2303,7 +2303,7 @@ public:
     //
     auto emit(return_statement_node const& n)
         -> void
-    {
+    {   STACKINSTR
         assert (!current_functions.empty());
         if (current_functions.back().func->has_postconditions()) {
             printer.print_cpp2( "cpp2_finally_presuccess.run(); ", n.position() );
@@ -2462,7 +2462,7 @@ public:
     //
     auto emit(jump_statement_node const& n)
         -> void
-    {
+    {   STACKINSTR
         assert(n.keyword);
 
         if (n.label) {
@@ -2504,7 +2504,7 @@ public:
     //
     auto emit(using_statement_node const& n)
         -> void
-    {
+    {   STACKINSTR
         assert(n.keyword);
         emit(*n.keyword);
 
@@ -2606,7 +2606,7 @@ public:
     //
     auto emit(primary_expression_node const& n)
         -> void
-    {
+    {   STACKINSTR
         try_emit<primary_expression_node::identifier     >(n.expr);
         try_emit<primary_expression_node::expression_list>(n.expr);
         try_emit<primary_expression_node::id_expression  >(n.expr);
@@ -2904,7 +2904,7 @@ public:
         bool                     for_lambda_capture = false
     )
         -> void
-    {
+    {   STACKINSTR
         if (!sema.check(n)) {
             return;
         }
@@ -3369,7 +3369,7 @@ public:
     //
     auto emit(prefix_expression_node const& n)
         -> void
-    {
+    {   STACKINSTR
         auto suffix = std::string{};
         for (auto const& x : n.ops) {
             assert(x);
@@ -3394,7 +3394,7 @@ public:
     //
     auto emit(is_as_expression_node const& n)
         -> void
-    {
+    {   STACKINSTR
         std::string prefix = {};
         std::string suffix = {};
 
@@ -3488,7 +3488,7 @@ public:
     >
     auto emit(binary_expression_node<Name,Term> const& n)
         -> void
-    {
+    {   STACKINSTR
         assert(n.expr);
         assert(
             n.terms.empty()
@@ -3817,7 +3817,7 @@ public:
     //
     auto emit(expression_node const& n)
         -> void
-    {
+    {   STACKINSTR
         assert(n.expr);
         push_need_expression_list_parens(true);
         emit(*n.expr);
@@ -3832,7 +3832,7 @@ public:
         bool                        parens_ok = true
     )
         -> void
-    {
+    {   STACKINSTR
         auto add_parens =
             should_add_expression_list_parens()
             && !n.inside_initializer
@@ -3911,7 +3911,7 @@ public:
         bool                             emitted             = false
     )
         -> void
-    {
+    {   STACKINSTR
         assert(n.expr);
         auto generating_return = false;
 
@@ -4019,7 +4019,7 @@ public:
         std::vector<std::string> const& function_epilog     = {}
     )
         -> void
-    {
+    {   STACKINSTR
         if (!sema.check(n)) {
             return;
         }
@@ -4125,7 +4125,7 @@ public:
         bool                              is_template_parameter = false
     )
         -> void
-    {
+    {   STACKINSTR
         if (!sema.check(n)) {
             return;
         }
@@ -4458,7 +4458,7 @@ public:
         bool                                   is_template_parameter = false
     )
         -> void
-    {
+    {   STACKINSTR
         in_parameter_list = true;
 
         if (is_returns) {
@@ -4517,7 +4517,7 @@ public:
         contract_node& n
     )
         -> void
-    {
+    {   STACKINSTR
         assert (n.kind);
 
         //  For a postcondition, we'll wrap it in a lambda and register it
@@ -4593,7 +4593,7 @@ public:
         std::string               suffix1         = {}
     )
         -> void
-    {
+    {   STACKINSTR
         assert(n.parameters);
 
         if (
@@ -4879,7 +4879,7 @@ public:
         std::string             prefix
     )
         -> void
-    {
+    {   STACKINSTR
         assert(n.is_function());
         auto& func = std::get<declaration_node::a_function>(n.type);
         assert(func);
@@ -5237,7 +5237,7 @@ public:
         std::string const&      capture_intro = {}
     )
         -> void
-    {
+    {   STACKINSTR
         // Helper for declarations with parent *template-head*s.
         auto const emit_parent_template_parameters = [&]() {
             auto parent_template_parameters = std::string{};

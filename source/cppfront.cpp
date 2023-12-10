@@ -17,12 +17,12 @@
 
 #include "to_cpp1.h"
 
-static auto enable_debug_output_files = false;
+static auto flag_debug_output = false;
 static cpp2::cmdline_processor::register_flag cmd_debug(
     9,
     "debug",
-    "Emit compiler debug output files",
-    []{ enable_debug_output_files = true; }
+    "Emit compiler debug output",
+    []{ flag_debug_output = true; }
 );
 
 auto main(
@@ -101,9 +101,14 @@ auto main(
         }
 
         //  And, if requested, the debug information
-        if (enable_debug_output_files) {
+        if (flag_debug_output) {
             c.debug_print();
         }
+    }
+
+    if (flag_internal_debug) {
+        stackinstr::print_deepest();
+        stackinstr::print_largest();
     }
 
     return exit_status;
