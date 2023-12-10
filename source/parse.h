@@ -145,6 +145,8 @@ struct primary_expression_node
         std::unique_ptr<inspect_expression_node>,
         std::unique_ptr<literal_node>
     > expr;
+    // Cache to work around <https://github.com/llvm/llvm-project/issues/73336>.
+    bool expression_list_is_fold_expression = false;
 
 
     //  API
@@ -1556,7 +1558,7 @@ auto primary_expression_node::is_fold_expression() const
     break;case identifier:
         return *std::get<identifier>(expr) == "...";
     break;case expression_list:
-        return std::get<expression_list>(expr)->is_fold_expression();
+        return expression_list_is_fold_expression;
     break;case id_expression:
         return std::get<id_expression>(expr)->is_fold_expression();
     break;default: ; // the others can't contain folds
@@ -5422,6 +5424,7 @@ private:
             ) {
                 expr_list->inside_initializer = false;
             }
+            n->expression_list_is_fold_expression = expr_list->is_fold_expression();
             n->expr = std::move(expr_list);
             return n;
         }
