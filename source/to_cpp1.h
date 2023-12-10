@@ -4594,6 +4594,10 @@ public:
     )
         -> void
     {
+        if (!sema.check(n)) {
+            return;
+        }
+
         assert(n.parameters);
 
         if (
@@ -6093,7 +6097,7 @@ public:
                     func->has_non_void_return_type()
                     && !func->is_assignment()
                     && !func->is_compound_assignment()
-                    && !func->is_prefix_increment_or_decrement()
+                    && !func->is_increment_or_decrement()
                     && (
                         printer.get_phase() == printer.phase1_type_defs_func_decls
                         || n.has_initializer()  // so we're printing it in phase 2

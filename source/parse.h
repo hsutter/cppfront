@@ -2229,7 +2229,7 @@ struct function_type_node
     auto is_comparison() const
         -> bool;
 
-    auto is_prefix_increment_or_decrement() const
+    auto is_increment_or_decrement() const
         -> bool;
 
     auto is_compound_assignment() const
@@ -3200,11 +3200,11 @@ public:
         return false;
     }
 
-    auto is_prefix_increment_or_decrement() const
+    auto is_increment_or_decrement() const
         -> bool
     {
         if (auto func = std::get_if<a_function>(&type)) {
-            return (*func)->is_prefix_increment_or_decrement();
+            return (*func)->is_increment_or_decrement();
         }
         //  else
         return false;
@@ -3722,17 +3722,12 @@ auto function_type_node::is_comparison() const
 }
 
 
-auto function_type_node::is_prefix_increment_or_decrement() const
+auto function_type_node::is_increment_or_decrement() const
     -> bool
 {
     if (
-        (
-            my_decl->has_name("operator++")
-            || my_decl->has_name("operator--")
-        )
-        && (*parameters).ssize() == 1
-        && (*parameters)[0]->has_name("this")
-        && (*parameters)[0]->direction() == passing_style::inout
+        my_decl->has_name("operator++")
+        || my_decl->has_name("operator--")
         )
     {
         return true;

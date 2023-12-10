@@ -1523,6 +1523,34 @@ public:
     }
 
 
+    auto check(function_type_node const& n)
+        -> bool
+    {
+        //  An increment/decrement function must have a single parameter that is 'inout this'
+        if (
+            (
+                n.my_decl->has_name("operator++")
+                || n.my_decl->has_name("operator--")
+            )
+            &&
+            (
+               (*n.parameters).ssize() != 1
+            || !(*n.parameters)[0]->has_name("this")
+            || (*n.parameters)[0]->direction() != passing_style::inout
+            )
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "a user-defined " + n.my_decl->name()->to_string() + " must have a single 'inout this' parameter"
+            );
+            return false;
+        }
+
+        return true;
+    }
+
+
     auto check(statement_node const& n)
         -> bool
     {
