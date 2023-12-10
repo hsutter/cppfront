@@ -4594,11 +4594,11 @@ public:
     )
         -> void
     {
+        assert(n.parameters);
+
         if (!sema.check(n)) {
             return;
         }
-
-        assert(n.parameters);
 
         if (
             is_main
