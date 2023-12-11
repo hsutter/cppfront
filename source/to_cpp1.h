@@ -4594,8 +4594,6 @@ public:
     )
         -> void
     {   STACKINSTR
-        assert(n.parameters);
-
         if (!sema.check(n)) {
             return;
         }
@@ -6273,6 +6271,15 @@ public:
                 else {
                     printer.print_cpp2( ";", n.position() );
                 }
+
+                //  If this is ++ or --, also generate a Cpp1 postfix version of the operator
+                if (func->is_increment_or_decrement()) {
+                    printer.print_cpp2(
+                        " public: auto " + n.name()->to_string() + "(int) { auto ret = *this; ++*this; return ret; }",
+                        n.position()
+                    );
+                }
+
                 //  Note: Not just early "return;" here because we may need to
                 //  recurse to emit the generated operator= declarations too,
                 //  so all the definition work goes into a big 'else' branch

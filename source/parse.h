@@ -2843,6 +2843,29 @@ public:
         return false;
     }
 
+    auto is_not_a_copyable_type() const
+        -> bool
+    {
+        //  If we're not a type, we're not a copyable type
+        if (!is_type()) {
+            return true;
+        }
+
+        //  If we're letting Cpp1 generate SMFs, we're likely copyable
+        if (!member_function_generation) {
+            return false;
+        }
+
+        //  If we have a copy constructor, we're copyable
+        for (auto& decl : get_type_scope_declarations())
+        if  (decl->is_constructor_with_that())
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     auto parent_is_function   () const -> bool
         { return  parent_declaration && parent_declaration->type.index() == a_function;  }
     auto parent_is_object     () const -> bool

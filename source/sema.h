@@ -1526,25 +1526,39 @@ public:
     auto check(function_type_node const& n)
         -> bool
     {
+        assert(n.parameters);
+
         //  An increment/decrement function must have a single parameter that is 'inout this'
+        //  and be a member of a copyable type (that defined a copy operator= or suppressed
+        //  member function generation to get the Cpp1 generated copy functions)
+        // 
+        //  Future: See if there's demand for non-member increment/decrement
         if (
-            (
-                n.my_decl->has_name("operator++")
-                || n.my_decl->has_name("operator--")
-            )
-            &&
-            (
-               (*n.parameters).ssize() != 1
-            || !(*n.parameters)[0]->has_name("this")
-            || (*n.parameters)[0]->direction() != passing_style::inout
-            )
+            n.my_decl->has_name("operator++")
+            || n.my_decl->has_name("operator--")
             )
         {
-            errors.emplace_back(
-                n.position(),
-                "a user-defined " + n.my_decl->name()->to_string() + " must have a single 'inout this' parameter"
-            );
-            return false;
+            if (
+               (*n.parameters).ssize() != 1
+                || !(*n.parameters)[0]->has_name("this")
+                || (*n.parameters)[0]->direction() != passing_style::inout
+                )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "a user-defined " + n.my_decl->name()->to_string() + " must have a single 'inout this' parameter"
+                );
+                return false;
+            }
+
+            if (n.my_decl->parent_declaration->is_not_a_copyable_type())
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "a user-defined " + n.my_decl->name()->to_string() + " must be a member of a copyable type"
+                );
+                return false;
+            }
         }
 
         return true;
