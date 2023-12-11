@@ -6275,7 +6275,12 @@ public:
                 //  If this is ++ or --, also generate a Cpp1 postfix version of the operator
                 if (func->is_increment_or_decrement()) {
                     printer.print_cpp2(
-                        " public: auto " + n.name()->to_string() + "(int) { auto ret = *this; ++*this; return ret; }",
+                        " public: auto " + n.name()->to_string() + "(int) -> " + n.parent_declaration->name()->to_string(),
+                        n.position()
+                    );
+                    emit_requires_clause();
+                    printer.print_cpp2(
+                        " { auto ret = *this; ++*this; return ret; }",
                         n.position()
                     );
                 }

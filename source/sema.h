@@ -1551,6 +1551,14 @@ public:
                 return false;
             }
 
+            if (n.has_deduced_return_type()) {
+                errors.emplace_back(
+                    n.position(),
+                    "a user-defined " + n.my_decl->name()->to_string() + " must have a specific (not deduced) return type"
+                );
+                return false;
+            }
+
             if (n.my_decl->parent_declaration->is_not_a_copyable_type())
             {
                 errors.emplace_back(

@@ -339,6 +339,7 @@ function_declaration: @copyable type =
     is_copy_or_move              : (this) -> bool = is_constructor_with_that() || is_assignment_with_that();
 
     has_declared_return_type     : (this) -> bool = n*.has_declared_return_type();
+    has_deduced_return_type      : (this) -> bool = n*.has_deduced_return_type();
     has_bool_return_type         : (this) -> bool = n*.has_bool_return_type();
     has_non_void_return_type     : (this) -> bool = n*.has_non_void_return_type();
 

@@ -2256,6 +2256,18 @@ struct function_type_node
         return returns.index() != empty;
     }
 
+    auto has_deduced_return_type() const
+        -> bool
+    {
+        return
+            returns.index() == empty
+            || (
+                returns.index() == id
+                && std::get<function_type_node::id>(returns).type->is_wildcard()
+                )
+            ;
+    }
+
     auto unnamed_return_type_to_string() const
         -> std::string
     {
@@ -3354,6 +3366,16 @@ public:
     {
         if (auto func = std::get_if<a_function>(&type)) {
             return (*func)->has_declared_return_type();
+        }
+        //  else
+        return false;
+    }
+
+    auto has_deduced_return_type() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->has_deduced_return_type();
         }
         //  else
         return false;
