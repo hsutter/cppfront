@@ -326,9 +326,7 @@ public:
             --i;
         }
         ++i;
-        while (
-            i-- != symbols.begin()    // TODO: See pure2-deducing-pointers-error.cpp2
-            )
+        while (i-- != symbols.begin())
         {
             if (
                 i->sym.index() == symbol::active::declaration
