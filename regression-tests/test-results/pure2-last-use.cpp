@@ -12,25 +12,56 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-last-use.cpp2"
+[[nodiscard]] auto f_inout(auto& x) -> auto;
+
+#line 6 "pure2-last-use.cpp2"
+auto issue_350() -> void;
+
+#line 18 "pure2-last-use.cpp2"
 auto issue_683(auto const& args) -> void;
 
-#line 10 "pure2-last-use.cpp2"
+#line 27 "pure2-last-use.cpp2"
+auto issue_825() -> void;
+
+#line 32 "pure2-last-use.cpp2"
 auto issue_832() -> void;
 
-#line 15 "pure2-last-use.cpp2"
+#line 37 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int;
 
 //=== Cpp2 function definitions =================================================
 
 #line 1 "pure2-last-use.cpp2"
-auto issue_683(auto const& args) -> void{
+[[nodiscard]] auto f_inout(auto& x) -> auto{
 #line 2 "pure2-last-use.cpp2"
+    x *= 2;
+    return x; 
+}
+
+auto issue_350() -> void{
+    auto x {21}; 
+
+    auto l1 {[](auto&& x) mutable -> void{
+        std::cout << f_inout(CPP2_FORWARD(x)) << std::endl;
+    }}; 
+
+    std::move(l1)(x);
+
+    ++x;
+}
+
+auto issue_683(auto const& args) -> void{
     for ( auto const& n : args ) {
         static_cast<void>(n);
     }
 
     cpp2::deferred_init<int> n; 
     n.construct(0);
+}
+
+auto issue_825() -> void{
+  static_cast<void>([](auto b) mutable -> auto { return static_cast<void>(std::move(b));  });
+  static_cast<void>([](auto&& d) mutable -> auto { return static_cast<void>(CPP2_FORWARD(d));  });
 }
 
 auto issue_832() -> void{
@@ -40,7 +71,7 @@ auto issue_832() -> void{
 
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 16 "pure2-last-use.cpp2"
+#line 38 "pure2-last-use.cpp2"
   issue_683(args);
 }
 

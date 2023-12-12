@@ -1668,9 +1668,7 @@ public:
             || n.pass == passing_style::forward
             )
         {
-            // Handle variables in unnamed functions. For such cases scope_depth is increased by +1
-            auto depth = scope_depth + ((n.declaration->parent_is_function() && n.declaration->parent_declaration->name() == nullptr) ? 1 : 0 );
-            symbols.emplace_back( depth, declaration_sym( true, n.declaration.get(), n.declaration->name(), n.declaration->initializer.get(), &n));
+            symbols.emplace_back( scope_depth, declaration_sym( true, n.declaration.get(), n.declaration->name(), n.declaration->initializer.get(), &n));
         }
     }
 
@@ -1716,7 +1714,10 @@ public:
             //  Skip type scope (member) variables
             && !(n.parent_is_type() && n.is_object())
             //  Skip unnamed variables
-            && n.identifier
+            && (
+                n.identifier
+                || n.is_function_expression()
+                )
             //  Skip non-out parameters
             && (
                 !inside_parameter_list
@@ -1738,7 +1739,10 @@ public:
             //  Skip type scope (member) variables
             && !(n.parent_is_type() && n.is_object())
             //  Skip unnamed variables
-            && n.identifier
+            && (
+                n.identifier
+                || n.is_function_expression()
+                )
             //  Skip non-out parameters
             && (
                 !inside_parameter_list
