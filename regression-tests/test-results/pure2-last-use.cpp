@@ -12,6 +12,14 @@
 class issue_857;
   
 
+#line 53 "pure2-last-use.cpp2"
+class issue_857_2;
+  
+
+#line 58 "pure2-last-use.cpp2"
+class issue_857_3;
+  
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-last-use.cpp2"
@@ -40,12 +48,30 @@ class issue_857 {
   public: auto g() && -> void;
   public: auto g(issue_857&& that) && -> void;
 //h: (move this) = f_copy(this.a, this.b);
-//i: (move this) = f_copy(a);
+  public: auto i() && -> void;
+  public: auto j() && -> void;
+  public: auto k() && -> void;
 };
 
-auto draw() -> void;
+class issue_857_2 {
+  public: std::unique_ptr<int> a; // OK: No error about 'a' being unused.
+};
 
-#line 57 "pure2-last-use.cpp2"
+extern int gi;
+class issue_857_3 {
+  public: std::pair<std::unique_ptr<int>,std::add_lvalue_reference_t<int>> p {
+    cpp2_new<int>(0), gi}; 
+  public: auto f() && -> void;
+
+#line 65 "pure2-last-use.cpp2"
+};
+
+//draw: () = {
+//  pos       := 0;
+//  vertex    := :(_) = { };
+//  _ = (pos).vertex();
+//}
+
 auto main(int const argc_, char** argv_) -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -97,16 +123,23 @@ auto f_copy([[maybe_unused]] auto ...unnamed_param_1) -> void{}
   auto issue_857::g() && -> void { f_copy(std::move((*this)).a);  }
   auto issue_857::g(issue_857&& that) && -> void { f_copy(std::move((*this)).a, std::move(that).a);  }
 
-#line 51 "pure2-last-use.cpp2"
-auto draw() -> void{
-  auto pos {0}; 
-  auto vertex {[]([[maybe_unused]] auto const& unnamed_param_1) mutable -> void{}}; 
-  static_cast<void>(CPP2_UFCS(std::move(vertex))((std::move(pos))));
-}
+  auto issue_857::i() && -> void { f_copy(std::move(*this).a);  }
+  auto issue_857::j() && -> void { f_copy(std::move(*this).a);  }
+  auto issue_857::k() && -> void { f_copy(std::move(*this).a, std::move(*this).b);  }
 
+#line 57 "pure2-last-use.cpp2"
+int gi {0}; 
+
+#line 61 "pure2-last-use.cpp2"
+  auto issue_857_3::f() && -> void{
+    // f_copy(p.first);
+    static_cast<void>(f_inout(std::move(*this).p.second));
+  }
+
+#line 73 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 58 "pure2-last-use.cpp2"
+#line 74 "pure2-last-use.cpp2"
   issue_683(args);
 }
 

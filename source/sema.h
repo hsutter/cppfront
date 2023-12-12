@@ -212,8 +212,8 @@ auto is_definite_initialization(token const* t)
 
 
 //  Keep a list of all token*'s found that are definite last uses
-//  for a local variable or copy or forward parameter x, which we
-//  will rewrite to move or forward from the variable.
+//  for a local or type-scope variable or copy or forward parameter x,
+//  which we will rewrite to move or forward from the variable.
 //
 struct last_use {
     token const* t;
@@ -291,7 +291,8 @@ public:
 
     auto get_declaration_of(
         token const& t,
-        bool         look_beyond_current_function = false
+        bool         look_beyond_current_function = false,
+        bool         look_up_to_type              = false
     )
         -> declaration_sym const*
     {
@@ -341,10 +342,17 @@ public:
                 if (
                     decl.declaration->type.index() == declaration_node::a_function
                     && decl.declaration->identifier
-                    && !look_beyond_current_function
                     )
                 {
-                    return nullptr;
+                    if (!look_beyond_current_function) {
+                        return nullptr;
+                    } else if (
+                        look_up_to_type
+                        && !decl.declaration->has_move_parameter_named("this")
+                        )
+                    {
+                        return nullptr;
+                    }
                 }
 
                 //  If the name matches, this is it
@@ -512,8 +520,9 @@ public:
         };
 
         //  It's a local (incl. named return value or copy or move or forward parameter)
+        //  or type-scope
         //
-        auto is_potentially_movable_local = [&](symbol const& s)
+        auto is_potentially_movable_local_or_type_scope = [&](symbol const& s)
             -> declaration_sym const*
         {
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
@@ -527,10 +536,13 @@ public:
                         )
                     )
                 {
-                    //  Must be in function scope
+                    //  Must be in function or type scope
                     if (
                         sym->declaration->parent_declaration
-                        && sym->declaration->parent_declaration->is_function()
+                        && (
+                            sym->declaration->parent_is_function()
+                            || sym->declaration->parent_is_type()
+                            )
                         )
                     {
                         return sym;
@@ -561,15 +573,16 @@ public:
                     ;
             }
 
-            //  If this is a copy, move, or forward parameter or a local variable,
+            //  If this is a copy, move, or forward parameter or a local or type-scope variable,
             //  identify and tag its definite last uses to `std::move` from them
             //
-            if (auto decl = is_potentially_movable_local(symbols[sympos])) {
+            if (auto decl = is_potentially_movable_local_or_type_scope(symbols[sympos])) {
                 assert (decl->identifier);
                 find_definite_last_uses(
                     decl->identifier,
                     sympos,
-                    decl->parameter && decl->parameter->pass == passing_style::forward
+                    decl->parameter && decl->parameter->pass == passing_style::forward,
+                    decl->declaration->parent_is_type()
                 );
             }
         }
@@ -578,18 +591,45 @@ public:
     }
 
 private:
-    //  Find the definite last uses for local variable *id starting at the
-    //  given position and depth in the symbol/scope table
+    //  Find the definite last uses for local or type-scope variable *id
+    //  starting at the given position and depth in the symbol/scope table
     //
     auto find_definite_last_uses(
         token const* id,
         int          pos,
-        bool         is_forward
+        bool         is_forward,
+        bool         in_type_scope,
+        bool         recursing = false
     ) const
         -> void
     {
         auto i = pos;
         auto depth = symbols[pos].depth;
+
+        if (
+            in_type_scope
+            && !recursing
+            )
+        {
+            //  Scan forward to the end of this scope,
+            //  recursing to its member functions
+            while (
+                i+1 < std::ssize(symbols)
+                && symbols[i+1].depth >= depth
+                )
+            {
+                assert (std::ssize(symbols) > 1);
+                if (symbols[i].sym.index() == symbol::declaration) {
+                    auto const& d = std::get<symbol::declaration>(symbols[i].sym);
+                    if (d.declaration->is_function_with_this()) {
+                        find_definite_last_uses(id, i+1, false, true, true);
+                    }
+                }
+                ++i;
+            }
+
+            return;
+        }
 
         //  Maintain a stack of the depths of the most recently seen
         //  selection statements, using the current depth-2 as a sentinel
@@ -666,10 +706,12 @@ private:
 
         //  If we arrived back at the declaration without finding a use
         //  and this isn't generated code (ignore that for now)
+        //  and this isn't in type scope
         //  and this is a user-named object (not 'this', 'that', or '_')
         if (
             i == pos
             && id->position().lineno > 0
+            && !in_type_scope
             && *id != "this"
             && *id != "that"
             && *id != "_"
@@ -700,6 +742,12 @@ private:
     ) const
         -> bool
     {
+        //  Skip type scope (member) variables,
+        //  which is checked in 'operator=' for non-'@struct's.
+        if (decl->declaration->parent_is_type()) {
+            return true;
+        }
+
         //  If this is a member variable in a constructor, the name doesn't
         //  appear lexically right in the constructor, so prepending "this."
         //  to the printed name might make the error more readable to the programmer
@@ -1602,7 +1650,7 @@ public:
     //
     int  scope_depth                              = 0;
     bool started_standalone_assignment_expression = false;
-    bool started_id_expression                    = false;
+    bool started_postfix_expression               = false;
     bool is_out_expression                        = false;
     bool inside_next_expression                   = false;
     bool inside_parameter_list                    = false;
@@ -1709,8 +1757,6 @@ public:
 
         if (
             !n.is_alias()
-            //  Skip type scope (member) variables
-            && !(n.parent_is_type() && n.is_object())
             //  Skip unnamed variables
             && (
                 n.identifier
@@ -1785,17 +1831,17 @@ public:
         }
 
         //  Otherwise it's just an identifier use (if it's not a parameter name) and
-        //  it's the first identifier of a postfix_expression
-        //  or the id-expression in a member access expression.
-        else if (started_id_expression)
+        //  it's the first identifier of a postfix_expressions (not a member name or something else)
+        else if (started_postfix_expression)
         {
-            started_id_expression = false;
+            started_postfix_expression = false;
             if (!inside_parameter_identifier && !inside_next_expression)
             {
                 //  Put this into the table if it's a use of an object in scope
                 //  or it's a 'copy' parameter (but to be a use it must be after
                 //  the declaration, not the token in the decl's name itself)
-                if (auto decl = get_declaration_of(t);
+                //  or it's a type-scope variable in a member function.
+                if (auto decl = get_declaration_of(t, true, true);
                     decl
                     && decl->declaration->name() != &t
                     )
@@ -1875,8 +1921,8 @@ public:
         }
     }
 
-    auto start(id_expression_node const&, int) {
-        started_id_expression = true;
+    auto start(postfix_expression_node const&, int) {
+        started_postfix_expression = true;
     }
 
     auto start(auto const&, int) -> void

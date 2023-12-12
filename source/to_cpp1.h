@@ -1716,6 +1716,23 @@ public:
                 )
             && !in_non_rvalue_context.back();
 
+        //  Add `std::move(*this).` when implicitly moving a member on last use.
+        //  This way, members of lvalue reference type won't be implicitly moved.
+        bool add_this = false;
+        if (add_move) {
+            auto lookup = source_order_name_lookup(n);
+            if (lookup) {
+                auto decl = get<declaration_node const*>(*lookup);
+                if (
+                    decl
+                    && decl->parent_is_type()
+                    )
+                {
+                    add_this = true;
+                }
+            }
+        }
+
         if (
             add_move
             && *(n.identifier - 1) == "return"
@@ -1741,6 +1758,9 @@ public:
 
         if (add_move) {
             printer.print_cpp2("std::move(", n.position());
+            if (add_this) {
+                printer.print_cpp2("*this).", n.position());
+            }
         }
         if (add_forward) {
             printer.print_cpp2("CPP2_FORWARD(", {n.position().lineno, n.position().colno - 8});
@@ -1799,8 +1819,10 @@ public:
         }
 
         if (
-            add_move
-            || add_forward
+            (add_move
+             || add_forward
+             )
+            && !add_this
             )
         {
             printer.print_cpp2(")", n.position());
