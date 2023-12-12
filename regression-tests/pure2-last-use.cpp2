@@ -39,11 +39,13 @@ f_copy: (copy _...) = { }
 
 issue_857: @struct type = {
   i: std::unique_ptr<int>;
+  j: std::unique_ptr<int>;
   f: (move this) = f_copy(this);
   f: (move this, move that) = f_copy(this, that);
   g: (move this) = f_copy(this.i);
   g: (move this, move that) = f_copy(this.i, that.i);
-//h: (move this) = f_copy(i);
+//h: (move this) = f_copy(this.i, this.j);
+//i: (move this) = f_copy(i);
 }
 
 draw: () = {

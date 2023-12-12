@@ -34,16 +34,18 @@ auto f_copy([[maybe_unused]] auto ...unnamed_param_1) -> void;
 
 class issue_857 {
   public: std::unique_ptr<int> i; 
+  public: std::unique_ptr<int> j; 
   public: auto f() && -> void;
   public: auto f(issue_857&& that) && -> void;
   public: auto g() && -> void;
   public: auto g(issue_857&& that) && -> void;
-//h: (move this) = f_copy(i);
+//h: (move this) = f_copy(this.i, this.j);
+//i: (move this) = f_copy(i);
 };
 
 auto draw() -> void;
 
-#line 55 "pure2-last-use.cpp2"
+#line 57 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -89,13 +91,13 @@ auto issue_832() -> void{
 
 auto f_copy([[maybe_unused]] auto ...unnamed_param_1) -> void{}
 
-#line 42 "pure2-last-use.cpp2"
+#line 43 "pure2-last-use.cpp2"
   auto issue_857::f() && -> void { f_copy(std::move((*this)));  }
   auto issue_857::f(issue_857&& that) && -> void { f_copy(std::move((*this)), std::move(that));  }
   auto issue_857::g() && -> void { f_copy(std::move((*this)).i);  }
   auto issue_857::g(issue_857&& that) && -> void { f_copy(std::move((*this)).i, std::move(that).i);  }
 
-#line 49 "pure2-last-use.cpp2"
+#line 51 "pure2-last-use.cpp2"
 auto draw() -> void{
   auto pos {0}; 
   auto vertex {[]([[maybe_unused]] auto const& unnamed_param_1) mutable -> void{}}; 
@@ -104,7 +106,7 @@ auto draw() -> void{
 
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 56 "pure2-last-use.cpp2"
+#line 58 "pure2-last-use.cpp2"
   issue_683(args);
 }
 
