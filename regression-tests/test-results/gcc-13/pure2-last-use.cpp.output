@@ -1,29 +1,29 @@
 In file included from pure2-last-use.cpp:7:
 pure2-last-use.cpp2: In function ‘void draw()’:
-pure2-last-use.cpp2:50:31: error: ‘std::move’ is not a class member
-   50 |   _ = (pos).vertex();
+pure2-last-use.cpp2:52:31: error: ‘std::move’ is not a class member
+   52 |   _ = (pos).vertex();
       |                               ^
-pure2-last-use.cpp2:50:31: error: ‘std::move’ is not a class member
-   50 |   _ = (pos).vertex();
+pure2-last-use.cpp2:52:31: error: ‘std::move’ is not a class member
+   52 |   _ = (pos).vertex();
       |                               ^
-pure2-last-use.cpp2:50:31: error: ‘std::move’ is not a class member
-   50 |   _ = (pos).vertex();
+pure2-last-use.cpp2:52:31: error: ‘std::move’ is not a class member
+   52 |   _ = (pos).vertex();
       |                               ^
-pure2-last-use.cpp2:50:31: error: ‘std::move’ is not a class member
-   50 |   _ = (pos).vertex();
+pure2-last-use.cpp2:52:31: error: ‘std::move’ is not a class member
+   52 |   _ = (pos).vertex();
       |                               ^
 pure2-last-use.cpp2: In lambda function:
-pure2-last-use.cpp2:50:31: error: ‘std::move’ is not a class member
-   50 |   _ = (pos).vertex();
+pure2-last-use.cpp2:52:31: error: ‘std::move’ is not a class member
+   52 |   _ = (pos).vertex();
       |                               ^
-pure2-last-use.cpp2:50:31: error: ‘std::move’ is not a class member
-   50 |   _ = (pos).vertex();
+pure2-last-use.cpp2:52:31: error: ‘std::move’ is not a class member
+   52 |   _ = (pos).vertex();
       |                               ^
 pure2-last-use.cpp2: In function ‘void draw()’:
-pure2-last-use.cpp2:50:49: error: no match for call to ‘(draw()::<lambda(Obj&&, Params&& ...)>) (std::remove_reference<int&>::type)’
-   50 |   _ = (pos).vertex();
+pure2-last-use.cpp2:52:49: error: no match for call to ‘(draw()::<lambda(Obj&&, Params&& ...)>) (std::remove_reference<int&>::type)’
+   52 |   _ = (pos).vertex();
       |                                                 ^
-pure2-last-use.cpp2:50:21: note: candidate: ‘template<class Obj, class ... Params, bool IsNothrow> draw()::<lambda(Obj&&, Params&& ...)>’
-   50 |   _ = (pos).vertex();
+pure2-last-use.cpp2:52:21: note: candidate: ‘template<class Obj, class ... Params, bool IsNothrow> draw()::<lambda(Obj&&, Params&& ...)>’
+   52 |   _ = (pos).vertex();
       |                     ^
-pure2-last-use.cpp2:50:21: note:   template argument deduction/substitution failed:
+pure2-last-use.cpp2:52:21: note:   template argument deduction/substitution failed:
