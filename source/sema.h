@@ -326,7 +326,7 @@ public:
             --i;
         }
         ++i;
-        while (i-- != symbols.begin())
+        while (std::ranges::advance(i, -1, symbols.begin()) == 0)
         {
             if (
                 i->sym.index() == symbol::active::declaration
