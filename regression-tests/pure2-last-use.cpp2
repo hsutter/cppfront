@@ -35,6 +35,15 @@ issue_832: () = {
   while i { }
 }
 
+f_copy: (copy _) = { }
+
+issue_857: @struct type = {
+  i: std::unique_ptr<int>;
+  f: (move this) = f_copy(this);
+  g: (move this) = f_copy(this.i);
+//h: (move this) = f_copy(i);
+}
+
 draw: () = {
   pos       := 0;
   vertex    := :(_) = { };

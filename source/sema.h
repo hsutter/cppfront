@@ -1757,8 +1757,12 @@ public:
 
     auto start(token const& t, int) -> void
     {
-        //  We currently only care to look at identifiers
-        if (t.type() != lexeme::Identifier) {
+        //  We currently only care to look at object identifiers
+        if (
+            t.type() != lexeme::Identifier
+            && t != "this"
+            )
+        {
             return;
         }
 
