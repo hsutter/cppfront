@@ -23,13 +23,13 @@ auto issue_683(auto const& args) -> void;
 #line 27 "pure2-last-use.cpp2"
 auto issue_825() -> void;
 
-#line 32 "pure2-last-use.cpp2"
+#line 33 "pure2-last-use.cpp2"
 auto issue_832() -> void;
 
-#line 37 "pure2-last-use.cpp2"
+#line 38 "pure2-last-use.cpp2"
 auto draw() -> void;
 
-#line 43 "pure2-last-use.cpp2"
+#line 44 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -64,6 +64,7 @@ auto issue_683(auto const& args) -> void{
 
 auto issue_825() -> void{
   static_cast<void>([](auto b) mutable -> auto { return static_cast<void>(std::move(b));  });
+  static_cast<void>([](auto&& c) mutable -> auto { return static_cast<void>(std::move(c));  });
   static_cast<void>([](auto&& d) mutable -> auto { return static_cast<void>(CPP2_FORWARD(d));  });
 }
 
@@ -80,7 +81,7 @@ auto draw() -> void{
 
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 44 "pure2-last-use.cpp2"
+#line 45 "pure2-last-use.cpp2"
   issue_683(args);
 }
 

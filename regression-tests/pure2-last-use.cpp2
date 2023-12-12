@@ -26,6 +26,7 @@ issue_683: (args) = {
 
 issue_825: () = {
   _ = :(copy b) _ = b;
+  _ = :(move c) _ = c;
   _ = :(forward d) _ = d;
 }
 
