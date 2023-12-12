@@ -1604,7 +1604,7 @@ public:
     //
     int  scope_depth                              = 0;
     bool started_standalone_assignment_expression = false;
-    bool started_postfix_expression               = false;
+    bool started_id_expression                    = false;
     bool is_out_expression                        = false;
     bool inside_next_expression                   = false;
     bool inside_parameter_list                    = false;
@@ -1783,10 +1783,11 @@ public:
         }
 
         //  Otherwise it's just an identifier use (if it's not a parameter name) and
-        //  it's the first identifier of a postfix_expressions (not a member name or something else)
-        else if (started_postfix_expression)
+        //  it's the first identifier of a postfix_expression
+        //  or the id-expression in a member access expression.
+        else if (started_id_expression)
         {
-            started_postfix_expression = false;
+            started_id_expression = false;
             if (!inside_parameter_identifier && !inside_next_expression)
             {
                 //  Put this into the table if it's a use of an object in scope
@@ -1872,8 +1873,8 @@ public:
         }
     }
 
-    auto start(postfix_expression_node const&, int) {
-        started_postfix_expression = true;
+    auto start(id_expression_node const&, int) {
+        started_id_expression = true;
     }
 
     auto start(auto const&, int) -> void

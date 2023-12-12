@@ -34,6 +34,12 @@ issue_832: () = {
   while i { }
 }
 
+draw: () = {
+  pos       := 0;
+  vertex    := :(_) = { };
+  _ = (pos).vertex();
+}
+
 main: (args) = {
   issue_683(args);
 }

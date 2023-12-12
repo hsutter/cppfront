@@ -27,6 +27,9 @@ auto issue_825() -> void;
 auto issue_832() -> void;
 
 #line 37 "pure2-last-use.cpp2"
+auto draw() -> void;
+
+#line 43 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -69,9 +72,15 @@ auto issue_832() -> void{
   while( i ) {}
 }
 
+auto draw() -> void{
+  auto pos {0}; 
+  auto vertex {[]([[maybe_unused]] auto const& unnamed_param_1) mutable -> void{}}; 
+  static_cast<void>(CPP2_UFCS(std::move(vertex))((std::move(pos))));
+}
+
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 38 "pure2-last-use.cpp2"
+#line 44 "pure2-last-use.cpp2"
   issue_683(args);
 }
 
