@@ -33,7 +33,7 @@ auto parser::apply_type_metafunctions( declaration_node& n )
     auto rtype = meta::type_declaration{ &n, cs };
 
     return apply_metafunctions(
-        n, 
+        n,
         rtype,
         [&](std::string const& msg) { error( msg, false ); }
     );
@@ -322,18 +322,20 @@ public:
         //  Then look backward to find the first declaration of
         //  this name that is not deeper (in a nested scope)
         //  and is in the same function
-        for (
-            auto ri = std::make_reverse_iterator(i+1);
-            ri != symbols.crend() && ri->position() <= t.position();    // TODO: See pure2-deducing-pointers-error.cpp2
-            ++ri
+        if (i->position() > t.position()) {
+            --i;
+        }
+        ++i;
+        while (
+            i-- != symbols.begin()    // TODO: See pure2-deducing-pointers-error.cpp2
             )
         {
             if (
-                ri->sym.index() == symbol::active::declaration
-                && ri->depth <= depth
+                i->sym.index() == symbol::active::declaration
+                && i->depth <= depth
                 )
             {
-                auto const& decl = std::get<symbol::active::declaration>(ri->sym);
+                auto const& decl = std::get<symbol::active::declaration>(i->sym);
 
                 //  Conditionally look beyond the start of the current named (has identifier) function
                 //  (an unnamed function is ok to look beyond)
@@ -355,7 +357,7 @@ public:
                 {
                     return &decl;
                 }
-                depth = ri->depth;
+                depth = i->depth;
             }
         }
 
@@ -668,9 +670,9 @@ private:
         //  and this isn't generated code (ignore that for now)
         //  and this is a user-named object (not 'this', 'that', or '_')
         if (
-            i == pos                        
-            && id->position().lineno > 0    
-            && *id != "this"                
+            i == pos
+            && id->position().lineno > 0
+            && *id != "this"
             && *id != "that"
             && *id != "_"
             )
@@ -1531,7 +1533,7 @@ public:
         //  An increment/decrement function must have a single parameter that is 'inout this'
         //  and be a member of a copyable type (that defined a copy operator= or suppressed
         //  member function generation to get the Cpp1 generated copy functions)
-        // 
+        //
         //  Future: See if there's demand for non-member increment/decrement
         if (
             n.my_decl->has_name("operator++")
@@ -1736,7 +1738,7 @@ public:
             //  Skip type scope (member) variables
             && !(n.parent_is_type() && n.is_object())
             //  Skip unnamed variables
-            && n.identifier 
+            && n.identifier
             //  Skip non-out parameters
             && (
                 !inside_parameter_list

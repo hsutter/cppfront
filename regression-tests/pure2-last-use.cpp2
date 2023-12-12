@@ -1,0 +1,17 @@
+issue_683: (args) = {
+    for args do (n) {
+        _ = n;
+    }
+
+    n: int;
+    n = 0;
+}
+
+issue_832: () = {
+  i := 0;
+  while i { }
+}
+
+main: (args) = {
+  issue_683(args);
+}
