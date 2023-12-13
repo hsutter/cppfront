@@ -1502,7 +1502,7 @@ std::string to_string = "    to_string: (this) -> std::string = { \n";
         }
 
         for ( 
-              auto const& e : enumerators ) {
+              auto const& e : std::move(enumerators) ) {
             if (e.name != "_") {// ignore unnamed values
                 if (bitwise) {
                     if (e.name != "none") {
@@ -1694,7 +1694,7 @@ std::string value_set = "";
 #line 1206 "reflect.h2"
     {
         for ( 
-              auto const& a : alternatives ) {
+              auto const& a : std::move(alternatives) ) {
             value_set += "        if that.is_" + cpp2::to_string(a.name) + "() { set_" + cpp2::to_string(a.name) + "( that." + cpp2::to_string(a.name) + "() ); }\n";
         }
         value_set += "    }\n";
