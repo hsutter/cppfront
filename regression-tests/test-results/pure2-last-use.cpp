@@ -8,22 +8,22 @@
 
 #line 1 "pure2-last-use.cpp2"
 
-#line 40 "pure2-last-use.cpp2"
+#line 41 "pure2-last-use.cpp2"
 class issue_857;
   
 
-#line 52 "pure2-last-use.cpp2"
+#line 54 "pure2-last-use.cpp2"
 class issue_857_2;
   
 
-#line 57 "pure2-last-use.cpp2"
+#line 59 "pure2-last-use.cpp2"
 class issue_857_3;
   
 
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-last-use.cpp2"
-[[nodiscard]] auto f_inout(auto& x) -> auto;
+[[nodiscard]] auto f_inout(int& x) -> auto;
 
 #line 6 "pure2-last-use.cpp2"
 auto issue_350() -> void;
@@ -38,6 +38,7 @@ auto issue_825() -> void;
 auto issue_832() -> void;
 
 #line 38 "pure2-last-use.cpp2"
+auto f_inout([[maybe_unused]] std::unique_ptr<int>& unnamed_param_1) -> void;
 auto f_copy([[maybe_unused]] auto ...unnamed_param_1) -> void;
 
 class issue_857 {
@@ -47,6 +48,7 @@ class issue_857 {
   public: auto f(issue_857&& that) && -> void;
   public: auto g() && -> void;
   public: auto g(issue_857&& that) && -> void;
+  public: auto h() & -> void;
   public: auto i() && -> void;
   public: auto j() && -> void;
   public: auto k() && -> void;
@@ -73,7 +75,7 @@ auto main(int const argc_, char** argv_) -> int;
 //=== Cpp2 function definitions =================================================
 
 #line 1 "pure2-last-use.cpp2"
-[[nodiscard]] auto f_inout(auto& x) -> auto{
+[[nodiscard]] auto f_inout(int& x) -> auto{
 #line 2 "pure2-last-use.cpp2"
     x *= 2;
     return x; 
@@ -111,27 +113,29 @@ auto issue_832() -> void{
   while( i ) {}
 }
 
+auto f_inout([[maybe_unused]] std::unique_ptr<int>& unnamed_param_1) -> void{}
 auto f_copy([[maybe_unused]] auto ...unnamed_param_1) -> void{}
 
-#line 43 "pure2-last-use.cpp2"
+#line 44 "pure2-last-use.cpp2"
   auto issue_857::f() && -> void { f_copy(std::move((*this)));  }
   auto issue_857::f(issue_857&& that) && -> void { f_copy(std::move((*this)), std::move(that));  }
   auto issue_857::g() && -> void { f_copy(std::move((*this)).a);  }
   auto issue_857::g(issue_857&& that) && -> void { f_copy(std::move((*this)).a, std::move(that).a);  }
+  auto issue_857::h() & -> void { f_inout(a);  }
   auto issue_857::i() && -> void { f_copy(std::move(*this).a);  }
   auto issue_857::j() && -> void { f_copy(std::move(*this).a);  }
   auto issue_857::k() && -> void { f_copy(std::move(*this).a, std::move(*this).b);  }
 
-#line 56 "pure2-last-use.cpp2"
+#line 58 "pure2-last-use.cpp2"
 int gi {0}; 
 
-#line 59 "pure2-last-use.cpp2"
+#line 61 "pure2-last-use.cpp2"
   auto issue_857_3::f() && -> void { static_cast<void>(f_inout(std::move(*this).i));  }
 
-#line 68 "pure2-last-use.cpp2"
+#line 70 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 69 "pure2-last-use.cpp2"
+#line 71 "pure2-last-use.cpp2"
   issue_683(args);
 }
 

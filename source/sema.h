@@ -327,6 +327,7 @@ public:
             --i;
         }
         ++i;
+        auto reached_type = false;
         while (std::ranges::advance(i, -1, symbols.begin()) == 0)
         {
             if (
@@ -346,12 +347,16 @@ public:
                 {
                     if (!look_beyond_current_function) {
                         return nullptr;
-                    } else if (
+                    }
+                    else if (
                         look_up_to_type
-                        && !decl.declaration->has_move_parameter_named("this")
+                        && !reached_type
                         )
                     {
-                        return nullptr;
+                        if (!decl.declaration->has_move_parameter_named("this")) {
+                            return nullptr;
+                        }
+                        reached_type = true;
                     }
                 }
 

@@ -1,4 +1,4 @@
-f_inout: (inout x) -> _ = {
+f_inout: (inout x: int) -> _ = {
     x *= 2;
     return x;
 }
@@ -35,6 +35,7 @@ issue_832: () = {
   while i { }
 }
 
+f_inout: (inout _: std::unique_ptr<int>) = { }
 f_copy: (copy _...) = { }
 
 issue_857: @struct type = {
@@ -44,6 +45,7 @@ issue_857: @struct type = {
   f: (move this, move that) = f_copy(this, that);
   g: (move this) = f_copy(this.a);
   g: (move this, move that) = f_copy(this.a, that.a);
+  h: (inout this) = f_inout(a);
   i: (move this) = f_copy(a);
   j: (move this) = f_copy(a);
   k: (move this) = f_copy(a, b);
