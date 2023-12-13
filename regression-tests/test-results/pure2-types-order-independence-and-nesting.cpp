@@ -6,6 +6,7 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-types-order-independence-and-nesting.cpp2"
 
 #line 2 "pure2-types-order-independence-and-nesting.cpp2"
 namespace N {
@@ -33,6 +34,7 @@ template<typename T, typename U> class A;
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-types-order-independence-and-nesting.cpp2"
 
 #line 2 "pure2-types-order-independence-and-nesting.cpp2"
 namespace N {
@@ -44,15 +46,12 @@ class X {
 
     //  Note: A constructor with an 'out' parameter
     public: explicit X(cpp2::out<Y> y);
-        
 #line 10 "pure2-types-order-independence-and-nesting.cpp2"
     public: auto operator=(cpp2::out<Y> y) -> X& ;
-        
 
 #line 34 "pure2-types-order-independence-and-nesting.cpp2"
     //  X::exx member function description here
     public: auto exx(cpp2::in<int> count) const& -> void;
-        
     public: X(X const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(X const&) -> void = delete;
 
@@ -70,9 +69,9 @@ class Y {
     public: auto operator=(X* x) -> Y& ;
 
     public: auto why(cpp2::in<int> count) const& -> void;
-        
     public: Y(Y const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(Y const&) -> void = delete;
+
 
 #line 53 "pure2-types-order-independence-and-nesting.cpp2"
 };
@@ -83,7 +82,6 @@ namespace M {
 template<typename T, typename U> class A {
     public: template<int I> class B {
         public: template<typename V, int J, typename W> static auto f(W const& w) -> void;
-    
         public: B() = default;
         public: B(B const&) = delete; /* No 'that' constructor, suppress copy */
         public: auto operator=(B const&) -> void = delete;
@@ -94,8 +92,8 @@ template<typename T, typename U> class A {
     public: A() = default;
     public: A(A const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(A const&) -> void = delete;
-#line 62 "pure2-types-order-independence-and-nesting.cpp2"
 };
+#line 63 "pure2-types-order-independence-and-nesting.cpp2"
 
 }
 
@@ -105,18 +103,16 @@ template<typename T, typename U> class A {
 //  stays on the function declaration when lowering
 auto main() -> int;
 
-
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-types-order-independence-and-nesting.cpp2"
 
 #line 2 "pure2-types-order-independence-and-nesting.cpp2"
 namespace N {
 
 #line 10 "pure2-types-order-independence-and-nesting.cpp2"
     X::X(cpp2::out<Y> y)
-        : py{(y.construct(&(*this)), &y.value() )}
-#line 10 "pure2-types-order-independence-and-nesting.cpp2"
-    {
+        : py{(y.construct(&(*this)), &y.value() )}{
         //  === The following comments will stay close to, but not exactly at,
         //      the corresponding lines that get moved to the Cpp1 mem-init-list
 
@@ -137,6 +133,7 @@ namespace N {
         //  === from here onward, the comments stick with their code
 
         //  then do anything else the constructor wants to do
+#line 31 "pure2-types-order-independence-and-nesting.cpp2"
         std::cout << "made a safely initialized cycle\n";
     }
 #line 10 "pure2-types-order-independence-and-nesting.cpp2"
@@ -153,26 +150,23 @@ namespace N {
 #line 35 "pure2-types-order-independence-and-nesting.cpp2"
     auto X::exx(cpp2::in<int> count) const& -> void{
         //  Exercise '_' anonymous objects too while we're at it
-        cpp2::finally auto_37_9 {[&]() -> void { std::cout << "leaving call to 'why(" + cpp2::to_string(count) + ")'\n";  }}; 
+        cpp2::finally auto_37_9 {[&]() mutable -> void { std::cout << "leaving call to 'why(" + cpp2::to_string(count) + ")'\n";  }}; 
         if (cpp2::cmp_less(count,5)) {
-            CPP2_UFCS(why, (*cpp2::assert_not_null(py)), count + 1);// use Y object from X
+            CPP2_UFCS(why)((*cpp2::assert_not_null(py)), count + 1);// use Y object from X
         }
     }
 
 #line 49 "pure2-types-order-independence-and-nesting.cpp2"
     Y::Y(X* x)
-                                   : px{ x }
-#line 49 "pure2-types-order-independence-and-nesting.cpp2"
-     {  }
+                                   : px{ x } {  }
 #line 49 "pure2-types-order-independence-and-nesting.cpp2"
     auto Y::operator=(X* x) -> Y&  { 
                                    px = x;
-                                   return *this;
-#line 49 "pure2-types-order-independence-and-nesting.cpp2"
-     }
+                                   return *this;  }
 
+#line 51 "pure2-types-order-independence-and-nesting.cpp2"
     auto Y::why(cpp2::in<int> count) const& -> void { 
-        CPP2_UFCS(exx, (*cpp2::assert_not_null(px)), count + 1);  }// use X object from Y
+        CPP2_UFCS(exx)((*cpp2::assert_not_null(px)), count + 1);  }// use X object from Y
 
 #line 55 "pure2-types-order-independence-and-nesting.cpp2"
 namespace M {
@@ -192,7 +186,7 @@ auto main() -> int
     N::X x {cpp2::out(&y)}; // construct y and x, and point them at each other
 
     // now have the two objects call each other back and forth a few times
-    CPP2_UFCS(exx, std::move(x), 1);
+    CPP2_UFCS(exx)(std::move(x), 1);
 
     // and test a nested template out-of-line definition
     N::M::A<int,int>::B<42>::f<int,43>("welt");

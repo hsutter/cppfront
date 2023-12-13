@@ -5,10 +5,12 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-string-interpolation.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-string-interpolation.cpp2"
 #include <iostream>
 #include <string_view>
 #include <utility>
@@ -18,10 +20,10 @@ struct custom_struct_with_no_stringize_customization { } custom;
 
 #line 8 "mixed-string-interpolation.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-string-interpolation.cpp2"
 
 #line 8 "mixed-string-interpolation.cpp2"
 [[nodiscard]] auto main() -> int{
@@ -30,7 +32,7 @@ struct custom_struct_with_no_stringize_customization { } custom;
     std::cout << "a = " + cpp2::to_string(a) + ", b = " + cpp2::to_string(b) + "\n";
 
     b = 42;
-    std::cout << "a^2 + b = " + cpp2::to_string(a * std::move(a) + CPP2_UFCS_0(value, std::move(b))) + "\n";
+    std::cout << "a^2 + b = " + cpp2::to_string(a * std::move(a) + CPP2_UFCS(value)(std::move(b))) + "\n";
 
     std::string_view sv {"my string_view"}; 
     std::cout << "sv = " + cpp2::to_string(std::move(sv)) + "\n";

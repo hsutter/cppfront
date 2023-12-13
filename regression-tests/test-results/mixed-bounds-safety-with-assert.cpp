@@ -5,18 +5,18 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-bounds-safety-with-assert.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-bounds-safety-with-assert.cpp2"
 
 #line 2 "mixed-bounds-safety-with-assert.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 
 #line 9 "mixed-bounds-safety-with-assert.cpp2"
 auto print_subrange(auto const& rng, cpp2::in<int> start, cpp2::in<int> end) -> void;
-    
 #line 21 "mixed-bounds-safety-with-assert.cpp2"
 
 #include <vector>
@@ -26,6 +26,7 @@ auto print_subrange(auto const& rng, cpp2::in<int> start, cpp2::in<int> end) -> 
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-bounds-safety-with-assert.cpp2"
 
 #line 2 "mixed-bounds-safety-with-assert.cpp2"
 [[nodiscard]] auto main() -> int{
@@ -37,7 +38,7 @@ auto print_subrange(auto const& rng, cpp2::in<int> start, cpp2::in<int> end) -> 
 
 auto print_subrange(auto const& rng, cpp2::in<int> start, cpp2::in<int> end) -> void{
     cpp2::Bounds.expects(cpp2::cmp_less_eq(0,start), "");
-    cpp2::Bounds.expects(cpp2::cmp_less_eq(end,CPP2_UFCS_0(ssize, rng)), "");
+    cpp2::Bounds.expects(cpp2::cmp_less_eq(end,CPP2_UFCS(ssize)(rng)), "");
 
     auto count {0}; 
     for ( 

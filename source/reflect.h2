@@ -1,6 +1,4 @@
 
-#include "parse.h"
-
 //  Copyright (c) Herb Sutter
 //  SPDX-License-Identifier: CC-BY-NC-ND-4.0
 
@@ -16,6 +14,8 @@
 //===========================================================================
 //  Reflection and meta
 //===========================================================================
+
+#include "parse.h"
 
 cpp2: namespace = {
 
@@ -107,7 +107,7 @@ compiler_services: @polymorphic_base @copyable type =
         tokens := generated_lexers.back()&;
         tokens*.lex( lines*, true );
 
-        [[assert: std::ssize(tokens*.get_map()) == 1]]
+        assert( std::ssize(tokens* .get_map()) == 1 );
 
         //  Now parse this single declaration from
         //  the lexed tokens
@@ -168,7 +168,7 @@ type_id: @polymorphic_base @copyable type =
     = {
         compiler_services = s;
         n = n_;
-        [[assert: n, "a meta::type_id must point to a valid type_id_node, not null"]]
+        assert( n, "a meta::type_id must point to a valid type_id_node, not null" );
     }
 
     is_wildcard         : (this) -> bool        = n*.is_wildcard();
@@ -204,7 +204,7 @@ declaration_base: @polymorphic_base @copyable type =
     = {
         compiler_services = s;
         n = n_;
-        [[assert: n, "a meta::declaration must point to a valid declaration_node, not null"]]
+        assert( n, "a meta::declaration must point to a valid declaration_node, not null" );
     }
 
     position: (override this) -> source_position = n*.position();
@@ -279,13 +279,18 @@ declaration: @polymorphic_base @copyable type =
     parent_is_type       : (this) -> bool = n*.parent_is_type();
     parent_is_namespace  : (this) -> bool = n*.parent_is_namespace();
     parent_is_alias      : (this) -> bool = n*.parent_is_alias();
+
+    parent_is_type_alias      : (this) -> bool = n*.parent_is_type_alias();
+    parent_is_namespace_alias : (this) -> bool = n*.parent_is_namespace_alias();
+    parent_is_object_alias    : (this) -> bool = n*.parent_is_object_alias();
+
     parent_is_polymorphic: (this) -> bool = n*.parent_is_polymorphic();
 
     mark_for_removal_from_enclosing_type: (inout this) 
-        [[pre Type: parent_is_type()]]              // this precondition should be sufficient ...
+        pre<Type>( parent_is_type() )               // this precondition should be sufficient ...
     = {
         test := n*.type_member_mark_for_removal();
-        [[assert: test]]                            // ... to ensure this assert is true
+        assert( test );                             // ... to ensure this assert is true
     }
 }
 
@@ -304,7 +309,7 @@ function_declaration: @copyable type =
     ) =
     {
         declaration = (n_, s);
-        [[assert: n*.is_function()]]
+        assert( n*.is_function() );
     }
 
     index_of_parameter_named     : (this, s: std::string_view) -> int  = n*.index_of_parameter_named(s);
@@ -312,6 +317,7 @@ function_declaration: @copyable type =
     has_in_parameter_named       : (this, s: std::string_view) -> bool = n*.has_in_parameter_named(s);
     has_out_parameter_named      : (this, s: std::string_view) -> bool = n*.has_out_parameter_named(s);
     has_move_parameter_named     : (this, s: std::string_view) -> bool = n*.has_move_parameter_named(s);
+    first_parameter_name         : (this) -> std::string               = n*.first_parameter_name();
 
     has_parameter_with_name_and_pass: (this, s: std::string_view, pass: passing_style) -> bool
                                                   = n*.has_parameter_with_name_and_pass(s, pass);
@@ -334,6 +340,7 @@ function_declaration: @copyable type =
     is_copy_or_move              : (this) -> bool = is_constructor_with_that() || is_assignment_with_that();
 
     has_declared_return_type     : (this) -> bool = n*.has_declared_return_type();
+    has_deduced_return_type      : (this) -> bool = n*.has_deduced_return_type();
     has_bool_return_type         : (this) -> bool = n*.has_bool_return_type();
     has_non_void_return_type     : (this) -> bool = n*.has_non_void_return_type();
 
@@ -361,7 +368,7 @@ object_declaration: @copyable type =
     ) =
     {
         declaration = (n_, s);
-        [[assert: n*.is_object()]]
+        assert( n*.is_object() );
     }
 
     is_const         : (this) -> bool = n*.is_const();
@@ -397,7 +404,7 @@ type_declaration: @copyable type =
     ) =
     {
         declaration = (n_, s);
-        [[assert: n*.is_type()]]
+        assert( n*.is_type() );
     }
 
     reserve_names: (this, name: std::string_view, forward etc...) = 
@@ -510,7 +517,7 @@ alias_declaration: @copyable type =
     ) =
     {
         declaration = (n_, s);
-        [[assert: n*.is_alias()]]
+        assert( n*.is_alias() );
     }
 }
 
@@ -1167,9 +1174,9 @@ union: (inout t : meta::type_declaration)
     {
         t.add_member( "    is_(a.name)$: (this) -> bool = _discriminator == (a.value)$;\n");
 
-        t.add_member( "    (a.name)$: (this) -> forward (a.type)$ [[pre: is_(a.name)$()]] = reinterpret_cast<* const (a.type)$>(_storage&)*;\n");
+        t.add_member( "    (a.name)$: (this) -> forward (a.type)$ pre(is_(a.name)$()) = reinterpret_cast<* const (a.type)$>(_storage&)*;\n");
 
-        t.add_member( "    (a.name)$: (inout this) -> forward (a.type)$ [[pre: is_(a.name)$()]] = reinterpret_cast<*(a.type)$>(_storage&)*;\n");
+        t.add_member( "    (a.name)$: (inout this) -> forward (a.type)$ pre(is_(a.name)$()) = reinterpret_cast<*(a.type)$>(_storage&)*;\n");
 
         t.add_member( "    set_(a.name)$: (inout this, _value: (a.type)$) = { if !is_(a.name)$() { _destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(_storage&), _value); } else { reinterpret_cast<*(a.type)$>(_storage&)* = _value; } _discriminator = (a.value)$; }\n");
 
@@ -1190,22 +1197,30 @@ union: (inout t : meta::type_declaration)
     }
 
     //  Add the destructor
-    t.add_member( "    operator=: (move this) = { _destroy(); } " );
+    t.add_member( "    operator=: (move this) = { _destroy(); }" );
 
     //  Add default constructor
-    t.add_member( "    operator=: (out this) = { _discriminator = -1; } " );
+    t.add_member( "    operator=: (out this) = { }" );
 
-    //  Add value-set
-    (copy value_set: std::string = "    operator=: (out this, that) = {\n")
+    //  Add copy/move construction and assignment
+    (copy value_set: std::string = "")
     {
         for  alternatives
         do   (a) {
             value_set += "        if that.is_(a.name)$() { set_(a.name)$( that.(a.name)$() ); }\n";
         }
-
-        value_set += "        _discriminator = that._discriminator;\n";
         value_set += "    }\n";
-        t.add_member( value_set );
+
+        t.add_member( std::string("    operator=: (out this, that) = {\n")
+                    + "        _storage = ();\n"
+                    + "        _discriminator = -1;\n"
+                    + value_set
+                    );
+        t.add_member( std::string("    operator=: (inout this, that) = {\n")
+                    + "        _storage = _;\n"
+                    + "        _discriminator = _;\n"
+                    + value_set
+                    );
     }
 }
 
@@ -1231,7 +1246,7 @@ apply_metafunctions: (
     )
     -> bool
 = {
-    [[assert: n.is_type()]]
+    assert( n.is_type() );
 
     //  Check for _names reserved for the metafunction implementation
     for  rtype.get_members()

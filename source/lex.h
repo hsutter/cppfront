@@ -1016,7 +1016,9 @@ auto lex_line(
     auto peek_is_cpp2_fundamental_type_keyword = [&]
     {
         static const auto keys = std::vector<std::string_view>{
-            "i8", "i16", "i32", "i64", "longdouble", "longlong", "u8", "u16", "u32", "u64", "ulong", "ulonglong", "ushort"
+            "i8", "i16", "i32", "i64", "longdouble", "longlong",
+            "u8", "u16", "u32", "u64", "ulonglong", "ulong", "ushort",
+            "_schar", "_uchar"
         };
 
         return do_is_keyword(keys);
@@ -1025,7 +1027,10 @@ auto lex_line(
     auto peek_is_cpp1_multi_token_fundamental_keyword = [&]
     {
         static const auto multi_keys = std::vector<std::string_view>{
-            "char16_t", "char32_t", "char8_t", "char", "double", "float", "int", "long", "short", "signed", "unsigned"
+            "char16_t", "char32_t", "char8_t", "char",
+            "double", "float",
+            "int", "long", "short",
+            "signed", "unsigned"
         };
         return do_is_keyword(multi_keys);
     };

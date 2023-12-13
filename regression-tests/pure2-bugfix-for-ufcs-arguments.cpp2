@@ -1,0 +1,71 @@
+print_res: (x: i32) -> i32 = {
+  std::cout << x;
+  if x == 9 { std::cout << '\n'; }
+  return x;
+}
+
+t: @struct type = {
+  f: (inout this) -> i32 = print_res(0);
+  f: (inout this, _) -> i32 = print_res(1);
+  f: <_> (inout this) -> i32 = print_res(2);
+  f: <_> (inout this, _) -> i32 = print_res(3);
+  f: <_, U> (inout this, _, _) -> i32 = print_res(4);
+}
+
+f: (_: t) -> i32 = print_res(5);
+f: (_: t, _) -> i32 = print_res(6);
+f: <_> (_: t) -> i32 = print_res(7);
+f: <_> (_: t, _) -> i32 = print_res(8);
+f: <_, U> (_: t, _, _) -> i32 = print_res(9);
+
+m: t       = ();
+n: const t = ();
+a: <_, U> _ == n;
+
+_: i32 = m.f();
+_: i32 = m.f(0);
+_: i32 = m.f<t>();
+_: i32 = m.f<t>(0);
+_: i32 = m.f<t, t>(0, 0);
+_: i32 = n.f();
+_: i32 = n.f(0);
+_: i32 = n.f<t>();
+_: i32 = n.f<t>(0);
+_: i32 = n.f<t, t>(0, 0);
+_: i32 = a<t, t>.f<t, t>(0, 0);
+
+main: () = {
+  _ = m.f();
+  _ = m.f(0);
+  _ = m.f<t>();
+  _ = m.f<t>(0);
+  _ = m.f<t, t>(0, 0);
+  _ = n.f();
+  _ = n.f(0);
+  _ = n.f<t>();
+  _ = n.f<t>(0);
+  _ = n.f<t, t>(0, 0);
+  _ = a<t, t>.f<t, t>(0, 0);
+
+  _ = :(a, f) = { _ = a.f(a).f(); };
+  // _ = 0.std::min<int>(0);
+  _ = 0.ns::t<0, 0>::f<0>();
+}
+
+// _: i32 = 0.std::min<int>(0);
+_: i32 = 0.ns::t<0, 0>::f<0>();
+
+ns: namespace = {
+t: @struct <T: int, U: int> type = {
+  f: <V: int> (_: int) -> i32 = 0;
+}
+} // namespace ns
+
+A: @struct type = {
+  f: (this) = { }
+}
+
+B: @struct type = {
+  m: A;
+  f: (this) = m.f();
+}

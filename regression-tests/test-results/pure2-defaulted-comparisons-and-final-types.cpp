@@ -6,6 +6,7 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-defaulted-comparisons-and-final-types.cpp2"
 
 #line 2 "pure2-defaulted-comparisons-and-final-types.cpp2"
 class widget;
@@ -13,6 +14,7 @@ class widget;
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-defaulted-comparisons-and-final-types.cpp2"
 
 #line 2 "pure2-defaulted-comparisons-and-final-types.cpp2"
 class widget final
@@ -26,29 +28,25 @@ class widget final
     public: [[nodiscard]] auto operator==(widget const& that) const& -> bool = default;
 
     public: [[nodiscard]] auto operator<=>(widget const& that) const& -> std::strong_ordering = default;
-
     public: widget(widget const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(widget const&) -> void = delete;
+
 #line 11 "pure2-defaulted-comparisons-and-final-types.cpp2"
 };
 
 auto main() -> int;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-defaulted-comparisons-and-final-types.cpp2"
 
 #line 6 "pure2-defaulted-comparisons-and-final-types.cpp2"
     widget::widget(cpp2::in<int> value)
-                                          : v{ value }
-#line 6 "pure2-defaulted-comparisons-and-final-types.cpp2"
-    {}
+                                          : v{ value }{}
 #line 6 "pure2-defaulted-comparisons-and-final-types.cpp2"
     auto widget::operator=(cpp2::in<int> value) -> widget& {
                                           v = value;
-                                          return *this;
-#line 6 "pure2-defaulted-comparisons-and-final-types.cpp2"
-    }
+                                          return *this; }
 
 #line 13 "pure2-defaulted-comparisons-and-final-types.cpp2"
 auto main() -> int{

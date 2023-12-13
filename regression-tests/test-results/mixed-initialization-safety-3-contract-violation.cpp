@@ -5,17 +5,18 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-initialization-safety-3-contract-violation.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-initialization-safety-3-contract-violation.cpp2"
 #include <random>
 #include <string>
 #include <vector>
 
 #line 5 "mixed-initialization-safety-3-contract-violation.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 
 #line 18 "mixed-initialization-safety-3-contract-violation.cpp2"
 auto fill(
@@ -37,6 +38,7 @@ bool flip_a_coin() {
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-initialization-safety-3-contract-violation.cpp2"
 
 #line 5 "mixed-initialization-safety-3-contract-violation.cpp2"
 [[nodiscard]] auto main() -> int{
@@ -59,9 +61,9 @@ auto fill(
     ) -> void
 
 {
-    cpp2::Default.expects(cpp2::cmp_greater_eq(CPP2_UFCS_0(ssize, value),count), "fill: value must contain at least count elements");
+    cpp2::Default.expects(cpp2::cmp_greater_eq(CPP2_UFCS(ssize)(value),count), "fill: value must contain at least count elements");
 #line 25 "mixed-initialization-safety-3-contract-violation.cpp2"
-    x.construct(CPP2_UFCS(substr, value, 0, count));
+    x.construct(CPP2_UFCS(substr)(value, 0, count));
 }
 
 auto print_decorated(auto const& x) -> void { std::cout << ">> [" << x << "]\n";  }

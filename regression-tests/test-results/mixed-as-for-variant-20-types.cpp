@@ -5,19 +5,21 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-as-for-variant-20-types.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-as-for-variant-20-types.cpp2"
 template<int I>
 struct X { operator int() const { return I; } };
 
 #line 4 "mixed-as-for-variant-20-types.cpp2"
 [[nodiscard]] auto main() -> int;
 
-
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-as-for-variant-20-types.cpp2"
 
 #line 4 "mixed-as-for-variant-20-types.cpp2"
 [[nodiscard]] auto main() -> int{
