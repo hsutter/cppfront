@@ -40,6 +40,7 @@ make_copy: (copy x) x;
 issue_847_0: (copy v: std::vector<std::unique_ptr<int>>) = { for v.make_copy() do (_) { } }
 issue_847_1: (move v: std::vector<std::unique_ptr<int>>) = { for v.make_copy() do (_) { } }
 issue_847_2: (forward v) = { for v.make_copy() do (_) { } }
+issue_847_3: (copy x: int) = { for (x) do (_) { } }
 
 f_inout: (inout _: std::unique_ptr<int>) = { }
 f_copy: (copy _...) = { }

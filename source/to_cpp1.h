@@ -2267,6 +2267,7 @@ public:
 
             printer.print_cpp2(" : ", n.position());
 
+            in_non_rvalue_context.push_back(false);
             //  If this expression is just a single expression-list, we can
             //  take over direct control of emitting it without needing to
             //  go through the whole grammar, and surround it with braces
@@ -2277,10 +2278,9 @@ public:
             }
             //  Otherwise, just emit the general expression as usual
             else {
-                in_non_rvalue_context.push_back(false);
                 emit(*n.range);
-                in_non_rvalue_context.pop_back();
             }
+            in_non_rvalue_context.pop_back();
 
             printer.print_cpp2(" ) ", n.position());
             if (!labelname.empty()) {
