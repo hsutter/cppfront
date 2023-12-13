@@ -179,7 +179,7 @@ auto f_copy([[maybe_unused]] auto ...unnamed_param_1) -> void{}
   auto issue_857::o1() && -> void { CPP2_UFCS(n)(std::move((*this)));  }
   auto issue_857::o2() && -> void { CPP2_UFCS(n)(0);  }
   auto issue_857::o3() && -> void { std::move(*this).n(0);  }
-  auto issue_857::o4() && -> void { std::move(*this).n(std::move((*this)));  }// FIXME Moves `this` twice.
+  auto issue_857::o4() && -> void { std::move(*this).n(std::move((*this)));  }
 
 #line 76 "pure2-last-use.cpp2"
 int gi {0}; 
