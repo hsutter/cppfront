@@ -545,6 +545,7 @@ public:
                          || (
                              sym->declaration->is_function()
                              && sym->declaration->has_name()
+                             && sym->declaration->has_parameter_named("this")
                              && sym->declaration->parent_is_type()
                              )
                         )

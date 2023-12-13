@@ -1724,12 +1724,16 @@ public:
         bool add_this = false;
         if (add_move)
         {
-            auto lookup = source_order_name_lookup(n);
+            auto lookup = source_order_name_lookup(*n.identifier);
             if (lookup) {
                 auto decl = get<declaration_node const*>(*lookup);
                 if (
                     decl
                     && decl->parent_is_type()
+                    && (
+                        !decl->is_function()
+                        || decl->has_parameter_named("this")
+                        )
                     )
                 {
                     add_this = true;
@@ -2845,8 +2849,8 @@ public:
     }
 
 
-    auto source_order_name_lookup(unqualified_id_node const& id)
-    -> source_order_name_lookup_res
+    auto source_order_name_lookup(std::string_view identifier)
+        -> source_order_name_lookup_res
     {
         for (
             auto first = current_names.rbegin(), last = current_names.rend() - 1;
@@ -2858,7 +2862,7 @@ public:
                 auto decl = get_if<declaration_node const*>(&*first);
                 decl
                 && *decl
-                && (*decl)->has_name(*id.identifier)
+                && (*decl)->has_name(identifier)
                 )
             {
                 return *decl;
@@ -2867,7 +2871,7 @@ public:
                 auto using_ = get_if<active_using_declaration>(&*first);
                 using_
                 && using_->identifier
-                && *using_->identifier == *id.identifier
+                && *using_->identifier == identifier
                 )
             {
                 return *using_;
@@ -2877,6 +2881,39 @@ public:
         return {};
     }
 
+    auto lookup_finds_this_parameter_function(id_expression_node const& n)
+        -> bool
+    {
+        if (!n.is_unqualified())
+        {
+            return false;
+        }
+
+        auto const& id = *get<id_expression_node::unqualified>(n.id);
+        auto lookup = source_order_name_lookup(*id.identifier);
+
+        if (
+            !lookup
+            || get_if<active_using_declaration>(&*lookup)
+            )
+        {
+            return false;
+        }
+
+        auto decl = get<declaration_node const*>(*lookup);
+
+        if (
+            !decl->is_function()
+            || !decl->has_name()
+            || !decl->has_parameter_named("this")
+            || !decl->parent_is_type()
+            )
+        {
+            return false;
+        }
+
+        return true;
+    }
 
     auto lookup_finds_variable_with_placeholder_type_under_initialization(id_expression_node const& n)
         -> bool
@@ -2887,7 +2924,7 @@ public:
         }
 
         auto const& id = *get<id_expression_node::unqualified>(n.id);
-        auto lookup = source_order_name_lookup(id);
+        auto lookup = source_order_name_lookup(*id.identifier);
 
         if (
             !lookup
@@ -3189,8 +3226,17 @@ public:
                 && !lookup_finds_variable_with_placeholder_type_under_initialization(*i->id_expr)
                 )
             {
+                auto is_this_parameter_function = lookup_finds_this_parameter_function(*i->id_expr);
+                if (is_this_parameter_function) {
+                    in_non_rvalue_context.push_back(true);
+                }
+
                 //  The function name is the argument to the macro
                 auto funcname = print_to_string(*i->id_expr);
+
+                if (is_this_parameter_function) {
+                    in_non_rvalue_context.pop_back();
+                }
 
                 //  First, build the UFCS macro name
 
@@ -3246,7 +3292,11 @@ public:
                 //
                 //  Note: This ensures a valid member call is still prioritized
                 //  by leveraging the last use only in the non-member branch
-                if (auto last_use = is_definite_last_use(i->id_expr->get_token())) {
+                if (auto last_use = is_definite_last_use(i->id_expr->get_token());
+                    last_use
+                    && !is_this_parameter_function
+                    )
+                {
                     if (last_use->is_forward) {
                         ufcs_string += "_FORWARD";
                     }

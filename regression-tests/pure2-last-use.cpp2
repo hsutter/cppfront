@@ -59,6 +59,10 @@ issue_857: type = {
   j: (move this) = f_copy(a);
   k: (move this) = f_copy(a, b);
   l: (move this) = k();
+  m: (move this) = this.k();
+  n: (_) = { }
+  o: (move this) = this.n();
+  p: (move this) = n(this);
 }
 
 issue_857_2: @struct type = {
