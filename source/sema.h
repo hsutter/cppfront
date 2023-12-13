@@ -323,10 +323,8 @@ public:
         //  Then look backward to find the first declaration of
         //  this name that is not deeper (in a nested scope)
         //  and is in the same function
-        if (i->position() > t.position()) {
-            --i;
-        }
-        ++i;
+        std::ranges::advance(i, -int(i->position() > t.position()), symbols.cbegin());
+        std::ranges::advance(i, 1, symbols.cend());
         auto reached_type = false;
         while (std::ranges::advance(i, -1, symbols.begin()) == 0)
         {
