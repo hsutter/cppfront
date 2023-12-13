@@ -20,6 +20,10 @@ class issue_857_2;
 class issue_857_3;
   
 
+#line 72 "pure2-last-use.cpp2"
+class my_string;
+  
+
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-last-use.cpp2"
@@ -71,6 +75,11 @@ class issue_857_3 {
 auto draw() -> void;
 
 #line 72 "pure2-last-use.cpp2"
+class my_string {
+  public: std::string string; 
+  public: std::size_t size {CPP2_UFCS(size)(string)}; 
+};
+
 auto main(int const argc_, char** argv_) -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -150,9 +159,10 @@ auto draw() -> void{
   static_cast<void>(CPP2_UFCS(std::move(vertex))((std::move(pos))));
 }
 
+#line 77 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 73 "pure2-last-use.cpp2"
+#line 78 "pure2-last-use.cpp2"
   issue_683(args);
 }
 

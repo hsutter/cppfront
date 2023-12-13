@@ -69,6 +69,11 @@ draw: () = {
   _ = (pos).vertex();
 }
 
+my_string: @struct type = {
+  string: std::string;
+  size: std::size_t = string.size();
+}
+
 main: (args) = {
   issue_683(args);
 }

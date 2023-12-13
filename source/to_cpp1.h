@@ -1805,6 +1805,8 @@ public:
                     )
                 //  and this variable was uninitialized
                 && !decl->initializer
+                // and is not a type-scope variable
+                && !decl->declaration->parent_is_type()
                 //  and it's either a non-parameter or an out parameter
                 && (
                     !decl->parameter
