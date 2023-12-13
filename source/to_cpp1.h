@@ -1730,10 +1730,6 @@ public:
                 if (
                     decl
                     && decl->parent_is_type()
-                    && (
-                        !decl->is_function()
-                        || decl->has_parameter_named("this")
-                        )
                     )
                 {
                     add_this = true;
@@ -2881,7 +2877,7 @@ public:
         return {};
     }
 
-    auto lookup_finds_this_parameter_function(id_expression_node const& n)
+    auto lookup_finds_type_scope_function(id_expression_node const& n)
         -> bool
     {
         if (!n.is_unqualified())
@@ -2905,7 +2901,6 @@ public:
         if (
             !decl->is_function()
             || !decl->has_name()
-            || !decl->has_parameter_named("this")
             || !decl->parent_is_type()
             )
         {
@@ -3226,15 +3221,15 @@ public:
                 && !lookup_finds_variable_with_placeholder_type_under_initialization(*i->id_expr)
                 )
             {
-                auto is_this_parameter_function = lookup_finds_this_parameter_function(*i->id_expr);
-                if (is_this_parameter_function) {
+                auto is_type_scope_function = lookup_finds_type_scope_function(*i->id_expr);
+                if (is_type_scope_function) {
                     in_non_rvalue_context.push_back(true);
                 }
 
                 //  The function name is the argument to the macro
                 auto funcname = print_to_string(*i->id_expr);
 
-                if (is_this_parameter_function) {
+                if (is_type_scope_function) {
                     in_non_rvalue_context.pop_back();
                 }
 
@@ -3294,7 +3289,7 @@ public:
                 //  by leveraging the last use only in the non-member branch
                 if (auto last_use = is_definite_last_use(i->id_expr->get_token());
                     last_use
-                    && !is_this_parameter_function
+                    && !is_type_scope_function
                     )
                 {
                     if (last_use->is_forward) {

@@ -61,8 +61,12 @@ issue_857: type = {
   l: (move this) = k();
   m: (move this) = this.k();
   n: (_) = { }
-  o: (move this) = this.n();
-  p: (move this) = n(this);
+  n: (move this) = { }
+  o0:(move this) = n();
+  o1:(move this) = this.n();
+  o2:(move this) = 0.n();
+  o3:(move this) = n(0);
+  o4:(move this) = n(this); // FIXME Moves `this` twice.
 }
 
 issue_857_2: @struct type = {
