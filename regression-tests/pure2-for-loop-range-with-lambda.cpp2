@@ -1,6 +1,6 @@
 first: (forward f, forward _...) -> forward _ = f;
 
-main: () = {
+main: (args) = {
    ints: const std::array = (1, 2, 3, 4, 5);
    // OK
    for ints.first() do (i) {
@@ -22,4 +22,9 @@ main: () = {
    for temp do (i) {
       std::cout << i;
    }
+
+   for :() args$;() do (i) _ = i;
+   for :(x) x;(args) do (j) _ = j;
+   for :(x) x;(args) next _ = :() args$;() do (k) _ = k;
+   for :(x) x;(args) next _ = :(x) x;(args) do (l) _ = l;
 }
