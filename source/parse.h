@@ -2349,6 +2349,9 @@ struct function_type_node
         return false;
     }
 
+    auto first_parameter_name() const
+        -> std::string;
+
     auto nth_parameter_type_name(int n) const
         -> std::string;
 
@@ -2857,7 +2860,8 @@ public:
         return false;
     }
 
-    auto is_not_a_copyable_type() const
+    //  Do we know that this cannot be a copy constructible type?
+    auto cannot_be_a_copy_constructible_type() const
         -> bool
     {
         //  If we're not a type, we're not a copyable type
@@ -2865,18 +2869,19 @@ public:
             return true;
         }
 
-        //  If we're letting Cpp1 generate SMFs, we're likely copyable
+        //  Else if we're letting Cpp1 generate SMFs, we're likely copyable
         if (!member_function_generation) {
             return false;
         }
 
-        //  If we have a copy constructor, we're copyable
+        //  Else if we have a copy constructor, we're copyable
         for (auto& decl : get_type_scope_declarations())
         if  (decl->is_constructor_with_that())
         {
             return false;
         }
 
+        //  Else there can't be a copy constructor
         return true;
     }
 
@@ -3426,6 +3431,16 @@ public:
         return false;
     }
 
+    auto first_parameter_name() const
+        -> std::string
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->first_parameter_name();
+        }
+        //  else
+        return "";
+    }
+
     auto is_binary_comparison_function() const
         -> bool
     {
@@ -3547,6 +3562,18 @@ auto parameter_declaration_node::has_name(std::string_view s) const
     return declaration->has_name(s);
 }
 
+
+auto function_type_node::first_parameter_name() const
+    -> std::string
+{
+    if (std::ssize(parameters->parameters) > 0)
+    {
+        assert (parameters->parameters[0]->declaration->name());
+        return parameters->parameters[0]->declaration->name()->to_string();
+    }
+    //  Else
+    return "";
+}
 
 auto function_type_node::nth_parameter_type_name(int n) const
     -> std::string
