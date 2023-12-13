@@ -3240,6 +3240,23 @@ public:
                     ufcs_string += "_NONLOCAL";
                 }
 
+                //  If it's a last use, emit as part of the macro name
+                //
+                //  Note: This ensures a valid member call is still prioritized
+                //  by leveraging the last use only in the non-member branch
+                if (auto last_use = is_definite_last_use(i->id_expr->get_token())) {
+                    if (last_use->is_forward) {
+                        ufcs_string += "_FORWARD";
+                    }
+                    else {
+                        ufcs_string += "_MOVE";
+                    }
+
+                    in_non_rvalue_context.push_back(true);
+                    funcname = print_to_string(*i->id_expr);
+                    in_non_rvalue_context.pop_back();
+                }
+
                 //  Second, emit the UFCS argument list
 
                 prefix.emplace_back(ufcs_string + "(" + funcname + ")(", args.value().open_pos );

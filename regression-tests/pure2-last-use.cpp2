@@ -63,6 +63,12 @@ issue_857_3: @struct type = {
   f: (move this) = _ = f_inout(i);
 }
 
+issue_888: (copy r: std::string, copy size: int) = {
+  // ...
+  _ = r.size();
+  // ...
+}
+
 draw: () = {
   pos       := 0;
   vertex    := :(_) = { };

@@ -20,7 +20,7 @@ class issue_857_2;
 class issue_857_3;
   
 
-#line 72 "pure2-last-use.cpp2"
+#line 78 "pure2-last-use.cpp2"
 class my_string;
   
 
@@ -72,9 +72,12 @@ class issue_857_3 {
   public: auto f() && -> void;
 };
 
-auto draw() -> void;
+auto issue_888(std::string r, int size) -> void;
 
 #line 72 "pure2-last-use.cpp2"
+auto draw() -> void;
+
+#line 78 "pure2-last-use.cpp2"
 class my_string {
   public: std::string string; 
   public: std::size_t size {CPP2_UFCS(size)(string)}; 
@@ -153,16 +156,22 @@ int gi {0};
   auto issue_857_3::f() && -> void { static_cast<void>(f_inout(std::move(*this).i));  }
 
 #line 66 "pure2-last-use.cpp2"
+auto issue_888(std::string r, int size) -> void{
+  // ...
+  static_cast<void>(CPP2_UFCS_MOVE(size)(std::move(r)));
+  // ...
+}
+
 auto draw() -> void{
   auto pos {0}; 
   auto vertex {[]([[maybe_unused]] auto const& unnamed_param_1) mutable -> void{}}; 
-  static_cast<void>(CPP2_UFCS(std::move(vertex))((std::move(pos))));
+  static_cast<void>(CPP2_UFCS_MOVE(vertex)((std::move(pos))));
 }
 
-#line 77 "pure2-last-use.cpp2"
+#line 83 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 78 "pure2-last-use.cpp2"
+#line 84 "pure2-last-use.cpp2"
   issue_683(args);
 }
 
