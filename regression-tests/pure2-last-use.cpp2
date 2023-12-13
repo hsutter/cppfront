@@ -63,11 +63,11 @@ issue_857_3: @struct type = {
   f: (move this) = _ = f_inout(i);
 }
 
-//draw: () = {
-//  pos       := 0;
-//  vertex    := :(_) = { };
-//  _ = (pos).vertex();
-//}
+draw: () = {
+  pos       := 0;
+  vertex    := :(_) = { };
+  _ = (pos).vertex();
+}
 
 main: (args) = {
   issue_683(args);

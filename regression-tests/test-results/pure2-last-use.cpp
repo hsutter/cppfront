@@ -68,12 +68,9 @@ class issue_857_3 {
   public: auto f() && -> void;
 };
 
-//draw: () = {
-//  pos       := 0;
-//  vertex    := :(_) = { };
-//  _ = (pos).vertex();
-//}
+auto draw() -> void;
 
+#line 72 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -146,7 +143,13 @@ int gi {0};
 #line 63 "pure2-last-use.cpp2"
   auto issue_857_3::f() && -> void { static_cast<void>(f_inout(std::move(*this).i));  }
 
-#line 72 "pure2-last-use.cpp2"
+#line 66 "pure2-last-use.cpp2"
+auto draw() -> void{
+  auto pos {0}; 
+  auto vertex {[]([[maybe_unused]] auto const& unnamed_param_1) mutable -> void{}}; 
+  static_cast<void>(CPP2_UFCS(std::move(vertex))((std::move(pos))));
+}
+
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
 #line 73 "pure2-last-use.cpp2"

@@ -1,0 +1,29 @@
+In file included from pure2-last-use.cpp:7:
+pure2-last-use.cpp2: In function ‘void draw()’:
+pure2-last-use.cpp2:69:31: error: ‘std::move’ is not a class member
+   69 |   _ = (pos).vertex();
+      |                               ^
+pure2-last-use.cpp2:69:31: error: ‘std::move’ is not a class member
+   69 |   _ = (pos).vertex();
+      |                               ^
+pure2-last-use.cpp2:69:31: error: ‘std::move’ is not a class member
+   69 |   _ = (pos).vertex();
+      |                               ^
+pure2-last-use.cpp2:69:31: error: ‘std::move’ is not a class member
+   69 |   _ = (pos).vertex();
+      |                               ^
+pure2-last-use.cpp2: In lambda function:
+pure2-last-use.cpp2:69:31: error: ‘std::move’ is not a class member
+   69 |   _ = (pos).vertex();
+      |                               ^
+pure2-last-use.cpp2:69:31: error: ‘std::move’ is not a class member
+   69 |   _ = (pos).vertex();
+      |                               ^
+pure2-last-use.cpp2: In function ‘void draw()’:
+pure2-last-use.cpp2:69:49: error: no match for call to ‘(draw()::<lambda(Obj&&, Params&& ...)>) (std::remove_reference<int&>::type)’
+   69 |   _ = (pos).vertex();
+      |                                                 ^
+pure2-last-use.cpp2:69:21: note: candidate: ‘template<class Obj, class ... Params, bool IsNothrow> draw()::<lambda(Obj&&, Params&& ...)>’
+   69 |   _ = (pos).vertex();
+      |                     ^
+pure2-last-use.cpp2:69:21: note:   template argument deduction/substitution failed:

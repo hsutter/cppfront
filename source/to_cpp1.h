@@ -1697,7 +1697,8 @@ public:
         unqualified_id_node const& n,
         bool in_synthesized_multi_return = false,
         bool is_local_name = true,
-        bool is_qualified = false
+        bool is_qualified = false,
+        bool right_after_member_access = false
     )
         -> void
     {   STACKINSTR
@@ -1706,7 +1707,8 @@ public:
         bool add_forward =
             last_use
             && last_use->is_forward
-            && !in_non_rvalue_context.back();
+            && !in_non_rvalue_context.back()
+            && !right_after_member_access;
 
         bool add_move =
             !add_forward
@@ -1714,12 +1716,14 @@ public:
                 in_synthesized_multi_return
                 || (last_use && !suppress_move_from_last_use)
                 )
-            && !in_non_rvalue_context.back();
+            && !in_non_rvalue_context.back()
+            && !right_after_member_access;
 
         //  Add `std::move(*this).` when implicitly moving a member on last use.
         //  This way, members of lvalue reference type won't be implicitly moved.
         bool add_this = false;
-        if (add_move) {
+        if (add_move)
+        {
             auto lookup = source_order_name_lookup(n);
             if (lookup) {
                 auto decl = get<declaration_node const*>(*lookup);
@@ -1904,12 +1908,13 @@ public:
     //
     auto emit(
         id_expression_node const& n,
-        bool                      is_local_name          = true
+        bool                      is_local_name          = true,
+        bool                      right_after_member_access = false
     )
         -> void
     {   STACKINSTR
         try_emit<id_expression_node::qualified  >(n.id);
-        try_emit<id_expression_node::unqualified>(n.id, false, is_local_name);
+        try_emit<id_expression_node::unqualified>(n.id, false, is_local_name, false, right_after_member_access);
     }
 
 
@@ -3325,7 +3330,7 @@ public:
                         args.reset();
                     }
 
-                    auto print = print_to_string(*i->id_expr, false /*not a local name*/);
+                    auto print = print_to_string(*i->id_expr, false /*not a local name*/, i->op->type() == lexeme::Dot);
                     suffix.emplace_back( print, i->id_expr->position() );
                 }
 

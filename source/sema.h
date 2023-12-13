@@ -1656,6 +1656,7 @@ public:
     int  scope_depth                              = 0;
     bool started_standalone_assignment_expression = false;
     bool started_postfix_expression               = false;
+    bool started_member_access                    = false;
     bool is_out_expression                        = false;
     bool inside_next_expression                   = false;
     bool inside_parameter_list                    = false;
@@ -1808,6 +1809,10 @@ public:
 
     auto start(token const& t, int) -> void
     {
+        if (t.type() == lexeme::Dot) {
+            started_member_access = true;
+        }
+
         //  We currently only care to look at object identifiers
         if (
             t.type() != lexeme::Identifier
@@ -1836,10 +1841,15 @@ public:
         }
 
         //  Otherwise it's just an identifier use (if it's not a parameter name) and
-        //  it's the first identifier of a postfix_expressions (not a member name or something else)
-        else if (started_postfix_expression)
+        //  it's the first identifier of a postfix_expressions
+        //  or the function name in a UFCS expression
+        else if (
+            started_postfix_expression
+            || started_member_access
+            )
         {
             started_postfix_expression = false;
+            started_member_access = false;
             if (!inside_parameter_identifier && !inside_next_expression)
             {
                 //  Put this into the table if it's a use of an object in scope
