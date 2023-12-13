@@ -38,9 +38,11 @@ issue_832: () = {
 f_inout: (inout _: std::unique_ptr<int>) = { }
 f_copy: (copy _...) = { }
 
-issue_857: @struct type = {
+issue_857: type = {
   a: std::unique_ptr<int>;
   b: std::unique_ptr<int>;
+  operator=: (out this, move that) = { }
+  operator=: (move this) = f_copy(a, this.b);
   f: (move this) = f_copy(this);
   f: (move this, move that) = f_copy(this, that);
   g: (move this) = f_copy(this.a);
