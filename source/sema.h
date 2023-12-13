@@ -525,7 +525,7 @@ public:
         };
 
         //  It's a local (incl. named return value or copy or move or forward parameter)
-        //  or type-scope
+        //  or type-scope (incl. `this` function for the implicit object parameter)
         //
         auto is_potentially_movable_local_or_type_scope = [&](symbol const& s)
             -> declaration_sym const*
@@ -533,11 +533,20 @@ public:
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
                 if (
                     sym->start
-                    && sym->declaration->is_object()
-                    && (!sym->parameter
-                        || sym->parameter->pass == passing_style::copy
-                        || sym->parameter->pass == passing_style::move
-                        || sym->parameter->pass == passing_style::forward
+                    && (
+                        (
+                            sym->declaration->is_object()
+                            && (!sym->parameter
+                                || sym->parameter->pass == passing_style::copy
+                                || sym->parameter->pass == passing_style::move
+                                || sym->parameter->pass == passing_style::forward
+                                )
+                         )
+                         || (
+                             sym->declaration->is_function()
+                             && sym->declaration->has_name()
+                             && sym->declaration->parent_is_type()
+                             )
                         )
                     )
                 {
