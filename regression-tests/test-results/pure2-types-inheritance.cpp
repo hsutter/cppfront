@@ -123,7 +123,7 @@ namespace N {
         std::cout << "printing: " + cpp2::to_string(name) + " lives at " + cpp2::to_string(address) + "\n";  }
 
     Cyborg::~Cyborg() noexcept { 
-        std::cout << "Tired but satisfied after another successful day, " + cpp2::to_string(name) + " checks out and goes home to their family\n";  }
+        std::cout << "Tired but satisfied after another successful day, " + cpp2::to_string(std::move(name)) + " checks out and goes home to their family\n";  }
 
 #line 38 "pure2-types-inheritance.cpp2"
 auto make_speak(cpp2::in<Human> h) -> void{
