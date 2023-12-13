@@ -44,7 +44,6 @@ issue_857: @struct type = {
   f: (move this, move that) = f_copy(this, that);
   g: (move this) = f_copy(this.a);
   g: (move this, move that) = f_copy(this.a, that.a);
-//h: (move this) = f_copy(this.a, this.b);
   i: (move this) = f_copy(a);
   j: (move this) = f_copy(a);
   k: (move this) = f_copy(a, b);
@@ -56,12 +55,8 @@ issue_857_2: @struct type = {
 
 gi: int = 0;
 issue_857_3: @struct type = {
-  p: std::pair<std::unique_ptr<int>, std::add_lvalue_reference_t<int>>
-    = (new<int>(0), gi);
-  f: (move this) = {
-    // f_copy(p.first);
-    _ = f_inout(p.second);
-  }
+  i: std::add_lvalue_reference_t<int> = gi;
+  f: (move this) = _ = f_inout(i);
 }
 
 //draw: () = {

@@ -12,11 +12,11 @@
 class issue_857;
   
 
-#line 53 "pure2-last-use.cpp2"
+#line 52 "pure2-last-use.cpp2"
 class issue_857_2;
   
 
-#line 58 "pure2-last-use.cpp2"
+#line 57 "pure2-last-use.cpp2"
 class issue_857_3;
   
 
@@ -47,7 +47,6 @@ class issue_857 {
   public: auto f(issue_857&& that) && -> void;
   public: auto g() && -> void;
   public: auto g(issue_857&& that) && -> void;
-//h: (move this) = f_copy(this.a, this.b);
   public: auto i() && -> void;
   public: auto j() && -> void;
   public: auto k() && -> void;
@@ -59,11 +58,8 @@ class issue_857_2 {
 
 extern int gi;
 class issue_857_3 {
-  public: std::pair<std::unique_ptr<int>,std::add_lvalue_reference_t<int>> p {
-    cpp2_new<int>(0), gi}; 
+  public: std::add_lvalue_reference_t<int> i {gi}; 
   public: auto f() && -> void;
-
-#line 65 "pure2-last-use.cpp2"
 };
 
 //draw: () = {
@@ -122,24 +118,20 @@ auto f_copy([[maybe_unused]] auto ...unnamed_param_1) -> void{}
   auto issue_857::f(issue_857&& that) && -> void { f_copy(std::move((*this)), std::move(that));  }
   auto issue_857::g() && -> void { f_copy(std::move((*this)).a);  }
   auto issue_857::g(issue_857&& that) && -> void { f_copy(std::move((*this)).a, std::move(that).a);  }
-
   auto issue_857::i() && -> void { f_copy(std::move(*this).a);  }
   auto issue_857::j() && -> void { f_copy(std::move(*this).a);  }
   auto issue_857::k() && -> void { f_copy(std::move(*this).a, std::move(*this).b);  }
 
-#line 57 "pure2-last-use.cpp2"
+#line 56 "pure2-last-use.cpp2"
 int gi {0}; 
 
-#line 61 "pure2-last-use.cpp2"
-  auto issue_857_3::f() && -> void{
-    // f_copy(p.first);
-    static_cast<void>(f_inout(std::move(*this).p.second));
-  }
+#line 59 "pure2-last-use.cpp2"
+  auto issue_857_3::f() && -> void { static_cast<void>(f_inout(std::move(*this).i));  }
 
-#line 73 "pure2-last-use.cpp2"
+#line 68 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 74 "pure2-last-use.cpp2"
+#line 69 "pure2-last-use.cpp2"
   issue_683(args);
 }
 
