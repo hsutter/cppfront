@@ -2177,6 +2177,8 @@ public:
         -> void
     {   STACKINSTR
         assert(n.identifier);
+        in_non_rvalue_context.push_back(true);
+        auto guard = finally([&]{ in_non_rvalue_context.pop_back(); });
 
         iteration_statements.push_back({ &n, false});
         auto labelname = labelized_position(n.label);
@@ -2184,9 +2186,6 @@ public:
         //  Handle while
         //
         if (*n.identifier == "while") {
-            in_non_rvalue_context.push_back(true);
-            auto guard = finally([&]{ in_non_rvalue_context.pop_back(); });
-
             assert(
                 n.condition
                 && n.statements
@@ -2219,9 +2218,6 @@ public:
         //  Handle do
         //
         else if (*n.identifier == "do") {
-            in_non_rvalue_context.push_back(true);
-            auto guard = finally([&]{ in_non_rvalue_context.pop_back(); });
-
             assert(
                 n.condition
                 && n.statements
@@ -2281,14 +2277,12 @@ public:
             }
             //  Otherwise, just emit the general expression as usual
             else {
+                in_non_rvalue_context.push_back(false);
                 emit(*n.range);
+                in_non_rvalue_context.pop_back();
             }
 
             printer.print_cpp2(" ) ", n.position());
-
-            in_non_rvalue_context.push_back(true);
-            auto guard = finally([&]{ in_non_rvalue_context.pop_back(); });
-
             if (!labelname.empty()) {
                 printer.print_extra("{");
             }
