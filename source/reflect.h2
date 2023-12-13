@@ -1152,13 +1152,22 @@ union: (inout t : meta::type_declaration)
     t.remove_marked_members();
 
     //  Provide storage
-    (copy storage: std::string = "    _storage: std::aligned_storage_t<cpp2::max( ")
+    (copy storage: std::string = "    _storage: cpp2::aligned_storage<cpp2::max( ")
     {
         (copy comma: std::string = "")
         for  alternatives  
         next comma = ", "  
         do   (e) {
             storage += comma + "sizeof((e.type)$)";
+        }
+
+        storage += "), cpp2::max( ";
+
+        (copy comma: std::string = "")
+        for  alternatives  
+        next comma = ", "  
+        do   (e) {
+            storage += comma + "alignof((e.type)$)";
         }
 
         storage += " )> = ();\n";

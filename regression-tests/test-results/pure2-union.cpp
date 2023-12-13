@@ -22,7 +22,7 @@ template<typename T> class name_or_other;
 
 #line 2 "pure2-union.cpp2"
 class name_or_number {
-private: std::aligned_storage_t<cpp2::max(sizeof(std::string), sizeof(cpp2::i32))> _storage {}; private: cpp2::i8 _discriminator {-1}; public: [[nodiscard]] auto is_name() const& -> bool;
+private: cpp2::aligned_storage<cpp2::max(sizeof(std::string), sizeof(cpp2::i32)),cpp2::max(alignof(std::string), alignof(cpp2::i32))> _storage {}; private: cpp2::i8 _discriminator {-1}; public: [[nodiscard]] auto is_name() const& -> bool;
 public: [[nodiscard]] auto name() const& -> std::string const&;
 public: [[nodiscard]] auto name() & -> std::string&;
 public: auto set_name(cpp2::in<std::string> _value) & -> void;
@@ -49,7 +49,7 @@ template<typename T> class name_or_other
 
 #line 12 "pure2-union.cpp2"
     public: [[nodiscard]] auto to_string() const& -> std::string;
-    private: std::aligned_storage_t<cpp2::max(sizeof(std::string), sizeof(T))> _storage {}; private: cpp2::i8 _discriminator {-1}; public: [[nodiscard]] auto is_name() const& -> bool;
+    private: cpp2::aligned_storage<cpp2::max(sizeof(std::string), sizeof(T)),cpp2::max(alignof(std::string), alignof(T))> _storage {}; private: cpp2::i8 _discriminator {-1}; public: [[nodiscard]] auto is_name() const& -> bool;
 public: [[nodiscard]] auto name() const& -> std::string const&;
 public: [[nodiscard]] auto name() & -> std::string&;
 public: auto set_name(cpp2::in<std::string> _value) & -> void;

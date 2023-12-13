@@ -336,6 +336,11 @@ inline constexpr auto max(auto... values) {
 template <class T, class... Ts>
 inline constexpr auto is_any = std::disjunction_v<std::is_same<T, Ts>...>;
 
+template <std::size_t Len, std::size_t Align>
+struct aligned_storage {
+    alignas(Align) unsigned char data[Len];
+};
+
 
 //-----------------------------------------------------------------------
 //
