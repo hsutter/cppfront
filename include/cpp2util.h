@@ -786,6 +786,7 @@ public:
     #endif
 #endif
 
+#define CPP2_UFCS_IDENTITY(...)  __VA_ARGS__
 #define CPP2_UFCS_REMPARENS(...) __VA_ARGS__
 
 // Ideally, the expression `CPP2_UFCS_IS_NOTHROW` expands to
@@ -794,18 +795,18 @@ public:
 // we instead make it a template parameter of the UFCS lambda.
 // But using a template parameter, Clang also ICEs on an application.
 // So we use these `NOTHROW` macros to fall back to the ideal for when not using GCC.
-#define CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,...) \
+#define CPP2_UFCS_IS_NOTHROW(MVFWD,QUALID,TEMPKW,...) \
    requires { requires  requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
               requires    noexcept(std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...)); } \
 || requires { requires !requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
-              requires noexcept(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(std::declval<Obj>(), std::declval<Params>()...)); }
-#define CPP2_UFCS_IS_NOTHROW_PARAM(...)               /*empty*/
-#define CPP2_UFCS_IS_NOTHROW_ARG(QUALID,TEMPKW,...)   CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,__VA_ARGS__)
+              requires noexcept(MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(std::declval<Obj>(), std::declval<Params>()...)); }
+#define CPP2_UFCS_IS_NOTHROW_PARAM(...)                     /*empty*/
+#define CPP2_UFCS_IS_NOTHROW_ARG(MVFWD,QUALID,TEMPKW,...)   CPP2_UFCS_IS_NOTHROW(MVFWD,QUALID,TEMPKW,__VA_ARGS__)
 #if defined(__GNUC__) && !defined(__clang__)
     #undef  CPP2_UFCS_IS_NOTHROW_PARAM
     #undef  CPP2_UFCS_IS_NOTHROW_ARG
-    #define CPP2_UFCS_IS_NOTHROW_PARAM(QUALID,TEMPKW,...) , bool IsNothrow = CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,__VA_ARGS__)
-    #define CPP2_UFCS_IS_NOTHROW_ARG(...)                 IsNothrow
+    #define CPP2_UFCS_IS_NOTHROW_PARAM(MVFWD,QUALID,TEMPKW,...) , bool IsNothrow = CPP2_UFCS_IS_NOTHROW(MVFWD,QUALID,TEMPKW,__VA_ARGS__)
+    #define CPP2_UFCS_IS_NOTHROW_ARG(...)                       IsNothrow
     #if __GNUC__ < 11
         #undef  CPP2_UFCS_IS_NOTHROW_PARAM
         #undef  CPP2_UFCS_IS_NOTHROW_ARG
@@ -822,41 +823,45 @@ public:
 // But using a template parameter, Clang also ICEs and GCC rejects a local 'F'.
 // Also, Clang rejects the SFINAE test case when using 'std::declval'.
 // So we use these `CONSTRAINT` macros to fall back to the ideal for when not using MSVC.
-#define CPP2_UFCS_CONSTRAINT_PARAM(...)               /*empty*/
-#define CPP2_UFCS_CONSTRAINT_ARG(QUALID,TEMPKW,...) \
+#define CPP2_UFCS_CONSTRAINT_PARAM(...)                   /*empty*/
+#define CPP2_UFCS_CONSTRAINT_ARG(MVFWD,QUALID,TEMPKW,...) \
    requires { CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); } \
-|| requires { CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); }
+|| requires { MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); }
 #if defined(_MSC_VER)
     #undef  CPP2_UFCS_CONSTRAINT_PARAM
     #undef  CPP2_UFCS_CONSTRAINT_ARG
-    #define CPP2_UFCS_CONSTRAINT_PARAM(QUALID,TEMPKW,...) , bool IsViable = \
+    #define CPP2_UFCS_CONSTRAINT_PARAM(MVFWD,QUALID,TEMPKW,...) , bool IsViable = \
    requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); } \
-|| requires { CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(std::declval<Obj>(), std::declval<Params>()...); }
+|| requires { MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(std::declval<Obj>(), std::declval<Params>()...); }
     #define CPP2_UFCS_CONSTRAINT_ARG(...)                 IsViable
 #endif
 
-#define CPP2_UFCS_(LAMBDADEFCAPT,QUALID,TEMPKW,...) \
+#define CPP2_UFCS_(LAMBDADEFCAPT,MVFWD,QUALID,TEMPKW,...) \
 [LAMBDADEFCAPT]< \
     typename Obj, typename... Params \
-    CPP2_UFCS_IS_NOTHROW_PARAM(QUALID,TEMPKW,__VA_ARGS__) \
-    CPP2_UFCS_CONSTRAINT_PARAM(QUALID,TEMPKW,__VA_ARGS__) \
+    CPP2_UFCS_IS_NOTHROW_PARAM(MVFWD,QUALID,TEMPKW,__VA_ARGS__) \
+    CPP2_UFCS_CONSTRAINT_PARAM(MVFWD,QUALID,TEMPKW,__VA_ARGS__) \
   > \
   CPP2_LAMBDA_NO_DISCARD (Obj&& obj, Params&& ...params) CPP2_FORCE_INLINE_LAMBDA_CLANG \
-  noexcept(CPP2_UFCS_IS_NOTHROW_ARG(QUALID,TEMPKW,__VA_ARGS__)) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) \
-    requires CPP2_UFCS_CONSTRAINT_ARG(QUALID,TEMPKW,__VA_ARGS__) { \
+  noexcept(CPP2_UFCS_IS_NOTHROW_ARG(MVFWD,QUALID,TEMPKW,__VA_ARGS__)) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) \
+    requires CPP2_UFCS_CONSTRAINT_ARG(MVFWD,QUALID,TEMPKW,__VA_ARGS__) { \
     if constexpr (requires{ CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
         return CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
     } else { \
-        return CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+        return MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
     } \
 }
 
-#define CPP2_UFCS(...)                                    CPP2_UFCS_(&,(),,__VA_ARGS__)
-#define CPP2_UFCS_TEMPLATE(...)                           CPP2_UFCS_(&,(),template,__VA_ARGS__)
-#define CPP2_UFCS_QUALIFIED_TEMPLATE(QUALID,...)          CPP2_UFCS_(&,QUALID,template,__VA_ARGS__)
-#define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,(),,__VA_ARGS__)
-#define CPP2_UFCS_TEMPLATE_NONLOCAL(...)                  CPP2_UFCS_(,(),template,__VA_ARGS__)
-#define CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL(QUALID,...) CPP2_UFCS_(,QUALID,template,__VA_ARGS__)
+#define CPP2_UFCS(...)                                    CPP2_UFCS_(&,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
+#define CPP2_UFCS_MOVE(...)                               CPP2_UFCS_(&,std::move,(),,__VA_ARGS__)
+#define CPP2_UFCS_FORWARD(...)                            CPP2_UFCS_(&,CPP2_FORWARD,(),,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE(...)                           CPP2_UFCS_(&,CPP2_UFCS_IDENTITY,(),template,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE_MOVE(...)                      CPP2_UFCS_(&,std::move,(),template,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE_FORWARD(...)                   CPP2_UFCS_(&,CPP2_FORWARD,(),template,__VA_ARGS__)
+#define CPP2_UFCS_QUALIFIED_TEMPLATE(QUALID,...)          CPP2_UFCS_(&,CPP2_UFCS_IDENTITY,QUALID,template,__VA_ARGS__)
+#define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE_NONLOCAL(...)                  CPP2_UFCS_(,CPP2_UFCS_IDENTITY,(),template,__VA_ARGS__)
+#define CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL(QUALID,...) CPP2_UFCS_(,CPP2_UFCS_IDENTITY,QUALID,template,__VA_ARGS__)
 
 
 //-----------------------------------------------------------------------
