@@ -1935,19 +1935,24 @@ public:
         );
         --scope_depth;
 
-        //  Pop an implicit 'else' branch.
-        if (auto s = std::find_if(
-                         symbols.rbegin(),
-                         symbols.rend(),
-                         [=](symbol s) {
-                             return s.depth == scope_depth;
-                         });
-            s != symbols.rend()
-            && std::get_if<symbol::selection>(&s->sym)
-            )
-        {
-            --scope_depth;
-        }
+        auto pop_implicit_else_branch = [&]() -> bool {
+            if (auto s = std::find_if(
+                             symbols.rbegin(),
+                             symbols.rend(),
+                             [=](symbol s) {
+                                 return s.depth <= scope_depth;
+                             });
+                s != symbols.rend()
+                && std::get_if<symbol::selection>(&s->sym)
+                && s->depth == scope_depth
+                )
+            {
+                --scope_depth;
+                return true;
+            }
+            return false;
+        };
+        while (pop_implicit_else_branch()) { }
     }
 
     auto start(assignment_expression_node const& n, int)

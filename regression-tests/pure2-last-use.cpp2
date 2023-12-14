@@ -79,6 +79,17 @@ issue_857_3: @struct type = {
   f: (move this) = _ = f_inout(i);
 }
 
+
+issue_884_3: () = {
+  x := new<int>(0);
+  if true { }
+  if true { }
+  {
+    { f_inout(x); }
+    f_copy(x);
+  }
+}
+
 issue_884: () = {
   x := new<int>(0);
   if true { }
