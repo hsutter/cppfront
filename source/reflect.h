@@ -1360,7 +1360,7 @@ auto basic_enum(
     std::vector<value_member_info> enumerators {}; 
     cpp2::i64 min_value {}; 
     cpp2::i64 max_value {}; 
-    std::string underlying_type {}; 
+    cpp2::deferred_init<std::string> underlying_type; 
 
     CPP2_UFCS(reserve_names)(t, "operator=", "operator<=>");
     if (bitwise) {
@@ -1369,7 +1369,7 @@ auto basic_enum(
 
     //  1. Gather: The names of all the user-written members, and find/compute the type
 
-    underlying_type = CPP2_UFCS(get_argument)(t, 0);// use the first template argument, if there was one
+    underlying_type.construct(CPP2_UFCS(get_argument)(t, 0));// use the first template argument, if there was one
 
     auto found_non_numeric {false}; 
 {
@@ -1415,23 +1415,23 @@ std::string value = "-1";
 
     //  Compute the default underlying type, if it wasn't explicitly specified
 #line 913 "reflect.h2"
-    if (underlying_type == "") 
+    if (underlying_type.value() == "") 
     {
         CPP2_UFCS(require)(t, !(std::move(found_non_numeric)), 
             "if you write an enumerator with a non-numeric-literal value, you must specify the enumeration's underlying type");
 
         if (!(bitwise)) {
             if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i8>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i8>::max())) {
-                underlying_type = "i8";
+                underlying_type.value() = "i8";
             }
             else {if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i16>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i16>::max())) {
-                underlying_type = "i16";
+                underlying_type.value() = "i16";
             }
             else {if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i32>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i32>::max())) {
-                underlying_type = "i32";
+                underlying_type.value() = "i32";
             }
             else {if (cpp2::cmp_greater_eq(std::move(min_value),std::numeric_limits<cpp2::i64>::min()) && cpp2::cmp_less_eq(std::move(max_value),std::numeric_limits<cpp2::i64>::max())) {
-                underlying_type = "i64";
+                underlying_type.value() = "i64";
             }
             else {
                 CPP2_UFCS(error)(t, "values are outside the range representable by the largest supported underlying signed type (i64)");
@@ -1440,16 +1440,16 @@ std::string value = "-1";
         else {
             auto umax {std::move(max_value) * cpp2::as_<cpp2::u64, 2>()}; 
             if (cpp2::cmp_less_eq(umax,std::numeric_limits<cpp2::u8>::max())) {
-                underlying_type = "u8";
+                underlying_type.value() = "u8";
             }
             else {if (cpp2::cmp_less_eq(umax,std::numeric_limits<cpp2::u16>::max())) {
-                underlying_type = "u16";
+                underlying_type.value() = "u16";
             }
             else {if (cpp2::cmp_less_eq(std::move(umax),std::numeric_limits<cpp2::u32>::max())) {
-                underlying_type = "u32";
+                underlying_type.value() = "u32";
             }
             else {
-                underlying_type = "u64";
+                underlying_type.value() = "u64";
             }}}
         }
     }
@@ -1462,9 +1462,9 @@ std::string value = "-1";
     CPP2_UFCS(remove_marked_members)(t);
 
     //  Generate all the common material: value and common functions
-    CPP2_UFCS(add_member)(t, "    _value            : " + cpp2::to_string(underlying_type) + ";");
-    CPP2_UFCS(add_member)(t, "    private operator= : (implicit out this, _val: i64) == _value = cpp2::unsafe_narrow<" + cpp2::to_string(underlying_type) + ">(_val);");
-    CPP2_UFCS(add_member)(t, "    get_raw_value     : (this) -> " + cpp2::to_string(std::move(underlying_type)) + " == _value;");
+    CPP2_UFCS(add_member)(t, "    _value            : " + cpp2::to_string(underlying_type.value()) + ";");
+    CPP2_UFCS(add_member)(t, "    private operator= : (implicit out this, _val: i64) == _value = cpp2::unsafe_narrow<" + cpp2::to_string(underlying_type.value()) + ">(_val);");
+    CPP2_UFCS(add_member)(t, "    get_raw_value     : (this) -> " + cpp2::to_string(std::move(underlying_type.value())) + " == _value;");
     CPP2_UFCS(add_member)(t, "    operator=         : (out this, that) == { }");
     CPP2_UFCS(add_member)(t, "    operator<=>       : (this, that) -> std::strong_ordering;");
 

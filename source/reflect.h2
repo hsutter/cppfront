@@ -859,7 +859,7 @@ basic_enum: (
     enumerators     : std::vector<value_member_info> = ();
     min_value       : i64                            = ();
     max_value       : i64                            = ();
-    underlying_type : std::string                    = ();
+    underlying_type : std::string;
 
     t.reserve_names( "operator=", "operator<=>" );
     if bitwise {

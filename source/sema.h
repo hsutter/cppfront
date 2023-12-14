@@ -148,7 +148,7 @@ struct selection_sym {
 struct compound_sym {
     bool start = false;
     compound_statement_node const* compound = {};
-    enum kind { is_scope, is_true, is_false } kind_ = is_scope;
+    enum kind { is_scope, is_implicit_scope, is_true, is_false } kind_ = is_scope;
 
     compound_sym(
         bool                           s,
@@ -848,13 +848,7 @@ private:
             return true;
         }
 
-        //  If this is a member variable in a constructor, the name doesn't
-        //  appear lexically right in the constructor, so prepending "this."
-        //  to the printed name might make the error more readable to the programmer
         auto name = decl->identifier->to_string();
-        if (decl->declaration->parent_is_type()) {
-            name += " (aka this." + name + ")";
-        }
 
         struct stack_entry{
             int pos;    // start of this selection statement
@@ -1079,7 +1073,11 @@ private:
                 auto const& sym = std::get<symbol::active::compound>(symbols[pos].sym);
 
                 //  If we're in a selection
-                if (std::ssize(selection_stack) > 0) {
+                if (
+                    std::ssize(selection_stack) > 0
+                    && sym.kind_ != compound_sym::kind::is_implicit_scope
+                    )
+                {
                     //  If this is a compound start with the current selection's depth
                     //  plus one, it's the start of one of the branches of that selection
                     if (
@@ -1995,7 +1993,12 @@ public:
                 && active_selections.back()->false_branch.get() == &n
                 )
             {
-                kind = compound_sym::is_false;
+                if (active_selections.back()->has_source_false_branch) {
+                    kind = compound_sym::is_false;
+                }
+                else {
+                    kind = compound_sym::is_implicit_scope;
+                }
             }
         }
         return kind;

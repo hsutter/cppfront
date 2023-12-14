@@ -24,11 +24,11 @@ class issue_857_3;
 class issue_869;
   
 
-#line 177 "pure2-last-use.cpp2"
+#line 191 "pure2-last-use.cpp2"
 class cpp2_union;
   
 
-#line 185 "pure2-last-use.cpp2"
+#line 199 "pure2-last-use.cpp2"
 class my_string;
   
 
@@ -168,6 +168,12 @@ auto issue_888(std::string r, int size) -> void;
 auto draw() -> void;
 
 #line 177 "pure2-last-use.cpp2"
+auto enum_0() -> void;
+
+#line 183 "pure2-last-use.cpp2"
+auto enum_1() -> void;
+
+#line 191 "pure2-last-use.cpp2"
 class cpp2_union {
   public: auto destroy() & -> void;
   public: ~cpp2_union() noexcept;
@@ -176,7 +182,7 @@ class cpp2_union {
   public: auto operator=(cpp2_union const&) -> void = delete;
 
 
-#line 183 "pure2-last-use.cpp2"
+#line 197 "pure2-last-use.cpp2"
 };
 
 class my_string {
@@ -386,17 +392,31 @@ auto draw() -> void{
   static_cast<void>(CPP2_UFCS_MOVE(vertex)((std::move(pos))));
 }
 
-#line 178 "pure2-last-use.cpp2"
+auto enum_0() -> void{
+  cpp2::deferred_init<int> underlying_type; 
+  if (true) {}
+  underlying_type.construct(0);
+}
+
+auto enum_1() -> void{
+  cpp2::deferred_init<int> underlying_type; 
+  if (true) {
+    underlying_type.construct(0);
+  }
+  underlying_type.construct(0);
+}
+
+#line 192 "pure2-last-use.cpp2"
   auto cpp2_union::destroy() & -> void{}
   cpp2_union::~cpp2_union() noexcept{
     destroy();
     static_cast<void>(std::move((*this)));
   }
 
-#line 190 "pure2-last-use.cpp2"
+#line 204 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 191 "pure2-last-use.cpp2"
+#line 205 "pure2-last-use.cpp2"
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());
 }
