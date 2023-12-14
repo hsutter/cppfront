@@ -1929,23 +1929,25 @@ public:
 
     auto end(compound_statement_node const& n, int) -> void
     {
-        //  Pop an implicit 'else' branch.
-        if (auto s = std::find_if(
-                         symbols.rbegin(),
-                         symbols.rend(),
-                         [=](symbol s) {
-                             return s.depth == scope_depth - 1;
-                         });
-            s == symbols.rend()
-            || std::get_if<symbol::selection>(&s->sym)
-            ) {
-            --scope_depth;
-        }
         symbols.emplace_back(
             scope_depth,
             compound_sym{ false, &n, kind_of(n) }
         );
         --scope_depth;
+
+        //  Pop an implicit 'else' branch.
+        if (auto s = std::find_if(
+                         symbols.rbegin(),
+                         symbols.rend(),
+                         [=](symbol s) {
+                             return s.depth == scope_depth;
+                         });
+            s != symbols.rend()
+            && std::get_if<symbol::selection>(&s->sym)
+            )
+        {
+            --scope_depth;
+        }
     }
 
     auto start(assignment_expression_node const& n, int)
