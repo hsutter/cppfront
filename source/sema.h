@@ -343,21 +343,22 @@ public:
     //
     auto get_declaration_of(
         token const* t,
-        bool         look_beyond_current_function = false
-    )
+        bool         look_beyond_current_function = false,
+        bool         look_up_to_type              = false
+    ) const
         -> declaration_sym const*
     {
         if (!t) {
             return {};
         }
-        return get_declaration_of(*t, look_beyond_current_function);
+        return get_declaration_of(*t, look_beyond_current_function, look_up_to_type);
     }
 
     auto get_declaration_of(
         token const& t,
         bool         look_beyond_current_function = false,
         bool         look_up_to_type              = false
-    )
+    ) const
         -> declaration_sym const*
     {
         //  First find the position the query is coming from
@@ -367,7 +368,13 @@ public:
             i != symbols.cend()
             && (
                 !i->get_token()
-                || final_position[i->get_token()] < final_position[&t]
+                || [&]() {
+                       auto lhs = final_position.find(i->get_token());
+                       auto rhs = final_position.find(&t);
+                       return lhs == final_position.end()
+                              || rhs == final_position.end()
+                              || lhs->second < rhs->second;
+                   }()
                 )
             )
         {
@@ -756,7 +763,20 @@ private:
                 assert (sym.identifier);
 
                 //  If we find a use of this identifier
-                if (*sym.identifier == *id)
+                if (
+                    *sym.identifier == *id
+                    || (
+                        in_type_scope
+                        && (
+                            *sym.identifier == "this"
+                            || [&]() {
+                                   auto decl = get_declaration_of(sym.get_token(), true, true);
+                                   return decl
+                                          && decl->declaration->parent_is_type();
+                               }()
+                            )
+                        )
+                    )
                 {
                     if (
                         !found

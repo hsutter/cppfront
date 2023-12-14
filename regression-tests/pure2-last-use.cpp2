@@ -58,7 +58,10 @@ issue_857: type = {
   a: std::unique_ptr<int>;
   b: std::unique_ptr<int>;
   operator=: (out this, move that) = { }
-  operator=: (move this) = f_copy(a, this.b);
+  operator=: (move this) = {
+    f_inout(a);
+    f_copy(this.b);
+  }
   f: (move this) = f_copy(this);
   f: (move this, move that) = f_copy(this, that);
   g: (move this) = f_copy(this.a);
@@ -66,7 +69,10 @@ issue_857: type = {
   h: (inout this) = f_inout(a);
   i: (move this) = f_copy(a);
   j: (move this) = f_copy(a);
-  k: (move this) = f_copy(a, b);
+  k: (move this) = {
+    f_inout(a);
+    f_copy(b);
+  }
   l: (move this) = k();
   m: (move this) = this.k();
   n: (_) = { }
@@ -85,7 +91,7 @@ issue_857: type = {
     f_copy(a);
   }
   p2: (move this) = {
-  //f_inout(a); // FIXME Moves `a`.
+    f_inout(a);
     f_copy(this);
   }
   p3: (move this) = {
@@ -93,7 +99,7 @@ issue_857: type = {
     f_copy(a);
   }
   q: (move this) = {
-  //m(); // FIXME Moves implicit `this`.
+    h();
     n();
   }
 // FIXME
@@ -171,7 +177,7 @@ draw: () = {
 union: type = {
   destroy: (inout this) = { }
   operator=: (move this) = {
-    // destroy(); FIXME Discarding `this` still moves it here.
+    destroy();
     _ = this;
   }
 }
