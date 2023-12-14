@@ -92,6 +92,22 @@ issue_857: type = {
   //f_inout(this); // FIXME Moves `this`.
     f_copy(a);
   }
+// FIXME
+//z: (move this, move that) = {
+///*f */      if true { f_copy(this); }
+///*f */ else if true { f_copy(this, that); }
+///*g */ else if true { f_copy(this.a); }
+///*g */ else if true { f_copy(this.a, that.a); }
+///*i */ else if true { f_copy(a); }
+///*j */ else if true { f_copy(a); }
+///*k */ else if true { f_copy(a, b); }
+///*l */ else if true { k(); }
+///*m */ else if true { this.k(); }
+///*o1*/ else if true { n(); }
+///*o2*/ else if true { this.n(); }
+///*o3*/ else if true { n(0); }
+///*o4*/ else         { n(this); }
+//}
 }
 
 issue_857_2: @struct type = {
