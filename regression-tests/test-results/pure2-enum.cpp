@@ -29,18 +29,19 @@ class skat_game {
 private: cpp2::i8 _value; private: constexpr skat_game(cpp2::in<cpp2::i64> _val);
 
 private: constexpr auto operator=(cpp2::in<cpp2::i64> _val) -> skat_game& ;
-public: [[nodiscard]] constexpr auto get_raw_value() const& -> cpp2::i8;
-public: constexpr skat_game(skat_game const& that);
-public: constexpr auto operator=(skat_game const& that) -> skat_game& ;
-public: constexpr skat_game(skat_game&& that) noexcept;
-public: constexpr auto operator=(skat_game&& that) noexcept -> skat_game& ;
-public: [[nodiscard]] auto operator<=>(skat_game const& that) const& -> std::strong_ordering = default;
 public: static const skat_game diamonds;
 public: static const skat_game hearts;
 public: static const skat_game spades;
 public: static const skat_game clubs;
 public: static const skat_game grand;
 public: static const skat_game null;
+public: [[nodiscard]] constexpr auto get_raw_value() const& -> cpp2::i8;
+public: constexpr explicit skat_game();
+public: constexpr skat_game(skat_game const& that);
+public: constexpr auto operator=(skat_game const& that) -> skat_game& ;
+public: constexpr skat_game(skat_game&& that) noexcept;
+public: constexpr auto operator=(skat_game&& that) noexcept -> skat_game& ;
+public: [[nodiscard]] auto operator<=>(skat_game const& that) const& -> std::strong_ordering = default;
 public: [[nodiscard]] auto to_string() const& -> std::string;
 
 #line 4 "pure2-enum.cpp2"
@@ -58,14 +59,15 @@ class janus {
     private: cpp2::i8 _value; private: constexpr janus(cpp2::in<cpp2::i64> _val);
 
 private: constexpr auto operator=(cpp2::in<cpp2::i64> _val) -> janus& ;
+public: static const janus past;
+public: static const janus future;
 public: [[nodiscard]] constexpr auto get_raw_value() const& -> cpp2::i8;
+public: constexpr explicit janus();
 public: constexpr janus(janus const& that);
 public: constexpr auto operator=(janus const& that) -> janus& ;
 public: constexpr janus(janus&& that) noexcept;
 public: constexpr auto operator=(janus&& that) noexcept -> janus& ;
 public: [[nodiscard]] auto operator<=>(janus const& that) const& -> std::strong_ordering = default;
-public: static const janus past;
-public: static const janus future;
 public: [[nodiscard]] auto to_string() const& -> std::string;
 
 #line 19 "pure2-enum.cpp2"
@@ -75,12 +77,6 @@ class file_attributes {
 private: cpp2::u8 _value; private: constexpr file_attributes(cpp2::in<cpp2::i64> _val);
 
 private: constexpr auto operator=(cpp2::in<cpp2::i64> _val) -> file_attributes& ;
-public: [[nodiscard]] constexpr auto get_raw_value() const& -> cpp2::u8;
-public: constexpr file_attributes(file_attributes const& that);
-public: constexpr auto operator=(file_attributes const& that) -> file_attributes& ;
-public: constexpr file_attributes(file_attributes&& that) noexcept;
-public: constexpr auto operator=(file_attributes&& that) noexcept -> file_attributes& ;
-public: [[nodiscard]] auto operator<=>(file_attributes const& that) const& -> std::strong_ordering = default;
 public: constexpr auto operator|=(file_attributes const& that) & -> void;
 public: constexpr auto operator&=(file_attributes const& that) & -> void;
 public: constexpr auto operator^=(file_attributes const& that) & -> void;
@@ -95,6 +91,13 @@ public: static const file_attributes current;
 public: static const file_attributes obsolete;
 public: static const file_attributes cached_and_current;
 public: static const file_attributes none;
+public: [[nodiscard]] constexpr auto get_raw_value() const& -> cpp2::u8;
+public: constexpr explicit file_attributes();
+public: constexpr file_attributes(file_attributes const& that);
+public: constexpr auto operator=(file_attributes const& that) -> file_attributes& ;
+public: constexpr file_attributes(file_attributes&& that) noexcept;
+public: constexpr auto operator=(file_attributes&& that) noexcept -> file_attributes& ;
+public: [[nodiscard]] auto operator<=>(file_attributes const& that) const& -> std::strong_ordering = default;
 public: [[nodiscard]] auto to_string() const& -> std::string;
 
 #line 22 "pure2-enum.cpp2"
@@ -118,17 +121,6 @@ constexpr skat_game::skat_game(cpp2::in<cpp2::i64> _val)
 constexpr auto skat_game::operator=(cpp2::in<cpp2::i64> _val) -> skat_game&  { 
                                                           _value = cpp2::unsafe_narrow<cpp2::i8>(_val);
                                                           return *this; }
-[[nodiscard]] constexpr auto skat_game::get_raw_value() const& -> cpp2::i8 { return _value; }
-constexpr skat_game::skat_game(skat_game const& that)
-                                              : _value{ that._value }{}
-constexpr auto skat_game::operator=(skat_game const& that) -> skat_game& {
-                                              _value = that._value;
-                                              return *this;}
-constexpr skat_game::skat_game(skat_game&& that) noexcept
-                                              : _value{ std::move(that)._value }{}
-constexpr auto skat_game::operator=(skat_game&& that) noexcept -> skat_game& {
-                                              _value = std::move(that)._value;
-                                              return *this;}
 inline CPP2_CONSTEXPR skat_game skat_game::diamonds = 9;
 
 inline CPP2_CONSTEXPR skat_game skat_game::hearts = 10;
@@ -141,6 +133,19 @@ inline CPP2_CONSTEXPR skat_game skat_game::grand = 20;
 
 inline CPP2_CONSTEXPR skat_game skat_game::null = 23;
 
+[[nodiscard]] constexpr auto skat_game::get_raw_value() const& -> cpp2::i8 { return _value; }
+constexpr skat_game::skat_game()
+                                        : _value{ diamonds._value }{}
+constexpr skat_game::skat_game(skat_game const& that)
+                                              : _value{ that._value }{}
+constexpr auto skat_game::operator=(skat_game const& that) -> skat_game& {
+                                              _value = that._value;
+                                              return *this;}
+constexpr skat_game::skat_game(skat_game&& that) noexcept
+                                              : _value{ std::move(that)._value }{}
+constexpr auto skat_game::operator=(skat_game&& that) noexcept -> skat_game& {
+                                              _value = std::move(that)._value;
+                                              return *this;}
 [[nodiscard]] auto skat_game::to_string() const& -> std::string{
 if ((*this) == diamonds) {return "diamonds"; }
 if ((*this) == hearts) {return "hearts"; }
@@ -163,7 +168,13 @@ return "invalid skat_game value";
 constexpr auto janus::operator=(cpp2::in<cpp2::i64> _val) -> janus&  { 
                                                           _value = cpp2::unsafe_narrow<cpp2::i8>(_val);
                                                           return *this; }
+inline CPP2_CONSTEXPR janus janus::past = 0;
+
+inline CPP2_CONSTEXPR janus janus::future = 1;
+
 [[nodiscard]] constexpr auto janus::get_raw_value() const& -> cpp2::i8 { return _value; }
+constexpr janus::janus()
+                                        : _value{ past._value }{}
 constexpr janus::janus(janus const& that)
                                               : _value{ that._value }{}
 constexpr auto janus::operator=(janus const& that) -> janus& {
@@ -174,10 +185,6 @@ constexpr janus::janus(janus&& that) noexcept
 constexpr auto janus::operator=(janus&& that) noexcept -> janus& {
                                               _value = std::move(that)._value;
                                               return *this;}
-inline CPP2_CONSTEXPR janus janus::past = 0;
-
-inline CPP2_CONSTEXPR janus janus::future = 1;
-
 [[nodiscard]] auto janus::to_string() const& -> std::string{
     if ((*this) == past) {return "past"; }
     if ((*this) == future) {return "future"; }
@@ -189,17 +196,6 @@ inline CPP2_CONSTEXPR janus janus::future = 1;
 constexpr auto file_attributes::operator=(cpp2::in<cpp2::i64> _val) -> file_attributes&  { 
                                                           _value = cpp2::unsafe_narrow<cpp2::u8>(_val);
                                                           return *this; }
-[[nodiscard]] constexpr auto file_attributes::get_raw_value() const& -> cpp2::u8 { return _value; }
-constexpr file_attributes::file_attributes(file_attributes const& that)
-                                              : _value{ that._value }{}
-constexpr auto file_attributes::operator=(file_attributes const& that) -> file_attributes& {
-                                              _value = that._value;
-                                              return *this;}
-constexpr file_attributes::file_attributes(file_attributes&& that) noexcept
-                                              : _value{ std::move(that)._value }{}
-constexpr auto file_attributes::operator=(file_attributes&& that) noexcept -> file_attributes& {
-                                              _value = std::move(that)._value;
-                                              return *this;}
 constexpr auto file_attributes::operator|=(file_attributes const& that) & -> void { _value |= that._value; }
 constexpr auto file_attributes::operator&=(file_attributes const& that) & -> void { _value &= that._value; }
 constexpr auto file_attributes::operator^=(file_attributes const& that) & -> void { _value ^= that._value; }
@@ -219,6 +215,19 @@ inline CPP2_CONSTEXPR file_attributes file_attributes::cached_and_current = cach
 
 inline CPP2_CONSTEXPR file_attributes file_attributes::none = 0;
 
+[[nodiscard]] constexpr auto file_attributes::get_raw_value() const& -> cpp2::u8 { return _value; }
+constexpr file_attributes::file_attributes()
+                                        : _value{ none._value }{}
+constexpr file_attributes::file_attributes(file_attributes const& that)
+                                              : _value{ that._value }{}
+constexpr auto file_attributes::operator=(file_attributes const& that) -> file_attributes& {
+                                              _value = that._value;
+                                              return *this;}
+constexpr file_attributes::file_attributes(file_attributes&& that) noexcept
+                                              : _value{ std::move(that)._value }{}
+constexpr auto file_attributes::operator=(file_attributes&& that) noexcept -> file_attributes& {
+                                              _value = std::move(that)._value;
+                                              return *this;}
 [[nodiscard]] auto file_attributes::to_string() const& -> std::string{
 
     std::string _ret {"("}; 

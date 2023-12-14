@@ -910,6 +910,9 @@ basic_enum: (
         mo.mark_for_removal_from_enclosing_type();
     }
 
+    t.require( !enumerators.empty(),
+        "an enumeration must contain at least one enumerator value");
+
     //  Compute the default underlying type, if it wasn't explicitly specified
     if underlying_type == "" 
     {
@@ -957,18 +960,19 @@ basic_enum: (
 
     t.remove_marked_members();
 
-    //  Generate all the common material: value and common functions
+    default_value := enumerators[0].name;
+    if bitwise{
+        default_value = "none";
+        e: value_member_info = ( "none", "", "0");
+        enumerators.push_back( e );
+    }
+
+    //  Generate all the private implementation
     t.add_member( "    _value            : (underlying_type)$;");
     t.add_member( "    private operator= : (implicit out this, _val: i64) == _value = cpp2::unsafe_narrow<(underlying_type)$>(_val);");
-    t.add_member( "    get_raw_value     : (this) -> (underlying_type)$ == _value;");
-    t.add_member( "    operator=         : (out this, that) == { }");
-    t.add_member( "    operator<=>       : (this, that) -> std::strong_ordering;");
 
     //  Generate the bitwise operations and 'none' value, if appropriate
     if bitwise {
-        e: value_member_info = ( "none", "", "0");
-        enumerators.push_back( e );
-
         t.add_member( "    operator|=: ( inout this, that )                 == _value |= that._value;");
         t.add_member( "    operator&=: ( inout this, that )                 == _value &= that._value;");
         t.add_member( "    operator^=: ( inout this, that )                 == _value ^= that._value;");
@@ -984,6 +988,12 @@ basic_enum: (
     for enumerators do (e) {
         t.add_member( "    (e.name)$ : (t.name())$ == (e.value)$;");
     }
+
+    //  Generate the common functions
+    t.add_member( "    get_raw_value     : (this) -> (underlying_type)$ == _value;");
+    t.add_member( "    operator=         : (out this) == { _value = (default_value)$._value; }");
+    t.add_member( "    operator=         : (out this, that) == { }");
+    t.add_member( "    operator<=>       : (this, that) -> std::strong_ordering;");
 
     //  Provide a 'to_string' function to print enumerator name(s)
     (copy to_string: std::string = "    to_string: (this) -> std::string = { \n")
