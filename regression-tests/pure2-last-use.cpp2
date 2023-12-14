@@ -164,6 +164,14 @@ draw: () = {
   _ = (pos).vertex();
 }
 
+union: type = {
+  destroy: (inout this) = { }
+  operator=: (move this) = {
+    // destroy(); FIXME Discarding `this` still moves it here.
+    _ = this;
+  }
+}
+
 my_string: @struct type = {
   string: std::string;
   size: std::size_t = string.size();

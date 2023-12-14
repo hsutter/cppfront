@@ -25,6 +25,10 @@ class issue_869;
   
 
 #line 167 "pure2-last-use.cpp2"
+class cpp2_union;
+  
+
+#line 175 "pure2-last-use.cpp2"
 class my_string;
   
 
@@ -157,6 +161,17 @@ auto issue_888(std::string r, int size) -> void;
 auto draw() -> void;
 
 #line 167 "pure2-last-use.cpp2"
+class cpp2_union {
+  public: auto destroy() & -> void;
+  public: ~cpp2_union() noexcept;
+  public: cpp2_union() = default;
+  public: cpp2_union(cpp2_union const&) = delete; /* No 'that' constructor, suppress copy */
+  public: auto operator=(cpp2_union const&) -> void = delete;
+
+
+#line 173 "pure2-last-use.cpp2"
+};
+
 class my_string {
   public: std::string string; 
   public: std::size_t size {CPP2_UFCS(size)(string)}; 
@@ -354,10 +369,17 @@ auto draw() -> void{
   static_cast<void>(CPP2_UFCS_MOVE(vertex)((std::move(pos))));
 }
 
-#line 172 "pure2-last-use.cpp2"
+#line 168 "pure2-last-use.cpp2"
+  auto cpp2_union::destroy() & -> void{}
+  cpp2_union::~cpp2_union() noexcept{
+    // destroy(); FIXME Discarding `this` still moves it here.
+    static_cast<void>(std::move((*this)));
+  }
+
+#line 180 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 173 "pure2-last-use.cpp2"
+#line 181 "pure2-last-use.cpp2"
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());
 }
