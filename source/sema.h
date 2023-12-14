@@ -1882,11 +1882,15 @@ public:
         ++scope_depth;
     }
 
-    auto end(selection_statement_node const&, int) -> void
+    auto end(selection_statement_node const& s, int) -> void
     {
         symbols.emplace_back( scope_depth, selection_sym{ false, active_selections.back() } );
         active_selections.pop_back();
-        --scope_depth;
+        //  Extend the scope of an implicit else branch
+        //  to the closing brace that contains it.
+        if (s.false_branch->position() != source_position(0, 0)) {
+            --scope_depth;
+        }
     }
 
     auto kind_of(compound_statement_node const& n)
@@ -1922,6 +1926,18 @@ public:
 
     auto end(compound_statement_node const& n, int) -> void
     {
+        //  Pop an implicit 'else' branch.
+        if (auto s = std::find_if(
+                         symbols.rbegin(),
+                         symbols.rend(),
+                         [=](symbol s) {
+                             return s.depth == scope_depth - 1;
+                         });
+            s == symbols.rend()
+            || std::get_if<symbol::selection>(&s->sym)
+            ) {
+            --scope_depth;
+        }
         symbols.emplace_back(
             scope_depth,
             compound_sym{ false, &n, kind_of(n) }
