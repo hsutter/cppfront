@@ -1196,7 +1196,7 @@ union: (inout t : meta::type_declaration)
     }
 
     //  Add the destructor
-    t.add_member( "    operator=: (move this) = { this._destroy(); _ = this; }" );
+    t.add_member( "    operator=: (move this) = { _destroy(); _ = this; }" );
 
     //  Add default constructor
     t.add_member( "    operator=: (out this) = { }" );

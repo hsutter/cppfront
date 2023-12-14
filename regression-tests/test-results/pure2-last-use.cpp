@@ -321,7 +321,7 @@ auto issue_869::_destroy() & -> void{
   _discriminator = -1;
   }
 
-  issue_869::~issue_869() noexcept{CPP2_UFCS(_destroy)((*this));static_cast<void>(std::move((*this)));}
+  issue_869::~issue_869() noexcept{_destroy();static_cast<void>(std::move((*this)));}
 issue_869::issue_869(){}
 issue_869::issue_869(issue_869 const& that)
         : _storage{  }

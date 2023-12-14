@@ -102,7 +102,7 @@ if (_discriminator == 1) {std::destroy_at(reinterpret_cast<cpp2::i32*>(&_storage
 _discriminator = -1;
 }
 
-name_or_number::~name_or_number() noexcept{CPP2_UFCS(_destroy)((*this));static_cast<void>(std::move((*this)));}
+name_or_number::~name_or_number() noexcept{_destroy();static_cast<void>(std::move((*this)));}
 name_or_number::name_or_number(){}
 name_or_number::name_or_number(name_or_number const& that)
         : _storage{  }
@@ -158,7 +158,7 @@ template <typename T> auto name_or_other<T>::_destroy() & -> void{
     _discriminator = -1;
     }
 
-    template <typename T> name_or_other<T>::~name_or_other() noexcept{CPP2_UFCS(_destroy)((*this));static_cast<void>(std::move((*this)));}
+    template <typename T> name_or_other<T>::~name_or_other() noexcept{_destroy();static_cast<void>(std::move((*this)));}
 template <typename T> name_or_other<T>::name_or_other(){}
 template <typename T> name_or_other<T>::name_or_other(name_or_other const& that)
         : _storage{  }
