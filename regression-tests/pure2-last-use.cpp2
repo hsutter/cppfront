@@ -92,6 +92,10 @@ issue_857: type = {
   //f_inout(this); // FIXME Moves `this`.
     f_copy(a);
   }
+  q: (move this) = {
+  //m(); // FIXME Moves implicit `this`.
+    n();
+  }
 // FIXME
 //z: (move this, move that) = {
 ///*f */      if true { f_copy(this); }
