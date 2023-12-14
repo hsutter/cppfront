@@ -229,7 +229,7 @@ inline CPP2_CONSTEXPR file_attributes file_attributes::none = 0;
     if (((*this) & current) == current) {_ret += _comma + "current";_comma = ", ";}
     if (((*this) & obsolete) == obsolete) {_ret += _comma + "obsolete";_comma = ", ";}
     if (((*this) & cached_and_current) == cached_and_current) {_ret += _comma + "cached_and_current";_comma = ", ";}
-    return _ret + ")"; 
+    return std::move(_ret) + ")"; 
     }
 #line 28 "pure2-enum.cpp2"
 auto main() -> int{
