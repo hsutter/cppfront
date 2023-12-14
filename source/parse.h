@@ -4186,7 +4186,7 @@ auto pretty_print_visualize(is_as_expression_node const& n, int indent)
     -> std::string;
 auto pretty_print_visualize(id_expression_node const& n, int indent)
     -> std::string;
-auto pretty_print_visualize(compound_statement_node const& n, int indent, bool explicit_scope = true)
+auto pretty_print_visualize(compound_statement_node const& n, int indent, bool is_implicit_scope = false)
     -> std::string;
 auto pretty_print_visualize(selection_statement_node const& n, int indent)
     -> std::string;
@@ -4506,12 +4506,12 @@ auto pretty_print_visualize(id_expression_node const& n, int indent)
 }
 
 
-auto pretty_print_visualize(compound_statement_node const& n, int indent, bool explicit_scope)
+auto pretty_print_visualize(compound_statement_node const& n, int indent, bool is_implicit_scope)
     -> std::string
 {
     auto ret = std::string{};
 
-    if (explicit_scope) {
+    if (!is_implicit_scope) {
         ret += std::string{"\n"} + pre(indent) + "{";
     }
 
@@ -4520,7 +4520,7 @@ auto pretty_print_visualize(compound_statement_node const& n, int indent, bool e
         ret += pretty_print_visualize(*stmt, indent+1);
     }
 
-    if (explicit_scope) {
+    if (!is_implicit_scope) {
         ret += std::string{"\n"} + pre(indent) + "}";
     }
 
@@ -4548,7 +4548,7 @@ auto pretty_print_visualize(selection_statement_node const& n, int indent)
         ret += std::string{"\n"} + pre(indent) + "else "
             + pretty_print_visualize(*n.false_branch, indent);
     } else if (!n.false_branch->statements.empty()) {
-        ret += pretty_print_visualize(*n.false_branch, indent, false);
+        ret += pretty_print_visualize(*n.false_branch, indent, true);
     }
 
     return ret;
