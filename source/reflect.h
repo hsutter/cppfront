@@ -1682,7 +1682,7 @@ std::string destroy = "    private _destroy: (inout this) = {\n";
 
     //  Add the destructor
 #line 1199 "reflect.h2"
-    CPP2_UFCS(add_member)(t, "    operator=: (move this) = { _destroy(); }");
+    CPP2_UFCS(add_member)(t, "    operator=: (move this) = { this._destroy(); _ = this; }");
 
     //  Add default constructor
     CPP2_UFCS(add_member)(t, "    operator=: (out this) = { }");

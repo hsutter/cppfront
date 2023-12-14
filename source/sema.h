@@ -76,6 +76,20 @@ struct declaration_sym {
         assert (declaration);
         return declaration->position();
     }
+
+    auto get_token() const
+        -> token const*
+    {
+        if (
+            declaration
+            && declaration->identifier
+            && declaration->identifier->identifier
+            )
+        {
+            return declaration->identifier->identifier;
+        }
+        return nullptr;
+    }
 };
 
 struct identifier_sym {
@@ -96,6 +110,12 @@ struct identifier_sym {
         assert (identifier);
         return identifier->position();
     }
+
+    auto get_token() const
+        -> token const*
+    {
+        return identifier;
+    }
 };
 
 struct selection_sym {
@@ -115,6 +135,13 @@ struct selection_sym {
     {
         assert (selection);
         return selection->position();
+    }
+
+    auto get_token() const
+        -> token const*
+    {
+        assert (selection);
+        return selection->identifier;
     }
 };
 
@@ -138,6 +165,12 @@ struct compound_sym {
     {
         assert (compound);
         return compound->position();
+    }
+
+    auto get_token() const
+        -> token const*
+    {
+        return nullptr;
     }
 };
 
@@ -187,6 +220,37 @@ struct symbol {
         break;default:
             assert (!"illegal symbol state");
             return { 0, 0 };
+        }
+    }
+
+    auto get_token() const
+        -> token const*
+    {
+        switch (sym.index())
+        {
+        break;case declaration: {
+            auto const& s = std::get<declaration>(sym);
+            return s.get_token();
+        }
+
+        break;case identifier: {
+            auto const& s = std::get<identifier>(sym);
+            return s.get_token();
+        }
+
+        break;case selection: {
+            auto const& s = std::get<selection>(sym);
+            return s.get_token();
+        }
+
+        break;case compound: {
+            auto const& s = std::get<compound>(sym);
+            return s.get_token();
+        }
+
+        break;default:
+            assert (!"illegal symbol state");
+            return nullptr;
         }
     }
 };
@@ -301,7 +365,10 @@ public:
         auto i = symbols.cbegin();
         while (
             i != symbols.cend()
-            && i->position() < t.position()
+            && (
+                !i->get_token()
+                || final_position[i->get_token()] < final_position[&t]
+                )
             )
         {
             ++i;
@@ -1672,6 +1739,7 @@ public:
     bool inside_returns_list                      = false;
     bool just_entered_for                         = false;
     parameter_declaration_node const* inside_out_parameter = {};
+    std::map<token const*, int> final_position    = {};
 
     auto start(next_expression_tag const&, int) -> void
     {
@@ -1817,6 +1885,8 @@ public:
 
     auto start(token const& t, int) -> void
     {
+        auto fpos = std::ssize(final_position);
+        final_position[&t] = cpp2::unsafe_narrow<int>(fpos);
         if (t.type() == lexeme::Dot) {
             started_member_access = true;
         }

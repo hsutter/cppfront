@@ -120,6 +120,9 @@ issue_857_3: @struct type = {
   f: (move this) = _ = f_inout(i);
 }
 
+issue_869: @union type = {
+  i: int;
+}
 
 issue_884_3: () = {
   x := new<int>(0);

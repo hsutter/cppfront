@@ -20,7 +20,11 @@ class issue_857_2;
 class issue_857_3;
   
 
-#line 164 "pure2-last-use.cpp2"
+#line 123 "pure2-last-use.cpp2"
+class issue_869;
+  
+
+#line 167 "pure2-last-use.cpp2"
 class my_string;
   
 
@@ -120,22 +124,39 @@ class issue_857_3 {
   public: auto f() && -> void;
 };
 
-#line 124 "pure2-last-use.cpp2"
+class issue_869 {
+private: std::aligned_storage_t<cpp2::max(sizeof(int))> _storage {}; private: cpp2::i8 _discriminator {-1}; public: [[nodiscard]] auto is_i() const& -> bool;
+public: [[nodiscard]] auto i() const& -> int const&;
+public: [[nodiscard]] auto i() & -> int&;
+public: auto set_i(cpp2::in<int> _value) & -> void;
+public: auto set_i(auto&& ..._args) & -> void;
+private: auto _destroy() & -> void;
+public: ~issue_869() noexcept;
+public: explicit issue_869();
+public: issue_869(issue_869 const& that);
+
+public: issue_869(issue_869&& that) noexcept;
+public: auto operator=(issue_869 const& that) -> issue_869& ;
+public: auto operator=(issue_869&& that) noexcept -> issue_869& ;
+
+#line 125 "pure2-last-use.cpp2"
+};
+
 auto issue_884_3() -> void;
 
-#line 134 "pure2-last-use.cpp2"
+#line 137 "pure2-last-use.cpp2"
 auto issue_884() -> void;
 
-#line 143 "pure2-last-use.cpp2"
+#line 146 "pure2-last-use.cpp2"
 auto issue_884_2() -> void;
 
-#line 152 "pure2-last-use.cpp2"
+#line 155 "pure2-last-use.cpp2"
 auto issue_888(std::string r, int size) -> void;
 
-#line 158 "pure2-last-use.cpp2"
+#line 161 "pure2-last-use.cpp2"
 auto draw() -> void;
 
-#line 164 "pure2-last-use.cpp2"
+#line 167 "pure2-last-use.cpp2"
 class my_string {
   public: std::string string; 
   public: std::size_t size {CPP2_UFCS(size)(string)}; 
@@ -254,7 +275,45 @@ int gi {0};
 #line 120 "pure2-last-use.cpp2"
   auto issue_857_3::f() && -> void { static_cast<void>(f_inout(std::move(*this).i));  }
 
-#line 124 "pure2-last-use.cpp2"
+
+
+  [[nodiscard]] auto issue_869::is_i() const& -> bool { return _discriminator == 0; }
+[[nodiscard]] auto issue_869::i() const& -> int const& { 
+                                           cpp2::Default.expects(is_i(), "");return *cpp2::assert_not_null(reinterpret_cast<int const*>(&_storage)); }
+[[nodiscard]] auto issue_869::i() & -> int& { 
+                                                 cpp2::Default.expects(is_i(), "");return *cpp2::assert_not_null(reinterpret_cast<int*>(&_storage)); }
+auto issue_869::set_i(cpp2::in<int> _value) & -> void{if (!(is_i())) {_destroy();std::construct_at(reinterpret_cast<int*>(&_storage), _value);}else {*cpp2::assert_not_null(reinterpret_cast<int*>(&_storage)) = _value;}_discriminator = 0;}
+auto issue_869::set_i(auto&& ..._args) & -> void{if (!(is_i())) {_destroy();std::construct_at(reinterpret_cast<int*>(&_storage), CPP2_FORWARD(_args)...);}else {*cpp2::assert_not_null(reinterpret_cast<int*>(&_storage)) = int{CPP2_FORWARD(_args)...};}_discriminator = 0;}
+auto issue_869::_destroy() & -> void{
+  if (_discriminator == 0) {std::destroy_at(reinterpret_cast<int*>(&_storage));}
+  _discriminator = -1;
+  }
+
+  issue_869::~issue_869() noexcept{CPP2_UFCS(_destroy)((*this));static_cast<void>(std::move((*this)));}
+issue_869::issue_869(){}
+issue_869::issue_869(issue_869 const& that)
+        : _storage{  }
+        , _discriminator{ -1 }{
+  if (CPP2_UFCS(is_i)(that)) {set_i(CPP2_UFCS(i)(that));}
+  }
+
+
+  issue_869::issue_869(issue_869&& that) noexcept
+        : _storage{  }
+        , _discriminator{ -1 }{
+  if (CPP2_UFCS(is_i)(std::move(that))) {set_i(CPP2_UFCS(i)(std::move(that)));}
+  }
+
+  auto issue_869::operator=(issue_869 const& that) -> issue_869& {
+  if (CPP2_UFCS(is_i)(that)) {set_i(CPP2_UFCS(i)(that));}
+        return *this;
+  }
+
+  auto issue_869::operator=(issue_869&& that) noexcept -> issue_869& {
+  if (CPP2_UFCS(is_i)(std::move(that))) {set_i(CPP2_UFCS(i)(std::move(that)));}
+        return *this;
+  }
+#line 127 "pure2-last-use.cpp2"
 auto issue_884_3() -> void{
   auto x {cpp2_new<int>(0)}; 
   if (true) {}
@@ -295,10 +354,10 @@ auto draw() -> void{
   static_cast<void>(CPP2_UFCS_MOVE(vertex)((std::move(pos))));
 }
 
-#line 169 "pure2-last-use.cpp2"
+#line 172 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 170 "pure2-last-use.cpp2"
+#line 173 "pure2-last-use.cpp2"
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());
 }
