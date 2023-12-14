@@ -88,6 +88,15 @@ issue_884: () = {
   }
 }
 
+issue_884_2: () = {
+  x := new<int>(0);
+  if true { }
+  {
+    f_inout(x);
+  }
+  f_copy(x);
+}
+
 issue_888: (copy r: std::string, copy size: int) = {
   // ...
   _ = r.size();

@@ -1888,7 +1888,10 @@ public:
         active_selections.pop_back();
         //  Extend the scope of an implicit else branch
         //  to the closing brace that contains it.
-        if (s.false_branch->position() != source_position(0, 0)) {
+        if (s.false_branch->position() == source_position(0, 0)) {
+            ++scope_depth;
+        }
+        else {
             --scope_depth;
         }
     }
