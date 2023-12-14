@@ -1654,9 +1654,10 @@ auto lex_line(
                     if (len > 0) {
                         j += len;
                         if (peek(j) != '\'') {
+                            assert (j > 1);
                             errors.emplace_back(
                                 source_position(lineno, i),
-                                "character literal '" + std::string(&line[i+1],j)
+                                "character literal '" + std::string(&line[i+1],j-1)
                                     + "' is missing its closing '"
                             );
                         }

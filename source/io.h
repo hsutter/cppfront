@@ -795,6 +795,13 @@ auto process_cpp2_line(
         prev = line[i];
     }
 
+    if (in_char_literal) {
+        errors.emplace_back(
+            source_position(lineno, ssize(line)),
+            std::string("line ended before character literal was terminated")
+        );
+    }
+
     return found_end;
 }
 
