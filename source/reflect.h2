@@ -84,7 +84,7 @@ compiler_services: @polymorphic_base @copyable type =
 
         //  First split this string into source_lines
         //
-        (copy newline_pos := source.find('\n')) 
+        (copy newline_pos := source.find('\n'))
         if  source.ssize() > 1
             && newline_pos != source.npos
         {
@@ -286,7 +286,7 @@ declaration: @polymorphic_base @copyable type =
 
     parent_is_polymorphic: (this) -> bool = n*.parent_is_polymorphic();
 
-    mark_for_removal_from_enclosing_type: (inout this) 
+    mark_for_removal_from_enclosing_type: (inout this)
         pre<Type>( parent_is_type() )               // this precondition should be sufficient ...
     = {
         test := n*.type_member_mark_for_removal();
@@ -406,7 +406,7 @@ type_declaration: @copyable type =
         assert( n*.is_type() );
     }
 
-    reserve_names: (this, name: std::string_view, forward etc...) = 
+    reserve_names: (this, name: std::string_view, forward etc...) =
     {                           // etc is not declared ':string_view' for compatibility with GCC 10.x
         for get_members()
         do  (m) {
@@ -758,7 +758,7 @@ basic_value: (inout t: meta::type_declaration) =
 //-----------------------------------------------------------------------
 //
 //     "A 'value' is a totally ordered basic_value..."
-// 
+//
 //          -- P0707R4, section 3
 //
 //  value - a value type that is totally ordered
@@ -859,7 +859,7 @@ basic_enum: (
     enumerators     : std::vector<value_member_info> = ();
     min_value       : i64                            = ();
     max_value       : i64                            = ();
-    underlying_type : std::string;
+    underlying_type : std::string                    = ();
 
     t.reserve_names( "operator=", "operator<=>" );
     if bitwise {
@@ -910,7 +910,7 @@ basic_enum: (
     }
 
     //  Compute the default underlying type, if it wasn't explicitly specified
-    if underlying_type == "" 
+    if underlying_type == ""
     {
         t.require( !found_non_numeric,
             "if you write an enumerator with a non-numeric-literal value, you must specify the enumeration's underlying type");
@@ -993,7 +993,7 @@ basic_enum: (
             to_string += "    if this == none { return \"(none)\"; }\n";
         }
 
-        for  enumerators  
+        for  enumerators
         do   (e) {
             if e.name != "_" {  // ignore unnamed values
                 if bitwise {
@@ -1025,7 +1025,7 @@ basic_enum: (
 //     value of its enumerators's type, and otherwise has only public
 //     member variables of its enumerator's type, all of which are
 //     naturally scoped because they are members of a type."
-// 
+//
 //          -- P0707R4, section 3
 //
 enum: (inout t: meta::type_declaration) =
@@ -1047,12 +1047,12 @@ enum: (inout t: meta::type_declaration) =
 
 //-----------------------------------------------------------------------
 //
-//     "flag_enum expresses an enumeration that stores values 
+//     "flag_enum expresses an enumeration that stores values
 //      corresponding to bitwise-or'd enumerators. The enumerators must
 //      be powers of two, and are automatically generated [...] A none
 //      value is provided [...] Operators | and & are provided to
 //      combine and extract values."
-// 
+//
 //          -- P0707R4, section 3
 //
 flag_enum: (inout t: meta::type_declaration) =
@@ -1085,10 +1085,10 @@ flag_enum: (inout t: meta::type_declaration) =
 //
 //          -- Stroustrup (The Design and Evolution of C++, 14.3.4.1)
 //
-//     "C++17 needs a type-safe union... The implications of the 
-//      consensus `variant` design are well understood and have been 
-//      explored over several LEWG discussions, over a thousand emails, 
-//      a joint LEWG/EWG session, and not to mention 12 years of 
+//     "C++17 needs a type-safe union... The implications of the
+//      consensus `variant` design are well understood and have been
+//      explored over several LEWG discussions, over a thousand emails,
+//      a joint LEWG/EWG session, and not to mention 12 years of
 //      experience with Boost and other libraries."
 //
 //          -- Axel Naumann, in P0088 (wg21.link/p0088),
@@ -1097,9 +1097,9 @@ flag_enum: (inout t: meta::type_declaration) =
 //-----------------------------------------------------------------------
 //
 //  union
-// 
+//
 //  a type that contains exactly one of a fixed set of values at a time
-// 
+//
 
 union: (inout t : meta::type_declaration)
 = {
@@ -1154,8 +1154,8 @@ union: (inout t : meta::type_declaration)
     (copy storage: std::string = "    _storage: std::aligned_storage_t<cpp2::max( ")
     {
         (copy comma: std::string = "")
-        for  alternatives  
-        next comma = ", "  
+        for  alternatives
+        next comma = ", "
         do   (e) {
             storage += comma + "sizeof((e.type)$)";
         }
@@ -1168,7 +1168,7 @@ union: (inout t : meta::type_declaration)
     t.add_member( "    _discriminator: (discriminator_type)$ = -1;\n");
 
     //  Add the alternatives: is_alternative, get_alternative, and set_alternative
-    for alternatives 
+    for alternatives
     do  (a)
     {
         t.add_member( "    is_(a.name)$: (this) -> bool = _discriminator == (a.value)$;\n");
@@ -1266,7 +1266,7 @@ apply_metafunctions: (
 
         args: std::vector<std::string> = ();
         for meta*.template_arguments()
-        do  (arg) 
+        do  (arg)
             args.push_back( arg.to_string() );
 
         rtype.set_metafunction_name( name, args );
@@ -1325,9 +1325,9 @@ apply_metafunctions: (
         }
 
         if (
-            !args.empty() 
+            !args.empty()
             && !rtype.arguments_were_used()
-            ) 
+            )
         {
             error( name + " did not use its template arguments - did you mean to write '" + name + " <" + args[0] + "> type' (with the spaces)?");
             return false;

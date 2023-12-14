@@ -569,7 +569,7 @@ auto basic_value(meta::type_declaration& t) -> void;
 //-----------------------------------------------------------------------
 //
 //     "A 'value' is a totally ordered basic_value..."
-// 
+//
 //          -- P0707R4, section 3
 //
 //  value - a value type that is totally ordered
@@ -649,7 +649,7 @@ auto basic_enum(
 //     value of its enumerators's type, and otherwise has only public
 //     member variables of its enumerator's type, all of which are
 //     naturally scoped because they are members of a type."
-// 
+//
 //          -- P0707R4, section 3
 //
 auto cpp2_enum(meta::type_declaration& t) -> void;
@@ -657,12 +657,12 @@ auto cpp2_enum(meta::type_declaration& t) -> void;
 #line 1048 "reflect.h2"
 //-----------------------------------------------------------------------
 //
-//     "flag_enum expresses an enumeration that stores values 
+//     "flag_enum expresses an enumeration that stores values
 //      corresponding to bitwise-or'd enumerators. The enumerators must
 //      be powers of two, and are automatically generated [...] A none
 //      value is provided [...] Operators | and & are provided to
 //      combine and extract values."
-// 
+//
 //          -- P0707R4, section 3
 //
 auto flag_enum(meta::type_declaration& t) -> void;
@@ -676,10 +676,10 @@ auto flag_enum(meta::type_declaration& t) -> void;
 //
 //          -- Stroustrup (The Design and Evolution of C++, 14.3.4.1)
 //
-//     "C++17 needs a type-safe union... The implications of the 
-//      consensus `variant` design are well understood and have been 
-//      explored over several LEWG discussions, over a thousand emails, 
-//      a joint LEWG/EWG session, and not to mention 12 years of 
+//     "C++17 needs a type-safe union... The implications of the
+//      consensus `variant` design are well understood and have been
+//      explored over several LEWG discussions, over a thousand emails,
+//      a joint LEWG/EWG session, and not to mention 12 years of
 //      experience with Boost and other libraries."
 //
 //          -- Axel Naumann, in P0088 (wg21.link/p0088),
@@ -688,9 +688,9 @@ auto flag_enum(meta::type_declaration& t) -> void;
 //-----------------------------------------------------------------------
 //
 //  union
-// 
+//
 //  a type that contains exactly one of a fixed set of values at a time
-// 
+//
 
 auto cpp2_union(meta::type_declaration& t) -> void;
 
@@ -790,9 +790,7 @@ auto newline_pos = CPP2_UFCS(find)(source, '\n');
                 newline_pos = CPP2_UFCS(find)(source, '\n');
             }
         }
-}
 
-#line 99 "reflect.h2"
         if (!(CPP2_UFCS(empty)(source))) {
             std::move(add_line)(std::move(source));
         }
@@ -812,6 +810,8 @@ auto newline_pos = CPP2_UFCS(find)(source, '\n');
             (*cpp2::assert_not_null(CPP2_UFCS(begin)(CPP2_UFCS(get_map)(*cpp2::assert_not_null(std::move(tokens)))))).second, 
             *cpp2::assert_not_null(generated_tokens)
         ); 
+}
+#line 118 "reflect.h2"
     }
 
     [[nodiscard]] auto compiler_services::position() const -> source_position
@@ -835,7 +835,7 @@ auto newline_pos = CPP2_UFCS(find)(source, '\n');
     {
         auto message {cpp2::as_<std::string>(msg)}; 
         if (!(CPP2_UFCS(empty)(metafunction_name))) {
-            message = "while applying @" + metafunction_name + " - " + message;
+            message = "while applying @" + metafunction_name + " - " + std::move(message);
         }
         static_cast<void>(CPP2_UFCS(emplace_back)((*cpp2::assert_not_null(errors)), position(), std::move(message)));
     }
@@ -1360,7 +1360,7 @@ auto basic_enum(
     std::vector<value_member_info> enumerators {}; 
     cpp2::i64 min_value {}; 
     cpp2::i64 max_value {}; 
-    cpp2::deferred_init<std::string> underlying_type; 
+    std::string underlying_type {}; 
 
     CPP2_UFCS(reserve_names)(t, "operator=", "operator<=>");
     if (bitwise) {
@@ -1369,7 +1369,7 @@ auto basic_enum(
 
     //  1. Gather: The names of all the user-written members, and find/compute the type
 
-    underlying_type.construct(CPP2_UFCS(get_argument)(t, 0));// use the first template argument, if there was one
+    underlying_type = CPP2_UFCS(get_argument)(t, 0);// use the first template argument, if there was one
 
     auto found_non_numeric {false}; 
 {
@@ -1415,23 +1415,23 @@ std::string value = "-1";
 
     //  Compute the default underlying type, if it wasn't explicitly specified
 #line 913 "reflect.h2"
-    if (underlying_type.value() == "") 
+    if (underlying_type == "") 
     {
         CPP2_UFCS(require)(t, !(std::move(found_non_numeric)), 
             "if you write an enumerator with a non-numeric-literal value, you must specify the enumeration's underlying type");
 
         if (!(bitwise)) {
             if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i8>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i8>::max())) {
-                underlying_type.value() = "i8";
+                underlying_type = "i8";
             }
             else {if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i16>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i16>::max())) {
-                underlying_type.value() = "i16";
+                underlying_type = "i16";
             }
             else {if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i32>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i32>::max())) {
-                underlying_type.value() = "i32";
+                underlying_type = "i32";
             }
-            else {if (cpp2::cmp_greater_eq(std::move(min_value),std::numeric_limits<cpp2::i64>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i64>::max())) {
-                underlying_type.value() = "i64";
+            else {if (cpp2::cmp_greater_eq(std::move(min_value),std::numeric_limits<cpp2::i64>::min()) && cpp2::cmp_less_eq(std::move(max_value),std::numeric_limits<cpp2::i64>::max())) {
+                underlying_type = "i64";
             }
             else {
                 CPP2_UFCS(error)(t, "values are outside the range representable by the largest supported underlying signed type (i64)");
@@ -1440,16 +1440,16 @@ std::string value = "-1";
         else {
             auto umax {std::move(max_value) * cpp2::as_<cpp2::u64, 2>()}; 
             if (cpp2::cmp_less_eq(umax,std::numeric_limits<cpp2::u8>::max())) {
-                underlying_type.value() = "u8";
+                underlying_type = "u8";
             }
             else {if (cpp2::cmp_less_eq(umax,std::numeric_limits<cpp2::u16>::max())) {
-                underlying_type.value() = "u16";
+                underlying_type = "u16";
             }
             else {if (cpp2::cmp_less_eq(std::move(umax),std::numeric_limits<cpp2::u32>::max())) {
-                underlying_type.value() = "u32";
+                underlying_type = "u32";
             }
             else {
-                underlying_type.value() = "u64";
+                underlying_type = "u64";
             }}}
         }
     }
@@ -1462,9 +1462,9 @@ std::string value = "-1";
     CPP2_UFCS(remove_marked_members)(t);
 
     //  Generate all the common material: value and common functions
-    CPP2_UFCS(add_member)(t, "    _value            : " + cpp2::to_string(underlying_type.value()) + ";");
-    CPP2_UFCS(add_member)(t, "    private operator= : (implicit out this, _val: i64) == _value = cpp2::unsafe_narrow<" + cpp2::to_string(underlying_type.value()) + ">(_val);");
-    CPP2_UFCS(add_member)(t, "    get_raw_value     : (this) -> " + cpp2::to_string(std::move(underlying_type.value())) + " == _value;");
+    CPP2_UFCS(add_member)(t, "    _value            : " + cpp2::to_string(underlying_type) + ";");
+    CPP2_UFCS(add_member)(t, "    private operator= : (implicit out this, _val: i64) == _value = cpp2::unsafe_narrow<" + cpp2::to_string(underlying_type) + ">(_val);");
+    CPP2_UFCS(add_member)(t, "    get_raw_value     : (this) -> " + cpp2::to_string(std::move(underlying_type)) + " == _value;");
     CPP2_UFCS(add_member)(t, "    operator=         : (out this, that) == { }");
     CPP2_UFCS(add_member)(t, "    operator<=>       : (this, that) -> std::strong_ordering;");
 
