@@ -8,19 +8,19 @@
 
 #line 1 "pure2-last-use.cpp2"
 
-#line 56 "pure2-last-use.cpp2"
+#line 57 "pure2-last-use.cpp2"
 class issue_857;
   
 
-#line 80 "pure2-last-use.cpp2"
+#line 97 "pure2-last-use.cpp2"
 class issue_857_2;
   
 
-#line 85 "pure2-last-use.cpp2"
+#line 102 "pure2-last-use.cpp2"
 class issue_857_3;
   
 
-#line 131 "pure2-last-use.cpp2"
+#line 148 "pure2-last-use.cpp2"
 class my_string;
   
 
@@ -53,13 +53,14 @@ auto issue_847_2(auto&& v) -> void;
 auto issue_847_3(int x) -> void;
 
 auto f_inout([[maybe_unused]] std::unique_ptr<int>& unnamed_param_1) -> void;
+auto f_inout([[maybe_unused]] auto& unnamed_param_1) -> void;
 auto f_copy([[maybe_unused]] auto ...unnamed_param_1) -> void;
 
 class issue_857 {
   private: std::unique_ptr<int> a; 
   private: std::unique_ptr<int> b; 
   public: issue_857(issue_857&& that) noexcept;
-#line 59 "pure2-last-use.cpp2"
+#line 60 "pure2-last-use.cpp2"
   public: auto operator=(issue_857&& that) noexcept -> issue_857& ;
   public: ~issue_857() noexcept;
   public: auto f() && -> void;
@@ -79,6 +80,18 @@ class issue_857 {
   public: auto o2() && -> void;
   public: auto o3() && -> void;
   public: auto o4() && -> void;
+  public: auto p0() && -> void;
+
+#line 83 "pure2-last-use.cpp2"
+  public: auto p1() && -> void;
+
+#line 87 "pure2-last-use.cpp2"
+  public: auto p2() && -> void;
+
+#line 91 "pure2-last-use.cpp2"
+  public: auto p3() && -> void;
+
+#line 95 "pure2-last-use.cpp2"
 };
 
 class issue_857_2 {
@@ -91,22 +104,22 @@ class issue_857_3 {
   public: auto f() && -> void;
 };
 
-#line 91 "pure2-last-use.cpp2"
+#line 108 "pure2-last-use.cpp2"
 auto issue_884_3() -> void;
 
-#line 101 "pure2-last-use.cpp2"
+#line 118 "pure2-last-use.cpp2"
 auto issue_884() -> void;
 
-#line 110 "pure2-last-use.cpp2"
+#line 127 "pure2-last-use.cpp2"
 auto issue_884_2() -> void;
 
-#line 119 "pure2-last-use.cpp2"
+#line 136 "pure2-last-use.cpp2"
 auto issue_888(std::string r, int size) -> void;
 
-#line 125 "pure2-last-use.cpp2"
+#line 142 "pure2-last-use.cpp2"
 auto draw() -> void;
 
-#line 131 "pure2-last-use.cpp2"
+#line 148 "pure2-last-use.cpp2"
 class my_string {
   public: std::string string; 
   public: std::size_t size {CPP2_UFCS(size)(string)}; 
@@ -171,18 +184,19 @@ auto issue_847_2(auto&& v) -> void{for ( [[maybe_unused]] auto const& unnamed_pa
 auto issue_847_3(int x) -> void{for ( [[maybe_unused]] auto const& unnamed_param_1 : { std::move(x) } ) {}}
 
 auto f_inout([[maybe_unused]] std::unique_ptr<int>& unnamed_param_1) -> void{}
+auto f_inout([[maybe_unused]] auto& unnamed_param_1) -> void{}
 auto f_copy([[maybe_unused]] auto ...unnamed_param_1) -> void{}
 
-#line 59 "pure2-last-use.cpp2"
+#line 60 "pure2-last-use.cpp2"
   issue_857::issue_857(issue_857&& that) noexcept
                                        : a{ std::move(that).a }
                                        , b{ std::move(that).b }{}
-#line 59 "pure2-last-use.cpp2"
+#line 60 "pure2-last-use.cpp2"
   auto issue_857::operator=(issue_857&& that) noexcept -> issue_857& {
                                        a = std::move(that).a;
                                        b = std::move(that).b;
                                        return *this; }
-#line 60 "pure2-last-use.cpp2"
+#line 61 "pure2-last-use.cpp2"
   issue_857::~issue_857() noexcept { f_copy(std::move(*this).a, std::move((*this)).b);  }
   auto issue_857::f() && -> void { f_copy(std::move((*this)));  }
   auto issue_857::f(issue_857&& that) && -> void { f_copy(std::move((*this)), std::move(that));  }
@@ -201,14 +215,30 @@ auto f_copy([[maybe_unused]] auto ...unnamed_param_1) -> void{}
   auto issue_857::o2() && -> void { CPP2_UFCS(n)(0);  }
   auto issue_857::o3() && -> void { std::move(*this).n(0);  }
   auto issue_857::o4() && -> void { std::move(*this).n(std::move((*this)));  }
+  auto issue_857::p0() && -> void{
+    f_inout(a);
+    f_copy(std::move((*this)).a);
+  }
+  auto issue_857::p1() && -> void{
+  //f_inout(this.a); // FIXME Moves `a`.
+    f_copy(std::move(*this).a);
+  }
+  auto issue_857::p2() && -> void{
+  //f_inout(a); // FIXME Moves `a`.
+    f_copy(std::move((*this)));
+  }
+  auto issue_857::p3() && -> void{
+  //f_inout(this); // FIXME Moves `this`.
+    f_copy(std::move(*this).a);
+  }
 
-#line 84 "pure2-last-use.cpp2"
+#line 101 "pure2-last-use.cpp2"
 int gi {0}; 
 
-#line 87 "pure2-last-use.cpp2"
+#line 104 "pure2-last-use.cpp2"
   auto issue_857_3::f() && -> void { static_cast<void>(f_inout(std::move(*this).i));  }
 
-#line 91 "pure2-last-use.cpp2"
+#line 108 "pure2-last-use.cpp2"
 auto issue_884_3() -> void{
   auto x {cpp2_new<int>(0)}; 
   if (true) {}
@@ -249,10 +279,10 @@ auto draw() -> void{
   static_cast<void>(CPP2_UFCS_MOVE(vertex)((std::move(pos))));
 }
 
-#line 136 "pure2-last-use.cpp2"
+#line 153 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 137 "pure2-last-use.cpp2"
+#line 154 "pure2-last-use.cpp2"
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());
 }

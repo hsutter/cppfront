@@ -51,6 +51,7 @@ issue_847_2: (forward v) = { for v.make_copy() do (_) { } }
 issue_847_3: (copy x: int) = { for (x) do (_) { } }
 
 f_inout: (inout _: std::unique_ptr<int>) = { }
+f_inout: (inout _) = { }
 f_copy: (copy _...) = { }
 
 issue_857: type = {
@@ -75,6 +76,22 @@ issue_857: type = {
   o2:(move this) = 0.n();
   o3:(move this) = n(0);
   o4:(move this) = n(this);
+  p0: (move this) = {
+    f_inout(a);
+    f_copy(this.a);
+  }
+  p1: (move this) = {
+  //f_inout(this.a); // FIXME Moves `a`.
+    f_copy(a);
+  }
+  p2: (move this) = {
+  //f_inout(a); // FIXME Moves `a`.
+    f_copy(this);
+  }
+  p3: (move this) = {
+  //f_inout(this); // FIXME Moves `this`.
+    f_copy(a);
+  }
 }
 
 issue_857_2: @struct type = {
