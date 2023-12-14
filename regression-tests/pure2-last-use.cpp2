@@ -15,6 +15,14 @@ issue_350: () = {
     x++;
 }
 
+issue_440: () = {
+  i: int;
+  if true {
+    i = 1;
+  }
+  i = 2;
+}
+
 issue_683: (args) = {
     for args do (n) {
         _ = n;

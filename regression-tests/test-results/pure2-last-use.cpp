@@ -8,19 +8,19 @@
 
 #line 1 "pure2-last-use.cpp2"
 
-#line 48 "pure2-last-use.cpp2"
+#line 56 "pure2-last-use.cpp2"
 class issue_857;
   
 
-#line 72 "pure2-last-use.cpp2"
+#line 80 "pure2-last-use.cpp2"
 class issue_857_2;
   
 
-#line 77 "pure2-last-use.cpp2"
+#line 85 "pure2-last-use.cpp2"
 class issue_857_3;
   
 
-#line 123 "pure2-last-use.cpp2"
+#line 131 "pure2-last-use.cpp2"
 class my_string;
   
 
@@ -33,15 +33,18 @@ class my_string;
 auto issue_350() -> void;
 
 #line 18 "pure2-last-use.cpp2"
+auto issue_440() -> void;
+
+#line 26 "pure2-last-use.cpp2"
 auto issue_683(auto const& args) -> void;
 
-#line 27 "pure2-last-use.cpp2"
+#line 35 "pure2-last-use.cpp2"
 auto issue_825() -> void;
 
-#line 33 "pure2-last-use.cpp2"
+#line 41 "pure2-last-use.cpp2"
 auto issue_832() -> void;
 
-#line 38 "pure2-last-use.cpp2"
+#line 46 "pure2-last-use.cpp2"
 [[nodiscard]] auto make_copy(auto x) -> auto;
 
 auto issue_847_0(std::vector<std::unique_ptr<int>> v) -> void;
@@ -56,7 +59,7 @@ class issue_857 {
   private: std::unique_ptr<int> a; 
   private: std::unique_ptr<int> b; 
   public: issue_857(issue_857&& that) noexcept;
-#line 51 "pure2-last-use.cpp2"
+#line 59 "pure2-last-use.cpp2"
   public: auto operator=(issue_857&& that) noexcept -> issue_857& ;
   public: ~issue_857() noexcept;
   public: auto f() && -> void;
@@ -88,22 +91,22 @@ class issue_857_3 {
   public: auto f() && -> void;
 };
 
-#line 83 "pure2-last-use.cpp2"
+#line 91 "pure2-last-use.cpp2"
 auto issue_884_3() -> void;
 
-#line 93 "pure2-last-use.cpp2"
+#line 101 "pure2-last-use.cpp2"
 auto issue_884() -> void;
 
-#line 102 "pure2-last-use.cpp2"
+#line 110 "pure2-last-use.cpp2"
 auto issue_884_2() -> void;
 
-#line 111 "pure2-last-use.cpp2"
+#line 119 "pure2-last-use.cpp2"
 auto issue_888(std::string r, int size) -> void;
 
-#line 117 "pure2-last-use.cpp2"
+#line 125 "pure2-last-use.cpp2"
 auto draw() -> void;
 
-#line 123 "pure2-last-use.cpp2"
+#line 131 "pure2-last-use.cpp2"
 class my_string {
   public: std::string string; 
   public: std::size_t size {CPP2_UFCS(size)(string)}; 
@@ -130,6 +133,14 @@ auto issue_350() -> void{
     std::move(l1)(x);
 
     ++x;
+}
+
+auto issue_440() -> void{
+  cpp2::deferred_init<int> i; 
+  if (true) {
+    i.construct(1);
+  }
+  i.construct(2);
 }
 
 auto issue_683(auto const& args) -> void{
@@ -162,16 +173,16 @@ auto issue_847_3(int x) -> void{for ( [[maybe_unused]] auto const& unnamed_param
 auto f_inout([[maybe_unused]] std::unique_ptr<int>& unnamed_param_1) -> void{}
 auto f_copy([[maybe_unused]] auto ...unnamed_param_1) -> void{}
 
-#line 51 "pure2-last-use.cpp2"
+#line 59 "pure2-last-use.cpp2"
   issue_857::issue_857(issue_857&& that) noexcept
                                        : a{ std::move(that).a }
                                        , b{ std::move(that).b }{}
-#line 51 "pure2-last-use.cpp2"
+#line 59 "pure2-last-use.cpp2"
   auto issue_857::operator=(issue_857&& that) noexcept -> issue_857& {
                                        a = std::move(that).a;
                                        b = std::move(that).b;
                                        return *this; }
-#line 52 "pure2-last-use.cpp2"
+#line 60 "pure2-last-use.cpp2"
   issue_857::~issue_857() noexcept { f_copy(std::move(*this).a, std::move((*this)).b);  }
   auto issue_857::f() && -> void { f_copy(std::move((*this)));  }
   auto issue_857::f(issue_857&& that) && -> void { f_copy(std::move((*this)), std::move(that));  }
@@ -191,13 +202,13 @@ auto f_copy([[maybe_unused]] auto ...unnamed_param_1) -> void{}
   auto issue_857::o3() && -> void { std::move(*this).n(0);  }
   auto issue_857::o4() && -> void { std::move(*this).n(std::move((*this)));  }
 
-#line 76 "pure2-last-use.cpp2"
+#line 84 "pure2-last-use.cpp2"
 int gi {0}; 
 
-#line 79 "pure2-last-use.cpp2"
+#line 87 "pure2-last-use.cpp2"
   auto issue_857_3::f() && -> void { static_cast<void>(f_inout(std::move(*this).i));  }
 
-#line 83 "pure2-last-use.cpp2"
+#line 91 "pure2-last-use.cpp2"
 auto issue_884_3() -> void{
   auto x {cpp2_new<int>(0)}; 
   if (true) {}
@@ -238,10 +249,10 @@ auto draw() -> void{
   static_cast<void>(CPP2_UFCS_MOVE(vertex)((std::move(pos))));
 }
 
-#line 128 "pure2-last-use.cpp2"
+#line 136 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 129 "pure2-last-use.cpp2"
+#line 137 "pure2-last-use.cpp2"
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());
 }

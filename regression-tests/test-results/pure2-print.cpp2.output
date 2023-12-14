@@ -20,12 +20,12 @@ outer: type =
             {
                 ret = -p*;
             }
-            ret += strlen(s) - 10 + s.strlen() * (16 / (3 & 2)) % 3;
-            m: map<const int, string> = ();
-            m[0] = "har" as string;
-            ret -= h("x", m).length();
-            _ = m;
-            return ret;
+                ret += strlen(s) - 10 + s.strlen() * (16 / (3 & 2)) % 3;
+                m: map<const int, string> = ();
+                m[0] = "har" as string;
+                ret -= h("x", m).length();
+                _ = m;
+                return ret;
         }
 
         private h:(

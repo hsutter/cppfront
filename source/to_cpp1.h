@@ -1962,7 +1962,8 @@ public:
     //-----------------------------------------------------------------------
     //
     auto emit(
-        compound_statement_node  const&  n,
+        compound_statement_node  const& n,
+        bool                            explicit_scope = true,
         function_prolog          const& function_prolog = {},
         std::vector<std::string> const& function_epilog = {}
     )
@@ -1970,7 +1971,9 @@ public:
     {   STACKINSTR
         emit_prolog_mem_inits(function_prolog, n.body_indent+1);
 
-        printer.print_cpp2( "{", n.open_brace );
+        if (explicit_scope) {
+            printer.print_cpp2( "{", n.open_brace );
+        }
 
         emit_prolog_statements(function_prolog, n.body_indent+1);
 
@@ -1981,7 +1984,9 @@ public:
 
         emit_epilog_statements( function_epilog, n.body_indent+1);
 
-        printer.print_cpp2( "}", n.close_brace );
+        if (explicit_scope) {
+            printer.print_cpp2( "}", n.close_brace );
+        }
     }
 
 
@@ -2167,6 +2172,8 @@ public:
         if (n.has_source_false_branch) {
             printer.print_cpp2("else ", n.else_pos);
             emit(*n.false_branch);
+        } else if (!n.false_branch->statements.empty()) {
+            emit(*n.false_branch, false);
         }
     }
 
@@ -4151,7 +4158,7 @@ public:
 
         printer.disable_indent_heuristic_for_next_text();
 
-        try_emit<statement_node::compound   >(n.statement, function_prolog, function_epilog);
+        try_emit<statement_node::compound   >(n.statement, true, function_prolog, function_epilog);
 
         //  NOTE: Reset preemption here because
         //  - for compound statements written as "= { ... }", we want to keep the
