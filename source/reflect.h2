@@ -960,6 +960,8 @@ basic_enum: (
 
     t.remove_marked_members();
 
+    //  Generate the 'none' value if appropriate, and use that or
+    //  else the first enumerator as the default-constructed value
     default_value := enumerators[0].name;
     if bitwise{
         default_value = "none";
@@ -971,7 +973,7 @@ basic_enum: (
     t.add_member( "    _value            : (underlying_type)$;");
     t.add_member( "    private operator= : (implicit out this, _val: i64) == _value = cpp2::unsafe_narrow<(underlying_type)$>(_val);");
 
-    //  Generate the bitwise operations and 'none' value, if appropriate
+    //  Generate the bitwise operations
     if bitwise {
         t.add_member( "    operator|=: ( inout this, that )                 == _value |= that._value;");
         t.add_member( "    operator&=: ( inout this, that )                 == _value &= that._value;");
