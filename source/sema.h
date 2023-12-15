@@ -605,17 +605,15 @@ public:
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
                 if (
                     sym->start
-                    && (
-                        sym->declaration->is_object()
-                        && (!sym->parameter
-                            || sym->parameter->pass == passing_style::copy
-                            || sym->parameter->pass == passing_style::move
-                            || sym->parameter->pass == passing_style::forward
-                            )
+                    && sym->declaration->is_object()
+                    && (!sym->parameter
+                        || sym->parameter->pass == passing_style::copy
+                        || sym->parameter->pass == passing_style::move
+                        || sym->parameter->pass == passing_style::forward
                         )
                     )
                 {
-                    //  Must be in function or type scope
+                    //  Must be in function scope
                     if (
                         sym->declaration->parent_declaration
                         && sym->declaration->parent_is_function()
@@ -649,7 +647,7 @@ public:
                     ;
             }
 
-            //  If this is a copy, move, or forward parameter or a local or type-scope variable,
+            //  If this is a copy, move, or forward parameter or a local variable,
             //  identify and tag its definite last uses to `std::move` from them
             //
             if (auto decl = is_potentially_movable_local(symbols[sympos])) {
@@ -666,8 +664,8 @@ public:
     }
 
 private:
-    //  Find the definite last uses for local or type-scope variable *id
-    //  starting at the given position and depth in the symbol/scope table
+    //  Find the definite last uses for local *id starting at the
+    //  given position and depth in the symbol/scope table
     //
     auto find_definite_last_uses(
         token const* id,
@@ -764,7 +762,6 @@ private:
 
         //  If we arrived back at the declaration without finding a use
         //  and this isn't generated code (ignore that for now)
-        //  and this isn't in type scope
         //  and this is a user-named object (not 'this', 'that', or '_')
         if (
             i == pos
@@ -1873,7 +1870,7 @@ public:
             expecting_ufcs_on_type_scope_variable = false;
         }
 
-        //  We currently only care to look at object identifiers
+        //  We currently only care to look at variable identifiers
         if (
             t.type() != lexeme::Identifier
             && t != "this"
@@ -1916,7 +1913,7 @@ public:
                 //  or it's a 'copy' parameter (but to be a use it must be after
                 //  the declaration, not the token in the decl's name itself)
                 //  or it's a type-scope variable in a member function.
-              auto look_up_to_type = !started_this_member_access;
+                auto look_up_to_type = !started_this_member_access;
                 if (auto decl = get_declaration_of(t, look_up_to_type, look_up_to_type);
                     decl
                     && decl->declaration->name() != &t
