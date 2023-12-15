@@ -368,13 +368,7 @@ public:
             i != symbols.cend()
             && (
                 !i->get_token()
-                || [&]() {
-                       auto lhs = final_position.find(i->get_token());
-                       auto rhs = final_position.find(&t);
-                       return lhs == final_position.end()
-                              || rhs == final_position.end()
-                              || lhs->second < rhs->second;
-                   }()
+                || i->get_token()->final_position < t.final_position
                 )
             )
         {
@@ -1710,7 +1704,6 @@ public:
     bool inside_returns_list                      = false;
     bool just_entered_for                         = false;
     parameter_declaration_node const* inside_out_parameter = {};
-    std::map<token const*, int> final_position    = {};
 
     auto start(next_expression_tag const&, int) -> void
     {
@@ -1856,8 +1849,8 @@ public:
 
     auto start(token const& t, int) -> void
     {
-        auto fpos = std::ssize(final_position);
-        final_position[&t] = cpp2::unsafe_narrow<int>(fpos);
+        static std::int32_t final_position = 0;
+        t.final_position = final_position++;
 
         if (t == "this") {
             started_this_member_access = true;
