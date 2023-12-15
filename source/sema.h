@@ -761,11 +761,9 @@ private:
         }
 
         //  If we arrived back at the declaration without finding a use
-        //  and this isn't generated code (ignore that for now)
         //  and this is a user-named object (not 'this', 'that', or '_')
         if (
             i == pos
-            && id->position().lineno > 0
             && *id != "this"
             && *id != "that"
             && *id != "_"
