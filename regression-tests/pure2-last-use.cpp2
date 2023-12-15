@@ -138,10 +138,10 @@ issue_857_4: @struct type = {
   h2: (move this, that) = _ = that.f();
   h3: (move this, that) = _ = that.f;
   h4: (move this, x: int) = _ = x.g();
-  h5: (move this, x: int) = _ = f() + x.g();
-  h6: (move this, x: int) = _ = x.g() + f();
-  h7: (move this, x: int) = _ = this.f() + x.g();
-  h8: (move this, x: int) = _ = x.g() + this.f();
+  h5: (move this, x: int) = _ = f() + x.g();      // FIXME #313.
+  h6: (move this, x: int) = _ = x.g() + f();      // FIXME #313.
+  h7: (move this, x: int) = _ = this.f() + x.g(); // FIXME #313.
+  h8: (move this, x: int) = _ = x.g() + this.f(); // FIXME #313.
 }
 
 issue_869: @union type = {
