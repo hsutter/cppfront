@@ -128,36 +128,38 @@ issue_857_2: @struct type = {
 gi: int = 0;
 issue_857_3: @struct type = {
   i: std::add_lvalue_reference_t<int> = gi;
-  f: (move this) = _ = f_inout(i);
+  f: (move this) = _ = f_inout(i); // OK: The implicit `this` is moved, not `i`.
 }
 
 issue_857_4: @struct type = {
-  f: std::add_pointer_t<int()>;    // TODO Use `std::move_only_function`.
-  g: std::add_pointer_t<int(int)>; // Ditto.
-  h0: (move this) = _ = f();
-  h1: (move this) = _ = this.f();
-  h2: (move this, that) = _ = that.f();
+   f: std::add_pointer_t<int()>;
+   g: std::add_pointer_t<int(int)>;
+  mf: std::add_pointer_t<int()>;    // TODO Use `std::move_only_function`.
+  mg: std::add_pointer_t<int(int)>; // Ditto.
+  h0: (move this) = _ = mf();
+  h1: (move this) = _ = this.mf();
+  h2: (move this, that) = _ = that.mf();
   h3: (move this, that) = _ = that.f;
-  h4: (move this, x: int) = _ = x.g();
+  h4: (move this, x: int) = _ = x.mg();
   h5: (move this, x: int) = _ = f() + x.g();      // FIXME #313.
   h6: (move this, x: int) = _ = x.g() + f();      // FIXME #313.
   h7: (move this, x: int) = _ = this.f() + x.g(); // FIXME #313.
   h8: (move this, x: int) = _ = x.g() + this.f(); // FIXME #313.
   i0: (move this, x: int) = {
     _ = f();
-    _ = x.g();
+    _ = x.mg();
   }
   i1: (move this, x: int) = {
     _ = x.g();
-    _ = f();
+    _ = mf();
   }
   i2: (move this, x: int) = {
     _ = this.f();
-    _ = x.g();
+    _ = x.mg();
   }
   i3: (move this, x: int) = {
     _ = x.g();
-    _ = this.f();
+    _ = this.mf();
   }
 }
 
@@ -193,15 +195,17 @@ issue_884_2: () = {
   f_copy(x);
 }
 
-issue_888: (copy r: std::string, copy size: int) = {
-  // ...
+issue_888_0: (copy r: std::string, copy size: int) = {
   _ = r.size();
-  // ...
+}
+// TODO Use `std::move_only_function`.
+issue_888_1: (copy _: std::string, copy size: std::add_pointer_t<int(int)>) = {
+  _ = 0.size();
 }
 
 draw: () = {
   pos       := 0;
-  vertex    := :(_) = { };
+  vertex    := :(_) = { }; // TODO Use `std::move_only_function`.
   _ = (pos).vertex();
 }
 
@@ -235,4 +239,6 @@ my_string: @struct type = {
 main: (args) = {
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());
+  enum_0();
+//enum_1(); // FIXME "Contract violation".
 }
