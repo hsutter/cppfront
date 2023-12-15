@@ -1702,6 +1702,7 @@ public:
     bool started_postfix_expression               = false;
     bool started_member_access                    = false;
     bool started_this_member_access               = false;
+    bool expecting_ufcs_on_type_scope_variable    = false;
     bool is_out_expression                        = false;
     bool inside_next_expression                   = false;
     bool inside_parameter_list                    = false;
@@ -1857,11 +1858,20 @@ public:
     {
         auto fpos = std::ssize(final_position);
         final_position[&t] = cpp2::unsafe_narrow<int>(fpos);
+
         if (t.type() == lexeme::Dot) {
             started_member_access = true;
             started_this_member_access =
                 symbols.back().sym.index() == symbol::identifier
                 && *std::get<symbol::identifier>(symbols.back().sym).identifier == "this";
+        }
+
+        if (
+            expecting_ufcs_on_type_scope_variable
+            && t == "("
+            )
+        {
+            expecting_ufcs_on_type_scope_variable = false;
         }
 
         //  We currently only care to look at object identifiers
@@ -1907,18 +1917,29 @@ public:
                 //  or it's a 'copy' parameter (but to be a use it must be after
                 //  the declaration, not the token in the decl's name itself)
                 //  or it's a type-scope variable in a member function.
-                auto look_up_to_type = !started_member_access && !started_this_member_access;
+                auto look_up_to_type = !started_this_member_access;
                 if (auto decl = get_declaration_of(t, look_up_to_type, look_up_to_type);
                     decl
                     && decl->declaration->name() != &t
                     )
                 {
+                    if (started_member_access) {
+                        expecting_ufcs_on_type_scope_variable = true;
+                    }
                     symbols.emplace_back( scope_depth, identifier_sym( false, &t ) );
                 }
             }
             started_member_access = false;
             started_this_member_access = false;
         }
+    }
+
+    auto end(postfix_expression_node const&, int) -> void
+    {
+      if (expecting_ufcs_on_type_scope_variable) {
+          expecting_ufcs_on_type_scope_variable = false;
+          symbols.pop_back();
+      }
     }
 
     auto start(selection_statement_node const& n, int) -> void
