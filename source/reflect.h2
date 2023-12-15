@@ -66,12 +66,10 @@ compiler_services: @polymorphic_base @copyable type =
         }
         return "";
     }
+
     get_arguments: (inout this) -> std::vector<std::string> = {
-        ret: std::vector<std::string> = ();
-        (copy count := 0)
-        while !ret.emplace_back(get_argument(count)).empty() { count++; } // No `next` (#832).
-        ret.pop_back();
-        return ret;
+        metafunctions_used = true;
+        return metafunction_args;
     }
 
     arguments_were_used: (this) -> bool = metafunctions_used;
@@ -351,12 +349,13 @@ function_declaration: @copyable type =
     has_non_void_return_type     : (this) -> bool = n*.has_non_void_return_type();
 
     unnamed_return_type          : (this) -> std::string = n*.unnamed_return_type_to_string();
+
     get_parameters: (this)
         -> std::vector<object_declaration>
     = {
         ret: std::vector<object_declaration> = ();
-        for n*.get_function_parameters() do (d) {
-            _ = ret.emplace_back( d*.declaration*&, this );
+        for n*.get_function_parameters() do (param) {
+            _ = ret.emplace_back( param*.declaration*&, this );
         }
         return ret;
     }
@@ -367,16 +366,18 @@ function_declaration: @copyable type =
 
     make_virtual                 : (inout this) -> bool = n*.make_function_virtual();
 
-    add_initializer: (move this, source: std::string_view)
-      pre(!has_initializer())
-      pre(parent_is_type())
+    add_initializer: (inout this, source: std::string_view)
     = {
-        prefix := n*.pretty_print_visualize(0);
-        prefix.back() = ' '; // Remove final ';'.
-        p := get_parent().as_type();
-        p.add_member(prefix + source);
-        _ = p;
-        mark_for_removal_from_enclosing_type();
+        require( !has_initializer(), 
+                 "cannot add an initializer to a function that already has one");
+        require( parent_is_type(),
+                 "cannot add an initializer to a function that isn't in a type scope");
+
+        stmt := parse_statement(source);
+        require( stmt as bool,
+                 std::string("cannot add an initializer that is not a valid statement: ") + source);
+        require (n*.add_function_initializer(stmt),
+                 std::string("error attempting to add initializer:\n") + source);
     }
 }
 
@@ -454,7 +455,8 @@ type_declaration: @copyable type =
         -> std::vector<function_declaration>
     = {
         ret: std::vector<function_declaration> = ();
-        for n*.get_type_scope_declarations(declaration_node::functions) do (d) {
+        for n*.get_type_scope_declarations(declaration_node::functions) 
+        do  (d) {
             _ = ret.emplace_back( d, this );
         }
         return ret;
@@ -465,10 +467,10 @@ type_declaration: @copyable type =
     = {
         ret: std::vector<function_declaration> = ();
         for n*.get_type_scope_declarations(declaration_node::functions)
-        do (d)
-        if !d*.has_initializer()
-           && !d*.is_virtual_function()
-           && !d*.is_defaultable_function()
+        do  (d)
+        if  !d*.has_initializer()
+            && !d*.is_virtual_function()
+            && !d*.is_defaultable_function()
         {
             _ = ret.emplace_back( d, this );
         }
@@ -533,9 +535,12 @@ type_declaration: @copyable type =
     add_member: (inout this, source: std::string_view)
     = {
         decl := parse_statement(source);
-        if !decl || !n*.add_type_member(decl) {
-            error( std::string("error attempting to add member:\n") + source );
-        }
+        require( decl as bool, 
+                 "the provided source string is not a valid statement");
+        require( decl*.is_declaration(), 
+                 "cannot add a member that is not a declaration");
+        require( n*.add_type_member(decl),
+                 std::string("error attempting to add member:\n") + source );
     }
 
     remove_marked_members: (inout this) = n*.type_remove_marked_members();
