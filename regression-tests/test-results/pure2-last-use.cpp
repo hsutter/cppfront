@@ -380,9 +380,6 @@ issue_869::issue_869(issue_869 const& that)
   if (CPP2_UFCS(is_i)(std::move(that))) {set_i(CPP2_UFCS(i)(std::move(that)));}
         return *this;
   }
-#line 144 "pure2-last-use.cpp2"
-                                                  // FIXME Moves `this` instead of `f`.
-
 #line 151 "pure2-last-use.cpp2"
 auto issue_884_3() -> void{
   auto x {cpp2_new<int>(0)}; 

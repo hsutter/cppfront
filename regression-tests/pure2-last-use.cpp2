@@ -141,7 +141,7 @@ issue_857_4: @struct type = {
   h5: (move this, x: int) = _ = f() + x.g();
   h6: (move this, x: int) = _ = x.g() + f();
   h7: (move this, x: int) = _ = this.f() + x.g(); // FIXME Moves `this` instead of `g`.
-  h8: (move this, x: int) = _ = x.g() + this.f(); // FIXME Moves `this` instead of `f`.
+  h8: (move this, x: int) = _ = x.g() + this.f();
 }
 
 issue_869: @union type = {
