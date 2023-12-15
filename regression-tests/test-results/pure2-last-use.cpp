@@ -76,7 +76,7 @@ class issue_857 {
   public: auto f() && -> void;
   public: auto f(issue_857&& that) && -> void;
   public: auto g() && -> void;
-//g: (move this, move that) = f_copy(this.a, that.a); // FIXME Doesn't move `this.a`.
+  public: auto g(issue_857&& that) && -> void;
   public: auto h() & -> void;
   public: auto i() && -> void;
   public: auto j() && -> void;
@@ -269,7 +269,7 @@ auto f_copy([[maybe_unused]] auto ...unnamed_param_1) -> void{}
   auto issue_857::f() && -> void { f_copy(std::move((*this)));  }
   auto issue_857::f(issue_857&& that) && -> void { f_copy(std::move((*this)), std::move(that));  }
   auto issue_857::g() && -> void { f_copy(std::move((*this)).a);  }
-
+  auto issue_857::g(issue_857&& that) && -> void { f_copy(std::move((*this)).a, std::move(that).a);  }
   auto issue_857::h() & -> void { f_inout(a);  }
   auto issue_857::i() && -> void { f_copy(std::move(*this).a);  }
   auto issue_857::j() && -> void { f_copy(std::move(*this).a);  }

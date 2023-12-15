@@ -1901,25 +1901,22 @@ public:
             )
         {
             started_postfix_expression = false;
-            started_member_access = false;
             if (!inside_parameter_identifier && !inside_next_expression)
             {
                 //  Put this into the table if it's a use of an object in scope
                 //  or it's a 'copy' parameter (but to be a use it must be after
                 //  the declaration, not the token in the decl's name itself)
                 //  or it's a type-scope variable in a member function.
-                if (auto decl = get_declaration_of(t, true, true);
+                auto look_up_to_type = !started_member_access && !started_this_member_access;
+                if (auto decl = get_declaration_of(t, look_up_to_type, look_up_to_type);
                     decl
                     && decl->declaration->name() != &t
-                    && (
-                        !decl->declaration->parent_is_type()
-                        || !started_this_member_access
-                        )
                     )
                 {
                     symbols.emplace_back( scope_depth, identifier_sym( false, &t ) );
                 }
             }
+            started_member_access = false;
             started_this_member_access = false;
         }
     }
