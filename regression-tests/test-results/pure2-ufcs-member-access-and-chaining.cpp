@@ -71,7 +71,7 @@ auto no_return([[maybe_unused]] auto const& unnamed_param_1) -> void{}
         cpp2::deferred_init<int> i;
 #line 33 "pure2-ufcs-member-access-and-chaining.cpp2"
     i.construct(42);
-    return std::move(i.value()); 
+    return i.value(); 
 }
 
 [[nodiscard]] auto get_i(auto const& r) -> int{

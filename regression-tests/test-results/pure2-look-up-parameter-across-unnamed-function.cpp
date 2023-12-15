@@ -36,7 +36,7 @@ using g_ret = int;
     auto pred {[](auto const& e) mutable -> auto { return e == 1;  }}; 
     ri = 42;
     std::move(pred)(ri);
-    return std::move(ri); // "return;" is implicit"
+    return ri; // "return;" is implicit"
 }
 
 [[nodiscard]] auto g() -> g_ret{
@@ -46,7 +46,7 @@ using g_ret = int;
     auto pred {[](auto const& e) mutable -> auto { return e == 1;  }}; 
     ri.value() = 42;
     std::move(pred)(ri.value());
-    return std::move(ri.value()); 
+    return ri.value(); 
 }
 
 [[nodiscard]] auto main() -> int{

@@ -72,7 +72,7 @@ auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void
     cpp2_finally_presuccess.add([&, _1 = CPP2_UFCS(length)(ret)]{cpp2::Default.expects(CPP2_UFCS(length)(ret) == _1 + 5, "");} );
 #line 26 "mixed-postexpression-with-capture.cpp2"
     ret += " and ";
-cpp2_finally_presuccess.run(); return std::move(ret); }
+cpp2_finally_presuccess.run(); return ret; }
 
 [[nodiscard]] auto make_strings() -> make_strings_ret
 
