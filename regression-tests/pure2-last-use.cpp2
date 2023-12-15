@@ -191,6 +191,32 @@ issue_857_4: @struct type = {
     _ = x.g();
     _ = this.mf();
   }
+//z: (move this, that, x: int) = {
+///*h0*/      if true { mf(); }
+///*h1*/ else if true { this.mf(); }
+///*h2*/ else if true { that.mf(); }
+///*h3*/ else if true { that.f; }
+///*h4*/ else if true { x.mg(); }
+///*h5*/ else if true { f() + x.g(); }
+///*h6*/ else if true { x.g() + f(); }
+///*h7*/ else if true { this.f() + x.g(); }
+///*h8*/ else if true { x.g() + this.f(); }
+///*i0*/ else if true {
+///*i0*/   _ = f();
+///*i0*/   _ = x.mg();
+///*i0*/ }
+///*i1*/ else if true {
+///*i1*/   _ = x.g();
+///*i1*/   _ = mf();
+///*i1*/ }
+///*i2*/ else if true {
+///*i2*/   _ = this.f();
+///*i2*/   _ = x.mg();
+///*i2*/ }
+///*i3*/ else {
+///*i3*/   _ = x.g();
+///*i3*/   _ = this.mf();
+///*i3*/ }
 }
 
 issue_869: @union type = {

@@ -12,27 +12,27 @@
 class issue_857;
   
 
-#line 134 "pure2-last-use.cpp2"
+#line 154 "pure2-last-use.cpp2"
 class issue_857_2;
   
 
-#line 139 "pure2-last-use.cpp2"
+#line 159 "pure2-last-use.cpp2"
 class issue_857_3;
   
 
-#line 144 "pure2-last-use.cpp2"
+#line 164 "pure2-last-use.cpp2"
 class issue_857_4;
    
 
-#line 176 "pure2-last-use.cpp2"
+#line 222 "pure2-last-use.cpp2"
 class issue_869;
   
 
-#line 236 "pure2-last-use.cpp2"
+#line 282 "pure2-last-use.cpp2"
 class cpp2_union;
   
 
-#line 244 "pure2-last-use.cpp2"
+#line 290 "pure2-last-use.cpp2"
 class my_string;
   
 
@@ -131,7 +131,27 @@ class issue_857 {
 ///*o1*/ else if true { n(); }
 ///*o2*/ else if true { this.n(); }
 ///*o3*/ else if true { n(0); }
-///*o4*/ else         { n(this); }
+///*o4*/ else if true { n(this); }
+///*p0*/ else if true {
+///*p0*/   f_inout(a);
+///*p0*/   f_copy(this.a);
+///*p0*/ }
+///*p1*/ else if true {
+///*p1*/   f_inout(this.a);
+///*p1*/   f_copy(a);
+///*p1*/ }
+///*p2*/ else if true {
+///*p2*/   f_inout(a);
+///*p2*/   f_copy(this);
+///*p2*/ }
+///*p3*/ else if true {
+///*p3*/   f_inout(this);
+///*p3*/   f_copy(a);
+///*p3*/ }
+///*q */ else {
+///*q */   h();
+///*q */   n();
+///*q */ }
 //}
 };
 
@@ -161,16 +181,42 @@ class issue_857_4 {
   public: auto h8(cpp2::in<int> x) && -> void;
   public: auto i0(cpp2::in<int> x) && -> void;
 
-#line 162 "pure2-last-use.cpp2"
+#line 182 "pure2-last-use.cpp2"
   public: auto i1(cpp2::in<int> x) && -> void;
 
-#line 166 "pure2-last-use.cpp2"
+#line 186 "pure2-last-use.cpp2"
   public: auto i2(cpp2::in<int> x) && -> void;
 
-#line 170 "pure2-last-use.cpp2"
+#line 190 "pure2-last-use.cpp2"
   public: auto i3(cpp2::in<int> x) && -> void;
 
-#line 174 "pure2-last-use.cpp2"
+#line 194 "pure2-last-use.cpp2"
+//z: (move this, that, x: int) = {
+///*h0*/      if true { mf(); }
+///*h1*/ else if true { this.mf(); }
+///*h2*/ else if true { that.mf(); }
+///*h3*/ else if true { that.f; }
+///*h4*/ else if true { x.mg(); }
+///*h5*/ else if true { f() + x.g(); }
+///*h6*/ else if true { x.g() + f(); }
+///*h7*/ else if true { this.f() + x.g(); }
+///*h8*/ else if true { x.g() + this.f(); }
+///*i0*/ else if true {
+///*i0*/   _ = f();
+///*i0*/   _ = x.mg();
+///*i0*/ }
+///*i1*/ else if true {
+///*i1*/   _ = x.g();
+///*i1*/   _ = mf();
+///*i1*/ }
+///*i2*/ else if true {
+///*i2*/   _ = this.f();
+///*i2*/   _ = x.mg();
+///*i2*/ }
+///*i3*/ else {
+///*i3*/   _ = x.g();
+///*i3*/   _ = this.mf();
+///*i3*/ }
 };
 
 class issue_869 {
@@ -188,34 +234,34 @@ public: issue_869(issue_869&& that) noexcept;
 public: auto operator=(issue_869 const& that) -> issue_869& ;
 public: auto operator=(issue_869&& that) noexcept -> issue_869& ;
 
-#line 178 "pure2-last-use.cpp2"
+#line 224 "pure2-last-use.cpp2"
 };
 
 auto issue_884_3() -> void;
 
-#line 190 "pure2-last-use.cpp2"
+#line 236 "pure2-last-use.cpp2"
 auto issue_884() -> void;
 
-#line 199 "pure2-last-use.cpp2"
+#line 245 "pure2-last-use.cpp2"
 auto issue_884_2() -> void;
 
-#line 208 "pure2-last-use.cpp2"
+#line 254 "pure2-last-use.cpp2"
 auto issue_888_0(std::string r, int size) -> void;
 
-#line 211 "pure2-last-use.cpp2"
+#line 257 "pure2-last-use.cpp2"
 // TODO Use `std::move_only_function`.
 auto issue_888_1([[maybe_unused]] std::string unnamed_param_1, std::add_pointer_t<int(int)> size) -> void;
 
-#line 216 "pure2-last-use.cpp2"
+#line 262 "pure2-last-use.cpp2"
 auto draw() -> void;
 
-#line 222 "pure2-last-use.cpp2"
+#line 268 "pure2-last-use.cpp2"
 auto enum_0() -> void;
 
-#line 228 "pure2-last-use.cpp2"
+#line 274 "pure2-last-use.cpp2"
 auto enum_1() -> void;
 
-#line 236 "pure2-last-use.cpp2"
+#line 282 "pure2-last-use.cpp2"
 class cpp2_union {
   public: auto destroy() & -> void;
   public: ~cpp2_union() noexcept;
@@ -224,7 +270,7 @@ class cpp2_union {
   public: auto operator=(cpp2_union const&) -> void = delete;
 
 
-#line 242 "pure2-last-use.cpp2"
+#line 288 "pure2-last-use.cpp2"
 };
 
 class my_string {
@@ -233,7 +279,7 @@ class my_string {
 };
 
 using no_pessimizing_move_ret = std::unique_ptr<int>;
-#line 249 "pure2-last-use.cpp2"
+#line 295 "pure2-last-use.cpp2"
 [[nodiscard]] auto no_pessimizing_move() -> no_pessimizing_move_ret;
 
 auto main(int const argc_, char** argv_) -> int;
@@ -365,13 +411,13 @@ auto f_copy([[maybe_unused]] auto ...unnamed_param_1) -> void{}
     std::move(*this).n();
   }
 
-#line 138 "pure2-last-use.cpp2"
+#line 158 "pure2-last-use.cpp2"
 int gi {0}; 
 
-#line 141 "pure2-last-use.cpp2"
+#line 161 "pure2-last-use.cpp2"
   auto issue_857_3::f() && -> void { static_cast<void>(f_inout(std::move(*this).i));  }// OK: The implicit `this` is moved, not `i`.
 
-#line 149 "pure2-last-use.cpp2"
+#line 169 "pure2-last-use.cpp2"
   auto issue_857_4::h0() && -> void { static_cast<void>(std::move(*this).mf());  }
   auto issue_857_4::h1() && -> void { static_cast<void>(CPP2_UFCS(mf)(std::move((*this))));  }
   auto issue_857_4::h2(issue_857_4 const& that) && -> void { static_cast<void>(CPP2_UFCS_MOVE(mf)(that));  }
@@ -436,7 +482,7 @@ issue_869::issue_869(issue_869 const& that)
   if (CPP2_UFCS(is_i)(std::move(that))) {set_i(CPP2_UFCS(i)(std::move(that)));}
         return *this;
   }
-#line 180 "pure2-last-use.cpp2"
+#line 226 "pure2-last-use.cpp2"
 auto issue_884_3() -> void{
   auto x {cpp2_new<int>(0)}; 
   if (true) {}
@@ -493,21 +539,21 @@ auto enum_1() -> void{
   underlying_type.construct(0);
 }
 
-#line 237 "pure2-last-use.cpp2"
+#line 283 "pure2-last-use.cpp2"
   auto cpp2_union::destroy() & -> void{}
   cpp2_union::~cpp2_union() noexcept{
     destroy();
     static_cast<void>(std::move((*this)));
   }
 
-#line 249 "pure2-last-use.cpp2"
+#line 295 "pure2-last-use.cpp2"
 [[nodiscard]] auto no_pessimizing_move() -> no_pessimizing_move_ret{
                                                                 std::unique_ptr<int> ret {};
-#line 250 "pure2-last-use.cpp2"
+#line 296 "pure2-last-use.cpp2"
 return ret; }
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 252 "pure2-last-use.cpp2"
+#line 298 "pure2-last-use.cpp2"
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());
   enum_0();
