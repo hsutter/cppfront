@@ -2473,6 +2473,7 @@ public:
                 stmt += std::string(" { ");
             }
 
+            in_non_rvalue_context.push_back(parameters.size() == 1);
             for (bool first = true; auto& param : parameters) {
                 if (!first) {
                     stmt += ", ";
@@ -2484,6 +2485,7 @@ public:
                 emit(*param->declaration->identifier, true);
                 printer.emit_to_string();
             }
+            in_non_rvalue_context.pop_back();
 
             if (std::ssize(parameters) > 1) {
                 stmt += std::string(" }");

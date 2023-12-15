@@ -15,10 +15,20 @@ issue_350: () = {
     x++;
 }
 
-issue_440: () = {
+issue_440_0: () -> int = {
   i: int;
   if true {
     i = 1;
+    return i;
+  }
+  i = 2;
+  return i;
+}
+
+issue_440_1: () -> (i: int) = {
+  if true {
+    i = 1;
+    return;
   }
   i = 2;
 }
@@ -235,6 +245,8 @@ my_string: @struct type = {
   string: std::string;
   size: std::size_t = string.size();
 }
+
+no_pessimizing_move: () -> (ret: std::unique_ptr<int> = ()) = { }
 
 main: (args) = {
   issue_683(args);
