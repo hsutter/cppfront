@@ -102,7 +102,8 @@ issue_857: type = {
     h();
     n();
   }
-// FIXME
+// FIXME Lack of implicit moves in sibling selections.
+// Not a `this` problem: <https://cpp2.godbolt.org/z/hbeje4c3M>.
 //z: (move this, move that) = {
 ///*f */      if true { f_copy(this); }
 ///*f */ else if true { f_copy(this, that); }
