@@ -584,6 +584,7 @@ public:
                     if (
                         sym->declaration->is_object()
                         && !sym->declaration->parent_is_namespace()
+                        && !sym->declaration->parent_is_type()
                         )
                     {
                         return sym;
@@ -597,39 +598,27 @@ public:
         };
 
         //  It's a local (incl. named return value or copy or move or forward parameter)
-        //  or type-scope (incl. `this` function for the implicit object parameter)
         //
-        auto is_potentially_movable_local_or_type_scope = [&](symbol const& s)
+        auto is_potentially_movable_local = [&](symbol const& s)
             -> declaration_sym const*
         {
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
                 if (
                     sym->start
                     && (
-                        (
-                            sym->declaration->is_object()
-                            && (!sym->parameter
-                                || sym->parameter->pass == passing_style::copy
-                                || sym->parameter->pass == passing_style::move
-                                || sym->parameter->pass == passing_style::forward
-                                )
-                         )
-                         || (
-                             sym->declaration->is_function()
-                             && sym->declaration->has_name()
-                             && sym->declaration->has_parameter_named("this")
-                             && sym->declaration->parent_is_type()
-                             )
+                        sym->declaration->is_object()
+                        && (!sym->parameter
+                            || sym->parameter->pass == passing_style::copy
+                            || sym->parameter->pass == passing_style::move
+                            || sym->parameter->pass == passing_style::forward
+                            )
                         )
                     )
                 {
                     //  Must be in function or type scope
                     if (
                         sym->declaration->parent_declaration
-                        && (
-                            sym->declaration->parent_is_function()
-                            || sym->declaration->parent_is_type()
-                            )
+                        && sym->declaration->parent_is_function()
                         )
                     {
                         return sym;
@@ -663,13 +652,12 @@ public:
             //  If this is a copy, move, or forward parameter or a local or type-scope variable,
             //  identify and tag its definite last uses to `std::move` from them
             //
-            if (auto decl = is_potentially_movable_local_or_type_scope(symbols[sympos])) {
+            if (auto decl = is_potentially_movable_local(symbols[sympos])) {
                 assert (decl->identifier);
                 find_definite_last_uses(
                     decl->identifier,
                     sympos,
-                    decl->parameter && decl->parameter->pass == passing_style::forward,
-                    decl->declaration->parent_is_type()
+                    decl->parameter && decl->parameter->pass == passing_style::forward
                 );
             }
         }
@@ -684,39 +672,12 @@ private:
     auto find_definite_last_uses(
         token const* id,
         int          pos,
-        bool         is_forward,
-        bool         in_type_scope,
-        bool         recursing = false
+        bool         is_forward
     ) const
         -> void
     {
         auto i = pos;
         auto depth = symbols[pos].depth;
-
-        if (
-            in_type_scope
-            && !recursing
-            )
-        {
-            //  Scan forward to the end of this scope,
-            //  recursing to its member functions
-            while (
-                i+1 < std::ssize(symbols)
-                && symbols[i+1].depth >= depth
-                )
-            {
-                assert (std::ssize(symbols) > 1);
-                if (symbols[i].sym.index() == symbol::declaration) {
-                    auto const& d = std::get<symbol::declaration>(symbols[i].sym);
-                    if (d.declaration->is_function_with_this()) {
-                        find_definite_last_uses(id, i+1, false, true, true);
-                    }
-                }
-                ++i;
-            }
-
-            return;
-        }
 
         //  Maintain a stack of the depths of the most recently seen
         //  selection statements, using the current depth-2 as a sentinel
@@ -766,15 +727,12 @@ private:
                 if (
                     *sym.identifier == *id
                     || (
-                        in_type_scope
-                        && (
-                            *sym.identifier == "this"
-                            || [&]() {
-                                   auto decl = get_declaration_of(sym.get_token(), true, true);
-                                   return decl
-                                          && decl->declaration->parent_is_type();
-                               }()
-                            )
+                        *id == "this"
+                        && [&]() {
+                               auto decl = get_declaration_of(sym.get_token(), true, true);
+                               return decl
+                                      && decl->declaration->parent_is_type();
+                           }()
                         )
                     )
                 {
@@ -811,7 +769,6 @@ private:
         if (
             i == pos
             && id->position().lineno > 0
-            && !in_type_scope
             && *id != "this"
             && *id != "that"
             && *id != "_"
@@ -842,12 +799,6 @@ private:
     ) const
         -> bool
     {
-        //  Skip type scope (member) variables,
-        //  which is checked in 'operator=' for non-'@struct's.
-        if (decl->declaration->parent_is_type()) {
-            return true;
-        }
-
         auto name = decl->identifier->to_string();
 
         struct stack_entry{
@@ -1750,6 +1701,7 @@ public:
     bool started_standalone_assignment_expression = false;
     bool started_postfix_expression               = false;
     bool started_member_access                    = false;
+    bool started_this_member_access               = false;
     bool is_out_expression                        = false;
     bool inside_next_expression                   = false;
     bool inside_parameter_list                    = false;
@@ -1907,6 +1859,9 @@ public:
         final_position[&t] = cpp2::unsafe_narrow<int>(fpos);
         if (t.type() == lexeme::Dot) {
             started_member_access = true;
+            started_this_member_access =
+                symbols.back().sym.index() == symbol::identifier
+                && *std::get<symbol::identifier>(symbols.back().sym).identifier == "this";
         }
 
         //  We currently only care to look at object identifiers
@@ -1942,6 +1897,7 @@ public:
         else if (
             started_postfix_expression
             || started_member_access
+            || started_this_member_access
             )
         {
             started_postfix_expression = false;
@@ -1955,11 +1911,16 @@ public:
                 if (auto decl = get_declaration_of(t, true, true);
                     decl
                     && decl->declaration->name() != &t
+                    && (
+                        !decl->declaration->parent_is_type()
+                        || !started_this_member_access
+                        )
                     )
                 {
                     symbols.emplace_back( scope_depth, identifier_sym( false, &t ) );
                 }
             }
+            started_this_member_access = false;
         }
     }
 

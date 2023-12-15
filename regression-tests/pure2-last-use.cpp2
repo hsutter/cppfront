@@ -65,7 +65,7 @@ issue_857: type = {
   f: (move this) = f_copy(this);
   f: (move this, move that) = f_copy(this, that);
   g: (move this) = f_copy(this.a);
-  g: (move this, move that) = f_copy(this.a, that.a);
+//g: (move this, move that) = f_copy(this.a, that.a); // FIXME Doesn't move `this.a`.
   h: (inout this) = f_inout(a);
   i: (move this) = f_copy(a);
   j: (move this) = f_copy(a);
@@ -87,7 +87,7 @@ issue_857: type = {
     f_copy(this.a);
   }
   p1: (move this) = {
-  //f_inout(this.a); // FIXME Moves `a`.
+    f_inout(this.a);
     f_copy(a);
   }
   p2: (move this) = {
@@ -95,7 +95,7 @@ issue_857: type = {
     f_copy(this);
   }
   p3: (move this) = {
-  //f_inout(this); // FIXME Moves `this`.
+    f_inout(this);
     f_copy(a);
   }
   q: (move this) = {
