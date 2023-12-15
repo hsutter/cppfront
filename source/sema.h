@@ -253,6 +253,15 @@ struct symbol {
             return nullptr;
         }
     }
+
+    auto get_final_position() const
+        -> std::int32_t
+    {
+        if (auto t = get_token()) {
+            return t->final_position;
+        }
+        return 0;
+    }
 };
 
 
@@ -366,10 +375,7 @@ public:
         auto i = symbols.cbegin();
         while (
             i != symbols.cend()
-            && (
-                !i->get_token()
-                || i->get_token()->final_position < t.final_position
-                )
+            && i->get_final_position() < t.final_position
             )
         {
             ++i;
