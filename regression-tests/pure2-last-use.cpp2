@@ -127,7 +127,27 @@ issue_857: type = {
 ///*o1*/ else if true { n(); }
 ///*o2*/ else if true { this.n(); }
 ///*o3*/ else if true { n(0); }
-///*o4*/ else         { n(this); }
+///*o4*/ else if true { n(this); }
+///*p0*/ else if true {
+///*p0*/   f_inout(a);
+///*p0*/   f_copy(this.a);
+///*p0*/ }
+///*p1*/ else if true {
+///*p1*/   f_inout(this.a);
+///*p1*/   f_copy(a);
+///*p1*/ }
+///*p2*/ else if true {
+///*p2*/   f_inout(a);
+///*p2*/   f_copy(this);
+///*p2*/ }
+///*p3*/ else if true {
+///*p3*/   f_inout(this);
+///*p3*/   f_copy(a);
+///*p3*/ }
+///*q */ else {
+///*q */   h();
+///*q */   n();
+///*q */ }
 //}
 }
 
