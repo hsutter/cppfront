@@ -1859,11 +1859,11 @@ public:
         auto fpos = std::ssize(final_position);
         final_position[&t] = cpp2::unsafe_narrow<int>(fpos);
 
-        if (t.type() == lexeme::Dot) {
+        if (t == "this") {
+            started_this_member_access = true;
+        }
+        else if (t.type() == lexeme::Dot) {
             started_member_access = true;
-            started_this_member_access =
-                symbols.back().sym.index() == symbol::identifier
-                && *std::get<symbol::identifier>(symbols.back().sym).identifier == "this";
         }
 
         if (
@@ -1917,7 +1917,7 @@ public:
                 //  or it's a 'copy' parameter (but to be a use it must be after
                 //  the declaration, not the token in the decl's name itself)
                 //  or it's a type-scope variable in a member function.
-                auto look_up_to_type = !started_this_member_access;
+              auto look_up_to_type = !started_this_member_access;
                 if (auto decl = get_declaration_of(t, look_up_to_type, look_up_to_type);
                     decl
                     && decl->declaration->name() != &t
@@ -1930,7 +1930,7 @@ public:
                 }
             }
             started_member_access = false;
-            started_this_member_access = false;
+            started_this_member_access = t == "this";
         }
     }
 
