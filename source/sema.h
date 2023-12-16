@@ -422,8 +422,7 @@ public:
                     return &decl;
                 }
 
-                //  Data members declared later in source code
-                //  need to be manually looked up while populating the symbols
+                //  If we reached a 'move this' parameter, look it up in the type members
                 if (
                     include_implicit_this
                     && decl.identifier
@@ -587,7 +586,7 @@ public:
         //  Helpers for readability
 
         //  It's an uninitialized variable (incl. named return values) if it's
-        //  a non-namespace-or-type-scope non-parameter object with no initializer
+        //  a non-namespace-scope non-parameter object with no initializer
         //
         auto is_uninitialized_variable_decl = [&](symbol const& s)
             -> declaration_sym const*
@@ -598,7 +597,6 @@ public:
                     if (
                         sym->declaration->is_object()
                         && !sym->declaration->parent_is_namespace()
-                        && !sym->declaration->parent_is_type()
                         )
                     {
                         return sym;
@@ -735,13 +733,13 @@ private:
                 auto const& sym = std::get<symbol::active::identifier>(symbols[i].sym);
                 assert (sym.identifier);
 
-                //  If we find a use of the identifier or possibly implicit 'this'
+                //  If we find a use of the identifier or its possibly implicit 'this'
                 if (
                     *sym.identifier == *id
                     || (
                         *id == "this"
                         && [&]() {
-                               auto decl = get_declaration_of(sym.get_token(), true, true);
+                               auto decl = get_declaration_of(sym.get_token(), false, true);
                                return decl
                                       && decl->identifier
                                       && *decl->identifier == "this";
@@ -1712,7 +1710,7 @@ public:
     bool started_postfix_expression               = false;
     bool started_member_access                    = false;
     bool started_this_member_access               = false;
-    bool expecting_ufcs_on_type_scope_variable    = false;
+    bool trial_ufcs_on_implicit_this_access       = false;
     bool is_out_expression                        = false;
     bool inside_next_expression                   = false;
     bool inside_parameter_list                    = false;
@@ -1819,6 +1817,8 @@ public:
 
         if (
             !n.is_alias()
+            //  Skip type scope (member) variables
+            && !(n.parent_is_type() && n.is_object())
             //  Skip unnamed variables
             && (
                 n.identifier
@@ -1875,12 +1875,13 @@ public:
             started_member_access = true;
         }
 
+        //  If a '(' follows '.member', the trial is completed
         if (
-            expecting_ufcs_on_type_scope_variable
+            trial_ufcs_on_implicit_this_access
             && t == "("
             )
         {
-            expecting_ufcs_on_type_scope_variable = false;
+            trial_ufcs_on_implicit_this_access = false;
         }
 
         //  We currently only care to look at variable identifiers
@@ -1925,14 +1926,14 @@ public:
                 //  Put this into the table if it's a use of an object in scope
                 //  or it's a 'copy' parameter (but to be a use it must be after
                 //  the declaration, not the token in the decl's name itself)
-                //  or it's a type-scope variable in a member function.
+                //  including an implicit 'this' access of a member name
                 if (auto decl = get_declaration_of(t, false, !started_this_member_access);
                     decl
                     && decl->declaration->name() != &t
                     )
                 {
                     if (started_member_access) {
-                        expecting_ufcs_on_type_scope_variable = true;
+                        trial_ufcs_on_implicit_this_access = true;
                     }
                     symbols.emplace_back( scope_depth, identifier_sym( false, &t ) );
                 }
@@ -1944,10 +1945,11 @@ public:
 
     auto end(postfix_expression_node const&, int) -> void
     {
-      if (expecting_ufcs_on_type_scope_variable) {
-          expecting_ufcs_on_type_scope_variable = false;
-          symbols.pop_back();
-      }
+        //  If there was no UFCS, drop the "last use" candidate
+        if (trial_ufcs_on_implicit_this_access) {
+            trial_ufcs_on_implicit_this_access = false;
+            symbols.pop_back();
+        }
     }
 
     auto start(selection_statement_node const& n, int) -> void
