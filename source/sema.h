@@ -277,8 +277,8 @@ auto is_definite_initialization(token const* t)
 
 
 //  Keep a list of all token*'s found that are definite last uses
-//  for a local or type-scope variable or copy or forward parameter x,
-//  which we will rewrite to move or forward from the variable.
+//  for a local variable or copy or forward parameter x, which we
+//   will rewrite to move or forward from the variable.
 //
 struct last_use {
     token const* t;
@@ -423,7 +423,7 @@ public:
                 }
 
                 //  Data members declared later in source code
-                //  need to be manually looked up while populating the symbols.
+                //  need to be manually looked up while populating the symbols
                 if (
                     include_implicit_this
                     && decl.identifier
