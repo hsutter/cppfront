@@ -285,9 +285,9 @@ class issue_857_9: public issue_857_8 {
 };
 
 class issue_869_0 {
-  public: explicit issue_869_0([[maybe_unused]] cpp2::in<std::unique_ptr<int>> unnamed_param_2);
+  public: explicit issue_869_0([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2);
 #line 257 "pure2-last-use.cpp2"
-  public: auto operator=([[maybe_unused]] cpp2::in<std::unique_ptr<int>> unnamed_param_2) -> issue_869_0& ;
+  public: auto operator=([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2) -> issue_869_0& ;
   public: [[nodiscard]] auto operator<=>([[maybe_unused]] issue_869_0 const& that) const& -> std::strong_ordering = default;
 public: issue_869_0([[maybe_unused]] issue_869_0 const& that);
 
@@ -556,10 +556,10 @@ int gi {0};
   auto issue_857_9::h() && -> void { static_cast<void>(f_inout(c));  }
 
 #line 257 "pure2-last-use.cpp2"
-  issue_869_0::issue_869_0([[maybe_unused]] cpp2::in<std::unique_ptr<int>> unnamed_param_2){}
+  issue_869_0::issue_869_0([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2){}
 #line 257 "pure2-last-use.cpp2"
-  auto issue_869_0::operator=([[maybe_unused]] cpp2::in<std::unique_ptr<int>> unnamed_param_2) -> issue_869_0& {
-                                                     return *this; }
+  auto issue_869_0::operator=([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2) -> issue_869_0& {
+                                                          return *this; }
 
 
   issue_869_0::issue_869_0([[maybe_unused]] issue_869_0 const& that){}

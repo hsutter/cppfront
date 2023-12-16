@@ -254,7 +254,7 @@ issue_857_9: @struct type = {
 }
 
 issue_869_0: @value type = {
-  operator=: (out this, _: std::unique_ptr<int>) = { }
+  operator=: (out this, move _: std::unique_ptr<int>) = { }
 }
 issue_869_1: @union type = {
   i: issue_869_0;
