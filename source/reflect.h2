@@ -31,10 +31,6 @@ meta: namespace = {
 
 compiler_services: @polymorphic_base @copyable type =
 {
-    //  Enable custom contracts on this object, to use .require
-    //
-    expects:(this, b, msg) = require(b, msg);
-
     //  Common data members
     //
     errors               : *std::vector<error_entry>;
@@ -88,7 +84,7 @@ compiler_services: @polymorphic_base @copyable type =
         inout this,
         copy source: std::string_view
     )
-        -> std::unique_ptr<statement_node>
+        -> (ret: std::unique_ptr<statement_node>)
     = {
         generated_lines.push_back( std::vector<source_line>() );
         lines := generated_lines.back()&;
@@ -126,10 +122,13 @@ compiler_services: @polymorphic_base @copyable type =
 
         //  Now parse this single declaration from
         //  the lexed tokens
-        return parser.parse_one_declaration(
-            tokens*.get_map().begin()*.second,
-            generated_tokens*
-        );
+        ret = parser.parse_one_declaration(
+                tokens*.get_map().begin()*.second,
+                generated_tokens*
+              );
+        if !ret {
+            error( "parse failed - the source string is not a valid statement:\n(source)$");
+        }
     }
 
     position: (virtual this)
@@ -155,9 +154,16 @@ compiler_services: @polymorphic_base @copyable type =
     = {
         message := msg as std::string;
         if !metafunction_name.empty() {
-            message = "while applying @" + metafunction_name + " - " + message;
+            message = "while applying @(metafunction_name)$ - (message)$";
         }
         _ = errors*.emplace_back( position(), message);
+    }
+
+    //  Enable custom contracts on this object
+    //
+    expects:(this, b, msg) = {
+        require(b, msg);
+        if !b { throw( std::runtime_error("  ==> programming bug found in metafunction @(metafunction_name)$ - precondition violation - see previous errors") ); }
     }
 }
 
@@ -389,11 +395,11 @@ function_declaration: @copyable type =
 
         stmt := parse_statement(source);
         if !(stmt as bool) {
-            error( std::string("cannot add an initializer that is not a valid statement: ") + source );
+            error( "cannot add an initializer that is not a valid statement");
             return;
         }
         require (n*.add_function_initializer(stmt),
-                 std::string("unexpected error while attempting to add initializer:\n") + source);
+                 std::string("unexpected error while attempting to add initializer"));
     }
 }
 
