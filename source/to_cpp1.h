@@ -1695,7 +1695,7 @@ public:
     //
     auto emit(
         unqualified_id_node const& n,
-        bool in_synthesized_multi_return = false,
+        int  synthesized_multi_return_size = 0,
         bool is_local_name = true,
         bool is_qualified = false,
         bool right_after_member_access = false
@@ -1703,6 +1703,8 @@ public:
         -> void
     {   STACKINSTR
         auto last_use = is_definite_last_use(n.identifier);
+
+        auto decl = sema.get_declaration_of(*n.identifier);
 
         bool add_forward =
             last_use
@@ -1713,7 +1715,12 @@ public:
         bool add_move =
             !add_forward
             && (
-                in_synthesized_multi_return
+                synthesized_multi_return_size > 1
+                || (
+                    synthesized_multi_return_size == 1
+                    && decl
+                    && !decl->initializer
+                    )
                 || (last_use && !suppress_move_from_last_use)
                 )
             && !in_non_rvalue_context.back()
@@ -1722,7 +1729,10 @@ public:
         //  Add `std::move(*this).` when implicitly moving a member on last use.
         //  This way, members of lvalue reference type won't be implicitly moved.
         bool add_this = false;
-        if (add_move)
+        if (
+            add_move
+            && synthesized_multi_return_size == 0
+            )
         {
             auto lookup = source_order_name_lookup(*n.identifier);
             if (lookup) {
@@ -1736,8 +1746,6 @@ public:
                 }
             }
         }
-
-        auto decl = sema.get_declaration_of(*n.identifier);
 
         if (
             add_move
@@ -1805,7 +1813,7 @@ public:
                 && !(*n.identifier == "that")
                 && decl
                 && (
-                    in_synthesized_multi_return
+                    synthesized_multi_return_size != 0
                     //  note pointer equality: if we're not in the actual declaration of n.identifier
                     || decl->identifier != n.identifier
                     )
@@ -1826,7 +1834,7 @@ public:
                 printer.print_cpp2(".value()", n.position());
             }
         }
-        else if (in_synthesized_multi_return) {
+        else if (synthesized_multi_return_size != 0) {
             printer.print_cpp2(".value()", n.position());
         }
 
@@ -2479,7 +2487,6 @@ public:
                 stmt += std::string(" { ");
             }
 
-            in_non_rvalue_context.push_back(parameters.size() == 1);
             for (bool first = true; auto& param : parameters) {
                 if (!first) {
                     stmt += ", ";
@@ -2488,10 +2495,9 @@ public:
                 assert(param->declaration->identifier);
 
                 printer.emit_to_string(&stmt);
-                emit(*param->declaration->identifier, true);
+                emit(*param->declaration->identifier, cpp2::unsafe_narrow<int>(parameters.size()));
                 printer.emit_to_string();
             }
-            in_non_rvalue_context.pop_back();
 
             if (std::ssize(parameters) > 1) {
                 stmt += std::string(" }");

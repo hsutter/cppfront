@@ -46,7 +46,7 @@ using g_ret = int;
     auto pred {[](auto const& e) mutable -> auto { return e == 1;  }}; 
     ri.value() = 42;
     std::move(pred)(ri.value());
-    return ri.value(); 
+    return std::move(ri.value()); 
 }
 
 [[nodiscard]] auto main() -> int{
