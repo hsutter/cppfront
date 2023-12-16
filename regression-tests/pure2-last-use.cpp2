@@ -160,6 +160,10 @@ issue_857_3: @struct type = {
   i: std::add_lvalue_reference_t<int> = gi;
   f: (move this) = _ = f_inout(i); // OK: The implicit `this` is moved, not `i`.
 }
+issue_857_6: @struct type = {
+  f: (move this) = _ = f_inout(i); // OK: The implicit `this` is moved, not `i`.
+  i: std::add_lvalue_reference_t<int> = gi;
+}
 
 issue_857_4: @struct type = {
    f: std::add_pointer_t<int()>;
