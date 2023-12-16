@@ -220,7 +220,7 @@ issue_857_4: @struct type = {
 }
 
 issue_857_5: @struct type = {
-  f: (move this) = _ = a;
+  f: (move this) = f_copy(a);
   a: std::unique_ptr<int>;
 }
 

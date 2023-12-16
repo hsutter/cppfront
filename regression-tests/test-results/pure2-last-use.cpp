@@ -454,7 +454,7 @@ int gi {0};
   }
 
 #line 223 "pure2-last-use.cpp2"
-  auto issue_857_5::f() && -> void { static_cast<void>(std::move(*this).a);  }
+  auto issue_857_5::f() && -> void { f_copy(std::move(*this).a);  }
 
 
 
