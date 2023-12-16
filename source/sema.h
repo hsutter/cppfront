@@ -80,15 +80,7 @@ struct declaration_sym {
     auto get_token() const
         -> token const*
     {
-        if (
-            declaration
-            && declaration->identifier
-            && declaration->identifier->identifier
-            )
-        {
-            return declaration->identifier->identifier;
-        }
-        return nullptr;
+        return identifier;
     }
 };
 
