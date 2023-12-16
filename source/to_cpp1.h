@@ -1737,10 +1737,16 @@ public:
             }
         }
 
+        auto decl = sema.get_declaration_of(*n.identifier);
+
         if (
             add_move
             && *(n.identifier - 1) == "return"
             && *(n.identifier + 1) == ";"
+            && (
+                !decl
+                || decl->initializer
+                )
             )
         {
             add_move = false;
@@ -1793,7 +1799,7 @@ public:
             && !in_parameter_list
             )
         {
-            if (auto decl = sema.get_declaration_of(*n.identifier);
+            if (
                 is_local_name
                 && !(*n.identifier == "this")
                 && !(*n.identifier == "that")

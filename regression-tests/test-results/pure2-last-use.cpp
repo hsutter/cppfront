@@ -291,6 +291,12 @@ using no_pessimizing_move_ret = std::unique_ptr<int>;
 #line 300 "pure2-last-use.cpp2"
 [[nodiscard]] auto no_pessimizing_move() -> no_pessimizing_move_ret;
 
+auto deferred_non_copyable_0() -> void;
+
+#line 308 "pure2-last-use.cpp2"
+[[nodiscard]] auto deferred_non_copyable_1() -> auto;
+
+#line 314 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -318,10 +324,10 @@ auto issue_350() -> void{
   cpp2::deferred_init<int> i; 
   if (true) {
     i.construct(1);
-    return i.value(); 
+    return std::move(i.value()); 
   }
   i.construct(2);
-  return i.value(); 
+  return std::move(i.value()); 
 }
 
 [[nodiscard]] auto issue_440_1() -> issue_440_1_ret{
@@ -563,9 +569,21 @@ auto enum_1() -> void{
                                                                 std::unique_ptr<int> ret {};
 #line 301 "pure2-last-use.cpp2"
 return ret; }
+auto deferred_non_copyable_0() -> void{
+  cpp2::deferred_init<std::unique_ptr<int>> p; 
+  p.construct();
+  f_copy(std::move(p.value()));
+}
+
+[[nodiscard]] auto deferred_non_copyable_1() -> auto{
+  cpp2::deferred_init<std::unique_ptr<int>> p; 
+  p.construct();
+  return std::move(p.value()); 
+}
+
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 303 "pure2-last-use.cpp2"
+#line 315 "pure2-last-use.cpp2"
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());
   enum_0();
