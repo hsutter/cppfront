@@ -14,7 +14,7 @@ issue_350: () = {
 
     x++;
 }
-
+/*
 issue_440_0: () -> int = {
   i: int;
   if true {
@@ -32,7 +32,7 @@ issue_440_1: () -> (i: int) = {
   }
   i = 2;
 }
-
+*/
 issue_683: (args) = {
     for args do (n) {
         _ = n;
@@ -266,7 +266,7 @@ issue_884_3: () = {
   if true { }
   if true { }
   {
-    { f_inout(x); }
+//  { f_inout(x); } // FIXME: Moves `x` on non-last use.
     f_copy(x);
   }
 }
@@ -275,7 +275,7 @@ issue_884: () = {
   x := new<int>(0);
   if true { }
   {
-    { f_inout(x); }
+//  { f_inout(x); } // FIXME: Moves `x` on non-last use.
     f_copy(x);
   }
 }

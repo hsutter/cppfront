@@ -140,7 +140,7 @@ struct selection_sym {
 struct compound_sym {
     bool start = false;
     compound_statement_node const* compound = {};
-    enum kind { is_scope, is_implicit_scope, is_true, is_false } kind_ = is_scope;
+    enum kind { is_scope, is_true, is_false } kind_ = is_scope;
 
     compound_sym(
         bool                           s,
@@ -1032,10 +1032,7 @@ private:
                 auto const& sym = std::get<symbol::active::compound>(symbols[pos].sym);
 
                 //  If we're in a selection
-                if (
-                    std::ssize(selection_stack) > 0
-                    && sym.kind_ != compound_sym::kind::is_implicit_scope
-                    )
+                if (std::ssize(selection_stack) > 0)
                 {
                     //  If this is a compound start with the current selection's depth
                     //  plus one, it's the start of one of the branches of that selection
@@ -1980,12 +1977,7 @@ public:
                 && active_selections.back()->false_branch.get() == &n
                 )
             {
-                if (active_selections.back()->has_source_false_branch) {
-                    kind = compound_sym::is_false;
-                }
-                else {
-                    kind = compound_sym::is_implicit_scope;
-                }
+                kind = compound_sym::is_false;
             }
         }
         return kind;

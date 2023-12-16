@@ -4186,7 +4186,7 @@ auto pretty_print_visualize(is_as_expression_node const& n, int indent)
     -> std::string;
 auto pretty_print_visualize(id_expression_node const& n, int indent)
     -> std::string;
-auto pretty_print_visualize(compound_statement_node const& n, int indent, bool is_implicit_scope = false)
+auto pretty_print_visualize(compound_statement_node const& n, int indent)
     -> std::string;
 auto pretty_print_visualize(selection_statement_node const& n, int indent)
     -> std::string;
@@ -4506,23 +4506,17 @@ auto pretty_print_visualize(id_expression_node const& n, int indent)
 }
 
 
-auto pretty_print_visualize(compound_statement_node const& n, int indent, bool is_implicit_scope)
+auto pretty_print_visualize(compound_statement_node const& n, int indent)
     -> std::string
 {
-    auto ret = std::string{};
-
-    if (!is_implicit_scope) {
-        ret += std::string{"\n"} + pre(indent) + "{";
-    }
+    auto ret = std::string{"\n"} + pre(indent) + "{";
 
     for (auto& stmt : n.statements) {
         assert (stmt);
         ret += pretty_print_visualize(*stmt, indent+1);
     }
 
-    if (!is_implicit_scope) {
-        ret += std::string{"\n"} + pre(indent) + "}";
-    }
+    ret += std::string{"\n"} + pre(indent) + "}";
 
     return ret;
 }
@@ -4547,8 +4541,6 @@ auto pretty_print_visualize(selection_statement_node const& n, int indent)
     if (n.has_source_false_branch) {
         ret += std::string{"\n"} + pre(indent) + "else "
             + pretty_print_visualize(*n.false_branch, indent);
-    } else if (!n.false_branch->statements.empty()) {
-        ret += pretty_print_visualize(*n.false_branch, indent, true);
     }
 
     return ret;
@@ -7329,7 +7321,6 @@ private:
             next();
         }
 
-        auto statements = &n->statements;
         while (
             curr().type() != lexeme::RightBrace
             && (
@@ -7350,16 +7341,7 @@ private:
                 pos = start_pos;    // backtrack
                 return {};
             }
-            statements->push_back( std::move(s) );
-
-            //  Add statements to the most recent implicit else branch
-            if (auto selection = statements->back()->get_if<selection_statement_node>();
-                selection
-                && !selection->has_source_false_branch
-                )
-            {
-                statements = &selection->false_branch->statements;
-            }
+            n->statements.push_back( std::move(s) );
         }
 
         if (is_braced) {

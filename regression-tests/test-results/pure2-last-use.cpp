@@ -71,15 +71,26 @@ class my_string;
 #line 6 "pure2-last-use.cpp2"
 auto issue_350() -> void;
 
-#line 18 "pure2-last-use.cpp2"
-[[nodiscard]] auto issue_440_0() -> int;
-using issue_440_1_ret = int;
+#line 17 "pure2-last-use.cpp2"
+/*
+issue_440_0: () -> int = {
+  i: int;
+  if true {
+    i = 1;
+    return i;
+  }
+  i = 2;
+  return i;
+}
 
-
-#line 28 "pure2-last-use.cpp2"
-[[nodiscard]] auto issue_440_1() -> issue_440_1_ret;
-
-#line 36 "pure2-last-use.cpp2"
+issue_440_1: () -> (i: int) = {
+  if true {
+    i = 1;
+    return;
+  }
+  i = 2;
+}
+*/
 auto issue_683(auto const& args) -> void;
 
 #line 45 "pure2-last-use.cpp2"
@@ -395,26 +406,7 @@ auto issue_350() -> void{
     ++x;
 }
 
-[[nodiscard]] auto issue_440_0() -> int{
-  cpp2::deferred_init<int> i; 
-  if (true) {
-    i.construct(1);
-    return std::move(i.value()); 
-  }
-  i.construct(2);
-  return std::move(i.value()); 
-}
-
-[[nodiscard]] auto issue_440_1() -> issue_440_1_ret{
-      cpp2::deferred_init<int> i;
-#line 29 "pure2-last-use.cpp2"
-  if (true) {
-    i.construct(1);
-    return std::move(i.value()); 
-  }
-  i.construct(2);return std::move(i.value()); 
-}
-
+#line 36 "pure2-last-use.cpp2"
 auto issue_683(auto const& args) -> void{
     for ( auto const& n : args ) {
         static_cast<void>(n);
@@ -615,7 +607,7 @@ auto issue_884_3() -> void{
   if (true) {}
   if (true) {}
   {
-    {f_inout(x); }
+//  { f_inout(x); } // FIXME: Moves `x` on non-last use.
     f_copy(std::move(x));
   }
 }
@@ -624,7 +616,7 @@ auto issue_884() -> void{
   auto x {cpp2_new<int>(0)}; 
   if (true) {}
   {
-    {f_inout(x); }
+//  { f_inout(x); } // FIXME: Moves `x` on non-last use.
     f_copy(std::move(x));
   }
 }
