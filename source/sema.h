@@ -341,25 +341,25 @@ public:
     }
 
     //  Get the declaration of t within the same named function or beyond it
-    //  optionally up to the type scope of a this parameter
+    //  For a this parameter, optionally include uses of implicit this
     //
     auto get_declaration_of(
         token const* t,
         bool         look_beyond_current_function = false,
-        bool         look_up_to_type              = false
+        bool         include_implicit_this        = false
     ) const
         -> declaration_sym const*
     {
         if (!t) {
             return {};
         }
-        return get_declaration_of(*t, look_beyond_current_function, look_up_to_type);
+        return get_declaration_of(*t, look_beyond_current_function, include_implicit_this);
     }
 
     auto get_declaration_of(
         token const& t,
         bool         look_beyond_current_function = false,
-        bool         look_up_to_type              = false
+        bool         include_implicit_this        = false
     ) const
         -> declaration_sym const*
     {
@@ -407,35 +407,10 @@ public:
                 if (
                     decl.declaration->type.index() == declaration_node::a_function
                     && decl.declaration->identifier
+                    && !look_beyond_current_function
                     )
                 {
-                    if (!look_beyond_current_function) {
-                        return nullptr;
-                    }
-                    else if (look_up_to_type)
-                    {
-                        //  Data members declared later in source code
-                        //  need to be manually looked up while populating the symbols.
-                        if (
-                            decl.declaration->has_move_parameter_named("this")
-                            && decl.declaration->parent_is_type()
-                            && decl.declaration->my_statement
-                            && decl.declaration->my_statement->compound_parent
-                            && std::any_of(
-                                   decl.declaration->my_statement->compound_parent->statements.begin(),
-                                   decl.declaration->my_statement->compound_parent->statements.end(),
-                                   [&t](std::unique_ptr<statement_node> const& s) {
-                                       return s
-                                              && s->statement.index() == statement_node::declaration
-                                              && std::get<statement_node::declaration>(s->statement)->identifier
-                                              && std::get<statement_node::declaration>(s->statement)->identifier->to_string() == t;
-                                   })
-                            )
-                        {
-                            return &decl;
-                        }
-                        return nullptr;
-                    }
+                    return nullptr;
                 }
 
                 //  If the name matches, this is it
@@ -446,6 +421,39 @@ public:
                 {
                     return &decl;
                 }
+
+                //  Data members declared later in source code
+                //  need to be manually looked up while populating the symbols.
+                if (
+                    include_implicit_this
+                    && decl.identifier
+                    && *decl.identifier == "this"
+                    )
+                {
+                    if (auto n = decl.declaration;
+                        decl.parameter
+                        && decl.parameter->pass == passing_style::move
+                        && n
+                        && n->parent_is_function()
+                        && (n = n->parent_declaration)->parent_is_type()
+                        && n->my_statement
+                        && n->my_statement->compound_parent
+                        && std::any_of(
+                               n->my_statement->compound_parent->statements.begin(),
+                               n->my_statement->compound_parent->statements.end(),
+                               [&](std::unique_ptr<statement_node> const& s) {
+                                   return s
+                                          && s->statement.index() == statement_node::declaration
+                                          && (n = &*std::get<statement_node::declaration>(s->statement))->identifier
+                                          && n->identifier->to_string() == t;
+                               })
+                        )
+                    {
+                        return &decl;
+                    }
+                    return nullptr;
+                }
+
                 depth = i->depth;
             }
         }
@@ -735,7 +743,8 @@ private:
                         && [&]() {
                                auto decl = get_declaration_of(sym.get_token(), true, true);
                                return decl
-                                      && decl->declaration->parent_is_type();
+                                      && decl->identifier
+                                      && *decl->identifier == "this";
                            }()
                         )
                     )
@@ -1917,8 +1926,7 @@ public:
                 //  or it's a 'copy' parameter (but to be a use it must be after
                 //  the declaration, not the token in the decl's name itself)
                 //  or it's a type-scope variable in a member function.
-                auto look_up_to_type = !started_this_member_access;
-                if (auto decl = get_declaration_of(t, look_up_to_type, look_up_to_type);
+                if (auto decl = get_declaration_of(t, false, !started_this_member_access);
                     decl
                     && decl->declaration->name() != &t
                     )
