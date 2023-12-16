@@ -86,6 +86,8 @@ compiler_services: @polymorphic_base @copyable type =
     )
         -> (ret: std::unique_ptr<statement_node>)
     = {
+        original_source := source;
+
         generated_lines.push_back( std::vector<source_line>() );
         lines := generated_lines.back()&;
 
@@ -127,7 +129,7 @@ compiler_services: @polymorphic_base @copyable type =
                 generated_tokens*
               );
         if !ret {
-            error( "parse failed - the source string is not a valid statement:\n(source)$");
+            error( "parse failed - the source string is not a valid statement:\n(original_source)$");
         }
     }
 
