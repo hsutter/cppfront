@@ -3591,8 +3591,9 @@ auto function_type_node::has_postconditions() const
     -> bool
 {
     return
-        std::ranges::find_if(
-            contracts,
+        std::find_if(
+            contracts.begin(),
+            contracts.end(),
             [](auto const& e){ return *e->kind == "post"; }
         ) != contracts.end();
 }
