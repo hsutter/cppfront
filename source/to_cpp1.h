@@ -1698,7 +1698,7 @@ public:
         int  synthesized_multi_return_size = 0,
         bool is_local_name = true,
         bool is_qualified = false,
-        bool right_after_member_access = false
+        bool is_class_member_access = false
     )
         -> void
     {   STACKINSTR
@@ -1710,7 +1710,7 @@ public:
             last_use
             && last_use->is_forward
             && !in_non_rvalue_context.back()
-            && !right_after_member_access;
+            && !is_class_member_access;
 
         bool add_move =
             !add_forward
@@ -1724,7 +1724,7 @@ public:
                 || (last_use && !suppress_move_from_last_use)
                 )
             && !in_non_rvalue_context.back()
-            && !right_after_member_access;
+            && !is_class_member_access;
 
         //  Add `std::move(*this).` when implicitly moving a member on last use.
         //  This way, members of lvalue reference type won't be implicitly moved.
