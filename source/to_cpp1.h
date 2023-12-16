@@ -1764,12 +1764,12 @@ public:
 
         if (add_move) {
             printer.print_cpp2("std::move(", n.position());
-            if (add_this) {
-                printer.print_cpp2("*this).", n.position());
-            }
         }
         if (add_forward) {
             printer.print_cpp2("CPP2_FORWARD(", {n.position().lineno, n.position().colno - 8});
+        }
+        if (add_this) {
+            printer.print_cpp2("*this).", n.position());
         }
 
         assert(n.identifier);
