@@ -1691,7 +1691,7 @@ public:
         inside_returns_list = false;
     }
 
-    auto prepare_for_loop_body(iteration_statement_node const &n) -> void
+    auto start(loop_body_tag const &n, int) -> void
     {
         if (*n.identifier == "for") {
             just_entered_for = true;

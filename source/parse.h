@@ -4028,6 +4028,7 @@ auto primary_expression_node::visit(auto& v, int depth)
 
 
 struct next_expression_tag { };
+struct loop_body_tag { token const* identifier; };
 
 auto iteration_statement_node::visit(auto& v, int depth)
     -> void
@@ -4054,7 +4055,7 @@ auto iteration_statement_node::visit(auto& v, int depth)
     else {
         assert(range && parameter && body);
         range->visit(v, depth+1);
-        v.prepare_for_loop_body(*this);
+        v.start(loop_body_tag{identifier}, depth);
         parameter->visit(v, depth+1);
         body->visit(v, depth+1);
     }
@@ -9140,11 +9141,6 @@ public:
     auto end(auto const&, int) -> void
     {
         //  Ignore other node types
-    }
-
-    auto prepare_for_loop_body(iteration_statement_node const &n) -> void 
-    {
-        // only important for sema
     }
 };
 
