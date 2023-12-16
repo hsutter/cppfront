@@ -219,6 +219,11 @@ issue_857_4: @struct type = {
 ///*i3*/ }
 }
 
+issue_857_5: @struct type = {
+  f: (move this) = _ = a;
+  a: std::unique_ptr<int>;
+}
+
 issue_869: @union type = {
   i: int;
 }

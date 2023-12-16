@@ -349,6 +349,7 @@ public:
     }
 
     //  Get the declaration of t within the same named function or beyond it
+    //  optionally up to the variables in the type scope of a this parameter
     //
     auto get_declaration_of(
         token const* t,
@@ -399,7 +400,6 @@ public:
         //  and is in the same function
         std::ranges::advance(i, -int(i->position() > t.position()), symbols.cbegin());
         std::ranges::advance(i, 1, symbols.cend());
-        auto reached_type = false;
         while (std::ranges::advance(i, -1, symbols.begin()) == 0)
         {
             if (
@@ -420,15 +420,29 @@ public:
                     if (!look_beyond_current_function) {
                         return nullptr;
                     }
-                    else if (
-                        look_up_to_type
-                        && !reached_type
-                        )
+                    else if (look_up_to_type)
                     {
-                        if (!decl.declaration->has_move_parameter_named("this")) {
-                            return nullptr;
+                        //  Data members declared later in source code
+                        //  need to be manually looked up while populating the symbols.
+                        if (
+                            decl.declaration->has_move_parameter_named("this")
+                            && decl.declaration->parent_is_type()
+                            && decl.declaration->my_statement
+                            && decl.declaration->my_statement->compound_parent
+                            && std::any_of(
+                                   decl.declaration->my_statement->compound_parent->statements.begin(),
+                                   decl.declaration->my_statement->compound_parent->statements.end(),
+                                   [&t](std::unique_ptr<statement_node> const& s) {
+                                       return s
+                                              && s->statement.index() == statement_node::declaration
+                                              && std::get<statement_node::declaration>(s->statement)->identifier
+                                              && std::get<statement_node::declaration>(s->statement)->identifier->to_string() == t;
+                                   })
+                            )
+                        {
+                            return &decl;
                         }
-                        reached_type = true;
+                        return nullptr;
                     }
                 }
 
