@@ -341,7 +341,7 @@ public:
     }
 
     //  Get the declaration of t within the same named function or beyond it
-    //  optionally up to the variables in the type scope of a this parameter
+    //  optionally up to the type scope of a this parameter
     //
     auto get_declaration_of(
         token const* t,
@@ -579,7 +579,7 @@ public:
         //  Helpers for readability
 
         //  It's an uninitialized variable (incl. named return values) if it's
-        //  a non-namespace-scope non-parameter object with no initializer
+        //  a non-namespace-or-type-scope non-parameter object with no initializer
         //
         auto is_uninitialized_variable_decl = [&](symbol const& s)
             -> declaration_sym const*
@@ -670,7 +670,7 @@ public:
     }
 
 private:
-    //  Find the definite last uses for local *id starting at the
+    //  Find the definite last uses for local variable *id starting at the
     //  given position and depth in the symbol/scope table
     //
     auto find_definite_last_uses(
@@ -727,7 +727,7 @@ private:
                 auto const& sym = std::get<symbol::active::identifier>(symbols[i].sym);
                 assert (sym.identifier);
 
-                //  If we find a use of this identifier
+                //  If we find a use of the identifier or possibly implicit 'this'
                 if (
                     *sym.identifier == *id
                     || (
