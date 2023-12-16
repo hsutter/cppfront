@@ -1911,12 +1911,12 @@ public:
     auto emit(
         id_expression_node const& n,
         bool                      is_local_name          = true,
-        bool                      right_after_member_access = false
+        bool                      is_class_member_access = false
     )
         -> void
     {   STACKINSTR
         try_emit<id_expression_node::qualified  >(n.id);
-        try_emit<id_expression_node::unqualified>(n.id, false, is_local_name, false, right_after_member_access);
+        try_emit<id_expression_node::unqualified>(n.id, false, is_local_name, false, is_class_member_access);
     }
 
 
