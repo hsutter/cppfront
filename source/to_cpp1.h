@@ -5444,7 +5444,7 @@ public:
         auto guard0 = stack_value(having_signature_emitted, &n);
         auto guard1 = stack_element(current_declarations, &n);
         current_names.push_back(&n);
-        auto guard2 = stack_size_if(current_names, n.is_function());
+        auto guard2 = stack_size_if(current_names, !n.is_namespace());
 
         //  Handle aliases
 
