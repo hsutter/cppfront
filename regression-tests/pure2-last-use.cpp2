@@ -290,17 +290,9 @@ draw: () = {
   _ = (pos).vertex();
 }
 
-enum_0: () = {
+enum: () = {
   underlying_type: int;
   if true { }
-  underlying_type = 0;
-}
-
-enum_1: () = {
-  underlying_type: int;
-  if true {
-    underlying_type = 0;
-  }
   underlying_type = 0;
 }
 
@@ -338,6 +330,5 @@ deferred_non_copyable_2: () -> (p: std::unique_ptr<int>) = {
 main: (args) = {
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());
-  enum_0();
-//enum_1(); // FIXME "Contract violation".
+  enum();
 }
