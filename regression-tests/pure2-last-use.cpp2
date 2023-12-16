@@ -241,6 +241,18 @@ issue_857_7: @struct type = {
   F: (move this) = _ = f_inout(A);
 }
 
+issue_857_8: @struct type = {
+  a: std::unique_ptr<int>;
+  b: move_only_function<int()>;
+  c: std::add_lvalue_reference_t<int>;
+}
+issue_857_9: @struct type = {
+  this: issue_857_8;
+//f: (move this) = f_copy(a); // Error: Cppfront limitation:
+//g: (move this) = b();       // <https://eel.is/c++draft/class.mfct.non.static#2.sentence-1>.
+  h: (move this) = _ = f_inout(c);
+}
+
 issue_869_0: @value type = {
   operator=: (out this, _: std::unique_ptr<int>) = { }
 }

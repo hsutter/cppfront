@@ -41,17 +41,25 @@ class issue_857_7;
   
 
 #line 244 "pure2-last-use.cpp2"
+class issue_857_8;
+  
+
+#line 249 "pure2-last-use.cpp2"
+class issue_857_9;
+  
+
+#line 256 "pure2-last-use.cpp2"
 class issue_869_0;
   
 
 class issue_869_1;
   
 
-#line 299 "pure2-last-use.cpp2"
+#line 311 "pure2-last-use.cpp2"
 class cpp2_union;
   
 
-#line 307 "pure2-last-use.cpp2"
+#line 319 "pure2-last-use.cpp2"
 class my_string;
   
 
@@ -264,9 +272,21 @@ class issue_857_7: public issue_857_7_A_as_base, public std::monostate {
   public: auto F() && -> void;
 };
 
+class issue_857_8 {
+  public: std::unique_ptr<int> a; 
+  public: move_only_function<int()> b; 
+  public: std::add_lvalue_reference_t<int> c; 
+};
+class issue_857_9: public issue_857_8 {
+
+//f: (move this) = f_copy(a); // Error: Cppfront limitation:
+//g: (move this) = b();       // <https://eel.is/c++draft/class.mfct.non.static#2.sentence-1>.
+  public: auto h() && -> void;
+};
+
 class issue_869_0 {
   public: explicit issue_869_0([[maybe_unused]] cpp2::in<std::unique_ptr<int>> unnamed_param_2);
-#line 245 "pure2-last-use.cpp2"
+#line 257 "pure2-last-use.cpp2"
   public: auto operator=([[maybe_unused]] cpp2::in<std::unique_ptr<int>> unnamed_param_2) -> issue_869_0& ;
   public: [[nodiscard]] auto operator<=>([[maybe_unused]] issue_869_0 const& that) const& -> std::strong_ordering = default;
 public: issue_869_0([[maybe_unused]] issue_869_0 const& that);
@@ -276,7 +296,7 @@ public: issue_869_0([[maybe_unused]] issue_869_0&& that) noexcept;
 public: auto operator=([[maybe_unused]] issue_869_0&& that) noexcept -> issue_869_0& ;
 public: explicit issue_869_0();
 
-#line 246 "pure2-last-use.cpp2"
+#line 258 "pure2-last-use.cpp2"
 };
 class issue_869_1 {
 private: std::aligned_storage_t<cpp2::max(sizeof(issue_869_0))> _storage {}; private: cpp2::i8 _discriminator {-1}; public: [[nodiscard]] auto is_i() const& -> bool;
@@ -293,34 +313,34 @@ public: issue_869_1(issue_869_1&& that) noexcept;
 public: auto operator=(issue_869_1 const& that) -> issue_869_1& ;
 public: auto operator=(issue_869_1&& that) noexcept -> issue_869_1& ;
 
-#line 249 "pure2-last-use.cpp2"
+#line 261 "pure2-last-use.cpp2"
 };
 
 using issue_869_2_ret = issue_869_1;
 [[nodiscard]] auto issue_869_2() -> issue_869_2_ret;
 
-#line 252 "pure2-last-use.cpp2"
+#line 264 "pure2-last-use.cpp2"
 auto issue_884_3() -> void;
 
-#line 262 "pure2-last-use.cpp2"
+#line 274 "pure2-last-use.cpp2"
 auto issue_884() -> void;
 
-#line 271 "pure2-last-use.cpp2"
+#line 283 "pure2-last-use.cpp2"
 auto issue_884_2() -> void;
 
-#line 280 "pure2-last-use.cpp2"
+#line 292 "pure2-last-use.cpp2"
 auto issue_888_0(std::string r, int size) -> void;
 
-#line 283 "pure2-last-use.cpp2"
+#line 295 "pure2-last-use.cpp2"
 auto issue_888_1([[maybe_unused]] std::string unnamed_param_1, move_only_function<int(int)> size) -> void;
 
-#line 287 "pure2-last-use.cpp2"
+#line 299 "pure2-last-use.cpp2"
 auto draw() -> void;
 
-#line 293 "pure2-last-use.cpp2"
+#line 305 "pure2-last-use.cpp2"
 auto cpp2_enum() -> void;
 
-#line 299 "pure2-last-use.cpp2"
+#line 311 "pure2-last-use.cpp2"
 class cpp2_union {
   public: auto destroy() & -> void;
   public: ~cpp2_union() noexcept;
@@ -329,7 +349,7 @@ class cpp2_union {
   public: auto operator=(cpp2_union const&) -> void = delete;
 
 
-#line 305 "pure2-last-use.cpp2"
+#line 317 "pure2-last-use.cpp2"
 };
 
 class my_string {
@@ -338,20 +358,20 @@ class my_string {
 };
 
 using no_pessimizing_move_ret = std::unique_ptr<int>;
-#line 312 "pure2-last-use.cpp2"
+#line 324 "pure2-last-use.cpp2"
 [[nodiscard]] auto no_pessimizing_move() -> no_pessimizing_move_ret;
 
 auto deferred_non_copyable_0() -> void;
 
-#line 320 "pure2-last-use.cpp2"
+#line 332 "pure2-last-use.cpp2"
 [[nodiscard]] auto deferred_non_copyable_1() -> auto;
 using deferred_non_copyable_2_ret = std::unique_ptr<int>;
 
 
-#line 326 "pure2-last-use.cpp2"
+#line 338 "pure2-last-use.cpp2"
 [[nodiscard]] auto deferred_non_copyable_2() -> deferred_non_copyable_2_ret;
 
-#line 330 "pure2-last-use.cpp2"
+#line 342 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -532,9 +552,12 @@ int gi {0};
 #line 241 "pure2-last-use.cpp2"
   auto issue_857_7::F() && -> void { static_cast<void>(f_inout(std::move(*this).A));  }
 
-#line 245 "pure2-last-use.cpp2"
+#line 253 "pure2-last-use.cpp2"
+  auto issue_857_9::h() && -> void { static_cast<void>(f_inout(c));  }
+
+#line 257 "pure2-last-use.cpp2"
   issue_869_0::issue_869_0([[maybe_unused]] cpp2::in<std::unique_ptr<int>> unnamed_param_2){}
-#line 245 "pure2-last-use.cpp2"
+#line 257 "pure2-last-use.cpp2"
   auto issue_869_0::operator=([[maybe_unused]] cpp2::in<std::unique_ptr<int>> unnamed_param_2) -> issue_869_0& {
                                                      return *this; }
 
@@ -582,10 +605,10 @@ issue_869_1::issue_869_1(issue_869_1 const& that)
   if (CPP2_UFCS(is_i)(std::move(that))) {set_i(CPP2_UFCS(i)(std::move(that)));}
         return *this;
   }
-#line 250 "pure2-last-use.cpp2"
+#line 262 "pure2-last-use.cpp2"
 [[nodiscard]] auto issue_869_2() -> issue_869_2_ret{
                                                issue_869_1 res {}; CPP2_UFCS(set_i)(res, cpp2_new<int>(0));
-#line 251 "pure2-last-use.cpp2"
+#line 263 "pure2-last-use.cpp2"
 return res; }
 auto issue_884_3() -> void{
   auto x {cpp2_new<int>(0)}; 
@@ -634,17 +657,17 @@ auto cpp2_enum() -> void{
   underlying_type.construct(0);
 }
 
-#line 300 "pure2-last-use.cpp2"
+#line 312 "pure2-last-use.cpp2"
   auto cpp2_union::destroy() & -> void{}
   cpp2_union::~cpp2_union() noexcept{
     destroy();
     static_cast<void>(std::move((*this)));
   }
 
-#line 312 "pure2-last-use.cpp2"
+#line 324 "pure2-last-use.cpp2"
 [[nodiscard]] auto no_pessimizing_move() -> no_pessimizing_move_ret{
                                                                 std::unique_ptr<int> ret {};
-#line 313 "pure2-last-use.cpp2"
+#line 325 "pure2-last-use.cpp2"
 return ret; }
 auto deferred_non_copyable_0() -> void{
   cpp2::deferred_init<std::unique_ptr<int>> p; 
@@ -660,13 +683,13 @@ auto deferred_non_copyable_0() -> void{
 
 [[nodiscard]] auto deferred_non_copyable_2() -> deferred_non_copyable_2_ret{
       cpp2::deferred_init<std::unique_ptr<int>> p;
-#line 327 "pure2-last-use.cpp2"
+#line 339 "pure2-last-use.cpp2"
   p.construct();
 return std::move(p.value()); }
 
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 331 "pure2-last-use.cpp2"
+#line 343 "pure2-last-use.cpp2"
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());
   cpp2_enum();
