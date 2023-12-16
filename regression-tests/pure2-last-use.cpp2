@@ -234,9 +234,13 @@ issue_857_7: @struct type = {
   F: (move this) = _ = f_inout(A);
 }
 
-issue_869: @union type = {
-  i: int;
+issue_869_0: @value type = {
+  operator=: (out this, _: std::unique_ptr<int>) = { }
 }
+issue_869_1: @union type = {
+  i: issue_869_0;
+}
+issue_869_2: () -> (res: issue_869_1 = ()) = { res.set_i(new<int>(0)); }
 
 issue_884_3: () = {
   x := new<int>(0);
