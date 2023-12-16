@@ -2349,6 +2349,9 @@ struct function_type_node
         return false;
     }
 
+    auto first_parameter_name() const
+        -> std::string;
+
     auto nth_parameter_type_name(int n) const
         -> std::string;
 
@@ -2857,7 +2860,8 @@ public:
         return false;
     }
 
-    auto is_not_a_copyable_type() const
+    //  Do we know that this cannot be a copy constructible type?
+    auto cannot_be_a_copy_constructible_type() const
         -> bool
     {
         //  If we're not a type, we're not a copyable type
@@ -2865,18 +2869,19 @@ public:
             return true;
         }
 
-        //  If we're letting Cpp1 generate SMFs, we're likely copyable
+        //  Else if we're letting Cpp1 generate SMFs, we're likely copyable
         if (!member_function_generation) {
             return false;
         }
 
-        //  If we have a copy constructor, we're copyable
+        //  Else if we have a copy constructor, we're copyable
         for (auto& decl : get_type_scope_declarations())
         if  (decl->is_constructor_with_that())
         {
             return false;
         }
 
+        //  Else there can't be a copy constructor
         return true;
     }
 
@@ -3457,6 +3462,16 @@ public:
         return false;
     }
 
+    auto first_parameter_name() const
+        -> std::string
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->first_parameter_name();
+        }
+        //  else
+        return "";
+    }
+
     auto is_binary_comparison_function() const
         -> bool
     {
@@ -3579,6 +3594,18 @@ auto parameter_declaration_node::has_name(std::string_view s) const
 }
 
 
+auto function_type_node::first_parameter_name() const
+    -> std::string
+{
+    if (std::ssize(parameters->parameters) > 0)
+    {
+        assert (parameters->parameters[0]->declaration->name());
+        return parameters->parameters[0]->declaration->name()->to_string();
+    }
+    //  Else
+    return "";
+}
+
 auto function_type_node::nth_parameter_type_name(int n) const
     -> std::string
 {
@@ -3595,8 +3622,9 @@ auto function_type_node::has_postconditions() const
     -> bool
 {
     return
-        std::ranges::find_if(
-            contracts,
+        std::find_if(
+            contracts.begin(),
+            contracts.end(),
             [](auto const& e){ return *e->kind == "post"; }
         ) != contracts.end();
 }
@@ -4032,6 +4060,7 @@ auto primary_expression_node::visit(auto& v, int depth)
 
 
 struct next_expression_tag { };
+struct loop_body_tag { token const* identifier; };
 
 auto iteration_statement_node::visit(auto& v, int depth)
     -> void
@@ -4058,6 +4087,7 @@ auto iteration_statement_node::visit(auto& v, int depth)
     else {
         assert(range && parameter && body);
         range->visit(v, depth+1);
+        v.start(loop_body_tag{identifier}, depth);
         parameter->visit(v, depth+1);
         body->visit(v, depth+1);
     }
@@ -5516,6 +5546,7 @@ private:
                 !decl->has_name()
                 && "ICE: declaration should have been unnamed"
             );
+
             if (auto obj = std::get_if<declaration_node::an_object>(&decl->type)) {
                 if ((*obj)->is_wildcard()) {
                     error("an unnamed object at expression scope currently cannot have a deduced type (the reason to create an unnamed object is typically to create a temporary of a named type)");
@@ -5540,22 +5571,28 @@ private:
                     next();
                     return {};
                 }
-                if (
-                    peek(-1) && peek(-1)->type() != lexeme::RightBrace  // it is short function syntax
-                    && curr().type() != lexeme::LeftParen               // not imediatelly called
-                    && curr().type() != lexeme::RightParen              // not as a last argument to function
-                    && curr().type() != lexeme::Comma                   // not as first or in-the-middle, function argument
-                ) {
-                    // this is a fix for a short function syntax that should have double semicolon used
-                    // (check comment in expression_statement(bool semicolon_required))
-                    // We simulate double semicolon by moving back to single semicolon.
-                    next(-1);
-                }
             }
             else {
                 error("(temporary alpha limitation) an unnamed declaration at expression scope must be a function or an object");
                 next();
                 return {};
+            }
+
+            if (
+                peek(-1) && peek(-1)->type() != lexeme::RightBrace  // it is not a braced function expression
+                && curr().type() != lexeme::LeftParen               // not imediatelly called
+                && curr().type() != lexeme::RightParen              // not as a last argument to function
+                && curr().type() != lexeme::Comma                   // not as first or in-the-middle, function argument
+                && curr().type() != lexeme::Greater                 // not as the last argument to template
+                && curr().type() != lexeme::RightBracket            // not as the last index argument
+                && curr() != "is"                                   // not as the argument to is
+                && curr() != "as"                                   // not as the argument to as
+                && curr() != "do"                                   // not as `for`'s `next`.
+            ) {
+                // this is a fix for a short function syntax that should have double semicolon used
+                // (check comment in expression_statement(bool semicolon_required))
+                // We simulate double semicolon by moving back to single semicolon.
+                next(-1);
             }
 
             n->expr = std::move(decl);

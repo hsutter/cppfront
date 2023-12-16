@@ -342,6 +342,7 @@ function_declaration: @copyable type =
     has_in_parameter_named       : (this, s: std::string_view) -> bool = n*.has_in_parameter_named(s);
     has_out_parameter_named      : (this, s: std::string_view) -> bool = n*.has_out_parameter_named(s);
     has_move_parameter_named     : (this, s: std::string_view) -> bool = n*.has_move_parameter_named(s);
+    first_parameter_name         : (this) -> std::string               = n*.first_parameter_name();
 
     has_parameter_with_name_and_pass: (this, s: std::string_view, pass: passing_style) -> bool
                                                   = n*.has_parameter_with_name_and_pass(s, pass);
@@ -984,6 +985,9 @@ basic_enum: (
         mo.mark_for_removal_from_enclosing_type();
     }
 
+    t.require( !enumerators.empty(),
+        "an enumeration must contain at least one enumerator value");
+
     //  Compute the default underlying type, if it wasn't explicitly specified
     if underlying_type == ""
     {
@@ -1031,18 +1035,21 @@ basic_enum: (
 
     t.remove_marked_members();
 
-    //  Generate all the common material: value and common functions
-    t.add_member( "    _value            : (underlying_type)$;");
-    t.add_member( "    private operator= : (implicit out this, _val: i64) == _value = cpp2::unsafe_narrow<(underlying_type)$>(_val);");
-    t.add_member( "    get_raw_value     : (this) -> (underlying_type)$ == _value;");
-    t.add_member( "    operator=         : (out this, that) == { }");
-    t.add_member( "    operator<=>       : (this, that) -> std::strong_ordering;");
-
-    //  Generate the bitwise operations and 'none' value, if appropriate
-    if bitwise {
+    //  Generate the 'none' value if appropriate, and use that or
+    //  else the first enumerator as the default-constructed value
+    default_value := enumerators[0].name;
+    if bitwise{
+        default_value = "none";
         e: value_member_info = ( "none", "", "0");
         enumerators.push_back( e );
+    }
 
+    //  Generate all the private implementation
+    t.add_member( "    _value            : (underlying_type)$;");
+    t.add_member( "    private operator= : (implicit out this, _val: i64) == _value = cpp2::unsafe_narrow<(underlying_type)$>(_val);");
+
+    //  Generate the bitwise operations
+    if bitwise {
         t.add_member( "    operator|=: ( inout this, that )                 == _value |= that._value;");
         t.add_member( "    operator&=: ( inout this, that )                 == _value &= that._value;");
         t.add_member( "    operator^=: ( inout this, that )                 == _value ^= that._value;");
@@ -1058,6 +1065,12 @@ basic_enum: (
     for enumerators do (e) {
         t.add_member( "    (e.name)$ : (t.name())$ == (e.value)$;");
     }
+
+    //  Generate the common functions
+    t.add_member( "    get_raw_value     : (this) -> (underlying_type)$ == _value;");
+    t.add_member( "    operator=         : (out this) == { _value = (default_value)$._value; }");
+    t.add_member( "    operator=         : (out this, that) == { }");
+    t.add_member( "    operator<=>       : (this, that) -> std::strong_ordering;");
 
     //  Provide a 'to_string' function to print enumerator name(s)
     (copy to_string: std::string = "    to_string: (this) -> std::string = { \n")
@@ -1226,13 +1239,22 @@ union: (inout t : meta::type_declaration)
     t.remove_marked_members();
 
     //  Provide storage
-    (copy storage: std::string = "    _storage: std::aligned_storage_t<cpp2::max( ")
+    (copy storage: std::string = "    _storage: cpp2::aligned_storage<cpp2::max( ")
     {
         (copy comma: std::string = "")
         for  alternatives
         next comma = ", "
         do   (e) {
             storage += comma + "sizeof((e.type)$)";
+        }
+
+        storage += "), cpp2::max( ";
+
+        (copy comma: std::string = "")
+        for  alternatives  
+        next comma = ", "  
+        do   (e) {
+            storage += comma + "alignof((e.type)$)";
         }
 
         storage += " )> = ();\n";

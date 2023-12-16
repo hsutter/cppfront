@@ -1031,11 +1031,12 @@ class cppfront
 
     declaration_node const* having_signature_emitted = {};
 
-    declaration_node const*   generating_assignment_from  = {};
-    declaration_node const*   generating_move_from        = {};
-    bool                      emitting_that_function      = false;
-    bool                      emitting_move_that_function = false;
-    std::vector<token const*> already_moved_that_members  = {};
+    declaration_node const*   generating_assignment_from      = {};
+    declaration_node const*   generating_move_from            = {};
+    declaration_node const*   generating_postfix_inc_dec_from = {};
+    bool                      emitting_that_function          = false;
+    bool                      emitting_move_that_function     = false;
+    std::vector<token const*> already_moved_that_members      = {};
 
     struct arg_info {
         passing_style pass   = passing_style::in;
@@ -4454,8 +4455,9 @@ public:
     //
     auto emit(
         parameter_declaration_list_node const& n,
-        bool                                   is_returns            = false,
-        bool                                   is_template_parameter = false
+        bool                                   is_returns                 = false,
+        bool                                   is_template_parameter      = false,
+        bool                                   generating_postfix_inc_dec = false
     )
         -> void
     {   STACKINSTR
@@ -4473,7 +4475,8 @@ public:
         printer.disable_indent_heuristic_for_next_text();
 
         auto prev_pos = n.position();
-        for (auto first = true; auto const& x : n.parameters) {
+        auto first    = true;
+        for (auto const& x : n.parameters) {
             if (
                 !first
                 && !is_returns
@@ -4496,6 +4499,14 @@ public:
             printer.print_extra( "};\n" );
         }
         else {
+            //  If we're generating Cpp1 postfix ++ or --, add the dummy int parameter
+            if (generating_postfix_inc_dec) {
+                if (!first) {
+                    printer.print_cpp2( ",", n.position() );
+                }
+                printer.print_cpp2( "int", n.position() );
+            }
+
             //  Position heuristic (aka hack): Avoid emitting extra whitespace before )
             //  beyond column 10
             assert(n.close_paren);
@@ -4588,9 +4599,10 @@ public:
     auto emit(
         function_type_node const& n,
         token const*              ident,
-        bool                      is_main         = false,
-        bool                      is_ctor_or_dtor = false,
-        std::string               suffix1         = {}
+        bool                      is_main                    = false,
+        bool                      is_ctor_or_dtor            = false,
+        std::string               suffix1                    = {},
+        bool                      generating_postfix_inc_dec = false
     )
         -> void
     {   STACKINSTR
@@ -4612,7 +4624,7 @@ public:
             );
         }
         else {
-            emit(*n.parameters);
+            emit(*n.parameters, false, false, generating_postfix_inc_dec); 
         }
 
         //  For an anonymous function, the emitted lambda is 'constexpr' or 'mutable'
@@ -4702,7 +4714,7 @@ public:
                     if (is_type_scope_function_with_in_this) {
                         printer.print_cpp2( " const&", n.position() );
                     }
-                    else {
+                    else if (!generating_postfix_inc_dec) {
                         printer.print_cpp2( "&", n.position() );
                     }
                 }
@@ -5518,8 +5530,9 @@ public:
 
         //  Handle other declarations
 
-        auto need_to_generate_assignment = false;
-        auto need_to_generate_move       = false;
+        auto need_to_generate_assignment      = false;
+        auto need_to_generate_move            = false;
+        auto need_to_generate_postfix_inc_dec = false;
 
         if (
             n.is_function()
@@ -6253,8 +6266,19 @@ public:
                     }
 
                     emit( *n.name() );
-                    emit( *func, n.name(), is_main, false, suffix1 );
+                    emit( *func, n.name(), is_main, false, suffix1, generating_postfix_inc_dec_from != nullptr );
                     printer.print_cpp2( suffix2, n.position() );
+
+                    //  If this is ++ or --, also generate a Cpp1 postfix version of the operator
+                    if (func->is_increment_or_decrement())
+                    {
+                        if (generating_postfix_inc_dec_from) {
+                            assert (generating_postfix_inc_dec_from == &n);
+                        }
+                        else {
+                            need_to_generate_postfix_inc_dec = true;
+                        }
+                    }
                 }
             }
 
@@ -6272,21 +6296,8 @@ public:
                     printer.print_cpp2( ";", n.position() );
                 }
 
-                //  If this is ++ or --, also generate a Cpp1 postfix version of the operator
-                if (func->is_increment_or_decrement()) {
-                    printer.print_cpp2(
-                        " public: auto " + n.name()->to_string() + "(int) -> " + n.parent_declaration->name()->to_string(),
-                        n.position()
-                    );
-                    emit_requires_clause();
-                    printer.print_cpp2(
-                        " { auto ret = *this; ++*this; return ret; }",
-                        n.position()
-                    );
-                }
-
-                //  Note: Not just early "return;" here because we may need to
-                //  recurse to emit the generated operator= declarations too,
+                //  Note: Not just early "return;" here because we may need
+                //  to recurse to emit generated operator declarations too,
                 //  so all the definition work goes into a big 'else' branch
             }
 
@@ -6381,12 +6392,35 @@ public:
                 emit_requires_clause();
 
                 having_signature_emitted = nullptr;
-                emit(
-                    *n.initializer,
-                    true, func->position(), func->returns.index() == function_type_node::empty,
-                    current_functions.back().prolog,
-                    current_functions.back().epilog
-                );
+
+                //  If this is ++ or --, also generate a Cpp1 postfix version of the operator
+                if (generating_postfix_inc_dec_from)
+                {
+                    assert (generating_postfix_inc_dec_from == &n);
+
+                    auto param1 = std::string{"*this"};
+                    if (
+                        !n.parent_declaration
+                        || !n.parent_declaration->is_type()
+                        )
+                    {
+                        param1 = n.first_parameter_name();
+                    }
+
+                    printer.print_cpp2(
+                        " { auto ret = " + param1 + "; ++" + param1 + "; return ret; }",
+                        n.position()
+                    );
+                }
+                //  Else just emit the normal function body
+                else {
+                    emit(
+                        *n.initializer,
+                        true, func->position(), func->returns.index() == function_type_node::empty,
+                        current_functions.back().prolog,
+                        current_functions.back().epilog
+                    );
+                }
 
                 printer.preempt_position_pop();
 
@@ -6425,6 +6459,21 @@ public:
                 generating_move_from = &n;
                 emit( n, capture_intro );
                 generating_move_from = {};
+            }
+
+            //  If this is ++ or --, emit the Cpp1 postfix version via a recursive call
+            if (need_to_generate_postfix_inc_dec)
+            {
+                //  Reset the 'emitted' flags
+                for (auto& statement : n.get_initializer_statements()) {
+                    statement->emitted = false;
+                }
+
+                //  Then reposition and do the recursive call
+                printer.reset_line_to(n.position().lineno);
+                generating_postfix_inc_dec_from = &n;
+                emit( n, capture_intro );
+                generating_postfix_inc_dec_from = {};
             }
         }
 

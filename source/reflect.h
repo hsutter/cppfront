@@ -317,6 +317,7 @@ class function_declaration
     public: [[nodiscard]] auto has_in_parameter_named(cpp2::in<std::string_view> s) const& -> bool;
     public: [[nodiscard]] auto has_out_parameter_named(cpp2::in<std::string_view> s) const& -> bool;
     public: [[nodiscard]] auto has_move_parameter_named(cpp2::in<std::string_view> s) const& -> bool;
+    public: [[nodiscard]] auto first_parameter_name() const& -> std::string;
 
     public: [[nodiscard]] auto has_parameter_with_name_and_pass(cpp2::in<std::string_view> s, cpp2::in<passing_style> pass) const& -> bool;
 
@@ -1022,6 +1023,7 @@ declaration::declaration(declaration const& that)
     [[nodiscard]] auto function_declaration::has_in_parameter_named(cpp2::in<std::string_view> s) const& -> bool { return CPP2_UFCS(has_in_parameter_named)((*cpp2::assert_not_null(n)), s); }
     [[nodiscard]] auto function_declaration::has_out_parameter_named(cpp2::in<std::string_view> s) const& -> bool { return CPP2_UFCS(has_out_parameter_named)((*cpp2::assert_not_null(n)), s); }
     [[nodiscard]] auto function_declaration::has_move_parameter_named(cpp2::in<std::string_view> s) const& -> bool { return CPP2_UFCS(has_move_parameter_named)((*cpp2::assert_not_null(n)), s); }
+    [[nodiscard]] auto function_declaration::first_parameter_name() const& -> std::string { return CPP2_UFCS(first_parameter_name)((*cpp2::assert_not_null(n))); }
 
     [[nodiscard]] auto function_declaration::has_parameter_with_name_and_pass(cpp2::in<std::string_view> s, cpp2::in<passing_style> pass) const& -> bool { 
                                                   return CPP2_UFCS(has_parameter_with_name_and_pass)((*cpp2::assert_not_null(n)), s, pass);  }
@@ -1514,8 +1516,10 @@ std::string value = "-1";
     }
 }
 
+    CPP2_UFCS(require)(t, !(CPP2_UFCS(empty)(enumerators)), 
+        "an enumeration must contain at least one enumerator value");
+
     //  Compute the default underlying type, if it wasn't explicitly specified
-#line 988 "reflect.h2"
     if (underlying_type.value() == "") 
     {
         CPP2_UFCS(require)(t, !(std::move(found_non_numeric)), 
@@ -1562,18 +1566,21 @@ std::string value = "-1";
 
     CPP2_UFCS(remove_marked_members)(t);
 
-    //  Generate all the common material: value and common functions
-    CPP2_UFCS(add_member)(t, "    _value            : " + cpp2::to_string(underlying_type.value()) + ";");
-    CPP2_UFCS(add_member)(t, "    private operator= : (implicit out this, _val: i64) == _value = cpp2::unsafe_narrow<" + cpp2::to_string(underlying_type.value()) + ">(_val);");
-    CPP2_UFCS(add_member)(t, "    get_raw_value     : (this) -> " + cpp2::to_string(std::move(underlying_type.value())) + " == _value;");
-    CPP2_UFCS(add_member)(t, "    operator=         : (out this, that) == { }");
-    CPP2_UFCS(add_member)(t, "    operator<=>       : (this, that) -> std::strong_ordering;");
-
-    //  Generate the bitwise operations and 'none' value, if appropriate
+    //  Generate the 'none' value if appropriate, and use that or
+    //  else the first enumerator as the default-constructed value
+    auto default_value {CPP2_ASSERT_IN_BOUNDS(enumerators, 0).name}; 
     if (bitwise) {
+        default_value = "none";
         value_member_info e {"none", "", "0"}; 
         CPP2_UFCS(push_back)(enumerators, std::move(e));
+    }
 
+    //  Generate all the private implementation
+    CPP2_UFCS(add_member)(t, "    _value            : " + cpp2::to_string(underlying_type.value()) + ";");
+    CPP2_UFCS(add_member)(t, "    private operator= : (implicit out this, _val: i64) == _value = cpp2::unsafe_narrow<" + cpp2::to_string(underlying_type.value()) + ">(_val);");
+
+    //  Generate the bitwise operations
+    if (bitwise) {
         CPP2_UFCS(add_member)(t, "    operator|=: ( inout this, that )                 == _value |= that._value;");
         CPP2_UFCS(add_member)(t, "    operator&=: ( inout this, that )                 == _value &= that._value;");
         CPP2_UFCS(add_member)(t, "    operator^=: ( inout this, that )                 == _value ^= that._value;");
@@ -1589,6 +1596,12 @@ std::string value = "-1";
     for ( auto const& e : enumerators ) {
         CPP2_UFCS(add_member)(t, "    " + cpp2::to_string(e.name) + " : " + cpp2::to_string(CPP2_UFCS(name)(t)) + " == " + cpp2::to_string(e.value) + ";");
     }
+
+    //  Generate the common functions
+    CPP2_UFCS(add_member)(t, "    get_raw_value     : (this) -> " + cpp2::to_string(std::move(underlying_type.value())) + " == _value;");
+    CPP2_UFCS(add_member)(t, "    operator=         : (out this) == { _value = " + cpp2::to_string(std::move(default_value)) + "._value; }");
+    CPP2_UFCS(add_member)(t, "    operator=         : (out this, that) == { }");
+    CPP2_UFCS(add_member)(t, "    operator<=>       : (this, that) -> std::strong_ordering;");
 {
 std::string to_string = "    to_string: (this) -> std::string = { \n";
 
@@ -1722,7 +1735,7 @@ auto value = 0;
 
     CPP2_UFCS(remove_marked_members)(t);
 {
-std::string storage = "    _storage: std::aligned_storage_t<cpp2::max( ";
+std::string storage = "    _storage: cpp2::aligned_storage<cpp2::max( ";
 
     //  Provide storage
 
@@ -1739,7 +1752,20 @@ std::string comma = "";
         } while (false); comma = ", "; }
 }
 
-#line 1238 "reflect.h2"
+#line 1176 "reflect.h2"
+        storage += "), cpp2::max( ";
+{
+std::string comma = "";
+
+#line 1179 "reflect.h2"
+        for ( 
+
+              auto const& e : alternatives )  { do {
+            storage += comma + "alignof(" + cpp2::to_string(e.type) + ")";
+        } while (false); comma = ", "; }
+}
+
+#line 1185 "reflect.h2"
         storage += " )> = ();\n";
         CPP2_UFCS(add_member)(t, std::move(storage));
     }

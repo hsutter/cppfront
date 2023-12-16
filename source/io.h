@@ -782,7 +782,10 @@ auto process_cpp2_line(
                 if (prev != '\\' || prev2 == '\\') { in_string_literal = true; }
 
             break;case '\'':
-                if (prev != '\\' || prev2 == '\\') { in_char_literal = true; }
+                if (prev != '\\' || prev2 == '\\') {
+                    //  Also check that this isn't a digit separator
+                    in_char_literal = !is_hexadecimal_digit(prev);
+                }
 
             break;default: ;
             }
@@ -790,6 +793,13 @@ auto process_cpp2_line(
 
         prev2 = prev;
         prev = line[i];
+    }
+
+    if (in_char_literal) {
+        errors.emplace_back(
+            source_position(lineno, ssize(line)),
+            std::string("line ended before character literal was terminated")
+        );
     }
 
     return found_end;
