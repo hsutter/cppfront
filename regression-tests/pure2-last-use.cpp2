@@ -228,6 +228,12 @@ issue_857_5: @struct type = {
   a: std::unique_ptr<int>;
 }
 
+issue_857_7: @struct type = {
+  A: std::add_lvalue_reference_t<int>;
+  this: std::monostate;
+  F: (move this) = _ = f_inout(A);
+}
+
 issue_869: @union type = {
   i: int;
 }

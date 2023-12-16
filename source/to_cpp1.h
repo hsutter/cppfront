@@ -1704,7 +1704,7 @@ public:
     {   STACKINSTR
         auto last_use = is_definite_last_use(n.identifier);
 
-        auto decl = sema.get_declaration_of(*n.identifier);
+        auto decl = sema.get_declaration_of(*n.identifier, false, true);
 
         bool add_forward =
             last_use
@@ -1728,24 +1728,12 @@ public:
 
         //  Add `std::move(*this).` when implicitly moving a member on last use.
         //  This way, members of lvalue reference type won't be implicitly moved.
-        bool add_this = false;
-        if (
+        bool add_this =
             add_move
             && synthesized_multi_return_size == 0
-            )
-        {
-            auto lookup = source_order_name_lookup(*n.identifier);
-            if (lookup) {
-                auto decl = get<declaration_node const*>(*lookup);
-                if (
-                    decl
-                    && decl->parent_is_type()
-                    )
-                {
-                    add_this = true;
-                }
-            }
-        }
+            && decl->identifier
+            && *decl->identifier == "this"
+            && *n.identifier != "this";
 
         if (
             add_move
