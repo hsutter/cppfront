@@ -31,6 +31,12 @@ meta: namespace = {
 
 compiler_services: @polymorphic_base @copyable type =
 {
+    //  Enable custom contracts on this object, to use .require
+    //
+    expects:(this, b, msg) = require(b, msg);
+
+    //  Common data members
+    //
     errors               : *std::vector<error_entry>;
     errors_original_size : int;
     generated_tokens     : *std::deque<token>;
@@ -39,6 +45,8 @@ compiler_services: @polymorphic_base @copyable type =
     metafunction_args    : std::vector<std::string> = ();
     metafunctions_used   : bool = false;
 
+    //  Constructor
+    //
     operator=: (
         out this,
         errors_          : *std::vector<error_entry>,
@@ -51,6 +59,8 @@ compiler_services: @polymorphic_base @copyable type =
         parser = errors*;
     }
 
+    //  Common API
+    //
     set_metafunction_name: (inout this, name: std::string_view, args: std::vector<std::string>) = {
         metafunction_name  = name;
         metafunction_args  = args;
@@ -128,10 +138,12 @@ compiler_services: @polymorphic_base @copyable type =
         return ();
     }
 
+    //  Error diagnosis and handling, integrated with compiler output
+    //
     require:(
         this,
-        b: bool,
-        msg: std::string_view
+        b   : bool,
+        msg : std::string_view
     )
     = {
         if !b {
@@ -367,17 +379,21 @@ function_declaration: @copyable type =
     make_virtual                 : (inout this) -> bool = n*.make_function_virtual();
 
     add_initializer: (inout this, source: std::string_view)
+        pre<this> (!has_initializer(), "cannot add an initializer to a function that already has one")
+        pre<this> (parent_is_type(),   "cannot add an initializer to a function that isn't in a type scope")
     = {
-        require( !has_initializer(), 
-                 "cannot add an initializer to a function that already has one");
-        require( parent_is_type(),
-                 "cannot add an initializer to a function that isn't in a type scope");
+        //require( !has_initializer(), 
+        //         "cannot add an initializer to a function that already has one");
+        //require( parent_is_type(),
+        //         "cannot add an initializer to a function that isn't in a type scope");
 
         stmt := parse_statement(source);
-        require( stmt as bool,
-                 std::string("cannot add an initializer that is not a valid statement: ") + source);
+        if !(stmt as bool) {
+            error( std::string("cannot add an initializer that is not a valid statement: ") + source );
+            return;
+        }
         require (n*.add_function_initializer(stmt),
-                 std::string("error attempting to add initializer:\n") + source);
+                 std::string("unexpected error while attempting to add initializer:\n") + source);
     }
 }
 
@@ -535,12 +551,15 @@ type_declaration: @copyable type =
     add_member: (inout this, source: std::string_view)
     = {
         decl := parse_statement(source);
-        require( decl as bool, 
-                 "the provided source string is not a valid statement");
-        require( decl*.is_declaration(), 
-                 "cannot add a member that is not a declaration");
+        if !(decl as bool) {
+            error("the provided source string is not a valid statement");
+            return;
+        }
+        if !decl*.is_declaration() {
+            error("cannot add a member that is not a declaration");
+        }
         require( n*.add_type_member(decl),
-                 std::string("error attempting to add member:\n") + source );
+                 std::string("unexpected error while attempting to add member:\n") + source );
     }
 
     remove_marked_members: (inout this) = n*.type_remove_marked_members();
