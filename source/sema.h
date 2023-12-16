@@ -1868,11 +1868,9 @@ public:
         static std::int32_t final_position = 0;
         t.final_position = final_position++;
 
-        if (t == "this") {
-            started_this_member_access = true;
-        }
-        else if (t.type() == lexeme::Dot) {
+        if (t.type() == lexeme::Dot) {
             started_member_access = true;
+            started_this_member_access = *(&t - 1) == "this";
         }
 
         //  If a '(' follows '.member', the trial is completed
@@ -1939,7 +1937,7 @@ public:
                 }
             }
             started_member_access = false;
-            started_this_member_access = t == "this";
+            started_this_member_access = false;
         }
     }
 
