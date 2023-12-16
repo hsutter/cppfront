@@ -5933,6 +5933,7 @@ public:
                             separator = ",";
                         }
                     }
+                    current_names.push_back(decl.get());
                 }
                 //  Then we'll switch to start the body == other members
                 else
