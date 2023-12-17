@@ -912,7 +912,7 @@ auto issue_884() -> void{
     }
     else {
       if (true) {
-        auto x {0}; 
+        auto x {cpp2_new<int>(0)}; 
         if (true) {
           f_inout(x);
         }

@@ -565,7 +565,7 @@ issue_884: () = {
     }
     else {
       if true {
-        x := 0;
+        x := new<int>(0);
         if true {
           f_inout(x);
         }
