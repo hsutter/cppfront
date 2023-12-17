@@ -790,7 +790,9 @@ auto newline_pos = CPP2_UFCS(find)(source, '\n');
                 newline_pos = CPP2_UFCS(find)(source, '\n');
             }
         }
+}
 
+#line 99 "reflect.h2"
         if (!(CPP2_UFCS(empty)(source))) {
             std::move(add_line)(std::move(source));
         }
@@ -810,8 +812,6 @@ auto newline_pos = CPP2_UFCS(find)(source, '\n');
             (*cpp2::assert_not_null(CPP2_UFCS(begin)(CPP2_UFCS(get_map)(*cpp2::assert_not_null(std::move(tokens)))))).second, 
             *cpp2::assert_not_null(generated_tokens)
         ); 
-}
-#line 118 "reflect.h2"
     }
 
     [[nodiscard]] auto compiler_services::position() const -> source_position
@@ -835,7 +835,7 @@ auto newline_pos = CPP2_UFCS(find)(source, '\n');
     {
         auto message {cpp2::as_<std::string>(msg)}; 
         if (!(CPP2_UFCS(empty)(metafunction_name))) {
-            message = "while applying @" + metafunction_name + " - " + std::move(message);
+            message = "while applying @" + metafunction_name + " - " + message;
         }
         static_cast<void>(CPP2_UFCS(emplace_back)((*cpp2::assert_not_null(errors)), position(), std::move(message)));
     }
@@ -1424,7 +1424,7 @@ std::string value = "-1";
             if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i8>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i8>::max())) {
                 underlying_type.value() = "i8";
             }
-            else {if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i16>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i16>::max())) {
+            else {if (cpp2::cmp_greater_eq(std::move(min_value),std::numeric_limits<cpp2::i16>::min()) && cpp2::cmp_less_eq(std::move(max_value),std::numeric_limits<cpp2::i16>::max())) {
                 underlying_type.value() = "i16";
             }
             else {if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i32>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i32>::max())) {
@@ -1439,7 +1439,7 @@ std::string value = "-1";
         }
         else {
             auto umax {std::move(max_value) * cpp2::as_<cpp2::u64, 2>()}; 
-            if (cpp2::cmp_less_eq(umax,std::numeric_limits<cpp2::u8>::max())) {
+            if (cpp2::cmp_less_eq(std::move(umax),std::numeric_limits<cpp2::u8>::max())) {
                 underlying_type.value() = "u8";
             }
             else {if (cpp2::cmp_less_eq(umax,std::numeric_limits<cpp2::u16>::max())) {
