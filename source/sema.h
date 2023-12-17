@@ -687,96 +687,113 @@ private:
         -> void
     {
         auto i = pos;
-        auto depth = symbols[pos].depth;
 
-        //  Maintain a stack of the depths of the most recently seen
-        //  selection statements, using the current depth-2 as a sentinel
-        auto selections = std::vector<int>{depth-2};
-
-        //  Scan forward to the end of this scope, keeping track of
-        //  the trailing nest of selection statements
-        while (
+        //  Scan forward to the end of this scope
+        for (auto start_depth = symbols[pos].depth;
             i+1 < std::ssize(symbols)
-            && symbols[i+1].depth >= depth
+            && symbols[i+1].depth >= start_depth;
+            ++i
             )
         {
-            assert (std::ssize(symbols) > 1);
-            if (symbols[i].sym.index() == symbol::selection) {
-                auto const& s = std::get<symbol::selection>(symbols[i].sym);
-                if (s.start) {
-                    selections.push_back(symbols[i].depth);
-                }
-                //else {
-                //    assert (symbols[i].depth-1 == selections.back());
-                //    selections.pop_back();
-                //}
-            }
-            ++i;
         }
+        // assert(symbols[i].sym.index() == symbol::active::compound);
+        // assert(!std::get<symbol::active::compound>(symbols[i].sym).start);
 
         //  i is now at the end of id's scope, so start scanning backwards
-        //  until we find the first definite last use
-        for (auto found = false; i > pos; --i)
+        //  until we find the first definite last uses
+        bool found = false;
+        compound_sym const* comp = nullptr;
+        auto found_depth = 0;
+        auto branch_depth = 0;
+        while (i > pos)
         {
-            //  Once we find something, don't continue back further
-            //  than the closest enclosing selection statement
+            //  If found in a branch and we are at its start,
+            //  pop out of any containing scope of the branch
             if (
-                found
-                && symbols[i].depth <= selections.back()
+                branch_depth != 0
+                && (comp = std::get_if<symbol::active::compound>(&symbols[i].sym))
+                && comp->kind_ == compound_sym::is_true
+                && branch_depth + 1 == symbols[i].depth
                 )
             {
-                break;
-            }
-
-            if (symbols[i].sym.index() == symbol::active::identifier)
-            {
-                auto const& sym = std::get<symbol::active::identifier>(symbols[i].sym);
-                assert (sym.identifier);
-
-                //  If we find a use of the identifier or its possibly implicit 'this'
-                if (
-                    *sym.identifier == *id
-                    || (
-                        *id == "this"
-                        && [&]() {
-                               auto decl = get_declaration_of(sym.get_token(), false, true);
-                               return decl
-                                      && decl->identifier
-                                      && *decl->identifier == "this";
-                           }()
+                while (
+                    i > pos
+                    && (
+                        !(comp = std::get_if<symbol::active::compound>(&symbols[i].sym))
+                        || branch_depth <= symbols[i].depth
                         )
                     )
                 {
-                    if (
-                        !found
-                        || symbols[i].depth > selections.back()+1
-                        )
-                    {
-                        definite_last_uses.emplace_back( sym.identifier, is_forward );
-                        found = true;
-                    }
-
-                    //  Pop any of the last branches that we're outside of
-                    while (symbols[i].depth <= selections.back()) {
-                        selections.pop_back();
-                        assert (!selections.empty());   // won't remove sentinel
-                    }
-                    //  Then skip over the earlier part of the current branch
-                    while (
-                        i > pos
-                        && symbols[i].depth > selections.back() + 1
-                        )
-                    {
-                        --i;
-                    }
+                    --i;
                 }
+
+                comp = nullptr;
+                found_depth = 0;
+                branch_depth = 0;
+                continue;
+            }
+
+            auto sym = std::get_if<symbol::active::identifier>(&symbols[i].sym);
+            assert (!sym || sym->identifier);
+
+
+            if (
+                //  Skip non-identifiers
+                !sym
+                //  Skip non-'id' identifiers
+                || !(
+                  *sym->identifier == *id
+                  //  For 'this', do include member names with implicit 'this.'
+                  || (
+                      *id == "this"
+                      && [&]() {
+                             auto decl = get_declaration_of(sym->get_token(), false, true);
+                             return decl
+                                    && decl->identifier
+                                    && *decl->identifier == "this";
+                         }()
+                      )
+
+                  )
+                )
+            {
+                --i;
+                continue;
+            }
+
+            definite_last_uses.emplace_back( sym->identifier, is_forward );
+            found = true;
+            found_depth = symbols[i--].depth;
+
+            //  Pop out of any containing scope of the last use
+            while (
+                i > pos
+                && (
+                    !(comp = std::get_if<symbol::active::compound>(&symbols[i].sym))
+                    || comp->kind_ == compound_sym::is_scope
+                    || found_depth <= symbols[i].depth
+                    )
+                )
+            {
+                --i;
+            }
+            assert(!comp || symbols[i].start);
+
+            //  If found in a branch, record its depth
+            if (
+                i > pos
+                && comp
+                && comp->kind_ != compound_sym::is_scope
+                )
+            {
+                branch_depth = symbols[i].depth - 1;
             }
         }
 
         //  If we arrived back at the declaration without finding a use
         //  and this is a user-named object (not 'this', 'that', or '_')
         if (
-            i == pos
+            !found
             && *id != "this"
             && *id != "that"
             && *id != "_"
