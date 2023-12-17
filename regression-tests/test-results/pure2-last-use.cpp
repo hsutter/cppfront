@@ -55,11 +55,11 @@ class issue_869_0;
 class issue_869_1;
   
 
-#line 464 "pure2-last-use.cpp2"
+#line 619 "pure2-last-use.cpp2"
 class cpp2_union;
   
 
-#line 472 "pure2-last-use.cpp2"
+#line 627 "pure2-last-use.cpp2"
 class my_string;
   
 
@@ -284,19 +284,19 @@ using issue_869_2_ret = issue_869_1;
 #line 272 "pure2-last-use.cpp2"
 auto issue_884() -> void;
 
-#line 445 "pure2-last-use.cpp2"
+#line 600 "pure2-last-use.cpp2"
 auto issue_888_0(std::string r, int size) -> void;
 
-#line 448 "pure2-last-use.cpp2"
+#line 603 "pure2-last-use.cpp2"
 auto issue_888_1([[maybe_unused]] std::string unnamed_param_1, move_only_function<int(int)> size) -> void;
 
-#line 452 "pure2-last-use.cpp2"
+#line 607 "pure2-last-use.cpp2"
 auto draw() -> void;
 
-#line 458 "pure2-last-use.cpp2"
+#line 613 "pure2-last-use.cpp2"
 auto cpp2_enum() -> void;
 
-#line 464 "pure2-last-use.cpp2"
+#line 619 "pure2-last-use.cpp2"
 class cpp2_union {
   public: auto destroy() & -> void;
   public: ~cpp2_union() noexcept;
@@ -305,7 +305,7 @@ class cpp2_union {
   public: auto operator=(cpp2_union const&) -> void = delete;
 
 
-#line 470 "pure2-last-use.cpp2"
+#line 625 "pure2-last-use.cpp2"
 };
 
 class my_string {
@@ -314,20 +314,20 @@ class my_string {
 };
 
 using no_pessimizing_move_ret = std::unique_ptr<int>;
-#line 477 "pure2-last-use.cpp2"
+#line 632 "pure2-last-use.cpp2"
 [[nodiscard]] auto no_pessimizing_move() -> no_pessimizing_move_ret;
 
 auto deferred_non_copyable_0() -> void;
 
-#line 485 "pure2-last-use.cpp2"
+#line 640 "pure2-last-use.cpp2"
 [[nodiscard]] auto deferred_non_copyable_1() -> auto;
 using deferred_non_copyable_2_ret = std::unique_ptr<int>;
 
 
-#line 491 "pure2-last-use.cpp2"
+#line 646 "pure2-last-use.cpp2"
 [[nodiscard]] auto deferred_non_copyable_2() -> deferred_non_copyable_2_ret;
 
-#line 495 "pure2-last-use.cpp2"
+#line 650 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -787,6 +787,161 @@ auto issue_884() -> void{
     }
     static_cast<void>(0);
   });
+
+  static_cast<void>([]() mutable -> void{
+    auto x {cpp2_new<int>(0)}; 
+    if (true) {
+      if (true) {
+        if (true) {
+          f_copy(std::move(x));
+        }
+      }
+    }
+    else {
+    }
+  });
+
+  static_cast<void>([]() mutable -> void{
+    auto x {cpp2_new<int>(0)}; 
+    if (true) {
+      if (true) {
+        if (true) {
+          f_copy(std::move(x));
+        }
+      }
+    }
+    else {
+      f_copy(std::move(x));
+    }
+  });
+
+  static_cast<void>([]() mutable -> void{
+    auto x {cpp2_new<int>(0)}; 
+    if (true) {
+    }
+    else {
+      if (true) {
+        if (true) {
+          f_copy(std::move(x));
+        }
+      }
+    }
+  });
+
+  static_cast<void>([]() mutable -> void{
+    auto x {cpp2_new<int>(0)}; 
+    if (true) {
+      f_copy(std::move(x));
+    }
+    else {
+      if (true) {
+        if (true) {
+          f_copy(std::move(x));
+        }
+      }
+    }
+  });
+
+  static_cast<void>([]() mutable -> void{
+    auto x {cpp2_new<int>(0)}; 
+    if (true) {
+      auto y {cpp2_new<int>(0)}; 
+      f_copy(std::move(x));
+      f_copy(std::move(y));
+    }
+    else {
+      if (true) {
+        if (true) {
+          f_inout(x);
+        }
+        f_copy(std::move(x));
+      }
+    }
+  });
+
+  static_cast<void>([]() mutable -> void{
+    auto x {cpp2_new<int>(0)}; 
+    if (true) {
+      auto y {cpp2_new<int>(0)}; 
+      if (true) {}
+      else {
+        f_copy(std::move(x));
+        f_copy(std::move(y));
+      }
+    }
+    else {
+      if (true) {
+        if (true) {
+          auto y {cpp2_new<int>(0)}; 
+          f_copy(std::move(y));
+          f_inout(x);
+        }
+        f_copy(std::move(x));
+      }
+    }
+  });
+
+  static_cast<void>([]() mutable -> void{
+    auto x {cpp2_new<int>(0)}; 
+    if (true) {
+      auto y {cpp2_new<int>(0)}; 
+      if (true) {}
+      else {
+        f_copy(std::move(x));
+        f_copy(std::move(y));
+      }
+    }
+    else {
+      auto y {cpp2_new<int>(0)}; 
+      if (true) {
+        if (true) {
+          f_copy(std::move(x));
+        }
+        else {
+          f_copy(std::move(x));
+        }
+        f_copy(std::move(y));
+      }
+    }
+  });
+
+  static_cast<void>([]() mutable -> void{
+    auto x {cpp2_new<int>(0)}; 
+    if (true) {
+      f_copy(std::move(x));
+    }
+    else {
+      if (true) {
+        auto x {0}; 
+        if (true) {
+          f_inout(x);
+        }
+        else {
+        }
+        f_copy(std::move(x));
+      }
+      f_copy(std::move(x));
+    }
+  });
+
+  static_cast<void>([]() mutable -> void{
+    auto x {cpp2_new<int>(0)}; 
+    if (true) {
+      if (true) {
+        auto x {cpp2_new<int>(0)}; 
+        if (true) {
+          f_inout(x);
+        }
+        else {
+        }
+        f_copy(std::move(x));
+      }
+      f_copy(std::move(x));
+    }
+    else {
+      f_copy(std::move(x));
+    }
+  });
 }
 
 auto issue_888_0(std::string r, int size) -> void{
@@ -808,17 +963,17 @@ auto cpp2_enum() -> void{
   underlying_type.construct(0);
 }
 
-#line 465 "pure2-last-use.cpp2"
+#line 620 "pure2-last-use.cpp2"
   auto cpp2_union::destroy() & -> void{}
   cpp2_union::~cpp2_union() noexcept{
     destroy();
     static_cast<void>(std::move((*this)));
   }
 
-#line 477 "pure2-last-use.cpp2"
+#line 632 "pure2-last-use.cpp2"
 [[nodiscard]] auto no_pessimizing_move() -> no_pessimizing_move_ret{
                                                                 std::unique_ptr<int> ret {};
-#line 478 "pure2-last-use.cpp2"
+#line 633 "pure2-last-use.cpp2"
 return ret; }
 auto deferred_non_copyable_0() -> void{
   cpp2::deferred_init<std::unique_ptr<int>> p; 
@@ -834,13 +989,13 @@ auto deferred_non_copyable_0() -> void{
 
 [[nodiscard]] auto deferred_non_copyable_2() -> deferred_non_copyable_2_ret{
       cpp2::deferred_init<std::unique_ptr<int>> p;
-#line 492 "pure2-last-use.cpp2"
+#line 647 "pure2-last-use.cpp2"
   p.construct();
 return std::move(p.value()); }
 
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 496 "pure2-last-use.cpp2"
+#line 651 "pure2-last-use.cpp2"
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());
   cpp2_enum();

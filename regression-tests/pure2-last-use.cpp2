@@ -440,6 +440,161 @@ issue_884: () = {
     }
     _ = 0;
   };
+
+  _ = :() = {
+    x := new<int>(0);
+    if true {
+      if true {
+        if true {
+          f_copy(x);
+        }
+      }
+    }
+    else {
+    }
+  };
+
+  _ = :() = {
+    x := new<int>(0);
+    if true {
+      if true {
+        if true {
+          f_copy(x);
+        }
+      }
+    }
+    else {
+      f_copy(x);
+    }
+  };
+
+  _ = :() = {
+    x := new<int>(0);
+    if true {
+    }
+    else {
+      if true {
+        if true {
+          f_copy(x);
+        }
+      }
+    }
+  };
+
+  _ = :() = {
+    x := new<int>(0);
+    if true {
+      f_copy(x);
+    }
+    else {
+      if true {
+        if true {
+          f_copy(x);
+        }
+      }
+    }
+  };
+
+  _ = :() = {
+    x := new<int>(0);
+    if true {
+      y := new<int>(0);
+      f_copy(x);
+      f_copy(y);
+    }
+    else {
+      if true {
+        if true {
+          f_inout(x);
+        }
+        f_copy(x);
+      }
+    }
+  };
+
+  _ = :() = {
+    x := new<int>(0);
+    if true {
+      y := new<int>(0);
+      if true { }
+      else {
+        f_copy(x);
+        f_copy(y);
+      }
+    }
+    else {
+      if true {
+        if true {
+          y := new<int>(0);
+          f_copy(y);
+          f_inout(x);
+        }
+        f_copy(x);
+      }
+    }
+  };
+
+  _ = :() = {
+    x := new<int>(0);
+    if true {
+      y := new<int>(0);
+      if true { }
+      else {
+        f_copy(x);
+        f_copy(y);
+      }
+    }
+    else {
+      y := new<int>(0);
+      if true {
+        if true {
+          f_copy(x);
+        }
+        else {
+          f_copy(x);
+        }
+        f_copy(y);
+      }
+    }
+  };
+
+  _ = :() = {
+    x := new<int>(0);
+    if true {
+      f_copy(x);
+    }
+    else {
+      if true {
+        x := 0;
+        if true {
+          f_inout(x);
+        }
+        else {
+        }
+        f_copy(x);
+      }
+      f_copy(x);
+    }
+  };
+
+  _ = :() = {
+    x := new<int>(0);
+    if true {
+      if true {
+        x := new<int>(0);
+        if true {
+          f_inout(x);
+        }
+        else {
+        }
+        f_copy(x);
+      }
+      f_copy(x);
+    }
+    else {
+      f_copy(x);
+    }
+  };
 }
 
 issue_888_0: (copy r: std::string, copy size: int) = {
