@@ -106,43 +106,44 @@ issue_857: type = {
     h();
     n();
   }
-// FIXME Lack of implicit moves in sibling selections.
-// Not a `this` problem: <https://cpp2.godbolt.org/z/hbeje4c3M>.
-//z: (move this, move that) = {
-///*f */      if true { f_copy(this); }
-///*f */ else if true { f_copy(this, that); }
-///*g */ else if true { f_copy(this.a); }
-///*g */ else if true { f_copy(this.a, that.a); }
-///*i */ else if true { f_copy(a); }
-///*j */ else if true { f_copy(a); }
-///*k */ else if true { f_copy(a, b); }
-///*l */ else if true { k(); }
-///*m */ else if true { this.k(); }
-///*o1*/ else if true { n(); }
-///*o2*/ else if true { this.n(); }
-///*o3*/ else if true { n(0); }
-///*o4*/ else if true { n(this); }
-///*p0*/ else if true {
-///*p0*/   f_inout(a);
-///*p0*/   f_copy(this.a);
-///*p0*/ }
-///*p1*/ else if true {
-///*p1*/   f_inout(this.a);
-///*p1*/   f_copy(a);
-///*p1*/ }
-///*p2*/ else if true {
-///*p2*/   f_inout(a);
-///*p2*/   f_copy(this);
-///*p2*/ }
-///*p3*/ else if true {
-///*p3*/   f_inout(this);
-///*p3*/   f_copy(a);
-///*p3*/ }
-///*q */ else {
-///*q */   h();
-///*q */   n();
-///*q */ }
-//}
+  z: (move this, move that) = {
+  /*f */      if true { f_copy(this); }
+  /*f */ else if true { f_copy(this, that); }
+  /*g */ else if true { f_copy(this.a); }
+  /*g */ else if true { f_copy(this.a, that.a); }
+  /*i */ else if true { f_copy(a); }
+  /*j */ else if true { f_copy(a); }
+  /*k */ else if true {
+  /*k */   f_inout(a);
+  /*k */   f_copy(b);
+  /*k */ }
+  /*l */ else if true { k(); }
+  /*m */ else if true { this.k(); }
+  /*o1*/ else if true { n(); }
+  /*o2*/ else if true { this.n(); }
+  /*o3*/ else if true { n(0); }
+  /*o4*/ else if true { n(this); }
+  /*p0*/ else if true {
+  /*p0*/   f_inout(a);
+  /*p0*/   f_copy(this.a);
+  /*p0*/ }
+  /*p1*/ else if true {
+  /*p1*/   f_inout(this.a);
+  /*p1*/   f_copy(a);
+  /*p1*/ }
+  /*p2*/ else if true {
+  /*p2*/   f_inout(a);
+  /*p2*/   f_copy(this);
+  /*p2*/ }
+  /*p3*/ else if true {
+  /*p3*/   f_inout(this);
+  /*p3*/   f_copy(a);
+  /*p3*/ }
+  /*q */ else {
+  /*q */   h();
+  /*q */   n();
+  /*q */ }
+  }
 }
 
 issue_857_2: @struct type = {
@@ -196,32 +197,34 @@ issue_857_4: @struct type = {
     _ = x.g();
     _ = this.mf();
   }
-//z: (move this, that, x: int) = {
-///*h0*/      if true { mf(); }
-///*h1*/ else if true { this.mf(); }
-///*h2*/ else if true { that.mf(); }
-///*h3*/ else if true { that.f; }
-///*h4*/ else if true { x.mg(); }
-///*h5*/ else if true { f() + x.g(); }
-///*h6*/ else if true { x.g() + f(); }
-///*h7*/ else if true { this.f() + x.g(); }
-///*h8*/ else if true { x.g() + this.f(); }
-///*i0*/ else if true {
-///*i0*/   _ = f();
-///*i0*/   _ = x.mg();
-///*i0*/ }
-///*i1*/ else if true {
-///*i1*/   _ = x.g();
-///*i1*/   _ = mf();
-///*i1*/ }
-///*i2*/ else if true {
-///*i2*/   _ = this.f();
-///*i2*/   _ = x.mg();
-///*i2*/ }
-///*i3*/ else {
-///*i3*/   _ = x.g();
-///*i3*/   _ = this.mf();
-///*i3*/ }
+  z: (move this, that) = {
+  x := 0;
+  /*h0*/      if true { _ = mf(); }
+  /*h1*/ else if true { _ = this.mf(); }
+  /*h2*/ else if true { _ = that.mf(); }
+  /*h3*/ else if true { _ = that.f; }
+  /*h4*/ else if true { _ = x.mg(); }
+  /*h5*/ else if true { f() + x.g(); }
+  /*h6*/ else if true { x.g() + f(); }
+  /*h7*/ else if true { this.f() + x.g(); }
+  /*h8*/ else if true { x.g() + this.f(); }
+  /*i0*/ else if true {
+  /*i0*/   _ = f();
+  /*i0*/   _ = x.mg();
+  /*i0*/ }
+  /*i1*/ else if true {
+  /*i1*/   _ = x.g();
+  /*i1*/   _ = mf();
+  /*i1*/ }
+  /*i2*/ else if true {
+  /*i2*/   _ = this.f();
+  /*i2*/   _ = x.mg();
+  /*i2*/ }
+  /*i3*/ else {
+  /*i3*/   _ = x.g();
+  /*i3*/   _ = this.mf();
+  /*i3*/ }
+  }
 }
 
 issue_857_5: @struct type = {
