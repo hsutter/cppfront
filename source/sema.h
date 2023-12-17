@@ -702,14 +702,12 @@ private:
         //  i is now at the end of id's scope, so start scanning backwards
         //  until we find the first definite last uses
         bool found = false;
-        compound_sym const* comp = nullptr;
-        auto found_depth = 0;
         auto branch_depth = 0;
         while (i > pos)
         {
             //  If found in a branch and we are at its start,
             //  pop out of any containing scope of the branch
-            if (
+            if (compound_sym const* comp = nullptr;
                 branch_depth != 0
                 && (comp = std::get_if<symbol::active::compound>(&symbols[i].sym))
                 && comp->kind_ == compound_sym::is_true
@@ -741,8 +739,6 @@ private:
                 {
                     branch_depth = 0;
                 }
-                comp = nullptr;
-                found_depth = 0;
                 continue;
             }
 
@@ -776,19 +772,20 @@ private:
 
             definite_last_uses.emplace_back( sym->identifier, is_forward );
             found = true;
-            found_depth = symbols[i--].depth;
+
+            compound_sym const* comp = nullptr;
 
             //  Pop out of any containing scope of the last use
-            while (
+            for (auto found_depth = symbols[i--].depth;
                 i > pos
                 && (
                     !(comp = std::get_if<symbol::active::compound>(&symbols[i].sym))
                     || comp->kind_ == compound_sym::is_scope
                     || found_depth <= symbols[i].depth
-                    )
+                    );
+                --i
                 )
             {
-                --i;
             }
             assert(!comp || symbols[i].start);
 
