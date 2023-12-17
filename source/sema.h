@@ -1724,7 +1724,6 @@ public:
     bool started_postfix_expression               = false;
     bool started_member_access                    = false;
     bool started_this_member_access               = false;
-    bool trial_ufcs_on_implicit_this_access       = false;
     bool is_out_expression                        = false;
     bool inside_next_expression                   = false;
     bool inside_parameter_list                    = false;
@@ -1887,15 +1886,6 @@ public:
             started_this_member_access = *(&t - 1) == "this";
         }
 
-        //  If a '(' follows '.member', the trial is completed
-        if (
-            trial_ufcs_on_implicit_this_access
-            && t == "("
-            )
-        {
-            trial_ufcs_on_implicit_this_access = false;
-        }
-
         //  We currently only care to look at variable identifiers
         if (
             t.type() != lexeme::Identifier
@@ -1942,25 +1932,17 @@ public:
                 if (auto decl = get_declaration_of(t, false, !started_this_member_access);
                     decl
                     && decl->declaration->name() != &t
+                    && (
+                        !started_member_access
+                        || *(&t + 1) == "("
+                        )
                     )
                 {
-                    if (started_member_access) {
-                        trial_ufcs_on_implicit_this_access = true;
-                    }
                     symbols.emplace_back( scope_depth, identifier_sym( false, &t ) );
                 }
             }
             started_member_access = false;
             started_this_member_access = false;
-        }
-    }
-
-    auto end(postfix_expression_node const&, int) -> void
-    {
-        //  If there was no UFCS, drop the "last use" candidate
-        if (trial_ufcs_on_implicit_this_access) {
-            trial_ufcs_on_implicit_this_access = false;
-            symbols.pop_back();
         }
     }
 
