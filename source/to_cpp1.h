@@ -4531,6 +4531,13 @@ public:
     {   STACKINSTR
         assert (n.kind);
 
+        //  "Axiom"s are for static analysis only, and are never evaluated, so just skip them
+        //  (The only requirement for an Axiom condition is that it parses; and even that's
+        //  easy to relax if we feel like allowing arbitrary tokens in an Axiom condition)
+        if (n.group && n.group->to_string() == "Axiom") {
+            return;
+        }
+
         //  For a postcondition, we'll wrap it in a lambda and register it
         //
         if (*n.kind == "post") {

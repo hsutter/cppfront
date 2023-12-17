@@ -1,0 +1,5 @@
+main: () = {
+    assert( 1 != 2, "ack, arithmetic is buggy" );
+    assert<Type>( typeid(int) != typeid(double), "ack, C types are broken" );
+    assert<Axiom>( any-grammatical.kind(of, nonsense * here) is "all ignored" );
+}
