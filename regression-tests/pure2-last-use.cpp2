@@ -416,6 +416,22 @@ issue_884: () = {
     }
     f_copy(x);
   };
+
+  _ = :() = {
+    x := new<int>(0);
+    f_inout(x);
+    if true {
+      f_copy(x);
+    }
+    else {
+      { f_inout(x); }
+      f_inout(x);
+      if true {
+        f_copy(x);
+      }
+    }
+    _ = 0;
+  };
 }
 
 issue_888_0: (copy r: std::string, copy size: int) = {
