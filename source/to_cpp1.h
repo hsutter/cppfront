@@ -4536,7 +4536,10 @@ public:
         auto name = std::string{"cpp2::Default"};
         if (n.group)
         {
-            name = print_to_string(*n.group);
+            auto group = print_to_string(*n.group);
+            if (group != "_") {
+                name = group;
+            }
             if (
                 name == "Default"
                 || name == "Bounds"
