@@ -1,13 +1,11 @@
-f_inout: (inout x: int) -> _ = {
-    x *= 2;
-    return x;
-}
+f_inout: (inout _) = { }
+f_copy: (copy _...) = { }
 
 issue_350: () = {
     x := 21;
 
     l1 := :(forward x) = {
-        std::cout << f_inout(forward x) << std::endl;
+        f_inout(forward x);
     };
 
     l1(x);
@@ -43,9 +41,9 @@ issue_683: (args) = {
 }
 
 issue_825: () = {
-  _ = :(copy b) _ = b;
-  _ = :(move c) _ = c;
-  _ = :(forward d) _ = d;
+  _ = :(copy b: std::unique_ptr<int>) f_copy(b);
+  _ = :(move c: std::unique_ptr<int>) f_copy(c);
+  _ = :(forward d) f_copy(d);(new<int>(0));
 }
 
 issue_832: () = {
@@ -59,10 +57,6 @@ issue_847_0: (copy v: std::vector<std::unique_ptr<int>>) = { for v.make_copy() d
 issue_847_1: (move v: std::vector<std::unique_ptr<int>>) = { for v.make_copy() do (_) { } }
 issue_847_2: (forward v) = { for v.make_copy() do (_) { } }
 issue_847_3: (copy x: int) = { for (x) do (_) { } }
-
-f_inout: (inout _: std::unique_ptr<int>) = { }
-f_inout: (inout _) = { }
-f_copy: (copy _...) = { }
 
 issue_857: type = {
   a: std::unique_ptr<int>;
