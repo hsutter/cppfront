@@ -27,6 +27,9 @@ jobs:
           - compiler: clang++-14
             cxx-std: 'c++2b'
         include:
+          - runs-on: macos-11
+            compiler: clang++
+            cxx-std: 'c++20'
           - runs-on: macos-latest
             compiler: clang++
             cxx-std: 'c++20'
