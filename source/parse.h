@@ -2987,7 +2987,7 @@ public:
     }
 
 
-    auto add_type_member( std::unique_ptr<statement_node> statement )
+    auto add_type_member( std::unique_ptr<statement_node>&& statement )
         -> bool
     {
         if (
@@ -3015,6 +3015,23 @@ public:
         auto compound_stmt = initializer->get_if<compound_statement_node>();
         assert (compound_stmt);
         compound_stmt->statements.push_back(std::move(statement));
+        return true;
+    }
+
+
+    auto add_function_initializer( std::unique_ptr<statement_node>&& statement )
+        -> bool
+    {
+        if (
+            !is_function()
+            || initializer
+            )
+        {
+            return false;
+        }
+
+        //  Adopt it as our initializer statement
+        initializer = std::move( statement );
         return true;
     }
 
@@ -3386,6 +3403,20 @@ public:
         }
         //  else
         return false;
+    }
+
+    auto get_function_parameters()
+        -> std::vector<parameter_declaration_node const*>
+    {
+        if (!is_function()) {
+            return {};
+        }
+        // else
+        auto ret = std::vector<parameter_declaration_node const*>{};
+        for (auto& param : std::get<a_function>(type)->parameters->parameters) {
+            ret.push_back( param.get() );
+        }
+        return ret;
     }
 
     auto unnamed_return_type_to_string() const
@@ -5281,17 +5312,22 @@ public:
         tokens           = &tokens_;
         generated_tokens = &generated_tokens_;
 
-        //  Parse one declaration - we succeed if the parse succeeded,
-        //  and there were no new errors, and all tokens were consumed
-        auto errors_size = std::ssize(errors);
-        pos = 0;
-        if (auto d = statement();
-            d
-            && std::ssize(errors) == errors_size
-            && done()
-            )
-        {
-            return d;
+        try {
+            //  Parse one declaration - we succeed if the parse succeeded,
+            //  and there were no new errors, and all tokens were consumed
+            auto errors_size = std::ssize(errors);
+            pos = 0;
+            if (auto d = statement();
+                d
+                && std::ssize(errors) == errors_size
+                && done()
+                )
+            {
+                return d;
+            }
+        }
+        catch(std::runtime_error& e) {
+            error(e.what(), true, {}, true);
         }
 
         return {};

@@ -391,7 +391,7 @@ class contract_group {
 public:
     using handler = void (*)(CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM);
 
-    constexpr contract_group  (handler h = {})  : reporter(h) { }
+    constexpr contract_group  (handler h) : reporter{h} { }
     constexpr auto set_handler(handler h);
     constexpr auto get_handler() const -> handler { return reporter; }
     constexpr auto expects    (bool b, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
