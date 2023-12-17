@@ -474,10 +474,10 @@ auto issue_847_3(int x) -> void{for ( [[maybe_unused]] auto const& unnamed_param
 int gi {0}; 
 
 #line 156 "pure2-last-use.cpp2"
-  auto issue_857_3::f() && -> void { static_cast<void>(f_inout(std::move(*this).i));  }// OK: The implicit `this` is moved, not `i`.
+  auto issue_857_3::f() && -> void { f_inout(std::move(*this).i);  }// OK: The implicit `this` is moved, not `i`.
 
 #line 159 "pure2-last-use.cpp2"
-  auto issue_857_6::f() && -> void { static_cast<void>(f_inout(std::move(*this).i));  }// OK: The implicit `this` is moved, not `i`.
+  auto issue_857_6::f() && -> void { f_inout(std::move(*this).i);  }// OK: The implicit `this` is moved, not `i`.
 
 #line 165 "pure2-last-use.cpp2"
   template <typename T> move_only_function<T>::move_only_function(){}
@@ -547,13 +547,13 @@ int gi {0};
   auto issue_857_5::f() && -> void { f_copy(std::move(*this).a);  }
 
 #line 238 "pure2-last-use.cpp2"
-  auto issue_857_7::F() && -> void { static_cast<void>(f_inout(std::move(*this).A));  }
+  auto issue_857_7::F() && -> void { f_inout(std::move(*this).A);  }
 
 #line 245 "pure2-last-use.cpp2"
   auto issue_857_8::d() && -> void{}
 
 #line 254 "pure2-last-use.cpp2"
-  auto issue_857_9::f2() && -> void { static_cast<void>(f_inout(c));  }// OK: Happens to work, like non-'move' 'this' parameters.
+  auto issue_857_9::f2() && -> void { f_inout(c);  }// OK: Happens to work, like non-'move' 'this' parameters.
 
 #line 258 "pure2-last-use.cpp2"
   auto issue_857_9::g0() && -> void { f_copy(std::move((*this)).a);  }

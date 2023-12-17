@@ -153,10 +153,10 @@ issue_857_2: @struct type = {
 gi: int = 0;
 issue_857_3: @struct type = {
   i: std::add_lvalue_reference_t<int> = gi;
-  f: (move this) = _ = f_inout(i); // OK: The implicit `this` is moved, not `i`.
+  f: (move this) = f_inout(i); // OK: The implicit `this` is moved, not `i`.
 }
 issue_857_6: @struct type = {
-  f: (move this) = _ = f_inout(i); // OK: The implicit `this` is moved, not `i`.
+  f: (move this) = f_inout(i); // OK: The implicit `this` is moved, not `i`.
   i: std::add_lvalue_reference_t<int> = gi;
 }
 
@@ -235,7 +235,7 @@ issue_857_5: @struct type = {
 issue_857_7: @struct type = {
   A: std::add_lvalue_reference_t<int>;
   this: std::monostate;
-  F: (move this) = _ = f_inout(A);
+  F: (move this) = f_inout(A);
 }
 
 issue_857_8: @struct type = {
@@ -251,7 +251,7 @@ issue_857_9: @struct type = {
   // <https://eel.is/c++draft/class.mfct.non.static#2.sentence-1>.
 //f0: (move this) = f_copy(a);
 //f1: (move this) = b();
-  f2: (move this) = _ = f_inout(c); // OK: Happens to work, like non-'move' 'this' parameters.
+  f2: (move this) = f_inout(c); // OK: Happens to work, like non-'move' 'this' parameters.
 //f3: (move this) = d();
 
   // OK: Explicit 'this' for base members, like in templates.
