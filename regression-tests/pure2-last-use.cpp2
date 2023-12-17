@@ -242,12 +242,23 @@ issue_857_8: @struct type = {
   a: std::unique_ptr<int>;
   b: move_only_function<int()>;
   c: std::add_lvalue_reference_t<int>;
+  d: (move this) = { }
 }
 issue_857_9: @struct type = {
   this: issue_857_8;
-//f: (move this) = f_copy(a); // Error: Cppfront limitation:
-//g: (move this) = b();       // <https://eel.is/c++draft/class.mfct.non.static#2.sentence-1>.
-  h: (move this) = _ = f_inout(c);
+
+  // Error: Cppfront limitation:
+  // <https://eel.is/c++draft/class.mfct.non.static#2.sentence-1>.
+//f0: (move this) = f_copy(a);
+//f1: (move this) = b();
+  f2: (move this) = _ = f_inout(c); // OK: Happens to work, like non-'move' 'this' parameters.
+//f3: (move this) = d();
+
+  // OK: Explicit 'this' for base members, like in templates.
+  g0: (move this) = f_copy(this.a);
+  g1: (move this) = this.b();
+  g2: (move this) = f_inout(this.c);
+  g3: (move this) = this.d();
 }
 
 issue_869_0: @value type = {
