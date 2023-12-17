@@ -1801,11 +1801,12 @@ struct contract_node
     //  postfix_expressions that could refer to it
     capture_group captures;
 
-    source_position                             open_bracket;
-    token const*                                kind = {};
-    std::unique_ptr<id_expression_node>         group;
-    std::unique_ptr<logical_or_expression_node> condition;
-    token const*                                message = {};
+    source_position                                  open_bracket;
+    token const*                                     kind = {};
+    std::unique_ptr<id_expression_node>              group;
+    std::vector<std::unique_ptr<id_expression_node>> flags;
+    std::unique_ptr<logical_or_expression_node>      condition;
+    token const*                                     message = {};
 
     contract_node( source_position pos )
         : open_bracket{pos}
@@ -1827,6 +1828,10 @@ struct contract_node
 
         if (group) {
             group->visit(v, depth+1);
+        }
+
+        for (auto const& f : flags) {
+            f->visit(v, depth+1);
         }
 
         assert(condition);
@@ -4735,7 +4740,11 @@ auto pretty_print_visualize(contract_node const& n, int indent)
     auto ret = std::string{"\n"} + pre(indent) + n.kind->as_string_view();
 
     if (n.group) {
-        ret += "<" + pretty_print_visualize(*n.group, indent) + ">";
+        ret += "<" + pretty_print_visualize(*n.group, indent);
+        for (auto const& flag : n.flags) {
+            ret += "," + pretty_print_visualize(*flag, indent);
+        }
+        ret += ">";
     }
 
     ret += "( " + pretty_print_visualize(*n.condition, indent);
@@ -7705,7 +7714,10 @@ private:
     //G     contract-kind contract-group? ':' '(' logical-or-expression ',' string-literal ')'
     //G
     //G contract-group:
-    //G     '<' id-expression '>'
+    //G     '<' id-expression contract-flags?'>'
+    //G
+    //G contract-flags:
+    //G     ',' id-expression contract-flags?
     //G
     //G contract-kind: one of
     //G     'pre' 'post' 'assert'
@@ -7727,6 +7739,7 @@ private:
         n->kind = &curr();
         next();
 
+        //  Check if there's a <group,flags>
         if (curr().type() == lexeme::Less) {
             next();
             if (auto id = id_expression()) {
@@ -7735,6 +7748,18 @@ private:
             else {
                 error("invalid contract group after '<'");
                 return {};
+            }
+
+            //  Now check if there's a list of flags
+            while (curr().type() == lexeme::Comma) {
+                next();
+                if (auto id = id_expression()) {
+                    n->flags.push_back( std::move(id) );
+                }
+                else {
+                    error("invalid contract tag in list");
+                    return {};
+                }
             }
 
             if (curr().type() != lexeme::Greater) {

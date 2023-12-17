@@ -4577,8 +4577,19 @@ public:
         }
 
         printer.print_cpp2(
-            "if (" + name + ".has_handler() && !(" + print_to_string(*n.condition) + ") ) " +
-                "{ " + name + ".violation(" + message + "); }", n.position()
+            "if (" + name + ".has_handler()",
+            n.position()
+        );
+        for (auto const& flag : n.flags) {
+            printer.print_cpp2(
+                " && " + print_to_string(*flag),
+                n.position()
+            );
+        }
+        printer.print_cpp2(
+            " && !(" + print_to_string(*n.condition) + ") ) " +
+                "{ " + name + ".violation(" + message + "); }",
+            n.position()
         );
 
         //  For a postcondition, close out the lambda
