@@ -113,8 +113,8 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
 
 #line 34 "pure2-print.cpp2"
         {
-            cpp2::Default.expects(CPP2_UFCS(empty)(m) == false || false, "message");
-            cpp2::Bounds.expects([_0 = 0, _1 = CPP2_UFCS(ssize)(m), _2 = 100]{ return cpp2::cmp_less(_0,_1) && cpp2::cmp_less(_1,_2); }() && true != false, "");
+            if (cpp2::Default.has_handler() && !(CPP2_UFCS(empty)(m) == false || false) ) { cpp2::Default.violation("message"); }
+            if (cpp2::Bounds.has_handler() && !([_0 = 0, _1 = CPP2_UFCS(ssize)(m), _2 = 100]{ return cpp2::cmp_less(_0,_1) && cpp2::cmp_less(_1,_2); }() && true != false) ) { cpp2::Bounds.violation(""); }
 #line 35 "pure2-print.cpp2"
             auto a {[]() mutable -> void{}}; 
             auto b {[]() mutable -> void{}}; 
@@ -131,7 +131,7 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
             else {if (!(CPP2_UFCS(empty)(m))) {std::move(b)(); }
             else {std::move(c)(); }}
 
-            cpp2::Default.expects(true, "");
+            if (cpp2::Default.has_handler() && !(true) ) { cpp2::Default.violation(""); }
 
             return [_0 = (s + CPP2_ASSERT_IN_BOUNDS(m, 0))]() mutable -> std::string { return _0;  }(); 
         }

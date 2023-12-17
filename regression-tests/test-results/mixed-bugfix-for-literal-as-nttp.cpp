@@ -21,8 +21,8 @@ auto main() -> int;
 
 #line 3 "mixed-bugfix-for-literal-as-nttp.cpp2"
 auto main() -> int{
-  cpp2::Default.expects(cpp2::as_<cpp2::i32, 10>() == 10, "");
-  cpp2::Default.expects(cpp2::as_<cpp2::i32, 10LL>() == 10, "");
-  cpp2::Default.expects(cpp2::as_<std::chrono::seconds>(10s) == 10s, "");
+  if (cpp2::Default.has_handler() && !(cpp2::as_<cpp2::i32, 10>() == 10) ) { cpp2::Default.violation(""); }
+  if (cpp2::Default.has_handler() && !(cpp2::as_<cpp2::i32, 10LL>() == 10) ) { cpp2::Default.violation(""); }
+  if (cpp2::Default.has_handler() && !(cpp2::as_<std::chrono::seconds>(10s) == 10s) ) { cpp2::Default.violation(""); }
 }
 

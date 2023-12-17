@@ -391,11 +391,14 @@ class contract_group {
 public:
     using handler = void (*)(CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM);
 
-    constexpr contract_group  (handler h) : reporter{h} { }
-    constexpr auto set_handler(handler h);
+    constexpr contract_group  (handler h = {}) : reporter{h} { }
+    constexpr auto set_handler(handler h = {}) { reporter = h; }
     constexpr auto get_handler() const -> handler { return reporter; }
+    constexpr auto has_handler() const -> bool    { return reporter != handler{}; }
     constexpr auto expects    (bool b, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
                                           -> void { if (!b) reporter(msg CPP2_SOURCE_LOCATION_ARG); }
+    constexpr auto violation  (CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
+                                          -> void { reporter(msg CPP2_SOURCE_LOCATION_ARG); }
 private:
     handler reporter;
 };
@@ -440,11 +443,6 @@ auto inline Testing = contract_group(
         report_and_terminate("Testing",       msg CPP2_SOURCE_LOCATION_ARG);
     }
 );
-
-constexpr auto contract_group::set_handler(handler h) {
-    Default.expects(h);
-    reporter = h;
-}
 
 
 //  Null pointer deref checking

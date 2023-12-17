@@ -22,7 +22,7 @@ auto main() -> int;
 
 #line 2 "pure2-concept-definition.cpp2"
 auto main() -> int      {
-  cpp2::Testing.expects(arithmetic<cpp2::i32>, "");
-  cpp2::Testing.expects(arithmetic<float>, "");
+  if (cpp2::Testing.has_handler() && !(arithmetic<cpp2::i32>) ) { cpp2::Testing.violation(""); }
+  if (cpp2::Testing.has_handler() && !(arithmetic<float>) ) { cpp2::Testing.violation(""); }
 }
 

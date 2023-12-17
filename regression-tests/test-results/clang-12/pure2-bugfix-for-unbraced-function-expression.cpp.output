@@ -1,7 +1,0 @@
-pure2-bugfix-for-unbraced-function-expression.cpp2:2:34: warning: unused parameter 'f' [-Wunused-parameter]
-  auto t::operator[](auto const& f) const& -> void{}
-                                 ^
-pure2-bugfix-for-unbraced-function-expression.cpp2:9:65: warning: expression result unused [-Wunused-value]
-  cpp2::Default.expects(!((cpp2::is<int>([]() mutable -> void { 0;  }))), "");
-                                                                ^
-2 warnings generated.

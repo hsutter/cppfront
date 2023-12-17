@@ -16,7 +16,7 @@ class t;
 #line 1 "pure2-bugfix-for-unbraced-function-expression.cpp2"
 class t {
 #line 2 "pure2-bugfix-for-unbraced-function-expression.cpp2"
-  public: auto operator[](auto const& f) const& -> void;
+  public: auto operator[]([[maybe_unused]] auto const& unnamed_param_2) const& -> void;
   public: t() = default;
   public: t(t const&) = delete; /* No 'that' constructor, suppress copy */
   public: auto operator=(t const&) -> void = delete;
@@ -35,7 +35,7 @@ extern cpp2::i32 y;
 #line 1 "pure2-bugfix-for-unbraced-function-expression.cpp2"
 
 #line 2 "pure2-bugfix-for-unbraced-function-expression.cpp2"
-  auto t::operator[](auto const& f) const& -> void{}
+  auto t::operator[]([[maybe_unused]] auto const& unnamed_param_2) const& -> void{}
 
 #line 5 "pure2-bugfix-for-unbraced-function-expression.cpp2"
 [[nodiscard]] auto main() -> int{
@@ -51,7 +51,7 @@ auto const& x = t();
 }
 
 #line 9 "pure2-bugfix-for-unbraced-function-expression.cpp2"
-  cpp2::Default.expects(!((cpp2::is<int>([]() mutable -> void { 0;  }))), "");
+  if (cpp2::Default.has_handler() && !(!((cpp2::is<int>([]() mutable -> auto { return 0; })))) ) { cpp2::Default.violation(""); }
 
   return cpp2::i32{0}; 
 }

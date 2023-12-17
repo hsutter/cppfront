@@ -140,6 +140,7 @@ compiler_services: @polymorphic_base @copyable type =
     }
 
     //  Error diagnosis and handling, integrated with compiler output
+    //  Unlike a contract violation, .requires continues further processing
     //
     require:(
         this,
@@ -161,13 +162,17 @@ compiler_services: @polymorphic_base @copyable type =
         _ = errors*.emplace_back( position(), message);
     }
 
-    //  Enable custom contracts on this object
+    //  Enable custom contracts on this object, integrated with compiler output
+    //  Unlike .requires, a contract violation stops further processing
     //
-    expects:(this, b, msg) = {
-        require(b, msg);
-        if !b { throw( std::runtime_error("  ==> programming bug found in metafunction @(metafunction_name)$ - precondition violation - see previous errors") ); }
+    violation:(this, msg) = {
+        error(msg);
+        throw( std::runtime_error("  ==> programming bug found in metafunction @(metafunction_name)$ - precondition violation - see previous errors") );
     }
+
+    has_handler:(this) true;
 }
+
 
 /*
 //-----------------------------------------------------------------------

@@ -28,7 +28,7 @@ auto main() -> int;
 
 #line 5 "pure2-bugfix-for-non-local-initialization.cpp2"
 auto main() -> int{
-  cpp2::Testing.expects(CPP2_ASSERT_IN_BOUNDS(t::value, 0) == 17, "");
-  cpp2::Testing.expects(CPP2_ASSERT_IN_BOUNDS(t::value, 1) == 29, "");
+  if (cpp2::Testing.has_handler() && !(CPP2_ASSERT_IN_BOUNDS(t::value, 0) == 17) ) { cpp2::Testing.violation(""); }
+  if (cpp2::Testing.has_handler() && !(CPP2_ASSERT_IN_BOUNDS(t::value, 1) == 29) ) { cpp2::Testing.violation(""); }
 }
 

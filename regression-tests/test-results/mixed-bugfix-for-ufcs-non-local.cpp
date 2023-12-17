@@ -86,7 +86,7 @@ template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> auto g() -> void{}// Fails on GCC ([GCC1
 auto g([[maybe_unused]] cpp2::in<t<CPP2_UFCS_NONLOCAL(f)(o)>> unnamed_param_1) -> void{}// Fails on Clang 12 (lambda in unevaluated context).
 
 auto g() -> void{
-                     cpp2::Default.expects(CPP2_UFCS(f)(o), ""); }
+                     if (cpp2::Default.has_handler() && !(CPP2_UFCS(f)(o)) ) { cpp2::Default.violation(""); }}
 
 #line 27 "mixed-bugfix-for-ufcs-non-local.cpp2"
 [[nodiscard]] auto h() -> t<CPP2_UFCS_NONLOCAL(f)(o)> { return o;  }// Fails on Clang 12 (lambda in unevaluated context).
@@ -95,7 +95,7 @@ auto g() -> void{
   inline CPP2_CONSTEXPR bool u::b = CPP2_UFCS_NONLOCAL(f)(o);
   inline CPP2_CONSTEXPR bool u::c = [](cpp2::in<std::type_identity_t<decltype(CPP2_UFCS_NONLOCAL(f)(o))>> x) mutable -> auto { return x; }(true);// Fails on Clang 12 (lambda in unevaluated context).
   auto u::g(auto const& s, auto const& sz) -> void{
-                                  cpp2::Default.expects(CPP2_UFCS(sz)(s) != 0, ""); }
+                                  if (cpp2::Default.has_handler() && !(CPP2_UFCS(sz)(s) != 0) ) { cpp2::Default.violation(""); }}
 
 #line 45 "mixed-bugfix-for-ufcs-non-local.cpp2"
 }

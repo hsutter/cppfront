@@ -4531,10 +4531,28 @@ public:
     {   STACKINSTR
         assert (n.kind);
 
-        //  "Axiom"s are for static analysis only, and are never evaluated, so just skip them
-        //  (The only requirement for an Axiom condition is that it parses; and even that's
-        //  easy to relax if we ever want to allow arbitrary tokens in an Axiom condition)
-        if (n.group && n.group->to_string() == "Axiom") {
+        //  If this is one of Cpp2's predefined contract groups,
+        //  make it convenient to use without cpp2:: qualification
+        auto name = std::string{"cpp2::Default"};
+        if (n.group)
+        {
+            name = print_to_string(*n.group);
+            if (
+                name == "Default"
+                || name == "Bounds"
+                || name == "Null"
+                || name == "Type"
+                || name == "Testing"
+                )
+            {
+                name.insert(0, "cpp2::");
+            }
+        }
+
+        //  "Unevaluated" is for static analysis only, and are never evaluated, so just skip them
+        //  (The only requirement for an Unevaluated condition is that it parses; and even that's
+        //  easy to relax if we ever want to allow arbitrary tokens in an Unevaluated condition)
+        if (n.group && n.group->to_string() == "Unevaluated") {
             return;
         }
 
@@ -4549,48 +4567,19 @@ public:
             );
         }
 
-        //  Emit the contract group name (defaults to cpp2::Default)
+        //  Emit the contract group name
+        //  and invoke .expects on that contract group
         //
-        if (n.group) {
-            //  If this is one of Cpp2's predefined contract groups,
-            //  make it convenient to use without cpp2:: qualification
-            if (auto uid = std::get_if<id_expression_node::unqualified>(&n.group->id)) {
-                assert (*uid && (**uid).identifier);
-                if (
-                    *(**uid).identifier == "Default"
-                    || *(**uid).identifier == "Bounds"
-                    || *(**uid).identifier == "Null"
-                    || *(**uid).identifier == "Type"
-                    || *(**uid).identifier == "Testing"
-                    )
-                {
-                    printer.print_cpp2("cpp2::", n.position());
-                }
-            }
-
-            printer.preempt_position_push(n.position());
-            printer.add_pad_in_this_line(-20);
-            emit(*n.group);
-            printer.preempt_position_pop();
-        }
-        else {
-            printer.print_cpp2("cpp2::Default", n.position());
-            printer.add_pad_in_this_line(-8);
-        }
-
-        //  And invoke .expects on that contract group
-        //
-        printer.print_cpp2(".expects(", n.position());
         assert(n.condition);
-        emit (*n.condition);
-        printer.print_cpp2(", ", n.position());
+        auto message = std::string{"\"\""};
         if (n.message) {
-            emit (*n.message);
+            message = print_to_string(*n.message);
         }
-        else {
-            printer.print_cpp2("\"\"", n.position());
-        }
-        printer.print_cpp2(");", n.position());
+
+        printer.print_cpp2(
+            "if (" + name + ".has_handler() && !(" + print_to_string(*n.condition) + ") ) " +
+                "{ " + name + ".violation(" + message + "); }", n.position()
+        );
 
         //  For a postcondition, close out the lambda
         //
