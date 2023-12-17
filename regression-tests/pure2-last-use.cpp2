@@ -636,8 +636,8 @@ enum_1: () = {
     }
 }
 enum_2: () = {
-    umax := 0;
-    if pred(umax) { // FIXME Moves `umax`.
+    umax := new<int>(0);
+    if pred(umax) {
     }
     else if pred(umax) {
     }

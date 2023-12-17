@@ -727,9 +727,22 @@ private:
                     --i;
                 }
 
+                //  If found in a sibling branch,
+                //  keep popping between the conditions
+                if (
+                    i > pos
+                    && comp
+                    && comp->kind_ == compound_sym::is_false
+                    )
+                {
+                    branch_depth = symbols[i].depth - 1;
+                }
+                else
+                {
+                    branch_depth = 0;
+                }
                 comp = nullptr;
                 found_depth = 0;
-                branch_depth = 0;
                 continue;
             }
 

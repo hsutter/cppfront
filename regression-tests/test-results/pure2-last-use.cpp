@@ -993,8 +993,8 @@ auto enum_1() -> void{
     }
 }
 auto enum_2() -> void{
-    auto umax {0}; 
-    if (pred(std::move(umax))) {// FIXME Moves `umax`.
+    auto umax {cpp2_new<int>(0)}; 
+    if (pred(umax)) {
     }
     else {if (pred(umax)) {
     }
