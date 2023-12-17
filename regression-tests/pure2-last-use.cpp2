@@ -1,5 +1,9 @@
 f_inout: (inout _) = { }
 f_copy: (copy _...) = { }
+pred: (_...) true;
+pred_copy: (copy _...) true;
+identity: (x) x;
+identity_copy: (copy x) x;
 
 issue_350: () = {
     x := 21;
@@ -610,10 +614,35 @@ draw: () = {
   _ = (pos).vertex();
 }
 
-enum: () = {
-  underlying_type: int;
-  if true { }
-  underlying_type = 0;
+enum_0: () = {
+    underlying_type : std::string;
+    if true { }
+    underlying_type = "";
+}
+enum_1: () = {
+    min_value: i64 = ();
+    max_value: i64 = ();
+
+    for  (0)
+    do   (_)
+    {
+        v := 0;
+        if pred(v, min_value) {
+            min_value = identity(v); // Not using 'else' will never move 'v'.
+        }
+        if pred(v, max_value) {
+            max_value = identity_copy(v); // FIXME Doesn't move `v`.
+        }
+    }
+}
+enum_2: () = {
+    umax := 0;
+    if pred(umax) { // FIXME Moves `umax`.
+    }
+    else if pred(umax) {
+    }
+    else if pred_copy(umax) {
+    }
 }
 
 union: type = {
@@ -650,5 +679,5 @@ deferred_non_copyable_2: () -> (p: std::unique_ptr<int>) = {
 main: (args) = {
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());
-  enum();
+  enum_0();
 }
