@@ -757,6 +757,7 @@ private:
 
         //  i is now at the end of id's scope, so start scanning backwards
         //  until we find the first definite last uses
+        --i;
         bool found = false;
         auto branch_depth = 0;
         while (i > pos)
