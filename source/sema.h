@@ -686,15 +686,71 @@ private:
     ) const
         -> void
     {
-        auto i = pos;
+        auto i = pos + 1;
+
+        //  To recognize uses in iteration statements
+        //  populate with pairs of (start pos, end pos)
+        auto loop_pos = std::vector<int>();
 
         //  Scan forward to the end of this scope
         for (auto start_depth = symbols[pos].depth;
-            i+1 < std::ssize(symbols)
-            && symbols[i+1].depth >= start_depth;
+            i < std::ssize(symbols)
+            && symbols[i].depth >= start_depth;
             ++i
             )
         {
+            //  Record the loops
+            if (auto sym = std::get_if<symbol::active::identifier>(&symbols[i].sym);
+                sym
+                && sym->identifier
+                && (
+                    *sym->identifier == "for"
+                    || *sym->identifier == "while"
+                    || *sym->identifier == "do"
+                    )
+                )
+            {
+                auto loop_depth = symbols[i].depth;
+                auto loop_id = sym->identifier;
+                //  Do consider the range expression of a for loop a last use
+                if (*loop_id == "for")
+                {
+                    //  If id is the loop parameter, this is its end
+                    if (!symbols[i].start)
+                    {
+                        assert(symbols[i].depth == start_depth && "Messed up in a nested loop");
+                        ++i;
+                        break;
+                    }
+                    //  Scan forward to the loop body
+                    while (i < std::ssize(symbols))
+                    {
+                        if (symbols[i].depth == loop_depth) {
+                            ++i;
+                        }
+                        // TODO Skip function expressions: <https://cpp2.godbolt.org/z/dxTaTvn9b>.
+                        else {
+                            break;
+                        }
+                    }
+                }
+                loop_pos.push_back(i - 1);
+                //  Scan forward to the end of this loop
+                ++i;
+                while (
+                    i < std::ssize(symbols)
+                    && (
+                        symbols[i].depth > loop_depth
+                        || !(sym = std::get_if<symbol::active::identifier>(&symbols[i].sym))
+                        || sym->identifier != loop_id
+                        )
+                    )
+                {
+                    ++i;
+                }
+                assert(sym && sym->identifier == loop_id && !symbols[i].start);
+                loop_pos.push_back(i);
+            }
         }
         // assert(symbols[i].sym.index() == symbol::active::compound);
         // assert(!std::get<symbol::active::compound>(symbols[i].sym).start);
@@ -705,6 +761,16 @@ private:
         auto branch_depth = 0;
         while (i > pos)
         {
+            //  Drop loops without uses
+            while (
+                loop_pos.size() >= 2
+                && *(loop_pos.end() - 2) >= i
+                )
+            {
+                loop_pos.pop_back();
+                loop_pos.pop_back();
+            }
+
             //  If found in a branch and we are at its start,
             //  pop out of any containing scope of the branch
             if (compound_sym const* comp = nullptr;
@@ -770,7 +836,22 @@ private:
                 continue;
             }
 
-            definite_last_uses.emplace_back( sym->identifier, is_forward );
+            //  If found in a loop, it wasn't a last use
+            //  Set up to pop out of the scope containing the loop
+            if (
+                loop_pos.size() >= 2
+                && *(loop_pos.end() - 2) <= i
+                && i <= loop_pos.back()
+                )
+            {
+                loop_pos.pop_back();
+                i = loop_pos.back(); // The scope to pop is the scope of the loop
+                loop_pos.pop_back();
+            }
+            else
+            {
+                definite_last_uses.emplace_back( sym->identifier, is_forward );
+            }
             found = true;
 
             compound_sym const* comp = nullptr;
@@ -1823,8 +1904,32 @@ public:
 
     auto start(iteration_statement_node const& n, int) -> void
     {
-        if (*n.identifier == "for") {
+        symbols.emplace_back( scope_depth, identifier_sym( false, n.identifier ) );
+    }
+
+    auto end(iteration_statement_node const& n, int) -> void
+    {
+        symbols.emplace_back( scope_depth, identifier_sym( false, n.identifier ) ).start = false;
+    }
+
+    auto start(loop_body_tag const& n, int) -> void
+    {
+        if (*n.n->identifier == "for") {
             just_entered_for = true;
+            if (n.n->body->is_expression()) {
+                ++scope_depth;
+            }
+        }
+    }
+
+    auto end(loop_body_tag const& n, int) -> void
+    {
+        if (
+            *n.n->identifier == "for"
+            && n.n->body->is_expression()
+            )
+        {
+            --scope_depth;
         }
     }
 

@@ -30,7 +30,7 @@ auto print_it(auto const& x, auto const& len) -> void;
 
     for ( auto& str : std::move(vec) ) {
         auto len {decorate(str)}; 
-        print_it(str, len);
+        print_it(str, std::move(len));
     }
 }
 

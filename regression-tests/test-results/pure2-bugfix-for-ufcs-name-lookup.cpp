@@ -75,7 +75,7 @@ auto main() -> int{
   }
   {
     auto f {t().f()}; 
-    cpp2::Default.expects(std::move(f) == 0, "");
+    cpp2::Default.expects(f == 0, "");
   }
 {
 auto const& f = t().f();

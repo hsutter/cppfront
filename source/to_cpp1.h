@@ -1731,6 +1731,7 @@ public:
         bool add_this =
             add_move
             && synthesized_multi_return_size == 0
+            && decl
             && decl->identifier
             && *decl->identifier == "this"
             && *n.identifier != "this";
@@ -2177,8 +2178,6 @@ public:
         -> void
     {   STACKINSTR
         assert(n.identifier);
-        in_non_rvalue_context.push_back(true);
-        auto guard = finally([&]{ in_non_rvalue_context.pop_back(); });
 
         iteration_statements.push_back({ &n, false});
         auto labelname = labelized_position(n.label);
@@ -2203,7 +2202,9 @@ public:
                 emit(*n.condition);
                 printer.print_cpp2("; ", n.position());
                 printer.add_pad_in_this_line(-10);
+                in_non_rvalue_context.push_back(true);
                 emit(*n.next_expression);
+                in_non_rvalue_context.pop_back();
             }
             printer.print_cpp2(" ) ", n.position());
             if (!labelname.empty()) {
@@ -2267,7 +2268,6 @@ public:
 
             printer.print_cpp2(" : ", n.position());
 
-            in_non_rvalue_context.push_back(false);
             //  If this expression is just a single expression-list, we can
             //  take over direct control of emitting it without needing to
             //  go through the whole grammar, and surround it with braces
@@ -2280,7 +2280,6 @@ public:
             else {
                 emit(*n.range);
             }
-            in_non_rvalue_context.pop_back();
 
             printer.print_cpp2(" ) ", n.position());
             if (!labelname.empty()) {
