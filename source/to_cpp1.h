@@ -2380,6 +2380,7 @@ public:
                 else if (
                     !is_parameter_name
                     && sema.get_declaration_of(*tok)
+                    && !sema.is_captured(*tok)
                     )
                 {
                     errors.emplace_back(

@@ -89,6 +89,17 @@ issue_847_2: (forward v) = {
 }
 issue_847_3: (copy x: int) = { for (x) do (_) { } }
 
+issue_850: () = {
+    v: std::vector = ( 1, 2, 3, 4, 5 );
+
+    //  Definite last use of v => move-capture v into f's closure
+    f := :() -> forward _ = { return v$; };
+
+    //  Now we can access the vector captured inside f()...
+    f().push_back(6);
+    for f() do(e) std::cout << e;       // prints 123456
+}
+
 issue_857: type = {
   a: std::unique_ptr<int>;
   b: std::unique_ptr<int>;
@@ -715,9 +726,102 @@ deferred_non_copyable_2: () -> (p: std::unique_ptr<int>) = {
   p = ();
 }
 
+loops: () = {
+  _ = :() = {
+    x := new<int>(0);
+    for (0)
+    do (_)
+    f_inout(x);
+  };
+
+  _ = :() = {
+    x := new<int>(0);
+    for (0)
+    do (_)
+    {
+      _ = 0; // FIXME Off-by-one error without this (see sema.h (last-use-A))
+      f_inout(x);
+    }
+  };
+  /*
+  _ = :() = {
+    x := new<int>(0);
+    for (0)
+    do (_)
+    assert(x); // FIXME See sema.h (last-use-A)
+  };
+  */
+  _ = :() = {
+    x := new<int>(0);
+    if true {
+      f_copy(x);
+    }
+    else {
+      while true {
+        f_inout(x);
+      }
+    }
+  };
+}
+
+captures: namespace = {
+
+// Skip non captured name in function expression
+
+f: () = {
+  x := new<int>(0);
+  f_copy(x);
+  id := :(x) -> forward _ = x;
+  y := new<int>(0);
+  assert(id(y)& == y&);
+}
+
+x: int == 0;
+
+t: @struct type = {
+  x: std::unique_ptr<int>;
+  operator(): (move this) = {
+    f_copy(x);
+    _ = :() = {
+      using captures::x;
+      _ = x;
+    };
+  }
+}
+
+}
+
+loops_and_captures: () = {
+  _ = :() = {
+    x := new<int>(0);
+    f_copy(x);
+    for (:(x) x)
+    do (_)
+    { }
+  };
+
+  _ = :() = {
+    x := new<int>(0);
+    for (:() x$*)
+    do (_)
+    { }
+  };
+}
+
+types: @struct type = {
+  x: std::unique_ptr<int>;
+  f: (move this) = _ = :() x$*;
+  g: (move this) = {
+    for (:() x$*)
+    do (_)
+    { }
+  }
+}
+
 main: (args) = {
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());
   issue_847_5(args);
+  issue_850();
   enum_0();
 }
