@@ -688,9 +688,19 @@ private:
     {
         auto i = pos + 1;
 
-        //  To recognize uses in iteration statements
-        //  populate with pairs of (start pos, end pos)
-        auto loop_pos = std::vector<int>();
+        struct pos_range {
+            bool is_loop;
+            int first;
+            int last = 0;
+            bool within(int x) const { return first <= x && x <= last; }
+            bool skip() const { return !is_loop; }
+        };
+        //  Ranges of positions which includes non-nested
+        //  1. Iteration statements (a use isn't a last use)
+        //  2. Ranges to skip (a last use can't be found in these)
+        //    - Function expressions (what about captures?)
+        //    - Where id is hidden by another declaration
+        auto pos_ranges = std::vector<pos_range>();
 
         //  Scan forward to the end of this scope
         for (auto start_depth = symbols[pos].depth;
@@ -734,7 +744,7 @@ private:
                         }
                     }
                 }
-                loop_pos.push_back(i - 1);
+                pos_ranges.emplace_back(true, i - 1);
                 //  Scan forward to the end of this loop
                 ++i;
                 while (
@@ -749,7 +759,7 @@ private:
                     ++i;
                 }
                 assert(sym && sym->identifier == loop_id && !symbols[i].start);
-                loop_pos.push_back(i);
+                pos_ranges.back().last = i;
             }
         }
         // assert(symbols[i].sym.index() == symbol::active::compound);
@@ -762,14 +772,23 @@ private:
         auto branch_depth = 0;
         while (i > pos)
         {
-            //  Drop loops without uses
+            //  Drop skipped ranges
             while (
-                loop_pos.size() >= 2
-                && *(loop_pos.end() - 2) >= i
+                !pos_ranges.empty()
+                && pos_ranges.back().first >= i
                 )
             {
-                loop_pos.pop_back();
-                loop_pos.pop_back();
+                pos_ranges.pop_back();
+            }
+            //  Skip ranges where a use of id would name another declaration
+            while (
+                !pos_ranges.empty()
+                && pos_ranges.back().within(i)
+                && pos_ranges.back().skip()
+                )
+            {
+                i = pos_ranges.back().first;
+                pos_ranges.pop_back();
             }
 
             //  If found in a branch and we are at its start,
@@ -840,14 +859,13 @@ private:
             //  If found in a loop, it wasn't a last use
             //  Set up to pop out of the scope containing the loop
             if (
-                loop_pos.size() >= 2
-                && *(loop_pos.end() - 2) <= i
-                && i <= loop_pos.back()
+                !pos_ranges.empty()
+                && pos_ranges.back().within(i)
                 )
             {
-                loop_pos.pop_back();
-                i = loop_pos.back(); // The scope to pop is the scope of the loop
-                loop_pos.pop_back();
+                assert(pos_ranges.back().is_loop && "Other ranges are skipped.");
+                i = pos_ranges.back().first; // The scope to pop is the scope of the loop
+                pos_ranges.pop_back();
             }
             else
             {
