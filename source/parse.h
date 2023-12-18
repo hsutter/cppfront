@@ -5686,6 +5686,9 @@ private:
                 n->cap_grp->add(n.get());
             }
 
+            //  Remember current position, in case we need to backtrack
+            auto term_pos = pos;
+
             auto term = postfix_expression_node::term{&curr()};
             next();
 
@@ -5708,18 +5711,25 @@ private:
             }
             else if (term.op->type() == lexeme::LeftParen)
             {
+                //  Next should be an expression-list followed by a ')'
+                //  If not, then this wasn't a call expression so backtrack to
+                //  the '(' which will be part of the next grammar production
+
                 term.expr_list = expression_list(term.op);
-                if (!term.expr_list) {
-                    error("( is not followed by a valid expression list");
-                    return {};
+                if (
+                    term.expr_list
+                    && curr().type() == lexeme::RightParen
+                )
+                {
+                    term.expr_list->close_paren = &curr();
+                    term.op_close = &curr();
+                    next();
                 }
-                if (curr().type() != lexeme::RightParen) {
-                    error("unexpected text - ( is not properly matched by )", true, {}, true);
-                    return {};
+                else
+                {
+                    pos = term_pos;    // backtrack
+                    break;
                 }
-                term.expr_list->close_paren = &curr();
-                term.op_close = &curr();
-                next();
             }
             else if (term.op->type() == lexeme::Dot)
             {
