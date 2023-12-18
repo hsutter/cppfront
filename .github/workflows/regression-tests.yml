@@ -1,0 +1,42 @@
+name: Regression tests
+
+on:
+  push:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  regression-tests-linux-mac:
+    name: Run on ${{ matrix.os }} using ${{ matrix.compiler }}
+    runs-on: ${{ matrix.os }}
+    env:
+      CXX: ${{ matrix.compiler }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        compiler: [g++-10, g++-13]
+        include:
+          - os: macos-latest
+            compiler: clang++
+          - os: windows-latest
+            compiler: cl.exe
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Run regression tests - Linux and macOS version
+      if: matrix.os == 'ubuntu-latest' || matrix.os == 'macOS-latest'
+      run: |
+        cd regression-tests
+        bash run-tests.sh -c ${{ matrix.compiler }}
+
+    - name: Run regression tests - Windows version
+      if: matrix.os == 'windows-latest'
+      run: |
+        "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && ^
+        git config --local core.autocrlf false && ^
+        cd regression-tests && ^
+        bash run-tests.sh -c ${{ matrix.compiler }}
+      shell: cmd
