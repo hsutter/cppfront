@@ -85,15 +85,18 @@ struct declaration_sym {
 };
 
 struct identifier_sym {
+    bool start = false;
     bool standalone_assignment_to = false;
     bool is_captured = false;
     token const* identifier = {};
 
     identifier_sym(
         bool         a,
-        token const* id
+        token const* id,
+        bool         s = true
     )
-        : standalone_assignment_to{a}
+        : start{s}
+        , standalone_assignment_to{a}
         , identifier{id}
     { }
 
@@ -181,7 +184,7 @@ struct symbol {
     bool start = true;
 
     symbol(int depth, declaration_sym const& sym) : depth{depth}, sym{sym}, start{sym.start} { }
-    symbol(int depth, identifier_sym  const& sym) : depth{depth}, sym{sym}                   { }
+    symbol(int depth, identifier_sym  const& sym) : depth{depth}, sym{sym}, start{sym.start} { }
     symbol(int depth, selection_sym   const& sym) : depth{depth}, sym{sym}, start{sym.start} { }
     symbol(int depth, compound_sym    const& sym) : depth{depth}, sym{sym}, start{sym.start} { }
 
@@ -475,6 +478,7 @@ public:
         if (identifier_sym const* sym = nullptr;
             it != symbols.end()
             && (sym = std::get_if<symbol::active::identifier>(&it->sym))
+            && sym->start
             )
         {
             return sym->is_captured;
@@ -541,14 +545,22 @@ public:
             break;case symbol::active::identifier: {
                 auto const& sym = std::get<symbol::active::identifier>(s.sym);
                 assert (sym.identifier);
-                if (auto use = is_definite_last_use(sym.identifier)) {
+                if (last_use const* use = nullptr;
+                    sym.start
+                    && (use = is_definite_last_use(sym.identifier))
+                    )
+                {
                     o << "*** " << sym.identifier->position().to_string()
                       << " DEFINITE LAST "
                       << (use->is_forward ? "FORWARDING" : "POTENTIALLY MOVING")
                       << " USE OF ";
                 }
 
-                if (is_definite_initialization(sym.identifier)) {
+                if (
+                    sym.start
+                    && is_definite_initialization(sym.identifier)
+                    )
+                {
                     o << "*** " << sym.identifier->position().to_string()
                       << " DEFINITE INITIALIZATION OF ";
                 }
@@ -709,8 +721,9 @@ private:
         -> void
     {
         auto is_an_use = [&](identifier_sym const* sym) -> bool {
-            assert (!sym || sym->identifier);
+            assert(!sym || sym->identifier);
             return sym
+                   && sym->start
                    && (
                        *sym->identifier == *id
                        //  For 'this', do include member names with implicit 'this.'
@@ -1044,7 +1057,11 @@ private:
                 auto const& sym = std::get<symbol::active::identifier>(symbols[pos].sym);
                 assert (sym.identifier);
 
-                if (is_definite_initialization(sym.identifier)) {
+                if (
+                    sym.start
+                    && is_definite_initialization(sym.identifier)
+                    )
+                {
                     errors.emplace_back(
                         sym.identifier->position(),
                         "local variable " + name
@@ -1899,6 +1916,33 @@ public:
     bool just_entered_for                         = false;
     parameter_declaration_node const* inside_out_parameter = {};
     std::vector<int> symbols_size_at_postfix_expression_start = {};
+    std::vector<int> symbols_size_at_lifetime_scope_start = {};
+
+    auto pop_lifetime_scope() -> void
+    {
+        assert(!symbols_size_at_lifetime_scope_start.empty());
+        assert(symbols_size_at_lifetime_scope_start.back() <= std::ssize(symbols));
+        for (auto first = symbols_size_at_lifetime_scope_start.back(),
+                  last = cpp2::unsafe_narrow<int>(std::ssize(symbols));
+             first != last;
+             --last) {
+            if (auto sym = std::get_if<symbol::active::declaration>(&symbols[last - 1].sym);
+                sym
+                && sym->start
+                && sym->identifier
+                && *sym->identifier != "_"
+                )
+            {
+                symbols.emplace_back( scope_depth, identifier_sym( false, sym->identifier, false ) );
+            }
+        }
+        symbols_size_at_lifetime_scope_start.pop_back();
+    }
+
+    auto end(translation_unit_node const&, int) -> void
+    {
+        assert(symbols_size_at_lifetime_scope_start.empty());
+    }
 
     auto start(next_expression_tag const&, int) -> void
     {
@@ -1913,6 +1957,7 @@ public:
     auto start(parameter_declaration_list_node const&, int) -> void
     {
         inside_parameter_list = true;
+        symbols_size_at_lifetime_scope_start.push_back(cpp2::unsafe_narrow<int>(ssize(symbols)));
     }
 
     auto end(parameter_declaration_list_node const&, int) -> void
@@ -1988,7 +2033,7 @@ public:
 
     auto end(iteration_statement_node const& n, int) -> void
     {
-        symbols.emplace_back( scope_depth, identifier_sym( false, n.identifier ) ).start = false;
+        symbols.emplace_back( scope_depth, identifier_sym( false, n.identifier, false ) );
     }
 
     auto start(loop_body_tag const& n, int) -> void
@@ -2047,6 +2092,13 @@ public:
 
     auto end(declaration_node const& n, int) -> void
     {
+        if (auto f = std::get_if<declaration_node::a_function>(&n.type)) {
+            if (std::get_if<function_type_node::list>(&(*f)->returns)) {
+                pop_lifetime_scope();
+            }
+            pop_lifetime_scope();
+        }
+
         if (
             !n.is_alias()
             //  Skip type scope (member) variables
@@ -2081,7 +2133,11 @@ public:
         {
             assert(!symbols_size_at_postfix_expression_start.empty());
             for (auto& s : std::span{symbols}.subspan(symbols_size_at_postfix_expression_start.back())) {
-                if (auto sym = std::get_if<symbol::active::identifier>(&s.sym)) {
+                if (auto sym = std::get_if<symbol::active::identifier>(&s.sym);
+                    sym
+                    && sym->start
+                    )
+                {
                     sym->is_captured = true;
                 }
             }
@@ -2150,6 +2206,13 @@ public:
         }
     }
 
+    auto end(statement_node const& n, int) -> void
+    {
+        if (n.parameters) {
+            pop_lifetime_scope();
+        }
+    }
+
     auto start(selection_statement_node const& n, int) -> void
     {
         active_selections.push_back( &n );
@@ -2193,6 +2256,7 @@ public:
             compound_sym{ true, &n, kind_of(n) }
         );
         ++scope_depth;
+        symbols_size_at_lifetime_scope_start.push_back(cpp2::unsafe_narrow<int>(ssize(symbols)));
     }
 
     auto end(compound_statement_node const& n, int) -> void
@@ -2202,6 +2266,7 @@ public:
             compound_sym{ false, &n, kind_of(n) }
         );
         --scope_depth;
+        pop_lifetime_scope();
     }
 
     auto start(assignment_expression_node const& n, int)
