@@ -73,7 +73,7 @@ class t;
 #line 792 "pure2-last-use.cpp2"
 }
 
-#line 811 "pure2-last-use.cpp2"
+#line 822 "pure2-last-use.cpp2"
 class types;
   
 
@@ -393,13 +393,13 @@ class t {
 
 auto loops_and_captures() -> void;
 
-#line 811 "pure2-last-use.cpp2"
+#line 822 "pure2-last-use.cpp2"
 class types {
   public: std::unique_ptr<int> x; 
   public: auto f() && -> void;
   public: auto g() && -> void;
 
-#line 819 "pure2-last-use.cpp2"
+#line 830 "pure2-last-use.cpp2"
 };
 
 auto main(int const argc_, char** argv_) -> int;
@@ -1220,13 +1220,23 @@ auto loops_and_captures() -> void{
 
   static_cast<void>([]() mutable -> void{
     auto x {cpp2_new<int>(0)}; 
+    f_copy(std::move(x));
+    for ( 
+
+#line 810 "pure2-last-use.cpp2"
+    [[maybe_unused]] auto const& unnamed_param_1 : { []() mutable -> auto{using captures::x;return x; } } ) 
+    {}
+  });
+
+  static_cast<void>([]() mutable -> void{
+    auto x {cpp2_new<int>(0)}; 
     for ( 
     [[maybe_unused]] auto const& unnamed_param_1 : { [_0 = std::move(x)]() mutable -> auto { return *cpp2::assert_not_null(_0); } } ) 
     {}
   });
 }
 
-#line 813 "pure2-last-use.cpp2"
+#line 824 "pure2-last-use.cpp2"
   auto types::f() && -> void { static_cast<void>([&, _1 = std::move(*this).x]() mutable -> auto { return *cpp2::assert_not_null(_1);  });  }
   auto types::g() && -> void{
     for ( 
@@ -1234,10 +1244,10 @@ auto loops_and_captures() -> void{
     {}
   }
 
-#line 821 "pure2-last-use.cpp2"
+#line 832 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 822 "pure2-last-use.cpp2"
+#line 833 "pure2-last-use.cpp2"
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());
   issue_847_5(args);

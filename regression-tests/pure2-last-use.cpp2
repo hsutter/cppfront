@@ -802,6 +802,17 @@ loops_and_captures: () = {
 
   _ = :() = {
     x := new<int>(0);
+    f_copy(x);
+    for (:() -> _ = {
+      using captures::x;
+      return x;
+    })
+    do (_)
+    { }
+  };
+
+  _ = :() = {
+    x := new<int>(0);
     for (:() x$*)
     do (_)
     { }
