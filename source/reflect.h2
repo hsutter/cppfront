@@ -907,6 +907,7 @@ basic_enum: (
         enumerators.push_back( e );
 
         mo.mark_for_removal_from_enclosing_type();
+        _ = mo;
     }
 
     //  Compute the default underlying type, if it wasn't explicitly specified
@@ -1129,6 +1130,7 @@ union: (inout t : meta::type_declaration)
         alternatives.push_back( e );
 
         mo.mark_for_removal_from_enclosing_type();
+        _ = mo;
     }
 
     discriminator_type: std::string = ();
