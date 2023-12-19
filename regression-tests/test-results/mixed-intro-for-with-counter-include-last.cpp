@@ -31,7 +31,7 @@
     std::vector<int> v {1, 2, 3, 4, 5}; 
     auto counter {42}; 
     for (                         auto const& i : std::move(v) )  { do {
-        std::cout << i << " " << counter << "\n";
+        std::cout << i << " " << std::move(counter) << "\n";
     } while (false); counter *= 2; }
 }
 
