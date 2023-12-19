@@ -402,6 +402,9 @@ class types {
 #line 827 "pure2-last-use.cpp2"
 };
 
+auto skip_hidden_names() -> void;
+
+#line 859 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -1242,9 +1245,49 @@ auto loops_and_captures() -> void{
   }
 
 #line 829 "pure2-last-use.cpp2"
+auto skip_hidden_names() -> void{
+  static_cast<void>([]() mutable -> void{
+    auto x {cpp2_new<int>(0)}; 
+    f_copy(std::move(x));
+{
+auto x = cpp2_new<int>(0);
+
+#line 834 "pure2-last-use.cpp2"
+      f_copy(std::move(x));
+}
+#line 835 "pure2-last-use.cpp2"
+  });
+
+  static_cast<void>([]() mutable -> void{
+    auto x {cpp2_new<int>(0)}; 
+    static_cast<void>([_0 = std::move(x)]() mutable -> void{
+      static_cast<void>(_0);
+      auto x {cpp2_new<int>(1)}; 
+      static_cast<void>([_0 = std::move(x)]() mutable -> void{
+        static_cast<void>(_0);
+      });
+    });
+  });
+
+  static_cast<void>([]() mutable -> void{
+    auto x {cpp2_new<int>(0)}; 
+    f_copy(std::move(x));
+{
+auto x = cpp2_new<int>(0);
+  //for (0)
+  //do (x) // TODO Treat loop parameter.
+  //_ = identity_copy(x);
+
+#line 855 "pure2-last-use.cpp2"
+      f_copy(std::move(x));
+}
+#line 856 "pure2-last-use.cpp2"
+  });
+}
+
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 830 "pure2-last-use.cpp2"
+#line 860 "pure2-last-use.cpp2"
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());
   issue_847_5(args);

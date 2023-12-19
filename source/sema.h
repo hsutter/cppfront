@@ -755,6 +755,43 @@ private:
         //    - Where id is hidden by another declaration
         auto pos_ranges = std::vector<pos_range>();
 
+        auto skip_hidden_name = [&]() -> bool {
+            if (auto decl = std::get_if<symbol::active::declaration>(&symbols[i].sym);
+                decl
+                && decl->start
+                && decl->identifier
+                && *decl->identifier == *id
+                && *decl->identifier != "_"
+                )
+            {
+                //  Can afford to just skip id and not member names
+                //  because in Cpp2 you can't shadow member names
+                //
+                //  TODO When local types are supported
+                //  consider where 'this' is implicitly declared
+                //  For example, see https://cpp2.godbolt.org/z/onfW6hns1
+
+                auto identifier_end = decl->identifier;
+                pos_ranges.emplace_back(false, i - 1);
+                ++i;
+                identifier_sym const* sym = nullptr;
+                while (
+                    i < std::ssize(symbols)
+                    && (
+                        !(sym = std::get_if<symbol::active::identifier>(&symbols[i].sym))
+                        || sym->identifier != identifier_end
+                        )
+                    )
+                {
+                    ++i;
+                }
+                assert(decl && sym->identifier == identifier_end && !sym->start);
+                pos_ranges.back().last = i;
+                return true;
+            }
+            return false;
+        };
+
         auto skip_function_expression = [&]() -> bool {
             if (auto decl = std::get_if<symbol::active::declaration>(&symbols[i].sym);
                 decl
@@ -774,10 +811,8 @@ private:
                         )
                     )
                 {
-                    if (decl)
-                    {
-                        //  TODO Skip scopes of hidden names,
-                        //  be it id or members of 'this'
+                    if (skip_hidden_name()) {
+                        continue;
                     }
                     else if (
                         auto sym = std::get_if<symbol::active::identifier>(&symbols[i].sym);
@@ -804,7 +839,11 @@ private:
             ++i
             )
         {
-            if (skip_function_expression()) {
+            if (
+                skip_function_expression()
+                || skip_hidden_name()
+                )
+            {
                 continue;
             }
 
@@ -846,6 +885,13 @@ private:
                         )
                     )
                 {
+                    if (
+                        skip_function_expression()
+                        || skip_hidden_name()
+                        )
+                    {
+                        continue;
+                    }
                     ++i;
                 }
                 assert(sym && sym->identifier == loop_id && !symbols[i].start);

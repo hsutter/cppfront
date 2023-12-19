@@ -826,6 +826,36 @@ types: @struct type = {
   }
 }
 
+skip_hidden_names: () = {
+  _ = :() = {
+    x := new<int>(0);
+    f_copy(x);
+    (copy x := new<int>(0))
+      f_copy(x);
+  };
+
+  _ = :() = {
+    x := new<int>(0);
+    _ = :() = {
+      _ = x$;
+      x := new<int>(1);
+      _ = :() = {
+        _ = x$;
+      };
+    };
+  };
+
+  _ = :() = {
+    x := new<int>(0);
+    f_copy(x);
+  //for (0)
+  //do (x) // TODO Treat loop parameter.
+  //_ = identity_copy(x);
+    (copy x := new<int>(0))
+      f_copy(x);
+  };
+}
+
 main: (args) = {
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());
