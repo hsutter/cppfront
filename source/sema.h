@@ -809,34 +809,17 @@ private:
                 auto loop_depth = symbols[i].depth;
                 auto loop_id = sym->identifier;
 
-                if (*loop_id == "for")
+                //  If id is the loop parameter, this is its end
+                if (
+                    *loop_id == "for"
+                    && !symbols[i].start
+                    )
                 {
-                    //  If id is the loop parameter, this is its end
-                    if (!symbols[i].start)
-                    {
-                        assert(symbols[i].depth == start_depth && "Messed up in a nested loop");
-                        ++i;
-                        break;
-                    }
-                    //  Scan forward to the loop parameter
-                    //  Uses in the range expression are OK
-                    //  The next expression is handled in `to_cpp1.h`
-                    while (i < std::ssize(symbols))
-                    {
-                        //  FIXME Brittle, better to tag in 'visit'
-                        // (see pure2-last-use.cpp2 (last-use-A))
-                        if (
-                            skip_function_expression()
-                            || symbols[i].depth == loop_depth
-                            )
-                        {
-                            ++i;
-                        }
-                        else {
-                            break;
-                        }
-                    }
+                    assert(symbols[i].depth == start_depth && "Messed up in a nested loop");
+                    ++i;
+                    break;
                 }
+
                 pos_ranges.emplace_back(true, i);
 
                 //  Scan forward to the end of this loop
@@ -1998,7 +1981,9 @@ public:
 
     auto start(iteration_statement_node const& n, int) -> void
     {
-        symbols.emplace_back( scope_depth, identifier_sym( false, n.identifier ) );
+        if (*n.identifier != "for") {
+             symbols.emplace_back( scope_depth, identifier_sym( false, n.identifier ) );
+        }
     }
 
     auto end(iteration_statement_node const& n, int) -> void
@@ -2008,11 +1993,11 @@ public:
 
     auto start(loop_body_tag const& n, int) -> void
     {
-        if (*n.n->identifier == "for") {
-            just_entered_for = true;
-            if (n.n->body->is_expression()) {
-                ++scope_depth;
-            }
+        assert(*n.n->identifier == "for");
+        symbols.emplace_back( scope_depth, identifier_sym( false, n.n->identifier ) );
+        just_entered_for = true;
+        if (n.n->body->is_expression()) {
+            ++scope_depth;
         }
     }
 
@@ -2087,9 +2072,6 @@ public:
 
     auto start(token const& t, int) -> void
     {
-        static std::int32_t final_position = 1;
-        t.final_position = final_position++;
-
         if (t.type() == lexeme::Dot) {
             started_member_access = true;
             started_this_member_access = *(&t - 1) == "this";
@@ -2107,7 +2089,7 @@ public:
             }
         }
 
-        //  We currently only care to look at variable identifiers
+        //  Further look at variable identifiers only
         if (
             t.type() != lexeme::Identifier
             && t != "this"
@@ -2116,9 +2098,12 @@ public:
             return;
         }
 
+        static std::int32_t final_position = 1;
+        t.final_position = final_position++;
+
         //  If this is the first identifier since we started a new assignment,
         //  expression, then it's the left-hand side (target) of the assignment
-        else if (started_standalone_assignment_expression)
+        if (started_standalone_assignment_expression)
         {
             symbols.emplace_back( scope_depth, identifier_sym( true, &t ) );
             started_standalone_assignment_expression = false;   // we were the consumer for this information

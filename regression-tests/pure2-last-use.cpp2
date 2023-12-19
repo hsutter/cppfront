@@ -738,19 +738,16 @@ loops: () = {
     x := new<int>(0);
     for (0)
     do (_)
-    {
-      _ = 0; // FIXME Off-by-one error without this (see sema.h (last-use-A))
-      f_inout(x);
-    }
+    f_inout(x);
   };
-  /*
+
   _ = :() = {
     x := new<int>(0);
     for (0)
     do (_)
-    assert(x); // FIXME See sema.h (last-use-A)
+    assert(x.get());
   };
-  */
+
   _ = :() = {
     x := new<int>(0);
     if true {
