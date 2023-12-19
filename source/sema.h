@@ -2080,10 +2080,8 @@ public:
         else if (t.type() == lexeme::Dollar)
         {
             assert(!symbols_size_at_postfix_expression_start.empty());
-            for (auto first = symbols.begin() + symbols_size_at_postfix_expression_start.back();
-                 first != symbols.end();
-                 ++first) {
-                if (auto sym = std::get_if<symbol::active::identifier>(&first->sym)) {
+            for (auto& s : std::span{symbols}.subspan(symbols_size_at_postfix_expression_start.back())) {
+                if (auto sym = std::get_if<symbol::active::identifier>(&s.sym)) {
                     sym->is_captured = true;
                 }
             }
