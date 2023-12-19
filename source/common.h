@@ -873,6 +873,96 @@ static cmdline_processor::register_flag cmd_gen_version(
     []{ cmdline.gen_version(); }
 );
 
+static auto flag_internal_debug = false;
+static cmdline_processor::register_flag cmd_internal_debug(
+    0,
+    "_debug",
+    "Generate internal debug instrumentation",
+    []{ flag_internal_debug = true; }
+);
+
+
+//-----------------------------------------------------------------------
+//
+//  Internal instrumentation
+//
+//-----------------------------------------------------------------------
+//
+
+class stackinstr
+{
+    struct entry
+    {
+        ptrdiff_t        delta;
+        ptrdiff_t        cumulative;
+        std::string_view func_name;
+        std::string_view file;
+        int              line;
+        char*            ptr;
+
+        entry(
+            std::string_view n,
+            std::string_view f,
+            int              l,
+            char*            p
+        )
+            : delta     { entries.empty() ? 0 : std::abs(entries.back().ptr - p) }
+            , cumulative{ entries.empty() ? 0 : entries.back().cumulative + delta }
+            , func_name { n }
+            , file      { f }
+            , line      { l }
+            , ptr       { p }
+        { }
+    };
+    static std::vector<entry> entries;
+    static std::vector<entry> deepest;
+    static std::vector<entry> largest;
+
+    static auto print(auto&& ee, std::string_view label) {
+        std::cout << "\n=== Stack debug information: " << label << " stack ===\n";
+        for (auto& e: ee) 
+        if  (e.ptr) {
+            std::cout
+                << "  " << std::setw(6)
+                << ((std::abs(e.delta) < 1000000)? std::to_string(e.delta) : "-----") << " "
+                << std::setw(8)
+                << ((std::abs(e.delta) < 1000000)? std::to_string(e.cumulative) : "-------") << " "
+                << e.func_name << " (" << e.file << ":" << e.line << ")\n";
+        }
+    }
+
+public:
+    struct guard {
+        guard( std::string_view name, std::string_view file, int line, char* p ) {
+            if (flag_internal_debug) {
+                entries.emplace_back(name, file, line ,p);
+                if (ssize(deepest) < ssize(entries)) {
+                    deepest = entries;
+                }
+                if (largest.empty() || largest.back().cumulative < entries.back().cumulative) {
+                    largest = entries;
+                }
+            }
+        }
+        ~guard() {
+            if (flag_internal_debug) {
+                entries.pop_back();
+            }
+        }
+    };
+
+    static auto print_entries() { print( entries, "Current" ); }
+    static auto print_deepest() { print( deepest, "Deepest" ); }
+    static auto print_largest() { print( largest, "Largest" ); }
+};
+
+std::vector<stackinstr::entry> stackinstr::entries;
+std::vector<stackinstr::entry> stackinstr::deepest;
+std::vector<stackinstr::entry> stackinstr::largest;
+
+#define STACKINSTR stackinstr::guard _s_guard{ __func__, __FILE__, __LINE__, reinterpret_cast<char*>(&_s_guard) };
+
+
 }
 
 #endif

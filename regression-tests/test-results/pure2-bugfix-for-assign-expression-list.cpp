@@ -6,23 +6,26 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-bugfix-for-assign-expression-list.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-bugfix-for-assign-expression-list.cpp2"
 auto main() -> int;
-  
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-bugfix-for-assign-expression-list.cpp2"
 auto main() -> int{
+#line 2 "pure2-bugfix-for-assign-expression-list.cpp2"
   using vec = std::vector<int>;
   vec v {0}; 
   v                   = {  };
-  cpp2::Default.expects(v == vec{}, "");
+  if (cpp2::Default.has_handler() && !(v == vec{}) ) { cpp2::Default.violation(""); }
   v                   = { 1 };
-  cpp2::Default.expects(v == vec{1}, "");
+  if (cpp2::Default.has_handler() && !(v == vec{1}) ) { cpp2::Default.violation(""); }
   v                   = { 2, 3 };
-  cpp2::Default.expects(std::move(v) == vec{2, 3}, "");
+  if (cpp2::Default.has_handler() && !(std::move(v) == vec{2, 3}) ) { cpp2::Default.violation(""); }
 }
 

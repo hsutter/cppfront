@@ -5,14 +5,15 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-bounds-safety-with-assert-2.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-bounds-safety-with-assert-2.cpp2"
 
 #line 2 "mixed-bounds-safety-with-assert-2.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 
 #line 10 "mixed-bounds-safety-with-assert-2.cpp2"
 auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> void;
@@ -25,6 +26,7 @@ auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> vo
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-bounds-safety-with-assert-2.cpp2"
 
 #line 2 "mixed-bounds-safety-with-assert-2.cpp2"
 [[nodiscard]] auto main() -> int{
@@ -37,13 +39,13 @@ auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> vo
 
 auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> void
 {
-    cpp2::Bounds.expects(cpp2::cmp_less_eq(0,start), "");
-    cpp2::Bounds.expects(cpp2::cmp_less_eq(end,CPP2_UFCS_0(ssize, rng)), "");
+    if (cpp2::Bounds.has_handler() && !(cpp2::cmp_less_eq(0,start)) ) { cpp2::Bounds.violation(""); }
+    if (cpp2::Bounds.has_handler() && !(cpp2::cmp_less_eq(end,CPP2_UFCS(ssize)(rng))) ) { cpp2::Bounds.violation(""); }
 
     auto count {0}; 
     for ( 
 
-          auto&  i : rng )  { do 
+          auto& i : rng )  { do 
         if ([_0 = start, _1 = count, _2 = end]{ return cpp2::cmp_less_eq(_0,_1) && cpp2::cmp_less_eq(_1,_2); }()) {
             i += 42;
         } while (false); ++count; }

@@ -17,8 +17,8 @@ main: () -> int = {
 vec: std::vector<int> = ();
 
 insert_at: (where: int, val: int)
-    [[pre:  0 <= where && where <= vec.ssize()]]
-    [[post: vec.ssize() == vec.ssize()$ + 1]]
+    pre( 0 <= where && where <= vec.ssize() )
+    post( vec.ssize() == vec.ssize()$ + 1 )
 = {
     _ = vec.insert( vec.begin()+where, val );
 }

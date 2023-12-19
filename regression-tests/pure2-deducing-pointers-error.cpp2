@@ -38,6 +38,7 @@ main: () -> int = {
     fp = 0;       // caught
 
     f := fun(a)*;
+    _ = f;
 
     fp2 := fun2(a).result;
     fp2--;        // not caught :(

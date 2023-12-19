@@ -1,0 +1,55 @@
+
+iterator: @value <T> type = {
+    public x: T = 0;
+    operator++: (inout this) -> forward iterator<T> requires true = { x++; return this; }
+}
+
+iterator2: @value <T> type = {
+    public x: T = 0;
+}
+operator++: <T> (inout it: iterator2<T>) -> forward iterator2<T> requires true = { it.x++; return it; }
+
+int main() {
+    {
+    iterator<int> i;
+    std::cout << (++i).x;
+    std::cout << (++i).x;
+    std::cout << i++.x;
+    std::cout << i++.x;
+    std::cout << i.x << "\n";
+    }
+
+    {
+    iterator2<int> i;
+    std::cout << (++i).x;
+    std::cout << (++i).x;
+    std::cout << i++.x;
+    std::cout << i++.x;
+    std::cout << i.x << "\n";
+    }
+}
+
+
+
+number: @struct type = {
+  operator<=>: (this, that) -> _;
+  operator-: (this, _) -> int = 0;
+}
+
+number_line: @struct <Op: i8, Id: i32> type = {
+  this: number;
+}
+
+number_line_pre_increment: <Id: i32> type  == number_line<0b1110, Id>;
+number_line_pre_decrement: <Id: i32> type  == number_line<0b1101, Id>;
+number_line_post_increment: <Id: i32> type == number_line<0b1011, Id>;
+number_line_post_decrement: <Id: i32> type == number_line<0b0111, Id>;
+
+operator++: <Op: i8, Id: i32> (inout x: number_line<Op, Id>) -> forward number_line<Op, Id> requires bool(Op & 1) = x;
+operator--: <Op: i8, Id: i32> (inout x: number_line<Op, Id>) -> forward number_line<Op, Id> requires bool(Op & 2) = x;
+
+operator++: (inout x: number_line_pre_increment<0>) -> forward number_line_pre_increment<0> = x;
+operator--: (inout x: number_line_pre_decrement<0>) -> forward number_line_pre_decrement<0> = x;
+
+operator++: (inout x: number_line_pre_increment<1>) -> forward const number_line_pre_increment<1> = x;
+operator--: (inout x: number_line_pre_decrement<1>) -> forward const number_line_pre_decrement<1> = x;

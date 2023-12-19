@@ -1,0 +1,111 @@
+identity: @struct type = {
+  operator(): (this, forward x) -> forward _ == x;
+}
+
+t: @struct type = {
+  f: (this) -> int == 0;
+}
+
+u: @struct type = { }
+
+ns: namespace = {
+f: (_) -> int == 1;
+} // namespace ns
+
+// v: @struct type = {
+//   f :== :(_) 0; // Pending on #706.
+//   g: (i) i.f();
+// }
+
+main: () = {
+  {
+    f: int = t().f();
+    assert(f == 0);
+  }
+  {
+    f := t().f();
+    assert(f == 0);
+  }
+  {
+    f: _ = t().f();
+    assert(f == 0);
+  }
+  (f := t().f()) assert(f == 0);
+  (f: _ = t().f()) assert(f == 0);
+  {
+    f :== t().f();
+    static_assert(f == 0);
+  }
+  {
+    f: _ == t().f();
+    static_assert(f == 0);
+  }
+  {
+    f := :(f) -> _ = {
+      assert(t().f() == 0);
+      return u().f();
+    }(identity());
+    _ = f;
+  }
+  { // Rejected by MSVC.
+    // f := :<f: _> (copy _: std::integral_constant<identity, f>) -> _ = {
+    //   assert(t().f() == 0);
+    //   return u().f();
+    // }(:std::integral_constant<identity, (:identity = ())> = ());
+    // _ = f;
+  }
+  {
+    f := :() = {
+      (f: identity = identity()) assert(t().f() == 0);
+      (f: identity = identity()) _ = u().f();
+    };
+    _ = f;
+  }
+  {
+    f := :() = {
+      using ns::f;
+      static_assert(t().f() == 0);
+      // static_assert(u().f() == 1);
+    };
+    _ = f;
+  }
+  {
+    f := :() = {
+      static_assert(t().f() == 0);
+      g := :<T> (_: T) -> std::void_t<decltype(T().f())> = {};
+      static_assert(!std::is_invocable_v<decltype(g), u>);
+      using ns::f;
+    };
+    _ = f;
+  }
+  {
+    f := :() = {
+      using ns::f;
+      _ = :() = {
+        static_assert(t().f() == 0);
+        // static_assert(u().f() == 1);
+      };
+      {
+        static_assert(t().f() == 0);
+        // static_assert(u().f() == 1);
+      }
+    };
+    _ = f;
+  }
+  {
+    f := :() = {
+      _ = :() = {
+        static_assert(t().f() == 0);
+        g := :<T> (_: T) -> std::void_t<decltype(T().f())> = {};
+        static_assert(!std::is_invocable_v<decltype(g), u>);
+      };
+      {
+        static_assert(t().f() == 0);
+        g := :<T> (_: T) -> std::void_t<decltype(T().f())> = {};
+        static_assert(!std::is_invocable_v<decltype(g), u>);
+      }
+      using ns::f;
+    };
+    _ = f;
+  }
+}

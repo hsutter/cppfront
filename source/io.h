@@ -578,6 +578,7 @@ auto process_cpp_line(
     struct process_line_ret r { in_comment, true , in_raw_string_literal};
 
     auto prev = ' ';
+    auto prev2 = ' ';
     for (auto i = colno_t{0}; i < ssize(line); ++i)
     {
         //  Local helper functions for readability
@@ -640,7 +641,7 @@ auto process_cpp_line(
                     //  If this isn't an escaped quote, toggle string literal state
                     if (
                         !in_comment
-                        && prev != '\\'
+                        && (prev != '\\' || prev2 == '\\')
                         && (in_string_literal || prev != '\'')
                         && !in_raw_string_literal
                         )
@@ -683,6 +684,7 @@ auto process_cpp_line(
             }
         }
 
+        prev2 = prev;
         prev = line[i];
     }
 
@@ -714,6 +716,7 @@ auto process_cpp2_line(
     auto found_end = false;
 
     auto prev = ' ';
+    auto prev2 = ' ';
     auto in_string_literal = false;
     auto in_char_literal   = false;
 
@@ -729,14 +732,14 @@ auto process_cpp2_line(
         else if (in_string_literal)
         {
             switch (line[i]) {
-            break;case '"': if (prev != '\\') { in_string_literal = false; }
+            break;case '"': if (prev != '\\' || prev2 == '\\') { in_string_literal = false; }
             break;default: ;
             }
         }
         else if (in_char_literal)
         {
             switch (line[i]) {
-            break;case '\'': if (prev != '\\') { in_char_literal = false; }
+            break;case '\'': if (prev != '\\' || prev2 == '\\') { in_char_literal = false; }
             break;default: ;
             }
         }
@@ -776,16 +779,27 @@ auto process_cpp2_line(
                 if (prev == '/') { in_comment = false; return found_end; }
 
             break;case '"':
-                if (prev != '\\') { in_string_literal = true; }
+                if (prev != '\\' || prev2 == '\\') { in_string_literal = true; }
 
             break;case '\'':
-                if (prev != '\\') { in_char_literal = true; }
+                if (prev != '\\' || prev2 == '\\') {
+                    //  Also check that this isn't a digit separator
+                    in_char_literal = !is_hexadecimal_digit(prev);
+                }
 
             break;default: ;
             }
         }
 
+        prev2 = prev;
         prev = line[i];
+    }
+
+    if (in_char_literal) {
+        errors.emplace_back(
+            source_position(lineno, ssize(line)),
+            std::string("line ended before character literal was terminated")
+        );
     }
 
     return found_end;

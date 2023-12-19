@@ -145,6 +145,8 @@ struct primary_expression_node
         std::unique_ptr<inspect_expression_node>,
         std::unique_ptr<literal_node>
     > expr;
+    // Cache to work around <https://github.com/llvm/llvm-project/issues/73336>.
+    bool expression_list_is_fold_expression = false;
 
 
     //  API
@@ -751,14 +753,6 @@ struct expression_statement_node
 };
 
 
-expression_node::expression_node()
-{
-    if (!expression_statement_node::current_expression_statements.empty()) {
-        my_statement = expression_statement_node::current_expression_statements.back();
-    }
-}
-
-
 auto expression_node::is_standalone_expression() const
     -> bool
 {
@@ -811,12 +805,7 @@ struct postfix_expression_node
     std::vector<term> ops;
     capture_group* cap_grp = {};
 
-    ~postfix_expression_node()
-    {
-        if (cap_grp) {
-            cap_grp->remove(this);
-        }
-    }
+    ~postfix_expression_node();
 
     //  API
     //
@@ -1307,7 +1296,9 @@ auto unqualified_id_node::to_string() const
             }
             separator = ",";
         }
-        ret += ">";
+        if (std::ssize(template_args) > 0) {
+            ret += ">";
+        }
     }
     return ret;
 }
@@ -1454,6 +1445,14 @@ struct is_as_expression_node
 };
 
 
+expression_node::expression_node()
+{
+    if (!expression_statement_node::current_expression_statements.empty()) {
+        my_statement = expression_statement_node::current_expression_statements.back();
+    }
+}
+
+
 struct id_expression_node
 {
     source_position pos;
@@ -1542,6 +1541,14 @@ struct id_expression_node
 };
 
 
+postfix_expression_node::~postfix_expression_node()
+{
+    if (cap_grp) {
+        cap_grp->remove(this);
+    }
+}
+
+
 auto primary_expression_node::is_fold_expression() const
     -> bool
 {
@@ -1551,7 +1558,7 @@ auto primary_expression_node::is_fold_expression() const
     break;case identifier:
         return *std::get<identifier>(expr) == "...";
     break;case expression_list:
-        return std::get<expression_list>(expr)->is_fold_expression();
+        return expression_list_is_fold_expression;
     break;case id_expression:
         return std::get<id_expression>(expr)->is_fold_expression();
     break;default: ; // the others can't contain folds
@@ -1627,9 +1634,7 @@ struct compound_statement_node
 
     colno_t body_indent = 0;
 
-    compound_statement_node(source_position o = source_position{})
-        : open_brace{o}
-    { }
+    compound_statement_node(source_position o = source_position{});
 
     auto position() const
         -> source_position
@@ -1796,11 +1801,12 @@ struct contract_node
     //  postfix_expressions that could refer to it
     capture_group captures;
 
-    source_position                             open_bracket;
-    token const*                                kind = {};
-    std::unique_ptr<id_expression_node>         group;
-    std::unique_ptr<logical_or_expression_node> condition;
-    token const*                                message = {};
+    source_position                                  open_bracket;
+    token const*                                     kind = {};
+    std::unique_ptr<id_expression_node>              group;
+    std::vector<std::unique_ptr<id_expression_node>> flags;
+    std::unique_ptr<logical_or_expression_node>      condition;
+    token const*                                     message = {};
 
     contract_node( source_position pos )
         : open_bracket{pos}
@@ -1822,6 +1828,10 @@ struct contract_node
 
         if (group) {
             group->visit(v, depth+1);
+        }
+
+        for (auto const& f : flags) {
+            f->visit(v, depth+1);
         }
 
         assert(condition);
@@ -1890,9 +1900,7 @@ struct statement_node
     std::unique_ptr<parameter_declaration_list_node> parameters;
     compound_statement_node* compound_parent = nullptr;
 
-    statement_node(compound_statement_node* compound_parent_ = nullptr)
-        : compound_parent{ compound_parent_ }
-    { }
+    statement_node(compound_statement_node* compound_parent_ = nullptr);
 
     enum active { expression=0, compound, selection, declaration, return_, iteration, using_, contract, inspect, jump };
     std::variant<
@@ -2185,12 +2193,13 @@ struct function_type_node
 
     std::vector<std::unique_ptr<contract_node>> contracts;
 
-    function_type_node(declaration_node* decl)
-        : my_decl{decl}
-    { }
+    function_type_node(declaration_node* decl);
 
     //  API
     //
+    auto has_postconditions() const
+        -> bool;
+
     auto is_function_with_this() const
         -> bool;
 
@@ -2227,6 +2236,9 @@ struct function_type_node
     auto is_comparison() const
         -> bool;
 
+    auto is_increment_or_decrement() const
+        -> bool;
+
     auto is_compound_assignment() const
         -> bool;
 
@@ -2249,6 +2261,18 @@ struct function_type_node
         -> bool
     {
         return returns.index() != empty;
+    }
+
+    auto has_deduced_return_type() const
+        -> bool
+    {
+        return
+            returns.index() == empty
+            || (
+                returns.index() == id
+                && std::get<function_type_node::id>(returns).type->is_wildcard()
+                )
+            ;
     }
 
     auto unnamed_return_type_to_string() const
@@ -2329,6 +2353,9 @@ struct function_type_node
         }
         return false;
     }
+
+    auto first_parameter_name() const
+        -> std::string;
 
     auto nth_parameter_type_name(int n) const
         -> std::string;
@@ -2838,6 +2865,31 @@ public:
         return false;
     }
 
+    //  Do we know that this cannot be a copy constructible type?
+    auto cannot_be_a_copy_constructible_type() const
+        -> bool
+    {
+        //  If we're not a type, we're not a copyable type
+        if (!is_type()) {
+            return true;
+        }
+
+        //  Else if we're letting Cpp1 generate SMFs, we're likely copyable
+        if (!member_function_generation) {
+            return false;
+        }
+
+        //  Else if we have a copy constructor, we're copyable
+        for (auto& decl : get_type_scope_declarations())
+        if  (decl->is_constructor_with_that())
+        {
+            return false;
+        }
+
+        //  Else there can't be a copy constructor
+        return true;
+    }
+
     auto parent_is_function   () const -> bool
         { return  parent_declaration && parent_declaration->type.index() == a_function;  }
     auto parent_is_object     () const -> bool
@@ -2848,6 +2900,23 @@ public:
         { return !parent_declaration || parent_declaration->type.index() == a_namespace; }
     auto parent_is_alias      () const -> bool
         { return  parent_declaration && parent_declaration->type.index() == an_alias;    }
+
+    auto parent_is_type_alias     () const -> bool
+        { return parent_declaration && parent_declaration->is_alias() && std::get<an_alias>(parent_declaration->type)->is_type_alias(); }
+    auto parent_is_namespace_alias() const -> bool
+        { return parent_declaration && parent_declaration->is_alias() && std::get<an_alias>(parent_declaration->type)->is_namespace_alias(); }
+    auto parent_is_object_alias   () const -> bool
+        { return parent_declaration && parent_declaration->is_alias() && std::get<an_alias>(parent_declaration->type)->is_object_alias(); }
+
+    auto is_inside_global_unnamed_function() const -> bool {
+        auto parent = parent_declaration;
+        //  Get outside all nested function expressions
+        while (parent && parent->is_function() && !parent->has_name()) {
+            parent = parent->parent_declaration;
+        }
+        return !parent;
+    }
+
     auto parent_is_polymorphic() const -> bool
         { return  parent_declaration && parent_declaration->is_polymorphic(); }
 
@@ -2923,7 +2992,7 @@ public:
     }
 
 
-    auto add_type_member( std::unique_ptr<statement_node> statement )
+    auto add_type_member( std::unique_ptr<statement_node>&& statement )
         -> bool
     {
         if (
@@ -2951,6 +3020,23 @@ public:
         auto compound_stmt = initializer->get_if<compound_statement_node>();
         assert (compound_stmt);
         compound_stmt->statements.push_back(std::move(statement));
+        return true;
+    }
+
+
+    auto add_function_initializer( std::unique_ptr<statement_node>&& statement )
+        -> bool
+    {
+        if (
+            !is_function()
+            || initializer
+            )
+        {
+            return false;
+        }
+
+        //  Adopt it as our initializer statement
+        initializer = std::move( statement );
         return true;
     }
 
@@ -2986,6 +3072,9 @@ public:
         auto found_later_base_type = false;
 
         for (auto& o : objects) {
+            if (o->is_alias()) {
+                continue;
+            }
             if (o->has_name(s)) {
                 found_name = true;
                 ret        = o;
@@ -3175,6 +3264,16 @@ public:
         return false;
     }
 
+    auto is_increment_or_decrement() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->is_increment_or_decrement();
+        }
+        //  else
+        return false;
+    }
+
     auto is_compound_assignment() const
         -> bool
     {
@@ -3301,6 +3400,30 @@ public:
         return false;
     }
 
+    auto has_deduced_return_type() const
+        -> bool
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->has_deduced_return_type();
+        }
+        //  else
+        return false;
+    }
+
+    auto get_function_parameters()
+        -> std::vector<parameter_declaration_node const*>
+    {
+        if (!is_function()) {
+            return {};
+        }
+        // else
+        auto ret = std::vector<parameter_declaration_node const*>{};
+        for (auto& param : std::get<a_function>(type)->parameters->parameters) {
+            ret.push_back( param.get() );
+        }
+        return ret;
+    }
+
     auto unnamed_return_type_to_string() const
         -> std::string
     {
@@ -3342,6 +3465,16 @@ public:
         }
         //  else
         return false;
+    }
+
+    auto first_parameter_name() const
+        -> std::string
+    {
+        if (auto func = std::get_if<a_function>(&type)) {
+            return (*func)->first_parameter_name();
+        }
+        //  else
+        return "";
     }
 
     auto is_binary_comparison_function() const
@@ -3430,6 +3563,21 @@ public:
 };
 
 
+compound_statement_node::compound_statement_node(source_position o)
+    : open_brace{o}
+{ }
+
+
+statement_node::statement_node(compound_statement_node* compound_parent_)
+    : compound_parent{ compound_parent_ }
+{ }
+
+
+function_type_node::function_type_node(declaration_node* decl)
+    : my_decl{decl}
+{ }
+
+
 auto parameter_declaration_node::has_name() const
     -> bool
 {
@@ -3451,6 +3599,18 @@ auto parameter_declaration_node::has_name(std::string_view s) const
 }
 
 
+auto function_type_node::first_parameter_name() const
+    -> std::string
+{
+    if (std::ssize(parameters->parameters) > 0)
+    {
+        assert (parameters->parameters[0]->declaration->name());
+        return parameters->parameters[0]->declaration->name()->to_string();
+    }
+    //  Else
+    return "";
+}
+
 auto function_type_node::nth_parameter_type_name(int n) const
     -> std::string
 {
@@ -3462,6 +3622,17 @@ auto function_type_node::nth_parameter_type_name(int n) const
     return "";
 }
 
+
+auto function_type_node::has_postconditions() const
+    -> bool
+{
+    return
+        std::find_if(
+            contracts.begin(),
+            contracts.end(),
+            [](auto const& e){ return *e->kind == "post"; }
+        ) != contracts.end();
+}
 
 auto function_type_node::is_function_with_this() const
     -> bool
@@ -3654,6 +3825,20 @@ auto function_type_node::is_comparison() const
             || my_decl->has_name("operator>=")
             || my_decl->has_name("operator<=>")
         )
+        )
+    {
+        return true;
+    }
+    return false;
+}
+
+
+auto function_type_node::is_increment_or_decrement() const
+    -> bool
+{
+    if (
+        my_decl->has_name("operator++")
+        || my_decl->has_name("operator--")
         )
     {
         return true;
@@ -3880,6 +4065,7 @@ auto primary_expression_node::visit(auto& v, int depth)
 
 
 struct next_expression_tag { };
+struct loop_body_tag { token const* identifier; };
 
 auto iteration_statement_node::visit(auto& v, int depth)
     -> void
@@ -3906,6 +4092,7 @@ auto iteration_statement_node::visit(auto& v, int depth)
     else {
         assert(range && parameter && body);
         range->visit(v, depth+1);
+        v.start(loop_body_tag{identifier}, depth);
         parameter->visit(v, depth+1);
         body->visit(v, depth+1);
     }
@@ -3954,8 +4141,26 @@ auto statement_node::position() const
         return s->position();
     }
 
+    break;case using_: {
+        auto const& s = std::get<using_>(statement);
+        assert (s);
+        return s->position();
+    }
+
     break;case contract: {
         auto const& s = std::get<contract>(statement);
+        assert (s);
+        return s->position();
+    }
+
+    break;case inspect: {
+        auto const& s = std::get<inspect>(statement);
+        assert (s);
+        return s->position();
+    }
+
+    break;case jump: {
+        auto const& s = std::get<jump>(statement);
         assert (s);
         return s->position();
     }
@@ -4415,7 +4620,7 @@ auto pretty_print_visualize(iteration_statement_node const& n, int indent)
 
     auto next_expr = std::string{};
     if (n.next_expression) {
-        next_expr += std::string{"\n"} + pre(indent+1) + "next " + pretty_print_visualize(*n.next_expression, indent);
+        next_expr += std::string{"\n"} + pre(indent) + "next " + pretty_print_visualize(*n.next_expression, indent);
     }
 
     auto stmts = std::string{};
@@ -4443,9 +4648,10 @@ auto pretty_print_visualize(iteration_statement_node const& n, int indent)
         assert (n.condition);
         ret += "do "
             + stmts
+            + next_expr
             + "\n" + pre(indent) + "while "
             + pretty_print_visualize(*n.condition, indent)
-            + next_expr + ";";
+            + ";";
     }
     else {
         assert (n.range && n.parameter && n.body);
@@ -4531,19 +4737,27 @@ auto pretty_print_visualize(contract_node const& n, int indent)
 {
     assert (n.kind && n.condition);
 
-    auto ret = std::string{"\n"} + pre(indent) + "[[" + n.kind->as_string_view();
+    auto ret = std::string{"\n"} + pre(indent) + n.kind->as_string_view();
 
     if (n.group) {
-        ret += " " + pretty_print_visualize(*n.group, indent);
+        ret += "<" + pretty_print_visualize(*n.group, indent);
+        for (auto const& flag : n.flags) {
+            ret += "," + pretty_print_visualize(*flag, indent);
+        }
+        ret += ">";
     }
 
-    ret += ": " + pretty_print_visualize(*n.condition, indent);
+    ret += "( " + pretty_print_visualize(*n.condition, indent);
 
     if (n.message) {
-        ret += " " + n.message->to_string();
+        ret += ", " + n.message->to_string();
     }
 
-    ret += "]]";
+    ret += " )";
+
+    if (*n.kind == "assert") {
+        ret += ";";
+    }
 
     return ret;
 }
@@ -5107,17 +5321,22 @@ public:
         tokens           = &tokens_;
         generated_tokens = &generated_tokens_;
 
-        //  Parse one declaration - we succeed if the parse succeeded,
-        //  and there were no new errors, and all tokens were consumed
-        auto errors_size = std::ssize(errors);
-        pos = 0;
-        if (auto d = statement();
-            d
-            && std::ssize(errors) == errors_size
-            && done()
-            )
-        {
-            return d;
+        try {
+            //  Parse one declaration - we succeed if the parse succeeded,
+            //  and there were no new errors, and all tokens were consumed
+            auto errors_size = std::ssize(errors);
+            pos = 0;
+            if (auto d = statement();
+                d
+                && std::ssize(errors) == errors_size
+                && done()
+                )
+            {
+                return d;
+            }
+        }
+        catch(std::runtime_error& e) {
+            error(e.what(), true, {}, true);
         }
 
         return {};
@@ -5325,6 +5544,7 @@ private:
             ) {
                 expr_list->inside_initializer = false;
             }
+            n->expression_list_is_fold_expression = expr_list->is_fold_expression();
             n->expr = std::move(expr_list);
             return n;
         }
@@ -5335,6 +5555,7 @@ private:
                 !decl->has_name()
                 && "ICE: declaration should have been unnamed"
             );
+
             if (auto obj = std::get_if<declaration_node::an_object>(&decl->type)) {
                 if ((*obj)->is_wildcard()) {
                     error("an unnamed object at expression scope currently cannot have a deduced type (the reason to create an unnamed object is typically to create a temporary of a named type)");
@@ -5359,22 +5580,28 @@ private:
                     next();
                     return {};
                 }
-                if (
-                    peek(-1) && peek(-1)->type() != lexeme::RightBrace  // it is short function syntax
-                    && curr().type() != lexeme::LeftParen               // not imediatelly called
-                    && curr().type() != lexeme::RightParen              // not as a last argument to function
-                    && curr().type() != lexeme::Comma                   // not as first or in-the-middle, function argument
-                ) {
-                    // this is a fix for a short function syntax that should have double semicolon used
-                    // (check comment in expression_statement(bool semicolon_required))
-                    // We simulate double semicolon by moving back to single semicolon.
-                    next(-1);
-                }
             }
             else {
                 error("(temporary alpha limitation) an unnamed declaration at expression scope must be a function or an object");
                 next();
                 return {};
+            }
+
+            if (
+                peek(-1) && peek(-1)->type() != lexeme::RightBrace  // it is not a braced function expression
+                && curr().type() != lexeme::LeftParen               // not imediatelly called
+                && curr().type() != lexeme::RightParen              // not as a last argument to function
+                && curr().type() != lexeme::Comma                   // not as first or in-the-middle, function argument
+                && curr().type() != lexeme::Greater                 // not as the last argument to template
+                && curr().type() != lexeme::RightBracket            // not as the last index argument
+                && curr() != "is"                                   // not as the argument to is
+                && curr() != "as"                                   // not as the argument to as
+                && curr() != "do"                                   // not as `for`'s `next`.
+            ) {
+                // this is a fix for a short function syntax that should have double semicolon used
+                // (check comment in expression_statement(bool semicolon_required))
+                // We simulate double semicolon by moving back to single semicolon.
+                next(-1);
             }
 
             n->expr = std::move(decl);
@@ -5459,6 +5686,9 @@ private:
                 n->cap_grp->add(n.get());
             }
 
+            //  Remember current position, in case we need to backtrack
+            auto term_pos = pos;
+
             auto term = postfix_expression_node::term{&curr()};
             next();
 
@@ -5481,18 +5711,25 @@ private:
             }
             else if (term.op->type() == lexeme::LeftParen)
             {
+                //  Next should be an expression-list followed by a ')'
+                //  If not, then this wasn't a call expression so backtrack to
+                //  the '(' which will be part of the next grammar production
+
                 term.expr_list = expression_list(term.op);
-                if (!term.expr_list) {
-                    error("( is not followed by a valid expression list");
-                    return {};
+                if (
+                    term.expr_list
+                    && curr().type() == lexeme::RightParen
+                )
+                {
+                    term.expr_list->close_paren = &curr();
+                    term.op_close = &curr();
+                    next();
                 }
-                if (curr().type() != lexeme::RightParen) {
-                    error("unexpected text - ( is not properly matched by )", true, {}, true);
-                    return {};
+                else
+                {
+                    pos = term_pos;    // backtrack
+                    break;
                 }
-                term.expr_list->close_paren = &curr();
-                term.op_close = &curr();
-                next();
             }
             else if (term.op->type() == lexeme::Dot)
             {
@@ -6225,6 +6462,14 @@ private:
                     term.arg = std::move(i);
                 }
 
+                //  Else if we already got at least one template-argument, this is a
+                //  ',' followed by something that isn't a valid template-arg
+                else if (std::ssize(n->template_args) > 0) {
+                    error( "expected a template argument after ','", false);
+                    return {};
+                }
+
+                //  Else this is an empty '<>' list which is okay
                 else {
                     break;
                 }
@@ -6571,7 +6816,7 @@ private:
 
     //G iteration-statement:
     //G     label? 'while' logical-or-expression next-clause? compound-statement
-    //G     label? 'do' compound-statement 'while' logical-or-expression next-clause? ';'
+    //G     label? 'do' compound-statement next-clause? 'while' logical-or-expression ';'
     //G     label? 'for' expression next-clause? 'do' unnamed-declaration
     //G
     //G label:
@@ -6670,13 +6915,13 @@ private:
         else if (*n->identifier == "do")
         {
             if (!handle_compound_statement  ()) { return {}; }
+            if (!handle_optional_next_clause()) { return {}; }
             if (curr() != "while") {
                 error("do loop body must be followed by 'while'");
                 return {};
             }
             next();
             if (!handle_logical_expression  ()) { return {}; }
-            if (!handle_optional_next_clause()) { return {}; }
             if (curr().type() != lexeme::Semicolon) {
                 error("missing ; after do..while loop condition");
                 next();
@@ -7001,9 +7246,12 @@ private:
     //G     jump-statement
     //G     iteration-statement
     //G     compound-statement
+    //G     contract-statement
     //G     declaration
     //G     expression-statement
-    //G     contract
+    //G
+    //G contract-statement
+    //G     contract ';'
     //
     //GTODO     try-block
     //G
@@ -7084,6 +7332,21 @@ private:
             return n;
         }
 
+        else if (auto s = contract()) {
+            if (*s->kind != "assert") {
+                error("only 'assert' contracts are allowed at statement scope");
+                return {};
+            }
+            if (curr().type() != lexeme::Semicolon) {
+                error("missing ';' after contract-statement");
+                return {};
+            }
+            next();
+            n->statement = std::move(s);
+            assert (n->is_contract());
+            return n;
+        }
+
         else if (auto s = declaration(true, false, false, n.get())) {
             n->statement = std::move(s);
             assert (n->is_declaration());
@@ -7093,16 +7356,6 @@ private:
         else if (auto s = expression_statement(semicolon_required)) {
             n->statement = std::move(s);
             assert (n->is_expression());
-            return n;
-        }
-
-        else if (auto s = contract()) {
-            if (*s->kind != "assert") {
-                error("only 'assert' contracts are allowed at statement scope");
-                return {};
-            }
-            n->statement = std::move(s);
-            assert (n->is_contract());
             return n;
         }
 
@@ -7467,8 +7720,14 @@ private:
 
 
     //G contract:
-    //G     '[' '[' contract-kind id-expression? ':' logical-or-expression ']' ']'
-    //G     '[' '[' contract-kind id-expression? ':' logical-or-expression ',' string-literal ']' ']'
+    //G     contract-kind contract-group? ':' '(' logical-or-expression ')'
+    //G     contract-kind contract-group? ':' '(' logical-or-expression ',' string-literal ')'
+    //G
+    //G contract-group:
+    //G     '<' id-expression contract-flags?'>'
+    //G
+    //G contract-flags:
+    //G     ',' id-expression contract-flags?
     //G
     //G contract-kind: one of
     //G     'pre' 'post' 'assert'
@@ -7476,26 +7735,8 @@ private:
     auto contract()
         -> std::unique_ptr<contract_node>
     {
-        //  Note: For now I'm using [[ ]] mainly so that existing Cpp1 syntax highlighters
-        //        don't get confused... I initially implemented single [ ], but then
-        //        my editor's default Cpp1 highlighter didn't colorize the following
-        //        multiline // comment correctly as a comment
-
-        //  If there's no [ [ then this isn't a contract
-        if (
-            done()
-            || curr().type() != lexeme::LeftBracket
-            || !peek(1)
-            || peek(1)->type() != lexeme::LeftBracket
-            )
-        {
-            return {};
-        }
-
         auto n = std::make_unique<contract_node>(curr().position());
         auto guard = capture_groups_stack_guard(this, &n->captures);
-        next();
-        next();
 
         if (
             curr() != "pre"
@@ -7503,18 +7744,43 @@ private:
             && curr() != "assert"
             )
         {
-            error("[ begins a contract and must be followed by 'pre', 'post', or 'assert'");
             return {};
         }
         n->kind = &curr();
         next();
 
-        if (auto id = id_expression()) {
-            n->group = std::move(id);
+        //  Check if there's a <group,flags>
+        if (curr().type() == lexeme::Less) {
+            next();
+            if (auto id = id_expression()) {
+                n->group = std::move(id);
+            }
+            else {
+                error("invalid contract group after '<'");
+                return {};
+            }
+
+            //  Now check if there's a list of flags
+            while (curr().type() == lexeme::Comma) {
+                next();
+                if (auto id = id_expression()) {
+                    n->flags.push_back( std::move(id) );
+                }
+                else {
+                    error("invalid contract tag in list");
+                    return {};
+                }
+            }
+
+            if (curr().type() != lexeme::Greater) {
+                error("expected '>' after contract group");
+                return {};
+            }
+            next();
         }
 
-        if (curr().type() != lexeme::Colon) {
-            error("expected : before the contract condition");
+        if (curr().type() != lexeme::LeftParen) {
+            error("expected '(' before the contract condition");
             return {};
         }
         next();
@@ -7537,16 +7803,10 @@ private:
             next();
         }
 
-        if (
-            curr().type() != lexeme::RightBracket
-            || !peek(1)
-            || peek(1)->type() != lexeme::RightBracket
-            )
-        {
-            error("expected ]] at the end of the contract");
+        if (curr().type() != lexeme::RightParen) {
+            error("expected ')' at the end of the contract");
             return {};
         }
-        next();
         next();
 
         return n;
@@ -7561,11 +7821,8 @@ private:
     //G
     //G return-list:
     //G     expression-statement
-    //G     '->' return-direction? type-id
+    //G     '->' parameter-direction? type-id
     //G     '->' parameter-declaration-list
-    //G
-    //G return-direction: one of
-    //G     'forward' 'move'
     //G
     //G contract-seq:
     //G     contract
@@ -7607,11 +7864,12 @@ private:
         }
 
 
-        //  If we're not at a '->' or 'requires' and what follows is an expression,
-        //  this is a ":(params) expr" shorthand function syntax
+        //  If we're not at a '->' or 'requires' or contract and what follows is
+        //  an expression, this is a ":(params) expr" shorthand function syntax
         if (
             curr().type() != lexeme::Arrow
             && curr() != "requires"
+            && (curr() != "pre" && curr() != "post")
             )
         {
             auto start_pos = pos;
@@ -7861,7 +8119,7 @@ private:
             next();
             auto idx = id_expression();
             if (!idx) {
-                error("'@' must be followed by a a metafunction name", false);
+                error("'@' must be followed by a metafunction name", false);
                 return {};
             }
             n->metafunctions.push_back( std::move(idx) );

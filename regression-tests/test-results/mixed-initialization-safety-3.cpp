@@ -5,17 +5,18 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-initialization-safety-3.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-initialization-safety-3.cpp2"
 #include <random>
 #include <string>
 #include <vector>
 
 #line 5 "mixed-initialization-safety-3.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 
 #line 16 "mixed-initialization-safety-3.cpp2"
 auto fill(
@@ -31,9 +32,9 @@ auto print_decorated(auto const& x) -> void;
 // the standard mandates that std::mt19937()() == 3499211612
 [[nodiscard]] auto flip_a_coin() -> bool;
 
-
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-initialization-safety-3.cpp2"
 
 #line 5 "mixed-initialization-safety-3.cpp2"
 [[nodiscard]] auto main() -> int{
@@ -54,9 +55,9 @@ auto fill(
     ) -> void
 
 {
-    cpp2::Default.expects(cpp2::cmp_greater_eq(CPP2_UFCS_0(ssize, value),count), "fill: value must contain at least count elements");
+    if (cpp2::Default.has_handler() && !(cpp2::cmp_greater_eq(CPP2_UFCS(ssize)(value),count)) ) { cpp2::Default.violation("fill: value must contain at least count elements"); }
 #line 23 "mixed-initialization-safety-3.cpp2"
-    x.construct(CPP2_UFCS(substr, value, 0, count));
+    x.construct(CPP2_UFCS(substr)(value, 0, count));
 }
 
 auto print_decorated(auto const& x) -> void { std::cout << ">> [" << x << "]\n";  }

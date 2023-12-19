@@ -1,6 +1,8 @@
 
 //  Exercise the pretty-print visualizer for the various grammar elements
 
+testing_enabled: bool = false;
+
 outer: @print type = {
 
     object_alias: <T> T requires true == 42;
@@ -29,8 +31,8 @@ outer: @print type = {
         }
 
         private h: (s: std::string, inout m: std::map<const int,std::string> ) -> std::string
-            [[pre: m.empty() == false || false]]
-            [[pre Bounds: 0 < m.ssize() < 100 && true != false]]
+            pre( m.empty() == false || false, "message" )
+            pre<Bounds, testing_enabled>( 0 < m.ssize() < 100 && true != false )
         = {
             a := :()={};
             b := :()={};
@@ -38,7 +40,7 @@ outer: @print type = {
 
             while s.empty() next a() { break; }
 
-            do { } while s.empty() next b();
+            do { } next b() while s.empty();
 
             label: for m next c() do (_) { continue label; }
 
@@ -46,7 +48,7 @@ outer: @print type = {
             else if !m.empty() { b(); }
             else { c(); }
 
-            [[assert: true]]
+            assert( true );
 
             return :() -> std::string = (s + m[0])$; ();
         }

@@ -71,9 +71,9 @@ main: () = {
     std::cout << "f2: (x.f2(2,2))$\n";
     std::cout << "f3: (x.f3<3,3>())$\n";
     std::cout << "f4: (x.f4<4,4>())$\n";
-    x2: N::myclass = "abracadabra";
-    x3: N::myclass = ();
-    x4: N::myclass = (1, "hair");
+    _: N::myclass = "abracadabra";
+    _: N::myclass = ();
+    _: N::myclass = (1, "hair");
 
     // Invoke the single-param operator=s as actual assignments
     std::cout << "x's state before assignments: ";

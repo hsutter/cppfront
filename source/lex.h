@@ -427,11 +427,16 @@ auto expand_string_literal(
 
             //  Then put interpolated chunk into ret
             auto chunk = std::string{text.substr(open, pos - open)};
-            { // unescape chunk string
-                auto last_it = std::remove_if(std::begin(chunk), std::end(chunk), [escape = false](const auto& e) mutable {
-                    escape = !escape && e == '\\';
-                    return escape;
-                });
+            {   // unescape chunk string
+                auto last_it = std::remove_if(
+                    std::begin(chunk),
+                    std::end(chunk),
+                    [escape = false, prev = ' '](const auto& e) mutable {
+                        escape = !escape && prev != '\'' && e == '\\';
+                        prev = e;
+                        return escape;
+                    }
+                );
                 chunk.erase(last_it, std::end(chunk));
             }
 
@@ -1016,7 +1021,9 @@ auto lex_line(
     auto peek_is_cpp2_fundamental_type_keyword = [&]
     {
         static const auto keys = std::vector<std::string_view>{
-            "i8", "i16", "i32", "i64", "longdouble", "longlong", "u8", "u16", "u32", "u64", "ulong", "ulonglong", "ushort"
+            "i8", "i16", "i32", "i64", "longdouble", "longlong",
+            "u8", "u16", "u32", "u64", "ulonglong", "ulong", "ushort",
+            "_schar", "_uchar"
         };
 
         return do_is_keyword(keys);
@@ -1025,7 +1032,10 @@ auto lex_line(
     auto peek_is_cpp1_multi_token_fundamental_keyword = [&]
     {
         static const auto multi_keys = std::vector<std::string_view>{
-            "char16_t", "char32_t", "char8_t", "char", "double", "float", "int", "long", "short", "signed", "unsigned"
+            "char16_t", "char32_t", "char8_t", "char",
+            "double", "float",
+            "int", "long", "short",
+            "signed", "unsigned"
         };
         return do_is_keyword(multi_keys);
     };
@@ -1649,9 +1659,10 @@ auto lex_line(
                     if (len > 0) {
                         j += len;
                         if (peek(j) != '\'') {
+                            assert (j > 1);
                             errors.emplace_back(
                                 source_position(lineno, i),
-                                "character literal '" + std::string(&line[i+1],j)
+                                "character literal '" + std::string(&line[i+1],j-1)
                                     + "' is missing its closing '"
                             );
                         }

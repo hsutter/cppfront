@@ -5,5 +5,5 @@ vals: () -> (i : int) = {
 
 main: () -> int = {
     v := vals();
-    v.i;
+    _ = v;
 }

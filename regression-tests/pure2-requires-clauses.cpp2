@@ -18,6 +18,6 @@ f:  <T: type, U: type>
 v: <T> const T requires std::same_as<T, i32> = 0;
 
 main: () = {
-    x: X<int,int> = ();
+    _: X<int,int> = ();
     std::cout << f<int,int>(2,5);
 }
