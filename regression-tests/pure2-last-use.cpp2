@@ -737,8 +737,9 @@ loops: () = {
   _ = :() = {
     x := new<int>(0);
     for (0)
+    next f_inout(x)
     do (_)
-    f_inout(x);
+    { }
   };
 
   _ = :() = {

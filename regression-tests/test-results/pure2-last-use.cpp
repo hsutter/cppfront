@@ -63,17 +63,17 @@ class cpp2_union;
 class my_string;
   
 
-#line 764 "pure2-last-use.cpp2"
+#line 765 "pure2-last-use.cpp2"
 namespace captures {
 
-#line 778 "pure2-last-use.cpp2"
+#line 779 "pure2-last-use.cpp2"
 class t;
   
 
-#line 789 "pure2-last-use.cpp2"
+#line 790 "pure2-last-use.cpp2"
 }
 
-#line 819 "pure2-last-use.cpp2"
+#line 820 "pure2-last-use.cpp2"
 class types;
   
 
@@ -372,39 +372,39 @@ using deferred_non_copyable_2_ret = std::unique_ptr<int>;
 #line 729 "pure2-last-use.cpp2"
 auto loops() -> void;
 
-#line 764 "pure2-last-use.cpp2"
+#line 765 "pure2-last-use.cpp2"
 namespace captures {
 
 // Skip non captured name in function expression
 
 auto f() -> void;
 
-#line 776 "pure2-last-use.cpp2"
+#line 777 "pure2-last-use.cpp2"
 int inline constexpr x = 0;
 
 class t {
   public: std::unique_ptr<int> x; 
   public: auto operator()() && -> void;
 
-#line 787 "pure2-last-use.cpp2"
+#line 788 "pure2-last-use.cpp2"
 };
 
 }
 
 auto loops_and_captures() -> void;
 
-#line 819 "pure2-last-use.cpp2"
+#line 820 "pure2-last-use.cpp2"
 class types {
   public: std::unique_ptr<int> x; 
   public: auto f() && -> void;
   public: auto g() && -> void;
 
-#line 827 "pure2-last-use.cpp2"
+#line 828 "pure2-last-use.cpp2"
 };
 
 auto skip_hidden_names() -> void;
 
-#line 859 "pure2-last-use.cpp2"
+#line 860 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -1162,8 +1162,9 @@ auto loops() -> void{
   static_cast<void>([]() mutable -> void{
     auto x {cpp2_new<int>(0)}; 
     for ( 
-    [[maybe_unused]] auto const& unnamed_param_1 : { 0 } ) 
-    f_inout(x);
+
+    [[maybe_unused]] auto const& unnamed_param_1 : { 0 } )  { do 
+    {} while (false); f_inout(x); }
   });
 
   static_cast<void>([]() mutable -> void{
@@ -1188,7 +1189,7 @@ auto loops() -> void{
 
 namespace captures {
 
-#line 768 "pure2-last-use.cpp2"
+#line 769 "pure2-last-use.cpp2"
 auto f() -> void{
   auto x {cpp2_new<int>(0)}; 
   f_copy(std::move(x));
@@ -1197,7 +1198,7 @@ auto f() -> void{
   cpp2::Default.expects(&std::move(id)(y) == &y, "");
 }
 
-#line 780 "pure2-last-use.cpp2"
+#line 781 "pure2-last-use.cpp2"
   auto t::operator()() && -> void{
     f_copy(std::move(*this).x);
     static_cast<void>([&]() mutable -> void{
@@ -1206,7 +1207,7 @@ auto f() -> void{
     });
   }
 
-#line 789 "pure2-last-use.cpp2"
+#line 790 "pure2-last-use.cpp2"
 }
 
 auto loops_and_captures() -> void{
@@ -1223,7 +1224,7 @@ auto loops_and_captures() -> void{
     f_copy(std::move(x));
     for ( 
 
-#line 807 "pure2-last-use.cpp2"
+#line 808 "pure2-last-use.cpp2"
     [[maybe_unused]] auto const& unnamed_param_1 : { []() mutable -> auto{using captures::x;return x; } } ) 
     {}
   });
@@ -1236,7 +1237,7 @@ auto loops_and_captures() -> void{
   });
 }
 
-#line 821 "pure2-last-use.cpp2"
+#line 822 "pure2-last-use.cpp2"
   auto types::f() && -> void { static_cast<void>([&, _1 = std::move(*this).x]() mutable -> auto { return *cpp2::assert_not_null(_1);  });  }
   auto types::g() && -> void{
     for ( 
@@ -1244,7 +1245,7 @@ auto loops_and_captures() -> void{
     {}
   }
 
-#line 829 "pure2-last-use.cpp2"
+#line 830 "pure2-last-use.cpp2"
 auto skip_hidden_names() -> void{
   static_cast<void>([]() mutable -> void{
     auto x {cpp2_new<int>(0)}; 
@@ -1252,10 +1253,10 @@ auto skip_hidden_names() -> void{
 {
 auto x = cpp2_new<int>(0);
 
-#line 834 "pure2-last-use.cpp2"
+#line 835 "pure2-last-use.cpp2"
       f_copy(std::move(x));
 }
-#line 835 "pure2-last-use.cpp2"
+#line 836 "pure2-last-use.cpp2"
   });
 
   static_cast<void>([]() mutable -> void{
@@ -1278,16 +1279,16 @@ auto x = cpp2_new<int>(0);
 {
 auto x = cpp2_new<int>(0);
 
-#line 855 "pure2-last-use.cpp2"
+#line 856 "pure2-last-use.cpp2"
       f_copy(std::move(x));
 }
-#line 856 "pure2-last-use.cpp2"
+#line 857 "pure2-last-use.cpp2"
   });
 }
 
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 860 "pure2-last-use.cpp2"
+#line 861 "pure2-last-use.cpp2"
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());
   issue_847_5(args);

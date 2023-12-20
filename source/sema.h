@@ -88,15 +88,18 @@ struct identifier_sym {
     bool start = false;
     bool standalone_assignment_to = false;
     bool is_captured = false;
+    bool in_next_clause = false;
     token const* identifier = {};
 
     identifier_sym(
         bool         a,
         token const* id,
-        bool         s = true
+        bool         s = true,
+        bool         n = false
     )
         : start{s}
         , standalone_assignment_to{a}
+        , in_next_clause{n}
         , identifier{id}
     { }
 
@@ -983,7 +986,7 @@ private:
                 i = pos_ranges.back().first; // The scope to pop is the scope of the loop
                 pos_ranges.pop_back();
             }
-            else
+            else if (!sym->in_next_clause)
             {
                 definite_last_uses.emplace_back( sym->identifier, is_forward );
             }
@@ -2236,7 +2239,7 @@ public:
             )
         {
             started_postfix_expression = false;
-            if (!inside_parameter_identifier && !inside_next_expression)
+            if (!inside_parameter_identifier)
             {
                 //  Put this into the table if it's a use of an object in scope
                 //  or it's a 'copy' parameter (but to be a use it must be after
@@ -2251,7 +2254,7 @@ public:
                         )
                     )
                 {
-                    symbols.emplace_back( scope_depth, identifier_sym( false, &t ) );
+                    symbols.emplace_back( scope_depth, identifier_sym( false, &t, true, inside_next_expression ) );
                 }
             }
             started_member_access = false;
