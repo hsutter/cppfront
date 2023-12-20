@@ -118,8 +118,8 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
 
 #line 36 "pure2-print.cpp2"
         {
-            if (cpp2::Default.has_handler() && !(CPP2_UFCS(empty)(m) == false || false) ) { cpp2::Default.violation(cpp2::contract_message("message")); }
-            if (cpp2::Bounds.has_handler() && testing_enabled && !([_0 = 0, _1 = CPP2_UFCS(ssize)(m), _2 = 100]{ return cpp2::cmp_less(_0,_1) && cpp2::cmp_less(_1,_2); }() && true != false) ) { cpp2::Bounds.violation(cpp2::contract_message("size is " + cpp2::to_string(CPP2_UFCS(ssize)(m)))); }
+            if (cpp2::Default.has_handler() && !(CPP2_UFCS(empty)(m) == false || false) ) { cpp2::Default.violation(CPP2_CONTRACT_MSG("message")); }
+            if (cpp2::Bounds.has_handler() && testing_enabled && !([_0 = 0, _1 = CPP2_UFCS(ssize)(m), _2 = 100]{ return cpp2::cmp_less(_0,_1) && cpp2::cmp_less(_1,_2); }() && true != false) ) { cpp2::Bounds.violation(CPP2_CONTRACT_MSG("size is " + cpp2::to_string(CPP2_UFCS(ssize)(m)))); }
 #line 37 "pure2-print.cpp2"
             auto a {[]() mutable -> void{}}; 
             auto b {[]() mutable -> void{}}; 

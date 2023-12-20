@@ -4576,7 +4576,7 @@ public:
         assert(n.condition);
         auto message = std::string{"\"\""};
         if (n.message) {
-            message = "cpp2::contract_message(" + print_to_string(*n.message) + ")";
+            message = "CPP2_CONTRACT_MSG(" + print_to_string(*n.message) + ")";
         }
 
         printer.print_cpp2(

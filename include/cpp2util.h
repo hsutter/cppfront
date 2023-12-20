@@ -386,7 +386,12 @@ struct String
 //      Before C++23 std::string_view was not guaranteed to be trivially copyable,
 //      and so in<T> will pass it by const& and really it should be by value
 #define CPP2_MESSAGE_PARAM  char const*
+#define CPP2_CONTRACT_MSG   cpp2::message_to_cstr_adapter
 
+auto message_to_cstr_adapter( CPP2_MESSAGE_PARAM msg ) -> CPP2_MESSAGE_PARAM { return msg ? msg : ""; }
+auto message_to_cstr_adapter( std::string const& msg ) -> CPP2_MESSAGE_PARAM { return msg.c_str(); }
+
+//  deprecated
 auto contract_message( CPP2_MESSAGE_PARAM msg ) -> CPP2_MESSAGE_PARAM { return msg; }
 auto contract_message( std::string const& msg ) -> CPP2_MESSAGE_PARAM { return msg.c_str(); }
 
