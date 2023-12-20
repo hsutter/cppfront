@@ -1272,11 +1272,11 @@ auto x = cpp2_new<int>(0);
   static_cast<void>([]() mutable -> void{
     auto x {cpp2_new<int>(0)}; 
     f_copy(std::move(x));
+    for ( 
+    auto x : { 0 } ) 
+    static_cast<void>(identity_copy(std::move(x)));
 {
 auto x = cpp2_new<int>(0);
-  //for (0)
-  //do (x) // TODO Treat loop parameter.
-  //_ = identity_copy(x);
 
 #line 855 "pure2-last-use.cpp2"
       f_copy(std::move(x));

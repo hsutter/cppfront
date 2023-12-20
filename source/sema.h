@@ -1964,6 +1964,11 @@ public:
     std::vector<int> symbols_size_at_postfix_expression_start = {};
     std::vector<int> symbols_size_at_lifetime_scope_start = {};
 
+    auto push_lifetime_scope() -> void
+    {
+        symbols_size_at_lifetime_scope_start.push_back(cpp2::unsafe_narrow<int>(ssize(symbols)));
+    }
+
     auto pop_lifetime_scope() -> void
     {
         assert(!symbols_size_at_lifetime_scope_start.empty());
@@ -2003,7 +2008,7 @@ public:
     auto start(parameter_declaration_list_node const&, int) -> void
     {
         inside_parameter_list = true;
-        symbols_size_at_lifetime_scope_start.push_back(cpp2::unsafe_narrow<int>(ssize(symbols)));
+        push_lifetime_scope();
     }
 
     auto end(parameter_declaration_list_node const&, int) -> void
@@ -2086,6 +2091,7 @@ public:
     {
         assert(*n.n->identifier == "for");
         symbols.emplace_back( scope_depth, identifier_sym( false, n.n->identifier ) );
+        push_lifetime_scope();
         just_entered_for = true;
         if (n.n->body->is_expression()) {
             ++scope_depth;
@@ -2094,6 +2100,7 @@ public:
 
     auto end(loop_body_tag const& n, int) -> void
     {
+        pop_lifetime_scope();
         if (
             *n.n->identifier == "for"
             && n.n->body->is_expression()
@@ -2302,7 +2309,7 @@ public:
             compound_sym{ true, &n, kind_of(n) }
         );
         ++scope_depth;
-        symbols_size_at_lifetime_scope_start.push_back(cpp2::unsafe_narrow<int>(ssize(symbols)));
+        push_lifetime_scope();
     }
 
     auto end(compound_statement_node const& n, int) -> void
