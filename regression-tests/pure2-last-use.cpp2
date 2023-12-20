@@ -783,9 +783,10 @@ t: @struct type = {
     _ = :() = {
       // Should this move?
       // I.e., don't skip non-captured names, just rely on skipping hiding names.
+      // An odr-use still requires capturing at Cpp1-time, and capturing would move.
       static_assert(std::is_same_v<decltype(x), std::unique_ptr<int>>);
       using captures::x;
-      _ = x;
+      _ = identity(x);
     };
   }
 }
@@ -857,6 +858,26 @@ skip_hidden_names: () = {
     _ = identity_copy(x);
     (copy x := new<int>(0))
       f_copy(x);
+  };
+
+  _ = :() = {
+    x := new<int>(0);
+    f_inout(x);
+    {
+      f_copy(x);
+      using captures::x;
+      f_inout(x);
+    }
+  };
+
+  _ = :() = {
+    x := new<int>(0);
+    f_copy(x);
+    _ = :() = {
+      static_assert(std::is_same_v<decltype(x), std::unique_ptr<int>>);
+      using captures::x;
+      f_inout(x);
+    };
   };
 }
 

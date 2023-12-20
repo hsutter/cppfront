@@ -2158,6 +2158,7 @@ auto statement_node::visit(auto& v, int depth)
     try_visit<declaration>(statement, v, depth);
     try_visit<return_    >(statement, v, depth);
     try_visit<iteration  >(statement, v, depth);
+    try_visit<using_     >(statement, v, depth);
     try_visit<contract   >(statement, v, depth);
     try_visit<inspect    >(statement, v, depth);
     try_visit<jump       >(statement, v, depth);

@@ -70,10 +70,10 @@ namespace captures {
 class t;
   
 
-#line 793 "pure2-last-use.cpp2"
+#line 794 "pure2-last-use.cpp2"
 }
 
-#line 823 "pure2-last-use.cpp2"
+#line 824 "pure2-last-use.cpp2"
 class types;
   
 
@@ -386,25 +386,25 @@ class t {
   public: std::unique_ptr<int> x; 
   public: auto operator()() && -> void;
 
-#line 791 "pure2-last-use.cpp2"
+#line 792 "pure2-last-use.cpp2"
 };
 
 }
 
 auto loops_and_captures() -> void;
 
-#line 823 "pure2-last-use.cpp2"
+#line 824 "pure2-last-use.cpp2"
 class types {
   public: std::unique_ptr<int> x; 
   public: auto f() && -> void;
   public: auto g() && -> void;
 
-#line 831 "pure2-last-use.cpp2"
+#line 832 "pure2-last-use.cpp2"
 };
 
 auto skip_hidden_names() -> void;
 
-#line 863 "pure2-last-use.cpp2"
+#line 884 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -1204,13 +1204,14 @@ auto f() -> void{
     static_cast<void>([&]() mutable -> void{
       // Should this move?
       // I.e., don't skip non-captured names, just rely on skipping hiding names.
+      // An odr-use still requires capturing at Cpp1-time, and capturing would move.
       static_assert(std::is_same_v<decltype(x),std::unique_ptr<int>>);
       using captures::x;
-      static_cast<void>(x);
+      static_cast<void>(identity(x));
     });
   }
 
-#line 793 "pure2-last-use.cpp2"
+#line 794 "pure2-last-use.cpp2"
 }
 
 auto loops_and_captures() -> void{
@@ -1227,7 +1228,7 @@ auto loops_and_captures() -> void{
     f_copy(std::move(x));
     for ( 
 
-#line 811 "pure2-last-use.cpp2"
+#line 812 "pure2-last-use.cpp2"
     [[maybe_unused]] auto const& unnamed_param_1 : { []() mutable -> auto{using captures::x;return x; } } ) 
     {}
   });
@@ -1240,7 +1241,7 @@ auto loops_and_captures() -> void{
   });
 }
 
-#line 825 "pure2-last-use.cpp2"
+#line 826 "pure2-last-use.cpp2"
   auto types::f() && -> void { static_cast<void>([&, _1 = std::move(*this).x]() mutable -> auto { return *cpp2::assert_not_null(_1);  });  }
   auto types::g() && -> void{
     for ( 
@@ -1248,7 +1249,7 @@ auto loops_and_captures() -> void{
     {}
   }
 
-#line 833 "pure2-last-use.cpp2"
+#line 834 "pure2-last-use.cpp2"
 auto skip_hidden_names() -> void{
   static_cast<void>([]() mutable -> void{
     auto x {cpp2_new<int>(0)}; 
@@ -1256,10 +1257,10 @@ auto skip_hidden_names() -> void{
 {
 auto x = cpp2_new<int>(0);
 
-#line 838 "pure2-last-use.cpp2"
+#line 839 "pure2-last-use.cpp2"
       f_copy(std::move(x));
 }
-#line 839 "pure2-last-use.cpp2"
+#line 840 "pure2-last-use.cpp2"
   });
 
   static_cast<void>([]() mutable -> void{
@@ -1282,16 +1283,36 @@ auto x = cpp2_new<int>(0);
 {
 auto x = cpp2_new<int>(0);
 
-#line 859 "pure2-last-use.cpp2"
+#line 860 "pure2-last-use.cpp2"
       f_copy(std::move(x));
 }
-#line 860 "pure2-last-use.cpp2"
+#line 861 "pure2-last-use.cpp2"
+  });
+
+  static_cast<void>([]() mutable -> void{
+    auto x {cpp2_new<int>(0)}; 
+    f_inout(x);
+    {
+      f_copy(std::move(x));
+      using captures::x;
+      f_inout(x);
+    }
+  });
+
+  static_cast<void>([]() mutable -> void{
+    auto x {cpp2_new<int>(0)}; 
+    f_copy(std::move(x));
+    static_cast<void>([]() mutable -> void{
+      static_assert(std::is_same_v<decltype(x),std::unique_ptr<int>>);
+      using captures::x;
+      f_inout(x);
+    });
   });
 }
 
 auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
-#line 864 "pure2-last-use.cpp2"
+#line 885 "pure2-last-use.cpp2"
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());
   issue_847_5(args);

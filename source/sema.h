@@ -86,6 +86,7 @@ struct declaration_sym {
 
 struct identifier_sym {
     bool start = false;
+    bool activates = false;
     bool standalone_assignment_to = false;
     bool is_captured = false;
     bool in_next_clause = false;
@@ -95,9 +96,11 @@ struct identifier_sym {
         bool         a,
         token const* id,
         bool         s = true,
+        bool         act = false,
         bool         n = false
     )
         : start{s}
+        , activates{act}
         , standalone_assignment_to{a}
         , in_next_clause{n}
         , identifier{id}
@@ -758,14 +761,8 @@ private:
         //    - Where id is hidden by another declaration
         auto pos_ranges = std::vector<pos_range>();
 
-        auto skip_hidden_name = [&]() -> bool {
-            if (auto decl = std::get_if<symbol::active::declaration>(&symbols[i].sym);
-                decl
-                && decl->start
-                && decl->identifier
-                && *decl->identifier == *id
-                && *decl->identifier != "_"
-                )
+        auto skip_hidden_name = [&](bool record_pos_range) -> bool {
+            auto skip_to = [&](token const* identifier_end)
             {
                 //  Can afford to just skip id and not member names
                 //  because in Cpp2 you can't shadow member names
@@ -774,8 +771,9 @@ private:
                 //  consider where 'this' is implicitly declared
                 //  For example, see https://cpp2.godbolt.org/z/onfW6hns1
 
-                auto identifier_end = decl->identifier;
-                pos_ranges.emplace_back(false, i - 1);
+                if (record_pos_range) {
+                    pos_ranges.emplace_back(false, i - 1);
+                }
                 ++i;
                 identifier_sym const* sym = nullptr;
                 while (
@@ -788,8 +786,30 @@ private:
                 {
                     ++i;
                 }
-                assert(decl && sym->identifier == identifier_end && !sym->start);
-                pos_ranges.back().last = i;
+                assert(sym->identifier == identifier_end && !sym->start);
+                if (record_pos_range) {
+                    pos_ranges.back().last = i;
+                }
+            };
+
+            if (auto decl = std::get_if<symbol::active::declaration>(&symbols[i].sym);
+                decl
+                && decl->start
+                && decl->identifier
+                && *decl->identifier == *id
+                && *decl->identifier != "_"
+                )
+            {
+                skip_to(decl->identifier);
+                return true;
+            }
+            else if (auto sym = std::get_if<symbol::active::identifier>(&symbols[i].sym);
+                     sym
+                     && sym->activates
+                     )
+            {
+                assert(sym->identifier);
+                skip_to(sym->identifier);
                 return true;
             }
             return false;
@@ -814,7 +834,7 @@ private:
                         )
                     )
                 {
-                    if (skip_hidden_name()) {
+                    if (skip_hidden_name(false)) {
                         continue;
                     }
                     else if (
@@ -844,7 +864,7 @@ private:
         {
             if (
                 skip_function_expression()
-                || skip_hidden_name()
+                || skip_hidden_name(true)
                 )
             {
                 continue;
@@ -890,7 +910,7 @@ private:
                 {
                     if (
                         skip_function_expression()
-                        || skip_hidden_name()
+                        || skip_hidden_name(true)
                         )
                     {
                         continue;
@@ -1954,7 +1974,7 @@ public:
     //
     int  scope_depth                              = 0;
     bool started_standalone_assignment_expression = false;
-    bool started_postfix_expression               = false;
+    std::vector<bool> started_postfix_expressions = {};
     bool started_member_access                    = false;
     bool started_this_member_access               = false;
     bool is_out_expression                        = false;
@@ -1966,6 +1986,12 @@ public:
     parameter_declaration_node const* inside_out_parameter = {};
     std::vector<int> symbols_size_at_postfix_expression_start = {};
     std::vector<int> symbols_size_at_lifetime_scope_start = {};
+
+    auto started_postfix_expression() -> bool
+    {
+        return !started_postfix_expressions.empty()
+               && started_postfix_expressions.back();
+    }
 
     auto push_lifetime_scope() -> void
     {
@@ -1980,13 +2006,21 @@ public:
                   last = cpp2::unsafe_narrow<int>(std::ssize(symbols));
              first != last;
              --last) {
-            if (auto sym = std::get_if<symbol::active::declaration>(&symbols[last - 1].sym);
-                sym
-                && sym->start
-                && sym->identifier
-                && *sym->identifier != "_"
+            if (auto decl = std::get_if<symbol::active::declaration>(&symbols[last - 1].sym);
+                decl
+                && decl->start
+                && decl->identifier
+                && *decl->identifier != "_"
                 )
             {
+                symbols.emplace_back( scope_depth, identifier_sym( false, decl->identifier, false ) );
+            }
+            else if (auto sym = std::get_if<symbol::active::identifier>(&symbols[last - 1].sym);
+                     sym
+                     && sym->activates
+                     )
+            {
+                assert(sym->identifier);
                 symbols.emplace_back( scope_depth, identifier_sym( false, sym->identifier, false ) );
             }
         }
@@ -2233,12 +2267,12 @@ public:
         //  it's the first identifier of a postfix_expressions
         //  or the function name in a UFCS expression
         else if (
-            started_postfix_expression
+            started_postfix_expression()
             || started_member_access
             || started_this_member_access
             )
         {
-            started_postfix_expression = false;
+            started_postfix_expressions.back() = false;
             if (!inside_parameter_identifier)
             {
                 //  Put this into the table if it's a use of an object in scope
@@ -2254,7 +2288,7 @@ public:
                         )
                     )
                 {
-                    symbols.emplace_back( scope_depth, identifier_sym( false, &t, true, inside_next_expression ) );
+                    symbols.emplace_back( scope_depth, identifier_sym( false, &t, true, false, inside_next_expression ) );
                 }
             }
             started_member_access = false;
@@ -2266,6 +2300,17 @@ public:
     {
         if (n.parameters) {
             pop_lifetime_scope();
+        }
+    }
+
+    auto start(using_statement_node const& n, int) -> void
+    {
+        if (auto id = get_if<id_expression_node::qualified>(&n.id->id);
+            !n.for_namespace
+            && id
+            )
+        {
+            symbols.emplace_back( scope_depth, identifier_sym( false, (*id)->ids.back().id->identifier, true, true ) );
         }
     }
 
@@ -2317,12 +2362,12 @@ public:
 
     auto end(compound_statement_node const& n, int) -> void
     {
+        pop_lifetime_scope();
         symbols.emplace_back(
             scope_depth,
             compound_sym{ false, &n, kind_of(n) }
         );
         --scope_depth;
-        pop_lifetime_scope();
     }
 
     auto start(assignment_expression_node const& n, int)
@@ -2341,11 +2386,18 @@ public:
     }
 
     auto start(postfix_expression_node const&, int) {
-        started_postfix_expression = true;
+        started_postfix_expressions.push_back(true);
         symbols_size_at_postfix_expression_start.push_back(cpp2::unsafe_narrow<int>(ssize(symbols)));
     }
 
+    auto end(primary_expression_node const&, int) {
+        if (started_postfix_expression()) {
+            started_postfix_expressions.back() = false;
+        }
+    }
+
     auto end(postfix_expression_node const&, int) {
+        started_postfix_expressions.pop_back();
         symbols_size_at_postfix_expression_start.pop_back();
     }
 
