@@ -85,18 +85,7 @@ struct declaration_sym {
 };
 
 struct identifier_sym {
-    //  '!start' means "deactivates the declaration name"
-    //  'activates' means "activates a declaration name"
-    //  Perhaps it's an abuse of 'start' compared to the other symbols
-    //  where there are only two symbol instances with each truth value
-    //  In our case here, all identifier uses have 'start == true'
-    //  and a last one is generated at scope exit to indicate deactivation
-    //  We need 'activates' for Cpp1 using declarations
-    //  which don't have an associated Cpp2 declaration
-    //  We can't just use 'activates' because it is also used to hide names
-    //  which is already done implicitly by Cpp2 declarations
-    bool start = false;
-    bool activates = false;
+    enum kind { use, using_declaration, deactivation } kind_ = use;
     bool standalone_assignment_to = false;
     bool is_captured = false;
     bool in_next_clause = false;
@@ -105,12 +94,10 @@ struct identifier_sym {
     identifier_sym(
         bool         a,
         token const* id,
-        bool         s = true,
-        bool         act = false,
+        kind         k = use,
         bool         n = false
     )
-        : start{s}
-        , activates{act}
+        : kind_{k}
         , standalone_assignment_to{a}
         , in_next_clause{n}
         , identifier{id}
@@ -127,6 +114,24 @@ struct identifier_sym {
         -> token const*
     {
         return identifier;
+    }
+
+    auto is_use() const
+        -> bool
+    {
+        return kind_ == use;
+    }
+
+    auto is_using_declaration() const
+        -> bool
+    {
+        return kind_ == using_declaration;
+    }
+
+    auto is_deactivation() const
+        -> bool
+    {
+        return kind_ == deactivation;
     }
 };
 
@@ -200,7 +205,7 @@ struct symbol {
     bool start = true;
 
     symbol(int depth, declaration_sym const& sym) : depth{depth}, sym{sym}, start{sym.start} { }
-    symbol(int depth, identifier_sym  const& sym) : depth{depth}, sym{sym}, start{sym.start} { }
+    symbol(int depth, identifier_sym  const& sym) : depth{depth}, sym{sym}, start{!sym.is_deactivation()} { }
     symbol(int depth, selection_sym   const& sym) : depth{depth}, sym{sym}, start{sym.start} { }
     symbol(int depth, compound_sym    const& sym) : depth{depth}, sym{sym}, start{sym.start} { }
 
@@ -494,7 +499,7 @@ public:
         if (identifier_sym const* sym = nullptr;
             it != symbols.end()
             && (sym = std::get_if<symbol::active::identifier>(&it->sym))
-            && sym->start
+            && sym->is_use()
             )
         {
             return sym->is_captured;
@@ -562,7 +567,7 @@ public:
                 auto const& sym = std::get<symbol::active::identifier>(s.sym);
                 assert (sym.identifier);
                 if (last_use const* use = nullptr;
-                    sym.start
+                    sym.is_use()
                     && (use = is_definite_last_use(sym.identifier))
                     )
                 {
@@ -573,7 +578,7 @@ public:
                 }
 
                 if (
-                    sym.start
+                    sym.is_use()
                     && is_definite_initialization(sym.identifier)
                     )
                 {
@@ -739,7 +744,7 @@ private:
         auto is_an_use = [&](identifier_sym const* sym) -> bool {
             assert(!sym || sym->identifier);
             return sym
-                   && sym->start
+                   && sym->is_use()
                    && (
                        *sym->identifier == *id
                        //  For 'this', do include member names with implicit 'this.'
@@ -796,7 +801,7 @@ private:
                 {
                     ++i;
                 }
-                assert(sym->identifier == identifier_end && !sym->start);
+                assert(sym->identifier == identifier_end && !sym->is_use());
                 if (record_pos_range) {
                     pos_ranges.back().last = i;
                 }
@@ -815,7 +820,7 @@ private:
             }
             else if (auto sym = std::get_if<symbol::active::identifier>(&symbols[i].sym);
                      sym
-                     && sym->activates
+                     && sym->is_using_declaration()
                      )
             {
                 assert(sym->identifier);
@@ -1137,7 +1142,7 @@ private:
                 assert (sym.identifier);
 
                 if (
-                    sym.start
+                    sym.is_use()
                     && is_definite_initialization(sym.identifier)
                     )
                 {
@@ -2026,7 +2031,7 @@ public:
     auto push_activating_symbol(identifier_sym sym) -> void
     {
         assert(!indices_of_activating_symbols_per_lifetime_scope.empty());
-        assert(sym.activates);
+        assert(sym.is_using_declaration());
         assert(sym.identifier);
 
         indices_of_activating_symbols_per_lifetime_scope.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
@@ -2040,11 +2045,11 @@ public:
         for (auto i : indices_of_activating_symbols_per_lifetime_scope.back()) {
             if (auto decl = std::get_if<symbol::active::declaration>(&symbols[i].sym))
             {
-                symbols.emplace_back( scope_depth, identifier_sym( false, decl->identifier, false ) );
+                symbols.emplace_back( scope_depth, identifier_sym( false, decl->identifier, identifier_sym::deactivation ) );
             }
             else if (auto sym = std::get_if<symbol::active::identifier>(&symbols[i].sym))
             {
-                symbols.emplace_back( scope_depth, identifier_sym( false, sym->identifier, false ) );
+                symbols.emplace_back( scope_depth, identifier_sym( false, sym->identifier, identifier_sym::deactivation ) );
             }
         }
         indices_of_activating_symbols_per_lifetime_scope.pop_back();
@@ -2144,7 +2149,7 @@ public:
 
     auto end(iteration_statement_node const& n, int) -> void
     {
-        symbols.emplace_back( scope_depth, identifier_sym( false, n.identifier, false ) );
+        symbols.emplace_back( scope_depth, identifier_sym( false, n.identifier, identifier_sym::deactivation ) );
     }
 
     auto start(loop_body_tag const& n, int) -> void
@@ -2248,7 +2253,7 @@ public:
             for (auto& s : std::span{symbols}.subspan(symbols_size_at_postfix_expression_start.back())) {
                 if (auto sym = std::get_if<symbol::active::identifier>(&s.sym);
                     sym
-                    && sym->start
+                    && sym->is_use()
                     )
                 {
                     sym->is_captured = true;
@@ -2311,7 +2316,7 @@ public:
                         )
                     )
                 {
-                    symbols.emplace_back( scope_depth, identifier_sym( false, &t, true, false, inside_next_expression ) );
+                    symbols.emplace_back( scope_depth, identifier_sym( false, &t, {}, inside_next_expression ) );
                 }
             }
             started_member_access = false;
@@ -2333,7 +2338,7 @@ public:
             && id
             )
         {
-            push_activating_symbol( identifier_sym( false, (*id)->ids.back().id->identifier, true, true ) );
+            push_activating_symbol( identifier_sym( false, (*id)->ids.back().id->identifier, identifier_sym::using_declaration ) );
         }
     }
 
