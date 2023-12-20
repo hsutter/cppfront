@@ -1985,7 +1985,7 @@ public:
     bool just_entered_for                         = false;
     parameter_declaration_node const* inside_out_parameter = {};
     std::vector<int> symbols_size_at_postfix_expression_start = {};
-    std::vector<int> symbols_size_at_lifetime_scope_start = {};
+    std::vector<std::vector<int>> indices_of_activating_symbols_per_lifetime_scope = {{}};
 
     auto started_postfix_expression() -> bool
     {
@@ -1995,41 +1995,54 @@ public:
 
     auto push_lifetime_scope() -> void
     {
-        symbols_size_at_lifetime_scope_start.push_back(cpp2::unsafe_narrow<int>(ssize(symbols)));
+        indices_of_activating_symbols_per_lifetime_scope.emplace_back();
+    }
+
+    auto push_activating_symbol(declaration_sym decl) -> void
+    {
+        assert(!indices_of_activating_symbols_per_lifetime_scope.empty());
+        assert(decl.start);
+
+        if (
+            decl.identifier
+            && *decl.identifier != "_"
+            )
+        {
+            indices_of_activating_symbols_per_lifetime_scope.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
+        }
+        symbols.emplace_back(scope_depth, decl);
+    }
+
+    auto push_activating_symbol(identifier_sym sym) -> void
+    {
+        assert(!indices_of_activating_symbols_per_lifetime_scope.empty());
+        assert(sym.activates);
+        assert(sym.identifier);
+
+        indices_of_activating_symbols_per_lifetime_scope.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
+        symbols.emplace_back(scope_depth, sym);
     }
 
     auto pop_lifetime_scope() -> void
     {
-        assert(!symbols_size_at_lifetime_scope_start.empty());
-        assert(symbols_size_at_lifetime_scope_start.back() <= std::ssize(symbols));
-        for (auto first = symbols_size_at_lifetime_scope_start.back(),
-                  last = cpp2::unsafe_narrow<int>(std::ssize(symbols));
-             first != last;
-             --last) {
-            if (auto decl = std::get_if<symbol::active::declaration>(&symbols[last - 1].sym);
-                decl
-                && decl->start
-                && decl->identifier
-                && *decl->identifier != "_"
-                )
+        assert(!indices_of_activating_symbols_per_lifetime_scope.empty());
+
+        for (auto i : indices_of_activating_symbols_per_lifetime_scope.back()) {
+            if (auto decl = std::get_if<symbol::active::declaration>(&symbols[i].sym))
             {
                 symbols.emplace_back( scope_depth, identifier_sym( false, decl->identifier, false ) );
             }
-            else if (auto sym = std::get_if<symbol::active::identifier>(&symbols[last - 1].sym);
-                     sym
-                     && sym->activates
-                     )
+            else if (auto sym = std::get_if<symbol::active::identifier>(&symbols[i].sym))
             {
-                assert(sym->identifier);
                 symbols.emplace_back( scope_depth, identifier_sym( false, sym->identifier, false ) );
             }
         }
-        symbols_size_at_lifetime_scope_start.pop_back();
+        indices_of_activating_symbols_per_lifetime_scope.pop_back();
     }
 
     auto end(translation_unit_node const&, int) -> void
     {
-        assert(symbols_size_at_lifetime_scope_start.empty());
+        assert(indices_of_activating_symbols_per_lifetime_scope.size() == 1);
     }
 
     auto start(next_expression_tag const&, int) -> void
@@ -2088,7 +2101,7 @@ public:
             || n.pass == passing_style::forward
             )
         {
-            symbols.emplace_back( scope_depth, declaration_sym( true, n.declaration.get(), n.declaration->name(), n.declaration->initializer.get(), &n));
+            push_activating_symbol( declaration_sym( true, n.declaration.get(), n.declaration->name(), n.declaration->initializer.get(), &n));
         }
     }
 
@@ -2173,7 +2186,7 @@ public:
                 )
             )
         {
-            symbols.emplace_back( scope_depth, declaration_sym( true, &n, n.name(), n.initializer.get(), inside_out_parameter ) );
+            push_activating_symbol( declaration_sym( true, &n, n.name(), n.initializer.get(), inside_out_parameter ) );
             if (!n.is_object()) {
                 ++scope_depth;
             }
@@ -2310,7 +2323,7 @@ public:
             && id
             )
         {
-            symbols.emplace_back( scope_depth, identifier_sym( false, (*id)->ids.back().id->identifier, true, true ) );
+            push_activating_symbol( identifier_sym( false, (*id)->ids.back().id->identifier, true, true ) );
         }
     }
 
