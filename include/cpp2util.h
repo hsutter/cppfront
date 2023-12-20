@@ -1700,7 +1700,7 @@ struct args_t : std::vector<std::string_view>
 {
     args_t(int c, char** v) : vector{static_cast<std::size_t>(c)}, argc{c}, argv{v} {}
 
-    int                argc = 0;
+    mutable int        argc = 0;        //  mutable for compatibility with frameworks that take 'int& argc'
     char**             argv = nullptr;
 };
 
