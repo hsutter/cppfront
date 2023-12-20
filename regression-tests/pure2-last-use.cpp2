@@ -781,6 +781,9 @@ t: @struct type = {
   operator(): (move this) = {
     f_copy(x);
     _ = :() = {
+      // Should this move?
+      // I.e., don't skip non-captured names, just rely on skipping hiding names.
+      static_assert(std::is_same_v<decltype(x), std::unique_ptr<int>>);
       using captures::x;
       _ = x;
     };
