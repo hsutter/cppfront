@@ -11,7 +11,7 @@ usage() {
 
 check_file () {
     file="$1"
-    # Check if the file is tracked by bit
+    # Check if the file is tracked by git
     git ls-files --error-unmatch "$file" > /dev/null 2>&1
     untracked=$?
     # Compare the content with the refernece value
@@ -138,7 +138,7 @@ for test_file in $tests; do
 
     ########
     # Run the translation test
-    echo "        Generating C++1 code"
+    echo "        Generating Cpp1 code"
     ./"$cppfront_cmd" "$test_file" -o "$expected_src" $opt > "$expeced_output" 2>&1
 
     failure=0
@@ -149,7 +149,7 @@ for test_file in $tests; do
         # The C++1 generation output has to be tracked
         check_file "$expeced_output"
         if [[ $untracked -eq 1 ]]; then
-            echo "            The C++1 generation output file is not tracked by git:"
+            echo "            The Cpp1 generation output file is not tracked by git:"
             echo "                $expeced_output"
             failure=1
         elif [[ -n "$diff_output" ]]; then
@@ -165,7 +165,7 @@ for test_file in $tests; do
     ########
     # Check the generated code
     if [ -f "$expected_src" ]; then
-        # The file was generated, so it shoudl be tracked by git
+        # The file was generated, so it should be tracked by git
         check_file "$expected_src"
         if [[ $untracked -eq 1 ]]; then
             echo "            The generated file is not tracked by git:"
@@ -198,7 +198,7 @@ for test_file in $tests; do
             if [ -f "$expected_src_compil_out" ]; then
                 # Check for local compiler issues
                 if [[ $compilation_result -ne 0 ]]; then
-                    # Workaround an issue with MSVC mising std modules
+                    # Workaround an issue with MSVC missing std modules
                     if cat $expected_src_compil_out | grep -q "error C1011"; then
                         echo "            Skipping further checks due to missing std modules support"
                         compiler_issue=1
