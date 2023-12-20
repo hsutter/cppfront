@@ -66,7 +66,7 @@ CPP2_REQUIRES_ ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...)) ;
     };
 
     public: template<typename ...Args> static auto print(std::ostream& out, Args const& ...args) -> void
-CPP2_REQUIRES_ (cpp2::cmp_greater_eq(sizeof(Args)...,0)) ;
+CPP2_REQUIRES_ (cpp2::cmp_greater_eq(sizeof...(Args),0)) ;
 
 #line 99 "pure2-print.cpp2"
     public: template<typename ...Args> [[nodiscard]] static auto all(Args const& ...args) -> bool;
@@ -182,7 +182,7 @@ requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...)) {(std::cout << ..
 
 #line 95 "pure2-print.cpp2"
     template<typename ...Args> auto outer::print(std::ostream& out, Args const& ...args) -> void
-requires (cpp2::cmp_greater_eq(sizeof(Args)...,0)) {
+requires (cpp2::cmp_greater_eq(sizeof...(Args),0)) {
 #line 96 "pure2-print.cpp2"
         (out << ... << args);
     }

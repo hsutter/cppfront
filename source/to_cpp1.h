@@ -3272,6 +3272,12 @@ public:
                 last_was_prefixed = true;
             }
 
+            //  Handle the other Cpp2 postfix operators that stay postfix in Cpp1 (currently: '...')
+            else if (is_postfix_operator(i->op->type())) {
+                flush_args();
+                suffix.emplace_back( i->op->to_string(), i->op->position());
+            }
+
             //  Handle the suffix operators that remain suffix
             //
             else {
@@ -3291,11 +3297,11 @@ public:
                     suffix.emplace_back( i->op_close->to_string(), i->op_close->position() );
                 }
 
-                if (i->id_expr) {
-
+                if (i->id_expr)
+                {
                     if (args) {
-                        // if args are stored it means that this is function or method
-                        // that is not handled by UFCS and args need to be printed
+                        //  If args are stored it means that this is function or method
+                        //  that is not handled by UFCS and args need to be printed
                         suffix.emplace_back(")", args.value().close_pos);
                         for (auto&& e: args.value().text_chunks) {
                             suffix.push_back(e);

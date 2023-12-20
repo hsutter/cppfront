@@ -391,10 +391,6 @@ struct String
 auto message_to_cstr_adapter( CPP2_MESSAGE_PARAM msg ) -> CPP2_MESSAGE_PARAM { return msg ? msg : ""; }
 auto message_to_cstr_adapter( std::string const& msg ) -> CPP2_MESSAGE_PARAM { return msg.c_str(); }
 
-//  deprecated
-auto contract_message( CPP2_MESSAGE_PARAM msg ) -> CPP2_MESSAGE_PARAM { return msg; }
-auto contract_message( std::string const& msg ) -> CPP2_MESSAGE_PARAM { return msg.c_str(); }
-
 class contract_group {
 public:
     using handler = void (*)(CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM);
@@ -404,15 +400,10 @@ public:
     constexpr auto get_handler() const -> handler { return reporter; }
     constexpr auto has_handler() const -> bool    { return reporter != handler{}; }
 
-    constexpr auto report_violation(CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
-                                          -> void { if (reporter) reporter(msg CPP2_SOURCE_LOCATION_ARG); }
-
-    //  deprecated
     constexpr auto enforce(bool b, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
                                           -> void { if (!b) reporter(msg CPP2_SOURCE_LOCATION_ARG); }
-    constexpr auto violation(CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
+    constexpr auto report_violation(CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
                                           -> void { if (reporter) reporter(msg CPP2_SOURCE_LOCATION_ARG); }
-
 private:
     handler reporter;
 };
@@ -727,7 +718,7 @@ public:
                 *t = T(CPP2_FORWARD(args)...);
             }
             else {
-                Default.enforce(false, "attempted to copy assign, but copy assignment is not available");
+                Default.report_violation("attempted to copy assign, but copy assignment is not available");
             }
         }
         else {
@@ -737,7 +728,7 @@ public:
                     dt->value() = T(CPP2_FORWARD(args)...);
                 }
                 else {
-                    Default.enforce(false, "attempted to copy assign, but copy assignment is not available");
+                    Default.report_violation("attempted to copy assign, but copy assignment is not available");
                 }
             }
             else {
