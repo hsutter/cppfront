@@ -33,7 +33,7 @@ outer: type =
             inout m: std::map<const int, std::string>
         ) -> move std::string
             pre( m.empty() == false || false, "message" )
-            pre<Bounds,testing_enabled>( 0 < m.ssize() < 100 && true != false ) = 
+            pre<Bounds,testing_enabled>( 0 < m.ssize() < 100 && true != false, "size is " + cpp2::to_string(m.ssize()) ) = 
         {
             a: = :() = 
                 {

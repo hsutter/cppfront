@@ -1806,7 +1806,7 @@ struct contract_node
     std::unique_ptr<id_expression_node>              group;
     std::vector<std::unique_ptr<id_expression_node>> flags;
     std::unique_ptr<logical_or_expression_node>      condition;
-    token const*                                     message = {};
+    std::unique_ptr<expression_node>                 message = {};
 
     contract_node( source_position pos )
         : open_bracket{pos}
@@ -1836,6 +1836,10 @@ struct contract_node
 
         assert(condition);
         condition->visit(v, depth+1);
+
+        if (message) {
+            message->visit(v, depth+1);
+        }
 
         v.end(*this, depth);
     }
@@ -4750,7 +4754,7 @@ auto pretty_print_visualize(contract_node const& n, int indent)
     ret += "( " + pretty_print_visualize(*n.condition, indent);
 
     if (n.message) {
-        ret += ", " + n.message->to_string();
+        ret += ", " + pretty_print_visualize(*n.message, indent);
     }
 
     ret += " )";
@@ -7721,7 +7725,7 @@ private:
 
     //G contract:
     //G     contract-kind contract-group? ':' '(' logical-or-expression ')'
-    //G     contract-kind contract-group? ':' '(' logical-or-expression ',' string-literal ')'
+    //G     contract-kind contract-group? ':' '(' logical-or-expression ',' expression ')'
     //G
     //G contract-group:
     //G     '<' id-expression contract-flags?'>'
@@ -7795,12 +7799,11 @@ private:
         //  Now check for the optional string message
         if (curr().type() == lexeme::Comma) {
             next();
-            if (curr().type() != lexeme::StringLiteral) {
-                error("expected contract message string");
+            n->message = expression();
+            if (!n->message) {
+                error("a contract violation message must be a valid string expression", true, {}, true);
                 return {};
             }
-            n->message = &curr();
-            next();
         }
 
         if (curr().type() != lexeme::RightParen) {
@@ -9081,9 +9084,6 @@ public:
         o << pre(indent) << "contract\n";
         assert(n.kind);
         o << pre(indent+1) << "kind: " << std::string_view(*n.kind) << "\n";
-        if (n.message) {
-            o << pre(indent+1) << "message: " << std::string_view(*n.message) << "\n";
-        }
         if (!n.captures.members.empty()) {
             o << pre(indent+1) << "captures: " << n.captures.members.size() << "\n";
         }

@@ -32,7 +32,7 @@ outer: @print type = {
 
         private h: (s: std::string, inout m: std::map<const int,std::string> ) -> std::string
             pre( m.empty() == false || false, "message" )
-            pre<Bounds, testing_enabled>( 0 < m.ssize() < 100 && true != false )
+            pre<Bounds, testing_enabled>( 0 < m.ssize() < 100 && true != false, "size is (m.ssize())$" )
         = {
             a := :()={};
             b := :()={};

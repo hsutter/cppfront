@@ -918,7 +918,7 @@ compiler_services::compiler_services(compiler_services const& that)
     {
 
 #line 237 "reflect.h2"
-        if (cpp2::Default.has_handler() && !(n) ) { cpp2::Default.violation("a meta::declaration must point to a valid declaration_node, not null"); }
+        if (cpp2::Default.has_handler() && !(n) ) { cpp2::Default.violation(cpp2::contract_message("a meta::declaration must point to a valid declaration_node, not null")); }
     }
 
     [[nodiscard]] auto declaration_base::position() const -> source_position { return CPP2_UFCS(position)((*cpp2::assert_not_null(n)));  }
@@ -1079,8 +1079,8 @@ declaration::declaration(declaration const& that)
 
 #line 398 "reflect.h2"
     {
-        if ((*this).has_handler() && !(!(has_initializer())) ) { (*this).violation("cannot add an initializer to a function that already has one"); }
-        if ((*this).has_handler() && !(parent_is_type()) ) { (*this).violation("cannot add an initializer to a function that isn't in a type scope"); }
+        if ((*this).has_handler() && !(!(has_initializer())) ) { (*this).violation(cpp2::contract_message("cannot add an initializer to a function that already has one")); }
+        if ((*this).has_handler() && !(parent_is_type()) ) { (*this).violation(cpp2::contract_message("cannot add an initializer to a function that isn't in a type scope")); }
         //require( !has_initializer(), 
         //         "cannot add an initializer to a function that already has one");
         //require( parent_is_type(),

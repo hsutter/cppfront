@@ -387,6 +387,9 @@ struct String
 //      and so in<T> will pass it by const& and really it should be by value
 #define CPP2_MESSAGE_PARAM  char const*
 
+auto contract_message( CPP2_MESSAGE_PARAM msg ) -> CPP2_MESSAGE_PARAM { return msg; }
+auto contract_message( std::string const& msg ) -> CPP2_MESSAGE_PARAM { return msg.c_str(); }
+
 class contract_group {
 public:
     using handler = void (*)(CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM);
