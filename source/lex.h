@@ -307,6 +307,7 @@ public:
             )
         {
             sv.remove_prefix(prefix.size());
+            pos.colno += prefix.size();
         }
     }
 

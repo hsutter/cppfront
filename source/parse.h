@@ -8264,7 +8264,6 @@ private:
 
         else
         {
-
             //  Next is optionally a requires clause (if not using the "-> expr;" syntax)
             if (curr() == "requires")
             {
