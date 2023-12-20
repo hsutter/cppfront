@@ -1237,7 +1237,13 @@ public:
             && n.parent_is_type()
             )
         {
-            assert(n.is_object());
+            if (!n.is_object()) {
+                errors.emplace_back(
+                    n.position(),
+                    "a member named 'this' declares a base subobject, and must be followed by a base type name"
+                );
+                return false;
+            }
 
             if (
                 !n.is_public()
