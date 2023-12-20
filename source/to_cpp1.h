@@ -4570,8 +4570,7 @@ public:
             );
         }
 
-        //  Emit the contract group name
-        //  and invoke .expects on that contract group
+        //  Emit the contract group name, and report any violation to that group
         //
         assert(n.condition);
         auto message = std::string{"\"\""};
@@ -4591,7 +4590,7 @@ public:
         }
         printer.print_cpp2(
             " && !(" + print_to_string(*n.condition) + ") ) " +
-                "{ " + name + ".violation(" + message + "); }",
+                "{ " + name + ".report_violation(" + message + "); }",
             n.position()
         );
 

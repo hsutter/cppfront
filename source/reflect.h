@@ -144,7 +144,7 @@ using parse_statement_ret = std::unique_ptr<statement_node>;
     //  Enable custom contracts on this object, integrated with compiler output
     //  Unlike .requires, a contract violation stops further processing
     //
-    public: auto violation(auto const& msg) const& -> void;
+    public: auto report_violation(auto const& msg) const& -> void;
 
 #line 173 "reflect.h2"
     public: [[nodiscard]] auto has_handler() const& -> auto;
@@ -848,7 +848,7 @@ auto newline_pos = CPP2_UFCS(find)(source, '\n');
         auto tokens {&CPP2_UFCS(back)(generated_lexers)}; 
         CPP2_UFCS(lex)((*cpp2::assert_not_null(tokens)), *cpp2::assert_not_null(std::move(lines)), true);
 
-        if (cpp2::Default.has_handler() && !(std::ssize(CPP2_UFCS(get_map)((*cpp2::assert_not_null(tokens)))) == 1) ) { cpp2::Default.violation(""); }
+        if (cpp2::Default.has_handler() && !(std::ssize(CPP2_UFCS(get_map)((*cpp2::assert_not_null(tokens)))) == 1) ) { cpp2::Default.report_violation(""); }
 
         //  Now parse this single declaration from
         //  the lexed tokens
@@ -889,7 +889,7 @@ auto newline_pos = CPP2_UFCS(find)(source, '\n');
     }
 
 #line 168 "reflect.h2"
-    auto compiler_services::violation(auto const& msg) const& -> void{
+    auto compiler_services::report_violation(auto const& msg) const& -> void{
         error(msg);
         throw(std::runtime_error("  ==> programming bug found in metafunction @" + cpp2::to_string(metafunction_name) + " - contract violation - see previous errors"));
     }
@@ -918,7 +918,7 @@ compiler_services::compiler_services(compiler_services const& that)
     {
 
 #line 237 "reflect.h2"
-        if (cpp2::Default.has_handler() && !(n) ) { cpp2::Default.violation(CPP2_CONTRACT_MSG("a meta::declaration must point to a valid declaration_node, not null")); }
+        if (cpp2::Default.has_handler() && !(n) ) { cpp2::Default.report_violation(CPP2_CONTRACT_MSG("a meta::declaration must point to a valid declaration_node, not null")); }
     }
 
     [[nodiscard]] auto declaration_base::position() const -> source_position { return CPP2_UFCS(position)((*cpp2::assert_not_null(n)));  }
@@ -1002,10 +1002,10 @@ declaration_base::declaration_base(declaration_base const& that)
     auto declaration::mark_for_removal_from_enclosing_type() & -> void
 
     {
-        if (cpp2::Type.has_handler() && !(parent_is_type()) ) { cpp2::Type.violation(""); }
+        if (cpp2::Type.has_handler() && !(parent_is_type()) ) { cpp2::Type.report_violation(""); }
 #line 322 "reflect.h2"
         auto test {CPP2_UFCS(type_member_mark_for_removal)((*cpp2::assert_not_null(n)))}; 
-        if (cpp2::Default.has_handler() && !(std::move(test)) ) { cpp2::Default.violation(""); }// ... to ensure this assert is true
+        if (cpp2::Default.has_handler() && !(std::move(test)) ) { cpp2::Default.report_violation(""); }// ... to ensure this assert is true
     }
 
     declaration::~declaration() noexcept{}
@@ -1022,7 +1022,7 @@ declaration::declaration(declaration const& that)
 #line 340 "reflect.h2"
     {
 
-        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_function)((*cpp2::assert_not_null(n)))) ) { cpp2::Default.violation(""); }
+        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_function)((*cpp2::assert_not_null(n)))) ) { cpp2::Default.report_violation(""); }
     }
 
     [[nodiscard]] auto function_declaration::index_of_parameter_named(cpp2::in<std::string_view> s) const& -> int { return CPP2_UFCS(index_of_parameter_named)((*cpp2::assert_not_null(n)), s); }
@@ -1079,8 +1079,8 @@ declaration::declaration(declaration const& that)
 
 #line 398 "reflect.h2"
     {
-        if ((*this).has_handler() && !(!(has_initializer())) ) { (*this).violation(CPP2_CONTRACT_MSG("cannot add an initializer to a function that already has one")); }
-        if ((*this).has_handler() && !(parent_is_type()) ) { (*this).violation(CPP2_CONTRACT_MSG("cannot add an initializer to a function that isn't in a type scope")); }
+        if ((*this).has_handler() && !(!(has_initializer())) ) { (*this).report_violation(CPP2_CONTRACT_MSG("cannot add an initializer to a function that already has one")); }
+        if ((*this).has_handler() && !(parent_is_type()) ) { (*this).report_violation(CPP2_CONTRACT_MSG("cannot add an initializer to a function that isn't in a type scope")); }
         //require( !has_initializer(), 
         //         "cannot add an initializer to a function that already has one");
         //require( parent_is_type(),
@@ -1109,7 +1109,7 @@ declaration::declaration(declaration const& that)
 #line 427 "reflect.h2"
     {
 
-        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_object)((*cpp2::assert_not_null(n)))) ) { cpp2::Default.violation(""); }
+        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_object)((*cpp2::assert_not_null(n)))) ) { cpp2::Default.report_violation(""); }
     }
 
     [[nodiscard]] auto object_declaration::is_const() const& -> bool { return CPP2_UFCS(is_const)((*cpp2::assert_not_null(n))); }
@@ -1142,7 +1142,7 @@ declaration::declaration(declaration const& that)
 #line 463 "reflect.h2"
     {
 
-        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_type)((*cpp2::assert_not_null(n)))) ) { cpp2::Default.violation(""); }
+        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_type)((*cpp2::assert_not_null(n)))) ) { cpp2::Default.report_violation(""); }
     }
 
     auto type_declaration::reserve_names(cpp2::in<std::string_view> name, auto&& ...etc) const& -> void
@@ -1275,7 +1275,7 @@ declaration::declaration(declaration const& that)
 #line 598 "reflect.h2"
     {
 
-        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_alias)((*cpp2::assert_not_null(n)))) ) { cpp2::Default.violation(""); }
+        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_alias)((*cpp2::assert_not_null(n)))) ) { cpp2::Default.report_violation(""); }
     }
 
     alias_declaration::alias_declaration(alias_declaration const& that)
@@ -1865,7 +1865,7 @@ auto print(cpp2::in<meta::type_declaration> t) -> void
     ) -> bool
 
 {
-    if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_type)(n)) ) { cpp2::Default.violation(""); }
+    if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_type)(n)) ) { cpp2::Default.report_violation(""); }
 
     //  Check for _names reserved for the metafunction implementation
     for ( 

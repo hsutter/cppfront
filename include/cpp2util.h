@@ -403,10 +403,16 @@ public:
     constexpr auto set_handler(handler h = {}) { reporter = h; }
     constexpr auto get_handler() const -> handler { return reporter; }
     constexpr auto has_handler() const -> bool    { return reporter != handler{}; }
-    constexpr auto expects    (bool b, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
+
+    constexpr auto report_violation(CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
+                                          -> void { if (reporter) reporter(msg CPP2_SOURCE_LOCATION_ARG); }
+
+    //  deprecated
+    constexpr auto enforce(bool b, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
                                           -> void { if (!b) reporter(msg CPP2_SOURCE_LOCATION_ARG); }
-    constexpr auto violation  (CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
-                                          -> void { reporter(msg CPP2_SOURCE_LOCATION_ARG); }
+    constexpr auto violation(CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
+                                          -> void { if (reporter) reporter(msg CPP2_SOURCE_LOCATION_ARG); }
+
 private:
     handler reporter;
 };
@@ -419,7 +425,7 @@ private:
         << where.function_name() << ": "
 #endif
         << group << " violation";
-    if (msg[0] != '\0') {
+    if (msg && msg[0] != '\0') {
         std::cerr << ": " << msg;
     }
     std::cerr << "\n";
@@ -461,7 +467,9 @@ auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> declty
     //        doesn't guarantee that using == and != will reliably report whether an
     //        STL iterator has the default-constructed value. So use it only for raw *...
     if constexpr (std::is_pointer_v<CPP2_TYPEOF(p)>) {
-        Null.expects(p != CPP2_TYPEOF(p){}, "dynamic null dereference attempt detected" CPP2_SOURCE_LOCATION_ARG);
+        if (p == CPP2_TYPEOF(p){}) {
+            Null.report_violation("dynamic null dereference attempt detected" CPP2_SOURCE_LOCATION_ARG);
+        };
     }
     return CPP2_FORWARD(p);
 }
@@ -483,7 +491,9 @@ auto assert_in_bounds_impl(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_
     else {
         msg += "but container is empty";
     }
-    Bounds.expects(0 <= arg && arg < max(), msg.c_str()  CPP2_SOURCE_LOCATION_ARG);
+    if (!(0 <= arg && arg < max())) {
+        Bounds.report_violation(msg.c_str()  CPP2_SOURCE_LOCATION_ARG);
+    }
 }
 
 auto assert_in_bounds_impl(auto&&, auto&& CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> void
@@ -510,10 +520,11 @@ auto assert_in_bounds_impl(auto&&, auto&& CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAUL
 
 [[noreturn]] auto Throw(auto&& x, [[maybe_unused]] char const* msg) -> void {
 #ifdef CPP2_NO_EXCEPTIONS
-    Type.expects(
-        !"exceptions are disabled with -fno-exceptions",
-        msg
-    );
+    auto err = std::string{"exceptions are disabled with -fno-exceptions - attempted to throw exception with type \"" + typeid(decltype(x)).name() + "\""};
+    if (msg) {
+        err += " and the message \"" + msg + "\"";
+    }
+    Type.report_violation( msg );
     std::terminate();
 #else
     throw CPP2_FORWARD(x);
@@ -531,10 +542,7 @@ inline auto Uncaught_exceptions() -> int {
 template<typename T>
 auto Dynamic_cast( [[maybe_unused]] auto&& x ) -> decltype(auto) {
 #ifdef CPP2_NO_RTTI
-    Type.expects(
-        !"'as' dynamic casting is disabled with -fno-rtti", // more likely to appear on console
-         "'as' dynamic casting is disabled with -fno-rtti"  // make message available to hooked handlers
-    );
+    Type.report_violation( "'as' dynamic casting is disabled with -fno-rtti" );
     return nullptr;
 #else
     return dynamic_cast<T>(CPP2_FORWARD(x));
@@ -544,25 +552,19 @@ auto Dynamic_cast( [[maybe_unused]] auto&& x ) -> decltype(auto) {
 template<typename T>
 auto Typeid() -> decltype(auto) {
 #ifdef CPP2_NO_RTTI
-    Type.expects(
-        !"'any' dynamic casting is disabled with -fno-rtti", // more likely to appear on console
-         "'any' dynamic casting is disabled with -fno-rtti"  // make message available to hooked handlers
-    );
+    Type.report_violation( "'any' dynamic casting is disabled with -fno-rtti" );
 #else
     return typeid(T);
 #endif
 }
 
-//  We don't need typeid(expr) yet -- uncomment this if/when we need it
-//auto Typeid( [[maybe_unused]] auto&& x ) -> decltype(auto) {
-//#ifdef CPP2_NO_RTTI
-//    Type.expects(
-//        !"<write appropriate error message here>"
-//    );
-//#else
-//    return typeid(CPP2_FORWARD(x));
-//#endif
-//}
+auto Typeid( [[maybe_unused]] auto&& x ) -> decltype(auto) {
+#ifdef CPP2_NO_RTTI
+    Type.report_violation( "'typeid' is disabled with -fno-rtti" );
+#else
+    return typeid(CPP2_FORWARD(x));
+#endif
+}
 
 
 //-----------------------------------------------------------------------
@@ -674,9 +676,9 @@ class deferred_init {
 public:
     deferred_init() noexcept       { }
    ~deferred_init() noexcept       { destroy(); }
-    auto value()    noexcept -> T& { Default.expects(init);  return t(); }
+    auto value()    noexcept -> T& { Default.enforce(init);  return t(); }
 
-    auto construct(auto&& ...args) -> void { Default.expects(!init);  new (&data) T{CPP2_FORWARD(args)...};  init = true; }
+    auto construct(auto&& ...args) -> void { Default.enforce(!init);  new (&data) T{CPP2_FORWARD(args)...};  init = true; }
 };
 
 
@@ -696,9 +698,9 @@ class out {
     bool called_construct_ = false;
 
 public:
-    out(T*                 t_) noexcept :  t{ t_}, has_t{true}       { Default.expects( t); }
-    out(deferred_init<T>* dt_) noexcept : dt{dt_}, has_t{false}      { Default.expects(dt); }
-    out(out<T>*           ot_) noexcept : ot{ot_}, has_t{ot_->has_t} { Default.expects(ot);
+    out(T*                 t_) noexcept :  t{ t_}, has_t{true}       { Default.enforce( t); }
+    out(deferred_init<T>* dt_) noexcept : dt{dt_}, has_t{false}      { Default.enforce(dt); }
+    out(out<T>*           ot_) noexcept : ot{ot_}, has_t{ot_->has_t} { Default.enforce(ot);
         if (has_t) {  t = ot->t;  }
         else       { dt = ot->dt; }
     }
@@ -712,7 +714,7 @@ public:
     //  then leave it in the same state on exit (strong guarantee)
     ~out() {
         if (called_construct() && uncaught_count != Uncaught_exceptions()) {
-            Default.expects(!has_t);
+            Default.enforce(!has_t);
             dt->destroy();
             called_construct() = false;
         }
@@ -721,21 +723,21 @@ public:
     auto construct(auto&& ...args) -> void {
         if (has_t || called_construct()) {
             if constexpr (requires { *t = T(CPP2_FORWARD(args)...); }) {
-                Default.expects( t );
+                Default.enforce( t );
                 *t = T(CPP2_FORWARD(args)...);
             }
             else {
-                Default.expects(false, "attempted to copy assign, but copy assignment is not available");
+                Default.enforce(false, "attempted to copy assign, but copy assignment is not available");
             }
         }
         else {
-            Default.expects( dt );
+            Default.enforce( dt );
             if (dt->init) {
                 if constexpr (requires { *t = T(CPP2_FORWARD(args)...); }) {
                     dt->value() = T(CPP2_FORWARD(args)...);
                 }
                 else {
-                    Default.expects(false, "attempted to copy assign, but copy assignment is not available");
+                    Default.enforce(false, "attempted to copy assign, but copy assignment is not available");
                 }
             }
             else {
@@ -747,11 +749,11 @@ public:
 
     auto value() noexcept -> T& {
         if (has_t) {
-            Default.expects( t );
+            Default.enforce( t );
             return *t;
         }
         else {
-            Default.expects( dt );
+            Default.enforce( dt );
             return dt->value();
         }
     }
@@ -1201,7 +1203,7 @@ inline constexpr auto as(auto const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) 
     )
 {
     const C c = static_cast<C>(x);
-    Type.expects(   // precondition check: must be round-trippable => not lossy
+    Type.enforce(   // precondition check: must be round-trippable => not lossy
         static_cast<CPP2_TYPEOF(x)>(c) == x && (c < C{}) == (x < CPP2_TYPEOF(x){}),
         "dynamic lossy narrowing conversion attempt detected" CPP2_SOURCE_LOCATION_ARG
     );

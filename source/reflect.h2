@@ -165,7 +165,7 @@ compiler_services: @polymorphic_base @copyable type =
     //  Enable custom contracts on this object, integrated with compiler output
     //  Unlike .requires, a contract violation stops further processing
     //
-    violation:(this, msg) = {
+    report_violation: (this, msg) = {
         error(msg);
         throw( std::runtime_error("  ==> programming bug found in metafunction @(metafunction_name)$ - contract violation - see previous errors") );
     }
