@@ -85,6 +85,16 @@ struct declaration_sym {
 };
 
 struct identifier_sym {
+    //  '!start' means "deactivates the declaration name"
+    //  'activates' means "activates a declaration name"
+    //  Perhaps it's an abuse of 'start' compared to the other symbols
+    //  where there are only two symbol instances with each truth value
+    //  In our case here, all identifier uses have 'start == true'
+    //  and a last one is generated at scope exit to indicate deactivation
+    //  We need 'activates' for Cpp1 using declarations
+    //  which don't have an associated Cpp2 declaration
+    //  We can't just use 'activates' because it is also used to hide names
+    //  which is already done implicitly by Cpp2 declarations
     bool start = false;
     bool activates = false;
     bool standalone_assignment_to = false;
