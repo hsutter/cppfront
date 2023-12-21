@@ -935,8 +935,6 @@ private:
                 pos_ranges.back().last = i;
             }
         }
-        // assert(symbols[i].sym.index() == symbol::active::compound);
-        // assert(!std::get<symbol::active::compound>(symbols[i].sym).start);
 
         //  i is now at the end of id's scope, so start scanning backwards
         //  until we find the first definite last uses
