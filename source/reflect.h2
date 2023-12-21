@@ -16,6 +16,7 @@
 //===========================================================================
 
 #include "parse.h"
+#include "regex.h"
 
 cpp2: namespace = {
 
@@ -1337,6 +1338,78 @@ print: (t: meta::type_declaration) =
     std::cout << t.print() << "\n";
 }
 
+//-----------------------------------------------------------------------
+//
+//  regex - creates regular expressions from members
+//
+//  TODO
+//
+regex_gen: (inout t: meta::type_declaration) =
+{
+    has_default: bool = false;
+    expressions: std::map<std::string, std::string> = ();
+
+    for t.get_member_objects() do (inout m)
+    {
+        name: std::string = m.name();
+        prefix: std::string = "regex";
+
+        if name.starts_with(prefix) {
+
+            if !m.has_initializer() {
+                t.error("Regular expression must have an initializer.");
+            }
+            m.mark_for_removal_from_enclosing_type();
+
+            name = name.substr(prefix.size());
+
+            if name.starts_with("_") {
+                name = name.substr(1);
+            }
+
+            if name.empty() {
+                if has_default {
+                    t.error("Type can only contain one default named regular expression.");
+                }
+                has_default = true;
+            }
+
+            expr: std::string = m.initializer();
+            if !(expr.starts_with("\"") && expr.ends_with("")) {
+                t.error("Unknown string format '(expr)$'");
+            }
+            expr = expr.substr(1, expr.size() - 2);
+
+            expressions[name] = expr;
+        }
+
+
+        m.require( m.make_public(),
+                   "all struct members must be public");
+        if m.is_function() {
+            mf := m.as_function();
+            t.require( !mf.is_virtual(),
+                       "a struct may not have a virtual function");
+            t.require( !mf.has_name("operator="),
+                       "a struct may not have a user-defined operator=");
+        }
+    }
+
+    t.remove_marked_members();
+
+    for expressions do (expr) {
+        regular_expression: std::string = ::cpp2::regex::generate_template(expr.second);
+
+        name: std::string = expr.first;
+        if !name.empty() {
+            name = "_" + name;
+        }
+
+        t.add_member("regex(name)$: type == (regular_expression)$;");
+        t.add_member("match(name)$: (in this, str: std::string) -> bool = { ctx: ::cpp2::regex::match_context<char,4> = (); return regex(name)$::match(str, ctx).matched; }");
+    }
+}
+
 
 //-----------------------------------------------------------------------
 //
@@ -1422,9 +1495,12 @@ apply_metafunctions: (
         else if name == "print" {
             print( rtype );
         }
+        else if name == "regex" {
+            regex_gen( rtype );
+        }
         else {
             error( "unrecognized metafunction name: " + name );
-            error( "(temporary alpha limitation) currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum, union, print" );
+            error( "(temporary alpha limitation) currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum, union, print, regex" );
             return false;
         }
 

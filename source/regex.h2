@@ -1,0 +1,121 @@
+
+//  Copyright (c) Herb Sutter
+//  SPDX-License-Identifier: CC-BY-NC-ND-4.0
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+cpp2: namespace = {
+
+regex: namespace = {
+
+view: <CharT> type == std::basic_string_view<CharT>;
+bstring: <CharT> type == std::basic_string<CharT>;
+
+list_end: type = {}
+
+match_return: @struct type =
+{
+    matched: bool = false;
+    length: size_t = 0;
+
+    create: (m, l) -> match_return = {
+      if m {
+        return (true, l);
+      }
+      else {
+        return (false, 0);
+      }
+    }
+}
+
+match_context: <CharT, max_groups: size_t> type =
+{
+
+    groups: std::array<view<CharT>, max_groups>;
+
+}
+
+/*regular_expression: @interface <CharT> type = {
+
+    match: <Ctx> (str: view<CharT>, inout ctx: Ctx) -> bool;
+}*/
+
+any_matcher_logic: <CharT> type =
+{
+    match: (str: view<CharT>, inout ctx: _) -> match_return = match_return::create(!str.empty(), 1);
+    to_string: () -> bstring<CharT> = bstring<CharT>(1, '.');
+}
+
+char_matcher_logic: <CharT, C: CharT> type =
+{
+    match: (str: view<CharT>, inout ctx: _) -> match_return = match_return::create(!str.empty() && str.front() == C, 1);
+    to_string: () -> bstring<CharT> = bstring<CharT>(1, C);
+}
+
+list_matcher_logic: <CharT, List ...> type =
+{
+    match: (str: view<CharT>, inout ctx: _) -> match_return = {
+      return match_all<List...>(str, ctx);
+    }
+
+    to_string: () -> bstring<CharT> = {
+      return (bstring<CharT>() + ... + List::to_string());
+    }
+
+    private match_all: <First, Other ...> (str: view<CharT>, inout ctx: _) -> match_return = {
+      r: match_return = First::match(str, ctx);
+
+      if r.matched {
+        if constexpr 0 != sizeof...(Other) {
+          o: match_return = match_all<Other...>(str.substr(1), ctx);
+
+          if o.matched {
+            r.length += o.length;
+          }
+          else {
+            r = (false, 0);
+          }
+        }
+      }
+
+      return r;
+    }
+
+    private match_all: (str: view<CharT>, inout ctx: _) -> match_return = {
+      // TODO: Assert End == list_end
+      return (true, 0);
+    }
+}
+
+generate_template: (regex: std::string_view) -> std::string = {
+  template_expression: std::string = "";
+  seperator: std::string = "";
+
+  template_expression += "::cpp2::regex::list_matcher_logic<char, ";
+
+  for regex do (c) {
+    template_expression += seperator;
+    if c == '.' {
+      template_expression += "::cpp2::regex::any_matcher_logic<char>";
+    }
+    else {
+      template_expression += "::cpp2::regex::char_matcher_logic<char, '(c)$'>";
+    }
+
+    seperator = ", ";
+  }
+  template_expression += ">";
+
+  return template_expression;
+
+
+}
+
+}
+}
