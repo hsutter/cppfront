@@ -2013,12 +2013,12 @@ public:
     parameter_declaration_node const* inside_out_parameter = {};
     std::vector<int> symbols_size_at_postfix_expression_start = {};
     std::vector<std::vector<int>> scoped_indices_of_uses = {{}};
-    std::vector<std::vector<int>> indices_of_activating_symbols_per_lifetime_scope = {{}};
+    std::vector<std::vector<int>> scoped_indices_of_activations = {{}};
 
     auto push_lifetime_scope() -> void
     {
         scoped_indices_of_uses.emplace_back();
-        indices_of_activating_symbols_per_lifetime_scope.emplace_back();
+        scoped_indices_of_activations.emplace_back();
     }
 
     auto push_use(identifier_sym sym) -> void
@@ -2031,9 +2031,9 @@ public:
         symbols.emplace_back(scope_depth, sym);
     }
 
-    auto push_activating_symbol(declaration_sym decl) -> void
+    auto push_activation(declaration_sym decl) -> void
     {
-        assert(!indices_of_activating_symbols_per_lifetime_scope.empty());
+        assert(!scoped_indices_of_activations.empty());
         assert(decl.start);
 
         if (
@@ -2041,27 +2041,27 @@ public:
             && *decl.identifier != "_"
             )
         {
-            indices_of_activating_symbols_per_lifetime_scope.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
+            scoped_indices_of_activations.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
         }
         symbols.emplace_back(scope_depth, decl);
     }
 
-    auto push_activating_symbol(identifier_sym sym) -> void
+    auto push_activation(identifier_sym sym) -> void
     {
-        assert(!indices_of_activating_symbols_per_lifetime_scope.empty());
+        assert(!scoped_indices_of_activations.empty());
         assert(sym.is_using_declaration());
         assert(sym.identifier);
 
-        indices_of_activating_symbols_per_lifetime_scope.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
+        scoped_indices_of_activations.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
         symbols.emplace_back(scope_depth, sym);
     }
 
     auto pop_lifetime_scope() -> void
     {
         assert(!scoped_indices_of_uses.empty());
-        assert(!indices_of_activating_symbols_per_lifetime_scope.empty());
+        assert(!scoped_indices_of_activations.empty());
 
-        for (auto i : indices_of_activating_symbols_per_lifetime_scope.back()) {
+        for (auto i : scoped_indices_of_activations.back()) {
             if (auto decl = std::get_if<symbol::active::declaration>(&symbols[i].sym))
             {
                 symbols.emplace_back( scope_depth, identifier_sym( false, decl->identifier, identifier_sym::deactivation ) );
@@ -2073,13 +2073,13 @@ public:
         }
 
         scoped_indices_of_uses.pop_back();
-        indices_of_activating_symbols_per_lifetime_scope.pop_back();
+        scoped_indices_of_activations.pop_back();
     }
 
     auto end(translation_unit_node const&, int) -> void
     {
         assert(scoped_indices_of_uses.size() == 1);
-        assert(indices_of_activating_symbols_per_lifetime_scope.size() == 1);
+        assert(scoped_indices_of_activations.size() == 1);
     }
 
     auto start(next_expression_tag const&, int) -> void
@@ -2138,7 +2138,7 @@ public:
             || n.pass == passing_style::forward
             )
         {
-            push_activating_symbol( declaration_sym( true, n.declaration.get(), n.declaration->name(), n.declaration->initializer.get(), &n));
+            push_activation( declaration_sym( true, n.declaration.get(), n.declaration->name(), n.declaration->initializer.get(), &n));
         }
     }
 
@@ -2213,7 +2213,7 @@ public:
                 )
             )
         {
-            push_activating_symbol( declaration_sym( true, &n, n.name(), n.initializer.get(), inside_out_parameter ) );
+            push_activation( declaration_sym( true, &n, n.name(), n.initializer.get(), inside_out_parameter ) );
             if (!n.is_object()) {
                 ++scope_depth;
             }
@@ -2352,7 +2352,7 @@ public:
             && id
             )
         {
-            push_activating_symbol( identifier_sym( false, (*id)->ids.back().id->identifier, identifier_sym::using_declaration ) );
+            push_activation( identifier_sym( false, (*id)->ids.back().id->identifier, identifier_sym::using_declaration ) );
         }
     }
 
