@@ -859,6 +859,20 @@ t: @struct type = {
   }
 }
 
+g: () = {
+  _ = :() = {
+    x := new<int>(0);
+    f_copy(x);
+    _ = :() std::array<int, :(x) identity(x);(0)>()$;
+  };
+
+  _ = :() = {
+    x := new<int>(0);
+    f_inout(x);
+    _ = :() -> int = (:() x$*)$();
+  };
+}
+
 }
 
 loops_and_captures: () = {

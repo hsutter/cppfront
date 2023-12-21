@@ -2011,7 +2011,7 @@ public:
     bool inside_returns_list                      = false;
     bool just_entered_for                         = false;
     parameter_declaration_node const* inside_out_parameter = {};
-    std::vector<int> symbols_size_at_postfix_expression_start = {};
+    std::vector<std::pair<int, int>> uses_at_postfix_expression = {};
     std::vector<std::vector<int>> scoped_indices_of_uses = {{}};
     std::vector<std::vector<int>> scoped_indices_of_activations = {{}};
 
@@ -2078,6 +2078,7 @@ public:
 
     auto end(translation_unit_node const&, int) -> void
     {
+        assert(uses_at_postfix_expression.empty());
         assert(scoped_indices_of_uses.size() == 1);
         assert(scoped_indices_of_activations.size() == 1);
     }
@@ -2261,9 +2262,10 @@ public:
         //  Mark captures
         else if (t.type() == lexeme::Dollar)
         {
-            assert(!symbols_size_at_postfix_expression_start.empty());
-            for (auto& s : std::span{symbols}.subspan(symbols_size_at_postfix_expression_start.back())) {
-                if (auto sym = std::get_if<symbol::active::identifier>(&s.sym);
+            assert(!uses_at_postfix_expression.empty());
+            auto [uses, offset] = uses_at_postfix_expression.back();
+            for (auto i : std::span{scoped_indices_of_uses[uses]}.subspan(offset)) {
+                if (auto sym = std::get_if<symbol::active::identifier>(&symbols[i].sym);
                     sym
                     && sym->is_use()
                     )
@@ -2431,11 +2433,11 @@ public:
         if (auto id = std::get_if<primary_expression_node::id_expression>(&n.expr->expr)) {
             started_postfix_expression = (*id)->is_unqualified();
         }
-        symbols_size_at_postfix_expression_start.push_back(cpp2::unsafe_narrow<int>(ssize(symbols)));
+        uses_at_postfix_expression.emplace_back(std::ssize(scoped_indices_of_uses) - 1, std::ssize(scoped_indices_of_uses.back()));
     }
 
     auto end(postfix_expression_node const&, int) {
-        symbols_size_at_postfix_expression_start.pop_back();
+        uses_at_postfix_expression.pop_back();
     }
 
     auto start(auto const&, int) -> void
