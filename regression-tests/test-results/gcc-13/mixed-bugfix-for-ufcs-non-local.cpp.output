@@ -1,31 +1,41 @@
-In file included from /home/johel/build/cppfront/GCCDebug/regression-tests/mixed-bugfix-for-ufcs-non-local/build/_cppfront/mixed-bugfix-for-ufcs-non-local.cpp:6:
-/home/johel/build/cppfront/GCCDebug/regression-tests/mixed-bugfix-for-ufcs-non-local/mixed-bugfix-for-ufcs-non-local.cpp2:13:12: error: lambda-expression in template parameter type
-   13 | v0: <_: t<o.f()>> bool == false; // Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
-      |            ^~~~~~~~~~~~~~~~~~
-/home/johel/build/cppfront/GCCDebug/regression-tests/mixed-bugfix-for-ufcs-non-local/mixed-bugfix-for-ufcs-non-local.cpp2:13:36: error: template argument 1 is invalid
-   13 | v0: <_: t<o.f()>> bool == false; // Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
-      |                                    ^
-/home/johel/build/cppfront/GCCDebug/regression-tests/mixed-bugfix-for-ufcs-non-local/mixed-bugfix-for-ufcs-non-local.cpp2:21:12: error: lambda-expression in template parameter type
-   21 | g: <_: t<o.f()>> () = { } // Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
-      |            ^~~~~~~~~~~~~~~~~~
-/home/johel/build/cppfront/GCCDebug/regression-tests/mixed-bugfix-for-ufcs-non-local/mixed-bugfix-for-ufcs-non-local.cpp2:21:36: error: template argument 1 is invalid
-   21 | g: <_: t<o.f()>> () = { } // Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
-      |                                    ^
-/home/johel/build/cppfront/GCCDebug/regression-tests/mixed-bugfix-for-ufcs-non-local/mixed-bugfix-for-ufcs-non-local.cpp2:31:12: error: lambda-expression in template parameter type
-   31 | a: <_: t<o.f()>> type == bool; // Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
-      |            ^~~~~~~~~~~~~~~~~~
-/home/johel/build/cppfront/GCCDebug/regression-tests/mixed-bugfix-for-ufcs-non-local/mixed-bugfix-for-ufcs-non-local.cpp2:31:36: error: template argument 1 is invalid
-   31 | a: <_: t<o.f()>> type == bool; // Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
-      |                                    ^
-/home/johel/build/cppfront/GCCDebug/regression-tests/mixed-bugfix-for-ufcs-non-local/mixed-bugfix-for-ufcs-non-local.cpp2:33:12: error: lambda-expression in template parameter type
-   33 | b: <_: t<o.f()>> _ == false; // Fails on GCC ([GCC109781][]).
-      |            ^~~~~~~~~~~~~~~~~~
-/home/johel/build/cppfront/GCCDebug/regression-tests/mixed-bugfix-for-ufcs-non-local/mixed-bugfix-for-ufcs-non-local.cpp2:33:36: error: template argument 1 is invalid
-   33 | b: <_: t<o.f()>> _ == false; // Fails on GCC ([GCC109781][]).
-      |                                    ^
-/home/johel/build/cppfront/GCCDebug/regression-tests/mixed-bugfix-for-ufcs-non-local/mixed-bugfix-for-ufcs-non-local.cpp2:21:12: error: lambda-expression in template parameter type
-   21 | g: <_: t<o.f()>> () = { } // Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
-      |            ^~~~~~~~~~~~~~~~~~
-/home/johel/build/cppfront/GCCDebug/regression-tests/mixed-bugfix-for-ufcs-non-local/mixed-bugfix-for-ufcs-non-local.cpp2:21:36: error: template argument 1 is invalid
-   21 | g: <_: t<o.f()>> () = { } // Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
-      |                                    ^
+In file included from mixed-bugfix-for-ufcs-non-local.cpp:6:
+../../../include/cpp2util.h:850:1: error: lambda-expression in template parameter type
+  850 | [LAMBDADEFCAPT]< \
+      | ^
+../../../include/cpp2util.h:868:59: note: in expansion of macro ‘CPP2_UFCS_’
+  868 | #define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,(),,__VA_ARGS__)
+      |                                                           ^~~~~~~~~~
+mixed-bugfix-for-ufcs-non-local.cpp2:13:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
+mixed-bugfix-for-ufcs-non-local.cpp2:13:36: error: template argument 1 is invalid
+../../../include/cpp2util.h:850:1: error: lambda-expression in template parameter type
+  850 | [LAMBDADEFCAPT]< \
+      | ^
+../../../include/cpp2util.h:868:59: note: in expansion of macro ‘CPP2_UFCS_’
+  868 | #define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,(),,__VA_ARGS__)
+      |                                                           ^~~~~~~~~~
+mixed-bugfix-for-ufcs-non-local.cpp2:21:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
+mixed-bugfix-for-ufcs-non-local.cpp2:21:36: error: template argument 1 is invalid
+../../../include/cpp2util.h:850:1: error: lambda-expression in template parameter type
+  850 | [LAMBDADEFCAPT]< \
+      | ^
+../../../include/cpp2util.h:868:59: note: in expansion of macro ‘CPP2_UFCS_’
+  868 | #define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,(),,__VA_ARGS__)
+      |                                                           ^~~~~~~~~~
+mixed-bugfix-for-ufcs-non-local.cpp2:31:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
+mixed-bugfix-for-ufcs-non-local.cpp2:31:36: error: template argument 1 is invalid
+../../../include/cpp2util.h:850:1: error: lambda-expression in template parameter type
+  850 | [LAMBDADEFCAPT]< \
+      | ^
+../../../include/cpp2util.h:868:59: note: in expansion of macro ‘CPP2_UFCS_’
+  868 | #define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,(),,__VA_ARGS__)
+      |                                                           ^~~~~~~~~~
+mixed-bugfix-for-ufcs-non-local.cpp2:33:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
+mixed-bugfix-for-ufcs-non-local.cpp2:33:36: error: template argument 1 is invalid
+../../../include/cpp2util.h:850:1: error: lambda-expression in template parameter type
+  850 | [LAMBDADEFCAPT]< \
+      | ^
+../../../include/cpp2util.h:868:59: note: in expansion of macro ‘CPP2_UFCS_’
+  868 | #define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,(),,__VA_ARGS__)
+      |                                                           ^~~~~~~~~~
+mixed-bugfix-for-ufcs-non-local.cpp2:21:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
+mixed-bugfix-for-ufcs-non-local.cpp2:21:36: error: template argument 1 is invalid
