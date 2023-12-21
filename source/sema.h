@@ -799,7 +799,7 @@ private:
                 {
                     ++i;
                 }
-                assert(sym->identifier == identifier_end && !sym->is_use());
+                assert(sym->identifier == identifier_end && sym->is_deactivation());
                 if (record_pos_range) {
                     pos_ranges.back().last = i;
                 }
@@ -900,13 +900,14 @@ private:
                 //  If id is the loop parameter, this is its end
                 if (
                     *loop_id == "for"
-                    && !symbols[i].start
+                    && sym->is_deactivation()
                     )
                 {
                     assert(symbols[i].depth == start_depth && "Messed up in a nested loop");
                     ++i;
                     break;
                 }
+                assert(symbols[i].start);
 
                 pos_ranges.emplace_back(true, i);
 
@@ -930,7 +931,7 @@ private:
                     }
                     ++i;
                 }
-                assert(sym && sym->identifier == loop_id && !symbols[i].start);
+                assert(sym && sym->identifier == loop_id && sym->is_deactivation());
                 pos_ranges.back().last = i;
             }
         }
