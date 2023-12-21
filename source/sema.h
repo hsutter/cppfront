@@ -977,12 +977,16 @@ private:
                     --i;
                 }
 
-                //  If found in a sibling branch,
-                //  keep popping between the conditions
+                //  If found in a branch,
+                //  keep popping to its sibling (false branch)
+                //  or to its contaning scope (true branch)
                 if (
                     i > pos
                     && comp
-                    && comp->kind_ == compound_sym::is_false
+                    && (
+                        comp->kind_ == compound_sym::is_false
+                        || comp->kind_ == compound_sym::is_true
+                        )
                     )
                 {
                     branch_depth = symbols[i].depth - 1;

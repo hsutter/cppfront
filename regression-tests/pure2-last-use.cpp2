@@ -637,6 +637,75 @@ issue_884: () = {
       f_copy(x);
     }
   };
+
+  _ = :() = {
+    x := new<int>(0);
+
+    if true {
+      f_inout(x);
+    }
+
+    if true {
+      if true {
+        f_copy(x);
+      }
+    }
+  };
+
+  _ = :() = {
+    x := new<int>(0);
+    if true {
+      if true {
+        f_inout(x);
+        if true {
+        }
+        else {
+          f_copy(x);
+        }
+      }
+      else {
+        if true {
+        }
+        else {
+          f_inout(x);
+        }
+        f_copy(x);
+      }
+    }
+    else {
+      if true {
+        if true {
+          f_inout(x);
+          f_copy(x);
+        }
+        else {
+        }
+      }
+      else {
+        if true {
+        }
+        else {
+          f_inout(x);
+        }
+        if true {
+          f_inout(x);
+          if true {
+            f_copy(x);
+          }
+          else {
+          }
+        }
+        else {
+          if true {
+            f_copy(x);
+          }
+          else {
+            f_copy(x);
+          }
+        }
+      }
+    }
+  };
 }
 
 issue_888_0: (copy r: std::string, copy size: int) = {
