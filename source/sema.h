@@ -88,18 +88,18 @@ struct identifier_sym {
     enum kind { use, using_declaration, deactivation } kind_ = use;
     bool standalone_assignment_to = false;
     bool is_captured = false;
-    bool in_next_clause = false;
+    bool safe_to_move = true;
     token const* identifier = {};
 
     identifier_sym(
         bool         a,
         token const* id,
         kind         k = use,
-        bool         n = false
+        bool         mv = true
     )
         : kind_{k}
         , standalone_assignment_to{a}
-        , in_next_clause{n}
+        , safe_to_move{mv}
         , identifier{id}
     { }
 
@@ -308,13 +308,16 @@ auto is_definite_initialization(token const* t)
 struct last_use {
     token const* t;
     bool         is_forward;
+    bool         safe_to_move;
 
     last_use(
         token const* t_,
-        bool         is_forward_ = false
+        bool         is_forward_ = false,
+        bool         safe_to_move_ = true
     )
         : t{t_}
         , is_forward{is_forward_}
+        , safe_to_move{safe_to_move_}
     { }
 
     bool operator==(last_use const& that) { return t == that.t; }
@@ -1026,9 +1029,9 @@ private:
                 i = pos_ranges.back().first; // The scope to pop is the scope of the loop
                 pos_ranges.pop_back();
             }
-            else if (!sym->in_next_clause)
+            else
             {
-                definite_last_uses.emplace_back( sym->identifier, is_forward );
+                definite_last_uses.emplace_back( sym->identifier, is_forward, sym->safe_to_move );
             }
             found = true;
 
@@ -2311,7 +2314,7 @@ public:
                         )
                     )
                 {
-                    symbols.emplace_back( scope_depth, identifier_sym( false, &t, {}, inside_next_expression ) );
+                    symbols.emplace_back( scope_depth, identifier_sym( false, &t, {}, !inside_next_expression ) );
                 }
             }
             started_member_access = false;

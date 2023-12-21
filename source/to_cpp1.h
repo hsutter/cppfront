@@ -1710,11 +1710,16 @@ public:
         bool add_forward =
             last_use
             && last_use->is_forward
+            && last_use->safe_to_move
             && !in_non_rvalue_context.back()
             && !is_class_member_access;
 
         bool add_move =
             !add_forward
+            && (
+                !last_use
+                || last_use->safe_to_move
+                )
             && (
                 synthesized_multi_return_size > 1
                 || (
@@ -4724,7 +4729,7 @@ public:
             );
         }
         else {
-            emit(*n.parameters, false, false, generating_postfix_inc_dec); 
+            emit(*n.parameters, false, false, generating_postfix_inc_dec);
         }
 
         //  For an anonymous function, the emitted lambda is 'constexpr' or 'mutable'
