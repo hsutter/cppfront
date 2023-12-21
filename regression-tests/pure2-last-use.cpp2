@@ -36,6 +36,33 @@ issue_313: () = {
 
     d := new<int>(0);
     if (identity(d)* - identity(d)*) { }
+
+    e := new<int>(0);
+    _ = e is (e);
+
+    f := new<int>(0);
+    _ = f is std::type_identity_t<decltype(f)>; // OK?
+
+    g := new<int>(0);
+    for (identity(g)* + identity(g)*)
+    do (_)
+    { }
+
+    h := new<int>(0);
+    while identity(h)* + identity(h)*
+    { }
+
+    i := new<int>(0);
+    do { }
+    while identity(i)* + identity(i)*;
+
+    j := new<int>(0);
+    k := new<int>(0);
+    _ = inspect identity(j)* + identity(j)* -> int {
+        is (identity(k)* + identity(k)*) = 0;
+        is _ = 0;
+    };
+
   }
   {
     a := new<int>(0);

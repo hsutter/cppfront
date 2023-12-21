@@ -2326,7 +2326,16 @@ public:
 
     auto start(token const& t, int) -> void
     {
-        if (is_binary_operator(t.type()))
+        if (
+            is_binary_operator(t.type())
+            || (
+                t.type() == cpp2::lexeme::Keyword
+                && (
+                    t == "is"
+                    || t == "as"
+                    )
+                )
+            )
         {
             ++safe_to_move_context;
         }
