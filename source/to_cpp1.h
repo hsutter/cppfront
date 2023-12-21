@@ -3220,17 +3220,8 @@ public:
                 && !lookup_finds_variable_with_placeholder_type_under_initialization(*i->id_expr)
                 )
             {
-                auto is_type_scope_function = lookup_finds_type_scope_function(*i->id_expr);
-                if (is_type_scope_function) {
-                    in_non_rvalue_context.push_back(true);
-                }
-
                 //  The function name is the argument to the macro
                 auto funcname = print_to_string(*i->id_expr);
-
-                if (is_type_scope_function) {
-                    in_non_rvalue_context.pop_back();
-                }
 
                 //  First, build the UFCS macro name
 
@@ -3288,7 +3279,7 @@ public:
                 //  by leveraging the last use only in the non-member branch
                 if (auto last_use = is_definite_last_use(i->id_expr->get_token());
                     last_use
-                    && !is_type_scope_function
+                    && !lookup_finds_type_scope_function(*i->id_expr)
                     )
                 {
                     if (last_use->is_forward) {
