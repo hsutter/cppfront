@@ -1310,8 +1310,7 @@ private:
                 auto const& sym = std::get<symbol::active::compound>(symbols[pos].sym);
 
                 //  If we're in a selection
-                if (std::ssize(selection_stack) > 0)
-                {
+                if (std::ssize(selection_stack) > 0) {
                     //  If this is a compound start with the current selection's depth
                     //  plus one, it's the start of one of the branches of that selection
                     if (
