@@ -2012,11 +2012,23 @@ public:
     bool just_entered_for                         = false;
     parameter_declaration_node const* inside_out_parameter = {};
     std::vector<int> symbols_size_at_postfix_expression_start = {};
+    std::vector<std::vector<int>> scoped_indices_of_uses = {{}};
     std::vector<std::vector<int>> indices_of_activating_symbols_per_lifetime_scope = {{}};
 
     auto push_lifetime_scope() -> void
     {
+        scoped_indices_of_uses.emplace_back();
         indices_of_activating_symbols_per_lifetime_scope.emplace_back();
+    }
+
+    auto push_use(identifier_sym sym) -> void
+    {
+        assert(!scoped_indices_of_uses.empty());
+        assert(sym.is_use());
+        assert(sym.identifier);
+
+        scoped_indices_of_uses.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
+        symbols.emplace_back(scope_depth, sym);
     }
 
     auto push_activating_symbol(declaration_sym decl) -> void
@@ -2046,6 +2058,7 @@ public:
 
     auto pop_lifetime_scope() -> void
     {
+        assert(!scoped_indices_of_uses.empty());
         assert(!indices_of_activating_symbols_per_lifetime_scope.empty());
 
         for (auto i : indices_of_activating_symbols_per_lifetime_scope.back()) {
@@ -2058,11 +2071,14 @@ public:
                 symbols.emplace_back( scope_depth, identifier_sym( false, sym->identifier, identifier_sym::deactivation ) );
             }
         }
+
+        scoped_indices_of_uses.pop_back();
         indices_of_activating_symbols_per_lifetime_scope.pop_back();
     }
 
     auto end(translation_unit_node const&, int) -> void
     {
+        assert(scoped_indices_of_uses.size() == 1);
         assert(indices_of_activating_symbols_per_lifetime_scope.size() == 1);
     }
 
@@ -2275,7 +2291,7 @@ public:
         //  expression, then it's the left-hand side (target) of the assignment
         if (started_standalone_assignment_expression)
         {
-            symbols.emplace_back( scope_depth, identifier_sym( true, &t ) );
+            push_use( identifier_sym( true, &t ) );
             started_standalone_assignment_expression = false;   // we were the consumer for this information
         }
 
@@ -2285,7 +2301,7 @@ public:
         //  this an id-expression and add a sema rule to disallow complex expressions
         else if (is_out_expression)
         {
-            symbols.emplace_back( scope_depth, identifier_sym( true, &t ) );
+            push_use( identifier_sym( true, &t ) );
             is_out_expression = false;
         }
 
@@ -2314,7 +2330,7 @@ public:
                         )
                     )
                 {
-                    symbols.emplace_back( scope_depth, identifier_sym( false, &t, {}, !inside_next_expression ) );
+                    push_use( identifier_sym( false, &t, {}, !inside_next_expression ) );
                 }
             }
             started_member_access = false;
