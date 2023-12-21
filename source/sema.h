@@ -1981,7 +1981,7 @@ public:
     //
     int  scope_depth                              = 0;
     bool started_standalone_assignment_expression = false;
-    std::vector<bool> started_postfix_expressions = {};
+    bool started_postfix_expression               = false;
     bool started_member_access                    = false;
     bool started_this_member_access               = false;
     bool is_out_expression                        = false;
@@ -1993,12 +1993,6 @@ public:
     parameter_declaration_node const* inside_out_parameter = {};
     std::vector<int> symbols_size_at_postfix_expression_start = {};
     std::vector<std::vector<int>> indices_of_activating_symbols_per_lifetime_scope = {{}};
-
-    auto started_postfix_expression() -> bool
-    {
-        return !started_postfix_expressions.empty()
-               && started_postfix_expressions.back();
-    }
 
     auto push_lifetime_scope() -> void
     {
@@ -2287,12 +2281,12 @@ public:
         //  it's the first identifier of a postfix_expressions
         //  or the function name in a UFCS expression
         else if (
-            started_postfix_expression()
+            started_postfix_expression
             || started_member_access
             || started_this_member_access
             )
         {
-            started_postfix_expressions.back() = false;
+            started_postfix_expression = false;
             if (!inside_parameter_identifier)
             {
                 //  Put this into the table if it's a use of an object in scope
@@ -2405,19 +2399,14 @@ public:
         }
     }
 
-    auto start(postfix_expression_node const&, int) {
-        started_postfix_expressions.push_back(true);
+    auto start(postfix_expression_node const& n, int) {
+        if (auto id = std::get_if<primary_expression_node::id_expression>(&n.expr->expr)) {
+            started_postfix_expression = (*id)->is_unqualified();
+        }
         symbols_size_at_postfix_expression_start.push_back(cpp2::unsafe_narrow<int>(ssize(symbols)));
     }
 
-    auto end(primary_expression_node const&, int) {
-        if (started_postfix_expression()) {
-            started_postfix_expressions.back() = false;
-        }
-    }
-
     auto end(postfix_expression_node const&, int) {
-        started_postfix_expressions.pop_back();
         symbols_size_at_postfix_expression_start.pop_back();
     }
 
