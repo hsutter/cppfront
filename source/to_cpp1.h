@@ -1726,8 +1726,8 @@ public:
             && !in_non_rvalue_context.back()
             && !is_class_member_access;
 
-        //  Add `std::move(*this).` when implicitly moving a member on last use.
-        //  This way, members of lvalue reference type won't be implicitly moved.
+        //  Add `std::move(*this).` when implicitly moving a member on last use
+        //  This way, members of lvalue reference type won't be implicitly moved
         bool add_this =
             add_move
             && synthesized_multi_return_size == 0
