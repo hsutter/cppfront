@@ -3277,6 +3277,8 @@ public:
                 //
                 //  Note: This ensures a valid member call is still prioritized
                 //  by leveraging the last use only in the non-member branch
+                //  For example, `x.f()` won't emit as 'CPP2_UFCS(std::move(f))(x)'
+                //  to never take the branch that wants to call `x.std::move(f)()`
                 if (auto last_use = is_definite_last_use(i->id_expr->get_token());
                     last_use
                     && !lookup_finds_type_scope_function(*i->id_expr)
