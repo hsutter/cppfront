@@ -2012,28 +2012,28 @@ public:
     bool just_entered_for                         = false;
     parameter_declaration_node const* inside_out_parameter = {};
     std::vector<std::pair<int, int>> uses_at_postfix_expression = {};
-    std::vector<std::vector<int>> scoped_indices_of_uses = {{}};
-    std::vector<std::vector<int>> scoped_indices_of_activations = {{}};
+    std::vector<std::vector<int>> indices_of_uses_per_scope = {{}};
+    std::vector<std::vector<int>> indices_of_activations_per_scope = {{}};
 
     auto push_lifetime_scope() -> void
     {
-        scoped_indices_of_uses.emplace_back();
-        scoped_indices_of_activations.emplace_back();
+        indices_of_uses_per_scope.emplace_back();
+        indices_of_activations_per_scope.emplace_back();
     }
 
     auto push_use(identifier_sym sym) -> void
     {
-        assert(!scoped_indices_of_uses.empty());
+        assert(!indices_of_uses_per_scope.empty());
         assert(sym.is_use());
         assert(sym.identifier);
 
-        scoped_indices_of_uses.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
+        indices_of_uses_per_scope.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
         symbols.emplace_back(scope_depth, sym);
     }
 
     auto push_activation(declaration_sym decl) -> void
     {
-        assert(!scoped_indices_of_activations.empty());
+        assert(!indices_of_activations_per_scope.empty());
         assert(decl.start);
 
         if (
@@ -2041,27 +2041,27 @@ public:
             && *decl.identifier != "_"
             )
         {
-            scoped_indices_of_activations.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
+            indices_of_activations_per_scope.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
         }
         symbols.emplace_back(scope_depth, decl);
     }
 
     auto push_activation(identifier_sym sym) -> void
     {
-        assert(!scoped_indices_of_activations.empty());
+        assert(!indices_of_activations_per_scope.empty());
         assert(sym.is_using_declaration());
         assert(sym.identifier);
 
-        scoped_indices_of_activations.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
+        indices_of_activations_per_scope.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
         symbols.emplace_back(scope_depth, sym);
     }
 
     auto pop_lifetime_scope() -> void
     {
-        assert(!scoped_indices_of_uses.empty());
-        assert(!scoped_indices_of_activations.empty());
+        assert(!indices_of_uses_per_scope.empty());
+        assert(!indices_of_activations_per_scope.empty());
 
-        for (auto i : scoped_indices_of_activations.back()) {
+        for (auto i : indices_of_activations_per_scope.back()) {
             if (auto decl = std::get_if<symbol::active::declaration>(&symbols[i].sym))
             {
                 symbols.emplace_back( scope_depth, identifier_sym( false, decl->identifier, identifier_sym::deactivation ) );
@@ -2072,15 +2072,15 @@ public:
             }
         }
 
-        scoped_indices_of_uses.pop_back();
-        scoped_indices_of_activations.pop_back();
+        indices_of_uses_per_scope.pop_back();
+        indices_of_activations_per_scope.pop_back();
     }
 
     auto end(translation_unit_node const&, int) -> void
     {
         assert(uses_at_postfix_expression.empty());
-        assert(scoped_indices_of_uses.size() == 1);
-        assert(scoped_indices_of_activations.size() == 1);
+        assert(indices_of_uses_per_scope.size() == 1);
+        assert(indices_of_activations_per_scope.size() == 1);
     }
 
     auto start(next_expression_tag const&, int) -> void
@@ -2264,7 +2264,7 @@ public:
         {
             assert(!uses_at_postfix_expression.empty());
             auto [uses, offset] = uses_at_postfix_expression.back();
-            for (auto i : std::span{scoped_indices_of_uses[uses]}.subspan(offset)) {
+            for (auto i : std::span{indices_of_uses_per_scope[uses]}.subspan(offset)) {
                 if (auto sym = std::get_if<symbol::active::identifier>(&symbols[i].sym);
                     sym
                     && sym->is_use()
@@ -2433,7 +2433,7 @@ public:
         if (auto id = std::get_if<primary_expression_node::id_expression>(&n.expr->expr)) {
             started_postfix_expression = (*id)->is_unqualified();
         }
-        uses_at_postfix_expression.emplace_back(std::ssize(scoped_indices_of_uses) - 1, std::ssize(scoped_indices_of_uses.back()));
+        uses_at_postfix_expression.emplace_back(std::ssize(indices_of_uses_per_scope) - 1, std::ssize(indices_of_uses_per_scope.back()));
     }
 
     auto end(postfix_expression_node const&, int) {
