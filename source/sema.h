@@ -465,7 +465,7 @@ public:
                         && std::any_of(
                                n->my_statement->compound_parent->statements.begin(),
                                n->my_statement->compound_parent->statements.end(),
-                               [&](std::unique_ptr<statement_node> const& s) {
+                               [&t, n](std::unique_ptr<statement_node> const& s) mutable {
                                    return s
                                           && s->statement.index() == statement_node::declaration
                                           && (n = &*std::get<statement_node::declaration>(s->statement))->identifier
