@@ -2203,9 +2203,7 @@ public:
                 emit(*n.condition);
                 printer.print_cpp2("; ", n.position());
                 printer.add_pad_in_this_line(-10);
-                in_non_rvalue_context.push_back(true);
                 emit(*n.next_expression);
-                in_non_rvalue_context.pop_back();
             }
             printer.print_cpp2(" ) ", n.position());
             if (!labelname.empty()) {
