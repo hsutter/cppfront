@@ -772,7 +772,7 @@ private:
         //  2. Ranges to skip (a last use can't be found in these)
         //    - Function expressions (except in a capture)
         //    - Where id is hidden by another declaration
-        auto pos_ranges = std::vector<pos_range>();
+        auto pos_ranges = std::vector<pos_range>{{}}; //  Keep sentinel for simpler code
 
         auto skip_hidden_name = [&](bool record_pos_range) -> bool {
             auto skip_to = [&](token const* identifier_end)
@@ -944,17 +944,12 @@ private:
         while (i > pos)
         {
             //  Drop skipped ranges
-            while (
-                !pos_ranges.empty()
-                && pos_ranges.back().first >= i
-                )
-            {
+            while (pos_ranges.back().first >= i) {
                 pos_ranges.pop_back();
             }
             //  Skip ranges where a use of id would name another declaration
             while (
-                !pos_ranges.empty()
-                && pos_ranges.back().within(i)
+                pos_ranges.back().within(i)
                 && pos_ranges.back().skip()
                 )
             {
@@ -1009,10 +1004,7 @@ private:
 
             //  If found in a loop, it wasn't a last use
             //  Set up to pop out of the scope containing the loop
-            if (
-                !pos_ranges.empty()
-                && pos_ranges.back().within(i)
-                )
+            if (pos_ranges.back().within(i))
             {
                 assert(pos_ranges.back().is_loop && "Other ranges are skipped.");
                 i = pos_ranges.back().first; // The scope to pop is the scope of the loop
