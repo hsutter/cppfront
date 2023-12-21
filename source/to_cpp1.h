@@ -1826,10 +1826,11 @@ public:
         }
 
         if (
-            (add_move
-             || add_forward
-             )
-            && !add_this
+            !add_this
+            && (
+                add_move
+                || add_forward
+                )
             )
         {
             printer.print_cpp2(")", n.position());
