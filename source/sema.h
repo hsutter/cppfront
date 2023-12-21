@@ -2144,21 +2144,11 @@ public:
         symbols.emplace_back( scope_depth, identifier_sym( false, n.n->identifier ) );
         push_lifetime_scope();
         just_entered_for = true;
-        if (n.n->body->is_expression()) {
-            ++scope_depth;
-        }
     }
 
     auto end(loop_body_tag const& n, int) -> void
     {
         pop_lifetime_scope();
-        if (
-            *n.n->identifier == "for"
-            && n.n->body->is_expression()
-            )
-        {
-            --scope_depth;
-        }
     }
 
     auto start(declaration_node const& n, int) -> void
