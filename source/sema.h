@@ -743,6 +743,7 @@ private:
     {
         auto is_an_use = [&](identifier_sym const* sym) -> bool {
             assert(!sym || sym->identifier);
+            declaration_sym const* decl = nullptr;
             return sym
                    && sym->is_use()
                    && (
@@ -750,12 +751,9 @@ private:
                        //  For 'this', do include member names with implicit 'this.'
                        || (
                            *id == "this"
-                           && [&]() {
-                                  auto decl = get_declaration_of(sym->get_token(), false, true);
-                                  return decl
-                                         && decl->identifier
-                                         && *decl->identifier == "this";
-                              }()
+                           && (decl = get_declaration_of(sym->get_token(), false, true))
+                           && decl->identifier
+                           && *decl->identifier == "this"
                            )
                        );
         };
