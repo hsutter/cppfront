@@ -2,8 +2,7 @@ f_inout: (inout _) = { }
 f_copy: (copy _...) = { }
 pred: (_...) true;
 pred_copy: (copy _...) true;
-identity: (x) -> forward _ == x;
-identity: (move _) requires false = { }
+identity: <T> (forward x: T) -> forward _ requires std::is_reference_v<T> == { return x; }
 identity_copy: (copy x) x;
 
 issue_350: () = {
