@@ -683,26 +683,17 @@ public:
 
         //  It's a local (incl. named return value or copy or move or forward parameter)
         //
-        auto is_potentially_movable_local = [&](symbol const& s)
+        auto is_local_declaration = [&](symbol const& s)
             -> declaration_sym const*
         {
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
                 if (
                     sym->start
                     && sym->declaration->is_object()
-                    && (!sym->parameter
-                        || sym->parameter->pass == passing_style::copy
-                        || sym->parameter->pass == passing_style::move
-                        || sym->parameter->pass == passing_style::forward
-                        )
                     )
                 {
                     //  Must be in function scope
-                    if (
-                        sym->declaration->parent_declaration
-                        && sym->declaration->parent_is_function()
-                        )
-                    {
+                    if (sym->declaration->parent_is_function()) {
                         return sym;
                     }
                     else {
@@ -733,13 +724,14 @@ public:
 
             //  If this is a copy, move, or forward parameter or a local variable,
             //  identify and tag its definite last uses to `std::move` from them
+            //  If it's some other parameter, just check that it is used
             //
-            if (auto decl = is_potentially_movable_local(symbols[sympos])) {
+            if (auto decl = is_local_declaration(symbols[sympos])) {
                 assert (decl->identifier);
                 find_definite_last_uses(
                     decl->identifier,
                     sympos,
-                    decl->parameter && decl->parameter->pass == passing_style::forward
+                    decl->parameter ? std::optional{decl->parameter->pass} : std::optional<passing_style>{}
                 );
             }
         }
@@ -752,9 +744,9 @@ private:
     //  given position and depth in the symbol/scope table
     //
     auto find_definite_last_uses(
-        token const* id,
-        int          pos,
-        bool         is_forward
+        token const*                 id,
+        int                          pos,
+        std::optional<passing_style> pass
     ) const
         -> void
     {
@@ -1034,7 +1026,17 @@ private:
             }
             else
             {
-                definite_last_uses.emplace_back( sym->identifier, is_forward, sym->safe_to_move );
+                definite_last_uses.emplace_back(
+                    sym->identifier,
+                    pass == passing_style::forward,
+                    sym->safe_to_move
+                    && (
+                        !pass
+                        || pass == passing_style::copy
+                        || pass == passing_style::move
+                        || pass == passing_style::forward
+                        )
+                    );
             }
             found = true;
 
@@ -2189,12 +2191,7 @@ public:
             inside_out_parameter = &n;
         }
 
-        if (
-            n.pass == passing_style::copy
-            || n.pass == passing_style::move
-            || n.pass == passing_style::forward
-            )
-        {
+        if (n.pass != passing_style::out) {
             push_activation( declaration_sym( true, n.declaration.get(), n.declaration->name(), n.declaration->initializer.get(), &n));
         }
     }
@@ -2335,11 +2332,13 @@ public:
                     || t == "as"
                     )
                 )
+            || t.type() == lexeme::Dot
             )
         {
             ++safe_to_move_context;
         }
-        else if (t.type() == lexeme::Dot) {
+
+        if (t.type() == lexeme::Dot) {
             started_member_access = true;
             started_this_member_access = *(&t - 1) == "this";
         }

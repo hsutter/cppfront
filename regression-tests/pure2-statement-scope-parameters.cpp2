@@ -3,7 +3,7 @@ main: (args) = {
     local_int := 42;
 
     //  'in' (read-only) statement scope variable
-    (i := local_int) for args do (arg) {
+    (i := local_int) for args do (_) {
         std::cout << i << "\n";     // prints 42
     }
 

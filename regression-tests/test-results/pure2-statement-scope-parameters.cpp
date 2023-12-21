@@ -30,7 +30,7 @@ auto const& i = local_int;
 
     //  'in' (read-only) statement scope variable
 #line 6 "pure2-statement-scope-parameters.cpp2"
-    for ( auto const& arg : args ) {
+    for ( [[maybe_unused]] auto const& unnamed_param_1 : args ) {
         std::cout << i << "\n";     // prints 42
     }
 }

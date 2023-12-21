@@ -69,6 +69,7 @@ issue_313: () = {
     _ = :() identity(a$)* + identity(a$)*;
   }
 }
+issue_313_1: (copy x: std::unique_ptr<int>) pre(identity(x)* + identity(x)*) = { }
 
 issue_350: () = {
     x := 21;
@@ -777,6 +778,12 @@ issue_888_0: (copy r: std::string, copy size: int) = {
 }
 issue_888_1: (copy _: std::string, copy size: move_only_function<int(int)>) = {
   _ = 0.size();
+}
+
+issue_890: () = {
+  x := new<int>(0);
+  assert(identity_copy(x)* == 0);
+  (x := new<int>(0)) assert(identity(x)* == 0);
 }
 
 draw: () = {

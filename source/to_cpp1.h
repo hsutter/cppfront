@@ -3287,6 +3287,7 @@ public:
                 //  to never take the branch that wants to call `x.std::move(f)()`
                 if (auto last_use = is_definite_last_use(i->id_expr->get_token());
                     last_use
+                    && last_use->safe_to_move
                     && !lookup_finds_type_scope_function(*i->id_expr)
                     )
                 {

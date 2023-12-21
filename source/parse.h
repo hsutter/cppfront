@@ -2412,6 +2412,10 @@ struct function_type_node
             r->visit(v, depth+1);
             v.end(function_returns_tag{}, depth);
         }
+
+        for (auto const& c : contracts) {
+            c->visit(v, depth+1);
+        }
         v.end(*this, depth);
     }
 };
