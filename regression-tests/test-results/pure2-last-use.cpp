@@ -297,7 +297,7 @@ public: explicit issue_869_0();
 #line 308 "pure2-last-use.cpp2"
 };
 class issue_869_1 {
-private: std::aligned_storage_t<cpp2::max(sizeof(issue_869_0))> _storage {}; private: cpp2::i8 _discriminator {-1}; public: [[nodiscard]] auto is_i() const& -> bool;
+private: cpp2::aligned_storage<cpp2::max(sizeof(issue_869_0)),cpp2::max(alignof(issue_869_0))> _storage {}; private: cpp2::i8 _discriminator {-1}; public: [[nodiscard]] auto is_i() const& -> bool;
 public: [[nodiscard]] auto i() const& -> issue_869_0 const&;
 public: [[nodiscard]] auto i() & -> issue_869_0&;
 public: auto set_i(cpp2::in<issue_869_0> _value) & -> void;
@@ -699,9 +699,9 @@ auto issue_869_0::operator=([[maybe_unused]] issue_869_0&& that) noexcept -> iss
 issue_869_0::issue_869_0(){}
 [[nodiscard]] auto issue_869_1::is_i() const& -> bool { return _discriminator == 0; }
 [[nodiscard]] auto issue_869_1::i() const& -> issue_869_0 const& { 
-                                                   cpp2::Default.expects(is_i(), "");return *cpp2::assert_not_null(reinterpret_cast<issue_869_0 const*>(&_storage)); }
+                                                   if (cpp2::Default.has_handler() && !(is_i()) ) { cpp2::Default.report_violation(""); }return *cpp2::assert_not_null(reinterpret_cast<issue_869_0 const*>(&_storage)); }
 [[nodiscard]] auto issue_869_1::i() & -> issue_869_0& { 
-                                                         cpp2::Default.expects(is_i(), "");return *cpp2::assert_not_null(reinterpret_cast<issue_869_0*>(&_storage)); }
+                                                         if (cpp2::Default.has_handler() && !(is_i()) ) { cpp2::Default.report_violation(""); }return *cpp2::assert_not_null(reinterpret_cast<issue_869_0*>(&_storage)); }
 auto issue_869_1::set_i(cpp2::in<issue_869_0> _value) & -> void{if (!(is_i())) {_destroy();std::construct_at(reinterpret_cast<issue_869_0*>(&_storage), _value);}else {*cpp2::assert_not_null(reinterpret_cast<issue_869_0*>(&_storage)) = _value;}_discriminator = 0;}
 auto issue_869_1::set_i(auto&& ..._args) & -> void{if (!(is_i())) {_destroy();std::construct_at(reinterpret_cast<issue_869_0*>(&_storage), CPP2_FORWARD(_args)...);}else {*cpp2::assert_not_null(reinterpret_cast<issue_869_0*>(&_storage)) = issue_869_0{CPP2_FORWARD(_args)...};}_discriminator = 0;}
 auto issue_869_1::_destroy() & -> void{
@@ -1240,7 +1240,7 @@ auto loops() -> void{
     auto x {cpp2_new<int>(0)}; 
     for ( 
     [[maybe_unused]] auto const& unnamed_param_1 : { 0 } ) 
-    cpp2::Default.expects(CPP2_UFCS(get)(x), "");
+    if (cpp2::Default.has_handler() && !(CPP2_UFCS(get)(x)) ) { cpp2::Default.report_violation(""); }
   });
 
   static_cast<void>([]() mutable -> void{
@@ -1264,7 +1264,7 @@ auto f() -> void{
   f_copy(std::move(x));
   auto id {[](auto const& x) mutable -> auto&& { return x;  }}; 
   auto y {cpp2_new<int>(0)}; 
-  cpp2::Default.expects(&std::move(id)(y) == &y, "");
+  if (cpp2::Default.has_handler() && !(&std::move(id)(y) == &y) ) { cpp2::Default.report_violation(""); }
 }
 
 #line 850 "pure2-last-use.cpp2"

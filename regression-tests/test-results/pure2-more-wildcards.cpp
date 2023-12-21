@@ -30,7 +30,7 @@
     auto const x {2}; 
     auto* p {&x}; 
     auto const* q {&p}; 
-    cpp2::Default.expects(std::move(q), "");
+    if (cpp2::Default.has_handler() && !(std::move(q)) ) { cpp2::Default.report_violation(""); }
 
     if (cpp2::is(x, (less_than(20)))) {
         std::cout << "yes, less\n";

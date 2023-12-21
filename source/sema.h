@@ -1616,7 +1616,13 @@ public:
             && n.parent_is_type()
             )
         {
-            assert(n.is_object());
+            if (!n.is_object()) {
+                errors.emplace_back(
+                    n.position(),
+                    "a member named 'this' declares a base subobject, and must be followed by a base type name"
+                );
+                return false;
+            }
 
             if (
                 !n.is_public()
@@ -1907,25 +1913,21 @@ public:
     {
         assert(n.parameters);
 
-        //  An increment/decrement function must have a single parameter that is 'inout this'
-        //  and be a member of a copyable type (that defined a copy operator= or suppressed
-        //  member function generation to get the Cpp1 generated copy functions)
-        //
-        //  Future: See if there's demand for non-member increment/decrement
+        //  An increment/decrement function must have a single 'inout' parameter,
+        //  and if it's a member flag it if we know the type is not copyable
         if (
             n.my_decl->has_name("operator++")
             || n.my_decl->has_name("operator--")
             )
         {
             if (
-               (*n.parameters).ssize() != 1
-                || !(*n.parameters)[0]->has_name("this")
+                (*n.parameters).ssize() != 1
                 || (*n.parameters)[0]->direction() != passing_style::inout
                 )
             {
                 errors.emplace_back(
                     n.position(),
-                    "a user-defined " + n.my_decl->name()->to_string() + " must have a single 'inout this' parameter"
+                    "a user-defined " + n.my_decl->name()->to_string() + " must have a single 'inout' parameter"
                 );
                 return false;
             }
@@ -1938,11 +1940,14 @@ public:
                 return false;
             }
 
-            if (n.my_decl->parent_declaration->is_not_a_copyable_type())
+            if (
+                n.my_decl->parent_declaration
+                && n.my_decl->parent_declaration->cannot_be_a_copy_constructible_type()
+                )
             {
                 errors.emplace_back(
                     n.position(),
-                    "a user-defined " + n.my_decl->name()->to_string() + " must be a member of a copyable type"
+                    "a user-defined " + n.my_decl->name()->to_string() + " in type scope must be a member of a copyable type"
                 );
                 return false;
             }

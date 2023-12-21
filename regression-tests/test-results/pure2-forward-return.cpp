@@ -28,7 +28,7 @@ extern int const global;
 
 #line 2 "pure2-forward-return.cpp2"
 [[nodiscard]] auto first(auto&& rng) -> auto&& { 
-    cpp2::Bounds.expects(!(std::empty(rng)), "");
+    if (cpp2::Bounds.has_handler() && !(!(std::empty(rng))) ) { cpp2::Bounds.report_violation(""); }
 
 #line 5 "pure2-forward-return.cpp2"
     return *cpp2::assert_not_null(std::begin(CPP2_FORWARD(rng)));  }

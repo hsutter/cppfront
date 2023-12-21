@@ -1,0 +1,29 @@
+test_condition_evaluation: (tag) -> bool = { std::cout << tag << "\n"; return true; }
+
+audit: bool = true;
+
+main: () = {
+    //  A few basic tests
+    assert( 1 != 2, "ack, arithmetic is buggy" );
+    assert<Type>( typeid(int) != typeid(double), "ack, C types are broken" );
+    assert<Unevaluated>( any-grammatical.kind(of, nonsense * here) is "all ignored" );
+
+    //  Now test that conditions are only evaluated if there's
+    //  a handler active + any other control flags are enabled
+
+    assert( test_condition_evaluation(1), "default" );              // evaluated: prints "1"
+
+    //  Type has a handler
+    assert<Type>( test_condition_evaluation(2), "type" );           // evaluated: prints "2"
+    cpp2::Type.set_handler();
+    //  Type does not have a handler
+    assert<Type>( test_condition_evaluation(3), "1 == (1)$" );      // not evaluated
+
+    //  Bounds has a handler, and audit is true
+    assert<Bounds, audit>( test_condition_evaluation(4), "type" );  // evaluated: prints "4"
+    audit = false;
+    //  Bounds has a handler, but audit is false
+    assert<Bounds, audit>( test_condition_evaluation(5), "type" );  // not evaluated
+
+    assert<Unevaluated>( test_condition_evaluation(6) );            // not evaluated
+}

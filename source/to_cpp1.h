@@ -1031,11 +1031,12 @@ class cppfront
 
     declaration_node const* having_signature_emitted = {};
 
-    declaration_node const*   generating_assignment_from  = {};
-    declaration_node const*   generating_move_from        = {};
-    bool                      emitting_that_function      = false;
-    bool                      emitting_move_that_function = false;
-    std::vector<token const*> already_moved_that_members  = {};
+    declaration_node const*   generating_assignment_from      = {};
+    declaration_node const*   generating_move_from            = {};
+    declaration_node const*   generating_postfix_inc_dec_from = {};
+    bool                      emitting_that_function          = false;
+    bool                      emitting_move_that_function     = false;
+    std::vector<token const*> already_moved_that_members      = {};
 
     struct arg_info {
         passing_style pass   = passing_style::in;
@@ -3356,6 +3357,12 @@ public:
                 last_was_prefixed = true;
             }
 
+            //  Handle the other Cpp2 postfix operators that stay postfix in Cpp1 (currently: '...')
+            else if (is_postfix_operator(i->op->type())) {
+                flush_args();
+                suffix.emplace_back( i->op->to_string(), i->op->position());
+            }
+
             //  Handle the suffix operators that remain suffix
             //
             else {
@@ -3375,11 +3382,11 @@ public:
                     suffix.emplace_back( i->op_close->to_string(), i->op_close->position() );
                 }
 
-                if (i->id_expr) {
-
+                if (i->id_expr)
+                {
                     if (args) {
-                        // if args are stored it means that this is function or method
-                        // that is not handled by UFCS and args need to be printed
+                        //  If args are stored it means that this is function or method
+                        //  that is not handled by UFCS and args need to be printed
                         suffix.emplace_back(")", args.value().close_pos);
                         for (auto&& e: args.value().text_chunks) {
                             suffix.push_back(e);
@@ -4539,8 +4546,9 @@ public:
     //
     auto emit(
         parameter_declaration_list_node const& n,
-        bool                                   is_returns            = false,
-        bool                                   is_template_parameter = false
+        bool                                   is_returns                 = false,
+        bool                                   is_template_parameter      = false,
+        bool                                   generating_postfix_inc_dec = false
     )
         -> void
     {   STACKINSTR
@@ -4558,7 +4566,8 @@ public:
         printer.disable_indent_heuristic_for_next_text();
 
         auto prev_pos = n.position();
-        for (auto first = true; auto const& x : n.parameters) {
+        auto first    = true;
+        for (auto const& x : n.parameters) {
             if (
                 !first
                 && !is_returns
@@ -4581,6 +4590,14 @@ public:
             printer.print_extra( "};\n" );
         }
         else {
+            //  If we're generating Cpp1 postfix ++ or --, add the dummy int parameter
+            if (generating_postfix_inc_dec) {
+                if (!first) {
+                    printer.print_cpp2( ",", n.position() );
+                }
+                printer.print_cpp2( "int", n.position() );
+            }
+
             //  Position heuristic (aka hack): Avoid emitting extra whitespace before )
             //  beyond column 10
             assert(n.close_paren);
@@ -4605,6 +4622,34 @@ public:
     {   STACKINSTR
         assert (n.kind);
 
+        //  If this is one of Cpp2's predefined contract groups,
+        //  make it convenient to use without cpp2:: qualification
+        auto name = std::string{"cpp2::Default"};
+        if (n.group)
+        {
+            auto group = print_to_string(*n.group);
+            if (group != "_") {
+                name = group;
+            }
+            if (
+                name == "Default"
+                || name == "Bounds"
+                || name == "Null"
+                || name == "Type"
+                || name == "Testing"
+                )
+            {
+                name.insert(0, "cpp2::");
+            }
+        }
+
+        //  "Unevaluated" is for static analysis only, and are never evaluated, so just skip them
+        //  (The only requirement for an Unevaluated condition is that it parses; and even that's
+        //  easy to relax if we ever want to allow arbitrary tokens in an Unevaluated condition)
+        if (n.group && n.group->to_string() == "Unevaluated") {
+            return;
+        }
+
         //  For a postcondition, we'll wrap it in a lambda and register it
         //
         if (*n.kind == "post") {
@@ -4616,48 +4661,29 @@ public:
             );
         }
 
-        //  Emit the contract group name (defaults to cpp2::Default)
+        //  Emit the contract group name, and report any violation to that group
         //
-        if (n.group) {
-            //  If this is one of Cpp2's predefined contract groups,
-            //  make it convenient to use without cpp2:: qualification
-            if (auto uid = std::get_if<id_expression_node::unqualified>(&n.group->id)) {
-                assert (*uid && (**uid).identifier);
-                if (
-                    *(**uid).identifier == "Default"
-                    || *(**uid).identifier == "Bounds"
-                    || *(**uid).identifier == "Null"
-                    || *(**uid).identifier == "Type"
-                    || *(**uid).identifier == "Testing"
-                    )
-                {
-                    printer.print_cpp2("cpp2::", n.position());
-                }
-            }
-
-            printer.preempt_position_push(n.position());
-            printer.add_pad_in_this_line(-20);
-            emit(*n.group);
-            printer.preempt_position_pop();
-        }
-        else {
-            printer.print_cpp2("cpp2::Default", n.position());
-            printer.add_pad_in_this_line(-8);
-        }
-
-        //  And invoke .expects on that contract group
-        //
-        printer.print_cpp2(".expects(", n.position());
         assert(n.condition);
-        emit (*n.condition);
-        printer.print_cpp2(", ", n.position());
+        auto message = std::string{"\"\""};
         if (n.message) {
-            emit (*n.message);
+            message = "CPP2_CONTRACT_MSG(" + print_to_string(*n.message) + ")";
         }
-        else {
-            printer.print_cpp2("\"\"", n.position());
+
+        printer.print_cpp2(
+            "if (" + name + ".has_handler()",
+            n.position()
+        );
+        for (auto const& flag : n.flags) {
+            printer.print_cpp2(
+                " && " + print_to_string(*flag),
+                n.position()
+            );
         }
-        printer.print_cpp2(");", n.position());
+        printer.print_cpp2(
+            " && !(" + print_to_string(*n.condition) + ") ) " +
+                "{ " + name + ".report_violation(" + message + "); }",
+            n.position()
+        );
 
         //  For a postcondition, close out the lambda
         //
@@ -4673,9 +4699,10 @@ public:
     auto emit(
         function_type_node const& n,
         token const*              ident,
-        bool                      is_main         = false,
-        bool                      is_ctor_or_dtor = false,
-        std::string               suffix1         = {}
+        bool                      is_main                    = false,
+        bool                      is_ctor_or_dtor            = false,
+        std::string               suffix1                    = {},
+        bool                      generating_postfix_inc_dec = false
     )
         -> void
     {   STACKINSTR
@@ -4697,7 +4724,7 @@ public:
             );
         }
         else {
-            emit(*n.parameters);
+            emit(*n.parameters, false, false, generating_postfix_inc_dec); 
         }
 
         //  For an anonymous function, the emitted lambda is 'constexpr' or 'mutable'
@@ -4787,7 +4814,7 @@ public:
                     if (is_type_scope_function_with_in_this) {
                         printer.print_cpp2( " const&", n.position() );
                     }
-                    else {
+                    else if (!generating_postfix_inc_dec) {
                         printer.print_cpp2( "&", n.position() );
                     }
                 }
@@ -5603,8 +5630,9 @@ public:
 
         //  Handle other declarations
 
-        auto need_to_generate_assignment = false;
-        auto need_to_generate_move       = false;
+        auto need_to_generate_assignment      = false;
+        auto need_to_generate_move            = false;
+        auto need_to_generate_postfix_inc_dec = false;
 
         if (
             n.is_function()
@@ -6339,8 +6367,19 @@ public:
                     }
 
                     emit( *n.name() );
-                    emit( *func, n.name(), is_main, false, suffix1 );
+                    emit( *func, n.name(), is_main, false, suffix1, generating_postfix_inc_dec_from != nullptr );
                     printer.print_cpp2( suffix2, n.position() );
+
+                    //  If this is ++ or --, also generate a Cpp1 postfix version of the operator
+                    if (func->is_increment_or_decrement())
+                    {
+                        if (generating_postfix_inc_dec_from) {
+                            assert (generating_postfix_inc_dec_from == &n);
+                        }
+                        else {
+                            need_to_generate_postfix_inc_dec = true;
+                        }
+                    }
                 }
             }
 
@@ -6358,21 +6397,8 @@ public:
                     printer.print_cpp2( ";", n.position() );
                 }
 
-                //  If this is ++ or --, also generate a Cpp1 postfix version of the operator
-                if (func->is_increment_or_decrement()) {
-                    printer.print_cpp2(
-                        " public: auto " + n.name()->to_string() + "(int) -> " + n.parent_declaration->name()->to_string(),
-                        n.position()
-                    );
-                    emit_requires_clause();
-                    printer.print_cpp2(
-                        " { auto ret = *this; ++*this; return ret; }",
-                        n.position()
-                    );
-                }
-
-                //  Note: Not just early "return;" here because we may need to
-                //  recurse to emit the generated operator= declarations too,
+                //  Note: Not just early "return;" here because we may need
+                //  to recurse to emit generated operator declarations too,
                 //  so all the definition work goes into a big 'else' branch
             }
 
@@ -6467,12 +6493,35 @@ public:
                 emit_requires_clause();
 
                 having_signature_emitted = nullptr;
-                emit(
-                    *n.initializer,
-                    true, func->position(), func->returns.index() == function_type_node::empty,
-                    current_functions.back().prolog,
-                    current_functions.back().epilog
-                );
+
+                //  If this is ++ or --, also generate a Cpp1 postfix version of the operator
+                if (generating_postfix_inc_dec_from)
+                {
+                    assert (generating_postfix_inc_dec_from == &n);
+
+                    auto param1 = std::string{"*this"};
+                    if (
+                        !n.parent_declaration
+                        || !n.parent_declaration->is_type()
+                        )
+                    {
+                        param1 = n.first_parameter_name();
+                    }
+
+                    printer.print_cpp2(
+                        " { auto ret = " + param1 + "; ++" + param1 + "; return ret; }",
+                        n.position()
+                    );
+                }
+                //  Else just emit the normal function body
+                else {
+                    emit(
+                        *n.initializer,
+                        true, func->position(), func->returns.index() == function_type_node::empty,
+                        current_functions.back().prolog,
+                        current_functions.back().epilog
+                    );
+                }
 
                 printer.preempt_position_pop();
 
@@ -6511,6 +6560,21 @@ public:
                 generating_move_from = &n;
                 emit( n, capture_intro );
                 generating_move_from = {};
+            }
+
+            //  If this is ++ or --, emit the Cpp1 postfix version via a recursive call
+            if (need_to_generate_postfix_inc_dec)
+            {
+                //  Reset the 'emitted' flags
+                for (auto& statement : n.get_initializer_statements()) {
+                    statement->emitted = false;
+                }
+
+                //  Then reposition and do the recursive call
+                printer.reset_line_to(n.position().lineno);
+                generating_postfix_inc_dec_from = &n;
+                emit( n, capture_intro );
+                generating_postfix_inc_dec_from = {};
             }
         }
 

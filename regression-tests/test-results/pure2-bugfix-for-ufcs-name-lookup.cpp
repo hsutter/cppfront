@@ -67,25 +67,25 @@ namespace ns {
 auto main() -> int{
   {
     int f {CPP2_UFCS(f)(t())}; 
-    cpp2::Default.expects(std::move(f) == 0, "");
+    if (cpp2::Default.has_handler() && !(std::move(f) == 0) ) { cpp2::Default.report_violation(""); }
   }
   {
     auto f {t().f()}; 
-    cpp2::Default.expects(std::move(f) == 0, "");
+    if (cpp2::Default.has_handler() && !(std::move(f) == 0) ) { cpp2::Default.report_violation(""); }
   }
   {
     auto f {t().f()}; 
-    cpp2::Default.expects(std::move(f) == 0, "");
+    if (cpp2::Default.has_handler() && !(std::move(f) == 0) ) { cpp2::Default.report_violation(""); }
   }
 {
 auto const& f = t().f();
 #line 33 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
-  cpp2::Default.expects(f == 0, "");
+  if (cpp2::Default.has_handler() && !(f == 0) ) { cpp2::Default.report_violation(""); }
 }
 {
 auto const& f = t().f();
 #line 34 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
-  cpp2::Default.expects(f == 0, "");
+  if (cpp2::Default.has_handler() && !(f == 0) ) { cpp2::Default.report_violation(""); }
 }
 #line 35 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
   {
@@ -98,7 +98,7 @@ auto const& f = t().f();
   }
   {
     auto f {[](auto const& f) mutable -> auto{
-      cpp2::Default.expects(CPP2_UFCS(f)(t()) == 0, "");
+      if (cpp2::Default.has_handler() && !(CPP2_UFCS(f)(t()) == 0) ) { cpp2::Default.report_violation(""); }
       return CPP2_UFCS(f)(u()); 
     }(identity())}; 
     static_cast<void>(std::move(f));
@@ -115,7 +115,7 @@ auto const& f = t().f();
 {
 cpp2::in<identity> f = identity();
 #line 59 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
-      cpp2::Default.expects(CPP2_UFCS(f)(t()) == 0, "");
+      if (cpp2::Default.has_handler() && !(CPP2_UFCS(f)(t()) == 0) ) { cpp2::Default.report_violation(""); }
 }
 {
 cpp2::in<identity> f = identity();
