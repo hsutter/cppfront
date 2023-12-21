@@ -139,7 +139,7 @@ outer: type =
     print: <Args...: type>(
         inout out: std::ostream, 
         in args...: Args
-    ) requires (sizeof...(Args) >= 0) = 
+    ) requires (sizeof...(Args) >= 0u) = 
     {
         (out << ... << args);
     }

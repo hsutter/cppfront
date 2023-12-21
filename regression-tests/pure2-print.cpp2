@@ -92,7 +92,7 @@ outer: @print type = {
         tup: std::tuple<Ts...> = ();
     }
 
-    print: <Args...: type> (inout out: std::ostream, args...: Args) requires sizeof...(Args) >= 0 = {
+    print: <Args...: type> (inout out: std::ostream, args...: Args) requires sizeof...(Args) >= 0u = {
         (out << ... << args);
     }
 

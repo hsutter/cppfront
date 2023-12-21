@@ -401,7 +401,7 @@ public:
     constexpr auto has_handler() const -> bool    { return reporter != handler{}; }
 
     constexpr auto enforce(bool b, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
-                                          -> void { if (!b) reporter(msg CPP2_SOURCE_LOCATION_ARG); }
+                                          -> void { if (!b) report_violation(msg CPP2_SOURCE_LOCATION_ARG); }
     constexpr auto report_violation(CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
                                           -> void { if (reporter) reporter(msg CPP2_SOURCE_LOCATION_ARG); }
 private:
@@ -515,7 +515,7 @@ auto assert_in_bounds_impl(auto&&, auto&& CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAUL
     if (msg) {
         err += " and the message \"" + msg + "\"";
     }
-    Type.report_violation( msg );
+    Type.report_violation( err );
     std::terminate();
 #else
     throw CPP2_FORWARD(x);
