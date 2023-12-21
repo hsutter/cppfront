@@ -1398,7 +1398,7 @@ regex_gen: (inout t: meta::type_declaration) =
     t.remove_marked_members();
 
     for expressions do (expr) {
-        regular_expression: std::string = ::cpp2::regex::generate_template(expr.second);
+        regular_expression: std::string = ::cpp2::regex::generate_template(expr.second, :(message: _) = t$.error(message););
 
         name: std::string = expr.first;
         if !name.empty() {

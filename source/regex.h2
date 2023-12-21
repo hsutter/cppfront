@@ -10,6 +10,49 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+// From https://stackoverflow.com/questions/216823/how-to-trim-a-stdstring
+
+// trim from start (in place)
+static inline void ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }));
+}
+
+// trim from end (in place)
+static inline void rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
+}
+
+// trim from both ends (in place)
+static inline void trim(std::string &s) {
+    rtrim(s);
+    ltrim(s);
+}
+
+// trim from start (copying)
+static inline std::string ltrim_copy(std::string_view s) {
+    std::string t(s);
+    ltrim(t);
+    return t;
+}
+
+// trim from end (copying)
+static inline std::string rtrim_copy(std::string_view s) {
+    std::string t(s);
+    rtrim(t);
+    return t;
+}
+
+// trim from both ends (copying)
+static inline std::string trim_copy(std::string_view s) {
+    std::string t(s);
+    trim(t);
+    return t;
+}
+
 cpp2: namespace = {
 
 regex: namespace = {
@@ -34,7 +77,7 @@ match_return: @struct type =
     }
 }
 
-match_context: <CharT, max_groups: size_t> type =
+match_context: @struct <CharT, max_groups: size_t> type =
 {
 
     groups: std::array<view<CharT>, max_groups>;
@@ -73,7 +116,7 @@ list_matcher_logic: <CharT, List ...> type =
 
       if r.matched {
         if constexpr 0 != sizeof...(Other) {
-          o: match_return = match_all<Other...>(str.substr(1), ctx);
+          o: match_return = match_all<Other...>(str.substr(r.length), ctx);
 
           if o.matched {
             r.length += o.length;
@@ -86,35 +129,219 @@ list_matcher_logic: <CharT, List ...> type =
 
       return r;
     }
+}
 
-    private match_all: (str: view<CharT>, inout ctx: _) -> match_return = {
-      // TODO: Assert End == list_end
-      return (true, 0);
+group_matcher_logic: <CharT, M, group: int> type = {
+    match: (str: view<CharT>, inout ctx: _) -> match_return = {
+        r: match_return = M::match(str, ctx);
+
+        if r.matched {
+            ctx.groups[group] = str.substr(0, r.length);
+        }
+        return r;
+    }
+    to_string: () -> bstring<CharT> = "((M::to_string())$)";
+}
+
+range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
+
+    // TODO: Add static assert on min_count and max_count.
+
+    match: (str: view<CharT>, inout ctx: _) -> match_return = {
+      r: match_return = (true, 0);
+      o: match_return = (true, 0);
+
+      count: int = -1; // First while is always true
+
+      while (o.matched && count < max_count) next o = M::match(str.substr(r.length), ctx) {
+        r.length += o.length;
+        count += 1;
+      }
+
+      return match_return::create(count >= min_count, r.length);
+    }
+    to_string: () -> bstring<CharT> = {
+      r: std::string = M::to_string();
+
+      if min_count == max_count {
+        r += "{(min_count)$}";
+      }
+      else if min_count == 0 {
+        r += "{,(max_count)$}";
+      }
+      else if max_count == std::numeric_limits<int>::max() {
+        r += "((min_count)$,}";
+      }
+      else {
+        r += "{(min_count)$,(max_count)$}";
+      }
+
+      return r;
     }
 }
 
-generate_template: (regex: std::string_view) -> std::string = {
-  template_expression: std::string = "";
-  seperator: std::string = "";
+star_matcher_logic: <CharT, M> type = {
+    this: range_matcher_logic<CharT, M, 0, std::numeric_limits<int>::max()> = ();
 
-  template_expression += "::cpp2::regex::list_matcher_logic<char, ";
+    to_string: () -> bstring<CharT> = M::to_string() + "*";
+}
 
-  for regex do (c) {
-    template_expression += seperator;
-    if c == '.' {
-      template_expression += "::cpp2::regex::any_matcher_logic<char>";
+
+regex_parser: <Error_out> type = {
+
+    regex: std::string_view;
+    list: std::vector<std::string> = ();
+    pos: size_t = 0;
+
+    named_groups: size_t = 1; // Global capture group.
+
+    error_out: Error_out;
+
+    operator=: (out this, r: std::string_view, e: Error_out) = {
+        this.regex = r;
+        this.error_out = e;
     }
-    else {
-      template_expression += "::cpp2::regex::char_matcher_logic<char, '(c)$'>";
+
+    create_list_matcher: (elements: std::vector<std::string>) -> std::string = {
+        template_expression: std::string = "::cpp2::regex::list_matcher_logic<char, ";
+
+        seperator: std::string = "";
+        for elements do (cur) {
+            template_expression += seperator + cur;
+            seperator = ", ";
+        }
+        template_expression += ">";
+
+        return template_expression;
     }
 
-    seperator = ", ";
-  }
-  template_expression += ">";
+    error:(inout this, message: std::string) = {
+        error_out("Error during parsing of regex '(regex)$' at position '(pos)$': (message)$");
+    }
 
-  return template_expression;
+    get_back: (inout this) -> std::string = {
+        b:= list.back();
+        list.pop_back();
+        return b;
+    }
 
+    is_any: (inout this, c: char) -> bool = {
+        if c == '.' {
+            list.push_back("::cpp2::regex::any_matcher_logic<char>");
+            return true;
+        }
+        return false;
+    }
 
+    is_group: (inout this, c: char) -> bool = {
+        if c != '(' { return false; }
+
+        group_number := named_groups;
+        named_groups += 1;
+
+        // Create a new global list.
+        cur_list: std::vector<std::string> = ();
+        std::swap(cur_list, list);
+
+        pos += 1;  // Skip the '('
+        parse_until(')');
+
+        // Restore the old global list.
+        std::swap(cur_list, list);
+
+        inner:= create_list_matcher(cur_list);
+
+        list.push_back("::cpp2::regex::group_matcher_logic<char, (inner)$, (group_number)$>");
+
+        return true;
+    }
+
+    is_range: (inout this, c: char) -> bool = {
+
+        if c != '{' { return false; }
+        if list.empty() { error("'{' without previous element."); }
+
+        end: size_t = regex.find("}", pos);
+        if end == std::string::npos { error("Missing closing bracket."); }
+
+        inner: std::string = trim_copy(regex.substr(pos + 1, end - pos - 1));
+        if inner.empty() { error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'"); }
+
+        min_count: std::string = "0";
+        max_count: std::string = "std::numeric_limits<int>::max()";
+
+        sep: size_t = inner.find(",");
+        if sep == std::string::npos {
+            min_count = inner;
+            max_count = inner;
+        }
+        else {
+            inner_first: std::string = trim_copy(inner.substr(0, sep));
+            inner_last: std::string = trim_copy(inner.substr(sep + 1));
+
+            if (inner_first.empty() && inner_last.empty()) {
+                error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'");
+            }
+
+            if !inner_first.empty() {
+                min_count = inner_first;
+            }
+            if !inner_last.empty() {
+                max_count = inner_last;
+            }
+        }
+
+        // TODO: Check 0 <=n <= m
+        inner_matcher: = get_back();
+        list.push_back("::cpp2::regex::range_matcher_logic<char, (inner_matcher)$, (min_count)$, (max_count)$>");
+        pos = end;
+
+        return true;
+    }
+
+    is_star: (inout this, c: char) -> bool = {
+        if c == '*' {
+            if list.empty() {
+                error("'*' without previous element.");
+            }
+            inner:= get_back();
+            list.push_back("::cpp2::regex::star_matcher_logic<char, (inner)$>");
+
+            return true;
+        }
+        return false;
+    }
+
+    parse_until:(inout this, term: char) = {
+        while pos != regex.size() next pos += 1 {
+            c: char = regex[pos];
+
+            if c == term { return; }
+
+            if is_any(c) { continue; }
+            if is_range(c) { continue; }
+            if is_star(c) { continue; }
+            if is_group(c) { continue; }
+
+            // No special char push a character match
+            list.push_back("::cpp2::regex::char_matcher_logic<char, '(c)$'>");
+        }
+    }
+
+    parse:(inout this) -> std::string = {
+
+        parse_until('\0');
+
+        return create_list_matcher(list);
+    }
+
+}
+
+generate_template: <Err> (regex: std::string_view, err: Err) -> std::string = {
+    parser: regex_parser<Err> = (regex, err);
+    r := parser.parse();
+    _ = parser;
+    return r;
 }
 
 }
