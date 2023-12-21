@@ -415,9 +415,20 @@ public:
         //  Then look backward to find the first declaration of
         //  this name that is not deeper (in a nested scope)
         //  and is in the same function
-        std::ranges::advance(i, -int(i->position() > t.position()), symbols.cbegin());
-        std::ranges::advance(i, 1, symbols.cend());
-        while (std::ranges::advance(i, -1, symbols.begin()) == 0)
+        using I = std::vector<symbol>::const_iterator;
+        auto advance = [](I& i, int n, I bound) {  // TODO Use `std::ranges::advance`
+            auto in = i;
+            if (std::abs(n) >= std::abs(bound - i)) {
+                i = bound;
+            }
+            else {
+                std::advance(i, n);
+            }
+            return n - (i - in);
+        };
+        advance(i, -int(i->position() > t.position()), symbols.cbegin());
+        advance(i, 1, symbols.cend());
+        while (advance(i, -1, symbols.begin()) == 0)
         {
             if (
                 i->sym.index() == symbol::active::declaration
@@ -764,6 +775,7 @@ private:
             bool is_loop;
             int first;
             int last = 0;
+            pos_range(bool l, int f) : is_loop{l}, first{f} { }
             bool within(int x) const { return first <= x && x <= last; }
             bool skip() const { return !is_loop; }
         };
@@ -772,7 +784,7 @@ private:
         //  2. Ranges to skip (a last use can't be found in these)
         //    - Function expressions (except in a capture)
         //    - Where id is hidden by another declaration
-        auto pos_ranges = std::vector<pos_range>{{}}; //  Keep sentinel for simpler code
+        auto pos_ranges = std::vector<pos_range>{{false, 0}}; //  Keep sentinel for simpler code
 
         auto skip_hidden_name = [&](bool record_pos_range) -> bool {
             auto skip_to = [&](token const* identifier_end)
@@ -2151,7 +2163,7 @@ public:
         just_entered_for = true;
     }
 
-    auto end(loop_body_tag const& n, int) -> void
+    auto end(loop_body_tag const&, int) -> void
     {
         pop_lifetime_scope();
     }
