@@ -2332,7 +2332,6 @@ public:
                     || t == "as"
                     )
                 )
-            || t.type() == lexeme::Dot
             )
         {
             ++safe_to_move_context;
