@@ -2246,6 +2246,8 @@ public:
             return;
         }
 
+        //  By giving tokens an order during sema
+        //  generated code can be equally checked
         static std::int32_t final_position = 1;
         t.final_position = final_position++;
 
