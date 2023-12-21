@@ -89,17 +89,20 @@ struct identifier_sym {
     bool standalone_assignment_to = false;
     bool is_captured = false;
     bool safe_to_move = true;
+    int safe_to_move_context = 0;
     token const* identifier = {};
 
     identifier_sym(
         bool         a,
         token const* id,
         kind         k = use,
-        bool         mv = true
+        bool         mv = true,
+        int          mvc = 0
     )
         : kind_{k}
         , standalone_assignment_to{a}
         , safe_to_move{mv}
+        , safe_to_move_context{mvc}
         , identifier{id}
     { }
 
@@ -2000,8 +2003,11 @@ public:
     //  Visitor functions
     //
     int  scope_depth                              = 0;
+    int  safe_to_move_context                     = 1;
     bool started_standalone_assignment_expression = false;
     bool started_postfix_expression               = false;
+    std::vector<bool> started_postfix_operators_  = {false};
+    bool started_prefix_operators                 = false;
     bool started_member_access                    = false;
     bool started_this_member_access               = false;
     bool is_out_expression                        = false;
@@ -2011,9 +2017,57 @@ public:
     bool inside_returns_list                      = false;
     bool just_entered_for                         = false;
     parameter_declaration_node const* inside_out_parameter = {};
+    std::vector<std::pair<int, int>> uses_in_expression = {};
     std::vector<std::pair<int, int>> uses_at_postfix_expression = {};
     std::vector<std::vector<int>> indices_of_uses_per_scope = {{}};
     std::vector<std::vector<int>> indices_of_activations_per_scope = {{}};
+
+    auto started_postfix_operators() -> bool
+    {
+        assert(!started_postfix_operators_.empty());
+        return started_postfix_operators_.back();
+    }
+
+    auto push(std::vector<std::pair<int, int>>& uses) -> void
+    {
+        uses.emplace_back(std::ssize(indices_of_uses_per_scope) - 1, std::ssize(indices_of_uses_per_scope.back()));
+    }
+
+    auto get(std::vector<std::pair<int, int>>& uses) -> std::span<const int>
+    {
+        assert(!uses.empty());
+        auto [i, j] = uses.back();
+        return std::span{indices_of_uses_per_scope[i]}.subspan(j);
+    }
+
+    //  Mark uses that are not safe to move
+    auto pop_uses_in_expression() -> void
+    {
+        auto identifier = [](symbol& s) { return &std::get<symbol::active::identifier>(s.sym); };
+
+        auto range = get(uses_in_expression);
+        for (auto i : range)
+        {
+            auto x = identifier(symbols[i]);
+            for (auto j : range)
+            {
+                auto y = identifier(symbols[j]);
+                if (
+                    i != j
+                    && *x->identifier == *y->identifier
+                    && x->safe_to_move_context != y->safe_to_move_context
+                    && !x->is_captured
+                    && !y->is_captured
+                    )
+                {
+                    x->safe_to_move = false;
+                    y->safe_to_move = false;
+                }
+            }
+        }
+
+        uses_in_expression.pop_back();
+    }
 
     auto push_lifetime_scope() -> void
     {
@@ -2078,7 +2132,9 @@ public:
 
     auto end(translation_unit_node const&, int) -> void
     {
+        assert(uses_in_expression.empty());
         assert(uses_at_postfix_expression.empty());
+        assert(started_postfix_operators_.size() == 1);
         assert(indices_of_uses_per_scope.size() == 1);
         assert(indices_of_activations_per_scope.size() == 1);
     }
@@ -2253,25 +2309,39 @@ public:
         }
     }
 
+    auto is_binary_operator(lexeme l) -> bool {
+        switch (l) {
+        break;case lexeme::PlusPlus:
+              case lexeme::MinusMinus:
+              case lexeme::Arrow:
+              case lexeme::Tilde:
+              case lexeme::Not:         return false;
+        break;case lexeme::Plus:
+              case lexeme::Minus:       return !started_prefix_operators;
+        break;case lexeme::Multiply:
+              case lexeme::Ampersand:   return !started_postfix_operators();
+        break;default:                  return is_operator(l);
+        }
+    }
+
     auto start(token const& t, int) -> void
     {
-        if (t.type() == lexeme::Dot) {
+        if (is_binary_operator(t.type()))
+        {
+            ++safe_to_move_context;
+        }
+        else if (t.type() == lexeme::Dot) {
             started_member_access = true;
             started_this_member_access = *(&t - 1) == "this";
         }
         //  Mark captures
         else if (t.type() == lexeme::Dollar)
         {
-            assert(!uses_at_postfix_expression.empty());
-            auto [uses, offset] = uses_at_postfix_expression.back();
-            for (auto i : std::span{indices_of_uses_per_scope[uses]}.subspan(offset)) {
-                if (auto sym = std::get_if<symbol::active::identifier>(&symbols[i].sym);
-                    sym
-                    && sym->is_use()
-                    )
-                {
-                    sym->is_captured = true;
-                }
+            for (auto i : get(uses_at_postfix_expression))
+            {
+                auto& sym = std::get<symbol::active::identifier>(symbols[i].sym);
+                assert(sym.is_use());
+                sym.is_captured = true;
             }
         }
 
@@ -2332,7 +2402,7 @@ public:
                         )
                     )
                 {
-                    push_use( identifier_sym( false, &t, {}, !inside_next_expression ) );
+                    push_use( identifier_sym( false, &t, {}, !inside_next_expression, safe_to_move_context ) );
                 }
             }
             started_member_access = false;
@@ -2414,7 +2484,21 @@ public:
         --scope_depth;
     }
 
-    auto start(assignment_expression_node const& n, int)
+    template<typename T> auto start(T const&, int) -> void
+        requires std::is_same_v<T, expression_node>
+                 || std::is_same_v<T, logical_or_expression_node>
+    {
+        push(uses_in_expression);
+    }
+
+    template<typename T> auto end(T const&, int) -> void
+        requires std::is_same_v<T, expression_node>
+                 || std::is_same_v<T, logical_or_expression_node>
+    {
+        pop_uses_in_expression();
+    }
+
+    auto start(assignment_expression_node const& n, int) -> void
     {
         if (
             n.is_standalone_expression()
@@ -2429,14 +2513,34 @@ public:
         }
     }
 
-    auto start(postfix_expression_node const& n, int) {
+    auto start(bit_and_expression_node const&, int) -> void
+    {
+        started_postfix_operators_.push_back(false);
+    }
+
+    auto end(bit_and_expression_node const&, int) -> void
+    {
+        started_postfix_operators_.pop_back();
+    }
+
+    auto start(prefix_expression_node const&, int) -> void
+    {
+        started_prefix_operators = true;
+    }
+
+    auto start(postfix_expression_node const& n, int) -> void
+    {
+        started_prefix_operators = false;
+        started_postfix_operators_.push_back(true);
         if (auto id = std::get_if<primary_expression_node::id_expression>(&n.expr->expr)) {
             started_postfix_expression = (*id)->is_unqualified();
         }
-        uses_at_postfix_expression.emplace_back(std::ssize(indices_of_uses_per_scope) - 1, std::ssize(indices_of_uses_per_scope.back()));
+        push(uses_at_postfix_expression);
     }
 
-    auto end(postfix_expression_node const&, int) {
+    auto end(postfix_expression_node const&, int) -> void
+    {
+        started_postfix_operators_.pop_back();
         uses_at_postfix_expression.pop_back();
     }
 

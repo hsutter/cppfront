@@ -48,7 +48,7 @@ auto main(int const argc_, char** argv_) -> int{
   auto const args = cpp2::make_args(argc_, argv_); 
 #line 8 "pure2-bugfix-for-discard-precedence.cpp2"
   quantity x {1729}; 
-  static_cast<void>(x + std::move(x));// Not `(void) x + x`; would attempt to add a `void` to `x`.
+  static_cast<void>(x + x);// Not `(void) x + x`; would attempt to add a `void` to `x`.
   static_cast<void>(args);// Not `void(args)`; would attempt to declare `args` with `void` type.
 }
 

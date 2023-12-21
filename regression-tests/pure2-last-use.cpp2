@@ -5,6 +5,44 @@ pred_copy: (copy _...) true;
 identity: <T> (forward x: T) -> forward _ requires std::is_reference_v<T> == { return x; }
 identity_copy: (copy x) x;
 
+issue_313: () = {
+  _ = :() -> std::vector<int> = {
+    a := new<int>(0);
+    return (a*, identity_copy(a)*);
+  };
+  _ = :() -> std::vector<int> = {
+    a := new<int>(0);
+    return (a&**, identity_copy(a)*);
+  };
+  _ = :() -> int = {
+    a := new<int>(0);
+    return identity(a)* + identity(a)*;
+
+    b := new<int>(0);
+    return identity(b)* = identity(b)*;
+
+    c := new<int>(0);
+    return identity(c)* ^ identity(c)*;
+  };
+  {
+    a := new<int>(0);
+    identity(a)* = identity(a)*;
+
+    b := new<int>(0);
+    _: int = identity(b)* = identity(b)*;
+
+    c := new<int>(0);
+    if identity(c)* * identity(c)* { }
+
+    d := new<int>(0);
+    if (identity(d)* - identity(d)*) { }
+  }
+  {
+    a := new<int>(0);
+    _ = :() identity(a$)* + identity(a$)*;
+  }
+}
+
 issue_350: () = {
     x := 21;
 
