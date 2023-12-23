@@ -78,7 +78,10 @@ auto main(
                 auto total = count.cpp1_lines + count.cpp2_lines;
                 if (total > 0) {
                     out << " (";
-                    if (count.cpp2_lines / count.cpp1_lines > 25) {
+                    if (count.cpp1_lines == 0) {
+                        out << 100;
+                    }
+                    else if (count.cpp2_lines / count.cpp1_lines > 25) {
                         out << std::setprecision(3)
                             << 100.0 * count.cpp2_lines / total;
                     }
