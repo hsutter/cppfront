@@ -56,7 +56,7 @@ auto pad(int padding)
 auto cpp_identifier_replacement(std::string_view const& name) 
     -> std::optional<std::string>
 {
-    constexpr std::string_view non_identifier_chars = "<=>*+-/";
+    constexpr std::string_view non_identifier_chars = "<=>*+-/()[]";
     auto pos = name.find_first_of(non_identifier_chars, 0); 
     if (pos == std::string_view::npos) {
         return {};
