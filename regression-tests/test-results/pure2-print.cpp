@@ -66,7 +66,7 @@ CPP2_REQUIRES_ ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...)) ;
     };
 
     public: template<typename ...Args> static auto print(std::ostream& out, Args const& ...args) -> void
-CPP2_REQUIRES_ (cpp2::cmp_greater_eq(sizeof(Args)...,0)) ;
+CPP2_REQUIRES_ (cpp2::cmp_greater_eq(sizeof...(Args),0u)) ;
 
 #line 99 "pure2-print.cpp2"
     public: template<typename ...Args> [[nodiscard]] static auto all(Args const& ...args) -> bool;
@@ -118,8 +118,8 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
 
 #line 36 "pure2-print.cpp2"
         {
-            if (cpp2::Default.has_handler() && !(CPP2_UFCS(empty)(m) == false || false) ) { cpp2::Default.violation("message"); }
-            if (cpp2::Bounds.has_handler() && testing_enabled && !([_0 = 0, _1 = CPP2_UFCS(ssize)(m), _2 = 100]{ return cpp2::cmp_less(_0,_1) && cpp2::cmp_less(_1,_2); }() && true != false) ) { cpp2::Bounds.violation(""); }
+            if (cpp2::Default.has_handler() && !(CPP2_UFCS(empty)(m) == false || false) ) { cpp2::Default.report_violation(CPP2_CONTRACT_MSG("message")); }
+            if (cpp2::Bounds.has_handler() && testing_enabled && !([_0 = 0, _1 = CPP2_UFCS(ssize)(m), _2 = 100]{ return cpp2::cmp_less(_0,_1) && cpp2::cmp_less(_1,_2); }() && true != false) ) { cpp2::Bounds.report_violation(CPP2_CONTRACT_MSG("size is " + cpp2::to_string(CPP2_UFCS(ssize)(m)))); }
 #line 37 "pure2-print.cpp2"
             auto a {[]() mutable -> void{}}; 
             auto b {[]() mutable -> void{}}; 
@@ -136,7 +136,7 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
             else {if (!(CPP2_UFCS(empty)(m))) {std::move(b)(); }
             else {std::move(c)(); }}
 
-            if (cpp2::Default.has_handler() && !(true) ) { cpp2::Default.violation(""); }
+            if (cpp2::Default.has_handler() && !(true) ) { cpp2::Default.report_violation(""); }
 
             return [_0 = (s + CPP2_ASSERT_IN_BOUNDS(m, 0))]() mutable -> std::string { return _0;  }(); 
         }
@@ -182,7 +182,7 @@ requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...)) {(std::cout << ..
 
 #line 95 "pure2-print.cpp2"
     template<typename ...Args> auto outer::print(std::ostream& out, Args const& ...args) -> void
-requires (cpp2::cmp_greater_eq(sizeof(Args)...,0)) {
+requires (cpp2::cmp_greater_eq(sizeof...(Args),0u)) {
 #line 96 "pure2-print.cpp2"
         (out << ... << args);
     }

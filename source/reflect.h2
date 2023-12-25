@@ -165,9 +165,9 @@ compiler_services: @polymorphic_base @copyable type =
     //  Enable custom contracts on this object, integrated with compiler output
     //  Unlike .requires, a contract violation stops further processing
     //
-    violation:(this, msg) = {
+    report_violation: (this, msg) = {
         error(msg);
-        throw( std::runtime_error("  ==> programming bug found in metafunction @(metafunction_name)$ - precondition violation - see previous errors") );
+        throw( std::runtime_error("  ==> programming bug found in metafunction @(metafunction_name)$ - contract violation - see previous errors") );
     }
 
     has_handler:(this) true;
@@ -990,8 +990,10 @@ basic_enum: (
         mo.mark_for_removal_from_enclosing_type();
     }
 
-    t.require( !enumerators.empty(),
-        "an enumeration must contain at least one enumerator value");
+    if (enumerators.empty()) {
+        t.error( "an enumeration must contain at least one enumerator value");
+        return;
+    }
 
     //  Compute the default underlying type, if it wasn't explicitly specified
     if underlying_type == ""

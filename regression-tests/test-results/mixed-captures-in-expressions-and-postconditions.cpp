@@ -47,8 +47,8 @@ auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void
 #line 22 "mixed-captures-in-expressions-and-postconditions.cpp2"
 {
     cpp2::finally_presuccess cpp2_finally_presuccess;
-    if (cpp2::Default.has_handler() && !(cpp2::cmp_less_eq(0,where) && cpp2::cmp_less_eq(where,CPP2_UFCS(ssize)(vec))) ) { cpp2::Default.violation(""); }
-    cpp2_finally_presuccess.add([&, _1 = CPP2_UFCS(ssize)(vec)]{if (cpp2::Default.has_handler() && !(CPP2_UFCS(ssize)(vec) == _1 + 1) ) { cpp2::Default.violation(""); }} );
+    if (cpp2::Default.has_handler() && !(cpp2::cmp_less_eq(0,where) && cpp2::cmp_less_eq(where,CPP2_UFCS(ssize)(vec))) ) { cpp2::Default.report_violation(""); }
+    cpp2_finally_presuccess.add([&, _1 = CPP2_UFCS(ssize)(vec)]{if (cpp2::Default.has_handler() && !(CPP2_UFCS(ssize)(vec) == _1 + 1) ) { cpp2::Default.report_violation(""); }} );
 #line 23 "mixed-captures-in-expressions-and-postconditions.cpp2"
     static_cast<void>(CPP2_UFCS(insert)(vec, CPP2_UFCS(begin)(vec) + where, val));
 }
