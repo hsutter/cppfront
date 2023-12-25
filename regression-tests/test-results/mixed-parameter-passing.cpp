@@ -5,39 +5,41 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-parameter-passing.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-parameter-passing.cpp2"
 
 #include <string>
 #include <cstdlib>
 #include <ctime>
 
 #line 6 "mixed-parameter-passing.cpp2"
-auto copy_from([[maybe_unused]] auto param1) -> void;
+auto copy_from([[maybe_unused]] auto unnamed_param_1) -> void;
 
 auto parameter_styles(
-    [[maybe_unused]] cpp2::in<std::string> param1, // "in" is default
+    [[maybe_unused]] cpp2::in<std::string> unnamed_param_1, // "in" is default
     std::string b, 
-    [[maybe_unused]] std::string& param3, 
+    [[maybe_unused]] std::string& unnamed_param_3, 
     std::string&& d
     ) -> void;
 
 #line 40 "mixed-parameter-passing.cpp2"
 [[nodiscard]] auto main() -> int;
 
-
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-parameter-passing.cpp2"
 
 #line 6 "mixed-parameter-passing.cpp2"
-auto copy_from([[maybe_unused]] auto param1) -> void{}
+auto copy_from([[maybe_unused]] auto unnamed_param_1) -> void{}
 
 auto parameter_styles(
-    [[maybe_unused]] cpp2::in<std::string> param1, 
+    [[maybe_unused]] cpp2::in<std::string> unnamed_param_1, 
     std::string b, 
-    [[maybe_unused]] std::string& param3, 
+    [[maybe_unused]] std::string& unnamed_param_3, 
     std::string&& d
     ) -> void
 {

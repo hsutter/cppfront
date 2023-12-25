@@ -19,7 +19,7 @@ make:     <T, Args...> (forward args...: Args)  :T = args...;
 
 main: ()
 = {
-    a: x<int, long, std::string> = ();
+    _: x<int, long, std::string> = ();
 
     std::cout << std::string("xyzzy", 3) << "\n";
     std::cout << make_string("plugh", :u8=3) << "\n";

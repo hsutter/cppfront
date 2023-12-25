@@ -8,14 +8,13 @@
 main: () -> int = {
     vec: std::vector<std::string>
             = ("hello", "2022");
-    view: std::span = vec;
 
     std::ranges::for_each
-        ( view, :(x) = std::cout << x << "\n" );
+        ( vec, :(x) = std::cout << x << "\n" );
 
     callback := :(inout x) = x += "-ish";
-    std::ranges::for_each( view, callback );
+    std::ranges::for_each( vec, callback );
 
-    for view do (str)
+    for vec do (str)
         std::cout << str << "\n";
 }

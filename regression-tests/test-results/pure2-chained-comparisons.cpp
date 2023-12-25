@@ -6,16 +6,19 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-chained-comparisons.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-chained-comparisons.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-chained-comparisons.cpp2"
 [[nodiscard]] auto main() -> int{
+#line 2 "pure2-chained-comparisons.cpp2"
     auto i {0}; for( ; cpp2::cmp_less(i,3); ++i ) {
         auto j {0}; for( ; cpp2::cmp_less(j,3); ++j ) {
             auto k {0}; for( ; cpp2::cmp_less(k,3); ++k ) {

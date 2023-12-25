@@ -5,10 +5,12 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-parameter-passing-generic-out.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-parameter-passing-generic-out.cpp2"
 #include <iostream>
 
 struct X {
@@ -21,14 +23,13 @@ auto operator<<(std::ostream& o, X const&) -> std::ostream& {
 
 #line 11 "mixed-parameter-passing-generic-out.cpp2"
 auto f(auto x_) -> void;
-    
 
 #line 15 "mixed-parameter-passing-generic-out.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-parameter-passing-generic-out.cpp2"
 
 #line 11 "mixed-parameter-passing-generic-out.cpp2"
 auto f(auto x_) -> void{

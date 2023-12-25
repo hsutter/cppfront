@@ -6,6 +6,7 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-type-and-namespace-aliases.cpp2"
 
 #line 2 "pure2-type-and-namespace-aliases.cpp2"
 namespace N {
@@ -22,6 +23,7 @@ template<typename T> class myclass2;
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-type-and-namespace-aliases.cpp2"
 
 #line 2 "pure2-type-and-namespace-aliases.cpp2"
 namespace N {
@@ -39,13 +41,12 @@ class myclass {
     public: myclass() = default;
     public: myclass(myclass const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(myclass const&) -> void = delete;
-#line 13 "pure2-type-and-namespace-aliases.cpp2"
 };
+#line 14 "pure2-type-and-namespace-aliases.cpp2"
 
 namespace N3 = ::std::literals;
 
 auto myfunc() -> void;
-    
 
 #line 25 "pure2-type-and-namespace-aliases.cpp2"
 template<typename T> class myclass2 {
@@ -54,14 +55,14 @@ template<typename T> class myclass2 {
     public: myclass2() = default;
     public: myclass2(myclass2 const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(myclass2 const&) -> void = delete;
-#line 27 "pure2-type-and-namespace-aliases.cpp2"
 };
+#line 28 "pure2-type-and-namespace-aliases.cpp2"
 
 auto main() -> int;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-type-and-namespace-aliases.cpp2"
 
 #line 2 "pure2-type-and-namespace-aliases.cpp2"
 namespace N {

@@ -5,10 +5,12 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-intro-for-with-counter-include-last.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-intro-for-with-counter-include-last.cpp2"
 
 #line 2 "mixed-intro-for-with-counter-include-last.cpp2"
 [[nodiscard]] auto main() -> int;
@@ -21,6 +23,7 @@
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-intro-for-with-counter-include-last.cpp2"
 
 #line 2 "mixed-intro-for-with-counter-include-last.cpp2"
 [[nodiscard]] auto main() -> int

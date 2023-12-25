@@ -663,6 +663,23 @@ private:
                 }
             }
         }
+
+        //  If we arrived back at the declaration without finding a use
+        //  and this isn't generated code (ignore that for now)
+        //  and this is a user-named object (not 'this', 'that', or '_')
+        if (
+            i == pos                        
+            && id->position().lineno > 0    
+            && *id != "this"                
+            && *id != "that"
+            && *id != "_"
+            )
+        {
+            errors.emplace_back(
+                id->position(),
+                "local variable " + id->to_string() + " is not used; consider changing its name to '_' to make it explicitly anonymous, or removing it entirely if its side effects are not needed"
+            );
+        }
     }
 
 
@@ -1000,6 +1017,34 @@ public:
     }
 
 
+    auto check(parameter_declaration_node const& n)
+        -> bool
+    {
+        auto type_name = std::string{};
+        if (n.declaration->has_declared_return_type()) {
+            type_name = n.declaration->get_object_type()->to_string();
+        }
+
+        if (
+            n.ordinal == 2
+            && !n.has_name("that")
+            && n.declaration->parent_declaration
+            && n.declaration->parent_declaration->has_name("operator=")
+            && n.declaration->parent_declaration->parent_declaration
+            && n.declaration->parent_declaration->parent_declaration->name()
+            && type_name == *n.declaration->parent_declaration->parent_declaration->name()
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "if an 'operator=' second parameter is of the same type (here '" + type_name + "'), it must be named 'that'"
+            );
+            return false;
+        }
+
+        return true;
+    }
+
     auto check(declaration_node const& n)
         -> bool
     {
@@ -1177,11 +1222,12 @@ public:
             n.has_name("_")
             && !n.is_object()
             && !n.is_namespace()
+            && !n.is_object_alias()
             )
         {
             errors.emplace_back(
                 n.identifier->position(),
-                "'_' (wildcard) may not be the name of a function or type - it may only be used as the name of an anonymous object or anonymous namespace"
+                "'_' (wildcard) may not be the name of a function or type - it may only be used as the name of an anonymous object, object alias, or namespace"
             );
             return false;
         }
@@ -1191,7 +1237,13 @@ public:
             && n.parent_is_type()
             )
         {
-            assert(n.is_object());
+            if (!n.is_object()) {
+                errors.emplace_back(
+                    n.position(),
+                    "a member named 'this' declares a base subobject, and must be followed by a base type name"
+                );
+                return false;
+            }
 
             if (
                 !n.is_public()
@@ -1459,13 +1511,66 @@ public:
             auto compound_stmt = n.initializer->get_if<compound_statement_node>();
             assert (compound_stmt);
             for (auto& stmt : compound_stmt->statements) {
-                if (!stmt->is_declaration()) {
+                if (
+                    !stmt->is_declaration()
+                    && !stmt->is_using()
+                    )
+                {
                     errors.emplace_back(
                         stmt->position(),
-                        "a user-defined type body must contain only declarations, not other code"
+                        "a user-defined type body must contain only declarations or 'using' statements, not other code"
                     );
                     return false;
                 }
+            }
+        }
+
+        return true;
+    }
+
+
+    auto check(function_type_node const& n)
+        -> bool
+    {
+        assert(n.parameters);
+
+        //  An increment/decrement function must have a single 'inout' parameter,
+        //  and if it's a member flag it if we know the type is not copyable
+        if (
+            n.my_decl->has_name("operator++")
+            || n.my_decl->has_name("operator--")
+            )
+        {
+            if (
+                (*n.parameters).ssize() != 1
+                || (*n.parameters)[0]->direction() != passing_style::inout
+                )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "a user-defined " + n.my_decl->name()->to_string() + " must have a single 'inout' parameter"
+                );
+                return false;
+            }
+
+            if (n.has_deduced_return_type()) {
+                errors.emplace_back(
+                    n.position(),
+                    "a user-defined " + n.my_decl->name()->to_string() + " must have a specific (not deduced) return type"
+                );
+                return false;
+            }
+
+            if (
+                n.my_decl->parent_declaration
+                && n.my_decl->parent_declaration->cannot_be_a_copy_constructible_type()
+                )
+            {
+                errors.emplace_back(
+                    n.position(),
+                    "a user-defined " + n.my_decl->name()->to_string() + " in type scope must be a member of a copyable type"
+                );
+                return false;
             }
         }
 
@@ -1592,7 +1697,7 @@ public:
         inside_returns_list = false;
     }
 
-    auto start(iteration_statement_node const& n, int) -> void
+    auto start(loop_body_tag const &n, int) -> void
     {
         if (*n.identifier == "for") {
             just_entered_for = true;

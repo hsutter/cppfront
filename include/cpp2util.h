@@ -31,7 +31,7 @@
 #if defined(CPP2_IMPORT_STD) || defined(CPP2_INCLUDE_STD)
 
     //  If C++23 'import std;' was requested and is available, use that
-    #if defined(CPP2_IMPORT_STD) && defined(__cpp_modules)
+    #if defined(CPP2_IMPORT_STD) && defined(__cpp_lib_modules)
 
         #ifndef _MSC_VER
             //  This is the ideal -- note that we just voted "import std;"
@@ -116,7 +116,7 @@
         // in our -pure-cpp2 "import std;" simulation mode... if you need this,
         // use mixed mode (not -pure-cpp2) and #include all the headers you need
         // including this one
-        // 
+        //
         // #include <execution>
         #ifdef __cpp_lib_expected
             #include <expected>
@@ -242,6 +242,7 @@
     #if defined(__cpp_lib_format) || (defined(_MSC_VER) && _MSC_VER >= 1929)
         #include <format>
     #endif
+    #include <functional>
     #include <iostream>
     #include <iterator>
     #include <limits>
@@ -335,6 +336,11 @@ inline constexpr auto max(auto... values) {
 template <class T, class... Ts>
 inline constexpr auto is_any = std::disjunction_v<std::is_same<T, Ts>...>;
 
+template <std::size_t Len, std::size_t Align>
+struct aligned_storage {
+    alignas(Align) unsigned char data[Len];
+};
+
 
 //-----------------------------------------------------------------------
 //
@@ -380,16 +386,24 @@ struct String
 //      Before C++23 std::string_view was not guaranteed to be trivially copyable,
 //      and so in<T> will pass it by const& and really it should be by value
 #define CPP2_MESSAGE_PARAM  char const*
+#define CPP2_CONTRACT_MSG   cpp2::message_to_cstr_adapter
+
+auto message_to_cstr_adapter( CPP2_MESSAGE_PARAM msg ) -> CPP2_MESSAGE_PARAM { return msg ? msg : ""; }
+auto message_to_cstr_adapter( std::string const& msg ) -> CPP2_MESSAGE_PARAM { return msg.c_str(); }
 
 class contract_group {
 public:
     using handler = void (*)(CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM);
 
-    constexpr contract_group  (handler h = {})  : reporter(h) { }
-    constexpr auto set_handler(handler h);
+    constexpr contract_group  (handler h = {}) : reporter{h} { }
+    constexpr auto set_handler(handler h = {}) { reporter = h; }
     constexpr auto get_handler() const -> handler { return reporter; }
-    constexpr auto expects    (bool b, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
-                                          -> void { if (!b) reporter(msg CPP2_SOURCE_LOCATION_ARG); }
+    constexpr auto has_handler() const -> bool    { return reporter != handler{}; }
+
+    constexpr auto enforce(bool b, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
+                                          -> void { if (!b) report_violation(msg CPP2_SOURCE_LOCATION_ARG); }
+    constexpr auto report_violation(CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
+                                          -> void { if (reporter) reporter(msg CPP2_SOURCE_LOCATION_ARG); }
 private:
     handler reporter;
 };
@@ -402,7 +416,7 @@ private:
         << where.function_name() << ": "
 #endif
         << group << " violation";
-    if (msg[0] != '\0') {
+    if (msg && msg[0] != '\0') {
         std::cerr << ": " << msg;
     }
     std::cerr << "\n";
@@ -435,11 +449,6 @@ auto inline Testing = contract_group(
     }
 );
 
-constexpr auto contract_group::set_handler(handler h) {
-    Default.expects(h);
-    reporter = h;
-}
-
 
 //  Null pointer deref checking
 //
@@ -449,28 +458,40 @@ auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> declty
     //        doesn't guarantee that using == and != will reliably report whether an
     //        STL iterator has the default-constructed value. So use it only for raw *...
     if constexpr (std::is_pointer_v<CPP2_TYPEOF(p)>) {
-        Null.expects(p != CPP2_TYPEOF(p){}, "dynamic null dereference attempt detected" CPP2_SOURCE_LOCATION_ARG);
+        if (p == CPP2_TYPEOF(p){}) {
+            Null.report_violation("dynamic null dereference attempt detected" CPP2_SOURCE_LOCATION_ARG);
+        };
     }
     return CPP2_FORWARD(p);
 }
 
 //  Subscript bounds checking
 //
-auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+auto assert_in_bounds_impl(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> void
     requires (std::is_integral_v<CPP2_TYPEOF(arg)> &&
              requires { std::size(x); std::ssize(x); x[arg]; std::begin(x) + 2; })
 {
-    Bounds.expects(0 <= arg && arg < [&]() -> auto {
+    auto max = [&]() -> auto {
         if constexpr (std::is_signed_v<CPP2_TYPEOF(arg)>) { return std::ssize(x); }
         else { return std::size(x); }
-    }(), "out of bounds access attempt detected" CPP2_SOURCE_LOCATION_ARG);
-    return CPP2_FORWARD(x) [ CPP2_FORWARD(arg) ];
+    };
+    auto msg = "out of bounds access attempt detected - attempted access at index " + std::to_string(arg) + ", ";
+    if (max() > 0 ) {
+        msg += "[min,max] range is [0," + std::to_string(max()-1) + "]";
+    }
+    else {
+        msg += "but container is empty";
+    }
+    if (!(0 <= arg && arg < max())) {
+        Bounds.report_violation(msg.c_str()  CPP2_SOURCE_LOCATION_ARG);
+    }
 }
 
-auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+auto assert_in_bounds_impl(auto&&, auto&& CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> void
 {
-    return CPP2_FORWARD(x) [ CPP2_FORWARD(arg) ];
 }
+
+#define CPP2_ASSERT_IN_BOUNDS(x, arg) (cpp2::assert_in_bounds_impl((x),(arg)), (x)[(arg)])
 
 
 //-----------------------------------------------------------------------
@@ -490,10 +511,11 @@ auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAU
 
 [[noreturn]] auto Throw(auto&& x, [[maybe_unused]] char const* msg) -> void {
 #ifdef CPP2_NO_EXCEPTIONS
-    Type.expects(
-        !"exceptions are disabled with -fno-exceptions",
-        msg
-    );
+    auto err = std::string{"exceptions are disabled with -fno-exceptions - attempted to throw exception with type \"" + typeid(decltype(x)).name() + "\""};
+    if (msg) {
+        err += " and the message \"" + msg + "\"";
+    }
+    Type.report_violation( err );
     std::terminate();
 #else
     throw CPP2_FORWARD(x);
@@ -511,10 +533,7 @@ inline auto Uncaught_exceptions() -> int {
 template<typename T>
 auto Dynamic_cast( [[maybe_unused]] auto&& x ) -> decltype(auto) {
 #ifdef CPP2_NO_RTTI
-    Type.expects(
-        !"'as' dynamic casting is disabled with -fno-rtti", // more likely to appear on console
-         "'as' dynamic casting is disabled with -fno-rtti"  // make message available to hooked handlers
-    );
+    Type.report_violation( "'as' dynamic casting is disabled with -fno-rtti" );
     return nullptr;
 #else
     return dynamic_cast<T>(CPP2_FORWARD(x));
@@ -524,25 +543,19 @@ auto Dynamic_cast( [[maybe_unused]] auto&& x ) -> decltype(auto) {
 template<typename T>
 auto Typeid() -> decltype(auto) {
 #ifdef CPP2_NO_RTTI
-    Type.expects(
-        !"'any' dynamic casting is disabled with -fno-rtti", // more likely to appear on console 
-         "'any' dynamic casting is disabled with -fno-rtti"  // make message available to hooked handlers
-    );
+    Type.report_violation( "'any' dynamic casting is disabled with -fno-rtti" );
 #else
     return typeid(T);
 #endif
 }
 
-//  We don't need typeid(expr) yet -- uncomment this if/when we need it
-//auto Typeid( [[maybe_unused]] auto&& x ) -> decltype(auto) {
-//#ifdef CPP2_NO_RTTI
-//    Type.expects(
-//        !"<write appropriate error message here>"
-//    );
-//#else
-//    return typeid(CPP2_FORWARD(x));
-//#endif
-//}
+auto Typeid( [[maybe_unused]] auto&& x ) -> decltype(auto) {
+#ifdef CPP2_NO_RTTI
+    Type.report_violation( "'typeid' is disabled with -fno-rtti" );
+#else
+    return typeid(CPP2_FORWARD(x));
+#endif
+}
 
 
 //-----------------------------------------------------------------------
@@ -574,7 +587,7 @@ struct {
     template<typename T>
     [[nodiscard]] auto cpp2_new(auto&& ...args) const -> std::shared_ptr<T> {
         //  Prefer { } to ( ) as noted for unique.new
-        // 
+        //
         //  Note this does mean we don't get the make_shared optimization a lot
         //  of the time -- we can restore that as soon as make_shared improves to
         //  allow list initialization. But the make_shared optimization isn't a
@@ -654,9 +667,9 @@ class deferred_init {
 public:
     deferred_init() noexcept       { }
    ~deferred_init() noexcept       { destroy(); }
-    auto value()    noexcept -> T& { Default.expects(init);  return t(); }
+    auto value()    noexcept -> T& { Default.enforce(init);  return t(); }
 
-    auto construct(auto&& ...args) -> void { Default.expects(!init);  new (&data) T{CPP2_FORWARD(args)...};  init = true; }
+    auto construct(auto&& ...args) -> void { Default.enforce(!init);  new (&data) T{CPP2_FORWARD(args)...};  init = true; }
 };
 
 
@@ -676,9 +689,9 @@ class out {
     bool called_construct_ = false;
 
 public:
-    out(T*                 t_) noexcept :  t{ t_}, has_t{true}       { Default.expects( t); }
-    out(deferred_init<T>* dt_) noexcept : dt{dt_}, has_t{false}      { Default.expects(dt); }
-    out(out<T>*           ot_) noexcept : ot{ot_}, has_t{ot_->has_t} { Default.expects(ot);
+    out(T*                 t_) noexcept :  t{ t_}, has_t{true}       { Default.enforce( t); }
+    out(deferred_init<T>* dt_) noexcept : dt{dt_}, has_t{false}      { Default.enforce(dt); }
+    out(out<T>*           ot_) noexcept : ot{ot_}, has_t{ot_->has_t} { Default.enforce(ot);
         if (has_t) {  t = ot->t;  }
         else       { dt = ot->dt; }
     }
@@ -692,7 +705,7 @@ public:
     //  then leave it in the same state on exit (strong guarantee)
     ~out() {
         if (called_construct() && uncaught_count != Uncaught_exceptions()) {
-            Default.expects(!has_t);
+            Default.enforce(!has_t);
             dt->destroy();
             called_construct() = false;
         }
@@ -701,21 +714,21 @@ public:
     auto construct(auto&& ...args) -> void {
         if (has_t || called_construct()) {
             if constexpr (requires { *t = T(CPP2_FORWARD(args)...); }) {
-                Default.expects( t );
+                Default.enforce( t );
                 *t = T(CPP2_FORWARD(args)...);
             }
             else {
-                Default.expects(false, "attempted to copy assign, but copy assignment is not available");
+                Default.report_violation("attempted to copy assign, but copy assignment is not available");
             }
         }
         else {
-            Default.expects( dt );
+            Default.enforce( dt );
             if (dt->init) {
                 if constexpr (requires { *t = T(CPP2_FORWARD(args)...); }) {
                     dt->value() = T(CPP2_FORWARD(args)...);
                 }
                 else {
-                    Default.expects(false, "attempted to copy assign, but copy assignment is not available");
+                    Default.report_violation("attempted to copy assign, but copy assignment is not available");
                 }
             }
             else {
@@ -727,11 +740,11 @@ public:
 
     auto value() noexcept -> T& {
         if (has_t) {
-            Default.expects( t );
+            Default.enforce( t );
             return *t;
         }
         else {
-            Default.expects( dt );
+            Default.enforce( dt );
             return dt->value();
         }
     }
@@ -744,13 +757,22 @@ public:
 //
 //-----------------------------------------------------------------------
 //
+// Workaround <https://github.com/llvm/llvm-project/issues/70556>.
+#define CPP2_FORCE_INLINE_LAMBDA_CLANG /* empty */
+
 #if defined(_MSC_VER) && !defined(__clang_major__)
-    #define CPP2_FORCE_INLINE        __forceinline
-    #define CPP2_FORCE_INLINE_LAMBDA [[msvc::forceinline]]
+    #define CPP2_FORCE_INLINE              __forceinline
+    #define CPP2_FORCE_INLINE_LAMBDA       [[msvc::forceinline]]
     #define CPP2_LAMBDA_NO_DISCARD
 #else
-    #define CPP2_FORCE_INLINE        __attribute__((always_inline))
-    #define CPP2_FORCE_INLINE_LAMBDA __attribute__((always_inline))
+    #define CPP2_FORCE_INLINE              __attribute__((always_inline))
+    #if defined(__clang__)
+        #define CPP2_FORCE_INLINE_LAMBDA       /* empty */
+        #undef CPP2_FORCE_INLINE_LAMBDA_CLANG
+        #define CPP2_FORCE_INLINE_LAMBDA_CLANG __attribute__((always_inline))
+    #else
+        #define CPP2_FORCE_INLINE_LAMBDA       __attribute__((always_inline))
+    #endif
 
     #if defined(__clang_major__)
         //  Also check __cplusplus, only to satisfy Clang -pedantic-errors
@@ -775,85 +797,77 @@ public:
     #endif
 #endif
 
-
-//  Note: [&] is because a nested UFCS might be viewed as trying to capture 'this'
-
-#define CPP2_UFCS(FUNCNAME,PARAM1,...) \
-[&] CPP2_LAMBDA_NO_DISCARD (auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); }) { \
-        return CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); \
-    } else { \
-        return FUNCNAME(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
-    } \
-}(PARAM1, __VA_ARGS__)
-
-#define CPP2_UFCS_0(FUNCNAME,PARAM1) \
-[&] CPP2_LAMBDA_NO_DISCARD (auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(); }) { \
-        return CPP2_FORWARD(obj).FUNCNAME(); \
-    } else { \
-        return FUNCNAME(CPP2_FORWARD(obj)); \
-    } \
-}(PARAM1)
-
 #define CPP2_UFCS_REMPARENS(...) __VA_ARGS__
 
-#define CPP2_UFCS_TEMPLATE(FUNCNAME,TEMPARGS,PARAM1,...) \
-[&] CPP2_LAMBDA_NO_DISCARD (auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); }) { \
-        return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); \
+// Ideally, the expression `CPP2_UFCS_IS_NOTHROW` expands to
+// is in the _noexcept-specifier_ of the UFCS lambda, but without 'std::declval'.
+// To workaround [GCC bug 101043](https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101043),
+// we instead make it a template parameter of the UFCS lambda.
+// But using a template parameter, Clang also ICEs on an application.
+// So we use these `NOTHROW` macros to fall back to the ideal for when not using GCC.
+#define CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,...) \
+   requires { requires  requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
+              requires    noexcept(std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...)); } \
+|| requires { requires !requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
+              requires noexcept(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(std::declval<Obj>(), std::declval<Params>()...)); }
+#define CPP2_UFCS_IS_NOTHROW_PARAM(...)               /*empty*/
+#define CPP2_UFCS_IS_NOTHROW_ARG(QUALID,TEMPKW,...)   CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,__VA_ARGS__)
+#if defined(__GNUC__) && !defined(__clang__)
+    #undef  CPP2_UFCS_IS_NOTHROW_PARAM
+    #undef  CPP2_UFCS_IS_NOTHROW_ARG
+    #define CPP2_UFCS_IS_NOTHROW_PARAM(QUALID,TEMPKW,...) , bool IsNothrow = CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,__VA_ARGS__)
+    #define CPP2_UFCS_IS_NOTHROW_ARG(...)                 IsNothrow
+    #if __GNUC__ < 11
+        #undef  CPP2_UFCS_IS_NOTHROW_PARAM
+        #undef  CPP2_UFCS_IS_NOTHROW_ARG
+        #define CPP2_UFCS_IS_NOTHROW_PARAM(...)    /*empty*/
+        #define CPP2_UFCS_IS_NOTHROW_ARG(...)      false // GCC 10 UFCS is always potentially-throwing.
+    #endif
+#endif
+
+// Ideally, the expression `CPP2_UFCS_CONSTRAINT_ARG` expands to
+// is in the _requires-clause_ of the UFCS lambda.
+// To workaround an MSVC bug within a member function 'F' where UFCS is also for 'F'
+// (<https://github.com/hsutter/cppfront/pull/506#issuecomment-1826086952>),
+// we instead make it a template parameter of the UFCS lambda.
+// But using a template parameter, Clang also ICEs and GCC rejects a local 'F'.
+// Also, Clang rejects the SFINAE test case when using 'std::declval'.
+// So we use these `CONSTRAINT` macros to fall back to the ideal for when not using MSVC.
+#define CPP2_UFCS_CONSTRAINT_PARAM(...)               /*empty*/
+#define CPP2_UFCS_CONSTRAINT_ARG(QUALID,TEMPKW,...) \
+   requires { CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); } \
+|| requires { CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); }
+#if defined(_MSC_VER)
+    #undef  CPP2_UFCS_CONSTRAINT_PARAM
+    #undef  CPP2_UFCS_CONSTRAINT_ARG
+    #define CPP2_UFCS_CONSTRAINT_PARAM(QUALID,TEMPKW,...) , bool IsViable = \
+   requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); } \
+|| requires { CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(std::declval<Obj>(), std::declval<Params>()...); }
+    #define CPP2_UFCS_CONSTRAINT_ARG(...)                 IsViable
+#endif
+
+#define CPP2_UFCS_(LAMBDADEFCAPT,QUALID,TEMPKW,...) \
+[LAMBDADEFCAPT]< \
+    typename Obj, typename... Params \
+    CPP2_UFCS_IS_NOTHROW_PARAM(QUALID,TEMPKW,__VA_ARGS__) \
+    CPP2_UFCS_CONSTRAINT_PARAM(QUALID,TEMPKW,__VA_ARGS__) \
+  > \
+  CPP2_LAMBDA_NO_DISCARD (Obj&& obj, Params&& ...params) CPP2_FORCE_INLINE_LAMBDA_CLANG \
+  noexcept(CPP2_UFCS_IS_NOTHROW_ARG(QUALID,TEMPKW,__VA_ARGS__)) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) \
+    requires CPP2_UFCS_CONSTRAINT_ARG(QUALID,TEMPKW,__VA_ARGS__) { \
+    if constexpr (requires{ CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
+        return CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
     } else { \
-        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+        return CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
     } \
-}(PARAM1, __VA_ARGS__)
+}
 
-#define CPP2_UFCS_TEMPLATE_0(FUNCNAME,TEMPARGS,PARAM1) \
-[&] CPP2_LAMBDA_NO_DISCARD (auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); }) { \
-        return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
-    } else { \
-        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj)); \
-    } \
-}(PARAM1)
-
-
-//  But for non-local lambdas [&] is not allowed
-
-#define CPP2_UFCS_NONLOCAL(FUNCNAME,PARAM1,...) \
-[] CPP2_LAMBDA_NO_DISCARD (auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); }) { \
-        return CPP2_FORWARD(obj).FUNCNAME(CPP2_FORWARD(params)...); \
-    } else { \
-        return FUNCNAME(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
-    } \
-}(PARAM1, __VA_ARGS__)
-
-#define CPP2_UFCS_0_NONLOCAL(FUNCNAME,PARAM1) \
-[] CPP2_LAMBDA_NO_DISCARD (auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).FUNCNAME(); }) { \
-        return CPP2_FORWARD(obj).FUNCNAME(); \
-    } else { \
-        return FUNCNAME(CPP2_FORWARD(obj)); \
-    } \
-}(PARAM1)
-
-#define CPP2_UFCS_TEMPLATE_NONLOCAL(FUNCNAME,TEMPARGS,PARAM1,...) \
-[] CPP2_LAMBDA_NO_DISCARD (auto&& obj, auto&& ...params) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); }) { \
-        return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(params)...); \
-    } else { \
-        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
-    } \
-}(PARAM1, __VA_ARGS__)
-
-#define CPP2_UFCS_TEMPLATE_0_NONLOCAL(FUNCNAME,TEMPARGS,PARAM1) \
-[] CPP2_LAMBDA_NO_DISCARD (auto&& obj) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); }) { \
-        return CPP2_FORWARD(obj).template FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (); \
-    } else { \
-        return FUNCNAME CPP2_UFCS_REMPARENS TEMPARGS (CPP2_FORWARD(obj)); \
-    } \
-}(PARAM1)
+#define CPP2_UFCS(...)                                    CPP2_UFCS_(&,(),,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE(...)                           CPP2_UFCS_(&,(),template,__VA_ARGS__)
+#define CPP2_UFCS_QUALIFIED_TEMPLATE(QUALID,...)          CPP2_UFCS_(&,QUALID,template,__VA_ARGS__)
+#define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,(),,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE_NONLOCAL(...)                  CPP2_UFCS_(,(),template,__VA_ARGS__)
+#define CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL(QUALID,...) CPP2_UFCS_(,QUALID,template,__VA_ARGS__)
 
 
 //-----------------------------------------------------------------------
@@ -862,9 +876,21 @@ public:
 //
 //-----------------------------------------------------------------------
 //
+//  For use when returning "no such thing", such as
+//  when customizing "as" for std::variant
+struct nonesuch_ {
+    auto operator==(auto const&) -> bool { return false; }
+};
+constexpr inline nonesuch_ nonesuch;
+
 inline auto to_string(...) -> std::string
 {
     return "(customize me - no cpp2::to_string overload exists for this type)";
+}
+
+inline auto to_string(nonesuch_) -> std::string
+{
+    return "(invalid type)";
 }
 
 inline auto to_string(std::same_as<std::any> auto const&) -> std::string
@@ -901,7 +927,7 @@ inline auto to_string(std::string const& s) -> std::string const&
 
 template<typename T>
 inline auto to_string(T const& sv) -> std::string
-    requires (std::is_convertible_v<T, std::string_view> 
+    requires (std::is_convertible_v<T, std::string_view>
               && !std::is_convertible_v<T, const char*>)
 {
     return std::string{sv};
@@ -1041,8 +1067,8 @@ auto is( X const& ) -> bool {
 
 template< typename C, typename X >
     requires (
-        ( std::is_base_of_v<X, C> || 
-          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>) 
+        ( std::is_base_of_v<X, C> ||
+          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>)
         ) && !std::is_same_v<C,X>)
 auto is( X const& x ) -> bool {
     return Dynamic_cast<C const*>(&x) != nullptr;
@@ -1050,8 +1076,8 @@ auto is( X const& x ) -> bool {
 
 template< typename C, typename X >
     requires (
-        ( std::is_base_of_v<X, C> || 
-          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>) 
+        ( std::is_base_of_v<X, C> ||
+          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>)
         ) && !std::is_same_v<C,X>)
 auto is( X const* x ) -> bool {
     return Dynamic_cast<C const*>(x) != nullptr;
@@ -1066,7 +1092,7 @@ auto is( X const& x ) -> bool {
 
 //  Values
 //
-inline constexpr auto is( auto const& x, auto const& value ) -> bool
+inline constexpr auto is( auto const& x, auto&& value ) -> bool
 {
     //  Value with customized operator_is case
     if constexpr (requires{ x.op_is(value); }) {
@@ -1092,13 +1118,6 @@ inline constexpr auto is( auto const& x, auto const& value ) -> bool
 //-------------------------------------------------------------------------------------------------------------
 //  Built-in as
 //
-
-//  For use when returning "no such thing", such as
-//  when customizing "as" for std::variant
-struct nonesuch_ {
-    auto operator==(auto const&) -> bool { return false; }
-};
-constexpr inline nonesuch_ nonesuch;
 
 //  The 'as' cast functions are <To, From> so use that order here
 //  If it's confusing, we can switch this to <From, To>
@@ -1175,7 +1194,7 @@ inline constexpr auto as(auto const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) 
     )
 {
     const C c = static_cast<C>(x);
-    Type.expects(   // precondition check: must be round-trippable => not lossy
+    Type.enforce(   // precondition check: must be round-trippable => not lossy
         static_cast<CPP2_TYPEOF(x)>(c) == x && (c < C{}) == (x < CPP2_TYPEOF(x){}),
         "dynamic lossy narrowing conversion attempt detected" CPP2_SOURCE_LOCATION_ARG
     );
@@ -1307,7 +1326,7 @@ auto is( std::variant<Ts...> const& x );
 //  is Value
 //
 template<typename... Ts>
-constexpr auto is( std::variant<Ts...> const& x, auto const& value ) -> bool
+constexpr auto is( std::variant<Ts...> const& x, auto&& value ) -> bool
 {
     //  Predicate case
     if constexpr      (requires{ bool{ value(operator_as< 0>(x)) }; }) { if (x.index() ==  0) return value(operator_as< 0>(x)); }
@@ -1488,7 +1507,7 @@ constexpr auto is( X const& x ) -> bool
 
 //  is Value
 //
-inline constexpr auto is( std::any const& x, auto const& value ) -> bool
+inline constexpr auto is( std::any const& x, auto&& value ) -> bool
 {
     //  Predicate case
     if constexpr (requires{ bool{ value(x) }; }) {
@@ -1536,7 +1555,7 @@ constexpr auto is( std::optional<U> const& x ) -> bool
 //  is Value
 //
 template<typename T>
-constexpr auto is( std::optional<T> const& x, auto const& value ) -> bool
+constexpr auto is( std::optional<T> const& x, auto&& value ) -> bool
 {
     //  Predicate case
     if constexpr (requires{ bool{ value(x) }; }) {
@@ -1570,6 +1589,11 @@ constexpr auto as( X const& x ) -> decltype(auto)
 //
 //  finally_success ensures something is run at the end of a scope
 //      if no exception is thrown
+//
+//  finally_presuccess ensures a group of add'd operations are run
+//      immediately before (not after) the return if no exception is
+//      thrown - right now this is used only for postconditions, so
+//      they can inspect named return values before they're moved from
 //
 //-----------------------------------------------------------------------
 //
@@ -1626,6 +1650,39 @@ private:
 };
 
 
+class finally_presuccess
+{
+public:
+    finally_presuccess() = default;
+
+    auto add(const auto& f) { fs.push_back(f); }
+
+    //  In compiled Cpp2 code, this function will be called
+    //  immediately before 'return' (both explicit and implicit)
+    auto run() {
+        if (invoke && ecount == std::uncaught_exceptions()) {
+            for (auto const& f : fs) {
+                f();
+            }
+        }
+        invoke = false;
+    }
+
+    ~finally_presuccess() noexcept {
+        run();
+    }
+
+    finally_presuccess(finally_presuccess const&) = delete;
+    void operator=    (finally_presuccess const&) = delete;
+    void operator=    (finally_presuccess &&)     = delete;
+
+private:
+    std::vector<std::function<void()>> fs;
+    int  ecount = std::uncaught_exceptions();
+    bool invoke = true;
+};
+
+
 //-----------------------------------------------------------------------
 //
 //  args: see main() arguments as vector<string_view>
@@ -1636,7 +1693,7 @@ struct args_t : std::vector<std::string_view>
 {
     args_t(int c, char** v) : vector{static_cast<std::size_t>(c)}, argc{c}, argv{v} {}
 
-    int                argc = 0;
+    mutable int        argc = 0;        //  mutable for compatibility with frameworks that take 'int& argc'
     char**             argv = nullptr;
 };
 
@@ -1682,7 +1739,7 @@ constexpr auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
 //  Returns a function object that takes a 'value' of the same type as
 //  'flags', and evaluates to true if and only if 'value' has set all of
 //  the bits set in 'flags'
-// 
+//
 //-----------------------------------------------------------------------
 //
 template <typename T>
@@ -1786,33 +1843,79 @@ CPP2_FORCE_INLINE constexpr auto cmp_mixed_signedness_check() -> void
         //  static_assert to reject the comparison is the right way to go.
         static_assert(
             program_violates_type_safety_guarantee<T, U>,
-            "mixed signed/unsigned comparison is unsafe - prefer using .ssize() instead of .size(), consider using std::cmp_less instead, or consider explicitly casting one of the values to change signedness by using 'as' or 'cpp2::unsafe_narrow'");
+            "mixed signed/unsigned comparison is unsafe - prefer using .ssize() instead of .size(), consider using std::cmp_less instead, or consider explicitly casting one of the values to change signedness by using 'as' or 'cpp2::unsafe_narrow'"
+            );
     }
 }
 
+
 CPP2_FORCE_INLINE constexpr auto cmp_less(auto&& t, auto&& u) -> decltype(auto)
+    requires requires {CPP2_FORWARD(t) < CPP2_FORWARD(u);}
 {
     cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
     return CPP2_FORWARD(t) < CPP2_FORWARD(u);
 }
 
+CPP2_FORCE_INLINE constexpr auto cmp_less(auto&& t, auto&& u) -> decltype(auto)
+{
+    static_assert(
+        program_violates_type_safety_guarantee<decltype(t), decltype(u)>,
+        "attempted to compare '<' for incompatible types"
+        );
+    return nonesuch;
+}
+
+
 CPP2_FORCE_INLINE constexpr auto cmp_less_eq(auto&& t, auto&& u) -> decltype(auto)
+    requires requires {CPP2_FORWARD(t) <= CPP2_FORWARD(u);}
 {
     cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
     return CPP2_FORWARD(t) <= CPP2_FORWARD(u);
 }
 
+CPP2_FORCE_INLINE constexpr auto cmp_less_eq(auto&& t, auto&& u) -> decltype(auto)
+{
+    static_assert(
+        program_violates_type_safety_guarantee<decltype(t), decltype(u)>,
+        "attempted to compare '<=' for incompatible types"
+        );
+    return nonesuch;
+}
+
+
 CPP2_FORCE_INLINE constexpr auto cmp_greater(auto&& t, auto&& u) -> decltype(auto)
+    requires requires {CPP2_FORWARD(t) > CPP2_FORWARD(u);}
 {
     cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
     return CPP2_FORWARD(t) > CPP2_FORWARD(u);
 }
 
+CPP2_FORCE_INLINE constexpr auto cmp_greater(auto&& t, auto&& u) -> decltype(auto)
+{
+    static_assert(
+        program_violates_type_safety_guarantee<decltype(t), decltype(u)>,
+        "attempted to compare '>' for incompatible types"
+        );
+    return nonesuch;
+}
+
+
 CPP2_FORCE_INLINE constexpr auto cmp_greater_eq(auto&& t, auto&& u) -> decltype(auto)
+    requires requires {CPP2_FORWARD(t) >= CPP2_FORWARD(u);}
 {
     cmp_mixed_signedness_check<CPP2_TYPEOF(t), CPP2_TYPEOF(u)>();
     return CPP2_FORWARD(t) >= CPP2_FORWARD(u);
 }
+
+CPP2_FORCE_INLINE constexpr auto cmp_greater_eq(auto&& t, auto&& u) -> decltype(auto)
+{
+    static_assert(
+        program_violates_type_safety_guarantee<decltype(t), decltype(u)>,
+        "attempted to compare '>=' for incompatible types"
+        );
+    return nonesuch;
+}
+
 
 
 //-----------------------------------------------------------------------

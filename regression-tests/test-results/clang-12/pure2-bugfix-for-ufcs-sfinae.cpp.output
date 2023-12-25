@@ -1,0 +1,19 @@
+pure2-bugfix-for-ufcs-sfinae.cpp2:1:78: error: lambda expression in an unevaluated operand
+template<typename T> [[nodiscard]] auto f() -> std::type_identity_t<decltype(CPP2_UFCS_NONLOCAL(a)(T()))>;
+                                                                             ^
+../../../include/cpp2util.h:868:59: note: expanded from macro 'CPP2_UFCS_NONLOCAL'
+#define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,(),,__VA_ARGS__)
+                                                          ^
+../../../include/cpp2util.h:849:53: note: expanded from macro 'CPP2_UFCS_'
+#define CPP2_UFCS_(LAMBDADEFCAPT,QUALID,TEMPKW,...) \
+                                                    ^
+pure2-bugfix-for-ufcs-sfinae.cpp2:1:78: error: lambda expression in an unevaluated operand
+template<typename T> [[nodiscard]] auto f() -> std::type_identity_t<decltype(CPP2_UFCS_NONLOCAL(a)(T()))>{}// Fails on Clang 12 (lambda in unevaluated context).
+                                                                             ^
+../../../include/cpp2util.h:868:59: note: expanded from macro 'CPP2_UFCS_NONLOCAL'
+#define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,(),,__VA_ARGS__)
+                                                          ^
+../../../include/cpp2util.h:849:53: note: expanded from macro 'CPP2_UFCS_'
+#define CPP2_UFCS_(LAMBDADEFCAPT,QUALID,TEMPKW,...) \
+                                                    ^
+2 errors generated.

@@ -5,10 +5,12 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-ufcs-multiple-template-arguments.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-ufcs-multiple-template-arguments.cpp2"
 #include <string>
 #include <iostream>
 
@@ -28,17 +30,17 @@ struct X {
 
 #line 18 "mixed-ufcs-multiple-template-arguments.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-ufcs-multiple-template-arguments.cpp2"
 
 #line 18 "mixed-ufcs-multiple-template-arguments.cpp2"
 [[nodiscard]] auto main() -> int{
     std::string test_string {"The rain in Spain flows mainly down the drain"}; 
     std::cout << substr<4,8>(test_string) << "\n";
 
-    X x {test_string}; 
-    std::cout << CPP2_UFCS_TEMPLATE_0(substr, (<4,8>), std::move(x)) << "\n";
+    X x {std::move(test_string)}; 
+    std::cout << CPP2_UFCS_TEMPLATE(substr<4,8>)(std::move(x)) << "\n";
 }
 

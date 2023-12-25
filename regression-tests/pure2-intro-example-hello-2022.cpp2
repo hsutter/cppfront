@@ -1,9 +1,8 @@
 main: () -> int = {
     vec: std::vector<std::string>
             = ("hello", "2022");
-    view: std::span = vec;
 
-    for view do (inout str) {
+    for vec do (inout str) {
         len := decorate(str);
         print_it(str, len);
     }

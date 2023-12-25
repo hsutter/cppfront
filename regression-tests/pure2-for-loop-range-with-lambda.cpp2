@@ -1,0 +1,30 @@
+first: (forward f, forward _...) -> forward _ = f;
+
+main: (args) = {
+   ints: const std::array = (1, 2, 3, 4, 5);
+   // OK
+   for ints.first() do (i) {
+      std::cout << i;
+   }
+
+   // OK
+   for ints.first(1) do (i)  {
+      std::cout << i;
+   }
+
+   // Used to cause Error
+   for ints.first(:(x) x) do (i)   {
+      std::cout << i;
+   }
+
+   // OK
+   temp := ints.first(:(x) x);
+   for temp do (i) {
+      std::cout << i;
+   }
+
+   for :() args$;() do (i) _ = i;
+   for :(x) x;(args) do (j) _ = j;
+   for :(x) x;(args) next _ = :() args$;() do (k) _ = k;
+   for :(x) x;(args) next _ = :(x) x;(args) do (l) _ = l;
+}

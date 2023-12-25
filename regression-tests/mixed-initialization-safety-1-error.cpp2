@@ -10,8 +10,8 @@ fill: (
     out x:     std::string,
     in  value: std::string,
     in  count: int
-    ) 
-    [[pre: value.size() >= count, "fill: value must contain at least count elements"]]
+    )
+    pre( value.size() >= count, "fill: value must contain at least count elements" )
 = {
     x = value.substr(0, count);
 }

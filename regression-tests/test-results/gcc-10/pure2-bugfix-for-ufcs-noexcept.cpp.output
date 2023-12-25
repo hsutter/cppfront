@@ -1,0 +1,2 @@
+pure2-bugfix-for-ufcs-noexcept.cpp2: In function ‘int main()’:
+pure2-bugfix-for-ufcs-noexcept.cpp2:5:17: error: static assertion failed

@@ -1,6 +1,6 @@
 
 first: (forward rng) -> forward _
-  [[pre Bounds: !std::empty(rng)]]
+  pre<Bounds>( !std::empty(rng) )
 =
     std::begin(rng)*;
 

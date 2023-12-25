@@ -6,10 +6,12 @@
 
 #include "cpp2util.h"
 
+#line 1 "pure2-template-parameter-lists.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "pure2-template-parameter-lists.cpp2"
 
 #line 2 "pure2-template-parameter-lists.cpp2"
 template<typename T, typename U> [[nodiscard]] auto f1(T const& t, U const& u) -> auto;
@@ -18,13 +20,13 @@ template<auto T, auto U> [[nodiscard]] auto f3() -> auto;
 template<cpp2::i8 T, cpp2::i16 U> [[nodiscard]] auto f4() -> auto;
 
 auto main() -> int;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "pure2-template-parameter-lists.cpp2"
 
 #line 2 "pure2-template-parameter-lists.cpp2"
-    template<typename T, typename U> [[nodiscard]] auto f1(T const& t, U const& u) -> auto { return t + u; }
+template<typename T, typename U> [[nodiscard]] auto f1(T const& t, U const& u) -> auto { return t + u; }
 template<typename T, typename U> [[nodiscard]] auto f2(T const& t, U const& u) -> auto { return t + u; }
 template<auto T, auto U> [[nodiscard]] auto f3() -> auto { return T + U; }
 template<cpp2::i8 T, cpp2::i16 U> [[nodiscard]] auto f4() -> auto { return T + U; }

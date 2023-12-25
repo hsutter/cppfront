@@ -5,10 +5,12 @@
 
 #include "cpp2util.h"
 
+#line 1 "mixed-inspect-values-2.cpp2"
 
 
 //=== Cpp2 type definitions and function declarations ===========================
 
+#line 1 "mixed-inspect-values-2.cpp2"
 
 #include <iostream>
 #include <vector>
@@ -29,10 +31,10 @@ constexpr auto empty = [](auto&& x){
 
 #line 19 "mixed-inspect-values-2.cpp2"
 [[nodiscard]] auto main() -> int;
-    
 
 //=== Cpp2 function definitions =================================================
 
+#line 1 "mixed-inspect-values-2.cpp2"
 
 #line 19 "mixed-inspect-values-2.cpp2"
 [[nodiscard]] auto main() -> int{
