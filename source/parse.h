@@ -4452,7 +4452,7 @@ auto pretty_print_visualize(expression_statement_node const& n, int indent)
 
     auto ret = pretty_print_visualize(*n.expr, indent);
 
-    if (n.has_semicolon) {
+    if (n.has_semicolon && ret.back() != ';') {
         ret += ";";
     }
 
@@ -4654,8 +4654,10 @@ auto pretty_print_visualize(iteration_statement_node const& n, int indent)
             + stmts
             + next_expr
             + "\n" + pre(indent) + "while "
-            + pretty_print_visualize(*n.condition, indent)
-            + ";";
+            + pretty_print_visualize(*n.condition, indent);
+        if (ret.back() != ';') {
+            ret += ";";
+        }
     }
     else {
         assert (n.range && n.parameter && n.body);
@@ -4679,7 +4681,9 @@ auto pretty_print_visualize(return_statement_node const& n, int indent)
         ret += " " + pretty_print_visualize(*n.expression, indent);
     }
 
-    ret += ";";
+    if (ret.back() != ';') {
+        ret += ";";
+    }
 
     return ret;
 }
@@ -4759,7 +4763,7 @@ auto pretty_print_visualize(contract_node const& n, int indent)
 
     ret += " )";
 
-    if (*n.kind == "assert") {
+    if (*n.kind == "assert" && ret.back() != ';') {
         ret += ";";
     }
 
@@ -4778,7 +4782,9 @@ auto pretty_print_visualize(jump_statement_node const& n, int indent)
         ret += " " + n.label->to_string();
     }
 
-    ret += ";";
+    if (ret.back() != ';') {
+        ret += ";";
+    }
 
     return ret;
 }
@@ -4795,7 +4801,10 @@ auto pretty_print_visualize(using_statement_node const& n, int indent)
         ret += "namespace ";
     }
 
-    ret += pretty_print_visualize(*n.id, indent) + ";";
+    ret += pretty_print_visualize(*n.id, indent);
+    if (ret.back() != ';') {
+        ret += ";";
+    }
 
     return ret;
 }
@@ -4979,6 +4988,9 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
             initializer += "=";
         }
         initializer += " " + pretty_print_visualize(*n.initializer, adjusted_indent);
+        if (initializer.ends_with(";;")) {
+            initializer.pop_back();
+        }
     }
     else if (!n.is_parameter) {
         initializer = ";";
@@ -5083,15 +5095,19 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
             ret += " type"
                 + requires_clause
                 + " == "
-                + pretty_print_visualize(*t, indent)
-                + ";";
+                + pretty_print_visualize(*t, indent);
+            if (ret.back() != ';') {
+                ret += ";";
+            }
         }
         else if (a->is_namespace_alias()) {
             auto& id = std::get<alias_node::a_namespace>(a->initializer);
             assert(id);
             ret += " namespace == "
-                + pretty_print_visualize(*id, indent)
-                + ";";
+                + pretty_print_visualize(*id, indent);
+            if (ret.back() != ';') {
+                ret += ";";
+            }
         }
         else if (a->is_object_alias()) {
             auto& expr = std::get<alias_node::an_object>(a->initializer);
@@ -5099,8 +5115,10 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
             ret += object_type_id
                 + requires_clause
                 + " == "
-                + pretty_print_visualize(*expr, indent)
-                + ";";
+                + pretty_print_visualize(*expr, indent);
+            if (ret.back() != ';') {
+                ret += ";";
+            }
         }
     }
 
