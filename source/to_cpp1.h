@@ -376,11 +376,11 @@ private:
             //  Now also adjust the colno
             if (last_newline != std::string::npos) {
                 //  If we found a newline, it's the distance from the last newline to EOL
-                curr_pos.colno = s.length() - last_newline;
+                curr_pos.colno = unsafe_narrow<colno_t>(s.length() - last_newline);
             }
             else {
                 //  Else add the length of the string
-                curr_pos.colno += s.length();
+                curr_pos.colno += unsafe_narrow<colno_t>(s.length());
             }
         }
     }
@@ -2752,7 +2752,7 @@ public:
             return is_pointer_declaration(type_id_node->address_of, deref_cnt, addr_cnt + 1);
         }
 
-        int pointer_declarators_cnt = std::count_if(std::cbegin(type_id_node->pc_qualifiers), std::cend(type_id_node->pc_qualifiers), [](auto* q) {
+        auto pointer_declarators_cnt = std::count_if(std::cbegin(type_id_node->pc_qualifiers), std::cend(type_id_node->pc_qualifiers), [](auto* q) {
             return q->type() == lexeme::Multiply;
         });
 
@@ -2764,7 +2764,7 @@ public:
             return is_pointer_declaration(type_id_node->suspicious_initialization, deref_cnt, addr_cnt);
         }
 
-        return (pointer_declarators_cnt + addr_cnt - deref_cnt) > 0;
+        return (unsafe_narrow<int>(pointer_declarators_cnt) + addr_cnt - deref_cnt) > 0;
     }
 
     auto is_pointer_declaration(
