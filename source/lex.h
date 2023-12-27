@@ -199,7 +199,7 @@ auto _as(lexeme l)
     break;case lexeme::None:                return "(NONE)";
     break;default:                          return "INTERNAL-ERROR";
     }
-};
+}
 
 
 auto is_operator(lexeme l)
