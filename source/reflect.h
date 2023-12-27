@@ -39,7 +39,7 @@ class alias_declaration;
 #line 929 "reflect.h2"
 class value_member_info;
 
-#line 1521 "reflect.h2"
+#line 1512 "reflect.h2"
 }
 
 }
@@ -745,7 +745,7 @@ auto print(cpp2::in<meta::type_declaration> t) -> void;
 //
 auto regex_gen(meta::type_declaration& t) -> void;
 
-#line 1414 "reflect.h2"
+#line 1405 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  apply_metafunctions
@@ -756,7 +756,7 @@ auto regex_gen(meta::type_declaration& t) -> void;
     auto const& error
     ) -> bool;
 
-#line 1521 "reflect.h2"
+#line 1512 "reflect.h2"
 }
 
 }
@@ -1906,23 +1906,12 @@ auto regex_gen(meta::type_declaration& t) -> void
 
             CPP2_ASSERT_IN_BOUNDS(expressions, name) = expr;
         }
-
-#line 1387 "reflect.h2"
-        CPP2_UFCS(require)(m, CPP2_UFCS(make_public)(m), 
-                   "all struct members must be public");
-        if (CPP2_UFCS(is_function)(m)) {
-            auto mf {CPP2_UFCS(as_function)(m)}; 
-            CPP2_UFCS(require)(t, !(CPP2_UFCS(is_virtual)(mf)), 
-                       "a struct may not have a virtual function");
-            CPP2_UFCS(require)(t, !(CPP2_UFCS(has_name)(mf, "operator=")), 
-                       "a struct may not have a user-defined operator=");
-        }
     }
 
     CPP2_UFCS(remove_marked_members)(t);
 
     for ( auto const& expr : expressions ) {
-        std::string regular_expression {::cpp2::regex::generate_template(expr.second, [_0 = t](auto const& message) mutable -> void { CPP2_UFCS(error)(_0, message);  })};
+        std::string regular_expression {::cpp2::regex::generate_template(expr.second, [_0 = t](auto const& message) mutable -> void { CPP2_UFCS(error)(_0, message);  })}; 
 
         std::string name {expr.first}; 
         if (!(CPP2_UFCS(empty)(name))) {
@@ -1930,11 +1919,13 @@ auto regex_gen(meta::type_declaration& t) -> void
         }
 
         CPP2_UFCS(add_member)(t, "regex" + cpp2::to_string(name) + ": type == " + cpp2::to_string(regular_expression) + ";");
-        CPP2_UFCS(add_member)(t, "match" + cpp2::to_string(name) + ": (in this, str: std::string) -> bool = { ctx: ::cpp2::regex::match_context<char,4> = (); ctx.str = str; return regex" + cpp2::to_string(name) + "::match(0, ctx).matched; }");
+        CPP2_UFCS(add_member)(t, "match" + cpp2::to_string(name) + ": (in this, str: std::string) -> _ = regex" + cpp2::to_string(name) + "().match(str);");
+        //t.add_member("match(name)$: (in this, str: std::string, out ctx: regex(name)$::context) -> _ = regex(name)$().match(str, ctx);");
+        //t.add_member("find(name)$: (in this, str: std::string, out ctx: regex(name)$::context) -> _ = regex(name)$().find(str, ctx);");
     }
 }
 
-#line 1418 "reflect.h2"
+#line 1409 "reflect.h2"
 [[nodiscard]] auto apply_metafunctions(
     declaration_node& n, 
     type_declaration& rtype, 
@@ -2037,7 +2028,7 @@ auto regex_gen(meta::type_declaration& t) -> void
     return true; 
 }
 
-#line 1521 "reflect.h2"
+#line 1512 "reflect.h2"
 }
 
 }

@@ -77,17 +77,74 @@ match_return: @struct type =
     }
 }
 
-match_context: @struct <CharT, max_groups: size_t> type =
+match_context: <CharT, max_groups: size_t> type =
 {
+    public str: view<CharT>;
+    public ranges: std::array<std::pair<size_t, size_t>, max_groups> = ();
+    public groups: std::array<view<CharT>, max_groups> = ();
 
-    str: view<CharT>;
-    ranges: std::array<std::pair<size_t, size_t>, max_groups>;
-    groups: std::array<view<CharT>, max_groups>;
+    operator=: (out this) = { // TODO: How to delegate???
+        str = "";
+        ranges.fill(std::make_pair(bstring<CharT>::npos, bstring<CharT>::npos));
+    }
+    operator=: (out this, s: view<CharT>) = {
+        str = s;
+        ranges.fill(std::make_pair(bstring<CharT>::npos, bstring<CharT>::npos));
+    }
 
     set_group: (inout this, group: size_t, pos: size_t, length: size_t) = {
         ranges[group] = (pos, pos + length);
         groups[group] = str.substr(pos, pos + length);
     }
+
+    print_ranges: (in this) -> bstring<CharT> = {
+        r: bstring<CharT> = "";
+        for ranges do (cur) {
+            if cur.first != bstring<CharT>::npos {
+                r += "((cur.first)$,(cur.second)$)";
+            }
+            else {
+                r += "(-1,-1)";
+            }
+        }
+
+        return r;
+    }
+}
+
+regular_expression: <CharT, Matcher, groups: size_t> type = {
+
+    context: type == match_context<CharT, groups>;
+
+    match: (in this, str: view<CharT>) -> bool = {
+        ctx: context = (str); // TODO: Wrong error about not initialized.
+        r := match(str, ctx);
+        _ = ctx;
+        return r;
+    }
+
+    match: (in this, str: view<CharT>, inout ctx: context) -> bool = { // TODO: Could call method with out parameter.
+        ctx = (str);
+        r := Matcher::match(0, ctx);
+
+        return r.matched && ctx.ranges[0].first == 0 && ctx.ranges[0].second == str.size();
+    }
+
+    search: (in this, str: view<CharT>, start: size_t, inout ctx: context) -> bool = {
+        ctx = (str);
+
+        // TODO: Improve find logic. (E.g. skip more elements on failure.)
+        cur := start;
+        while cur < str.size() next (cur += 1) {
+            if Matcher::match(cur, ctx).first {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    to_string: (in this) -> _ = Matcher::to_string();
 }
 
 /*regular_expression: @interface <CharT> type = {
@@ -476,7 +533,7 @@ regex_parser: <Error_out> type = {
         parse_until('\0');
 
         inner := create_matcher_from_state();
-        return "::cpp2::regex::group_matcher_logic<char, (inner)$, 0>";
+        return "::cpp2::regex::regular_expression<char, ::cpp2::regex::group_matcher_logic<char, (inner)$, 0>, (named_groups)$>";
     }
 
 }

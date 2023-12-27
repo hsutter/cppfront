@@ -1382,17 +1382,6 @@ regex_gen: (inout t: meta::type_declaration) =
 
             expressions[name] = expr;
         }
-
-
-        m.require( m.make_public(),
-                   "all struct members must be public");
-        if m.is_function() {
-            mf := m.as_function();
-            t.require( !mf.is_virtual(),
-                       "a struct may not have a virtual function");
-            t.require( !mf.has_name("operator="),
-                       "a struct may not have a user-defined operator=");
-        }
     }
 
     t.remove_marked_members();
@@ -1406,7 +1395,9 @@ regex_gen: (inout t: meta::type_declaration) =
         }
 
         t.add_member("regex(name)$: type == (regular_expression)$;");
-        t.add_member("match(name)$: (in this, str: std::string) -> bool = { ctx: ::cpp2::regex::match_context<char,4> = (); ctx.str = str; return regex(name)$::match(0, ctx).matched; }");
+        t.add_member("match(name)$: (in this, str: std::string) -> _ = regex(name)$().match(str);");
+        //t.add_member("match(name)$: (in this, str: std::string, out ctx: regex(name)$::context) -> _ = regex(name)$().match(str, ctx);");
+        //t.add_member("find(name)$: (in this, str: std::string, out ctx: regex(name)$::context) -> _ = regex(name)$().find(str, ctx);");
     }
 }
 
