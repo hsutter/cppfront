@@ -1930,7 +1930,7 @@ auto regex_gen(meta::type_declaration& t) -> void
         }
 
         CPP2_UFCS(add_member)(t, "regex" + cpp2::to_string(name) + ": type == " + cpp2::to_string(regular_expression) + ";");
-        CPP2_UFCS(add_member)(t, "match" + cpp2::to_string(name) + ": (in this, str: std::string) -> bool = { ctx: ::cpp2::regex::match_context<char,4> = (); return regex" + cpp2::to_string(name) + "::match(str, ctx).matched; }");
+        CPP2_UFCS(add_member)(t, "match" + cpp2::to_string(name) + ": (in this, str: std::string) -> bool = { ctx: ::cpp2::regex::match_context<char,4> = (); ctx.str = str; return regex" + cpp2::to_string(name) + "::match(0, ctx).matched; }");
     }
 }
 

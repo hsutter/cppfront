@@ -1406,7 +1406,7 @@ regex_gen: (inout t: meta::type_declaration) =
         }
 
         t.add_member("regex(name)$: type == (regular_expression)$;");
-        t.add_member("match(name)$: (in this, str: std::string) -> bool = { ctx: ::cpp2::regex::match_context<char,4> = (); return regex(name)$::match(str, ctx).matched; }");
+        t.add_member("match(name)$: (in this, str: std::string) -> bool = { ctx: ::cpp2::regex::match_context<char,4> = (); ctx.str = str; return regex(name)$::match(0, ctx).matched; }");
     }
 }
 
