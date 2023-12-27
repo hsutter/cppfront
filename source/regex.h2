@@ -89,6 +89,27 @@ match_context: @struct <CharT, max_groups: size_t> type =
     match: <Ctx> (str: view<CharT>, inout ctx: Ctx) -> bool;
 }*/
 
+alternative_matcher_logic: <CharT, List ...> type = {
+    match: (str: view<CharT>, inout ctx: _) -> _ = match_all<List...>(str, ctx);
+    to_string: () -> _ = ((bstring<CharT>() + ... + ("|" + List::to_string()))).substr(1); // substr: Remove first '|'.
+
+    private match_all: <First, Other ...> (str: view<CharT>, inout ctx: _) -> match_return = {
+        r: match_return = First::match(str, ctx);
+
+        if r.matched {
+            return r;
+        }
+        else {
+            if constexpr 0 != sizeof...(Other) {
+                return match_all<Other...>(str.substr(r.length), ctx);
+            }
+            else {
+                return (false, 0);
+            }
+        }
+    }
+}
+
 any_matcher_logic: <CharT> type =
 {
     match: (str: view<CharT>, inout ctx: _) -> match_return = match_return::create(!str.empty(), 1);
@@ -99,6 +120,12 @@ char_matcher_logic: <CharT, C: CharT> type =
 {
     match: (str: view<CharT>, inout ctx: _) -> match_return = match_return::create(!str.empty() && str.front() == C, 1);
     to_string: () -> bstring<CharT> = bstring<CharT>(1, C);
+}
+
+empty_matcher_logic: <CharT> type =
+{
+    match: (str: view<CharT>, inout ctx: _) match_return(true, 0);
+    to_string: () bstring<CharT>();
 }
 
 list_matcher_logic: <CharT, List ...> type =
@@ -192,11 +219,40 @@ special_range_matcher_logic: <CharT, M, min_count: int, max_count: int, symbol: 
     to_string: () -> bstring<CharT> = M::to_string() + symbol;
 }
 
+regex_parser_state: @struct type = {
+    cur_match_list: std::vector<std::string> = ();
+    alternate_match_lists: std::vector<std::vector<std::string>> = ();
+
+    start_new_list: (inout this) = {
+        new_list: std::vector<std::string> = ();
+        std::swap(new_list, cur_match_list);
+        alternate_match_lists.insert(alternate_match_lists.begin(), new_list);
+    }
+
+    swap: (inout this, inout t: regex_parser_state) = {
+        std::swap(cur_match_list, t.cur_match_list);
+        std::swap(alternate_match_lists, t.alternate_match_lists);
+    }
+
+    add: (inout this, matcher: _) = {
+        cur_match_list.push_back(matcher);
+    }
+
+    wrap_last: (inout this, matcher) = {
+        last: std::string = cur_match_list.back();
+        cur_match_list.back() = matcher(last);
+        _ = matcher;
+        _ = last;
+    }
+
+    empty: (this) -> bool = cur_match_list.empty();
+}
+
 
 regex_parser: <Error_out> type = {
 
     regex: std::string_view;
-    list: std::vector<std::string> = ();
+    cur_state: regex_parser_state = ();
     pos: size_t = 0;
 
     named_groups: int = 1; // Global capture group.
@@ -208,32 +264,65 @@ regex_parser: <Error_out> type = {
         this.error_out = e;
     }
 
-    create_list_matcher: (elements: std::vector<std::string>) -> std::string = {
-        template_expression: std::string = "::cpp2::regex::list_matcher_logic<char, ";
+    new_state: (inout this) -> regex_parser_state = {
+        old_state: regex_parser_state = ();
+        old_state.swap(cur_state);
+        return old_state;
+    }
+
+    restore_state: (inout this, old_state: regex_parser_state) = {
+        cur_state = old_state;
+    }
+
+    private create_matcher_from_list: (list: std::vector<std::string>) -> std::string = {
+        if list.empty() { return "::cpp2::regex::empty_matcher_logic<char>"; }
+
+        matcher: std::string = "::cpp2::regex::list_matcher_logic<char, ";
 
         seperator: std::string = "";
-        for elements do (cur) {
-            template_expression += seperator + cur;
+        for list do (cur) {
+            matcher += seperator + cur;
             seperator = ", ";
         }
-        template_expression += ">";
+        matcher += ">";
 
-        return template_expression;
+        return matcher;
+    }
+
+    create_matcher_from_state: (this) -> std::string = {
+        // Early out for no alternatives
+        if 0 == cur_state.alternate_match_lists.size() { return create_matcher_from_list(cur_state.cur_match_list); }
+
+        matcher: std::string = "::cpp2::regex::alternative_matcher_logic<char, ";
+
+        seperator: std::string = "";
+        add := :(list) = {
+            matcher&$* += seperator&$* + create_matcher_from_list(list);
+            seperator&$* = ", ";
+        };
+        if 0 != cur_state.cur_match_list.size() { add(cur_state.cur_match_list); }
+        for cur_state.alternate_match_lists do (cur) {
+            add(cur);
+        }
+        matcher += ">";
+
+        return matcher;
     }
 
     error:(inout this, message: std::string) = {
         error_out("Error during parsing of regex '(regex)$' at position '(pos)$': (message)$");
     }
 
-    get_back: (inout this) -> std::string = {
-        b:= list.back();
-        list.pop_back();
-        return b;
+    is_alternative: (inout this, c: char) -> bool = {
+        if c != '|' { return false; }
+
+        cur_state.start_new_list();
+        return true;
     }
 
     is_any: (inout this, c: char) -> bool = {
         if c == '.' {
-            list.push_back("::cpp2::regex::any_matcher_logic<char>");
+            cur_state.add("::cpp2::regex::any_matcher_logic<char>");
             return true;
         }
         return false;
@@ -253,7 +342,13 @@ regex_parser: <Error_out> type = {
 
             if group_id >= named_groups { error("Group reference is used before the group is declared."); }
 
-            list.push_back("::cpp2::regex::group_ref_matcher_logic<char, (group_id)$>");
+            cur_state.add("::cpp2::regex::group_ref_matcher_logic<char, (group_id)$>");
+        }
+        else if std::string::npos != std::string("^.[]$()*{}?+|").find(c_next) {
+            cur_state.add("::cpp2::regex::char_matcher_logic<char, '(c_next)$'>");
+        }
+        else if '\\' == c_next {
+            cur_state.add("::cpp2::regex::char_matcher_logic<char, '\\\\'>");
         } else {
             error("Unkonwn escape.");
         }
@@ -267,27 +362,32 @@ regex_parser: <Error_out> type = {
         group_number := named_groups;
         named_groups += 1;
 
-        // Create a new global list.
-        cur_list: std::vector<std::string> = ();
-        std::swap(cur_list, list);
+        old_state: _ = new_state();
 
         pos += 1;  // Skip the '('
         parse_until(')');
 
-        // Restore the old global list.
-        std::swap(cur_list, list);
+        inner:= create_matcher_from_state();
+        restore_state(old_state);
 
-        inner:= create_list_matcher(cur_list);
-
-        list.push_back("::cpp2::regex::group_matcher_logic<char, (inner)$, (group_number)$>");
+        cur_state.add("::cpp2::regex::group_matcher_logic<char, (inner)$, (group_number)$>");
 
         return true;
+    }
+
+    is_handle_special: (inout this, c: char) -> bool = {
+        if c == '\'' {
+            cur_state.add("::cpp2::regex::char_matcher_logic<char, '\\(c)$'>");
+            return true;
+        }
+
+        return false;
     }
 
     is_range: (inout this, c: char) -> bool = {
 
         if c != '{' { return false; }
-        if list.empty() { error("'{' without previous element."); }
+        if cur_state.empty() { error("'{' without previous element."); }
 
         end: size_t = regex.find("}", pos);
         if end == std::string::npos { error("Missing closing bracket."); }
@@ -320,8 +420,7 @@ regex_parser: <Error_out> type = {
         }
 
         // TODO: Check 0 <=n <= m
-        inner_matcher: = get_back();
-        list.push_back("::cpp2::regex::range_matcher_logic<char, (inner_matcher)$, (min_count)$, (max_count)$>");
+        cur_state.wrap_last( :(inner) -> _ == "::cpp2::regex::range_matcher_logic<char, (inner)$, (min_count$)$, (max_count$)$>");
         pos = end;
 
         return true;
@@ -344,12 +443,11 @@ regex_parser: <Error_out> type = {
             return false;
         }
 
-        if list.empty() {
+        if cur_state.empty() {
             error("'(c)$' without previous element.");
         }
 
-        inner:= get_back();
-        list.push_back("::cpp2::regex::special_range_matcher_logic<char, (inner)$, (min_range)$, (max_range)$, '(c)$'>");
+        cur_state.wrap_last(:(inner) -> _ == "::cpp2::regex::special_range_matcher_logic<char, (inner)$, (min_range$)$, (max_range$)$, '(c$)$'>");
         return true;
     }
 
@@ -364,9 +462,11 @@ regex_parser: <Error_out> type = {
             if is_special_range(c) { continue; }
             if is_group(c) { continue; }
             if is_escape(c) { continue; }
+            if is_alternative(c) { continue; }
+            if is_handle_special(c) { continue; }
 
             // No special char push a character match
-            list.push_back("::cpp2::regex::char_matcher_logic<char, '(c)$'>");
+            cur_state.add("::cpp2::regex::char_matcher_logic<char, '(c)$'>");
         }
     }
 
@@ -374,7 +474,8 @@ regex_parser: <Error_out> type = {
 
         parse_until('\0');
 
-        return create_list_matcher(list);
+        inner := create_matcher_from_state();
+        return "::cpp2::regex::group_matcher_logic<char, (inner)$, 0>";
     }
 
 }
