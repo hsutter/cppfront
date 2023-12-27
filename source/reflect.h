@@ -1922,7 +1922,7 @@ auto regex_gen(meta::type_declaration& t) -> void
     CPP2_UFCS(remove_marked_members)(t);
 
     for ( auto const& expr : expressions ) {
-    std::string regular_expression {::cpp2::regex::generate_template(expr.second, [_0 = t](auto const& message) mutable -> void { CPP2_UFCS(error)(_0, message);  })}; // TODO: Lambda capture.
+        std::string regular_expression {::cpp2::regex::generate_template(expr.second, [_0 = t](auto const& message) mutable -> void { CPP2_UFCS(error)(_0, message);  })};
 
         std::string name {expr.first}; 
         if (!(CPP2_UFCS(empty)(name))) {

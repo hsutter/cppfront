@@ -37,16 +37,20 @@ template<typename CharT, typename M, int group> class group_matcher_logic;
     
 
 #line 146 "regex.h2"
+template<typename CharT, int group> class group_ref_matcher_logic;
+
+
+#line 152 "regex.h2"
 template<typename CharT, typename M, int min_count, int max_count> class range_matcher_logic;
 
-#line 183 "regex.h2"
-template<typename CharT, typename M> class star_matcher_logic;
+#line 189 "regex.h2"
+template<typename CharT, typename M, int min_count, int max_count, CharT symbol> class special_range_matcher_logic;
     
 
-#line 190 "regex.h2"
+#line 196 "regex.h2"
 template<typename Error_out> class regex_parser;
 
-#line 347 "regex.h2"
+#line 389 "regex.h2"
 }
 }
 
@@ -197,82 +201,96 @@ template<typename CharT, typename M, int group> class group_matcher_logic {
 #line 144 "regex.h2"
 };
 
+template<typename CharT, int group> class group_ref_matcher_logic {
+    public: [[nodiscard]] static auto match(cpp2::in<view<CharT>> str, auto& ctx) -> match_return;
+
+    public: [[nodiscard]] static auto to_string() -> bstring<CharT>;
+    public: group_ref_matcher_logic() = default;
+    public: group_ref_matcher_logic(group_ref_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
+    public: auto operator=(group_ref_matcher_logic const&) -> void = delete;
+
+#line 150 "regex.h2"
+};
+
 template<typename CharT, typename M, int min_count, int max_count> class range_matcher_logic {
 
     // TODO: Add static assert on min_count and max_count.
 
     public: [[nodiscard]] static auto match(cpp2::in<view<CharT>> str, auto& ctx) -> match_return;
 
-#line 163 "regex.h2"
+#line 169 "regex.h2"
     public: [[nodiscard]] static auto to_string() -> bstring<CharT>;
     public: range_matcher_logic() = default;
     public: range_matcher_logic(range_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(range_matcher_logic const&) -> void = delete;
 
 
-#line 181 "regex.h2"
-};
-
-template<typename CharT, typename M> class star_matcher_logic: public range_matcher_logic<CharT,M,0,std::numeric_limits<int>::max()> {
-
-#line 186 "regex.h2"
-    public: [[nodiscard]] static auto to_string() -> bstring<CharT>;
-    public: star_matcher_logic() = default;
-    public: star_matcher_logic(star_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
-    public: auto operator=(star_matcher_logic const&) -> void = delete;
-
 #line 187 "regex.h2"
 };
 
-#line 190 "regex.h2"
+template<typename CharT, typename M, int min_count, int max_count, CharT symbol> class special_range_matcher_logic: public range_matcher_logic<CharT,M,min_count,max_count> {
+
+#line 192 "regex.h2"
+    public: [[nodiscard]] static auto to_string() -> bstring<CharT>;
+    public: special_range_matcher_logic() = default;
+    public: special_range_matcher_logic(special_range_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
+    public: auto operator=(special_range_matcher_logic const&) -> void = delete;
+
+#line 193 "regex.h2"
+};
+
+#line 196 "regex.h2"
 template<typename Error_out> class regex_parser {
 
     private: std::string_view regex; 
     private: std::vector<std::string> list {}; 
     private: size_t pos {0}; 
 
-    private: size_t named_groups {1}; // Global capture group.
+    private: int named_groups {1}; // Global capture group.
 
     private: Error_out error_out; 
 
     public: explicit regex_parser(cpp2::in<std::string_view> r, Error_out const& e);
 
-#line 205 "regex.h2"
+#line 211 "regex.h2"
     public: [[nodiscard]] static auto create_list_matcher(cpp2::in<std::vector<std::string>> elements) -> std::string;
 
-#line 218 "regex.h2"
+#line 224 "regex.h2"
     public: auto error(cpp2::in<std::string> message) & -> void;
 
-#line 222 "regex.h2"
+#line 228 "regex.h2"
     public: [[nodiscard]] auto get_back() & -> std::string;
 
-#line 228 "regex.h2"
+#line 234 "regex.h2"
     public: [[nodiscard]] auto is_any(cpp2::in<char> c) & -> bool;
 
-#line 236 "regex.h2"
+#line 242 "regex.h2"
+    public: [[nodiscard]] auto is_escape(cpp2::in<char> c) & -> bool;
+
+#line 264 "regex.h2"
     public: [[nodiscard]] auto is_group(cpp2::in<char> c) & -> bool;
 
-#line 259 "regex.h2"
+#line 287 "regex.h2"
     public: [[nodiscard]] auto is_range(cpp2::in<char> c) & -> bool;
 
-#line 302 "regex.h2"
-    public: [[nodiscard]] auto is_star(cpp2::in<char> c) & -> bool;
+#line 330 "regex.h2"
+    public: [[nodiscard]] auto is_special_range(cpp2::in<char> c) & -> bool;
 
-#line 315 "regex.h2"
+#line 356 "regex.h2"
     public: auto parse_until(cpp2::in<char> term) & -> void;
 
-#line 331 "regex.h2"
+#line 373 "regex.h2"
     public: [[nodiscard]] auto parse() & -> std::string;
     public: regex_parser(regex_parser const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(regex_parser const&) -> void = delete;
 
 
-#line 338 "regex.h2"
+#line 380 "regex.h2"
 };
 
 template<typename Err> [[nodiscard]] auto generate_template(cpp2::in<std::string_view> regex, Err const& err) -> std::string;
 
-#line 347 "regex.h2"
+#line 389 "regex.h2"
 }
 }
 
@@ -343,7 +361,12 @@ namespace regex {
     }
     template <typename CharT, typename M, int group> [[nodiscard]] auto group_matcher_logic<CharT,M,group>::to_string() -> bstring<CharT> { return "(" + cpp2::to_string(M::to_string()) + ")";  }
 
-#line 150 "regex.h2"
+#line 147 "regex.h2"
+    template <typename CharT, int group> [[nodiscard]] auto group_ref_matcher_logic<CharT,group>::match(cpp2::in<view<CharT>> str, auto& ctx) -> match_return {
+        return match_return::create(CPP2_UFCS(starts_with)(str, CPP2_ASSERT_IN_BOUNDS(ctx.groups, group)), CPP2_UFCS(size)(CPP2_ASSERT_IN_BOUNDS(ctx.groups, group)));  }
+    template <typename CharT, int group> [[nodiscard]] auto group_ref_matcher_logic<CharT,group>::to_string() -> bstring<CharT> { return "\\(" + cpp2::to_string(group) + ")";  }
+
+#line 156 "regex.h2"
     template <typename CharT, typename M, int min_count, int max_count> [[nodiscard]] auto range_matcher_logic<CharT,M,min_count,max_count>::match(cpp2::in<view<CharT>> str, auto& ctx) -> match_return{
       match_return r {true, 0}; 
       match_return o {true, 0}; 
@@ -376,15 +399,15 @@ namespace regex {
       return r; 
     }
 
-#line 186 "regex.h2"
-    template <typename CharT, typename M> [[nodiscard]] auto star_matcher_logic<CharT,M>::to_string() -> bstring<CharT> { return M::to_string() + "*";  }
+#line 192 "regex.h2"
+    template <typename CharT, typename M, int min_count, int max_count, CharT symbol> [[nodiscard]] auto special_range_matcher_logic<CharT,M,min_count,max_count,symbol>::to_string() -> bstring<CharT> { return M::to_string() + symbol;  }
 
-#line 200 "regex.h2"
+#line 206 "regex.h2"
     template <typename Error_out> regex_parser<Error_out>::regex_parser(cpp2::in<std::string_view> r, Error_out const& e)
         : regex{ r }
         , error_out{ e }{
 
-#line 203 "regex.h2"
+#line 209 "regex.h2"
     }
 
     template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::create_list_matcher(cpp2::in<std::vector<std::string>> elements) -> std::string{
@@ -416,6 +439,28 @@ namespace regex {
             return true; 
         }
         return false; 
+    }
+
+    template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::is_escape(cpp2::in<char> c) & -> bool{
+        if (c != '\\') {return false; }
+
+        pos += 1;
+
+        if (cpp2::cmp_greater_eq(pos,CPP2_UFCS(size)(regex))) {error("Escape without a follwoing character."); }
+
+        char c_next {CPP2_ASSERT_IN_BOUNDS(regex, pos)};
+
+        if ([_0 = '1', _1 = c_next, _2 = '9']{ return cpp2::cmp_less_eq(_0,_1) && cpp2::cmp_less_eq(_1,_2); }()) {
+            int group_id {std::move(c_next) - '0'};
+
+            if (cpp2::cmp_greater_eq(group_id,named_groups)) {error("Group reference is used before the group is declared."); }
+
+            CPP2_UFCS(push_back)(list, "::cpp2::regex::group_ref_matcher_logic<char, " + cpp2::to_string(std::move(group_id)) + ">");
+        }else {
+            error("Unkonwn escape.");
+        }
+
+        return true;
     }
 
     template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::is_group(cpp2::in<char> c) & -> bool{
@@ -484,17 +529,30 @@ namespace regex {
         return true; 
     }
 
-    template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::is_star(cpp2::in<char> c) & -> bool{
+    template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::is_special_range(cpp2::in<char> c) & -> bool{
+        std::string min_range {"0"};
+        std::string max_range {"std::numeric_limits<int>::max()"};
         if (c == '*') {
-            if (CPP2_UFCS(empty)(list)) {
-                error("'*' without previous element.");
-            }
-            auto inner {get_back()}; 
-            CPP2_UFCS(push_back)(list, "::cpp2::regex::star_matcher_logic<char, " + cpp2::to_string(std::move(inner)) + ">");
-
-            return true; 
+            min_range = "0";
         }
-        return false; 
+        else {if (c == '+') {
+            min_range = "1";
+        }
+        else {if (c == '?') {
+            min_range = "0";
+            max_range = "1";
+        }
+        else {
+            return false;
+        }}}
+
+        if (CPP2_UFCS(empty)(list)) {
+            error("'" + cpp2::to_string(c) + "' without previous element.");
+        }
+
+        auto inner {get_back()};
+        CPP2_UFCS(push_back)(list, "::cpp2::regex::special_range_matcher_logic<char, " + cpp2::to_string(std::move(inner)) + ", " + cpp2::to_string(std::move(min_range)) + ", " + cpp2::to_string(std::move(max_range)) + ", '" + cpp2::to_string(c) + "'>");
+        return true;
     }
 
     template <typename Error_out> auto regex_parser<Error_out>::parse_until(cpp2::in<char> term) & -> void{
@@ -505,8 +563,9 @@ namespace regex {
 
             if (is_any(c)) {continue; }
             if (is_range(c)) {continue; }
-            if (is_star(c)) {continue; }
+            if (is_special_range(c)) {continue; }
             if (is_group(c)) {continue; }
+            if (is_escape(c)) {continue; }
 
             // No special char push a character match
             CPP2_UFCS(push_back)(list, "::cpp2::regex::char_matcher_logic<char, '" + cpp2::to_string(c) + "'>");
@@ -520,7 +579,7 @@ namespace regex {
         return create_list_matcher(list); 
     }
 
-#line 340 "regex.h2"
+#line 382 "regex.h2"
 template<typename Err> [[nodiscard]] auto generate_template(cpp2::in<std::string_view> regex, Err const& err) -> std::string{
     regex_parser<Err> parser {regex, err}; 
     auto r {CPP2_UFCS(parse)(parser)}; 
