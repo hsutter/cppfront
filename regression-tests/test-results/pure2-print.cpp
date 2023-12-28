@@ -34,7 +34,7 @@ CPP2_REQUIRES_ (true) static const T object_alias;
 
 #line 33 "pure2-print.cpp2"
         private: [[nodiscard]] static auto h(cpp2::in<std::string> s, std::map<int const,std::string>& m) -> std::string;
-struct values_ret{ int offset; std::string name; };
+struct values_ret { int offset; std::string name; };
 
 
 

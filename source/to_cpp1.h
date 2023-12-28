@@ -5620,7 +5620,7 @@ public:
                 //  Else just emit it as an ordinary struct
                 else
                 {
-                    printer.print_extra( "\nstruct " + multi_return_type_name(n));
+                    printer.print_extra( "\nstruct " + multi_return_type_name(n) + " ");
                     emit(*r, true);
                 }
                 printer.print_extra( "\n" );

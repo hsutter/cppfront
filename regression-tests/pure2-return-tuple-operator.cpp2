@@ -11,8 +11,8 @@ A : type = {
         return;
     }
     operator[] : (this, idx: int) -> (x: int, y: int) = {
-        x = 34;
-        y = 56;
+        x = 34 * (idx+1);
+        y = 56 * (idx+1);
         return;
     }
 }

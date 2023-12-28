@@ -18,18 +18,18 @@ class A;
 
 #line 2 "pure2-return-tuple-operator.cpp2"
 class A {
-struct operator_call_ret{ int x; int y; };
+struct operator_call_ret { int x; int y; };
 
 
 #line 3 "pure2-return-tuple-operator.cpp2"
     public: [[nodiscard]] auto operator()() const& -> operator_call_ret;
-struct operator_dereference_ret{ int x; int y; };
+struct operator_dereference_ret { int x; int y; };
 
 
 
 #line 8 "pure2-return-tuple-operator.cpp2"
     public: [[nodiscard]] auto operator*() const& -> operator_dereference_ret;
-struct operator_subscript_ret{ int x; int y; };
+struct operator_subscript_ret { int x; int y; };
 
 
 
@@ -71,8 +71,8 @@ auto main() -> int;
             cpp2::deferred_init<int> x;
             cpp2::deferred_init<int> y;
 #line 14 "pure2-return-tuple-operator.cpp2"
-        x.construct(34);
-        y.construct(56);
+        x.construct(34 * (idx + 1));
+        y.construct(56 * (idx + 1));
         return  { std::move(x.value()), std::move(y.value()) }; 
     }
 

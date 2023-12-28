@@ -30,7 +30,7 @@ using make_string_ret = std::string;
 
 #line 23 "mixed-postexpression-with-capture.cpp2"
 [[nodiscard]] auto make_string() -> make_string_ret;
-struct make_strings_ret{ std::string a; std::string b; };
+struct make_strings_ret { std::string a; std::string b; };
 
 
 
