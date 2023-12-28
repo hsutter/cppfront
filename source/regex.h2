@@ -104,7 +104,7 @@ match_context: <CharT, max_groups: size_t> type =
                 r += "((cur.first)$,(cur.second)$)";
             }
             else {
-                r += "(-1,-1)";
+                r += "(?,?)";
             }
         }
 
@@ -130,13 +130,14 @@ regular_expression: <CharT, Matcher, groups: size_t> type = {
         return r.matched && ctx.ranges[0].first == 0 && ctx.ranges[0].second == str.size();
     }
 
+    search: (in this, str: view<CharT>, inout ctx: context) -> bool = search(str, 0, ctx);
     search: (in this, str: view<CharT>, start: size_t, inout ctx: context) -> bool = {
         ctx = (str);
 
         // TODO: Improve find logic. (E.g. skip more elements on failure.)
         cur := start;
-        while cur < str.size() next (cur += 1) {
-            if Matcher::match(cur, ctx).first {
+        while cur <= str.size() next (cur += 1) {
+            if Matcher::match(cur, ctx).matched {
                 return true;
             }
         }
@@ -241,10 +242,16 @@ empty_matcher_logic: <CharT> type =
     to_string: () bstring<CharT>();
 }
 
+escaped_char_matcher_logic: <CharT, C: CharT> type =
+{
+    this : char_matcher_logic<CharT, C> = ();
+    to_string: () -> bstring<CharT> = "\\(C)$";
+}
+
 line_end_matcher_logic: <CharT> type =
 {
     match: (pos: size_t, inout ctx) -> _ = match_return::create(pos == ctx.str.size() || ctx.str[pos] == '\n', 0); // TODO: Extend to other line feeds.
-    to_string: () -> _ = bstring<CharT>(1, '$');
+    to_string: () -> bstring<CharT> = "\\$";
 }
 
 line_start_matcher_logic: <CharT> type =
@@ -287,7 +294,14 @@ group_matcher_logic: <CharT, M, group: int> type = {
         }
         return r;
     }
-    to_string: () -> bstring<CharT> = "((M::to_string())$)";
+    to_string: () -> bstring<CharT> = {
+        if group == 0 {
+            return M::to_string();
+        }
+        else {
+            return "((M::to_string())$)";
+        }
+    }
 }
 
 group_ref_matcher_logic: <CharT, group: int> type = {
@@ -304,11 +318,16 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
       r: match_return = (true, 0);
       o: match_return = (true, 0);
 
-      count: int = -1; // First while is always true
+      count: int = 0;
 
+      o = M::match(pos, ctx);
       while (o.matched && count < max_count) next o = M::match(pos + r.length, ctx) {
         r.length += o.length;
         count += 1;
+
+        if o.length == 0 {
+            break;
+        }
       }
 
       return match_return::create(count >= min_count, r.length);
@@ -427,10 +446,12 @@ regex_parser: <Error_out> type = {
             matcher&$* += seperator&$* + create_matcher_from_list(list);
             seperator&$* = ", ";
         };
-        if 0 != cur_state.cur_match_list.size() { add(cur_state.cur_match_list); }
-        for cur_state.alternate_match_lists do (cur) {
-            add(cur);
+
+        cur := cur_state.alternate_match_lists.rbegin();
+        while cur != cur_state.alternate_match_lists.rend() next( cur++ ) {
+            add(cur*);
         }
+        if 0 != cur_state.cur_match_list.size() { add(cur_state.cur_match_list); }
         matcher += ">";
 
         return matcher;
@@ -524,7 +545,7 @@ regex_parser: <Error_out> type = {
         }
 
         for classes do (inout cur) {
-            if std::string::npos != cur.find("-") {
+            if 1 != cur.size() {
                 cur = "::cpp2::regex::range_class_entry<char, '(cur[0])$', '(cur[2])$'>";
             }
             else {
@@ -542,7 +563,7 @@ regex_parser: <Error_out> type = {
 
         pos += 1;
 
-        if pos >= regex.size() { error("Escape without a follwoing character."); }
+        if pos >= regex.size() { error("Escape without a following character."); }
 
         c_next: char = regex[pos];
 
@@ -554,7 +575,13 @@ regex_parser: <Error_out> type = {
             cur_state.add("::cpp2::regex::group_ref_matcher_logic<char, (group_id)$>");
         }
         else if std::string::npos != std::string("^.[]$()*{}?+|").find(c_next) {
-            cur_state.add("::cpp2::regex::char_matcher_logic<char, '(c_next)$'>");
+            if c_next == '$' {
+                // TODO: Provide proper escape for cppfront capture .
+                cur_state.add("::cpp2::regex::line_end_matcher_logic<char>");
+            }
+            else {
+                cur_state.add("::cpp2::regex::escaped_char_matcher_logic<char, '(c_next)$'>");
+            }
         }
         else if '\\' == c_next {
             cur_state.add("::cpp2::regex::char_matcher_logic<char, '\\\\'>");
