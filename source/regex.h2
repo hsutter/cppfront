@@ -185,6 +185,56 @@ char_matcher_logic: <CharT, C: CharT> type =
     to_string: () -> bstring<CharT> = bstring<CharT>(1, C);
 }
 
+single_class_entry: <CharT, C: CharT> type =
+{
+    includes: (c: CharT) -> _ = c == C;
+    to_string: () -> _ = bstring<CharT>(1, C);
+}
+
+range_class_entry: <CharT, Start: CharT, End: CharT> type =
+{
+    includes: (c: CharT) -> _ = Start <= c <= End;
+    to_string: () -> _ = "(Start)$-(End)$";
+}
+
+class_matcher_logic: <CharT, negate: bool, List ...> type =
+{
+    match: (pos: size_t, inout ctx: _) -> match_return = {
+        c: CharT = ctx.str[pos];
+        r: bool = match_any<List...>(c);
+
+        if negate {
+            r = !r;
+        }
+
+        return match_return::create(r, 1);
+    }
+
+    private match_any: <First, Other ...> (c: CharT) -> bool = {
+        r: bool = First::includes(c);
+
+        if !r {
+            if constexpr 0 != sizeof...(Other) {
+                r = match_any<Other...>(c);
+            }
+        }
+
+        return r;
+    }
+
+    to_string: () -> bstring<CharT> = {
+        r: bstring<CharT> = "[";
+        if negate {
+            r += "^";
+        }
+        r += (bstring<CharT>() + ... + List::to_string());
+        r += "]';";
+
+        return r;
+    }
+}
+
+
 empty_matcher_logic: <CharT> type =
 {
     match: (pos: size_t, inout ctx: _) match_return(true, 0);
@@ -332,16 +382,23 @@ regex_parser: <Error_out> type = {
         cur_state = old_state;
     }
 
+    private join: (list: std::vector<std::string>) -> std::string = {
+        r: std::string = "";
+
+        seperator: std::string = "";
+        for list do (cur) {
+            r += seperator + cur;
+            seperator = ", ";
+        }
+
+        return r;
+    }
+
     private create_matcher_from_list: (list: std::vector<std::string>) -> std::string = {
         if list.empty() { return "::cpp2::regex::empty_matcher_logic<char>"; }
 
         matcher: std::string = "::cpp2::regex::list_matcher_logic<char, ";
-
-        seperator: std::string = "";
-        for list do (cur) {
-            matcher += seperator + cur;
-            seperator = ", ";
-        }
+        matcher += join(list);
         matcher += ">";
 
         return matcher;
@@ -384,6 +441,74 @@ regex_parser: <Error_out> type = {
             return true;
         }
         return false;
+    }
+
+    is_class: (inout this, c: char) -> bool = {
+        if c != '[' { return false; }
+
+        classes: std::vector<std::string> = ();
+
+        c_cur: char = regex[pos];
+        next_item:= :() -> bool = {
+            pos&$* += 1;
+            if pos&$* >= regex$.size() { return false; }
+
+            c_cur&$* = regex$[pos&$*];
+            return true;
+
+        };
+
+        negate:= false;
+
+        first:= true;
+        range:= false;
+        while next_item() & (c_cur != ']' || first) {
+            if c_cur == '^' {
+                negate = true;
+                continue; // Skip rest of the loop. Also the first update.
+            }
+            if c_cur == '-' {
+                if first { // Litral if first entry.
+                    classes.push_back("(c_cur)$");
+                } else {
+                    range = true;
+                }
+            }
+            else {
+                if range { // Modify last element to be a range.
+                    classes.back() += "-(c_cur)$";
+                    range = false;
+                }
+                else {
+                    classes.push_back("(c_cur)$");
+                }
+            }
+
+            first = false;
+        }
+
+        _ = next_item; // TODO: Use in while is not recognized.
+
+        if c_cur != ']' {
+            error_out("Error end of character class definition before terminating ']'.");
+        }
+
+        if range { // If '-' is last entry treat it as a literal char.
+            classes.push_back("-");
+        }
+
+        for classes do (inout cur) {
+            if std::string::npos != cur.find("-") {
+                cur = "::cpp2::regex::range_class_entry<char, '(cur[0])$', '(cur[2])$'>";
+            }
+            else {
+                cur = "::cpp2::regex::single_class_entry<char, '(cur)$'>";
+            }
+        }
+
+        inner := join(classes);
+        cur_state.add("::cpp2::regex::class_matcher_logic<char, (negate)$, (inner)$>");
+        return true;
     }
 
     is_escape: (inout this, c: char) -> bool = {
@@ -516,6 +641,7 @@ regex_parser: <Error_out> type = {
             if c == term { return; }
 
             if is_any(c) { continue; }
+            if is_class(c) { continue; }
             if is_range(c) { continue; }
             if is_special_range(c) { continue; }
             if is_group(c) { continue; }
