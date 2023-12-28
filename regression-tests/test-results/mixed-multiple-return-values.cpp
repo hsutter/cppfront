@@ -16,7 +16,7 @@
 #include <random>
 #include <string>
 
-struct f_ret { int i; std::string s; };
+struct f_ret{ int i; std::string s; };
 
 #line 6 "mixed-multiple-return-values.cpp2"
 [[nodiscard]] auto f() -> f_ret;

@@ -1,0 +1,2 @@
+pure2-return-tuple-operator.cpp2: In member function ‘A::operator_subscript_ret A::operator[](cpp2::in<int>) const &’:
+pure2-return-tuple-operator.cpp2:13:52: warning: unused parameter ‘idx’ [-Wunused-parameter]
