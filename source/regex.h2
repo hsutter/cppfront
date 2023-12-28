@@ -241,6 +241,18 @@ empty_matcher_logic: <CharT> type =
     to_string: () bstring<CharT>();
 }
 
+line_end_matcher_logic: <CharT> type =
+{
+    match: (pos: size_t, inout ctx) -> _ = match_return::create(pos == ctx.str.size() || ctx.str[pos] == '\n', 0); // TODO: Extend to other line feeds.
+    to_string: () -> _ = bstring<CharT>(1, '$');
+}
+
+line_start_matcher_logic: <CharT> type =
+{
+    match: (pos: size_t, inout ctx) -> _ = match_return::create(pos == 0 || ctx.str[pos - 1] == '\n', 0); // TODO: Extend to other line feeds.
+    to_string: () -> _ = bstring<CharT>(1, '^');
+}
+
 list_matcher_logic: <CharT, List ...> type =
 {
     match: (pos: size_t, inout ctx: _) -> _ = match_all<List...>(pos, ctx);
@@ -433,6 +445,20 @@ regex_parser: <Error_out> type = {
 
         cur_state.start_new_list();
         return true;
+    }
+
+    is_anchor: (inout this, c: char) -> bool = {
+        r := false;
+        if c == '^' {
+            cur_state.add("::cpp2::regex::line_start_matcher_logic<char>");
+            r = true;
+        }
+        else if c == '$' {
+            cur_state.add("::cpp2::regex::line_end_matcher_logic<char>");
+            r = true;
+        }
+
+        return r;
     }
 
     is_any: (inout this, c: char) -> bool = {
@@ -640,14 +666,15 @@ regex_parser: <Error_out> type = {
 
             if c == term { return; }
 
+            if is_alternative(c) { continue; }
             if is_any(c) { continue; }
             if is_class(c) { continue; }
+            if is_escape(c) { continue; }
+            if is_anchor(c) { continue; }
+            if is_group(c) { continue; }
+            if is_handle_special(c) { continue; }
             if is_range(c) { continue; }
             if is_special_range(c) { continue; }
-            if is_group(c) { continue; }
-            if is_escape(c) { continue; }
-            if is_alternative(c) { continue; }
-            if is_handle_special(c) { continue; }
 
             // No special char push a character match
             cur_state.add("::cpp2::regex::char_matcher_logic<char, '(c)$'>");
