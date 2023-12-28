@@ -56,6 +56,32 @@ auto pad(int padding)
     };
 }
 
+auto multi_return_type_name(declaration_node const& n) 
+    -> std::string
+{
+    //  When generating a multi-return struct, also enable multi-return
+    //  from a (), [], or * operator. We can expand this in the future,
+    //  but with care because most operators should 'do as the ints do'
+    //  (e.g., it doesn't seem sensible for == to return multiple values)
+    constexpr std::pair<std::string_view, std::string_view> canonized_names[] = {
+        { "operator()", "operator_call"        },
+        { "operator[]", "operator_subscript"   },
+        { "operator*",  "operator_dereference" }
+    };
+
+    assert (n.is_function() && n.name());
+    auto ret = n.name()->to_string();
+    for (auto [op, canon] : canonized_names) {
+        if (ret == op) {
+            ret = canon;
+            break;
+        }
+    }
+    ret += "_ret";
+
+    return ret;
+}
+
 
 //-----------------------------------------------------------------------
 //
@@ -1127,7 +1153,6 @@ class cppfront
     bool               in_definite_init  = false;
     bool               in_parameter_list = false;
 
-    std::string                                   function_return_name;
     struct function_return {
         parameter_declaration_list_node* param_list;
         passing_style                    pass;
@@ -4629,7 +4654,6 @@ public:
     //
     auto emit(
         function_type_node const& n,
-        token const*              ident,
         bool                      is_main                    = false,
         bool                      is_ctor_or_dtor            = false,
         std::string               suffix1                    = {},
@@ -4758,13 +4782,8 @@ public:
         //  Otherwise, handle multiple/named returns
         else {
             printer.print_cpp2( " -> ", n.position() );
-            function_return_name = {};
-            printer.emit_to_string(&function_return_name);
-            assert(ident);
-            printer.print_cpp2( *ident, ident->position() );
-            printer.print_cpp2( "_ret", ident->position() );
-            printer.emit_to_string();
-            printer.print_cpp2( function_return_name, ident->position() );
+            assert (n.my_decl);
+            printer.print_cpp2( multi_return_type_name(*n.my_decl), n.position());
         }
     }
 
@@ -5261,7 +5280,7 @@ public:
             printer.print_cpp2( prefix, n.position() );
             printer.print_cpp2( type_qualification_if_any_for(n), n.position() );
             printer.print_cpp2( print_to_string( *n.parent_declaration->name() ), n.position() );
-            emit( *func, n.name(), false, true );
+            emit( *func, false, true );
         }
         //  For an assignment operator, similar to emitting an ordinary function
         else
@@ -5270,7 +5289,7 @@ public:
             current_functions.back().epilog.push_back( "return *this;");
             printer.print_cpp2( prefix, n.position() );
             printer.print_cpp2( "auto " + type_qualification_if_any_for(n) + print_to_string( *n.name() ), n.position());
-            emit( *func, n.name() );
+            emit( *func );
         }
     }
 
@@ -5617,11 +5636,7 @@ public:
                 //  Else just emit it as an ordinary struct
                 else
                 {
-                    printer.print_extra(
-                        "\nstruct "
-                        + n.name()->to_string()
-                        + "_ret "
-                    );
+                    printer.print_extra( "\nstruct " + multi_return_type_name(n) + " ");
                     emit(*r, true);
                 }
                 printer.print_extra( "\n" );
@@ -6028,9 +6043,9 @@ public:
             //  so print the provided intro instead, which will be a Cpp1 lambda-introducer
             if (capture_intro != "")
             {
-                assert (!n.identifier);
+                assert (!n.identifier && !is_main);
                 printer.print_cpp2(capture_intro, n.position());
-                emit( *func, nullptr, is_main);
+                emit( *func );
             }
 
             //  Else start introducing a normal function
@@ -6275,7 +6290,7 @@ public:
                             + "~" + print_to_string(*n.parent_declaration->name()),
                         n.position()
                     );
-                    emit( *func, n.name(), false, true);
+                    emit( *func, false, true);
                     printer.print_cpp2( suffix2, n.position() );
                 }
 
@@ -6297,7 +6312,7 @@ public:
                     }
 
                     emit( *n.name() );
-                    emit( *func, n.name(), is_main, false, suffix1, generating_postfix_inc_dec_from != nullptr );
+                    emit( *func, is_main, false, suffix1, generating_postfix_inc_dec_from != nullptr );
                     printer.print_cpp2( suffix2, n.position() );
 
                     //  If this is ++ or --, also generate a Cpp1 postfix version of the operator
