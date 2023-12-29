@@ -546,7 +546,7 @@ public:
         //-----------------------------------------------------------------------
         //  Function logic: For each entry in the table...
         //
-        for (auto sympos = std::ssize(symbols) - 1; sympos >= 0; --sympos)
+        for (auto sympos = unsafe_narrow<int>(std::ssize(symbols) - 1); sympos >= 0; --sympos)
         {
             //  If this is an uninitialized local variable,
             //  ensure it is definitely initialized and tag those initializations

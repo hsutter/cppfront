@@ -322,7 +322,7 @@ struct binary_expression_node
     auto terms_size() const
         -> int
     {
-        return std::ssize(terms);
+        return unsafe_narrow<int>(std::ssize(terms));
     }
 
     auto is_identifier() const
@@ -2313,7 +2313,7 @@ struct function_type_node
     auto parameter_count() const
         -> int
     {
-        return std::ssize(parameters->parameters);
+        return unsafe_narrow<int>(std::ssize(parameters->parameters));
     }
 
     auto index_of_parameter_named(std::string_view s) const
@@ -5785,7 +5785,7 @@ private:
         }
 
         for (auto& e : expression_node::current_expressions) {
-            e->num_subexpressions += std::ssize(n->ops);
+            e->num_subexpressions += unsafe_narrow<int>(std::ssize(n->ops));
         }
 
         return n;
