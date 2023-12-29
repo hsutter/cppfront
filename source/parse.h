@@ -4961,15 +4961,19 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
     //  First compute the common parts
 
     auto metafunctions = std::string{};
-    for (auto& meta : n.metafunctions)
     {
-        if (
-            include_metafunctions_list
-            || meta->to_string() == "struct"
-            )
-        {
-            metafunctions += " @" + pretty_print_visualize(*meta, indent);
-        }
+    auto as_comment = 
+        !n.metafunctions.empty()
+        && !include_metafunctions_list;
+    if (as_comment) {
+        metafunctions += "/*";
+    }
+    for (auto& meta : n.metafunctions) {
+        metafunctions += " @" + pretty_print_visualize(*meta, indent);
+    }
+    if (as_comment) {
+        metafunctions += " */";
+    }
     }
 
     auto template_params = std::string{};
