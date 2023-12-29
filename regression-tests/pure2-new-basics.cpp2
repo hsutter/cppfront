@@ -40,6 +40,18 @@ test_movable_ref : () = {
     }
 }
 
+test_movable_ref_replace : () = {
+    a : _ = new<Movable>();
+    if (a) {
+        a**.test();
+    }
+    
+    a = new<Movable>();
+    if (a) {
+        a**.test();
+    }
+}
+
 test_copyable : () = {
     a : Copyable = ();
     a.test();
@@ -70,9 +82,24 @@ test_copyable_ref : () = {
     }
 }
 
+test_copyable_ref_replace : () = {
+    a : _ = new<Copyable>();
+    if (a) {
+        a**.test();
+    }
+    
+    a = new<Copyable>();
+    if (a) {
+        a**.test();
+    }
+}
+
+
 main: () = {
     test_movable();
     test_movable_ref();
+    test_movable_ref_replace();
     test_copyable();
     test_copyable_ref();
+    test_copyable_ref_replace();
 }
