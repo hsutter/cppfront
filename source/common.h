@@ -65,8 +65,8 @@ struct source_line
         -> int
     {
         return
-            std::find_if_not( text.begin(), text.end(), &isspace )
-                - text.begin();
+            unsafe_narrow<int>(std::find_if_not( text.begin(), text.end(), &isspace )
+                               - text.begin());
     }
 
     auto prefix() const
@@ -334,7 +334,7 @@ auto is_nondigit(char c)
         isalpha(c)
         || c == '_'
         ;
-};
+}
 
 //G identifier-start:
 //G     nondigit
@@ -379,7 +379,7 @@ auto starts_with_identifier(std::string_view s)
         return j;
     }
     return 0;
-};
+}
 
 
 //  Helper to allow one of the above or a digit separator
@@ -759,7 +759,7 @@ public:
         auto length = std::ssize(name);
         if (opt_out) { length += 3; }   // space to print "[-]"
         if (max_flag_length < length) {
-            max_flag_length = length;
+            max_flag_length = unsafe_narrow<int>(length);
         }
     }
     struct register_flag {
