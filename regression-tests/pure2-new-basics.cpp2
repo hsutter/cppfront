@@ -1,0 +1,78 @@
+Movable : type = {
+    operator= : (out this) = {}
+    operator= : (out this, move that) = {}
+    test : (this) = {}
+}
+
+Copyable : type = {
+    operator= : (out this) = {}
+    operator= : (out this, in that) = {}
+    test : (this) = {}
+}
+
+call_test : (m : _) = {
+    m.test();
+}
+
+test_movable : () = {
+    a : Movable = ();
+    a.test();
+    call_test(a);
+
+    b : Movable = a;
+    b.test();
+    call_test(b);
+
+    //a.test(); // not allowed
+}
+
+test_movable_ref : () = {
+    a : _ = new<Movable>();
+
+    if (a) {
+        a**.test();
+        call_test(a**);
+        //b : _ = a**;      // cannot create copy       
+        c : _ = a*;
+        call_test(c*);
+        c*.test();
+        // a**.test(); // not allowed
+    }
+}
+
+test_copyable : () = {
+    a : Copyable = ();
+    a.test();
+    call_test(a);
+
+    b : Copyable = a;
+    b.test();
+    call_test(b);
+
+    a.test(); // allowed
+}
+
+test_copyable_ref : () = {
+    a : _ = new<Copyable>();
+
+    if (a) {
+        a**.test();
+        call_test(a**);
+        b : _ = a**;    // create copy
+        call_test(b);
+        b.test();
+        a**.test(); // allowed
+
+        c : _ = a*;     // move owning reference from optional
+        call_test(c*);
+        c*.test();
+        //a**.test(); // no longer allowed
+    }
+}
+
+main: () = {
+    test_movable();
+    test_movable_ref();
+    test_copyable();
+    test_copyable_ref();
+}

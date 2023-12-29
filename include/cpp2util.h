@@ -612,8 +612,25 @@ struct {
 } inline shared;
 
 template<typename T>
-[[nodiscard]] auto cpp2_new(auto&& ...args) -> std::unique_ptr<T> {
-    return unique.cpp2_new<T>(CPP2_FORWARD(args)...);
+class owning_reference {
+public:
+    explicit owning_reference(std::unique_ptr<T>&& ptr):_ptr(assert_not_null(std::move(ptr))){}
+    ~owning_reference() = default;
+    owning_reference(owning_reference&& ref) = default;
+    owning_reference& operator=(owning_reference&& ref) noexcept = default;
+    std::add_lvalue_reference<T>::type operator*() const { return *assert_not_null(_ptr.get()); }
+    std::add_lvalue_reference<T>::type operator->() const noexcept {return *assert_not_null(_ptr.get());}
+private:
+   std::unique_ptr<T> _ptr; 
+};
+
+template<typename T>
+[[nodiscard]] auto cpp2_new(auto&& ...args) -> std::optional<owning_reference<T>> {
+    auto _ptr = unique.cpp2_new<T>(CPP2_FORWARD(args)...);
+    if (_ptr) {
+        return owning_reference<T>{std::move(_ptr)};
+    }
+    return {};
 }
 
 
