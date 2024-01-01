@@ -4923,6 +4923,9 @@ public:
                     for (auto& tparam : parent->template_parameters->parameters) {
                         assert (tparam->has_name());
                         list += separator + tparam->name()->to_string();
+                        if(tparam->declaration->is_variadic) {
+                            list += "...";
+                        }
                         separator = ",";
                     }
                     list += ">";
