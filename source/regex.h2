@@ -518,15 +518,17 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int, state_index: int
       o = M::match(pos, ctx);
       ctx_copy := ctx;
       while (o.matched && count < max_count) next o = M::match(pos + r.length, ctx_copy) {
+
+        // Stop for empty matches.
+        if o.length == 0 && count >= get_min_count() {
+            break;
+        }
+
         ctx = ctx_copy;
 
         state*.push_back(r.length);
         r.length += o.length;
         count += 1;
-
-        if o.length == 0 {
-            break;
-        }
 
         ctx_copy = ctx; // For context. TODO: Separate context and state.
       }
