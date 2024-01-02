@@ -231,6 +231,10 @@ class_matcher_logic: <CharT, negate: bool, List ...> type =
     invalidate_groups: (inout ctx) = {}
 
     match: (pos: size_t, inout ctx: _) -> match_return = {
+        if pos >= ctx.str.size() {
+            return match_return(false, 0);
+        }
+
         c: CharT = ctx.str[pos];
         r: bool = match_any<List...>(c);
 
@@ -259,7 +263,7 @@ class_matcher_logic: <CharT, negate: bool, List ...> type =
             r += "^";
         }
         r += (bstring<CharT>() + ... + List::to_string());
-        r += "]';";
+        r += "]";
 
         return r;
     }
@@ -442,7 +446,15 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int, state_index: int
         if !state*.empty() {
             length := state*.back();
             state*.pop_back();
-            return match_return::create(state*.ssize() >= get_min_count(), length);
+
+            valid := state*.ssize() >= get_min_count();
+            if !valid || state*.empty() {
+                M::invalidate_groups(ctx);
+            } else {
+                _ = M::match(pos + state*.back(), ctx);  // Repopulate the ranges.
+            }
+
+            return match_return::create(valid, length);
         } else {
             return match_return(false, 0);
         }
