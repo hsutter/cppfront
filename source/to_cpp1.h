@@ -1739,10 +1739,13 @@ public:
         unqualified_id_node const& n,
         bool in_synthesized_multi_return = false,
         bool is_local_name = true,
-        bool is_qualified = false
+        bool is_qualified = false,
+        bool is_dependent = false,
+        bool emit_identifier = true
     )
         -> void
     {   STACKINSTR
+        (void)is_dependent; // Avoid conflict with #533.
         auto last_use = is_definite_last_use(n.identifier);
 
         bool add_forward =
@@ -1789,7 +1792,9 @@ public:
         }
 
         assert(n.identifier);
-        emit(*n.identifier, is_qualified);  // inform the identifier if we know this is qualified
+        if (emit_identifier) {
+            emit(*n.identifier, is_qualified);  // inform the identifier if we know this is qualified
+        }
 
         if (n.open_angle != source_position{}) {
             printer.print_cpp2("<", n.open_angle);
@@ -4918,7 +4923,10 @@ public:
                 )
             {
                 auto list = std::string{""};
-                if (parent->template_parameters) {
+                if (parent->specialization_template_arguments) {
+                    list = print_to_string(*parent->specialization_template_arguments, false, false, false, false, false);
+                }
+                else if (parent->template_parameters) {
                     auto separator = std::string{"<"};
                     for (auto& tparam : parent->template_parameters->parameters) {
                         assert (tparam->has_name());
@@ -5394,6 +5402,18 @@ public:
             return;
         }
 
+        //  Do not forward declare specializations.
+        if (
+            n.is_specialization()
+            && (
+                (n.is_type() && printer.get_phase() == printer.phase0_type_decls)
+                || (n.is_object() && printer.get_phase() == printer.phase1_type_defs_func_decls)
+                )
+            )
+        {
+            return;
+        }
+
         //  If this is a generated declaration (negative source line number),
         //  add a line break before
         if (
@@ -5471,6 +5491,8 @@ public:
                     printer.print_cpp2("template", n.position());
                     emit(*n.template_parameters, false, true);
                     printer.print_cpp2(" ", n.position());
+                } else if (n.is_specialization()) {
+                    printer.print_cpp2("template<> ", n.position());
                 }
 
                 //  Emit requires clause if any
@@ -5516,6 +5538,13 @@ public:
                     if (n.parent_is_type())
                     {
                         assert (n.parent_declaration->name());
+                        if (n.specialization_template_arguments) {
+                            errors.emplace_back(
+                                n.position(),
+                                "(temporary alpha limitation) an object alias in type scope cannot be specialized"
+                            );
+                            return;
+                        }
 
                         if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
                             printer.print_cpp2(
@@ -5560,10 +5589,16 @@ public:
                             intro = "inline constexpr";
                         }
 
+                        auto specialization_template_arguments = std::string{};
+                        if (n.specialization_template_arguments) {
+                            specialization_template_arguments = print_to_string(*n.specialization_template_arguments, false, false, false, false, false);
+                        }
+
                         printer.print_cpp2(
                             type + " "
                                 + intro + " "
                                 + print_to_string(*n.identifier)
+                                + specialization_template_arguments
                                 + " = "
                                 + print_to_string( *std::get<alias_node::an_object>(a->initializer) )
                                 + ";\n",
@@ -5727,7 +5762,7 @@ public:
 
         //  Now, emit our own template parameters
         if (
-            n.template_parameters
+            (n.template_parameters || n.is_specialization())
             && (
                 printer.get_phase() <  printer.phase2_func_defs
                 || n.is_object()
@@ -5745,7 +5780,12 @@ public:
             )
         {
             printer.print_cpp2("template", n.position());
-            emit(*n.template_parameters, false, true);
+            if (n.template_parameters) {
+                emit(*n.template_parameters, false, true);
+            } else {
+                assert(n.is_specialization());
+                printer.print_cpp2("<>", n.position());
+            }
             printer.print_cpp2(" ", n.position());
         }
 
@@ -5768,6 +5808,9 @@ public:
 
                 printer.print_cpp2("class ", n.position());
                 emit(*n.identifier);
+                if (n.specialization_template_arguments) {
+                    emit(*n.specialization_template_arguments, false, false, false, false, false);
+                }
 
                 //  Type declaration
                 if (printer.get_phase() == printer.phase0_type_decls) {
@@ -6625,6 +6668,9 @@ public:
             }
             else {
                 emit(*n.identifier);
+                if (n.specialization_template_arguments) {
+                    emit(*n.specialization_template_arguments, false, false, false, false, false);
+                }
             }
 
             if (
