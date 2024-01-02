@@ -2032,7 +2032,10 @@ public:
 
     auto push(std::vector<std::pair<int, int>>& uses) -> void
     {
-        uses.emplace_back(std::ssize(indices_of_uses_per_scope) - 1, std::ssize(indices_of_uses_per_scope.back()));
+        uses.emplace_back(
+            unsafe_narrow<int>(std::ssize(indices_of_uses_per_scope) - 1),
+            unsafe_narrow<int>(std::ssize(indices_of_uses_per_scope.back()))
+        );
     }
 
     auto get(std::vector<std::pair<int, int>>& uses) -> std::span<const int>

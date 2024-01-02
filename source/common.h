@@ -12,7 +12,7 @@
 
 
 #ifdef _MSC_VER
-#pragma warning(disable: 4456)
+#pragma warning(disable: 4456 4706)
 #endif
 
 #include "cpp2util.h"
@@ -334,7 +334,7 @@ auto is_nondigit(char c)
         isalpha(c)
         || c == '_'
         ;
-};
+}
 
 //G identifier-start:
 //G     nondigit
@@ -379,7 +379,7 @@ auto starts_with_identifier(std::string_view s)
         return j;
     }
     return 0;
-};
+}
 
 
 //  Helper to allow one of the above or a digit separator

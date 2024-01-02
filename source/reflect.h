@@ -1352,7 +1352,7 @@ auto ordered_impl(
         if (CPP2_UFCS(has_name)(mf, "operator<=>")) {
             has_spaceship = true;
             auto return_name {CPP2_UFCS(unnamed_return_type)(mf)}; 
-            if (CPP2_UFCS(find)(return_name, ordering) == std::move(return_name).npos) 
+            if (CPP2_UFCS(find)(return_name, ordering) == return_name.npos) 
             {
                 CPP2_UFCS(error)(mf, "operator<=> must return std::" + cpp2::as_<std::string>(ordering));
             }
@@ -1951,7 +1951,7 @@ auto print(cpp2::in<meta::type_declaration> t) -> void
             && !(CPP2_UFCS(arguments_were_used)(rtype)))) 
 
         {
-            error(name + " did not use its template arguments - did you mean to write '" + std::move(name) + " <" + CPP2_ASSERT_IN_BOUNDS(std::move(args), 0) + "> type' (with the spaces)?");
+            error(name + " did not use its template arguments - did you mean to write '" + name + " <" + CPP2_ASSERT_IN_BOUNDS(std::move(args), 0) + "> type' (with the spaces)?");
             return false; 
         }
     }

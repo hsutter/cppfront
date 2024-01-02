@@ -1,0 +1,9 @@
+pure2-last-use.cpp
+pure2-last-use.cpp2(193): error C3889: call to object of class type 'issue_857::o2::<lambda_1>': no matching call operator found
+pure2-last-use.cpp2(193): note: could be 'decltype(auto) issue_857::o2::<lambda_1>::operator ()(Obj &&,Params &&...) noexcept(<expr>) const'
+pure2-last-use.cpp2(193): note: the associated constraints are not satisfied
+pure2-last-use.cpp2(193): note: the constraint was not satisfied
+pure2-last-use.cpp2(314): warning C4552: '+': result of expression not used
+pure2-last-use.cpp2(315): warning C4552: '+': result of expression not used
+pure2-last-use.cpp2(316): warning C4552: '+': result of expression not used
+pure2-last-use.cpp2(317): warning C4552: '+': result of expression not used
