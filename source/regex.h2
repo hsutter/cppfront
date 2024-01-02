@@ -94,6 +94,8 @@ match_context: <CharT, State, max_groups: size_t> type =
         ranges.fill(std::make_pair(bstring<CharT>::npos, bstring<CharT>::npos));
     }
 
+    operator=: (out this, that) = {}
+
     invalidate_group: (inout this, group: size_t) = {
         ranges[group] = (bstring<CharT>::npos, bstring<CharT>::npos);
         groups[group] = ();
@@ -458,7 +460,10 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int, state_index: int
       count: int = 0;
 
       o = M::match(pos, ctx);
-      while (o.matched && count < max_count) next o = M::match(pos + r.length, ctx) {
+      ctx_copy := ctx;
+      while (o.matched && count < max_count) next o = M::match(pos + r.length, ctx_copy) {
+        ctx = ctx_copy;
+
         state*.push_back(r.length);
         r.length += o.length;
         count += 1;
@@ -466,10 +471,18 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int, state_index: int
         if o.length == 0 {
             break;
         }
+
+        ctx_copy = ctx; // For context. TODO: Separate context and state.
       }
 
       _ = state;
-      return match_return::create(count >= get_min_count(), r.length);
+      valid := count >= get_min_count();
+
+      // If we do not reach the minimal count invalidate all groups.
+      if !valid {
+        M::invalidate_groups(ctx);
+      }
+      return match_return::create(valid, r.length);
     }
 
     to_string: () -> bstring<CharT> = {
