@@ -164,11 +164,45 @@ regular_expression: <CharT, Matcher, State, groups: size_t> type = {
     match: <Ctx> (pos: size_t, inout ctx: Ctx) -> bool;
 }*/
 
-alternative_matcher_logic: <CharT, List ...> type = {
-    alternate_match: (pos: size_t, inout ctx) match_return(false, 0);
+alternative_matcher_logic: <CharT, state_index: int, List ...> type = {
+
+    private prepare_state: (inout ctx, init: bool) -> _ = {
+        state := ctx.get_state<state_index>();
+
+        if init {
+            state* = 0;
+        }
+
+        return state;
+    }
+
+    alternate_match: (pos: size_t, inout ctx) alternate_all<List...>(pos, ctx, prepare_state(ctx, false));
     invalidate_groups: (inout ctx) invalidate_all<List...>(ctx);
-    match: (pos: size_t, inout ctx: _) -> _ = match_all<List...>(pos, ctx);
+    match: (pos: size_t, inout ctx) -> _ = match_all<List...>(pos, ctx, prepare_state(ctx, true));
     to_string: () -> _ = ((bstring<CharT>() + ... + ("|" + List::to_string()))).substr(1); // substr: Remove first '|'.
+
+    private alternate_all: <First, Other ...> (pos: size_t, inout ctx, state) -> match_return = {
+        entry_pos :== sizeof...(List) - sizeof...(Other) - 1;
+
+        r: match_return = (false, 0);
+        if state* == entry_pos {
+            // Current state is the same element. Try an alternative match.
+            r = First::alternate_match(pos, ctx);
+        }
+        else if (state* as size_t) < entry_pos {
+            // Previous alternative has not match. Try the next one.
+            state* = entry_pos;
+            r = First::match(pos, ctx);
+        }
+
+        if !r.matched {
+            if constexpr 0 != sizeof...(Other) {
+                r = alternate_all<Other...>(pos, ctx, state);
+            }
+        }
+
+        return r;
+    }
 
     private invalidate_all: <First, Other ...> (inout ctx) = {
         First::invalidate_groups(ctx);
@@ -178,19 +212,23 @@ alternative_matcher_logic: <CharT, List ...> type = {
         }
     }
 
-    private match_all: <First, Other ...> (pos: size_t, inout ctx: _) -> match_return = {
+    private match_all: <First, Other ...> (pos: size_t, inout ctx, state) -> match_return = {
+        entry_pos :== sizeof...(List) - sizeof...(Other) - 1;
+
         r: match_return = First::match(pos, ctx);
 
         if r.matched {
+            state* = entry_pos;
             return r;
         }
         else {
             First::invalidate_groups(ctx); // Did not match we need to remove matched ranges.
 
             if constexpr 0 != sizeof...(Other) {
-                return match_all<Other...>(pos + r.length, ctx);
+                return match_all<Other...>(pos + r.length, ctx, state);
             }
             else {
+                state* = sizeof...(List);
                 return (false, 0);
             }
         }
@@ -360,8 +398,10 @@ list_matcher_logic: <CharT, state_index: int, List ...> type =
         entry_pos :== sizeof...(List) - sizeof...(Other) - 1;
 
         r: match_return = (false, 0);
+        length: = 0;
         if constexpr 0 != sizeof...(Other) {
             r = rematch_all<Other...>(state*[entry_pos + 1], ctx, state);
+            length = state*[entry_pos + 1] - state*[entry_pos];
         } else {
             r = (false, 0); // Default fails. This triggers the alternate on the last element.
         }
@@ -382,6 +422,10 @@ list_matcher_logic: <CharT, state_index: int, List ...> type =
                     }
                 }
             }
+        }
+        else {
+            // Adjust total match length of the list.
+            r.length += length;
         }
 
         return r;
@@ -618,7 +662,8 @@ regex_parser: <Error_out> type = {
         // Early out for no alternatives
         if 0 == cur_state.alternate_match_lists.size() { return create_matcher_from_list(cur_state.cur_match_list); }
 
-        matcher: std::string = "::cpp2::regex::alternative_matcher_logic<char, ";
+        state_index := push_matcher_state("int");
+        matcher: std::string = "::cpp2::regex::alternative_matcher_logic<char, (state_index)$, ";
 
         seperator: std::string = "";
         add := :(list) = {
