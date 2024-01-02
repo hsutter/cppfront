@@ -23,66 +23,70 @@ class match_return;
 #line 80 "regex.h2"
 template<typename CharT, typename State, size_t max_groups> class match_context;
 
-#line 119 "regex.h2"
+#line 124 "regex.h2"
 template<typename CharT, typename Matcher, typename State, size_t groups> class regular_expression;
 
-#line 160 "regex.h2"
+#line 165 "regex.h2"
 template<typename CharT, typename ...List> class alternative_matcher_logic;
     
 
-#line 182 "regex.h2"
+#line 198 "regex.h2"
 template<typename CharT> class any_matcher_logic;
 
-#line 189 "regex.h2"
+#line 206 "regex.h2"
 template<typename CharT, CharT C> class char_matcher_logic;
 
-#line 196 "regex.h2"
+#line 214 "regex.h2"
 template<typename CharT, CharT C> class single_class_entry;
 
-#line 202 "regex.h2"
+#line 220 "regex.h2"
 template<typename CharT, CharT Start, CharT End> class range_class_entry;
 
-#line 208 "regex.h2"
+#line 226 "regex.h2"
 template<typename CharT, bool negate, typename ...List> class class_matcher_logic;
 
-#line 248 "regex.h2"
+#line 267 "regex.h2"
 template<typename CharT> class empty_matcher_logic;
 
-#line 255 "regex.h2"
+#line 275 "regex.h2"
 template<typename CharT, CharT C> class escaped_char_matcher_logic;
 
-#line 261 "regex.h2"
+#line 281 "regex.h2"
 template<typename CharT> class line_end_matcher_logic;
 
-#line 268 "regex.h2"
+#line 289 "regex.h2"
 template<typename CharT> class line_start_matcher_logic;
 
-#line 275 "regex.h2"
-template<typename CharT, typename ...List> class list_matcher_logic;
+#line 297 "regex.h2"
+class list_matcher_state;
 
-#line 304 "regex.h2"
+
+#line 301 "regex.h2"
+template<typename CharT, int state_index, typename ...List> class list_matcher_logic;
+
+#line 385 "regex.h2"
 template<typename CharT, typename M, int group> class group_matcher_logic;
     
 
-#line 324 "regex.h2"
+#line 418 "regex.h2"
 template<typename CharT, int group> class group_ref_matcher_logic;
     
 
-#line 331 "regex.h2"
+#line 427 "regex.h2"
 template<typename CharT, typename M, int min_count, int max_count, int state_index> class range_matcher_logic;
 
-#line 391 "regex.h2"
+#line 497 "regex.h2"
 template<typename CharT, typename M, int min_count, int max_count, int state_index, CharT symbol> class special_range_matcher_logic;
     
 
-#line 397 "regex.h2"
+#line 503 "regex.h2"
 class regex_parser_state;
     
 
-#line 427 "regex.h2"
+#line 533 "regex.h2"
 template<typename Error_out> class regex_parser;
 
-#line 780 "regex.h2"
+#line 887 "regex.h2"
 }
 }
 
@@ -186,17 +190,20 @@ template<typename CharT, typename State, size_t max_groups> class match_context
     public: auto operator=(view<CharT> const& s) -> match_context& ;
 
 #line 97 "regex.h2"
-    public: auto set_group(cpp2::in<size_t> group, cpp2::in<size_t> pos, cpp2::in<size_t> length) & -> void;
+    public: auto invalidate_group(cpp2::in<size_t> group) & -> void;
 
 #line 102 "regex.h2"
+    public: auto set_group(cpp2::in<size_t> group, cpp2::in<size_t> pos, cpp2::in<size_t> length) & -> void;
+
+#line 107 "regex.h2"
     public: [[nodiscard]] auto print_ranges() const& -> bstring<CharT>;
 
-#line 116 "regex.h2"
+#line 121 "regex.h2"
     public: template<int pos> [[nodiscard]] auto get_state() & -> auto;
     public: match_context(match_context const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(match_context const&) -> void = delete;
 
-#line 117 "regex.h2"
+#line 122 "regex.h2"
 };
 
 template<typename CharT, typename Matcher, typename State, size_t groups> class regular_expression {
@@ -205,20 +212,20 @@ template<typename CharT, typename Matcher, typename State, size_t groups> class 
 
     public: [[nodiscard]] auto match(cpp2::in<view<CharT>> str) const& -> bool;
 
-#line 130 "regex.h2"
+#line 135 "regex.h2"
     public: [[nodiscard]] auto match(cpp2::in<view<CharT>> str, context& ctx) const& -> bool;
 
-#line 137 "regex.h2"
+#line 142 "regex.h2"
     public: [[nodiscard]] auto search(cpp2::in<view<CharT>> str, context& ctx) const& -> bool;
     public: [[nodiscard]] auto search(cpp2::in<view<CharT>> str, cpp2::in<size_t> start, context& ctx) const& -> bool;
 
-#line 152 "regex.h2"
+#line 157 "regex.h2"
     public: [[nodiscard]] auto to_string() const& -> auto;
     public: regular_expression() = default;
     public: regular_expression(regular_expression const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(regular_expression const&) -> void = delete;
 
-#line 153 "regex.h2"
+#line 158 "regex.h2"
 };
 
 /*regular_expression: @interface <CharT> type = {
@@ -227,41 +234,47 @@ template<typename CharT, typename Matcher, typename State, size_t groups> class 
 }*/
 
 template<typename CharT, typename ...List> class alternative_matcher_logic {
-    public: [[nodiscard]] static auto match(cpp2::in<size_t> pos, auto& ctx) -> auto;
     public: [[nodiscard]] static auto alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto;
+    public: [[nodiscard]] static auto invalidate_groups(auto& ctx) -> auto;
+    public: [[nodiscard]] static auto match(cpp2::in<size_t> pos, auto& ctx) -> auto;
     public: [[nodiscard]] static auto to_string() -> auto;
 
+    private: template<typename First, typename ...Other> static auto invalidate_all(auto& ctx) -> void;
+
+#line 179 "regex.h2"
     private: template<typename First, typename ...Other> [[nodiscard]] static auto match_all(cpp2::in<size_t> pos, auto& ctx) -> match_return;
     public: alternative_matcher_logic() = default;
     public: alternative_matcher_logic(alternative_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(alternative_matcher_logic const&) -> void = delete;
 
 
-#line 180 "regex.h2"
+#line 196 "regex.h2"
 };
 
 template<typename CharT> class any_matcher_logic
  {
-    public: [[nodiscard]] static auto match(cpp2::in<size_t> pos, auto& ctx) -> match_return;
     public: [[nodiscard]] static auto alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto;
+    public: static auto invalidate_groups(auto& ctx) -> void;
+    public: [[nodiscard]] static auto match(cpp2::in<size_t> pos, auto& ctx) -> match_return;
     public: [[nodiscard]] static auto to_string() -> bstring<CharT>;
     public: any_matcher_logic() = default;
     public: any_matcher_logic(any_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(any_matcher_logic const&) -> void = delete;
 
-#line 187 "regex.h2"
+#line 204 "regex.h2"
 };
 
 template<typename CharT, CharT C> class char_matcher_logic
  {
-    public: [[nodiscard]] static auto match(cpp2::in<size_t> pos, auto& ctx) -> match_return;
     public: [[nodiscard]] static auto alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto;
+    public: static auto invalidate_groups(auto& ctx) -> void;
+    public: [[nodiscard]] static auto match(cpp2::in<size_t> pos, auto& ctx) -> match_return;
     public: [[nodiscard]] static auto to_string() -> bstring<CharT>;
     public: char_matcher_logic() = default;
     public: char_matcher_logic(char_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(char_matcher_logic const&) -> void = delete;
 
-#line 194 "regex.h2"
+#line 212 "regex.h2"
 };
 
 template<typename CharT, CharT C> class single_class_entry
@@ -272,7 +285,7 @@ template<typename CharT, CharT C> class single_class_entry
     public: single_class_entry(single_class_entry const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(single_class_entry const&) -> void = delete;
 
-#line 200 "regex.h2"
+#line 218 "regex.h2"
 };
 
 template<typename CharT, CharT Start, CharT End> class range_class_entry
@@ -283,39 +296,41 @@ template<typename CharT, CharT Start, CharT End> class range_class_entry
     public: range_class_entry(range_class_entry const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(range_class_entry const&) -> void = delete;
 
-#line 206 "regex.h2"
+#line 224 "regex.h2"
 };
 
 template<typename CharT, bool negate, typename ...List> class class_matcher_logic
  {
+    public: [[nodiscard]] static auto alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto;
+    public: static auto invalidate_groups(auto& ctx) -> void;
+
     public: [[nodiscard]] static auto match(cpp2::in<size_t> pos, auto& ctx) -> match_return;
 
-#line 221 "regex.h2"
-    public: [[nodiscard]] static auto alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto;
-
+#line 242 "regex.h2"
     private: template<typename First, typename ...Other> [[nodiscard]] static auto match_any(cpp2::in<CharT> c) -> bool;
 
-#line 235 "regex.h2"
+#line 254 "regex.h2"
     public: [[nodiscard]] static auto to_string() -> bstring<CharT>;
     public: class_matcher_logic() = default;
     public: class_matcher_logic(class_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(class_matcher_logic const&) -> void = delete;
 
 
-#line 245 "regex.h2"
+#line 264 "regex.h2"
 };
 
-#line 248 "regex.h2"
+#line 267 "regex.h2"
 template<typename CharT> class empty_matcher_logic
  {
-    public: [[nodiscard]] static auto match(cpp2::in<size_t> pos, auto& ctx) -> auto;
     public: [[nodiscard]] static auto alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto;
+    public: static auto invalidate_groups(auto& ctx) -> void;
+    public: [[nodiscard]] static auto match(cpp2::in<size_t> pos, auto& ctx) -> auto;
     public: [[nodiscard]] static auto to_string() -> auto;
     public: empty_matcher_logic() = default;
     public: empty_matcher_logic(empty_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(empty_matcher_logic const&) -> void = delete;
 
-#line 253 "regex.h2"
+#line 273 "regex.h2"
 };
 
 template<typename CharT, CharT C> class escaped_char_matcher_logic
@@ -326,102 +341,131 @@ template<typename CharT, CharT C> class escaped_char_matcher_logic
     public: escaped_char_matcher_logic(escaped_char_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(escaped_char_matcher_logic const&) -> void = delete;
 
-#line 259 "regex.h2"
+#line 279 "regex.h2"
 };
 
 template<typename CharT> class line_end_matcher_logic
  {
-    public: [[nodiscard]] static auto match(cpp2::in<size_t> pos, auto& ctx) -> auto;
     public: [[nodiscard]] static auto alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto;
+    public: static auto invalidate_groups(auto& ctx) -> void;
+    public: [[nodiscard]] static auto match(cpp2::in<size_t> pos, auto& ctx) -> auto;
     public: [[nodiscard]] static auto to_string() -> bstring<CharT>;
     public: line_end_matcher_logic() = default;
     public: line_end_matcher_logic(line_end_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(line_end_matcher_logic const&) -> void = delete;
 
-#line 266 "regex.h2"
+#line 287 "regex.h2"
 };
 
 template<typename CharT> class line_start_matcher_logic
  {
-    public: [[nodiscard]] static auto match(cpp2::in<size_t> pos, auto& ctx) -> auto;
     public: [[nodiscard]] static auto alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto;
+    public: static auto invalidate_groups(auto& ctx) -> void;
+    public: [[nodiscard]] static auto match(cpp2::in<size_t> pos, auto& ctx) -> auto;
     public: [[nodiscard]] static auto to_string() -> auto;
     public: line_start_matcher_logic() = default;
     public: line_start_matcher_logic(line_start_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(line_start_matcher_logic const&) -> void = delete;
 
-#line 273 "regex.h2"
+#line 295 "regex.h2"
 };
 
-template<typename CharT, typename ...List> class list_matcher_logic
+class list_matcher_state: public std::vector<int> {
+
+};
+
+template<typename CharT, int state_index, typename ...List> class list_matcher_logic
  {
-    public: [[nodiscard]] static auto match(cpp2::in<size_t> pos, auto& ctx) -> auto;
+
+    private: [[nodiscard]] static auto prepare_state(auto& ctx, cpp2::in<bool> init) -> auto;
+
+#line 315 "regex.h2"
     public: [[nodiscard]] static auto alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto;
+    public: static auto invalidate_groups(auto& ctx) -> void;
+    public: [[nodiscard]] static auto match(cpp2::in<size_t> pos, auto& ctx) -> auto;
     public: [[nodiscard]] static auto to_string() -> auto;
 
-    private: template<typename First, typename ...Other> [[nodiscard]] static auto match_all(cpp2::in<size_t> pos, auto& ctx) -> match_return;
+    private: template<typename First, typename ...Other> static auto invalidate_all(auto& ctx) -> void;
+
+#line 328 "regex.h2"
+    private: template<typename First, typename ...Other> [[nodiscard]] static auto match_all(cpp2::in<size_t> pos, auto& ctx, auto const& state) -> match_return;
+
+#line 353 "regex.h2"
+    private: template<typename First, typename ...Other> [[nodiscard]] static auto rematch_all(cpp2::in<size_t> pos, auto& ctx, auto const& state) -> match_return;
     public: list_matcher_logic() = default;
     public: list_matcher_logic(list_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(list_matcher_logic const&) -> void = delete;
 
 
-#line 302 "regex.h2"
+#line 383 "regex.h2"
 };
 
 template<typename CharT, typename M, int group> class group_matcher_logic {
+    public: [[nodiscard]] static auto alternate_match(cpp2::in<size_t> pos, auto& ctx) -> match_return;
+
+#line 395 "regex.h2"
+    public: static auto invalidate_groups(auto& ctx) -> void;
+
+#line 399 "regex.h2"
     public: [[nodiscard]] static auto match(cpp2::in<size_t> pos, auto& ctx) -> match_return;
 
-#line 313 "regex.h2"
-    public: [[nodiscard]] static auto alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto;
+#line 408 "regex.h2"
     public: [[nodiscard]] static auto to_string() -> bstring<CharT>;
     public: group_matcher_logic() = default;
     public: group_matcher_logic(group_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(group_matcher_logic const&) -> void = delete;
 
 
-#line 322 "regex.h2"
+#line 416 "regex.h2"
 };
 
 template<typename CharT, int group> class group_ref_matcher_logic {
+    public: [[nodiscard]] static auto alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto;
+    public: static auto invalidate_groups(auto& ctx) -> void;
     public: [[nodiscard]] static auto match(cpp2::in<size_t> pos, auto& ctx) -> auto;
 
-    public: [[nodiscard]] static auto alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto;
+#line 424 "regex.h2"
     public: [[nodiscard]] static auto to_string() -> bstring<CharT>;
     public: group_ref_matcher_logic() = default;
     public: group_ref_matcher_logic(group_ref_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(group_ref_matcher_logic const&) -> void = delete;
 
-#line 329 "regex.h2"
+#line 425 "regex.h2"
 };
 
 template<typename CharT, typename M, int min_count, int max_count, int state_index> class range_matcher_logic {
 
     // TODO: Add static assert on min_count and max_count.
 
-    public: [[nodiscard]] static auto match(cpp2::in<size_t> pos, auto& ctx) -> match_return;
+    private: [[nodiscard]] static auto get_min_count() -> auto;
 
-#line 359 "regex.h2"
+#line 439 "regex.h2"
     public: [[nodiscard]] static auto alternate_match(cpp2::in<size_t> pos, auto& ctx) -> match_return;
 
-#line 371 "regex.h2"
+#line 451 "regex.h2"
+    public: static auto invalidate_groups(auto& ctx) -> void;
+
+    public: [[nodiscard]] static auto match(cpp2::in<size_t> pos, auto& ctx) -> match_return;
+
+#line 477 "regex.h2"
     public: [[nodiscard]] static auto to_string() -> bstring<CharT>;
     public: range_matcher_logic() = default;
     public: range_matcher_logic(range_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(range_matcher_logic const&) -> void = delete;
 
 
-#line 389 "regex.h2"
+#line 495 "regex.h2"
 };
 
 template<typename CharT, typename M, int min_count, int max_count, int state_index, CharT symbol> class special_range_matcher_logic: public range_matcher_logic<CharT,M,min_count,max_count,state_index> {
 
-#line 394 "regex.h2"
+#line 500 "regex.h2"
     public: [[nodiscard]] static auto to_string() -> bstring<CharT>;
     public: special_range_matcher_logic() = default;
     public: special_range_matcher_logic(special_range_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(special_range_matcher_logic const&) -> void = delete;
 
-#line 395 "regex.h2"
+#line 501 "regex.h2"
 };
 
 class regex_parser_state {
@@ -430,20 +474,20 @@ class regex_parser_state {
 
     public: auto start_new_list() & -> void;
 
-#line 407 "regex.h2"
+#line 513 "regex.h2"
     public: auto swap(regex_parser_state& t) & -> void;
 
-#line 412 "regex.h2"
+#line 518 "regex.h2"
     public: auto add(auto const& matcher) & -> void;
 
-#line 416 "regex.h2"
+#line 522 "regex.h2"
     public: auto wrap_last(auto const& matcher) & -> void;
 
-#line 423 "regex.h2"
+#line 529 "regex.h2"
     public: [[nodiscard]] auto empty() const& -> bool;
 };
 
-#line 427 "regex.h2"
+#line 533 "regex.h2"
 template<typename Error_out> class regex_parser {
 
     private: std::string_view regex; 
@@ -458,72 +502,72 @@ template<typename Error_out> class regex_parser {
 
     public: explicit regex_parser(cpp2::in<std::string_view> r, Error_out const& e);
 
-#line 444 "regex.h2"
+#line 550 "regex.h2"
     public: [[nodiscard]] auto new_state() & -> regex_parser_state;
 
-#line 450 "regex.h2"
+#line 556 "regex.h2"
     public: auto restore_state(cpp2::in<regex_parser_state> old_state) & -> void;
 
-#line 454 "regex.h2"
+#line 560 "regex.h2"
     private: [[nodiscard]] auto push_matcher_state(cpp2::in<std::string> t) & -> int;
 
-#line 460 "regex.h2"
+#line 566 "regex.h2"
     private: [[nodiscard]] static auto join(cpp2::in<std::vector<std::string>> list) -> std::string;
 
-#line 472 "regex.h2"
-    private: [[nodiscard]] static auto create_matcher_from_list(cpp2::in<std::vector<std::string>> list) -> std::string;
+#line 578 "regex.h2"
+    private: [[nodiscard]] auto create_matcher_from_list(cpp2::in<std::vector<std::string>> list) & -> std::string;
 
-#line 482 "regex.h2"
+#line 589 "regex.h2"
     public: [[nodiscard]] auto create_matcher_state() const& -> std::string;
 
-#line 487 "regex.h2"
-    public: [[nodiscard]] auto create_matcher_from_state() const& -> std::string;
+#line 594 "regex.h2"
+    public: [[nodiscard]] auto create_matcher_from_state() & -> std::string;
 
-#line 509 "regex.h2"
+#line 616 "regex.h2"
     public: auto error(cpp2::in<std::string> message) & -> void;
 
-#line 513 "regex.h2"
+#line 620 "regex.h2"
     public: [[nodiscard]] auto is_alternative(cpp2::in<char> c) & -> bool;
 
-#line 520 "regex.h2"
+#line 627 "regex.h2"
     public: [[nodiscard]] auto is_anchor(cpp2::in<char> c) & -> bool;
 
-#line 534 "regex.h2"
+#line 641 "regex.h2"
     public: [[nodiscard]] auto is_any(cpp2::in<char> c) & -> bool;
 
-#line 542 "regex.h2"
+#line 649 "regex.h2"
     public: [[nodiscard]] auto is_class(cpp2::in<char> c) & -> bool;
 
-#line 610 "regex.h2"
+#line 717 "regex.h2"
     public: [[nodiscard]] auto is_escape(cpp2::in<char> c) & -> bool;
 
-#line 644 "regex.h2"
+#line 751 "regex.h2"
     public: [[nodiscard]] auto is_group(cpp2::in<char> c) & -> bool;
 
-#line 663 "regex.h2"
+#line 770 "regex.h2"
     public: [[nodiscard]] auto is_handle_special(cpp2::in<char> c) & -> bool;
 
-#line 672 "regex.h2"
+#line 779 "regex.h2"
     public: [[nodiscard]] auto is_range(cpp2::in<char> c) & -> bool;
 
-#line 715 "regex.h2"
+#line 822 "regex.h2"
     public: [[nodiscard]] auto is_special_range(cpp2::in<char> c) & -> bool;
 
-#line 741 "regex.h2"
+#line 848 "regex.h2"
     public: auto parse_until(cpp2::in<char> term) & -> void;
 
-#line 762 "regex.h2"
+#line 869 "regex.h2"
     public: [[nodiscard]] auto parse() & -> std::string;
     public: regex_parser(regex_parser const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(regex_parser const&) -> void = delete;
 
 
-#line 771 "regex.h2"
+#line 878 "regex.h2"
 };
 
 template<typename Err> [[nodiscard]] auto generate_template(cpp2::in<std::string_view> regex, Err const& err) -> std::string;
 
-#line 780 "regex.h2"
+#line 887 "regex.h2"
 }
 }
 
@@ -573,6 +617,11 @@ namespace regex {
 #line 95 "regex.h2"
     }
 
+    template <typename CharT, typename State, size_t max_groups> auto match_context<CharT,State,max_groups>::invalidate_group(cpp2::in<size_t> group) & -> void{
+        CPP2_ASSERT_IN_BOUNDS(ranges, group) = { bstring<CharT>::npos, bstring<CharT>::npos };
+        CPP2_ASSERT_IN_BOUNDS(groups, group) = {  };
+    }
+
     template <typename CharT, typename State, size_t max_groups> auto match_context<CharT,State,max_groups>::set_group(cpp2::in<size_t> group, cpp2::in<size_t> pos, cpp2::in<size_t> length) & -> void{
         CPP2_ASSERT_IN_BOUNDS(ranges, group) = { pos, pos + length };
         CPP2_ASSERT_IN_BOUNDS(groups, group) = CPP2_UFCS(substr)(str, pos, pos + length);
@@ -594,7 +643,7 @@ namespace regex {
 
     template <typename CharT, typename State, size_t max_groups> template<int pos> [[nodiscard]] auto match_context<CharT,State,max_groups>::get_state() & -> auto { return &std::get<pos>(state);  }
 
-#line 123 "regex.h2"
+#line 128 "regex.h2"
     template <typename CharT, typename Matcher, typename State, size_t groups> [[nodiscard]] auto regular_expression<CharT,Matcher,State,groups>::match(cpp2::in<view<CharT>> str) const& -> bool{
         context ctx {str};    // TODO: Wrong error about not initialized.
         auto r {match(str, ctx)}; 
@@ -626,10 +675,19 @@ namespace regex {
 
     template <typename CharT, typename Matcher, typename State, size_t groups> [[nodiscard]] auto regular_expression<CharT,Matcher,State,groups>::to_string() const& -> auto { return Matcher::to_string();  }
 
-#line 161 "regex.h2"
-    template <typename CharT, typename ...List> [[nodiscard]] auto alternative_matcher_logic<CharT,List...>::match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_all<List...>(pos, ctx);  }
+#line 166 "regex.h2"
     template <typename CharT, typename ...List> [[nodiscard]] auto alternative_matcher_logic<CharT,List...>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_return(false, 0);  }
+    template <typename CharT, typename ...List> [[nodiscard]] auto alternative_matcher_logic<CharT,List...>::invalidate_groups(auto& ctx) -> auto { return invalidate_all<List...>(ctx);  }
+    template <typename CharT, typename ...List> [[nodiscard]] auto alternative_matcher_logic<CharT,List...>::match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_all<List...>(pos, ctx);  }
     template <typename CharT, typename ...List> [[nodiscard]] auto alternative_matcher_logic<CharT,List...>::to_string() -> auto { return CPP2_UFCS(substr)(((bstring<CharT>() + ... + ("|" + List::to_string()))), 1);  }// substr: Remove first '|'.
+
+    template <typename CharT, typename ...List> template<typename First, typename ...Other> auto alternative_matcher_logic<CharT,List...>::invalidate_all(auto& ctx) -> void{
+        First::invalidate_groups(ctx);
+
+        if constexpr (0 != sizeof...(Other)) {
+            invalidate_all<Other...>(ctx);
+        }
+    }
 
     template <typename CharT, typename ...List> template<typename First, typename ...Other> [[nodiscard]] auto alternative_matcher_logic<CharT,List...>::match_all(cpp2::in<size_t> pos, auto& ctx) -> match_return{
         match_return r {First::match(pos, ctx)}; 
@@ -638,6 +696,8 @@ namespace regex {
             return r; 
         }
         else {
+            First::invalidate_groups(ctx); // Did not match we need to remove matched ranges.
+
             if constexpr (0 != sizeof...(Other)) {
                 return match_all<Other...>(pos + std::move(r).length, ctx); 
             }
@@ -647,25 +707,30 @@ namespace regex {
         }
     }
 
-#line 184 "regex.h2"
-    template <typename CharT> [[nodiscard]] auto any_matcher_logic<CharT>::match(cpp2::in<size_t> pos, auto& ctx) -> match_return { return match_return::create(cpp2::cmp_less(pos,CPP2_UFCS(size)(ctx.str)), 1);  }
+#line 200 "regex.h2"
     template <typename CharT> [[nodiscard]] auto any_matcher_logic<CharT>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_return(false, 0);  }
+    template <typename CharT> auto any_matcher_logic<CharT>::invalidate_groups(auto& ctx) -> void{}
+    template <typename CharT> [[nodiscard]] auto any_matcher_logic<CharT>::match(cpp2::in<size_t> pos, auto& ctx) -> match_return { return match_return::create(cpp2::cmp_less(pos,CPP2_UFCS(size)(ctx.str)), 1);  }
     template <typename CharT> [[nodiscard]] auto any_matcher_logic<CharT>::to_string() -> bstring<CharT> { return bstring<CharT>(1, '.');  }
 
-#line 191 "regex.h2"
-    template <typename CharT, CharT C> [[nodiscard]] auto char_matcher_logic<CharT,C>::match(cpp2::in<size_t> pos, auto& ctx) -> match_return { return match_return::create(cpp2::cmp_less(pos,CPP2_UFCS(size)(ctx.str)) && CPP2_ASSERT_IN_BOUNDS(ctx.str, pos) == C, 1);  }
+#line 208 "regex.h2"
     template <typename CharT, CharT C> [[nodiscard]] auto char_matcher_logic<CharT,C>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_return(false, 0);  }
+    template <typename CharT, CharT C> auto char_matcher_logic<CharT,C>::invalidate_groups(auto& ctx) -> void{}
+    template <typename CharT, CharT C> [[nodiscard]] auto char_matcher_logic<CharT,C>::match(cpp2::in<size_t> pos, auto& ctx) -> match_return { return match_return::create(cpp2::cmp_less(pos,CPP2_UFCS(size)(ctx.str)) && CPP2_ASSERT_IN_BOUNDS(ctx.str, pos) == C, 1);  }
     template <typename CharT, CharT C> [[nodiscard]] auto char_matcher_logic<CharT,C>::to_string() -> bstring<CharT> { return bstring<CharT>(1, C);  }
 
-#line 198 "regex.h2"
+#line 216 "regex.h2"
     template <typename CharT, CharT C> [[nodiscard]] auto single_class_entry<CharT,C>::includes(cpp2::in<CharT> c) -> auto { return c == C;  }
     template <typename CharT, CharT C> [[nodiscard]] auto single_class_entry<CharT,C>::to_string() -> auto { return bstring<CharT>(1, C);  }
 
-#line 204 "regex.h2"
+#line 222 "regex.h2"
     template <typename CharT, CharT Start, CharT End> [[nodiscard]] auto range_class_entry<CharT,Start,End>::includes(cpp2::in<CharT> c) -> auto { return [_0 = Start, _1 = c, _2 = End]{ return cpp2::cmp_less_eq(_0,_1) && cpp2::cmp_less_eq(_1,_2); }();  }
     template <typename CharT, CharT Start, CharT End> [[nodiscard]] auto range_class_entry<CharT,Start,End>::to_string() -> auto { return cpp2::to_string(Start) + "-" + cpp2::to_string(End);  }
 
-#line 210 "regex.h2"
+#line 228 "regex.h2"
+    template <typename CharT, bool negate, typename ...List> [[nodiscard]] auto class_matcher_logic<CharT,negate,List...>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_return(false, 0);  }
+    template <typename CharT, bool negate, typename ...List> auto class_matcher_logic<CharT,negate,List...>::invalidate_groups(auto& ctx) -> void{}
+
     template <typename CharT, bool negate, typename ...List> [[nodiscard]] auto class_matcher_logic<CharT,negate,List...>::match(cpp2::in<size_t> pos, auto& ctx) -> match_return{
         CharT c {CPP2_ASSERT_IN_BOUNDS(ctx.str, pos)};
         bool r {match_any<List...>(std::move(c))};
@@ -676,8 +741,6 @@ namespace regex {
 
         return match_return::create(std::move(r), 1);
     }
-
-    template <typename CharT, bool negate, typename ...List> [[nodiscard]] auto class_matcher_logic<CharT,negate,List...>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_return(false, 0);  }
 
     template <typename CharT, bool negate, typename ...List> template<typename First, typename ...Other> [[nodiscard]] auto class_matcher_logic<CharT,negate,List...>::match_any(cpp2::in<CharT> c) -> bool{
         bool r {First::includes(c)};
@@ -702,36 +765,62 @@ namespace regex {
         return r;
     }
 
-#line 250 "regex.h2"
-    template <typename CharT> [[nodiscard]] auto empty_matcher_logic<CharT>::match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_return(true, 0);  }
+#line 269 "regex.h2"
     template <typename CharT> [[nodiscard]] auto empty_matcher_logic<CharT>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_return(false, 0);  }
+    template <typename CharT> auto empty_matcher_logic<CharT>::invalidate_groups(auto& ctx) -> void{}
+    template <typename CharT> [[nodiscard]] auto empty_matcher_logic<CharT>::match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_return(true, 0);  }
     template <typename CharT> [[nodiscard]] auto empty_matcher_logic<CharT>::to_string() -> auto { return bstring<CharT>();  }
 
-#line 258 "regex.h2"
+#line 278 "regex.h2"
     template <typename CharT, CharT C> [[nodiscard]] auto escaped_char_matcher_logic<CharT,C>::to_string() -> bstring<CharT> { return "\\" + cpp2::to_string(C);  }
 
-#line 263 "regex.h2"
-    template <typename CharT> [[nodiscard]] auto line_end_matcher_logic<CharT>::match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_return::create(pos == CPP2_UFCS(size)(ctx.str) || CPP2_ASSERT_IN_BOUNDS(ctx.str, pos) == '\n', 0);  }// TODO: Extend to other line feeds.
+#line 283 "regex.h2"
     template <typename CharT> [[nodiscard]] auto line_end_matcher_logic<CharT>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_return(false, 0);  }
+    template <typename CharT> auto line_end_matcher_logic<CharT>::invalidate_groups(auto& ctx) -> void{}
+    template <typename CharT> [[nodiscard]] auto line_end_matcher_logic<CharT>::match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_return::create(pos == CPP2_UFCS(size)(ctx.str) || CPP2_ASSERT_IN_BOUNDS(ctx.str, pos) == '\n', 0);  }// TODO: Extend to other line feeds.
     template <typename CharT> [[nodiscard]] auto line_end_matcher_logic<CharT>::to_string() -> bstring<CharT> { return "\\$";  }
 
-#line 270 "regex.h2"
-    template <typename CharT> [[nodiscard]] auto line_start_matcher_logic<CharT>::match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_return::create(pos == 0 || CPP2_ASSERT_IN_BOUNDS(ctx.str, pos - 1) == '\n', 0);  }// TODO: Extend to other line feeds.
+#line 291 "regex.h2"
     template <typename CharT> [[nodiscard]] auto line_start_matcher_logic<CharT>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_return(false, 0);  }
+    template <typename CharT> auto line_start_matcher_logic<CharT>::invalidate_groups(auto& ctx) -> void{}
+    template <typename CharT> [[nodiscard]] auto line_start_matcher_logic<CharT>::match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_return::create(pos == 0 || CPP2_ASSERT_IN_BOUNDS(ctx.str, pos - 1) == '\n', 0);  }// TODO: Extend to other line feeds.
     template <typename CharT> [[nodiscard]] auto line_start_matcher_logic<CharT>::to_string() -> auto { return bstring<CharT>(1, '^');  }
 
-#line 277 "regex.h2"
-    template <typename CharT, typename ...List> [[nodiscard]] auto list_matcher_logic<CharT,List...>::match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_all<List...>(pos, ctx);  }
-    template <typename CharT, typename ...List> [[nodiscard]] auto list_matcher_logic<CharT,List...>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_return(false, 0);  }
-    template <typename CharT, typename ...List> [[nodiscard]] auto list_matcher_logic<CharT,List...>::to_string() -> auto { return (bstring<CharT>() + ... + List::to_string()); }
+#line 304 "regex.h2"
+    template <typename CharT, int state_index, typename ...List> [[nodiscard]] auto list_matcher_logic<CharT,state_index,List...>::prepare_state(auto& ctx, cpp2::in<bool> init) -> auto{
+        auto state {CPP2_UFCS_TEMPLATE(get_state<state_index>)(ctx)};
 
-    template <typename CharT, typename ...List> template<typename First, typename ...Other> [[nodiscard]] auto list_matcher_logic<CharT,List...>::match_all(cpp2::in<size_t> pos, auto& ctx) -> match_return{
+        if (init) {
+            CPP2_UFCS(clear)((*cpp2::assert_not_null(state)));
+            CPP2_UFCS(resize)((*cpp2::assert_not_null(state)), sizeof...(List));
+        }
+
+        return state;
+    }
+
+    template <typename CharT, int state_index, typename ...List> [[nodiscard]] auto list_matcher_logic<CharT,state_index,List...>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto { return rematch_all<List...>(pos, ctx, prepare_state(ctx, false));  }
+    template <typename CharT, int state_index, typename ...List> auto list_matcher_logic<CharT,state_index,List...>::invalidate_groups(auto& ctx) -> void { invalidate_all<List...>(ctx);  }
+    template <typename CharT, int state_index, typename ...List> [[nodiscard]] auto list_matcher_logic<CharT,state_index,List...>::match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_all<List...>(pos, ctx, prepare_state(ctx, true));  }
+    template <typename CharT, int state_index, typename ...List> [[nodiscard]] auto list_matcher_logic<CharT,state_index,List...>::to_string() -> auto { return (bstring<CharT>() + ... + List::to_string()); }
+
+    template <typename CharT, int state_index, typename ...List> template<typename First, typename ...Other> auto list_matcher_logic<CharT,state_index,List...>::invalidate_all(auto& ctx) -> void{
+      First::invalidate_groups(ctx);
+
+      if constexpr (0 != sizeof...(Other)) {
+          invalidate_all<Other...>(ctx);
+      }
+    }
+
+    template <typename CharT, int state_index, typename ...List> template<typename First, typename ...Other> [[nodiscard]] auto list_matcher_logic<CharT,state_index,List...>::match_all(cpp2::in<size_t> pos, auto& ctx, auto const& state) -> match_return{
+      auto constexpr entry_pos = sizeof...(List) - sizeof...(Other) - 1;
       match_return r {First::match(pos, ctx)}; 
 
       if (r.matched) {
+        CPP2_ASSERT_IN_BOUNDS((*cpp2::assert_not_null(state)), entry_pos) = pos;
+
         if constexpr (0 != sizeof...(Other)) {
           while( r.matched ) {
-            match_return o {match_all<Other...>(pos + r.length, ctx)};
+            match_return o {match_all<Other...>(pos + r.length, ctx, state)};
 
             if (o.matched) {
                 r.length += o.length;
@@ -747,16 +836,60 @@ namespace regex {
       return r; 
     }
 
-#line 305 "regex.h2"
-    template <typename CharT, typename M, int group> [[nodiscard]] auto group_matcher_logic<CharT,M,group>::match(cpp2::in<size_t> pos, auto& ctx) -> match_return{
-        match_return r {M::match(pos, ctx)}; 
+    template <typename CharT, int state_index, typename ...List> template<typename First, typename ...Other> [[nodiscard]] auto list_matcher_logic<CharT,state_index,List...>::rematch_all(cpp2::in<size_t> pos, auto& ctx, auto const& state) -> match_return{
+        auto constexpr entry_pos = sizeof...(List) - sizeof...(Other) - 1;
+
+        match_return r {false, 0};
+        if constexpr (0 != sizeof...(Other)) {
+            r = rematch_all<Other...>(CPP2_ASSERT_IN_BOUNDS((*cpp2::assert_not_null(state)), entry_pos + 1), ctx, state);
+        }else {
+            r = { false, 0 };// Default fails. This triggers the alternate on the last element.
+        }
+
+        if (!(r.matched)) {
+            r = First::alternate_match(pos, ctx);
+
+            if constexpr (0 != sizeof...(Other)) {
+                while( r.matched ) {
+                    match_return o {match_all<Other...>(pos + r.length, ctx, state)};
+
+                    if (o.matched) {
+                        r.length += o.length;
+                        break;
+                    }
+                    else {
+                        r = First::alternate_match(pos, ctx);
+                    }
+                }
+            }
+        }
+
+        return r;
+    }
+
+#line 386 "regex.h2"
+    template <typename CharT, typename M, int group> [[nodiscard]] auto group_matcher_logic<CharT,M,group>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> match_return{
+        match_return r {M::alternate_match(pos, ctx)};
 
         if (r.matched) {
             CPP2_UFCS(set_group)(ctx, group, pos, r.length);
         }
         return r; 
     }
-    template <typename CharT, typename M, int group> [[nodiscard]] auto group_matcher_logic<CharT,M,group>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_return(false, 0);  }
+
+    template <typename CharT, typename M, int group> auto group_matcher_logic<CharT,M,group>::invalidate_groups(auto& ctx) -> void{
+        CPP2_UFCS(invalidate_group)(ctx, group);
+    }
+
+    template <typename CharT, typename M, int group> [[nodiscard]] auto group_matcher_logic<CharT,M,group>::match(cpp2::in<size_t> pos, auto& ctx) -> match_return{
+        match_return r {M::match(pos, ctx)};
+
+        if (r.matched) {
+            CPP2_UFCS(set_group)(ctx, group, pos, r.length);
+        }
+        return r;
+    }
+
     template <typename CharT, typename M, int group> [[nodiscard]] auto group_matcher_logic<CharT,M,group>::to_string() -> bstring<CharT>{
         if (group == 0) {
             return M::to_string();
@@ -766,13 +899,37 @@ namespace regex {
         }
     }
 
-#line 325 "regex.h2"
+#line 419 "regex.h2"
+    template <typename CharT, int group> [[nodiscard]] auto group_ref_matcher_logic<CharT,group>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_return(false, 0);  }
+    template <typename CharT, int group> auto group_ref_matcher_logic<CharT,group>::invalidate_groups(auto& ctx) -> void{}
     template <typename CharT, int group> [[nodiscard]] auto group_ref_matcher_logic<CharT,group>::match(cpp2::in<size_t> pos, auto& ctx) -> auto { 
         return match_return::create(CPP2_UFCS(starts_with)(CPP2_UFCS(substr)(ctx.str, pos), CPP2_ASSERT_IN_BOUNDS(ctx.groups, group)), CPP2_UFCS(size)(CPP2_ASSERT_IN_BOUNDS(ctx.groups, group)));  }
-    template <typename CharT, int group> [[nodiscard]] auto group_ref_matcher_logic<CharT,group>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto { return match_return(false, 0);  }
+
     template <typename CharT, int group> [[nodiscard]] auto group_ref_matcher_logic<CharT,group>::to_string() -> bstring<CharT> { return "\\(" + cpp2::to_string(group) + ")";  }
 
-#line 335 "regex.h2"
+#line 431 "regex.h2"
+    template <typename CharT, typename M, int min_count, int max_count, int state_index> [[nodiscard]] auto range_matcher_logic<CharT,M,min_count,max_count,state_index>::get_min_count() -> auto{
+        if constexpr (min_count == -1) {
+            return 0;
+        }else {
+            return min_count;
+        }
+    }
+
+    template <typename CharT, typename M, int min_count, int max_count, int state_index> [[nodiscard]] auto range_matcher_logic<CharT,M,min_count,max_count,state_index>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> match_return{
+        auto state {CPP2_UFCS_TEMPLATE(get_state<state_index>)(ctx)};
+
+        if (!(CPP2_UFCS(empty)((*cpp2::assert_not_null(state))))) {
+            auto length {CPP2_UFCS(back)((*cpp2::assert_not_null(state)))};
+            CPP2_UFCS(pop_back)((*cpp2::assert_not_null(state)));
+            return match_return::create(cpp2::cmp_greater_eq(CPP2_UFCS(ssize)((*cpp2::assert_not_null(std::move(state)))),get_min_count()), std::move(length));
+        }else {
+            return match_return(false, 0);
+        }
+    }
+
+    template <typename CharT, typename M, int min_count, int max_count, int state_index> auto range_matcher_logic<CharT,M,min_count,max_count,state_index>::invalidate_groups(auto& ctx) -> void { M::invalidate_groups(ctx);  }
+
     template <typename CharT, typename M, int min_count, int max_count, int state_index> [[nodiscard]] auto range_matcher_logic<CharT,M,min_count,max_count,state_index>::match(cpp2::in<size_t> pos, auto& ctx) -> match_return{
       match_return r {true, 0}; 
       match_return o {true, 0}; 
@@ -794,19 +951,7 @@ namespace regex {
       }
 
       static_cast<void>(std::move(state));
-      return match_return::create(cpp2::cmp_greater_eq(std::move(count),min_count), std::move(r).length); 
-    }
-
-    template <typename CharT, typename M, int min_count, int max_count, int state_index> [[nodiscard]] auto range_matcher_logic<CharT,M,min_count,max_count,state_index>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> match_return{
-        auto state {CPP2_UFCS_TEMPLATE(get_state<state_index>)(ctx)};
-
-        if (!(CPP2_UFCS(empty)((*cpp2::assert_not_null(state))))) {
-            auto length {CPP2_UFCS(back)((*cpp2::assert_not_null(state)))};
-            CPP2_UFCS(pop_back)((*cpp2::assert_not_null(state)));
-            return match_return::create(cpp2::cmp_greater_eq(CPP2_UFCS(ssize)((*cpp2::assert_not_null(std::move(state)))),min_count), std::move(length));
-        }else {
-            return match_return(false, 0);
-        }
+      return match_return::create(cpp2::cmp_greater_eq(std::move(count),get_min_count()), std::move(r).length);
     }
 
     template <typename CharT, typename M, int min_count, int max_count, int state_index> [[nodiscard]] auto range_matcher_logic<CharT,M,min_count,max_count,state_index>::to_string() -> bstring<CharT>{
@@ -815,11 +960,11 @@ namespace regex {
       if (min_count == max_count) {
         r += "{" + cpp2::to_string(min_count) + "}";
       }
-      else {if (min_count == 0) {
+      else {if (min_count == -1) {
         r += "{," + cpp2::to_string(max_count) + "}";
       }
       else {if (max_count == std::numeric_limits<int>::max()) {
-        r += "(" + cpp2::to_string(min_count) + ",}";
+        r += "{" + cpp2::to_string(min_count) + ",}";
       }
       else {
         r += "{" + cpp2::to_string(min_count) + "," + cpp2::to_string(max_count) + "}";
@@ -828,10 +973,10 @@ namespace regex {
       return r; 
     }
 
-#line 394 "regex.h2"
+#line 500 "regex.h2"
     template <typename CharT, typename M, int min_count, int max_count, int state_index, CharT symbol> [[nodiscard]] auto special_range_matcher_logic<CharT,M,min_count,max_count,state_index,symbol>::to_string() -> bstring<CharT> { return M::to_string() + symbol;  }
 
-#line 401 "regex.h2"
+#line 507 "regex.h2"
     auto regex_parser_state::start_new_list() & -> void{
         std::vector<std::string> new_list {}; 
         std::swap(new_list, cur_match_list);
@@ -856,12 +1001,12 @@ namespace regex {
 
     [[nodiscard]] auto regex_parser_state::empty() const& -> bool { return CPP2_UFCS(empty)(cur_match_list);  }
 
-#line 439 "regex.h2"
+#line 545 "regex.h2"
     template <typename Error_out> regex_parser<Error_out>::regex_parser(cpp2::in<std::string_view> r, Error_out const& e)
         : regex{ r }
         , error_out{ e }{
 
-#line 442 "regex.h2"
+#line 548 "regex.h2"
     }
 
     template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::new_state() & -> regex_parser_state{
@@ -892,10 +1037,11 @@ namespace regex {
         return r;
     }
 
-    template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::create_matcher_from_list(cpp2::in<std::vector<std::string>> list) -> std::string{
+    template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::create_matcher_from_list(cpp2::in<std::vector<std::string>> list) & -> std::string{
         if (CPP2_UFCS(empty)(list)) {return "::cpp2::regex::empty_matcher_logic<char>"; }
 
-        std::string matcher {"::cpp2::regex::list_matcher_logic<char, "};
+        auto state_index {push_matcher_state("::cpp2::regex::list_matcher_state")};
+        std::string matcher {"::cpp2::regex::list_matcher_logic<char, " + cpp2::to_string(std::move(state_index)) + ", "};
         matcher += join(list);
         matcher += ">";
 
@@ -907,7 +1053,7 @@ namespace regex {
         return "std::tuple<" + cpp2::to_string(std::move(inner)) + ">";
     }
 
-    template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::create_matcher_from_state() const& -> std::string{
+    template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::create_matcher_from_state() & -> std::string{
         // Early out for no alternatives
         if (0 == CPP2_UFCS(size)(cur_state.alternate_match_lists)) {return create_matcher_from_list(cur_state.cur_match_list); }
 
@@ -1103,7 +1249,7 @@ namespace regex {
         std::string inner {trim_copy(CPP2_UFCS(substr)(regex, pos + 1, end - pos - 1))}; 
         if (CPP2_UFCS(empty)(inner)) {error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'"); }
 
-        std::string min_count {"0"}; 
+        std::string min_count {"-1"};
         std::string max_count {"std::numeric_limits<int>::max()"}; 
 
         size_t sep {CPP2_UFCS(find)(inner, ",")}; 
@@ -1191,7 +1337,7 @@ namespace regex {
         return "::cpp2::regex::regular_expression<char, ::cpp2::regex::group_matcher_logic<char, " + cpp2::to_string(std::move(inner)) + ", 0>, " + cpp2::to_string(std::move(matcher_state)) + ", " + cpp2::to_string(named_groups) + ">";
     }
 
-#line 773 "regex.h2"
+#line 880 "regex.h2"
 template<typename Err> [[nodiscard]] auto generate_template(cpp2::in<std::string_view> regex, Err const& err) -> std::string{
     regex_parser<Err> parser {regex, err}; 
     auto r {CPP2_UFCS(parse)(parser)}; 
