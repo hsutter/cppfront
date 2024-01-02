@@ -77,11 +77,13 @@ match_return: @struct type =
     }
 }
 
-match_context: <CharT, max_groups: size_t> type =
+match_context: <CharT, State, max_groups: size_t> type =
 {
     public str: view<CharT>;
     public ranges: std::array<std::pair<size_t, size_t>, max_groups> = ();
     public groups: std::array<view<CharT>, max_groups> = ();
+
+    public state: State = ();
 
     operator=: (out this) = { // TODO: How to delegate???
         str = "";
@@ -110,11 +112,13 @@ match_context: <CharT, max_groups: size_t> type =
 
         return r;
     }
+
+    get_state: <pos: int> (inout this) -> _ = std::get<pos>(state)&;
 }
 
-regular_expression: <CharT, Matcher, groups: size_t> type = {
+regular_expression: <CharT, Matcher, State, groups: size_t> type = {
 
-    context: type == match_context<CharT, groups>;
+    context: type == match_context<CharT, State, groups>;
 
     match: (in this, str: view<CharT>) -> bool = {
         ctx: context = (str); // TODO: Wrong error about not initialized.
@@ -155,6 +159,7 @@ regular_expression: <CharT, Matcher, groups: size_t> type = {
 
 alternative_matcher_logic: <CharT, List ...> type = {
     match: (pos: size_t, inout ctx: _) -> _ = match_all<List...>(pos, ctx);
+    alternate_match: (pos: size_t, inout ctx) match_return(false, 0);
     to_string: () -> _ = ((bstring<CharT>() + ... + ("|" + List::to_string()))).substr(1); // substr: Remove first '|'.
 
     private match_all: <First, Other ...> (pos: size_t, inout ctx: _) -> match_return = {
@@ -177,12 +182,14 @@ alternative_matcher_logic: <CharT, List ...> type = {
 any_matcher_logic: <CharT> type =
 {
     match: (pos: size_t, inout ctx: _) -> match_return = match_return::create(pos < ctx.str.size(), 1);
+    alternate_match: (pos: size_t, inout ctx) match_return(false, 0);
     to_string: () -> bstring<CharT> = bstring<CharT>(1, '.');
 }
 
 char_matcher_logic: <CharT, C: CharT> type =
 {
     match: (pos: size_t, inout ctx: _) -> match_return = match_return::create(pos < ctx.str.size() && ctx.str[pos] == C, 1);
+    alternate_match: (pos: size_t, inout ctx) match_return(false, 0);
     to_string: () -> bstring<CharT> = bstring<CharT>(1, C);
 }
 
@@ -210,6 +217,8 @@ class_matcher_logic: <CharT, negate: bool, List ...> type =
 
         return match_return::create(r, 1);
     }
+
+    alternate_match: (pos: size_t, inout ctx) match_return(false, 0);
 
     private match_any: <First, Other ...> (c: CharT) -> bool = {
         r: bool = First::includes(c);
@@ -239,6 +248,7 @@ class_matcher_logic: <CharT, negate: bool, List ...> type =
 empty_matcher_logic: <CharT> type =
 {
     match: (pos: size_t, inout ctx: _) match_return(true, 0);
+    alternate_match: (pos: size_t, inout ctx) match_return(false, 0);
     to_string: () bstring<CharT>();
 }
 
@@ -251,18 +261,21 @@ escaped_char_matcher_logic: <CharT, C: CharT> type =
 line_end_matcher_logic: <CharT> type =
 {
     match: (pos: size_t, inout ctx) -> _ = match_return::create(pos == ctx.str.size() || ctx.str[pos] == '\n', 0); // TODO: Extend to other line feeds.
+    alternate_match: (pos: size_t, inout ctx) match_return(false, 0);
     to_string: () -> bstring<CharT> = "\\$";
 }
 
 line_start_matcher_logic: <CharT> type =
 {
     match: (pos: size_t, inout ctx) -> _ = match_return::create(pos == 0 || ctx.str[pos - 1] == '\n', 0); // TODO: Extend to other line feeds.
+    alternate_match: (pos: size_t, inout ctx) match_return(false, 0);
     to_string: () -> _ = bstring<CharT>(1, '^');
 }
 
 list_matcher_logic: <CharT, List ...> type =
 {
     match: (pos: size_t, inout ctx: _) -> _ = match_all<List...>(pos, ctx);
+    alternate_match: (pos: size_t, inout ctx) match_return(false, 0);
     to_string: () -> _  = (bstring<CharT>() + ... + List::to_string());
 
     private match_all: <First, Other ...> (pos: size_t, inout ctx: _) -> match_return = {
@@ -270,13 +283,16 @@ list_matcher_logic: <CharT, List ...> type =
 
       if r.matched {
         if constexpr 0 != sizeof...(Other) {
-          o: match_return = match_all<Other...>(pos + r.length, ctx);
+          while r.matched {
+            o: match_return = match_all<Other...>(pos + r.length, ctx);
 
-          if o.matched {
-            r.length += o.length;
-          }
-          else {
-            r = (false, 0);
+            if o.matched {
+                r.length += o.length;
+                break;
+            }
+            else {
+                r = First::alternate_match(pos, ctx);
+            }
           }
         }
       }
@@ -294,6 +310,7 @@ group_matcher_logic: <CharT, M, group: int> type = {
         }
         return r;
     }
+    alternate_match: (pos: size_t, inout ctx) match_return(false, 0);
     to_string: () -> bstring<CharT> = {
         if group == 0 {
             return M::to_string();
@@ -307,10 +324,11 @@ group_matcher_logic: <CharT, M, group: int> type = {
 group_ref_matcher_logic: <CharT, group: int> type = {
     match: (pos: size_t, inout ctx: _) -> _ =
         match_return::create(ctx.str.substr(pos).starts_with(ctx.groups[group]), ctx.groups[group].size());
+    alternate_match: (pos: size_t, inout ctx) match_return(false, 0);
     to_string: () -> bstring<CharT> = "\\((group)$)";
 }
 
-range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
+range_matcher_logic: <CharT, M, min_count: int, max_count: int, state_index: int> type = {
 
     // TODO: Add static assert on min_count and max_count.
 
@@ -318,10 +336,14 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
       r: match_return = (true, 0);
       o: match_return = (true, 0);
 
+      state := ctx.get_state<state_index>();
+      state*.clear();
+
       count: int = 0;
 
       o = M::match(pos, ctx);
       while (o.matched && count < max_count) next o = M::match(pos + r.length, ctx) {
+        state*.push_back(r.length);
         r.length += o.length;
         count += 1;
 
@@ -330,8 +352,22 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
         }
       }
 
+      _ = state;
       return match_return::create(count >= min_count, r.length);
     }
+
+    alternate_match: (pos: size_t, inout ctx) -> match_return = {
+        state := ctx.get_state<state_index>();
+
+        if !state*.empty() {
+            length := state*.back();
+            state*.pop_back();
+            return match_return::create(state*.ssize() >= min_count, length);
+        } else {
+            return match_return(false, 0);
+        }
+    }
+
     to_string: () -> bstring<CharT> = {
       r: std::string = M::to_string();
 
@@ -352,8 +388,8 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
     }
 }
 
-special_range_matcher_logic: <CharT, M, min_count: int, max_count: int, symbol: CharT> type = {
-    this: range_matcher_logic<CharT, M, min_count, max_count> = ();
+special_range_matcher_logic: <CharT, M, min_count: int, max_count: int, state_index: int, symbol: CharT> type = {
+    this: range_matcher_logic<CharT, M, min_count, max_count, state_index> = ();
 
     to_string: () -> bstring<CharT> = M::to_string() + symbol;
 }
@@ -362,7 +398,7 @@ regex_parser_state: @struct type = {
     cur_match_list: std::vector<std::string> = ();
     alternate_match_lists: std::vector<std::vector<std::string>> = ();
 
-start_new_list: (inout this) = {
+    start_new_list: (inout this) = {
         new_list: std::vector<std::string> = ();
         std::swap(new_list, cur_match_list);
         _ = alternate_match_lists.insert(alternate_match_lists.begin(), new_list);
@@ -396,6 +432,8 @@ regex_parser: <Error_out> type = {
 
     named_groups: int = 1; // Global capture group.
 
+    matcher_states: std::vector<std::string> = ();
+
     error_out: Error_out;
 
     operator=: (out this, r: std::string_view, e: Error_out) = {
@@ -411,6 +449,12 @@ regex_parser: <Error_out> type = {
 
     restore_state: (inout this, old_state: regex_parser_state) = {
         cur_state = old_state;
+    }
+
+    private push_matcher_state: (inout this, t: std::string) -> int = {
+        id := matcher_states.ssize();
+        matcher_states.push_back(t);
+        return id;
     }
 
     private join: (list: std::vector<std::string>) -> std::string = {
@@ -433,6 +477,11 @@ regex_parser: <Error_out> type = {
         matcher += ">";
 
         return matcher;
+    }
+
+    create_matcher_state: (this) -> std::string = {
+        inner := join(matcher_states);
+        return "std::tuple<(inner)$>";
     }
 
     create_matcher_from_state: (this) -> std::string = {
@@ -656,7 +705,8 @@ regex_parser: <Error_out> type = {
         }
 
         // TODO: Check 0 <=n <= m
-        cur_state.wrap_last( :(inner) -> _ == "::cpp2::regex::range_matcher_logic<char, (inner)$, (min_count$)$, (max_count$)$>");
+        matcher_state := push_matcher_state("std::vector<int>");
+        cur_state.wrap_last( :(inner) -> _ == "::cpp2::regex::range_matcher_logic<char, (inner)$, (min_count$)$, (max_count$)$, (matcher_state)$>");
         pos = end;
 
         return true;
@@ -683,7 +733,8 @@ regex_parser: <Error_out> type = {
             error("'(c)$' without previous element.");
         }
 
-        cur_state.wrap_last(:(inner) -> _ == "::cpp2::regex::special_range_matcher_logic<char, (inner)$, (min_range$)$, (max_range$)$, '(c$)$'>");
+        matcher_state := push_matcher_state("std::vector<int>");
+        cur_state.wrap_last(:(inner) -> _ == "::cpp2::regex::special_range_matcher_logic<char, (inner)$, (min_range$)$, (max_range$)$, (matcher_state)$, '(c$)$'>");
         return true;
     }
 
@@ -713,7 +764,8 @@ regex_parser: <Error_out> type = {
         parse_until('\0');
 
         inner := create_matcher_from_state();
-        return "::cpp2::regex::regular_expression<char, ::cpp2::regex::group_matcher_logic<char, (inner)$, 0>, (named_groups)$>";
+        matcher_state := create_matcher_state();
+        return "::cpp2::regex::regular_expression<char, ::cpp2::regex::group_matcher_logic<char, (inner)$, 0>, (matcher_state)$, (named_groups)$>";
     }
 
 }
