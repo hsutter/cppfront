@@ -311,10 +311,10 @@ issue_857_4: @struct type = {
   /*h2*/ else if true { _ = that.mf(); }
   /*h3*/ else if true { _ = that.f; }
   /*h4*/ else if true { _ = x.mg(); }
-  /*h5*/ else if true { f() + x.g(); }
-  /*h6*/ else if true { x.g() + f(); }
-  /*h7*/ else if true { this.f() + x.g(); }
-  /*h8*/ else if true { x.g() + this.f(); }
+  /*h5*/ else if true { _ = f() + x.g(); }
+  /*h6*/ else if true { _ = x.g() + f(); }
+  /*h7*/ else if true { _ = this.f() + x.g(); }
+  /*h8*/ else if true { _ = x.g() + this.f(); }
   /*i0*/ else if true {
   /*i0*/   _ = f();
   /*i0*/   _ = x.mg();

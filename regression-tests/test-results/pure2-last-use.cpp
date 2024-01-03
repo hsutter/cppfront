@@ -719,10 +719,10 @@ int gi {0};
   else {if (true) {static_cast<void>(CPP2_UFCS_MOVE(mf)(that)); }/*h2*/
   else {if (true) {static_cast<void>(that.f); }/*h3*/
   else {if (true) {static_cast<void>(CPP2_UFCS_MOVE(mg)(std::move(x))); }/*h4*/
-  else {if (true) {f() + CPP2_UFCS_MOVE(g)(std::move(x)); }/*h5*/
-  else {if (true) {CPP2_UFCS(g)(std::move(x)) + std::move(*this).f(); }/*h6*/
-  else {if (true) {CPP2_UFCS(f)((*this)) + CPP2_UFCS_MOVE(g)(std::move(x)); }/*h7*/
-  else {if (true) {CPP2_UFCS(g)(std::move(x)) + CPP2_UFCS(f)(std::move((*this))); }/*h8*/
+  else {if (true) {static_cast<void>(f() + CPP2_UFCS_MOVE(g)(std::move(x))); }/*h5*/
+  else {if (true) {static_cast<void>(CPP2_UFCS(g)(std::move(x)) + std::move(*this).f()); }/*h6*/
+  else {if (true) {static_cast<void>(CPP2_UFCS(f)((*this)) + CPP2_UFCS_MOVE(g)(std::move(x))); }/*h7*/
+  else {if (true) {static_cast<void>(CPP2_UFCS(g)(std::move(x)) + CPP2_UFCS(f)(std::move((*this)))); }/*h8*/
   else {if (true) {/*i0*/
   static_cast<void>(f());/*i0*/
   static_cast<void>(CPP2_UFCS_MOVE(mg)(std::move(x)));/*i0*/
