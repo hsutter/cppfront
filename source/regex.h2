@@ -830,9 +830,10 @@ regex_parser: <Error_out> type = {
             }
         }
         else if '\\' == c_next {
-            cur_state.add("::cpp2::regex::char_matcher_logic<char, '\\\\'>");
-        } else {
-            error("Unkonwn escape.");
+            cur_state.add("::cpp2::regex::escaped_char_matcher_logic<char, '\\\\'>");
+        }
+        else {
+            error("Unknown escape.");
         }
 
         return true;

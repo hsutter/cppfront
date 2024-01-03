@@ -97,7 +97,7 @@ class regex_parser_state;
 #line 593 "regex.h2"
 template<typename Error_out> class regex_parser;
 
-#line 977 "regex.h2"
+#line 978 "regex.h2"
 }
 }
 
@@ -570,33 +570,33 @@ template<typename Error_out> class regex_parser {
 #line 807 "regex.h2"
     public: [[nodiscard]] auto is_escape(cpp2::in<char> c) & -> bool;
 
-#line 841 "regex.h2"
+#line 842 "regex.h2"
     public: [[nodiscard]] auto is_group(cpp2::in<char> c) & -> bool;
 
-#line 860 "regex.h2"
+#line 861 "regex.h2"
     public: [[nodiscard]] auto is_handle_special(cpp2::in<char> c) & -> bool;
 
-#line 869 "regex.h2"
+#line 870 "regex.h2"
     public: [[nodiscard]] auto is_range(cpp2::in<char> c) & -> bool;
 
-#line 912 "regex.h2"
+#line 913 "regex.h2"
     public: [[nodiscard]] auto is_special_range(cpp2::in<char> c) & -> bool;
 
-#line 938 "regex.h2"
+#line 939 "regex.h2"
     public: auto parse_until(cpp2::in<char> term) & -> void;
 
-#line 959 "regex.h2"
+#line 960 "regex.h2"
     public: [[nodiscard]] auto parse() & -> std::string;
     public: regex_parser(regex_parser const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(regex_parser const&) -> void = delete;
 
 
-#line 968 "regex.h2"
+#line 969 "regex.h2"
 };
 
 template<typename Err> [[nodiscard]] auto generate_template(cpp2::in<std::string_view> regex, Err const& err) -> std::string;
 
-#line 977 "regex.h2"
+#line 978 "regex.h2"
 }
 }
 
@@ -1364,9 +1364,10 @@ namespace regex {
             }
         }
         else {if ('\\' == std::move(c_next)) {
-            CPP2_UFCS(add)(cur_state, "::cpp2::regex::char_matcher_logic<char, '\\\\'>");
-        }else {
-            error("Unkonwn escape.");
+            CPP2_UFCS(add)(cur_state, "::cpp2::regex::escaped_char_matcher_logic<char, '\\\\'>");
+        }
+        else {
+            error("Unknown escape.");
         }}}
 
         return true; 
@@ -1499,7 +1500,7 @@ namespace regex {
         return "::cpp2::regex::regular_expression<char, ::cpp2::regex::group_matcher_logic<char, " + cpp2::to_string(std::move(inner)) + ", 0>, " + cpp2::to_string(std::move(matcher_state)) + ", " + cpp2::to_string(named_groups) + ">";
     }
 
-#line 970 "regex.h2"
+#line 971 "regex.h2"
 template<typename Err> [[nodiscard]] auto generate_template(cpp2::in<std::string_view> regex, Err const& err) -> std::string{
     regex_parser<Err> parser {regex, err}; 
     auto r {CPP2_UFCS(parse)(parser)}; 
