@@ -4291,7 +4291,10 @@ public:
         if (is_template_parameter) {
             emit( type_id );
             printer.print_cpp2(" ", type_id.position());
-                printer.print_cpp2( identifier, identifier_pos );
+            if (n.declaration->is_variadic) {
+                printer.print_cpp2("...",identifier_pos);
+            }
+            printer.print_cpp2( identifier, identifier_pos );
             return;
         }
 
