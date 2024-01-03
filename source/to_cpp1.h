@@ -1878,7 +1878,7 @@ public:
             if (id.scope_op) {
                 emit(*id.scope_op);
             }
-            emit(*id.id, false, true, true);    // inform the unqualified-id that it's qualified
+            emit(*id.id, 0, true, true);    // inform the unqualified-id that it's qualified
         }
 
         printer.emit_to_string();
@@ -1902,7 +1902,7 @@ public:
             printer.print_cpp2("auto", pos);
         }
         else {
-            try_emit<type_id_node::unqualified>(n.id, false, false);
+            try_emit<type_id_node::unqualified>(n.id, 0, false);
             try_emit<type_id_node::qualified  >(n.id);
             try_emit<type_id_node::keyword    >(n.id);
         }
@@ -1924,7 +1924,7 @@ public:
         -> void
     {   STACKINSTR
         try_emit<id_expression_node::qualified  >(n.id);
-        try_emit<id_expression_node::unqualified>(n.id, false, is_local_name, false, is_class_member_access);
+        try_emit<id_expression_node::unqualified>(n.id, 0, is_local_name, false, is_class_member_access);
     }
 
 
@@ -3244,7 +3244,7 @@ public:
                             "("
                             + print_to_string(id, false)
                             + "::),"
-                            + print_to_string(*cpp2::assert_not_null(id.ids.back().id), false, true, true);
+                            + print_to_string(*cpp2::assert_not_null(id.ids.back().id), 0, true, true);
                     }
                     ufcs_string += "_TEMPLATE";
                 }
