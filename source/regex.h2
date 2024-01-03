@@ -145,6 +145,10 @@ alternative_matcher_logic: <CharT, state_index: int, List ...> type = {
         if state* == entry_pos {
             // Current state is the same element. Try an alternative match.
             r = First::alternate_match(pos, ctx);
+
+            if !r.matched {
+                First::invalidate_groups(ctx); // Did not match we need to remove matched ranges.
+            }
         }
         else if (state* as size_t) < entry_pos {
             // Previous alternative has not match. Try the next one.
