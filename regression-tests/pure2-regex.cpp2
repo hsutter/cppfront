@@ -1,4 +1,3 @@
-#include </home/msagebaum/Kaiserslautern/Programms/cppfront/cppfront/source/regex.h>
 
 test: <M> (regex: M, id: std::string, regex_str: std::string, str: std::string, result: std::string) = {
   context : type == M::context;
@@ -14,8 +13,9 @@ test: <M> (regex: M, id: std::string, regex_str: std::string, str: std::string, 
     status = "Failure: Parsed regex does not match.";
   } else {
     m : bool = regex.search(str_mod, ctx);
-    is_pass := !id.starts_with("M");
+    is_pass := !result.starts_with("NOMATCH");
 
+    // Check if we expect a match.
     if is_pass != m {
       if is_pass {
         status = "Failure: Regex should apply.";
@@ -23,12 +23,25 @@ test: <M> (regex: M, id: std::string, regex_str: std::string, str: std::string, 
       else {
         status = "Failure: Regex should not apply.";
       }
-    } else if result != ctx.print_ranges() {
-      status = "Failure: Ranges are wrong.";
+    }
+
+    // If we have a match. Check the ranges.
+    if m {
+      ranges_match := result == ctx.print_ranges();
+      should_ranges_match := !id.starts_with("M");
+
+      if ranges_match != should_ranges_match {
+        if ranges_match {
+          status = "Failure: Ranges should be wrong.";
+        }
+        else {
+          status = "Failure: Ranges are wrong.";
+        }
+      }
     }
   }
 
-  std::cout << "(id)$: (status)$ regex: (regex_str)$ parsed_regex: (regex.to_string())$ str: (str)$ result: (ctx.print_ranges())$ expected_results (result)$ " << std::endl;
+  std::cout << "(id)$: (status)$ regex: (regex_str)$ parsed_regex: (regex.to_string())$ str: (str)$ result: (ctx.print_ranges())$ expected_results (result)$" << std::endl;
 }
 
 
@@ -65,7 +78,7 @@ test_basic3: @regex type = {
   regex_31 := "(a.|.a.)*|(a|.a...)";
   regex_32 := "ab|a";
   regex_33 := "ab|a";
-  regex_34 := "(Ab|cD)*";
+  regex_M34 := "(Ab|cD)*";
   regex_35 := ":::1:::0:|:::1:1:0:";
   regex_36 := ":::1:::0:|:::1:1:1:";
   regex_37 := "[[:lower:]]+";
@@ -176,7 +189,7 @@ test_basic3: @regex type = {
   regex_145 := ".*(\\000).*";
   regex_146 := "\\000";
   run: (this) = {
-    std::cout << "Running basic3:\n "<< std::endl;
+    std::cout << "Running basic3:"<< std::endl;
     test(regex_1(), "1", "\\)", "()", "(1,2)");
     test(regex_2(), "2", "\\}", "}", "(0,1)");
     test(regex_3(), "3", "]", "]", "(0,1)");
@@ -209,7 +222,7 @@ test_basic3: @regex type = {
     test(regex_31(), "31", "(a.|.a.)*|(a|.a...)", "aa", "(0,2)(0,2)(?,?)");
     test(regex_32(), "32", "ab|a", "xabc", "(1,3)");
     test(regex_33(), "33", "ab|a", "xxabc", "(2,4)");
-    test(regex_34(), "34", "(Ab|cD)*", "aBcD", "(0,4)(2,4)");
+    test(regex_M34(), "M34", "(Ab|cD)*", "aBcD", "(0,4)(2,4)");
     test(regex_35(), "35", ":::1:::0:|:::1:1:0:", ":::0:::1:::1:::0:", "(8,17)");
     test(regex_36(), "36", ":::1:::0:|:::1:1:1:", ":::0:::1:::1:::0:", "(8,17)");
     test(regex_37(), "37", "[[:lower:]]+", "`az{", "(1,3)");
@@ -319,6 +332,7 @@ test_basic3: @regex type = {
     test(regex_144(), "144", ".*(/000).*", "/000", "(0,4)(0,4)");
     test(regex_145(), "145", ".*(\\\\000).*", "\\000", "(0,4)(0,4)");
     test(regex_146(), "146", "\\\\000", "\\000", "(0,4)");
+    std::cout << std::endl;
   }
 }
 test_class: @regex type = {
@@ -337,7 +351,7 @@ test_class: @regex type = {
   regex_12 := "(a?)((ab)?)(b?)a?(ab)?b?";
   regex_M12 := "(a?)((ab)?)(b?)a?(ab)?b?";
   run: (this) = {
-    std::cout << "Running class:\n "<< std::endl;
+    std::cout << "Running class:"<< std::endl;
     test(regex_1(), "1", "aa*", "xaxaax", "(1,2)");
     test(regex_2(), "2", "(a*)(ab)*(b*)", "abc", "(0,2)(0,1)(?,?)(1,2)");
     test(regex_M2(), "M2", "(a*)(ab)*(b*)", "abc", "(0,2)(0,0)(0,2)(2,2)");
@@ -352,6 +366,7 @@ test_class: @regex type = {
     test(regex_11(), "11", ".*(.*)", "ab", "(0,2)(2,2)");
     test(regex_12(), "12", "(a?)((ab)?)(b?)a?(ab)?b?", "abab", "(0,4)(0,1)(1,1)(?,?)(1,2)(?,?)");
     test(regex_M12(), "M12", "(a?)((ab)?)(b?)a?(ab)?b?", "abab", "(0,4)(0,1)(1,1)(?,?)(1,2)(2,4)");
+    std::cout << std::endl;
   }
 }
 test_left_assoc: @regex type = {
@@ -368,7 +383,7 @@ test_left_assoc: @regex type = {
   regex_M11 := "(ab|a)(c|bcd)(d|.*)";
   regex_M12 := "(ab|a)(bcd|c)(d|.*)";
   run: (this) = {
-    std::cout << "Running left_assoc:\n "<< std::endl;
+    std::cout << "Running left_assoc:"<< std::endl;
     test(regex_M1(), "M1", "(a|ab)(c|bcd)(d*)", "abcd", "(0,4)(0,1)(1,4)(4,4)");
     test(regex_M2(), "M2", "(a|ab)(bcd|c)(d*)", "abcd", "(0,4)(0,1)(1,4)(4,4)");
     test(regex_M3(), "M3", "(ab|a)(c|bcd)(d*)", "abcd", "(0,4)(0,1)(1,4)(4,4)");
@@ -381,6 +396,7 @@ test_left_assoc: @regex type = {
     test(regex_M10(), "M10", "(a|ab)(bcd|c)(d|.*)", "abcd", "(0,4)(0,1)(1,4)(4,4)");
     test(regex_M11(), "M11", "(ab|a)(c|bcd)(d|.*)", "abcd", "(0,4)(0,1)(1,4)(4,4)");
     test(regex_M12(), "M12", "(ab|a)(bcd|c)(d|.*)", "abcd", "(0,4)(0,1)(1,4)(4,4)");
+    std::cout << std::endl;
   }
 }
 test_right_assoc: @regex type = {
@@ -397,7 +413,7 @@ test_right_assoc: @regex type = {
   regex_11 := "(ab|a)(c|bcd)(d|.*)";
   regex_12 := "(ab|a)(bcd|c)(d|.*)";
   run: (this) = {
-    std::cout << "Running right_assoc:\n "<< std::endl;
+    std::cout << "Running right_assoc:"<< std::endl;
     test(regex_1(), "1", "(a|ab)(c|bcd)(d*)", "abcd", "(0,4)(0,2)(2,3)(3,4)");
     test(regex_2(), "2", "(a|ab)(bcd|c)(d*)", "abcd", "(0,4)(0,2)(2,3)(3,4)");
     test(regex_3(), "3", "(ab|a)(c|bcd)(d*)", "abcd", "(0,4)(0,2)(2,3)(3,4)");
@@ -410,6 +426,7 @@ test_right_assoc: @regex type = {
     test(regex_10(), "10", "(a|ab)(bcd|c)(d|.*)", "abcd", "(0,4)(0,2)(2,3)(3,4)");
     test(regex_11(), "11", "(ab|a)(c|bcd)(d|.*)", "abcd", "(0,4)(0,2)(2,3)(3,4)");
     test(regex_12(), "12", "(ab|a)(bcd|c)(d|.*)", "abcd", "(0,4)(0,2)(2,3)(3,4)");
+    std::cout << std::endl;
   }
 }
 test_forced_assoc: @regex type = {
@@ -442,7 +459,7 @@ test_forced_assoc: @regex type = {
   regex_27 := "(a|ab)(b*)";
   regex_28 := "(ab|a)(b*)";
   run: (this) = {
-    std::cout << "Running forced_assoc:\n "<< std::endl;
+    std::cout << "Running forced_assoc:"<< std::endl;
     test(regex_1(), "1", "(a|ab)(c|bcd)", "abcd", "(0,4)(0,1)(1,4)");
     test(regex_2(), "2", "(a|ab)(bcd|c)", "abcd", "(0,4)(0,1)(1,4)");
     test(regex_3(), "3", "(ab|a)(c|bcd)", "abcd", "(0,4)(0,1)(1,4)");
@@ -471,49 +488,50 @@ test_forced_assoc: @regex type = {
     test(regex_26(), "26", "(ab|a)", "ab", "(0,2)(0,2)");
     test(regex_27(), "27", "(a|ab)(b*)", "ab", "(0,2)(0,2)(2,2)");
     test(regex_28(), "28", "(ab|a)(b*)", "ab", "(0,2)(0,2)(2,2)");
+    std::cout << std::endl;
   }
 }
 test_nullsub3: @regex type = {
   regex_1 := "(a*)*";
-  regex_2 := "SAME";
-  regex_3 := "SAME";
-  regex_4 := "SAME";
+  regex_2 := "(a*)*";
+  regex_3 := "(a*)*";
+  regex_4 := "(a*)*";
   regex_5 := "(a*)+";
-  regex_6 := "SAME";
-  regex_7 := "SAME";
-  regex_8 := "SAME";
+  regex_6 := "(a*)+";
+  regex_7 := "(a*)+";
+  regex_8 := "(a*)+";
   regex_9 := "(a+)*";
-  regex_10 := "SAME";
-  regex_11 := "SAME";
-  regex_12 := "SAME";
+  regex_10 := "(a+)*";
+  regex_11 := "(a+)*";
+  regex_12 := "(a+)*";
   regex_13 := "(a+)+";
-  regex_14 := "SAME";
-  regex_15 := "SAME";
-  regex_16 := "SAME";
+  regex_14 := "(a+)+";
+  regex_15 := "(a+)+";
+  regex_16 := "(a+)+";
   regex_17 := "([a]*)*";
-  regex_18 := "SAME";
-  regex_19 := "SAME";
-  regex_20 := "SAME";
+  regex_18 := "([a]*)*";
+  regex_19 := "([a]*)*";
+  regex_20 := "([a]*)*";
   regex_21 := "([a]*)+";
-  regex_22 := "SAME";
-  regex_23 := "SAME";
-  regex_24 := "SAME";
+  regex_22 := "([a]*)+";
+  regex_23 := "([a]*)+";
+  regex_24 := "([a]*)+";
   regex_25 := "([^b]*)*";
-  regex_26 := "SAME";
-  regex_27 := "SAME";
-  regex_28 := "SAME";
+  regex_26 := "([^b]*)*";
+  regex_27 := "([^b]*)*";
+  regex_28 := "([^b]*)*";
   regex_29 := "([ab]*)*";
-  regex_30 := "SAME";
-  regex_31 := "SAME";
-  regex_32 := "SAME";
-  regex_33 := "SAME";
-  regex_34 := "SAME";
-  regex_35 := "SAME";
+  regex_30 := "([ab]*)*";
+  regex_31 := "([ab]*)*";
+  regex_32 := "([ab]*)*";
+  regex_33 := "([ab]*)*";
+  regex_34 := "([ab]*)*";
+  regex_35 := "([ab]*)*";
   regex_36 := "([^a]*)*";
-  regex_37 := "SAME";
-  regex_38 := "SAME";
+  regex_37 := "([^a]*)*";
+  regex_38 := "([^a]*)*";
   regex_39 := "([^ab]*)*";
-  regex_40 := "SAME";
+  regex_40 := "([^ab]*)*";
   regex_41 := "((z)+|a)*";
   regex_42 := "(a)";
   regex_46 := "(a*)*(x)";
@@ -526,47 +544,47 @@ test_nullsub3: @regex type = {
   regex_53 := "(a*){2}(x)";
   regex_54 := "(a*){2}(x)";
   run: (this) = {
-    std::cout << "Running nullsub3:\n "<< std::endl;
+    std::cout << "Running nullsub3:"<< std::endl;
     test(regex_1(), "1", "(a*)*", "a", "(0,1)(0,1)");
-    test(regex_2(), "2", "SAME", "x", "(0,0)(0,0)");
-    test(regex_3(), "3", "SAME", "aaaaaa", "(0,6)(0,6)");
-    test(regex_4(), "4", "SAME", "aaaaaax", "(0,6)(0,6)");
+    test(regex_2(), "2", "(a*)*", "x", "(0,0)(0,0)");
+    test(regex_3(), "3", "(a*)*", "aaaaaa", "(0,6)(0,6)");
+    test(regex_4(), "4", "(a*)*", "aaaaaax", "(0,6)(0,6)");
     test(regex_5(), "5", "(a*)+", "a", "(0,1)(0,1)");
-    test(regex_6(), "6", "SAME", "x", "(0,0)(0,0)");
-    test(regex_7(), "7", "SAME", "aaaaaa", "(0,6)(0,6)");
-    test(regex_8(), "8", "SAME", "aaaaaax", "(0,6)(0,6)");
+    test(regex_6(), "6", "(a*)+", "x", "(0,0)(0,0)");
+    test(regex_7(), "7", "(a*)+", "aaaaaa", "(0,6)(0,6)");
+    test(regex_8(), "8", "(a*)+", "aaaaaax", "(0,6)(0,6)");
     test(regex_9(), "9", "(a+)*", "a", "(0,1)(0,1)");
-    test(regex_10(), "10", "SAME", "x", "(0,0)(?,?)");
-    test(regex_11(), "11", "SAME", "aaaaaa", "(0,6)(0,6)");
-    test(regex_12(), "12", "SAME", "aaaaaax", "(0,6)(0,6)");
+    test(regex_10(), "10", "(a+)*", "x", "(0,0)(?,?)");
+    test(regex_11(), "11", "(a+)*", "aaaaaa", "(0,6)(0,6)");
+    test(regex_12(), "12", "(a+)*", "aaaaaax", "(0,6)(0,6)");
     test(regex_13(), "13", "(a+)+", "a", "(0,1)(0,1)");
-    test(regex_14(), "14", "SAME", "x", "NOMATCH");
-    test(regex_15(), "15", "SAME", "aaaaaa", "(0,6)(0,6)");
-    test(regex_16(), "16", "SAME", "aaaaaax", "(0,6)(0,6)");
+    test(regex_14(), "14", "(a+)+", "x", "NOMATCH");
+    test(regex_15(), "15", "(a+)+", "aaaaaa", "(0,6)(0,6)");
+    test(regex_16(), "16", "(a+)+", "aaaaaax", "(0,6)(0,6)");
     test(regex_17(), "17", "([a]*)*", "a", "(0,1)(0,1)");
-    test(regex_18(), "18", "SAME", "x", "(0,0)(0,0)");
-    test(regex_19(), "19", "SAME", "aaaaaa", "(0,6)(0,6)");
-    test(regex_20(), "20", "SAME", "aaaaaax", "(0,6)(0,6)");
+    test(regex_18(), "18", "([a]*)*", "x", "(0,0)(0,0)");
+    test(regex_19(), "19", "([a]*)*", "aaaaaa", "(0,6)(0,6)");
+    test(regex_20(), "20", "([a]*)*", "aaaaaax", "(0,6)(0,6)");
     test(regex_21(), "21", "([a]*)+", "a", "(0,1)(0,1)");
-    test(regex_22(), "22", "SAME", "x", "(0,0)(0,0)");
-    test(regex_23(), "23", "SAME", "aaaaaa", "(0,6)(0,6)");
-    test(regex_24(), "24", "SAME", "aaaaaax", "(0,6)(0,6)");
+    test(regex_22(), "22", "([a]*)+", "x", "(0,0)(0,0)");
+    test(regex_23(), "23", "([a]*)+", "aaaaaa", "(0,6)(0,6)");
+    test(regex_24(), "24", "([a]*)+", "aaaaaax", "(0,6)(0,6)");
     test(regex_25(), "25", "([^b]*)*", "a", "(0,1)(0,1)");
-    test(regex_26(), "26", "SAME", "b", "(0,0)(0,0)");
-    test(regex_27(), "27", "SAME", "aaaaaa", "(0,6)(0,6)");
-    test(regex_28(), "28", "SAME", "aaaaaab", "(0,6)(0,6)");
+    test(regex_26(), "26", "([^b]*)*", "b", "(0,0)(0,0)");
+    test(regex_27(), "27", "([^b]*)*", "aaaaaa", "(0,6)(0,6)");
+    test(regex_28(), "28", "([^b]*)*", "aaaaaab", "(0,6)(0,6)");
     test(regex_29(), "29", "([ab]*)*", "a", "(0,1)(0,1)");
-    test(regex_30(), "30", "SAME", "aaaaaa", "(0,6)(0,6)");
-    test(regex_31(), "31", "SAME", "ababab", "(0,6)(0,6)");
-    test(regex_32(), "32", "SAME", "bababa", "(0,6)(0,6)");
-    test(regex_33(), "33", "SAME", "b", "(0,1)(0,1)");
-    test(regex_34(), "34", "SAME", "bbbbbb", "(0,6)(0,6)");
-    test(regex_35(), "35", "SAME", "aaaabcde", "(0,5)(0,5)");
+    test(regex_30(), "30", "([ab]*)*", "aaaaaa", "(0,6)(0,6)");
+    test(regex_31(), "31", "([ab]*)*", "ababab", "(0,6)(0,6)");
+    test(regex_32(), "32", "([ab]*)*", "bababa", "(0,6)(0,6)");
+    test(regex_33(), "33", "([ab]*)*", "b", "(0,1)(0,1)");
+    test(regex_34(), "34", "([ab]*)*", "bbbbbb", "(0,6)(0,6)");
+    test(regex_35(), "35", "([ab]*)*", "aaaabcde", "(0,5)(0,5)");
     test(regex_36(), "36", "([^a]*)*", "b", "(0,1)(0,1)");
-    test(regex_37(), "37", "SAME", "bbbbbb", "(0,6)(0,6)");
-    test(regex_38(), "38", "SAME", "aaaaaa", "(0,0)(0,0)");
+    test(regex_37(), "37", "([^a]*)*", "bbbbbb", "(0,6)(0,6)");
+    test(regex_38(), "38", "([^a]*)*", "aaaaaa", "(0,0)(0,0)");
     test(regex_39(), "39", "([^ab]*)*", "ccccxx", "(0,6)(0,6)");
-    test(regex_40(), "40", "SAME", "ababab", "(0,0)(0,0)");
+    test(regex_40(), "40", "([^ab]*)*", "ababab", "(0,0)(0,0)");
     test(regex_41(), "41", "((z)+|a)*", "zabcde", "(0,2)(1,2)(?,?)");
     test(regex_42(), "42", "(a)", "aaa", "(0,1)(0,1)");
     test(regex_46(), "46", "(a*)*(x)", "x", "(0,1)(0,0)(0,1)");
@@ -578,6 +596,7 @@ test_nullsub3: @regex type = {
     test(regex_52(), "52", "(a*){2}(x)", "x", "(0,1)(0,0)(0,1)");
     test(regex_53(), "53", "(a*){2}(x)", "ax", "(0,2)(1,1)(1,2)");
     test(regex_54(), "54", "(a*){2}(x)", "axa", "(0,2)(1,1)(1,2)");
+    std::cout << std::endl;
   }
 }
 test_repetition2: @regex type = {
@@ -661,7 +680,7 @@ test_repetition2: @regex type = {
   regex_270 := "(a|ab|c|bcd)*(d*)";
   regex_271 := "(a|ab|c|bcd)+(d*)";
   run: (this) = {
-    std::cout << "Running repetition2:\n "<< std::endl;
+    std::cout << "Running repetition2:"<< std::endl;
     test(regex_1(), "1", "((..)|(.))", "NULL", "NOMATCH");
     test(regex_2(), "2", "((..)|(.))((..)|(.))", "NULL", "NOMATCH");
     test(regex_3(), "3", "((..)|(.))((..)|(.))((..)|(.))", "NULL", "NOMATCH");
@@ -741,6 +760,7 @@ test_repetition2: @regex type = {
     test(regex_269(), "269", "(a|ab|c|bcd){4,10}(d*)", "ababcd", "NOMATCH");
     test(regex_270(), "270", "(a|ab|c|bcd)*(d*)", "ababcd", "(0,6)(3,6)(6,6)");
     test(regex_271(), "271", "(a|ab|c|bcd)+(d*)", "ababcd", "(0,6)(3,6)(6,6)");
+    std::cout << std::endl;
   }
 }
 test_totest: @regex type = {
@@ -824,7 +844,7 @@ test_totest: @regex type = {
   regex_250 := "(b(c)|d(e))*";
   regex_251 := "(a(b)*)*";
   run: (this) = {
-    std::cout << "Running totest:\n "<< std::endl;
+    std::cout << "Running totest:"<< std::endl;
     test(regex_01(), "01", "a+", "xaax", "(1,3)");
     test(regex_03(), "03", "(a?)((ab)?)", "ab", "(0,2)(0,0)(0,2)(0,2)");
     test(regex_04(), "04", "(a?)((ab)?)(b?)", "ab", "(0,2)(0,1)(1,1)(?,?)(1,2)");
@@ -904,6 +924,7 @@ test_totest: @regex type = {
     test(regex_220(), "220", "ab()c|ab()c()", "abc", "(0,3)(2,2)(-1,-1)(-1,-1)");
     test(regex_250(), "250", "(b(c)|d(e))*", "bcde", "(0,4)(2,4)(-1,-1)(3,4)");
     test(regex_251(), "251", "(a(b)*)*", "aba", "(0,3)(2,3)(-1,-1)");
+    std::cout << std::endl;
   }
 }
 test_osx_bsd_critical: @regex type = {
@@ -919,7 +940,7 @@ test_osx_bsd_critical: @regex type = {
   regex_M14 := "([ab]|())+b";
   regex_20 := "(.?)(b)";
   run: (this) = {
-    std::cout << "Running osx_bsd_critical:\n "<< std::endl;
+    std::cout << "Running osx_bsd_critical:"<< std::endl;
     test(regex_1(), "1", "(()|.)(b)", "ab", "(0,2)(0,1)(?,?)(1,2)");
     test(regex_M1(), "M1", "(()|.)(b)", "ab", "(1,2)(1,1)(1,1)(1,2)");
     test(regex_2(), "2", "(()|[ab])(b)", "ab", "(0,2)(0,1)(?,?)(1,2)");
@@ -931,6 +952,7 @@ test_osx_bsd_critical: @regex type = {
     test(regex_14(), "14", "([ab]|())+b", "aaab", "(0,4)(2,3)(?,?)");
     test(regex_M14(), "M14", "([ab]|())+b", "aaab", "(0,4)(3,3)(3,3)");
     test(regex_20(), "20", "(.?)(b)", "ab", "(0,2)(0,1)(1,2)");
+    std::cout << std::endl;
   }
 }
 main: (args) = {
