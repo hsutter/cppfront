@@ -1,9 +1,10 @@
 name: Regression tests
 
 on:
-  push:
   pull_request:
     types: [opened, synchronize, reopened]
+  push:
+  workflow_dispatch:
 
 jobs:
   regression-tests-linux-mac:
