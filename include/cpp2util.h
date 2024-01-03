@@ -1978,6 +1978,7 @@ inline constexpr auto as_() -> decltype(auto)
 
 }
 
+#include "../source/regex.h"
 
 using cpp2::cpp2_new;
 
