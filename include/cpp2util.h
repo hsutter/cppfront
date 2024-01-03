@@ -282,6 +282,7 @@
     #define CPP2_CONSTEXPR constexpr
 #endif
 
+#include "string_util.h"
 
 namespace cpp2 {
 
