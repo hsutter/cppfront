@@ -43,15 +43,15 @@ template<typename CharT, CharT Start, CharT End> class range_class_entry;
 
 #line 227 "regex.h2"
 template<typename CharT, typename ...List> class and_class_entry;
-
+    
 
 #line 232 "regex.h2"
 template<typename CharT, CharT ...List> class list_class_entry;
-
+    
 
 #line 237 "regex.h2"
 template<typename CharT, fixed_string Name, typename Inner> class named_class_entry;
-
+    
 
 #line 261 "regex.h2"
 template<typename CharT, bool negate, typename ...List> class class_matcher_logic;
@@ -70,7 +70,7 @@ template<typename CharT> class line_start_matcher_logic;
 
 #line 336 "regex.h2"
 class list_matcher_state;
-
+    
 
 #line 340 "regex.h2"
 template<typename CharT, int state_index, typename ...List> class list_matcher_logic;
@@ -148,7 +148,7 @@ template<typename CharT, typename State, size_t max_groups> class match_context
     public: std::array<std::pair<size_t,size_t>,max_groups> ranges {}; 
     public: std::array<view<CharT>,max_groups> groups {}; 
 
-    public: State state {};
+    public: State state {}; 
 
     public: explicit match_context();
 
@@ -523,11 +523,11 @@ template<typename Error_out> class regex_parser {
 
     private: int named_groups {1}; // Global capture group.
 
-    private: std::vector<std::string> matcher_states {};
+    private: std::vector<std::string> matcher_states {}; 
 
     private: Error_out error_out; 
 
-    private: std::vector<std::string> supported_classes {"alnum", "alpha", "ascii", "blank", "cntrl", "digits", "graph", "lower", "print", "punct", "space", "upper", "word", "xdigit"};
+    private: std::vector<std::string> supported_classes {"alnum", "alpha", "ascii", "blank", "cntrl", "digits", "graph", "lower", "print", "punct", "space", "upper", "word", "xdigit"}; 
 
     public: explicit regex_parser(cpp2::in<std::string_view> r, Error_out const& e);
 
@@ -733,13 +733,13 @@ namespace regex {
 
 #line 126 "regex.h2"
     template <typename CharT, int state_index, typename ...List> [[nodiscard]] auto alternative_matcher_logic<CharT,state_index,List...>::prepare_state(auto& ctx, cpp2::in<bool> init) -> auto{
-        auto state {CPP2_UFCS_TEMPLATE(get_state<state_index>)(ctx)};
+        auto state {CPP2_UFCS_TEMPLATE(get_state<state_index>)(ctx)}; 
 
         if (init) {
             *cpp2::assert_not_null(state) = 0;
         }
 
-        return state;
+        return state; 
     }
 
     template <typename CharT, int state_index, typename ...List> [[nodiscard]] auto alternative_matcher_logic<CharT,state_index,List...>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto { return alternate_all<List...>(pos, ctx, prepare_state(ctx, false));  }
@@ -750,13 +750,13 @@ namespace regex {
     template <typename CharT, int state_index, typename ...List> template<typename First, typename ...Other> [[nodiscard]] auto alternative_matcher_logic<CharT,state_index,List...>::alternate_all(cpp2::in<size_t> pos, auto& ctx, auto const& state) -> match_return{
         auto constexpr entry_pos = sizeof...(List) - sizeof...(Other) - 1;
 
-        match_return r {false, 0};
+        match_return r {false, 0}; 
         if (*cpp2::assert_not_null(state) == entry_pos) {
             // Current state is the same element. Try an alternative match.
             r = First::alternate_match(pos, ctx);
 
             if (!(r.matched)) {
-                First::invalidate_groups(ctx); // Did not match we need to remove matched ranges.
+                First::invalidate_groups(ctx); // Did not match we need to remove matched ranges.    
             }
         }
         else {if (cpp2::cmp_less((cpp2::as_<size_t>(*cpp2::assert_not_null(state))),entry_pos)) {
@@ -771,7 +771,7 @@ namespace regex {
             }
         }
 
-        return r;
+        return r; 
     }
 
     template <typename CharT, int state_index, typename ...List> template<typename First, typename ...Other> auto alternative_matcher_logic<CharT,state_index,List...>::invalidate_all(auto& ctx) -> void{
@@ -795,7 +795,7 @@ namespace regex {
             First::invalidate_groups(ctx); // Did not match we need to remove matched ranges.
 
             if constexpr (0 != sizeof...(Other)) {
-                return match_all<Other...>(pos + std::move(r).length, ctx, state);
+                return match_all<Other...>(pos + std::move(r).length, ctx, state); 
             }
             else {
                 *cpp2::assert_not_null(state) = sizeof...(List);
@@ -842,21 +842,21 @@ namespace regex {
 
     template <typename CharT, bool negate, typename ...List> [[nodiscard]] auto class_matcher_logic<CharT,negate,List...>::match(cpp2::in<size_t> pos, auto& ctx) -> match_return{
         if (cpp2::cmp_greater_eq(pos,CPP2_UFCS(size)(ctx.str))) {
-            return match_return(false, 0);
+            return match_return(false, 0); 
         }
 
-        CharT c {CPP2_ASSERT_IN_BOUNDS(ctx.str, pos)};
-        bool r {match_any<List...>(std::move(c))};
+        CharT c {CPP2_ASSERT_IN_BOUNDS(ctx.str, pos)}; 
+        bool r {match_any<List...>(std::move(c))}; 
 
         if (negate) {
             r = !(r);
         }
 
-        return match_return::create(std::move(r), 1);
+        return match_return::create(std::move(r), 1); 
     }
 
     template <typename CharT, bool negate, typename ...List> template<typename First, typename ...Other> [[nodiscard]] auto class_matcher_logic<CharT,negate,List...>::match_any(cpp2::in<CharT> c) -> bool{
-        bool r {First::includes(c)};
+        bool r {First::includes(c)}; 
 
         if (!(r)) {
             if constexpr (0 != sizeof...(Other)) {
@@ -864,18 +864,18 @@ namespace regex {
             }
         }
 
-        return r;
+        return r; 
     }
 
     template <typename CharT, bool negate, typename ...List> [[nodiscard]] auto class_matcher_logic<CharT,negate,List...>::to_string() -> bstring<CharT>{
-        bstring<CharT> r {"["};
+        bstring<CharT> r {"["}; 
         if (negate) {
             r += "^";
         }
         r += (bstring<CharT>() + ... + List::to_string());
         r += "]";
 
-        return r;
+        return r; 
     }
 
 #line 308 "regex.h2"
@@ -901,14 +901,14 @@ namespace regex {
 
 #line 343 "regex.h2"
     template <typename CharT, int state_index, typename ...List> [[nodiscard]] auto list_matcher_logic<CharT,state_index,List...>::prepare_state(auto& ctx, cpp2::in<bool> init) -> auto{
-        auto state {CPP2_UFCS_TEMPLATE(get_state<state_index>)(ctx)};
+        auto state {CPP2_UFCS_TEMPLATE(get_state<state_index>)(ctx)}; 
 
         if (init) {
             CPP2_UFCS(clear)((*cpp2::assert_not_null(state)));
             CPP2_UFCS(resize)((*cpp2::assert_not_null(state)), sizeof...(List));
         }
 
-        return state;
+        return state; 
     }
 
     template <typename CharT, int state_index, typename ...List> [[nodiscard]] auto list_matcher_logic<CharT,state_index,List...>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> auto { return rematch_all<List...>(pos, ctx, prepare_state(ctx, false));  }
@@ -933,7 +933,7 @@ namespace regex {
 
         if constexpr (0 != sizeof...(Other)) {
           while( r.matched ) {
-            match_return o {match_all<Other...>(pos + r.length, ctx, state)};
+            match_return o {match_all<Other...>(pos + r.length, ctx, state)}; 
 
             if (o.matched) {
                 r.length += o.length;
@@ -952,8 +952,8 @@ namespace regex {
     template <typename CharT, int state_index, typename ...List> template<typename First, typename ...Other> [[nodiscard]] auto list_matcher_logic<CharT,state_index,List...>::rematch_all(cpp2::in<size_t> pos, auto& ctx, auto const& state) -> match_return{
         auto constexpr entry_pos = sizeof...(List) - sizeof...(Other) - 1;
 
-        match_return r {false, 0};
-        auto length {0};
+        match_return r {false, 0}; 
+        auto length {0}; 
         if constexpr (0 != sizeof...(Other)) {
             r = rematch_all<Other...>(CPP2_ASSERT_IN_BOUNDS((*cpp2::assert_not_null(state)), entry_pos + 1), ctx, state);
             length = CPP2_ASSERT_IN_BOUNDS((*cpp2::assert_not_null(state)), entry_pos + 1) - CPP2_ASSERT_IN_BOUNDS((*cpp2::assert_not_null(state)), entry_pos);
@@ -966,7 +966,7 @@ namespace regex {
 
             if constexpr (0 != sizeof...(Other)) {
                 while( r.matched ) {
-                    match_return o {match_all<Other...>(pos + r.length, ctx, state)};
+                    match_return o {match_all<Other...>(pos + r.length, ctx, state)}; 
 
                     if (o.matched) {
                         r.length += o.length;
@@ -983,12 +983,12 @@ namespace regex {
             r.length += std::move(length);
         }
 
-        return r;
+        return r; 
     }
 
 #line 431 "regex.h2"
     template <typename CharT, typename M, int group> [[nodiscard]] auto group_matcher_logic<CharT,M,group>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> match_return{
-        match_return r {M::alternate_match(pos, ctx)};
+        match_return r {M::alternate_match(pos, ctx)}; 
 
         if (r.matched) {
             CPP2_UFCS(set_group)(ctx, group, pos, r.length);
@@ -999,20 +999,20 @@ namespace regex {
     template <typename CharT, typename M, int group> auto group_matcher_logic<CharT,M,group>::invalidate_groups(auto& ctx) -> void { CPP2_UFCS(invalidate_group)(ctx, group);  }
 
     template <typename CharT, typename M, int group> [[nodiscard]] auto group_matcher_logic<CharT,M,group>::match(cpp2::in<size_t> pos, auto& ctx) -> match_return{
-        match_return r {M::match(pos, ctx)};
+        match_return r {M::match(pos, ctx)}; 
 
         if (r.matched) {
             CPP2_UFCS(set_group)(ctx, group, pos, r.length);
         }
-        return r;
+        return r; 
     }
 
     template <typename CharT, typename M, int group> [[nodiscard]] auto group_matcher_logic<CharT,M,group>::to_string() -> bstring<CharT>{
         if (group == 0) {
-            return M::to_string();
+            return M::to_string(); 
         }
         else {
-            return "(" + cpp2::to_string(M::to_string()) + ")";
+            return "(" + cpp2::to_string(M::to_string()) + ")"; 
         }
     }
 
@@ -1027,29 +1027,29 @@ namespace regex {
 #line 474 "regex.h2"
     template <typename CharT, typename M, int min_count, int max_count, int state_index> [[nodiscard]] auto range_matcher_logic<CharT,M,min_count,max_count,state_index>::get_min_count() -> auto{
         if constexpr (min_count == -1) {
-            return 0;
+            return 0; 
         }else {
-            return min_count;
+            return min_count; 
         }
     }
 
     template <typename CharT, typename M, int min_count, int max_count, int state_index> [[nodiscard]] auto range_matcher_logic<CharT,M,min_count,max_count,state_index>::alternate_match(cpp2::in<size_t> pos, auto& ctx) -> match_return{
-        auto state {CPP2_UFCS_TEMPLATE(get_state<state_index>)(ctx)};
+        auto state {CPP2_UFCS_TEMPLATE(get_state<state_index>)(ctx)}; 
 
         if (!(CPP2_UFCS(empty)((*cpp2::assert_not_null(state))))) {
-            auto length {CPP2_UFCS(back)((*cpp2::assert_not_null(state)))};
+            auto length {CPP2_UFCS(back)((*cpp2::assert_not_null(state)))}; 
             CPP2_UFCS(pop_back)((*cpp2::assert_not_null(state)));
 
-            auto valid {cpp2::cmp_greater_eq(CPP2_UFCS(ssize)((*cpp2::assert_not_null(state))),get_min_count())};
+            auto valid {cpp2::cmp_greater_eq(CPP2_UFCS(ssize)((*cpp2::assert_not_null(state))),get_min_count())}; 
             if (!(valid) || CPP2_UFCS(empty)((*cpp2::assert_not_null(state)))) {
                 M::invalidate_groups(ctx);
             }else {
                 static_cast<void>(M::match(pos + CPP2_UFCS(back)((*cpp2::assert_not_null(std::move(state)))), ctx));// Repopulate the ranges.
             }
 
-            return match_return::create(std::move(valid), std::move(length));
+            return match_return::create(std::move(valid), std::move(length)); 
         }else {
-            return match_return(false, 0);
+            return match_return(false, 0); 
         }
     }
 
@@ -1059,13 +1059,13 @@ namespace regex {
       match_return r {true, 0}; 
       match_return o {true, 0}; 
 
-      auto state {CPP2_UFCS_TEMPLATE(get_state<state_index>)(ctx)};
+      auto state {CPP2_UFCS_TEMPLATE(get_state<state_index>)(ctx)}; 
       CPP2_UFCS(clear)((*cpp2::assert_not_null(state)));
 
-      int count {0};
+      int count {0}; 
 
       o = M::match(pos, ctx);
-      auto ctx_copy {ctx};
+      auto ctx_copy {ctx}; 
       for( ; (o.matched && cpp2::cmp_less(count,max_count)); o = M::match(pos + r.length, ctx_copy) ) {
 
         // Stop for empty matches.
@@ -1083,13 +1083,13 @@ namespace regex {
       }
 
       static_cast<void>(std::move(state));
-      auto valid {cpp2::cmp_greater_eq(std::move(count),get_min_count())};
+      auto valid {cpp2::cmp_greater_eq(std::move(count),get_min_count())}; 
 
       // If we do not reach the minimal count invalidate all groups.
       if (!(valid)) {
         M::invalidate_groups(ctx);
       }
-      return match_return::create(std::move(valid), std::move(r).length);
+      return match_return::create(std::move(valid), std::move(r).length); 
     }
 
     template <typename CharT, typename M, int min_count, int max_count, int state_index> [[nodiscard]] auto range_matcher_logic<CharT,M,min_count,max_count,state_index>::to_string() -> bstring<CharT>{
@@ -1158,13 +1158,13 @@ namespace regex {
     }
 
     template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::push_matcher_state(cpp2::in<std::string> t) & -> int{
-        auto id {CPP2_UFCS(ssize)(matcher_states)};
+        auto id {CPP2_UFCS(ssize)(matcher_states)}; 
         CPP2_UFCS(push_back)(matcher_states, t);
-        return id;
+        return id; 
     }
 
     template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::join(cpp2::in<std::vector<std::string>> list) -> std::string{
-        std::string r {""};
+        std::string r {""}; 
 
         std::string seperator {""}; 
         for ( auto const& cur : list ) {
@@ -1172,14 +1172,14 @@ namespace regex {
             seperator = ", ";
         }
 
-        return r;
+        return r; 
     }
 
     template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::create_matcher_from_list(cpp2::in<std::vector<std::string>> list) & -> std::string{
         if (CPP2_UFCS(empty)(list)) {return "::cpp2::regex::empty_matcher_logic<char>"; }
 
-        auto state_index {push_matcher_state("::cpp2::regex::list_matcher_state")};
-        std::string matcher {"::cpp2::regex::list_matcher_logic<char, " + cpp2::to_string(std::move(state_index)) + ", "};
+        auto state_index {push_matcher_state("::cpp2::regex::list_matcher_state")}; 
+        std::string matcher {"::cpp2::regex::list_matcher_logic<char, " + cpp2::to_string(std::move(state_index)) + ", "}; 
         matcher += join(list);
         matcher += ">";
 
@@ -1187,16 +1187,16 @@ namespace regex {
     }
 
     template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::create_matcher_state() const& -> std::string{
-        auto inner {join(matcher_states)};
-        return "std::tuple<" + cpp2::to_string(std::move(inner)) + ">";
+        auto inner {join(matcher_states)}; 
+        return "std::tuple<" + cpp2::to_string(std::move(inner)) + ">"; 
     }
 
     template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::create_matcher_from_state() & -> std::string{
         // Early out for no alternatives
         if (0 == CPP2_UFCS(size)(cur_state.alternate_match_lists)) {return create_matcher_from_list(cur_state.cur_match_list); }
 
-        auto state_index {push_matcher_state("int")};
-        std::string matcher {"::cpp2::regex::alternative_matcher_logic<char, " + cpp2::to_string(std::move(state_index)) + ", "};
+        auto state_index {push_matcher_state("int")}; 
+        std::string matcher {"::cpp2::regex::alternative_matcher_logic<char, " + cpp2::to_string(std::move(state_index)) + ", "}; 
 
         std::string seperator {""}; 
         auto add {[&, _1 = (&matcher), _2 = (&seperator)](auto const& list) mutable -> void{
@@ -1204,7 +1204,7 @@ namespace regex {
             *cpp2::assert_not_null(_2) = ", ";
         }}; 
 
-        auto cur {CPP2_UFCS(rbegin)(cur_state.alternate_match_lists)};
+        auto cur {CPP2_UFCS(rbegin)(cur_state.alternate_match_lists)}; 
         for( ; cur != CPP2_UFCS(rend)(cur_state.alternate_match_lists); (++cur) ) {
             add(*cpp2::assert_not_null(cur));
         }
@@ -1226,7 +1226,7 @@ namespace regex {
     }
 
     template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::is_anchor(cpp2::in<char> c) & -> bool{
-        auto r {false};
+        auto r {false}; 
         if (c == '^') {
             CPP2_UFCS(add)(cur_state, "::cpp2::regex::line_start_matcher_logic<char>");
             r = true;
@@ -1236,7 +1236,7 @@ namespace regex {
             r = true;
         }}
 
-        return r;
+        return r; 
     }
 
     template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::is_any(cpp2::in<char> c) & -> bool{
@@ -1250,27 +1250,27 @@ namespace regex {
     template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::is_class(cpp2::in<char> c) & -> bool{
         if (c != '[') {return false; }
 
-        std::vector<std::string> classes {};
+        std::vector<std::string> classes {}; 
 
-        char c_cur {CPP2_ASSERT_IN_BOUNDS(regex, pos)};
+        char c_cur {CPP2_ASSERT_IN_BOUNDS(regex, pos)}; 
         auto next_item {[&, _1 = (&pos), _3 = regex, _4 = (&c_cur)]() mutable -> bool{
             *cpp2::assert_not_null(_1) += 1;
             if (cpp2::cmp_greater_eq(*cpp2::assert_not_null(_1),CPP2_UFCS(size)(_3))) {return false; }
 
             *cpp2::assert_not_null(_4) = CPP2_ASSERT_IN_BOUNDS(_3, *cpp2::assert_not_null(_1));
-            return true;
+            return true; 
 
-        }};
+        }}; 
 
         auto peek_item {[&, _1 = pos, _2 = regex]() mutable -> char{
             if (cpp2::cmp_greater_eq((_1 + 1),CPP2_UFCS(size)(_2))) {return '\0'; }
             else {return CPP2_ASSERT_IN_BOUNDS(regex, pos + 1); }
-        }};
+        }}; 
 
-        auto negate {false};
+        auto negate {false}; 
 
-        auto first {true};
-        auto range {false};
+        auto first {true}; 
+        auto range {false}; 
         while( next_item() & (c_cur != ']' || first) ) {
             if (c_cur == '^') {
                 negate = true;
@@ -1280,10 +1280,10 @@ namespace regex {
                 // We have a character class.
                 pos += 2; // Skip ':]'
 
-                auto end {CPP2_UFCS(find)(regex, ":]", pos)};
+                auto end {CPP2_UFCS(find)(regex, ":]", pos)}; 
                 if (end == std::string::npos) {error_out("Could not find end of character class."); }
 
-                auto name {CPP2_UFCS(substr)(regex, pos, end - pos)};
+                auto name {CPP2_UFCS(substr)(regex, pos, end - pos)}; 
                 if (CPP2_UFCS(end)(supported_classes) == std::find(CPP2_UFCS(begin)(supported_classes), CPP2_UFCS(end)(supported_classes), name)) {
                     error_out("Unsupported character class. Supported ones are: " + cpp2::to_string(join(supported_classes)));
                 }
@@ -1326,7 +1326,7 @@ namespace regex {
 
         for ( auto& cur : classes ) {
             if (CPP2_UFCS(starts_with)(cur, "[:")) {
-                auto name {CPP2_UFCS(substr)(cur, 2, CPP2_UFCS(size)(cur) - 4)};
+                auto name {CPP2_UFCS(substr)(cur, 2, CPP2_UFCS(size)(cur) - 4)}; 
                 cur = "::cpp2::regex::" + cpp2::to_string(name) + "_class<char>";
             }
             else {if (1 != CPP2_UFCS(size)(cur)) {
@@ -1337,9 +1337,9 @@ namespace regex {
             }}
         }
 
-        auto inner {join(std::move(classes))};
+        auto inner {join(std::move(classes))}; 
         CPP2_UFCS(add)(cur_state, "::cpp2::regex::class_matcher_logic<char, " + cpp2::to_string(std::move(negate)) + ", " + cpp2::to_string(std::move(inner)) + ">");
-        return true;
+        return true; 
     }
 
     template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::is_escape(cpp2::in<char> c) & -> bool{
@@ -1416,7 +1416,7 @@ namespace regex {
         std::string inner {trim_copy(CPP2_UFCS(substr)(regex, pos + 1, end - pos - 1))}; 
         if (CPP2_UFCS(empty)(inner)) {error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'"); }
 
-        std::string min_count {"-1"};
+        std::string min_count {"-1"}; 
         std::string max_count {"std::numeric_limits<int>::max()"}; 
 
         size_t sep {CPP2_UFCS(find)(inner, ",")}; 
@@ -1441,7 +1441,7 @@ namespace regex {
         }
 
         // TODO: Check 0 <=n <= m
-        auto matcher_state {push_matcher_state("std::vector<int>")};
+        auto matcher_state {push_matcher_state("std::vector<int>")}; 
         CPP2_UFCS(wrap_last)(cur_state, [&, _1 = std::move(min_count), _2 = std::move(max_count)](auto const& inner) -> auto { return "::cpp2::regex::range_matcher_logic<char, " + cpp2::to_string(std::move(inner)) + ", " + cpp2::to_string(_1) + ", " + cpp2::to_string(_2) + ", " + cpp2::to_string(std::move(matcher_state)) + ">";  });
         pos = std::move(end);
 
@@ -1469,7 +1469,7 @@ namespace regex {
             error("'" + cpp2::to_string(c) + "' without previous element.");
         }
 
-        auto matcher_state {push_matcher_state("std::vector<int>")};
+        auto matcher_state {push_matcher_state("std::vector<int>")}; 
         CPP2_UFCS(wrap_last)(cur_state, [&, _1 = std::move(min_range), _2 = std::move(max_range), _3 = c](auto const& inner) -> auto { return "::cpp2::regex::special_range_matcher_logic<char, " + cpp2::to_string(inner) + ", " + cpp2::to_string(_1) + ", " + cpp2::to_string(_2) + ", " + cpp2::to_string(std::move(matcher_state)) + ", '" + cpp2::to_string(_3) + "'>";  });
         return true; 
     }
@@ -1500,8 +1500,8 @@ namespace regex {
         parse_until('\0');
 
         auto inner {create_matcher_from_state()}; 
-        auto matcher_state {create_matcher_state()};
-        return "::cpp2::regex::regular_expression<char, ::cpp2::regex::group_matcher_logic<char, " + cpp2::to_string(std::move(inner)) + ", 0>, " + cpp2::to_string(std::move(matcher_state)) + ", " + cpp2::to_string(named_groups) + ">";
+        auto matcher_state {create_matcher_state()}; 
+        return "::cpp2::regex::regular_expression<char, ::cpp2::regex::group_matcher_logic<char, " + cpp2::to_string(std::move(inner)) + ", 0>, " + cpp2::to_string(std::move(matcher_state)) + ", " + cpp2::to_string(named_groups) + ">"; 
     }
 
 #line 975 "regex.h2"
