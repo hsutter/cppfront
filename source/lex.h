@@ -872,8 +872,11 @@ auto lex_line(
     };
 
     //G universal-character-name:
-    //G     '\u' hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit
-    //G     '\U' hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit
+    //G     '\u' hex-quad
+    //G     '\U' hex-quad hex-quad
+    //G
+    //G hex-quad:
+    //G     hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit
     //G
     auto peek_is_universal_character_name = [&](colno_t offset)
     {
@@ -1506,7 +1509,7 @@ auto lex_line(
                 //G     decimal-literal ''' digit [uU][lL][lL]
                 //G
                 //G floating-point-literal:
-                //G     digit { ' | digit }* . digit ({ ' | digit }*)? ([eE][-+]?digit { ' | digit }*) [fFlL]
+                //G     digit { ''' | digit }* . digit ({ ''' | digit }*)? ([eE][-+]?digit { ' | digit }*) [fFlL]
                 //G
                 //G TODO full grammar & refactor to utility functions with their
                 //G      own unit test rather than inline everything here

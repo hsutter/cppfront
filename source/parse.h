@@ -6334,13 +6334,13 @@ private:
     //G     is-as-expression as-type-cast
     //GTODO     type-id is-type-constraint
     //G
-    //G is-type-constraint
+    //G is-type-constraint:
     //G     'is' type-id
     //G
-    //G is-value-constraint
+    //G is-value-constraint:
     //G     'is' expression
     //G
-    //G as-type-cast
+    //G as-type-cast:
     //G     'as' type-id
     //G
     auto is_as_expression()
@@ -6424,10 +6424,10 @@ private:
     //G     ...
     //G
     //G template-id:
-    //G     identifier '<' template-argument-list? '>'
+    //G     identifier '<' template-arguments? '>'
     //G
-    //G template-argument-list:
-    //G     template-argument-list ',' template-argument
+    //G template-arguments:
+    //G     template-arguments ',' template-argument
     //G
     //G template-argument:
     //G     # note: < > << >> are not allowed in expressions until new ( is opened
@@ -6456,7 +6456,7 @@ private:
         one_past_identifier_end_pos.colno += curr().length();
         next();
 
-        //  Handle the template-argument-list if there is one
+        //  Handle the template-arguments if there is one
         if (
             curr().type() == lexeme::Less
             && curr().position() == one_past_identifier_end_pos
@@ -7281,7 +7281,7 @@ private:
     //G     declaration
     //G     expression-statement
     //G
-    //G contract-statement
+    //G contract-statement:
     //G     contract ';'
     //
     //GTODO     try-block
@@ -7656,7 +7656,7 @@ private:
     }
 
 
-    //G parameter-declaration-list
+    //G parameter-declaration-list:
     //G     '(' parameter-declaration-seq? ')'
     //G
     //G parameter-declaration-seq:
@@ -8004,22 +8004,22 @@ private:
 
 
     //G unnamed-declaration:
-    //G     ':' meta-functions-list? template-parameter-declaration-list? function-type requires-clause? '=' statement
-    //G     ':' meta-functions-list? template-parameter-declaration-list? function-type statement
-    //G     ':' meta-functions-list? template-parameter-declaration-list? type-id? requires-clause? '=' statement
-    //G     ':' meta-functions-list? template-parameter-declaration-list? type-id
-    //G     ':' meta-functions-list? template-parameter-declaration-list? 'final'? 'type' requires-clause? '=' statement
+    //G     ':' meta-functions? template-parameters? function-type requires-clause? '=' statement
+    //G     ':' meta-functions? template-parameters? function-type statement
+    //G     ':' meta-functions? template-parameters? type-id? requires-clause? '=' statement
+    //G     ':' meta-functions? template-parameters? type-id
+    //G     ':' meta-functions? template-parameters? 'final'? 'type' requires-clause? '=' statement
     //G     ':' 'namespace' '=' statement
     //G
-    //G meta-functions-list:
+    //G meta-functions:
     //G     '@' id-expression
-    //G     meta-functions-list '@' id-expression
+    //G     meta-functions '@' id-expression
     //G
     //G requires-clause:
     //G      # note: for aliases, == is not allowed in expressions until new ( is opened
     //G      'requires' logical-or-expression
     //G
-    //G template-parameter-declaration-list
+    //G template-parameters:
     //G     '<' parameter-declaration-seq '>'
     //G
     auto unnamed_declaration(
@@ -8527,9 +8527,9 @@ private:
 
 
     //G alias:
-    //G     ':' template-parameter-declaration-list? 'type' requires-clause? '==' type-id ';'
+    //G     ':' template-parameters? 'type' requires-clause? '==' type-id ';'
     //G     ':' 'namespace' '==' id-expression ';'
-    //G     ':' template-parameter-declaration-list? type-id? requires-clause? '==' expression ';'
+    //G     ':' template-parameters? type-id? requires-clause? '==' expression ';'
     //G
     //GT     ':' function-type '==' expression ';'
     //GT        # See commit 63efa6ed21c4d4f4f136a7a73e9f6b2c110c81d7 comment
