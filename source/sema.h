@@ -2010,14 +2010,14 @@ public:
     bool started_postfix_expression               = false;
     std::vector<bool> started_postfix_operators_  = {false};
     bool started_prefix_operators                 = false;
-    bool started_member_access                    = false;
-    bool started_this_member_access               = false;
     bool is_out_expression                        = false;
     bool inside_next_expression                   = false;
     bool inside_parameter_list                    = false;
     bool inside_parameter_identifier              = false;
     bool inside_returns_list                      = false;
     bool just_entered_for                         = false;
+    token const* prev_token                       = nullptr;
+    token const* prev2_token                      = nullptr;
     parameter_declaration_node const* inside_out_parameter = {};
     std::vector<std::pair<int, int>> uses_in_expression = {};
     std::vector<std::pair<int, int>> uses_at_postfix_expression = {};
@@ -2326,6 +2326,11 @@ public:
 
     auto start(token const& t, int) -> void
     {
+        auto guard = finally([&]() {
+            prev2_token = prev_token;
+            prev_token = &t;
+        });
+
         if (
             is_binary_operator(t.type())
             || (
@@ -2340,12 +2345,8 @@ public:
             ++safe_to_move_context;
         }
 
-        if (t.type() == lexeme::Dot) {
-            started_member_access = true;
-            started_this_member_access = *(&t - 1) == "this";
-        }
         //  Mark captures
-        else if (t.type() == lexeme::Dollar)
+        if (t.type() == lexeme::Dollar)
         {
             for (auto i : get(uses_at_postfix_expression))
             {
@@ -2368,6 +2369,14 @@ public:
         //  generated code can be equally checked
         static std::int32_t final_position = 1;
         t.final_position = final_position++;
+
+        auto started_member_access =
+            prev_token
+            && prev_token->type() == lexeme::Dot;
+        auto started_this_member_access =
+            started_member_access
+            && prev2_token
+            && *prev2_token == "this";
 
         //  If this is the first identifier since we started a new assignment,
         //  expression, then it's the left-hand side (target) of the assignment
@@ -2415,8 +2424,6 @@ public:
                     push_use( identifier_sym( false, &t, {}, !inside_next_expression, safe_to_move_context ) );
                 }
             }
-            started_member_access = false;
-            started_this_member_access = false;
         }
     }
 
