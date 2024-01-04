@@ -82,13 +82,13 @@ auto main() -> int{
     A a {}; 
 
     auto t1 {a()}; 
-    std::cout << t1.x << " , " << std::move(t1).y << "\n";
+    std::cout << t1.x << " , " << t1.y << "\n";
 
     auto t2 {*cpp2::assert_not_null(a)}; 
-    std::cout << t2.x << " , " << std::move(t2).y << "\n";
+    std::cout << t2.x << " , " << t2.y << "\n";
 
     auto t3 {CPP2_ASSERT_IN_BOUNDS(std::move(a), 0)}; 
-    std::cout << t3.x << " , " << std::move(t3).y << "\n";
+    std::cout << t3.x << " , " << t3.y << "\n";
 
 }
 
