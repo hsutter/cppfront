@@ -31,9 +31,15 @@ match_context: <CharT, Iter, max_groups: size_t> type =
     get_group: <pos: size_t> (inout this) groups[pos]&;
 }
 
-template_list: <List...> type = {}
+template_list: <List...> type = {
+    match: <Iter> (begin: Iter, cur: Iter, end: Iter, inout ctx) select<Iter, List...>(begin, cur, end, ctx);
 
-regular_expression: <CharT, groups: size_t, Matcher, Other ...> type = {
+    private select: <Iter, First, Other...> (begin: Iter, cur: Iter, end: Iter, inout ctx)
+        First::match(begin, cur, end, ctx, template_list<Other...>());
+    private select: <Iter> (begin: Iter, cur: Iter, end: Iter, inout ctx) true;
+}
+
+regular_expression: <CharT, groups: size_t, Matcher> type = {
 
     Iter: type == view<CharT>::const_iterator;
     context: type == match_context<CharT, Iter, groups>;
@@ -42,7 +48,7 @@ regular_expression: <CharT, groups: size_t, Matcher, Other ...> type = {
         cur := str.begin();
         end := str.end();
         while cur != end next (cur++) {
-            if Matcher::match(cur, cur, end, ctx, template_list<Other...>()) {
+            if Matcher::match(cur, cur, end, ctx) {
                 return true;
             }
         }
@@ -53,18 +59,11 @@ regular_expression: <CharT, groups: size_t, Matcher, Other ...> type = {
     to_string: (in this) -> _ = Matcher::to_string();
 }
 
-end_matcher_logic: type =
-{
-    match: <Iter> (begin: Iter, cur: Iter, end: Iter, inout ctx, _) -> bool = {
-        return true;
-    }
-}
-
 char_matcher_logic: <CharT, C: CharT> type =
 {
-    match: <Iter, First, Other ...> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : template_list<First, Other...>) -> bool = {
+    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> bool = {
         if cur != end && cur* == C {
-            return First::match(begin, cur + 1, end, ctx, template_list<Other...>());
+            return Other::match(begin, cur + 1, end, ctx);
         } else {
             return false;
         }
@@ -158,7 +157,7 @@ regex_parser: <Error_out> type = {
         parse_until('\0');
 
         inner := create_matcher_from_state();
-        return "::cpp2::regex::regular_expression<char, (named_groups)$, (inner)$, ::cpp2::regex::end_matcher_logic>";
+        return "::cpp2::regex::regular_expression<char, (named_groups)$, ::cpp2::regex::template_list<(inner)$>>";
     }
 
 }
