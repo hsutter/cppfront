@@ -2,6 +2,8 @@
 //  Type pack expansion
 x: <Ts...: type> type = {
     tup: std::tuple<Ts...> = ();
+
+    func: () = {}
 }
 
 left_fold_print: <Args...: type> (inout out: std::ostream, args...: Args) = {

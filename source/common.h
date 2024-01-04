@@ -11,8 +11,13 @@
 // THE SOFTWARE.
 
 
+//  We want cppfront to build cleanly at very high warning levels, with warnings
+//  as errors -- so disable a handful that fire incorrectly due to compiler bugs
 #ifdef _MSC_VER
-#pragma warning(disable: 4456 4706)
+    #pragma warning(disable: 4456 4706)
+#endif
+#if defined(__GNUC__) && __GNUC__ >= 13 && !defined(__clang_major__)
+    #pragma GCC diagnostic ignored "-Wno-dangling-reference"
 #endif
 
 #include "cpp2util.h"
@@ -65,8 +70,8 @@ struct source_line
         -> int
     {
         return
-            std::find_if_not( text.begin(), text.end(), &isspace )
-                - text.begin();
+            unsafe_narrow<int>(std::find_if_not( text.begin(), text.end(), &isspace )
+                               - text.begin());
     }
 
     auto prefix() const
@@ -759,7 +764,7 @@ public:
         auto length = std::ssize(name);
         if (opt_out) { length += 3; }   // space to print "[-]"
         if (max_flag_length < length) {
-            max_flag_length = length;
+            max_flag_length = unsafe_narrow<int>(length);
         }
     }
     struct register_flag {
@@ -821,7 +826,9 @@ public:
         -> void
     {
         help_requested = true;
-        print("\ncppfront compiler v0.3.0   Build "
+        print("\ncppfront compiler "
+            #include "version.info"
+        "   Build "
             #include "build.info"
         );
         print("\nCopyright(c) Herb Sutter   All rights reserved\n");

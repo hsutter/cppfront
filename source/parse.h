@@ -322,7 +322,7 @@ struct binary_expression_node
     auto terms_size() const
         -> int
     {
-        return std::ssize(terms);
+        return unsafe_narrow<int>(std::ssize(terms));
     }
 
     auto is_identifier() const
@@ -2314,7 +2314,7 @@ struct function_type_node
     auto parameter_count() const
         -> int
     {
-        return std::ssize(parameters->parameters);
+        return unsafe_narrow<int>(std::ssize(parameters->parameters));
     }
 
     auto index_of_parameter_named(std::string_view s) const
@@ -4458,7 +4458,7 @@ auto pretty_print_visualize(expression_statement_node const& n, int indent)
 
     auto ret = pretty_print_visualize(*n.expr, indent);
 
-    if (n.has_semicolon) {
+    if (n.has_semicolon && ret.back() != ';') {
         ret += ";";
     }
 
@@ -4660,8 +4660,10 @@ auto pretty_print_visualize(iteration_statement_node const& n, int indent)
             + stmts
             + next_expr
             + "\n" + pre(indent) + "while "
-            + pretty_print_visualize(*n.condition, indent)
-            + ";";
+            + pretty_print_visualize(*n.condition, indent);
+        if (ret.back() != ';') {
+            ret += ";";
+        }
     }
     else {
         assert (n.range && n.parameter && n.body);
@@ -4685,7 +4687,9 @@ auto pretty_print_visualize(return_statement_node const& n, int indent)
         ret += " " + pretty_print_visualize(*n.expression, indent);
     }
 
-    ret += ";";
+    if (ret.back() != ';') {
+        ret += ";";
+    }
 
     return ret;
 }
@@ -4765,7 +4769,7 @@ auto pretty_print_visualize(contract_node const& n, int indent)
 
     ret += " )";
 
-    if (*n.kind == "assert") {
+    if (*n.kind == "assert" && ret.back() != ';') {
         ret += ";";
     }
 
@@ -4784,7 +4788,9 @@ auto pretty_print_visualize(jump_statement_node const& n, int indent)
         ret += " " + n.label->to_string();
     }
 
-    ret += ";";
+    if (ret.back() != ';') {
+        ret += ";";
+    }
 
     return ret;
 }
@@ -4801,7 +4807,10 @@ auto pretty_print_visualize(using_statement_node const& n, int indent)
         ret += "namespace ";
     }
 
-    ret += pretty_print_visualize(*n.id, indent) + ";";
+    ret += pretty_print_visualize(*n.id, indent);
+    if (ret.back() != ';') {
+        ret += ";";
+    }
 
     return ret;
 }
@@ -4958,10 +4967,19 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
     //  First compute the common parts
 
     auto metafunctions = std::string{};
-    if (include_metafunctions_list) {
-        for (auto& meta : n.metafunctions) {
-            metafunctions += " @" + pretty_print_visualize(*meta, indent);
-        }
+    {
+    auto as_comment = 
+        !n.metafunctions.empty()
+        && !include_metafunctions_list;
+    if (as_comment) {
+        metafunctions += "/*";
+    }
+    for (auto& meta : n.metafunctions) {
+        metafunctions += " @" + pretty_print_visualize(*meta, indent);
+    }
+    if (as_comment) {
+        metafunctions += " */";
+    }
     }
 
     auto template_params = std::string{};
@@ -4985,6 +5003,9 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
             initializer += "=";
         }
         initializer += " " + pretty_print_visualize(*n.initializer, adjusted_indent);
+        if (initializer.ends_with(";;")) {
+            initializer.pop_back();
+        }
     }
     else if (!n.is_parameter) {
         initializer = ";";
@@ -5089,15 +5110,19 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
             ret += " type"
                 + requires_clause
                 + " == "
-                + pretty_print_visualize(*t, indent)
-                + ";";
+                + pretty_print_visualize(*t, indent);
+            if (ret.back() != ';') {
+                ret += ";";
+            }
         }
         else if (a->is_namespace_alias()) {
             auto& id = std::get<alias_node::a_namespace>(a->initializer);
             assert(id);
             ret += " namespace == "
-                + pretty_print_visualize(*id, indent)
-                + ";";
+                + pretty_print_visualize(*id, indent);
+            if (ret.back() != ';') {
+                ret += ";";
+            }
         }
         else if (a->is_object_alias()) {
             auto& expr = std::get<alias_node::an_object>(a->initializer);
@@ -5105,8 +5130,10 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
             ret += object_type_id
                 + requires_clause
                 + " == "
-                + pretty_print_visualize(*expr, indent)
-                + ";";
+                + pretty_print_visualize(*expr, indent);
+            if (ret.back() != ';') {
+                ret += ";";
+            }
         }
     }
 
@@ -5768,7 +5795,7 @@ private:
         }
 
         for (auto& e : expression_node::current_expressions) {
-            e->num_subexpressions += std::ssize(n->ops);
+            e->num_subexpressions += unsafe_narrow<int>(std::ssize(n->ops));
         }
 
         return n;
@@ -6313,13 +6340,13 @@ private:
     //G     is-as-expression as-type-cast
     //GTODO     type-id is-type-constraint
     //G
-    //G is-type-constraint
+    //G is-type-constraint:
     //G     'is' type-id
     //G
-    //G is-value-constraint
+    //G is-value-constraint:
     //G     'is' expression
     //G
-    //G as-type-cast
+    //G as-type-cast:
     //G     'as' type-id
     //G
     auto is_as_expression()
@@ -6403,10 +6430,10 @@ private:
     //G     ...
     //G
     //G template-id:
-    //G     identifier '<' template-argument-list? '>'
+    //G     identifier '<' template-arguments? '>'
     //G
-    //G template-argument-list:
-    //G     template-argument-list ',' template-argument
+    //G template-arguments:
+    //G     template-arguments ',' template-argument
     //G
     //G template-argument:
     //G     # note: < > << >> are not allowed in expressions until new ( is opened
@@ -6435,7 +6462,7 @@ private:
         one_past_identifier_end_pos.colno += curr().length();
         next();
 
-        //  Handle the template-argument-list if there is one
+        //  Handle the template-arguments if there is one
         if (
             curr().type() == lexeme::Less
             && curr().position() == one_past_identifier_end_pos
@@ -7260,7 +7287,7 @@ private:
     //G     declaration
     //G     expression-statement
     //G
-    //G contract-statement
+    //G contract-statement:
     //G     contract ';'
     //
     //GTODO     try-block
@@ -7635,7 +7662,7 @@ private:
     }
 
 
-    //G parameter-declaration-list
+    //G parameter-declaration-list:
     //G     '(' parameter-declaration-seq? ')'
     //G
     //G parameter-declaration-seq:
@@ -7983,22 +8010,22 @@ private:
 
 
     //G unnamed-declaration:
-    //G     ':' meta-functions-list? template-parameter-declaration-list? function-type requires-clause? '=' statement
-    //G     ':' meta-functions-list? template-parameter-declaration-list? function-type statement
-    //G     ':' meta-functions-list? template-parameter-declaration-list? type-id? requires-clause? '=' statement
-    //G     ':' meta-functions-list? template-parameter-declaration-list? type-id
-    //G     ':' meta-functions-list? template-parameter-declaration-list? 'final'? 'type' requires-clause? '=' statement
+    //G     ':' meta-functions? template-parameters? function-type requires-clause? '=' statement
+    //G     ':' meta-functions? template-parameters? function-type statement
+    //G     ':' meta-functions? template-parameters? type-id? requires-clause? '=' statement
+    //G     ':' meta-functions? template-parameters? type-id
+    //G     ':' meta-functions? template-parameters? 'final'? 'type' requires-clause? '=' statement
     //G     ':' 'namespace' '=' statement
     //G
-    //G meta-functions-list:
+    //G meta-functions:
     //G     '@' id-expression
-    //G     meta-functions-list '@' id-expression
+    //G     meta-functions '@' id-expression
     //G
     //G requires-clause:
     //G      # note: for aliases, == is not allowed in expressions until new ( is opened
     //G      'requires' logical-or-expression
     //G
-    //G template-parameter-declaration-list
+    //G template-parameters:
     //G     '<' parameter-declaration-seq '>'
     //G
     auto unnamed_declaration(
@@ -8506,9 +8533,9 @@ private:
 
 
     //G alias:
-    //G     ':' template-parameter-declaration-list? 'type' requires-clause? '==' type-id ';'
+    //G     ':' template-parameters? 'type' requires-clause? '==' type-id ';'
     //G     ':' 'namespace' '==' id-expression ';'
-    //G     ':' template-parameter-declaration-list? type-id? requires-clause? '==' expression ';'
+    //G     ':' template-parameters? type-id? requires-clause? '==' expression ';'
     //G
     //GT     ':' function-type '==' expression ';'
     //GT        # See commit 63efa6ed21c4d4f4f136a7a73e9f6b2c110c81d7 comment

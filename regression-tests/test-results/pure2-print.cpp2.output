@@ -1,6 +1,6 @@
 pure2-print.cpp2...
 
-outer: type = 
+outer:/* @print */ type = 
 {
     object_alias: <T: type> T requires (true) == 42;
     mytype: final type = 
