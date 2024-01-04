@@ -7232,7 +7232,7 @@ private:
 
 
     //G using-statement:
-    //G     'using' id-expression ';'
+    //G     'using' qualified-id ';'
     //G     'using' 'namespace' id-expression ';'
     //G
     auto using_statement()
@@ -7254,6 +7254,10 @@ private:
         auto id = id_expression();
         if (!id) {
             error(std::string{"expected valid id-expression after 'using"} + (n->for_namespace ? " namespace" : "") + "'");
+            return {};
+        }
+        if (!n->for_namespace && !id->is_qualified()) {
+            error("'using' for a specific name (not 'using namespace') must specify a qualified name", false);
             return {};
         }
 
