@@ -606,7 +606,7 @@ auto issue_850() -> void{
   auto issue_857::n() && -> void{}
   auto issue_857::o0() && -> void { std::move(*this).n();  }
   auto issue_857::o1() && -> void { CPP2_UFCS(n)(std::move((*this)));  }
-  auto issue_857::o2() && -> void { CPP2_UFCS(std::move(*this).n)(0);  }
+  auto issue_857::o2() && -> void { std::move(*this).n(0);  }
   auto issue_857::o3() && -> void { std::move(*this).n(0);  }
   auto issue_857::o4() && -> void { n(std::move((*this)));  }
   auto issue_857::p0() && -> void{

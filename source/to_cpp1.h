@@ -3305,7 +3305,15 @@ public:
 
                 //  Second, emit the UFCS argument list
 
-                prefix.emplace_back(ufcs_string + "(" + funcname + ")(", args.value().open_pos );
+                //  If the computed function name is an explicit member access
+                //  we don't need to go through the UFCS macro
+                //  This also workarounds compiler bugs
+                if (funcname.starts_with("std::move(*this).")) {
+                    prefix.emplace_back(funcname + "(", args.value().open_pos );
+                }
+                else {
+                    prefix.emplace_back(ufcs_string + "(" + funcname + ")(", args.value().open_pos );
+                }
                 suffix.emplace_back(")", args.value().close_pos );
                 if (!args.value().text_chunks.empty()) {
                     for (auto&& e: args.value().text_chunks) {
