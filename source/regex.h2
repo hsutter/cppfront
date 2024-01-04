@@ -24,6 +24,11 @@ match_group: @struct <Iter> type = {
     matched: bool = false;
 }
 
+match_return: @struct <Iter> type = {
+    matched: bool = false;
+    pos: Iter = ();
+}
+
 match_context: <CharT, Iter, max_groups: size_t> type =
 {
     public groups: std::array<match_group<Iter>, max_groups> = ();
@@ -48,7 +53,7 @@ matcher_list: <List...> type = {
 
     private select: <Iter, First, Other...> (begin: Iter, cur: Iter, end: Iter, inout ctx)
         First::match(begin, cur, end, ctx, matcher_list<Other...>());
-    private select: <Iter> (begin: Iter, cur: Iter, end: Iter, inout ctx) true;
+    private select: <Iter> (begin: Iter, cur: Iter, end: Iter, inout ctx) match_return<Iter>(true, cur);
 }
 
 regular_expression: <CharT, groups: size_t, Matcher> type = {
@@ -60,7 +65,7 @@ regular_expression: <CharT, groups: size_t, Matcher> type = {
         cur := str.begin();
         end := str.end();
         while cur != end next (cur++) {
-            if Matcher::match(cur, cur, end, ctx) {
+            if Matcher::match(cur, cur, end, ctx).matched {
                 return true;
             }
         }
@@ -74,14 +79,15 @@ regular_expression: <CharT, groups: size_t, Matcher> type = {
 alternative_matcher_logic: <CharT, List ...> type = {
 
     match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) match_all<Iter, Other, List...>(begin, cur, end, ctx, Other());
-    private match_all: <Iter, Tail, First, Other ...> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Tail) -> bool = {
-        if First::match(begin, cur, end, ctx, Tail()) {
-            return true;
+    private match_all: <Iter, Tail, First, Other ...> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Tail) -> match_return<Iter> = {
+        r := First::match(begin, cur, end, ctx, Tail());
+        if r.matched {
+            return r;
         } else {
             if constexpr 0 != sizeof...(Other) {
                 return match_all<Iter, Tail, Other...>(begin, cur, end, ctx, Tail());
             } else {
-                return false;
+                return match_return<Iter>(false, end);
             }
         }
     }
@@ -89,24 +95,24 @@ alternative_matcher_logic: <CharT, List ...> type = {
 
 char_matcher_logic: <CharT, C: CharT> type =
 {
-    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> bool = {
+    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
         if cur != end && cur* == C {
             return Other::match(begin, cur + 1, end, ctx);
         } else {
-            return false;
+            return match_return<Iter>(false, end);
         }
     }
 }
 
 group_matcher_start_logic: <CharT, group: int> type = {
-    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> bool = {
+    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
         ctx.set_group_start(group, cur);
         return Other::match(begin, cur, end, ctx);
     }
 }
 
 group_matcher_end_logic: <CharT, group: int> type = {
-    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> bool = {
+    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
         ctx.set_group_end(group, cur);
         return Other::match(begin, cur, end, ctx);
     }
@@ -114,8 +120,40 @@ group_matcher_end_logic: <CharT, group: int> type = {
 
 list_matcher_logic: <CharT, List> type =
 {
-    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> bool = {
+    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
         return List::match_combine(begin, cur, end, ctx, Other());
+    }
+}
+
+range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
+
+
+    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other)
+        match_greedy(0, begin, cur, end, ctx, Other());
+
+    private is_below_upper_bound: (count: int) -> bool = {
+        if -1 == max_count { return true; }
+        else { return count < max_count; }
+    }
+
+    private is_in_range: (count: int) -> bool = {
+        if -1 != min_count && count < min_count { return false; }
+        if -1 != max_count && count > max_count { return false; }
+        return true;
+    }
+    private match_greedy: <Iter, Other> (count: int, begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
+        r:= M::match(begin, cur, end, ctx, matcher_list<>());
+        if  is_below_upper_bound(count) && r.matched && r.pos != cur {
+            return match_greedy(count + 1, begin, r.pos, end, ctx, Other());
+        }
+        else {
+            if is_in_range(count) {
+                return Other::match(begin, cur, end, ctx);
+            }
+            else {
+                return match_return<Iter>(false, end);
+            }
+        }
     }
 }
 
@@ -165,10 +203,56 @@ regex_parser: <Error_out> type = {
         this.error_out = e;
     }
 
+    error:(inout this, message: std::string) = {
+        error_out("Error during parsing of regex '(regex)$' at position '(pos)$': (message)$");
+    }
+
     is_alternative: (inout this, c: char) -> bool = {
         if c != '|' { return false; }
 
         cur_state.start_new_list();
+        return true;
+    }
+
+    is_range: (inout this, c: char) -> bool = {
+
+        if c != '{' { return false; }
+        if cur_state.empty() { error("'{' without previous element."); }
+
+        end: size_t = regex.find("}", pos);
+        if end == std::string::npos { error("Missing closing bracket."); }
+
+        inner: std::string = trim_copy(regex.substr(pos + 1, end - pos - 1));
+        if inner.empty() { error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'"); }
+
+        min_count: std::string = "-1";
+        max_count: std::string = "-1";
+
+        sep: size_t = inner.find(",");
+        if sep == std::string::npos {
+            min_count = inner;
+            max_count = inner;
+        }
+        else {
+            inner_first: std::string = trim_copy(inner.substr(0, sep));
+            inner_last: std::string = trim_copy(inner.substr(sep + 1));
+
+            if (inner_first.empty() && inner_last.empty()) {
+                error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'");
+            }
+
+            if !inner_first.empty() {
+                min_count = inner_first;
+            }
+            if !inner_last.empty() {
+                max_count = inner_last;
+            }
+        }
+
+        // TODO: Check 0 <=n <= m
+        cur_state.wrap_last( :(inner) -> _ == "::cpp2::regex::range_matcher_logic<char, (inner)$, (min_count$)$, (max_count$)$>");
+        pos = end;
+
         return true;
     }
 
@@ -185,7 +269,7 @@ regex_parser: <Error_out> type = {
             // if is_anchor(c) { continue; }
             // if is_group(c) { continue; }
             // if is_handle_special(c) { continue; }
-            // if is_range(c) { continue; }
+            if is_range(c) { continue; }
             // if is_special_range(c) { continue; }
 
             // No special char push a character match
