@@ -15,11 +15,56 @@
 //  Reflection and meta
 //===========================================================================
 
-#include "parse.h"
 
 cpp2: namespace = {
 
 meta: namespace = {
+
+
+lineno_t: type == std::int32_t;
+colno_t: type == std::int32_t;   // not int16_t... encountered >80,000 char line during testing
+
+source_position: @dll_visible @value type =
+{
+    public lineno: lineno_t = 1;   // one-based offset into program source
+    public colno: colno_t = 1;     // one-based offset into line
+
+    operator=: (implicit out this) = { }
+    operator=: (implicit out this, l: lineno_t) = lineno = l;
+    operator=: (implicit out this, l: lineno_t, c: colno_t) =
+    {
+        lineno = l;
+        colno = c;
+    }
+
+    to_string: (this) -> std::string = "((lineno)$,(colno)$)";
+}
+
+
+passing_style: @dll_visible @enum type =
+{
+    in;
+    copy;
+    inout;
+    out;
+    move;
+    forward;
+    invalid;
+}
+
+//  Not `passing_style::from_string` to workaround #555.
+to_passing_style: (s: std::string_view) -> passing_style =
+{
+    return inspect s -> passing_style {
+        is (passing_style::in.to_string()) = passing_style::in;
+        is (passing_style::copy.to_string()) = passing_style::copy;
+        is (passing_style::inout.to_string()) = passing_style::inout;
+        is (passing_style::out.to_string()) = passing_style::out;
+        is (passing_style::move.to_string()) = passing_style::move;
+        is (passing_style::forward.to_string()) = passing_style::forward;
+        is _ = passing_style::invalid;
+    };
+}
 
 
 //-----------------------------------------------------------------------
@@ -29,62 +74,55 @@ meta: namespace = {
 //-----------------------------------------------------------------------
 //
 
-compiler_services: @polymorphic_base @copyable type =
+compiler_services: @dll_visible @polymorphic_base @copyable type =
 {
     //  Common data members
     //
-    errors               : *std::vector<error_entry>;
-    errors_original_size : int;
-    generated_tokens     : *std::deque<token>;
-    parser               : cpp2::parser;
-    metafunction_name    : std::string = ();
-    metafunction_args    : std::vector<std::string> = ();
-    metafunctions_used   : bool = false;
+    data_: std::any;
+    private data: (this) -> forward _ = std::any_cast<std::add_lvalue_reference_t<const compiler_services_data>>(data_);
+    private data: (inout this) -> forward _ = std::any_cast<std::add_lvalue_reference_t<compiler_services_data>>(data_);
 
     //  Constructor
     //
     operator=: (
         out this,
-        errors_          : *std::vector<error_entry>,
-        generated_tokens_: *std::deque<token>
+        data_v: std::any
     )
     = {
-        errors = errors_;
-        errors_original_size = cpp2::unsafe_narrow<int>(std::ssize(errors*));
-        generated_tokens = generated_tokens_;
-        parser = errors*;
+        data_ = data_v;
+        assert<Type>( data_.type() == Typeid<compiler_services_data>(), "parameter 'data_v' must store a 'compiler_services_data'" );
     }
 
     //  Common API
     //
     set_metafunction_name: (inout this, name: std::string_view, args: std::vector<std::string>) = {
-        metafunction_name  = name;
-        metafunction_args  = args;
-        metafunctions_used = args.empty();
+        data().metafunction_name  = name;
+        data().metafunction_args  = args;
+        data().metafunctions_used = args.empty();
     }
 
-    get_metafunction_name: (this) -> std::string_view = metafunction_name;
+    get_metafunction_name: (this) -> std::string_view = data().metafunction_name;
 
     get_argument: (inout this, index: int) -> std::string = {
-        metafunctions_used = true;
-        if (0 <= index < metafunction_args.ssize()) {
-            return metafunction_args[index];
+        data().metafunctions_used = true;
+        if (0 <= index < data().metafunction_args.ssize()) {
+            return data().metafunction_args[index];
         }
         return "";
     }
 
     get_arguments: (inout this) -> std::vector<std::string> = {
-        metafunctions_used = true;
-        return metafunction_args;
+        data().metafunctions_used = true;
+        return data().metafunction_args;
     }
 
-    arguments_were_used: (this) -> bool = metafunctions_used;
+    arguments_were_used: (this) -> bool = data().metafunctions_used;
 
     protected parse_statement: (
         inout this,
         copy source: std::string_view
     )
-        -> (ret: std::unique_ptr<statement_node>)
+        -> _
     = {
         original_source := source;
 
@@ -116,7 +154,7 @@ compiler_services: @polymorphic_base @copyable type =
         //  Now lex this source fragment to generate
         //  a single grammar_map entry, whose .second
         //  is the vector of tokens
-        _ = generated_lexers.emplace_back( errors* );
+        _ = generated_lexers.emplace_back( data().errors* );
         tokens := generated_lexers.back()&;
         tokens*.lex( lines*, true );
 
@@ -124,13 +162,14 @@ compiler_services: @polymorphic_base @copyable type =
 
         //  Now parse this single declaration from
         //  the lexed tokens
-        ret = parser.parse_one_declaration(
-                tokens*.get_map().begin()*.second,
-                generated_tokens*
-              );
+        ret := data().parser.parse_one_declaration(
+                 tokens*.get_map().begin()*.second,
+                 data().generated_tokens*
+               );
         if !ret {
             error( "parse failed - the source string is not a valid statement:\n(original_source)$");
         }
+        return ret;
     }
 
     position: (virtual this)
@@ -156,10 +195,10 @@ compiler_services: @polymorphic_base @copyable type =
     error: (this, msg: std::string_view)
     = {
         message := msg as std::string;
-        if !metafunction_name.empty() {
-            message = "while applying @(metafunction_name)$ - (message)$";
+        if !data().metafunction_name.empty() {
+            message = "while applying @(data().metafunction_name)$ - (message)$";
         }
-        _ = errors*.emplace_back( position(), message);
+        _ = data().errors*.emplace_back( position(), message);
     }
 
     //  Enable custom contracts on this object, integrated with compiler output
@@ -167,7 +206,7 @@ compiler_services: @polymorphic_base @copyable type =
     //
     report_violation: (this, msg) = {
         error(msg);
-        throw( std::runtime_error("  ==> programming bug found in metafunction @(metafunction_name)$ - contract violation - see previous errors") );
+        throw( std::runtime_error("  ==> programming bug found in metafunction @(data().metafunction_name)$ - contract violation - see previous errors") );
     }
 
     has_handler:(this) true;
@@ -184,7 +223,7 @@ compiler_services: @polymorphic_base @copyable type =
 
 //  All type_ids are wrappers around a pointer to node
 //
-type_id: @polymorphic_base @copyable type =
+type_id: @dll_visible @polymorphic_base @copyable type =
 {
     this: compiler_services = ();
 
@@ -220,21 +259,37 @@ type_id: @polymorphic_base @copyable type =
 
 //  All declarations are wrappers around a pointer to node
 //
-declaration_base: @polymorphic_base @copyable type =
+declaration_base: @dll_visible @polymorphic_base @copyable type =
 {
     this: compiler_services = ();
 
-    protected n: *declaration_node;
+    node_pointer: @copyable type =
+    {
+        n: *void;
+
+        operator=: <T> (
+            implicit out this,
+            n_: T
+        )
+        = {
+            n = n_;
+            assert( n_, "a meta::declaration must point to a valid declaration_node, not null" );
+            static_assert( std::is_same_v<T, *declaration_node> );
+        }
+
+        operator*: (this) -> forward _ = unsafe_narrow<*declaration_node>(n)*;
+    }
+
+    protected n: node_pointer;
 
     protected operator=: (
         out this,
-        n_: *declaration_node,
+        n_: node_pointer,
         s : compiler_services
     )
     = {
         compiler_services = s;
         n = n_;
-        assert( n, "a meta::declaration must point to a valid declaration_node, not null" );
     }
 
     position: (override this) -> source_position = n*.position();
@@ -246,13 +301,13 @@ declaration_base: @polymorphic_base @copyable type =
 //-----------------------------------------------------------------------
 //  All declarations
 //
-declaration: @polymorphic_base @copyable type =
+declaration: @dll_visible @polymorphic_base @copyable type =
 {
     this: declaration_base = ();
 
     operator=: (
         out this,
-        n_: *declaration_node,
+        n_: declaration_base::node_pointer,
         s : compiler_services
     )
     = {
@@ -271,6 +326,9 @@ declaration: @polymorphic_base @copyable type =
     make_public      : (inout this) -> bool = n*.make_public();
     make_protected   : (inout this) -> bool = n*.make_protected();
     make_private     : (inout this) -> bool = n*.make_private();
+
+    is_dll_visible   : (this)       -> bool = n*.is_dll_visible();
+    make_dll_visible : (inout this) -> bool = n*.make_dll_visible();
 
     has_name         : (this)                      -> bool = n*.has_name();
     has_name         : (this, s: std::string_view) -> bool = n*.has_name(s);
@@ -328,13 +386,13 @@ declaration: @polymorphic_base @copyable type =
 //-----------------------------------------------------------------------
 //  Function declarations
 //
-function_declaration: @copyable type =
+function_declaration: @dll_visible @copyable type =
 {
     this: declaration = ();
 
     operator=: (
         out this,
-        n_: *declaration_node,
+        n_: declaration_base::node_pointer,
         s : compiler_services
     ) =
     {
@@ -396,7 +454,7 @@ function_declaration: @copyable type =
         pre<this> (!has_initializer(), "cannot add an initializer to a function that already has one")
         pre<this> (parent_is_type(),   "cannot add an initializer to a function that isn't in a type scope")
     = {
-        //require( !has_initializer(), 
+        //require( !has_initializer(),
         //         "cannot add an initializer to a function that already has one");
         //require( parent_is_type(),
         //         "cannot add an initializer to a function that isn't in a type scope");
@@ -415,13 +473,13 @@ function_declaration: @copyable type =
 //-----------------------------------------------------------------------
 //  Object declarations
 //
-object_declaration: @copyable type =
+object_declaration: @dll_visible @copyable type =
 {
     this: declaration = ();
 
     operator=: (
         out this,
-        n_: *declaration_node,
+        n_: declaration_base::node_pointer,
         s : compiler_services
     ) =
     {
@@ -451,13 +509,13 @@ object_declaration: @copyable type =
 //-----------------------------------------------------------------------
 //  Type declarations
 //
-type_declaration: @copyable type =
+type_declaration: @dll_visible @copyable type =
 {
     this: declaration = ();
 
     operator=: (
         out this,
-        n_: *declaration_node,
+        n_: declaration_base::node_pointer,
         s : compiler_services
     ) =
     {
@@ -485,7 +543,7 @@ type_declaration: @copyable type =
         -> std::vector<function_declaration>
     = {
         ret: std::vector<function_declaration> = ();
-        for n*.get_type_scope_declarations(declaration_node::functions) 
+        for n*.get_type_scope_declarations(declaration_node::functions)
         do  (d) {
             _ = ret.emplace_back( d, this );
         }
@@ -586,13 +644,13 @@ type_declaration: @copyable type =
 //-----------------------------------------------------------------------
 //  Alias declarations
 //
-alias_declaration: @copyable type =
+alias_declaration: @dll_visible @copyable type =
 {
     this: declaration = ();
 
     operator=: (
         out this,
-        n_: *declaration_node,
+        n_: declaration_base::node_pointer,
         s : compiler_services
     ) =
     {
@@ -632,7 +690,7 @@ add_virtual_destructor: (inout t: meta::type_declaration) =
 //
 //  an abstract base class having only pure virtual functions
 //
-interface: (inout t: meta::type_declaration) =
+interface: @dll_visible (inout t: meta::type_declaration) =
 {
     has_dtor := false;
 
@@ -678,7 +736,7 @@ interface: (inout t: meta::type_declaration) =
 //
 //  Unlike an interface, it can have nonpublic and nonvirtual functions.
 //
-polymorphic_base: (inout t: meta::type_declaration) =
+polymorphic_base: @dll_visible (inout t: meta::type_declaration) =
 {
     has_dtor := false;
 
@@ -752,7 +810,7 @@ ordered_impl: (
 //
 //  Note: the ordering that should be encouraged as default gets the nice name
 //
-ordered: (inout t: meta::type_declaration) =
+ordered: @dll_visible (inout t: meta::type_declaration) =
 {
     ordered_impl( t, "strong_ordering" );
 }
@@ -760,7 +818,7 @@ ordered: (inout t: meta::type_declaration) =
 //-----------------------------------------------------------------------
 //  weakly_ordered - a weakly ordered type
 //
-weakly_ordered: (inout t: meta::type_declaration) =
+weakly_ordered: @dll_visible (inout t: meta::type_declaration) =
 {
     ordered_impl( t, "weak_ordering" );
 }
@@ -768,7 +826,7 @@ weakly_ordered: (inout t: meta::type_declaration) =
 //-----------------------------------------------------------------------
 //  partially_ordered - a partially ordered type
 //
-partially_ordered: (inout t: meta::type_declaration) =
+partially_ordered: @dll_visible (inout t: meta::type_declaration) =
 {
     ordered_impl( t, "partial_ordering" );
 }
@@ -790,7 +848,7 @@ partially_ordered: (inout t: meta::type_declaration) =
 //
 //  A type with (copy and move) x (construction and assignment)
 //
-copyable: (inout t: meta::type_declaration) =
+copyable: @dll_visible (inout t: meta::type_declaration) =
 {
     //  If the user explicitly wrote any of the copy/move functions,
     //  they must also have written the most general one - we can't
@@ -818,7 +876,7 @@ copyable: (inout t: meta::type_declaration) =
 //  A regular type: copyable, plus has public default construction
 //  and no protected or virtual functions
 //
-basic_value: (inout t: meta::type_declaration) =
+basic_value: @dll_visible (inout t: meta::type_declaration) =
 {
     t.copyable();
 
@@ -846,19 +904,19 @@ basic_value: (inout t: meta::type_declaration) =
 //
 //  Note: the ordering that should be encouraged as default gets the nice name
 //
-value: (inout t: meta::type_declaration) =
+value: @dll_visible (inout t: meta::type_declaration) =
 {
     t.ordered();
     t.basic_value();
 }
 
-weakly_ordered_value: (inout t: meta::type_declaration) =
+weakly_ordered_value: @dll_visible (inout t: meta::type_declaration) =
 {
     t.weakly_ordered();
     t.basic_value();
 }
 
-partially_ordered_value: (inout t: meta::type_declaration) =
+partially_ordered_value: @dll_visible (inout t: meta::type_declaration) =
 {
     t.partially_ordered();
     t.basic_value();
@@ -890,7 +948,7 @@ partially_ordered_value: (inout t: meta::type_declaration) =
 //  no virtual functions, and no user-defined constructors
 //  (i.e., no invariants) or assignment or destructors.
 //
-struct: (inout t: meta::type_declaration) =
+struct: @dll_visible (inout t: meta::type_declaration) =
 {
     for t.get_members() do (inout m)
     {
@@ -1123,7 +1181,7 @@ basic_enum: (
 //
 //          -- P0707R4, section 3
 //
-enum: (inout t: meta::type_declaration) =
+enum: @dll_visible (inout t: meta::type_declaration) =
 {
     //  Let basic_enum do its thing, with an incrementing value generator
     t.basic_enum(
@@ -1150,7 +1208,7 @@ enum: (inout t: meta::type_declaration) =
 //
 //          -- P0707R4, section 3
 //
-flag_enum: (inout t: meta::type_declaration) =
+flag_enum: @dll_visible (inout t: meta::type_declaration) =
 {
     //  Let basic_enum do its thing, with a power-of-two value generator
     t.basic_enum(
@@ -1196,7 +1254,7 @@ flag_enum: (inout t: meta::type_declaration) =
 //  a type that contains exactly one of a fixed set of values at a time
 //
 
-union: (inout t : meta::type_declaration)
+union: @dll_visible (inout t : meta::type_declaration)
 = {
     alternatives : std::vector<value_member_info> = ();
 
@@ -1258,8 +1316,8 @@ union: (inout t : meta::type_declaration)
         storage += "), cpp2::max( ";
 
         (copy comma: std::string = "")
-        for  alternatives  
-        next comma = ", "  
+        for  alternatives
+        next comma = ", "
         do   (e) {
             storage += comma + "alignof((e.type)$)";
         }
@@ -1332,7 +1390,7 @@ union: (inout t : meta::type_declaration)
 //
 //  print - output a pretty-printed visualization of t
 //
-print: (t: meta::type_declaration) =
+print: @dll_visible (t: meta::type_declaration) =
 {
     std::cout << t.print() << "\n";
 }
@@ -1340,105 +1398,17 @@ print: (t: meta::type_declaration) =
 
 //-----------------------------------------------------------------------
 //
-//  apply_metafunctions
+//  dll_visible - makes t visible in a DLL
 //
-apply_metafunctions: (
-    inout n     : declaration_node,
-    inout rtype : type_declaration,
-    error
-    )
-    -> bool
-= {
-    assert( n.is_type() );
-
-    //  Check for _names reserved for the metafunction implementation
-    for  rtype.get_members()
-    do   (m)
-    {
-        m.require( !m.name().starts_with("_") || m.name().ssize() > 1,
-                    "a type that applies a metafunction cannot have a body that declares a name that starts with '_' - those names are reserved for the metafunction implementation");
-    }
-
-    //  For each metafunction, apply it
-    for n.metafunctions
-    do  (meta)
-    {
-        //  Convert the name and any template arguments to strings
-        //  and record that in rtype
-        name := meta*.to_string();
-        name = name.substr(0, name.find('<'));
-
-        args: std::vector<std::string> = ();
-        for meta*.template_arguments()
-        do  (arg)
-            args.push_back( arg.to_string() );
-
-        rtype.set_metafunction_name( name, args );
-
-        //  Dispatch
-        //
-        if name == "interface" {
-            interface( rtype );
-        }
-        else if name == "polymorphic_base" {
-            polymorphic_base( rtype );
-        }
-        else if name == "ordered" {
-            ordered( rtype );
-        }
-        else if name == "weakly_ordered" {
-            weakly_ordered( rtype );
-        }
-        else if name == "partially_ordered" {
-            partially_ordered( rtype );
-        }
-        else if name == "copyable" {
-            copyable( rtype );
-        }
-        else if name == "basic_value" {
-            basic_value( rtype );
-        }
-        else if name == "value" {
-            value( rtype );
-        }
-        else if name == "weakly_ordered_value" {
-            weakly_ordered_value( rtype );
-        }
-        else if name == "partially_ordered_value" {
-            partially_ordered_value( rtype );
-        }
-        else if name == "struct" {
-            cpp2_struct( rtype );
-        }
-        else if name == "enum" {
-            cpp2_enum( rtype );
-        }
-        else if name == "flag_enum" {
-            flag_enum( rtype );
-        }
-        else if name == "union" {
-            cpp2_union( rtype );
-        }
-        else if name == "print" {
-            print( rtype );
-        }
-        else {
-            error( "unrecognized metafunction name: " + name );
-            error( "(temporary alpha limitation) currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum, union, print" );
-            return false;
-        }
-
-        if (
-            !args.empty()
-            && !rtype.arguments_were_used()
-            )
-        {
-            error( name + " did not use its template arguments - did you mean to write '" + name + " <" + args[0] + "> type' (with the spaces)?");
-            return false;
-        }
-    }
-
-    return true;
+dll_visible: @dll_visible (inout t: meta::type_declaration) =
+{
+    t.require( t.make_dll_visible(),
+               "dll_visible can only be applied to a namespace-scope name");
+}
+dll_visible: @dll_visible (inout t: meta::function_declaration) =
+{
+    t.require( t.make_dll_visible(),
+               "dll_visible can only be applied to a namespace-scope name");
 }
 
 

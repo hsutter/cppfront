@@ -12,7 +12,7 @@
 
 
 #ifdef _MSC_VER
-#pragma warning(disable: 4456)
+#pragma warning(disable: 4456 4996)
 #endif
 
 #include "cpp2util.h"
@@ -86,27 +86,10 @@ struct source_line
 };
 
 
-using lineno_t = int32_t;
-using colno_t  = int32_t;   // not int16_t... encountered >80,000 char line during testing
+using cpp2::meta::lineno_t;
+using cpp2::meta::colno_t;
 
-struct source_position
-{
-    lineno_t    lineno;     // one-based offset into program source
-    colno_t     colno;      // one-based offset into line
-
-    source_position(lineno_t l = 1, colno_t  c = 1 )
-        : lineno{ l }, colno{ c }
-    {
-    }
-
-    auto operator<=>(source_position const&) const = default;
-
-    auto to_string() const
-        -> std::string
-    {
-        return "(" + std::to_string(lineno) + "," + std::to_string(colno) + ")";
-    }
-};
+using cpp2::meta::source_position;
 
 struct comment
 {
@@ -127,7 +110,7 @@ struct string_parts {
 
     string_parts(const std::string& beginseq,
                  const std::string& endseq,
-                 adds_sequences     strateg) 
+                 adds_sequences     strateg)
      : begin_seq{beginseq}
      , end_seq{endseq}
      , strategy{strateg}
@@ -144,16 +127,16 @@ struct string_parts {
     void clear() { parts.clear(); }
 
     auto generate() const -> std::string {
-        
-        if (parts.empty()) { 
-            return (strategy & on_the_beginning ? begin_seq : std::string{}) 
-                 + (strategy & on_the_end ? end_seq : std::string{}); 
+
+        if (parts.empty()) {
+            return (strategy & on_the_beginning ? begin_seq : std::string{})
+                 + (strategy & on_the_end ? end_seq : std::string{});
         }
 
-        auto result = std::visit(begin_visit{begin_seq, strategy}, 
+        auto result = std::visit(begin_visit{begin_seq, strategy},
                                  parts.front());
 
-        if (std::ssize(parts) > 1) { 
+        if (std::ssize(parts) > 1) {
             auto it1 = parts.cbegin();
             auto it2 = parts.cbegin()+1;
             for(;it2 != parts.cend(); ++it1, ++it2) {
@@ -466,6 +449,18 @@ auto to_upper(char c)
 }
 
 
+auto to_lower(char c)
+    -> char
+{
+    //  C toupper is only not-UB in [0,127] and returns the wrong type,
+    //  so wrap the range check and the type cast here in one place...
+    //  note the 126 (not 127) is intentional to avoid a GCC warning
+    if (0 <= c && c <= 126) { return static_cast<char>(std::tolower(c)); }
+    //  else
+    return c;
+}
+
+
 auto to_upper_and_underbar(std::string_view s)
     -> std::string
 {
@@ -473,6 +468,36 @@ auto to_upper_and_underbar(std::string_view s)
     for (char& c : ret) {
         if (std::isalnum(c)) { c = to_upper(c); }
         else                 { c = '_'; }
+    }
+    return ret;
+}
+
+
+auto to_lower_and_collapsed_underbar(
+    std::string_view s,
+    bool prev_was_underbar = false,
+    bool drop_back_underbar = false
+    )
+    -> std::string
+{
+    auto ret = std::string{};
+    for (char c : s) {
+        if (std::isalnum(c)) {
+            ret.push_back(to_lower(c));
+            prev_was_underbar = false;
+        }
+        else if (!prev_was_underbar) {
+            ret.push_back('_');
+            prev_was_underbar = true;
+        }
+    }
+    if (
+        drop_back_underbar
+        && !ret.empty()
+        && ret.back() == '_'
+        )
+    {
+        ret.pop_back();
     }
     return ret;
 }
@@ -920,7 +945,7 @@ class stackinstr
 
     static auto print(auto&& ee, std::string_view label) {
         std::cout << "\n=== Stack debug information: " << label << " stack ===\n";
-        for (auto& e: ee) 
+        for (auto& e: ee)
         if  (e.ptr) {
             std::cout
                 << "  " << std::setw(6)

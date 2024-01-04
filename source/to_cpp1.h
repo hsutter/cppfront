@@ -1050,6 +1050,12 @@ class cppfront
     std::string              sourcefile;
     std::vector<error_entry> errors;
 
+    struct metafunction_symbol {
+        meta::dll_symbol name;
+        std::string definition;
+    };
+    std::vector<metafunction_symbol> metafunction_symbols;
+
     //  For building
     //
     cpp2::source source;
@@ -1077,19 +1083,6 @@ class cppfront
         token const*  ptoken = {};
     };
     std::vector<arg_info> current_args  = { {} };
-
-    struct active_using_declaration {
-        token const* identifier = {};
-
-        explicit active_using_declaration(using_statement_node const& n) {
-          if (auto id = get_if<id_expression_node::qualified>(&n.id->id)) {
-              identifier = (*id)->ids.back().id->identifier;
-          }
-        }
-    };
-
-    using source_order_name_lookup_res =
-        std::optional<std::variant<declaration_node const*, active_using_declaration>>;
 
     //  Stack of the currently active nested declarations we're inside
     std::vector<declaration_node const*> current_declarations = { {} };
@@ -1199,7 +1192,7 @@ public:
         : sourcefile{ filename }
         , source    { errors }
         , tokens    { errors }
-        , parser    { errors }
+        , parser    { errors, sourcefile.ends_with(".h2") }
         , sema      { errors }
     {
         //  "Constraints enable creativity in the right directions"
@@ -1520,7 +1513,12 @@ public:
 
         //  If there is Cpp2 code, we have more to do...
 
-        //  First, if this is a .h2 and in a -pure-cpp2 compilation,
+        //  First, emit metafunction symbols in the global namespace
+        for (auto const& mf: metafunction_symbols) {
+            printer.print_extra(mf.definition);
+        }
+
+        //  Then, if this is a .h2 and in a -pure-cpp2 compilation,
         //  we need to switch filenames
         if (
             cpp1_filename.back() == 'h'
@@ -1582,6 +1580,39 @@ public:
         }
 
         printer.finalize_phase( true );
+
+        //---------------------------------------------------------------------
+        //  Emit the accessor for declared metafunctions
+        //
+        if (!metafunction_symbols.empty())
+        {
+            assert(source.has_cpp2());
+
+            auto symbols_accessor = std::string{meta::this_execution::symbols_accessor().view()};
+            auto decl = std::string{};
+            decl += "std::type_identity_t<char const**> "
+                  + symbols_accessor
+                  + "_() {\n";
+            decl += "    static char const* res[] = {\n";
+            auto prefix = "        \"";
+            auto suffix = std::string{"\"\n"};
+            for (auto const& mf: metafunction_symbols) {
+                decl += prefix + (mf.name.view() + suffix);
+                prefix = "        , \"";
+            }
+            decl += "        , nullptr\n"; //  Sentinel element
+            decl += "    };\n";
+            decl += "    return res;\n";
+            decl += "}\n";
+            printer.print_extra(decl);
+            printer.print_extra(
+                "CPP2_C_API constexpr auto "
+                + symbols_accessor
+                + " = &"
+                + symbols_accessor
+                + "_;"
+            );
+        }
 
         //  Finally, some debug checks
         assert(
@@ -2552,7 +2583,8 @@ public:
 
         if (n.for_namespace) {
             printer.print_cpp2(" namespace", n.position());
-        } else {
+        }
+        else {
             current_names.push_back(active_using_declaration{n});
         }
 
@@ -2856,39 +2888,6 @@ public:
     }
 
 
-    auto source_order_name_lookup(unqualified_id_node const& id)
-    -> source_order_name_lookup_res
-    {
-        for (
-            auto first = current_names.rbegin(), last = current_names.rend() - 1;
-            first != last;
-            ++first
-            )
-        {
-            if (
-                auto decl = get_if<declaration_node const*>(&*first);
-                decl
-                && *decl
-                && (*decl)->has_name(*id.identifier)
-                )
-            {
-                return *decl;
-            }
-            else if (
-                auto using_ = get_if<active_using_declaration>(&*first);
-                using_
-                && using_->identifier
-                && *using_->identifier == *id.identifier
-                )
-            {
-                return *using_;
-            }
-        }
-
-        return {};
-    }
-
-
     auto lookup_finds_variable_with_placeholder_type_under_initialization(id_expression_node const& n)
         -> bool
     {
@@ -2898,7 +2897,7 @@ public:
         }
 
         auto const& id = *get<id_expression_node::unqualified>(n.id);
-        auto lookup = source_order_name_lookup(id);
+        auto lookup = source_order_name_lookup(current_names, *id.identifier);
 
         if (
             !lookup
@@ -4011,51 +4010,6 @@ public:
     }
 
 
-    // Consider moving these `stack` functions to `common.h` to enable more general use.
-
-    template<typename T>
-    auto stack_value(
-        T& var,
-        std::type_identity_t<T> const& value
-    )
-        -> auto
-    {
-        return finally([&var, old = std::exchange(var, value)]() {
-            var = old;
-        });
-    }
-
-    template<typename T>
-    auto stack_element(
-        std::vector<T>& cont,
-        std::type_identity_t<T> const& value
-    )
-        -> auto
-    {
-        cont.push_back(value);
-        return finally([&]{ cont.pop_back(); });
-    }
-
-    template<typename T>
-    auto stack_size(std::vector<T>& cont)
-        -> auto
-    {
-        return finally([&, size = cont.size()]{ cont.resize(size); });
-    }
-
-    template<typename T>
-    auto stack_size_if(
-        std::vector<T>& cont,
-        bool cond
-    )
-        -> std::optional<decltype(stack_size(cont))>
-    {
-        if (cond) {
-            return stack_size(cont);
-        }
-        return {};
-    }
-
     //-----------------------------------------------------------------------
     //
     auto emit(
@@ -4360,10 +4314,11 @@ public:
             && !type_id.is_pointer_qualified()
             )
         {
-            switch (n.pass) {
-            break;case passing_style::in     : printer.print_cpp2( "cpp2::in<",  n.position() );
-            break;case passing_style::out    : printer.print_cpp2( "cpp2::out<", n.position() );
-            break;default: ;
+            if (n.pass == passing_style::in) {
+                printer.print_cpp2( "cpp2::in<",  n.position() );
+            }
+            else if (n.pass == passing_style::out) {
+                printer.print_cpp2( "cpp2::out<", n.position() );
             }
         }
 
@@ -4401,22 +4356,29 @@ public:
                 function_requires_conditions.push_back(req);
             }
 
-            switch (n.pass) {
-            break;case passing_style::in     : printer.print_cpp2( name+" const&", n.position() );
-            break;case passing_style::copy   : printer.print_cpp2( name,           n.position() );
-            break;case passing_style::inout  : printer.print_cpp2( name+"&",       n.position() );
-
+            if (n.pass == passing_style::in) {
+                printer.print_cpp2( name+" const&", n.position() );
+            }
+            else if (n.pass == passing_style::copy) {
+                printer.print_cpp2( name,           n.position() );
+            }
+            else if (n.pass == passing_style::inout) {
+                printer.print_cpp2( name+"&",       n.position() );
+            }
             //  For generic out parameters, we take a pointer to anything with paramater named "identifier_"
             //  and then generate the out<> as a stack local with the expected name "identifier"
-            break;case passing_style::out    : printer.print_cpp2( name,           n.position() );
-                                               current_functions.back().prolog.statements.push_back(
-                                                   "auto " + identifier + " = cpp2::out(" + identifier + "_); "
-                                               );
-                                               identifier += "_";
-
-            break;case passing_style::move   : printer.print_cpp2( name+"&&",      n.position() );
-            break;case passing_style::forward: printer.print_cpp2( name+"&&",      n.position() );
-            break;default: ;
+            else if (n.pass == passing_style::out) {
+                printer.print_cpp2( name,           n.position() );
+                current_functions.back().prolog.statements.push_back(
+                    "auto " + identifier + " = cpp2::out(" + identifier + "_); "
+                );
+                identifier += "_";
+            }
+            else if (n.pass == passing_style::move) {
+                printer.print_cpp2( name+"&&",      n.position() );
+            }
+            else if (n.pass == passing_style::forward) {
+                printer.print_cpp2( name+"&&",      n.position() );
             }
         }
         else if (n.pass == passing_style::forward) {
@@ -4452,14 +4414,23 @@ public:
             && !n.declaration->is_variadic
             )
         {
-            switch (n.pass) {
-            break;case passing_style::in     : printer.print_cpp2( ">",  n.position() );
-            break;case passing_style::copy   : printer.print_cpp2( "",   n.position() );
-            break;case passing_style::inout  : printer.print_cpp2( "&",  n.position() );
-            break;case passing_style::out    : printer.print_cpp2( ">",  n.position() );
-            break;case passing_style::move   : printer.print_cpp2( "&&", n.position() );
-            break;case passing_style::forward: printer.print_cpp2( "&&", n.position() );
-            break;default: ;
+            if (n.pass == passing_style::in) {
+                printer.print_cpp2( ">",  n.position() );
+            }
+            else if (n.pass == passing_style::copy) {
+                printer.print_cpp2( "",   n.position() );
+            }
+            else if (n.pass == passing_style::inout) {
+                printer.print_cpp2( "&",  n.position() );
+            }
+            else if (n.pass == passing_style::out) {
+                printer.print_cpp2( ">",  n.position() );
+            }
+            else if (n.pass == passing_style::move) {
+                printer.print_cpp2( "&&", n.position() );
+            }
+            else if (n.pass == passing_style::forward) {
+                printer.print_cpp2( "&&", n.position() );
             }
         }
 
@@ -4679,7 +4650,7 @@ public:
             );
         }
         else {
-            emit(*n.parameters, false, false, generating_postfix_inc_dec); 
+            emit(*n.parameters, false, false, generating_postfix_inc_dec);
         }
 
         //  For an anonymous function, the emitted lambda is 'constexpr' or 'mutable'
@@ -5608,6 +5579,14 @@ public:
         }
 
 
+        //  Emit sanity check to ensure the Cpp1 lookup matches ours
+        if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
+            for (auto&& check : n.metafunction_lookup_checks) {
+                printer.print_extra(check);
+            }
+        }
+
+
         //  If this is a function that has multiple return values,
         //  first we need to emit the struct that contains the returns
         if (
@@ -5713,6 +5692,17 @@ public:
             }
         }
 
+        //  If this is a function declaration visible in a DLL
+        //  emit the portable macro that makes it visible
+        if (
+            printer.get_phase() != printer.phase0_type_decls
+            && n.is_function()
+            && n.is_dll_visible()
+            )
+        {
+            printer.print_cpp2("CPPFRONTAPI ", n.position());
+        }
+
         //  If this is a function definition and the function is inside
         //  type(s) that have template parameters and/or requires clauses,
         //  emit those outer template parameters and requires clauses too
@@ -5767,6 +5757,17 @@ public:
                 }
 
                 printer.print_cpp2("class ", n.position());
+
+                //  If this is a declaration visible in a DLL
+                //  emit the portable macro that makes it visible
+                if (
+                    printer.get_phase() == printer.phase1_type_defs_func_decls
+                    && n.is_dll_visible()
+                    )
+                {
+                    printer.print_cpp2("CPPFRONTAPI ", n.position());
+                }
+
                 emit(*n.identifier);
 
                 //  Type declaration
@@ -6084,28 +6085,32 @@ public:
                     assert (is_in_type);
                     auto& this_ = func->parameters->parameters[0];
 
-                    switch (this_->pass) {
-                    break;case passing_style::in:
+                    if (this_->pass == passing_style::in) {
                         suffix1 += " const";
                         //  Cpp1 ref-qualifiers don't belong on virtual functions
                         if (!this_->is_polymorphic()) {
                             suffix1 += "&";
                         }
-                    break;case passing_style::inout:
+                    }
+                    else if (this_->pass == passing_style::inout) {
                         //  Cpp1 ref-qualifiers don't belong on virtual functions
                         if (!this_->is_polymorphic()) {
                             suffix1 += " &";
                         }
-                    break;case passing_style::out:
-                        ; // constructor is handled below
-                    break;case passing_style::move:
+                    }
+                    else if (this_->pass == passing_style::out) {
+                        // constructor is handled below
+                    }
+                    else if (this_->pass == passing_style::move) {
                         suffix1 += " &&";
-
+                    }
                     //  We shouldn't be able to get into a state where these values
                     //  exist here, if we did it's our compiler bug
-                    break;case passing_style::copy:
-                          case passing_style::forward:
-                          default:
+                    else if (this_->pass == passing_style::copy
+                          || this_->pass == passing_style::forward
+                          || this_->pass == passing_style::invalid
+                          )
+                    {
                         errors.emplace_back( n.position(), "ICE: invalid parameter passing style, should have been rejected", true);
                     }
 
@@ -6343,6 +6348,20 @@ public:
                 }
                 else {
                     printer.print_cpp2( ";", n.position() );
+                }
+
+                //  Save the symbol for a metafunction
+                //  to be emitted in the global namespace and
+                //  to be loaded by `cpp2::meta::load_metafunction`
+                if (n.is_metafunction())
+                {
+                    metafunction_symbols.push_back({meta::dll_symbol(n, parser.translation_unit_has_interface()), {}});
+                    metafunction_symbols.back().definition =
+                        std::string{"\nCPP2_C_API constexpr auto "}
+                        + metafunction_symbols.back().name.view()
+                        + " = "
+                        + meta::to_type_metafunction_cast(n.fully_qualified_name(), n.is_const_metafunction())
+                        + ";";
                 }
 
                 //  Note: Not just early "return;" here because we may need

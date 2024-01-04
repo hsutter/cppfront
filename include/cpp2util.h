@@ -283,6 +283,15 @@
 #endif
 
 
+#if defined(_WIN32)
+#define CPPFRONTAPI __declspec(dllexport)
+#else
+#define CPPFRONTAPI  __attribute__ ((visibility ("default")))
+#endif
+
+#define CPP2_C_API extern "C" CPPFRONTAPI
+
+
 namespace cpp2 {
 
 
@@ -1111,7 +1120,9 @@ inline constexpr auto is( auto const& x, auto&& value ) -> bool
     else if constexpr (requires{ bool{x == value}; }) {
         return x == value;
     }
-    return false;
+    else {
+        return false;
+    }
 }
 
 
@@ -1994,6 +2005,17 @@ using cpp2::cpp2_new;
 #else
     #define CPP2_REQUIRES(...) requires (__VA_ARGS__)
     #define CPP2_REQUIRES_(...) requires (__VA_ARGS__)
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4251)
+#endif
+
+#include "cpp2reflect.h"
+
+#ifdef _MSC_VER
+#pragma warning(pop)
 #endif
 
 #endif

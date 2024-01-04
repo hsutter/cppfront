@@ -1,0 +1,640 @@
+
+//  Copyright (c) Herb Sutter
+//  SPDX-License-Identifier: CC-BY-NC-ND-4.0
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+
+//===========================================================================
+//  Reflection and meta
+//===========================================================================
+
+#include "parse.h"
+#include <cstdlib>
+#include <functional>
+#include <utility>
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <Windows.h>
+#else
+#include <dlfcn.h>
+#endif // _WIN32
+
+
+cpp2: namespace = {
+
+meta: namespace = {
+
+
+to_type_metafunction_cast: (
+    name: std::string_view,
+    is_const_metafunction: bool
+    )
+    -> std::string
+= {
+    const_ := "";
+    if is_const_metafunction {
+        const_ = " const";
+    }
+    return "static_cast<void(*)(cpp2::meta::type_declaration(const_)$&)>((name)$)";
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  dll_symbol
+//
+dll_symbol: @value type = {
+    value: std::string = ();
+
+    constant_prefix: std::string_view == "cpp2_metafunction_";
+    reachable_mangle: std::string_view == "r";
+    const_metafunction_mangle: std::string_view == "c";
+
+    operator=: (implicit out this) = { }
+    operator=: (out this, n: declaration_node, is_reachable_: bool)
+        pre(n.is_metafunction())
+        post(is_reachable() == is_reachable_)
+        post(is_const_metafunction() == n.is_const_metafunction())
+    = {
+        value = constant_prefix;
+        if is_reachable_ {
+            value += reachable_mangle;
+        }
+        if n.is_const_metafunction() {
+            value += const_metafunction_mangle;
+        }
+        value += mangle(n);
+    }
+    operator=: (out this, copy s: std::string_view)
+    = {
+        if !s.starts_with(constant_prefix) {
+            value += constant_prefix;
+        }
+        value += s;
+    }
+
+    c_str: (this) -> *const char = value.c_str();
+    view: (this) -> std::string_view = value;
+    without_prefix: (this)
+        -> std::string_view
+    = {
+        res := view();
+        res.remove_prefix(constant_prefix.size());
+        for (reachable_mangle, const_metafunction_mangle)
+        do  (m)
+        if res.starts_with(m) {
+            res.remove_prefix(m.size());
+        }
+        return res;
+    }
+
+    is_reachable: (this) -> bool = view().substr(constant_prefix.size()).starts_with(reachable_mangle);
+    is_const_metafunction: (this) -> bool =
+                                   view().substr(constant_prefix.size())
+                                         .substr(unsigned(is_reachable()) * reachable_mangle.size())
+                                         .starts_with(const_metafunction_mangle);
+}
+
+symbols_accessor: (lib_path: std::string_view)
+    -> dll_symbol
+    = dll_symbol("get_symbol_names_(to_lower_and_collapsed_underbar(lib_path, true, true))$");
+
+this_execution: namespace =
+{
+
+//  The environment variable 'CPPFRONT_METAFUNCTION_LIBRARY'
+//  is read and interpreted as the Cpp2 metafunction library path of this execution
+symbols_accessor: ()
+    -> dll_symbol
+= {
+    env_var :== "CPPFRONT_METAFUNCTION_LIBRARY";
+    lib_path := std::getenv(env_var);
+    assert(lib_path && lib_path[0] != '\0', "(env_var)$ should be set for a Cpp2 source with metafunctions");
+    // FIXME Doesn't work for a library with more than one source providing a metafunction
+    // See https://github.com/hsutter/cppfront/pull/907#issuecomment-1872644205
+    return meta::symbols_accessor(lib_path);
+}
+
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  expected with diagnostic to return to apply_metafunctions
+//
+diagnostic: @struct type = {
+    value: std::string;
+}
+
+expected: @union <T> type = {
+    value: T;
+    error: diagnostic;
+
+    operator=: (implicit out this, v: T) = set_value(v);
+    operator=: (implicit out this, u: diagnostic) = set_error(u);
+
+    and_then: <F> (move this, f: F) -> std::remove_cvref_t<std::invoke_result_t<F, T>> = {
+        if is_value() {
+            return f(value());
+        }
+        else {
+            return (error());
+        }
+    }
+}
+
+}
+
+}
+
+
+namespace cpp2::meta {
+
+
+//-----------------------------------------------------------------------
+//
+//  (de)mangling
+//
+auto mangle(std::string res)
+    -> std::string
+{
+    //  Mangle (id length, id) pairs according to
+    //  https://en.wikipedia.org/wiki/Name_mangling#Complex_example
+    //  "... by the GNU GCC 3.x compilers, according to the IA-64 (Itanium) ABI"
+    auto xpos = res.size();
+    auto prev_id_end = xpos;
+    while ((xpos = res.find_last_of(':', xpos)) != res.npos)
+    {
+        res.replace(xpos - 1, 2, std::to_string(prev_id_end - xpos - 1));
+        prev_id_end = xpos - 1;
+    }
+
+    return res;
+}
+
+auto mangle(declaration_node const& n)
+    -> std::string
+{
+    assert(n.identifier);
+    assert(n.identifier->template_arguments().empty());
+    assert(n.parent_is_namespace());
+
+    return mangle(n.fully_qualified_name());
+}
+
+auto demangle(std::string_view s)
+    -> std::string
+{
+    std::string res{};
+
+    //  Demangle (id length, id) pairs according to
+    //  https://en.wikipedia.org/wiki/Name_mangling#Complex_example
+    //  "... by the GNU GCC 3.x compilers, according to the IA-64 (Itanium) ABI"
+    while (!s.empty())
+    {
+        auto length = s.substr(0, s.find_first_not_of("0123456789"));
+        s.remove_prefix(length.size());
+        auto id = s.substr(0, unsafe_narrow<unsigned>(std::stoi(std::string{length})));
+        s.remove_prefix(id.size());
+
+        assert(!length.empty());
+        assert(!id.empty());
+
+        res += id;
+        if (!s.empty()) {
+            res += "::";
+        }
+    }
+
+    return res;
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  dll Load DLL and its symbols with the OS API
+//
+class dll
+{
+public:
+    dll(std::string const& path)
+      : handle_{
+#ifdef _WIN32
+            static_cast<void*>(LoadLibraryA(path.c_str()))
+#else
+            static_cast<void*>(dlopen(path.c_str(), RTLD_NOW|RTLD_LOCAL))
+#endif // _WIN32
+            , +[](void* handle)
+            {
+#ifdef _WIN32
+                FreeLibrary(static_cast<HMODULE>(handle));
+#else
+                dlclose(handle);
+#endif // _WIN32
+            }
+        }
+    {
+        if(!handle_) {
+            Default.report_violation(("failed to load DLL '" + path + "': " + get_last_error()).c_str());
+        }
+    }
+
+    template<typename T>
+    auto get_alias(std::string const& name) noexcept -> T&
+    {
+#ifdef _WIN32
+        auto symbol = reinterpret_cast<void*>(GetProcAddress(static_cast<HMODULE>(handle_.get()), name.c_str()));
+#else
+        auto symbol = dlsym(handle_.get(), name.c_str());
+        if(!symbol)
+        {
+            //  Some platforms export with additional underscore, so try that
+            auto const us_name = "_" + name;
+            symbol = dlsym(handle_.get(), us_name.c_str());
+        }
+#endif // _WIN32
+        if (!symbol) {
+            Default.report_violation(("failed to load DLL symbol '" + name+ "': " + get_last_error()).c_str());
+        }
+        return **reinterpret_cast<T**>(symbol);
+    }
+private:
+    std::shared_ptr<void> handle_;
+
+    static auto get_last_error() noexcept -> std::string
+    {
+#ifdef _WIN32
+        DWORD errorMessageID = GetLastError();
+        if(errorMessageID == 0) {
+            return {}; //  No error message has been recorded
+        }
+        LPSTR messageBuffer = nullptr;
+        auto size = FormatMessageA(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS,
+            nullptr,
+            errorMessageID,
+            MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
+            (LPSTR)&messageBuffer,
+            0,
+            nullptr
+        );
+        std::string message(messageBuffer, unsafe_narrow<std::size_t>(size));
+        LocalFree(messageBuffer);
+        return message;
+#else
+        return std::string{dlerror()};
+#endif // _WIN32
+    }
+
+};
+
+
+//-----------------------------------------------------------------------
+//
+//  get_reachable_metafunction_symbols
+//
+struct library
+{
+    std::string_view name;
+    std::vector<dll_symbol> symbols;
+};
+
+namespace this_execution {
+
+//  Load Cpp2 libraries with metafunctions by opening DLL with the OS API
+//
+//  The environment variable 'CPPFRONT_METAFUNCTION_LIBRARIES'
+//  is read and interpreted as ':'-separated Cpp2 metafunction library paths
+std::span<library> get_reachable_metafunction_symbols()
+{
+    static std::vector<library> res = []{
+        std::vector<library> res;
+
+        // FIXME: On Windows, using this approach with the system apis not set to utf8, will
+        // break if a metafunction library contains unicode codepoints in its name, a proper
+        // way to handle this would be to use _wgetenv and use wchar_t strings for the dll opening
+        // function
+        auto cpp1_libraries_cstr = std::getenv("CPPFRONT_METAFUNCTION_LIBRARIES");
+        if (
+            !cpp1_libraries_cstr
+            || cpp1_libraries_cstr[0] == '\0'
+            )
+        {
+            return res;
+        }
+
+        auto cpp1_libraries = std::string_view{cpp1_libraries_cstr};
+        while (!cpp1_libraries.empty())
+        {
+            auto colon = cpp1_libraries.find(':');
+            auto lib_path = cpp1_libraries.substr(0, colon);
+            cpp1_libraries.remove_prefix(lib_path.size() + unsigned(colon != lib_path.npos));
+
+            auto lib = dll{std::string{lib_path}};
+
+            auto get_symbols = lib.get_alias<char const**()>(meta::symbols_accessor(lib_path).c_str());
+
+            res.push_back({lib_path, {}});
+            auto c_strings = get_symbols();
+            if (!c_strings || !*c_strings) {
+                Default.report_violation(
+                    ("symbols accesor returns no symbols (in '" + std::string{lib_path} + "')").c_str()
+                );
+            }
+
+            for (; *c_strings; ++c_strings) {
+                auto symbol = res.back().symbols.emplace_back(*c_strings);
+            }
+        }
+
+        return res;
+    }();
+
+    return res;
+}
+
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  load_metafunction
+//
+struct lookup_res {
+    std::string_view library;
+    dll_symbol const* symbol;
+};
+
+using load_metafunction_ret = std::function<void(type_declaration&)>;
+
+//  Load Cpp2 metafunction by opening DLL with the OS API
+auto load_metafunction(
+    std::string const& name,
+    std::function<expected<lookup_res>(std::string const&)> lookup
+    )
+    -> expected<load_metafunction_ret>
+{
+    return lookup(name).and_then(
+        [](lookup_res res)
+            -> expected<load_metafunction_ret>
+        {
+            auto [lib_path, cpp1_name] = res;
+
+            auto lib = dll{std::string(lib_path)};
+            return load_metafunction_ret{
+                [
+                 fun = lib.get_alias<void(type_declaration&)>(cpp1_name->c_str()),
+                 lib = std::move(lib)
+                 ]
+                (type_declaration& t)
+                    -> void
+                {
+                    fun(t);
+                }
+            };
+        }
+    );
+}
+
+}
+
+
+cpp2: namespace = {
+
+meta: namespace = {
+
+
+//-----------------------------------------------------------------------
+//
+//  Compiler services data
+//
+//-----------------------------------------------------------------------
+//
+
+compiler_services_data: @struct type =
+{
+    //  Common data members
+    //
+    errors               : *std::vector<error_entry>;
+    errors_original_size : int;
+    generated_tokens     : *std::deque<token>;
+    parser               : cpp2::parser;
+    metafunction_name    : std::string = ();
+    metafunction_args    : std::vector<std::string> = ();
+    metafunctions_used   : bool = false;
+
+    //  Make function
+    //
+    make: (
+        errors_                       : *std::vector<error_entry>,
+        generated_tokens_             : *std::deque<token>,
+        translation_unit_has_interface: bool
+    )
+        -> compiler_services_data
+    = {
+        return (errors_,
+                cpp2::unsafe_narrow<int>(std::ssize(errors_*)),
+                generated_tokens_,
+                cpp2::parser(errors_*, translation_unit_has_interface));
+    }
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  apply_metafunctions
+//
+apply_metafunctions: (
+    inout n     : declaration_node,
+    inout rtype : type_declaration,
+    error,
+    lookup
+    )
+    -> bool
+= {
+    assert( n.is_type() );
+
+    //  Check for _names reserved for the metafunction implementation
+    for  rtype.get_members()
+    do   (m)
+    {
+        m.require( !m.name().starts_with("_") || m.name().ssize() > 1,
+                    "a type that applies a metafunction cannot have a body that declares a name that starts with '_' - those names are reserved for the metafunction implementation");
+    }
+
+    //  For each metafunction, apply it
+    for n.metafunctions
+    do  (meta)
+    {
+        //  Convert the name and any template arguments to strings
+        //  and record that in rtype
+        name := meta*.to_string();
+        name = name.substr(0, name.find('<'));
+
+        args: std::vector<std::string> = ();
+        for meta*.template_arguments()
+        do  (arg)
+            args.push_back( arg.to_string() );
+
+        rtype.set_metafunction_name( name, args );
+
+        //  Dispatch
+        //
+        if name == "interface" {
+            interface( rtype );
+        }
+        else if name == "polymorphic_base" {
+            polymorphic_base( rtype );
+        }
+        else if name == "ordered" {
+            ordered( rtype );
+        }
+        else if name == "weakly_ordered" {
+            weakly_ordered( rtype );
+        }
+        else if name == "partially_ordered" {
+            partially_ordered( rtype );
+        }
+        else if name == "copyable" {
+            copyable( rtype );
+        }
+        else if name == "basic_value" {
+            basic_value( rtype );
+        }
+        else if name == "value" {
+            value( rtype );
+        }
+        else if name == "weakly_ordered_value" {
+            weakly_ordered_value( rtype );
+        }
+        else if name == "partially_ordered_value" {
+            partially_ordered_value( rtype );
+        }
+        else if name == "struct" {
+            cpp2_struct( rtype );
+        }
+        else if name == "enum" {
+            cpp2_enum( rtype );
+        }
+        else if name == "flag_enum" {
+            flag_enum( rtype );
+        }
+        else if name == "union" {
+            cpp2_union( rtype );
+        }
+        else if name == "print" {
+            print( rtype );
+        }
+        else if name == "dll_visible" {
+            dll_visible( rtype );
+        }
+        else {
+            (load := load_metafunction( name, lookup ))
+            if load.is_value() {
+                load.value()( rtype );
+            } else {
+                error( "unrecognized metafunction name: " + name );
+                if name.find("::") == name.npos {
+                    error( "currently supported built-in names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum, union, print, dll_visible" );
+                }
+                if !load.error().value.empty() {
+                    error( load.error().value );
+                }
+                return false;
+            }
+        }
+
+        if (
+            !args.empty()
+            && !rtype.arguments_were_used()
+            )
+        {
+            error( name + " did not use its template arguments - did you mean to write '" + name + " <" + args[0] + "> type' (with the spaces)?");
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+apply_metafunctions: (
+    inout n         : declaration_node,
+    inout rfunction : function_declaration,
+    error
+    )
+    -> bool
+= {
+    assert( n.is_function() );
+
+    //  Check for _names reserved for the metafunction implementation
+//  for  rfunction.get_members()
+//  do   (m)
+//  {
+//      m.require( !m.name().starts_with("_") || m.name().ssize() > 1,
+//                  "a function that applies a metafunction cannot have a body that declares a name that starts with '_' - those names are reserved for the metafunction implementation");
+//  }
+
+    //  For each metafunction, apply it
+    for n.metafunctions
+    do  (meta)
+    {
+        //  Convert the name and any template arguments to strings
+        //  and record that in rfunction
+        name := meta*.to_string();
+        name = name.substr(0, name.find('<'));
+
+        args: std::vector<std::string> = ();
+        for meta*.template_arguments()
+        do  (arg)
+            args.push_back( arg.to_string() );
+
+        rfunction.set_metafunction_name( name, args );
+
+        //  Dispatch
+        //
+        if name == "dll_visible" {
+            dll_visible( rfunction );
+        }
+        else {
+//          (load := load_metafunction(name))
+//          if load.metafunction {
+//              load.metafunction( rfunction );
+//          } else {
+                error( "unrecognized metafunction name: " + name );
+                error( "currently supported built-in names are: dll_visible" );
+//              if !load.error.empty() {
+//                  error( load.error );
+//              }
+//              return false;
+//          }
+        }
+
+        if (
+            !args.empty()
+            && !rfunction.arguments_were_used()
+            )
+        {
+            error( name + " did not use its template arguments - did you mean to write '" + name + " <" + args[0] + "> (...) -> ...' (with the spaces)?");
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+}
+
+}
+
+
+#include "cpp2reflect.hpp"

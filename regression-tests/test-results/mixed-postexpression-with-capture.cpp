@@ -38,7 +38,6 @@ struct make_strings_ret { std::string a; std::string b; };
 [[nodiscard]] auto make_strings() -> make_strings_ret;
 #line 38 "mixed-postexpression-with-capture.cpp2"
 
-#line 1 "mixed-postexpression-with-capture.cpp2"
 
 //=== Cpp2 function definitions =================================================
 
