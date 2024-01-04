@@ -1048,6 +1048,14 @@ public:
     auto check(declaration_node const& n)
         -> bool
     {
+        if (n.has_name("operator")) {
+            errors.emplace_back(
+                n.position(),
+                "the name 'operator' is incomplete - did you mean to write an overloaded operator name like 'operator*' or 'operator++'?"
+            );
+            return false;
+        }
+
         //  An object of deduced type must have an initializer
         if (
             n.is_object()
