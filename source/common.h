@@ -11,8 +11,13 @@
 // THE SOFTWARE.
 
 
+//  We want cppfront to build cleanly at very high warning levels, with warnings
+//  as errors -- so disable a handful that fire incorrectly due to compiler bugs
 #ifdef _MSC_VER
-#pragma warning(disable: 4456)
+    #pragma warning(disable: 4456)
+#endif
+#if defined(__GNUC__) && __GNUC__ >= 13 && !defined(__clang_major__)
+    #pragma GCC diagnostic ignored "-Wno-dangling-reference"
 #endif
 
 #include "cpp2util.h"

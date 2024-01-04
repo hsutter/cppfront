@@ -42,7 +42,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     env:
       CXX: ${{ matrix.compiler }}
-      CXXFLAGS: -std=${{ matrix.cxx-std }} -Wall -Wextra -Wold-style-cast -Wunused-parameter -Wno-error=dangling-reference -Wpedantic -Werror -pthread
+      CXXFLAGS: -std=${{ matrix.cxx-std }} -Wall -Wextra -Wold-style-cast -Wunused-parameter -Wpedantic -Werror -pthread
     steps:
     - uses: actions/checkout@v3
     - name: Install compiler
