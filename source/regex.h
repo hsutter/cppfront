@@ -20,6 +20,8 @@ template<typename ...List> class matcher_list;
 
 template<typename CharT, size_t groups, typename Matcher> class regular_expression;
 
+template<typename CharT, typename ...List> class alternative_matcher_logic;
+
 template<typename CharT, CharT C> class char_matcher_logic;
 
 template<typename CharT, int group> class group_matcher_start_logic;
@@ -27,6 +29,8 @@ template<typename CharT, int group> class group_matcher_start_logic;
 
 template<typename CharT, int group> class group_matcher_end_logic;
 
+
+template<typename CharT, typename List> class list_matcher_logic;
 
 class regex_parser_state;
     
@@ -79,6 +83,8 @@ template<typename CharT, typename Iter, size_t max_groups> class match_context
 template<typename ...List> class matcher_list {
     public: template<typename Iter> [[nodiscard]] static auto match(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx) -> auto;
 
+    public: template<typename Iter, typename ...OtherList> [[nodiscard]] static auto match_combine(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx, [[maybe_unused]] matcher_list<OtherList...> const& unnamed_param_5) -> auto;
+
     private: template<typename Iter, typename First, typename ...Other> [[nodiscard]] static auto select(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx) -> auto;
 
     private: template<typename Iter> [[nodiscard]] static auto select(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx) -> auto;
@@ -99,6 +105,17 @@ template<typename CharT, size_t groups, typename Matcher> class regular_expressi
     public: regular_expression() = default;
     public: regular_expression(regular_expression const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(regular_expression const&) -> void = delete;
+
+};
+
+template<typename CharT, typename ...List> class alternative_matcher_logic {
+
+    public: template<typename Iter, typename Other> [[nodiscard]] static auto match(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx, [[maybe_unused]] Other const& unnamed_param_5) -> auto;
+    private: template<typename Iter, typename Tail, typename First, typename ...Other> [[nodiscard]] static auto match_all(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx, [[maybe_unused]] Tail const& unnamed_param_5) -> bool;
+    public: alternative_matcher_logic() = default;
+    public: alternative_matcher_logic(alternative_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
+    public: auto operator=(alternative_matcher_logic const&) -> void = delete;
+
 
 };
 
@@ -130,6 +147,16 @@ template<typename CharT, int group> class group_matcher_end_logic {
 
 };
 
+template<typename CharT, typename List> class list_matcher_logic
+ {
+    public: template<typename Iter, typename Other> [[nodiscard]] static auto match(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx, [[maybe_unused]] Other const& unnamed_param_5) -> bool;
+    public: list_matcher_logic() = default;
+    public: list_matcher_logic(list_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
+    public: auto operator=(list_matcher_logic const&) -> void = delete;
+
+
+};
+
 class regex_parser_state {
     public: std::vector<std::string> cur_match_list {}; 
     public: std::vector<std::vector<std::string>> alternate_match_lists {}; 
@@ -157,9 +184,13 @@ template<typename Error_out> class regex_parser {
 
     public: explicit regex_parser(cpp2::in<std::string_view> r, Error_out const& e);
 
+    public: [[nodiscard]] auto is_alternative(cpp2::in<char> c) & -> bool;
+
     public: auto parse_until(cpp2::in<char> term) & -> void;
 
     private: [[nodiscard]] static auto join(cpp2::in<std::vector<std::string>> list) -> std::string;
+
+    public: [[nodiscard]] auto create_matcher_from_list(auto const& list) & -> auto;
 
     public: [[nodiscard]] auto create_matcher_from_state() & -> std::string;
 
@@ -192,6 +223,9 @@ namespace regex {
 
     template <typename ...List> template<typename Iter> [[nodiscard]] auto matcher_list<List...>::match(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx) -> auto { return select<Iter,List...>(begin, cur, end, ctx);  }
 
+    template <typename ...List> template<typename Iter, typename ...OtherList> [[nodiscard]] auto matcher_list<List...>::match_combine(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx, [[maybe_unused]] matcher_list<OtherList...> const& unnamed_param_5) -> auto {
+        return select<Iter,List...,OtherList...>(begin, cur, end, ctx);  }
+
     template <typename ...List> template<typename Iter, typename First, typename ...Other> [[nodiscard]] auto matcher_list<List...>::select(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx) -> auto {
         return First::match(begin, cur, end, ctx, matcher_list<Other...>());  }
     template <typename ...List> template<typename Iter> [[nodiscard]] auto matcher_list<List...>::select(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx) -> auto { return true;  }
@@ -210,6 +244,19 @@ namespace regex {
 
     template <typename CharT, size_t groups, typename Matcher> [[nodiscard]] auto regular_expression<CharT,groups,Matcher>::to_string() const& -> auto { return Matcher::to_string();  }
 
+    template <typename CharT, typename ...List> template<typename Iter, typename Other> [[nodiscard]] auto alternative_matcher_logic<CharT,List...>::match(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx, [[maybe_unused]] Other const& unnamed_param_5) -> auto { return match_all<Iter,Other,List...>(begin, cur, end, ctx, Other());  }
+    template <typename CharT, typename ...List> template<typename Iter, typename Tail, typename First, typename ...Other> [[nodiscard]] auto alternative_matcher_logic<CharT,List...>::match_all(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx, [[maybe_unused]] Tail const& unnamed_param_5) -> bool{
+        if (First::match(begin, cur, end, ctx, Tail())) {
+            return true;
+        }else {
+            if constexpr (0!=sizeof...(Other)) {
+                return match_all<Iter,Tail,Other...>(begin, cur, end, ctx, Tail());
+            }else {
+                return false;
+            }
+        }
+    }
+
     template <typename CharT, CharT C> template<typename Iter, typename Other> [[nodiscard]] auto char_matcher_logic<CharT,C>::match(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx, [[maybe_unused]] Other const& unnamed_param_5) -> bool{
         if (cur!=end && *cur==C) {
             return Other::match(begin, cur + 1, end, ctx);
@@ -226,6 +273,10 @@ namespace regex {
     template <typename CharT, int group> template<typename Iter, typename Other> [[nodiscard]] auto group_matcher_end_logic<CharT,group>::match(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx, [[maybe_unused]] Other const& unnamed_param_5) -> bool{
         CPP2_UFCS(set_group_end)(ctx, group, cur);
         return Other::match(begin, cur, end, ctx);
+    }
+
+    template <typename CharT, typename List> template<typename Iter, typename Other> [[nodiscard]] auto list_matcher_logic<CharT,List>::match(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx, [[maybe_unused]] Other const& unnamed_param_5) -> bool{
+        return List::match_combine(begin, cur, end, ctx, Other());
     }
 
     auto regex_parser_state::start_new_list() & -> void{
@@ -258,13 +309,20 @@ namespace regex {
 
     }
 
+    template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::is_alternative(cpp2::in<char> c) & -> bool{
+        if (c!='|') {return false; }
+
+        CPP2_UFCS(start_new_list)(cur_state);
+        return true;
+    }
+
     template <typename Error_out> auto regex_parser<Error_out>::parse_until(cpp2::in<char> term) & -> void{
         for( ; pos!=CPP2_UFCS(size)(regex); pos += 1 ) {
             char c {regex[pos]}; 
 
             if (c==term) {return ; }
 
-            // if is_alternative(c) { continue; }
+            if (is_alternative(c)) {continue; }
             // if is_any(c) { continue; }
             // if is_class(c) { continue; }
             // if is_escape(c) { continue; }
@@ -291,8 +349,28 @@ namespace regex {
         return r; 
     }
 
+    template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::create_matcher_from_list(auto const& list) & -> auto {
+            return "::cpp2::regex::list_matcher_logic<char, ::cpp2::regex::matcher_list<" + cpp2::to_string(join(list)) + ">>";  }
+
     template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::create_matcher_from_state() & -> std::string{
-        return join(cur_state.cur_match_list); 
+        if (0==CPP2_UFCS(size)(cur_state.alternate_match_lists)) {return create_matcher_from_list(cur_state.cur_match_list); }
+
+        std::string matcher {"::cpp2::regex::alternative_matcher_logic<char, "};
+
+        std::string seperator {""};
+        auto add {[&, _1 = (&matcher), _2 = (&seperator)](auto const& list) mutable -> void{
+            *_1 += *_2 + create_matcher_from_list(list);
+            *_2 = ", ";
+        }};
+
+        auto cur {CPP2_UFCS(rbegin)(cur_state.alternate_match_lists)};
+        for( ; cur!=CPP2_UFCS(rend)(cur_state.alternate_match_lists); (++cur) ) {
+            add(*cur);
+        }
+        if (0!=CPP2_UFCS(size)(cur_state.cur_match_list)) {std::move(add)(cur_state.cur_match_list); }
+        matcher += ">";
+
+        return matcher;
     }
 
     template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::parse() & -> std::string{

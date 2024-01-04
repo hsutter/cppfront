@@ -43,6 +43,9 @@ match_context: <CharT, Iter, max_groups: size_t> type =
 matcher_list: <List...> type = {
     match: <Iter> (begin: Iter, cur: Iter, end: Iter, inout ctx) select<Iter, List...>(begin, cur, end, ctx);
 
+    match_combine: <Iter, OtherList...> (begin: Iter, cur: Iter, end: Iter, inout ctx, _: matcher_list<OtherList...>)
+        select<Iter, List..., OtherList...>(begin, cur, end, ctx);
+
     private select: <Iter, First, Other...> (begin: Iter, cur: Iter, end: Iter, inout ctx)
         First::match(begin, cur, end, ctx, matcher_list<Other...>());
     private select: <Iter> (begin: Iter, cur: Iter, end: Iter, inout ctx) true;
@@ -66,6 +69,22 @@ regular_expression: <CharT, groups: size_t, Matcher> type = {
     }
 
     to_string: (in this) -> _ = Matcher::to_string();
+}
+
+alternative_matcher_logic: <CharT, List ...> type = {
+
+    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) match_all<Iter, Other, List...>(begin, cur, end, ctx, Other());
+    private match_all: <Iter, Tail, First, Other ...> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Tail) -> bool = {
+        if First::match(begin, cur, end, ctx, Tail()) {
+            return true;
+        } else {
+            if constexpr 0 != sizeof...(Other) {
+                return match_all<Iter, Tail, Other...>(begin, cur, end, ctx, Tail());
+            } else {
+                return false;
+            }
+        }
+    }
 }
 
 char_matcher_logic: <CharT, C: CharT> type =
@@ -92,6 +111,14 @@ group_matcher_end_logic: <CharT, group: int> type = {
         return Other::match(begin, cur, end, ctx);
     }
 }
+
+list_matcher_logic: <CharT, List> type =
+{
+    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> bool = {
+        return List::match_combine(begin, cur, end, ctx, Other());
+    }
+}
+
 
 regex_parser_state: @struct type = {
     cur_match_list: std::vector<std::string> = ();
@@ -138,13 +165,20 @@ regex_parser: <Error_out> type = {
         this.error_out = e;
     }
 
+    is_alternative: (inout this, c: char) -> bool = {
+        if c != '|' { return false; }
+
+        cur_state.start_new_list();
+        return true;
+    }
+
     parse_until:(inout this, term: char) = {
         while pos != regex.size() next pos += 1 {
             c: char = regex[pos];
 
             if c == term { return; }
 
-            // if is_alternative(c) { continue; }
+            if is_alternative(c) { continue; }
             // if is_any(c) { continue; }
             // if is_class(c) { continue; }
             // if is_escape(c) { continue; }
@@ -171,8 +205,28 @@ regex_parser: <Error_out> type = {
         return r;
     }
 
+    create_matcher_from_list: (inout this, list)
+            "::cpp2::regex::list_matcher_logic<char, ::cpp2::regex::matcher_list<(join(list))$>>"
+
     create_matcher_from_state: (inout this) -> std::string = {
-        return join(cur_state.cur_match_list);
+        if 0 == cur_state.alternate_match_lists.size() { return create_matcher_from_list(cur_state.cur_match_list); }
+
+        matcher: std::string = "::cpp2::regex::alternative_matcher_logic<char, ";
+
+        seperator: std::string = "";
+        add := :(list) = {
+            matcher&$* += seperator&$* + create_matcher_from_list(list);
+            seperator&$* = ", ";
+        };
+
+        cur := cur_state.alternate_match_lists.rbegin();
+        while cur != cur_state.alternate_match_lists.rend() next( cur++ ) {
+            add(cur*);
+        }
+        if 0 != cur_state.cur_match_list.size() { add(cur_state.cur_match_list); }
+        matcher += ">";
+
+        return matcher;
     }
 
     parse:(inout this) -> std::string = {
