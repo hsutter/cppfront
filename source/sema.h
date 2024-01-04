@@ -2018,6 +2018,7 @@ public:
     bool just_entered_for                         = false;
     token const* prev_token                       = nullptr;
     token const* prev2_token                      = nullptr;
+    token const* accessed_member_for_ufcs         = nullptr;
     parameter_declaration_node const* inside_out_parameter = {};
     std::vector<std::pair<int, int>> uses_in_expression = {};
     std::vector<std::pair<int, int>> uses_at_postfix_expression = {};
@@ -2360,6 +2361,7 @@ public:
         if (
             t.type() != lexeme::Identifier
             && t != "this"
+            && !accessed_member_for_ufcs
             )
         {
             return;
@@ -2403,6 +2405,7 @@ public:
             started_postfix_expression
             || started_member_access
             || started_this_member_access
+            || accessed_member_for_ufcs
             )
         {
             started_postfix_expression = false;
@@ -2412,16 +2415,26 @@ public:
                 //  or it's a 'copy' parameter (but to be a use it must be after
                 //  the declaration, not the token in the decl's name itself)
                 //  including an implicit 'this' access of a member name
-                if (auto decl = get_declaration_of(t, false, !started_this_member_access);
+                auto push_use = [&](token const* u) {
+                    this->push_use( identifier_sym( false, u, {}, !inside_next_expression, safe_to_move_context ) );
+                };
+                if (accessed_member_for_ufcs) {
+                    if (t == "(") {
+                        push_use(accessed_member_for_ufcs);
+                    }
+                    accessed_member_for_ufcs = nullptr;
+                }
+                else if (auto decl = get_declaration_of(t, false, !started_this_member_access);
                     decl
                     && decl->declaration->name() != &t
-                    && (
-                        !started_member_access
-                        || *(&t + 1) == "("
-                        )
                     )
                 {
-                    push_use( identifier_sym( false, &t, {}, !inside_next_expression, safe_to_move_context ) );
+                    if (!started_member_access) {
+                        push_use(&t);
+                    }
+                    else {
+                        accessed_member_for_ufcs = &t;
+                    }
                 }
             }
         }
