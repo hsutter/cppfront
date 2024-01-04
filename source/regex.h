@@ -15,12 +15,18 @@ template<typename Iter> class match_group;
 
 template<typename CharT, typename Iter, size_t max_groups> class match_context;
 
-template<typename ...List> class template_list;
+template<typename ...List> class matcher_list;
 
 
 template<typename CharT, size_t groups, typename Matcher> class regular_expression;
 
 template<typename CharT, CharT C> class char_matcher_logic;
+
+template<typename CharT, int group> class group_matcher_start_logic;
+
+
+template<typename CharT, int group> class group_matcher_end_logic;
+
 
 class regex_parser_state;
     
@@ -59,22 +65,26 @@ template<typename CharT, typename Iter, size_t max_groups> class match_context
  {
     public: std::array<match_group<Iter>,max_groups> groups {}; 
 
-    public: template<size_t pos> [[nodiscard]] auto get_group() & -> auto;
+    public: auto set_group_start(auto const& pos, auto const& start) & -> void;
+
+    public: auto set_group_end(auto const& pos, auto const& end) & -> void;
+
+    public: [[nodiscard]] auto get_group(auto const& pos) & -> auto;
     public: match_context() = default;
     public: match_context(match_context const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(match_context const&) -> void = delete;
 
 };
 
-template<typename ...List> class template_list {
+template<typename ...List> class matcher_list {
     public: template<typename Iter> [[nodiscard]] static auto match(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx) -> auto;
 
     private: template<typename Iter, typename First, typename ...Other> [[nodiscard]] static auto select(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx) -> auto;
 
     private: template<typename Iter> [[nodiscard]] static auto select(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx) -> auto;
-    public: template_list() = default;
-    public: template_list(template_list const&) = delete; /* No 'that' constructor, suppress copy */
-    public: auto operator=(template_list const&) -> void = delete;
+    public: matcher_list() = default;
+    public: matcher_list(matcher_list const&) = delete; /* No 'that' constructor, suppress copy */
+    public: auto operator=(matcher_list const&) -> void = delete;
 
 };
 
@@ -98,6 +108,24 @@ template<typename CharT, CharT C> class char_matcher_logic
     public: char_matcher_logic() = default;
     public: char_matcher_logic(char_matcher_logic const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(char_matcher_logic const&) -> void = delete;
+
+
+};
+
+template<typename CharT, int group> class group_matcher_start_logic {
+    public: template<typename Iter, typename Other> [[nodiscard]] static auto match(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx, [[maybe_unused]] Other const& unnamed_param_5) -> bool;
+    public: group_matcher_start_logic() = default;
+    public: group_matcher_start_logic(group_matcher_start_logic const&) = delete; /* No 'that' constructor, suppress copy */
+    public: auto operator=(group_matcher_start_logic const&) -> void = delete;
+
+
+};
+
+template<typename CharT, int group> class group_matcher_end_logic {
+    public: template<typename Iter, typename Other> [[nodiscard]] static auto match(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx, [[maybe_unused]] Other const& unnamed_param_5) -> bool;
+    public: group_matcher_end_logic() = default;
+    public: group_matcher_end_logic(group_matcher_end_logic const&) = delete; /* No 'that' constructor, suppress copy */
+    public: auto operator=(group_matcher_end_logic const&) -> void = delete;
 
 
 };
@@ -151,13 +179,22 @@ namespace cpp2 {
 
 namespace regex {
 
-    template <typename CharT, typename Iter, size_t max_groups> template<size_t pos> [[nodiscard]] auto match_context<CharT,Iter,max_groups>::get_group() & -> auto { return &groups[pos];  }
+    template <typename CharT, typename Iter, size_t max_groups> auto match_context<CharT,Iter,max_groups>::set_group_start(auto const& pos, auto const& start) & -> void{
+        groups[pos].start = start;
+    }
 
-    template <typename ...List> template<typename Iter> [[nodiscard]] auto template_list<List...>::match(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx) -> auto { return select<Iter,List...>(begin, cur, end, ctx);  }
+    template <typename CharT, typename Iter, size_t max_groups> auto match_context<CharT,Iter,max_groups>::set_group_end(auto const& pos, auto const& end) & -> void{
+        groups[pos].end = end;
+        groups[pos].matched = true;
+    }
 
-    template <typename ...List> template<typename Iter, typename First, typename ...Other> [[nodiscard]] auto template_list<List...>::select(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx) -> auto {
-        return First::match(begin, cur, end, ctx, template_list<Other...>());  }
-    template <typename ...List> template<typename Iter> [[nodiscard]] auto template_list<List...>::select(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx) -> auto { return true;  }
+    template <typename CharT, typename Iter, size_t max_groups> [[nodiscard]] auto match_context<CharT,Iter,max_groups>::get_group(auto const& pos) & -> auto { return &groups[pos];  }
+
+    template <typename ...List> template<typename Iter> [[nodiscard]] auto matcher_list<List...>::match(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx) -> auto { return select<Iter,List...>(begin, cur, end, ctx);  }
+
+    template <typename ...List> template<typename Iter, typename First, typename ...Other> [[nodiscard]] auto matcher_list<List...>::select(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx) -> auto {
+        return First::match(begin, cur, end, ctx, matcher_list<Other...>());  }
+    template <typename ...List> template<typename Iter> [[nodiscard]] auto matcher_list<List...>::select(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx) -> auto { return true;  }
 
     template <typename CharT, size_t groups, typename Matcher> [[nodiscard]] auto regular_expression<CharT,groups,Matcher>::search(cpp2::in<view<CharT>> str, context& ctx) const& -> bool{
         auto cur {CPP2_UFCS(begin)(str)}; 
@@ -179,6 +216,16 @@ namespace regex {
         }else {
             return false; 
         }
+    }
+
+    template <typename CharT, int group> template<typename Iter, typename Other> [[nodiscard]] auto group_matcher_start_logic<CharT,group>::match(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx, [[maybe_unused]] Other const& unnamed_param_5) -> bool{
+        CPP2_UFCS(set_group_start)(ctx, group, cur);
+        return Other::match(begin, cur, end, ctx);
+    }
+
+    template <typename CharT, int group> template<typename Iter, typename Other> [[nodiscard]] auto group_matcher_end_logic<CharT,group>::match(Iter const& begin, Iter const& cur, Iter const& end, auto& ctx, [[maybe_unused]] Other const& unnamed_param_5) -> bool{
+        CPP2_UFCS(set_group_end)(ctx, group, cur);
+        return Other::match(begin, cur, end, ctx);
     }
 
     auto regex_parser_state::start_new_list() & -> void{
@@ -253,7 +300,8 @@ namespace regex {
         parse_until('\0');
 
         auto inner {create_matcher_from_state()}; 
-        return "::cpp2::regex::regular_expression<char, " + cpp2::to_string(named_groups) + ", ::cpp2::regex::template_list<" + cpp2::to_string(std::move(inner)) + ">>";
+        inner = "::cpp2::regex::group_matcher_start_logic<char, 0>, " + cpp2::to_string(inner) + ", ::cpp2::regex::group_matcher_end_logic<char, 0>";
+        return "::cpp2::regex::regular_expression<char, " + cpp2::to_string(named_groups) + ", ::cpp2::regex::matcher_list<" + cpp2::to_string(std::move(inner)) + ">>";
     }
 
 template<typename Err> [[nodiscard]] auto generate_template(cpp2::in<std::string_view> regex, Err const& err) -> std::string{

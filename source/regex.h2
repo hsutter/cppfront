@@ -28,14 +28,23 @@ match_context: <CharT, Iter, max_groups: size_t> type =
 {
     public groups: std::array<match_group<Iter>, max_groups> = ();
 
-    get_group: <pos: size_t> (inout this) groups[pos]&;
+    set_group_start: (inout this, pos, start) = {
+        groups[pos].start = start;
+    }
+
+    set_group_end: (inout this, pos, end) = {
+        groups[pos].end = end;
+        groups[pos].matched = true;
+    }
+
+    get_group: (inout this, pos) groups[pos]&;
 }
 
-template_list: <List...> type = {
+matcher_list: <List...> type = {
     match: <Iter> (begin: Iter, cur: Iter, end: Iter, inout ctx) select<Iter, List...>(begin, cur, end, ctx);
 
     private select: <Iter, First, Other...> (begin: Iter, cur: Iter, end: Iter, inout ctx)
-        First::match(begin, cur, end, ctx, template_list<Other...>());
+        First::match(begin, cur, end, ctx, matcher_list<Other...>());
     private select: <Iter> (begin: Iter, cur: Iter, end: Iter, inout ctx) true;
 }
 
@@ -67,6 +76,20 @@ char_matcher_logic: <CharT, C: CharT> type =
         } else {
             return false;
         }
+    }
+}
+
+group_matcher_start_logic: <CharT, group: int> type = {
+    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> bool = {
+        ctx.set_group_start(group, cur);
+        return Other::match(begin, cur, end, ctx);
+    }
+}
+
+group_matcher_end_logic: <CharT, group: int> type = {
+    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> bool = {
+        ctx.set_group_end(group, cur);
+        return Other::match(begin, cur, end, ctx);
     }
 }
 
@@ -157,7 +180,8 @@ regex_parser: <Error_out> type = {
         parse_until('\0');
 
         inner := create_matcher_from_state();
-        return "::cpp2::regex::regular_expression<char, (named_groups)$, ::cpp2::regex::template_list<(inner)$>>";
+        inner = "::cpp2::regex::group_matcher_start_logic<char, 0>, (inner)$, ::cpp2::regex::group_matcher_end_logic<char, 0>";
+        return "::cpp2::regex::regular_expression<char, (named_groups)$, ::cpp2::regex::matcher_list<(inner)$>>";
     }
 
 }
