@@ -1355,7 +1355,7 @@ apply_metafunctions: (
     for  rtype.get_members()
     do   (m)
     {
-        m.require( !m.name().starts_with("_") || m.name().ssize() > 1,
+        m.require( !m.name().starts_with("_") || m.name().ssize() == 1,
                     "a type that applies a metafunction cannot have a body that declares a name that starts with '_' - those names are reserved for the metafunction implementation");
     }
 
