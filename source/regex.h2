@@ -53,6 +53,12 @@ match_context: <CharT, State, max_groups: size_t> type =
 
     operator=: (out this, that) = {}
 
+    reset: (inout this, s: view<CharT>) = {
+        str = s;
+        groups.fill(view<CharT>());
+        ranges.fill(std::make_pair(bstring<CharT>::npos, bstring<CharT>::npos));
+    }
+
     invalidate_group: (inout this, group: size_t) = {
         ranges[group] = (bstring<CharT>::npos, bstring<CharT>::npos);
         groups[group] = ();
@@ -100,7 +106,7 @@ regular_expression: <CharT, Matcher, State, groups: size_t> type = {
 
     search: (in this, str: view<CharT>, inout ctx: context) -> bool = search(str, 0, ctx);
     search: (in this, str: view<CharT>, start: size_t, inout ctx: context) -> bool = {
-        ctx = (str);
+        ctx.reset(str);
 
         // TODO: Improve find logic. (E.g. skip more elements on failure.)
         cur := start;
