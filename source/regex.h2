@@ -42,6 +42,10 @@ match_context: <CharT, Iter, max_groups: size_t> type =
         groups[pos].matched = true;
     }
 
+    set_group_invalid: (inout this, pos) = {
+        groups[pos].matched = false;
+    }
+
     get_group: (inout this, pos) groups[pos];
 
     print_ranges: (in this, begin) -> bstring<CharT> = {
@@ -228,8 +232,13 @@ escaped_char_matcher_logic: <CharT, C: CharT> type =
 
 group_matcher_start_logic: <CharT, group: int> type = {
     match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
-        ctx.set_group_start(group, cur);
-        return Other::match(begin, cur, end, ctx);
+        r := Other::match(begin, cur, end, ctx);
+        if r.matched {
+            ctx.set_group_start(group, cur);
+        } else {
+            ctx.set_group_invalid(group);
+        }
+        return r;
     }
     to_string: () -> _ = {
         if group != 0 {
@@ -243,8 +252,11 @@ group_matcher_start_logic: <CharT, group: int> type = {
 
 group_matcher_end_logic: <CharT, group: int> type = {
     match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
-        ctx.set_group_end(group, cur);
-        return Other::match(begin, cur, end, ctx);
+        r := Other::match(begin, cur, end, ctx);
+        if r.matched {
+            ctx.set_group_end(group, cur);
+        }
+        return r;
     }
     to_string: () -> _ = {
         if group != 0 {
@@ -311,7 +323,7 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
 
 
     match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other)
-        match_greedy(0, begin, cur, end, ctx, Other());
+        match_greedy(0, begin, cur, cur, end, ctx, Other());
 
     private is_below_upper_bound: (count: int) -> bool = {
         if -1 == max_count { return true; }
@@ -328,12 +340,12 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
         if -1 != max_count && count > max_count { return false; }
         return true;
     }
-    private match_greedy: <Iter, Other> (count: int, begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
+    private match_greedy: <Iter, Other> (count: int, begin: Iter, cur: Iter, last_valid: Iter, end: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
         r:= M::match(begin, cur, end, ctx, matcher_list<>());
         if  is_below_upper_bound(count) && r.matched &&
             (is_below_lower_bound(count) || r.pos != cur)
         {
-            inner := match_greedy(count + 1, begin, r.pos, end, ctx, Other());
+            inner := match_greedy(count + 1, begin, r.pos, cur, end, ctx, Other());
 
             if inner.matched {
                 return inner;
@@ -342,7 +354,14 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
 
         // No match from the recursion. Try to match our tail.
         if is_in_range(count) {
-            return Other::match(begin, cur, end, ctx);
+            o:= Other::match(begin, cur, end, ctx);
+
+            if o.matched {
+                // Rematch M to set the groups.
+                _ = M::match(begin, last_valid, end, ctx, matcher_list<>());
+            }
+
+            return o;
         }
         else {
             return match_return<Iter>(false, end);
