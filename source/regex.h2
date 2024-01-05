@@ -318,6 +318,11 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
         else { return count < max_count; }
     }
 
+    private is_below_lower_bound: (count: int) -> bool = {
+        if -1 == min_count { return false; }
+        else { return count < min_count; }
+    }
+
     private is_in_range: (count: int) -> bool = {
         if -1 != min_count && count < min_count { return false; }
         if -1 != max_count && count > max_count { return false; }
@@ -325,16 +330,22 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
     }
     private match_greedy: <Iter, Other> (count: int, begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
         r:= M::match(begin, cur, end, ctx, matcher_list<>());
-        if  is_below_upper_bound(count) && r.matched && r.pos != cur {
-            return match_greedy(count + 1, begin, r.pos, end, ctx, Other());
+        if  is_below_upper_bound(count) && r.matched &&
+            (is_below_lower_bound(count) || r.pos != cur)
+        {
+            inner := match_greedy(count + 1, begin, r.pos, end, ctx, Other());
+
+            if inner.matched {
+                return inner;
+            }
+        }
+
+        // No match from the recursion. Try to match our tail.
+        if is_in_range(count) {
+            return Other::match(begin, cur, end, ctx);
         }
         else {
-            if is_in_range(count) {
-                return Other::match(begin, cur, end, ctx);
-            }
-            else {
-                return match_return<Iter>(false, end);
-            }
+            return match_return<Iter>(false, end);
         }
     }
     to_string: () -> bstring<CharT> = {

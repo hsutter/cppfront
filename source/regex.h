@@ -791,6 +791,7 @@ namespace regex {
         return true;
     }
     template <typename CharT, typename M, int min_count, int max_count> template<typename Iter, typename Other> [[nodiscard]] auto range_matcher_logic<CharT,M,min_count,max_count>::match_greedy(cpp2::in<int> count, Iter const& begin, Iter const& cur, Iter const& end, auto& ctx, [[maybe_unused]] Other const& unnamed_param_6) -> match_return<Iter>{
+<<<<<<< Updated upstream
         auto r {M::match(begin, cur, end, ctx, matcher_list<>())};
         if ( is_below_upper_bound(count) && r.matched && r.pos != cur) {
             return match_greedy(count + 1, begin, std::move(r).pos, end, ctx, Other());
@@ -802,6 +803,25 @@ namespace regex {
             else {
                 return match_return<Iter>(false, end);
             }
+=======
+        auto r {M::match(begin, cur, end, ctx, matcher_list<>())};
+        if ( is_below_upper_bound(count) && r.matched &&
+            (is_below_lower_bound(count) || r.pos!=cur))
+        {
+            auto inner {match_greedy(count + 1, begin, std::move(r).pos, end, ctx, Other())};
+
+            if (inner.matched) {
+                return inner;
+            }
+        }
+
+        // No match from the recursion. Try to match our tail.
+        if (is_in_range(count)) {
+            return Other::match(begin, cur, end, ctx);
+        }
+        else {
+            return match_return<Iter>(false, end);
+>>>>>>> Stashed changes
         }
     }
     template <typename CharT, typename M, int min_count, int max_count> [[nodiscard]] auto range_matcher_logic<CharT,M,min_count,max_count>::to_string() -> bstring<CharT>{
