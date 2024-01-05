@@ -99,7 +99,7 @@ I'm not posting much documentation because that would imply this project is inte
 To learn more, please see:
 
 - [**My CppCon 2022 talk, "Can C++ be 10x simpler and safer ...?"**](https://www.youtube.com/watch?v=ELeZAKCN4tY)
-- [**My CppCon 2023 talk, "Cooperative C++ Evolution: Toward a TypeScript for C++?"**](https://www.youtube.com/watch?v=8U3hl8XMm8c)
+- [**My CppCon 2023 talk, "Cooperative C++ Evolution: Toward a TypeScript for C++"**](https://www.youtube.com/watch?v=8U3hl8XMm8c)
 - **The [cppfront regression tests](https://github.com/hsutter/cppfront/tree/main/regression-tests)** which show dozens of working examples, each with a`.cpp2` file. In the `/test-results/` subdirectory you can see the `.cpp` file that each is translated to. Each filename briefly describes the language features the test demonstrates (e.g., contracts, parameter passing, bounds safety, type-safe `is` queries and `as` casts, initialization safety, and generalized value capture including in function expressions ('lambdas'), postconditions, and string interpolation).
 - The list of papers and talks below.
 
