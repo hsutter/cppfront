@@ -42,18 +42,34 @@ match_context: <CharT, Iter, max_groups: size_t> type =
         groups[pos].matched = true;
     }
 
-    get_group: (inout this, pos) groups[pos]&;
+    get_group: (inout this, pos) groups[pos];
+
+    print_ranges: (in this, begin) -> bstring<CharT> = {
+        r: bstring<CharT> = "";
+        for groups do (cur) {
+            if cur.matched {
+                r += "((std::distance(begin, cur.start))$,(std::distance(begin, cur.end))$)";
+            }
+            else {
+                r += "(?,?)";
+            }
+        }
+
+        return r;
+    }
 }
 
 matcher_list: <List...> type = {
-    match: <Iter> (begin: Iter, cur: Iter, end: Iter, inout ctx) select<Iter, List...>(begin, cur, end, ctx);
+    match: <Iter> (begin: Iter, cur: Iter, end: Iter, inout ctx) match_select<Iter, List...>(begin, cur, end, ctx);
 
     match_combine: <Iter, OtherList...> (begin: Iter, cur: Iter, end: Iter, inout ctx, _: matcher_list<OtherList...>)
-        select<Iter, List..., OtherList...>(begin, cur, end, ctx);
+        match_select<Iter, List..., OtherList...>(begin, cur, end, ctx);
 
-    private select: <Iter, First, Other...> (begin: Iter, cur: Iter, end: Iter, inout ctx)
+    private match_select: <Iter, First, Other...> (begin: Iter, cur: Iter, end: Iter, inout ctx)
         First::match(begin, cur, end, ctx, matcher_list<Other...>());
-    private select: <Iter> (begin: Iter, cur: Iter, end: Iter, inout ctx) match_return<Iter>(true, cur);
+    private match_select: <Iter> (begin: Iter, cur: Iter, end: Iter, inout ctx) match_return<Iter>(true, cur);
+
+    to_string: () (bstring<char>() + ... + List::to_string());
 }
 
 regular_expression: <CharT, groups: size_t, Matcher> type = {
@@ -64,9 +80,13 @@ regular_expression: <CharT, groups: size_t, Matcher> type = {
     search: (in this, str: view<CharT>, inout ctx: context) -> bool = {
         cur := str.begin();
         end := str.end();
-        while cur != end next (cur++) {
+        while true next (cur++) {
             if Matcher::match(cur, cur, end, ctx).matched {
                 return true;
+            }
+
+            if cur == end {
+                break;
             }
         }
 
@@ -91,6 +111,21 @@ alternative_matcher_logic: <CharT, List ...> type = {
             }
         }
     }
+
+    to_string: () (bstring<CharT>() + ... + ("|" + List::to_string())).substr(1); // substr: Remove first '|'.
+}
+
+any_matcher_logic: <CharT> type =
+{
+    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
+        if cur != end {
+            return Other::match(begin, cur + 1, end, ctx);
+        } else {
+            return match_return<Iter>(false, end);
+        }
+    }
+
+    to_string: () bstring<CharT>(1, '.');
 }
 
 char_matcher_logic: <CharT, C: CharT> type =
@@ -102,12 +137,107 @@ char_matcher_logic: <CharT, C: CharT> type =
             return match_return<Iter>(false, end);
         }
     }
+    to_string: () bstring<CharT>(1, C);
+}
+
+single_class_entry: <CharT, C: CharT> type =
+{
+    includes: (c: CharT) -> _ = c == C;
+    to_string: () -> _ = bstring<CharT>(1, C);
+}
+
+range_class_entry: <CharT, Start: CharT, End: CharT> type =
+{
+    includes: (c: CharT) -> _ = Start <= c <= End;
+    to_string: () -> _ = "(Start)$-(End)$";
+}
+
+and_class_entry: <CharT, List ...> type = {
+    includes: (c: CharT) (false || ... || List::includes(c));
+    to_string: () ("" + ... + List::to_string());
+}
+
+list_class_entry: <CharT, List ... : CharT> type = {
+    includes: (c: CharT) (false || ... || (List == c));
+    to_string: () ("" + ... + List);
+}
+
+named_class_entry: <CharT, Name: fixed_string, Inner> type = {
+    includes: (c: CharT) Inner::includes(c);
+    to_string: () "[:(Name.data())$:]";
+}
+
+
+// Named character classes.
+digits_class  : <CharT> type == named_class_entry<CharT, "digits", range_class_entry<CharT, '0', '9'>>;
+lower_class   : <CharT> type == named_class_entry<CharT, "lower", range_class_entry<CharT, 'a', 'z'>>;
+upper_class   : <CharT> type == named_class_entry<CharT, "upper", range_class_entry<CharT, 'A', 'Z'>>;
+
+// Named classes.
+alnum_class   : <CharT> type == named_class_entry<CharT, "alnum", and_class_entry<CharT, lower_class<CharT>, upper_class<CharT>, digits_class<CharT>>>;
+alpha_class   : <CharT> type == named_class_entry<CharT, "alpha", and_class_entry<CharT, lower_class<CharT>, upper_class<CharT>>>;
+ascii_class   : <CharT> type == named_class_entry<CharT, "ascii", range_class_entry<CharT, '\x00', '\x7F'>>;
+blank_class   : <CharT> type == named_class_entry<CharT, "blank", list_class_entry<CharT, ' ', '\t'>>;
+cntrl_class   : <CharT> type == named_class_entry<CharT, "cntrl", and_class_entry<CharT, range_class_entry<CharT, '\x00', '\x1F'>, single_class_entry<CharT, '\x7F'>>>;
+graph_class   : <CharT> type == named_class_entry<CharT, "graph", range_class_entry<CharT, '\x21', '\x7E'>>;
+print_class   : <CharT> type == named_class_entry<CharT, "print", range_class_entry<CharT, '\x20', '\x7E'>>;
+punct_class   : <CharT> type == named_class_entry<CharT, "punct", list_class_entry<CharT, '[','!','"','#','$','%','&','\'','(',')','*','+',',','-','.','/',':',';','<','=','>','?','@','[','\\',']','^','_','`','{','|','}','~',']'>>;
+space_class   : <CharT> type == named_class_entry<CharT, "space", list_class_entry<CharT, ' ', '\t', '\r', '\n', '\v', '\f'>>;
+word_class    : <CharT> type == named_class_entry<CharT, "word", and_class_entry<CharT, alnum_class<CharT>, single_class_entry<CharT, '_'>>>;
+xdigit_class  : <CharT> type == named_class_entry<CharT, "xdigit", and_class_entry<CharT, range_class_entry<CharT, 'A', 'F'>, range_class_entry<CharT, 'a', 'f'>, digits_class<CharT>>>;
+
+class_matcher_logic: <CharT, negate: bool, List ...> type =
+{
+    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
+        if cur != end && negate != match_any<List...>(cur*) {
+            return Other::match(begin, cur + 1, end, ctx);
+        } else {
+            return match_return<Iter>(false, end);
+        }
+    }
+
+    private match_any: <First, Other ...> (c: CharT) -> bool = {
+        r: bool = First::includes(c);
+
+        if !r {
+            if constexpr 0 != sizeof...(Other) {
+                r = match_any<Other...>(c);
+            }
+        }
+
+        return r;
+    }
+
+    to_string: () -> bstring<CharT> = {
+        r: bstring<CharT> = "[";
+        if negate {
+            r += "^";
+        }
+        r += (bstring<CharT>() + ... + List::to_string());
+        r += "]";
+
+        return r;
+    }
+}
+
+escaped_char_matcher_logic: <CharT, C: CharT> type =
+{
+    this : char_matcher_logic<CharT, C> = ();
+    to_string: () "\\(C)$";
 }
 
 group_matcher_start_logic: <CharT, group: int> type = {
     match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
         ctx.set_group_start(group, cur);
         return Other::match(begin, cur, end, ctx);
+    }
+    to_string: () -> _ = {
+        if group != 0 {
+            return "(";
+        }
+        else {
+            return "";
+        }
     }
 }
 
@@ -116,6 +246,57 @@ group_matcher_end_logic: <CharT, group: int> type = {
         ctx.set_group_end(group, cur);
         return Other::match(begin, cur, end, ctx);
     }
+    to_string: () -> _ = {
+        if group != 0 {
+            return ")";
+        }
+        else {
+            return "";
+        }
+    }
+}
+
+group_ref_matcher_logic: <CharT, group: int> type = {
+    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
+        g := ctx.get_group(group);
+
+        while g.start != g.end && cur != end next (g.start++, cur++) {
+            if g.start* != cur* {
+                return match_return<Iter>(false, end);
+            }
+        }
+
+        return Other::match(begin, cur, end, ctx);
+    }
+    to_string: () -> bstring<CharT> = "\\((group)$)";
+}
+
+line_end_matcher_logic: <CharT> type =
+{
+    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
+        if cur == end || cur* == '\n' {
+            return Other::match(begin, cur, end, ctx);
+        }
+        else {
+            return match_return<Iter>(false, end);
+        }
+
+    }
+    to_string: () -> bstring<CharT> = "\\$";
+}
+
+line_start_matcher_logic: <CharT> type =
+{
+    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
+        if cur == begin || (cur - 1)* == '\n' {
+            return Other::match(begin, cur, end, ctx);
+        }
+        else {
+            return match_return<Iter>(false, end);
+        }
+
+    }
+    to_string: () -> _ = bstring<CharT>(1, '^');
 }
 
 list_matcher_logic: <CharT, List> type =
@@ -123,6 +304,7 @@ list_matcher_logic: <CharT, List> type =
     match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
         return List::match_combine(begin, cur, end, ctx, Other());
     }
+    to_string: () List::to_string();
 }
 
 range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
@@ -155,6 +337,29 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
             }
         }
     }
+    to_string: () -> bstring<CharT> = {
+      r: std::string = M::to_string();
+
+      if min_count == max_count {
+        r += "{(min_count)$}";
+      }
+      else if min_count == -1 {
+        r += "{,(max_count)$}";
+      }
+      else if max_count == -1 {
+        r += "{(min_count)$,}";
+      }
+      else {
+        r += "{(min_count)$,(max_count)$}";
+      }
+
+      return r;
+    }
+}
+
+special_range_matcher_logic: <CharT, M, min_count: int, max_count: int, symbol: CharT> type = {
+    this: range_matcher_logic<CharT, M, min_count, max_count> = ();
+    to_string: () M::to_string() + symbol;
 }
 
 
@@ -198,9 +403,21 @@ regex_parser: <Error_out> type = {
 
     error_out: Error_out;
 
+    supported_classes: std::vector<std::string> = ("alnum", "alpha", "ascii", "blank", "cntrl", "digits", "graph", "lower", "print", "punct", "space", "upper", "word", "xdigit");
+
     operator=: (out this, r: std::string_view, e: Error_out) = {
         this.regex = r;
         this.error_out = e;
+    }
+
+    new_state: (inout this) -> regex_parser_state = {
+        old_state: regex_parser_state = ();
+        old_state.swap(cur_state);
+        return old_state;
+    }
+
+    restore_state: (inout this, old_state: regex_parser_state) = {
+        cur_state = old_state;
     }
 
     error:(inout this, message: std::string) = {
@@ -212,6 +429,190 @@ regex_parser: <Error_out> type = {
 
         cur_state.start_new_list();
         return true;
+    }
+
+    is_anchor: (inout this, c: char) -> bool = {
+        r := false;
+        if c == '^' {
+            cur_state.add("::cpp2::regex::line_start_matcher_logic<char>");
+            r = true;
+        }
+        else if c == '$' {
+            cur_state.add("::cpp2::regex::line_end_matcher_logic<char>");
+            r = true;
+        }
+
+        return r;
+    }
+
+    is_any: (inout this, c: char) -> bool = {
+        if c == '.' {
+            cur_state.add("::cpp2::regex::any_matcher_logic<char>");
+            return true;
+        }
+        return false;
+    }
+
+    is_class: (inout this, c: char) -> bool = {
+        if c != '[' { return false; }
+
+        classes: std::vector<std::string> = ();
+
+        c_cur: char = regex[pos];
+        next_item:= :() -> bool = {
+            pos&$* += 1;
+            if pos&$* >= regex$.size() { return false; }
+
+            c_cur&$* = regex$[pos&$*];
+            return true;
+
+        };
+
+        peek_item:= :() -> char = {
+            if (pos$ + 1) >= regex$.size() { return '\0'; }
+            else { return regex[pos + 1]; }
+        };
+
+        negate:= false;
+
+        first:= true;
+        range:= false;
+        while next_item() & (c_cur != ']' || first) {
+            if c_cur == '^' {
+                negate = true;
+                continue; // Skip rest of the loop. Also the first update.
+            }
+            if c_cur == '[' && peek_item() == ':' {
+                // We have a character class.
+                pos += 2; // Skip ':]'
+
+                end := regex.find(":]", pos);
+                if end == std::string::npos { error_out("Could not find end of character class."); }
+
+                name := regex.substr(pos, end - pos);
+                if supported_classes.end() == std::find(supported_classes.begin(), supported_classes.end(), name) {
+                    error_out("Unsupported character class. Supported ones are: (join(supported_classes))$");
+                }
+
+                classes.push_back("[:(name)$:]");
+
+                end += 1; // Skip ':' pointing to the ending ']'.
+                pos = end;
+
+            }
+            else if c_cur == '-' {
+                if first { // Literal if first entry.
+                    classes.push_back("(c_cur)$");
+                } else {
+                    range = true;
+                }
+            }
+            else {
+                if range { // Modify last element to be a range.
+                    classes.back() += "-(c_cur)$";
+                    range = false;
+                }
+                else {
+                    classes.push_back("(c_cur)$");
+                }
+            }
+
+            first = false;
+        }
+
+        _ = next_item; // TODO: Use in while is not recognized.
+
+        if c_cur != ']' {
+            error_out("Error end of character class definition before terminating ']'.");
+        }
+
+        if range { // If '-' is last entry treat it as a literal char.
+            classes.push_back("-");
+        }
+
+        for classes do (inout cur) {
+            if cur.starts_with("[:") {
+                name := cur.substr(2, cur.size() - 4);
+                cur = "::cpp2::regex::(name)$_class<char>";
+            }
+            else if 1 != cur.size() {
+                cur = "::cpp2::regex::range_class_entry<char, '(cur[0])$', '(cur[2])$'>";
+            }
+            else {
+                cur = "::cpp2::regex::single_class_entry<char, '(cur)$'>";
+            }
+        }
+
+        inner := join(classes);
+        cur_state.add("::cpp2::regex::class_matcher_logic<char, (negate)$, (inner)$>");
+        return true;
+    }
+
+    is_escape: (inout this, c: char) -> bool = {
+        if c != '\\' { return false; }
+
+        pos += 1;
+
+        if pos >= regex.size() { error("Escape without a following character."); }
+
+        c_next: char = regex[pos];
+
+        if '1' <= c_next <= '9' {
+            group_id: int = c_next - '0';
+
+            if group_id >= named_groups { error("Group reference is used before the group is declared."); }
+
+            cur_state.add("::cpp2::regex::group_ref_matcher_logic<char, (group_id)$>");
+        }
+        else if std::string::npos != std::string("^.[]$()*{}?+|").find(c_next) {
+            if c_next == '$' {
+                // TODO: Provide proper escape for cppfront capture .
+                cur_state.add("::cpp2::regex::line_end_matcher_logic<char>");
+            }
+            else {
+                cur_state.add("::cpp2::regex::escaped_char_matcher_logic<char, '(c_next)$'>");
+            }
+        }
+        else if '\\' == c_next {
+            cur_state.add("::cpp2::regex::escaped_char_matcher_logic<char, '\\\\'>");
+        }
+        else {
+            error("Unknown escape.");
+        }
+
+        return true;
+    }
+
+    is_group: (inout this, c: char) -> bool = {
+        if c != '(' { return false; }
+
+        group_number := named_groups;
+        named_groups += 1;
+
+        old_state: _ = new_state();
+
+        pos += 1;  // Skip the '('
+        parse_until(')');
+
+        inner:= create_matcher_from_state();
+        restore_state(old_state);
+
+        v: std::vector<std::string> = (
+            "::cpp2::regex::group_matcher_start_logic<char, (group_number)$>",
+            inner,
+            "::cpp2::regex::group_matcher_end_logic<char, (group_number)$>");
+        cur_state.add(create_matcher_from_list(v));
+
+        return true;
+    }
+
+    is_handle_special: (inout this, c: char) -> bool = {
+        if c == '\'' {
+            cur_state.add("::cpp2::regex::char_matcher_logic<char, '\\(c)$'>");
+            return true;
+        }
+
+        return false;
     }
 
     is_range: (inout this, c: char) -> bool = {
@@ -256,6 +657,31 @@ regex_parser: <Error_out> type = {
         return true;
     }
 
+    is_special_range: (inout this, c: char) -> bool = {
+        min_range: std::string = "0";
+        max_range: std::string = "-1";
+        if c == '*' {
+            min_range = "0";
+        }
+        else if c == '+' {
+            min_range = "1";
+        }
+        else if c == '?' {
+            min_range = "0";
+            max_range = "1";
+        }
+        else {
+            return false;
+        }
+
+        if cur_state.empty() {
+            error("'(c)$' without previous element.");
+        }
+
+        cur_state.wrap_last(:(inner) -> _ == "::cpp2::regex::special_range_matcher_logic<char, (inner)$, (min_range$)$, (max_range$)$, '(c$)$'>");
+        return true;
+    }
+
     parse_until:(inout this, term: char) = {
         while pos != regex.size() next pos += 1 {
             c: char = regex[pos];
@@ -263,14 +689,14 @@ regex_parser: <Error_out> type = {
             if c == term { return; }
 
             if is_alternative(c) { continue; }
-            // if is_any(c) { continue; }
-            // if is_class(c) { continue; }
-            // if is_escape(c) { continue; }
-            // if is_anchor(c) { continue; }
-            // if is_group(c) { continue; }
-            // if is_handle_special(c) { continue; }
+            if is_any(c) { continue; }
+            if is_class(c) { continue; }
+            if is_escape(c) { continue; }
+            if is_anchor(c) { continue; }
+            if is_group(c) { continue; }
+            if is_handle_special(c) { continue; }
             if is_range(c) { continue; }
-            // if is_special_range(c) { continue; }
+            if is_special_range(c) { continue; }
 
             // No special char push a character match
             cur_state.add("::cpp2::regex::char_matcher_logic<char, '(c)$'>");
