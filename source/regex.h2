@@ -73,6 +73,7 @@ matcher_list: <List...> type = {
         First::match(begin, cur, end, ctx, matcher_list<Other...>());
     private match_select: <Iter> (begin: Iter, cur: Iter, end: Iter, inout ctx) match_return<Iter>(true, cur);
 
+    reset_ranges: ( inout ctx) = (List::reset_ranges(ctx), ...);
     to_string: () (bstring<char>() + ... + List::to_string());
 }
 
@@ -108,6 +109,8 @@ alternative_matcher_logic: <CharT, List ...> type = {
         if r.matched {
             return r;
         } else {
+            First::reset_ranges(ctx);
+
             if constexpr 0 != sizeof...(Other) {
                 return match_all<Iter, Tail, Other...>(begin, cur, end, ctx, Tail());
             } else {
@@ -115,6 +118,8 @@ alternative_matcher_logic: <CharT, List ...> type = {
             }
         }
     }
+
+    reset_ranges: (inout ctx) = (List::reset_ranges(ctx) , ...);
 
     to_string: () (bstring<CharT>() + ... + ("|" + List::to_string())).substr(1); // substr: Remove first '|'.
 }
@@ -129,6 +134,8 @@ any_matcher_logic: <CharT> type =
         }
     }
 
+    reset_ranges: (inout ctx) = {}
+
     to_string: () bstring<CharT>(1, '.');
 }
 
@@ -141,6 +148,7 @@ char_matcher_logic: <CharT, C: CharT> type =
             return match_return<Iter>(false, end);
         }
     }
+    reset_ranges: (inout ctx) = {}
     to_string: () bstring<CharT>(1, C);
 }
 
@@ -212,6 +220,7 @@ class_matcher_logic: <CharT, negate: bool, List ...> type =
         return r;
     }
 
+    reset_ranges: (inout ctx) = {}
     to_string: () -> bstring<CharT> = {
         r: bstring<CharT> = "[";
         if negate {
@@ -240,6 +249,7 @@ group_matcher_start_logic: <CharT, group: int> type = {
         }
         return r;
     }
+    reset_ranges: (inout ctx) = { ctx.set_group_invalid(group); }
     to_string: () -> _ = {
         if group != 0 {
             return "(";
@@ -258,6 +268,7 @@ group_matcher_end_logic: <CharT, group: int> type = {
         }
         return r;
     }
+    reset_ranges: (inout ctx) = {}
     to_string: () -> _ = {
         if group != 0 {
             return ")";
@@ -280,6 +291,7 @@ group_ref_matcher_logic: <CharT, group: int> type = {
 
         return Other::match(begin, cur, end, ctx);
     }
+    reset_ranges: (inout ctx) = {}
     to_string: () -> bstring<CharT> = "\\((group)$)";
 }
 
@@ -294,6 +306,7 @@ line_end_matcher_logic: <CharT> type =
         }
 
     }
+    reset_ranges: (inout ctx) = {}
     to_string: () -> bstring<CharT> = "\\$";
 }
 
@@ -308,6 +321,7 @@ line_start_matcher_logic: <CharT> type =
         }
 
     }
+    reset_ranges: (inout ctx) = {}
     to_string: () -> _ = bstring<CharT>(1, '^');
 }
 
@@ -316,6 +330,7 @@ list_matcher_logic: <CharT, List> type =
     match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
         return List::match_combine(begin, cur, end, ctx, Other());
     }
+    reset_ranges: (inout ctx) = { List::reset_ranges(ctx); }
     to_string: () List::to_string();
 }
 
@@ -358,6 +373,7 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
 
             if o.matched {
                 // Rematch M to set the groups.
+                M::reset_ranges(ctx);
                 _ = M::match(begin, last_valid, end, ctx, matcher_list<>());
             }
 
@@ -367,6 +383,7 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
             return match_return<Iter>(false, end);
         }
     }
+    reset_ranges: (inout ctx) = { M::reset_ranges(ctx); }
     to_string: () -> bstring<CharT> = {
       r: std::string = M::to_string();
 
