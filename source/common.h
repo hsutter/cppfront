@@ -17,7 +17,7 @@
     #pragma warning(disable: 4456)
 #endif
 #if defined(__GNUC__) && __GNUC__ >= 13 && !defined(__clang_major__)
-    #pragma GCC diagnostic ignored "-Wno-dangling-reference"
+    #pragma GCC diagnostic ignored "-Wdangling-reference"
 #endif
 
 #include "cpp2util.h"
