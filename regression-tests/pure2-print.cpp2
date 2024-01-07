@@ -99,6 +99,8 @@ outer: @print type = {
     all: <Args...: type> (args...: Args) -> bool =
         (... && args);
 
+    y: () -> decltype(0) = 0;
+
 }
 
 main: () = {

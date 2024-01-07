@@ -72,7 +72,7 @@ main: () = {
   {
     f := :() = {
       static_assert(t().f() == 0);
-      g := :<T> (_: T) -> std::void_t<decltype(T().f())> = {};
+      g := :<T> (_: T) -> decltype(T().f()) = {};
       static_assert(!std::is_invocable_v<decltype(g), u>);
       using ns::f;
     };
@@ -96,12 +96,12 @@ main: () = {
     f := :() = {
       _ = :() = {
         static_assert(t().f() == 0);
-        g := :<T> (_: T) -> std::void_t<decltype(T().f())> = {};
+        g := :<T> (_: T) -> decltype(T().f()) = {};
         static_assert(!std::is_invocable_v<decltype(g), u>);
       };
       {
         static_assert(t().f() == 0);
-        g := :<T> (_: T) -> std::void_t<decltype(T().f())> = {};
+        g := :<T> (_: T) -> decltype(T().f()) = {};
         static_assert(!std::is_invocable_v<decltype(g), u>);
       }
       using ns::f;

@@ -1175,9 +1175,10 @@ struct type_id_node
     int dereference_cnt                     = {};
     token const* suspicious_initialization  = {};
 
-    enum active { empty=0, qualified, unqualified, keyword };
+    enum active { empty=0, decltype_, qualified, unqualified, keyword };
     std::variant<
         std::monostate,
+        std::unique_ptr<postfix_expression_node>,
         std::unique_ptr<qualified_id_node>,
         std::unique_ptr<unqualified_id_node>,
         token const*
@@ -1216,6 +1217,9 @@ struct type_id_node
         if (id.index() == unqualified) {
             return std::get<unqualified>(id)->template_arguments();
         }
+        else if (id.index() != qualified) {
+            Default.report_violation("ICE: this type_id has no template arguments");
+        }
         // else
         return std::get<qualified>(id)->template_arguments();
     }
@@ -1226,6 +1230,8 @@ struct type_id_node
         switch (id.index()) {
         break;case empty:
             return {};
+        break;case decltype_:
+            return std::get<decltype_>(id)->to_string();
         break;case qualified:
             return std::get<qualified>(id)->to_string();
         break;case unqualified:
@@ -1244,6 +1250,8 @@ struct type_id_node
     {
         switch (id.index()) {
         break;case empty:
+            return {};
+        break;case decltype_:
             return {};
         break;case qualified:
             return {};
@@ -1271,6 +1279,7 @@ struct type_id_node
         for (auto q : pc_qualifiers) {
             v.start(*q, depth+1);
         }
+        try_visit<decltype_  >(id, v, depth);
         try_visit<qualified  >(id, v, depth);
         try_visit<unqualified>(id, v, depth);
         try_visit<keyword    >(id, v, depth);
@@ -4539,6 +4548,7 @@ auto pretty_print_visualize(type_id_node const& n, int indent)
     }
 
     if (n.id.index() == type_id_node::empty) { ret += "_"; }
+    ret += try_pretty_print_visualize<type_id_node::decltype_  >(n.id, indent);
     ret += try_pretty_print_visualize<type_id_node::qualified  >(n.id, indent);
     ret += try_pretty_print_visualize<type_id_node::unqualified>(n.id, indent);
     ret += try_pretty_print_visualize<type_id_node::keyword    >(n.id, indent);
@@ -4962,7 +4972,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
 
     auto metafunctions = std::string{};
     {
-    auto as_comment = 
+    auto as_comment =
         !n.metafunctions.empty()
         && !include_metafunctions_list;
     if (as_comment) {
@@ -6268,6 +6278,7 @@ private:
 
 
     //G type-id:
+    //G     type-qualifier-seq? 'decltype' '(' expression ')'
     //G     type-qualifier-seq? qualified-id
     //G     type-qualifier-seq? unqualified-id
     //G
@@ -6302,7 +6313,28 @@ private:
             next();
         }
 
-        if (auto id = qualified_id()) {
+        if (auto& c = curr();
+            c == "decltype"
+            )
+        {
+            if (auto id = postfix_expression();
+                id
+                && id->ops.size() == 1
+                && id->ops[0].expr_list->expressions.size() == 1
+                && id->ops[0].expr_list->open_paren->type() == lexeme::LeftParen
+                )
+            {
+                n->pos = id->position();
+                n->id = std::move(id);
+                assert (n->id.index() == type_id_node::decltype_);
+            }
+            else
+            {
+                error("'decltype' must be followed by a single parenthesized expression", false, c.position());
+                return {};
+            }
+        }
+        else if (auto id = qualified_id()) {
             n->pos = id->position();
             n->id  = std::move(id);
             assert (n->id.index() == type_id_node::qualified);
