@@ -19,7 +19,7 @@ jobs:
         os: [ubuntu-latest]
         compiler: [g++-10, g++-13]
         include:
-          - os: macos-latest
+          - os: macos-13
             compiler: clang++
           - os: windows-latest
             compiler: cl.exe
@@ -28,7 +28,7 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Run regression tests - Linux and macOS version
-      if: matrix.os == 'ubuntu-latest' || matrix.os == 'macOS-latest'
+      if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-13'
       run: |
         cd regression-tests
         bash run-tests.sh -c ${{ matrix.compiler }}
