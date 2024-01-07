@@ -9,13 +9,43 @@ usage() {
     exit 1
 }
 
+################
+# Check file existence and compare its state against the version in git
 check_file () {
     file="$1"
+    description="$2"
+
+    if [[ ! -f "$file" ]]; then
+        echo "            The $description does not exist:"
+        echo "                $file"
+        failure=1
+        return
+    fi
+
     # Check if the file is tracked by git
     git ls-files --error-unmatch "$file" > /dev/null 2>&1
     untracked=$?
-    # Compare the content with the refernece value
-    diff_output=$(git diff --ignore-cr-at-eol -- "$file")
+
+    if [[ $untracked -eq 1 ]]; then
+        echo "            The $description is not tracked by git:"
+        echo "                $file"
+        # Add the file to the index to be able to diff it...
+        git add "$file"
+        # ... print the diff ...
+        git --no-pager diff HEAD -- "$file"
+        # ... and remove the file from the diff
+        git rm --cached -- "$file" > /dev/null 2>&1
+        
+        failure=1
+    else
+        # Compare the content with the refernece value checked in git
+        diff_output=$(git diff --ignore-cr-at-eol -- "$file")
+        if [[ -n "$diff_output" ]]; then
+            echo "            Non-matching $description:"
+            printf "\n$diff_output\n\n"
+            failure=1
+        fi
+    fi
 }
 
 optstring="c:t:"
@@ -127,11 +157,11 @@ for test_file in $tests; do
     test_bin="test.exe"
 
     # Choose mode - default to mixed code
-    descr="mixed cpp1 and cpp2 code"
+    descr="mixed Cpp1 and Cpp2 code"
     opt=""
-    # Using naming convention to discriminate pure cpp2 code
+    # Using naming convention to discriminate pure Cpp2 code
     if [[ $test_name == "pure2"* ]]; then
-        descr="pure cpp2 code"
+        descr="pure Cpp2 code"
         opt="-p"
     fi
     echo "    Testing $descr: $test_name.cpp2"
@@ -144,115 +174,63 @@ for test_file in $tests; do
     failure=0
     compiler_issue=0
     ########
-    # Check the output
-    if [ -f "$expeced_output" ]; then
-        # The C++1 generation output has to be tracked
-        check_file "$expeced_output"
-        if [[ $untracked -eq 1 ]]; then
-            echo "            The Cpp1 generation output file is not tracked by git:"
-            echo "                $expeced_output"
-            failure=1
-        elif [[ -n "$diff_output" ]]; then
-                echo "            Non-matching std out/err:"
-                printf "\n$diff_output\n\n"
-                failure=1
-        fi
-    else
-        echo "            Missing expected output file treaded as failure"
-        failure=1
-    fi
+    # The C++1 generation output has to exist and to be tracked by git
+    check_file "$expeced_output" "Cpp1 generation output file"
 
     ########
     # Check the generated code
     if [ -f "$expected_src" ]; then
         # The file was generated, so it should be tracked by git
-        check_file "$expected_src"
-        if [[ $untracked -eq 1 ]]; then
-            echo "            The generated file is not tracked by git:"
-            echo "                $expected_src"
-            failure=1
-        elif [[ -n "$diff_output" ]]; then
-            echo "            Non-matching generated src:"
-            printf "\n$diff_output\n\n"
-            failure=1
-        else
+        check_file "$expected_src" "generated Cpp1 file"
+        ########
+        # Compile and run the generated code in a sub-shell
+        expected_src_compil_out="$exec_out_dir/$generated_cpp_name.output"
+        expected_src_exec_out="$exec_out_dir/$generated_cpp_name.execution"
+        expected_files="$expected_results_dir/$test_name.files"
+
+        echo "        Compiling the generated Cpp1 code"
+        
+        # For some tests the binary needs to be placed in "$exec_out_dir"
+        # For that reason the compilation is done directly in that dir
+        # The source is temporarily copied to avoid issues with bash paths in cl.exe
+        (cd $exec_out_dir; \
+         cp ../../$expected_src $generated_cpp_name;
+         $compiler_cmd"$test_bin" \
+                        $generated_cpp_name \
+                        > $generated_cpp_name.output 2>&1)
+        compilation_result=$?
+        rm $exec_out_dir/$generated_cpp_name
+
+        if [ -f "$expected_src_compil_out" ]; then
+            # Check for local compiler issues
+            if [[ $compilation_result -ne 0 ]]; then
+                # Workaround an issue with MSVC missing std modules
+                if cat $expected_src_compil_out | grep -q "error C1011"; then
+                    echo "            Skipping further checks due to missing std modules support"
+                    compiler_issue=1
+                fi
+            fi
             ########
-            # Compile and run the generated code in a sub-shell
-            expected_src_compil_out="$exec_out_dir/$generated_cpp_name.output"
-            expected_src_exec_out="$exec_out_dir/$generated_cpp_name.execution"
-            expected_files="$expected_results_dir/$test_name.files"
-
-            echo "        Compiling generated code"
-            
-            # For some tests the binary needs to be placed in "$exec_out_dir"
-            # For that reason the compilation is done directly in that dir
-            # The source is temporarily copied to avoid issues with bash paths in cl.exe
-            (cd $exec_out_dir; \
-             cp ../../$expected_src $generated_cpp_name;
-             $compiler_cmd"$test_bin" \
-                            $generated_cpp_name \
-                            > $generated_cpp_name.output 2>&1)
-            compilation_result=$?
-            rm $exec_out_dir/$generated_cpp_name
-
-            if [ -f "$expected_src_compil_out" ]; then
-                # Check for local compiler issues
-                if [[ $compilation_result -ne 0 ]]; then
-                    # Workaround an issue with MSVC missing std modules
-                    if cat $expected_src_compil_out | grep -q "error C1011"; then
-                        echo "            Skipping further checks due to missing std modules support"
-                        compiler_issue=1
-                    fi
-                fi
+            # Check the Cpp1 compilation message (if there are no local compiler issues)
+            if [[ $compiler_issue -ne 1 ]]; then
+                check_file "$expected_src_compil_out" "Cpp1 compilation message file"
+            fi
+            # Check the result of a successful compilation
+            if [[ $compilation_result -eq 0 ]]; then
                 ########
-                # Check the compilation message (if there are no local compiler issues)
-                if [[ $compiler_issue -ne 1 ]]; then
-                    check_file "$expected_src_compil_out"
-                    if [[ $untracked -eq 1 ]]; then
-                        echo "            The compilation message file is not tracked by git:"
-                        echo "                $expected_src_compil_out"
-                        failure=1
-                    elif [[ -n "$diff_output" ]]; then
-                        echo "            Non-matching comilation output:"
-                        printf "\n$diff_output\n\n"
-                        failure=1
-                    fi
-                fi
-                # Check the result of a successful compilation
-                if [[ $compilation_result -eq 0 ]]; then
-                    ########
-                    # Execute the compiled code in $exec_out_dir
-                    echo "        Executing the compiled test binary"
-                    # Run the binary in a sub-shell in $exec_out_dir so that files are written there
-                    ( cd "$exec_out_dir"; ./$test_bin > "$generated_cpp_name.execution" 2>&1 )
+                # Execute the compiled code in $exec_out_dir
+                echo "        Executing the compiled test binary"
+                # Run the binary in a sub-shell in $exec_out_dir so that files are written there
+                ( cd "$exec_out_dir"; ./$test_bin > "$generated_cpp_name.execution" 2>&1 )
 
-                    check_file "$expected_src_exec_out"
-                    if [[ $untracked -eq 1 ]]; then
-                        echo "            Execution output file is not tracked by git:"
-                        echo "                $expected_src_exec_out"
-                        failure=1
-                    elif [[ -n "$diff_output" ]]; then
-                        echo "            Non-matching execution output:"
-                        printf "\n$diff_output\n\n"
-                        failure=1
-                    fi
-                    # If the test generates files check their content
-                    if [[ -f "$expected_files" ]]; then
-                        echo "        Checking written files"
-                        files="$(cat "$expected_files")"
-                        for file in ${files/,/ }; do
-                            check_file "$exec_out_dir/$file"
-                            if [[ $untracked -eq 1 ]]; then
-                                echo "            The file generated by the binary is not tracked by git:"
-                                echo "                $exec_out_dir/$file"
-                                failure=1
-                            elif [[ -n "$diff_output" ]]; then
-                                echo "            Non-matching content of written file:"
-                                printf "\n$diff_output\n\n"
-                                failure=1
-                            fi
-                        done
-                    fi
+                check_file "$expected_src_exec_out" "execution output file"
+                # If the test generates files check their content
+                if [[ -f "$expected_files" ]]; then
+                    echo "        Checking files written by the binary"
+                    files="$(cat "$expected_files")"
+                    for file in ${files/,/ }; do
+                        check_file "$exec_out_dir/$file" "file meant to be written by the binary"
+                    done
                 fi
             fi
         fi
