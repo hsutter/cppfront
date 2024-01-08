@@ -5,7 +5,7 @@ testing_enabled: bool = false;
 
 outer: @print type = {
 
-    object_alias: <T> T requires true == 42;
+    object_alias: <T> T requires true == sizeof(type T::value_type);
 
     mytype: final type =
     {
