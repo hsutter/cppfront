@@ -1,14 +1,11 @@
 #include <cstddef>
 main: () = {
-  // OK by Cpp1 semantics.
   _ = alignof(int);
   _ = sizeof(int);
   _ = typeid(int);
   _ = offsetof(t, a);
   _ = :<T> (_: T) _ = sizeof(T::value);(std::true_type());
-  // Rejected by Cpp1 semantics.
-  _ = :<T> (_: T) _ = sizeof(T::value_type);(std::true_type());
-  // Not accepted by Cpp2 grammar.
+  _ = :<T> (_: T) _ = sizeof(type T::value_type);(std::true_type());
   _ = alignof(const int);
   _ = sizeof(const int);
   _ = typeid(const int);
