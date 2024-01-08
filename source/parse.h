@@ -6267,8 +6267,10 @@ private:
         auto add_expr = [&](std::unique_ptr<expression_node>&& x) {
             n->arguments.push_back(
                 {std::make_unique<expression_list_node::expression_term>(
-                    pass.value_or(passing_style::in),
-                    std::move(x)
+                    expression_list_node::expression_term{
+                        pass.value_or(passing_style::in),
+                        std::move(x)
+                    }
                 )}
             );
             pass.reset();
