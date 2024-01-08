@@ -6,10 +6,15 @@ first: (forward rng) -> forward _
 
 global: const int = 42;
 f: () -> forward const int = { return global; }
+f: (x: int) x;
+f: (x: long) _ = x;
+g: (x) -> decltype(auto) = f(x);
 
 main: () -> int = {
     v : std::vector = (1,2,3);
     first(v) = 4;
     std::cout << first(v) << std::endl; // prints: 4
     std::cout << f() << std::endl; // prints: 42
+    std::cout << g(0) << std::endl; // prints: 0
+    g(0L);
 }

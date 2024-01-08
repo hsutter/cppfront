@@ -19,6 +19,9 @@
 #line 7 "pure2-forward-return.cpp2"
 extern int const global;
 [[nodiscard]] auto f() -> int const&;
+[[nodiscard]] auto f(cpp2::in<int> x) -> auto;
+[[nodiscard]] auto f(cpp2::in<long> x) -> auto;
+[[nodiscard]] auto g(auto const& x) -> decltype(auto);
 
 [[nodiscard]] auto main() -> int;
 
@@ -35,11 +38,16 @@ extern int const global;
 
 int const global {42}; 
 [[nodiscard]] auto f() -> int const&{return global; }
+[[nodiscard]] auto f(cpp2::in<int> x) -> auto { return x;  }
+[[nodiscard]] auto f(cpp2::in<long> x) -> auto { return static_cast<void>(x);  }
+[[nodiscard]] auto g(auto const& x) -> decltype(auto) { return f(x);  }
 
 [[nodiscard]] auto main() -> int{
     std::vector v {1, 2, 3}; 
     first(v) = 4;
     std::cout << first(std::move(v)) << std::endl;// prints: 4
     std::cout << f() << std::endl; // prints: 42
+    std::cout << g(0) << std::endl; // prints: 0
+    g(0L);
 }
 
