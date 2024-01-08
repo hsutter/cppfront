@@ -1,0 +1,11 @@
+#include <cstddef>
+main: () = {
+  // OK by Cpp1 semantics.
+  _ = alignof(int);
+  _ = sizeof(int);
+  _ = typeid(int);
+  _ = offsetof(t, a);
+}
+t: @struct type = {
+  a: int;
+}
