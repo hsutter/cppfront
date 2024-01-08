@@ -6325,7 +6325,7 @@ private:
                 )
             {
                 n->pos = id->position();
-                n->id = std::move(id);
+                n->id  = std::move(id);
                 assert (n->id.index() == type_id_node::decltype_);
             }
             else
