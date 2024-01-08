@@ -5867,6 +5867,8 @@ private:
             error("prefix '++var' is not valid Cpp2; use postfix 'var++' instead", false);
         break; case lexeme::MinusMinus:
             error("prefix '--var' is not valid Cpp2; use postfix 'var--' instead", false);
+        break; case lexeme::Multiply:
+            error("prefix '*ptr' dereference is not valid Cpp2; use postfix 'ptr*' instead", false);
         break; case lexeme::Ampersand:
             error("prefix '&var' address-of is not valid Cpp2; use postfix 'var&' instead", false);
         break; case lexeme::Tilde:
