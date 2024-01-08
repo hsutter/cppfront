@@ -6265,11 +6265,11 @@ private:
         n->inside_initializer = inside_initializer;
 
         auto add_expr = [&](std::unique_ptr<expression_node>&& x) {
-            n->arguments.emplace_back(
-                std::make_unique<expression_list_node::expression_term>(
+            n->arguments.push_back(
+                {std::make_unique<expression_list_node::expression_term>(
                     pass.value_or(passing_style::in),
                     std::move(x)
-                )
+                )}
             );
             pass.reset();
         };
@@ -6281,7 +6281,7 @@ private:
             next((res->has_disambiguating_type = curr() == "type"));
             if ((res->type = type_id()))
             {
-                n->arguments.emplace_back(std::move(res));
+                n->arguments.push_back( {std::move(res)} );
                 return true;
             }
             if (curr().type() == lexeme::Multiply) {
