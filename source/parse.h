@@ -625,7 +625,7 @@ struct expression_list_node
     token const* close_paren = {};
     bool inside_initializer  = false;
 
-    struct term {
+    struct expression_term {
         passing_style                    pass = {};
         std::unique_ptr<expression_node> expr;
 
@@ -637,7 +637,7 @@ struct expression_list_node
             v.end(*this, depth);
         }
     };
-    std::vector< term > arguments;
+    std::vector< expression_term > arguments;
 
 
     //  API
@@ -8996,7 +8996,7 @@ public:
             << static_cast<void const*>(n.my_statement) << "]\n";
     }
 
-    auto start(expression_list_node::term const&n, int indent) -> void
+    auto start(expression_list_node::expression_term const&n, int indent) -> void
     {
         o << pre(indent) << "expression-list term\n";
         if (n.pass == passing_style::out) {
