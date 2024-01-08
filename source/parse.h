@@ -637,7 +637,7 @@ struct expression_list_node
             v.end(*this, depth);
         }
     };
-    std::vector< term > expressions;
+    std::vector< term > arguments;
 
 
     //  API
@@ -648,7 +648,7 @@ struct expression_list_node
         //  This is a fold-expression if any subexpression
         //  has an identifier named "..."
         auto ret = false;
-        for (auto& x : expressions) {
+        for (auto& x : arguments) {
             ret |= x.expr->is_fold_expression();
         }
         return ret;
@@ -669,7 +669,7 @@ struct expression_list_node
         -> void
     {
         v.start(*this, depth);
-        for (auto& x : expressions) {
+        for (auto& x : arguments) {
             x.visit(v, depth+1);
         }
         v.end(*this, depth);
@@ -4423,7 +4423,7 @@ auto pretty_print_visualize(expression_list_node const& n, int indent)
 
     auto ret = n.open_paren->to_string();
 
-    for (auto i = 0; auto& expr : n.expressions) {
+    for (auto i = 0; auto& expr : n.arguments) {
         assert(expr.expr);
         if (
             expr.pass == passing_style::out
@@ -4434,7 +4434,7 @@ auto pretty_print_visualize(expression_list_node const& n, int indent)
             ret += to_string_view(expr.pass) + std::string{" "};
         }
         ret += pretty_print_visualize(*expr.expr, indent);
-        if (++i < std::ssize(n.expressions)) {
+        if (++i < std::ssize(n.arguments)) {
             ret += ", ";
         }
     }
@@ -4962,7 +4962,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
 
     auto metafunctions = std::string{};
     {
-    auto as_comment = 
+    auto as_comment =
         !n.metafunctions.empty()
         && !include_metafunctions_list;
     if (as_comment) {
@@ -6242,7 +6242,7 @@ private:
         }
 
         //  Otherwise remember the first expression
-        n->expressions.push_back( { pass, std::move(x) } );
+        n->arguments.push_back( { pass, std::move(x) } );
         //  and see if there are more...
         while (curr().type() == lexeme::Comma) {
             next();
@@ -6261,7 +6261,7 @@ private:
                 error("invalid text in expression list", true, {}, true);
                 return {};
             }
-            n->expressions.push_back( { pass, std::move(expr) } );
+            n->arguments.push_back( { pass, std::move(expr) } );
         }
         return n;
     }
