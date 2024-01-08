@@ -70,12 +70,15 @@ CPP2_REQUIRES_ (cpp2::impl::cmp_greater_eq(sizeof...(Args),0u)) ;
 
 #line 100 "pure2-print.cpp2"
     public: template<typename ...Args> [[nodiscard]] static auto all(Args const& ...args) -> bool;
+
+#line 103 "pure2-print.cpp2"
+    public: template<typename T> static auto sizeof_dependent_type() -> void;
     public: outer() = default;
     public: outer(outer const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(outer const&) -> void = delete;
 
 
-#line 103 "pure2-print.cpp2"
+#line 105 "pure2-print.cpp2"
 };
 
 auto main() -> int;
@@ -199,7 +202,10 @@ requires (cpp2::impl::cmp_greater_eq(sizeof...(Args),0u)) {
     template<typename ...Args> [[nodiscard]] auto outer::all(Args const& ...args) -> bool { 
         return (... && args);  }
 
-#line 105 "pure2-print.cpp2"
+#line 103 "pure2-print.cpp2"
+    template<typename T> auto outer::sizeof_dependent_type() -> void { sizeof(typename T::value_type);  }
+
+#line 107 "pure2-print.cpp2"
 auto main() -> int{
     outer::test();
 }

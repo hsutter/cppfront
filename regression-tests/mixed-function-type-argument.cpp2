@@ -1,0 +1,21 @@
+#include <cstddef>
+main: () = {
+  _ = alignof(int);
+  _ = sizeof(int);
+  _ = typeid(int);
+  _ = offsetof(t, a);
+  _ = :<T> (_: T) _ = sizeof(T::value);(std::true_type());
+  _ = :<T> (_: T) _ = sizeof(type T::value_type);(std::true_type());
+  _ = alignof(const int);
+  _ = sizeof(const int);
+  _ = typeid(const int);
+  _ = alignof(*int);
+  _ = sizeof(*int);
+  _ = typeid(*int);
+}
+#if defined(_MSC_VER) || defined(__GNUC__)
+_: int == __builtin_bit_cast(const int, 0);
+#endif
+t: @struct type = {
+  a: int;
+}
