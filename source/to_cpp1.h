@@ -3260,7 +3260,7 @@ public:
                 auto local_args = text_chunks_with_parens_position{{}, i->op->position(), i->op_close->position()};
 
                 assert (i->expr_list);
-                if (!i->expr_list->expressions.empty()) {
+                if (!i->expr_list->arguments.empty()) {
                     local_args.text_chunks = print_to_text_chunks(*i->expr_list);
                 }
 
@@ -3451,7 +3451,7 @@ public:
                 if (
                     flag_safe_subscripts
                     && i->op->type() == lexeme::LeftBracket
-                    && std::ssize(i->expr_list->expressions) == 1
+                    && std::ssize(i->expr_list->arguments) == 1
                     )
                 {
                     suffix.emplace_back( ")", i->op->position() );
@@ -3505,10 +3505,10 @@ public:
                 if (
                     flag_safe_subscripts
                     && i->op->type() == lexeme::LeftBracket
-                    && std::ssize(i->expr_list->expressions) == 1
+                    && std::ssize(i->expr_list->arguments) == 1
                     )
                 {
-                    if (auto lit = i->expr_list->expressions.front().expr->get_literal();
+                    if (auto lit = i->expr_list->arguments.front().expr->get_literal();
                         lit
                         && lit->get_token()->type() == lexeme::DecimalLiteral
                         )
@@ -4086,7 +4086,7 @@ public:
         }
 
         auto first = true;
-        for (auto const& x : n.expressions) {
+        for (auto const& x : n.arguments) {
             if (!first) {
                 printer.print_cpp2(", ", n.position());
             }

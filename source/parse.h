@@ -713,7 +713,7 @@ struct expression_list_node
             v.end(*this, depth);
         }
     };
-    std::vector< term > expressions;
+    std::vector< term > arguments;
 
 
     //  API
@@ -721,7 +721,7 @@ struct expression_list_node
     auto is_empty() const
         -> bool
     {
-        return expressions.empty();
+        return arguments.empty();
     }
 
     auto is_fold_expression() const
@@ -730,7 +730,7 @@ struct expression_list_node
         //  This is a fold-expression if any subexpression
         //  has an identifier named "..."
         auto ret = false;
-        for (auto& x : expressions) {
+        for (auto& x : arguments) {
             ret |= x.expr->is_fold_expression();
         }
         return ret;
@@ -745,7 +745,7 @@ struct expression_list_node
             ret += *open_paren;
         }
 
-        for (auto& term : expressions) {
+        for (auto& term : arguments) {
             ret += term.expr->to_string();
         }
 
@@ -771,7 +771,7 @@ struct expression_list_node
         -> void
     {
         v.start(*this, depth);
-        for (auto& x : expressions) {
+        for (auto& x : arguments) {
             x.visit(v, depth+1);
         }
         v.end(*this, depth);
@@ -969,7 +969,7 @@ struct postfix_expression_node
             std::ssize(ops) >= 1
             && ops.front().op->type() == lexeme::LeftParen
             && ops.front().expr_list
-            && std::ssize(ops.front().expr_list->expressions) == n
+            && std::ssize(ops.front().expr_list->arguments) == n
             ;
     }
 
@@ -4965,7 +4965,7 @@ auto pretty_print_visualize(expression_list_node const& n, int indent)
 
     auto ret = n.open_paren->to_string();
 
-    for (auto i = 0; auto& expr : n.expressions) {
+    for (auto i = 0; auto& expr : n.arguments) {
         assert(expr.expr);
         if (
             expr.pass == passing_style::out
@@ -4976,7 +4976,7 @@ auto pretty_print_visualize(expression_list_node const& n, int indent)
             ret += to_string_view(expr.pass) + std::string{" "};
         }
         ret += pretty_print_visualize(*expr.expr, indent);
-        if (++i < std::ssize(n.expressions)) {
+        if (++i < std::ssize(n.arguments)) {
             ret += ", ";
         }
     }
@@ -6140,7 +6140,7 @@ private:
             }
             n->expression_list_is_fold_expression = expr_list->is_fold_expression();
             expr_list->default_initializer =
-                is_inside_call_expr && std::empty(expr_list->expressions);
+                is_inside_call_expr && std::empty(expr_list->arguments);
 
             n->expr = std::move(expr_list);
             return n;
@@ -6843,7 +6843,7 @@ private:
         }
 
         //  Otherwise remember the first expression
-        n->expressions.push_back( { pass, std::move(x) } );
+        n->arguments.push_back( { pass, std::move(x) } );
         //  and see if there are more...
         while (curr().type() == lexeme::Comma) {
             next();
@@ -6859,7 +6859,7 @@ private:
                 error("invalid text in expression list", true, {}, true);
                 return {};
             }
-            n->expressions.push_back( { pass, std::move(expr) } );
+            n->arguments.push_back( { pass, std::move(expr) } );
         }
 
         return n;
