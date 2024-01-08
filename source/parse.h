@@ -694,6 +694,8 @@ auto to_string_view(passing_style pass) -> std::string_view {
 }
 
 
+struct type_id_node;
+
 struct expression_list_node
 {
     token const* open_paren  = {};
@@ -712,6 +714,12 @@ struct expression_list_node
             expr->visit(v, depth+1);
             v.end(*this, depth);
         }
+    };
+    struct type_id_term {
+        bool                          has_disambiguating_type = {};
+        std::unique_ptr<type_id_node> type;
+
+        auto visit(auto& v, int depth) -> void;
     };
     std::vector< expression_term > arguments;
 
@@ -1174,7 +1182,6 @@ auto prefix_expression_node::visit(auto& v, int depth)
 }
 
 
-struct type_id_node;
 struct template_args_tag { };
 
 struct template_argument
@@ -1511,6 +1518,14 @@ auto template_argument::to_string() const
     }
     // else
     return {};
+}
+
+auto expression_list_node::type_id_term::visit(auto& v, int depth) -> void
+{
+    v.start(*this, depth);
+    assert(type);
+    type->visit(v, depth+1);
+    v.end(*this, depth);
 }
 
 
