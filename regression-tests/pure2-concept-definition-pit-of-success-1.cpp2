@@ -1,0 +1,22 @@
+// https://quuxplusone.github.io/blog/2021/06/09/another-concepts-chest-mimic/
+has_a_but_not_b: <T> concept = requires(t: T)
+{
+  _           = a(t);
+  !requires _ = b(t); // In Cpp2, this works and does the correct thing.
+};
+
+s1: @struct type = { }
+s2: @struct type = { }
+a: (_: s2)       = { }
+s3: @struct type = { }
+b: (_: s3)       = { }
+s4: @struct type = { }
+a: (_: s4)       = { }
+b: (_: s4)       = { }
+
+main: () = {
+  static_assert(!has_a_but_not_b<s1>); // as expected
+  static_assert(has_a_but_not_b<s2>);  // as expected
+  static_assert(!has_a_but_not_b<s3>); // as expected
+  static_assert(!has_a_but_not_b<s4>); // pit of success!
+}
