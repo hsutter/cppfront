@@ -1,9 +1,0 @@
-pure2-print.cpp2: In static member function ‘static void outer::test()’:
-pure2-print.cpp2:80:54: error: conversion from ‘int’ to non-scalar type ‘const std::array<int, 1>’ requested
-   80 |         object_alias_3: std::array == (4,5,6);
-      |                                                      ^
-pure2-print.cpp2:80:52: error: could not convert ‘((void)0, 6)’ from ‘int’ to ‘const std::array<int, 1>’
-   80 |         object_alias_3: std::array == (4,5,6);
-      |                                                    ^
-      |                                                    |
-      |                                                    int

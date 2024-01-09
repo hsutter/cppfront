@@ -5520,6 +5520,22 @@ public:
                         type = print_to_string(*a->type_id);
                     }
 
+                    auto print_initializer_to_string = [&](expression_node const& n) -> std::string {
+                        //  If this expression is just a single expression-list, we can
+                        //  take over direct control of emitting it without needing to
+                        //  go through the whole grammar, and surround it with braces
+                        if (n.is_expression_list()) {
+                            return "{ "
+                                   + print_to_string(*n.get_expression_list(), false)
+                                   + " }";
+                        }
+                        //  Otherwise, just emit the general expression as usual
+                        else {
+                            return " = "
+                                   + print_to_string(n);
+                        }
+                    };
+
                     //  (*) If this is at type scope, Cpp1 requires an out-of-line declaration dance
                     //  for some cases to work - see https://stackoverflow.com/questions/11928089/
                     if (n.parent_is_type())
@@ -5551,8 +5567,7 @@ public:
                                     + " "
                                     + type_qualification_if_any_for(n)
                                     + print_to_string(*n.identifier)
-                                    + " = "
-                                    + print_to_string( *std::get<alias_node::an_object>(a->initializer) )
+                                    + print_initializer_to_string( *std::get<alias_node::an_object>(a->initializer) )
                                     + ";\n",
                                 n.position()
                             );
@@ -5573,8 +5588,7 @@ public:
                             type + " "
                                 + intro + " "
                                 + print_to_string(*n.identifier)
-                                + " = "
-                                + print_to_string( *std::get<alias_node::an_object>(a->initializer) )
+                                + print_initializer_to_string( *std::get<alias_node::an_object>(a->initializer) )
                                 + ";\n",
                             n.position()
                         );

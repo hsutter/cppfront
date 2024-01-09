@@ -169,7 +169,7 @@ requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...)) {(std::cout << ..
 
         cpp2::i8 constexpr object_alias_1 = 42;
         auto constexpr object_alias_2 = 42;
-        std::array constexpr object_alias_3 = (4, 5, 6);
+        std::array constexpr object_alias_3{ 4, 5, 6 };
 
 #line 83 "pure2-print.cpp2"
         ::outer::mytype var {}; 
