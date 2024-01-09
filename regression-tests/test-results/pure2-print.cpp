@@ -55,27 +55,27 @@ CPP2_REQUIRES_ ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...)) ;
 
     public: static auto test() -> void;
 
-#line 91 "pure2-print.cpp2"
+#line 92 "pure2-print.cpp2"
     public: template<typename ...Ts> class x {
         private: std::tuple<Ts...> tup {}; 
         public: x() = default;
         public: x(x const&) = delete; /* No 'that' constructor, suppress copy */
         public: auto operator=(x const&) -> void = delete;
 
-#line 93 "pure2-print.cpp2"
+#line 94 "pure2-print.cpp2"
     };
 
     public: template<typename ...Args> static auto print(std::ostream& out, Args const& ...args) -> void
 CPP2_REQUIRES_ (cpp2::cmp_greater_eq(sizeof...(Args),0u)) ;
 
-#line 99 "pure2-print.cpp2"
+#line 100 "pure2-print.cpp2"
     public: template<typename ...Args> [[nodiscard]] static auto all(Args const& ...args) -> bool;
     public: outer() = default;
     public: outer(outer const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(outer const&) -> void = delete;
 
 
-#line 102 "pure2-print.cpp2"
+#line 103 "pure2-print.cpp2"
 };
 
 auto main() -> int;
@@ -169,8 +169,9 @@ requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...)) {(std::cout << ..
 
         cpp2::i8 constexpr object_alias_1 = 42;
         auto constexpr object_alias_2 = 42;
+        std::array constexpr object_alias_3{ 4, 5, 6 };
 
-#line 82 "pure2-print.cpp2"
+#line 83 "pure2-print.cpp2"
         ::outer::mytype var {}; 
         cout << CPP2_UFCS(g)(var, 42) << "\n";
 
@@ -180,17 +181,17 @@ requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...)) {(std::cout << ..
         () << "\n";
     }
 
-#line 95 "pure2-print.cpp2"
+#line 96 "pure2-print.cpp2"
     template<typename ...Args> auto outer::print(std::ostream& out, Args const& ...args) -> void
 requires (cpp2::cmp_greater_eq(sizeof...(Args),0u)) {
-#line 96 "pure2-print.cpp2"
+#line 97 "pure2-print.cpp2"
         (out << ... << args);
     }
 
     template<typename ...Args> [[nodiscard]] auto outer::all(Args const& ...args) -> bool { 
         return (... && args);  }
 
-#line 104 "pure2-print.cpp2"
+#line 105 "pure2-print.cpp2"
 auto main() -> int{
     outer::test();
 }

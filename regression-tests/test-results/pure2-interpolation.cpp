@@ -39,7 +39,7 @@ class item {
 #line 9 "pure2-interpolation.cpp2"
 [[nodiscard]] auto main() -> int{
 {
-auto const& x = 0;
+auto const& x{0};
 
 #line 11 "pure2-interpolation.cpp2"
     {
@@ -57,7 +57,7 @@ auto const& x = 0;
     }
 }
 {
-auto const& x = item();
+auto const& x{item()};
 
 #line 25 "pure2-interpolation.cpp2"
     {
