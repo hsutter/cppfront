@@ -1,4 +1,7 @@
 #include <cstddef>
+#if defined(_MSC_VER) || defined(__GNUC__)
+_: int == __builtin_bit_cast(const int, 0);
+#endif
 main: () = {
   _ = alignof(int);
   _ = sizeof(int);

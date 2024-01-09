@@ -7,7 +7,7 @@
 
 #line 1 "mixed-function-type-argument.cpp2"
 
-#line 16 "mixed-function-type-argument.cpp2"
+#line 19 "mixed-function-type-argument.cpp2"
 class t;
   
 
@@ -15,9 +15,13 @@ class t;
 
 #line 1 "mixed-function-type-argument.cpp2"
 #include <cstddef>
+#if defined(_MSC_VER) || defined(__GNUC__)
+int inline constexpr _ = __builtin_bit_cast(int const, 0);
+#line 4 "mixed-function-type-argument.cpp2"
+#endif
 auto main() -> int;
 
-#line 16 "mixed-function-type-argument.cpp2"
+#line 19 "mixed-function-type-argument.cpp2"
 class t {
   public: int a; 
 };
@@ -27,7 +31,7 @@ class t {
 
 #line 1 "mixed-function-type-argument.cpp2"
 
-#line 2 "mixed-function-type-argument.cpp2"
+#line 5 "mixed-function-type-argument.cpp2"
 auto main() -> int{
   static_cast<void>(alignof(int));
   static_cast<void>(sizeof(int));
