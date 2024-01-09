@@ -78,12 +78,12 @@ auto main() -> int{
     if (cpp2::Default.has_handler() && !(std::move(f) == 0) ) { cpp2::Default.report_violation(""); }
   }
 {
-auto const& f = t().f();
+auto const& f{t().f()};
 #line 33 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
   if (cpp2::Default.has_handler() && !(f == 0) ) { cpp2::Default.report_violation(""); }
 }
 {
-auto const& f = t().f();
+auto const& f{t().f()};
 #line 34 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
   if (cpp2::Default.has_handler() && !(f == 0) ) { cpp2::Default.report_violation(""); }
 }
@@ -113,12 +113,12 @@ auto const& f = t().f();
   {
     auto f {[]() mutable -> void{
 {
-cpp2::in<identity> f = identity();
+cpp2::in<identity> f{identity()};
 #line 59 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
       if (cpp2::Default.has_handler() && !(CPP2_UFCS(f)(t()) == 0) ) { cpp2::Default.report_violation(""); }
 }
 {
-cpp2::in<identity> f = identity();
+cpp2::in<identity> f{identity()};
 #line 60 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
       static_cast<void>(CPP2_UFCS(f)(u()));
 }
