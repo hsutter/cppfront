@@ -3896,13 +3896,13 @@ public:
 
         auto first = true;
         for (auto const& arg : n.arguments) {
+            if (!first) {
+                printer.print_cpp2(", ", n.position());
+            }
+            first = false;
             if (auto x_ = std::get_if<expression_list_node::term::expression>(&arg.argument))
             {
                 auto& x = **x_;
-                if (!first) {
-                    printer.print_cpp2(", ", n.position());
-                }
-                first = false;
                 auto is_out = false;
 
                 if (x.pass != passing_style::in) {
