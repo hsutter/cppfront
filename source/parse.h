@@ -7222,7 +7222,7 @@ private:
         }
 
         if (curr().type() != lexeme::Semicolon) {
-            error("expected ; at end of jump-statement");
+            error("expected ';' at end of '" + n->keyword->to_string() + "' statement");
             return {};
         }
         next();
