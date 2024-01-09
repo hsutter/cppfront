@@ -69,10 +69,10 @@ auto test_down() -> void;
  auto A::mut_foo() & -> void{std::cout << "foo \n"; }
 
 #line 13 "pure2-types-down-upcast.cpp2"
-auto func_mut(A& a) -> void     {std::cout << "Call A mut: " + cpp2::to_string(a.i) << std::endl;}
-auto func_mut(B& b) -> void     {std::cout << "Call B mut: " + cpp2::to_string(b.d) << std::endl;}
-auto func_const(cpp2::in<A> a) -> void{std::cout << "Call A const: " + cpp2::to_string(a.i) << std::endl;}
-auto func_const(cpp2::in<B> b) -> void{std::cout << "Call B const: " + cpp2::to_string(b.d) << std::endl;}
+auto func_mut(A& a) -> void     {std::cout << ("Call A mut: " + cpp2::to_string(a.i)) << std::endl;}
+auto func_mut(B& b) -> void     {std::cout << ("Call B mut: " + cpp2::to_string(b.d)) << std::endl;}
+auto func_const(cpp2::in<A> a) -> void{std::cout << ("Call A const: " + cpp2::to_string(a.i)) << std::endl;}
+auto func_const(cpp2::in<B> b) -> void{std::cout << ("Call B const: " + cpp2::to_string(b.d)) << std::endl;}
 
 auto test_const_foo() -> void{
  A s {}; 

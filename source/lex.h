@@ -345,6 +345,7 @@ auto expand_string_literal(
 )
     -> std::string
 {
+    auto expanded_interpolation = false;
     auto const length = std::ssize(text);
 
     assert(length >= 2);
@@ -474,6 +475,7 @@ auto expand_string_literal(
             parts.add_code("cpp2::to_string" + chunk);
 
             current_start = pos+1;
+            expanded_interpolation = true;
         }
     }
 
@@ -488,8 +490,17 @@ auto expand_string_literal(
         parts.add_string(text.substr(current_start, std::ssize(text)-current_start-1));
     }
 
+    //  Only for expand_string_literal: If we expanded any interpolations,
+    //  parenthesize the result to support cases like "(1)$+".append("2 is 2")
+    //  But don't do this for expand_raw_string_literal, where injecting a ) can
+    //  interfere with the closing sequence... raw literals really are raw-er
+    if (expanded_interpolation) {
+        return "(" + parts.generate() + ")";
+    }
+    //  Else
     return parts.generate();
 }
+
 
 auto expand_raw_string_literal(
     const std::string&           opening_seq,

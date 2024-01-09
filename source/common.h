@@ -142,14 +142,14 @@ struct string_parts {
         }
     }
 
-    void add_code(const std::string& text) { parts.push_back(cpp_code{text});}
-    void add_string(const std::string& text) { parts.push_back(raw_string{text});}
-    void add_string(const std::string_view& text) { parts.push_back(raw_string{std::string(text)});}
+    void add_code  (const std::string&      text) { parts.push_back(cpp_code{text}); }
+    void add_string(const std::string&      text) { parts.push_back(raw_string{text}); }
+    void add_string(const std::string_view& text) { parts.push_back(raw_string{std::string(text)}); }
 
     void clear() { parts.clear(); }
 
-    auto generate() const -> std::string {
-        
+    auto generate() const -> std::string
+    {        
         if (parts.empty()) { 
             return (strategy & on_the_beginning ? begin_seq : std::string{}) 
                  + (strategy & on_the_end ? end_seq : std::string{}); 

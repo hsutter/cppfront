@@ -72,7 +72,7 @@ auto main() -> int
 
     left_fold_print(std::cout, 3.14, "word", -1500);
 
-    std::cout << "\nfirst all() returned " + cpp2::to_string(all(true, true, true, false));
+    std::cout << ("\nfirst all() returned " + cpp2::to_string(all(true, true, true, false)));
     std::cout << "\nsecond all() returned " << cpp2::as_<std::string>(all(true, true, true, true));
 }
 

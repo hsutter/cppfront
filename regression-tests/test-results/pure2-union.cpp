@@ -198,7 +198,7 @@ auto print_name(cpp2::in<name_or_number> non) -> void{
 
 auto main() -> int{
     name_or_number x {}; 
-    std::cout << "sizeof(x) is " + cpp2::to_string(sizeof(x)) + "\n";
+    std::cout << ("sizeof(x) is " + cpp2::to_string(sizeof(x)) + "\n");
 
     CPP2_UFCS(print_name)(x);
 
