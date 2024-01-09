@@ -124,6 +124,7 @@ outer:/* @print */ type =
         type_alias: type == array<int, 10>;
         object_alias_1: i8 == 42;
         object_alias_2: == 42;
+        object_alias_3: std::array == (4, 5, 6);
         var: ::outer::mytype = ();
         cout << var.g(42) << "\n";
         cout << inspect var.g(42) -> namespace_alias::string {

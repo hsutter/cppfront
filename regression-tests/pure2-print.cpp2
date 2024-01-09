@@ -77,6 +77,7 @@ outer: @print type = {
 
         object_alias_1: i8 == 42;
         object_alias_2: == 42;
+        object_alias_3: std::array == (4,5,6);
 
 
         var: ::outer::mytype = ();
