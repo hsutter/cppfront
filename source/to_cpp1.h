@@ -4679,7 +4679,7 @@ public:
             );
         }
         else {
-            emit(*n.parameters, false, false, generating_postfix_inc_dec); 
+            emit(*n.parameters, false, false, generating_postfix_inc_dec);
         }
 
         //  For an anonymous function, the emitted lambda is 'constexpr' or 'mutable'
@@ -5416,8 +5416,18 @@ public:
             auto& a = std::get<declaration_node::an_alias>(n.type);
             assert(a);
 
+            //  Helper for aliases that emit as a defining declaration.
+            auto const type_scope_object_alias_emits_in_phase_1_only = [&]() {
+                assert(
+                    n.parent_is_type()
+                    && n.is_object_alias()
+                );
+                return !a->type_id
+                       || a->type_id->is_wildcard();
+            };
+
             //  Namespace-scope aliases are emitted in phase 1,
-            //  type-scope object aliases in both phases 1 and 2, and
+            //  type-scope object aliases is emitted in phase 1 and maybe 2, and
             //  function-scope aliases in phase 2
             if (
                 (
@@ -5429,6 +5439,7 @@ public:
                     n.parent_is_type()
                     && n.is_object_alias()
                     && printer.get_phase() == printer.phase2_func_defs
+                    && !type_scope_object_alias_emits_in_phase_1_only()
                     )
                 ||
                 (
@@ -5503,7 +5514,7 @@ public:
                 //  Handle object aliases:
                 //      - at function scope, it's const&
                 //      - at namespace scope, it's inline constexpr
-                //      - at type scope, it's also inline constexpr but see note (*) below
+                //      - at type scope, it's also static constexpr but see note (*) below
                 else if (a->is_object_alias())
                 {
                     auto type = std::string{"auto"};
@@ -5511,13 +5522,26 @@ public:
                         type = print_to_string(*a->type_id);
                     }
 
-                    //  (*) If this is at type scope, Cpp1 requires an out-of-line declaration dance
-                    //  for some cases to work - see https://stackoverflow.com/questions/11928089/
                     if (n.parent_is_type())
                     {
                         assert (n.parent_declaration->name());
 
-                        if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
+                        if (type_scope_object_alias_emits_in_phase_1_only()) {
+                            if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
+                                printer.print_cpp2(
+                                    "static constexpr "
+                                        + type + " "
+                                        + print_to_string(*n.identifier)
+                                        + " = "
+                                        + print_to_string( *std::get<alias_node::an_object>(a->initializer) )
+                                        + ";\n",
+                                    n.position()
+                                );
+                            }
+                        }
+                        //  At type scope, Cpp1 requires an out-of-line declaration dance
+                        //  for some cases to work - see https://stackoverflow.com/questions/11928089/
+                        else if (printer.get_phase() == printer.phase1_type_defs_func_decls) {
                             printer.print_cpp2(
                                 "static const "
                                     + type + " "
@@ -5697,7 +5721,10 @@ public:
 
         //  In class definitions, emit the explicit access specifier if there
         //  is one, or default to private for data and public for functions
-        if (printer.get_phase() == printer.phase1_type_defs_func_decls)
+        if (
+            printer.get_phase() == printer.phase1_type_defs_func_decls
+            && n.identifier
+            )
         {
             if (!n.is_default_access()) {
                 assert (is_in_type);
