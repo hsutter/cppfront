@@ -9100,12 +9100,21 @@ public:
             << static_cast<void const*>(n.my_statement) << "]\n";
     }
 
-    auto start(expression_list_node::expression_term const&n, int indent) -> void
+    auto start(expression_list_node::term const&, int indent) -> void
     {
         o << pre(indent) << "expression-list term\n";
+    }
+
+    auto start(expression_list_node::expression_term const&n, int indent) -> void
+    {
         if (n.pass == passing_style::out) {
-            o << pre(indent+1) << "out\n";
+            o << pre(indent) << "out\n";
         }
+    }
+
+    auto start(expression_list_node::type_id_term const&, int indent) -> void
+    {
+        o << pre(indent) << "type\n";
     }
 
     auto start(expression_list_node const&, int indent) -> void
