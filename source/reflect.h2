@@ -883,11 +883,11 @@ partially_ordered_value: (inout t: meta::type_declaration) =
 //
 //-----------------------------------------------------------------------
 //
-//  rule_of_zero
+//  cpp1_rule_of_zero
 //
 //  a type without declared copy/move/destructor functions
 //
-rule_of_zero: (inout t: meta::type_declaration) =
+cpp1_rule_of_zero: (inout t: meta::type_declaration) =
 {
     for t.get_member_functions() do (inout mf)
     {
@@ -938,7 +938,7 @@ struct: (inout t: meta::type_declaration) =
                        "a struct may not have a user-defined operator=");
         }
     }
-    t.rule_of_zero();
+    t.cpp1_rule_of_zero();
 }
 
 
@@ -1441,8 +1441,8 @@ apply_metafunctions: (
         else if name == "partially_ordered_value" {
             partially_ordered_value( rtype );
         }
-        else if name == "rule_of_zero" {
-            rule_of_zero( rtype );
+        else if name == "cpp1_rule_of_zero" {
+            cpp1_rule_of_zero( rtype );
         }
         else if name == "struct" {
             cpp2_struct( rtype );
@@ -1461,7 +1461,7 @@ apply_metafunctions: (
         }
         else {
             error( "unrecognized metafunction name: " + name );
-            error( "(temporary alpha limitation) currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, rule_of_zero, struct, enum, flag_enum, union, print" );
+            error( "(temporary alpha limitation) currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum, union, cpp1_rule_of_zero, print" );
             return false;
         }
 
