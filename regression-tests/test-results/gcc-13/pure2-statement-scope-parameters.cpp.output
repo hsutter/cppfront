@@ -1,7 +1,0 @@
-pure2-statement-scope-parameters.cpp2: In function ‘int main(int, char**)’:
-pure2-statement-scope-parameters.cpp2:18:69: error: conversion from ‘int’ to non-scalar type ‘std::chrono::duration<int>’ requested
-   18 |     _: std::in_place_t = ();
-      |                                                                     ^
-pure2-statement-scope-parameters.cpp2:20:52: error: expected primary-expression before ‘;’ token
-   20 | }
-      |                                                    ^
