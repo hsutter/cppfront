@@ -1,8 +1,0 @@
-In file included from pure2-bugfix-for-indexed-call.cpp:7:
-pure2-bugfix-for-indexed-call.cpp2: In function ‘int main()’:
-pure2-bugfix-for-indexed-call.cpp2:6:43: error: no match for call to ‘(std::array<void (*)(int), 2>) (cpp2::i32&)’
-    6 |   array_of_functions[index](arguments);
-      |                         ~~~~~~~~~~~~~~~   ^
-pure2-bugfix-for-indexed-call.cpp2:6:43: error: no match for call to ‘(std::array<void (*)(int), 2>) (cpp2::i32&)’
-    6 |   array_of_functions[index](arguments);
-      |                         ~~~~~~~~~~~~~~~   ^

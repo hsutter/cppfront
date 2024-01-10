@@ -3322,6 +3322,8 @@ public:
             //  Handle the suffix operators that remain suffix
             //
             else {
+                flush_args();
+
                 assert(i->op);
                 last_was_prefixed = false;
 
