@@ -5746,7 +5746,7 @@ private:
                 //  If not, then this wasn't a call expression so backtrack to
                 //  the '(' which will be part of the next grammar production
 
-                term.expr_list = expression_list(term.op);
+                term.expr_list = expression_list(term.op, true);
                 if (
                     term.expr_list
                     && curr().type() == lexeme::RightParen

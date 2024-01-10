@@ -67,8 +67,8 @@ point::point(){}
 [[nodiscard]] auto check(cpp2::in<point> p) -> auto { return p;  }
 
 auto main() -> int{
-    if (cpp2::Default.has_handler() && !(check({17, 29}).x == 17) ) { cpp2::Default.report_violation(""); }
-    if (cpp2::Default.has_handler() && !(check({17, 29}).y == 29) ) { cpp2::Default.report_violation(""); }
+    if (cpp2::Default.has_handler() && !(check({ 17, 29 }).x == 17) ) { cpp2::Default.report_violation(""); }
+    if (cpp2::Default.has_handler() && !(check({ 17, 29 }).y == 29) ) { cpp2::Default.report_violation(""); }
 
     std::array<std::array<cpp2::u8,3>,3> board {{ { 
                                             'O', 'X', 'O' }, { 
