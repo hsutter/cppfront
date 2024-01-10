@@ -70,14 +70,14 @@ auto main() -> int{
     if (cpp2::Default.has_handler() && !(check({17, 29}).x == 17) ) { cpp2::Default.report_violation(""); }
     if (cpp2::Default.has_handler() && !(check({17, 29}).y == 29) ) { cpp2::Default.report_violation(""); }
 
-  //board: std::array<std::array<u8, 3>, 3> = ((
-  //                                        ('O', 'X', 'O'),
-  //                                        (' ', 'X', 'X'),
-  //                                        ('X', 'O', 'O')
-  //));
-  //assert(board[0] == :std::array<u8, 3> = ('O', 'X', 'O'));
-  //assert(board[1] == :std::array<u8, 3> = (' ', 'X', 'X'));
-  //assert(board[2] == :std::array<u8, 3> = ('X', 'O', 'O'));
+    std::array<std::array<cpp2::u8,3>,3> board {{ { 
+                                            'O', 'X', 'O' }, { 
+                                            ' ', { 'X' }, 'X' }, { 
+                                            'X', 'O', 'O' } }}; 
+
+    if (cpp2::Default.has_handler() && !(CPP2_ASSERT_IN_BOUNDS(board, 0) == std::array<cpp2::u8,3>{'O', 'X', 'O'}) ) { cpp2::Default.report_violation(""); }
+    if (cpp2::Default.has_handler() && !(CPP2_ASSERT_IN_BOUNDS(board, 1) == std::array<cpp2::u8,3>{' ', 'X', 'X'}) ) { cpp2::Default.report_violation(""); }
+    if (cpp2::Default.has_handler() && !(CPP2_ASSERT_IN_BOUNDS(std::move(board), 2) == std::array<cpp2::u8,3>{'X', 'O', 'O'}) ) { cpp2::Default.report_violation(""); }
 
     // Still parentheses
     if (cpp2::Default.has_handler() && !(CPP2_UFCS(size)((std::vector{17, 29})) == 2) ) { cpp2::Default.report_violation(""); }
