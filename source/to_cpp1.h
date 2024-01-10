@@ -3132,6 +3132,12 @@ public:
             if (args) {
                 suffix.emplace_back(")", args.value().close_pos);
                 for (auto&& e: args.value().text_chunks) {
+                    if (e.text == "(") {
+                        e.text = "{";
+                    }
+                    else if (e.text == ")") {
+                        e.text = "}";
+                    }
                     suffix.push_back(e);
                 }
                 suffix.emplace_back("(", args.value().open_pos);
