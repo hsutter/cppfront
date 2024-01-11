@@ -93,13 +93,13 @@ auto main() -> int;
     template <int ...Ts> [[nodiscard]] auto y<Ts...>::func() -> auto { return (0 + ... + Ts);  }
 
 #line 17 "pure2-variadics.cpp2"
-  template <typename ...UnnamedTypeParam1_16_14> template<int UnnamedTypeParam1_17_7> [[nodiscard]] auto t0<_...>::f() -> cpp2::i32 { return 0;  }
+  template <typename ...UnnamedTypeParam1_16_14> template<int UnnamedTypeParam1_17_7> [[nodiscard]] auto t0<UnnamedTypeParam1_16_14...>::f() -> cpp2::i32 { return 0;  }
 
 #line 22 "pure2-variadics.cpp2"
   template <auto ...T> template<int UnnamedTypeParam1_22_7> [[nodiscard]] auto t1<T...>::f() -> cpp2::i32 { return 0;  }
 
 #line 27 "pure2-variadics.cpp2"
-  template <auto ...UnnamedTypeParam1_26_14> template<int UnnamedTypeParam1_27_7> [[nodiscard]] auto t2<_...>::f() -> cpp2::i32 { return 0;  }
+  template <auto ...UnnamedTypeParam1_26_14> template<int UnnamedTypeParam1_27_7> [[nodiscard]] auto t2<UnnamedTypeParam1_26_14...>::f() -> cpp2::i32 { return 0;  }
 
 #line 30 "pure2-variadics.cpp2"
 template<typename ...Args> auto left_fold_print(std::ostream& out, Args const& ...args) -> void{

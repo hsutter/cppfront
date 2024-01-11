@@ -4272,8 +4272,7 @@ public:
             }
 
             if (identifier == "_") {
-                printer.print_cpp2( "UnnamedTypeParam" + std::to_string(n.ordinal) + "_"
-                                    + labelized_position(n.declaration->identifier->get_token()),
+                printer.print_cpp2( unnamed_type_param_name(n.ordinal, n.declaration->identifier->get_token()),
                                     identifier_pos );
             }
             else {
@@ -4929,7 +4928,14 @@ public:
                     auto separator = std::string{"<"};
                     for (auto& tparam : parent->template_parameters->parameters) {
                         assert (tparam->has_name());
-                        list += separator + tparam->name()->to_string();
+                        list += separator;
+                        if ("_" == tparam->name()->to_string()) {
+                            list += unnamed_type_param_name(tparam->ordinal,
+                                                            tparam->declaration->identifier->get_token());
+                        }
+                        else {
+                            list += tparam->name()->to_string();
+                        }
                         if(tparam->declaration->is_variadic) {
                             list += "...";
                         }
