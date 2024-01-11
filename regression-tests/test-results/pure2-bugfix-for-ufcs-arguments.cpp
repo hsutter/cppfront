@@ -35,20 +35,20 @@ class B;
 class t {
   public: [[nodiscard]] auto f() & -> cpp2::i32;
   public: [[nodiscard]] auto f([[maybe_unused]] auto const& unnamed_param_2) & -> cpp2::i32;
-  public: template<typename UnnamedTypeParam1> [[nodiscard]] auto f() & -> cpp2::i32;
-  public: template<typename UnnamedTypeParam1> [[nodiscard]] auto f([[maybe_unused]] auto const& unnamed_param_2) & -> cpp2::i32;
-  public: template<typename UnnamedTypeParam1, typename U> [[nodiscard]] auto f([[maybe_unused]] auto const& unnamed_param_2, [[maybe_unused]] auto const& unnamed_param_3) & -> cpp2::i32;
+  public: template<typename UnnamedTypeParam1_10_7> [[nodiscard]] auto f() & -> cpp2::i32;
+  public: template<typename UnnamedTypeParam1_11_7> [[nodiscard]] auto f([[maybe_unused]] auto const& unnamed_param_2) & -> cpp2::i32;
+  public: template<typename UnnamedTypeParam1_12_7, typename U> [[nodiscard]] auto f([[maybe_unused]] auto const& unnamed_param_2, [[maybe_unused]] auto const& unnamed_param_3) & -> cpp2::i32;
 };
 
 [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1) -> cpp2::i32;
 [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2) -> cpp2::i32;
-template<typename UnnamedTypeParam1> [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1) -> cpp2::i32;
-template<typename UnnamedTypeParam1> [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2) -> cpp2::i32;
-template<typename UnnamedTypeParam1, typename U> [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2, [[maybe_unused]] auto const& unnamed_param_3) -> cpp2::i32;
+template<typename UnnamedTypeParam1_17_5> [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1) -> cpp2::i32;
+template<typename UnnamedTypeParam1_18_5> [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2) -> cpp2::i32;
+template<typename UnnamedTypeParam1_19_5, typename U> [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2, [[maybe_unused]] auto const& unnamed_param_3) -> cpp2::i32;
 
 extern t m;
 extern t const n;
-template<typename UnnamedTypeParam1, typename U> auto inline constexpr a = n;
+template<typename UnnamedTypeParam1_23_5, typename U> auto inline constexpr a = n;
 
 extern cpp2::i32 auto_25_1;
 extern cpp2::i32 auto_26_1;
@@ -97,16 +97,16 @@ class B {
 #line 8 "pure2-bugfix-for-ufcs-arguments.cpp2"
   [[nodiscard]] auto t::f() & -> cpp2::i32 { return print_res(0);  }
   [[nodiscard]] auto t::f([[maybe_unused]] auto const& unnamed_param_2) & -> cpp2::i32 { return print_res(1);  }
-  template<typename UnnamedTypeParam1> [[nodiscard]] auto t::f() & -> cpp2::i32 { return print_res(2);  }
-  template<typename UnnamedTypeParam1> [[nodiscard]] auto t::f([[maybe_unused]] auto const& unnamed_param_2) & -> cpp2::i32 { return print_res(3);  }
-  template<typename UnnamedTypeParam1, typename U> [[nodiscard]] auto t::f([[maybe_unused]] auto const& unnamed_param_2, [[maybe_unused]] auto const& unnamed_param_3) & -> cpp2::i32 { return print_res(4);  }
+  template<typename UnnamedTypeParam1_10_7> [[nodiscard]] auto t::f() & -> cpp2::i32 { return print_res(2);  }
+  template<typename UnnamedTypeParam1_11_7> [[nodiscard]] auto t::f([[maybe_unused]] auto const& unnamed_param_2) & -> cpp2::i32 { return print_res(3);  }
+  template<typename UnnamedTypeParam1_12_7, typename U> [[nodiscard]] auto t::f([[maybe_unused]] auto const& unnamed_param_2, [[maybe_unused]] auto const& unnamed_param_3) & -> cpp2::i32 { return print_res(4);  }
 
 #line 15 "pure2-bugfix-for-ufcs-arguments.cpp2"
 [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1) -> cpp2::i32 { return print_res(5);  }
 [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2) -> cpp2::i32 { return print_res(6);  }
-template<typename UnnamedTypeParam1> [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1) -> cpp2::i32 { return print_res(7);  }
-template<typename UnnamedTypeParam1> [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2) -> cpp2::i32 { return print_res(8);  }
-template<typename UnnamedTypeParam1, typename U> [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2, [[maybe_unused]] auto const& unnamed_param_3) -> cpp2::i32 { return print_res(9);  }
+template<typename UnnamedTypeParam1_17_5> [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1) -> cpp2::i32 { return print_res(7);  }
+template<typename UnnamedTypeParam1_18_5> [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2) -> cpp2::i32 { return print_res(8);  }
+template<typename UnnamedTypeParam1_19_5, typename U> [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2, [[maybe_unused]] auto const& unnamed_param_3) -> cpp2::i32 { return print_res(9);  }
 
 t m {}; 
 t const n {}; 
