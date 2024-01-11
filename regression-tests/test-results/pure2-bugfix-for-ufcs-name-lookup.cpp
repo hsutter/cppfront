@@ -60,6 +60,7 @@ auto main() -> int;
 
 #line 11 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
 namespace ns {
+#line 12 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
 [[nodiscard]] constexpr auto f([[maybe_unused]] auto const& unnamed_param_1) -> int { return 1;  }
 }
 

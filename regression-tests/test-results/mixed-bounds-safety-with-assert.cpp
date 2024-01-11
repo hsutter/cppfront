@@ -36,6 +36,7 @@ auto print_subrange(auto const& rng, cpp2::in<int> start, cpp2::in<int> end) -> 
     print_subrange(std::move(v), 1, 13);
 }
 
+#line 9 "mixed-bounds-safety-with-assert.cpp2"
 auto print_subrange(auto const& rng, cpp2::in<int> start, cpp2::in<int> end) -> void{
     if (cpp2::Bounds.has_handler() && !(cpp2::cmp_less_eq(0,start)) ) { cpp2::Bounds.report_violation(""); }
     if (cpp2::Bounds.has_handler() && !(cpp2::cmp_less_eq(end,CPP2_UFCS(ssize)(rng))) ) { cpp2::Bounds.report_violation(""); }

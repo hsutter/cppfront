@@ -32,6 +32,7 @@ auto main() -> int;
 #line 2 "pure2-bugfix-for-ufcs-noexcept.cpp2"
   auto t::swap([[maybe_unused]] t const& that) noexcept -> void{}// Non-`virtual` blocked on #508, idiomatic form on #507.
 
+#line 4 "pure2-bugfix-for-ufcs-noexcept.cpp2"
 auto main() -> int{
   static_assert(noexcept(CPP2_UFCS(swap)(t(), t())));// Fails on Clang 12 (lambda in unevaluated context) and GCC 10 (static assertion failed)
 }

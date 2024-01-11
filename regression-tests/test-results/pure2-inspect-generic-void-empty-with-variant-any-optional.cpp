@@ -40,6 +40,7 @@ auto test_generic(auto const& x, auto const& msg) -> void;
     test_generic(std::move(o), "optional<string>");
 }
 
+#line 18 "pure2-inspect-generic-void-empty-with-variant-any-optional.cpp2"
 auto test_generic(auto const& x, auto const& msg) -> void{
     std::cout 
         << "\n" << msg << "\n    ..." 

@@ -114,8 +114,8 @@ auto main() -> int;
 
 #line 1 "pure2-enum.cpp2"
 
-
 #line 1 "pure2-enum.cpp2"
+
 constexpr skat_game::skat_game(cpp2::in<cpp2::i64> _val)
                                                           : _value{ cpp2::unsafe_narrow<cpp2::i8>(_val) } {  }
 constexpr auto skat_game::operator=(cpp2::in<cpp2::i64> _val) -> skat_game&  { 

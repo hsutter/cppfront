@@ -35,6 +35,7 @@ auto calc() {
     (); 
 }
 
+#line 14 "mixed-inspect-with-typeof-of-template-arg-list.cpp2"
 [[nodiscard]] auto main() -> int{
     return fun(42); 
 }
