@@ -15,6 +15,17 @@ template<typename ...Ts> class x;
 #line 10 "pure2-variadics.cpp2"
 template<int ...Ts> class y;
 
+#line 16 "pure2-variadics.cpp2"
+template<typename ...UnnamedTypeParam1> class t0;
+  
+
+#line 21 "pure2-variadics.cpp2"
+template<auto ...T> class t1;
+  
+
+#line 26 "pure2-variadics.cpp2"
+template<auto ...UnnamedTypeParam1> class t2;
+  
 
 //=== Cpp2 type definitions and function declarations ===========================
 
@@ -44,12 +55,27 @@ template<int ...Ts> class y {
 #line 13 "pure2-variadics.cpp2"
 };
 
+// Discard type name pack expansion
+template<typename ...UnnamedTypeParam1> class t0 {
+  public: template<int UnnamedTypeParam1> [[nodiscard]] static auto f() -> cpp2::i32;
+};
+
+// Discard template type pack expansion
+template<auto ...T> class t1 {
+  public: template<int UnnamedTypeParam1> [[nodiscard]] static auto f() -> cpp2::i32;
+};
+
+// Discard typename and template type pack expansion
+template<auto ...UnnamedTypeParam1> class t2 {
+  public: template<int UnnamedTypeParam1> [[nodiscard]] static auto f() -> cpp2::i32;
+};
+
 template<typename ...Args> auto left_fold_print(std::ostream& out, Args const& ...args) -> void;
 
-#line 20 "pure2-variadics.cpp2"
+#line 35 "pure2-variadics.cpp2"
 template<typename ...Args> [[nodiscard]] auto all(Args const& ...args) -> bool;
 
-#line 24 "pure2-variadics.cpp2"
+#line 39 "pure2-variadics.cpp2"
 template     <typename ...Args> [[nodiscard]] auto make_string(Args&& ...args) -> auto;
 
 template  <typename T, typename ...Args> [[nodiscard]] auto make(Args&& ...args) -> auto;
@@ -66,7 +92,16 @@ auto main() -> int;
 #line 12 "pure2-variadics.cpp2"
     template <int ...Ts> [[nodiscard]] auto y<Ts...>::func() -> auto { return (0 + ... + Ts);  }
 
-#line 15 "pure2-variadics.cpp2"
+#line 17 "pure2-variadics.cpp2"
+  template <typename ...UnnamedTypeParam1> template<int UnnamedTypeParam1> [[nodiscard]] auto t0<_...>::f() -> cpp2::i32 { return 0;  }
+
+#line 22 "pure2-variadics.cpp2"
+  template <auto ...T> template<int UnnamedTypeParam1> [[nodiscard]] auto t1<T...>::f() -> cpp2::i32 { return 0;  }
+
+#line 27 "pure2-variadics.cpp2"
+  template <auto ...UnnamedTypeParam1> template<int UnnamedTypeParam1> [[nodiscard]] auto t2<_...>::f() -> cpp2::i32 { return 0;  }
+
+#line 30 "pure2-variadics.cpp2"
 template<typename ...Args> auto left_fold_print(std::ostream& out, Args const& ...args) -> void{
     //  Binary left fold expression
     (out << ... << args);
@@ -82,7 +117,7 @@ template  <typename T, typename ...Args> [[nodiscard]] auto make(Args&& ...args)
 
 auto main() -> int
 {
-    x<int,long,std::string> auto_30_5 {}; 
+    x<int,long,std::string> auto_45_5 {}; 
 
     std::cout << std::string("xyzzy", 3) << "\n";
     std::cout << make_string("plugh", cpp2::u8{3}) << "\n";

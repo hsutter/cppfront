@@ -1,0 +1,20 @@
+pure2-variadics.cpp2:21:10: error: ‘R’ has not been declared
+pure2-variadics.cpp2:17:20: error: declaration of template parameter ‘T’ shadows template parameter
+pure2-variadics.cpp2:16:10: note: template parameter ‘T’ declared here
+pure2-variadics.cpp2:21:10: error: ‘R’ has not been declared
+pure2-variadics.cpp2:27:20: error: declaration of template parameter ‘_’ shadows template parameter
+pure2-variadics.cpp2:26:10: note: template parameter ‘_’ declared here
+pure2-variadics.cpp2:17:33: error: declaration of template parameter ‘T’ shadows template parameter
+pure2-variadics.cpp2:17:13: note: template parameter ‘T’ declared here
+pure2-variadics.cpp2:17:63: error: expansion pattern ‘T’ contains no parameter packs
+pure2-variadics.cpp2:17:66: error: template argument 1 is invalid
+pure2-variadics.cpp2:17:59: error: too many template-parameter-lists
+pure2-variadics.cpp2:22:13: error: ‘R’ has not been declared
+pure2-variadics.cpp2:22:60: error: expansion pattern ‘_’ contains no parameter packs
+pure2-variadics.cpp2:22:63: error: template argument 1 is invalid
+pure2-variadics.cpp2:22:56: error: too many template-parameter-lists
+pure2-variadics.cpp2:27:33: error: declaration of template parameter ‘_’ shadows template parameter
+pure2-variadics.cpp2:27:13: note: template parameter ‘_’ declared here
+pure2-variadics.cpp2:27:63: error: expansion pattern ‘_’ contains no parameter packs
+pure2-variadics.cpp2:27:66: error: template argument 1 is invalid
+pure2-variadics.cpp2:27:59: error: too many template-parameter-lists

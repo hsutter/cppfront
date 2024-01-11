@@ -12,6 +12,21 @@ y: <Ts...: int> type = {
     func: () ( 0 + ... + Ts);
 }
 
+// Discard type name pack expansion
+t0: @struct <_...> type = {
+  f: <_: int> () -> i32 = 0;
+}
+
+// Discard template type pack expansion
+t1: @struct <T...: _> type = {
+  f: <_: int> () -> i32 = 0;
+}
+
+// Discard typename and template type pack expansion
+t2: @struct <_...: _> type = {
+  f: <_: int> () -> i32 = 0;
+}
+
 left_fold_print: <Args...: type> (inout out: std::ostream, args...: Args) = {
     //  Binary left fold expression
     (out << ... << args);

@@ -4294,7 +4294,12 @@ public:
             if (n.declaration->is_variadic) {
                 printer.print_cpp2("...",identifier_pos);
             }
-            printer.print_cpp2( identifier, identifier_pos );
+            if (identifier == "_") {
+                printer.print_cpp2( "UnnamedTypeParam" + std::to_string(n.ordinal), identifier_pos );
+            }
+            else {
+                printer.print_cpp2( identifier, identifier_pos );
+            }
             return;
         }
 
