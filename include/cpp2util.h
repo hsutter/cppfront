@@ -197,7 +197,7 @@
         #endif
         #include <stdexcept>
         #if __has_include(<stdfloat>)
-            #if (defined(_MSC_VER) && _HAS_CXX23) || !defined(_MSC_VER)
+            #if !defined(_MSC_VER) || _HAS_CXX23
                 #include <stdfloat>
             #endif
         #endif
