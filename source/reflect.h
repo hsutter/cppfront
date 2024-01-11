@@ -843,7 +843,7 @@ namespace meta {
             static_cast<void>(CPP2_UFCS(emplace_back)((*cpp2::assert_not_null(_1)), s, source_line::category::cpp2));
         }}; 
 {
-auto newline_pos = CPP2_UFCS(find)(source, '\n');
+auto newline_pos{CPP2_UFCS(find)(source, '\n')};
 
         //  First split this string into source_lines
         //
@@ -1521,7 +1521,7 @@ auto basic_enum(
 
     auto found_non_numeric {false}; 
 {
-std::string value = "-1";
+std::string value{"-1"};
 
 #line 991 "reflect.h2"
     for ( 
@@ -1651,7 +1651,7 @@ std::string value = "-1";
     CPP2_UFCS(add_member)(t, "    operator=         : (out this, that) == { }");
     CPP2_UFCS(add_member)(t, "    operator<=>       : (this, that) -> std::strong_ordering;");
 {
-std::string to_string = "    to_string: (this) -> std::string = { \n";
+std::string to_string{"    to_string: (this) -> std::string = { \n"};
 
     //  Provide a 'to_string' function to print enumerator name(s)
 
@@ -1734,7 +1734,7 @@ auto cpp2_union(meta::type_declaration& t) -> void
 {
     std::vector<value_member_info> alternatives {}; 
 {
-auto value = 0;
+auto value{0};
 
     //  1. Gather: All the user-written members, and find/compute the max size
 
@@ -1783,14 +1783,14 @@ auto value = 0;
 
     CPP2_UFCS(remove_marked_members)(t);
 {
-std::string storage = "    _storage: cpp2::aligned_storage<cpp2::max( ";
+std::string storage{"    _storage: cpp2::aligned_storage<cpp2::max( "};
 
     //  Provide storage
 
 #line 1284 "reflect.h2"
     {
 {
-std::string comma = "";
+std::string comma{""};
 
 #line 1286 "reflect.h2"
         for ( 
@@ -1803,7 +1803,7 @@ std::string comma = "";
 #line 1292 "reflect.h2"
         storage += "), cpp2::max( ";
 {
-std::string comma = "";
+std::string comma{""};
 
 #line 1295 "reflect.h2"
         for ( 
@@ -1838,7 +1838,7 @@ std::string comma = "";
         CPP2_UFCS(add_member)(t, ("    set_" + cpp2::to_string(a.name) + ": (inout this, forward _args...: _) = { if !is_" + cpp2::to_string(a.name) + "() { _destroy(); std::construct_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&), _args...); } else { reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&)* = :" + cpp2::to_string(a.type) + " = (_args...); } _discriminator = " + cpp2::to_string(a.value) + "; }\n"));
     }
 {
-std::string destroy = "    private _destroy: (inout this) = {\n";
+std::string destroy{"    private _destroy: (inout this) = {\n"};
 
     //  Add destroy
 
@@ -1862,7 +1862,7 @@ std::string destroy = "    private _destroy: (inout this) = {\n";
     //  Add default constructor
     CPP2_UFCS(add_member)(t, "    operator=: (out this) = { }");
 {
-std::string value_set = "";
+std::string value_set{""};
 
     //  Add copy/move construction and assignment
 
