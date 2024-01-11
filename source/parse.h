@@ -8432,6 +8432,18 @@ private:
 
         }
 
+        if (
+            n->is_type()
+            && n->initializer
+            && !done() && curr().type() == lexeme::Semicolon
+            )
+        {
+            if (n->initializer->is_compound() && n->has_name()) {
+                error("Cpp2 does not allow a semicolon after the closing brace of a type definition");
+                return {};
+            }
+        }
+
         //  A type initializer must be a compound expression
         if (
             n->is_type()
