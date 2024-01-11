@@ -4262,9 +4262,8 @@ public:
         //-----------------------------------------------------------------------
         //  Handle type parameters
 
-        if (n.declaration->is_type()) {
-            assert( is_template_parameter );
-            printer.print_cpp2("typename ", identifier_pos);
+        // Common template naming
+        auto emit_template_name = [&]() {
             if (n.declaration->is_variadic) {
                 printer.print_cpp2(
                     "...",
@@ -4273,12 +4272,19 @@ public:
             }
 
             if (identifier == "_") {
-                printer.print_cpp2( "UnnamedTypeParam" + std::to_string(n.ordinal), identifier_pos );
+                printer.print_cpp2( "UnnamedTypeParam" + std::to_string(n.ordinal) + "_"
+                                    + labelized_position(n.declaration->identifier->get_token()),
+                                    identifier_pos );
             }
             else {
                 printer.print_cpp2( identifier, identifier_pos );
             }
+        };
+        if (n.declaration->is_type()) {
+            assert( is_template_parameter );
+            printer.print_cpp2("typename ", identifier_pos);
 
+            emit_template_name();
             return;
         }
 
@@ -4291,15 +4297,8 @@ public:
         if (is_template_parameter) {
             emit( type_id );
             printer.print_cpp2(" ", type_id.position());
-            if (n.declaration->is_variadic) {
-                printer.print_cpp2("...",identifier_pos);
-            }
-            if (identifier == "_") {
-                printer.print_cpp2( "UnnamedTypeParam" + std::to_string(n.ordinal), identifier_pos );
-            }
-            else {
-                printer.print_cpp2( identifier, identifier_pos );
-            }
+
+            emit_template_name();
             return;
         }
 
