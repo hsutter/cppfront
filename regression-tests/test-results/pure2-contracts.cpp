@@ -42,7 +42,7 @@ auto main() -> int{
     if (cpp2::Type.has_handler() && !(test_condition_evaluation(2)) ) { cpp2::Type.report_violation(CPP2_CONTRACT_MSG("type")); }// evaluated: prints "2"
     CPP2_UFCS(set_handler)(cpp2::Type);
     //  Type does not have a handler
-    if (cpp2::Type.has_handler() && !(test_condition_evaluation(3)) ) { cpp2::Type.report_violation(CPP2_CONTRACT_MSG("1 == " + cpp2::to_string(1))); }// not evaluated
+    if (cpp2::Type.has_handler() && !(test_condition_evaluation(3)) ) { cpp2::Type.report_violation(CPP2_CONTRACT_MSG(("1 == " + cpp2::to_string(1)))); }// not evaluated
 
     //  Bounds has a handler, and audit is true
     if (cpp2::Bounds.has_handler() && audit && !(test_condition_evaluation(4)) ) { cpp2::Bounds.report_violation(CPP2_CONTRACT_MSG("type")); }// evaluated: prints "4"

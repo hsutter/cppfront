@@ -546,7 +546,7 @@ public:
         //-----------------------------------------------------------------------
         //  Function logic: For each entry in the table...
         //
-        for (auto sympos = std::ssize(symbols) - 1; sympos >= 0; --sympos)
+        for (auto sympos = unsafe_narrow<int>(std::ssize(symbols) - 1); sympos >= 0; --sympos)
         {
             //  If this is an uninitialized local variable,
             //  ensure it is definitely initialized and tag those initializations
@@ -1048,6 +1048,14 @@ public:
     auto check(declaration_node const& n)
         -> bool
     {
+        if (n.has_name("operator")) {
+            errors.emplace_back(
+                n.position(),
+                "the name 'operator' is incomplete - did you mean to write an overloaded operator name like 'operator*' or 'operator++'?"
+            );
+            return false;
+        }
+
         //  An object of deduced type must have an initializer
         if (
             n.is_object()

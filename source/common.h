@@ -11,8 +11,13 @@
 // THE SOFTWARE.
 
 
+//  We want cppfront to build cleanly at very high warning levels, with warnings
+//  as errors -- so disable a handful that fire incorrectly due to compiler bugs
 #ifdef _MSC_VER
-#pragma warning(disable: 4456)
+    #pragma warning(disable: 4456)
+#endif
+#if defined(__GNUC__) && __GNUC__ >= 13 && !defined(__clang_major__)
+    #pragma GCC diagnostic ignored "-Wdangling-reference"
 #endif
 
 #include "cpp2util.h"
@@ -65,8 +70,8 @@ struct source_line
         -> int
     {
         return
-            std::find_if_not( text.begin(), text.end(), &isspace )
-                - text.begin();
+            unsafe_narrow<int>(std::find_if_not( text.begin(), text.end(), &isspace )
+                               - text.begin());
     }
 
     auto prefix() const
@@ -137,14 +142,14 @@ struct string_parts {
         }
     }
 
-    void add_code(const std::string& text) { parts.push_back(cpp_code{text});}
-    void add_string(const std::string& text) { parts.push_back(raw_string{text});}
-    void add_string(const std::string_view& text) { parts.push_back(raw_string{std::string(text)});}
+    void add_code  (const std::string&      text) { parts.push_back(cpp_code{text}); }
+    void add_string(const std::string&      text) { parts.push_back(raw_string{text}); }
+    void add_string(const std::string_view& text) { parts.push_back(raw_string{std::string(text)}); }
 
     void clear() { parts.clear(); }
 
-    auto generate() const -> std::string {
-        
+    auto generate() const -> std::string
+    {        
         if (parts.empty()) { 
             return (strategy & on_the_beginning ? begin_seq : std::string{}) 
                  + (strategy & on_the_end ? end_seq : std::string{}); 
@@ -334,7 +339,7 @@ auto is_nondigit(char c)
         isalpha(c)
         || c == '_'
         ;
-};
+}
 
 //G identifier-start:
 //G     nondigit
@@ -379,7 +384,7 @@ auto starts_with_identifier(std::string_view s)
         return j;
     }
     return 0;
-};
+}
 
 
 //  Helper to allow one of the above or a digit separator
@@ -759,7 +764,7 @@ public:
         auto length = std::ssize(name);
         if (opt_out) { length += 3; }   // space to print "[-]"
         if (max_flag_length < length) {
-            max_flag_length = length;
+            max_flag_length = unsafe_narrow<int>(length);
         }
     }
     struct register_flag {
@@ -821,7 +826,9 @@ public:
         -> void
     {
         help_requested = true;
-        print("\ncppfront compiler v0.3.0   Build "
+        print("\ncppfront compiler "
+            #include "version.info"
+        "   Build "
             #include "build.info"
         );
         print("\nCopyright(c) Herb Sutter   All rights reserved\n");

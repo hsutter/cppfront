@@ -199,7 +199,7 @@ auto _as(lexeme l)
     break;case lexeme::None:                return "(NONE)";
     break;default:                          return "INTERNAL-ERROR";
     }
-};
+}
 
 
 auto is_operator(lexeme l)
@@ -286,13 +286,13 @@ public:
         pos.colno += offset;
     }
 
-    auto position() const -> source_position { return pos;       }
+    auto position() const -> source_position { return pos;                           }
 
-    auto length  () const -> int             { return sv.size(); }
+    auto length  () const -> int             { return unsafe_narrow<int>(sv.size()); }
 
-    auto type    () const -> lexeme          { return lex_type;  }
+    auto type    () const -> lexeme          { return lex_type;                      }
 
-    auto set_type(lexeme l) -> void          { lex_type = l;     }
+    auto set_type(lexeme l) -> void          { lex_type = l;                         }
 
     auto visit(auto& v, int depth) const
         -> void
@@ -307,7 +307,7 @@ public:
             )
         {
             sv.remove_prefix(prefix.size());
-            pos.colno += prefix.size();
+            pos.colno += unsafe_narrow<colno_t>(prefix.size());
         }
     }
 
@@ -345,6 +345,7 @@ auto expand_string_literal(
 )
     -> std::string
 {
+    auto expanded_interpolation = false;
     auto const length = std::ssize(text);
 
     assert(length >= 2);
@@ -474,6 +475,7 @@ auto expand_string_literal(
             parts.add_code("cpp2::to_string" + chunk);
 
             current_start = pos+1;
+            expanded_interpolation = true;
         }
     }
 
@@ -488,8 +490,17 @@ auto expand_string_literal(
         parts.add_string(text.substr(current_start, std::ssize(text)-current_start-1));
     }
 
+    //  Only for expand_string_literal: If we expanded any interpolations,
+    //  parenthesize the result to support cases like "(1)$+".append("2 is 2")
+    //  But don't do this for expand_raw_string_literal, where injecting a ) can
+    //  interfere with the closing sequence... raw literals really are raw-er
+    if (expanded_interpolation) {
+        return "(" + parts.generate() + ")";
+    }
+    //  Else
     return parts.generate();
 }
+
 
 auto expand_raw_string_literal(
     const std::string&           opening_seq,
@@ -816,7 +827,7 @@ auto lex_line(
             source_position(lineno, i + 1),
             type
             });
-        i += num-1;
+        i += unsafe_narrow<int>(num-1);
 
         merge_cpp1_multi_token_fundamental_type_names();
         merge_operator_function_names();
@@ -872,8 +883,11 @@ auto lex_line(
     };
 
     //G universal-character-name:
-    //G     '\u' hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit
-    //G     '\U' hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit
+    //G     '\u' hex-quad
+    //G     '\U' hex-quad hex-quad
+    //G
+    //G hex-quad:
+    //G     hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit
     //G
     auto peek_is_universal_character_name = [&](colno_t offset)
     {
@@ -1066,7 +1080,7 @@ auto lex_line(
         auto parts = expand_raw_string_literal(opening_seq, closing_seq, closing_strategy, part, errors, source_position(lineno, pos_to_replace + 1));
         auto new_part = parts.generate();
         mutable_line.replace( pos_to_replace, size_to_replace, new_part );
-        i += std::ssize(new_part)-1;
+        i += unsafe_narrow<colno_t>(std::ssize(new_part)-1);
 
         if (parts.is_expanded()) {
             // raw string was expanded and we need to repeat the processing of this line
@@ -1147,7 +1161,7 @@ auto lex_line(
                 auto closing_strategy = end_pos == line.npos ? string_parts::no_ends : string_parts::on_the_end;
                 auto size_to_replace  = end_pos == line.npos ? std::ssize(line) - i  : end_pos - i + std::ssize(rsm.closing_seq);
 
-                if (interpolate_raw_string(rsm.opening_seq, rsm.closing_seq, closing_strategy, part, i, size_to_replace ) ) {
+                if (interpolate_raw_string(rsm.opening_seq, rsm.closing_seq, closing_strategy, part, i, unsafe_narrow<int>(size_to_replace) ) ) {
                     continue;
                 }
             }
@@ -1164,7 +1178,7 @@ auto lex_line(
             raw_string_multiline.value().text += raw_string_multiline.value().closing_seq;
 
             // and position where multiline_raw_string ends (needed for reseting line parsing)
-            i = end_pos+std::ssize(raw_string_multiline.value().closing_seq)-1;
+            i = unsafe_narrow<colno_t>(end_pos+std::ssize(raw_string_multiline.value().closing_seq)-1);
 
             const auto& text = raw_string_multiline.value().should_interpolate ? raw_string_multiline.value().text.substr(1) : raw_string_multiline.value().text;
             multiline_raw_strings.emplace_back(multiline_raw_string{ text, {lineno, i} });
@@ -1379,7 +1393,9 @@ auto lex_line(
                                     opening_seq,
                                     closing_seq,
                                     string_parts::on_both_ends,
-                                    std::string_view(&line[paren_pos+1], closing_pos-paren_pos-1), i, closing_pos-i+std::ssize(closing_seq))
+                                    std::string_view(&line[paren_pos+1], closing_pos-paren_pos-1),
+                                    i,
+                                    unsafe_narrow<int>(closing_pos-i+std::ssize(closing_seq)))
                             ) {
                                 continue;
                             }
@@ -1397,12 +1413,14 @@ auto lex_line(
                                     opening_seq,
                                     closing_seq,
                                     string_parts::on_the_beginning,
-                                    std::string_view(&line[paren_pos+1], std::ssize(line)-(paren_pos+1)), i, std::ssize(line)-i)
+                                    std::string_view(&line[paren_pos+1], std::ssize(line)-(paren_pos+1)),
+                                    i,
+                                    unsafe_narrow<int>(std::ssize(line)-i))
                             ) {
                                 continue;
                             }
                             // skip entire raw string opening sequence R"
-                            i = paren_pos;
+                            i = unsafe_narrow<int>(paren_pos);
 
                             // if we are on the end of the line we need to add new line char
                             if (i+1 == std::ssize(line)) {
@@ -1502,7 +1520,7 @@ auto lex_line(
                 //G     decimal-literal ''' digit [uU][lL][lL]
                 //G
                 //G floating-point-literal:
-                //G     digit { ' | digit }* . digit ({ ' | digit }*)? ([eE][-+]?digit { ' | digit }*) [fFlL]
+                //G     digit { ''' | digit }* . digit ({ ''' | digit }*)? ([eE][-+]?digit { ' | digit }*) [fFlL]
                 //G
                 //G TODO full grammar & refactor to utility functions with their
                 //G      own unit test rather than inline everything here
@@ -1594,7 +1612,7 @@ auto lex_line(
                             } else {
                                 raw_string_multiline.emplace(raw_string{source_position{lineno, i}, opening_seq, opening_seq, closing_seq });
                                 // skip entire raw string opening sequence R"
-                                i = paren_pos;
+                                i = unsafe_narrow<int>(paren_pos);
 
                                 // if we are on the end of the line we need to add new line char
                                 if (i+1 == std::ssize(line)) {
@@ -1842,7 +1860,7 @@ public:
 
             //  Create new map entry for the section starting at this line,
             //  and populate its tokens with the tokens in this section
-            auto lineno = std::distance(std::begin(lines), line);
+            auto lineno = unsafe_narrow<lineno_t>(std::distance(std::begin(lines), line));
 
             //  If this is generated code, use negative line numbers to
             //  inform and assist the printer

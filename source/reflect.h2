@@ -397,7 +397,7 @@ function_declaration: @copyable type =
         pre<this> (!has_initializer(), "cannot add an initializer to a function that already has one")
         pre<this> (parent_is_type(),   "cannot add an initializer to a function that isn't in a type scope")
     = {
-        //require( !has_initializer(), 
+        //require( !has_initializer(),
         //         "cannot add an initializer to a function that already has one");
         //require( parent_is_type(),
         //         "cannot add an initializer to a function that isn't in a type scope");
@@ -486,7 +486,7 @@ type_declaration: @copyable type =
         -> std::vector<function_declaration>
     = {
         ret: std::vector<function_declaration> = ();
-        for n*.get_type_scope_declarations(declaration_node::functions) 
+        for n*.get_type_scope_declarations(declaration_node::functions)
         do  (d) {
             _ = ret.emplace_back( d, this );
         }
@@ -868,6 +868,40 @@ partially_ordered_value: (inout t: meta::type_declaration) =
 
 //-----------------------------------------------------------------------
 //
+//     C.20: If you can avoid defining default operations, do
+//
+//     ##### Reason
+//
+//     It's the simplest and gives the cleanest semantics.
+//
+//     ...
+//
+//     This is known as "the rule of zero".
+//
+//          -- C++ Core Guidelines
+//             C.20: If you can avoid defining any default operations, do
+//             <https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rc-zero>
+//
+//-----------------------------------------------------------------------
+//
+//  cpp1_rule_of_zero
+//
+//  a type without declared copy/move/destructor functions
+//
+cpp1_rule_of_zero: (inout t: meta::type_declaration) =
+{
+    for t.get_member_functions() do (inout mf)
+    {
+        t.require( !mf.is_constructor_with_that()
+                   && !mf.is_assignment_with_that()
+                   && !mf.is_destructor(),
+                   "the rule of zero requires no copy/move/destructor functions");
+    }
+    t.disable_member_function_generation();
+}
+
+//-----------------------------------------------------------------------
+//
 //     "By definition, a `struct` is a `class` in which members
 //      are by default `public`; that is,
 //
@@ -905,7 +939,7 @@ struct: (inout t: meta::type_declaration) =
                        "a struct may not have a user-defined operator=");
         }
     }
-    t.disable_member_function_generation();
+    t.cpp1_rule_of_zero();
 }
 
 
@@ -1259,8 +1293,8 @@ union: (inout t : meta::type_declaration)
         storage += "), cpp2::max( ";
 
         (copy comma: std::string = "")
-        for  alternatives  
-        next comma = ", "  
+        for  alternatives
+        next comma = ", "
         do   (e) {
             storage += comma + "alignof((e.type)$)";
         }
@@ -1419,7 +1453,7 @@ apply_metafunctions: (
     for  rtype.get_members()
     do   (m)
     {
-        m.require( !m.name().starts_with("_") || m.name().ssize() > 1,
+        m.require( !m.name().starts_with("_") || m.name().ssize() == 1,
                     "a type that applies a metafunction cannot have a body that declares a name that starts with '_' - those names are reserved for the metafunction implementation");
     }
 
@@ -1471,6 +1505,9 @@ apply_metafunctions: (
         else if name == "partially_ordered_value" {
             partially_ordered_value( rtype );
         }
+        else if name == "cpp1_rule_of_zero" {
+            cpp1_rule_of_zero( rtype );
+        }
         else if name == "struct" {
             cpp2_struct( rtype );
         }
@@ -1491,7 +1528,7 @@ apply_metafunctions: (
         }
         else {
             error( "unrecognized metafunction name: " + name );
-            error( "(temporary alpha limitation) currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum, union, print, regex" );
+            error( "(temporary alpha limitation) currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum, union, cpp1_rule_of_zero, regex, print" );
             return false;
         }
 
