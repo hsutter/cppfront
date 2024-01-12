@@ -48,10 +48,7 @@ match_context: <CharT, Iter, max_groups: size_t> type =
         end = end_;
     }
 
-    operator=: (out this) = { // TODO: Remove
-        begin = ();
-        end = ();
-    }
+    operator=: (out this, that) = {}
 
     // Getter and setter for groups
     //
@@ -74,7 +71,7 @@ match_context: <CharT, Iter, max_groups: size_t> type =
 
     // Misc functions
     //
-    print_ranges: (in this, begin_) -> bstring<CharT> = { // TODO: Remove Argument
+    print_ranges: (in this) -> bstring<CharT> = {
         r: bstring<CharT> = "";
         for groups do (cur) {
             if cur.matched {
@@ -475,19 +472,53 @@ special_range_matcher_logic: <CharT, M, min_count: int, max_count: int, symbol: 
 //-----------------------------------------------------------------------
 //
 
-// TODO
+// Regular expression implementation
 regular_expression: <CharT, groups: size_t, Matcher> type = {
 
-    Iter: type == view<CharT>::const_iterator;
-    context: type == match_context<CharT, Iter, groups>;
+    context: <Iter> type == match_context<CharT, Iter, groups>;
 
-    search: (in this, str: view<CharT>, inout ctx: context) -> bool = {
-        ctx.begin = str.begin();
-        ctx.end = str.end();
-        cur := str.begin();
+    private get_iter: (str: view<CharT>, pos) -> _ = {
+        if pos < str.size() {
+            return str.begin() + pos;
+        }
+        else {
+            return str.end();
+        }
+    }
+
+    // TODO: Named multiple return has problems with templates.
+    search_return: <Iter> type = {
+        public matched: bool;
+        public ctx: context<Iter>;
+
+        operator=:(out this, matched_: bool, ctx_: context<Iter>) = {
+            matched = matched_;
+            ctx = ctx_;
+        }
+    }
+
+    match: (in this, str: view<CharT>)                 match(str.begin(), str.end());
+    match: (in this, str: view<CharT>, start)          match(get_iter(str, start), str.end());
+    match: (in this, str: view<CharT>, start, length)  match(get_iter(str, start), get_iter(str, start + length));
+    match: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> = {
+        ctx: context = (start, end);
+
+        r := Matcher::match(start, ctx);
+        return search_return(r.matched && r.pos == end, ctx);
+    }
+
+    search: (in this, str: view<CharT>)                 search(str.begin(), str.end());
+    search: (in this, str: view<CharT>, start)          search(get_iter(str, start), str.end());
+    search: (in this, str: view<CharT>, start, length)  search(get_iter(str, start), get_iter(str, start + length));
+    search: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> = {
+        matched := false;
+        ctx: context = (start, end);
+
+        cur:= start;
         while true next (cur++) {
             if Matcher::match(cur, ctx).matched {
-                return true;
+                matched = true;
+                break;
             }
 
             if cur == ctx.end {
@@ -495,12 +526,11 @@ regular_expression: <CharT, groups: size_t, Matcher> type = {
             }
         }
 
-        return false;
+        return search_return(matched, ctx);
     }
 
     to_string: (in this) -> _ = Matcher::to_string();
 }
-
 
 //-----------------------------------------------------------------------
 //

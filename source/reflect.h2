@@ -1428,10 +1428,7 @@ regex_gen: (inout t: meta::type_declaration) =
             name = "_" + name;
         }
 
-        t.add_member("regex(name)$: type == (regular_expression)$;");
-        //t.add_member("match(name)$: (in this, str: std::string) -> _ = regex(name)$().match(str);");
-        //t.add_member("match(name)$: (in this, str: std::string, out ctx: regex(name)$::context) -> _ = regex(name)$().match(str, ctx);");
-        //t.add_member("find(name)$: (in this, str: std::string, out ctx: regex(name)$::context) -> _ = regex(name)$().find(str, ctx);");
+        t.add_member("regex(name)$: (regular_expression)$ = ();");
     }
 }
 
