@@ -150,7 +150,7 @@ namespace N {
 #line 35 "pure2-types-order-independence-and-nesting.cpp2"
     auto X::exx(cpp2::in<int> count) const& -> void{
         //  Exercise '_' anonymous objects too while we're at it
-        cpp2::finally auto_37_9 {[&]() mutable -> void { std::cout << "leaving call to 'why(" + cpp2::to_string(count) + ")'\n";  }}; 
+        cpp2::finally auto_37_9 {[&]() mutable -> void { std::cout << ("leaving call to 'why(" + cpp2::to_string(count) + ")'\n");  }}; 
         if (cpp2::cmp_less(count,5)) {
             CPP2_UFCS(why)((*cpp2::assert_not_null(py)), count + 1);// use Y object from X
         }
@@ -172,7 +172,7 @@ namespace N {
 namespace M {
 
 #line 60 "pure2-types-order-independence-and-nesting.cpp2"
-        template <typename T, typename U> template <int I> template<typename V, int J, typename W> auto A<T,U>::B<I>::f(W const& w) -> void { std::cout << "hallo " + cpp2::to_string(w) + "\n";  }
+        template <typename T, typename U> template <int I> template<typename V, int J, typename W> auto A<T,U>::B<I>::f(W const& w) -> void { std::cout << ("hallo " + cpp2::to_string(w) + "\n");  }
 
 #line 64 "pure2-types-order-independence-and-nesting.cpp2"
 }

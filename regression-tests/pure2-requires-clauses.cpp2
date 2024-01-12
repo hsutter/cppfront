@@ -15,9 +15,12 @@ f:  <T: type, U: type>
     return a * b;
 }
 
+f: (x) -> int requires true == x;
+
 v: <T> const T requires std::same_as<T, i32> = 0;
 
 main: () = {
     _: X<int,int> = ();
-    std::cout << f<int,int>(2,5);
+    std::cout << f<int,int>(2,5)
+              << f(0);
 }

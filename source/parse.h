@@ -4962,7 +4962,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
 
     auto metafunctions = std::string{};
     {
-    auto as_comment = 
+    auto as_comment =
         !n.metafunctions.empty()
         && !include_metafunctions_list;
     if (as_comment) {
@@ -7222,7 +7222,7 @@ private:
         }
 
         if (curr().type() != lexeme::Semicolon) {
-            error("expected ; at end of jump-statement");
+            error("expected ';' at end of '" + n->keyword->to_string() + "' statement");
             return {};
         }
         next();
@@ -8315,7 +8315,7 @@ private:
 
                 n->requires_pos = curr().position();
                 next();
-                auto e = logical_or_expression();
+                auto e = logical_or_expression(true, false);
                 if (!e) {
                     error("'requires' must be followed by an expression");
                     return {};

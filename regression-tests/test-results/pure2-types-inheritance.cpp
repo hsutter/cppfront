@@ -110,20 +110,20 @@ namespace N {
         , N::Machine<99>{ "Acme Corp. engineer tech" }{
 
 #line 22 "pure2-types-inheritance.cpp2"
-        std::cout << cpp2::to_string(name) + " checks in for the day's shift\n";
+        std::cout << (cpp2::to_string(name) + " checks in for the day's shift\n");
     }
 
     auto Cyborg::speak() const -> void { 
-        std::cout << cpp2::to_string(name) + " cracks a few jokes with a coworker\n";  }
+        std::cout << (cpp2::to_string(name) + " cracks a few jokes with a coworker\n");  }
 
     auto Cyborg::work() const -> void { 
-        std::cout << cpp2::to_string(name) + " carries some half-tonne crates of Fe2O3 to cold storage\n";  }
+        std::cout << (cpp2::to_string(name) + " carries some half-tonne crates of Fe2O3 to cold storage\n");  }
 
     auto Cyborg::print() const& -> void { 
-        std::cout << "printing: " + cpp2::to_string(name) + " lives at " + cpp2::to_string(address) + "\n";  }
+        std::cout << ("printing: " + cpp2::to_string(name) + " lives at " + cpp2::to_string(address) + "\n");  }
 
     Cyborg::~Cyborg() noexcept { 
-        std::cout << "Tired but satisfied after another successful day, " + cpp2::to_string(name) + " checks out and goes home to their family\n";  }
+        std::cout << ("Tired but satisfied after another successful day, " + cpp2::to_string(name) + " checks out and goes home to their family\n");  }
 
 #line 38 "pure2-types-inheritance.cpp2"
 auto make_speak(cpp2::in<Human> h) -> void{
