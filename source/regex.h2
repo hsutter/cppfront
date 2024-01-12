@@ -17,6 +17,13 @@ regex: namespace = {
 view: <CharT> type == std::basic_string_view<CharT>;
 bstring: <CharT> type == std::basic_string<CharT>;
 
+//-----------------------------------------------------------------------
+//
+//  Helper structures for the expression matching.
+//
+//-----------------------------------------------------------------------
+//
+
 match_group: @struct <Iter> type = {
     start: Iter = ();
     end: Iter = ();
@@ -31,23 +38,29 @@ match_return: @struct <Iter> type = {
 
 match_context: <CharT, Iter, max_groups: size_t> type =
 {
-    public groups: std::array<match_group<Iter>, max_groups> = ();
+    private groups: std::array<match_group<Iter>, max_groups> = ();
 
-    set_group_start: (inout this, pos, start) = {
-        groups[pos].start = start;
+    // Getter and setter for groups
+    //
+    get_group: (in this, group) groups[group];
+
+    set_group_end: (inout this, group, end) = {
+        groups[group].end = end;
+        groups[group].matched = true;
     }
 
-    set_group_end: (inout this, pos, end) = {
-        groups[pos].end = end;
-        groups[pos].matched = true;
+    set_group_invalid: (inout this, group) = {
+        groups[group].matched = false;
     }
 
-    set_group_invalid: (inout this, pos) = {
-        groups[pos].matched = false;
+    set_group_start: (inout this, group, start) = {
+        groups[group].start = start;
     }
 
-    get_group: (inout this, pos) groups[pos];
+    size: (in this) max_groups;
 
+    // Misc functions
+    //
     print_ranges: (in this, begin) -> bstring<CharT> = {
         r: bstring<CharT> = "";
         for groups do (cur) {
@@ -63,20 +76,28 @@ match_context: <CharT, Iter, max_groups: size_t> type =
     }
 }
 
-matcher_list: <List...> type = {
+//  Represents the remainder of the regular expression.
+//
+//  A matcher can ask this remainder if it would match. If yes a full match of the regular expression is found.
+//  Otherwise the matcher can try a different alternative.
+//
+match_tail: <CharT, List...> type = {
     match: <Iter> (begin: Iter, cur: Iter, end: Iter, inout ctx) match_select<Iter, List...>(begin, cur, end, ctx);
 
-    match_combine: <Iter, OtherList...> (begin: Iter, cur: Iter, end: Iter, inout ctx, _: matcher_list<OtherList...>)
+    match_combine: <Iter, OtherList...> (begin: Iter, cur: Iter, end: Iter, inout ctx, _: match_tail<CharT, OtherList...>)
         match_select<Iter, List..., OtherList...>(begin, cur, end, ctx);
 
     private match_select: <Iter, First, Other...> (begin: Iter, cur: Iter, end: Iter, inout ctx)
-        First::match(begin, cur, end, ctx, matcher_list<Other...>());
+        First::match(begin, cur, end, ctx, match_tail<CharT, Other...>());
     private match_select: <Iter> (begin: Iter, cur: Iter, end: Iter, inout ctx) match_return<Iter>(true, cur);
 
     reset_ranges: ( inout ctx) = (List::reset_ranges(ctx), ...);
-    to_string: () (bstring<char>() + ... + List::to_string());
+    to_string: () (bstring<CharT>() + ... + List::to_string());
 }
 
+no_match_tail: <CharT> type == match_tail<CharT>;
+
+// TODO
 regular_expression: <CharT, groups: size_t, Matcher> type = {
 
     Iter: type == view<CharT>::const_iterator;
@@ -101,18 +122,22 @@ regular_expression: <CharT, groups: size_t, Matcher> type = {
     to_string: (in this) -> _ = Matcher::to_string();
 }
 
+//  Regex syntax: |
+//  Example: ab|ba
+//
+//  Non greedy implementation. First alternative that matches is chosen.
 alternative_matcher_logic: <CharT, List ...> type = {
 
-    match: <Iter, Other> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Other) match_all<Iter, Other, List...>(begin, cur, end, ctx, Other());
-    private match_all: <Iter, Tail, First, Other ...> (begin: Iter, cur: Iter, end: Iter, inout ctx, _ : Tail) -> match_return<Iter> = {
-        r := First::match(begin, cur, end, ctx, Tail());
+    match: <Iter> (begin: Iter, cur: Iter, end: Iter, inout ctx, tail) match_all<Iter, List...>(begin, cur, end, ctx, tail);
+    private match_all: <Iter, First, Other ...> (begin: Iter, cur: Iter, end: Iter, inout ctx, tail) -> match_return<Iter> = {
+        r := First::match(begin, cur, end, ctx, tail);
         if r.matched {
             return r;
         } else {
             First::reset_ranges(ctx);
 
             if constexpr 0 != sizeof...(Other) {
-                return match_all<Iter, Tail, Other...>(begin, cur, end, ctx, Tail());
+                return match_all<Iter, Other...>(begin, cur, end, ctx, tail);
             } else {
                 return match_return<Iter>(false, end);
             }
@@ -356,7 +381,7 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
         return true;
     }
     private match_greedy: <Iter, Other> (count: int, begin: Iter, cur: Iter, last_valid: Iter, end: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
-        r:= M::match(begin, cur, end, ctx, matcher_list<>());
+        r:= M::match(begin, cur, end, ctx, no_match_tail<CharT>());
         if  is_below_upper_bound(count) && r.matched &&
             (is_below_lower_bound(count) || r.pos != cur)
         {
@@ -374,7 +399,7 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
             if o.matched {
                 // Rematch M to set the groups.
                 M::reset_ranges(ctx);
-                _ = M::match(begin, last_valid, end, ctx, matcher_list<>());
+                _ = M::match(begin, last_valid, end, ctx, no_match_tail<CharT>());
             }
 
             return o;
@@ -763,7 +788,7 @@ regex_parser: <Error_out> type = {
     }
 
     create_matcher_from_list: (inout this, list)
-            "::cpp2::regex::list_matcher_logic<char, ::cpp2::regex::matcher_list<(join(list))$>>"
+            "::cpp2::regex::list_matcher_logic<char, ::cpp2::regex::match_tail<char, (join(list))$>>"
 
     create_matcher_from_state: (inout this) -> std::string = {
         if 0 == cur_state.alternate_match_lists.size() { return create_matcher_from_list(cur_state.cur_match_list); }
@@ -792,7 +817,7 @@ regex_parser: <Error_out> type = {
 
         inner := create_matcher_from_state();
         inner = "::cpp2::regex::group_matcher_start_logic<char, 0>, (inner)$, ::cpp2::regex::group_matcher_end_logic<char, 0>";
-        return "::cpp2::regex::regular_expression<char, (named_groups)$, ::cpp2::regex::matcher_list<(inner)$>>";
+        return "::cpp2::regex::regular_expression<char, (named_groups)$, ::cpp2::regex::match_tail<char, (inner)$>>";
     }
 
 }
