@@ -110,40 +110,87 @@ match_tail: <CharT, List...> type = {
 
 no_match_tail: <CharT> type == match_tail<CharT>;
 
-// TODO
-regular_expression: <CharT, groups: size_t, Matcher> type = {
+//-----------------------------------------------------------------------
+//
+//  Character classes for regular expressions.
+//
+//-----------------------------------------------------------------------
+//
 
-    Iter: type == view<CharT>::const_iterator;
-    context: type == match_context<CharT, Iter, groups>;
-
-    search: (in this, str: view<CharT>, inout ctx: context) -> bool = {
-        ctx.begin = str.begin();
-        ctx.end = str.end();
-        cur := str.begin();
-        while true next (cur++) {
-            if Matcher::match(cur, ctx).matched {
-                return true;
-            }
-
-            if cur == ctx.end {
-                break;
-            }
-        }
-
-        return false;
-    }
-
-    to_string: (in this) -> _ = Matcher::to_string();
+// Class syntax: <any character> Example: a
+//
+single_class_entry: <CharT, C: CharT> type =
+{
+    includes: (c: CharT) c == C;
+    to_string: ()        bstring<CharT>(1, C);
 }
 
-//  Regex syntax: |
-//  Example: ab|ba
+// Class syntax: - Example: a-c
+//
+range_class_entry: <CharT, Start: CharT, End: CharT> type =
+{
+    includes: (c: CharT) Start <= c <= End;
+    to_string:        () "(Start)$-(End)$";
+}
+
+// Helper for combining two character classes
+//
+combined_class_entry: <CharT, List ...> type = {
+    includes: (c: CharT) (false || ... || List::includes(c));
+    to_string: ()        ("" + ... + List::to_string());
+}
+
+// Class syntax: <list of characters>  Example: abcd
+//
+list_class_entry: <CharT, List ... : CharT> type = {
+    includes: (c: CharT) (false || ... || (List == c));
+    to_string: ()        ("" + ... + List);
+}
+
+// Class syntax: [:<class name:]  Example: [:alnum:]
+//
+named_class_entry: <CharT, Name: fixed_string, Inner> type = {
+    includes: (c: CharT) Inner::includes(c);
+    to_string: ()        "[:(Name.data())$:]";
+}
+
+
+// Named basic character classes
+//
+digits_class  : <CharT> type == named_class_entry<CharT, "digits", range_class_entry<CharT, '0', '9'>>;
+lower_class   : <CharT> type == named_class_entry<CharT, "lower", range_class_entry<CharT, 'a', 'z'>>;
+upper_class   : <CharT> type == named_class_entry<CharT, "upper", range_class_entry<CharT, 'A', 'Z'>>;
+
+// Named other classes
+//
+alnum_class   : <CharT> type == named_class_entry<CharT, "alnum", combined_class_entry<CharT, lower_class<CharT>, upper_class<CharT>, digits_class<CharT>>>;
+alpha_class   : <CharT> type == named_class_entry<CharT, "alpha", combined_class_entry<CharT, lower_class<CharT>, upper_class<CharT>>>;
+ascii_class   : <CharT> type == named_class_entry<CharT, "ascii", range_class_entry<CharT, '\x00', '\x7F'>>;
+blank_class   : <CharT> type == named_class_entry<CharT, "blank", list_class_entry<CharT, ' ', '\t'>>;
+cntrl_class   : <CharT> type == named_class_entry<CharT, "cntrl", combined_class_entry<CharT, range_class_entry<CharT, '\x00', '\x1F'>, single_class_entry<CharT, '\x7F'>>>;
+graph_class   : <CharT> type == named_class_entry<CharT, "graph", range_class_entry<CharT, '\x21', '\x7E'>>;
+print_class   : <CharT> type == named_class_entry<CharT, "print", range_class_entry<CharT, '\x20', '\x7E'>>;
+punct_class   : <CharT> type == named_class_entry<CharT, "punct", list_class_entry<CharT, '[','!','"','#','$','%','&','\'','(',')','*','+',',','-','.','/',':',';','<','=','>','?','@','[','\\',']','^','_','`','{','|','}','~',']'>>;
+space_class   : <CharT> type == named_class_entry<CharT, "space", list_class_entry<CharT, ' ', '\t', '\r', '\n', '\v', '\f'>>;
+word_class    : <CharT> type == named_class_entry<CharT, "word", combined_class_entry<CharT, alnum_class<CharT>, single_class_entry<CharT, '_'>>>;
+xdigit_class  : <CharT> type == named_class_entry<CharT, "xdigit", combined_class_entry<CharT, range_class_entry<CharT, 'A', 'F'>, range_class_entry<CharT, 'a', 'f'>, digits_class<CharT>>>;
+
+//-----------------------------------------------------------------------
+//
+//  Matchers for regular expressions.
+//
+//-----------------------------------------------------------------------
+//
+
+//  Regex syntax: |  Example: ab|ba
 //
 //  Non greedy implementation. First alternative that matches is chosen. 
+//
 alternative_matcher_logic: <CharT, List ...> type = {
 
-    match: (cur, inout ctx, tail) 
-            match_all<List...>(cur, ctx, tail);
+    match: (cur, inout ctx, tail)   match_all<List...>(cur, ctx, tail);
+    reset_ranges: (inout ctx)     = (List::reset_ranges(ctx) , ...);
+    to_string: ()                   (bstring<CharT>() + ... + ("|" + List::to_string())).substr(1); // substr: Remove first '|'.
 
     private match_all: <First, Next ...> (cur, inout ctx, tail) -> _ = {
         r := First::match(cur, ctx, tail);
@@ -159,12 +206,10 @@ alternative_matcher_logic: <CharT, List ...> type = {
             }
         }
     }
-
-    reset_ranges: (inout ctx) = (List::reset_ranges(ctx) , ...);
-
-    to_string: () (bstring<CharT>() + ... + ("|" + List::to_string())).substr(1); // substr: Remove first '|'.
 }
 
+//  Regex syntax: .
+//
 any_matcher_logic: <CharT> type =
 {
     match: <Other> (cur, inout ctx, _ : Other) -> _ = {
@@ -176,10 +221,11 @@ any_matcher_logic: <CharT> type =
     }
 
     reset_ranges: (inout ctx) = {}
-
-    to_string: () bstring<CharT>(1, '.');
+    to_string: ()               bstring<CharT>(1, '.');
 }
 
+// Regex syntax: <any character>  Example: a
+//
 char_matcher_logic: <CharT, C: CharT> type =
 {
     match: <Other> (cur, inout ctx, _ : Other) -> _ = {
@@ -190,55 +236,12 @@ char_matcher_logic: <CharT, C: CharT> type =
         }
     }
     reset_ranges: (inout ctx) = {}
-    to_string: () bstring<CharT>(1, C);
-}
-
-single_class_entry: <CharT, C: CharT> type =
-{
-    includes: (c: CharT) -> _ = c == C;
-    to_string: () -> _ = bstring<CharT>(1, C);
-}
-
-range_class_entry: <CharT, Start: CharT, End: CharT> type =
-{
-    includes: (c: CharT) -> _ = Start <= c <= End;
-    to_string: () -> _ = "(Start)$-(End)$";
-}
-
-and_class_entry: <CharT, List ...> type = {
-    includes: (c: CharT) (false || ... || List::includes(c));
-    to_string: () ("" + ... + List::to_string());
-}
-
-list_class_entry: <CharT, List ... : CharT> type = {
-    includes: (c: CharT) (false || ... || (List == c));
-    to_string: () ("" + ... + List);
-}
-
-named_class_entry: <CharT, Name: fixed_string, Inner> type = {
-    includes: (c: CharT) Inner::includes(c);
-    to_string: () "[:(Name.data())$:]";
+    to_string: ()               bstring<CharT>(1, C);
 }
 
 
-// Named character classes.
-digits_class  : <CharT> type == named_class_entry<CharT, "digits", range_class_entry<CharT, '0', '9'>>;
-lower_class   : <CharT> type == named_class_entry<CharT, "lower", range_class_entry<CharT, 'a', 'z'>>;
-upper_class   : <CharT> type == named_class_entry<CharT, "upper", range_class_entry<CharT, 'A', 'Z'>>;
-
-// Named classes.
-alnum_class   : <CharT> type == named_class_entry<CharT, "alnum", and_class_entry<CharT, lower_class<CharT>, upper_class<CharT>, digits_class<CharT>>>;
-alpha_class   : <CharT> type == named_class_entry<CharT, "alpha", and_class_entry<CharT, lower_class<CharT>, upper_class<CharT>>>;
-ascii_class   : <CharT> type == named_class_entry<CharT, "ascii", range_class_entry<CharT, '\x00', '\x7F'>>;
-blank_class   : <CharT> type == named_class_entry<CharT, "blank", list_class_entry<CharT, ' ', '\t'>>;
-cntrl_class   : <CharT> type == named_class_entry<CharT, "cntrl", and_class_entry<CharT, range_class_entry<CharT, '\x00', '\x1F'>, single_class_entry<CharT, '\x7F'>>>;
-graph_class   : <CharT> type == named_class_entry<CharT, "graph", range_class_entry<CharT, '\x21', '\x7E'>>;
-print_class   : <CharT> type == named_class_entry<CharT, "print", range_class_entry<CharT, '\x20', '\x7E'>>;
-punct_class   : <CharT> type == named_class_entry<CharT, "punct", list_class_entry<CharT, '[','!','"','#','$','%','&','\'','(',')','*','+',',','-','.','/',':',';','<','=','>','?','@','[','\\',']','^','_','`','{','|','}','~',']'>>;
-space_class   : <CharT> type == named_class_entry<CharT, "space", list_class_entry<CharT, ' ', '\t', '\r', '\n', '\v', '\f'>>;
-word_class    : <CharT> type == named_class_entry<CharT, "word", and_class_entry<CharT, alnum_class<CharT>, single_class_entry<CharT, '_'>>>;
-xdigit_class  : <CharT> type == named_class_entry<CharT, "xdigit", and_class_entry<CharT, range_class_entry<CharT, 'A', 'F'>, range_class_entry<CharT, 'a', 'f'>, digits_class<CharT>>>;
-
+// Regex syntax: [<character classes>]  Example: [abcx-y[:digits:]]
+//
 class_matcher_logic: <CharT, negate: bool, List ...> type =
 {
     match: <Other> (cur, inout ctx, _ : Other) -> _ = {
@@ -262,6 +265,7 @@ class_matcher_logic: <CharT, negate: bool, List ...> type =
     }
 
     reset_ranges: (inout ctx) = {}
+
     to_string: () -> bstring<CharT> = {
         r: bstring<CharT> = "[";
         if negate {
@@ -274,9 +278,12 @@ class_matcher_logic: <CharT, negate: bool, List ...> type =
     }
 }
 
+// Regex syntax: \<special character>  Example: \.
+//
 escaped_char_matcher_logic: <CharT, C: CharT> type =
 {
     this : char_matcher_logic<CharT, C> = ();
+    
     to_string: () "\\(C)$";
 }
 
@@ -449,6 +456,40 @@ special_range_matcher_logic: <CharT, M, min_count: int, max_count: int, symbol: 
     this: range_matcher_logic<CharT, M, min_count, max_count> = ();
     to_string: () M::to_string() + symbol;
 }
+
+//-----------------------------------------------------------------------
+//
+//  Regular expression implementation.
+//
+//-----------------------------------------------------------------------
+//
+
+// TODO
+regular_expression: <CharT, groups: size_t, Matcher> type = {
+
+    Iter: type == view<CharT>::const_iterator;
+    context: type == match_context<CharT, Iter, groups>;
+
+    search: (in this, str: view<CharT>, inout ctx: context) -> bool = {
+        ctx.begin = str.begin();
+        ctx.end = str.end();
+        cur := str.begin();
+        while true next (cur++) {
+            if Matcher::match(cur, ctx).matched {
+                return true;
+            }
+
+            if cur == ctx.end {
+                break;
+            }
+        }
+
+        return false;
+    }
+
+    to_string: (in this) -> _ = Matcher::to_string();
+}
+
 
 
 regex_parser_state: @struct type = {
