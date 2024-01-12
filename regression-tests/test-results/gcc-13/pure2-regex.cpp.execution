@@ -153,7 +153,7 @@ M2: OK regex: (a*)(ab)*(b*) parsed_regex: (a*)(ab)*(b*) str: abc result: (0,2)(0
 7: OK regex: (a*){2} parsed_regex: (a*){2} str: xxxxx result: (0,0)(0,0) expected_results (0,0)(0,0)
 8: OK regex: (a*)* parsed_regex: (a*)* str: a result: (0,1)(0,1) expected_results (0,1)(0,1)
 9: Failure: Ranges are wrong. regex: (aba|a*b)* parsed_regex: (aba|a*b)* str: ababa result: (0,4)(3,4) expected_results (0,5)(2,5)
-10: Failure: Ranges are wrong. regex: (a(b)?)+ parsed_regex: (a(b)?)+ str: aba result: (0,3)(2,3)(1,2) expected_results (0,3)(2,3)(?,?)
+10: OK regex: (a(b)?)+ parsed_regex: (a(b)?)+ str: aba result: (0,3)(2,3)(?,?) expected_results (0,3)(2,3)(?,?)
 11: OK regex: .*(.*) parsed_regex: .*(.*) str: ab result: (0,2)(2,2) expected_results (0,2)(2,2)
 12: OK regex: (a?)((ab)?)(b?)a?(ab)?b? parsed_regex: (a?)((ab)?)(b?)a?(ab)?b? str: abab result: (0,4)(0,1)(1,1)(?,?)(1,2)(?,?) expected_results (0,4)(0,1)(1,1)(?,?)(1,2)(?,?)
 M12: OK regex: (a?)((ab)?)(b?)a?(ab)?b? parsed_regex: (a?)((ab)?)(b?)a?(ab)?b? str: abab result: (0,4)(0,1)(1,1)(?,?)(1,2)(?,?) expected_results (0,4)(0,1)(1,1)(?,?)(1,2)(2,4)
@@ -230,7 +230,7 @@ Running nullsub3:
 11: OK regex: (a+)* parsed_regex: (a+)* str: aaaaaa result: (0,6)(0,6) expected_results (0,6)(0,6)
 12: OK regex: (a+)* parsed_regex: (a+)* str: aaaaaax result: (0,6)(0,6) expected_results (0,6)(0,6)
 13: OK regex: (a+)+ parsed_regex: (a+)+ str: a result: (0,1)(0,1) expected_results (0,1)(0,1)
-14: OK regex: (a+)+ parsed_regex: (a+)+ str: x result: (?,?)(?,?) expected_results NOMATCH
+14: OK regex: (a+)+ parsed_regex: (a+)+ str: x result: NOMATCH expected_results NOMATCH
 15: OK regex: (a+)+ parsed_regex: (a+)+ str: aaaaaa result: (0,6)(0,6) expected_results (0,6)(0,6)
 16: OK regex: (a+)+ parsed_regex: (a+)+ str: aaaaaax result: (0,6)(0,6) expected_results (0,6)(0,6)
 17: OK regex: ([a]*)* parsed_regex: ([a]*)* str: a result: (0,1)(0,1) expected_results (0,1)(0,1)
@@ -270,40 +270,40 @@ Running nullsub3:
 54: OK regex: (a*){2}(x) parsed_regex: (a*){2}(x) str: axa result: (0,2)(1,1)(1,2) expected_results (0,2)(1,1)(1,2)
 
 Running repetition2:
-1: OK regex: ((..)|(.)) parsed_regex: ((..)|(.)) str: NULL result: (?,?)(?,?)(?,?)(?,?) expected_results NOMATCH
-2: OK regex: ((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.)) str: NULL result: (?,?)(?,?)(?,?)(?,?)(?,?)(?,?)(?,?) expected_results NOMATCH
-3: OK regex: ((..)|(.))((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.))((..)|(.)) str: NULL result: (?,?)(?,?)(?,?)(?,?)(?,?)(?,?)(?,?)(?,?)(?,?)(?,?) expected_results NOMATCH
-4: OK regex: ((..)|(.)){1} parsed_regex: ((..)|(.)){1} str: NULL result: (?,?)(?,?)(?,?)(?,?) expected_results NOMATCH
-5: OK regex: ((..)|(.)){2} parsed_regex: ((..)|(.)){2} str: NULL result: (?,?)(?,?)(?,?)(?,?) expected_results NOMATCH
-6: OK regex: ((..)|(.)){3} parsed_regex: ((..)|(.)){3} str: NULL result: (?,?)(?,?)(?,?)(?,?) expected_results NOMATCH
+1: OK regex: ((..)|(.)) parsed_regex: ((..)|(.)) str: NULL result: NOMATCH expected_results NOMATCH
+2: OK regex: ((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.)) str: NULL result: NOMATCH expected_results NOMATCH
+3: OK regex: ((..)|(.))((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.))((..)|(.)) str: NULL result: NOMATCH expected_results NOMATCH
+4: OK regex: ((..)|(.)){1} parsed_regex: ((..)|(.)){1} str: NULL result: NOMATCH expected_results NOMATCH
+5: OK regex: ((..)|(.)){2} parsed_regex: ((..)|(.)){2} str: NULL result: NOMATCH expected_results NOMATCH
+6: OK regex: ((..)|(.)){3} parsed_regex: ((..)|(.)){3} str: NULL result: NOMATCH expected_results NOMATCH
 7: OK regex: ((..)|(.))* parsed_regex: ((..)|(.))* str: NULL result: (0,0)(?,?)(?,?)(?,?) expected_results (0,0)(?,?)(?,?)(?,?)
 8: OK regex: ((..)|(.)) parsed_regex: ((..)|(.)) str: a result: (0,1)(0,1)(?,?)(0,1) expected_results (0,1)(0,1)(?,?)(0,1)
-9: OK regex: ((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.)) str: a result: (?,?)(0,1)(?,?)(?,?)(?,?)(?,?)(?,?) expected_results NOMATCH
-10: OK regex: ((..)|(.))((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.))((..)|(.)) str: a result: (?,?)(0,1)(?,?)(?,?)(?,?)(?,?)(?,?)(?,?)(?,?)(?,?) expected_results NOMATCH
+9: OK regex: ((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.)) str: a result: NOMATCH expected_results NOMATCH
+10: OK regex: ((..)|(.))((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.))((..)|(.)) str: a result: NOMATCH expected_results NOMATCH
 11: OK regex: ((..)|(.)){1} parsed_regex: ((..)|(.)){1} str: a result: (0,1)(0,1)(?,?)(0,1) expected_results (0,1)(0,1)(?,?)(0,1)
-12: OK regex: ((..)|(.)){2} parsed_regex: ((..)|(.)){2} str: a result: (?,?)(?,?)(?,?)(?,?) expected_results NOMATCH
-13: OK regex: ((..)|(.)){3} parsed_regex: ((..)|(.)){3} str: a result: (?,?)(?,?)(?,?)(?,?) expected_results NOMATCH
+12: OK regex: ((..)|(.)){2} parsed_regex: ((..)|(.)){2} str: a result: NOMATCH expected_results NOMATCH
+13: OK regex: ((..)|(.)){3} parsed_regex: ((..)|(.)){3} str: a result: NOMATCH expected_results NOMATCH
 14: OK regex: ((..)|(.))* parsed_regex: ((..)|(.))* str: a result: (0,1)(0,1)(?,?)(0,1) expected_results (0,1)(0,1)(?,?)(0,1)
 15: OK regex: ((..)|(.)) parsed_regex: ((..)|(.)) str: aa result: (0,2)(0,2)(0,2)(?,?) expected_results (0,2)(0,2)(0,2)(?,?)
 16: OK regex: ((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.)) str: aa result: (0,2)(0,1)(?,?)(0,1)(1,2)(?,?)(1,2) expected_results (0,2)(0,1)(?,?)(0,1)(1,2)(?,?)(1,2)
-17: OK regex: ((..)|(.))((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.))((..)|(.)) str: aa result: (?,?)(1,2)(?,?)(?,?)(1,2)(?,?)(?,?)(?,?)(?,?)(?,?) expected_results NOMATCH
+17: OK regex: ((..)|(.))((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.))((..)|(.)) str: aa result: NOMATCH expected_results NOMATCH
 18: OK regex: ((..)|(.)){1} parsed_regex: ((..)|(.)){1} str: aa result: (0,2)(0,2)(0,2)(?,?) expected_results (0,2)(0,2)(0,2)(?,?)
-19: Failure: Regex should apply. regex: ((..)|(.)){2} parsed_regex: ((..)|(.)){2} str: aa result: (?,?)(?,?)(?,?)(?,?) expected_results (0,2)(1,2)(?,?)(1,2)
-20: OK regex: ((..)|(.)){3} parsed_regex: ((..)|(.)){3} str: aa result: (?,?)(?,?)(?,?)(?,?) expected_results NOMATCH
+19: Failure: Regex should apply. regex: ((..)|(.)){2} parsed_regex: ((..)|(.)){2} str: aa result: NOMATCH expected_results (0,2)(1,2)(?,?)(1,2)
+20: OK regex: ((..)|(.)){3} parsed_regex: ((..)|(.)){3} str: aa result: NOMATCH expected_results NOMATCH
 21: OK regex: ((..)|(.))* parsed_regex: ((..)|(.))* str: aa result: (0,2)(0,2)(0,2)(?,?) expected_results (0,2)(0,2)(0,2)(?,?)
 22: OK regex: ((..)|(.)) parsed_regex: ((..)|(.)) str: aaa result: (0,2)(0,2)(0,2)(?,?) expected_results (0,2)(0,2)(0,2)(?,?)
 23: OK regex: ((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.)) str: aaa result: (0,3)(0,2)(0,2)(?,?)(2,3)(?,?)(2,3) expected_results (0,3)(0,2)(0,2)(?,?)(2,3)(?,?)(2,3)
 24: OK regex: ((..)|(.))((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.))((..)|(.)) str: aaa result: (0,3)(0,1)(?,?)(0,1)(1,2)(?,?)(1,2)(2,3)(?,?)(2,3) expected_results (0,3)(0,1)(?,?)(0,1)(1,2)(?,?)(1,2)(2,3)(?,?)(2,3)
 25: OK regex: ((..)|(.)){1} parsed_regex: ((..)|(.)){1} str: aaa result: (0,2)(0,2)(0,2)(?,?) expected_results (0,2)(0,2)(0,2)(?,?)
 26: OK regex: ((..)|(.)){2} parsed_regex: ((..)|(.)){2} str: aaa result: (0,3)(2,3)(?,?)(2,3) expected_results (0,3)(2,3)(?,?)(2,3)
-27: Failure: Regex should apply. regex: ((..)|(.)){3} parsed_regex: ((..)|(.)){3} str: aaa result: (?,?)(?,?)(?,?)(?,?) expected_results (0,3)(2,3)(?,?)(2,3)
+27: Failure: Regex should apply. regex: ((..)|(.)){3} parsed_regex: ((..)|(.)){3} str: aaa result: NOMATCH expected_results (0,3)(2,3)(?,?)(2,3)
 28: OK regex: ((..)|(.))* parsed_regex: ((..)|(.))* str: aaa result: (0,3)(2,3)(?,?)(2,3) expected_results (0,3)(2,3)(?,?)(2,3)
 29: OK regex: ((..)|(.)) parsed_regex: ((..)|(.)) str: aaaa result: (0,2)(0,2)(0,2)(?,?) expected_results (0,2)(0,2)(0,2)(?,?)
 30: OK regex: ((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.)) str: aaaa result: (0,4)(0,2)(0,2)(?,?)(2,4)(2,4)(?,?) expected_results (0,4)(0,2)(0,2)(?,?)(2,4)(2,4)(?,?)
 31: OK regex: ((..)|(.))((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.))((..)|(.)) str: aaaa result: (0,4)(0,2)(0,2)(?,?)(2,3)(?,?)(2,3)(3,4)(?,?)(3,4) expected_results (0,4)(0,2)(0,2)(?,?)(2,3)(?,?)(2,3)(3,4)(?,?)(3,4)
 32: OK regex: ((..)|(.)){1} parsed_regex: ((..)|(.)){1} str: aaaa result: (0,2)(0,2)(0,2)(?,?) expected_results (0,2)(0,2)(0,2)(?,?)
 33: OK regex: ((..)|(.)){2} parsed_regex: ((..)|(.)){2} str: aaaa result: (0,4)(2,4)(2,4)(?,?) expected_results (0,4)(2,4)(2,4)(?,?)
-34: Failure: Regex should apply. regex: ((..)|(.)){3} parsed_regex: ((..)|(.)){3} str: aaaa result: (?,?)(?,?)(?,?)(?,?) expected_results (0,4)(3,4)(?,?)(3,4)
+34: Failure: Regex should apply. regex: ((..)|(.)){3} parsed_regex: ((..)|(.)){3} str: aaaa result: NOMATCH expected_results (0,4)(3,4)(?,?)(3,4)
 35: OK regex: ((..)|(.))* parsed_regex: ((..)|(.))* str: aaaa result: (0,4)(2,4)(2,4)(?,?) expected_results (0,4)(2,4)(2,4)(?,?)
 36: OK regex: ((..)|(.)) parsed_regex: ((..)|(.)) str: aaaaa result: (0,2)(0,2)(0,2)(?,?) expected_results (0,2)(0,2)(0,2)(?,?)
 37: OK regex: ((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.)) str: aaaaa result: (0,4)(0,2)(0,2)(?,?)(2,4)(2,4)(?,?) expected_results (0,4)(0,2)(0,2)(?,?)(2,4)(2,4)(?,?)
@@ -327,7 +327,7 @@ Running repetition2:
 105: OK regex: X(.?){5,}Y parsed_regex: X(.?){5,}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
 106: OK regex: X(.?){6,}Y parsed_regex: X(.?){6,}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
 107: OK regex: X(.?){7,}Y parsed_regex: X(.?){7,}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
-108: Failure: Regex should apply. regex: X(.?){8,}Y parsed_regex: X(.?){8,}Y str: X1234567Y result: (?,?)(?,?) expected_results (0,9)(8,8)
+108: Failure: Regex should apply. regex: X(.?){8,}Y parsed_regex: X(.?){8,}Y str: X1234567Y result: NOMATCH expected_results (0,9)(8,8)
 110: OK regex: X(.?){0,8}Y parsed_regex: X(.?){0,8}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
 111: OK regex: X(.?){1,8}Y parsed_regex: X(.?){1,8}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
 112: OK regex: X(.?){2,8}Y parsed_regex: X(.?){2,8}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
@@ -336,17 +336,17 @@ Running repetition2:
 115: OK regex: X(.?){5,8}Y parsed_regex: X(.?){5,8}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
 116: OK regex: X(.?){6,8}Y parsed_regex: X(.?){6,8}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
 117: OK regex: X(.?){7,8}Y parsed_regex: X(.?){7,8}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
-118: Failure: Parsed regex does not match. regex: X(.?){8,8}Y parsed_regex: X(.?){8}Y str: X1234567Y result: (?,?)(?,?) expected_results (0,9)(8,8)
+118: Failure: Parsed regex does not match. regex: X(.?){8,8}Y parsed_regex: X(.?){8}Y str: X1234567Y result: NOMATCH expected_results (0,9)(8,8)
 260: Failure: Ranges are wrong. regex: (a|ab|c|bcd){0,}(d*) parsed_regex: (a|ab|c|bcd){0,}(d*) str: ababcd result: (0,1)(0,1)(1,1) expected_results (0,6)(3,6)(6,6)
 261: Failure: Ranges are wrong. regex: (a|ab|c|bcd){1,}(d*) parsed_regex: (a|ab|c|bcd){1,}(d*) str: ababcd result: (0,1)(0,1)(1,1) expected_results (0,6)(3,6)(6,6)
 262: Failure: Ranges are wrong. regex: (a|ab|c|bcd){2,}(d*) parsed_regex: (a|ab|c|bcd){2,}(d*) str: ababcd result: (2,6)(3,6)(6,6) expected_results (0,6)(3,6)(6,6)
-263: Failure: Regex should apply. regex: (a|ab|c|bcd){3,}(d*) parsed_regex: (a|ab|c|bcd){3,}(d*) str: ababcd result: (?,?)(?,?)(?,?) expected_results (0,6)(3,6)(6,6)
-264: OK regex: (a|ab|c|bcd){4,}(d*) parsed_regex: (a|ab|c|bcd){4,}(d*) str: ababcd result: (?,?)(?,?)(?,?) expected_results NOMATCH
+263: Failure: Regex should apply. regex: (a|ab|c|bcd){3,}(d*) parsed_regex: (a|ab|c|bcd){3,}(d*) str: ababcd result: NOMATCH expected_results (0,6)(3,6)(6,6)
+264: OK regex: (a|ab|c|bcd){4,}(d*) parsed_regex: (a|ab|c|bcd){4,}(d*) str: ababcd result: NOMATCH expected_results NOMATCH
 265: Failure: Ranges are wrong. regex: (a|ab|c|bcd){0,10}(d*) parsed_regex: (a|ab|c|bcd){0,10}(d*) str: ababcd result: (0,1)(0,1)(1,1) expected_results (0,6)(3,6)(6,6)
 266: Failure: Ranges are wrong. regex: (a|ab|c|bcd){1,10}(d*) parsed_regex: (a|ab|c|bcd){1,10}(d*) str: ababcd result: (0,1)(0,1)(1,1) expected_results (0,6)(3,6)(6,6)
 267: Failure: Ranges are wrong. regex: (a|ab|c|bcd){2,10}(d*) parsed_regex: (a|ab|c|bcd){2,10}(d*) str: ababcd result: (2,6)(3,6)(6,6) expected_results (0,6)(3,6)(6,6)
-268: Failure: Regex should apply. regex: (a|ab|c|bcd){3,10}(d*) parsed_regex: (a|ab|c|bcd){3,10}(d*) str: ababcd result: (?,?)(?,?)(?,?) expected_results (0,6)(3,6)(6,6)
-269: OK regex: (a|ab|c|bcd){4,10}(d*) parsed_regex: (a|ab|c|bcd){4,10}(d*) str: ababcd result: (?,?)(?,?)(?,?) expected_results NOMATCH
+268: Failure: Regex should apply. regex: (a|ab|c|bcd){3,10}(d*) parsed_regex: (a|ab|c|bcd){3,10}(d*) str: ababcd result: NOMATCH expected_results (0,6)(3,6)(6,6)
+269: OK regex: (a|ab|c|bcd){4,10}(d*) parsed_regex: (a|ab|c|bcd){4,10}(d*) str: ababcd result: NOMATCH expected_results NOMATCH
 270: Failure: Ranges are wrong. regex: (a|ab|c|bcd)*(d*) parsed_regex: (a|ab|c|bcd)*(d*) str: ababcd result: (0,1)(0,1)(1,1) expected_results (0,6)(3,6)(6,6)
 271: Failure: Ranges are wrong. regex: (a|ab|c|bcd)+(d*) parsed_regex: (a|ab|c|bcd)+(d*) str: ababcd result: (0,1)(0,1)(1,1) expected_results (0,6)(3,6)(6,6)
 
@@ -379,7 +379,7 @@ Running totest:
 27: Failure: Ranges are wrong. regex: (a|ab|ba)* parsed_regex: (a|ab|ba)* str: aba result: (0,3)(1,3) expected_results (0,3)(2,3)
 28: OK regex: (aba|a*b) parsed_regex: (aba|a*b) str: ababa result: (0,3)(0,3) expected_results (0,3)(0,3)
 29: Failure: Ranges are wrong. regex: (aba|a*b)(aba|a*b) parsed_regex: (aba|a*b)(aba|a*b) str: ababa result: (0,4)(0,3)(3,4) expected_results (0,5)(0,2)(2,5)
-1029: OK regex: (aba|a*b)(aba|a*b)(aba|a*b) parsed_regex: (aba|a*b)(aba|a*b)(aba|a*b) str: ababa result: (?,?)(3,4)(2,4)(?,?) expected_results NOMATCH
+1029: OK regex: (aba|a*b)(aba|a*b)(aba|a*b) parsed_regex: (aba|a*b)(aba|a*b)(aba|a*b) str: ababa result: NOMATCH expected_results NOMATCH
 30: Failure: Ranges are wrong. regex: (aba|a*b)* parsed_regex: (aba|a*b)* str: ababa result: (0,4)(3,4) expected_results (0,5)(2,5)
 31: OK regex: (aba|ab|a) parsed_regex: (aba|ab|a) str: ababa result: (0,3)(0,3) expected_results (0,3)(0,3)
 32: OK regex: (aba|ab|a)(aba|ab|a) parsed_regex: (aba|ab|a)(aba|ab|a) str: ababa result: (0,5)(0,2)(2,5) expected_results (0,5)(0,2)(2,5)
@@ -387,7 +387,7 @@ Running totest:
 33: Failure: Ranges are wrong. regex: (aba|ab|a)* parsed_regex: (aba|ab|a)* str: ababa result: (0,3)(0,3) expected_results (0,5)(2,5)
 34: OK regex: (a(b)?) parsed_regex: (a(b)?) str: aba result: (0,2)(0,2)(1,2) expected_results (0,2)(0,2)(1,2)
 35: OK regex: (a(b)?)(a(b)?) parsed_regex: (a(b)?)(a(b)?) str: aba result: (0,3)(0,2)(1,2)(2,3)(?,?) expected_results (0,3)(0,2)(1,2)(2,3)(?,?)
-36: Failure: Ranges are wrong. regex: (a(b)?)+ parsed_regex: (a(b)?)+ str: aba result: (0,3)(2,3)(1,2) expected_results (0,3)(2,3)(?,?)
+36: OK regex: (a(b)?)+ parsed_regex: (a(b)?)+ str: aba result: (0,3)(2,3)(?,?) expected_results (0,3)(2,3)(?,?)
 37: OK regex: (.*)(.*) parsed_regex: (.*)(.*) str: xx result: (0,2)(0,2)(2,2) expected_results (0,2)(0,2)(2,2)
 38: OK regex: .*(.*) parsed_regex: .*(.*) str: xx result: (0,2)(2,2) expected_results (0,2)(2,2)
 39: OK regex: (a.*z|b.*y) parsed_regex: (a.*z|b.*y) str: azbazby result: (0,5)(0,5) expected_results (0,5)(0,5)
@@ -397,8 +397,8 @@ Running totest:
 43: Failure: Ranges are wrong. regex: ((..)*(...)*) parsed_regex: ((..)*(...)*) str: xxx result: (0,2)(0,2)(0,2)(?,?) expected_results (0,3)(0,3)(?,?)(0,3)
 44: Failure: Ranges are wrong. regex: ((..)*(...)*)((..)*(...)*) parsed_regex: ((..)*(...)*)((..)*(...)*) str: xxx result: (0,2)(0,2)(0,2)(?,?)(2,2)(?,?)(?,?) expected_results (0,3)(0,3)(?,?)(0,3)(3,3)(?,?)(?,?)
 45: Failure: Ranges are wrong. regex: ((..)*(...)*)* parsed_regex: ((..)*(...)*)* str: xxx result: (0,2)(0,2)(0,2)(?,?) expected_results (0,3)(0,3)(?,?)(0,3)
-83: Failure: Ranges are wrong. regex: (aa(b(b))?)+ parsed_regex: (aa(b(b))?)+ str: aabbaa result: (0,6)(4,6)(2,4)(3,4) expected_results (0,6)(4,6)(?,?)(?,?)
-84: Failure: Ranges are wrong. regex: (a(b)?)+ parsed_regex: (a(b)?)+ str: aba result: (0,3)(2,3)(1,2) expected_results (0,3)(2,3)(?,?)
+83: OK regex: (aa(b(b))?)+ parsed_regex: (aa(b(b))?)+ str: aabbaa result: (0,6)(4,6)(?,?)(?,?) expected_results (0,6)(4,6)(?,?)(?,?)
+84: OK regex: (a(b)?)+ parsed_regex: (a(b)?)+ str: aba result: (0,3)(2,3)(?,?) expected_results (0,3)(2,3)(?,?)
 85: OK regex: ([ab]+)([bc]+)([cd]*) parsed_regex: ([ab]+)([bc]+)([cd]*) str: abcd result: (0,4)(0,2)(2,3)(3,4) expected_results (0,4)(0,2)(2,3)(3,4)
 90: OK regex: ^(A([^B]*))?(B(.*))? parsed_regex: ^(A([^B]*))?(B(.*))? str: Aa result: (0,2)(0,2)(1,2)(?,?)(?,?) expected_results (0,2)(0,2)(1,2)(?,?)(?,?)
 91: OK regex: ^(A([^B]*))?(B(.*))? parsed_regex: ^(A([^B]*))?(B(.*))? str: Bb result: (0,2)(?,?)(?,?)(0,2)(1,2) expected_results (0,2)(?,?)(?,?)(0,2)(1,2)
@@ -424,12 +424,12 @@ Running totest:
 215: OK regex: ((a)|(b)){2,} parsed_regex: ((a)|(b)){2,} str: ab result: (0,2)(1,2)(?,?)(1,2) expected_results (0,2)(1,2)(?,?)(1,2)
 216: OK regex: .()|((.)?) parsed_regex: .()|((.)?) str: NULL result: (0,0)(?,?)(0,0)(?,?) expected_results (0,0)(?,?)(0,0)(?,?)
 217: OK regex: (.|\$){2,} parsed_regex: (.|\$){2,} str: xx result: (0,2)(1,2) expected_results (0,2)(1,2)
-218: Failure: Parsed regex does not match. regex: (.|\$){2,2} parsed_regex: (.|\$){2} str: xx result: (?,?)(?,?) expected_results (0,2)(1,2)
+218: Failure: Parsed regex does not match. regex: (.|\$){2,2} parsed_regex: (.|\$){2} str: xx result: NOMATCH expected_results (0,2)(1,2)
 219: OK regex: (.){2,} parsed_regex: (.){2,} str: xx result: (0,2)(1,2) expected_results (0,2)(1,2)
-220: Failure: Parsed regex does not match. regex: (a|())(b|())(c|()) parsed_regex: ab()c|ab()c() str: abc result: (?,?)(?,?)(?,?)(?,?) expected_results (0,3)(0,1)(?,?)(1,2)(?,?)(2,3)(?,?)
-220: Failure: Ranges are wrong. regex: ab()c|ab()c() parsed_regex: ab()c|ab()c() str: abc result: (0,3)(2,2)(?,?)(?,?) expected_results (0,3)(2,2)(-1,-1)(-1,-1)
+220: OK regex: (a|())(b|())(c|()) parsed_regex: (a|())(b|())(c|()) str: abc result: (0,3)(0,1)(?,?)(1,2)(?,?)(2,3)(?,?) expected_results (0,3)(0,1)(?,?)(1,2)(?,?)(2,3)(?,?)
+230: Failure: Ranges are wrong. regex: ab()c|ab()c() parsed_regex: ab()c|ab()c() str: abc result: (0,3)(2,2)(?,?)(?,?) expected_results (0,3)(2,2)(-1,-1)(-1,-1)
 250: Failure: Ranges are wrong. regex: (b(c)|d(e))* parsed_regex: (b(c)|d(e))* str: bcde result: (0,4)(2,4)(?,?)(3,4) expected_results (0,4)(2,4)(-1,-1)(3,4)
-251: Failure: Ranges are wrong. regex: (a(b)*)* parsed_regex: (a(b)*)* str: aba result: (0,3)(2,3)(1,2) expected_results (0,3)(2,3)(-1,-1)
+251: Failure: Ranges are wrong. regex: (a(b)*)* parsed_regex: (a(b)*)* str: aba result: (0,3)(2,3)(?,?) expected_results (0,3)(2,3)(-1,-1)
 
 Running osx_bsd_critical:
 1: OK regex: (()|.)(b) parsed_regex: (()|.)(b) str: ab result: (0,2)(0,1)(?,?)(1,2) expected_results (0,2)(0,1)(?,?)(1,2)
