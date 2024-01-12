@@ -32,6 +32,7 @@ jobs:
       run: |
         cd regression-tests
         bash run-tests.sh -c ${{ matrix.compiler }}
+      continue-on-error: true
 
     - name: Run regression tests - Windows version
       if: matrix.os == 'windows-latest'
@@ -41,3 +42,10 @@ jobs:
         cd regression-tests && ^
         bash run-tests.sh -c ${{ matrix.compiler }}
       shell: cmd
+      continue-on-error: true
+
+    - name: Upload patch
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.compiler }}-patch.diff
+        path: regression-tests/${{ matrix.compiler }}-patch.diff

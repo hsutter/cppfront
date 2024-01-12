@@ -32,7 +32,7 @@ check_file () {
         # Add the file to the index to be able to diff it...
         git add "$file"
         # ... print the diff ...
-        git --no-pager diff HEAD -- "$file"
+        git --no-pager diff HEAD -- "$file" | tee -a "$cxx_compiler-patch.diff"
         # ... and remove the file from the diff
         git rm --cached -- "$file" > /dev/null 2>&1
         
@@ -195,7 +195,7 @@ for test_file in $tests; do
         # The source is temporarily copied to avoid issues with bash paths in cl.exe
         (cd $exec_out_dir; \
          cp ../../$expected_src $generated_cpp_name;
-         $compiler_cmd"$test_bin" \
+         $compiler_cmd "$test_bin" \
                         $generated_cpp_name \
                         > $generated_cpp_name.output 2>&1)
         compilation_result=$?
