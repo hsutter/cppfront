@@ -32,17 +32,17 @@ check_file () {
         # Add the file to the index to be able to diff it...
         git add "$file"
         # ... print the diff ...
-        git --no-pager diff HEAD -- "$file"
+        git --no-pager diff HEAD -- "$file" | tee -a "$cxx_compiler-patch.diff"
         # ... and remove the file from the diff
         git rm --cached -- "$file" > /dev/null 2>&1
         
         failure=1
     else
-        # Compare the content with the refernece value checked in git
+        # Compare the content with the reference value checked in git
         diff_output=$(git diff --ignore-cr-at-eol -- "$file")
         if [[ -n "$diff_output" ]]; then
             echo "            Non-matching $description:"
-            printf "\n$diff_output\n\n"
+            printf "\n$diff_output\n\n" | tee -a "$cxx_compiler-patch.diff"
             failure=1
         fi
     fi
@@ -252,7 +252,7 @@ for test_file in $tests; do
 done
 
 ################
-# Report missing reference data direcotry
+# Report missing reference data directory
 if [[ ! -d "$exec_out_dir" ]]; then
     echo "Reference data directory not found for compiler: '$cxx_compiler'"
     exit 3

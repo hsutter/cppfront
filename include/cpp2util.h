@@ -45,15 +45,14 @@
             //  (but we'll have more full-C++20 compilers soon!)
             #ifdef _MSC_VER
                 #include "intrin.h"
+                //  Suppress spurious MSVC modules warning
+                #pragma warning(disable:5050)
             #endif
             import std.core;
             import std.filesystem;
             import std.memory;
             import std.regex;
             import std.threading;
-
-            //  Suppress spurious MSVC modules warning
-            #pragma warning(disable:5050)
         #endif
 
     //  Otherwise, as a fallback if 'import std;' was requested, or else
@@ -197,7 +196,9 @@
         #endif
         #include <stdexcept>
         #if __has_include(<stdfloat>)
-            #include <stdfloat>
+            #if !defined(_MSC_VER) || _HAS_CXX23
+                #include <stdfloat>
+            #endif
         #endif
         #ifdef __cpp_lib_jthread
             #include <stop_token>
@@ -388,8 +389,8 @@ struct String
 #define CPP2_MESSAGE_PARAM  char const*
 #define CPP2_CONTRACT_MSG   cpp2::message_to_cstr_adapter
 
-auto message_to_cstr_adapter( CPP2_MESSAGE_PARAM msg ) -> CPP2_MESSAGE_PARAM { return msg ? msg : ""; }
-auto message_to_cstr_adapter( std::string const& msg ) -> CPP2_MESSAGE_PARAM { return msg.c_str(); }
+inline auto message_to_cstr_adapter( CPP2_MESSAGE_PARAM msg ) -> CPP2_MESSAGE_PARAM { return msg ? msg : ""; }
+inline auto message_to_cstr_adapter( std::string const& msg ) -> CPP2_MESSAGE_PARAM { return msg.c_str(); }
 
 class contract_group {
 public:
@@ -467,31 +468,47 @@ auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> declty
 
 //  Subscript bounds checking
 //
-auto assert_in_bounds_impl(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> void
-    requires (std::is_integral_v<CPP2_TYPEOF(arg)> &&
-             requires { std::size(x); std::ssize(x); x[arg]; std::begin(x) + 2; })
-{
-    auto max = [&]() -> auto {
-        if constexpr (std::is_signed_v<CPP2_TYPEOF(arg)>) { return std::ssize(x); }
-        else { return std::size(x); }
-    };
-    auto msg = "out of bounds access attempt detected - attempted access at index " + std::to_string(arg) + ", ";
-    if (max() > 0 ) {
-        msg += "[min,max] range is [0," + std::to_string(max()-1) + "]";
-    }
-    else {
-        msg += "but container is empty";
-    }
-    if (!(0 <= arg && arg < max())) {
-        Bounds.report_violation(msg.c_str()  CPP2_SOURCE_LOCATION_ARG);
-    }
+#define CPP2_ASSERT_IN_BOUNDS_IMPL \
+    requires (std::is_integral_v<CPP2_TYPEOF(arg)> && \
+             requires { std::size(x); std::ssize(x); x[arg]; std::begin(x) + 2; }) \
+{ \
+    auto max = [&]() -> auto { \
+        if constexpr (std::is_signed_v<CPP2_TYPEOF(arg)>) { return std::ssize(x); } \
+        else { return std::size(x); } \
+    }; \
+    auto msg = "out of bounds access attempt detected - attempted access at index " + std::to_string(arg) + ", "; \
+    if (max() > 0 ) { \
+        msg += "[min,max] range is [0," + std::to_string(max()-1) + "]"; \
+    } \
+    else { \
+        msg += "but container is empty"; \
+    } \
+    if (!(0 <= arg && arg < max())) { \
+        Bounds.report_violation(msg.c_str()  CPP2_SOURCE_LOCATION_ARG); \
+    } \
+    return CPP2_FORWARD(x) [ arg ]; \
 }
 
-auto assert_in_bounds_impl(auto&&, auto&& CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> void
+template<auto arg>
+auto assert_in_bounds(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+    CPP2_ASSERT_IN_BOUNDS_IMPL
+
+auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+    CPP2_ASSERT_IN_BOUNDS_IMPL
+
+template<auto arg>
+auto assert_in_bounds(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
 {
+    return CPP2_FORWARD(x) [ arg ];
 }
 
-#define CPP2_ASSERT_IN_BOUNDS(x, arg) (cpp2::assert_in_bounds_impl((x),(arg)), (x)[(arg)])
+auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+{
+    return CPP2_FORWARD(x) [ CPP2_FORWARD(arg) ];
+}
+
+#define CPP2_ASSERT_IN_BOUNDS(x,arg)         (cpp2::assert_in_bounds((x),(arg)))
+#define CPP2_ASSERT_IN_BOUNDS_LITERAL(x,arg) (cpp2::assert_in_bounds<(arg)>(x))
 
 
 //-----------------------------------------------------------------------

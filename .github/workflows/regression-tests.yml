@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  regression-tests-linux-mac:
+  regression-tests:
     name: Run on ${{ matrix.os }} using ${{ matrix.compiler }}
     runs-on: ${{ matrix.os }}
     env:
@@ -19,6 +19,8 @@ jobs:
         os: [ubuntu-latest]
         compiler: [g++-10, g++-13]
         include:
+          - os: ubuntu-20.04
+            compiler: clang++-12
           - os: macos-13
             compiler: clang++
           - os: windows-latest
@@ -28,7 +30,7 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Run regression tests - Linux and macOS version
-      if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-13'
+      if: startsWith(matrix.os, 'ubuntu') || matrix.os == 'macos-13'
       run: |
         cd regression-tests
         bash run-tests.sh -c ${{ matrix.compiler }}
@@ -41,3 +43,11 @@ jobs:
         cd regression-tests && ^
         bash run-tests.sh -c ${{ matrix.compiler }}
       shell: cmd
+
+    - name: Upload patch
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.compiler }}-patch.diff
+        path: regression-tests/${{ matrix.compiler }}-patch.diff
+        if-no-files-found: ignore

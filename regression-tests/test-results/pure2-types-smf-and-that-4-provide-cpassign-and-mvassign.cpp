@@ -84,6 +84,7 @@ auto main() -> int;
 #line 16 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
     }
 
+#line 18 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
     auto myclass::operator=(myclass&& that) noexcept -> myclass& {
         name = std::move(that).name;
         addr = std::move(that).addr;
@@ -93,6 +94,7 @@ auto main() -> int;
 #line 20 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
     }
 
+#line 22 "pure2-types-smf-and-that-4-provide-cpassign-and-mvassign.cpp2"
     myclass::myclass(cpp2::in<std::string> x)
         : name{ x }{
 

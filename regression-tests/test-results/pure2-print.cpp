@@ -95,6 +95,7 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
 #line 12 "pure2-print.cpp2"
         [[nodiscard]] auto outer::mytype::f() -> int { return 42;  }
 
+#line 14 "pure2-print.cpp2"
         [[nodiscard]] auto outer::mytype::g(cpp2::in<int> i) const -> int{
             using namespace ::std;
 
@@ -107,13 +108,14 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
             ret += strlen(s) - 10 + CPP2_UFCS(strlen)(std::move(s)) * (16 / (3 & 2)) % 3;
 
             map<int const,string> m {}; 
-            CPP2_ASSERT_IN_BOUNDS(m, 0) = cpp2::as_<string>("har");
+            CPP2_ASSERT_IN_BOUNDS_LITERAL(m, 0) = cpp2::as_<string>("har");
             ret -= CPP2_UFCS(length)(h("x", m));
             static_cast<void>(std::move(m));
 
             return ret; 
         }
 
+#line 33 "pure2-print.cpp2"
         [[nodiscard]] auto outer::mytype::h(cpp2::in<std::string> s, std::map<int const,std::string>& m) -> std::string
 
 #line 36 "pure2-print.cpp2"
@@ -129,7 +131,7 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
 
             do {} while ( [&]{ b() ; return true; }() && CPP2_UFCS(empty)(s));
 
-            for ( [[maybe_unused]] auto const& unnamed_param_1 : m ) { { do {goto CONTINUE_45_13; } while (false); c(); } CPP2_CONTINUE_BREAK(45_13) }
+            for ( [[maybe_unused]] auto const& unnamed_param_1 : m ) { { do {goto CONTINUE_label; } while (false); c(); } CPP2_CONTINUE_BREAK(label) }
 
 #line 47 "pure2-print.cpp2"
             if (cpp2::is(!(CPP2_UFCS(empty)(s)), (true))) {std::move(a)(); }
@@ -138,9 +140,10 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
 
             if (cpp2::Default.has_handler() && !(true) ) { cpp2::Default.report_violation(""); }
 
-            return [_0 = (s + CPP2_ASSERT_IN_BOUNDS(m, 0))]() mutable -> std::string { return _0;  }(); 
+            return [_0 = (s + CPP2_ASSERT_IN_BOUNDS_LITERAL(m, 0))]() mutable -> std::string { return _0;  }(); 
         }
 
+#line 56 "pure2-print.cpp2"
         template<typename T> [[nodiscard]] auto outer::mytype::values([[maybe_unused]] T const& unnamed_param_2) const& -> values_ret{
                 cpp2::deferred_init<int> offset;
                 cpp2::deferred_init<std::string> name;
@@ -149,12 +152,16 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
             name.construct("plugh");
         return  { std::move(offset.value()), std::move(name.value()) }; }
 
+#line 61 "pure2-print.cpp2"
         outer::mytype::mytype(){}
 
+#line 63 "pure2-print.cpp2"
         outer::mytype::mytype([[maybe_unused]] mytype const& that){}
 
+#line 65 "pure2-print.cpp2"
         outer::mytype::mytype([[maybe_unused]] cpp2::in<int> unnamed_param_2){}
 
+#line 67 "pure2-print.cpp2"
         auto outer::mytype::variadic(auto const& ...x) -> void
 requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...)) {(std::cout << ... << x); }
 
@@ -188,6 +195,7 @@ requires (cpp2::cmp_greater_eq(sizeof...(Args),0u)) {
         (out << ... << args);
     }
 
+#line 100 "pure2-print.cpp2"
     template<typename ...Args> [[nodiscard]] auto outer::all(Args const& ...args) -> bool { 
         return (... && args);  }
 
