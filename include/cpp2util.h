@@ -196,7 +196,9 @@
         #endif
         #include <stdexcept>
         #if __has_include(<stdfloat>)
-            #include <stdfloat>
+            #if !defined(_MSC_VER) || _HAS_CXX23
+                #include <stdfloat>
+            #endif
         #endif
         #ifdef __cpp_lib_jthread
             #include <stop_token>
