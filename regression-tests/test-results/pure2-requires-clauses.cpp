@@ -76,7 +76,7 @@ requires (std::same_as<T,cpp2::i32>) T const v {0};
 
 #line 22 "pure2-requires-clauses.cpp2"
 auto main() -> int{
-    X<int,int> auto_23_5 {}; 
+    X<int,int> auto_1 {}; 
     std::cout << f<int,int>(2, 5) 
               << f(0);
 }

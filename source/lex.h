@@ -323,14 +323,17 @@ static_assert (CHAR_BIT == 8);
 auto labelized_position(token const* t)
     -> std::string
 {
-    auto ret = std::string{};
-    if (t) {
-        ret +=
-            std::to_string(t->position().lineno) +
-            "_" +
-            std::to_string(t->position().colno);
-    }
-    return ret;
+    struct label {
+        std::string text;
+        label() {
+            static auto ordinal = 0;
+            text = std::to_string(++ordinal);
+        }
+    };
+    static auto labels = std::unordered_map<token const*, label const>{};
+
+    assert (t);
+    return labels[t].text;
 }
 
 

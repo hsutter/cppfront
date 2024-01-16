@@ -1120,6 +1120,7 @@ class cppfront
         declaration_node::declared_value_set_funcs declared_value_set_functions = {};
         function_prolog                            prolog                       = {};
         std::vector<std::string>                   epilog                       = {};
+        int                                        ordinal                      = {};
 
         function_info(
             declaration_node const*                    decl_,
@@ -2192,7 +2193,10 @@ public:
         auto guard = finally([&]{ in_non_rvalue_context.pop_back(); });
 
         iteration_statements.push_back({ &n, false});
-        auto labelname = labelized_position(n.label);
+        auto labelname = std::string{};
+        if (n.label) {
+            labelname = n.label->to_string();
+        }
 
         //  Handle while
         //
@@ -2529,7 +2533,7 @@ public:
             iter_stmt->used = true;
             assert((*iter_stmt).stmt->label);
             printer.print_cpp2(
-                "goto " + to_upper_and_underbar(*n.keyword) + "_" + labelized_position((*iter_stmt).stmt->label) + ";",
+                "goto " + to_upper_and_underbar(*n.keyword) + "_" + (*iter_stmt).stmt->label->to_string() + ";",
                 n.position()
             );
         }
@@ -6663,8 +6667,20 @@ public:
                     return;
                 }
 
+                //  Minimize diff noise by using ordinals for generated names, not line/col info
+                auto next_unique_id = [&]() -> std::string
+                {
+                    if (current_functions.empty()) {
+                        //  Generate a globally unique label for non-function-locals,
+                        //  so the declarations and definitions match
+                        return labelized_position( n.identifier->get_token() );
+                    }
+                    //  Else just use a per-function ordinal
+                    return std::to_string( ++current_functions.back().ordinal );
+                };
+
                 printer.print_cpp2(
-                    "auto_" + labelized_position(n.identifier->get_token()),
+                    "auto_" + next_unique_id(),
                     n.identifier->position()
                 );
             }

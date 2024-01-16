@@ -50,23 +50,23 @@ extern t m;
 extern t const n;
 template<typename UnnamedTypeParam1, typename U> auto inline constexpr a = n;
 
-extern cpp2::i32 auto_25_1;
-extern cpp2::i32 auto_26_1;
-extern cpp2::i32 auto_27_1;
-extern cpp2::i32 auto_28_1;
-extern cpp2::i32 auto_29_1;
-extern cpp2::i32 auto_30_1;
-extern cpp2::i32 auto_31_1;
-extern cpp2::i32 auto_32_1;
-extern cpp2::i32 auto_33_1;
-extern cpp2::i32 auto_34_1;
-extern cpp2::i32 auto_35_1;
+extern cpp2::i32 auto_1;
+extern cpp2::i32 auto_2;
+extern cpp2::i32 auto_3;
+extern cpp2::i32 auto_4;
+extern cpp2::i32 auto_5;
+extern cpp2::i32 auto_6;
+extern cpp2::i32 auto_7;
+extern cpp2::i32 auto_8;
+extern cpp2::i32 auto_9;
+extern cpp2::i32 auto_10;
+extern cpp2::i32 auto_11;
 
 auto main() -> int;
 
 #line 55 "pure2-bugfix-for-ufcs-arguments.cpp2"
 // _: i32 = 0.std::min<int>(0);
-extern cpp2::i32 auto_56_1;
+extern cpp2::i32 auto_12;
 
 namespace ns {
 template<int T, int U> class t {
@@ -120,17 +120,17 @@ t m {};
 t const n {}; 
 
 #line 25 "pure2-bugfix-for-ufcs-arguments.cpp2"
-cpp2::i32 auto_25_1 {CPP2_UFCS_NONLOCAL(f)(m)}; 
-cpp2::i32 auto_26_1 {CPP2_UFCS_NONLOCAL(f)(m, 0)}; 
-cpp2::i32 auto_27_1 {CPP2_UFCS_TEMPLATE_NONLOCAL(f<t>)(m)}; 
-cpp2::i32 auto_28_1 {CPP2_UFCS_TEMPLATE_NONLOCAL(f<t>)(m, 0)}; 
-cpp2::i32 auto_29_1 {CPP2_UFCS_TEMPLATE_NONLOCAL(f<t,t>)(m, 0, 0)}; 
-cpp2::i32 auto_30_1 {CPP2_UFCS_NONLOCAL(f)(n)}; 
-cpp2::i32 auto_31_1 {CPP2_UFCS_NONLOCAL(f)(n, 0)}; 
-cpp2::i32 auto_32_1 {CPP2_UFCS_TEMPLATE_NONLOCAL(f<t>)(n)}; 
-cpp2::i32 auto_33_1 {CPP2_UFCS_TEMPLATE_NONLOCAL(f<t>)(n, 0)}; 
-cpp2::i32 auto_34_1 {CPP2_UFCS_TEMPLATE_NONLOCAL(f<t,t>)(n, 0, 0)}; 
-cpp2::i32 auto_35_1 {CPP2_UFCS_TEMPLATE_NONLOCAL(f<t,t>)(a<t,t>, 0, 0)}; 
+cpp2::i32 auto_1 {CPP2_UFCS_NONLOCAL(f)(m)}; 
+cpp2::i32 auto_2 {CPP2_UFCS_NONLOCAL(f)(m, 0)}; 
+cpp2::i32 auto_3 {CPP2_UFCS_TEMPLATE_NONLOCAL(f<t>)(m)}; 
+cpp2::i32 auto_4 {CPP2_UFCS_TEMPLATE_NONLOCAL(f<t>)(m, 0)}; 
+cpp2::i32 auto_5 {CPP2_UFCS_TEMPLATE_NONLOCAL(f<t,t>)(m, 0, 0)}; 
+cpp2::i32 auto_6 {CPP2_UFCS_NONLOCAL(f)(n)}; 
+cpp2::i32 auto_7 {CPP2_UFCS_NONLOCAL(f)(n, 0)}; 
+cpp2::i32 auto_8 {CPP2_UFCS_TEMPLATE_NONLOCAL(f<t>)(n)}; 
+cpp2::i32 auto_9 {CPP2_UFCS_TEMPLATE_NONLOCAL(f<t>)(n, 0)}; 
+cpp2::i32 auto_10 {CPP2_UFCS_TEMPLATE_NONLOCAL(f<t,t>)(n, 0, 0)}; 
+cpp2::i32 auto_11 {CPP2_UFCS_TEMPLATE_NONLOCAL(f<t,t>)(a<t,t>, 0, 0)}; 
 
 #line 37 "pure2-bugfix-for-ufcs-arguments.cpp2"
 auto main() -> int{
@@ -152,7 +152,7 @@ auto main() -> int{
 }
 
 #line 56 "pure2-bugfix-for-ufcs-arguments.cpp2"
-cpp2::i32 auto_56_1 {CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL((ns::t<0,0>::),f<0>)(0)}; 
+cpp2::i32 auto_12 {CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL((ns::t<0,0>::),f<0>)(0)}; 
 
 namespace ns {
 
