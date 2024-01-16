@@ -29,6 +29,7 @@ using vals_ret = int;
     return std::move(i.value()); 
 }
 
+#line 6 "pure2-bugfix-for-name-lookup-and-value-decoration.cpp2"
 [[nodiscard]] auto main() -> int{
     auto v {vals()}; 
     static_cast<void>(std::move(v));

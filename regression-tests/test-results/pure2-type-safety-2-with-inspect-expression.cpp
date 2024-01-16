@@ -40,6 +40,7 @@ auto test_generic(auto const& x, auto const& msg) -> void;
     test_generic(std::move(o), "optional<int>");
 }
 
+#line 20 "pure2-type-safety-2-with-inspect-expression.cpp2"
 auto test_generic(auto const& x, auto const& msg) -> void{
     std::cout 
         << std::setw(30) << msg 

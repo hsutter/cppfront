@@ -48,6 +48,7 @@ auto print_decorated(auto const& x) -> void;
     print_decorated(std::move(x.value()));
 }
 
+#line 16 "mixed-initialization-safety-3.cpp2"
 auto fill(
     cpp2::out<std::string> x, 
     cpp2::in<std::string> value, 
@@ -60,6 +61,7 @@ auto fill(
     x.construct(CPP2_UFCS(substr)(value, 0, count));
 }
 
+#line 26 "mixed-initialization-safety-3.cpp2"
 auto print_decorated(auto const& x) -> void { std::cout << ">> [" << x << "]\n";  }
 
 #line 30 "mixed-initialization-safety-3.cpp2"

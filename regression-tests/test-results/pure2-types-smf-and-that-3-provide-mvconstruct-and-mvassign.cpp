@@ -75,6 +75,7 @@ auto main() -> int;
 #line 6 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     }
 
+#line 8 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     myclass::myclass(myclass&& that) noexcept
         : name{ std::move(that).name + "(CM)" }
         , addr{ std::move(that).addr }{
@@ -93,6 +94,7 @@ auto main() -> int;
 #line 20 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     }
 
+#line 22 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     myclass::myclass(cpp2::in<std::string> x)
         : name{ x }{
 

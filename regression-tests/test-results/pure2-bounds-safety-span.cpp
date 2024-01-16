@@ -40,6 +40,7 @@ auto print_and_decorate(auto const& thing) -> void;
     }
 }
 
+#line 15 "pure2-bounds-safety-span.cpp2"
 auto print_and_decorate(auto const& thing) -> void { 
     std::cout << ">> " << thing << "\n";  }
 

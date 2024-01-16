@@ -27,6 +27,7 @@ auto print_an_int(auto const& x) -> void;
     print_an_int(1.1);
 }
 
+#line 7 "pure2-inspect-expression-with-as-in-generic-function.cpp2"
 auto print_an_int(auto const& x) -> void{
     std::cout 
         << std::setw(30) << cpp2::to_string(x) 

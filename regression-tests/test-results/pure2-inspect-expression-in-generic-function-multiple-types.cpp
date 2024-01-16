@@ -40,6 +40,7 @@ auto test_generic(auto const& x, auto const& msg) -> void;
     test_generic(std::move(o), "optional<int>");
 }
 
+#line 20 "pure2-inspect-expression-in-generic-function-multiple-types.cpp2"
 auto test_generic(auto const& x, auto const& msg) -> void{
     std::cout 
         << std::setw(30) << msg 

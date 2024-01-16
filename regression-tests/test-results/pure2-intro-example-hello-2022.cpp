@@ -34,11 +34,13 @@ auto print_it(auto const& x, auto const& len) -> void;
     }
 }
 
+#line 11 "pure2-intro-example-hello-2022.cpp2"
 [[nodiscard]] auto decorate(auto& thing) -> int{
     thing = "[" + thing + "]";
     return CPP2_UFCS(ssize)(thing); 
 }
 
+#line 16 "pure2-intro-example-hello-2022.cpp2"
 auto print_it(auto const& x, auto const& len) -> void { 
     std::cout 
         << ">> " << x 

@@ -22,6 +22,7 @@
 #include <iostream>
 #include <cstdio>
 #include <optional>
+#include <filesystem>
 
 namespace cpp2 {
 
@@ -103,6 +104,14 @@ static cmdline_processor::register_flag cmd_clean_cpp1(
     "clean-cpp1",
     "Emit clean Cpp1 without #line directives",
     []{ flag_clean_cpp1 = true; }
+);
+
+static auto flag_line_paths = false;
+static cmdline_processor::register_flag cmd_line_paths(
+    9,
+    "line-paths",
+    "Emit absolute paths in #line directives",
+    [] { flag_line_paths = true; }
 );
 
 static auto flag_import_std = false;
@@ -661,7 +670,9 @@ public:
     )
         -> void
     {
-        cpp2_filename = cpp2_filename_;
+        cpp2_filename = (flag_line_paths) ?
+            std::filesystem::absolute(std::filesystem::path(cpp2_filename_)).string() :
+            cpp2_filename_;
         assert(
             !is_open()
             && !pcomments
@@ -5733,6 +5744,18 @@ public:
                     printer.print_cpp2("public: ", n.position());
                 }
             }
+        }
+
+        //  Print a line directive before every function definition, excluding lambdas.
+        //  This is needed to enable debugging with lldb.
+        if (
+            printer.get_phase() == printer.phase2_func_defs
+            && n.is_function()
+            && n.has_name()
+            && n.initializer
+            )
+        {
+            printer.print_extra("");
         }
 
         //  If this is a function definition and the function is inside

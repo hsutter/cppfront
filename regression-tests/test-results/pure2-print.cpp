@@ -95,6 +95,7 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
 #line 12 "pure2-print.cpp2"
         [[nodiscard]] auto outer::mytype::f() -> int { return 42;  }
 
+#line 14 "pure2-print.cpp2"
         [[nodiscard]] auto outer::mytype::g(cpp2::in<int> i) const -> int{
             using namespace ::std;
 
@@ -114,6 +115,7 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
             return ret; 
         }
 
+#line 33 "pure2-print.cpp2"
         [[nodiscard]] auto outer::mytype::h(cpp2::in<std::string> s, std::map<int const,std::string>& m) -> std::string
 
 #line 36 "pure2-print.cpp2"
@@ -141,6 +143,7 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
             return [_0 = (s + CPP2_ASSERT_IN_BOUNDS_LITERAL(m, 0))]() mutable -> std::string { return _0;  }(); 
         }
 
+#line 56 "pure2-print.cpp2"
         template<typename T> [[nodiscard]] auto outer::mytype::values([[maybe_unused]] T const& unnamed_param_2) const& -> values_ret{
                 cpp2::deferred_init<int> offset;
                 cpp2::deferred_init<std::string> name;
@@ -149,12 +152,16 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
             name.construct("plugh");
         return  { std::move(offset.value()), std::move(name.value()) }; }
 
+#line 61 "pure2-print.cpp2"
         outer::mytype::mytype(){}
 
+#line 63 "pure2-print.cpp2"
         outer::mytype::mytype([[maybe_unused]] mytype const& that){}
 
+#line 65 "pure2-print.cpp2"
         outer::mytype::mytype([[maybe_unused]] cpp2::in<int> unnamed_param_2){}
 
+#line 67 "pure2-print.cpp2"
         auto outer::mytype::variadic(auto const& ...x) -> void
 requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...)) {(std::cout << ... << x); }
 
@@ -188,6 +195,7 @@ requires (cpp2::cmp_greater_eq(sizeof...(Args),0u)) {
         (out << ... << args);
     }
 
+#line 100 "pure2-print.cpp2"
     template<typename ...Args> [[nodiscard]] auto outer::all(Args const& ...args) -> bool { 
         return (... && args);  }
 
