@@ -169,6 +169,9 @@ struct primary_expression_node
     auto is_literal() const
         -> bool;
 
+    auto get_literal() const
+        -> literal_node const*;
+
     auto template_arguments() const -> std::vector<template_argument> const&;
 
     auto get_token() const -> token const*;
@@ -261,6 +264,9 @@ struct prefix_expression_node
 
     auto is_literal() const
         -> bool;
+
+    auto get_literal() const
+        -> literal_node const*;
 
     auto is_result_a_temporary_variable() const -> bool;
 
@@ -355,7 +361,17 @@ struct binary_expression_node
     auto is_literal() const
         -> bool
     {
-        return terms.empty() && expr->is_literal();
+        return get_literal();
+    }
+
+    auto get_literal() const
+        -> literal_node const*
+    {
+        if (!terms.empty()) {
+            return nullptr;
+        }
+        //  Else
+        return expr->get_literal();
     }
 
     //  Get left-hand postfix-expression
@@ -538,7 +554,13 @@ struct expression_node
     auto is_literal() const
         -> bool
     {
-        return expr->is_literal();
+        return get_literal();
+    }
+
+    auto get_literal() const
+        -> literal_node const*
+    {
+        return expr->get_literal();
     }
 
     auto get_lhs_rhs_if_simple_assignment() const
@@ -706,7 +728,17 @@ auto primary_expression_node::get_expression_list() const
 auto primary_expression_node::is_literal() const
     -> bool
 {
-    return expr.index() == literal;
+    return get_literal();
+}
+
+auto primary_expression_node::get_literal() const
+    -> literal_node const*
+{
+    if (auto lit = std::get_if<literal>(&expr)) {
+        return (*lit).get();
+    }
+    //  Else
+    return nullptr;
 }
 
 
@@ -847,7 +879,17 @@ struct postfix_expression_node
     auto is_literal() const
         -> bool
     {
-        return ops.empty() && expr->is_literal();
+        return get_literal();
+    }
+
+    auto get_literal() const
+        -> literal_node const*
+    {
+        if (!ops.empty()) {
+            return nullptr;
+        }
+        //  Else
+        return expr->get_literal();
     }
 
     auto get_first_token_ignoring_this() const
@@ -914,7 +956,17 @@ auto prefix_expression_node::get_expression_list() const
 auto prefix_expression_node::is_literal() const
     -> bool
 {
-    return ops.empty() && expr->is_literal();
+    return get_literal();
+}
+
+auto prefix_expression_node::get_literal() const
+    -> literal_node const*
+{
+    if (!ops.empty()) {
+        return nullptr;
+    }
+    //  Else
+    return expr->get_literal();
 }
 
 auto prefix_expression_node::is_result_a_temporary_variable() const -> bool {
@@ -1378,7 +1430,17 @@ struct is_as_expression_node
     auto is_literal() const
         -> bool
     {
-        return ops.empty() && expr->is_literal();
+        return get_literal();
+    }
+
+    auto get_literal() const
+        -> literal_node const*
+    {
+        if (!ops.empty()) {
+            return nullptr;
+        }
+        //  Else
+        return expr->get_literal();
     }
 
     auto get_postfix_expression_node() const

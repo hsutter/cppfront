@@ -3371,7 +3371,17 @@ public:
                     && std::ssize(i->expr_list->expressions) == 1
                     )
                 {
-                    prefix.emplace_back( "CPP2_ASSERT_IN_BOUNDS(", i->op->position() );
+                    if (auto lit = i->expr_list->expressions.front().expr->get_literal();
+                        lit
+                        && lit->literal->type() == lexeme::DecimalLiteral
+                        )
+                    {
+                        prefix.emplace_back( "CPP2_ASSERT_IN_BOUNDS_LITERAL(", i->op->position() );
+                    }
+                    else
+                    {
+                        prefix.emplace_back( "CPP2_ASSERT_IN_BOUNDS(", i->op->position() );
+                    }
                     suffix.emplace_back( ", ", i->op->position() );
                 }
                 else {

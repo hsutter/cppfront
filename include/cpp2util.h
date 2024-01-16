@@ -467,31 +467,47 @@ auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> declty
 
 //  Subscript bounds checking
 //
-auto assert_in_bounds_impl(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> void
-    requires (std::is_integral_v<CPP2_TYPEOF(arg)> &&
-             requires { std::size(x); std::ssize(x); x[arg]; std::begin(x) + 2; })
-{
-    auto max = [&]() -> auto {
-        if constexpr (std::is_signed_v<CPP2_TYPEOF(arg)>) { return std::ssize(x); }
-        else { return std::size(x); }
-    };
-    auto msg = "out of bounds access attempt detected - attempted access at index " + std::to_string(arg) + ", ";
-    if (max() > 0 ) {
-        msg += "[min,max] range is [0," + std::to_string(max()-1) + "]";
-    }
-    else {
-        msg += "but container is empty";
-    }
-    if (!(0 <= arg && arg < max())) {
-        Bounds.report_violation(msg.c_str()  CPP2_SOURCE_LOCATION_ARG);
-    }
+#define CPP2_ASSERT_IN_BOUNDS_IMPL \
+    requires (std::is_integral_v<CPP2_TYPEOF(arg)> && \
+             requires { std::size(x); std::ssize(x); x[arg]; std::begin(x) + 2; }) \
+{ \
+    auto max = [&]() -> auto { \
+        if constexpr (std::is_signed_v<CPP2_TYPEOF(arg)>) { return std::ssize(x); } \
+        else { return std::size(x); } \
+    }; \
+    auto msg = "out of bounds access attempt detected - attempted access at index " + std::to_string(arg) + ", "; \
+    if (max() > 0 ) { \
+        msg += "[min,max] range is [0," + std::to_string(max()-1) + "]"; \
+    } \
+    else { \
+        msg += "but container is empty"; \
+    } \
+    if (!(0 <= arg && arg < max())) { \
+        Bounds.report_violation(msg.c_str()  CPP2_SOURCE_LOCATION_ARG); \
+    } \
+    return CPP2_FORWARD(x) [ arg ]; \
 }
 
-auto assert_in_bounds_impl(auto&&, auto&& CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> void
+template<auto arg>
+auto assert_in_bounds(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+    CPP2_ASSERT_IN_BOUNDS_IMPL
+
+auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+    CPP2_ASSERT_IN_BOUNDS_IMPL
+
+template<auto arg>
+auto assert_in_bounds(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
 {
+    return CPP2_FORWARD(x) [ arg ];
 }
 
-#define CPP2_ASSERT_IN_BOUNDS(x, arg) (cpp2::assert_in_bounds_impl((x),(arg)), (x)[(arg)])
+auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+{
+    return CPP2_FORWARD(x) [ CPP2_FORWARD(arg) ];
+}
+
+#define CPP2_ASSERT_IN_BOUNDS(x,arg)         (cpp2::assert_in_bounds((x),(arg)))
+#define CPP2_ASSERT_IN_BOUNDS_LITERAL(x,arg) (cpp2::assert_in_bounds<(arg)>(x))
 
 
 //-----------------------------------------------------------------------

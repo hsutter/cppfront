@@ -107,7 +107,7 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
             ret += strlen(s) - 10 + CPP2_UFCS(strlen)(std::move(s)) * (16 / (3 & 2)) % 3;
 
             map<int const,string> m {}; 
-            CPP2_ASSERT_IN_BOUNDS(m, 0) = cpp2::as_<string>("har");
+            CPP2_ASSERT_IN_BOUNDS_LITERAL(m, 0) = cpp2::as_<string>("har");
             ret -= CPP2_UFCS(length)(h("x", m));
             static_cast<void>(std::move(m));
 
@@ -138,7 +138,7 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
 
             if (cpp2::Default.has_handler() && !(true) ) { cpp2::Default.report_violation(""); }
 
-            return [_0 = (s + CPP2_ASSERT_IN_BOUNDS(m, 0))]() mutable -> std::string { return _0;  }(); 
+            return [_0 = (s + CPP2_ASSERT_IN_BOUNDS_LITERAL(m, 0))]() mutable -> std::string { return _0;  }(); 
         }
 
         template<typename T> [[nodiscard]] auto outer::mytype::values([[maybe_unused]] T const& unnamed_param_2) const& -> values_ret{

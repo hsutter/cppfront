@@ -87,7 +87,7 @@ auto main() -> int{
     auto t2 {*cpp2::assert_not_null(a)}; 
     std::cout << t2.x << " , " << std::move(t2).y << "\n";
 
-    auto t3 {CPP2_ASSERT_IN_BOUNDS(std::move(a), 0)}; 
+    auto t3 {CPP2_ASSERT_IN_BOUNDS_LITERAL(std::move(a), 0)}; 
     std::cout << t3.x << " , " << std::move(t3).y << "\n";
 
 }

@@ -1545,7 +1545,7 @@ std::string value{"-1"};
 
         nextval(value, init);
 
-        auto v {std::strtoll(&CPP2_ASSERT_IN_BOUNDS(value, 0), nullptr, 10)}; // for non-numeric values we'll just get 0 which is okay for now
+        auto v {std::strtoll(&CPP2_ASSERT_IN_BOUNDS_LITERAL(value, 0), nullptr, 10)}; // for non-numeric values we'll just get 0 which is okay for now
         if (cpp2::cmp_less(v,min_value)) {
             min_value = v;
         }
@@ -1616,7 +1616,7 @@ std::string value{"-1"};
 
     //  Generate the 'none' value if appropriate, and use that or
     //  else the first enumerator as the default-constructed value
-    auto default_value {CPP2_ASSERT_IN_BOUNDS(enumerators, 0).name}; 
+    auto default_value {CPP2_ASSERT_IN_BOUNDS_LITERAL(enumerators, 0).name}; 
     if (bitwise) {
         default_value = "none";
         value_member_info e {"none", "", "0"}; 
@@ -1699,7 +1699,7 @@ auto cpp2_enum(meta::type_declaration& t) -> void
             if (!(CPP2_UFCS(empty)(specified_value))) {
                 value = specified_value;
             }else {
-                auto v {std::strtoll(&CPP2_ASSERT_IN_BOUNDS(value, 0), nullptr, 10)}; 
+                auto v {std::strtoll(&CPP2_ASSERT_IN_BOUNDS_LITERAL(value, 0), nullptr, 10)}; 
                 value = cpp2::as_<std::string>((std::move(v) + 1));
             }
         }, 
@@ -1716,7 +1716,7 @@ auto flag_enum(meta::type_declaration& t) -> void
             if (!(CPP2_UFCS(empty)(specified_value))) {
                 value = specified_value;
             }else {
-                auto v {std::strtoll(&CPP2_ASSERT_IN_BOUNDS(value, 0), nullptr, 10)}; 
+                auto v {std::strtoll(&CPP2_ASSERT_IN_BOUNDS_LITERAL(value, 0), nullptr, 10)}; 
                 if (cpp2::cmp_less(v,1)) {
                     value = "1";
                 }
@@ -1990,7 +1990,7 @@ auto print(cpp2::in<meta::type_declaration> t) -> void
             && !(CPP2_UFCS(arguments_were_used)(rtype)))) 
 
         {
-            error(name + " did not use its template arguments - did you mean to write '" + name + " <" + CPP2_ASSERT_IN_BOUNDS(args, 0) + "> type' (with the spaces)?");
+            error(name + " did not use its template arguments - did you mean to write '" + name + " <" + CPP2_ASSERT_IN_BOUNDS_LITERAL(args, 0) + "> type' (with the spaces)?");
             return false; 
         }
     }
