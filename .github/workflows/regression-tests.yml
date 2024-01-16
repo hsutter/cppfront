@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  regression-tests-linux-mac:
+  regression-tests:
     name: Run on ${{ matrix.os }} using ${{ matrix.compiler }}
     runs-on: ${{ matrix.os }}
     env:
@@ -32,7 +32,6 @@ jobs:
       run: |
         cd regression-tests
         bash run-tests.sh -c ${{ matrix.compiler }}
-      continue-on-error: true
 
     - name: Run regression tests - Windows version
       if: matrix.os == 'windows-latest'
@@ -42,10 +41,11 @@ jobs:
         cd regression-tests && ^
         bash run-tests.sh -c ${{ matrix.compiler }}
       shell: cmd
-      continue-on-error: true
 
     - name: Upload patch
+      if: ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.compiler }}-patch.diff
         path: regression-tests/${{ matrix.compiler }}-patch.diff
+        if-no-files-found: ignore

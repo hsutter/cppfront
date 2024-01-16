@@ -38,11 +38,11 @@ check_file () {
         
         failure=1
     else
-        # Compare the content with the refernece value checked in git
+        # Compare the content with the reference value checked in git
         diff_output=$(git diff --ignore-cr-at-eol -- "$file")
         if [[ -n "$diff_output" ]]; then
             echo "            Non-matching $description:"
-            printf "\n$diff_output\n\n"
+            printf "\n$diff_output\n\n" | tee -a "$cxx_compiler-patch.diff"
             failure=1
         fi
     fi
@@ -195,7 +195,7 @@ for test_file in $tests; do
         # The source is temporarily copied to avoid issues with bash paths in cl.exe
         (cd $exec_out_dir; \
          cp ../../$expected_src $generated_cpp_name;
-         $compiler_cmd "$test_bin" \
+         $compiler_cmd"$test_bin" \
                         $generated_cpp_name \
                         > $generated_cpp_name.output 2>&1)
         compilation_result=$?
@@ -252,7 +252,7 @@ for test_file in $tests; do
 done
 
 ################
-# Report missing reference data direcotry
+# Report missing reference data directory
 if [[ ! -d "$exec_out_dir" ]]; then
     echo "Reference data directory not found for compiler: '$cxx_compiler'"
     exit 3
