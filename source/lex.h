@@ -817,7 +817,8 @@ auto lex_line(
         //  If the last three tokens are "unique/shared" "." "new", add "cpp2::"
 
         if (
-            i >= 2
+            i >= 3
+            && (tokens[i-3] != "::" && tokens[i-3] != ".")
             && (tokens[i-2] == "unique" || tokens[i-2] == "shared")
             && tokens[i-1] == "."
             && tokens[i] == "new"

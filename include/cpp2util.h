@@ -388,8 +388,8 @@ struct String
 #define CPP2_MESSAGE_PARAM  char const*
 #define CPP2_CONTRACT_MSG   cpp2::message_to_cstr_adapter
 
-auto message_to_cstr_adapter( CPP2_MESSAGE_PARAM msg ) -> CPP2_MESSAGE_PARAM { return msg ? msg : ""; }
-auto message_to_cstr_adapter( std::string const& msg ) -> CPP2_MESSAGE_PARAM { return msg.c_str(); }
+inline auto message_to_cstr_adapter( CPP2_MESSAGE_PARAM msg ) -> CPP2_MESSAGE_PARAM { return msg ? msg : ""; }
+inline auto message_to_cstr_adapter( std::string const& msg ) -> CPP2_MESSAGE_PARAM { return msg.c_str(); }
 
 class contract_group {
 public:

@@ -6591,11 +6591,7 @@ private:
         }
 
         else {
-            if (*n->identifier == "new") {
-                error( "use 'new<" + curr().to_string() + ">', not 'new " + curr().to_string() + "'", false);
-                return {};
-            }
-            if (*n->identifier == "co_await" || *n->identifier == "co_yield") {
+             if (*n->identifier == "co_await" || *n->identifier == "co_yield") {
                 error( "(temporary alpha limitation) coroutines are not yet supported in Cpp2", false);
                 return {};
             }
