@@ -336,6 +336,15 @@ auto labelized_position(token const* t)
     return labels[t].text;
 }
 
+auto unnamed_type_param_name(int ordinal, token const* t)
+    -> std::string
+{
+    return "UnnamedTypeParam"
+            + std::to_string(ordinal)
+            + "_"
+            + labelized_position(t);
+}
+
 
 //-----------------------------------------------------------------------
 //
