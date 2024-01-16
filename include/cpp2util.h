@@ -45,15 +45,14 @@
             //  (but we'll have more full-C++20 compilers soon!)
             #ifdef _MSC_VER
                 #include "intrin.h"
+                //  Suppress spurious MSVC modules warning
+                #pragma warning(disable:5050)
             #endif
             import std.core;
             import std.filesystem;
             import std.memory;
             import std.regex;
             import std.threading;
-
-            //  Suppress spurious MSVC modules warning
-            #pragma warning(disable:5050)
         #endif
 
     //  Otherwise, as a fallback if 'import std;' was requested, or else
