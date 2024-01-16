@@ -1743,6 +1743,7 @@ public:
     )
         -> void
     {   STACKINSTR
+        assert( n.identifier );
         auto last_use = is_definite_last_use(n.identifier);
 
         bool add_forward =
@@ -1860,20 +1861,6 @@ public:
     {   STACKINSTR
         if (!sema.check(n)) {
             return;
-        }
-
-        //  Implicit "cpp2::" qualification of "unique.new" and "shared.new"
-        if (
-            n.ids.size() == 2
-            && (
-                *n.ids[0].id->identifier == "unique"
-                || *n.ids[0].id->identifier == "shared"
-                )
-            && *n.ids[1].scope_op == "."
-            && *n.ids[1].id->identifier == "new"
-            )
-        {
-            printer.print_cpp2("cpp2::", n.position());
         }
 
         auto ident = std::string{};
