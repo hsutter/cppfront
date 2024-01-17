@@ -39,7 +39,7 @@ class alias_declaration;
 #line 963 "reflect.h2"
 class value_member_info;
 
-#line 1546 "reflect.h2"
+#line 1536 "reflect.h2"
 }
 
 }
@@ -770,7 +770,7 @@ auto print(cpp2::in<meta::type_declaration> t) -> void;
 //
 auto regex_gen(meta::type_declaration& t) -> void;
 
-#line 1436 "reflect.h2"
+#line 1426 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  apply_metafunctions
@@ -781,7 +781,7 @@ auto regex_gen(meta::type_declaration& t) -> void;
     auto const& error
     ) -> bool;
 
-#line 1546 "reflect.h2"
+#line 1536 "reflect.h2"
 }
 
 }
@@ -1908,13 +1908,14 @@ auto print(cpp2::in<meta::type_declaration> t) -> void
 #line 1381 "reflect.h2"
 auto regex_gen(meta::type_declaration& t) -> void
 {
-    bool has_default {false}; 
+    auto has_default {false}; 
+
+    auto prefix {"regex"}; 
     std::map<std::string,std::string> expressions {}; 
 
     for ( auto& m : CPP2_UFCS(get_member_objects)(t) ) 
     {
         std::string name {CPP2_UFCS(name)(m)}; 
-        std::string prefix {"regex"}; 
 
         if (CPP2_UFCS(starts_with)(name, prefix)) {
 
@@ -1923,13 +1924,7 @@ auto regex_gen(meta::type_declaration& t) -> void
             }
             CPP2_UFCS(mark_for_removal_from_enclosing_type)(m);
 
-            name = CPP2_UFCS(substr)(name, CPP2_UFCS(size)(prefix));
-
-            if (CPP2_UFCS(starts_with)(name, "_")) {
-                name = CPP2_UFCS(substr)(name, 1);
-            }
-
-            if (CPP2_UFCS(empty)(name)) {
+            if (name == prefix) {
                 if (has_default) {
                     CPP2_UFCS(error)(t, "Type can only contain one default named regular expression.");
                 }
@@ -1937,7 +1932,7 @@ auto regex_gen(meta::type_declaration& t) -> void
             }
 
             std::string expr {CPP2_UFCS(initializer)(m)}; 
-            if (!((CPP2_UFCS(starts_with)(expr, "\"") && CPP2_UFCS(ends_with)(expr, "")))) {
+            if (!((CPP2_UFCS(starts_with)(expr, "\"") && CPP2_UFCS(ends_with)(expr, "\"")))) {
                 CPP2_UFCS(error)(t, ("Unknown string format '" + cpp2::to_string(expr) + "'"));
             }
             expr = CPP2_UFCS(substr)(expr, 1, CPP2_UFCS(size)(expr) - 2);
@@ -1949,18 +1944,13 @@ auto regex_gen(meta::type_declaration& t) -> void
     CPP2_UFCS(remove_marked_members)(t);
 
     for ( auto const& expr : expressions ) {
-        std::string regular_expression {::cpp2::regex::generate_template(expr.second, [_0 = t](auto const& message) mutable -> void { CPP2_UFCS(error)(_0, message);  })}; 
+        auto regular_expression {::cpp2::regex::generate_template(expr.second, [_0 = t](auto const& message) mutable -> void { CPP2_UFCS(error)(_0, message);  })}; 
 
-        std::string name {expr.first}; 
-        if (!(CPP2_UFCS(empty)(name))) {
-            name = "_" + name;
-        }
-
-        CPP2_UFCS(add_member)(t, ("regex" + cpp2::to_string(name) + ": " + cpp2::to_string(regular_expression) + " = ();"));
+        CPP2_UFCS(add_member)(t, (cpp2::to_string(expr.first) + ": " + cpp2::to_string(regular_expression) + " = ();"));
     }
 }
 
-#line 1440 "reflect.h2"
+#line 1430 "reflect.h2"
 [[nodiscard]] auto apply_metafunctions(
     declaration_node& n, 
     type_declaration& rtype, 
@@ -2066,7 +2056,7 @@ auto regex_gen(meta::type_declaration& t) -> void
     return true; 
 }
 
-#line 1546 "reflect.h2"
+#line 1536 "reflect.h2"
 }
 
 }
