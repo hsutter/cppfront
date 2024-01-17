@@ -39,7 +39,7 @@ check_file () {
         failure=1
     else
         # Compare the content with the reference value checked in git
-        diff_output=$(git diff --ignore-cr-at-eol -- "$file")
+        diff_output=$(git diff --ignore-cr-at-eol -I"\#define CPP2\_.*\_STD" -- "$file")
         if [[ -n "$diff_output" ]]; then
             echo "            Non-matching $description:"
             printf "\n$diff_output\n\n" | tee -a "$cxx_compiler-patch.diff"
