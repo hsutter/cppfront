@@ -1,0 +1,10 @@
+pure2-assert-expected-not-null.cpp2: In function ‘int fine()’:
+pure2-assert-expected-not-null.cpp2:7:10: error: ‘expected’ is not a member of ‘std’
+pure2-assert-expected-not-null.cpp2:7:10: note: ‘std::expected’ is only available from C++23 onwards
+pure2-assert-expected-not-null.cpp2:7:19: error: expected primary-expression before ‘int’
+pure2-assert-expected-not-null.cpp2:9:165: error: ‘ex’ was not declared in this scope; did you mean ‘exp’?
+pure2-assert-expected-not-null.cpp2: In function ‘int bad_expected_access()’:
+pure2-assert-expected-not-null.cpp2:14:10: error: ‘expected’ is not a member of ‘std’
+pure2-assert-expected-not-null.cpp2:14:10: note: ‘std::expected’ is only available from C++23 onwards
+pure2-assert-expected-not-null.cpp2:14:19: error: expected primary-expression before ‘int’
+pure2-assert-expected-not-null.cpp2:15:45: error: ‘ex’ was not declared in this scope; did you mean ‘exp’?
