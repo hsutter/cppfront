@@ -39,7 +39,7 @@ check_file () {
         failure=1
     else
         # Compare the content with the reference value checked in git
-        diff_output=$(git diff --ignore-cr-at-eol -- "$file")
+        diff_output=$(git diff --ignore-cr-at-eol -I"\#define CPP2\_.*\_STD" -- "$file")
         if [[ -n "$diff_output" ]]; then
             echo "            Non-matching $description:"
             printf "\n$diff_output\n\n" | tee -a "$cxx_compiler-patch.diff"
@@ -163,6 +163,11 @@ for test_file in $tests; do
     if [[ $test_name == "pure2"* ]]; then
         descr="pure Cpp2 code"
         opt="-p"
+		# Disable C++ modules with MSVC due to GitHub-hosted runner not supporting it
+		# See https://github.com/hsutter/cppfront/issues/943
+		if [[ "$cxx_compiler" == *"cl.exe"* ]]; then
+			opt="$opt -include-std"
+		fi
     fi
     echo "    Testing $descr: $test_name.cpp2"
 
