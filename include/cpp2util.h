@@ -240,6 +240,9 @@
     #ifndef CPP2_NO_EXCEPTIONS
         #include <exception>
     #endif
+    #ifdef __cpp_lib_expected
+        #include <expected>
+    #endif
     #if defined(__cpp_lib_format) || (defined(_MSC_VER) && _MSC_VER >= 1929)
         #include <format>
     #endif
@@ -451,19 +454,67 @@ auto inline Testing = contract_group(
 );
 
 
-//  Null pointer deref checking
+//  Check for invalid dereference or indirection which would result in undefined behavior.
+// 
+//     - Null pointer
+//     - std::unique_ptr that owns nothing
+//     - std::shared_ptr with no managed object
+//     - std::optional with no value
+//     - std::expected containing an unexpected value
+// 
+//  Note: For naming simplicity we consider all the above cases to be "null" states so that
+//        we can write: `*assert_not_null(object)`.
 //
-auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+template<typename T>
+concept UniquePtr = std::is_same_v<T, std::unique_ptr<typename T::element_type, typename T::deleter_type>>;
+
+template<typename T>
+concept SharedPtr = std::is_same_v<T, std::shared_ptr<typename T::element_type>>;
+
+template<typename T>
+concept Optional = std::is_same_v<T, std::optional<typename T::value_type>>;
+
+#ifdef __cpp_lib_expected
+
+template<typename T>
+concept Expected = std::is_same_v<T, std::expected<typename T::value_type, typename T::error_type>>;
+
+#endif
+
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
 {
     //  NOTE: This "!= T{}" test may or may not work for STL iterators. The standard
     //        doesn't guarantee that using == and != will reliably report whether an
     //        STL iterator has the default-constructed value. So use it only for raw *...
-    if constexpr (std::is_pointer_v<CPP2_TYPEOF(p)>) {
-        if (p == CPP2_TYPEOF(p){}) {
+    if constexpr (std::is_pointer_v<CPP2_TYPEOF(arg)>) {
+        if (arg == CPP2_TYPEOF(arg){}) {
             Null.report_violation("dynamic null dereference attempt detected" CPP2_SOURCE_LOCATION_ARG);
         };
     }
-    return CPP2_FORWARD(p);
+    else if constexpr (UniquePtr<CPP2_TYPEOF(arg)>) {
+        if (!arg) {
+            Null.report_violation("std::unique_ptr is empty" CPP2_SOURCE_LOCATION_ARG);
+        }
+    }
+    else if constexpr (SharedPtr<CPP2_TYPEOF(arg)>) {
+        if (!arg) {
+            Null.report_violation("std::shared_ptr is empty" CPP2_SOURCE_LOCATION_ARG);
+        }
+    }
+    else if constexpr (Optional<CPP2_TYPEOF(arg)>) {
+        if (!arg.has_value()) {
+            Null.report_violation("std::optional does not contain a value" CPP2_SOURCE_LOCATION_ARG);
+        }
+    }
+#ifdef __cpp_lib_expected
+    else if constexpr (Expected<CPP2_TYPEOF(arg)>) {
+        if (!arg.has_value()) {
+            Null.report_violation("std::expected has an unexpected value" CPP2_SOURCE_LOCATION_ARG);
+        }
+    }
+#endif
+
+    return CPP2_FORWARD(arg);
 }
 
 //  Subscript bounds checking
