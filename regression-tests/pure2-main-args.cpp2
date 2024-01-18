@@ -1,5 +1,12 @@
-main: (args) =
+main: (args) = {
+    exe: std::string = args.argv[0];
+    pos:= exe.find_last_of("/\\");
+    if pos != std::string::npos {
+        pos++;
+        exe = exe.substr(pos, exe.size() - pos);
+    }
     std::cout
         << "args.argc            is (args.argc)$\n"
-        << "args.argv[0]         is (args.argv[0])$\n"
+        << "args.argv[0]         is (exe)$\n"
         ;
+}
