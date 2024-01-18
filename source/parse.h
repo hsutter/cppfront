@@ -8490,6 +8490,29 @@ private:
 
         }
 
+        //  If this is a non-local named function with a single-statement body,
+        //  followed by a non-declaration statement, they probably forgot { }
+        //  so give a nicer diagnostic
+        if (
+            !done()
+            && n->is_function()
+            && n->has_name()
+            && !n->parent_is_function()
+            && n->initializer
+            && !n->initializer->is_compound()
+            )
+        {
+            auto start_pos = pos;
+            auto stmt = statement();
+            auto at_a_statement = stmt != nullptr && !stmt->is_declaration();
+            pos = start_pos;    // backtrack no matter what, we're just peeking here
+
+            if (at_a_statement) {
+                error("in this scope, a single-statement function body cannot be immediately followed by a statement - did you forget to put { } braces around a multi-statement function body?", false);
+                return n;
+            }
+        }
+
         if (
             n->is_type()
             && n->initializer
