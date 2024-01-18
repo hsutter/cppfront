@@ -11,7 +11,7 @@ cl 1>NUL 2> MSVC-version.output
 for %%f in (*.cpp) do (
     set /a count+=1
     echo [!count!] Starting MSVC cl.exe %%f
-    cl.exe %%f -Fe"test" -nologo -std:c++latest -MD -EHsc -I c:\github\cppfront\include -experimental:module >> %%f.output 2>&1
+    cl.exe %%f -Fe"test" -nologo -std:c++latest -MD -EHsc -I ..\..\..\include -experimental:module >> %%f.output 2>&1
     del %%f
     IF EXIST "test.exe" (
         set /a exe_count+=1
