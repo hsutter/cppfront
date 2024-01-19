@@ -26,39 +26,20 @@
     #undef CPP2_USE_SOURCE_LOCATION
 #endif
 
-//  If the cppfront user requested making the entire C++ standard library
-//  available via module import or header include, do that
+//  If the user requested making the entire C++ standard library available
+//  via module import (incl. via -pure-cpp2) or header include, do that
 #if defined(CPP2_IMPORT_STD) || defined(CPP2_INCLUDE_STD)
 
-    //  If C++23 'import std;' was requested and is available, use that
+    //  If C++23 'import std;' was requested but isn't available, fall back
+    //  to the 'include std' path
     #if defined(CPP2_IMPORT_STD) && defined(__cpp_lib_modules)
-
-        #ifndef _MSC_VER
-            //  This is the ideal -- note that we just voted "import std;"
-            //  into draft C++23 in late July 2022, so implementers haven't
-            //  had time to catch up yet
-            import std;
-        #else // MSVC
-            //  Note: When C++23 "import std;" is available, we will switch to that here
-            //  In the meantime, this is what works on MSVC which is the only compiler
-            //  I've been able to get access to that implements modules enough to demo
-            //  (but we'll have more full-C++20 compilers soon!)
-            #ifdef _MSC_VER
-                #include "intrin.h"
-                //  Suppress spurious MSVC modules warning
-                #pragma warning(disable:5050)
-            #endif
-            import std.core;
-            import std.filesystem;
-            import std.memory;
-            import std.regex;
-            import std.threading;
-        #endif
-
-    //  Otherwise, as a fallback if 'import std;' was requested, or else
-    //  because 'include all std' was requested, include all the standard
-    //  headers, with a feature test #ifdef for each header that
-    //  isn't yet supported by all of { VS 2022, g++-10, clang++-12 }
+        import std;
+        import std.compat;
+    //  If 'include std' was requested, include all standard headers.
+    //  This list tracks the current draft standard, so as of this
+    //  writing includes draft C++26 headers like <debugging>.
+    //  Use a feature test #ifdef for each header that isn't supported
+    //  by all of { VS 2022, g++-10, clang++-12 }
     #else
         #ifdef _MSC_VER
             #include "intrin.h"
@@ -105,6 +86,9 @@
         #endif
         #include <cwchar>
         #include <cwctype>
+        #ifdef __cpp_lib_debugging
+            #include <debugging>
+        #endif
         #include <deque>
         #ifndef CPP2_NO_EXCEPTIONS
             #include <exception>
@@ -137,6 +121,9 @@
         #ifdef __cpp_lib_generator
             #include <generator>
         #endif
+        #ifdef __cpp_lib_hazard_pointer
+            #include <hazard_pointer>
+        #endif
         #include <initializer_list>
         #include <iomanip>
         #include <ios>
@@ -149,6 +136,9 @@
             #include <latch>
         #endif
         #include <limits>
+        #ifdef __cpp_lib_linalg
+            #include <linalg>
+        #endif
         #include <list>
         #include <locale>
         #include <map>
@@ -172,6 +162,9 @@
         #include <random>
         #include <ranges>
         #include <ratio>
+        #ifdef __cpp_lib_rcu
+            #include <rcu>
+        #endif
         #include <regex>
         #include <scoped_allocator>
         #ifdef __cpp_lib_semaphore
@@ -210,6 +203,9 @@
             #include <syncstream>
         #endif
         #include <system_error>
+        #ifdef __cpp_lib_text_encoding
+            #include <text_encoding>
+        #endif
         #include <thread>
         #include <tuple>
         #include <type_traits>

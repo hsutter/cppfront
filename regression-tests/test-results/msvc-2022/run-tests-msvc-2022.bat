@@ -11,7 +11,7 @@ cl 1>NUL 2> MSVC-version.output
 for %%f in (*.cpp) do (
     set /a count+=1
     echo [!count!] Starting MSVC cl.exe %%f
-    cl.exe %%f -Fe"test" -nologo -std:c++latest -MD -EHsc -I ..\..\..\include -experimental:module >> %%f.output 2>&1
+    cl.exe %%f -Fe"test" -nologo -std:c++latest -MD -EHsc -I ..\..\..\include std.obj std.compat.obj >> %%f.output 2>&1
     del %%f
     IF EXIST "test.exe" (
         set /a exe_count+=1
@@ -20,7 +20,7 @@ for %%f in (*.cpp) do (
         del test.exe
     )
 )
-del *.obj *.exp *.lib
+del pure2-*.obj mixed-*.obj *.exp *.lib
 echo.
 echo Done: %count% .cpp tests compiled
 echo.
