@@ -33,7 +33,6 @@
     //  If C++23 'import std;' was requested but isn't available, fall back
     //  to the 'include std' path
     #if defined(CPP2_IMPORT_STD) && defined(__cpp_lib_modules)
-        import std;
         import std.compat;
     //  If 'include std' was requested, include all standard headers.
     //  This list tracks the current draft standard, so as of this

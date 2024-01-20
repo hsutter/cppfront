@@ -1,6 +1,11 @@
 REM This is intended to be run in the /test-results/msvc-2022 directory
 REM in a VS2022 Command Prompt (which sets the path and other environment)
 REM
+REM After installing VS2022, to finish setting up std modules in your environment, run:
+REM     cl /std:c++latest /EHsc /nologo /W4 /MD /c "%VCToolsInstallDir%\modules\std.ixx"
+REM     cl /std:c++latest /EHsc /nologo /W4 /MD /c "%VCToolsInstallDir%\modules\std.compat.ixx"
+REM More info: https://learn.microsoft.com/en-us/cpp/cpp/tutorial-import-stl-named-module?view=msvc-170
+REM
 @echo off
 SETLOCAL EnableDelayedExpansion
 copy ..\*.cpp .
