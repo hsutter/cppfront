@@ -9,8 +9,7 @@
 *.tlog
 *.idb
 *.obj
-!std.obj
-!std.compat.obj
+*.ifc
 *.pdb
 *.suo
 *.db
