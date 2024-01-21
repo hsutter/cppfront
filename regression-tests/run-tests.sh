@@ -149,10 +149,14 @@ fi
 # in order to support `import std.compat;`.
 regression_test_link_obj=""
 if [[ "$cxx_compiler" == *"cl.exe"* ]]; then
+    echo "Building std.compat module"
     (cd $exec_out_dir; \
-    cl.exe -nologo -std:c++latest -MD -EHsc -c "%VCToolsInstallDir%\modules\std.compat.ixx")
+    cl.exe -nologo -std:c++latest -MD -EHsc -c "${VCToolsInstallDir}/modules/std.compat.ixx")
     regression_test_link_obj="std.compat.obj"
 fi
+
+#Temp
+exit
 
 ################
 failed_tests=()
