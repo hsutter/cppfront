@@ -151,7 +151,7 @@ skipped_tests=()
 echo "Running regression tests"
 for test_file in $tests; do
     test_name=${test_file%.*}
-    expeced_output="$expected_results_dir/$test_file.output"
+    expected_output="$expected_results_dir/$test_file.output"
     generated_cpp_name=$test_name.cpp
     expected_src="$expected_results_dir/$generated_cpp_name"
     test_bin="test.exe"
@@ -174,13 +174,13 @@ for test_file in $tests; do
     ########
     # Run the translation test
     echo "        Generating Cpp1 code"
-    ./"$cppfront_cmd" "$test_file" -o "$expected_src" $opt > "$expeced_output" 2>&1
+    ./"$cppfront_cmd" "$test_file" -o "$expected_src" $opt > "$expected_output" 2>&1
 
     failure=0
     compiler_issue=0
     ########
     # The C++1 generation output has to exist and to be tracked by git
-    check_file "$expeced_output" "Cpp1 generation output file"
+    check_file "$expected_output" "Cpp1 generation output file"
 
     ########
     # Check the generated code
@@ -239,7 +239,7 @@ for test_file in $tests; do
                 fi
             fi
         fi
-    elif [[ $(cat "$expeced_output") != *"error"* ]]; then
+    elif [[ $(cat "$expected_output") != *"error"* ]]; then
          echo "            Missing generated src file treated as failure"
          echo "                Failing compilation message needs to contain 'error'"
          failure=1
