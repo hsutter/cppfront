@@ -145,14 +145,15 @@ if [[ $? -ne 0 ]]; then
 fi
 
 ################
-# Build the `std.compat` module so that the regression tests can link it (currently only supported by MSVC)
+# Build the `std` and `std.compat` modules so that the regression tests can use them (currently only supported by MSVC)
 # in order to support `import std.compat;`.
 regression_test_link_obj=""
 if [[ "$cxx_compiler" == *"cl.exe"* ]]; then
-    echo "Building std.compat module"
+    echo "Building std and std.compat modules"
     (cd $exec_out_dir; \
+    cl.exe -nologo -std:c++latest -MD -EHsc -c "${VCToolsInstallDir}/modules/std.ixx")
     cl.exe -nologo -std:c++latest -MD -EHsc -c "${VCToolsInstallDir}/modules/std.compat.ixx")
-    regression_test_link_obj="std.compat.obj"
+    regression_test_link_obj="std.obj std.compat.obj"
 fi
 
 #Temp
