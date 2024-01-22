@@ -151,8 +151,8 @@ regression_test_link_obj=""
 if [[ "$cxx_compiler" == *"cl.exe"* ]]; then
     echo "Building std and std.compat modules"
     (cd $exec_out_dir; \
-    cl.exe -nologo -std:c++latest -MD -EHsc -c "${VCToolsInstallDir}/modules/std.ixx")
-    cl.exe -nologo -std:c++latest -MD -EHsc -c "${VCToolsInstallDir}/modules/std.compat.ixx")
+     cl.exe -nologo -std:c++latest -MD -EHsc -c "${VCToolsInstallDir}/modules/std.ixx";
+     cl.exe -nologo -std:c++latest -MD -EHsc -c "${VCToolsInstallDir}/modules/std.compat.ixx")
     regression_test_link_obj="std.obj std.compat.obj"
 fi
 
