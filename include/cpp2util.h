@@ -2041,7 +2041,7 @@ inline constexpr auto as_() -> decltype(auto)
 
 }
 
-#include "../source/regex.h"
+#include "cpp2regex.h"
 
 using cpp2::cpp2_new;
 

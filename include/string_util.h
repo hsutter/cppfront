@@ -65,3 +65,9 @@ struct fixed_string {
 
 template<typename CharT, std::size_t N>
 fixed_string(const CharT (&)[N])->fixed_string<CharT, N-1>;
+
+// Other utility functions.
+
+static inline bool is_escaped(std::string_view s) {
+    return s.starts_with("\"") && s.ends_with("\"");
+}

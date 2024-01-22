@@ -16,7 +16,7 @@
 //===========================================================================
 
 #include "parse.h"
-#include "regex.h"
+#include "cpp2regex.h"
 
 cpp2: namespace = {
 
@@ -1412,7 +1412,7 @@ regex_gen: (inout t: meta::type_declaration) =
             }
 
             expr: std::string = m.initializer();
-            if !(expr.starts_with("\"") && expr.ends_with("\"")) {
+            if !expr.is_escaped() {
                 t.error("Unknown string format '(expr)$'");
             }
             expr = expr.substr(1, expr.size() - 2);
