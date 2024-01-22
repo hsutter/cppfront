@@ -30,6 +30,7 @@ auto test(auto const& x) -> void;
 #line 5 "mixed-inspect-values.cpp2"
 [[nodiscard]] auto in_2_3(cpp2::in<int> x) -> bool { return cpp2::cmp_less_eq(2,x) && cpp2::cmp_less_eq(x,3);  }
 
+#line 7 "mixed-inspect-values.cpp2"
 [[nodiscard]] auto main() -> int{
     std::variant<double,std::string,double> v {}; 
     v = "rev dodgson";
@@ -54,6 +55,7 @@ auto test(auto const& x) -> void;
     test(3.14);
 }
 
+#line 31 "mixed-inspect-values.cpp2"
 auto test(auto const& x) -> void{
     auto forty_two {42}; 
     std::cout << [&] () -> std::string { auto&& _expr = x;

@@ -80,8 +80,8 @@ auto main() -> int;
 
 #line 1 "pure2-union.cpp2"
 
-
 #line 1 "pure2-union.cpp2"
+
 [[nodiscard]] auto name_or_number::is_name() const& -> bool { return _discriminator == 0; }
 [[nodiscard]] auto name_or_number::name() const& -> std::string const& { 
                                                          if (cpp2::Default.has_handler() && !(is_name()) ) { cpp2::Default.report_violation(""); }return *cpp2::assert_not_null(reinterpret_cast<std::string const*>(&_storage)); }
@@ -196,9 +196,11 @@ auto print_name(cpp2::in<name_or_number> non) -> void{
     }
 }
 
+#line 28 "pure2-union.cpp2"
 auto main() -> int{
     name_or_number x {}; 
-    std::cout << ("sizeof(x) is " + cpp2::to_string(sizeof(x)) + "\n");
+    std::cout << "sizeof(x) - alignof(x) == max(sizeof(fields))" 
+              << (" is " + cpp2::to_string(sizeof(x) - alignof(name_or_number) == std::max(sizeof(cpp2::i32), sizeof(std::string))) + "\n");
 
     CPP2_UFCS(print_name)(x);
 

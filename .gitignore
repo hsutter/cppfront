@@ -9,6 +9,7 @@
 *.tlog
 *.idb
 *.obj
+*.ifc
 *.pdb
 *.suo
 *.db
@@ -27,3 +28,9 @@
 *.exe
 source/gen_version.bat
 build*/
+
+# Visual Studio cache directory
+.vs/
+
+# VSCode workspace directory
+.vscode/

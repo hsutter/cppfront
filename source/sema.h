@@ -677,7 +677,7 @@ private:
         {
             errors.emplace_back(
                 id->position(),
-                "local variable " + id->to_string() + " is not used; consider changing its name to '_' to make it explicitly anonymous, or removing it entirely if its side effects are not needed"
+                "local variable '" + id->to_string() + "' is not used; consider changing its name to '_' to make it explicitly anonymous, or removing it entirely if its side effects are not needed"
             );
         }
     }

@@ -323,14 +323,26 @@ static_assert (CHAR_BIT == 8);
 auto labelized_position(token const* t)
     -> std::string
 {
-    auto ret = std::string{};
-    if (t) {
-        ret +=
-            std::to_string(t->position().lineno) +
-            "_" +
-            std::to_string(t->position().colno);
-    }
-    return ret;
+    struct label {
+        std::string text;
+        label() {
+            static auto ordinal = 0;
+            text = std::to_string(++ordinal);
+        }
+    };
+    static auto labels = std::unordered_map<token const*, label const>{};
+
+    assert (t);
+    return labels[t].text;
+}
+
+auto unnamed_type_param_name(int ordinal, token const* t)
+    -> std::string
+{
+    return "UnnamedTypeParam"
+            + std::to_string(ordinal)
+            + "_"
+            + labelized_position(t);
 }
 
 
@@ -810,6 +822,47 @@ auto lex_line(
     };
 
 
+    auto qualify_cpp2_special_names = [&]
+    {
+        auto i = std::ssize(tokens)-1;
+
+        //  If the last three tokens are "unique/shared" "." "new", add "cpp2::"
+
+        if (
+            i >= 3
+            && (tokens[i-3] != "::" && tokens[i-3] != ".")
+            && (tokens[i-2] == "unique" || tokens[i-2] == "shared")
+            && tokens[i-1] == "."
+            && tokens[i] == "new"
+            )
+        {
+            auto pos = tokens[i-2].position();
+
+            generated_text.push_back( "cpp2" );
+            tokens.insert(
+                tokens.end()-3,
+                token{
+                    &generated_text.back()[0],
+                    std::ssize(generated_text.back()),
+                    pos,
+                    lexeme::Identifier
+                }
+            );
+
+            generated_text.push_back( "::" );
+            tokens.insert(
+                tokens.end()-3,
+                token{
+                    &generated_text.back()[0],
+                    std::ssize(generated_text.back()),
+                    pos,
+                    lexeme::Scope
+                }
+            );
+        }
+    };
+
+
     //  Local helper functions for readability
     //
     auto peek = [&](int num) {
@@ -831,6 +884,7 @@ auto lex_line(
 
         merge_cpp1_multi_token_fundamental_type_names();
         merge_operator_function_names();
+        qualify_cpp2_special_names();
     };
 
 

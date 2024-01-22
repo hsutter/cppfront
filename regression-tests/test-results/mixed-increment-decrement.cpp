@@ -188,13 +188,16 @@ requires (bool(Op & 2))  { auto ret = x; ++x; return ret; }
 auto operator++(number_line_pre_increment<0>& x) -> number_line_pre_increment<0>& { return x;  }
 #line 51 "mixed-increment-decrement.cpp2"
 auto operator++(number_line_pre_increment<0>& x,int) -> number_line_pre_increment<0> { auto ret = x; ++x; return ret; }
+#line 52 "mixed-increment-decrement.cpp2"
 auto operator--(number_line_pre_decrement<0>& x) -> number_line_pre_decrement<0>& { return x;  }
 #line 52 "mixed-increment-decrement.cpp2"
 auto operator--(number_line_pre_decrement<0>& x,int) -> number_line_pre_decrement<0> { auto ret = x; ++x; return ret; }
 
+#line 54 "mixed-increment-decrement.cpp2"
 auto operator++(number_line_pre_increment<1>& x) -> number_line_pre_increment<1> const& { return x;  }
 #line 54 "mixed-increment-decrement.cpp2"
 auto operator++(number_line_pre_increment<1>& x,int) -> number_line_pre_increment<1> const { auto ret = x; ++x; return ret; }
+#line 55 "mixed-increment-decrement.cpp2"
 auto operator--(number_line_pre_decrement<1>& x) -> number_line_pre_decrement<1> const& { return x;  }
 #line 55 "mixed-increment-decrement.cpp2"
 auto operator--(number_line_pre_decrement<1>& x,int) -> number_line_pre_decrement<1> const { auto ret = x; ++x; return ret; }

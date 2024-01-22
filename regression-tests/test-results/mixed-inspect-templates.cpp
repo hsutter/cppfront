@@ -42,6 +42,7 @@ struct my_type {};
     (); 
 }
 
+#line 18 "mixed-inspect-templates.cpp2"
 [[nodiscard]] auto fun2(auto const& v) -> std::string{
     if (cpp2::is<std::vector>(v)) {return "std::vector"; }
     if (cpp2::is<std::array>(v)) {return "std::array"; }
@@ -50,6 +51,7 @@ struct my_type {};
     return "unknown"; 
 }
 
+#line 26 "mixed-inspect-templates.cpp2"
 [[nodiscard]] auto main() -> int{
     std::vector<int> vec {1, 2, 3}; 
     std::array<int,4> arr {1, 2, 3, 4}; 

@@ -48,6 +48,7 @@ auto main() -> int;
 
 #line 2 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
   Base::Base(){}
+#line 3 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
   Base::Base ([[maybe_unused]] Base const& that) { std::cout << "(out this, that)\n"; }
 #line 3 "pure2-bugfix-for-memberwise-base-assignment.cpp2"
   auto Base::operator=([[maybe_unused]] Base const& that) -> Base&  { std::cout << "(out this, that)\n";

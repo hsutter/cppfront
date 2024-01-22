@@ -27,6 +27,7 @@
     return std::move(x) >> 1; 
 }
 
+#line 7 "pure2-synthesize-rightshift-and-rightshifteq.cpp2"
 [[nodiscard]] auto main() -> int{
     std::cout << f(32, 1) << "\n";
 }

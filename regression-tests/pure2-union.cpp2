@@ -27,7 +27,8 @@ print_name: (non: name_or_number) = {
 
 main: () = {
     x: name_or_number = ();
-    std::cout << "sizeof(x) is (sizeof(x))$\n";
+    std::cout << "sizeof(x) - alignof(x) == max(sizeof(fields))"
+              << " is (sizeof(x) - alignof(name_or_number) == std::max(sizeof(i32), sizeof(std::string)))$\n";
 
     x.print_name();
 

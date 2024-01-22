@@ -27,6 +27,7 @@ auto main() -> int;
 #line 3 "pure2-contracts.cpp2"
 bool audit {true}; 
 
+#line 5 "pure2-contracts.cpp2"
 auto main() -> int{
     //  A few basic tests
     if (cpp2::Default.has_handler() && !(1 != 2) ) { cpp2::Default.report_violation(CPP2_CONTRACT_MSG("ack, arithmetic is buggy")); }
