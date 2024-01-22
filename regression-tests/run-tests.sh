@@ -39,7 +39,7 @@ check_file () {
         failure=1
     else
         # Compare the content with the reference value checked in git
-        diff_output=$(git diff --ignore-cr-at-eol -I"\#define CPP2\_.*\_STD" -- "$file")
+        diff_output=$(git diff --ignore-cr-at-eol -- "$file")
         if [[ -n "$diff_output" ]]; then
             echo "            Non-matching $description:"
             printf "\n$diff_output\n\n" | tee -a "$cxx_compiler-patch.diff"
@@ -103,7 +103,7 @@ expected_results_dir="test-results"
 ################
 # Get the directory with the exec outputs and compilation command
 if [[ "$cxx_compiler" == *"cl.exe"* ]]; then
-    compiler_cmd='cl.exe -nologo -std:c++latest -MD -EHsc -I ..\include -I ..\..\..\include -experimental:module -Fe:'
+    compiler_cmd='cl.exe -nologo -std:c++latest -MD -EHsc -I ..\include -I ..\..\..\include -Fe:'
     exec_out_dir="$expected_results_dir/msvc-2022"
     compiler_version=$(cl.exe)
 else
@@ -145,13 +145,25 @@ if [[ $? -ne 0 ]]; then
 fi
 
 ################
+# Build the `std` and `std.compat` modules so that the regression tests can use them (currently only supported by MSVC)
+# in order to support `import std.compat;`.
+regression_test_link_obj=""
+if [[ "$cxx_compiler" == *"cl.exe"* ]]; then
+    echo "Building std and std.compat modules"
+    (cd $exec_out_dir; \
+     cl.exe -nologo -std:c++latest -MD -EHsc -c "${VCToolsInstallDir}/modules/std.ixx";
+     cl.exe -nologo -std:c++latest -MD -EHsc -c "${VCToolsInstallDir}/modules/std.compat.ixx")
+    regression_test_link_obj="std.obj std.compat.obj"
+fi
+
+################
 failed_tests=()
 failed_compilations=()
 skipped_tests=()
 echo "Running regression tests"
 for test_file in $tests; do
     test_name=${test_file%.*}
-    expeced_output="$expected_results_dir/$test_file.output"
+    expected_output="$expected_results_dir/$test_file.output"
     generated_cpp_name=$test_name.cpp
     expected_src="$expected_results_dir/$generated_cpp_name"
     test_bin="test.exe"
@@ -163,24 +175,19 @@ for test_file in $tests; do
     if [[ $test_name == "pure2"* ]]; then
         descr="pure Cpp2 code"
         opt="-p"
-		# Disable C++ modules with MSVC due to GitHub-hosted runner not supporting it
-		# See https://github.com/hsutter/cppfront/issues/943
-		if [[ "$cxx_compiler" == *"cl.exe"* ]]; then
-			opt="$opt -include-std"
-		fi
     fi
     echo "    Testing $descr: $test_name.cpp2"
 
     ########
     # Run the translation test
     echo "        Generating Cpp1 code"
-    ./"$cppfront_cmd" "$test_file" -o "$expected_src" $opt > "$expeced_output" 2>&1
+    ./"$cppfront_cmd" "$test_file" -o "$expected_src" $opt > "$expected_output" 2>&1
 
     failure=0
     compiler_issue=0
     ########
     # The C++1 generation output has to exist and to be tracked by git
-    check_file "$expeced_output" "Cpp1 generation output file"
+    check_file "$expected_output" "Cpp1 generation output file"
 
     ########
     # Check the generated code
@@ -200,7 +207,7 @@ for test_file in $tests; do
         # The source is temporarily copied to avoid issues with bash paths in cl.exe
         (cd $exec_out_dir; \
          cp ../../$expected_src $generated_cpp_name;
-         $compiler_cmd"$test_bin" \
+         $compiler_cmd"$test_bin" $regression_test_link_obj \
                         $generated_cpp_name \
                         > $generated_cpp_name.output 2>&1)
         compilation_result=$?
@@ -239,7 +246,7 @@ for test_file in $tests; do
                 fi
             fi
         fi
-    elif [[ $(cat "$expeced_output") != *"error"* ]]; then
+    elif [[ $(cat "$expected_output") != *"error"* ]]; then
          echo "            Missing generated src file treated as failure"
          echo "                Failing compilation message needs to contain 'error'"
          failure=1
