@@ -156,9 +156,6 @@ if [[ "$cxx_compiler" == *"cl.exe"* ]]; then
     regression_test_link_obj="std.obj std.compat.obj"
 fi
 
-#Temp
-exit
-
 ################
 failed_tests=()
 failed_compilations=()
