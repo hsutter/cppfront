@@ -65,6 +65,7 @@ auto main() -> int;
         std::cout << "ctor - copy (GENERAL)";
     }
 
+#line 8 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
     myclass::myclass(myclass&& that) noexcept
         : name{ std::move(that).name + "(CM)" }
         , addr{ std::move(that).addr }{
@@ -73,6 +74,7 @@ auto main() -> int;
         std::cout << "ctor - move          ";
     }
 
+#line 13 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
     auto myclass::operator=(myclass const& that) -> myclass& {
         name = that.name;
         addr = that.addr + "(AC)";
@@ -117,7 +119,7 @@ auto main() -> int;
         cpp2::in<std::string_view> prefix, 
         cpp2::in<std::string_view> suffix
         ) const& -> void { 
-    std::cout << prefix << "[ " + cpp2::to_string(name) + " | " + cpp2::to_string(addr) + " ]" << suffix;  }
+    std::cout << prefix << ("[ " + cpp2::to_string(name) + " | " + cpp2::to_string(addr) + " ]") << suffix;  }
 
 #line 39 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
 auto main() -> int{

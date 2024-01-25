@@ -169,6 +169,9 @@ struct primary_expression_node
     auto is_literal() const
         -> bool;
 
+    auto get_literal() const
+        -> literal_node const*;
+
     auto template_arguments() const -> std::vector<template_argument> const&;
 
     auto get_token() const -> token const*;
@@ -261,6 +264,9 @@ struct prefix_expression_node
 
     auto is_literal() const
         -> bool;
+
+    auto get_literal() const
+        -> literal_node const*;
 
     auto is_result_a_temporary_variable() const -> bool;
 
@@ -355,7 +361,17 @@ struct binary_expression_node
     auto is_literal() const
         -> bool
     {
-        return terms.empty() && expr->is_literal();
+        return get_literal();
+    }
+
+    auto get_literal() const
+        -> literal_node const*
+    {
+        if (!terms.empty()) {
+            return nullptr;
+        }
+        //  Else
+        return expr->get_literal();
     }
 
     //  Get left-hand postfix-expression
@@ -538,7 +554,13 @@ struct expression_node
     auto is_literal() const
         -> bool
     {
-        return expr->is_literal();
+        return get_literal();
+    }
+
+    auto get_literal() const
+        -> literal_node const*
+    {
+        return expr->get_literal();
     }
 
     auto get_lhs_rhs_if_simple_assignment() const
@@ -706,7 +728,17 @@ auto primary_expression_node::get_expression_list() const
 auto primary_expression_node::is_literal() const
     -> bool
 {
-    return expr.index() == literal;
+    return get_literal();
+}
+
+auto primary_expression_node::get_literal() const
+    -> literal_node const*
+{
+    if (auto lit = std::get_if<literal>(&expr)) {
+        return (*lit).get();
+    }
+    //  Else
+    return nullptr;
 }
 
 
@@ -847,7 +879,17 @@ struct postfix_expression_node
     auto is_literal() const
         -> bool
     {
-        return ops.empty() && expr->is_literal();
+        return get_literal();
+    }
+
+    auto get_literal() const
+        -> literal_node const*
+    {
+        if (!ops.empty()) {
+            return nullptr;
+        }
+        //  Else
+        return expr->get_literal();
     }
 
     auto get_first_token_ignoring_this() const
@@ -914,7 +956,17 @@ auto prefix_expression_node::get_expression_list() const
 auto prefix_expression_node::is_literal() const
     -> bool
 {
-    return ops.empty() && expr->is_literal();
+    return get_literal();
+}
+
+auto prefix_expression_node::get_literal() const
+    -> literal_node const*
+{
+    if (!ops.empty()) {
+        return nullptr;
+    }
+    //  Else
+    return expr->get_literal();
 }
 
 auto prefix_expression_node::is_result_a_temporary_variable() const -> bool {
@@ -1378,7 +1430,17 @@ struct is_as_expression_node
     auto is_literal() const
         -> bool
     {
-        return ops.empty() && expr->is_literal();
+        return get_literal();
+    }
+
+    auto get_literal() const
+        -> literal_node const*
+    {
+        if (!ops.empty()) {
+            return nullptr;
+        }
+        //  Else
+        return expr->get_literal();
     }
 
     auto get_postfix_expression_node() const
@@ -4968,7 +5030,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
 
     auto metafunctions = std::string{};
     {
-    auto as_comment = 
+    auto as_comment =
         !n.metafunctions.empty()
         && !include_metafunctions_list;
     if (as_comment) {
@@ -6535,11 +6597,7 @@ private:
         }
 
         else {
-            if (*n->identifier == "new") {
-                error( "use 'new<" + curr().to_string() + ">', not 'new " + curr().to_string() + "'", false);
-                return {};
-            }
-            if (*n->identifier == "co_await" || *n->identifier == "co_yield") {
+             if (*n->identifier == "co_await" || *n->identifier == "co_yield") {
                 error( "(temporary alpha limitation) coroutines are not yet supported in Cpp2", false);
                 return {};
             }
@@ -7228,7 +7286,7 @@ private:
         }
 
         if (curr().type() != lexeme::Semicolon) {
-            error("expected ; at end of jump-statement");
+            error("expected ';' at end of '" + n->keyword->to_string() + "' statement");
             return {};
         }
         next();
@@ -7238,7 +7296,7 @@ private:
 
 
     //G using-statement:
-    //G     'using' id-expression ';'
+    //G     'using' qualified-id ';'
     //G     'using' 'namespace' id-expression ';'
     //G
     auto using_statement()
@@ -7260,6 +7318,10 @@ private:
         auto id = id_expression();
         if (!id) {
             error(std::string{"expected valid id-expression after 'using"} + (n->for_namespace ? " namespace" : "") + "'");
+            return {};
+        }
+        if (!n->for_namespace && !id->is_qualified()) {
+            error("'using' for a specific name (not 'using namespace') must specify a qualified name", false);
             return {};
         }
 
@@ -8317,7 +8379,7 @@ private:
 
                 n->requires_pos = curr().position();
                 next();
-                auto e = logical_or_expression();
+                auto e = logical_or_expression(true, false);
                 if (!e) {
                     error("'requires' must be followed by an expression");
                     return {};
@@ -8432,6 +8494,41 @@ private:
                 }
             }
 
+        }
+
+        //  If this is a non-local named function with a single-statement body,
+        //  followed by a non-declaration statement, they probably forgot { }
+        //  so give a nicer diagnostic
+        if (
+            !done()
+            && n->is_function()
+            && n->has_name()
+            && !n->parent_is_function()
+            && n->initializer
+            && !n->initializer->is_compound()
+            )
+        {
+            auto start_pos = pos;
+            auto stmt = statement();
+            auto at_a_statement = stmt != nullptr && !stmt->is_declaration();
+            pos = start_pos;    // backtrack no matter what, we're just peeking here
+
+            if (at_a_statement) {
+                error("in this scope, a single-statement function body cannot be immediately followed by a statement - did you forget to put { } braces around a multi-statement function body?", false);
+                return n;
+            }
+        }
+
+        if (
+            n->is_type()
+            && n->initializer
+            && !done() && curr().type() == lexeme::Semicolon
+            )
+        {
+            if (n->initializer->is_compound() && n->has_name()) {
+                error("Cpp2 does not allow a semicolon after the closing brace of a type definition");
+                return {};
+            }
         }
 
         //  A type initializer must be a compound expression

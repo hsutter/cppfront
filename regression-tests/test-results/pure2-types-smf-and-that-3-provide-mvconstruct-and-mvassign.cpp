@@ -75,6 +75,7 @@ auto main() -> int;
 #line 6 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     }
 
+#line 8 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     myclass::myclass(myclass&& that) noexcept
         : name{ std::move(that).name + "(CM)" }
         , addr{ std::move(that).addr }{
@@ -93,6 +94,7 @@ auto main() -> int;
 #line 20 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     }
 
+#line 22 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     myclass::myclass(cpp2::in<std::string> x)
         : name{ x }{
 
@@ -116,7 +118,7 @@ auto main() -> int;
         cpp2::in<std::string_view> prefix, 
         cpp2::in<std::string_view> suffix
         ) const& -> void { 
-    std::cout << prefix << "[ " + cpp2::to_string(name) + " | " + cpp2::to_string(addr) + " ]" << suffix;  }
+    std::cout << prefix << ("[ " + cpp2::to_string(name) + " | " + cpp2::to_string(addr) + " ]") << suffix;  }
 
 #line 39 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
 auto main() -> int{

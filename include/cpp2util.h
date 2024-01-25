@@ -26,40 +26,19 @@
     #undef CPP2_USE_SOURCE_LOCATION
 #endif
 
-//  If the cppfront user requested making the entire C++ standard library
-//  available via module import or header include, do that
+//  If the user requested making the entire C++ standard library available
+//  via module import (incl. via -pure-cpp2) or header include, do that
 #if defined(CPP2_IMPORT_STD) || defined(CPP2_INCLUDE_STD)
 
-    //  If C++23 'import std;' was requested and is available, use that
+    //  If C++23 'import std;' was requested but isn't available, fall back
+    //  to the 'include std' path
     #if defined(CPP2_IMPORT_STD) && defined(__cpp_lib_modules)
-
-        #ifndef _MSC_VER
-            //  This is the ideal -- note that we just voted "import std;"
-            //  into draft C++23 in late July 2022, so implementers haven't
-            //  had time to catch up yet
-            import std;
-        #else // MSVC
-            //  Note: When C++23 "import std;" is available, we will switch to that here
-            //  In the meantime, this is what works on MSVC which is the only compiler
-            //  I've been able to get access to that implements modules enough to demo
-            //  (but we'll have more full-C++20 compilers soon!)
-            #ifdef _MSC_VER
-                #include "intrin.h"
-            #endif
-            import std.core;
-            import std.filesystem;
-            import std.memory;
-            import std.regex;
-            import std.threading;
-
-            //  Suppress spurious MSVC modules warning
-            #pragma warning(disable:5050)
-        #endif
-
-    //  Otherwise, as a fallback if 'import std;' was requested, or else
-    //  because 'include all std' was requested, include all the standard
-    //  headers, with a feature test #ifdef for each header that
-    //  isn't yet supported by all of { VS 2022, g++-10, clang++-12 }
+        import std.compat;
+    //  If 'include std' was requested, include all standard headers.
+    //  This list tracks the current draft standard, so as of this
+    //  writing includes draft C++26 headers like <debugging>.
+    //  Use a feature test #ifdef for each header that isn't supported
+    //  by all of { VS 2022, g++-10, clang++-12 }
     #else
         #ifdef _MSC_VER
             #include "intrin.h"
@@ -106,6 +85,9 @@
         #endif
         #include <cwchar>
         #include <cwctype>
+        #ifdef __cpp_lib_debugging
+            #include <debugging>
+        #endif
         #include <deque>
         #ifndef CPP2_NO_EXCEPTIONS
             #include <exception>
@@ -138,6 +120,9 @@
         #ifdef __cpp_lib_generator
             #include <generator>
         #endif
+        #ifdef __cpp_lib_hazard_pointer
+            #include <hazard_pointer>
+        #endif
         #include <initializer_list>
         #include <iomanip>
         #include <ios>
@@ -150,6 +135,9 @@
             #include <latch>
         #endif
         #include <limits>
+        #ifdef __cpp_lib_linalg
+            #include <linalg>
+        #endif
         #include <list>
         #include <locale>
         #include <map>
@@ -173,6 +161,9 @@
         #include <random>
         #include <ranges>
         #include <ratio>
+        #ifdef __cpp_lib_rcu
+            #include <rcu>
+        #endif
         #include <regex>
         #include <scoped_allocator>
         #ifdef __cpp_lib_semaphore
@@ -197,7 +188,9 @@
         #endif
         #include <stdexcept>
         #if __has_include(<stdfloat>)
-            #include <stdfloat>
+            #if !defined(_MSC_VER) || _HAS_CXX23
+                #include <stdfloat>
+            #endif
         #endif
         #ifdef __cpp_lib_jthread
             #include <stop_token>
@@ -209,6 +202,9 @@
             #include <syncstream>
         #endif
         #include <system_error>
+        #ifdef __cpp_lib_text_encoding
+            #include <text_encoding>
+        #endif
         #include <thread>
         #include <tuple>
         #include <type_traits>
@@ -238,6 +234,9 @@
     #include <cstdio>
     #ifndef CPP2_NO_EXCEPTIONS
         #include <exception>
+    #endif
+    #ifdef __cpp_lib_expected
+        #include <expected>
     #endif
     #if defined(__cpp_lib_format) || (defined(_MSC_VER) && _MSC_VER >= 1929)
         #include <format>
@@ -388,8 +387,8 @@ struct String
 #define CPP2_MESSAGE_PARAM  char const*
 #define CPP2_CONTRACT_MSG   cpp2::message_to_cstr_adapter
 
-auto message_to_cstr_adapter( CPP2_MESSAGE_PARAM msg ) -> CPP2_MESSAGE_PARAM { return msg ? msg : ""; }
-auto message_to_cstr_adapter( std::string const& msg ) -> CPP2_MESSAGE_PARAM { return msg.c_str(); }
+inline auto message_to_cstr_adapter( CPP2_MESSAGE_PARAM msg ) -> CPP2_MESSAGE_PARAM { return msg ? msg : ""; }
+inline auto message_to_cstr_adapter( std::string const& msg ) -> CPP2_MESSAGE_PARAM { return msg.c_str(); }
 
 class contract_group {
 public:
@@ -450,48 +449,112 @@ auto inline Testing = contract_group(
 );
 
 
-//  Null pointer deref checking
+//  Check for invalid dereference or indirection which would result in undefined behavior.
+// 
+//     - Null pointer
+//     - std::unique_ptr that owns nothing
+//     - std::shared_ptr with no managed object
+//     - std::optional with no value
+//     - std::expected containing an unexpected value
+// 
+//  Note: For naming simplicity we consider all the above cases to be "null" states so that
+//        we can write: `*assert_not_null(object)`.
 //
-auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+template<typename T>
+concept UniquePtr = std::is_same_v<T, std::unique_ptr<typename T::element_type, typename T::deleter_type>>;
+
+template<typename T>
+concept SharedPtr = std::is_same_v<T, std::shared_ptr<typename T::element_type>>;
+
+template<typename T>
+concept Optional = std::is_same_v<T, std::optional<typename T::value_type>>;
+
+#ifdef __cpp_lib_expected
+
+template<typename T>
+concept Expected = std::is_same_v<T, std::expected<typename T::value_type, typename T::error_type>>;
+
+#endif
+
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
 {
     //  NOTE: This "!= T{}" test may or may not work for STL iterators. The standard
     //        doesn't guarantee that using == and != will reliably report whether an
     //        STL iterator has the default-constructed value. So use it only for raw *...
-    if constexpr (std::is_pointer_v<CPP2_TYPEOF(p)>) {
-        if (p == CPP2_TYPEOF(p){}) {
+    if constexpr (std::is_pointer_v<CPP2_TYPEOF(arg)>) {
+        if (arg == CPP2_TYPEOF(arg){}) {
             Null.report_violation("dynamic null dereference attempt detected" CPP2_SOURCE_LOCATION_ARG);
         };
     }
-    return CPP2_FORWARD(p);
+    else if constexpr (UniquePtr<CPP2_TYPEOF(arg)>) {
+        if (!arg) {
+            Null.report_violation("std::unique_ptr is empty" CPP2_SOURCE_LOCATION_ARG);
+        }
+    }
+    else if constexpr (SharedPtr<CPP2_TYPEOF(arg)>) {
+        if (!arg) {
+            Null.report_violation("std::shared_ptr is empty" CPP2_SOURCE_LOCATION_ARG);
+        }
+    }
+    else if constexpr (Optional<CPP2_TYPEOF(arg)>) {
+        if (!arg.has_value()) {
+            Null.report_violation("std::optional does not contain a value" CPP2_SOURCE_LOCATION_ARG);
+        }
+    }
+#ifdef __cpp_lib_expected
+    else if constexpr (Expected<CPP2_TYPEOF(arg)>) {
+        if (!arg.has_value()) {
+            Null.report_violation("std::expected has an unexpected value" CPP2_SOURCE_LOCATION_ARG);
+        }
+    }
+#endif
+
+    return CPP2_FORWARD(arg);
 }
 
 //  Subscript bounds checking
 //
-auto assert_in_bounds_impl(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> void
-    requires (std::is_integral_v<CPP2_TYPEOF(arg)> &&
-             requires { std::size(x); std::ssize(x); x[arg]; std::begin(x) + 2; })
-{
-    auto max = [&]() -> auto {
-        if constexpr (std::is_signed_v<CPP2_TYPEOF(arg)>) { return std::ssize(x); }
-        else { return std::size(x); }
-    };
-    auto msg = "out of bounds access attempt detected - attempted access at index " + std::to_string(arg) + ", ";
-    if (max() > 0 ) {
-        msg += "[min,max] range is [0," + std::to_string(max()-1) + "]";
-    }
-    else {
-        msg += "but container is empty";
-    }
-    if (!(0 <= arg && arg < max())) {
-        Bounds.report_violation(msg.c_str()  CPP2_SOURCE_LOCATION_ARG);
-    }
+#define CPP2_ASSERT_IN_BOUNDS_IMPL \
+    requires (std::is_integral_v<CPP2_TYPEOF(arg)> && \
+             requires { std::size(x); std::ssize(x); x[arg]; std::begin(x) + 2; }) \
+{ \
+    auto max = [&]() -> auto { \
+        if constexpr (std::is_signed_v<CPP2_TYPEOF(arg)>) { return std::ssize(x); } \
+        else { return std::size(x); } \
+    }; \
+    auto msg = "out of bounds access attempt detected - attempted access at index " + std::to_string(arg) + ", "; \
+    if (max() > 0 ) { \
+        msg += "[min,max] range is [0," + std::to_string(max()-1) + "]"; \
+    } \
+    else { \
+        msg += "but container is empty"; \
+    } \
+    if (!(0 <= arg && arg < max())) { \
+        Bounds.report_violation(msg.c_str()  CPP2_SOURCE_LOCATION_ARG); \
+    } \
+    return CPP2_FORWARD(x) [ arg ]; \
 }
 
-auto assert_in_bounds_impl(auto&&, auto&& CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> void
+template<auto arg>
+auto assert_in_bounds(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+    CPP2_ASSERT_IN_BOUNDS_IMPL
+
+auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+    CPP2_ASSERT_IN_BOUNDS_IMPL
+
+template<auto arg>
+auto assert_in_bounds(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
 {
+    return CPP2_FORWARD(x) [ arg ];
 }
 
-#define CPP2_ASSERT_IN_BOUNDS(x, arg) (cpp2::assert_in_bounds_impl((x),(arg)), (x)[(arg)])
+auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+{
+    return CPP2_FORWARD(x) [ CPP2_FORWARD(arg) ];
+}
+
+#define CPP2_ASSERT_IN_BOUNDS(x,arg)         (cpp2::assert_in_bounds((x),(arg)))
+#define CPP2_ASSERT_IN_BOUNDS_LITERAL(x,arg) (cpp2::assert_in_bounds<(arg)>(x))
 
 
 //-----------------------------------------------------------------------

@@ -53,6 +53,7 @@ struct make_strings_ret { std::string a; std::string b; };
 
 std::vector<int> vec {}; 
 
+#line 16 "mixed-postexpression-with-capture.cpp2"
 auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void
 
 #line 19 "mixed-postexpression-with-capture.cpp2"
@@ -64,6 +65,7 @@ auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void
     CPP2_UFCS(push_back)(vec, val);
 }
 
+#line 23 "mixed-postexpression-with-capture.cpp2"
 [[nodiscard]] auto make_string() -> make_string_ret
 
 {
@@ -74,6 +76,7 @@ auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void
     ret += " and ";
 cpp2_finally_presuccess.run(); return ret; }
 
+#line 29 "mixed-postexpression-with-capture.cpp2"
 [[nodiscard]] auto make_strings() -> make_strings_ret
 
 #line 35 "mixed-postexpression-with-capture.cpp2"

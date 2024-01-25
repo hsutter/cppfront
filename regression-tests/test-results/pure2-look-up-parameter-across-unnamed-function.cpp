@@ -39,6 +39,7 @@ using g_ret = int;
     return ri; // "return;" is implicit"
 }
 
+#line 9 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 [[nodiscard]] auto g() -> g_ret{
         cpp2::deferred_init<int> ri;
 #line 10 "pure2-look-up-parameter-across-unnamed-function.cpp2"
@@ -49,6 +50,7 @@ using g_ret = int;
     return std::move(ri.value()); 
 }
 
+#line 17 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 [[nodiscard]] auto main() -> int{
     std::cout << f() + g() << "\n";
 }

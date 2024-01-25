@@ -26,7 +26,7 @@ auto main(int const argc_, char** argv_) -> int{
 #line 3 "pure2-statement-scope-parameters.cpp2"
     auto local_int {42}; 
 {
-auto const& i = local_int;
+auto const& i{local_int};
 
     //  'in' (read-only) statement scope variable
 #line 6 "pure2-statement-scope-parameters.cpp2"
@@ -35,7 +35,7 @@ auto const& i = local_int;
     }
 }
 {
-auto& i = local_int;
+auto& i{local_int};
 
     //  'inout' (read-write) statement scope variable
 #line 11 "pure2-statement-scope-parameters.cpp2"
@@ -45,5 +45,20 @@ auto& i = local_int;
 }
 #line 14 "pure2-statement-scope-parameters.cpp2"
     std::cout << std::move(local_int) << "\n";// prints 43
+
+    std::chrono::duration<cpp2::i32> auto_1 {0}; 
+{
+[[maybe_unused]] std::chrono::duration<cpp2::i32> unnamed_param_1{0};
+#line 17 "pure2-statement-scope-parameters.cpp2"
+    {}
+}
+#line 18 "pure2-statement-scope-parameters.cpp2"
+    std::in_place_t auto_2 {}; 
+{
+[[maybe_unused]] std::in_place_t unnamed_param_1{};
+#line 19 "pure2-statement-scope-parameters.cpp2"
+    {}
+}
+#line 20 "pure2-statement-scope-parameters.cpp2"
 }
 

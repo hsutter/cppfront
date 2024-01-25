@@ -52,11 +52,13 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
     test_generic(std::move(o), "optional<int>");
 }
 
+#line 24 "pure2-type-safety-1.cpp2"
 auto test_generic(auto const& x, auto const& msg) -> void{
     std::string msgx {msg}; 
     print(std::move(msgx) + " is int? ", cpp2::is<int>(x));
 }
 
+#line 29 "pure2-type-safety-1.cpp2"
 auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void{
     cpp2::deferred_init<char const*> bmsg; 
     if (b) { bmsg.construct("true");}

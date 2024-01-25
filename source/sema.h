@@ -1078,7 +1078,7 @@ private:
         {
             errors.emplace_back(
                 id->position(),
-                "local variable " + id->to_string() + " is not used; consider changing its name to '_' to make it explicitly anonymous, or removing it entirely if its side effects are not needed"
+                "local variable '" + id->to_string() + "' is not used; consider changing its name to '_' to make it explicitly anonymous, or removing it entirely if its side effects are not needed"
             );
         }
     }
@@ -1447,6 +1447,14 @@ public:
     auto check(declaration_node const& n)
         -> bool
     {
+        if (n.has_name("operator")) {
+            errors.emplace_back(
+                n.position(),
+                "the name 'operator' is incomplete - did you mean to write an overloaded operator name like 'operator*' or 'operator++'?"
+            );
+            return false;
+        }
+
         //  An object of deduced type must have an initializer
         if (
             n.is_object()

@@ -62,6 +62,7 @@ auto main() -> int;
         std::cout << "ctor - copy (GENERAL)";
     }
 
+#line 8 "pure2-types-smf-and-that-1-provide-everything.cpp2"
     myclass::myclass(myclass&& that) noexcept
         : name{ std::move(that).name + "(CM)" }
         , addr{ std::move(that).addr }{
@@ -70,6 +71,7 @@ auto main() -> int;
         std::cout << "ctor - move          ";
     }
 
+#line 13 "pure2-types-smf-and-that-1-provide-everything.cpp2"
     auto myclass::operator=(myclass const& that) -> myclass& {
         name = that.name;
         addr = that.addr + "(AC)";
@@ -80,6 +82,7 @@ auto main() -> int;
 #line 16 "pure2-types-smf-and-that-1-provide-everything.cpp2"
     }
 
+#line 18 "pure2-types-smf-and-that-1-provide-everything.cpp2"
     auto myclass::operator=(myclass&& that) noexcept -> myclass& {
         name = std::move(that).name;
         addr = std::move(that).addr;
@@ -89,6 +92,7 @@ auto main() -> int;
 #line 20 "pure2-types-smf-and-that-1-provide-everything.cpp2"
     }
 
+#line 22 "pure2-types-smf-and-that-1-provide-everything.cpp2"
     myclass::myclass(cpp2::in<std::string> x)
         : name{ x }{
 
@@ -112,7 +116,7 @@ auto main() -> int;
         cpp2::in<std::string_view> prefix, 
         cpp2::in<std::string_view> suffix
         ) const& -> void { 
-    std::cout << prefix << "[ " + cpp2::to_string(name) + " | " + cpp2::to_string(addr) + " ]" << suffix;  }
+    std::cout << prefix << ("[ " + cpp2::to_string(name) + " | " + cpp2::to_string(addr) + " ]") << suffix;  }
 
 #line 39 "pure2-types-smf-and-that-1-provide-everything.cpp2"
 auto main() -> int{

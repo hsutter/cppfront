@@ -42,6 +42,7 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
 auto print(cpp2::in<std::string> msg, auto const& x) -> void { 
     std::cout << msg << x << "\n";  }
 
+#line 16 "mixed-type-safety-1.cpp2"
 auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void
 {
     cpp2::deferred_init<char const*> bmsg; 

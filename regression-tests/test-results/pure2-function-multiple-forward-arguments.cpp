@@ -27,6 +27,7 @@ requires (std::is_same_v<CPP2_TYPEOF(s1), std::string> && std::is_same_v<CPP2_TY
     std::cout << CPP2_FORWARD(s1) << CPP2_FORWARD(s2) << CPP2_FORWARD(s3) << std::endl;
 }
 
+#line 5 "pure2-function-multiple-forward-arguments.cpp2"
 auto main() -> int{
     std::string b {"b"}; 
     std::string c {"c"}; 
