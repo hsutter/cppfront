@@ -935,7 +935,7 @@ g: () = {
   _ = :() = {
     x := new<int>(0);
     f_copy(x);
-    _ = :() std::array<int, :(x) identity(x);(0)>()$;
+    _ = :() std::array<int, :(x) identity(x);(0)>()$; // Fails on Clang 12 (lambda in unevaluated context).
   };
 
   _ = :() = {
