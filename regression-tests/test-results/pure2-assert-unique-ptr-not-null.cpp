@@ -47,6 +47,7 @@
 #line 18 "pure2-assert-unique-ptr-not-null.cpp2"
 [[nodiscard]] auto main() -> int
 {
+    std::set_terminate(std::abort);
     return fine() + bad_unique_ptr_access(); 
 }
 

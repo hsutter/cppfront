@@ -16,5 +16,6 @@ bad_optional_access: () -> int =
 
 main: () -> int =
 {
+    std::set_terminate(std::abort);
     return fine() + bad_optional_access();
 }
