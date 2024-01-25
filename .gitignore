@@ -27,3 +27,4 @@
 *.exe
 source/gen_version.bat
 build*/
+*.ifc
