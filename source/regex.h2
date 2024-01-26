@@ -36,12 +36,13 @@ match_return: @struct <Iter> type = {
     pos: Iter = ();
 }
 
-match_context: <CharT, Iter, max_groups: size_t> type =
+match_context: <CharT, Iter, max_groups: size_t, max_alternatives: size_t> type =
 {
     public begin: Iter;
     public end: Iter;
 
     private groups: std::array<match_group<Iter>, max_groups> = ();
+    private alternatives_pos: std::array<Iter, max_alternatives> = ();
 
     operator=: (out this, begin_: Iter, end_: Iter) = {
         begin = begin_;
@@ -68,6 +69,14 @@ match_context: <CharT, Iter, max_groups: size_t> type =
     }
 
     size: (in this) max_groups;
+
+    // Getter and setter for alternatives
+
+    get_alternative_pos: (in this, alternative) alternatives_pos[alternative];
+
+    set_alternative_pos: (inout this, alternative, pos) = {
+        alternatives_pos[alternative] = pos;
+    }
 
     // Misc functions
     //
@@ -103,6 +112,8 @@ matcher_list: <CharT, List...> type = {
 
     reset_ranges: ( inout ctx) = (List::reset_ranges(ctx), ...);
     to_string: () (bstring<CharT>() + ... + List::to_string());
+
+    prepend: <Pre> (_ : Pre) matcher_list<CharT, Pre, List...>();
 }
 
 no_tail: <CharT> type == matcher_list<CharT>;
@@ -179,17 +190,40 @@ xdigit_class  : <CharT> type == named_class_entry<CharT, "xdigit", combined_clas
 //-----------------------------------------------------------------------
 //
 
+
+// Helper for greedy alternatives
+//
+extract_position_helper: <CharT, alternative: size_t> type = {
+    match: <Other> (cur, inout ctx, _ : Other) -> _ = {
+        r := Other::match(cur, ctx);
+        if r.matched {
+            ctx.set_alternative_pos(alternative, cur);
+        }
+        return r;
+    }
+
+    reset_ranges: (inout ctx) = {}
+    to_string: () -> _ = {}
+}
+
 //  Regex syntax: |  Example: ab|ba
 //
 //  Non greedy implementation. First alternative that matches is chosen. 
 //
-alternative_matcher_logic: <CharT, List ...> type = {
+alternative_matcher_logic: <CharT, alternative: size_t, List ...> type = {
 
-    match: (cur, inout ctx, tail)   match_all<List...>(cur, ctx, tail);
+    match: <Tail> (cur, inout ctx, tail: Tail) -> _ = {
+        max_overall_length: = 0;
+        max_current_length: = 0;
+        r := match_greedy<Tail, List...>(cur, max_overall_length, max_current_length, ctx, tail);
+        _ = max_overall_length;
+        _ = max_current_length;
+        return r;
+    }
     reset_ranges: (inout ctx)     = (List::reset_ranges(ctx) , ...);
     to_string: ()                   (bstring<CharT>() + ... + ("|" + List::to_string())).substr(1); // substr: Remove first '|'.
 
-    private match_all: <First, Next ...> (cur, inout ctx, tail) -> _ = {
+    private match_first: <First, Next ...> (cur, inout ctx, tail) -> _ = {
         r := First::match(cur, ctx, tail);
         if r.matched {
             return r;
@@ -197,10 +231,59 @@ alternative_matcher_logic: <CharT, List ...> type = {
             First::reset_ranges(ctx);
 
             if constexpr 0 != sizeof...(Next) {
-                return match_all<Next...>(cur, ctx, tail);
+                return match_first<Next...>(cur, ctx, tail);
             } else {
                 return match_return(false, ctx.end);
             }
+        }
+    }
+
+    private match_greedy: <Tail, First, Next...> (cur, inout max_overall_length, inout max_current_length, inout ctx, _: Tail) -> _ = {
+        r := First::match(cur, ctx, Tail::prepend(extract_position_helper<CharT, alternative>()));
+
+        // Get the end position of First.
+        end_overall_pos := cur;
+        end_current_pos := cur;
+        if r.matched {
+            end_overall_pos = r.pos;
+            end_current_pos = ctx.get_alternative_pos(alternative);
+        }
+
+        // Compute the new max length and our max length.
+        my_overall_length := unsafe_narrow<int>(std::distance(cur, end_overall_pos));
+        max_overall_length = std::max(max_overall_length, my_overall_length);
+
+
+        // Check if someone other has something larker
+        o := match_return(false, ctx.end);
+        if constexpr 0 != sizeof...(Next) {
+            o = match_greedy<Tail, Next...>(cur, max_overall_length, max_current_length, ctx, Tail());
+        }
+
+        my_current_length := unsafe_narrow<int>(std::distance(cur, end_current_pos));
+        if max_overall_length == my_overall_length {
+            max_current_length = std::max(max_current_length, my_current_length);
+        }
+
+
+        if r.matched && my_overall_length == max_overall_length {
+            // We are the longest. Check now if we are also the longest in this alternative.
+            if my_current_length == max_current_length {
+                // Yes we are. Reset all groups by matching again.
+                (Next::reset_ranges(ctx) , ...); // Reset all other ranges.
+                return First::match(cur, ctx, Tail::prepend(extract_position_helper<CharT, alternative>()));
+            }
+            else {
+                // We are not, so there was an other match.
+                First::reset_ranges(ctx);
+
+                return o;
+            }
+        } else {
+            // We are not the largest one.
+            First::reset_ranges(ctx);
+
+            return o;
         }
     }
 }
@@ -473,9 +556,9 @@ special_range_matcher_logic: <CharT, M, min_count: int, max_count: int, symbol: 
 //
 
 // Regular expression implementation
-regular_expression: <CharT, groups: size_t, Matcher> type = {
+regular_expression: <CharT, groups: size_t, alternatives: size_t, Matcher> type = {
 
-    context: <Iter> type == match_context<CharT, Iter, groups>;
+    context: <Iter> type == match_context<CharT, Iter, groups, alternatives>;
 
     private get_iter: (str: view<CharT>, pos) -> _ = {
         if pos < str.size() {
@@ -578,6 +661,7 @@ regex_parser: <Error_out> type = {
     pos: size_t = 0;
 
     named_groups: int = 1; // Global capture group.
+    alternatives_count: int = 0;
 
     error_out: Error_out;
 
@@ -630,7 +714,10 @@ regex_parser: <Error_out> type = {
             separator = ", ";
         }
 
-        return create_matcher("alternative_matcher_logic", list);
+        alternative_id := alternatives_count;
+        alternatives_count += 1;
+
+        return create_matcher("alternative_matcher_logic", "(alternative_id)$, (list)$");
     }
 
     join: (list: std::vector<std::string>) -> std::string = {
@@ -953,7 +1040,7 @@ regex_parser: <Error_out> type = {
         start := create_matcher("group_matcher_start_logic", "0");
         end   := create_matcher("group_matcher_end_logic", "0");
         list  := create_matcher("matcher_list", "(start)$, (inner)$, (end)$");
-        return   create_matcher("regular_expression", "(named_groups)$, (list)$");
+        return   create_matcher("regular_expression", "(named_groups)$, (alternatives_count)$, (list)$");
     }
 
 }
