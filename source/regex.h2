@@ -14,6 +14,8 @@ cpp2: namespace = {
 
 regex: namespace = {
 
+greedy_alternative : bool == false;
+
 view: <CharT> type == std::basic_string_view<CharT>;
 bstring: <CharT> type == std::basic_string<CharT>;
 
@@ -213,12 +215,16 @@ extract_position_helper: <CharT, alternative: size_t> type = {
 alternative_matcher_logic: <CharT, alternative: size_t, List ...> type = {
 
     match: <Tail> (cur, inout ctx, tail: Tail) -> _ = {
-        max_overall_length: = 0;
-        max_current_length: = 0;
-        r := match_greedy<Tail, List...>(cur, max_overall_length, max_current_length, ctx, tail);
-        _ = max_overall_length;
-        _ = max_current_length;
-        return r;
+        if constexpr greedy_alternative {
+            max_overall_length: = 0;
+            max_current_length: = 0;
+            r := match_greedy<Tail, List...>(cur, max_overall_length, max_current_length, ctx, tail);
+            _ = max_overall_length;
+            _ = max_current_length;
+            return r;
+        } else {
+            return match_first<List...>(cur, ctx, tail);
+        }
     }
     reset_ranges: (inout ctx)     = (List::reset_ranges(ctx) , ...);
     to_string: ()                   (bstring<CharT>() + ... + ("|" + List::to_string())).substr(1); // substr: Remove first '|'.
