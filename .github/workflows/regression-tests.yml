@@ -27,13 +27,13 @@ jobs:
             compiler: cl.exe
     steps:
     - name: Checkout repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Run regression tests - Linux and macOS version
       if: startsWith(matrix.os, 'ubuntu') || matrix.os == 'macos-13'
       run: |
         cd regression-tests
-        bash run-tests.sh -c ${{ matrix.compiler }}
+        bash run-tests.sh -c ${{ matrix.compiler }} -l ${{ matrix.os }}
 
     - name: Run regression tests - Windows version
       if: matrix.os == 'windows-latest'
@@ -41,13 +41,13 @@ jobs:
         "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && ^
         git config --local core.autocrlf false && ^
         cd regression-tests && ^
-        bash run-tests.sh -c ${{ matrix.compiler }}
+        bash run-tests.sh -c ${{ matrix.compiler }} -l ${{ matrix.os }}
       shell: cmd
 
     - name: Upload patch
       if: ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.compiler }}-patch.diff
-        path: regression-tests/${{ matrix.compiler }}-patch.diff
+        name: ${{ matrix.os }}-${{ matrix.compiler }}.patch
+        path: regression-tests/${{ matrix.os }}-${{ matrix.compiler }}.patch
         if-no-files-found: ignore
