@@ -1901,39 +1901,32 @@ constexpr auto as( X const& x ) -> T
 //  std::optional is and as
 //
 
-//  is Type
+//  std::optional variable is Type
 //
-template<typename T, typename X>
-    requires std::is_same_v<X,std::optional<T>>
-constexpr auto is( X const& x ) -> bool
-    { return x.has_value(); }
-
-template<typename T, typename U>
-    requires std::is_same_v<T,empty>
-constexpr auto is( std::optional<U> const& x ) -> bool
-    { return !x.has_value(); }
-
-
-//  is Value
-//
-template<typename T>
-constexpr auto is( std::optional<T> const& x, auto&& value ) -> bool
-{
-    //  Predicate case
-    if constexpr (requires{ bool{ value(x) }; }) {
-        return value(x);
-    }
-    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
-        return false;
-    }
-
-    //  Value case
-    else if constexpr (requires{ bool{ x.value() == value }; }) {
-        return x.has_value() && x.value() == value;
-    }
-    return false;
+template<not_same_as<empty> T, specialization_of_template<std::optional> U>
+    requires not_same_as<T, U> && not_same_as<T, pointee_t<U>>
+constexpr auto is( U&& ) -> std::false_type {
+    return {};
 }
 
+template<not_same_as<empty> T, specialization_of_template<std::optional> U>
+    requires not_same_as<T, U>
+constexpr auto is( U&& x ) {
+    return x.has_value();
+}
+
+//-------------------------------------------------------------------------------------------------------------
+//  pointer_like variable is value
+//
+
+template <pointer_like X, typename V>
+constexpr auto is( X const& x, V && value) -> decltype(auto) {
+    if constexpr (pointer<X> && pointer<V>) {
+        return x == value;
+    } else {
+        return !is<empty>(x) && is(*x, CPP2_FORWARD(value));
+    }
+}
 
 //  as
 //
