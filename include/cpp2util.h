@@ -1856,40 +1856,38 @@ auto as( std::variant<Ts...> const& x ) -> decltype(auto) {
 //  std::any is and as
 //
 
-//  is Type
+//  std::any variable is Type
 //
-template<typename T, typename X>
-    requires (std::is_same_v<X,std::any> && !std::is_same_v<T,std::any> && !std::is_same_v<T,empty>)
-constexpr auto is( X const& x ) -> bool
+template<typename T>
+constexpr auto is( same_type_as<std::any> auto && x ) -> bool
     { return x.type() == Typeid<T>(); }
 
-template<typename T, typename X>
-    requires (std::is_same_v<X,std::any> && std::is_same_v<T,empty>)
-constexpr auto is( X const& x ) -> bool
+template<std::same_as<empty> T>
+constexpr auto is( same_type_as<std::any> auto && x ) -> bool
     { return !x.has_value(); }
 
 
-//  is Value
+//  std::any variable is Value
 //
-inline constexpr auto is( std::any const& x, auto&& value ) -> bool
-{
-    //  Predicate case
-    if constexpr (requires{ bool{ value(x) }; }) {
-        return value(x);
-    }
-    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
-        return false;
-    }
 
-    //  Value case
-    else if constexpr (requires{ bool{ *std::any_cast<CPP2_TYPEOF(value)>(&x) == value }; }) {
-        auto pvalue = std::any_cast<CPP2_TYPEOF(value)>(&x);
-        return pvalue && *pvalue == value;
-    }
-    //  else
-    return false;
+template <std::same_as<std::any> X, has_defined_argument V>
+    requires not_same_as<std::any, argument_of_t<V>>
+constexpr bool is( X const& x, V && value ) {
+    auto* ptr = std::any_cast<argument_of_t<V>>(&x);
+    return ptr && value(*ptr);
 }
 
+template <std::same_as<std::any> X, std::equality_comparable V>
+    requires (!has_defined_argument<V>)
+constexpr bool is( X const& x, V && value ) {
+    if constexpr (pointer_like<V>) {
+        auto* ptr = std::any_cast<pointee_t<V>>(&x);
+        return ptr && !is<empty>(value) && is(*ptr, *value);
+    } else {
+        auto* ptr = std::any_cast<std::remove_cvref_t<V>>(&x);
+        return ptr && is(*ptr, std::forward<V>(value));
+    }
+}
 
 //  as
 //
