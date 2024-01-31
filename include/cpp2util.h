@@ -379,6 +379,11 @@ concept specialization_of_template_type_and_nttp = requires (X x) {
 template <template <typename...> class C>
 concept type_trait = std::derived_from<C<int>, std::true_type> || std::derived_from<C<int>, std::false_type>;
 
+template<typename X>
+concept boolean_testable = std::convertible_to<X, bool> && requires(X&& x) {
+  { !std::forward<X>(x) } -> std::convertible_to<bool>;
+};
+
 template <typename X>
 concept polymorphic = std::is_polymorphic_v<std::remove_cvref_t<X>>;
 
@@ -484,6 +489,66 @@ struct aligned_storage {
     alignas(Align) unsigned char data[Len];
 };
 
+//-----------------------------------------------------------------------
+//
+//  A type_find_if for iterating over types in parameter packs
+//
+//  Note: the current implementation is a workaround for clang-12 internal error.
+//  Original implementation does not need type_it and is implemented
+//  using lambda with explicit parameter type list in the following way:
+//
+//    template <typename... Ts, typename F>
+//    constexpr auto type_find_if(F&& fun)
+//    {
+//        std::size_t found = std::variant_npos;
+//        [&]<std::size_t... Is>(std::index_sequence<Is...>){
+//            if constexpr ((requires { {CPP2_FORWARD(fun).template operator()<Is, Ts>()} -> std::convertible_to<bool>;} && ...)) {
+//                (((CPP2_FORWARD(fun).template operator()<Is, Ts>()) && (found = Is, true)) || ...);
+//            }
+//        }(std::index_sequence_for<Ts...>());
+//        return found;
+//    }
+//
+//  The workaround is not needed in gcc-12.1+, clang-13+, msvc 19.29+
+//
+//  Note2: the internal if constexpr could have else with static_assert.
+//  Unfortunatelly I cannot make it work on MSVC.
+//
+//-----------------------------------------------------------------------
+//
+template <std::size_t Index, typename T>
+struct type_it {
+    using type = T;
+    inline static const std::size_t index = Index;
+};
+
+template <typename... Ts, typename F>
+constexpr auto type_find_if(F&& fun)
+{
+    std::size_t found = std::variant_npos;
+    [&]<std::size_t... Is>(std::index_sequence<Is...>){
+        if constexpr ((requires { {CPP2_FORWARD(fun)(type_it<Is, Ts>{})} -> boolean_testable;} && ...)) {
+            ((CPP2_FORWARD(fun)(type_it<Is, Ts>{}) && (found = Is, true)) || ...);
+        } 
+    }(std::index_sequence_for<Ts...>());
+    return found;
+}
+
+template <typename F, template<typename...> class C, typename... Ts>
+constexpr auto type_find_if(C<Ts...>, F&& fun)
+{
+    return type_find_if<Ts...>(CPP2_FORWARD(fun));
+}
+
+template <typename T, typename... Ts>
+constexpr auto variant_contains_type(std::variant<Ts...>)
+{
+    if constexpr (is_any<T, Ts...>) {
+        return std::true_type{};
+    } else {
+        return std::false_type{};
+    }
+}
 
 //-----------------------------------------------------------------------
 //
@@ -848,6 +913,26 @@ using in =
         T const&
     >;
 
+
+template<class T, class U>
+[[nodiscard]] constexpr auto&& forward_like(U&& x) noexcept
+{
+    constexpr bool is_adding_const = std::is_const_v<std::remove_reference_t<T>>;
+    if constexpr (std::is_lvalue_reference_v<T&&>)
+    {
+        if constexpr (is_adding_const)
+            return std::as_const(x);
+        else
+            return static_cast<U&>(x);
+    }
+    else
+    {
+        if constexpr (is_adding_const)
+            return std::move(std::as_const(x));
+        else
+            return std::move(x);
+    }
+}
 
 //-----------------------------------------------------------------------
 //
@@ -1615,104 +1700,79 @@ constexpr auto operator_as( std::variant<Ts...> const& x ) -> decltype(auto) {
     }
 }
 
-
-//  is Type
+//-------------------------------------------------------------------------------------------------------------
+//  forward declarations needed for recursive calls
 //
-template<typename... Ts>
-constexpr auto operator_is( std::variant<Ts...> const& x ) {
-    return x.index();
-}
 
-template<typename T, typename... Ts>
-auto is( std::variant<Ts...> const& x );
+template<specialization_of_template<std::variant> T, typename C>
+constexpr auto is( T&& x, C&& value );
 
-
-//  is Value
+//  std::variant variable is Template
 //
-template<typename... Ts>
-constexpr auto is( std::variant<Ts...> const& x, auto&& value ) -> bool
-{
-    //  Predicate case
-    if constexpr      (requires{ bool{ value(operator_as< 0>(x)) }; }) { if (x.index() ==  0) return value(operator_as< 0>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 1>(x)) }; }) { if (x.index() ==  1) return value(operator_as< 1>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 2>(x)) }; }) { if (x.index() ==  2) return value(operator_as< 2>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 3>(x)) }; }) { if (x.index() ==  3) return value(operator_as< 3>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 4>(x)) }; }) { if (x.index() ==  4) return value(operator_as< 4>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 5>(x)) }; }) { if (x.index() ==  5) return value(operator_as< 5>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 6>(x)) }; }) { if (x.index() ==  6) return value(operator_as< 6>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 7>(x)) }; }) { if (x.index() ==  7) return value(operator_as< 7>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 8>(x)) }; }) { if (x.index() ==  8) return value(operator_as< 8>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 9>(x)) }; }) { if (x.index() ==  9) return value(operator_as< 9>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<10>(x)) }; }) { if (x.index() == 10) return value(operator_as<10>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<11>(x)) }; }) { if (x.index() == 11) return value(operator_as<11>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<12>(x)) }; }) { if (x.index() == 12) return value(operator_as<12>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<13>(x)) }; }) { if (x.index() == 13) return value(operator_as<13>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<14>(x)) }; }) { if (x.index() == 14) return value(operator_as<14>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<15>(x)) }; }) { if (x.index() == 15) return value(operator_as<15>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<16>(x)) }; }) { if (x.index() == 16) return value(operator_as<16>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<17>(x)) }; }) { if (x.index() == 17) return value(operator_as<17>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<18>(x)) }; }) { if (x.index() == 18) return value(operator_as<18>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<19>(x)) }; }) { if (x.index() == 19) return value(operator_as<19>(x)); }
-    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
+
+template<template <typename...> class C, specialization_of_template<std::variant> T>
+    requires (!specialization_of_template<T, C>)
+constexpr auto is( T&& x ) {
+    return type_find_if(x, [&]<typename It>(It const&) -> bool {
+        if (x.index() == It::index) { return is<C>(forward_like<T>(std::get<It::index>(x)));}
         return false;
-    }
-
-    //  Value case
-    else {
-        if constexpr (requires{ bool{ operator_as< 0>(x) == value }; }) { if (x.index() ==  0) return operator_as< 0>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 1>(x) == value }; }) { if (x.index() ==  1) return operator_as< 1>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 2>(x) == value }; }) { if (x.index() ==  2) return operator_as< 2>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 3>(x) == value }; }) { if (x.index() ==  3) return operator_as< 3>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 4>(x) == value }; }) { if (x.index() ==  4) return operator_as< 4>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 5>(x) == value }; }) { if (x.index() ==  5) return operator_as< 5>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 6>(x) == value }; }) { if (x.index() ==  6) return operator_as< 6>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 7>(x) == value }; }) { if (x.index() ==  7) return operator_as< 7>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 8>(x) == value }; }) { if (x.index() ==  8) return operator_as< 8>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 9>(x) == value }; }) { if (x.index() ==  9) return operator_as< 9>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<10>(x) == value }; }) { if (x.index() == 10) return operator_as<10>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<11>(x) == value }; }) { if (x.index() == 11) return operator_as<11>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<12>(x) == value }; }) { if (x.index() == 12) return operator_as<12>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<13>(x) == value }; }) { if (x.index() == 13) return operator_as<13>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<14>(x) == value }; }) { if (x.index() == 14) return operator_as<14>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<15>(x) == value }; }) { if (x.index() == 15) return operator_as<15>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<16>(x) == value }; }) { if (x.index() == 16) return operator_as<16>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<17>(x) == value }; }) { if (x.index() == 17) return operator_as<17>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<18>(x) == value }; }) { if (x.index() == 18) return operator_as<18>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<19>(x) == value }; }) { if (x.index() == 19) return operator_as<19>(x) == value; }
-    }
-    return false;
+    }) != std::variant_npos;
 }
 
+template <template <typename...> class C, typename... Ts>
+    requires std::same_as<C<Ts...>, std::variant<Ts...>>
+constexpr auto is( std::variant<Ts...> const& ) -> std::true_type {
+    return {};
+}
 
-//  as
+template<template <typename, auto...> class C, specialization_of_template<std::variant> T>
+constexpr auto is( T&& x ) {
+    return type_find_if(x, [&]<typename It>(It const&) -> bool {
+        if (x.index() == It::index) { return is<C>(forward_like<T>(std::get<It::index>(x)));}
+        return false;
+    }) != std::variant_npos || specialization_of_template_type_and_nttp<T, C>;
+}
+
+//  std::variant variable is Value
 //
-template<typename T, typename... Ts>
-auto is( std::variant<Ts...> const& x ) {
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) { if (x.index() ==  0) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 1>(x)), T >) { if (x.index() ==  1) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 2>(x)), T >) { if (x.index() ==  2) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 3>(x)), T >) { if (x.index() ==  3) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 4>(x)), T >) { if (x.index() ==  4) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 5>(x)), T >) { if (x.index() ==  5) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 6>(x)), T >) { if (x.index() ==  6) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 7>(x)), T >) { if (x.index() ==  7) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 8>(x)), T >) { if (x.index() ==  8) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 9>(x)), T >) { if (x.index() ==  9) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<10>(x)), T >) { if (x.index() == 10) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<11>(x)), T >) { if (x.index() == 11) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<12>(x)), T >) { if (x.index() == 12) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<13>(x)), T >) { if (x.index() == 13) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<14>(x)), T >) { if (x.index() == 14) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<15>(x)), T >) { if (x.index() == 15) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<16>(x)), T >) { if (x.index() == 16) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) { if (x.index() == 17) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) { if (x.index() == 18) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<19>(x)), T >) { if (x.index() == 19) return true; }
-    if constexpr (std::is_same_v< T, empty > ) {
-        if (x.valueless_by_exception()) return true;
-        //  Need to guard this with is_any otherwise the get_if is illegal
-        if constexpr (is_any<std::monostate, Ts...>) return std::get_if<std::monostate>(&x) != nullptr;
+
+template<specialization_of_template<std::variant> T, typename C>
+constexpr auto is( T&& x, C&& value ) {
+    if constexpr (std::same_as<T,C>) {
+        return x == value;
+    } else {
+        return type_find_if(x, [&]<typename It>(It const&) -> bool {
+            if (x.index() == It::index) { return is(forward_like<T>(std::get<It::index>(x)), std::forward<C>(value));}
+            return false;
+        }) != std::variant_npos;
     }
+}
+
+//  std::variant variable is Type
+//
+template<specialization_of_template<std::variant> T, specialization_of_template<std::variant> C>
+constexpr auto is( C&& ) {
+    if constexpr (std::same_as<std::remove_cvref_t<T>, std::remove_cvref_t<C>>) {
+        return std::true_type{};
+    } else {
+        return std::false_type{};
+    }
+}
+
+template<typename C, specialization_of_template<std::variant> T>
+auto is( T&& x ) {
+    return type_find_if(x, [&]<typename It>(It const&) -> bool {
+        if (x.index() == It::index) { return is<C>(std::get<It::index>(x));}
+        return false;
+    }) != std::variant_npos;
+}
+
+template<std::same_as<empty> C, specialization_of_template<std::variant> T>
+auto is( T&& x ) {
+    if (x.valueless_by_exception())
+        return true;
+    if constexpr (requires { {variant_contains_type<std::monostate>(std::declval<T>())} -> std::same_as<std::true_type>; }) 
+        return std::get_if<std::monostate>(&x) != nullptr;
     return false;
 }
 
