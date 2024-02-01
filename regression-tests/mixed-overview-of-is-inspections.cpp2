@@ -1,0 +1,327 @@
+int* raw_null = nullptr;
+
+auto expect_throws(auto l) -> bool {
+    try {
+        l();
+    } catch (...) {
+        return true;
+    }
+    return false;
+}
+
+struct ThrowingConstruction {
+    constexpr ThrowingConstruction() = default;
+    ThrowingConstruction(int) { throw 1; }
+};
+
+
+main: () = {
+
+    print_header("type is type");
+    {
+        print("<A> is A", cpp2::is<A,A>(), true);
+        print("<A> is B", cpp2::is<A,B>(), false);
+        print("<A> is C", cpp2::is<A,C>(), false);
+        print("<B> is A", cpp2::is<B,A>(), false);
+        print("<B> is B", cpp2::is<B,B>(), true);
+        print("<B> is C", cpp2::is<B,C>(), false);
+        print("<C> is A", cpp2::is<C,A>(), true);
+        print("<C> is B", cpp2::is<C,B>(), false);
+        print("<C> is C", cpp2::is<C,C>(), true);
+    }
+
+    print_header("type is template");
+    {
+        print("<std::vector<int>> is std::vector", cpp2::is<std::vector<int>,std::vector>(), true);
+        print("<std::vector<int>> is std::array", cpp2::is<std::vector<int>,std::array>(), false);
+        print("<std::vector<int>> is std::optional", cpp2::is<std::vector<int>,std::optional>(), false);
+        print("<std::array<int, 3>> is ", cpp2::is<std::array<int, 3>,std::vector>(), false);
+        print("<std::array<int, 3>> is ", cpp2::is<std::array<int, 3>,std::array>(), true);
+        print("<std::array<int, 3>> is ", cpp2::is<std::array<int, 3>,std::optional>(), false);
+        print("<std::optional<int>> is ", cpp2::is<std::optional<int>,std::vector>(), false);
+        print("<std::optional<int>> is ", cpp2::is<std::optional<int>,std::array>(), false);
+        print("<std::optional<int>> is ", cpp2::is<std::optional<int>,std::optional>(), true);
+    }
+
+    print_header("type is type_trait");
+    {
+        v : std::vector<int> = ();
+        print("<const std::vector<int>> is std::is_const", cpp2::is<const std::vector<int>,std::is_const>(), true);
+        print("<std::vector<int>> is std::is_const", cpp2::is<std::vector<int>,std::is_const>(), false);
+        print("<std::vector<int>&> is std::is_reference", cpp2::is<decltype(v),std::is_reference>(), true);
+    }
+
+    print_header("type is concept");
+    {
+        // requires: clang-13+, gcc-12.1+, msvc-v19.34+
+        print("<int> is std::integral", cpp2::is<int,:<T:std::integral>()={}>(), true);
+        print("<double> is std::integral", cpp2::is<double,:<T:std::integral>()={}>(), false);
+    }
+
+    print_header("variable is template");
+    {
+        v : std::vector = (1, 2, 3);
+        print("v is vector",   v is std::vector, true);
+        print("v is array",    v is std::array,  false);
+        print("v is optional", v is std::optional,  false);
+        a : std::array<int,4> = (4,3,2,1);
+        print("a is array",    a is std::array,  true);
+        print("a is vector",   a is std::vector, false);
+        print("a is optional", a is std::optional,  false);
+        o : std::optional = 42;
+        print("o is array",    o is std::array,  false);
+        print("o is vector",   o is std::vector, false);
+        print("o is optional", o is std::optional,  true);
+
+    }
+
+    print_header("variable is type");
+    {
+        a: A = ();
+        b: B = ();
+        c: C = ();
+        print("a is A", a is A, true);
+        print("b is A", b is A, false);
+        print("c is A", c is A, true);
+    }
+    {
+        vc: VC = ();
+        ptr_va0: *VA<0> = vc&;
+        ptr_va1: *VA<1> = vc&;
+        cptr_va0: * const VA<0> = vc&;
+
+        print("vc is VA<0>", vc is VA<0>, true);
+        print("vc is VA<1>", vc is VA<1>, true);
+        print("vc& is *VA<0>", vc& is *VA<0>, true);
+        print("vc& is *VA<1>", vc& is *VA<1>, true);
+
+        print("ptr_va0 is *VC", ptr_va0 is *VC, true);
+        print("ptr_va1 is *VC", ptr_va1 is *VC, true);
+        print("ptr_va0 is *VA<1>", ptr_va0 is *VA<1>, true);
+        print("ptr_va1 is *VA<0>", ptr_va1 is *VA<0>, true);
+        print("cptr_va0 is *VC", cptr_va0 is *VC, false);
+        print("cptr_va0 is * const VC", cptr_va0 is * const VC, true);
+
+        print("ptr_va0* is VC", ptr_va0* is VC, true);
+        print("ptr_va1* is VC", ptr_va1* is VC, true);
+        print("ptr_va0* is VA<1>", ptr_va0* is VA<1>, true);
+        print("ptr_va1* is VA<0>", ptr_va1* is VA<0>, true);
+        print("cptr_va0* is VC", cptr_va0* is VC, false);
+        print("cptr_va0* is const VC", cptr_va0* is const VC, true);
+    }
+
+    print_header("pointer-like variable is empty");
+    {
+        print("raw_null is empty", raw_null is cpp2::empty, true);
+        print("nullptr is empty", nullptr is cpp2::empty, true);
+        print("shared_ptr() is empty", std::shared_ptr<int>() is cpp2::empty, true);
+        print("unique_ptr() is empty", std::unique_ptr<int>() is cpp2::empty, true);
+
+        i := 42;
+        print("i& is empty", i& is cpp2::empty, false);
+        print("std::make_shared<int>(42) is empty", std::make_shared<int>(42) is cpp2::empty, false);
+        print("std::make_unique<int>(44) is empty", std::make_unique<int>(44) is cpp2::empty, false);
+    }
+
+    print_header("variable is value");
+    {
+        i := 42;
+        print("i{42} is empty", i is cpp2::empty, false);
+        print("i{42} is 24",    i is 24, false);
+        print("i{42} is 42",    i is 42, true);
+        print("i{42} is 42u",   i is 42u, true);
+        print("i{42} is 42L",   i is 42L, true);
+        print("i{42} is 42.0",  i is 42.0, true);
+        print("i{42} is 42.0f", i is 42.0f, true);
+        print("3.14f is 3.14",  3.14f is 3.14, false);
+        close_to := :(v) -> _ = :(x) -> bool = {
+            return std::abs(v$ - x) < std::max<std::common_type_t<std::decay_t<decltype(x)>,std::decay_t<decltype(v$)>>>(std::numeric_limits<std::decay_t<decltype(x)>>::epsilon(), std::numeric_limits<std::decay_t<decltype(v$)>>::epsilon());
+        };
+        print("3.14f is (close_to(3.14 ))",  3.14f is (close_to(3.14 )), true);
+        print("3.14  is (close_to(3.14f))",  3.14  is (close_to(3.14f)), true);
+    }
+
+    print_header("variable is type_trait");
+    {
+        i  : int       = 42;
+        ci : const int = 24;
+
+        print("i{int} is std::is_const",                  i is std::is_const, false);
+        print("ci{const int} is std::is_const",          ci is std::is_const, true);
+        print("ci{const int} is std::is_integral",       ci is std::is_integral, true);
+        print("ci{const int} is std::is_floating_point", ci is std::is_floating_point, false);
+    }
+
+    print_header("variable is predicate");
+    {
+        d := 3.14;
+
+        print("d{3.14} is (:(x) -> bool = x>0;)", d is (:(x) -> bool = x>0;), true);
+        print("d{3.14} is (:(x:int) -> bool = x>0;)", d is (:(x:int) -> bool = x>0;), false);
+        print("d{3.14} is (:(x:std::string) -> bool = x.ssize()>5;)", d is (:(x:std::string) -> bool = x.ssize()>5;), false);
+        print("std::string(\"abcdefg\") is (:(x:std::string) -> bool = x.ssize()>5;)", std::string("abcdefg") is (:(x:std::string) -> bool = x.ssize()>5;), true);
+
+        print("d{3.14} is (pred_i)", d is (pred_i), false);
+        print("d{3.14} is (pred_d)", d is (pred_d), true);
+        print("d{3.14} is (pred_)", true, true);
+
+        print("d{3.14} is (:<T:std::floating_point> () -> _ = true;)", d is (:<T:std::floating_point> () -> _ = true;), true);
+        print("d{3.14} is (:<T:std::floating_point> () = {})", d is (:<T:std::floating_point> () = {}), true);
+        print("d{3.14} is (:<T:std::integral> () = {})", d is (:<T:std::integral> () = {}), false);
+    }
+
+    print_header("variant variable is value");
+    {
+        v : std::variant<int, long, float, double, std::string, std::vector<int>> = (42);
+
+        print("v{42} is 42",   v is 42, true);
+        print("v{42} is int",   v is int, true);
+        print("v{42} is int",   v is double, false);
+        print("v{42} is 42.0", v is 42.0, true);
+        print("v{42} is 24",   v is 24, false);
+        print("v{42} is (std::string(\"hello\"))",   v is (std::string("hello")), false);
+        print("v{42} is std::integral",   v is (:<T:std::integral> () = {}), true);
+        print("v{42} is std::floating_point",   v is (:<T:std::floating_point> () = {}), false);
+
+        v = std::string("hello");
+        print("v{hello} is (std::string(\"hello\"))",   v is (std::string("hello")), true);
+        print("v{hello} is 42",    v is 42, false);
+        print("v{hello} is empty", v is cpp2::empty, false);
+        print("v{hello} is int",   v is int, false);
+        print("v{hello} is std::string",   v is std::string, true);
+
+        v = :std::vector = (1,2,3,4);
+        print("v{std::vector{1,2,3,4}} is std::vector<int>", v is std::vector<int>, true );
+        print("v{std::vector{1,2,3,4}} is std::vector",      v is std::vector,      true );
+        print("v{std::vector{1,2,3,4}} is std::map",         v is std::map,         false);
+        print("v{std::vector{1,2,3,4}} is std::variant",     v is std::variant,     true );
+    }
+
+    print_header("variant variable is empty");
+    {
+        v : std::variant<int, ThrowingConstruction, std::monostate> = ();
+        print("v{int} is empty", v is cpp2::empty, false, "v contains default value of first type");
+
+        v = std::monostate();
+        print("v{monostate} is empty", v is cpp2::empty, true);
+
+        expect_throws(:() = v&$*.emplace<1>(42););
+        print("v{valueless_by_exception} is empty", v is cpp2::empty, true, "is valueless: " + cpp2::to_string(v.valueless_by_exception()));
+
+    }
+
+    print_header("any variable is type");
+    {
+        a : std::any = 42;
+
+        print("a{42} is int", a is int, true);
+        print("a{42} is double", a is double, false);
+        print("a{42} is empty", a is cpp2::empty, false);
+
+        print("std::any() is empty", std::any() is cpp2::empty, true);
+    }
+
+    print_header("any variable is value");
+    {
+        a : std::any = 42;
+
+        print("a{42} is 42",  a is 42,  true);
+        print("a{42} is 24",  a is 24,  false);
+        print("a{42} is 42L", a is 42L, false);
+        print("std::any(3.14) is 3", std::any(3.14) is 3, false);
+
+        print("a{42} is :(v)->bool = v.has_value();", a is :(v)->bool = v.has_value();, true);
+        print("a{42} is :(v:std::any)->bool = v.has_value();", a is :(v:std::any)->bool = v.has_value();, true);
+        print("a{42} is :(v:int)->bool = v>0;", a is :(v:int)->bool = v>0;, true);
+    }
+
+    print_header("optional variable is type");
+    {
+        o : std::optional = 42;
+
+        print("o{42} is int",  o is int,  true);
+        print("o{42} is empty",  o is cpp2::empty,  false);
+        print("std::optional<int>() is empty",  std::optional<int>() is cpp2::empty,  true);
+    }
+
+    print_header("optional variable is value");
+    {
+        o : std::optional = 42;
+
+        print("o{42} is 42",   o is 42,  true);
+        print("o{42} is 24",   o is 24,  false);
+        print("o{42} is 42.0", o is 42.0,  true);
+
+        print("o{42} is :(v) -> bool = v > 0;",   o is :(v) -> bool = v > 0;,  true);
+        print("o{42} is :(v:std::optional<int>) -> bool = v > 0;",   o is :(v:std::optional<int>) -> bool = v > 0;,  true);
+        print("o{42} is :(v:std::optional<long>) -> bool = v > 0;",   o is :(v:std::optional<long>) -> bool = v > 0;,  true);
+        print("std::optional(3.14) is :(v:std::optional<int>) -> bool = v == 3;", std::optional(3.14) is :(v:std::optional<int>) -> bool = v* == 3;,  false);
+    }
+
+}
+
+A: type = {}
+B: type = {}
+C: type = {
+    this: A = ();
+}
+
+VA: @polymorphic_base <I:int> type = {}
+
+VC: type = {
+    this: VA<0>;
+    this: VA<1>;
+}
+
+
+pred_i: (x : int ) -> bool = {
+    return x > 0;
+}
+
+pred_d: (x : double ) -> bool = {
+    return x > 0;
+}
+
+pred_: (x) -> bool = {
+    return x > 0;
+}
+
+col : std::array<int, 5> = (70, 8, 8, 8, 40);
+
+print: (what, value, expected, comment) = {
+    l := :(value) -> std::string = { 
+        if value {
+            return "true";
+        } else {
+            return "false";
+        }
+    };
+    print(what, l(value), l(expected), inspect (value == expected) -> std::string { is (true) = "OK"; is _ = "FAILED!";}, comment );
+}
+
+print: (what, value, expected) = {
+    print(what, value, expected, std::string());
+}
+
+print: (what, value, expected, result, comment) = {
+    std::cout << "|" << std::setw(col[0]) << std::right << what;
+    std::cout << "|" << std::setw(col[1]) << std::internal << value;
+    std::cout << "|" << std::setw(col[2]) << std::internal << expected;
+    std::cout << "|" << std::setw(col[3]) << std::internal <<  result;
+    std::cout << "|" << std::setw(col[4]) << std::left << std::setprecision(20) << comment;
+    std::cout << "|" << std::endl;
+}
+
+print_header: (title) = {
+    std::cout << "\n# (title)$\n\n";
+    print("Test", "Actual", "Expected", "Result", "Comment");
+    print(     std::string(col[0]-1,'-')+":"
+         , ":"+std::string(col[1]-2,'-')+":"
+         , ":"+std::string(col[2]-2,'-')+":"
+         , ":"+std::string(col[3]-2,'-')+":"
+         , ":"+std::string(col[4]-1,'-')
+    );
+}
+
+#include <iomanip>
+#include <map>

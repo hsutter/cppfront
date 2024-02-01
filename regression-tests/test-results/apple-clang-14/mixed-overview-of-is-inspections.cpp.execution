@@ -1,0 +1,203 @@
+
+# type is type
+
+|                                                                  Test|  Actual|Expected|  Result|Comment                                 |
+|---------------------------------------------------------------------:|:------:|:------:|:------:|:---------------------------------------|
+|                                                              <A> is A|    true|    true|      OK|                                        |
+|                                                              <A> is B|   false|   false|      OK|                                        |
+|                                                              <A> is C|   false|   false|      OK|                                        |
+|                                                              <B> is A|   false|   false|      OK|                                        |
+|                                                              <B> is B|    true|    true|      OK|                                        |
+|                                                              <B> is C|   false|   false|      OK|                                        |
+|                                                              <C> is A|    true|    true|      OK|                                        |
+|                                                              <C> is B|   false|   false|      OK|                                        |
+|                                                              <C> is C|    true|    true|      OK|                                        |
+
+# type is template
+
+|                                                                  Test|  Actual|Expected|  Result|Comment                                 |
+|---------------------------------------------------------------------:|:------:|:------:|:------:|:---------------------------------------|
+|                                     <std::vector<int>> is std::vector|    true|    true|      OK|                                        |
+|                                      <std::vector<int>> is std::array|   false|   false|      OK|                                        |
+|                                   <std::vector<int>> is std::optional|   false|   false|      OK|                                        |
+|                                              <std::array<int, 3>> is |   false|   false|      OK|                                        |
+|                                              <std::array<int, 3>> is |    true|    true|      OK|                                        |
+|                                              <std::array<int, 3>> is |   false|   false|      OK|                                        |
+|                                              <std::optional<int>> is |   false|   false|      OK|                                        |
+|                                              <std::optional<int>> is |   false|   false|      OK|                                        |
+|                                              <std::optional<int>> is |    true|    true|      OK|                                        |
+
+# type is type_trait
+
+|                                                                  Test|  Actual|Expected|  Result|Comment                                 |
+|---------------------------------------------------------------------:|:------:|:------:|:------:|:---------------------------------------|
+|                             <const std::vector<int>> is std::is_const|    true|    true|      OK|                                        |
+|                                   <std::vector<int>> is std::is_const|   false|   false|      OK|                                        |
+|                              <std::vector<int>&> is std::is_reference|    true|    true|      OK|                                        |
+
+# type is concept
+
+|                                                                  Test|  Actual|Expected|  Result|Comment                                 |
+|---------------------------------------------------------------------:|:------:|:------:|:------:|:---------------------------------------|
+|                                                <int> is std::integral|    true|    true|      OK|                                        |
+|                                             <double> is std::integral|   false|   false|      OK|                                        |
+
+# variable is template
+
+|                                                                  Test|  Actual|Expected|  Result|Comment                                 |
+|---------------------------------------------------------------------:|:------:|:------:|:------:|:---------------------------------------|
+|                                                           v is vector|    true|    true|      OK|                                        |
+|                                                            v is array|   false|   false|      OK|                                        |
+|                                                         v is optional|   false|   false|      OK|                                        |
+|                                                            a is array|    true|    true|      OK|                                        |
+|                                                           a is vector|   false|   false|      OK|                                        |
+|                                                         a is optional|   false|   false|      OK|                                        |
+|                                                            o is array|   false|   false|      OK|                                        |
+|                                                           o is vector|   false|   false|      OK|                                        |
+|                                                         o is optional|    true|    true|      OK|                                        |
+
+# variable is type
+
+|                                                                  Test|  Actual|Expected|  Result|Comment                                 |
+|---------------------------------------------------------------------:|:------:|:------:|:------:|:---------------------------------------|
+|                                                                a is A|    true|    true|      OK|                                        |
+|                                                                b is A|   false|   false|      OK|                                        |
+|                                                                c is A|    true|    true|      OK|                                        |
+|                                                           vc is VA<0>|    true|    true|      OK|                                        |
+|                                                           vc is VA<1>|    true|    true|      OK|                                        |
+|                                                         vc& is *VA<0>|    true|    true|      OK|                                        |
+|                                                         vc& is *VA<1>|    true|    true|      OK|                                        |
+|                                                        ptr_va0 is *VC|    true|    true|      OK|                                        |
+|                                                        ptr_va1 is *VC|    true|    true|      OK|                                        |
+|                                                     ptr_va0 is *VA<1>|    true|    true|      OK|                                        |
+|                                                     ptr_va1 is *VA<0>|    true|    true|      OK|                                        |
+|                                                       cptr_va0 is *VC|   false|   false|      OK|                                        |
+|                                                cptr_va0 is * const VC|    true|    true|      OK|                                        |
+|                                                        ptr_va0* is VC|    true|    true|      OK|                                        |
+|                                                        ptr_va1* is VC|    true|    true|      OK|                                        |
+|                                                     ptr_va0* is VA<1>|    true|    true|      OK|                                        |
+|                                                     ptr_va1* is VA<0>|    true|    true|      OK|                                        |
+|                                                       cptr_va0* is VC|   false|   false|      OK|                                        |
+|                                                 cptr_va0* is const VC|    true|    true|      OK|                                        |
+
+# pointer-like variable is empty
+
+|                                                                  Test|  Actual|Expected|  Result|Comment                                 |
+|---------------------------------------------------------------------:|:------:|:------:|:------:|:---------------------------------------|
+|                                                     raw_null is empty|    true|    true|      OK|                                        |
+|                                                      nullptr is empty|    true|    true|      OK|                                        |
+|                                                 shared_ptr() is empty|    true|    true|      OK|                                        |
+|                                                 unique_ptr() is empty|    true|    true|      OK|                                        |
+|                                                           i& is empty|   false|   false|      OK|                                        |
+|                                    std::make_shared<int>(42) is empty|   false|   false|      OK|                                        |
+|                                    std::make_unique<int>(44) is empty|   false|   false|      OK|                                        |
+
+# variable is value
+
+|                                                                  Test|  Actual|Expected|  Result|Comment                                 |
+|---------------------------------------------------------------------:|:------:|:------:|:------:|:---------------------------------------|
+|                                                        i{42} is empty|   false|   false|      OK|                                        |
+|                                                           i{42} is 24|   false|   false|      OK|                                        |
+|                                                           i{42} is 42|    true|    true|      OK|                                        |
+|                                                          i{42} is 42u|    true|    true|      OK|                                        |
+|                                                          i{42} is 42L|    true|    true|      OK|                                        |
+|                                                         i{42} is 42.0|    true|    true|      OK|                                        |
+|                                                        i{42} is 42.0f|    true|    true|      OK|                                        |
+|                                                         3.14f is 3.14|   false|   false|      OK|                                        |
+|                                            3.14f is (close_to(3.14 ))|    true|    true|      OK|                                        |
+|                                            3.14  is (close_to(3.14f))|    true|    true|      OK|                                        |
+
+# variable is type_trait
+
+|                                                                  Test|  Actual|Expected|  Result|Comment                                 |
+|---------------------------------------------------------------------:|:------:|:------:|:------:|:---------------------------------------|
+|                                               i{int} is std::is_const|   false|   false|      OK|                                        |
+|                                        ci{const int} is std::is_const|    true|    true|      OK|                                        |
+|                                     ci{const int} is std::is_integral|    true|    true|      OK|                                        |
+|                               ci{const int} is std::is_floating_point|   false|   false|      OK|                                        |
+
+# variable is predicate
+
+|                                                                  Test|  Actual|Expected|  Result|Comment                                 |
+|---------------------------------------------------------------------:|:------:|:------:|:------:|:---------------------------------------|
+|                                      d{3.14} is (:(x) -> bool = x>0;)|    true|    true|      OK|                                        |
+|                                  d{3.14} is (:(x:int) -> bool = x>0;)|   false|   false|      OK|                                        |
+|                  d{3.14} is (:(x:std::string) -> bool = x.ssize()>5;)|   false|   false|      OK|                                        |
+|   std::string("abcdefg") is (:(x:std::string) -> bool = x.ssize()>5;)|    true|    true|      OK|                                        |
+|                                                   d{3.14} is (pred_i)|   false|   false|      OK|                                        |
+|                                                   d{3.14} is (pred_d)|    true|    true|      OK|                                        |
+|                                                    d{3.14} is (pred_)|    true|    true|      OK|                                        |
+|                 d{3.14} is (:<T:std::floating_point> () -> _ = true;)|    true|    true|      OK|                                        |
+|                         d{3.14} is (:<T:std::floating_point> () = {})|    true|    true|      OK|                                        |
+|                               d{3.14} is (:<T:std::integral> () = {})|   false|   false|      OK|                                        |
+
+# variant variable is value
+
+|                                                                  Test|  Actual|Expected|  Result|Comment                                 |
+|---------------------------------------------------------------------:|:------:|:------:|:------:|:---------------------------------------|
+|                                                           v{42} is 42|    true|    true|      OK|                                        |
+|                                                          v{42} is int|    true|    true|      OK|                                        |
+|                                                          v{42} is int|   false|   false|      OK|                                        |
+|                                                         v{42} is 42.0|    true|    true|      OK|                                        |
+|                                                           v{42} is 24|   false|   false|      OK|                                        |
+|                                       v{42} is (std::string("hello"))|   false|   false|      OK|                                        |
+|                                                v{42} is std::integral|    true|    true|      OK|                                        |
+|                                          v{42} is std::floating_point|   false|   false|      OK|                                        |
+|                                    v{hello} is (std::string("hello"))|    true|    true|      OK|                                        |
+|                                                        v{hello} is 42|   false|   false|      OK|                                        |
+|                                                     v{hello} is empty|   false|   false|      OK|                                        |
+|                                                       v{hello} is int|   false|   false|      OK|                                        |
+|                                               v{hello} is std::string|    true|    true|      OK|                                        |
+|                           v{std::vector{1,2,3,4}} is std::vector<int>|    true|    true|      OK|                                        |
+|                                v{std::vector{1,2,3,4}} is std::vector|    true|    true|      OK|                                        |
+|                                   v{std::vector{1,2,3,4}} is std::map|   false|   false|      OK|                                        |
+|                               v{std::vector{1,2,3,4}} is std::variant|    true|    true|      OK|                                        |
+
+# variant variable is empty
+
+|                                                                  Test|  Actual|Expected|  Result|Comment                                 |
+|---------------------------------------------------------------------:|:------:|:------:|:------:|:---------------------------------------|
+|                                                       v{int} is empty|   false|   false|      OK|v contains default value of first type  |
+|                                                 v{monostate} is empty|    true|    true|      OK|                                        |
+|                                    v{valueless_by_exception} is empty|    true|    true|      OK|is valueless: true                      |
+
+# any variable is type
+
+|                                                                  Test|  Actual|Expected|  Result|Comment                                 |
+|---------------------------------------------------------------------:|:------:|:------:|:------:|:---------------------------------------|
+|                                                          a{42} is int|    true|    true|      OK|                                        |
+|                                                       a{42} is double|   false|   false|      OK|                                        |
+|                                                        a{42} is empty|   false|   false|      OK|                                        |
+|                                                   std::any() is empty|    true|    true|      OK|                                        |
+
+# any variable is value
+
+|                                                                  Test|  Actual|Expected|  Result|Comment                                 |
+|---------------------------------------------------------------------:|:------:|:------:|:------:|:---------------------------------------|
+|                                                           a{42} is 42|    true|    true|      OK|                                        |
+|                                                           a{42} is 24|   false|   false|      OK|                                        |
+|                                                          a{42} is 42L|   false|   false|      OK|                                        |
+|                                                   std::any(3.14) is 3|   false|   false|      OK|                                        |
+|                                  a{42} is :(v)->bool = v.has_value();|    true|    true|      OK|                                        |
+|                         a{42} is :(v:std::any)->bool = v.has_value();|    true|    true|      OK|                                        |
+|                                        a{42} is :(v:int)->bool = v>0;|    true|    true|      OK|                                        |
+
+# optional variable is type
+
+|                                                                  Test|  Actual|Expected|  Result|Comment                                 |
+|---------------------------------------------------------------------:|:------:|:------:|:------:|:---------------------------------------|
+|                                                          o{42} is int|    true|    true|      OK|                                        |
+|                                                        o{42} is empty|   false|   false|      OK|                                        |
+|                                         std::optional<int>() is empty|    true|    true|      OK|                                        |
+
+# optional variable is value
+
+|                                                                  Test|  Actual|Expected|  Result|Comment                                 |
+|---------------------------------------------------------------------:|:------:|:------:|:------:|:---------------------------------------|
+|                                                           o{42} is 42|    true|    true|      OK|                                        |
+|                                                           o{42} is 24|   false|   false|      OK|                                        |
+|                                                         o{42} is 42.0|    true|    true|      OK|                                        |
+|                                        o{42} is :(v) -> bool = v > 0;|    true|    true|      OK|                                        |
+|                     o{42} is :(v:std::optional<int>) -> bool = v > 0;|    true|    true|      OK|                                        |
+|                    o{42} is :(v:std::optional<long>) -> bool = v > 0;|    true|    true|      OK|                                        |
+|      std::optional(3.14) is :(v:std::optional<int>) -> bool = v == 3;|   false|   false|      OK|                                        |

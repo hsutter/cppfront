@@ -320,6 +320,155 @@ using longdouble = long double;
 using _schar     = signed char;      // normally use i8 instead
 using _uchar     = unsigned char;    // normally use u8 instead
 
+//-----------------------------------------------------------------------
+//
+//  Helper for concepts
+//
+//-----------------------------------------------------------------------
+//
+
+template<typename Ret, typename Arg>
+auto argument_of_helper(Ret(*) (Arg)) -> Arg;
+
+template<typename Ret, typename F, typename Arg>
+auto argument_of_helper(Ret(F::*) (Arg)) -> Arg;
+
+template<typename Ret, typename F, typename Arg>
+auto argument_of_helper(Ret(F::*) (Arg) const) -> Arg;
+
+template <typename F>
+auto argument_of_helper(F) -> CPP2_TYPEOF(argument_of_helper(&F::operator()));
+
+template <typename T>
+using argument_of_t = CPP2_TYPEOF(argument_of_helper(std::declval<T>()));
+
+template <typename T>
+using pointee_t = std::iter_value_t<T>;
+
+template <typename R>
+using range_value_t = std::iter_value_t<decltype(std::begin(std::declval<R>()))>;
+
+template <template <typename...> class C, typename... Ts>
+constexpr auto specialization_of_template_helper(C< Ts...> const& ) -> std::true_type {
+    return {};
+}
+
+template <template <typename, auto...> class C, typename T, auto... Ns>
+    requires (sizeof...(Ns) > 0)
+constexpr auto specialization_of_template_helper(C< T, Ns... > const& ) -> std::true_type {
+    return {};
+}
+
+//-----------------------------------------------------------------------
+//
+//  Concepts
+//
+//-----------------------------------------------------------------------
+//
+
+template <typename X, template<typename...> class C>
+concept specialization_of_template = requires (X x) {
+    { specialization_of_template_helper<C>(std::forward<X>(x)) } -> std::same_as<std::true_type>;
+};
+
+template <typename X, template<typename,auto...> class C>
+concept specialization_of_template_type_and_nttp = requires (X x) {
+    { specialization_of_template_helper<C>(std::forward<X>(x)) } -> std::same_as<std::true_type>;
+};
+
+template <template <typename...> class C>
+concept type_trait = std::derived_from<C<int>, std::true_type> || std::derived_from<C<int>, std::false_type>;
+
+template<typename X>
+concept boolean_testable = std::convertible_to<X, bool> && requires(X&& x) {
+  { !std::forward<X>(x) } -> std::convertible_to<bool>;
+};
+
+template <typename X>
+concept polymorphic = std::is_polymorphic_v<std::remove_cvref_t<X>>;
+
+template <typename X>
+concept pointer = std::is_pointer_v<std::remove_cvref_t<X>>;
+
+template <typename X>
+concept polymorphic_pointer = pointer<X>
+                        && polymorphic<std::remove_pointer_t<std::remove_cvref_t<X>>>;
+
+template <typename X>
+concept dereferencable = requires (X x) { *x; };
+
+template <typename X>
+concept default_constructible = std::is_default_constructible_v<std::remove_cvref_t<X>>;
+
+template <typename X>
+concept bounded_array = std::is_bounded_array_v<std::remove_cvref_t<X>>;
+
+template <typename X>
+concept pointer_like = dereferencable<X> && default_constructible<X> && std::equality_comparable<X>
+                       && !bounded_array<X>;
+
+template <typename X>
+concept not_pointer_like = !pointer_like<X>;
+
+template< typename From, typename To >
+concept brace_initializable_to = requires (From x) { To{x}; };
+
+template <typename V, typename X>
+concept callable_with_explicit_type = requires (V value) {
+    {value.template operator()<X>()};
+};
+
+template< typename X, typename C >
+concept same_type_as = std::same_as<std::remove_cvref_t<X>, std::remove_cvref_t<C>>;
+
+template <typename X, typename C>
+concept not_same_as = !same_type_as<X, C>;
+
+template <typename X>
+concept const_type = std::is_const_v<X> || std::is_const_v<std::remove_reference_t<X>>;
+
+template <typename X>
+concept has_defined_argument = requires {
+	std::declval<argument_of_t<X>>();
+};
+
+template <typename X, typename F>
+concept covertible_to_argument_of = same_type_as<X,argument_of_t<F>>
+                                 || (pointer_like<argument_of_t<F>> && brace_initializable_to<X, pointee_t<argument_of_t<F>>>)
+                                 || (!pointer_like<argument_of_t<F>> && brace_initializable_to<X, argument_of_t<F>>)
+                                 ;
+
+template <typename F, typename X>
+concept valid_predicate = (std::predicate<F, X> && !has_defined_argument<F>)
+                          || (std::predicate<F, X> && has_defined_argument<F> && covertible_to_argument_of<X, F>);
+
+template <typename V, typename X>
+concept has_custom_operator_is = requires (V value, X x){
+	value.op_is(x);
+};
+
+template <typename X, typename C>
+concept can_bound_to__impl__ = same_type_as<X, C>
+                       || (
+                            std::derived_from<std::remove_cvref_t<X>, std::remove_cvref_t<C>>
+                        )
+                       || (
+                            !(polymorphic<X> && polymorphic<C>)
+                            && requires (X x){ static_cast<C&>(x); }
+                        );
+
+template <typename X, typename C>
+concept can_bound_to = can_bound_to__impl__<X, C>
+                       || can_bound_to__impl__<pointee_t<X>, pointee_t<C>>;
+
+template <typename X, typename C>
+concept cannot_bound_to = !can_bound_to<X,C> && !can_bound_to<pointee_t<X>, C>;
+
+template <typename X>
+concept range = requires(X& x) {
+    std::begin(x);
+    std::end(x);
+};
 
 //-----------------------------------------------------------------------
 //
@@ -340,6 +489,66 @@ struct aligned_storage {
     alignas(Align) unsigned char data[Len];
 };
 
+//-----------------------------------------------------------------------
+//
+//  A type_find_if for iterating over types in parameter packs
+//
+//  Note: the current implementation is a workaround for clang-12 internal error.
+//  Original implementation does not need type_it and is implemented
+//  using lambda with explicit parameter type list in the following way:
+//
+//    template <typename... Ts, typename F>
+//    constexpr auto type_find_if(F&& fun)
+//    {
+//        std::size_t found = std::variant_npos;
+//        [&]<std::size_t... Is>(std::index_sequence<Is...>){
+//            if constexpr ((requires { {CPP2_FORWARD(fun).template operator()<Is, Ts>()} -> std::convertible_to<bool>;} && ...)) {
+//                (((CPP2_FORWARD(fun).template operator()<Is, Ts>()) && (found = Is, true)) || ...);
+//            }
+//        }(std::index_sequence_for<Ts...>());
+//        return found;
+//    }
+//
+//  The workaround is not needed in gcc-12.1+, clang-13+, msvc 19.29+
+//
+//  Note2: the internal if constexpr could have else with static_assert.
+//  Unfortunatelly I cannot make it work on MSVC.
+//
+//-----------------------------------------------------------------------
+//
+template <std::size_t Index, typename T>
+struct type_it {
+    using type = T;
+    inline static const std::size_t index = Index;
+};
+
+template <typename... Ts, typename F>
+constexpr auto type_find_if(F&& fun)
+{
+    std::size_t found = std::variant_npos;
+    [&]<std::size_t... Is>(std::index_sequence<Is...>){
+        if constexpr ((requires { {CPP2_FORWARD(fun)(type_it<Is, Ts>{})} -> boolean_testable;} && ...)) {
+            ((CPP2_FORWARD(fun)(type_it<Is, Ts>{}) && (found = Is, true)) || ...);
+        } 
+    }(std::index_sequence_for<Ts...>());
+    return found;
+}
+
+template <typename F, template<typename...> class C, typename... Ts>
+constexpr auto type_find_if(C<Ts...>, F&& fun)
+{
+    return type_find_if<Ts...>(CPP2_FORWARD(fun));
+}
+
+template <typename T, typename... Ts>
+constexpr auto variant_contains_type(std::variant<Ts...>)
+{
+    if constexpr (is_any<T, Ts...>) {
+        return std::true_type{};
+    } else {
+        return std::false_type{};
+    }
+}
 
 //-----------------------------------------------------------------------
 //
@@ -704,6 +913,26 @@ using in =
         T const&
     >;
 
+
+template<class T, class U>
+[[nodiscard]] constexpr auto&& forward_like(U&& x) noexcept
+{
+    constexpr bool is_adding_const = std::is_const_v<std::remove_reference_t<T>>;
+    if constexpr (std::is_lvalue_reference_v<T&&>)
+    {
+        if constexpr (is_adding_const)
+            return std::as_const(x);
+        else
+            return static_cast<U&>(x);
+    }
+    else
+    {
+        if constexpr (is_adding_const)
+            return std::move(std::as_const(x));
+        else
+            return std::move(x);
+    }
+}
 
 //-----------------------------------------------------------------------
 //
@@ -1079,104 +1308,201 @@ inline auto to_string(auto&& value, std::string_view) -> std::string
 //  TODO: Does this really warrant a new synonym? Perhaps "is void" is enough
 using empty = void;
 
-
-//  Templates
+//  Type is Type
 //
-template <template <typename...> class C, typename... Ts>
-constexpr auto is(C< Ts...> const& ) -> bool {
-    return true;
-}
 
-#if defined(_MSC_VER)
-    template <template <typename, typename...> class C, typename T>
-    constexpr auto is( T const& ) -> bool {
-        return false;
+template <typename X, typename C>
+constexpr auto is() -> std::false_type { return {}; }
+
+template <typename X, typename C>
+    requires std::same_as<X, C> || std::derived_from<X,C>
+constexpr auto is() -> std::true_type { return {}; }
+
+//  Type is Template
+//
+
+template <typename X, template <typename, typename...> class C>
+constexpr auto is() -> std::false_type { return {}; }
+
+template <typename X, template <typename, typename...> class C>
+    requires specialization_of_template<X, C>
+constexpr auto is() -> std::true_type { return {}; }
+
+template <typename X, template <typename, auto, auto...> class C>
+constexpr auto is() -> std::false_type { return {}; }
+
+template <typename X, template <typename, auto, auto...> class C>
+    requires specialization_of_template_type_and_nttp<X, C>
+constexpr auto is() -> std::true_type { return {}; }
+
+//  Type is Type Traits
+//
+
+template <typename  X, template <typename, typename...> class C>
+    requires type_trait<C>
+constexpr auto is() -> C<X> { return {}; }
+
+//  Type is Concept
+//
+
+template <typename X, auto C>
+constexpr auto is() {
+    if constexpr (callable_with_explicit_type<CPP2_TYPEOF(C), X>) {
+        return std::true_type{};
+    } else {
+        return std::false_type{};
     }
-#else
-    template <template <typename...> class C, typename T>
-    constexpr auto is( T const& ) -> bool {
-        return false;
+}
+
+//  Variable is Template
+//
+
+template <template <typename...> class C, specialization_of_template<C> X>
+    // requires (!specialization_of_template<X, std::variant>)
+constexpr auto is( X&& ) -> std::true_type {
+    return {};
+}
+template <template <typename...> class C, typename T>
+constexpr auto is( T&& ) -> std::false_type {
+    return {};
+}
+
+template <template <typename, auto, auto...> class C, typename T, auto... Vs>
+constexpr auto is( C<T, Vs...> const& ) -> std::true_type {
+    return {};
+}
+
+// additional auto required not to collide with is type_trait
+template <template <typename, auto, auto...> class C, typename T>
+constexpr auto is( T const& ) -> std::false_type {
+    return {};
+}
+
+template <template <auto, auto...> class C, auto... Vs>
+constexpr auto is( C<Vs...> const& ) -> std::true_type {
+    return {};
+}
+
+template <template <auto, auto...> class C, typename T>
+constexpr auto is( T const& ) -> std::false_type {
+    return {};
+}
+
+// Variable is Type_traits
+//
+template <template <typename...> class C, typename X>
+    requires type_trait<C>
+constexpr auto is( X&& ) -> decltype(auto) {
+    if constexpr (
+        C<X&&>::value
+        || C<std::remove_reference_t<X>>::value
+        || C<std::remove_cv_t<X>>::value
+        || C<std::remove_cvref_t<X>>::value
+    ) {
+        return std::true_type{};
+    } else {
+        return std::false_type{};
     }
-#endif
-
-template <template <typename,auto> class C, typename T, auto V>
-constexpr auto is( C<T, V> const& ) -> bool {
-    return true;
 }
 
-template <template <typename,auto> class C, typename T>
-constexpr auto is( T const& ) -> bool {
-    return false;
-}
-
-//  Types
+//  Variable is Type
 //
 template< typename C, typename X >
-auto is( X const& ) -> bool {
-    return false;
+constexpr auto is( X && ) -> std::false_type {
+    return {};
 }
 
-template< typename C, typename X >
-    requires std::is_same_v<C, X>
-auto is( X const& ) -> bool {
-    return true;
+template< typename C, can_bound_to<C> X >
+    requires not_same_as<X, std::any>
+constexpr auto is( X && ) -> std::true_type {
+    return {};
 }
 
-template< typename C, typename X >
-    requires (std::is_base_of_v<C, X> && !std::is_same_v<C,X>)
-auto is( X const& ) -> bool {
-    return true;
+template< polymorphic C, polymorphic X >
+    requires (!std::derived_from<std::remove_cvref_t<X>, C>)
+constexpr auto is( X&& x ) {
+    if constexpr ( const_type<std::remove_reference_t<X>> && !const_type<C>) {
+        return std::false_type{};
+    } else {
+        return Dynamic_cast<std::add_pointer_t<C>>(&x) != nullptr;
+    }
 }
 
-template< typename C, typename X >
-    requires (
-        ( std::is_base_of_v<X, C> ||
-          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>)
-        ) && !std::is_same_v<C,X>)
-auto is( X const& x ) -> bool {
-    return Dynamic_cast<C const*>(&x) != nullptr;
+template< polymorphic_pointer C, polymorphic_pointer X >
+    requires cannot_bound_to<X, C>
+constexpr auto is( X&& x ) {
+    if constexpr ( const_type<std::remove_pointer_t<std::remove_reference_t<X>>> && !const_type<std::remove_pointer_t<C>>) {
+        return std::false_type{};
+    } else {
+        return Dynamic_cast<std::add_pointer_t<std::add_const_t<std::remove_pointer_t<C>>>>(x) != nullptr;
+    }
 }
 
-template< typename C, typename X >
-    requires (
-        ( std::is_base_of_v<X, C> ||
-          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>)
-        ) && !std::is_same_v<C,X>)
-auto is( X const* x ) -> bool {
-    return Dynamic_cast<C const*>(x) != nullptr;
+template< std::same_as<empty> C, pointer_like X >
+constexpr auto is( X && x ) -> bool {
+    return x == std::remove_cvref_t<X>();
 }
 
-template< typename C, typename X >
-    requires (requires (X x) { *x; X(); } && std::is_same_v<C, empty>)
-auto is( X const& x ) -> bool {
-    return x == X();
+template< std::same_as<empty> C, typename X >
+    requires same_type_as<X, std::nullptr_t> || same_type_as<X, std::monostate>
+constexpr auto is( X && ) -> std::true_type {
+    return {};
 }
 
-
-//  Values
+//  Variable is Value
 //
-inline constexpr auto is( auto const& x, auto&& value ) -> bool
-{
-    //  Value with customized operator_is case
-    if constexpr (requires{ x.op_is(value); }) {
-        return x.op_is(value);
-    }
-
-    //  Predicate case
-    else if constexpr (requires{ bool{ value(x) }; }) {
-        return value(x);
-    }
-    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
-        return false;
-    }
-
-    //  Value equality case
-    else if constexpr (requires{ bool{x == value}; }) {
-        return x == value;
-    }
-    return false;
+template <typename X, typename V>
+constexpr auto is( X const&, V && ) -> std::false_type {
+    return {};
 }
 
+template <typename X, has_custom_operator_is<X> V>
+constexpr bool is( X const& x, V && value ) {
+    return value.op_is(x);
+}
+
+template <not_pointer_like X, valid_predicate<X> V>
+constexpr bool is( X const& x, V && value ) {
+    return value(x);
+}
+
+template <not_pointer_like X, std::equality_comparable_with<X> V>
+constexpr bool is( X const& x, V && value ) {
+    return x == value;
+}
+
+template <not_pointer_like X, std::equality_comparable_with<X> V>
+    requires range<X> && range<V> && std::equality_comparable_with<range_value_t<X>, range_value_t<V>>
+constexpr bool is( X const& x, V && value ) {
+    if constexpr (std::convertible_to<X, std::string_view> && std::convertible_to<V, std::string_view>) {
+        return std::string_view(x) == std::string_view(value);
+    } else {
+        return std::equal(std::cbegin(x), std::cend(x),
+                        std::cbegin(value), std::cend(value));
+    }
+}
+
+template <range X, range V>
+    requires std::equality_comparable_with<range_value_t<X>, range_value_t<V>>
+constexpr bool is( X const& x, V && value ) {
+    return std::equal(std::cbegin(x), std::cend(x),
+                      std::cbegin(value), std::cend(value));
+}
+
+template <typename X, callable_with_explicit_type<X> V>
+constexpr auto is( X const&, V &&) -> std::true_type {
+    return {};
+}
+
+//-----------------------------------------------------------------------
+//
+//  and "is predicate" for generic function used as predicate
+//
+
+template <typename X>
+inline constexpr auto is( X const& x, bool (*value)(X const&) ) -> bool {
+    return value(x);
+}
 
 //-------------------------------------------------------------------------------------------------------------
 //  Built-in as
@@ -1374,104 +1700,79 @@ constexpr auto operator_as( std::variant<Ts...> const& x ) -> decltype(auto) {
     }
 }
 
-
-//  is Type
+//-------------------------------------------------------------------------------------------------------------
+//  forward declarations needed for recursive calls
 //
-template<typename... Ts>
-constexpr auto operator_is( std::variant<Ts...> const& x ) {
-    return x.index();
-}
 
-template<typename T, typename... Ts>
-auto is( std::variant<Ts...> const& x );
+template<specialization_of_template<std::variant> T, typename C>
+constexpr auto is( T&& x, C&& value );
 
-
-//  is Value
+//  std::variant variable is Template
 //
-template<typename... Ts>
-constexpr auto is( std::variant<Ts...> const& x, auto&& value ) -> bool
-{
-    //  Predicate case
-    if constexpr      (requires{ bool{ value(operator_as< 0>(x)) }; }) { if (x.index() ==  0) return value(operator_as< 0>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 1>(x)) }; }) { if (x.index() ==  1) return value(operator_as< 1>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 2>(x)) }; }) { if (x.index() ==  2) return value(operator_as< 2>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 3>(x)) }; }) { if (x.index() ==  3) return value(operator_as< 3>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 4>(x)) }; }) { if (x.index() ==  4) return value(operator_as< 4>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 5>(x)) }; }) { if (x.index() ==  5) return value(operator_as< 5>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 6>(x)) }; }) { if (x.index() ==  6) return value(operator_as< 6>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 7>(x)) }; }) { if (x.index() ==  7) return value(operator_as< 7>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 8>(x)) }; }) { if (x.index() ==  8) return value(operator_as< 8>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as< 9>(x)) }; }) { if (x.index() ==  9) return value(operator_as< 9>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<10>(x)) }; }) { if (x.index() == 10) return value(operator_as<10>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<11>(x)) }; }) { if (x.index() == 11) return value(operator_as<11>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<12>(x)) }; }) { if (x.index() == 12) return value(operator_as<12>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<13>(x)) }; }) { if (x.index() == 13) return value(operator_as<13>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<14>(x)) }; }) { if (x.index() == 14) return value(operator_as<14>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<15>(x)) }; }) { if (x.index() == 15) return value(operator_as<15>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<16>(x)) }; }) { if (x.index() == 16) return value(operator_as<16>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<17>(x)) }; }) { if (x.index() == 17) return value(operator_as<17>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<18>(x)) }; }) { if (x.index() == 18) return value(operator_as<18>(x)); }
-    else if constexpr (requires{ bool{ value(operator_as<19>(x)) }; }) { if (x.index() == 19) return value(operator_as<19>(x)); }
-    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
+
+template<template <typename...> class C, specialization_of_template<std::variant> T>
+    requires (!specialization_of_template<T, C>)
+constexpr auto is( T&& x ) {
+    return type_find_if(x, [&]<typename It>(It const&) -> bool {
+        if (x.index() == It::index) { return is<C>(forward_like<T>(std::get<It::index>(x)));}
         return false;
-    }
-
-    //  Value case
-    else {
-        if constexpr (requires{ bool{ operator_as< 0>(x) == value }; }) { if (x.index() ==  0) return operator_as< 0>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 1>(x) == value }; }) { if (x.index() ==  1) return operator_as< 1>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 2>(x) == value }; }) { if (x.index() ==  2) return operator_as< 2>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 3>(x) == value }; }) { if (x.index() ==  3) return operator_as< 3>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 4>(x) == value }; }) { if (x.index() ==  4) return operator_as< 4>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 5>(x) == value }; }) { if (x.index() ==  5) return operator_as< 5>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 6>(x) == value }; }) { if (x.index() ==  6) return operator_as< 6>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 7>(x) == value }; }) { if (x.index() ==  7) return operator_as< 7>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 8>(x) == value }; }) { if (x.index() ==  8) return operator_as< 8>(x) == value; }
-        if constexpr (requires{ bool{ operator_as< 9>(x) == value }; }) { if (x.index() ==  9) return operator_as< 9>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<10>(x) == value }; }) { if (x.index() == 10) return operator_as<10>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<11>(x) == value }; }) { if (x.index() == 11) return operator_as<11>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<12>(x) == value }; }) { if (x.index() == 12) return operator_as<12>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<13>(x) == value }; }) { if (x.index() == 13) return operator_as<13>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<14>(x) == value }; }) { if (x.index() == 14) return operator_as<14>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<15>(x) == value }; }) { if (x.index() == 15) return operator_as<15>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<16>(x) == value }; }) { if (x.index() == 16) return operator_as<16>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<17>(x) == value }; }) { if (x.index() == 17) return operator_as<17>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<18>(x) == value }; }) { if (x.index() == 18) return operator_as<18>(x) == value; }
-        if constexpr (requires{ bool{ operator_as<19>(x) == value }; }) { if (x.index() == 19) return operator_as<19>(x) == value; }
-    }
-    return false;
+    }) != std::variant_npos;
 }
 
+template <template <typename...> class C, typename... Ts>
+    requires std::same_as<C<Ts...>, std::variant<Ts...>>
+constexpr auto is( std::variant<Ts...> const& ) -> std::true_type {
+    return {};
+}
 
-//  as
+template<template <typename, auto...> class C, specialization_of_template<std::variant> T>
+constexpr auto is( T&& x ) {
+    return type_find_if(x, [&]<typename It>(It const&) -> bool {
+        if (x.index() == It::index) { return is<C>(forward_like<T>(std::get<It::index>(x)));}
+        return false;
+    }) != std::variant_npos || specialization_of_template_type_and_nttp<T, C>;
+}
+
+//  std::variant variable is Value
 //
-template<typename T, typename... Ts>
-auto is( std::variant<Ts...> const& x ) {
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 0>(x)), T >) { if (x.index() ==  0) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 1>(x)), T >) { if (x.index() ==  1) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 2>(x)), T >) { if (x.index() ==  2) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 3>(x)), T >) { if (x.index() ==  3) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 4>(x)), T >) { if (x.index() ==  4) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 5>(x)), T >) { if (x.index() ==  5) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 6>(x)), T >) { if (x.index() ==  6) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 7>(x)), T >) { if (x.index() ==  7) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 8>(x)), T >) { if (x.index() ==  8) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as< 9>(x)), T >) { if (x.index() ==  9) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<10>(x)), T >) { if (x.index() == 10) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<11>(x)), T >) { if (x.index() == 11) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<12>(x)), T >) { if (x.index() == 12) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<13>(x)), T >) { if (x.index() == 13) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<14>(x)), T >) { if (x.index() == 14) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<15>(x)), T >) { if (x.index() == 15) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<16>(x)), T >) { if (x.index() == 16) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<17>(x)), T >) { if (x.index() == 17) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<18>(x)), T >) { if (x.index() == 18) return true; }
-    if constexpr (std::is_same_v< CPP2_TYPEOF(operator_as<19>(x)), T >) { if (x.index() == 19) return true; }
-    if constexpr (std::is_same_v< T, empty > ) {
-        if (x.valueless_by_exception()) return true;
-        //  Need to guard this with is_any otherwise the get_if is illegal
-        if constexpr (is_any<std::monostate, Ts...>) return std::get_if<std::monostate>(&x) != nullptr;
+
+template<specialization_of_template<std::variant> T, typename C>
+constexpr auto is( T&& x, C&& value ) {
+    if constexpr (std::same_as<T,C>) {
+        return x == value;
+    } else {
+        return type_find_if(x, [&]<typename It>(It const&) -> bool {
+            if (x.index() == It::index) { return is(forward_like<T>(std::get<It::index>(x)), std::forward<C>(value));}
+            return false;
+        }) != std::variant_npos;
     }
+}
+
+//  std::variant variable is Type
+//
+template<specialization_of_template<std::variant> T, specialization_of_template<std::variant> C>
+constexpr auto is( C&& ) {
+    if constexpr (std::same_as<std::remove_cvref_t<T>, std::remove_cvref_t<C>>) {
+        return std::true_type{};
+    } else {
+        return std::false_type{};
+    }
+}
+
+template<typename C, specialization_of_template<std::variant> T>
+auto is( T&& x ) {
+    return type_find_if(x, [&]<typename It>(It const&) -> bool {
+        if (x.index() == It::index) { return is<C>(std::get<It::index>(x));}
+        return false;
+    }) != std::variant_npos;
+}
+
+template<std::same_as<empty> C, specialization_of_template<std::variant> T>
+auto is( T&& x ) {
+    if (x.valueless_by_exception())
+        return true;
+    if constexpr (requires { {variant_contains_type<std::monostate>(std::declval<T>())} -> std::same_as<std::true_type>; }) 
+        return std::get_if<std::monostate>(&x) != nullptr;
     return false;
 }
 
@@ -1555,40 +1856,38 @@ auto as( std::variant<Ts...> const& x ) -> decltype(auto) {
 //  std::any is and as
 //
 
-//  is Type
+//  std::any variable is Type
 //
-template<typename T, typename X>
-    requires (std::is_same_v<X,std::any> && !std::is_same_v<T,std::any> && !std::is_same_v<T,empty>)
-constexpr auto is( X const& x ) -> bool
+template<typename T>
+constexpr auto is( same_type_as<std::any> auto && x ) -> bool
     { return x.type() == Typeid<T>(); }
 
-template<typename T, typename X>
-    requires (std::is_same_v<X,std::any> && std::is_same_v<T,empty>)
-constexpr auto is( X const& x ) -> bool
+template<std::same_as<empty> T>
+constexpr auto is( same_type_as<std::any> auto && x ) -> bool
     { return !x.has_value(); }
 
 
-//  is Value
+//  std::any variable is Value
 //
-inline constexpr auto is( std::any const& x, auto&& value ) -> bool
-{
-    //  Predicate case
-    if constexpr (requires{ bool{ value(x) }; }) {
-        return value(x);
-    }
-    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
-        return false;
-    }
 
-    //  Value case
-    else if constexpr (requires{ bool{ *std::any_cast<CPP2_TYPEOF(value)>(&x) == value }; }) {
-        auto pvalue = std::any_cast<CPP2_TYPEOF(value)>(&x);
-        return pvalue && *pvalue == value;
-    }
-    //  else
-    return false;
+template <std::same_as<std::any> X, has_defined_argument V>
+    requires not_same_as<std::any, argument_of_t<V>>
+constexpr bool is( X const& x, V && value ) {
+    auto* ptr = std::any_cast<argument_of_t<V>>(&x);
+    return ptr && value(*ptr);
 }
 
+template <std::same_as<std::any> X, std::equality_comparable V>
+    requires (!has_defined_argument<V>)
+constexpr bool is( X const& x, V && value ) {
+    if constexpr (pointer_like<V>) {
+        auto* ptr = std::any_cast<pointee_t<V>>(&x);
+        return ptr && !is<empty>(value) && is(*ptr, *value);
+    } else {
+        auto* ptr = std::any_cast<std::remove_cvref_t<V>>(&x);
+        return ptr && is(*ptr, std::forward<V>(value));
+    }
+}
 
 //  as
 //
@@ -1602,39 +1901,32 @@ constexpr auto as( X const& x ) -> T
 //  std::optional is and as
 //
 
-//  is Type
+//  std::optional variable is Type
 //
-template<typename T, typename X>
-    requires std::is_same_v<X,std::optional<T>>
-constexpr auto is( X const& x ) -> bool
-    { return x.has_value(); }
-
-template<typename T, typename U>
-    requires std::is_same_v<T,empty>
-constexpr auto is( std::optional<U> const& x ) -> bool
-    { return !x.has_value(); }
-
-
-//  is Value
-//
-template<typename T>
-constexpr auto is( std::optional<T> const& x, auto&& value ) -> bool
-{
-    //  Predicate case
-    if constexpr (requires{ bool{ value(x) }; }) {
-        return value(x);
-    }
-    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
-        return false;
-    }
-
-    //  Value case
-    else if constexpr (requires{ bool{ x.value() == value }; }) {
-        return x.has_value() && x.value() == value;
-    }
-    return false;
+template<not_same_as<empty> T, specialization_of_template<std::optional> U>
+    requires not_same_as<T, U> && not_same_as<T, pointee_t<U>>
+constexpr auto is( U&& ) -> std::false_type {
+    return {};
 }
 
+template<not_same_as<empty> T, specialization_of_template<std::optional> U>
+    requires not_same_as<T, U>
+constexpr auto is( U&& x ) {
+    return x.has_value();
+}
+
+//-------------------------------------------------------------------------------------------------------------
+//  pointer_like variable is value
+//
+
+template <pointer_like X, typename V>
+constexpr auto is( X const& x, V && value) -> decltype(auto) {
+    if constexpr (pointer<X> && pointer<V>) {
+        return x == value;
+    } else {
+        return !is<empty>(x) && is(*x, CPP2_FORWARD(value));
+    }
+}
 
 //  as
 //
