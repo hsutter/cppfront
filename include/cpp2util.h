@@ -349,6 +349,10 @@ struct aligned_storage {
     alignas(Align) unsigned char data[Len];
 };
 
+template <typename T>
+    requires requires { *std::declval<T&>(); }
+using deref_t = decltype(*std::declval<T&>());
+
 
 //-----------------------------------------------------------------------
 //
@@ -1274,7 +1278,7 @@ auto as(X const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto) {
     else if constexpr (
         std::is_pointer_v<C>
         && std::is_pointer_v<X>
-        && requires { requires std::is_base_of_v<std::iter_reference_t<X>, std::iter_reference_t<C>>; }
+        && requires { requires std::is_base_of_v<deref_t<X>, deref_t<C>>; }
     )
     {
         return Dynamic_cast<C>(x);
