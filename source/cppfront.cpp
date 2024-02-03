@@ -73,8 +73,8 @@ auto main(
             }
 
             if (flag_verbose) {
-                out << "   Cpp1: " << count.cpp1_lines << " line" << (count.cpp1_lines != 1 ? "s" : "");
-                out << "\n   Cpp2: " << count.cpp2_lines << " line" << (count.cpp2_lines != 1 ? "s" : "");
+                out << "   Cpp1: " << print_with_thousands(count.cpp1_lines) << " line" << (count.cpp1_lines != 1 ? "s" : "");
+                out << "\n   Cpp2: " << print_with_thousands(count.cpp2_lines) << " line" << (count.cpp2_lines != 1 ? "s" : "");
                 auto total = count.cpp1_lines + count.cpp2_lines;
                 if (total > 0) {
                     out << " (";

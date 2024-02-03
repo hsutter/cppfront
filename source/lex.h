@@ -300,7 +300,9 @@ public:
         v.start(*this, depth);
     }
 
-    auto remove_prefix_if(std::string_view prefix) {
+    auto remove_prefix_if(std::string_view prefix)
+        -> void
+    {
         if (
             sv.size() > prefix.size()
             && sv.starts_with(prefix)
@@ -311,11 +313,24 @@ public:
         }
     }
 
+    auto set_global_token_order(index_t fp) const
+        -> void
+    {
+        assert(global_token_order == 0);    // we only expect to set this once
+        global_token_order = fp;
+    }
+
+    auto get_global_token_order() const
+        -> index_t
+    {
+        return global_token_order;
+    }
+
 private:
     std::string_view sv;
     source_position  pos;
     lexeme           lex_type;
-public: mutable std::int32_t final_position = 0;
+    mutable index_t  global_token_order = 0;
 };
 
 static_assert (CHAR_BIT == 8);

@@ -93,6 +93,7 @@ struct source_line
 
 using lineno_t = int32_t;
 using colno_t  = int32_t;   // not int16_t... encountered >80,000 char line during testing
+using index_t  = int32_t;
 
 struct source_position
 {
@@ -528,6 +529,20 @@ auto contains(
     -> bool
 {
     return s.find(value) != s.npos;
+}
+
+
+//  Print an integer with 1,000's separators (always commas, not locale-driven)
+auto print_with_thousands(std::integral auto val)
+    -> std::string
+{
+    auto ret = std::to_string(val % 10);
+    auto pos = 0;
+    while ((val /= 10) > 0) {
+        if ((++pos % 3) == 0) { ret = ',' + ret; }
+        ret = std::to_string(val % 10) + ret;
+    }
+    return ret;
 }
 
 

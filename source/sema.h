@@ -274,11 +274,11 @@ struct symbol {
         }
     }
 
-    auto get_final_position() const
-        -> std::int32_t
+    auto get_global_token_order() const
+        -> index_t
     {
         if (auto t = get_token()) {
-            return t->final_position;
+            return t->get_global_token_order();
         }
         return 0;
     }
@@ -399,7 +399,7 @@ public:
         auto i = symbols.cbegin();
         while (
             i != symbols.cend()
-            && i->get_final_position() < t.final_position
+            && i->get_global_token_order() < t.get_global_token_order()
             )
         {
             ++i;
@@ -510,7 +510,7 @@ public:
             symbols.begin(),
             symbols.end(),
             [&](symbol const& s) -> bool {
-                return s.get_final_position() == t.final_position;
+                return s.get_global_token_order() == t.get_global_token_order();
             });
 
         if (identifier_sym const* sym = nullptr;
@@ -2377,8 +2377,8 @@ public:
 
         //  By giving tokens an order during sema
         //  generated code can be equally checked
-        static std::int32_t final_position = 1;
-        t.final_position = final_position++;
+        static index_t global_token_counter = 1;
+        t.set_global_token_order( global_token_counter++ );
 
         auto started_member_access =
             prev_token
