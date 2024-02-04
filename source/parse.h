@@ -19,9 +19,6 @@
 #define CPP2_PARSE_H
 
 #include "lex.h"
-#include <memory>
-#include <variant>
-#include <iostream>
 
 
 namespace cpp2 {

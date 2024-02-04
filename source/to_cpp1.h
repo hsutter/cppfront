@@ -19,9 +19,6 @@
 #define CPP2_TO_CPP1_H
 
 #include "sema.h"
-#include <iostream>
-#include <cstdio>
-#include <optional>
 #include <filesystem>
 
 namespace cpp2 {
@@ -1749,10 +1746,10 @@ public:
     //
     auto emit(
         unqualified_id_node const& n,
-        int  synthesized_multi_return_size = 0,
-        bool is_local_name = true,
-        bool is_qualified = false,
-        bool is_class_member_access = false
+        int                        synthesized_multi_return_size = 0,
+        bool                       is_local_name                 = true,
+        bool                       is_qualified                  = false,
+        bool                       is_class_member_access        = false
     )
         -> void
     {   STACKINSTR
@@ -3350,7 +3347,7 @@ public:
 
                 //  If the computed function name is an explicit member access
                 //  we don't need to go through the UFCS macro
-                //  This also workarounds compiler bugs
+                //  Note: This also works around compiler bugs
                 if (funcname.starts_with("std::move(*this).")) {
                     prefix.emplace_back(funcname + "(", args.value().open_pos );
                 }

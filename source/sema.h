@@ -750,7 +750,7 @@ private:
     ) const
         -> void
     {
-        auto is_an_use = [&](identifier_sym const* sym) -> bool {
+        auto is_a_use = [&](identifier_sym const* sym) -> bool {
             assert(!sym || sym->identifier);
             declaration_sym const* decl = nullptr;
             return sym
@@ -769,20 +769,23 @@ private:
 
         auto i = pos + 1;
 
-        struct pos_range {
+        struct pos_range
+        {
             bool is_loop;
-            int first;
-            int last = 0;
-            pos_range(bool l, int f) : is_loop{l}, first{f} { }
-            bool within(int x) const { return first <= x && x <= last; }
-            bool skip() const { return !is_loop; }
+            int  first;
+            int  last = 0;
+
+            pos_range  (bool l, int f) : is_loop{l}, first{f} { }
+            bool within(int x)   const { return first <= x && x <= last; }
+            bool skip  ()        const { return !is_loop; }
         };
+
         //  Ranges of positions which includes non-nested
         //  1. Iteration statements (a use isn't a last use)
         //  2. Ranges to skip (a last use can't be found in these)
         //    - Function expressions (except in a capture)
         //    - Where id is hidden by another declaration
-        auto pos_ranges = std::vector<pos_range>{{false, 0}}; //  Keep sentinel for simpler code
+        auto pos_ranges = std::vector<pos_range>{{false, 0}}; // Keep sentinel for simpler code
 
         auto skip_hidden_name = [&](bool record_pos_range) -> bool {
             auto skip_to = [&](token const* identifier_end)
@@ -845,7 +848,7 @@ private:
                 && decl->declaration->is_function_expression()
                 )
             {
-                // Record the skipped subranges without captures
+                //  Record the skipped subranges without captures
                 auto function_expression_end = decl->declaration;
                 pos_ranges.emplace_back(false, i - 1);
                 ++i;
@@ -862,7 +865,7 @@ private:
                     }
                     else if (
                         auto sym = std::get_if<symbol::active::identifier>(&symbols[i].sym);
-                        is_an_use(sym)
+                        is_a_use(sym)
                         && sym->is_captured
                         )
                     {
@@ -989,7 +992,7 @@ private:
 
                 //  If found in a branch,
                 //  keep popping to its sibling (false branch)
-                //  or to its contaning scope (true branch)
+                //  or to its containing scope (true branch)
                 if (
                     i > pos
                     && comp
@@ -1010,7 +1013,7 @@ private:
 
             auto sym = std::get_if<symbol::active::identifier>(&symbols[i].sym);
 
-            if (!is_an_use(sym))
+            if (!is_a_use(sym))
             {
                 --i;
                 continue;
@@ -2012,26 +2015,26 @@ public:
     //-----------------------------------------------------------------------
     //  Visitor functions
     //
-    int  scope_depth                              = 0;
-    int  safe_to_move_context                     = 1;
-    bool started_standalone_assignment_expression = false;
-    bool started_postfix_expression               = false;
-    std::vector<bool> started_postfix_operators_  = {false};
-    bool started_prefix_operators                 = false;
-    bool is_out_expression                        = false;
-    bool inside_next_expression                   = false;
-    bool inside_parameter_list                    = false;
-    bool inside_parameter_identifier              = false;
-    bool inside_returns_list                      = false;
-    bool just_entered_for                         = false;
-    token const* prev_token                       = nullptr;
-    token const* prev2_token                      = nullptr;
-    token const* accessed_member_for_ufcs         = nullptr;
-    parameter_declaration_node const* inside_out_parameter = {};
-    std::vector<std::pair<int, int>> uses_in_expression = {};
-    std::vector<std::pair<int, int>> uses_at_postfix_expression = {};
-    std::vector<std::vector<int>> indices_of_uses_per_scope = {{}};
-    std::vector<std::vector<int>> indices_of_activations_per_scope = {{}};
+    int                               scope_depth                              = 0;
+    int                               safe_to_move_context                     = 1;
+    bool                              started_standalone_assignment_expression = false;
+    bool                              started_postfix_expression               = false;
+    std::vector<bool>                 started_postfix_operators_               = {false};
+    bool                              started_prefix_operators                 = false;
+    bool                              is_out_expression                        = false;
+    bool                              inside_next_expression                   = false;
+    bool                              inside_parameter_list                    = false;
+    bool                              inside_parameter_identifier              = false;
+    bool                              inside_returns_list                      = false;
+    bool                              just_entered_for                         = false;
+    token const*                      prev_token                               = nullptr;
+    token const*                      prev2_token                              = nullptr;
+    token const*                      accessed_member_for_ufcs                 = nullptr;
+    parameter_declaration_node const* inside_out_parameter                     = {};
+    std::vector<std::pair<int, int>>  uses_in_expression                       = {};
+    std::vector<std::pair<int, int>>  uses_at_postfix_expression               = {};
+    std::vector<std::vector<int>>     indices_of_uses_per_scope                = {{}};
+    std::vector<std::vector<int>>     indices_of_activations_per_scope         = {{}};
 
     auto started_postfix_operators() -> bool
     {
