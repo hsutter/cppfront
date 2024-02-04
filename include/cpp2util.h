@@ -268,6 +268,15 @@
 
 
 #define CPP2_TYPEOF(x)              std::remove_cvref_t<decltype(x)>
+#if __cplusplus >= 202302L && \
+    ( \
+     (defined(__clang_major__) && __clang_major__ >= 15) \
+     || (defined(__GNUC__) && __GNUC__ >= 12) \
+     )
+#define CPP2_COPY(x)                auto(x)
+#else
+#define CPP2_COPY(x)                CPP2_TYPEOF(x)(x)
+#endif
 #define CPP2_FORWARD(x)             std::forward<decltype(x)>(x)
 #define CPP2_PACK_EMPTY(x)          (sizeof...(x) == 0)
 #define CPP2_CONTINUE_BREAK(NAME)   goto CONTINUE_##NAME; CONTINUE_##NAME: continue; goto BREAK_##NAME; BREAK_##NAME: break;
@@ -339,6 +348,10 @@ template <std::size_t Len, std::size_t Align>
 struct aligned_storage {
     alignas(Align) unsigned char data[Len];
 };
+
+template <typename T>
+    requires requires { *std::declval<T&>(); }
+using deref_t = decltype(*std::declval<T&>());
 
 
 //-----------------------------------------------------------------------
@@ -450,13 +463,13 @@ auto inline Testing = contract_group(
 
 
 //  Check for invalid dereference or indirection which would result in undefined behavior.
-// 
+//
 //     - Null pointer
 //     - std::unique_ptr that owns nothing
 //     - std::shared_ptr with no managed object
 //     - std::optional with no value
 //     - std::expected containing an unexpected value
-// 
+//
 //  Note: For naming simplicity we consider all the above cases to be "null" states so that
 //        we can write: `*assert_not_null(object)`.
 //
@@ -1115,44 +1128,39 @@ constexpr auto is( T const& ) -> bool {
 //  Types
 //
 template< typename C, typename X >
-auto is( X const& ) -> bool {
-    return false;
-}
-
-template< typename C, typename X >
-    requires std::is_same_v<C, X>
-auto is( X const& ) -> bool {
-    return true;
-}
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<C, X> && !std::is_same_v<C,X>)
-auto is( X const& ) -> bool {
-    return true;
-}
-
-template< typename C, typename X >
-    requires (
-        ( std::is_base_of_v<X, C> ||
-          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>)
-        ) && !std::is_same_v<C,X>)
 auto is( X const& x ) -> bool {
-    return Dynamic_cast<C const*>(&x) != nullptr;
-}
-
-template< typename C, typename X >
-    requires (
-        ( std::is_base_of_v<X, C> ||
-          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>)
-        ) && !std::is_same_v<C,X>)
-auto is( X const* x ) -> bool {
-    return Dynamic_cast<C const*>(x) != nullptr;
-}
-
-template< typename C, typename X >
-    requires (requires (X x) { *x; X(); } && std::is_same_v<C, empty>)
-auto is( X const& x ) -> bool {
-    return x == X();
+    if constexpr (
+        std::is_same_v<C, X>
+        || std::is_base_of_v<C, X>
+    )
+    {
+        return true;
+    }
+    else if constexpr (
+        std::is_base_of_v<X, C>
+        || (
+            std::is_polymorphic_v<C>
+            && std::is_polymorphic_v<X>
+            )
+    )
+    {
+        if constexpr (std::is_pointer_v<X>) {
+            return Dynamic_cast<C const*>(x) != nullptr;
+        }
+        else {
+            return Dynamic_cast<C const*>(&x) != nullptr;
+        }
+    }
+    else if constexpr (
+        requires { *x; X(); }
+        && std::is_same_v<C, empty>
+    )
+    {
+        return x == X();
+    }
+    else {
+        return false;
+    }
 }
 
 
@@ -1220,11 +1228,6 @@ inline constexpr bool is_castable_v =
 //  As
 //
 
-template< typename C >
-auto as(auto const&) -> auto {
-    return nonesuch;
-}
-
 template< typename C, auto x >
     requires (std::is_arithmetic_v<C> && std::is_arithmetic_v<CPP2_TYPEOF(x)>)
 inline constexpr auto as() -> auto
@@ -1236,108 +1239,83 @@ inline constexpr auto as() -> auto
     }
 }
 
-template< typename C >
-inline constexpr auto as(auto const& x) -> auto
-    requires (
+template< typename C, typename X >
+auto as(X const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto) {
+    if constexpr (
         std::is_floating_point_v<C> &&
         std::is_floating_point_v<CPP2_TYPEOF(x)> &&
         sizeof(CPP2_TYPEOF(x)) > sizeof(C)
     )
-{
-    return nonesuch;
-}
-
-//  Signed/unsigned conversions to a not-smaller type are handled as a precondition,
-//  and trying to cast from a value that is in the half of the value space that isn't
-//  representable in the target type C is flagged as a Type safety contract violation
-template< typename C >
-inline constexpr auto as(auto const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto
-    requires (
+    {
+        return CPP2_COPY(nonesuch);
+    }
+    //  Signed/unsigned conversions to a not-smaller type are handled as a precondition,
+    //  and trying to cast from a value that is in the half of the value space that isn't
+    //  representable in the target type C is flagged as a Type safety contract violation
+    else if constexpr (
         std::is_integral_v<C> &&
         std::is_integral_v<CPP2_TYPEOF(x)> &&
         std::is_signed_v<CPP2_TYPEOF(x)> != std::is_signed_v<C> &&
         sizeof(CPP2_TYPEOF(x)) <= sizeof(C)
     )
-{
-    const C c = static_cast<C>(x);
-    Type.enforce(   // precondition check: must be round-trippable => not lossy
-        static_cast<CPP2_TYPEOF(x)>(c) == x && (c < C{}) == (x < CPP2_TYPEOF(x){}),
-        "dynamic lossy narrowing conversion attempt detected" CPP2_SOURCE_LOCATION_ARG
-    );
-    return c;
-}
-
-template< typename C, typename X >
-    requires std::is_same_v<C, X>
-auto as( X const& x ) -> decltype(auto) {
-    return x;
-}
-
-template< typename C, typename X >
-    requires std::is_same_v<C, X>
-auto as( X& x ) -> decltype(auto) {
-    return x;
-}
-
-
-template< typename C, typename X >
-auto as(X const& x) -> C
-    requires (std::is_same_v<C, std::string> && std::is_integral_v<X>)
-{
-    return cpp2::to_string(x);
-}
-
-
-template< typename C, typename X >
-auto as( X const& x ) -> auto
-    requires (!std::is_same_v<C, X> && !std::is_base_of_v<C, X> && requires { C{x}; }
-              && !(std::is_same_v<C, std::string> && std::is_integral_v<X>) // exclude above case
-             )
-{
-    //  Experiment: Recognize the nested `::value_type` pattern for some dynamic library types
-    //  like std::optional, and try to prevent accidental narrowing conversions even when
-    //  those types themselves don't defend against them
-    if constexpr( requires { requires std::is_convertible_v<X, typename C::value_type>; } ) {
-        if constexpr( is_narrowing_v<typename C::value_type, X>) {
-            return nonesuch;
-        }
+    {
+        const C c = static_cast<C>(x);
+        Type.enforce(   // precondition check: must be round-trippable => not lossy
+            static_cast<CPP2_TYPEOF(x)>(c) == x && (c < C{}) == (x < CPP2_TYPEOF(x){}),
+            "dynamic lossy narrowing conversion attempt detected" CPP2_SOURCE_LOCATION_ARG
+        );
+        return CPP2_COPY(c);
     }
-    return C{x};
-}
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<C, X> && !std::is_same_v<C, X>)
-auto as( X& x ) -> C& {
-    return x;
-}
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<C, X> && !std::is_same_v<C, X>)
-auto as( X const& x ) -> C const& {
-    return x;
-}
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
-auto as( X& x ) -> C& {
-    return Dynamic_cast<C&>(x);
-}
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
-auto as( X const& x ) -> C const& {
-    return Dynamic_cast<C const&>(x);
-}
-
-template< typename C, typename X >
-    requires (
+    else if constexpr (std::is_same_v<C, std::string> && std::is_integral_v<X>) {
+        return cpp2::to_string(x);
+    }
+    else if constexpr (std::is_same_v<C, X>) {
+        return x;
+    }
+    else if constexpr (std::is_base_of_v<C, X>) {
+        return static_cast<C const&>(x);
+    }
+    else if constexpr (std::is_base_of_v<X, C>) {
+        return Dynamic_cast<C const&>(x);
+    }
+    else if constexpr (
         std::is_pointer_v<C>
         && std::is_pointer_v<X>
-        && std::is_base_of_v<CPP2_TYPEOF(*std::declval<X>()), CPP2_TYPEOF(*std::declval<C>())>
-        && !std::is_same_v<C, X>
+        && requires { requires std::is_base_of_v<deref_t<X>, deref_t<C>>; }
     )
-auto as( X x ) -> C {
-    return Dynamic_cast<C>(x);
+    {
+        return Dynamic_cast<C>(x);
+    }
+    else if constexpr (requires { C{x}; }) {
+        //  Experiment: Recognize the nested `::value_type` pattern for some dynamic library types
+        //  like std::optional, and try to prevent accidental narrowing conversions even when
+        //  those types themselves don't defend against them
+        if constexpr( requires { requires std::is_convertible_v<X, typename C::value_type>; } ) {
+            if constexpr( is_narrowing_v<typename C::value_type, X>) {
+                return nonesuch;
+            }
+        }
+        return C{x};
+    }
+    else {
+        return nonesuch;
+    }
+}
+
+template< typename C, typename X >
+auto as( X& x ) -> decltype(auto) {
+    if constexpr (std::is_same_v<C, X>) {
+        return x;
+    }
+    else if constexpr (std::is_base_of_v<C, X>) {
+        return static_cast<C&>(x);
+    }
+    else if constexpr (std::is_base_of_v<X, C>) {
+        return Dynamic_cast<C&>(x);
+    }
+    else {
+        return as<C>(std::as_const(x));
+    }
 }
 
 

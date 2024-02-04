@@ -46,6 +46,7 @@
 #line 17 "pure2-assert-optional-not-null.cpp2"
 [[nodiscard]] auto main() -> int
 {
+    std::set_terminate(std::abort);
     return fine() + bad_optional_access(); 
 }
 
