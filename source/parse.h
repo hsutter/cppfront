@@ -1235,6 +1235,8 @@ struct type_id_node
         token const*
     > id;
 
+    bool type_only_context = false;
+
     auto is_wildcard() const
         -> bool
     {
@@ -6341,10 +6343,11 @@ private:
     //G     'const'
     //G     '*'
     //G
-    auto type_id()
+    auto type_id(bool type_only_context = true)
         -> std::unique_ptr<type_id_node>
     {
         auto n = std::make_unique<type_id_node>();
+        n->type_only_context = type_only_context;
 
         while (
             (curr().type() == lexeme::Keyword && curr() == "const")
@@ -6551,7 +6554,7 @@ private:
                 }
 
                 //  Else try parsing it as a type id
-                else if (auto i = type_id()) {
+                else if (auto i = type_id(false)) {
                     term.arg = std::move(i);
                 }
 
