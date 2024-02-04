@@ -14,7 +14,7 @@
 //  We want cppfront to build cleanly at very high warning levels, with warnings
 //  as errors -- so disable a handful that fire incorrectly due to compiler bugs
 #ifdef _MSC_VER
-    #pragma warning(disable: 4456)
+    #pragma warning(disable: 4456 4706)
 #endif
 #if defined(__GNUC__) && __GNUC__ >= 13 && !defined(__clang_major__)
     #pragma GCC diagnostic ignored "-Wdangling-reference"
@@ -93,6 +93,7 @@ struct source_line
 
 using lineno_t = int32_t;
 using colno_t  = int32_t;   // not int16_t... encountered >80,000 char line during testing
+using index_t  = int32_t;
 
 struct source_position
 {
@@ -132,7 +133,7 @@ struct string_parts {
 
     string_parts(const std::string& beginseq,
                  const std::string& endseq,
-                 adds_sequences     strateg) 
+                 adds_sequences     strateg)
      : begin_seq{beginseq}
      , end_seq{endseq}
      , strategy{strateg}
@@ -149,16 +150,16 @@ struct string_parts {
     void clear() { parts.clear(); }
 
     auto generate() const -> std::string
-    {        
-        if (parts.empty()) { 
-            return (strategy & on_the_beginning ? begin_seq : std::string{}) 
-                 + (strategy & on_the_end ? end_seq : std::string{}); 
+    {
+        if (parts.empty()) {
+            return (strategy & on_the_beginning ? begin_seq : std::string{})
+                 + (strategy & on_the_end ? end_seq : std::string{});
         }
 
-        auto result = std::visit(begin_visit{begin_seq, strategy}, 
+        auto result = std::visit(begin_visit{begin_seq, strategy},
                                  parts.front());
 
-        if (std::ssize(parts) > 1) { 
+        if (std::ssize(parts) > 1) {
             auto it1 = parts.cbegin();
             auto it2 = parts.cbegin()+1;
             for(;it2 != parts.cend(); ++it1, ++it2) {
@@ -528,6 +529,20 @@ auto contains(
     -> bool
 {
     return s.find(value) != s.npos;
+}
+
+
+//  Print an integer with 1,000's separators (always commas, not locale-driven)
+auto print_with_thousands(std::integral auto val)
+    -> std::string
+{
+    auto ret = std::to_string(val % 10);
+    auto pos = 0;
+    while ((val /= 10) > 0) {
+        if ((++pos % 3) == 0) { ret = ',' + ret; }
+        ret = std::to_string(val % 10) + ret;
+    }
+    return ret;
 }
 
 
@@ -925,7 +940,7 @@ class stackinstr
 
     static auto print(auto&& ee, std::string_view label) {
         std::cout << "\n=== Stack debug information: " << label << " stack ===\n";
-        for (auto& e: ee) 
+        for (auto& e: ee)
         if  (e.ptr) {
             std::cout
                 << "  " << std::setw(6)

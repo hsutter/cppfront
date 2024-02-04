@@ -28,6 +28,7 @@
 *.exe
 source/gen_version.bat
 build*/
+*.ifc
 
 # Visual Studio cache directory
 .vs/

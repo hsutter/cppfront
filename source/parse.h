@@ -19,9 +19,6 @@
 #define CPP2_PARSE_H
 
 #include "lex.h"
-#include <memory>
-#include <variant>
-#include <iostream>
 
 
 namespace cpp2 {
@@ -2229,6 +2226,7 @@ auto statement_node::visit(auto& v, int depth)
     try_visit<declaration>(statement, v, depth);
     try_visit<return_    >(statement, v, depth);
     try_visit<iteration  >(statement, v, depth);
+    try_visit<using_     >(statement, v, depth);
     try_visit<contract   >(statement, v, depth);
     try_visit<inspect    >(statement, v, depth);
     try_visit<jump       >(statement, v, depth);
@@ -2472,6 +2470,10 @@ struct function_type_node
             v.start(function_returns_tag{}, depth);
             r->visit(v, depth+1);
             v.end(function_returns_tag{}, depth);
+        }
+
+        for (auto const& c : contracts) {
+            c->visit(v, depth+1);
         }
         v.end(*this, depth);
     }
@@ -4131,7 +4133,7 @@ auto primary_expression_node::visit(auto& v, int depth)
 
 
 struct next_expression_tag { };
-struct loop_body_tag { token const* identifier; };
+struct loop_body_tag { iteration_statement_node const* n; };
 
 auto iteration_statement_node::visit(auto& v, int depth)
     -> void
@@ -4158,9 +4160,10 @@ auto iteration_statement_node::visit(auto& v, int depth)
     else {
         assert(range && parameter && body);
         range->visit(v, depth+1);
-        v.start(loop_body_tag{identifier}, depth);
+        v.start(loop_body_tag{this}, depth);
         parameter->visit(v, depth+1);
         body->visit(v, depth+1);
+        v.end(loop_body_tag{this}, depth);
     }
     v.end(*this, depth);
 }

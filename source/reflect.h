@@ -39,7 +39,7 @@ class alias_declaration;
 #line 962 "reflect.h2"
 class value_member_info;
 
-#line 1482 "reflect.h2"
+#line 1484 "reflect.h2"
 }
 
 }
@@ -701,7 +701,7 @@ auto basic_enum(
     cpp2::in<bool> bitwise
     ) -> void;
 
-#line 1151 "reflect.h2"
+#line 1152 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //    "An enum[...] is a totally ordered value type that stores a
@@ -713,7 +713,7 @@ auto basic_enum(
 //
 auto cpp2_enum(meta::type_declaration& t) -> void;
 
-#line 1177 "reflect.h2"
+#line 1178 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "flag_enum expresses an enumeration that stores values
@@ -726,7 +726,7 @@ auto cpp2_enum(meta::type_declaration& t) -> void;
 //
 auto flag_enum(meta::type_declaration& t) -> void;
 
-#line 1209 "reflect.h2"
+#line 1210 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "As with void*, programmers should know that unions [...] are
@@ -753,14 +753,14 @@ auto flag_enum(meta::type_declaration& t) -> void;
 
 auto cpp2_union(meta::type_declaration& t) -> void;
 
-#line 1365 "reflect.h2"
+#line 1367 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  print - output a pretty-printed visualization of t
 //
 auto print(cpp2::in<meta::type_declaration> t) -> void;
 
-#line 1375 "reflect.h2"
+#line 1377 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  apply_metafunctions
@@ -771,7 +771,7 @@ auto print(cpp2::in<meta::type_declaration> t) -> void;
     auto const& error
     ) -> bool;
 
-#line 1482 "reflect.h2"
+#line 1484 "reflect.h2"
 }
 
 }
@@ -1433,7 +1433,7 @@ auto interface(meta::type_declaration& t) -> void
             CPP2_UFCS(require)(mf, CPP2_UFCS(make_public)(mf), 
                         "interface functions must be public");
             CPP2_UFCS(default_to_virtual)(mf);
-            has_dtor |= CPP2_UFCS(is_destructor)(mf);
+            has_dtor |= CPP2_UFCS(is_destructor)(std::move(mf));
         }
     }
 
@@ -1596,7 +1596,7 @@ auto cpp2_struct(meta::type_declaration& t) -> void
             auto mf {CPP2_UFCS(as_function)(m)}; 
             CPP2_UFCS(require)(t, !(CPP2_UFCS(is_virtual)(mf)), 
                        "a struct may not have a virtual function");
-            CPP2_UFCS(require)(t, !(CPP2_UFCS(has_name)(mf, "operator=")), 
+            CPP2_UFCS(require)(t, !(CPP2_UFCS(has_name)(std::move(mf), "operator=")), 
                        "a struct may not have a user-defined operator=");
         }
     }
@@ -1645,28 +1645,29 @@ std::string value{"-1"};
 
         auto is_default_or_numeric {is_empty_or_a_decimal_number(init)}; 
         found_non_numeric |= !(CPP2_UFCS(empty)(init)) && !(is_default_or_numeric);
-        CPP2_UFCS(require)(m, !(is_default_or_numeric) || !(found_non_numeric) || CPP2_UFCS(has_name)(mo, "none"), 
+        CPP2_UFCS(require)(m, !(std::move(is_default_or_numeric)) || !(found_non_numeric) || CPP2_UFCS(has_name)(mo, "none"), 
             (cpp2::to_string(CPP2_UFCS(name)(mo)) + ": enumerators with non-numeric values must come after all default and numeric values"));
 
-        nextval(value, init);
+        nextval(value, std::move(init));
 
         auto v {std::strtoll(&CPP2_ASSERT_IN_BOUNDS_LITERAL(value, 0), nullptr, 10)}; // for non-numeric values we'll just get 0 which is okay for now
         if (cpp2::cmp_less(v,min_value)) {
             min_value = v;
         }
         if (cpp2::cmp_greater(v,max_value)) {
-            max_value = v;
+            max_value = std::move(v);
         }
 
         //  Adding local variable 'e' to work around a Clang warning
         value_member_info e {cpp2::as_<std::string>(CPP2_UFCS(name)(mo)), "", value}; 
-        CPP2_UFCS(push_back)(enumerators, e);
+        CPP2_UFCS(push_back)(enumerators, std::move(e));
 
         CPP2_UFCS(mark_for_removal_from_enclosing_type)(mo);
+        static_cast<void>(std::move(mo));
     }
 }
 
-#line 1027 "reflect.h2"
+#line 1028 "reflect.h2"
     if ((CPP2_UFCS(empty)(enumerators))) {
         CPP2_UFCS(error)(t, "an enumeration must contain at least one enumerator value");
         return ; 
@@ -1688,7 +1689,7 @@ std::string value{"-1"};
             else {if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i32>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i32>::max())) {
                 underlying_type.value() = "i32";
             }
-            else {if (cpp2::cmp_greater_eq(std::move(min_value),std::numeric_limits<cpp2::i64>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i64>::max())) {
+            else {if (cpp2::cmp_greater_eq(std::move(min_value),std::numeric_limits<cpp2::i64>::min()) && cpp2::cmp_less_eq(std::move(max_value),std::numeric_limits<cpp2::i64>::max())) {
                 underlying_type.value() = "i64";
             }
             else {
@@ -1712,7 +1713,7 @@ std::string value{"-1"};
         }
     }
 
-#line 1073 "reflect.h2"
+#line 1074 "reflect.h2"
     //  2. Replace: Erase the contents and replace with modified contents
     //
     //  Note that most values and functions are declared as '==' compile-time values, i.e. Cpp1 'constexpr'
@@ -1760,7 +1761,7 @@ std::string to_string{"    to_string: (this) -> std::string = { \n"};
 
     //  Provide a 'to_string' function to print enumerator name(s)
 
-#line 1118 "reflect.h2"
+#line 1119 "reflect.h2"
     {
         if (bitwise) {
             to_string += "    _ret   : std::string = \"(\";\n";
@@ -1769,7 +1770,7 @@ std::string to_string{"    to_string: (this) -> std::string = { \n"};
         }
 
         for ( 
-              auto const& e : enumerators ) {
+              auto const& e : std::move(enumerators) ) {
             if (e.name != "_") {// ignore unnamed values
                 if (bitwise) {
                     if (e.name != "none") {
@@ -1792,10 +1793,10 @@ std::string to_string{"    to_string: (this) -> std::string = { \n"};
         CPP2_UFCS(add_member)(t, std::move(to_string));
     }
 }
-#line 1148 "reflect.h2"
+#line 1149 "reflect.h2"
 }
 
-#line 1160 "reflect.h2"
+#line 1161 "reflect.h2"
 auto cpp2_enum(meta::type_declaration& t) -> void
 {
     //  Let basic_enum do its thing, with an incrementing value generator
@@ -1812,7 +1813,7 @@ auto cpp2_enum(meta::type_declaration& t) -> void
     );
 }
 
-#line 1187 "reflect.h2"
+#line 1188 "reflect.h2"
 auto flag_enum(meta::type_declaration& t) -> void
 {
     //  Let basic_enum do its thing, with a power-of-two value generator
@@ -1834,7 +1835,7 @@ auto flag_enum(meta::type_declaration& t) -> void
     );
 }
 
-#line 1233 "reflect.h2"
+#line 1234 "reflect.h2"
 auto cpp2_union(meta::type_declaration& t) -> void
 {
     std::vector<value_member_info> alternatives {}; 
@@ -1843,7 +1844,7 @@ auto value{0};
 
     //  1. Gather: All the user-written members, and find/compute the max size
 
-#line 1240 "reflect.h2"
+#line 1241 "reflect.h2"
     for ( 
 
            auto const& m : CPP2_UFCS(get_members)(t) )  { do 
@@ -1862,13 +1863,14 @@ auto value{0};
 
         //  Adding local variable 'e' to work around a Clang warning
         value_member_info e {cpp2::as_<std::string>(CPP2_UFCS(name)(mo)), CPP2_UFCS(type)(mo), cpp2::as_<std::string>(value)}; 
-        CPP2_UFCS(push_back)(alternatives, e);
+        CPP2_UFCS(push_back)(alternatives, std::move(e));
 
         CPP2_UFCS(mark_for_removal_from_enclosing_type)(mo);
+        static_cast<void>(std::move(mo));
     } while (false); ++value; }
 }
 
-#line 1263 "reflect.h2"
+#line 1265 "reflect.h2"
     std::string discriminator_type {}; 
     if (cpp2::cmp_less(CPP2_UFCS(ssize)(alternatives),std::numeric_limits<cpp2::i8>::max())) {
         discriminator_type = "i8";
@@ -1883,7 +1885,7 @@ auto value{0};
         discriminator_type = "i64";
     }}}
 
-#line 1278 "reflect.h2"
+#line 1280 "reflect.h2"
     //  2. Replace: Erase the contents and replace with modified contents
 
     CPP2_UFCS(remove_marked_members)(t);
@@ -1892,12 +1894,12 @@ std::string storage{"    _storage: cpp2::aligned_storage<cpp2::max( "};
 
     //  Provide storage
 
-#line 1284 "reflect.h2"
+#line 1286 "reflect.h2"
     {
 {
 std::string comma{""};
 
-#line 1286 "reflect.h2"
+#line 1288 "reflect.h2"
         for ( 
 
               auto const& e : alternatives )  { do {
@@ -1905,12 +1907,12 @@ std::string comma{""};
         } while (false); comma = ", "; }
 }
 
-#line 1292 "reflect.h2"
+#line 1294 "reflect.h2"
         storage += "), cpp2::max( ";
 {
 std::string comma{""};
 
-#line 1295 "reflect.h2"
+#line 1297 "reflect.h2"
         for ( 
 
               auto const& e : alternatives )  { do {
@@ -1918,14 +1920,14 @@ std::string comma{""};
         } while (false); comma = ", "; }
 }
 
-#line 1301 "reflect.h2"
+#line 1303 "reflect.h2"
         storage += " )> = ();\n";
         CPP2_UFCS(add_member)(t, std::move(storage));
     }
 }
 
     //  Provide discriminator
-#line 1306 "reflect.h2"
+#line 1308 "reflect.h2"
     CPP2_UFCS(add_member)(t, ("    _discriminator: " + cpp2::to_string(std::move(discriminator_type)) + " = -1;\n"));
 
     //  Add the alternatives: is_alternative, get_alternative, and set_alternative
@@ -1947,7 +1949,7 @@ std::string destroy{"    private _destroy: (inout this) = {\n"};
 
     //  Add destroy
 
-#line 1325 "reflect.h2"
+#line 1327 "reflect.h2"
     {
         for ( 
               auto const& a : alternatives ) {
@@ -1961,8 +1963,8 @@ std::string destroy{"    private _destroy: (inout this) = {\n"};
 }
 
     //  Add the destructor
-#line 1337 "reflect.h2"
-    CPP2_UFCS(add_member)(t, "    operator=: (move this) = { _destroy(); }");
+#line 1339 "reflect.h2"
+    CPP2_UFCS(add_member)(t, "    operator=: (move this) = { _destroy(); _ = this; }");
 
     //  Add default constructor
     CPP2_UFCS(add_member)(t, "    operator=: (out this) = { }");
@@ -1971,10 +1973,10 @@ std::string value_set{""};
 
     //  Add copy/move construction and assignment
 
-#line 1344 "reflect.h2"
+#line 1346 "reflect.h2"
     {
         for ( 
-              auto const& a : alternatives ) {
+              auto const& a : std::move(alternatives) ) {
             value_set += ("        if that.is_" + cpp2::to_string(a.name) + "() { set_" + cpp2::to_string(a.name) + "( that." + cpp2::to_string(a.name) + "() ); }\n");
         }
         value_set += "    }\n";
@@ -1991,16 +1993,16 @@ std::string value_set{""};
                     );
     }
 }
-#line 1362 "reflect.h2"
+#line 1364 "reflect.h2"
 }
 
-#line 1369 "reflect.h2"
+#line 1371 "reflect.h2"
 auto print(cpp2::in<meta::type_declaration> t) -> void
 {
     std::cout << CPP2_UFCS(print)(t) << "\n";
 }
 
-#line 1379 "reflect.h2"
+#line 1381 "reflect.h2"
 [[nodiscard]] auto apply_metafunctions(
     declaration_node& n, 
     type_declaration& rtype, 
@@ -2095,7 +2097,7 @@ auto print(cpp2::in<meta::type_declaration> t) -> void
             && !(CPP2_UFCS(arguments_were_used)(rtype)))) 
 
         {
-            error(name + " did not use its template arguments - did you mean to write '" + name + " <" + CPP2_ASSERT_IN_BOUNDS_LITERAL(args, 0) + "> type' (with the spaces)?");
+            error(name + " did not use its template arguments - did you mean to write '" + name + " <" + CPP2_ASSERT_IN_BOUNDS_LITERAL(std::move(args), 0) + "> type' (with the spaces)?");
             return false; 
         }
     }
@@ -2103,7 +2105,7 @@ auto print(cpp2::in<meta::type_declaration> t) -> void
     return true; 
 }
 
-#line 1482 "reflect.h2"
+#line 1484 "reflect.h2"
 }
 
 }

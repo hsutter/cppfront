@@ -19,9 +19,6 @@
 #define CPP2_TO_CPP1_H
 
 #include "sema.h"
-#include <iostream>
-#include <cstdio>
-#include <optional>
 #include <filesystem>
 
 namespace cpp2 {
@@ -1749,32 +1746,61 @@ public:
     //
     auto emit(
         unqualified_id_node const& n,
-        bool in_synthesized_multi_return = false,
-        bool is_local_name = true,
-        bool is_qualified = false
+        int                        synthesized_multi_return_size = 0,
+        bool                       is_local_name                 = true,
+        bool                       is_qualified                  = false,
+        bool                       is_class_member_access        = false
     )
         -> void
     {   STACKINSTR
         assert( n.identifier );
         auto last_use = is_definite_last_use(n.identifier);
 
+        auto decl = sema.get_declaration_of(*n.identifier, false, true);
+
         bool add_forward =
             last_use
             && last_use->is_forward
-            && !in_non_rvalue_context.back();
+            && last_use->safe_to_move
+            && !in_non_rvalue_context.back()
+            && !is_class_member_access;
 
         bool add_move =
             !add_forward
             && (
-                in_synthesized_multi_return
+                !last_use
+                || last_use->safe_to_move
+                )
+            && (
+                synthesized_multi_return_size > 1
+                || (
+                    synthesized_multi_return_size == 1
+                    && decl
+                    && !decl->initializer
+                    )
                 || (last_use && !suppress_move_from_last_use)
                 )
-            && !in_non_rvalue_context.back();
+            && !in_non_rvalue_context.back()
+            && !is_class_member_access;
+
+        //  Add `std::move(*this).` when implicitly moving a member on last use
+        //  This way, members of lvalue reference type won't be implicitly moved
+        bool add_this =
+            add_move
+            && synthesized_multi_return_size == 0
+            && decl
+            && decl->identifier
+            && *decl->identifier == "this"
+            && *n.identifier != "this";
 
         if (
             add_move
             && *(n.identifier - 1) == "return"
             && *(n.identifier + 1) == ";"
+            && (
+                !decl
+                || decl->initializer
+                )
             )
         {
             add_move = false;
@@ -1800,6 +1826,9 @@ public:
         if (add_forward) {
             printer.print_cpp2("CPP2_FORWARD(", {n.position().lineno, n.position().colno - 8});
         }
+        if (add_this) {
+            printer.print_cpp2("*this).", n.position());
+        }
 
         assert(n.identifier);
         emit(*n.identifier, is_qualified);  // inform the identifier if we know this is qualified
@@ -1824,13 +1853,13 @@ public:
             && !in_parameter_list
             )
         {
-            if (auto decl = sema.get_declaration_of(*n.identifier);
+            if (
                 is_local_name
                 && !(*n.identifier == "this")
                 && !(*n.identifier == "that")
                 && decl
                 && (
-                    in_synthesized_multi_return
+                    synthesized_multi_return_size != 0
                     //  note pointer equality: if we're not in the actual declaration of n.identifier
                     || decl->identifier != n.identifier
                     )
@@ -1849,13 +1878,16 @@ public:
                 printer.print_cpp2(".value()", n.position());
             }
         }
-        else if (in_synthesized_multi_return) {
+        else if (synthesized_multi_return_size != 0) {
             printer.print_cpp2(".value()", n.position());
         }
 
         if (
-            add_move
-            || add_forward
+            !add_this
+            && (
+                add_move
+                || add_forward
+                )
             )
         {
             printer.print_cpp2(")", n.position());
@@ -1883,7 +1915,7 @@ public:
             if (id.scope_op) {
                 emit(*id.scope_op);
             }
-            emit(*id.id, false, true, true);    // inform the unqualified-id that it's qualified
+            emit(*id.id, 0, true, true);    // inform the unqualified-id that it's qualified
         }
 
         printer.emit_to_string();
@@ -1907,7 +1939,7 @@ public:
             printer.print_cpp2("auto", pos);
         }
         else {
-            try_emit<type_id_node::unqualified>(n.id, false, false);
+            try_emit<type_id_node::unqualified>(n.id, 0, false);
             try_emit<type_id_node::qualified  >(n.id);
             try_emit<type_id_node::keyword    >(n.id);
         }
@@ -1923,12 +1955,13 @@ public:
     //
     auto emit(
         id_expression_node const& n,
-        bool                      is_local_name          = true
+        bool                      is_local_name          = true,
+        bool                      is_class_member_access = false
     )
         -> void
     {   STACKINSTR
         try_emit<id_expression_node::qualified  >(n.id);
-        try_emit<id_expression_node::unqualified>(n.id, false, is_local_name);
+        try_emit<id_expression_node::unqualified>(n.id, 0, is_local_name, false, is_class_member_access);
     }
 
 
@@ -1974,7 +2007,7 @@ public:
     //-----------------------------------------------------------------------
     //
     auto emit(
-        compound_statement_node  const&  n,
+        compound_statement_node  const& n,
         function_prolog          const& function_prolog = {},
         std::vector<std::string> const& function_epilog = {}
     )
@@ -2189,8 +2222,6 @@ public:
         -> void
     {   STACKINSTR
         assert(n.identifier);
-        in_non_rvalue_context.push_back(true);
-        auto guard = finally([&]{ in_non_rvalue_context.pop_back(); });
 
         iteration_statements.push_back({ &n, false});
         auto labelname = std::string{};
@@ -2394,6 +2425,7 @@ public:
                 else if (
                     !is_parameter_name
                     && sema.get_declaration_of(*tok)
+                    && !sema.is_captured(*tok)
                     )
                 {
                     errors.emplace_back(
@@ -2487,7 +2519,7 @@ public:
                 assert(param->declaration->identifier);
 
                 printer.emit_to_string(&stmt);
-                emit(*param->declaration->identifier, true);
+                emit(*param->declaration->identifier, cpp2::unsafe_narrow<int>(parameters.size()));
                 printer.emit_to_string();
             }
 
@@ -2858,8 +2890,8 @@ public:
     }
 
 
-    auto source_order_name_lookup(unqualified_id_node const& id)
-    -> source_order_name_lookup_res
+    auto source_order_name_lookup(std::string_view identifier)
+        -> source_order_name_lookup_res
     {
         for (
             auto first = current_names.rbegin(), last = current_names.rend() - 1;
@@ -2871,7 +2903,7 @@ public:
                 auto decl = get_if<declaration_node const*>(&*first);
                 decl
                 && *decl
-                && (*decl)->has_name(*id.identifier)
+                && (*decl)->has_name(identifier)
                 )
             {
                 return *decl;
@@ -2880,7 +2912,7 @@ public:
                 auto using_ = get_if<active_using_declaration>(&*first);
                 using_
                 && using_->identifier
-                && *using_->identifier == *id.identifier
+                && *using_->identifier == identifier
                 )
             {
                 return *using_;
@@ -2890,6 +2922,38 @@ public:
         return {};
     }
 
+    auto lookup_finds_type_scope_function(id_expression_node const& n)
+        -> bool
+    {
+        if (!n.is_unqualified())
+        {
+            return false;
+        }
+
+        auto const& id = *get<id_expression_node::unqualified>(n.id);
+        auto lookup = source_order_name_lookup(*id.identifier);
+
+        if (
+            !lookup
+            || get_if<active_using_declaration>(&*lookup)
+            )
+        {
+            return false;
+        }
+
+        auto decl = get<declaration_node const*>(*lookup);
+
+        if (
+            !decl->is_function()
+            || !decl->has_name()
+            || !decl->parent_is_type()
+            )
+        {
+            return false;
+        }
+
+        return true;
+    }
 
     auto lookup_finds_variable_with_placeholder_type_under_initialization(id_expression_node const& n)
         -> bool
@@ -2900,7 +2964,7 @@ public:
         }
 
         auto const& id = *get<id_expression_node::unqualified>(n.id);
-        auto lookup = source_order_name_lookup(id);
+        auto lookup = source_order_name_lookup(*id.identifier);
 
         if (
             !lookup
@@ -3220,7 +3284,7 @@ public:
                             "("
                             + print_to_string(id, false)
                             + "::),"
-                            + print_to_string(*cpp2::assert_not_null(id.ids.back().id), false, true, true);
+                            + print_to_string(*cpp2::assert_not_null(id.ids.back().id), 0, true, true);
                     }
                     ufcs_string += "_TEMPLATE";
                 }
@@ -3255,9 +3319,41 @@ public:
                     ufcs_string += "_NONLOCAL";
                 }
 
+                //  If it's a last use, emit as part of the macro name
+                //
+                //  Note: This ensures a valid member call is still prioritized
+                //  by leveraging the last use only in the non-member branch
+                //  For example, `x.f()` won't emit as 'CPP2_UFCS(std::move(f))(x)'
+                //  to never take the branch that wants to call `x.std::move(f)()`
+                if (auto last_use = is_definite_last_use(i->id_expr->get_token());
+                    last_use
+                    && last_use->safe_to_move
+                    && !lookup_finds_type_scope_function(*i->id_expr)
+                    )
+                {
+                    if (last_use->is_forward) {
+                        ufcs_string += "_FORWARD";
+                    }
+                    else {
+                        ufcs_string += "_MOVE";
+                    }
+
+                    in_non_rvalue_context.push_back(true);
+                    funcname = print_to_string(*i->id_expr);
+                    in_non_rvalue_context.pop_back();
+                }
+
                 //  Second, emit the UFCS argument list
 
-                prefix.emplace_back(ufcs_string + "(" + funcname + ")(", args.value().open_pos );
+                //  If the computed function name is an explicit member access
+                //  we don't need to go through the UFCS macro
+                //  Note: This also works around compiler bugs
+                if (funcname.starts_with("std::move(*this).")) {
+                    prefix.emplace_back(funcname + "(", args.value().open_pos );
+                }
+                else {
+                    prefix.emplace_back(ufcs_string + "(" + funcname + ")(", args.value().open_pos );
+                }
                 suffix.emplace_back(")", args.value().close_pos );
                 if (!args.value().text_chunks.empty()) {
                     for (auto&& e: args.value().text_chunks) {
@@ -3355,7 +3451,7 @@ public:
                         args.reset();
                     }
 
-                    auto print = print_to_string(*i->id_expr, false /*not a local name*/);
+                    auto print = print_to_string(*i->id_expr, false /*not a local name*/, i->op->type() == lexeme::Dot);
                     suffix.emplace_back( print, i->id_expr->position() );
                 }
 
@@ -5443,7 +5539,7 @@ public:
         auto guard0 = stack_value(having_signature_emitted, &n);
         auto guard1 = stack_element(current_declarations, &n);
         current_names.push_back(&n);
-        auto guard2 = stack_size_if(current_names, n.is_function());
+        auto guard2 = stack_size_if(current_names, !n.is_namespace());
 
         //  Handle aliases
 
@@ -5955,6 +6051,7 @@ public:
                             separator = ",";
                         }
                     }
+                    current_names.push_back(decl.get());
                 }
                 //  Then we'll switch to start the body == other members
                 else

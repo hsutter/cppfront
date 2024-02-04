@@ -1,3 +1,4 @@
 pure2-bugfix-for-parameter-decl-list-error.cpp2...
 pure2-bugfix-for-parameter-decl-list-error.cpp2(1,13): error: invalid parameter list: a comma must be followed by another parameter (at ')')
+pure2-bugfix-for-parameter-decl-list-error.cpp2(1,8): error: local variable 'args' is not used; consider changing its name to '_' to make it explicitly anonymous, or removing it entirely if its side effects are not needed
 

@@ -105,7 +105,7 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
             if (cpp2::cmp_less(*cpp2::assert_not_null(p),0)) {
                 ret = -*cpp2::assert_not_null(std::move(p));
             }
-            ret += strlen(s) - 10 + CPP2_UFCS(strlen)(std::move(s)) * (16 / (3 & 2)) % 3;
+            ret += strlen(s) - 10 + CPP2_UFCS(strlen)(s) * (16 / (3 & 2)) % 3;
 
             map<int const,string> m {}; 
             CPP2_ASSERT_IN_BOUNDS_LITERAL(m, 0) = cpp2::as_<string>("har");

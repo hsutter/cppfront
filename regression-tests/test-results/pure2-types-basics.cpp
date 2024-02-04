@@ -157,7 +157,7 @@ namespace N {
 
 #line 38 "pure2-types-basics.cpp2"
     auto myclass::print() && -> void{
-        std::cout << ("    (move print) data: " + cpp2::to_string(data) + ", more: " + cpp2::to_string(more) + "\n");
+        std::cout << ("    (move print) data: " + cpp2::to_string(data) + ", more: " + cpp2::to_string(std::move(*this).more) + "\n");
     }
 
 #line 42 "pure2-types-basics.cpp2"
