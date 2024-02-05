@@ -533,7 +533,9 @@ auto contains(
 
 
 //  Print an integer with 1,000's separators (always commas, not locale-driven)
-auto print_with_thousands(std::integral auto val)
+template <typename T>
+    requires std::is_integral_v<T>  // Note: `std::integral` concept not yet available in Apple Clang
+auto print_with_thousands(T val)
     -> std::string
 {
     auto ret = std::to_string(val % 10);
