@@ -1729,13 +1729,55 @@ private:
 
 //-----------------------------------------------------------------------
 //
-//  args: see main() arguments as vector<string_view>
+//  args: see main() arguments as a container of string_views
+//
+//  Does not perform any dynamic memory allocation - each string_view
+//  is directly bound to the string provided by the host environment
 //
 //-----------------------------------------------------------------------
 //
-struct args_t : std::vector<std::string_view>
+struct args_t
 {
-    args_t(int c, char** v) : vector{static_cast<std::size_t>(c)}, argc{c}, argv{v} {}
+    args_t(int c, char** v) : argc{c}, argv{v} {}
+
+    class iterator {
+    public:
+        iterator(int c, char** v, int start) : argc{c}, argv{v}, curr{start} {}
+
+        auto operator*() const {
+            if (curr < argc) { return std::string_view{ argv[curr] }; }
+            else             { return std::string_view{}; }
+        }
+
+        auto operator+(int i) -> iterator  {
+            if (i > 0) { return { argc, argv, std::min(curr+i, argc) }; }
+            else       { return { argc, argv, std::max(curr+i, 0   ) }; }
+        }
+        auto operator-(int i) -> iterator  { return operator+(-i); }
+        auto operator++()     -> iterator& { curr = std::min(curr+1, argc);  return *this; }
+        auto operator--()     -> iterator& { curr = std::max(curr-1, 0   );  return *this; }
+        auto operator++(int)  -> iterator  { auto old = *this;  ++*this;  return old; }
+        auto operator--(int)  -> iterator  { auto old = *this;  ++*this;  return old; }
+
+        auto operator<=>(iterator const&) const = default;
+
+    private:
+        int    argc;
+        char** argv;
+        int    curr;
+    };
+
+    auto begin()  const -> iterator    { return iterator{ argc, argv, 0    }; }
+    auto end()    const -> iterator    { return iterator{ argc, argv, argc }; }
+    auto cbegin() const -> iterator    { return begin(); }
+    auto cend()   const -> iterator    { return end(); }
+    auto size()   const -> std::size_t { return argc; }
+    auto ssize()  const -> int         { return argc; }
+
+    auto operator[](int i) const {
+        if (0 <= i && i < argc) { return std::string_view{ argv[i] }; }
+        else                    { return std::string_view{}; }
+    }
 
     mutable int        argc = 0;        //  mutable for compatibility with frameworks that take 'int& argc'
     char**             argv = nullptr;
@@ -1743,10 +1785,7 @@ struct args_t : std::vector<std::string_view>
 
 inline auto make_args(int argc, char** argv) -> args_t
 {
-    auto ret  = args_t{argc, argv};
-    auto args = std::span(argv, static_cast<std::size_t>(argc));
-    std::copy( args.begin(), args.end(), ret.data());
-    return ret;
+    return args_t{argc, argv};
 }
 
 
