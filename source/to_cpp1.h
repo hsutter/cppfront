@@ -1787,7 +1787,6 @@ public:
         //  This way, members of lvalue reference type won't be implicitly moved
         bool add_this =
             add_move
-            && synthesized_multi_return_size == 0
             && decl
             && decl->identifier
             && *decl->identifier == "this"
