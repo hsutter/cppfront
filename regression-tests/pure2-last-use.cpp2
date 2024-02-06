@@ -786,9 +786,9 @@ issue_890: () = {
   (x := new<int>(0)) assert(identity(x)* == 0);
 }
 
-issue_962: (s: int) = {
+issue_962: (s: ::std::string) = {
   using ::std::string;
-  _ = s;
+  std::cout << "A: (s)$" << std::endl;
 }
 
 draw: () = {

@@ -334,7 +334,7 @@ auto issue_888_1([[maybe_unused]] std::string unnamed_param_1, move_only_functio
 auto issue_890() -> void;
 
 #line 789 "pure2-last-use.cpp2"
-auto issue_962(cpp2::in<int> s) -> void;
+auto issue_962(cpp2::in<::std::string> s) -> void;
 
 #line 794 "pure2-last-use.cpp2"
 auto draw() -> void;
@@ -1292,9 +1292,9 @@ auto const& x{cpp2_new<int>(0)};
 }
 
 #line 789 "pure2-last-use.cpp2"
-auto issue_962(cpp2::in<int> s) -> void{
+auto issue_962(cpp2::in<::std::string> s) -> void{
   using ::std::string;
-  static_cast<void>(s);
+  std::cout << ("A: " + cpp2::to_string(s)) << std::endl;
 }
 
 #line 794 "pure2-last-use.cpp2"
