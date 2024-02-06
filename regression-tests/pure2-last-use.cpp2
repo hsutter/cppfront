@@ -786,6 +786,11 @@ issue_890: () = {
   (x := new<int>(0)) assert(identity(x)* == 0);
 }
 
+issue_962: (s: ::std::string) = {
+  using ::std::string;
+  std::cout << "A: (s)$" << std::endl;
+}
+
 draw: () = {
   pos := 0;
   vertex: move_only_function<int(int)> = ();

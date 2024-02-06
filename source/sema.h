@@ -832,9 +832,10 @@ private:
             else if (auto sym = std::get_if<symbol::active::identifier>(&symbols[i].sym);
                      sym
                      && sym->is_using_declaration()
+                     && sym->identifier
+                     && *sym->identifier == *id
                      )
             {
-                assert(sym->identifier);
                 skip_to(sym->identifier);
                 return true;
             }
