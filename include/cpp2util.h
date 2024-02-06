@@ -1771,7 +1771,7 @@ struct args_t
     auto end()    const -> iterator    { return iterator{ argc, argv, argc }; }
     auto cbegin() const -> iterator    { return begin(); }
     auto cend()   const -> iterator    { return end(); }
-    auto size()   const -> std::size_t { return argc; }
+    auto size()   const -> std::size_t { return static_cast<std::size_t>(argc); }
     auto ssize()  const -> int         { return argc; }
 
     auto operator[](int i) const {
