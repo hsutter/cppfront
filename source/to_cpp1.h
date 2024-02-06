@@ -1189,6 +1189,7 @@ class cppfront
     std::vector<iter_info> iteration_statements;
 
     std::vector<bool>                             in_non_rvalue_context   = { false };
+    std::vector<bool>                             in_single_unqualified_id_return  = { false };
     std::vector<bool>                             need_expression_list_parens = { true };
     auto push_need_expression_list_parens( bool b ) -> void { need_expression_list_parens.push_back(b);            }
     auto pop_need_expression_list_parens()          -> void { assert(std::ssize(need_expression_list_parens) > 1);
@@ -1795,8 +1796,8 @@ public:
 
         if (
             add_move
-            && *(n.identifier - 1) == "return"
-            && *(n.identifier + 1) == ";"
+            && in_single_unqualified_id_return.size() > 0
+            && in_single_unqualified_id_return.back()
             && (
                 !decl
                 || decl->initializer
@@ -2387,6 +2388,12 @@ public:
         assert(n.identifier);
         assert(*n.identifier == "return");
         printer.print_cpp2("return ", n.position());
+
+        in_single_unqualified_id_return.push_back(
+            n.expression
+            && n.expression->is_unqualified_id()
+        );
+        auto guard = finally([&]{ in_single_unqualified_id_return.pop_back(); });
 
         //  Return with expression == single anonymous return type
         //

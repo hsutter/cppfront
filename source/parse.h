@@ -157,6 +157,9 @@ struct primary_expression_node
     auto is_id_expression() const
         -> bool;
 
+    auto is_unqualified_id() const
+        -> bool;
+
     auto is_expression_list() const
         -> bool;
 
@@ -244,6 +247,9 @@ struct prefix_expression_node
         -> bool;
 
     auto is_id_expression() const
+        -> bool;
+
+    auto is_unqualified_id() const
         -> bool;
 
     auto is_expression_list() const
@@ -338,6 +344,12 @@ struct binary_expression_node
         -> bool
     {
         return terms.empty() && expr->is_id_expression();
+    }
+
+    auto is_unqualified_id() const
+        -> bool
+    {
+        return terms.empty() && expr->is_unqualified_id();
     }
 
     auto is_expression_list() const
@@ -531,6 +543,12 @@ struct expression_node
         -> bool
     {
         return expr->is_id_expression();
+    }
+
+    auto is_unqualified_id() const
+        -> bool
+    {
+        return expr->is_unqualified_id();
     }
 
     auto is_expression_list() const
@@ -858,6 +876,12 @@ struct postfix_expression_node
         return ops.empty() && expr->is_id_expression();
     }
 
+    auto is_unqualified_id() const
+        -> bool
+    {
+        return ops.empty() && expr->is_unqualified_id();
+    }
+
     auto is_expression_list() const
         -> bool
     {
@@ -933,6 +957,12 @@ auto prefix_expression_node::is_id_expression() const
     -> bool
 {
     return ops.empty() && expr->is_id_expression();
+}
+
+auto prefix_expression_node::is_unqualified_id() const
+    -> bool
+{
+    return ops.empty() && expr->is_unqualified_id();
 }
 
 auto prefix_expression_node::is_expression_list() const
@@ -1409,6 +1439,12 @@ struct is_as_expression_node
         return ops.empty() && expr->is_id_expression();
     }
 
+    auto is_unqualified_id() const
+        -> bool
+    {
+        return ops.empty() && expr->is_unqualified_id();
+    }
+
     auto is_expression_list() const
         -> bool
     {
@@ -1605,6 +1641,19 @@ postfix_expression_node::~postfix_expression_node()
     if (cap_grp) {
         cap_grp->remove(this);
     }
+}
+
+
+auto primary_expression_node::is_unqualified_id() const
+    -> bool
+{
+    if (is_identifier()) {
+        return true;
+    }
+    if (is_id_expression()) {
+        return std::get<id_expression>(expr)->is_unqualified();
+    }
+    return false;
 }
 
 
