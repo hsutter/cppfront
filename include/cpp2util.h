@@ -1729,6 +1729,19 @@ private:
 
 //-----------------------------------------------------------------------
 //
+//  An implementation of GSL's narrow_cast with a clearly 'unsafe' name
+//
+//-----------------------------------------------------------------------
+//
+template <typename C, typename X>
+constexpr auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
+{
+    return static_cast<C>(CPP2_FORWARD(x));
+}
+
+
+//-----------------------------------------------------------------------
+//
 //  args: see main() arguments as a container of string_views
 //
 //  Does not perform any dynamic memory allocation - each string_view
@@ -1771,7 +1784,7 @@ struct args_t
     auto end()    const -> iterator    { return iterator{ argc, argv, argc }; }
     auto cbegin() const -> iterator    { return begin(); }
     auto cend()   const -> iterator    { return end(); }
-    auto size()   const -> std::size_t { return static_cast<std::size_t>(argc); }
+    auto size()   const -> std::size_t { return cpp2::unsafe_narrow<std::size_t>(argc); }
     auto ssize()  const -> int         { return argc; }
 
     auto operator[](int i) const {
@@ -1798,19 +1811,6 @@ inline auto make_args(int argc, char** argv) -> args_t
 //
 template<typename T>
 using alien_memory = T volatile;
-
-
-//-----------------------------------------------------------------------
-//
-//  An implementation of GSL's narrow_cast with a clearly 'unsafe' name
-//
-//-----------------------------------------------------------------------
-//
-template <typename C, typename X>
-constexpr auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
-{
-    return static_cast<C>(CPP2_FORWARD(x));
-}
 
 
 //-----------------------------------------------------------------------
