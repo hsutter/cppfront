@@ -1190,136 +1190,6 @@ inline constexpr auto is( auto const& x, auto&& value ) -> bool
 
 
 //-------------------------------------------------------------------------------------------------------------
-//  Built-in as
-//
-
-//  The 'as' cast functions are <To, From> so use that order here
-//  If it's confusing, we can switch this to <From, To>
-template< typename To, typename From >
-inline constexpr auto is_narrowing_v =
-    // [dcl.init.list] 7.1
-    (std::is_floating_point_v<From> && std::is_integral_v<To>) ||
-    // [dcl.init.list] 7.2
-    (std::is_floating_point_v<From> && std::is_floating_point_v<To> && sizeof(From) > sizeof(To)) ||
-    // [dcl.init.list] 7.3
-    (std::is_integral_v<From> && std::is_floating_point_v<To>) ||
-    (std::is_enum_v<From> && std::is_floating_point_v<To>) ||
-    // [dcl.init.list] 7.4
-    (std::is_integral_v<From> && std::is_integral_v<To> && sizeof(From) > sizeof(To)) ||
-    (std::is_enum_v<From> && std::is_integral_v<To> && sizeof(From) > sizeof(To)) ||
-    // [dcl.init.list] 7.5
-    (std::is_pointer_v<From> && std::is_same_v<To, bool>);
-
-template <typename... Ts>
-inline constexpr auto program_violates_type_safety_guarantee = sizeof...(Ts) < 0;
-
-//  For literals we can check for safe 'narrowing' at a compile time (e.g., 1 as std::size_t)
-template< typename C, auto x >
-inline constexpr bool is_castable_v =
-    std::is_integral_v<C> &&
-    std::is_integral_v<CPP2_TYPEOF(x)> &&
-    !(static_cast<CPP2_TYPEOF(x)>(static_cast<C>(x)) != x ||
-        (
-            (std::is_signed_v<C> != std::is_signed_v<CPP2_TYPEOF(x)>) &&
-            ((static_cast<C>(x) < C{}) != (x < CPP2_TYPEOF(x){}))
-        )
-    );
-
-//  As
-//
-
-template< typename C, auto x >
-    requires (std::is_arithmetic_v<C> && std::is_arithmetic_v<CPP2_TYPEOF(x)>)
-inline constexpr auto as() -> auto
-{
-    if constexpr ( is_castable_v<C, x> ) {
-        return static_cast<C>(x);
-    } else {
-        return nonesuch;
-    }
-}
-
-template< typename C, typename X >
-auto as(X const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto) {
-    if constexpr (
-        std::is_floating_point_v<C> &&
-        std::is_floating_point_v<CPP2_TYPEOF(x)> &&
-        sizeof(CPP2_TYPEOF(x)) > sizeof(C)
-    )
-    {
-        return CPP2_COPY(nonesuch);
-    }
-    //  Signed/unsigned conversions to a not-smaller type are handled as a precondition,
-    //  and trying to cast from a value that is in the half of the value space that isn't
-    //  representable in the target type C is flagged as a Type safety contract violation
-    else if constexpr (
-        std::is_integral_v<C> &&
-        std::is_integral_v<CPP2_TYPEOF(x)> &&
-        std::is_signed_v<CPP2_TYPEOF(x)> != std::is_signed_v<C> &&
-        sizeof(CPP2_TYPEOF(x)) <= sizeof(C)
-    )
-    {
-        const C c = static_cast<C>(x);
-        Type.enforce(   // precondition check: must be round-trippable => not lossy
-            static_cast<CPP2_TYPEOF(x)>(c) == x && (c < C{}) == (x < CPP2_TYPEOF(x){}),
-            "dynamic lossy narrowing conversion attempt detected" CPP2_SOURCE_LOCATION_ARG
-        );
-        return CPP2_COPY(c);
-    }
-    else if constexpr (std::is_same_v<C, std::string> && std::is_integral_v<X>) {
-        return cpp2::to_string(x);
-    }
-    else if constexpr (std::is_same_v<C, X>) {
-        return x;
-    }
-    else if constexpr (std::is_base_of_v<C, X>) {
-        return static_cast<C const&>(x);
-    }
-    else if constexpr (std::is_base_of_v<X, C>) {
-        return Dynamic_cast<C const&>(x);
-    }
-    else if constexpr (
-        std::is_pointer_v<C>
-        && std::is_pointer_v<X>
-        && requires { requires std::is_base_of_v<deref_t<X>, deref_t<C>>; }
-    )
-    {
-        return Dynamic_cast<C>(x);
-    }
-    else if constexpr (requires { C{x}; }) {
-        //  Experiment: Recognize the nested `::value_type` pattern for some dynamic library types
-        //  like std::optional, and try to prevent accidental narrowing conversions even when
-        //  those types themselves don't defend against them
-        if constexpr( requires { requires std::is_convertible_v<X, typename C::value_type>; } ) {
-            if constexpr( is_narrowing_v<typename C::value_type, X>) {
-                return nonesuch;
-            }
-        }
-        return C{x};
-    }
-    else {
-        return nonesuch;
-    }
-}
-
-template< typename C, typename X >
-auto as( X& x ) -> decltype(auto) {
-    if constexpr (std::is_same_v<C, X>) {
-        return x;
-    }
-    else if constexpr (std::is_base_of_v<C, X>) {
-        return static_cast<C&>(x);
-    }
-    else if constexpr (std::is_base_of_v<X, C>) {
-        return Dynamic_cast<C&>(x);
-    }
-    else {
-        return as<C>(std::as_const(x));
-    }
-}
-
-
-//-------------------------------------------------------------------------------------------------------------
 //  std::variant is and as
 //
 
@@ -1613,7 +1483,9 @@ constexpr auto is( std::optional<T> const& x, auto&& value ) -> bool
     else if constexpr (requires{ bool{ x.value() == value }; }) {
         return x.has_value() && x.value() == value;
     }
-    return false;
+    else {
+        return false;
+    }
 }
 
 
@@ -1624,6 +1496,222 @@ template<typename T, typename X>
 constexpr auto as( X const& x ) -> decltype(auto)
     { return x.value(); }
 
+
+//-------------------------------------------------------------------------------------------------------------
+//  std::expected is and as
+//
+#ifdef __cpp_lib_expected
+//  is Type
+//
+template<typename T, typename X>
+    requires std::is_same_v<X, std::expected<T, typename X::error_type>>
+constexpr auto is( X const &x ) -> bool
+{
+    return x.has_value();
+}
+
+template<typename T, typename U, typename V>
+    requires std::is_same_v<T, empty>
+constexpr auto is( std::expected<U, V> const &x ) -> bool
+{
+    return !x.has_value();
+}
+
+//  is std::unexpected<T> Type
+//
+template<typename T, typename X>
+    requires (
+              std::is_same_v<T, std::unexpected<typename X::error_type>>
+              && std::is_same_v<X, std::expected<typename X::value_type, typename X::error_type>>
+             )
+constexpr auto is( X const &x ) -> bool
+{
+    return !x.has_value();
+}
+
+
+//  is Value
+//
+template<typename T, typename U>
+constexpr auto is( std::expected<T, U> const &x, auto &&value ) -> bool
+{
+    //  Predicate case
+    if constexpr (requires{ bool{ value(x) }; }) {
+        return value(x);
+    }
+    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
+        return false;
+    }
+
+    //  Value case
+    else if constexpr (requires{ bool{ x.value() == value }; }) {
+        return x.has_value() && x.value() == value;
+    }
+    else {
+        return false;
+    }
+}
+
+
+//  as
+//
+template<typename T, typename X>
+    requires std::is_same_v<X, std::expected<T, typename X::error_type>>
+constexpr auto as( X const &x ) -> decltype(auto)
+{
+    return x.value();
+}
+
+//  as std::unexpected<T>
+//
+template<typename T, typename X>
+    requires (
+              std::is_same_v<T, std::unexpected<typename X::error_type>>
+              && std::is_same_v<X, std::expected<typename X::value_type, typename X::error_type>>
+             )
+constexpr auto as( X const &x ) -> decltype(auto)
+{
+    // It's UB to call `error` if `has_value` is true.
+    if (x.has_value()) {
+        Throw(
+            std::runtime_error("Cannot cast 'expected' to 'unexpected' because it has a value"),
+            "Cannot cast 'expected' to 'unexpected' because it has a value");
+    }
+
+    return std::unexpected< typename X::error_type>(x.error());
+}
+#endif
+
+
+//-------------------------------------------------------------------------------------------------------------
+//  Built-in as
+//
+
+//  The 'as' cast functions are <To, From> so use that order here
+//  If it's confusing, we can switch this to <From, To>
+template< typename To, typename From >
+inline constexpr auto is_narrowing_v =
+    // [dcl.init.list] 7.1
+    (std::is_floating_point_v<From> && std::is_integral_v<To>) ||
+    // [dcl.init.list] 7.2
+    (std::is_floating_point_v<From> && std::is_floating_point_v<To> && sizeof(From) > sizeof(To)) ||
+    // [dcl.init.list] 7.3
+    (std::is_integral_v<From> && std::is_floating_point_v<To>) ||
+    (std::is_enum_v<From> && std::is_floating_point_v<To>) ||
+    // [dcl.init.list] 7.4
+    (std::is_integral_v<From> && std::is_integral_v<To> && sizeof(From) > sizeof(To)) ||
+    (std::is_enum_v<From> && std::is_integral_v<To> && sizeof(From) > sizeof(To)) ||
+    // [dcl.init.list] 7.5
+    (std::is_pointer_v<From> && std::is_same_v<To, bool>);
+
+template <typename... Ts>
+inline constexpr auto program_violates_type_safety_guarantee = sizeof...(Ts) < 0;
+
+//  For literals we can check for safe 'narrowing' at a compile time (e.g., 1 as std::size_t)
+template< typename C, auto x >
+inline constexpr bool is_castable_v =
+    std::is_integral_v<C> &&
+    std::is_integral_v<CPP2_TYPEOF(x)> &&
+    !(static_cast<CPP2_TYPEOF(x)>(static_cast<C>(x)) != x ||
+        (
+            (std::is_signed_v<C> != std::is_signed_v<CPP2_TYPEOF(x)>) &&
+            ((static_cast<C>(x) < C{}) != (x < CPP2_TYPEOF(x){}))
+        )
+    );
+
+//  As
+//
+
+template< typename C, auto x >
+    requires (std::is_arithmetic_v<C> && std::is_arithmetic_v<CPP2_TYPEOF(x)>)
+inline constexpr auto as() -> auto
+{
+    if constexpr ( is_castable_v<C, x> ) {
+        return static_cast<C>(x);
+    } else {
+        return nonesuch;
+    }
+}
+
+template< typename C, typename X >
+auto as(X const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto) {
+    if constexpr (
+        std::is_floating_point_v<C> &&
+        std::is_floating_point_v<CPP2_TYPEOF(x)> &&
+        sizeof(CPP2_TYPEOF(x)) > sizeof(C)
+    )
+    {
+        return CPP2_COPY(nonesuch);
+    }
+    //  Signed/unsigned conversions to a not-smaller type are handled as a precondition,
+    //  and trying to cast from a value that is in the half of the value space that isn't
+    //  representable in the target type C is flagged as a Type safety contract violation
+    else if constexpr (
+        std::is_integral_v<C> &&
+        std::is_integral_v<CPP2_TYPEOF(x)> &&
+        std::is_signed_v<CPP2_TYPEOF(x)> != std::is_signed_v<C> &&
+        sizeof(CPP2_TYPEOF(x)) <= sizeof(C)
+    )
+    {
+        const C c = static_cast<C>(x);
+        Type.enforce(   // precondition check: must be round-trippable => not lossy
+            static_cast<CPP2_TYPEOF(x)>(c) == x && (c < C{}) == (x < CPP2_TYPEOF(x){}),
+            "dynamic lossy narrowing conversion attempt detected" CPP2_SOURCE_LOCATION_ARG
+        );
+        return CPP2_COPY(c);
+    }
+    else if constexpr (std::is_same_v<C, std::string> && std::is_integral_v<X>) {
+        return cpp2::to_string(x);
+    }
+    else if constexpr (std::is_same_v<C, X>) {
+        return x;
+    }
+    else if constexpr (std::is_base_of_v<C, X>) {
+        return static_cast<C const&>(x);
+    }
+    else if constexpr (std::is_base_of_v<X, C>) {
+        return Dynamic_cast<C const&>(x);
+    }
+    else if constexpr (
+        std::is_pointer_v<C>
+        && std::is_pointer_v<X>
+        && requires { requires std::is_base_of_v<deref_t<X>, deref_t<C>>; }
+    )
+    {
+        return Dynamic_cast<C>(x);
+    }
+    else if constexpr (requires { C{x}; }) {
+        //  Experiment: Recognize the nested `::value_type` pattern for some dynamic library types
+        //  like std::optional, and try to prevent accidental narrowing conversions even when
+        //  those types themselves don't defend against them
+        if constexpr( requires { requires std::is_convertible_v<X, typename C::value_type>; } ) {
+            if constexpr( is_narrowing_v<typename C::value_type, X>) {
+                return nonesuch;
+            }
+        }
+        return C{x};
+    }
+    else {
+        return nonesuch;
+    }
+}
+
+template< typename C, typename X >
+auto as( X& x ) -> decltype(auto) {
+    if constexpr (std::is_same_v<C, X>) {
+        return x;
+    }
+    else if constexpr (std::is_base_of_v<C, X>) {
+        return static_cast<C&>(x);
+    }
+    else if constexpr (std::is_base_of_v<X, C>) {
+        return Dynamic_cast<C&>(x);
+    }
+    else {
+        return as<C>(std::as_const(x));
+    }
+}
+     
 
 //-----------------------------------------------------------------------
 //

@@ -1,0 +1,112 @@
+pure2-expected-is-as.cpp2:7:22: error: expected '(' for function-style cast or type construction
+    std::expected<int,int> ex1 {123}; 
+                  ~~~^
+pure2-expected-is-as.cpp2:7:10: error: no member named 'expected' in namespace 'std'; did you mean 'unexpected'?
+    std::expected<int,int> ex1 {123}; 
+    ~~~~~^~~~~~~~
+         unexpected
+/usr/bin/../lib/gcc/x86_64-linux-gnu/10/../../../../include/c++/10/exception:92:8: note: 'unexpected' declared here
+  void unexpected() __attribute__ ((__noreturn__));
+       ^
+pure2-expected-is-as.cpp2:8:22: error: expected '(' for function-style cast or type construction
+    std::expected<int,int> ex2 {std::unexpected(-1)}; 
+                  ~~~^
+pure2-expected-is-as.cpp2:8:10: error: no member named 'expected' in namespace 'std'; did you mean 'unexpected'?
+    std::expected<int,int> ex2 {std::unexpected(-1)}; 
+    ~~~~~^~~~~~~~
+         unexpected
+/usr/bin/../lib/gcc/x86_64-linux-gnu/10/../../../../include/c++/10/exception:92:8: note: 'unexpected' declared here
+  void unexpected() __attribute__ ((__noreturn__));
+       ^
+pure2-expected-is-as.cpp2:9:30: error: expected '(' for function-style cast or type construction
+    std::expected<std::string,size_t> ex3 {"Expect the unexpected"}; 
+                  ~~~~~~~~~~~^
+pure2-expected-is-as.cpp2:9:10: error: no member named 'expected' in namespace 'std'; did you mean 'unexpected'?
+    std::expected<std::string,size_t> ex3 {"Expect the unexpected"}; 
+    ~~~~~^~~~~~~~
+         unexpected
+/usr/bin/../lib/gcc/x86_64-linux-gnu/10/../../../../include/c++/10/exception:92:8: note: 'unexpected' declared here
+  void unexpected() __attribute__ ((__noreturn__));
+       ^
+pure2-expected-is-as.cpp2:11:23: error: use of undeclared identifier 'ex1'; did you mean 'exp'?
+    if (cpp2::is<int>(ex1)) {
+                      ^~~
+                      exp
+/usr/include/x86_64-linux-gnu/bits/mathcalls.h:95:17: note: 'exp' declared here
+__MATHCALL_VEC (exp,, (_Mdouble_ __x));
+                ^
+pure2-expected-is-as.cpp2:15:24: error: use of undeclared identifier 'ex1'; did you mean 'exp'?
+    if (cpp2::is<bool>(ex1)) {
+                       ^~~
+                       exp
+/usr/include/x86_64-linux-gnu/bits/mathcalls.h:95:17: note: 'exp' declared here
+__MATHCALL_VEC (exp,, (_Mdouble_ __x));
+                ^
+pure2-expected-is-as.cpp2:20:24: error: use of undeclared identifier 'ex1'; did you mean 'exp'?
+    if (cpp2::is<void>(ex1)) {
+                       ^~~
+                       exp
+/usr/include/x86_64-linux-gnu/bits/mathcalls.h:95:17: note: 'exp' declared here
+__MATHCALL_VEC (exp,, (_Mdouble_ __x));
+                ^
+pure2-expected-is-as.cpp2:25:23: error: 'unexpected' does not name a template but is followed by template arguments
+    if (cpp2::is<std::unexpected<int>>(ex1)) {
+                      ^         ~~~~~
+/usr/bin/../lib/gcc/x86_64-linux-gnu/10/../../../../include/c++/10/exception:92:8: note: non-template declaration found by name lookup
+  void unexpected() __attribute__ ((__noreturn__));
+       ^
+pure2-expected-is-as.cpp2:25:40: error: use of undeclared identifier 'ex1'; did you mean 'exp'?
+    if (cpp2::is<std::unexpected<int>>(ex1)) {
+                                       ^~~
+                                       exp
+/usr/include/x86_64-linux-gnu/bits/mathcalls.h:95:17: note: 'exp' declared here
+__MATHCALL_VEC (exp,, (_Mdouble_ __x));
+                ^
+pure2-expected-is-as.cpp2:30:18: error: use of undeclared identifier 'ex1'; did you mean 'exp'?
+    if (cpp2::is(ex1, 123)) {
+                 ^~~
+                 exp
+/usr/include/x86_64-linux-gnu/bits/mathcalls.h:95:17: note: 'exp' declared here
+__MATHCALL_VEC (exp,, (_Mdouble_ __x));
+                ^
+pure2-expected-is-as.cpp2:34:18: error: use of undeclared identifier 'ex1'; did you mean 'exp'?
+    if (cpp2::is(ex1, 100)) {
+                 ^~~
+                 exp
+/usr/include/x86_64-linux-gnu/bits/mathcalls.h:95:17: note: 'exp' declared here
+__MATHCALL_VEC (exp,, (_Mdouble_ __x));
+                ^
+In file included from pure2-expected-is-as.cpp:7:
+../../../include/cpp2util.h:1597:72: error: invalid application of 'sizeof' to a function type
+    (std::is_floating_point_v<From> && std::is_floating_point_v<To> && sizeof(From) > sizeof(To)) ||
+                                                                       ^~~~~~~~~~~~
+../../../include/cpp2util.h:2111:19: note: in instantiation of variable template specialization 'cpp2::is_narrowing_v' requested here
+    if constexpr (is_narrowing_v<C, CPP2_TYPEOF(x)>) {
+                  ^
+pure2-expected-is-as.cpp2:39:22: note: in instantiation of function template specialization 'cpp2::as_<int, double (&)(double) noexcept>' requested here
+    auto val1 {cpp2::as_<int>(ex1)}; 
+                     ^
+In file included from pure2-expected-is-as.cpp:7:
+../../../include/cpp2util.h:1641:9: error: invalid application of 'sizeof' to a function type
+        sizeof(CPP2_TYPEOF(x)) > sizeof(C)
+        ^~~~~~~~~~~~~~~~~~~~~~
+../../../include/cpp2util.h:2124:12: note: in instantiation of function template specialization 'cpp2::as<int, double (double) noexcept>' requested here
+    return as<C>(CPP2_FORWARD(x));
+           ^
+pure2-expected-is-as.cpp2:39:22: note: in instantiation of function template specialization 'cpp2::as_<int, double (&)(double) noexcept>' requested here
+    auto val1 {cpp2::as_<int>(ex1)}; 
+                     ^
+pure2-expected-is-as.cpp2:39:31: error: use of undeclared identifier 'ex1'
+    auto val1 {cpp2::as_<int>(ex1)}; 
+                              ^
+pure2-expected-is-as.cpp2:42:23: error: use of undeclared identifier 'ex2'
+    if (cpp2::is<int>(ex2)) {
+                      ^
+pure2-expected-is-as.cpp2:47:24: error: use of undeclared identifier 'ex2'
+    if (cpp2::is<bool>(ex2)) {
+                       ^
+pure2-expected-is-as.cpp2:52:18: error: use of undeclared identifier 'ex2'
+    if (cpp2::is(ex2, 123)) {
+                 ^
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+20 errors generated.
