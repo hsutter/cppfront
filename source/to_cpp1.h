@@ -6744,6 +6744,17 @@ public:
             }
             //  Otherwise, emit the type
             else {
+                //  If this is an anonymous object (named "_"), we'll generate a unique name below
+                //  but first we need to emit the `maybe_unused` attribute before its type, unless
+                //  we're at namespace scope.
+                if (
+                    n.has_name("_")
+                    && !n.parent_is_namespace()
+                    )
+                {
+                    printer.print_cpp2("[[maybe_unused]] ", n.position());
+                }
+
                 //  If there isn't an initializer, use cpp2::deferred_init<T>
                 if (!n.initializer) {
                     if (n.parent_is_function()) {
