@@ -1185,7 +1185,9 @@ inline constexpr auto is( auto const& x, auto&& value ) -> bool
     else if constexpr (requires{ bool{x == value}; }) {
         return x == value;
     }
-    return false;
+    else {
+        return false;
+    }
 }
 
 
@@ -1436,8 +1438,9 @@ inline constexpr auto is( std::any const& x, auto&& value ) -> bool
         auto pvalue = std::any_cast<CPP2_TYPEOF(value)>(&x);
         return pvalue && *pvalue == value;
     }
-    //  else
-    return false;
+    else {
+        return false;
+    }
 }
 
 
