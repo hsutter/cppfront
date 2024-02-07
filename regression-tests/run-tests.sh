@@ -130,8 +130,15 @@ if [[ "$cxx_compiler" == *"cl.exe"* ]]; then
     compiler_version=$(cl.exe)
 else
     compiler_cmd="$cxx_compiler -I../../../include -std=c++20 -pthread -o "
-    
     compiler_version=$("$cxx_compiler" --version)
+
+    # We don't currently support Apple Clang 15 so try and switch to 14
+    if [[ "$compiler_version" == *"Apple clang version 15.0"* ]]; then
+        printf "Found Apple Clang 15, attempting to switch to Apple Clang 14"
+        cxx_compiler=$(xcodebuild -find clang++)
+        compiler_version=$("$cxx_compiler" --version)
+    fi
+
     if [[ "$compiler_version" == *"Apple clang version 14.0"* ]]; then
         exec_out_dir="$expected_results_dir/apple-clang-14"
     elif [[ "$compiler_version" == *"clang version 12.0"* ]]; then 
