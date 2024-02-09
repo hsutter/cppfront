@@ -130,23 +130,30 @@ if [[ "$cxx_compiler" == *"cl.exe"* ]]; then
     compiler_version=$(cl.exe)
 else
     compiler_cmd="$cxx_compiler -I../../../include -std=c++20 -pthread -o "
-    
-    compiler_ver=$("$cxx_compiler" --version)
-    if [[ "$compiler_ver" == *"Apple clang version 14.0"* ]]; then
-        exec_out_dir="$expected_results_dir/apple-clang-14"
-    elif [[ "$compiler_ver" == *"clang version 12.0"* ]]; then 
-        exec_out_dir="$expected_results_dir/clang-12"
-    elif [[ "$compiler_ver" == *"clang version 15.0"* ]]; then 
-        exec_out_dir="$expected_results_dir/clang-15"
-    elif [[ "$compiler_ver" == *"g++-10"* ]]; then
-        exec_out_dir="$expected_results_dir/gcc-10"
-    elif [[ "$compiler_ver" == *"g++-12"* ||
-            "$compiler_ver" == *"g++-13"*
-         ]]; then
-        exec_out_dir="$expected_results_dir/gcc-13"
+    compiler_version=$("$cxx_compiler" --version)
+
+    # We don't currently support Apple Clang 15 so try and switch to 14
+    if [[ "$compiler_version" == *"Apple clang version 15.0"* ]]; then
+        printf "Found Apple Clang 15, attempting to switch to Apple Clang 14"
+        cxx_compiler=$(xcodebuild -find clang++)
+        compiler_version=$("$cxx_compiler" --version)
     fi
 
-    compiler_version=$("$cxx_compiler" --version)
+    if [[ "$compiler_version" == *"Apple clang version 14.0"* ]]; then
+        exec_out_dir="$expected_results_dir/apple-clang-14"
+    elif [[ "$compiler_version" == *"clang version 12.0"* ]]; then 
+        exec_out_dir="$expected_results_dir/clang-12"
+    elif [[ "$compiler_version" == *"clang version 15.0"* ]]; then 
+        exec_out_dir="$expected_results_dir/clang-15"
+    elif [[ "$compiler_version" == *"g++-10"* ]]; then
+        exec_out_dir="$expected_results_dir/gcc-10"
+    elif [[ "$compiler_version" == *"g++-12"* ||
+            "$compiler_version" == *"g++-13"*
+         ]]; then
+        exec_out_dir="$expected_results_dir/gcc-13"
+    else
+        printf "Unhandled compiler version:\n$compiler_version\n\n"
+    fi
 fi
 
 if [[ -d "$exec_out_dir" ]]; then
@@ -154,7 +161,8 @@ if [[ -d "$exec_out_dir" ]]; then
 
     printf "Directory with reference compilation/execution files to use:\n$exec_out_dir\n\n"
 else
-    printf "not found for compiler: '$cxx_compiler'\n\n"
+    printf "Directory with reference compilation/execution files not found for compiler: '$cxx_compiler'\n\n"
+    exit 2
 fi
 
 ################
