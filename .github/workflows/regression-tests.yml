@@ -34,6 +34,7 @@ jobs:
     - name: Prepare compilers
       if: matrix.os == 'macos-13'
       run: |
+        sudo xcode-select --switch /Applications/Xcode_14.3.1.app
         sudo ln -s "$(brew --prefix llvm@15)/bin/clang" /usr/local/bin/clang++-15
 
     - name: Run regression tests - Linux and macOS version
