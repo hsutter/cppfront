@@ -59,18 +59,17 @@ cppfront hello.cpp2 -p    # produces hello.cpp
 
 and then build `hello.cpp` using your favorite C++20 compiler, where `CPPFRONT_INCLUDE` is the path to `/cppfront/include`:
 
-```
-# --- MSVC -----------------------------------------------
+``` title="MSVC"
 > cl hello.cpp -std:c++20 -EHsc -I CPPFRONT_INCLUDE
 > hello.exe
 Hello, world!
-
-# --- GCC ------------------------------------------------
+```
+``` title="GCC"
 $ g++ hello.cpp -std=c++20 -ICPPFRONT_INCLUDE -o hello
 $ ./hello.exe
 Hello, world!
-
-# --- Clang ----------------------------------------------
+```
+``` title="Clang"
 $ clang++ hello.cpp -std=c++20 -ICPPFRONT_INCLUDE -o hello
 $ ./hello.exe
 Hello, world!
