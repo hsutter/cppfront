@@ -213,4 +213,4 @@ That's enough to enable builds, and the IDE just picks up the rest from the `.cp
 
 
 
-[^clean-cpp1]: For presentation purposes, this documentation generally shows the Cpp1 code generated when using cppfront's `-c` (short for `-clean-cpp1`), which eliminates extra output including `#line` directives. In normal use, you won't need `-c`, because you want the `#line` information which  enables accurate error messages, debuggers, and other tools.
+[^clean-cpp1]: For presentation purposes, this documentation generally shows the Cpp1 code generated when using cppfront's `-c` (short for `-clean-cpp1`), which eliminates extra output including `#line` directives. In normal use, you won't need `-c`, because you want the `#line` information which enables accurate error messages, debuggers, and other tools.
