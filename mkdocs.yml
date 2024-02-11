@@ -1,3 +1,20 @@
+# To view the documentation locally on your machine, use the following steps
+#
+# Clone the GitHub cppfront repo locally, then on the command line:
+#
+#   cd /github/cppfront
+#   python -m venv venv
+#   source venv/bin/activate
+#   pip install mkdocs-material
+#   mkdocs new .
+#   mkdocs serve
+#
+# The last command should eventually print something like
+#   Serving on http://127.0.0.1:8000/
+# and you can open that URL in a local brower. If you are locally editing
+# the documentation, leave the server process running and the browser
+# pages will auto-reload as you save edits.
+#
 site_name: "Cpp2 and cppfront — An experimental 'C++ syntax 2', and its first compiler"
 theme:
   name: material
@@ -42,4 +59,4 @@ markdown_extensions:
   - attr_list
 
 copyright: |
-  &copy <a href="https://github.com/hsutter" target="_blank" rel="noopener">Herb Sutter</a>
+  &copy <a href="https://github.com/hsutter" target="_blank" rel="noopener">Herb Sutter</a> &bull; <a href="https://github.com/hsutter/cppfront/blob/main/LICENSE">cppfront license </a>
