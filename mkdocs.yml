@@ -40,9 +40,6 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.mark
   - attr_list
-  - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
 
 copyright: |
   &copy <a href="https://github.com/hsutter" target="_blank" rel="noopener">Herb Sutter</a>
