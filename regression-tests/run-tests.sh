@@ -129,31 +129,39 @@ if [[ "$cxx_compiler" == *"cl.exe"* ]]; then
     exec_out_dir="$expected_results_dir/msvc-2022"
     compiler_version=$(cl.exe)
 else
-    compiler_cmd="$cxx_compiler -I../../../include -std=c++20 -pthread -o "
-    compiler_version=$("$cxx_compiler" --version)
-
-    # We don't currently support Apple Clang 15 so try and switch to 14
-    if [[ "$compiler_version" == *"Apple clang version 15.0"* ]]; then
-        printf "Found Apple Clang 15, attempting to switch to Apple Clang 14"
-        cxx_compiler=$(xcodebuild -find clang++)
-        compiler_version=$("$cxx_compiler" --version)
+    # Verify the compiler command
+    which "$cxx_compiler" > /dev/null
+    if [[ $? != 0 ]]; then
+        printf "The compiler '$cxx_compiler' is not installed\n\n"
+        exit 2
     fi
 
-    if [[ "$compiler_version" == *"Apple clang version 14.0"* ]]; then
+    cpp_std=c++2b
+    compiler_version=$("$cxx_compiler" --version)
+
+    if [[ "$compiler_version" == *"Apple clang version 14.0"* ||
+          "$compiler_version" == *"Homebrew clang version 15.0"* ]]; then
         exec_out_dir="$expected_results_dir/apple-clang-14"
     elif [[ "$compiler_version" == *"clang version 12.0"* ]]; then 
         exec_out_dir="$expected_results_dir/clang-12"
     elif [[ "$compiler_version" == *"clang version 15.0"* ]]; then 
         exec_out_dir="$expected_results_dir/clang-15"
+        # c++2b causes starge issues on GitHub ubuntu-latest runner
+        cpp_std="c++20"
     elif [[ "$compiler_version" == *"g++-10"* ]]; then
         exec_out_dir="$expected_results_dir/gcc-10"
+        # GCC 10 does not support c++2b
+        cpp_std=c++20
     elif [[ "$compiler_version" == *"g++-12"* ||
             "$compiler_version" == *"g++-13"*
          ]]; then
         exec_out_dir="$expected_results_dir/gcc-13"
     else
         printf "Unhandled compiler version:\n$compiler_version\n\n"
+        exit 2
     fi
+
+    compiler_cmd="$cxx_compiler -I../../../include -std=$cpp_std -pthread -o "
 fi
 
 if [[ -d "$exec_out_dir" ]]; then
