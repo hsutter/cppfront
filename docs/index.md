@@ -63,7 +63,7 @@ main: () = std::cout << "Hello, world!\n";
 
 But let's add a little more, just to show a few things:
 
-``` cpp title="hello.cpp2, slightly more interesting"
+``` cpp title="hello.cpp2 — slightly more interesting"
 main: () = {
     words: std::vector = ( "Alice", "Bob" );
     hello( words[0] );
@@ -80,7 +80,9 @@ This short program code already illustrates a few Cpp2 essentials.
 **Consistent context-free syntax.** Cpp2 is designed so that there is one general way to spell a given thing, that works consistently everywhere. All Cpp2 type/function/object declarations use the unambiguous and context-free syntax **"_name_ `:` _kind_ `=` _statement_"**. The `:` is pronounced **"is a,"** and the `=` is pronounced is pronounced **"defined as."**
 
 - `main` **is a** function that takes no arguments and returns nothing, and is **defined as** the code body shown.
+
 - `words` **is a** `std::vector`, initially **defined as** holding `"Alice"` and `"Bob"`.
+
 - `hello` **is a** function that takes a `std::string_view` it will only read from and that returns nothing, and is **defined as** code that prints the string to `cout` the usual C++ way.
 
 All grammar is context-free. In particular, we (the human reading the code, or the compiler) never need to do name lookup to figure out how to parse something — there is never a ["vexing parse"](https://en.wikipedia.org/wiki/Most_vexing_parse) in Cpp2.
@@ -88,13 +90,17 @@ All grammar is context-free. In particular, we (the human reading the code, or t
 **Simple and safe by default.** Cpp2 has contracts (tracking draft C++26 contracts), `inspect` pattern matching, string interpolation, and more.
 
 - `hello` uses **string interpolation** to be able to write `"Hello, (msg)$!\n"` instead of `"Hello, (" << msg << "!\n"`.
+
 - `main` uses **"CTAD"** (C++'s normal constructor template argument deduction) to declare its `words` variable.
+
 - `words[0]` and `words[1]` are **bounds-checked by default**. From Cpp2 code, ordinary `std::vector` subscript accesses are safely bounds-checked by default without requiring any upgrade to your favorite standard library, and that's true for any similar subscript of something whose size can be queried using `std::size()`, including any in-house integer-indexed container types you already have that can easily provide `std::size()` if they don't already.
 
 **Simplicity through generality + defaults.** A major way that Cpp2 delivers simplicity is by providing just one powerful general syntax for a given thing (e.g., one function definition syntax), but designing it so you can omit the parts you're not currently using (e.g., where you're happy with the defaults). We're already using some of those defaults above:
 
 - We can omit writing the `-> void` return type for a function that doesn't return anything, as both of these functions do.
+
 - We can omit the `{` `}` around single-statement function bodies, as `hello` does.
+
 - We can omit the `in` on the `msg` parameter. Cpp2 has just six ways to pass parameters: The most common ones are `in` for read-only (the default so we can omit it, as `hello` does), `inout` for read-write, and also `copy`, `out`, `move`, and `forward`.
 
 **Order-independent by default.** Did you notice that `main` called `hello`, which was defined later? Cpp2 code is order-independent by default — there are no forward declarations.
@@ -223,7 +229,9 @@ Finally, put the `/cppfront/include` directory on your `INCLUDE` path. In Soluti
 That's enough to enable builds, and the IDE just picks up the rest from the `.cpp` file that cppfront generated:
 
 - **The cppfront error messages in `filename(line, col)` format.** Most C++ IDEs recognize these, and usually automatically merge any diagnostic output wherever compiler error output normally appears. If your IDE prefers `filename:line:col`, just use the cppfront `-format-colon-errors` command line option.
+
 - **The `#line` directives cppfront emits in the generated `.cpp` file.** Most C++ debuggers recognize these and will know to step through the `.cpp2` file. Note that `#line` emission is on by default, but if you choose `-c` (short for `-clean-cpp1`) these will be suppressed and then the debugger will step through the generated C++ code instead.
+
 - **Regardless of syntax, every type/function/object is still just an ordinary C++ type/function/object.** Most C++ debugger visualizers will just work and show beautiful output for the types your program uses, including to use any in-the-box visualizers for all the `std::` types (since those are used directly as usual) and any custom visualizers you may have already written for your own types or popular library types.
 
 
