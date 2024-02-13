@@ -79,7 +79,7 @@ hello: (msg: std::string_view) =
 
 This short program code already illustrates a few Cpp2 essentials.
 
-**Consistent context-free syntax.** Cpp2 is designed so that there is one general way to spell a given thing, that works consistently everywhere. All Cpp2 type/function/object/namespace/module/etc. declarations use the unambiguous and context-free syntax **"_name_ `:` _kind_ `=` _statement_"**. The `:` is pronounced **"is a,"** and the `=` is pronounced is pronounced **"defined as."**
+**Consistent context-free syntax.** Cpp2 is designed so that there is one general way to spell a given thing, that works consistently everywhere. All Cpp2 type/function/object/namespace/module/etc. declarations use the unambiguous and context-free syntax **"_name_ `:` _kind_ `=` _statement_"**. The `:` is pronounced **"is a,"** and the `=` is pronounced **"defined as."**
 
 - `main` **is a** function that takes no arguments and returns nothing, and is **defined as** the code body shown.
 

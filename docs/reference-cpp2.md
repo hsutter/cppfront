@@ -22,12 +22,12 @@ The usual `// line comments` and `/* stream comments */` are supported. For exma
 All Cpp2 declarations are written as **"_name_ `:` _kind_ `=` _statement_"**.
 
 - The `:` is pronounced **"is a."**
-- The `=` is pronounced is pronounced **"defined as."**
+- The `=` is pronounced **"defined as."**
 - The _statement_ is typically an expression statement (e.g., `a + b();`) or a compound statement (e.g., `{ /*...*/ return c(d) / e; }`).
 
 For example:
 
-``` cpp title="Example: Consistent declartions — name : kind = statement"
+``` cpp title="Example: Consistent declarations — name : kind = statement"
 // n is a namespace defined as the following scope
 n: namespace
 = {
