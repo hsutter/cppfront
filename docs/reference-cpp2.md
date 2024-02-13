@@ -79,6 +79,15 @@ Cpp2 supports the same fundamental types as today's Cpp1, but additionally provi
 | `_schar`     | `signed char`   | Normally, prefer `i8` instead |
 | `_uchar`     | `unsigned char` | Normally, prefer `u8` instead |
 
+### Type qualifiers
+
+Types can be qualified with `const` and `*`. Types are written left-to-right, so a qualifier always applies to what immediately follows it. For example, to declare a `const` pointer to a non-`const` pointer to a `const i32` object, write:
+
+``` cpp title="Example: Type qualifiers"
+//  A const pointer to a non-const pointer to a const i32 object
+p: const * * const i32; //
+```
+
 ### Literals
 
 Cpp2 supports the same `'c'`haracter, `"string"`, binary, integer, and floating point literals as Cpp1, including most Unicode encoding prefixes and raw string literals.
@@ -152,9 +161,60 @@ For more details, see [Design note: Postfix unary operators vs binary operators]
 
 #### Binary operators
 
+Binary operators are the same as in Cpp1. From lowest to highest precedence:
 
->>
->>=
+| Binary operators grouped by precedence |
+|---|
+| `*`, `/`, `%` |
+| `+`, `-` |
+| `<<`, `>>` |
+| `<=>` |
+| `<`, `>`, `<=`, `>=` |
+| `==`, `!=` |
+| `&` |
+| `^` |
+| `|` |
+| `&&` |
+| `||` |
+| `=` and compound assignment |
+
+### `is` — safe type/value queries
+
+An `x is C` expression allows safe type and value queries, and evaluates to `true` if `x` matches constraint `C`.
+
+There are two kinds of `is`:
+
+- A **type query**, where `C` is a type constraint: A type, a template name, a concept, or a type predicate. Here `x` may be a type or an object; if it is an object, the query refers to `x`'s type.
+
+| Type constraint kind | Example | Notes |
+|---|---|---|
+| Static type query | `x is int` |
+| Dynamic type query | `ptr* is Shape` |
+| Static template type query | `x is std::vector` |
+| Static concept query | `x is std::integral` |
+
+- A **value query**, where `C` is a value constraint: A value, or a value predicate. Here `x` must be an object.
+
+| Value constraint kind | Example |
+|---|---|
+| Value | `x is 0` |
+| Value predicate | `x is (in(10, 20))` |
+
+`is` is useful throughout the language, including in `inspect` pattern matching alternatives. `is` is extensible, and works out of the box with `std::variant`, `std::optional`, and `std::any`. For examples, see:
+
+- [`mixed-inspect-templates.cpp2`](https://github.com/hsutter/cppfront/tree/main/regression-tests/mixed-inspect-templates.cpp2)
+- [`mixed-inspect-values.cpp2`](https://github.com/hsutter/cppfront/tree/main/regression-tests/mixed-inspect-values.cpp2)
+- [`mixed-inspect-values-2.cpp2`](https://github.com/hsutter/cppfront/tree/main/regression-tests/mixed-inspect-values-2.cpp2)
+- [`mixed-type-safety-1.cpp2`](https://github.com/hsutter/cppfront/tree/main/regression-tests/mixed-type-safety-1.cpp2)
+- [`pure2-enum.cpp2`](https://github.com/hsutter/cppfront/tree/main/regression-tests/pure2-enum.cpp2)
+- [`pure2-inspect-expression-in-generic-function-multiple-types.cpp2`](https://github.com/hsutter/cppfront/tree/main/regression-tests/pure2-inspect-expression-in-generic-function-multiple-types.cpp2)
+- [`pure2-inspect-fallback-with-variant-any-optional.cpp2`](https://github.com/hsutter/cppfront/tree/main/regression-tests/pure2-inspect-fallback-with-variant-any-optional.cpp2)
+- [`pure2-type-safety-1.cpp2`](https://github.com/hsutter/cppfront/tree/main/regression-tests/pure2-type-safety-1.cpp2)
+- [`pure2-type-safety-2-with-inspect-expression.cpp2`](https://github.com/hsutter/cppfront/tree/main/regression-tests/pure2-type-safety-2-with-inspect-expression.cpp2)
+
+
+### `as` — safe casts and conversions
+
 
 
 ### Captures, including interpolations
@@ -302,11 +362,13 @@ All value operations are spelled `operator=`, including construction, assignment
 
 ### `operator<=>`: Unified comparisons (mostly in C++20)
 
-Most of Cpp2's `operator<=>` has already been merged into ISO C++, except for allowing chained comparisons. In Cpp2, comparisons can be chained, and always have the mathematically sound transitive meaning or else are rejected at compile time:
+Most of Cpp2's `operator<=>` has already been merged into ISO C++, except for allowing chained comparisons. In Cpp2, comparisons can be safely chained, and always have the mathematically sound transitive meaning or else are rejected at compile time:
 
-- All mathematically sound and safe chains like `a <= b < c` are supported, with efficient single evaluation of each term. They are "sound" because they are transitive; these chains imply a relationship between `a` and `c` (in this case, the chain implies that `a <= c` is also true).
+- **Valid chains: All `<`/`<=`, all `>`/`>=`, or all `==`.** All mathematically sound and safe chains like `a <= b < c` are supported, with efficient single evaluation of each term. They are "sound" because they are transitive; these chains imply a relationship between `a` and `c` (in this case, the chain implies that `a <= c` is also true).
 
-- Nonsense chains like `a >= b < c` and `a != b != c` are compile time errors. They are "nonsense" because they are non-transitive; these chains do not imply any relationship between `a` and `c`.
+- **Invalid chains: Everything else.** Nonsense chains like `a >= b < c` and `a != b != c` are compile time errors. They are "nonsense" because they are non-transitive; these chains do not imply any relationship between `a` and `c`.
+
+For details, see [P0515 "Consistent comparison" section 3.3](https://wg21.link/p0515) and [P0893 "Chaining comparisons"](https://wg21.link/p0893).
 
 
 ## Metafunctions

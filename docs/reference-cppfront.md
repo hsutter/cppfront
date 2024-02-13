@@ -34,10 +34,10 @@ This is fine, where the Cpp2 and Cpp1 code are side by side and seamlessly call 
 #include <iostream>                             // Cpp1 syntax
 #include <string_view>                          // Cpp1 syntax
 
-N: namespace = {                                // Cpp2 syntax
-    hello: (msg: std::string_view) =            // Cpp2 syntax
-        std::cout << "Hello, (msg)$!\n";        // Cpp2 syntax
-}                                               // Cpp2 syntax
+N: namespace = {                                        // Cpp2 syntax
+    hello: (msg: std::string_view) =                    // Cpp2 syntax
+        std::cout << "Hello, (msg)$!\n";                // Cpp2 syntax
+}                                                       // Cpp2 syntax
 
 int main() {                                    // Cpp1 syntax
     auto words = std::vector{ "Alice", "Bob" }; // Cpp1 syntax
@@ -163,7 +163,7 @@ Emit cppfront version and build in the `.cpp` file.
 
 ### `-format-colon-errors`, `-fo`
 
-Emit cppfront diagnostics using ':line:col:' format for line and column numbers, if that is the format better recognized by your IDE, so that it will pick up cppfront messages and integrate them in its normal error message output location. If not set, by default cppfront diagnostics use `(line,col)` format.
+Emit cppfront diagnostics using `:line:col:` format for line and column numbers, if that is the format better recognized by your IDE, so that it will pick up cppfront messages and integrate them in its normal error message output location. If not set, by default cppfront diagnostics use `(line,col)` format.
 
 ### `-line-paths`, `-l`
 
