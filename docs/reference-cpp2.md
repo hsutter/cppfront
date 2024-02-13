@@ -17,6 +17,60 @@ The usual `// line comments` and `/* stream comments */` are supported. For exma
  */
 ```
 
+### Declarations
+
+All Cpp2 declarations are written as **"_name_ `:` _kind_ `=` _statement_"**.
+
+- The `:` is pronounced **"is a."**
+- The `=` is pronounced is pronounced **"defined as."**
+- The _statement_ is typically an expression statement (e.g., `a + b();`) or a compound statement (e.g., `{ /*...*/ return c(d) / e; }`).
+
+For example:
+
+``` cpp title="Example: Consistent declartions — name : kind = statement"
+// n is a namespace defined as the following scope
+n: namespace
+= {
+    // shape is a type defined as the following scope
+    shape: type
+    = {
+        // points is an object of type std::vector<point2d>,
+        // defined as having an empty default value
+        // (type-scope objects are private by default)
+        points: std::vector<point2d> = ();
+
+        // draw is a function taking 'this' and 'canvas' parameters
+        // and returning bool, defined as the following body
+        // (type-scope functions are public by default)
+        //   - this is as if 'this: shape', an object of type shape
+        //   - where is an object of type canvas
+        draw: (this, where: canvas) -> bool
+        = {
+            // pen is an object of deduced (omitted) type 'color',
+            // defined as having initial value 'color::red'
+            pen := color::red;
+
+            // success is an object of deduced (omitted) type bool,
+            // defined as having initial value 'false'
+            success := false;
+
+            // ...
+
+            return success;
+        }
+
+        // count is a function taking 'this' and returning a type
+        // deduced from its body, defined as a single-expression body
+        count: (this) = points.ssize();
+
+        // ...
+    }
+
+    // color is an @enum type (described later)
+    color: @enum type = { red; green; blue; }
+}
+```
+
 ### The `_` wildcard, including explicit discard
 
 `_` is pronounced **"don't care"** and allowed as a wildcard in most contexts. For example:
@@ -237,9 +291,16 @@ test: (x) = {
 }
 ```
 
-### `inspect` expressions — pattern matching
+### `inspect` — pattern matching
 
-An `inspect` expression allows pattern matching using `is`. For example:
+An `inspect expr -> Type` expression allows pattern matching using `is`.
+
+- `expr` is evaluated once.
+- Each alternative spelled `is C` is evaluated in order as if called with `expr is C`.
+- If an alternative evaluates to `true`, then its `= alternative;` body is used as the value of the entire `inspect` expression, and the meaning is the same as if the entire `inspect` expression had been written as just `:Type = alternative;` — i.e., an unnamed object expression (aka 'temporary object') of type `Type` initialized with `alternative`.
+- A catchall `is _` is required.
+
+For example:
 
 ``` cpp title="Example: Using inspect"
 //  A generic function that takes an argument 'x' of any type
@@ -248,19 +309,25 @@ test: (x) = {
     forty_two := 42;
     std::cout << inspect x -> std::string {
         is 0           = "zero";            // == 0
-        is (forty_two) = "the answer";      // == forty_two
-        is int         = "integer";         // is an int with some other value
-        is std::string = x as std::string;  // is a std::string
-        is std::vector = "a std::vector";   // is a vector</*some-type*/>
-        is _           = "(no match)";      // something else
+        is (forty_two) = "the answer";      // == 42
+        is int         = "integer";         // is type int (value other than 0 or 42)
+        is std::string = x as std::string;  // is type std::string
+        is std::vector = "a std::vector";   // is a vector</*of-some-type*/>
+        is _           = "(no match)";      // is something else
     } << "\n";
 }
+
+//  Sample call site
+test(42);
+    //  Behaves as if the following function were called:
+    //      test: (x) = { std::cout << (:std::string = "the answer") << "\n";; }
+    //  (and that's why inspect alternatives are introduced with '=')
 ```
 
 For more examples, see also the examples in the previous two sections on `is` and `as`, many of which use `inspect`.
 
 
-### Captures, including interpolations
+### `$` — captures, including interpolations
 
 
 For details, see [Design note: Capture](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Capture).
