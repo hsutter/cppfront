@@ -5,47 +5,49 @@
 
 ### What is Cpp2?
 
-"Cpp2" is shorthand name for an experimental alternate "syntax 2" for C++ itself. The goal is to help us evolve C++ to make it simpler and safer, while maintaining full source and link compatibility — but to only pay for perfect backward source compatibility when we actually use it.
-
-Having an unambiguous alternative "syntax 2" gives us:
-
-- **Freedom to make C++ simpler and safer, without breaking any of today's code.** Cpp2 is designed to take all the consensus C++ best-practices guidance we already teach, and make it the default. Examples: writing unsafe type casts is just not possible in Cpp2 syntax; and Cpp2 can change language defaults to make them simpler and safer, which would be impossible to do directly in an existing syntax without breaking lots of existing code. You can always "break the glass" when needed to violate the guidance, but has to opt out explicitly to write unsafe code, so if the program has a bug you can grep for those places to look at first.
-
-- **Perfect link compatibility always on, perfect source compatibility always available (but you pay for it only if you use it).** Any type/function/object written in either syntax is always still just a normal C++ type/function/object, so Cpp2 code can directly use any existing C++ code or library (and vice versa), with no wrapping/marshaling/thunking. You can write a "mixed" source files that has both Cpp2 and Cpp1 code and get full backward C++ source compatibility including with SFINAE and macros and header files, or you can write a "pure" Cpp2 source file to use only the simpler syntax and get to write in a 10x simpler C++.
-
-Bjarne Stroustrup said it best:
+"Cpp2," short for "C++ syntax 2," is my ([Herb Sutter's](https://github.com/hsutter)) personal project to try to make writing ordinary C++ types/functions/objects be much simpler and safer, without breaking backward compatibility. Bjarne Stroustrup said it best:
 
 > "Inside C++, there is a much smaller and cleaner language struggling to get out." <br>— Bjarne Stroustrup, _The Design and Evolution of C++_ (D&E), 1994
 >
 > "Say 10% of the size of C++ in definition and similar in front-end compiler size. ... most of the simplification would come from generalization." <br>— Bjarne Stroustrup, _ACM History of Programming Languages III_, 2007
 
-My goal for this project is to try to prove that Bjarne Stroustrup has long been right: That it's possible and desirable to have true C++ with all its expressive power and control and with full backward compatibility, but in a C++ that's **10x simpler** with fewer warts and special cases, and **50x safer** where it's far easier to not write security bugs by accident.
+My goal is to try to prove that Stroustrup is right: that it's possible and desirable to have true C++ with all its expressive power and control and with full backward compatibility, but in a flavor that's **10x simpler** with fewer quirks and special cases to remember, and **50x safer** where it's far easier to not write security bugs by accident.
+
+We can't make an improvement that large to C++ via gradual evolution to today's syntax, because we can't break backward source compatibility with today's syntax. That means we can never change a language feature default in today's syntax, not even if the default creates a security vulnerability pitfall, because changing a default would break vast swathes of existing code. Instead, having an distinct alternative syntax gives us a "bubble of new code" that doesn't exist today, and:
+
+- **Freedom to make C++ simpler and safer, without breaking any of today's code.** Cpp2 is designed to take all the consensus C++ best-practices guidance we already teach, and make it the default when using "syntax 2." Examples: Writing unsafe type casts is just not possible in Cpp2 syntax; and Cpp2 can change language defaults to make them simpler and safer. You can always "break the glass" when needed to violate the guidance, but has to opt out explicitly to write unsafe code, so if the program has a bug you can grep for those places to look at first. For details, see [Design note: unsafe code](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Unsafe-code).
+
+- **Perfect link compatibility always on, perfect source compatibility always available (but you pay for it only if you use it).** Any type/function/object written in either syntax is always still just a normal C++ type/function/object, so any code or library written in either Cpp2 or today's C++ syntax ("Cpp1" for short) can seamlessly call each other, with no wrapping/marshaling/thunking. You can write a "mixed" source files that has both Cpp2 and Cpp1 code and get perfect backward C++ source compatibility (even SFINAE and macros), or you can write a "pure" all-Cpp2 source file and write code in a 10x simpler syntax.
+
+**What it isn't.** Cpp2 is not a successor or alternate language with it own divergent or incompatible ecosystem. For example, it does not have its own nonstandard incompatible modules/concepts/etc. that compete with the Standard C++ features; and does not replace your Standard C++ compiler and other tools.
+
+**What it is.** Cpp2 aims to be another "skin" for C++ itself, just a simpler and safer way to write ordinary C++ types/functions/objects. It seamlessly uses Standard C++ modules and concepts requirements and other features, and it works with all existing C++20 or higher compilers and tools right out of the box with zero overhead.
 
 
 ### What is cppfront?
 
-[**Cppfront**](https://github.com/hsutter/cppfront) is a compiler that compiles Cpp2 syntax to today's C++ syntax (aka Cpp1). This lets you start trying out Cpp2 syntax in any existing C++ project and build system just by [adding a build step](#adding-cppfront-in-your-ide-build-system) to translate the Cpp2 to Cpp1 syntax, and the result Just Works with every C++20 or higher compiler and all existing C++ tools (debuggers, build systems, sanitizers, etc.).
+[**Cppfront**](https://github.com/hsutter/cppfront) is a compiler that compiles Cpp2 syntax to today's Cpp1 syntax. This lets you start trying out Cpp2 syntax in any existing C++ project and build system just by renaming a source file from `.cpp` to `.cpp2` and [adding a build step](#adding-cppfront-in-your-ide-build-system), and the result Just Works with every C++20 or higher compiler and all existing C++ tools (debuggers, build systems, sanitizers, etc.).
 
-This deliberately follows Bjarne Stroustrup's wise approach with [**cfront**](https://en.wikipedia.org/wiki/Cfront), the original C++ compiler: In the 1980s and 1990s, Stroustrup created cfront to translate C++ to pure C, Stroustrup similarly ensured that C++ could be interleaved with C in the same source file, and C++ could always call any C code with no wrapping/marshaling/thunking. By providing a C++ compiler that emitted pure C, Stroustrup ensured full compatibility with the C ecosystems that already existed, and made it easy for people to start trying out C++ code in any existing C project by adding just another build step to translate the C++ to C first, and the result Just Worked with existing C tools.
+This deliberately follows Bjarne Stroustrup's wise approach with [**cfront**](https://en.wikipedia.org/wiki/Cfront), the original C++ compiler: In the 1980s and 1990s, Stroustrup created cfront to translate C++ to pure C, and similarly ensured that C++ could be interleaved with C in the same source file, and that C++ could always call any C code with no wrapping/marshaling/thunking. By providing a C++ compiler that emitted pure C, Stroustrup ensured full compatibility with the C ecosystems that already existed, and made it easy for people to start trying out C++ code in any existing C project by adding just another build step to translate the C++ to C first, and the result Just Worked with existing C tools.
 
 ### How do I get and build cppfront?
 
-The full source code for cppfront is at the [**Cppfront repo**](https://github.com/hsutter/cppfront).
+The full source code for cppfront is at the [**Cppfront GitHub repo**](https://github.com/hsutter/cppfront).
 
-Cppfront builds with any major C++20 compiler. Go to the `/cppfront/source` directory, and run one of the following:
+Cppfront builds with any recent C++ compiler. Go to the `/cppfront/source` directory, and run one of the following:
 
 <image align="right" width="120" src="https://user-images.githubusercontent.com/1801526/188906112-ef377a79-b6a9-4a30-b318-10b51d8ea934.png">
 
-``` bash title="MSVC build instructions"
+``` bash title="MSVC build instructions (Visual Studio 2019 version 16.11 or higher)"
 cl cppfront.cpp -std:c++20 -EHsc
 ```
 
-``` bash title="GCC build instructions"
-g++-10 cppfront.cpp -std=c++20 -o cppfront
+``` bash title="GCC build instructions (g++ 10 or higher)"
+g++ cppfront.cpp -std=c++20 -o cppfront
 ```
 
-``` bash title="Clang build instructions"
-clang++-12 cppfront.cpp -std=c++20 -o cppfront
+``` bash title="Clang build instructions (Clang 12 or higher)"
+clang++ cppfront.cpp -std=c++20 -o cppfront
 ```
 
 That's it!
@@ -55,7 +57,7 @@ That's it!
 
 ### A `hello.cpp2` program
 
-Here is the usual one-line starter program that prints `Hello, world!`. Note that this is a complete program... even without any `#include`s:
+Here is the usual one-line starter program that prints `Hello, world!`. Note that this is a complete program, no `#include` required:
 
 ``` cpp title="hello.cpp2, on one line"
 main: () = std::cout << "Hello, world!\n";
@@ -85,7 +87,7 @@ This short program code already illustrates a few Cpp2 essentials.
 
 - `hello` **is a** function that takes a `std::string_view` it will only read from and that returns nothing, and is **defined as** code that prints the string to `cout` the usual C++ way.
 
-All grammar is context-free. In particular, we (the human reading the code, or the compiler) never need to do name lookup to figure out how to parse something — there is never a ["vexing parse"](https://en.wikipedia.org/wiki/Most_vexing_parse) in Cpp2.
+All grammar is context-free. In particular, we (the human reading the code, or the compiler) never need to do name lookup to figure out how to parse something — there is never a ["vexing parse"](https://en.wikipedia.org/wiki/Most_vexing_parse) in Cpp2. For details, see [Design note: Unambiguous parsing](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Unambiguous-parsing).
 
 **Simple and safe by default.** Cpp2 has contracts (tracking draft C++26 contracts), `inspect` pattern matching, string interpolation, and more.
 
@@ -102,6 +104,8 @@ All grammar is context-free. In particular, we (the human reading the code, or t
 - We can omit the `{` `}` around single-statement function bodies, as `hello` does.
 
 - We can omit the `in` on the `msg` parameter. Cpp2 has just six ways to pass parameters: The most common ones are `in` for read-only (the default so we can omit it, as `hello` does), `inout` for read-write, and also `copy`, `out`, `move`, and `forward`.
+
+For details, see [Design note: Defaults are one way to say the same thing](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Defaults-are-one-way-to-say-the-same-thing).
 
 **Order-independent by default.** Did you notice that `main` called `hello`, which was defined later? Cpp2 code is order-independent by default — there are no forward declarations.
 

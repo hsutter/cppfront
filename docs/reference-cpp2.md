@@ -12,7 +12,8 @@ The usual `// line comments` and `/* stream comments */` are supported. For exma
 //  A line comment: After //, the entire rest of the line is part of the comment
 
 /*
-    A stream comment: After /*, everything until the closing */ is part of the comment
+    A stream comment: After /*, everything until the next * / (without a space between)
+    is part of the comment. Note that stream comments do not nest.
  */
 ```
 
@@ -20,7 +21,7 @@ The usual `// line comments` and `/* stream comments */` are supported. For exma
 
 `_` is pronounced **"don't care"** and allowed as a wildcard in most contexts. For example:
 
-``` cpp title="Example: Wildcard (_)"
+``` cpp title="Example: _ wildcard"
 _ : std::lock_guard = mut;      // don't care about the guard variable's name
 
 x : _ = 42;                     // don't care to write the variable's type, deduce it
@@ -32,12 +33,12 @@ return inspect v -> std::string {
 };
 ```
 
-All return values and results returned from `inout` and `out` parameters are treated as important and are not discarded by default. To explicitly discard such a value, assign it to `_`. For example:
+Cpp2 treats all function outputs (return values, and results produced via `inout` and `out` parameters) as important, and does not let them be silently discarded by default. To explicitly discard such a value, assign it to `_`. For example:
 
 ``` cpp title="Example: Using _ for explicit discard"
 _ = vec.emplace_back(1,2,3);
     // "_ =" is required to explicitly discard emplace_back's
-    // return value (non-void since C++17)
+    // return value (which is non-void since C++17)
 
 {
     x := my_vector.begin();
@@ -53,7 +54,7 @@ For details, see [Design note: Explicit discard](https://github.com/hsutter/cppf
 
 Cpp2 supports the same fundamental types as today's Cpp1, but additionally provides the following aliases in namespace `cpp2`:
 
-| Known-width types | Synonym for |
+| Fixed-width types | Synonym for |
 |---|---|
 | `i8`        | `std::int8_t`        |
 | `i16`       | `std::int16_t`       |
@@ -64,8 +65,7 @@ Cpp2 supports the same fundamental types as today's Cpp1, but additionally provi
 | `u32`       | `std::uint32_t`      |
 | `u64`       | `std::uint64_t`      |
 
-
-| Variable-width types (Cpp2-compatible single-word names) | Synonym for (multi-word names not allowed in Cpp2) |
+| Variable-width types <br> (Cpp2-compatible single-word names) | Synonym for (these multi-word<br> names are not allowed in Cpp2) |
 |---|---|
 | `ushort`      | `unsigned short`       |
 | `uint`        | `unsigned int`         |
@@ -74,7 +74,7 @@ Cpp2 supports the same fundamental types as today's Cpp1, but additionally provi
 | `ulonglong`   | `unsigned long long`   |
 | `longdouble`  | `long double`          |
 
-| For compatibility/interop only | Synonym for | Notes |
+| For compatibility/interop only,<br> so deliberately ugly names | Synonym for | Notes |
 |---|---|---|
 | `_schar`     | `signed char`   | Normally, prefer `i8` instead |
 | `_uchar`     | `unsigned char` | Normally, prefer `u8` instead |
@@ -83,13 +83,13 @@ Cpp2 supports the same fundamental types as today's Cpp1, but additionally provi
 
 Cpp2 supports the same `'c'`haracter, `"string"`, binary, integer, and floating point literals as Cpp1, including most Unicode encoding prefixes and raw string literals.
 
-Cpp2 supports using Cpp1 user-defined literals. However, because Cpp2 has unified function call syntax (UFCS), the preferred way to author the equivalent in Cpp2 is to just write a function or type name as a `.` call suffix. For example:
+Cpp2 supports using Cpp1 user-defined literals for compatibility, to support seamlessly using existing libraries. However, because Cpp2 has unified function call syntax (UFCS), the preferred way to author the equivalent in Cpp2 is to just write a function or type name as a `.` call suffix. For example:
 
 - You can create a `u8` value by writing either `u8(123)` or **`123.u8()`**. [^u8using]
 
 - You can write a 'constexpr' function like `nm: (value: i64) -> my_nanometer_type == { /*...*/ }` that takes an integer and returns a value of a strongly typed "nanometer" type, and then create a `nm` value by writing either `nm(123)` or **`123.nm()`**.
 
-Both `123.n()` and `123.u8()` are very similar to user-defined literal syntax, and more general.
+Both **`123.n()`** and **`123.u8()`** are very similar to user-defined literal syntax, and more general.
 
 ### Operators
 
@@ -122,9 +122,9 @@ The operators `.`, `*`, `&`, `~`, `++`, `--`, `()`, `[]`, and `$` are postfix. F
         is_void = u**.identifier* == "void";
 ```
 
-> Note: Postfix notation lets the code read fluidly left-to-right, in the same order in which the operators will be applied, and lets declaration syntax be consistent with usage syntax. For more details, see [Design note: Postfix operators](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Postfix-operators)
+Postfix notation lets the code read fluidly left-to-right, in the same order in which the operators will be applied, and lets declaration syntax be consistent with usage syntax. For more details, see [Design note: Postfix operators](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Postfix-operators).
 
-> Note: The function call syntax `f(x)` calls a namespace-scope function, or a function object, named `f`. The function call syntax `x.f()` calls a type-scope function in the type of `x` if available, otherwise calls the same as `f(x)`.
+> Note: The function call syntax `f(x)` calls a namespace-scope function, or a function object, named `f`. The function call syntax `x.f()` is a unified function call syntax (aka UFCS) that calls a type-scope function in the type of `x` if available, otherwise calls the same as `f(x)`. For details, see [Design note: UFCS](https://github.com/hsutter/cppfront/wiki/Design-note%3A-UFCS).
 
 | Unary operator | Cpp2 example | Cpp1 equivalent |
 |---|---|---|
@@ -148,6 +148,7 @@ Unary suffix operators must not be preceded by whitespace. When `*`, `&`, and `~
 | `&` | `obj& & mask` <p> (note: allowed in unsafe code only) | `&obj & mask` |
 | `~` | `~val ~ bitcomplement` | `val~ ~ bitcomplement` |
 
+For more details, see [Design note: Postfix unary operators vs binary operators](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Postfix-unary-operators-vs-binary-operators).
 
 #### Binary operators
 
@@ -157,6 +158,9 @@ Unary suffix operators must not be preceded by whitespace. When `*`, `&`, and `~
 
 
 ### Captures, including interpolations
+
+
+For details, see [Design note: Capture](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Capture).
 
 
 ### Control flow
@@ -193,6 +197,10 @@ outer: while i<M next i++ {      // loop named "outer"
 ### Overview
 
 ### Parameter passing
+
+
+All parameters and other objects in Cpp2 are `const` by default, except for local variables. For details, see [Design note: Capture](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Capture).
+
 
 ### Named functions, and unnamed function expressions
 
@@ -468,6 +476,11 @@ main: () = {
 
 
 ## Namespaces
+
+### Overview
+
+For details, see [Design note: Namespaces](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Namespaces).
+
 
 ### `using`
 
