@@ -180,11 +180,11 @@ Binary operators are the same as in Cpp1. From lowest to highest precedence:
 
 ### `is` — safe type/value queries
 
-An `x is C` expression allows safe type and value queries, and evaluates to `true` if `x` matches constraint `C`.
+An `x is C` expression allows safe type and value queries, and evaluates to `true` if `x` matches constraint `C`. It supports both static and dynamic queries, including customization with support for the standard dynamically typed libraries `std::variant`, `std::optional`, and `std::any` provided in the box.
 
 There are two kinds of `is`:
 
-- A **type query**, where `C` is a type constraint: A type, a template name, a concept, or a type predicate. Here `x` may be a type or an object; if it is an object, the query refers to `x`'s type.
+- A **type query**, where `C` is a type constraint: A type, a template name, a concept, or a type predicate. Here `x` may be a type, or an object or expression; if it is an object or expression, the query refers to `x`'s type.
 
 | Type constraint kind | Example | Notes |
 |---|---|---|
@@ -193,7 +193,7 @@ There are two kinds of `is`:
 | Static template type query | `x is std::vector` |
 | Static concept query | `x is std::integral` |
 
-- A **value query**, where `C` is a value constraint: A value, or a value predicate. Here `x` must be an object.
+- A **value query**, where `C` is a value constraint: A value, or a value predicate. Here `x` must be an object or expression.
 
 | Value constraint kind | Example |
 |---|---|
@@ -215,6 +215,49 @@ There are two kinds of `is`:
 
 ### `as` — safe casts and conversions
 
+An `x as T` expression allows safe type casts. `x` must be an object or expression, and `T` must be a type. It supports both static and dynamic typing, including customization with support for the standard dynamically tyuped libraries `std::variant`, `std::optional`, and `std::any` provided in the box. For example:
+
+``` cpp title="Example: Using as"
+main: () = {
+    a: std::any = 0;                // a's type is now int, value 0
+    test(a);                        // prints "zero"
+    a = "plugh" as std::string;     // a's type is now std::string, value "plugh"
+    test(a);                        // prints "plugh"
+    test("xyzzy" as std::string);   // prints "xyzzy"
+}
+
+//  A generic function that takes an argument 'x' of any type,
+//  same as "void test( auto const& x )" in C++20 syntax
+test: (x) = {
+    std::cout << inspect x -> std::string {
+        is 0           = "zero";
+        is std::string = x as std::string;
+        is _           = "(no match)";
+    } << "\n";
+}
+```
+
+### `inspect` expressions — pattern matching
+
+An `inspect` expression allows pattern matching using `is`. For example:
+
+``` cpp title="Example: Using inspect"
+//  A generic function that takes an argument 'x' of any type
+//  and inspects various things about `x`
+test: (x) = {
+    forty_two := 42;
+    std::cout << inspect x -> std::string {
+        is 0           = "zero";            // == 0
+        is (forty_two) = "the answer";      // == forty_two
+        is int         = "integer";         // is an int with some other value
+        is std::string = x as std::string;  // is a std::string
+        is std::vector = "a std::vector";   // is a vector</*some-type*/>
+        is _           = "(no match)";      // something else
+    } << "\n";
+}
+```
+
+For more examples, see also the examples in the previous two sections on `is` and `as`, many of which use `inspect`.
 
 
 ### Captures, including interpolations
@@ -222,6 +265,15 @@ There are two kinds of `is`:
 
 For details, see [Design note: Capture](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Capture).
 
+
+
+## Functions and variables
+
+### Overview
+
+### Parameter passing
+
+All parameters and other objects in Cpp2 are `const` by default, except for local variables. For details, see [Design note: Capture](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Capture).
 
 ### Control flow
 
@@ -249,20 +301,9 @@ outer: while i<M next i++ {      // loop named "outer"
 }
 ```
 
-#### `inspect` expressions (pattern matching)
 
 
-## Functions and variables
-
-### Overview
-
-### Parameter passing
-
-
-All parameters and other objects in Cpp2 are `const` by default, except for local variables. For details, see [Design note: Capture](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Capture).
-
-
-### Named functions, and unnamed function expressions
+### Unnamed function expressions
 
 ### Move/forward from last use
 
