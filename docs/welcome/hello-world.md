@@ -40,9 +40,9 @@ All grammar is context-free. In particular, we (the human reading the code, and 
 
 - Declaring `words` uses **"CTAD"** (C++'s normal [constructor template argument deduction](https://en.cppreference.com/w/cpp/language/class_template_argument_deduction)) to declare its `words` variable.
 
-- Calling `words[0]` and `words[1]` is **bounds-checked by default**. From Cpp2 code, ordinary `std::vector` subscript accesses are safely bounds-checked by default without requiring any upgrade to your favorite standard library, and that's true for any similar subscript of something whose size can be queried using `std::size()`, including any in-house integer-indexed container types you already have that can easily provide `std::size()` if they don't already.
+- Calling `words[0]` and `words[1]` is **bounds-checked by default**. From Cpp2 code, ordinary `std::vector` subscript accesses are safely bounds-checked by default without requiring any upgrade to your favorite standard library, and that's true for any similar subscript of something whose size can be queried using `std::size()` and `std::ssize()`, and for which `std::begin()` returns a random access iterator, including any in-house integer-indexed container types you already have that can easily provide `std::size()` and `std::ssize()` if they don't already.
 
-- `hello` uses **string interpolation** to be able to write `"Hello, (msg)$!\n"` instead of `"Hello, (" << msg << "!\n"`.
+- `hello` uses **string interpolation** to be able to write `"Hello, (msg)$!\n"` instead of `"Hello, " << msg << "!\n"`.
 
 **Simplicity through generality + defaults.** A major way that Cpp2 delivers simplicity is by providing just one powerful general syntax for a given thing (e.g., one function definition syntax), but designing it so you can omit the parts you're not currently using (e.g., where you're happy with the defaults). We're already using some of those defaults above:
 
@@ -50,7 +50,7 @@ All grammar is context-free. In particular, we (the human reading the code, and 
 
 - We can omit the `{` `}` around single-statement function bodies, as `hello` does.
 
-- We can omit the `in` on the `msg` parameter. Cpp2 has just six ways to pass parameters: The most common ones are `in` for read-only (the default so we can omit it, as `hello` does), `inout` for read-write, and also `copy`, `out`, `move`, and `forward`.
+- We can omit the `in` on the `msg` parameter. Cpp2 has just six ways to pass parameters: The most common ones are `in` for read-only (the default so we can omit it, as `hello` does), and `inout` for read-write.  The others are `copy`, `out`, `move`, and `forward`.
 
 For details, see [Design note: Defaults are one way to say the same thing](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Defaults-are-one-way-to-say-the-same-thing).
 
@@ -58,7 +58,7 @@ For details, see [Design note: Defaults are one way to say the same thing](https
 
 **Seamless compatibility and interop.** We can just use `std::cout` and `std::operator<<` and `std::string_view` directly as usual. Cpp2 code works with any C++ code or library, including the standard library, using ordinary direct calls without any wrapping/marshaling/thunking.
 
-**C++ standard library always available.** We didn't need `#include <iostream>` or `import std;`. The full C++ standard library is always available by default if your source file contains only syntax-2 code and you compile using cppfront's `-p` (short for `-pure-cpp2`). Cppfront is regularly updated to be compatible with C++23 and the latest draft C++26 library additions as soon as the ISO C++ committee votes them into the C++26 working draft, so as soon as you have a C++ implementation that has a new standard (or bleeding-edge draft standard!) C++ library feature, you'll be able to fully use it in Cpp2 code.
+**C++ standard library is always available.** We didn't need `#include <iostream>` or `import std;`. The full C++ standard library is always available by default if your source file contains only syntax-2 code and you compile using cppfront's `-p` (short for `-pure-cpp2`), or if you use `-im` (short for `-import-std`). Cppfront is regularly updated to be compatible with C++23 and the latest draft C++26 library additions as soon as the ISO C++ committee votes them into the C++26 working draft, so as soon as you have a C++ implementation that has a new standard (or bleeding-edge draft standard!) C++ library feature, you'll be able to fully use it in Cpp2 code.
 
 
 ## Building `hello.cpp2`
@@ -99,7 +99,7 @@ Here we can see more of how Cpp2 makes it features work.
 **How: Simple, safe, and efficient by default.**
 
 - **Line 9: CTAD** just works, because it turns into ordinary C++ code which already supports CTAD.
-- **Lines 10-11: Automatic bounds checking** is added to `words[0]` and `words[1]` nonintrusively at the call site by default. Because it's nonintrusive, it works seamlessly with all existing container types that are `std::ssize`-aware, when you use them from safe Cpp2 code.
+- **Lines 10-11: Automatic bounds checking** is added to `words[0]` and `words[1]` nonintrusively at the call site by default. Because it's nonintrusive, it works seamlessly with all existing container types that are `std::size` and `std::ssize`-aware, when you use them from safe Cpp2 code.
 - **Line 11: Automatic move from last use** ensures the last use of `words` will automatically avoid a copy if it's being passed to something that's optimized for rvalues.
 - **Line 16: String interpolation** performs the string capture of `msg`'s current value via `cpp2::to_string`. That uses `std::to_string` when available, and it also works for additional types (such as `bool`, to print `false` and `true` instead of `0` and `1`, without having to remember to use `std::boolalpha`).
 
@@ -148,4 +148,4 @@ Hello, world!
 ### &#10148; Next: [Adding cppfront to your existing C++ project](integration.md)
 
 
-[^clean-cpp1]: For presentation purposes, this documentation generally shows the `.cpp` as generated when using cppfront's `-c` (short for `-clean-cpp1`), which suppresses extra information cppfront normally emits in the `.cpp` to light up C++ tools (e.g., to let IDEs integrate cppfront error message output, debuggers step to the right lines in Cpp2 source code, and so forth). In normal use, you won't need `-c`.
+[^clean-cpp1]: For presentation purposes, this documentation generally shows the `.cpp` as generated when using cppfront's `-c` (short for `-clean-cpp1`), which suppresses extra information cppfront normally emits in the `.cpp` to light up C++ tools (e.g., to let IDEs integrate cppfront error message output, debuggers step to the right lines in Cpp2 source code, and so forth). In normal use, you won't need or even want `-c`.
