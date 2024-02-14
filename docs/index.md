@@ -152,7 +152,7 @@ Here we can see more of how Cpp2 makes it features work.
 **How: Simple and safe by default.**
 
 - **Line 9:** CTAD just works, because it turns into ordinary C++ code which is CTAD-aware.
-- **Lines 10-11:** The accesses of `words[0]` and `words[1]` are bounds-checked nonintrusively at the call site by default. Because it's nonintrusive, it works seamlessly with all existing container types that are `std::ssize`-aware, when you use them from safe Cpp2 code.
+- **Lines 10-11:** The accesses of `words[0]` and `words[1]` are bounds-checked nonintrusively at the call site by default. Because it's nonintrusive, it works seamlessly with all existing container types that are `std::size`-aware, when you use them from safe Cpp2 code.
 - **Line 16:** String interpolation performs the string capture of `msg`'s current value via `cpp2::to_string`. That uses `std::to_string` when available, and it also works for additional types (such as `bool`, to print `false` and `true` instead of `0` and `1`, without having to remember to use `std::boolalpha`).
 
 **How: Simplicity through generality + defaults.**
