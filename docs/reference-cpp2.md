@@ -1,6 +1,8 @@
 
 # Cpp2 reference
 
+### See also: **[Hello, world!](index.md/#hello-world)**
+
 
 ## Common programming concepts
 
@@ -24,6 +26,7 @@ All Cpp2 declarations are written as **"_name_ `:` _kind_ `=` _statement_"**.
 - The `:` is pronounced **"is a."**
 - The `=` is pronounced **"defined as."**
 - The _statement_ is typically an expression statement (e.g., `a + b();`) or a compound statement (e.g., `{ /*...*/ return c(d) / e; }`).
+- Various parts of the syntax allow a `_` "don't care" wildcard or can be omitted entirely to accept a default (e.g., `x: int = 0;` can be equivalently written `x: _ = 0;` or `x := 0;` both of which deduce the type).
 
 For example:
 
@@ -344,9 +347,9 @@ All parameters and other objects in Cpp2 are `const` by default, except for loca
 
 ### Control flow
 
-#### `if` and `else` branches
+#### `if`, `else` — branches
 
-#### `for`, `while`, and `do` loops
+#### `for`, `while`, `do` — loops
 
 Loops can be named using the usual **name `:`** name introduction syntax, and `break` and `continue` can refer to those names. For example:
 
