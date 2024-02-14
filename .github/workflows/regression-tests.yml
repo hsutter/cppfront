@@ -2,12 +2,12 @@ name: Regression tests
 
 on:
   pull_request:
-    branches:
-      - main
+    branches-ignore:
+      - docs
     types: [opened, synchronize, reopened]
   push:
-    branches:
-      - main
+    branches-ignore:
+      - docs
   workflow_dispatch:
 
 jobs:
