@@ -1,0 +1,9 @@
+
+/*
+    todo: try to make the nav pane section labels larger
+
+    for now, this at least adds space between sections
+    to section starts are easier to see
+*/
+.md-nav__item { font-size: 20pt; }
+.md-nav__link { font-size: medium; }

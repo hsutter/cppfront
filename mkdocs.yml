@@ -45,8 +45,14 @@ theme:
         primary: teal
         accent: lime
 
+extra_css:
+  - stylesheets/extra.css
+
 nav:
-  - 'Welcome & getting started': index.md
+  - 'Welcome & getting started':
+    - 'Overview: What are Cpp2 and cppfront? How do I get and build cppfront?': index.md
+    - 'Hello, world!': welcome/hello-world.md
+    - 'Adding cppfront to your existing C++ project': welcome/integration.md
   - 'Cpp2 reference':
     - 'Overview': cpp2.md
     - 'Common programming concepts': cpp2/common.md
@@ -60,7 +66,7 @@ nav:
     - 'Modules': cpp2/modules.md
   - 'Cppfront reference':
     - 'Overview': cppfront.md
-    - 'Using Cpp1 (today''ds C++) and Cpp2 in the same source file': cppfront/mixed.md
+    - 'Using Cpp1 (today''s C++) and Cpp2 in the same source file': cppfront/mixed.md
     - 'Cppfront command line options': cppfront/options.md
 
 markdown_extensions:
