@@ -19,7 +19,7 @@ We can't make an improvement that large to C++ via gradual evolution to today's 
 
 - **Perfect link compatibility always on, perfect source compatibility always available (but you pay for it only if you use it).** Any type/function/object/namespace/module/etc. written in either syntax is always still just a normal C++ type/function/object/namespace/module/etc., so any code or library written in either Cpp2 or today's C++ syntax ("Cpp1" for short) can seamlessly call each other, with no wrapping/marshaling/thunking. You can write a "mixed" source files that has both Cpp2 and Cpp1 code and get perfect backward C++ source compatibility (even SFINAE and macros), or you can write a "pure" all-Cpp2 source file and write code in a 10x simpler syntax.
 
-**What it isn't.** Cpp2 is not a successor or alternate language with it own divergent or incompatible ecosystem. For example, it does not have its own nonstandard incompatible modules/concepts/etc. that compete with the Standard C++ features; and does not replace your Standard C++ compiler and other tools.
+**What it isn't.** Cpp2 is not a successor or alternate language with its own divergent or incompatible ecosystem. For example, it does not have its own nonstandard incompatible modules/concepts/etc. that compete with the Standard C++ features; and it does not replace your Standard C++ compiler and other tools.
 
 **What it is.** Cpp2 aims to be another "skin" for C++ itself, just a simpler and safer way to write ordinary C++ types/functions/objects. It seamlessly uses Standard C++ modules and concepts requirements and other features, and it works with all existing C++20 or higher compilers and tools right out of the box with zero overhead.
 
@@ -42,7 +42,7 @@ Cppfront builds with any recent C++ compiler. Go to the `/cppfront/source` direc
 cl cppfront.cpp -std:c++20 -EHsc
 ```
 
-``` bash title="GCC build instructions (g++ 10 or higher)"
+``` bash title="GCC build instructions (GCC 10 or higher)"
 g++ cppfront.cpp -std=c++20 -o cppfront
 ```
 
@@ -87,15 +87,15 @@ This short program code already illustrates a few Cpp2 essentials.
 
 - `hello` **is a** function that takes a `std::string_view` it will only read from and that returns nothing, and is **defined as** code that prints the string to `cout` the usual C++ way.
 
-All grammar is context-free. In particular, we (the human reading the code, or the compiler) never need to do name lookup to figure out how to parse something — there is never a ["vexing parse"](https://en.wikipedia.org/wiki/Most_vexing_parse) in Cpp2. For details, see [Design note: Unambiguous parsing](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Unambiguous-parsing).
+All grammar is context-free. In particular, we (the human reading the code, and the compiler) never need to do name lookup to figure out how to parse something — there is never a ["vexing parse"](https://en.wikipedia.org/wiki/Most_vexing_parse) in Cpp2. For details, see [Design note: Unambiguous parsing](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Unambiguous-parsing).
 
 **Simple and safe by default.** Cpp2 has contracts (tracking draft C++26 contracts), `inspect` pattern matching, string interpolation, and more.
 
+- Declaring `words` uses **"CTAD"** (C++'s normal constructor template argument deduction) to declare its `words` variable.
+
+- Calling `words[0]` and `words[1]` is **bounds-checked by default**. From Cpp2 code, ordinary `std::vector` subscript accesses are safely bounds-checked by default without requiring any upgrade to your favorite standard library, and that's true for any similar subscript of something whose size can be queried using `std::size()`, including any in-house integer-indexed container types you already have that can easily provide `std::size()` if they don't already.
+
 - `hello` uses **string interpolation** to be able to write `"Hello, (msg)$!\n"` instead of `"Hello, (" << msg << "!\n"`.
-
-- `main` uses **"CTAD"** (C++'s normal constructor template argument deduction) to declare its `words` variable.
-
-- `words[0]` and `words[1]` are **bounds-checked by default**. From Cpp2 code, ordinary `std::vector` subscript accesses are safely bounds-checked by default without requiring any upgrade to your favorite standard library, and that's true for any similar subscript of something whose size can be queried using `std::size()`, including any in-house integer-indexed container types you already have that can easily provide `std::size()` if they don't already.
 
 **Simplicity through generality + defaults.** A major way that Cpp2 delivers simplicity is by providing just one powerful general syntax for a given thing (e.g., one function definition syntax), but designing it so you can omit the parts you're not currently using (e.g., where you're happy with the defaults). We're already using some of those defaults above:
 
@@ -109,9 +109,9 @@ For details, see [Design note: Defaults are one way to say the same thing](https
 
 **Order-independent by default.** Did you notice that `main` called `hello`, which was defined later? Cpp2 code is order-independent by default — there are no forward declarations.
 
-**Seamless compatibility and interop.** We can just use `std::cout` and `std::operator<<` and `std::string_view` directly as usual. Cpp2 code works with any C++ code or library, including the standard library, using direct calls without any wrapping/marshaling/thunking.
+**Seamless compatibility and interop.** We can just use `std::cout` and `std::operator<<` and `std::string_view` directly as usual. Cpp2 code works with any C++ code or library, including the standard library, using ordinary direct calls without any wrapping/marshaling/thunking.
 
-**C++ standard library always available.** We didn't need `#include <iostream>` or `import std;`. The full C++ standard library is always available by default if your source file contains only syntax-2 code and you compile using cppfront's `-p` (short for `-pure-cpp2`). Cppfront is regularly updated to be compatible with C++23 and draft C++26 library additions, so as soon as you have a C++ implementation that has the new library feature, you'll be able to fully use it in Cpp2 code.
+**C++ standard library always available.** We didn't need `#include <iostream>` or `import std;`. The full C++ standard library is always available by default if your source file contains only syntax-2 code and you compile using cppfront's `-p` (short for `-pure-cpp2`). Cppfront is regularly updated to be compatible with C++23 and the latest draft C++26 library additions as soon as the ISO C++ committee votes them into the C++26 working draft, so as soon as you have a C++ implementation that has a new standard (or bleeding-edge draft standard!) C++ library feature, you'll be able to fully use it in Cpp2 code.
 
 
 ### Building `hello.cpp2` from the command line
