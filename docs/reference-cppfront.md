@@ -7,44 +7,23 @@ Cppfront compiles a `.cpp2` file and produces a `.cpp` file to be compiled by yo
 
 The same `.cpp2` file may contain both Cpp2 syntax and today's "Cpp1" C++ syntax, **side by side but not nested**.
 
-For example, this is not valid because it tries to nest Cpp2 code inside Cpp1 code, and vice versa:
+For example, this source file is fine, where the Cpp2 and Cpp1 code are side by side and seamlessly call each other directly as usual:
 
-``` cpp title="ERROR.cpp2 — this is NOT allowed" linenums="1" hl_lines="5 6 9 14"
-#include <iostream>                         // Cpp1 syntax
-#include <string_view>                      // Cpp1 syntax
+``` cpp title="mixed.cpp2  — Mixing Cpp1 and Cpp2 code side by side in the same source file is okay" linenums="1" hl_lines="4-7"
+#include <iostream>                                 // Cpp1 syntax
+#include <string_view>                              // Cpp1 syntax
 
-namespace N {                               // Cpp1 syntax
-    hello: (msg: std::string_view) =                // Cpp2 syntax (not allowed inside Cpp1 code)
-        std::cout << "Hello, (msg)$!\n";            // Cpp2 syntax
-}                                           // Cpp1 syntax
+N: namespace = {                                                    // Cpp2 syntax
+    hello: (msg: std::string_view) =                                // Cpp2 syntax
+        std::cout << "Hello, (msg)$!\n";                            // Cpp2 syntax
+}                                                                   // Cpp2 syntax
 
-main: () = {                                // Cpp2 syntax
-    auto words = std::vector{ "Alice", "Bob" };     // Cpp1 syntax (not allowed inside Cpp2 code)
-    N::hello( words[0] );                       // ? could be either
-    N::hello( words[1] );                       // ? could be either
-    std::cout << "... and goodnight\n";         // ? could be either
-}                                           // Cpp2 syntax
-```
-
-The above nesting is not supported because it would create not just parsing problems but also semantic ambiguities. For example, if lines 11 and 12 are Cpp2, then the `words[0]` and `words[1]` subscript expressions are bounds-checked and bounds-safe by default; but if they are Cpp1 lines, they are not bounds-checked.
-
-This is fine, where the Cpp2 and Cpp1 code are side by side and seamlessly call each other directly as usual:
-
-``` cpp title="mixed.cpp2  — this is perfectly okay" linenums="1" hl_lines="4-7"
-#include <iostream>                             // Cpp1 syntax
-#include <string_view>                          // Cpp1 syntax
-
-N: namespace = {                                        // Cpp2 syntax
-    hello: (msg: std::string_view) =                    // Cpp2 syntax
-        std::cout << "Hello, (msg)$!\n";                // Cpp2 syntax
-}                                                       // Cpp2 syntax
-
-int main() {                                    // Cpp1 syntax
-    auto words = std::vector{ "Alice", "Bob" }; // Cpp1 syntax
-    N::hello( words[0] );                       // Cpp1 syntax
-    N::hello( words[1] );                       // Cpp1 syntax
-    std::cout << "... and goodnight\n";         // Cpp1 syntax
-}                                               // Cpp1 syntax
+int main() {                                        // Cpp1 syntax
+    auto words = std::vector{ "Alice", "Bob" };     // Cpp1 syntax
+    N::hello( words[0] );                           // Cpp1 syntax
+    N::hello( words[1] );                           // Cpp1 syntax
+    std::cout << "... and goodnight\n";             // Cpp1 syntax
+}                                                   // Cpp1 syntax
 ```
 
 When cppfront compiles such a mixed file, it just passes through the Cpp1 code as-is, and translates the Cpp2 code to Cpp1 in-place. This means that when a call site (call this the "caller") uses a type/function/object (call this the "callee") written in the same file:
@@ -52,6 +31,27 @@ When cppfront compiles such a mixed file, it just passes through the Cpp1 code a
 - **Code written in all Cpp2 is always order-independent by default.** When a caller written in Cpp2 syntax uses a callee written in Cpp2 syntax, they can appear in either order in the file.
 
 - **Code written in Cpp1 is order-dependent as usual.** When either the caller or the callee (or both) are written in Cpp1 syntax, the callee must be declared before the caller.
+
+However, this source file is not valid, because it tries to nest Cpp2 code inside Cpp1 code, and vice versa:
+
+``` cpp title="ERROR.cpp2 — this is NOT allowed" linenums="1" hl_lines="5 6 9 14"
+#include <iostream>                             // Cpp1 syntax
+#include <string_view>                          // Cpp1 syntax
+
+namespace N {                                   // Cpp1 syntax
+    hello: (msg: std::string_view) =                            // Cpp2 syntax (NOT allowed here)
+        std::cout << "Hello, (msg)$!\n";                        // Cpp2 syntax (NOT allowed here)
+}                                               // Cpp1 syntax
+
+main: () = {                                                    // Cpp2 syntax
+    auto words = std::vector{ "Alice", "Bob" }; // Cpp1 syntax (NOT allowed here)
+    N::hello( words[0] );                               // ?
+    N::hello( words[1] );                               // ?
+    std::cout << "... and goodnight\n";                 // ?
+}                                                               // Cpp2 syntax
+```
+
+> The above nesting is not supported because it would create not just parsing problems but also semantic ambiguities. For example, lines 11-13 are syntactically valid as Cpp1 or as Cpp2, but if they are treated as Cpp2 then the `words[0]` and `words[1]` expressions' `std::vector::operator[]` calls are bounds-checked and bounds-safe by default, whereas if they are treated as Cpp1 then they are not bounds-checked. And that's a pretty important difference to be sure about!
 
 
 ## Cppfront command line
