@@ -5,13 +5,13 @@
 
 ### What is Cpp2?
 
-"Cpp2," short for "C++ syntax 2," is my ([Herb Sutter's](https://github.com/hsutter)) personal project to try to make writing ordinary C++ types/functions/objects be much simpler and safer, without breaking backward compatibility. Bjarne Stroustrup said it best:
+"Cpp2," short for "C++ syntax 2," is my ([Herb Sutter's](https://github.com/hsutter)) personal project to try to make writing ordinary C++ types/functions/objects be much **simpler and safer**, without breaking backward compatibility. Bjarne Stroustrup said it best:
 
-> "Inside C++, there is a much smaller and cleaner language struggling to get out." <br>— Bjarne Stroustrup, _The Design and Evolution of C++_ (D&E), 1994
+> "Inside C++, there is a much smaller and cleaner language struggling to get out." <br>&emsp;&emsp;— Bjarne Stroustrup, _The Design and Evolution of C++_ (D&E), 1994
 >
-> "Say 10% of the size of C++ in definition and similar in front-end compiler size. ... most of the simplification would come from generalization." <br>— Bjarne Stroustrup, _ACM History of Programming Languages III_, 2007
+> "Say 10% of the size of C++ in definition and similar in front-end compiler size. ... most of the simplification would come from generalization." <br>&emsp;&emsp;— Bjarne Stroustrup, _ACM History of Programming Languages III_, 2007
 
-My goal is to try to prove that Stroustrup is right: that it's possible and desirable to have true C++ with all its expressive power and control and with full backward compatibility, but in a flavor that's **10x simpler** with fewer quirks and special cases to remember, and **50x safer** where it's far easier to not write security bugs by accident.
+My goal is to try to prove that Stroustrup is right: that it's possible and desirable to have true C++ with all its expressive power and control and with full backward compatibility, but in a flavor that's 10x simpler with fewer quirks and special cases to remember, [^simpler] and 50x safer where it's far easier to not write security bugs by accident.
 
 We can't make an improvement that large to C++ via gradual evolution to today's syntax, because some important changes would require changing the meaning of code written in today's syntax. For example, we can never change a language feature default in today's syntax, not even if the default creates a security vulnerability pitfall, because changing a default would break vast swathes of existing code. Having a distinct alternative syntax gives us a "bubble of new code" that doesn't exist today, and have:
 
@@ -59,7 +59,7 @@ That's it!
 
 Here is the usual one-line starter program that prints `Hello, world!`. Note that this is a complete program, no `#include` required:
 
-``` cpp title="hello.cpp2, on one line"
+``` cpp title="hello.cpp2 — on one line"
 main: () = std::cout << "Hello, world!\n";
 ```
 
@@ -239,5 +239,7 @@ That's enough to enable builds, and the IDE just picks up the rest from the `.cp
 - **Regardless of syntax, every type/function/object/namespace/module/etc. is still just an ordinary C++ type/function/object/namespace/module/etc.** Most C++ debugger visualizers will just work and show beautiful output for the types your program uses, including to use any in-the-box visualizers for all the `std::` types (since those are used directly as usual) and any custom visualizers you may have already written for your own types or popular library types.
 
 
+
+[^simpler]: I'd ideally love to obsolete ~90% of the C++ guidance I've personally had to write and teach over the past quarter century, by removing inconsistencies and pitfalls and gotchas. I love writing C++ code... I just want it to be easier and safer by default.
 
 [^clean-cpp1]: For presentation purposes, this documentation generally shows the `.cpp` as generated when using cppfront's `-c` (short for `-clean-cpp1`), which suppresses extra information cppfront normally emits in the `.cpp` to light up C++ tools (e.g., to let IDEs integrate cppfront error message output, debuggers step to the right lines in Cpp2 source code, and so forth). In normal use, you won't need `-c`.
