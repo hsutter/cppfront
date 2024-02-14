@@ -20,7 +20,11 @@ theme:
   name: material
   features:
     - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
+    - navigation.expand
+    - navigation.instant
+    - navigation.instant.preview
     - toc.integrate
     - navigation.top
     - search.suggest
