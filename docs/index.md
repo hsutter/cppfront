@@ -17,7 +17,7 @@ We can't make an improvement that large to C++ via gradual evolution to today's 
 
 - **Freedom to make any desired improvement, without breaking any of today's code.** Cpp2 is designed to take all the consensus C++ best-practices guidance we already teach, and make it the default when using "syntax 2." Examples: Writing unsafe type casts is just not possible in Cpp2 syntax; and Cpp2 can change language defaults to make them simpler and safer. You can always "break the glass" when needed to violate the guidance, but has to opt out explicitly to write unsafe code, so if the program has a bug you can grep for those places to look at first. For details, see [Design note: unsafe code](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Unsafe-code).
 
-- **Perfect link compatibility always on, perfect source compatibility always available (but you pay for it only if you use it).** Any type/function/object/namespace/module/etc. written in either syntax is always still just a normal C++ type/function/object/namespace/module/etc., so any code or library written in either Cpp2 or today's C++ syntax ("Cpp1" for short) can seamlessly call each other, with no wrapping/marshaling/thunking. You can write a "mixed" source files that has both Cpp2 and Cpp1 code and get perfect backward C++ source compatibility (even SFINAE and macros), or you can write a "pure" all-Cpp2 source file and write code in a 10x simpler syntax.
+- **Perfect link compatibility always on, perfect source compatibility always available (but you pay for it only if you use it).** Any type/function/object/namespace/etc. written in either syntax is always still just a normal C++ type/function/object/namespace/etc., so any code or library written in either Cpp2 or today's C++ syntax ("Cpp1" for short) can seamlessly call each other, with no wrapping/marshaling/thunking. You can write a "mixed" source files that has both Cpp2 and Cpp1 code and get perfect backward C++ source compatibility (even SFINAE and macros), or you can write a "pure" all-Cpp2 source file and write code in a 10x simpler syntax.
 
 **What it isn't.** Cpp2 is not a successor or alternate language with its own divergent or incompatible ecosystem. For example, it does not have its own nonstandard incompatible modules/concepts/etc. that compete with the Standard C++ features; and it does not replace your Standard C++ compiler and other tools.
 
@@ -79,7 +79,7 @@ hello: (msg: std::string_view) =
 
 This short program code already illustrates a few Cpp2 essentials.
 
-**Consistent context-free syntax.** Cpp2 is designed so that there is one general way to spell a given thing, that works consistently everywhere. All Cpp2 type/function/object/namespace/module/etc. declarations use the unambiguous and context-free syntax **"_name_ `:` _kind_ `=` _statement_"**. The `:` is pronounced **"is a,"** and the `=` is pronounced **"defined as."**
+**Consistent context-free syntax.** Cpp2 is designed so that there is one general way to spell a given thing, that works consistently everywhere. All Cpp2 type/function/object/namespace/etc. declarations use the unambiguous and context-free syntax **"_name_ `:` _kind_ `=` _statement_"**. The `:` is pronounced **"is a,"** and the `=` is pronounced **"defined as."**
 
 - `main` **is a** function that takes no arguments and returns nothing, and is **defined as** the code body shown.
 
@@ -236,7 +236,7 @@ That's enough to enable builds, and the IDE just picks up the rest from the `.cp
 
 - **The `#line` directives cppfront emits in the generated `.cpp` file.** Most C++ debuggers recognize these and will know to step through the `.cpp2` file. Note that `#line` emission is on by default, but if you choose `-c` (short for `-clean-cpp1`) these will be suppressed and then the debugger will step through the generated C++ code instead.
 
-- **Regardless of syntax, every type/function/object/namespace/module/etc. is still just an ordinary C++ type/function/object/namespace/module/etc.** Most C++ debugger visualizers will just work and show beautiful output for the types your program uses, including to use any in-the-box visualizers for all the `std::` types (since those are used directly as usual) and any custom visualizers you may have already written for your own types or popular library types.
+- **Regardless of syntax, every type/function/object/namespace/etc. is still just an ordinary C++ type/function/object/namespace/etc.** Most C++ debugger visualizers will just work and show beautiful output for the types your program uses, including to use any in-the-box visualizers for all the `std::` types (since those are used directly as usual) and any custom visualizers you may have already written for your own types or popular library types.
 
 
 
