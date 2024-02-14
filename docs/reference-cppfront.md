@@ -32,7 +32,7 @@ When cppfront compiles such a mixed file, it just passes through the Cpp1 code a
 
 - **Code written in Cpp1 is order-dependent as usual.** When either the caller or the callee (or both) are written in Cpp1 syntax, the callee must be declared before the caller.
 
-However, this source file is not valid, because it tries to nest Cpp2 code inside Cpp1 code, and vice versa:
+However, the following source file is not valid, because it tries to nest Cpp2 code inside Cpp1 code, and vice versa:
 
 ``` cpp title="ERROR.cpp2 — this is NOT allowed" linenums="1" hl_lines="5 6 9 14"
 #include <iostream>                             // Cpp1 syntax

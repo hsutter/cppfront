@@ -8,7 +8,7 @@
 
 ### Comments
 
-The usual `// line comments` and `/* stream comments */` are supported. For exmaple:
+The usual `// line comments` and `/* stream comments */` are supported. For example:
 
 ``` cpp title="Example: Comments"
 //  A line comment: After //, the entire rest of the line is part of the comment
@@ -142,7 +142,7 @@ Types can be qualified with `const` and `*`. Types are written left-to-right, so
 
 ``` cpp title="Example: Type qualifiers"
 //  A const pointer to a non-const pointer to a const i32 object
-p: const * * const i32; //
+p: const * * const i32;
 ```
 
 ### Literals
@@ -272,7 +272,7 @@ There are two kinds of `is`:
 
 ### `as` — safe casts and conversions
 
-An `x as T` expression allows safe type casts. `x` must be an object or expression, and `T` must be a type. It supports both static and dynamic typing, including customization with support for the standard dynamically tyuped libraries `std::variant`, `std::optional`, and `std::any` provided in the box. For example:
+An `x as T` expression allows safe type casts. `x` must be an object or expression, and `T` must be a type. It supports both static and dynamic typing, including customization with support for the standard dynamically typed libraries `std::variant`, `std::optional`, and `std::any` provided in the box. For example:
 
 ``` cpp title="Example: Using as"
 main: () = {
@@ -323,7 +323,7 @@ test: (x) = {
 //  Sample call site
 test(42);
     //  Behaves as if the following function were called:
-    //      test: (x) = { std::cout << (:std::string = "the answer") << "\n";; }
+    //      test: (x) = { std::cout << (:std::string = "the answer") << "\n"; }
     //  (and that's why inspect alternatives are introduced with '=')
 ```
 
@@ -542,7 +542,7 @@ skat_game: @enum<i16> type = {
 
 Consider `hearts`: It's a member object declaration, but it doesn't have a type (or a default value) which is normally illegal, but here it's okay because the `@enum<i16>` metafunction fills them in: It iterates over all the data members and gives each one the underlying type (here explicitly specified as `i16`, otherwise it would be computed as the smallest signed type that's big enough), and an initializer (by default one higher than the previous enumerator).
 
-Unlike C `enum`, this `@union` is scoped and strongly type (does not implicitly convert to the underlying type.
+Unlike C `enum`, this `@enum` is scoped and strongly typed (does not implicitly convert to the underlying type.
 
 Unlike C++11 `enum class`, it's "just a `type`" which means it can naturally also have member functions and other things that a type can have:
 
@@ -616,7 +616,7 @@ Unlike C `union`, this `@union` is safe to use because it always ensures only th
 
 Unlike C++11 `std::variant`, this `@union` is easier to use because its alternatives are anonymous, and safer to use because each union type is a distinct type. [^variant]
 
-Each `@union` type has its own type-safe name, has clear and unambiguous named members, and safely encapsulates a discriminator to rule them all. Sure, it uses unsafe casts in the implementation, but they are fully encapsulated, where they can be tested once and be safe in all uses. That makes @union:
+Each `@union` type has its own type-safe name, has clear and unambiguous named members, and safely encapsulates a discriminator to rule them all. Sure, it uses unsafe casts in the implementation, but they are fully encapsulated, where they can be tested once and be safe in all uses.
 
 Because a `@union type` is still a `type`, it can naturally have other things normal types can have, such as template parameter lists and member functions:
 
