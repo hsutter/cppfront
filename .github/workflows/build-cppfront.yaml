@@ -1,11 +1,13 @@
 name: Multi-platform Build of cppfront
 on:
-  push:
-    branches:
-      - main
   pull_request:
-    branches:
-      - main
+    branches-ignore:
+      - docs
+  push:
+    branches-ignore:
+      - docs
+  workflow_dispatch:
+
 jobs:
   build-windows:
     runs-on: windows-latest
