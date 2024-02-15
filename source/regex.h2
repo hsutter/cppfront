@@ -687,6 +687,7 @@ regex_parser: <Error_out> type = {
     named_groups: int = 1; // Global capture group.
     alternatives_count: int = 0;
 
+    has_error: bool = false;
     error_out: Error_out;
 
     supported_classes: std::vector<std::string> = ("alnum", "alpha", "ascii", "blank", "cntrl", "digits", "graph",
@@ -713,6 +714,7 @@ regex_parser: <Error_out> type = {
     //
     error:(inout this, message: std::string) = {
         error_out("Error during parsing of regex '(regex)$' at position '(pos)$': (message)$");
+        has_error = true;
     }
 
     create_matcher: (in this, name: std::string, template_arguments: std::string) -> _ = {
@@ -821,11 +823,12 @@ regex_parser: <Error_out> type = {
                 pos += 2; // Skip ':]'
 
                 end := regex.find(":]", pos);
-                if end == std::string::npos { error_out("Could not find end of character class."); }
+                if end == std::string::npos { error("Could not find end of character class."); return false; }
 
                 name := regex.substr(pos, end - pos);
                 if supported_classes.end() == std::find(supported_classes.begin(), supported_classes.end(), name) {
-                    error_out("Unsupported character class. Supported ones are: (join(supported_classes))$");
+                    error("Unsupported character class. Supported ones are: (join(supported_classes))$");
+                    return false;
                 }
 
                 classes.push_back("[:(name)$:]");
@@ -857,7 +860,8 @@ regex_parser: <Error_out> type = {
         _ = next_item; // TODO: Use in while is not recognized.
 
         if c_cur != ']' {
-            error_out("Error end of character class definition before terminating ']'.");
+            error("Error end of character class definition before terminating ']'.");
+            return false;
         }
 
         if range { // If '-' is last entry treat it as a literal char.
@@ -888,14 +892,14 @@ regex_parser: <Error_out> type = {
 
         pos += 1;
 
-        if pos >= regex.size() { error("Escape without a following character."); }
+        if pos >= regex.size() { error("Escape without a following character."); return false;}
 
         c_next: char = regex[pos];
 
         if '1' <= c_next <= '9' {
             group_id: int = c_next - '0';
 
-            if group_id >= named_groups { error("Group reference is used before the group is declared."); }
+            if group_id >= named_groups { error("Group reference is used before the group is declared."); return false; }
 
             cur_state.add(create_matcher("group_ref_matcher_logic", "(group_id)$"));
         }
@@ -916,6 +920,7 @@ regex_parser: <Error_out> type = {
         }
         else {
             error("Unknown escape.");
+            return false;
         }
 
         return true;
@@ -966,13 +971,13 @@ regex_parser: <Error_out> type = {
         };
 
         if c != '{' { return false; }
-        if cur_state.empty() { error("'{' without previous element."); }
+        if cur_state.empty() { error("'{' without previous element.");  return false; }
 
         end: size_t = regex.find("}", pos);
-        if end == std::string::npos { error("Missing closing bracket."); }
+        if end == std::string::npos { error("Missing closing bracket."); return false; }
 
         inner: std::string = trim_copy(regex.substr(pos + 1, end - pos - 1));
-        if inner.empty() { error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'"); }
+        if inner.empty() { error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'"); return false; }
 
         min_count: std::string = "-1";
         min_count_number: int  = 0;
@@ -992,6 +997,7 @@ regex_parser: <Error_out> type = {
 
             if (inner_first.empty() && inner_last.empty()) {
                 error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'");
+                return false;
             }
 
             if !inner_first.empty() {
@@ -1006,6 +1012,7 @@ regex_parser: <Error_out> type = {
 
         if !(0 <= min_count_number <= max_count_number) {
             error("Min and max values in range are wrong it should hold 0 <= min <= max. Have 0 <= (min_count_number)$ <= (max_count_number)$");
+            return false;
         }
 
         cur_state.wrap_last( :(inner) -> _ == create_matcher("range_matcher_logic", "(inner)$, (min_count$)$, (max_count$)$"));
@@ -1033,6 +1040,7 @@ regex_parser: <Error_out> type = {
 
         if cur_state.empty() {
             error("'(c)$' without previous element.");
+            return false;
         }
 
         cur_state.wrap_last(:(inner) -> _ == create_matcher("special_range_matcher_logic", "(inner)$, (min_range$)$, (max_range$)$, '(c$)$'"));
@@ -1045,15 +1053,17 @@ regex_parser: <Error_out> type = {
 
             if c == term { return; }
 
-            if is_alternative(c) { continue; }
-            if is_any(c) { continue; }
-            if is_class(c) { continue; }
-            if is_escape(c) { continue; }
-            if is_anchor(c) { continue; }
-            if is_group(c) { continue; }
-            if is_handle_special(c) { continue; }
-            if is_range(c) { continue; }
-            if is_special_range(c) { continue; }
+            if !has_error && is_alternative(c) { continue; }
+            if !has_error && is_any(c) { continue; }
+            if !has_error && is_class(c) { continue; }
+            if !has_error && is_escape(c) { continue; }
+            if !has_error && is_anchor(c) { continue; }
+            if !has_error && is_group(c) { continue; }
+            if !has_error && is_handle_special(c) { continue; }
+            if !has_error && is_range(c) { continue; }
+            if !has_error && is_special_range(c) { continue; }
+
+            if has_error { return; }
 
             // No special char, push a character match
             cur_state.add(create_matcher("char_matcher_logic", "'(c)$'"));
@@ -1062,6 +1072,8 @@ regex_parser: <Error_out> type = {
 
     parse:(inout this) -> std::string = {
         parse_until('\0');
+
+        if has_error { return "Error"; }
 
         inner := create_matcher_from_state();
         start := create_matcher("group_matcher_start_logic", "0");
