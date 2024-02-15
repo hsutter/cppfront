@@ -54,19 +54,18 @@ nav:
     - 'Hello, world!': welcome/hello-world.md
     - 'Adding cppfront to your existing C++ project': welcome/integration.md
   - 'Cpp2 reference':
-    - 'Overview': cpp2.md
     - 'Common programming concepts': cpp2/common.md
     - 'Common expressions': cpp2/expressions.md
     - 'Declaration syntax': cpp2/declarations.md
-    - 'Functions & variables': cpp2/functions-and-variables.md
+    - 'Variables and initialization': cpp2/variables.md
+    - 'Functions': cpp2/functions-and-variables.md
     - 'Types': cpp2/types.md
     - 'Metafunctions & reflection API': cpp2/metafunctions.md
     - 'Namespaces': cpp2/namespaces.md
     - 'Aliases': cpp2/aliases.md
     - 'Modules': cpp2/modules.md
   - 'Cppfront reference':
-    - 'Overview': cppfront.md
-    - 'Using Cpp1 (today''s C++) and Cpp2 in the same source file': cppfront/mixed.md
+    - 'Using Cpp1 (today''s syntax) and Cpp2 in the same source file': cppfront/mixed.md
     - 'Cppfront command line options': cppfront/options.md
 
 markdown_extensions:
