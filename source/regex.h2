@@ -57,6 +57,10 @@ match_context: <CharT, Iter, max_groups: size_t, max_alternatives: size_t> type 
     //
     get_group: (in this, group) groups[group];
 
+    get_group_string: (in this, group) std::string(groups[group].start, groups[group].end);
+    get_group_start:  (in this, group) std::distance(begin, groups[group].start);
+    get_group_end:    (in this, group) std::distance(begin, groups[group].end);
+
     set_group_end: (inout this, group, pos) = {
         groups[group].end = pos;
         groups[group].matched = true;
@@ -476,6 +480,15 @@ line_start_matcher_logic: <CharT> type =
     to_string: ()               bstring<CharT>(1, '^');
 }
 
+// Named character classes
+//
+named_class_matcher_logic: <CharT, Name: fixed_string, negate: bool, List ...> type =  {
+    this: class_matcher_logic<CharT, negate, List...> = ();
+    to_string: () bstring<CharT>(Name.data());
+}
+
+named_class_no_new_line: <CharT> type == named_class_matcher_logic<CharT, "\\\\N", true, single_class_entry<CharT, '\n'>>; // TODO: Remove second \, switch to raw strings.
+
 // Regex syntax: <matcher>{min, max}  Example: a{2,4}
 range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
 
@@ -584,6 +597,11 @@ regular_expression: <CharT, groups: size_t, alternatives: size_t, Matcher> type 
             matched = matched_;
             ctx = ctx_;
         }
+
+        group_number: (this) ctx.size();
+        group:        (this, g: int) ctx.get_group_string(g);
+        group_start:  (this, g: int) ctx.get_group_start(g);
+        group_end:    (this, g: int) ctx.get_group_end(g);
     }
 
     match: (in this, str: view<CharT>)                 match(str.begin(), str.end());
@@ -892,6 +910,9 @@ regex_parser: <Error_out> type = {
         }
         else if '\\' == c_next {
             cur_state.add(create_matcher("escaped_char_matcher_logic", "'\\\\'"));
+        }
+        else if 'N' == c_next {
+            cur_state.add(create_matcher("named_class_no_new_line", ""));
         }
         else {
             error("Unknown escape.");
