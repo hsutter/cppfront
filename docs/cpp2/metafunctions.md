@@ -4,14 +4,16 @@
 A metafunction is a compile-time function that can participate in interpreting the meaning of a declaration, and can:
 
 - apply defaults (e.g., `interface` makes functions virtual by default)
+
 - enforce constraints (e.g., `value` enforces that the type has no virtual functions)
+
 - generate additional functions and other code (e.g., `value` generates copy/move/comparison operations for a type if it didn't write them explicitly)
 
 The most important thing about metafunctions is that they are not hardwired language features — they are compile-time library code that uses the reflection and code generation API, that lets the author of an ordinary type easily opt into a named set of defaults, requirements, and generated contents. This approach is essential to making the language simpler, because it lets us avoid hardwiring special "extra" types into the language and compiler.
 
 ## Applying metafunctions
 
-Using a metafunctionis always opt-in, by writing `@name` afer the `:` of a declaration, where `name` is the name of the metafunctions. This lets the type author declare (and the human reader see) the intent up front: "This isn't just any `type`, this is a `@value type`" which automatically gives the type default/copy/move construction and assignment, `<=>` with `std::strong_ordering` comparisons, and guarantees that it has a public destructor and no protected or virtual functions:
+Metafunctions provide an easy way for a type author to opt into a group of defaults, constraints, and generated functions: Just write `@name` afer the `:` of a declaration, where `name` is the name of the metafunctions. This lets the type author declare (and the human reader see) the intent up front: "This isn't just any `type`, this is a `@value type`" which automatically gives the type default/copy/move construction and assignment, `<=>` with `std::strong_ordering` comparisons, and guarantees that it has a public destructor and no protected or virtual functions:
 
 ``` cpp title="Example: Using the value metafunction when writing a type"
 point2d: @value type = {

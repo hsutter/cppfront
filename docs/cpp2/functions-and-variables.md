@@ -1,5 +1,5 @@
 
-# Functions and variables
+# Functions
 
 ## Overview
 
@@ -9,7 +9,7 @@ TODO
 
 TODO
 
-All parameters and other objects in Cpp2 are `const` by default, except for local variables. For details, see [Design note: Capture](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Capture).
+All parameters and other objects in Cpp2 are `const` by default, except for local variables. For details, see [Design note: `const` objects by default](https://github.com/hsutter/cppfront/wiki/Design-note%3A-const-objects-by-default).
 
 ## Control flow
 

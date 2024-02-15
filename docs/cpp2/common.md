@@ -15,6 +15,20 @@ The usual `// line comments` and `/* stream comments */` are supported. For exam
  */
 ```
 
+
+## Reserved keywords
+
+Cpp2 has very few globally reserved keywords; nearly all keywords are contextual, where they have their special meaning when they appear in a particular place in the grammar. For example:
+
+- `new` is used as an ordinary function to do allocation (e.g., `shared.new<widget>(1, 2, 3)`).
+
+- `struct` and `enum` are used as function names in the metafunctions library.
+
+- `type` can be used as an ordinary name (e.g., `std::common_type<T1,T2>::type`).
+
+In rare cases, usually when consuming code written in other languages, you may need to write a name that is a reserved keyword. The way to do that is to prefix it with `__identifer__`, which treats it as an ordinary identifier (without the prefix).
+
+
 ## Fundamental data types
 
 Cpp2 supports the same fundamental types as today's Cpp1, but additionally provides the following aliases in namespace `cpp2`:

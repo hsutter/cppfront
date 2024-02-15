@@ -3,7 +3,7 @@
 
 ## Overview
 
-A user-defined `type` is written using the same **name `:` kind `=` value** syntax as everything in Cpp2. The type's "value" is a `{}`-enclosed body containing more declarations.
+A user-defined `type` is written using the same **name `:` kind `=` value** [declaration syntax](../cpp2/declarations.md) as everything in Cpp2. The type's "value" is a `{}`-enclosed body containing more declarations.
 
 In a `type`, data members are private by default, and functions and nested types are public by default. To explicitly declare a type scope declaration `public`, `protected`, or `private`, write that keyword at the beginning of the declaration.
 
@@ -61,7 +61,7 @@ Base types are written as members named this. For example, just as a type could 
 
 Because base and member subobjects are all declared in the same place (the type body) and initialized in the same place (an `operator=` function body), they can be written in any order, including interleaved, and are still guaranteed to be safely initialized in declared order. This means that in Cpp2 you can declare a data member object before a base subobject, so that it naturally outlives the base subobject.
 
-> Cpp2 code doesn't need workarounds like Boost's `base_from_member`, because all of the motivating examples for that can be written directly. See my comments on [cppfront issue #334](https://github.com/hsutter/cppfront/issues/334) for details.
+> Cpp2 code doesn't need workarounds like Boost's `base_from_member`, because all of the motivating examples for that can be written directly. See [this explanation](https://github.com/hsutter/cppfront/issues/334#issuecomment-1500984173) for details.
 
 ## `virtual`, `override`, and `final` — Virtual functions
 
