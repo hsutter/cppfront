@@ -38,7 +38,7 @@ match_return: @struct <Iter> type = {
     pos: Iter = ();
 }
 
-match_context: <CharT, Iter, max_groups: size_t, max_alternatives: size_t> type =
+match_context: <CharT, Iter, max_groups: int, max_alternatives: int> type =
 {
     public begin: Iter;
     public end: Iter;
@@ -57,7 +57,12 @@ match_context: <CharT, Iter, max_groups: size_t, max_alternatives: size_t> type 
     //
     get_group: (in this, group) groups[group];
 
-    get_group_string: (in this, group) std::string(groups[group].start, groups[group].end);
+    get_group_string: (in this, group) -> std::string = {
+        if group >= max_groups {
+            return "";
+        }
+        return std::string(groups[group].start, groups[group].end);
+    }
     get_group_start:  (in this, group) std::distance(begin, groups[group].start);
     get_group_end:    (in this, group) std::distance(begin, groups[group].end);
 
@@ -168,6 +173,18 @@ named_class_entry: <CharT, Name: fixed_string, Inner> type = {
     to_string: ()        "[:(Name.data())$:]";
 }
 
+negated_class_entry: <CharT, Inner> type = {
+    this: Inner = ();
+    includes: (c: CharT) !Inner::includes(c);
+}
+
+// Short class syntax: \<character>  Example: \w
+//
+shorthand_class_entry: <CharT, Name: fixed_string, Inner> type = {
+    includes: (c: CharT) Inner::includes(c);
+    to_string: ()        bstring<CharT>(Name.data());
+}
+
 
 // Named basic character classes
 //
@@ -188,6 +205,16 @@ punct_class   : <CharT> type == named_class_entry<CharT, "punct", list_class_ent
 space_class   : <CharT> type == named_class_entry<CharT, "space", list_class_entry<CharT, ' ', '\t', '\r', '\n', '\v', '\f'>>;
 word_class    : <CharT> type == named_class_entry<CharT, "word", combined_class_entry<CharT, alnum_class<CharT>, single_class_entry<CharT, '_'>>>;
 xdigit_class  : <CharT> type == named_class_entry<CharT, "xdigit", combined_class_entry<CharT, range_class_entry<CharT, 'A', 'F'>, range_class_entry<CharT, 'a', 'f'>, digits_class<CharT>>>;
+
+// Shorthand class entries
+//
+short_digits_class : <CharT> type == shorthand_class_entry<CharT, "\\d", digits_class<CharT>>;
+short_word_class :   <CharT> type == shorthand_class_entry<CharT, "\\w", word_class<CharT>>;
+short_space_class :  <CharT> type == shorthand_class_entry<CharT, "\\s", space_class<CharT>>;
+
+short_not_digits_class : <CharT> type == negated_class_entry<CharT, shorthand_class_entry<CharT, "\\D", digits_class<CharT>>>;
+short_not_word_class :   <CharT> type == negated_class_entry<CharT, shorthand_class_entry<CharT, "\\W", word_class<CharT>>>;
+short_not_space_class :  <CharT> type == negated_class_entry<CharT, shorthand_class_entry<CharT, "\\S", space_class<CharT>>>;
 
 //-----------------------------------------------------------------------
 //
@@ -445,16 +472,18 @@ group_ref_matcher_logic: <CharT, group: int> type = {
 //
 // Also matches new lines endings.
 //
-line_end_matcher_logic: <CharT> type =
+line_end_matcher_logic: <CharT, match_new_line: bool, match_new_line_before_end: bool> type =
 {
     match: <Other> (cur, inout ctx, _ : Other) -> _ = {
-        if cur == ctx.end || cur* == '\n' {
+        if cur == ctx.end || (match_new_line && cur* == '\n') {
+            return Other::match(cur, ctx);
+        }
+        else if !match_new_line_before_end && (cur* == '\n' && (cur + 1) == ctx.end) { // Special cas for new line at end.
             return Other::match(cur, ctx);
         }
         else {
             return match_return(false, ctx.end);
         }
-
     }
 
     reset_ranges: (inout ctx) = {}
@@ -465,10 +494,10 @@ line_end_matcher_logic: <CharT> type =
 //
 // Also matches new line starts.
 //
-line_start_matcher_logic: <CharT> type =
+line_start_matcher_logic: <CharT, match_new_line: bool> type =
 {
     match: <Other> (cur, inout ctx, _ : Other) -> _ = {
-        if cur == ctx.begin || (cur - 1)* == '\n' {
+        if cur == ctx.begin || (match_new_line && (cur - 1)* == '\n') {
             return Other::match(cur, ctx);
         }
         else {
@@ -482,12 +511,31 @@ line_start_matcher_logic: <CharT> type =
 
 // Named character classes
 //
-named_class_matcher_logic: <CharT, Name: fixed_string, negate: bool, List ...> type =  {
-    this: class_matcher_logic<CharT, negate, List...> = ();
+
+named_matcher_logic: <CharT, Name: fixed_string, Base> type = {
+    this: Base = ();
     to_string: () bstring<CharT>(Name.data());
+}
+named_class_matcher_logic: <CharT, Name: fixed_string, negate: bool, List ...> type =  {
+    this: named_matcher_logic<CharT, Name, class_matcher_logic<CharT, negate, List...>> = ();
 }
 
 named_class_no_new_line: <CharT> type == named_class_matcher_logic<CharT, "\\\\N", true, single_class_entry<CharT, '\n'>>; // TODO: Remove second \, switch to raw strings.
+named_class_white_space: <CharT> type == named_class_matcher_logic<CharT, "\\s", false, space_class<CharT>>;
+named_class_word: <CharT> type == named_class_matcher_logic<CharT, "\\w", false, word_class<CharT>>;
+named_class_digits: <CharT> type == named_class_matcher_logic<CharT, "\\d", false, digits_class<CharT>>;
+
+
+named_class_not_white_space: <CharT> type == named_class_matcher_logic<CharT, "\\S", true, space_class<CharT>>;
+named_class_not_word: <CharT> type == named_class_matcher_logic<CharT, "\\W", true, word_class<CharT>>;
+named_class_not_digits: <CharT> type == named_class_matcher_logic<CharT, "\\D", true, digits_class<CharT>>;
+
+// Other named matchers
+named_string_end_or_before_new_line_at_end: <CharT> type == named_matcher_logic<CharT, "\\Z", line_end_matcher_logic<CharT, false, true>>;
+named_string_end: <CharT> type == named_matcher_logic<CharT, "\\z", line_end_matcher_logic<CharT, false, false>>;
+named_string_start: <CharT> type == named_matcher_logic<CharT, "\\A", line_start_matcher_logic<CharT, false>>;
+
+
 
 // Regex syntax: <matcher>{min, max}  Example: a{2,4}
 range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
@@ -566,6 +614,52 @@ special_range_matcher_logic: <CharT, M, min_count: int, max_count: int, symbol: 
     this: range_matcher_logic<CharT, M, min_count, max_count> = ();
     to_string: () M::to_string() + symbol;
 }
+
+// Regex syntax: \b or \B  Example: \bword\b
+//
+// Matches the start end end of word boundaries.
+//
+word_boundary_matcher_logic: <CharT, negate: bool> type =
+{
+    match: <Other> (cur, inout ctx, _: Other) -> _ = {
+        words : word_class<CharT> = ();
+        is_match := false;
+        if cur == ctx.begin { // String start
+            if cur != ctx.end { // No empty string
+                is_match = words.includes(cur*);
+            }
+        }
+        else if cur == ctx.end { // String end
+            is_match = words.includes((cur - 1)*);
+        }
+        else { // Middle of string
+            is_match =
+                   (words.includes((cur - 1)*) && !words.includes(cur*))  // End of word: \w\W
+                || (!words.includes((cur - 1)*) && words.includes(cur*)); // Start of word: \W\w
+
+        }
+        if negate {
+            is_match = !is_match;
+        }
+
+        if is_match{
+            return Other::match(cur, ctx);
+        }
+        else {
+            return match_return(false, ctx.end);
+        }
+
+    }
+    reset_ranges: (inout ctx) = {}
+    to_string: () -> std::string = {
+        if negate {
+            return "\\B";
+        } else {
+            return "\\b";
+        }
+    }
+}
+
 
 //-----------------------------------------------------------------------
 //
@@ -770,11 +864,11 @@ regex_parser: <Error_out> type = {
 
     is_anchor: (inout this, c: char) -> bool = {
         if c == '^' {
-            cur_state.add(create_matcher("line_start_matcher_logic", ""));
+            cur_state.add(create_matcher("line_start_matcher_logic", "true"));
             return true;
         }
         else if c == '$' {
-            cur_state.add(create_matcher("line_end_matcher_logic", ""));
+            cur_state.add(create_matcher("line_end_matcher_logic", "true, false"));
             return true;
         }
 
@@ -835,7 +929,25 @@ regex_parser: <Error_out> type = {
 
                 end += 1; // Skip ':' pointing to the ending ']'.
                 pos = end;
-
+            }
+            else if c_cur == '\\' {
+                if next_item()  && (c_cur != ']') {
+                    name := "";
+                    if      's' == c_cur { name = "short_space"; }
+                    else if 'S' == c_cur { name = "short_not_space"; }
+                    else if 'w' == c_cur { name = "short_word"; }
+                    else if 'W' == c_cur { name = "short_not_word"; }
+                    else if 'd' == c_cur { name = "short_digits"; }
+                    else if 'D' == c_cur { name = "short_not_digits"; }
+                    else {
+                        error("Unknown group escape.");
+                        return false;
+                    }
+                    classes.push_back("[:(name)$:]");
+                } else {
+                    error("Escape without a following character.");
+                    return false;
+                }
             }
             else if c_cur == '-' {
                 if first { // Literal if first entry.
@@ -906,7 +1018,7 @@ regex_parser: <Error_out> type = {
         else if std::string::npos != std::string("^.[]$()*{}?+|").find(c_next) {
             if c_next == '$' {
                 // TODO: Provide proper escape for cppfront capture
-                cur_state.add(create_matcher("line_end_matcher_logic", ""));
+                cur_state.add(create_matcher("line_end_matcher_logic", "true, false"));
             }
             else {
                 cur_state.add(create_matcher("escaped_char_matcher_logic", "'(c_next)$'"));
@@ -915,9 +1027,18 @@ regex_parser: <Error_out> type = {
         else if '\\' == c_next {
             cur_state.add(create_matcher("escaped_char_matcher_logic", "'\\\\'"));
         }
-        else if 'N' == c_next {
-            cur_state.add(create_matcher("named_class_no_new_line", ""));
-        }
+        else if 'N' == c_next { cur_state.add(create_matcher("named_class_no_new_line", "")); }
+        else if 's' == c_next { cur_state.add(create_matcher("named_class_white_space", "")); }
+        else if 'S' == c_next { cur_state.add(create_matcher("named_class_not_white_space", "")); }
+        else if 'w' == c_next { cur_state.add(create_matcher("named_class_word", "")); }
+        else if 'W' == c_next { cur_state.add(create_matcher("named_class_not_word", "")); }
+        else if 'd' == c_next { cur_state.add(create_matcher("named_class_digits", "")); }
+        else if 'D' == c_next { cur_state.add(create_matcher("named_class_not_digits", "")); }
+        else if 'Z' == c_next { cur_state.add(create_matcher("named_string_end_or_before_new_line_at_end", "")); }
+        else if 'z' == c_next { cur_state.add(create_matcher("named_string_end", "")); }
+        else if 'A' == c_next { cur_state.add(create_matcher("named_string_start", "")); }
+        else if 'b' == c_next { cur_state.add(create_matcher("word_boundary_matcher_logic", "false")); }
+        else if 'B' == c_next { cur_state.add(create_matcher("word_boundary_matcher_logic", "true")); }
         else {
             error("Unknown escape.");
             return false;
