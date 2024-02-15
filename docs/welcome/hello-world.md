@@ -34,7 +34,7 @@ This short program code already illustrates a few Cpp2 essentials.
 
 All grammar is context-free. In particular, we (the human reading the code, and the compiler) never need to do name lookup to figure out how to parse something — there is never a ["vexing parse"](https://en.wikipedia.org/wiki/Most_vexing_parse) in Cpp2. For details, see [Design note: Unambiguous parsing](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Unambiguous-parsing).
 
-**Simple and safe by default.** Cpp2 has contracts (tracking draft C++26 contracts), `inspect` pattern matching, string interpolation, and more.
+**Simple, safe, and efficient by default.** Cpp2 has contracts (tracking draft C++26 contracts), `inspect` pattern matching, string interpolation, automatic move from last use, and more.
 
 - Declaring `words` uses **"CTAD"** (C++'s normal constructor template argument deduction) to declare its `words` variable.
 
@@ -59,7 +59,7 @@ For details, see [Design note: Defaults are one way to say the same thing](https
 **C++ standard library always available.** We didn't need `#include <iostream>` or `import std;`. The full C++ standard library is always available by default if your source file contains only syntax-2 code and you compile using cppfront's `-p` (short for `-pure-cpp2`). Cppfront is regularly updated to be compatible with C++23 and the latest draft C++26 library additions as soon as the ISO C++ committee votes them into the C++26 working draft, so as soon as you have a C++ implementation that has a new standard (or bleeding-edge draft standard!) C++ library feature, you'll be able to fully use it in Cpp2 code.
 
 
-## Building `hello.cpp2` from the command line
+## Building `hello.cpp2`
 
 Now use `cppfront` to compile `hello.cpp2` to a standard C++ file `hello.cpp`:
 
@@ -92,50 +92,51 @@ Here we can see more of how Cpp2 makes it features work.
 
 **How: Consistent context-free syntax.**
 
-- **Lines 8, 9, and 15:** Cpp2's context-free syntax converts directly to today's Cpp1 syntax. We can write and read our C++ types/functions/objects in simpler Cpp2 syntax without wrestling with context sensitivity and ambiguity, and they're all still just ordinary types/functions/objects.
+- **Lines 8, 9, and 15: Portable C++20 code** we can build with any C++ compiler. Cpp2's context-free syntax converts directly to today's Cpp1 syntax. We can write and read our C++ types/functions/objects in simpler Cpp2 syntax without wrestling with context sensitivity and ambiguity, and they're all still just ordinary types/functions/objects.
 
-**How: Simple and safe by default.**
+**How: Simple, safe, and efficient by default.**
 
-- **Line 9:** CTAD just works, because it turns into ordinary C++ code which is CTAD-aware.
-- **Lines 10-11:** The accesses of `words[0]` and `words[1]` are bounds-checked nonintrusively at the call site by default. Because it's nonintrusive, it works seamlessly with all existing container types that are `std::ssize`-aware, when you use them from safe Cpp2 code.
-- **Line 16:** String interpolation performs the string capture of `msg`'s current value via `cpp2::to_string`. That uses `std::to_string` when available, and it also works for additional types (such as `bool`, to print `false` and `true` instead of `0` and `1`, without having to remember to use `std::boolalpha`).
+- **Line 9: CTAD** just works, because it turns into ordinary C++ code which is CTAD-aware.
+- **Lines 10-11: Automatic bounds checking** is added to `words[0]` and `words[1]` nonintrusively at the call site by default. Because it's nonintrusive, it works seamlessly with all existing container types that are `std::ssize`-aware, when you use them from safe Cpp2 code.
+- **Line 11: Automatic move from last use** ensures the last use of `words` will automatically avoid a copy if it's being passed to something that's optimized for rvalues.
+- **Line 16: String interpolation** performs the string capture of `msg`'s current value via `cpp2::to_string`. That uses `std::to_string` when available, and it also works for additional types (such as `bool`, to print `false` and `true` instead of `0` and `1`, without having to remember to use `std::boolalpha`).
 
 **How: Simplicity through generality + defaults.**
 
-- **Line 7:** The default `in` parameter passing convention is implemented using `cpp2::in<>`, which is smart enough to pass by `const` value when that's safe and appropriate, otherwise by `const&`, so you don't have to choose the right one by hand.
+- **Line 7: `in` parameters** are implemented using `cpp2::in<>`, which is smart enough to pass by `const` value when that's safe and appropriate, otherwise by `const&`, so you don't have to choose the right one by hand.
 
 **How: Order-independent by default.**
 
-- **Lines 5 and 7:** Cppfront achieves order independence is by generating all the type and function forward declarations for you, so you don't have to. That's why `main` can just call `hello`: Both are forward-declared, so they can both see each other.
+- **Lines 5 and 7: Order independence** happens because cppfront generates all the type and function forward declarations for you, so you don't have to. That's why `main` can just call `hello`: Both are forward-declared, so they can both see each other.
 
 **How: Seamless compatibility and interop.**
 
-- **Lines 9, 12, and 16:** Calling existing C++ code is just ordinary direct calls, so there's never a need for wrapping/marshaling/thunking.
+- **Lines 9, 12, and 16: Ordinary direct calls** to existing C++ code, so there's never a need for wrapping/marshaling/thunking.
 
 **How: C++ standard library always available.**
 
-- **Lines 1 and 3:** Because cppfront was invoked with `-p`, which implies either `-im` (short for `-import-std`) or `-in` (short for `-include-std`, for compilers that don't support modules yet), the generated code tells `cpp2util.h` to `import` the entire standard library as a module (or do the equivalent via headers if modules are not available).
+- **Lines 1 and 3: `std::` is available** because cppfront was invoked with `-p`, which implies either `-im` (short for `-import-std`) or `-in` (short for `-include-std`, for compilers that don't support modules yet). The generated code tells `cpp2util.h` to `import` the entire standard library as a module (or do the equivalent via headers if modules are not available).
 
 
-## Building and running `hello.cpp` from the command line
+## Building and running `hello.cpp` with any recent C++ compiler
 
 Finally, just build `hello.cpp` using your favorite C++20 compiler, where `CPPFRONT_INCLUDE` is the path to `/cppfront/include`:
 
 <image align="right" width="120" src="https://user-images.githubusercontent.com/1801526/188906112-ef377a79-b6a9-4a30-b318-10b51d8ea934.png">
 
-``` title="MSVC"
+``` title="MSVC (Visual Studio 2019 version 16.11 or higher)"
 > cl hello.cpp -std:c++20 -EHsc -I CPPFRONT_INCLUDE
 > hello.exe
 Hello, world!
 ```
 
-``` bash title="GCC"
+``` bash title="GCC (GCC 10 or higher)"
 $ g++ hello.cpp -std=c++20 -ICPPFRONT_INCLUDE -o hello
 $ ./hello.exe
 Hello, world!
 ```
 
-``` bash title="Clang"
+``` bash title="Clang (Clang 12 or higher)"
 $ clang++ hello.cpp -std=c++20 -ICPPFRONT_INCLUDE -o hello
 $ ./hello.exe
 Hello, world!
