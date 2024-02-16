@@ -1,5 +1,41 @@
 # Common programming concepts
 
+## `main`
+
+As always, `main` is the entry point of the program. For example:
+
+`main` can have either:
+
+- No parameters: `main: () /*etc.*/`
+
+- One parameter of implicit type named `args`: `main: (args) /*etc*/`.
+    - The type of `args` cannot be explicitly specified. It is always `cpp2::args_t`, which behaves similarly to a `const std::array<std::string_view>`.
+    - Using `args` performs zero heap allocations. Every `string_view` is directly bound to the string storage provided by host environment.
+    - `args.argc` and `args.argv` dditionally provide access to the raw C/C++ `main` parameters.
+
+``` cpp title="Examples: main with (args)"
+//  Print out command line arguments, then invoke
+//  a Qt event loop for a non-UI Qt application
+main: (args) -> int
+= {
+    for args do (arg) {
+        std::cout << arg << "\n";
+    }
+
+    app: QCoreApplication = (args.argc, args.argv);
+    return app.exec();
+}
+```
+
+`main` can return:
+
+- `void`, the default return value for functions. In this case, the compiled Cpp1 code returns an `int` (as required by the standard) with value `0`.
+
+- `int`. If the body has no `return` statement, the default is to `return 0;` at the end of the function body.
+
+- Some other type that your Cpp1 compiler(s) supports as a nonstandard extension.
+
+
 ## Comments
 
 The usual `// line comments` and `/* stream comments */` are supported. For example:
@@ -137,6 +173,7 @@ Unary suffix operators must not be preceded by whitespace. When `*`, `&`, and `~
 | `~` | `~val ~ bitcomplement` | `val~ ~ bitcomplement` |
 
 For more details, see [Design note: Postfix unary operators vs binary operators](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Postfix-unary-operators-vs-binary-operators).
+
 
 ## Binary operators
 
