@@ -42,7 +42,7 @@ All grammar is context-free. In particular, we (the human reading the code, and 
 
 - Calling `words[0]` and `words[1]` is **bounds-checked by default**. From Cpp2 code, ordinary `std::vector` subscript accesses are safely bounds-checked by default without requiring any upgrade to your favorite standard library, and that's true for any similar subscript of something whose size can be queried using `std::size()`, including any in-house integer-indexed container types you already have that can easily provide `std::size()` if they don't already.
 
-- `hello` uses **string interpolation** to be able to write `"Hello, (msg)$!\n"` instead of `"Hello, (" << msg << "!\n"`.
+- `hello` uses **string interpolation** to be able to write `"Hello, (msg)$!\n"` instead of `"Hello, " << msg << "!\n"`.
 
 **Simplicity through generality + defaults.** A major way that Cpp2 delivers simplicity is by providing just one powerful general syntax for a given thing (e.g., one function definition syntax), but designing it so you can omit the parts you're not currently using (e.g., where you're happy with the defaults). We're already using some of those defaults above:
 
@@ -99,7 +99,7 @@ Here we can see more of how Cpp2 makes it features work.
 **How: Simple, safe, and efficient by default.**
 
 - **Line 9: CTAD** just works, because it turns into ordinary C++ code which already supports CTAD.
-- **Lines 10-11: Automatic bounds checking** is added to `words[0]` and `words[1]` nonintrusively at the call site by default. Because it's nonintrusive, it works seamlessly with all existing container types that are `std::ssize`-aware, when you use them from safe Cpp2 code.
+- **Lines 10-11: Automatic bounds checking** is added to `words[0]` and `words[1]` nonintrusively at the call site by default. Because it's nonintrusive, it works seamlessly with all existing container types that are `std::size`-aware, when you use them from safe Cpp2 code.
 - **Line 11: Automatic move from last use** ensures the last use of `words` will automatically avoid a copy if it's being passed to something that's optimized for rvalues.
 - **Line 16: String interpolation** performs the string capture of `msg`'s current value via `cpp2::to_string`. That uses `std::to_string` when available, and it also works for additional types (such as `bool`, to print `false` and `true` instead of `0` and `1`, without having to remember to use `std::boolalpha`).
 
