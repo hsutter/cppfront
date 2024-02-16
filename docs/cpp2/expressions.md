@@ -40,11 +40,11 @@ For details, see [Design note: Explicit discard](https://github.com/hsutter/cppf
 
 ## `is` — safe type/value queries
 
-An `x is C` expression allows safe type and value queries, and evaluates to `true` if `x` matches constraint `C`. It supports both static and dynamic queries, including customization with support for the standard dynamically typed libraries `std::variant`, `std::optional`, and `std::any` provided in the box.
+An `x is C` expression allows safe type and value queries, and evaluates to `true` if `x` matches constraint `C`. It supports both static and dynamic queries, including customization, with support for the standard dynamically typed libraries `std::variant`, `std::optional`, and `std::any` provided in the box.
 
 There are two kinds of `is`:
 
-- A **type query**, where `C` is a type constraint: A type, a template name, a concept, or a type predicate. Here `x` may be a type, or an object or expression; if it is an object or expression, the query refers to `x`'s type.
+- A **type query**, where `C` is a type constraint: a type, a template name, a concept, or a type predicate. Here `x` may be a type, or an object or expression; if it is an object or expression, the query refers to `x`'s type.
 
 | Type constraint kind | Example |
 |---|---|
@@ -53,7 +53,7 @@ There are two kinds of `is`:
 | Static template type query | `x is std::vector` |
 | Static concept query | `x is std::integral` |
 
-- A **value query**, where `C` is a value constraint: A value, or a value predicate. Here `x` must be an object or expression.
+- A **value query**, where `C` is a value constraint: a value, or a value predicate. Here `x` must be an object or expression.
 
 | Value constraint kind | Example |
 |---|---|
