@@ -37,7 +37,7 @@ That's enough to enable builds, and the IDE just picks up the rest from the `.cp
 
 - **The cppfront error messages in `filename(line, col)` format.** Most C++ IDEs recognize these, and usually automatically merge any diagnostic output wherever compiler error output normally appears. If your IDE prefers `filename:line:col`, just use the cppfront `-format-colon-errors` command line option.
 
-- **The `#line` directives cppfront emits in the generated `.cpp` file.** Most C++ debuggers recognize these and will know to step through the `.cpp2` file. Note that `#line` emission is on by default, but if you choose `-c` (short for `-clean-cpp1`) these will be suppressed and then the debugger will step through the generated C++ code instead.
+- **The `#line` directives cppfront emits in the generated `.cpp` file.** Most C++ debuggers recognize these and will know to step through the `.cpp2` file. Note that `#line` emission is on by default, but if you choose `-c` (short for `-clean-cpp1`) these will be suppressed and then the debugger will step through the generated C++ code instead.  If your debugger can't find the files, you may need to use `-line-paths` to have absolute paths instead of relative paths in the `#line` directives.
 
 - **Regardless of syntax, every type/function/object/namespace/etc. is still just an ordinary C++ type/function/object/namespace/etc.** Most C++ debugger visualizers will just work and show beautiful output for the types your program uses, including to use any in-the-box visualizers for all the `std::` types (since those are used directly as usual) and any custom visualizers you may have already written for your own types or popular library types.
 
