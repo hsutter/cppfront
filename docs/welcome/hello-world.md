@@ -94,7 +94,7 @@ Here we can see more of how Cpp2 makes it features work.
 
 **How: Consistent context-free syntax.**
 
-- **Lines 8, 9, and 15: Portable C++20 code** we can build with any C++ compiler. Cpp2's context-free syntax converts directly to today's Cpp1 syntax. We can write and read our C++ types/functions/objects in simpler Cpp2 syntax without wrestling with context sensitivity and ambiguity, and they're all still just ordinary types/functions/objects.
+- **All compiled lines are portable C++20 code** we can build with pretty much any C++ compiler released circa 2019 or later. Cpp2's context-free syntax converts directly to today's Cpp1 syntax. We can write and read our C++ types/functions/objects in simpler Cpp2 syntax without wrestling with context sensitivity and ambiguity, and they're all still just ordinary types/functions/objects.
 
 **How: Simple, safe, and efficient by default.**
 
