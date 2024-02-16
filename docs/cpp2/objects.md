@@ -6,7 +6,7 @@ Its declaration is written using the same **name `:` kind `=` value** [declarati
 
 - **name** starts with a letter and is followed by other letters, digits, or `_`. Examples: `count`, `skat_game`, `Point2D` are valid names.
 
-- **kind** is the object's type. In most places, except type scopes, you can write the `_` wildcard as the type (or omit the type entirely) to ask for the type to be deduced. When the type is a template and the templated arguments can be inferred from the constructor (via [CTAD](../welcome/hello-world.md#CTAD)).
+- **kind** is the object's type. In most places, except type scopes, you can write the `_` wildcard as the type (or omit the type entirely) to ask for the type to be deduced. When the type is a template, the templated arguments can be inferred from the constructor (via [CTAD](../welcome/hello-world.md#CTAD)).
 
 - **value** is the object's initial value. To use the default-constructed value, write `()`.
 
