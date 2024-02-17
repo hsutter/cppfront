@@ -124,9 +124,10 @@ TODO Return type of assignment operator?
 
 > Note: Writing `=` always invokes an `operator=` (in fact for a Cpp2-authored type, and semantically for a Cpp1-authored type). This avoids the Cpp1 inconsistency that "writing `=` calls `operator=`, except when it doesn't" (such as in a Cpp1 variable initialization). Conversely, `operator=` is always invoked by `=` in Cpp2.
 
+
 ### `that` — A source parameter
 
-All type-scope functions can have **`that`** as its second parameter, which is a synonym for the object to be copied/moved from. Like `this`, at type scope it is never declared with an explicit `: its_type` because its type is always the current type.
+All type-scope functions can have **`that`** as their second parameter, which is a synonym for the object to be copied/moved from. Like `this`, at type scope it is never declared with an explicit `: its_type` because its type is always the current type. Unlike `this`, `that` is always passed as a `in` (the default) or `move` parameter.
 
 `that` can be an `in` (default) or `move` parameter. Which you choose naturally determines what kind of member function is being declared:
 

@@ -95,7 +95,7 @@ skat_game: @enum<i16> type = {
 
 Consider `hearts`: It's a member object declaration, but it doesn't have a type (or a default value) which is normally illegal, but here it's okay because the `@enum<i16>` metafunction fills them in: It iterates over all the data members and gives each one the underlying type (here explicitly specified as `i16`, otherwise it would be computed as the smallest signed type that's big enough), and an initializer (by default one higher than the previous enumerator).
 
-Unlike C `enum`, this `@enum` is scoped and strongly typed (does not implicitly convert to the underlying type.)
+Unlike C `enum`, this `@enum` is scoped and strongly typed (does not implicitly convert to the underlying type).
 
 Unlike C++11 `enum class`, it's "just a `type`" which means it can naturally also have member functions and other things that a type can have:
 
@@ -141,11 +141,11 @@ file_attributes: @flag_enum<u8> type = {
 // name_or_number is declaratively a safe union/variant type:
 // it has a discriminant that enforces only one alternative
 // can be active at a time, members always have a name, and
-// each member has .is_member() .set_member() and .member()
-// accessors using the member name...
-// the word "union" carries all that meaning as a convenient
-// and readable opt-in without hardwiring "union" specially
-// into the language
+// each member has .is_member(), .set_member(), and .member()
+// accessors using the member name... the word "union"
+// carries all that meaning as a convenient and readable
+// opt-in without hardwiring "union" specially into the
+// language
 //
 name_or_number: @union type = {
     name: std::string;
@@ -156,9 +156,8 @@ main: () = {
     x: name_or_number = ();
 
     x.set_name("xyzzy");            // now x is a string
-    if x.is_name() {
-        std::cout << x.name();      // prints the string
-    }
+    assert( x.is_name() );
+    std::cout << x.name();          // prints the string
 
     // trying to use x.num() here would cause a Type safety
     // contract violation, because x is currently a string
