@@ -71,3 +71,19 @@ fixed_string(const CharT (&)[N])->fixed_string<CharT, N-1>;
 inline bool is_escaped(std::string_view s) {
     return s.starts_with("\"") && s.ends_with("\"");
 }
+
+inline bool string_to_int(std::string const& s, int& v) {
+    try {
+        v = stoi(s);
+        return true;
+    }
+    catch (std::invalid_argument const& ex)
+    {
+        return false;
+    }
+    catch (std::out_of_range const& ex)
+    {
+        return false;
+    }
+
+}

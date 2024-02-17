@@ -10,6 +10,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <map>
+
 cpp2: namespace = {
 
 regex: namespace = {
@@ -406,22 +408,23 @@ escaped_char_matcher_logic: <CharT, C: CharT> type =
 
 // Regex syntax: (<inner>) Example: (.*)
 //
-group_matcher_start_logic: <CharT, group: int> type = {
+group_matcher_start_logic: <CharT, group: int, name: fixed_string> type = {
     match: <Other> (cur, inout ctx, _ : Other) -> _ = {
+        ctx.set_group_start(group, cur);
         r := Other::match(cur, ctx);
-        if r.matched {
-            ctx.set_group_start(group, cur);
-        } else {
-            ctx.set_group_invalid(group);
-        }
         return r;
     }
 
     reset_ranges: (inout ctx) = ctx.set_group_invalid(group);
 
-    to_string: () -> _ = {
+    to_string: () -> std::string = {
         if group != 0 {
-            return "(";
+            if 0 != name.size() {
+                return "(?<(name.data())$>";
+            }
+            else {
+                return "(";
+            }
         }
         else {
             return "";
@@ -431,9 +434,10 @@ group_matcher_start_logic: <CharT, group: int> type = {
 
 group_matcher_end_logic: <CharT, group: int> type = {
     match: <Other> (cur, inout ctx, _ : Other) -> _ = {
+        ctx.set_group_end(group, cur);
         r := Other::match(cur, ctx);
-        if r.matched {
-            ctx.set_group_end(group, cur);
+        if !r.matched {
+            ctx.set_group_invalid(group);
         }
         return r;
     }
@@ -452,20 +456,21 @@ group_matcher_end_logic: <CharT, group: int> type = {
 
 // Regex syntax: \<number>  Example: \1
 //
-group_ref_matcher_logic: <CharT, group: int> type = {
+group_ref_matcher_logic: <CharT, group: int, symbol: fixed_string> type = {
     match: <Other> (cur, inout ctx, _ : Other) -> _ = {
         g := ctx.get_group(group);
 
-        while g.start != g.end && cur != ctx.end next (g.start++, cur++) {
-            if g.start* != cur* {
+        pos := cur;
+        while g.start != g.end && pos != ctx.end next (g.start++, pos++) {
+            if g.start* != pos* {
                 return match_return(false, ctx.end);
             }
         }
 
-        return Other::match(cur, ctx);
+        return Other::match(pos, ctx);
     }
     reset_ranges: (inout ctx) = {}
-    to_string: ()               "\\((group)$)";
+    to_string: ()               bstring<CharT>(symbol.data());
 }
 
 // Regex syntax: $  Example: aa$
@@ -671,6 +676,8 @@ word_boundary_matcher_logic: <CharT, negate: bool> type =
 // Regular expression implementation
 regular_expression: <CharT, groups: size_t, alternatives: size_t, Matcher> type = {
 
+    // TODO: Add named groups.
+
     context: <Iter> type == match_context<CharT, Iter, groups, alternatives>;
 
     private get_iter: (str: view<CharT>, pos) -> _ = {
@@ -778,8 +785,10 @@ regex_parser: <Error_out> type = {
     cur_state: regex_parser_state = ();
     pos: size_t = 0;
 
-    named_groups: int = 1; // Global capture group.
+    next_group_id: int = 1; // Global capture group.
     alternatives_count: int = 0;
+
+    named_groups : std::map<std::string, int> = ();
 
     has_error: bool = false;
     error_out: Error_out;
@@ -802,6 +811,56 @@ regex_parser: <Error_out> type = {
 
     restore_state: (inout this, old_state: regex_parser_state) = {
         cur_state = old_state;
+    }
+
+    // Position management functions
+    //
+
+    next: (inout this, out n: char) -> bool = {
+        if (pos + 1) < regex.size() {
+            pos += 1;
+            n = regex[pos];
+            return true;
+        }
+        else {
+            n = '\0';
+            return false;
+        }
+    }
+
+    grab_until: (inout this, in e: char, out r: std::string) -> bool = {
+        start := pos;
+        end: = regex.find(e, pos);
+
+        if end != std::string_view::npos {
+            r = regex.substr(start, end - pos);
+            pos = end;
+            return true;
+        }
+        else {
+            r = "";
+            return false;
+        }
+    }
+
+    grab_number: (inout this) -> std::string = {
+        start := pos;
+        start_search := pos;
+        if regex[start_search] == '-' {
+            start_search += 1;
+        }
+        end := regex.find_first_not_of("1234567890", start_search);
+
+        r : std::string;
+        if end != std::string_view::npos {
+            r = regex.substr(start, end - start);
+            pos = end - 1;
+        }
+        else {
+            r = regex.substr(start);
+            pos = regex.size() - 1;
+        }
+        return r;
     }
 
     // Misc functions
@@ -1002,18 +1061,42 @@ regex_parser: <Error_out> type = {
     is_escape: (inout this, c: char) -> bool = {
         if c != '\\' { return false; }
 
+        start := pos; // Keep start for group matchers.
         pos += 1;
+
+        add_group_matcher:= :(name: std::string) -> bool = {
+
+            group_id : int = 0;
+            if string_to_int(name, group_id) {
+                if group_id < 0 {
+                    group_id = next_group_id + group_id;
+
+                    if group_id < 1 { // Negative and zero are no valid groups.
+                        error("Relative group reference does not reference a valid group. (Would be (group_id)$.)");
+                        return false;
+                    }
+                }
+
+                if group_id >= next_group_id { error("Group reference is used before the group is declared."); return false; }
+            }
+            else {
+                // Named group
+                iter := named_groups.find(name);
+                if iter == named_groups.end() { error("Group names does not exist. (Name is: (name)$)"); return false; }
+
+                group_id = iter*.second;
+            }
+            cur_state.add(create_matcher("group_ref_matcher_logic", "(group_id)$, \"\\(regex.substr(start$, pos&$* - start$ + 1))$\""));
+
+            return true;
+        };
 
         if pos >= regex.size() { error("Escape without a following character."); return false;}
 
         c_next: char = regex[pos];
 
         if '1' <= c_next <= '9' {
-            group_id: int = c_next - '0';
-
-            if group_id >= named_groups { error("Group reference is used before the group is declared."); return false; }
-
-            cur_state.add(create_matcher("group_ref_matcher_logic", "(group_id)$"));
+            if !add_group_matcher(std::string(1, c_next)) { return false; }
         }
         else if std::string::npos != std::string("^.[]$()*{}?+|").find(c_next) {
             if c_next == '$' {
@@ -1026,6 +1109,33 @@ regex_parser: <Error_out> type = {
         }
         else if '\\' == c_next {
             cur_state.add(create_matcher("escaped_char_matcher_logic", "'\\\\'"));
+        }
+        else if 'g' == c_next {
+            if !next(out c_next) {error("Group escape without a following char."); return false; }
+
+            group : std::string = "";
+            if c_next == '{' {
+                if !(next(out c_next) && grab_until('}', out group)) { error("No ending bracket."); return false; }
+            }
+            else {
+                group = grab_number();
+            }
+            if !add_group_matcher(group) { return false; }
+        }
+        else if 'k' == c_next {
+            if !next(out c_next) {error("Group escape without a following char."); return false; }
+
+            term_char := '\0';
+            if c_next == '{' { term_char = '}'; }
+            else if c_next == '<' { term_char = '>'; }
+            else if c_next == '\'' { term_char = '\''; }
+            else {
+                error("Group escape has wrong operator."); return false;
+            }
+
+            group : std::string = "";
+            if !(next(out c_next) && grab_until(term_char, out group)) { error("No ending bracket."); return false; }
+            if !add_group_matcher(group) { return false; }
         }
         else if 'N' == c_next { cur_state.add(create_matcher("named_class_no_new_line", "")); }
         else if 's' == c_next { cur_state.add(create_matcher("named_class_white_space", "")); }
@@ -1050,19 +1160,36 @@ regex_parser: <Error_out> type = {
     is_group: (inout this, c: char) -> bool = {
         if c != '(' { return false; }
 
-        group_number := named_groups;
-        named_groups += 1;
+        group_number := next_group_id;
+        next_group_id += 1;
 
         old_state: _ = new_state();
 
-        pos += 1;  // Skip the '('
+        start_matcher := create_matcher("group_matcher_start_logic", "(group_number)$, \"\"");
+
+        c_next : char = '\0';
+        // Skip the '('
+        if !next(out c_next) { error("Group without closing bracket."); return false;}
+        if c_next == '?' {
+            // Named group
+            if !(next(out c_next) && c_next == '<') { error("Missing opening bracket for named group."); return false; }
+            name : std::string = "";
+            if !grab_until('>', out name) { error("Missing ending bracket for named group."); return false; }
+            if !next(out c_next) { error("Group without closing bracket."); return false;}
+
+            if !named_groups.contains(name) { // Redefinition of group name is not an error. The left most one is retained.
+                named_groups[name] = group_number;
+            }
+            start_matcher = create_matcher("group_matcher_start_logic", "(group_number)$, \"(name)$\"");
+        }
+
         parse_until(')');
 
         inner:= create_matcher_from_state();
         restore_state(old_state);
 
         v: std::vector<std::string> = (
-            create_matcher("group_matcher_start_logic", "(group_number)$"),
+            start_matcher,
             inner,
             create_matcher("group_matcher_end_logic", "(group_number)$"));
         cur_state.add(create_matcher_from_list(v));
@@ -1197,10 +1324,10 @@ regex_parser: <Error_out> type = {
         if has_error { return "Error"; }
 
         inner := create_matcher_from_state();
-        start := create_matcher("group_matcher_start_logic", "0");
+        start := create_matcher("group_matcher_start_logic", "0, \"\"");
         end   := create_matcher("group_matcher_end_logic", "0");
         list  := create_matcher("matcher_list", "(start)$, (inner)$, (end)$");
-        return   create_matcher("regular_expression", "(named_groups)$, (alternatives_count)$, (list)$");
+        return   create_matcher("regular_expression", "(next_group_id)$, (alternatives_count)$, (list)$");
     }
 
 }
