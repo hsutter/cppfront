@@ -673,10 +673,26 @@ word_boundary_matcher_logic: <CharT, negate: bool> type =
 //-----------------------------------------------------------------------
 //
 
-// Regular expression implementation
-regular_expression: <CharT, groups: size_t, alternatives: size_t, Matcher> type = {
+// Helper for named groups.
 
-    // TODO: Add named groups.
+group_name_list: <Name: fixed_string, group_id: int, Inner> type = {
+
+    get_group_id: (name) -> int = {
+        if name == Name.data() {
+            return group_id;
+        }
+        else {
+            return Inner::get_group_id(name);
+        }
+    }
+}
+
+group_name_list_end: type = {
+    get_group_id: (_) -1;
+}
+
+// Regular expression implementation
+regular_expression: <CharT, groups: size_t, alternatives: size_t, named_groups, Matcher> type = {
 
     context: <Iter> type == match_context<CharT, Iter, groups, alternatives>;
 
@@ -703,6 +719,18 @@ regular_expression: <CharT, groups: size_t, alternatives: size_t, Matcher> type 
         group:        (this, g: int) ctx.get_group_string(g);
         group_start:  (this, g: int) ctx.get_group_start(g);
         group_end:    (this, g: int) ctx.get_group_end(g);
+
+        group:        (this, g: bstring<CharT>) group(get_group_id(g));
+        group_start:  (this, g: bstring<CharT>) group_start(get_group_id(g));
+        group_end:    (this, g: bstring<CharT>) group_end(get_group_id(g));
+
+        private get_group_id: (this, g: bstring<CharT>) -> _ = {
+            group_id := named_groups::get_group_id(g);
+            if -1 == group_id {
+                // TODO: Throw error.
+            }
+            return group_id;
+        }
     }
 
     match: (in this, str: view<CharT>)                 match(str.begin(), str.end());
@@ -897,6 +925,16 @@ regex_parser: <Error_out> type = {
         alternatives_count += 1;
 
         return create_matcher("alternative_matcher_logic", "(alternative_id)$, (list)$");
+    }
+
+    create_named_groups_arg: (in this) -> std::string = {
+        r : std::string = "::cpp2::regex::group_name_list_end";
+
+        for named_groups do (cur) {
+            r = "::cpp2::regex::group_name_list<\"(cur.first)$\", (cur.second)$, (r)$>";
+        }
+
+        return r;
     }
 
     join: (list: std::vector<std::string>) -> std::string = {
@@ -1173,6 +1211,7 @@ regex_parser: <Error_out> type = {
         if c_next == '?' {
             // Named group
             if !(next(out c_next) && c_next == '<') { error("Missing opening bracket for named group."); return false; }
+            if !next(out c_next) /* skip '<' */ { error("Missing ending bracket for named group."); return false; }
             name : std::string = "";
             if !grab_until('>', out name) { error("Missing ending bracket for named group."); return false; }
             if !next(out c_next) { error("Group without closing bracket."); return false;}
@@ -1323,11 +1362,12 @@ regex_parser: <Error_out> type = {
 
         if has_error { return "Error"; }
 
+        named_groups_arg := create_named_groups_arg();
         inner := create_matcher_from_state();
         start := create_matcher("group_matcher_start_logic", "0, \"\"");
         end   := create_matcher("group_matcher_end_logic", "0");
         list  := create_matcher("matcher_list", "(start)$, (inner)$, (end)$");
-        return   create_matcher("regular_expression", "(next_group_id)$, (alternatives_count)$, (list)$");
+        return   create_matcher("regular_expression", "(next_group_id)$, (alternatives_count)$, (named_groups_arg)$, (list)$");
     }
 
 }
