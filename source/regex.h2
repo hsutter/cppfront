@@ -28,6 +28,10 @@ bstring: <CharT> type == std::basic_string<CharT>;
 //-----------------------------------------------------------------------
 //
 
+expression_flags: type = {
+    case_insensitive : int == 1;
+}
+
 match_group: @struct <Iter> type = {
     start: Iter = ();
     end: Iter = ();
@@ -40,7 +44,7 @@ match_return: @struct <Iter> type = {
     pos: Iter = ();
 }
 
-match_context: <CharT, Iter, max_groups: int, max_alternatives: int> type =
+match_context: <CharT, Iter, max_groups: int, max_alternatives: int, flags: int> type =
 {
     public begin: Iter;
     public end: Iter;
@@ -105,6 +109,13 @@ match_context: <CharT, Iter, max_groups: int, max_alternatives: int> type =
         }
 
         return r;
+    }
+
+    // Flag management
+    //
+
+    has_flag: (f: int) -> bool = {
+        return  0 != (f & flags);
     }
 }
 
@@ -345,14 +356,26 @@ any_matcher_logic: <CharT> type =
 
 // Regex syntax: <any character>  Example: a
 //
-char_matcher_logic: <CharT, C: CharT> type =
+char_matcher_logic: <CharT, C: CharT, L: CharT, U: CharT> type =
 {
     match: <Other> (cur, inout ctx, _ : Other) -> _ = {
-        if cur != ctx.end && cur* == C {
-            return Other::match(cur + 1, ctx);
-        } else {
-            return match_return(false, ctx.end);
+        if ctx.has_flag(expression_flags::case_insensitive) {
+            if cur != ctx.end && (cur* == L || cur* == U) {
+                return Other::match(cur + 1, ctx);
+            }
+            else {
+                return match_return(false, ctx.end);
+            }
         }
+        else {
+            if cur != ctx.end && cur* == C {
+                return Other::match(cur + 1, ctx);
+            }
+            else {
+                return match_return(false, ctx.end);
+            }
+        }
+
     }
     reset_ranges: (inout ctx) = {}
     to_string: ()               bstring<CharT>(1, C);
@@ -364,10 +387,18 @@ char_matcher_logic: <CharT, C: CharT> type =
 class_matcher_logic: <CharT, negate: bool, List ...> type =
 {
     match: <Other> (cur, inout ctx, _ : Other) -> _ = {
-        if cur != ctx.end && negate != match_any<List...>(cur*) {
-            return Other::match(cur + 1, ctx);
-        } else {
-            return match_return(false, ctx.end);
+        if ctx.has_flag(expression_flags::case_insensitive) {
+            if cur != ctx.end && (negate != match_any<List...>(safe_tolower(cur*)) || negate != match_any<List...>(safe_toupper(cur*))) {
+                return Other::match(cur + 1, ctx);
+            }
+            else {
+                return match_return(false, ctx.end);
+            }
+        }
+        else {
+            if cur != ctx.end && negate != match_any<List...>(cur*) {
+                return Other::match(cur + 1, ctx);
+            }
         }
     }
 
@@ -399,9 +430,9 @@ class_matcher_logic: <CharT, negate: bool, List ...> type =
 
 // Regex syntax: \<special character>  Example: \.
 //
-escaped_char_matcher_logic: <CharT, C: CharT> type =
+escaped_char_matcher_logic: <CharT, C: CharT, L: CharT, U: CharT> type =
 {
-    this : char_matcher_logic<CharT, C> = ();
+    this : char_matcher_logic<CharT, C, L, U> = ();
 
     to_string: () "\\(C)$";
 }
@@ -462,8 +493,15 @@ group_ref_matcher_logic: <CharT, group: int, symbol: fixed_string> type = {
 
         pos := cur;
         while g.start != g.end && pos != ctx.end next (g.start++, pos++) {
-            if g.start* != pos* {
-                return match_return(false, ctx.end);
+            if ctx.has_flag(expression_flags::case_insensitive) {
+                if safe_tolower(g.start*) != safe_tolower(pos*) {
+                    return match_return(false, ctx.end);
+                }
+            }
+            else {
+                if g.start* != pos* {
+                    return match_return(false, ctx.end);
+                }
             }
         }
 
@@ -692,9 +730,9 @@ group_name_list_end: type = {
 }
 
 // Regular expression implementation
-regular_expression: <CharT, groups: size_t, alternatives: size_t, named_groups, Matcher> type = {
+regular_expression: <CharT, flags: int, groups: size_t, alternatives: size_t, named_groups, Matcher> type = {
 
-    context: <Iter> type == match_context<CharT, Iter, groups, alternatives>;
+    context: <Iter> type == match_context<CharT, Iter, groups, alternatives, flags>;
 
     private get_iter: (str: view<CharT>, pos) -> _ = {
         if pos < str.size() {
@@ -1142,11 +1180,11 @@ regex_parser: <Error_out> type = {
                 cur_state.add(create_matcher("line_end_matcher_logic", "true, false"));
             }
             else {
-                cur_state.add(create_matcher("escaped_char_matcher_logic", "'(c_next)$'"));
+                cur_state.add(create_matcher("escaped_char_matcher_logic", "'(c_next)$', '(safe_tolower(c_next))$', '(safe_toupper(c_next))$'"));
             }
         }
         else if '\\' == c_next {
-            cur_state.add(create_matcher("escaped_char_matcher_logic", "'\\\\'"));
+            cur_state.add(create_matcher("escaped_char_matcher_logic", "'\\\\', '\\\\', '\\\\'"));
         }
         else if 'g' == c_next {
             if !next(out c_next) {error("Group escape without a following char."); return false; }
@@ -1238,7 +1276,7 @@ regex_parser: <Error_out> type = {
 
     is_handle_special: (inout this, c: char) -> bool = {
         if c == '\'' {
-            cur_state.add(create_matcher("char_matcher_logic", "'\\(c)$'"));
+            cur_state.add(create_matcher("char_matcher_logic", "'\\(c)$', '\\(c)$', '\\(c)$'"));
             return true;
         }
 
@@ -1353,7 +1391,7 @@ regex_parser: <Error_out> type = {
             if has_error { return; }
 
             // No special char, push a character match
-            cur_state.add(create_matcher("char_matcher_logic", "'(c)$'"));
+            cur_state.add(create_matcher("char_matcher_logic", "'(c)$', '(safe_tolower(c))$', '(safe_toupper(c))$'"));
         }
     }
 
@@ -1367,7 +1405,7 @@ regex_parser: <Error_out> type = {
         start := create_matcher("group_matcher_start_logic", "0, \"\"");
         end   := create_matcher("group_matcher_end_logic", "0");
         list  := create_matcher("matcher_list", "(start)$, (inner)$, (end)$");
-        return   create_matcher("regular_expression", "(next_group_id)$, (alternatives_count)$, (named_groups_arg)$, (list)$");
+        return   create_matcher("regular_expression", "0, (next_group_id)$, (alternatives_count)$, (named_groups_arg)$, (list)$");
     }
 
 }

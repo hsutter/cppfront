@@ -85,5 +85,12 @@ inline bool string_to_int(std::string const& s, int& v) {
     {
         return false;
     }
+}
 
+inline char safe_toupper(char ch) {
+    return static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
+}
+
+inline char safe_tolower(char ch) {
+    return static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
 }

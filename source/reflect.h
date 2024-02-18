@@ -3,51 +3,33 @@
 #define REFLECT_H_CPP2
 
 
-//=== Cpp2 type declarations ====================================================
-
-
 #include "cpp2util.h"
 
-#line 1 "reflect.h2"
 
-#line 21 "reflect.h2"
 namespace cpp2 {
 
 namespace meta {
 
-#line 33 "reflect.h2"
 class compiler_services;
 
-#line 224 "reflect.h2"
 class declaration_base;
 
-#line 250 "reflect.h2"
 class declaration;
 
-#line 332 "reflect.h2"
 class function_declaration;
 
-#line 419 "reflect.h2"
 class object_declaration;
 
-#line 455 "reflect.h2"
 class type_declaration;
 
-#line 590 "reflect.h2"
 class alias_declaration;
 
-#line 963 "reflect.h2"
 class value_member_info;
 
-#line 1544 "reflect.h2"
 }
 
 }
 
-
-//=== Cpp2 type definitions and function declarations ===========================
-
-#line 1 "reflect.h2"
 
 //  Copyright (c) Herb Sutter
 //  SPDX-License-Identifier: CC-BY-NC-ND-4.0
@@ -68,12 +50,10 @@ class value_member_info;
 #include "parse.h"
 #include "cpp2regex.h"
 
-#line 21 "reflect.h2"
 namespace cpp2 {
 
 namespace meta {
 
-#line 26 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  Compiler services
@@ -101,34 +81,27 @@ class compiler_services
         std::deque<token>* generated_tokens_
     );
 
-#line 59 "reflect.h2"
     //  Common API
     //
     public: auto set_metafunction_name(cpp2::in<std::string_view> name, cpp2::in<std::vector<std::string>> args) & -> void;
 
-#line 67 "reflect.h2"
     public: [[nodiscard]] auto get_metafunction_name() const& -> std::string_view;
 
     public: [[nodiscard]] auto get_argument(cpp2::in<int> index) & -> std::string;
 
-#line 77 "reflect.h2"
     public: [[nodiscard]] auto get_arguments() & -> std::vector<std::string>;
 
-#line 82 "reflect.h2"
     public: [[nodiscard]] auto arguments_were_used() const& -> bool;
 using parse_statement_ret = std::unique_ptr<statement_node>;
 
 
-#line 84 "reflect.h2"
     protected: [[nodiscard]] auto parse_statement(
 
         std::string_view source
     ) & -> parse_statement_ret;
 
-#line 137 "reflect.h2"
     public: [[nodiscard]] virtual auto position() const -> source_position;
 
-#line 143 "reflect.h2"
     //  Error diagnosis and handling, integrated with compiler output
     //  Unlike a contract violation, .requires continues further processing
     //
@@ -138,24 +111,19 @@ using parse_statement_ret = std::unique_ptr<statement_node>;
         cpp2::in<std::string_view> msg
     ) const& -> void;
 
-#line 157 "reflect.h2"
     public: auto error(cpp2::in<std::string_view> msg) const& -> void;
 
-#line 166 "reflect.h2"
     //  Enable custom contracts on this object, integrated with compiler output
     //  Unlike .requires, a contract violation stops further processing
     //
     public: auto report_violation(auto const& msg) const& -> void;
 
-#line 174 "reflect.h2"
     public: [[nodiscard]] auto has_handler() const& -> auto;
     public: virtual ~compiler_services() noexcept;
 public: compiler_services(compiler_services const& that);
 
-#line 175 "reflect.h2"
 };
 
-#line 178 "reflect.h2"
 /*
 //-----------------------------------------------------------------------
 //
@@ -192,7 +160,6 @@ type_id: @polymorphic_base @copyable type =
 }
 */
 
-#line 215 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  Declarations
@@ -205,7 +172,6 @@ type_id: @polymorphic_base @copyable type =
 class declaration_base
 : public compiler_services {
 
-#line 228 "reflect.h2"
     protected: declaration_node* n; 
 
     protected: explicit declaration_base(
@@ -214,31 +180,26 @@ class declaration_base
         cpp2::in<compiler_services> s
     );
 
-#line 241 "reflect.h2"
     public: [[nodiscard]] auto position() const -> source_position override;
 
     public: [[nodiscard]] auto print() const& -> std::string;
     public: virtual ~declaration_base() noexcept;
 public: declaration_base(declaration_base const& that);
 
-#line 244 "reflect.h2"
 };
 
-#line 247 "reflect.h2"
 //-----------------------------------------------------------------------
 //  All declarations
 //
 class declaration
 : public declaration_base {
 
-#line 254 "reflect.h2"
     public: explicit declaration(
 
         declaration_node* n_, 
         cpp2::in<compiler_services> s
     );
 
-#line 263 "reflect.h2"
     public: [[nodiscard]] auto is_public() const& -> bool;
     public: [[nodiscard]] auto is_protected() const& -> bool;
     public: [[nodiscard]] auto is_private() const& -> bool;
@@ -257,7 +218,6 @@ class declaration
 
     public: [[nodiscard]] auto name() const& -> std::string_view;
 
-#line 284 "reflect.h2"
     public: [[nodiscard]] auto has_initializer() const& -> bool;
 
     public: [[nodiscard]] auto is_global() const& -> bool;
@@ -300,24 +260,20 @@ public: declaration(declaration const& that);
 
                                                     // this precondition should be sufficient ...
 
-#line 326 "reflect.h2"
 };
 
-#line 329 "reflect.h2"
 //-----------------------------------------------------------------------
 //  Function declarations
 //
 class function_declaration
 : public declaration {
 
-#line 336 "reflect.h2"
     public: explicit function_declaration(
 
         declaration_node* n_, 
         cpp2::in<compiler_services> s
     );
 
-#line 346 "reflect.h2"
     public: [[nodiscard]] auto index_of_parameter_named(cpp2::in<std::string_view> s) const& -> int;
     public: [[nodiscard]] auto has_parameter_named(cpp2::in<std::string_view> s) const& -> bool;
     public: [[nodiscard]] auto has_in_parameter_named(cpp2::in<std::string_view> s) const& -> bool;
@@ -354,7 +310,6 @@ class function_declaration
 
     public: [[nodiscard]] auto get_parameters() const& -> std::vector<object_declaration>;
 
-#line 390 "reflect.h2"
     public: [[nodiscard]] auto is_binary_comparison_function() const& -> bool;
 
     public: auto default_to_virtual() & -> void;
@@ -365,103 +320,82 @@ class function_declaration
     public: function_declaration(function_declaration const& that);
 
 
-#line 413 "reflect.h2"
 };
 
-#line 416 "reflect.h2"
 //-----------------------------------------------------------------------
 //  Object declarations
 //
 class object_declaration
 : public declaration {
 
-#line 423 "reflect.h2"
     public: explicit object_declaration(
 
         declaration_node* n_, 
         cpp2::in<compiler_services> s
     );
 
-#line 433 "reflect.h2"
     public: [[nodiscard]] auto is_const() const& -> bool;
     public: [[nodiscard]] auto has_wildcard_type() const& -> bool;
 
     public: [[nodiscard]] auto type() const& -> std::string;
 
-#line 443 "reflect.h2"
     public: [[nodiscard]] auto initializer() const& -> std::string;
     public: object_declaration(object_declaration const& that);
 
 
-#line 449 "reflect.h2"
 };
 
-#line 452 "reflect.h2"
 //-----------------------------------------------------------------------
 //  Type declarations
 //
 class type_declaration
 : public declaration {
 
-#line 459 "reflect.h2"
     public: explicit type_declaration(
 
         declaration_node* n_, 
         cpp2::in<compiler_services> s
     );
 
-#line 469 "reflect.h2"
     public: auto reserve_names(cpp2::in<std::string_view> name, auto&& ...etc) const& -> void;
 
-#line 481 "reflect.h2"
     public: [[nodiscard]] auto is_polymorphic() const& -> bool;
     public: [[nodiscard]] auto is_final() const& -> bool;
     public: [[nodiscard]] auto make_final() & -> bool;
 
     public: [[nodiscard]] auto get_member_functions() const& -> std::vector<function_declaration>;
 
-#line 496 "reflect.h2"
     public: [[nodiscard]] auto get_member_functions_needing_initializer() const& -> std::vector<function_declaration>;
 
-#line 511 "reflect.h2"
     public: [[nodiscard]] auto get_member_objects() const& -> std::vector<object_declaration>;
 
-#line 521 "reflect.h2"
     public: [[nodiscard]] auto get_member_types() const& -> std::vector<type_declaration>;
 
-#line 531 "reflect.h2"
     public: [[nodiscard]] auto get_member_aliases() const& -> std::vector<alias_declaration>;
 
-#line 541 "reflect.h2"
     public: [[nodiscard]] auto get_members() const& -> std::vector<declaration>;
 struct query_declared_value_set_functions_ret { bool out_this_in_that; bool out_this_move_that; bool inout_this_in_that; bool inout_this_move_that; };
 
 
 
-#line 551 "reflect.h2"
     public: [[nodiscard]] auto query_declared_value_set_functions() const& -> query_declared_value_set_functions_ret;
 
-#line 566 "reflect.h2"
     public: auto add_member(cpp2::in<std::string_view> source) & -> void;
 
-#line 580 "reflect.h2"
     public: auto remove_marked_members() & -> void;
     public: auto remove_all_members() & -> void;
 
     public: auto disable_member_function_generation() & -> void;
     public: type_declaration(type_declaration const& that);
 
-#line 584 "reflect.h2"
 };
 
-#line 587 "reflect.h2"
 //-----------------------------------------------------------------------
 //  Alias declarations
 //
 class alias_declaration
 : public declaration {
 
-#line 594 "reflect.h2"
     public: explicit alias_declaration(
 
         declaration_node* n_, 
@@ -470,10 +404,8 @@ class alias_declaration
     public: alias_declaration(alias_declaration const& that);
 
 
-#line 603 "reflect.h2"
 };
 
-#line 606 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  Metafunctions - these are hardwired for now until we get to the
@@ -488,7 +420,6 @@ class alias_declaration
 //
 auto add_virtual_destructor(meta::type_declaration& t) -> void;
 
-#line 624 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //      "... an abstract base class defines an interface ..."
@@ -503,7 +434,6 @@ auto add_virtual_destructor(meta::type_declaration& t) -> void;
 //
 auto interface(meta::type_declaration& t) -> void;
 
-#line 663 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "C.35: A base class destructor should be either public and
@@ -525,7 +455,6 @@ auto interface(meta::type_declaration& t) -> void;
 //
 auto polymorphic_base(meta::type_declaration& t) -> void;
 
-#line 707 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "... A totally ordered type ... requires operator<=> that
@@ -551,7 +480,6 @@ auto ordered_impl(
     cpp2::in<std::string_view> ordering// must be "strong_ordering" etc.
 ) -> void;
 
-#line 751 "reflect.h2"
 //-----------------------------------------------------------------------
 //  ordered - a totally ordered type
 //
@@ -559,19 +487,16 @@ auto ordered_impl(
 //
 auto ordered(meta::type_declaration& t) -> void;
 
-#line 761 "reflect.h2"
 //-----------------------------------------------------------------------
 //  weakly_ordered - a weakly ordered type
 //
 auto weakly_ordered(meta::type_declaration& t) -> void;
 
-#line 769 "reflect.h2"
 //-----------------------------------------------------------------------
 //  partially_ordered - a partially ordered type
 //
 auto partially_ordered(meta::type_declaration& t) -> void;
 
-#line 778 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "A value is ... a regular type. It must have all public
@@ -590,7 +515,6 @@ auto partially_ordered(meta::type_declaration& t) -> void;
 //
 auto copyable(meta::type_declaration& t) -> void;
 
-#line 815 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  basic_value
@@ -600,7 +524,6 @@ auto copyable(meta::type_declaration& t) -> void;
 //
 auto basic_value(meta::type_declaration& t) -> void;
 
-#line 840 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "A 'value' is a totally ordered basic_value..."
@@ -613,13 +536,10 @@ auto basic_value(meta::type_declaration& t) -> void;
 //
 auto value(meta::type_declaration& t) -> void;
 
-#line 856 "reflect.h2"
 auto weakly_ordered_value(meta::type_declaration& t) -> void;
 
-#line 862 "reflect.h2"
 auto partially_ordered_value(meta::type_declaration& t) -> void;
 
-#line 869 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     C.20: If you can avoid defining default operations, do
@@ -644,7 +564,6 @@ auto partially_ordered_value(meta::type_declaration& t) -> void;
 //
 auto cpp1_rule_of_zero(meta::type_declaration& t) -> void;
 
-#line 903 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "By definition, a `struct` is a `class` in which members
@@ -672,7 +591,6 @@ auto cpp1_rule_of_zero(meta::type_declaration& t) -> void;
 //
 auto cpp2_struct(meta::type_declaration& t) -> void;
 
-#line 946 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "C enumerations constitute a curiously half-baked concept. ...
@@ -702,7 +620,6 @@ auto basic_enum(
     cpp2::in<bool> bitwise
     ) -> void;
 
-#line 1152 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //    "An enum[...] is a totally ordered value type that stores a
@@ -714,7 +631,6 @@ auto basic_enum(
 //
 auto cpp2_enum(meta::type_declaration& t) -> void;
 
-#line 1178 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "flag_enum expresses an enumeration that stores values
@@ -727,7 +643,6 @@ auto cpp2_enum(meta::type_declaration& t) -> void;
 //
 auto flag_enum(meta::type_declaration& t) -> void;
 
-#line 1210 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //     "As with void*, programmers should know that unions [...] are
@@ -754,14 +669,12 @@ auto flag_enum(meta::type_declaration& t) -> void;
 
 auto cpp2_union(meta::type_declaration& t) -> void;
 
-#line 1366 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  print - output a pretty-printed visualization of t
 //
 auto print(cpp2::in<meta::type_declaration> t) -> void;
 
-#line 1375 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  regex - creates regular expressions from members
@@ -778,7 +691,6 @@ auto print(cpp2::in<meta::type_declaration> t) -> void;
 //
 auto regex_gen(meta::type_declaration& t) -> void;
 
-#line 1434 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  apply_metafunctions
@@ -789,66 +701,50 @@ auto regex_gen(meta::type_declaration& t) -> void;
     auto const& error
     ) -> bool;
 
-#line 1544 "reflect.h2"
 }
 
 }
 
-
-//=== Cpp2 function definitions =================================================
-
-#line 1 "reflect.h2"
-
-#line 21 "reflect.h2"
 namespace cpp2 {
 
 namespace meta {
 
-#line 47 "reflect.h2"
     compiler_services::compiler_services(
 
         std::vector<error_entry>* errors_, 
         std::deque<token>* generated_tokens_
     )
         : errors{ errors_ }
-        , errors_original_size{ cpp2::unsafe_narrow<int>(std::ssize(*cpp2::assert_not_null(errors))) }
+        , errors_original_size{ cpp2::unsafe_narrow<int>(std::ssize(*errors)) }
         , generated_tokens{ generated_tokens_ }
-        , parser{ *cpp2::assert_not_null(errors) }
-#line 52 "reflect.h2"
+        , parser{ *errors }
     {
 
-#line 57 "reflect.h2"
     }
 
-#line 61 "reflect.h2"
     auto compiler_services::set_metafunction_name(cpp2::in<std::string_view> name, cpp2::in<std::vector<std::string>> args) & -> void{
         metafunction_name  = name;
         metafunction_args  = args;
         metafunctions_used = CPP2_UFCS(empty)(args);
     }
 
-#line 67 "reflect.h2"
     [[nodiscard]] auto compiler_services::get_metafunction_name() const& -> std::string_view { return metafunction_name;  }
 
-#line 69 "reflect.h2"
     [[nodiscard]] auto compiler_services::get_argument(cpp2::in<int> index) & -> std::string{
         metafunctions_used = true;
-        if (([_0 = 0, _1 = index, _2 = CPP2_UFCS(ssize)(metafunction_args)]{ return cpp2::cmp_less_eq(_0,_1) && cpp2::cmp_less(_1,_2); }())) {
-            return CPP2_ASSERT_IN_BOUNDS(metafunction_args, index); 
+        if (([_0 = 0, _1 = index, _2 = CPP2_UFCS(ssize)(metafunction_args)]{ return _0<=_1 && _1<_2; }())) {
+            return metafunction_args[index]; 
         }
         return ""; 
     }
 
-#line 77 "reflect.h2"
     [[nodiscard]] auto compiler_services::get_arguments() & -> std::vector<std::string>{
         metafunctions_used = true;
         return metafunction_args; 
     }
 
-#line 82 "reflect.h2"
     [[nodiscard]] auto compiler_services::arguments_were_used() const& -> bool { return metafunctions_used;  }
 
-#line 84 "reflect.h2"
     [[nodiscard]] auto compiler_services::parse_statement(
 
         std::string_view source
@@ -856,14 +752,13 @@ namespace meta {
 
     {
             cpp2::deferred_init<std::unique_ptr<statement_node>> ret;
-#line 90 "reflect.h2"
         auto original_source {source}; 
 
         CPP2_UFCS(push_back)(generated_lines, std::vector<source_line>());
         auto lines {&CPP2_UFCS(back)(generated_lines)}; 
 
         auto add_line {[&, _1 = lines](cpp2::in<std::string_view> s) mutable -> void{
-            static_cast<void>(CPP2_UFCS(emplace_back)((*cpp2::assert_not_null(_1)), s, source_line::category::cpp2));
+            static_cast<void>(CPP2_UFCS(emplace_back)((*_1), s, source_line::category::cpp2));
         }}; 
 {
 auto newline_pos{CPP2_UFCS(find)(source, '\n')};
@@ -871,11 +766,10 @@ auto newline_pos{CPP2_UFCS(find)(source, '\n')};
         //  First split this string into source_lines
         //
 
-#line 102 "reflect.h2"
-        if ( cpp2::cmp_greater(CPP2_UFCS(ssize)(source),1) 
-            && newline_pos != source.npos) 
+        if ( CPP2_UFCS(ssize)(source)>1 
+            && newline_pos!=source.npos) 
         {
-            while( newline_pos != std::string_view::npos ) 
+            while( newline_pos!=std::string_view::npos ) 
             {
                 add_line(CPP2_UFCS(substr)(source, 0, newline_pos));
                 CPP2_UFCS(remove_prefix)(source, newline_pos + 1);
@@ -884,7 +778,6 @@ auto newline_pos{CPP2_UFCS(find)(source, '\n')};
         }
 }
 
-#line 113 "reflect.h2"
         if (!(CPP2_UFCS(empty)(source))) {
             std::move(add_line)(std::move(source));
         }
@@ -892,31 +785,29 @@ auto newline_pos{CPP2_UFCS(find)(source, '\n')};
         //  Now lex this source fragment to generate
         //  a single grammar_map entry, whose .second
         //  is the vector of tokens
-        static_cast<void>(CPP2_UFCS(emplace_back)(generated_lexers, *cpp2::assert_not_null(errors)));
+        static_cast<void>(CPP2_UFCS(emplace_back)(generated_lexers, *errors));
         auto tokens {&CPP2_UFCS(back)(generated_lexers)}; 
-        CPP2_UFCS(lex)((*cpp2::assert_not_null(tokens)), *cpp2::assert_not_null(std::move(lines)), true);
+        CPP2_UFCS(lex)((*tokens), *std::move(lines), true);
 
-        if (cpp2::Default.has_handler() && !(std::ssize(CPP2_UFCS(get_map)((*cpp2::assert_not_null(tokens)))) == 1) ) { cpp2::Default.report_violation(""); }
+        if (cpp2::Default.has_handler() && !(std::ssize(CPP2_UFCS(get_map)((*tokens)))==1) ) { cpp2::Default.report_violation(""); }
 
         //  Now parse this single declaration from
         //  the lexed tokens
         ret.construct(CPP2_UFCS(parse_one_declaration)(parser, 
-                (*cpp2::assert_not_null(CPP2_UFCS(begin)(CPP2_UFCS(get_map)(*cpp2::assert_not_null(std::move(tokens)))))).second, 
-                *cpp2::assert_not_null(generated_tokens)
+                (*CPP2_UFCS(begin)(CPP2_UFCS(get_map)(*std::move(tokens)))).second, 
+                *generated_tokens
               ));
         if (!(ret.value())) {
             error(("parse failed - the source string is not a valid statement:\n" + cpp2::to_string(std::move(original_source))));
         }return std::move(ret.value()); 
     }
 
-#line 137 "reflect.h2"
     [[nodiscard]] auto compiler_services::position() const -> source_position
 
     {
         return {  }; 
     }
 
-#line 146 "reflect.h2"
     auto compiler_services::require(
 
         cpp2::in<bool> b, 
@@ -928,23 +819,20 @@ auto newline_pos{CPP2_UFCS(find)(source, '\n')};
         }
     }
 
-#line 157 "reflect.h2"
     auto compiler_services::error(cpp2::in<std::string_view> msg) const& -> void
     {
         auto message {cpp2::as_<std::string>(msg)}; 
         if (!(CPP2_UFCS(empty)(metafunction_name))) {
             message = { "while applying @" + cpp2::to_string(metafunction_name) + " - " + cpp2::to_string(message) };
         }
-        static_cast<void>(CPP2_UFCS(emplace_back)((*cpp2::assert_not_null(errors)), position(), std::move(message)));
+        static_cast<void>(CPP2_UFCS(emplace_back)((*errors), position(), std::move(message)));
     }
 
-#line 169 "reflect.h2"
     auto compiler_services::report_violation(auto const& msg) const& -> void{
         error(msg);
         throw(std::runtime_error(("  ==> programming bug found in metafunction @" + cpp2::to_string(metafunction_name) + " - contract violation - see previous errors")));
     }
 
-#line 174 "reflect.h2"
     [[nodiscard]] auto compiler_services::has_handler() const& -> auto { return true;  }
 
     compiler_services::~compiler_services() noexcept{}
@@ -957,7 +845,6 @@ compiler_services::compiler_services(compiler_services const& that)
                                 , metafunction_args{ that.metafunction_args }
                                 , metafunctions_used{ that.metafunctions_used }{}
 
-#line 230 "reflect.h2"
     declaration_base::declaration_base(
 
         declaration_node* n_, 
@@ -965,140 +852,92 @@ compiler_services::compiler_services(compiler_services const& that)
     )
         : compiler_services{ s }
         , n{ n_ }
-#line 235 "reflect.h2"
     {
 
-#line 238 "reflect.h2"
         if (cpp2::Default.has_handler() && !(n) ) { cpp2::Default.report_violation(CPP2_CONTRACT_MSG("a meta::declaration must point to a valid declaration_node, not null")); }
     }
 
-#line 241 "reflect.h2"
-    [[nodiscard]] auto declaration_base::position() const -> source_position { return CPP2_UFCS(position)((*cpp2::assert_not_null(n)));  }
+    [[nodiscard]] auto declaration_base::position() const -> source_position { return CPP2_UFCS(position)((*n));  }
 
-#line 243 "reflect.h2"
-    [[nodiscard]] auto declaration_base::print() const& -> std::string { return CPP2_UFCS(pretty_print_visualize)((*cpp2::assert_not_null(n)), 0);  }
+    [[nodiscard]] auto declaration_base::print() const& -> std::string { return CPP2_UFCS(pretty_print_visualize)((*n), 0);  }
 
     declaration_base::~declaration_base() noexcept{}
 declaration_base::declaration_base(declaration_base const& that)
                                 : compiler_services{ static_cast<compiler_services const&>(that) }
                                 , n{ that.n }{}
 
-#line 254 "reflect.h2"
     declaration::declaration(
 
         declaration_node* n_, 
         cpp2::in<compiler_services> s
     )
         : declaration_base{ n_, s }
-#line 259 "reflect.h2"
     {
 
     }
 
-#line 263 "reflect.h2"
-    [[nodiscard]] auto declaration::is_public() const& -> bool { return CPP2_UFCS(is_public)((*cpp2::assert_not_null(n))); }
-#line 264 "reflect.h2"
-    [[nodiscard]] auto declaration::is_protected() const& -> bool { return CPP2_UFCS(is_protected)((*cpp2::assert_not_null(n))); }
-#line 265 "reflect.h2"
-    [[nodiscard]] auto declaration::is_private() const& -> bool { return CPP2_UFCS(is_private)((*cpp2::assert_not_null(n))); }
-#line 266 "reflect.h2"
-    [[nodiscard]] auto declaration::is_default_access() const& -> bool { return CPP2_UFCS(is_default_access)((*cpp2::assert_not_null(n)));  }
+    [[nodiscard]] auto declaration::is_public() const& -> bool { return CPP2_UFCS(is_public)((*n)); }
+    [[nodiscard]] auto declaration::is_protected() const& -> bool { return CPP2_UFCS(is_protected)((*n)); }
+    [[nodiscard]] auto declaration::is_private() const& -> bool { return CPP2_UFCS(is_private)((*n)); }
+    [[nodiscard]] auto declaration::is_default_access() const& -> bool { return CPP2_UFCS(is_default_access)((*n));  }
 
-#line 268 "reflect.h2"
-    auto declaration::default_to_public() & -> void { static_cast<void>(CPP2_UFCS(make_public)((*cpp2::assert_not_null(n)))); }
-#line 269 "reflect.h2"
-    auto declaration::default_to_protected() & -> void { static_cast<void>(CPP2_UFCS(make_protected)((*cpp2::assert_not_null(n))));  }
-#line 270 "reflect.h2"
-    auto declaration::default_to_private() & -> void { static_cast<void>(CPP2_UFCS(make_private)((*cpp2::assert_not_null(n)))); }
+    auto declaration::default_to_public() & -> void { static_cast<void>(CPP2_UFCS(make_public)((*n))); }
+    auto declaration::default_to_protected() & -> void { static_cast<void>(CPP2_UFCS(make_protected)((*n)));  }
+    auto declaration::default_to_private() & -> void { static_cast<void>(CPP2_UFCS(make_private)((*n))); }
 
-#line 272 "reflect.h2"
-    [[nodiscard]] auto declaration::make_public() & -> bool { return CPP2_UFCS(make_public)((*cpp2::assert_not_null(n))); }
-#line 273 "reflect.h2"
-    [[nodiscard]] auto declaration::make_protected() & -> bool { return CPP2_UFCS(make_protected)((*cpp2::assert_not_null(n))); }
-#line 274 "reflect.h2"
-    [[nodiscard]] auto declaration::make_private() & -> bool { return CPP2_UFCS(make_private)((*cpp2::assert_not_null(n))); }
+    [[nodiscard]] auto declaration::make_public() & -> bool { return CPP2_UFCS(make_public)((*n)); }
+    [[nodiscard]] auto declaration::make_protected() & -> bool { return CPP2_UFCS(make_protected)((*n)); }
+    [[nodiscard]] auto declaration::make_private() & -> bool { return CPP2_UFCS(make_private)((*n)); }
 
-#line 276 "reflect.h2"
-    [[nodiscard]] auto declaration::has_name() const& -> bool { return CPP2_UFCS(has_name)((*cpp2::assert_not_null(n))); }
-#line 277 "reflect.h2"
-    [[nodiscard]] auto declaration::has_name(cpp2::in<std::string_view> s) const& -> bool { return CPP2_UFCS(has_name)((*cpp2::assert_not_null(n)), s); }
+    [[nodiscard]] auto declaration::has_name() const& -> bool { return CPP2_UFCS(has_name)((*n)); }
+    [[nodiscard]] auto declaration::has_name(cpp2::in<std::string_view> s) const& -> bool { return CPP2_UFCS(has_name)((*n), s); }
 
-#line 279 "reflect.h2"
     [[nodiscard]] auto declaration::name() const& -> std::string_view{
-        if (has_name()) {return CPP2_UFCS(as_string_view)((*cpp2::assert_not_null(CPP2_UFCS(name)(*cpp2::assert_not_null(n))))); }
+        if (has_name()) {return CPP2_UFCS(as_string_view)((*CPP2_UFCS(name)(*n))); }
         else          { return ""; }
     }
 
-#line 284 "reflect.h2"
-    [[nodiscard]] auto declaration::has_initializer() const& -> bool { return CPP2_UFCS(has_initializer)((*cpp2::assert_not_null(n)));  }
+    [[nodiscard]] auto declaration::has_initializer() const& -> bool { return CPP2_UFCS(has_initializer)((*n));  }
 
-#line 286 "reflect.h2"
-    [[nodiscard]] auto declaration::is_global() const& -> bool { return CPP2_UFCS(is_global)((*cpp2::assert_not_null(n))); }
-#line 287 "reflect.h2"
-    [[nodiscard]] auto declaration::is_function() const& -> bool { return CPP2_UFCS(is_function)((*cpp2::assert_not_null(n))); }
-#line 288 "reflect.h2"
-    [[nodiscard]] auto declaration::is_object() const& -> bool { return CPP2_UFCS(is_object)((*cpp2::assert_not_null(n))); }
-#line 289 "reflect.h2"
-    [[nodiscard]] auto declaration::is_base_object() const& -> bool { return CPP2_UFCS(is_base_object)((*cpp2::assert_not_null(n))); }
-#line 290 "reflect.h2"
-    [[nodiscard]] auto declaration::is_member_object() const& -> bool { return CPP2_UFCS(is_member_object)((*cpp2::assert_not_null(n)));  }
-#line 291 "reflect.h2"
-    [[nodiscard]] auto declaration::is_type() const& -> bool { return CPP2_UFCS(is_type)((*cpp2::assert_not_null(n))); }
-#line 292 "reflect.h2"
-    [[nodiscard]] auto declaration::is_namespace() const& -> bool { return CPP2_UFCS(is_namespace)((*cpp2::assert_not_null(n))); }
-#line 293 "reflect.h2"
-    [[nodiscard]] auto declaration::is_alias() const& -> bool { return CPP2_UFCS(is_alias)((*cpp2::assert_not_null(n))); }
+    [[nodiscard]] auto declaration::is_global() const& -> bool { return CPP2_UFCS(is_global)((*n)); }
+    [[nodiscard]] auto declaration::is_function() const& -> bool { return CPP2_UFCS(is_function)((*n)); }
+    [[nodiscard]] auto declaration::is_object() const& -> bool { return CPP2_UFCS(is_object)((*n)); }
+    [[nodiscard]] auto declaration::is_base_object() const& -> bool { return CPP2_UFCS(is_base_object)((*n)); }
+    [[nodiscard]] auto declaration::is_member_object() const& -> bool { return CPP2_UFCS(is_member_object)((*n));  }
+    [[nodiscard]] auto declaration::is_type() const& -> bool { return CPP2_UFCS(is_type)((*n)); }
+    [[nodiscard]] auto declaration::is_namespace() const& -> bool { return CPP2_UFCS(is_namespace)((*n)); }
+    [[nodiscard]] auto declaration::is_alias() const& -> bool { return CPP2_UFCS(is_alias)((*n)); }
 
-#line 295 "reflect.h2"
-    [[nodiscard]] auto declaration::is_type_alias() const& -> bool { return CPP2_UFCS(is_type_alias)((*cpp2::assert_not_null(n))); }
-#line 296 "reflect.h2"
-    [[nodiscard]] auto declaration::is_namespace_alias() const& -> bool { return CPP2_UFCS(is_namespace_alias)((*cpp2::assert_not_null(n)));  }
-#line 297 "reflect.h2"
-    [[nodiscard]] auto declaration::is_object_alias() const& -> bool { return CPP2_UFCS(is_object_alias)((*cpp2::assert_not_null(n))); }
+    [[nodiscard]] auto declaration::is_type_alias() const& -> bool { return CPP2_UFCS(is_type_alias)((*n)); }
+    [[nodiscard]] auto declaration::is_namespace_alias() const& -> bool { return CPP2_UFCS(is_namespace_alias)((*n));  }
+    [[nodiscard]] auto declaration::is_object_alias() const& -> bool { return CPP2_UFCS(is_object_alias)((*n)); }
 
-#line 299 "reflect.h2"
-    [[nodiscard]] auto declaration::is_function_expression() const& -> bool { return CPP2_UFCS(is_function_expression)((*cpp2::assert_not_null(n)));  }
+    [[nodiscard]] auto declaration::is_function_expression() const& -> bool { return CPP2_UFCS(is_function_expression)((*n));  }
 
-#line 301 "reflect.h2"
     [[nodiscard]] auto declaration::as_function() const& -> function_declaration { return function_declaration(n, (*this));  }
-#line 302 "reflect.h2"
     [[nodiscard]] auto declaration::as_object() const& -> object_declaration { return object_declaration(n, (*this)); }
-#line 303 "reflect.h2"
     [[nodiscard]] auto declaration::as_type() const& -> type_declaration { return type_declaration(n, (*this)); }
-#line 304 "reflect.h2"
     [[nodiscard]] auto declaration::as_alias() const& -> alias_declaration { return alias_declaration(n, (*this)); }
 
-#line 306 "reflect.h2"
-    [[nodiscard]] auto declaration::get_parent() const& -> declaration { return declaration((*cpp2::assert_not_null(n)).parent_declaration, (*this)); }
+    [[nodiscard]] auto declaration::get_parent() const& -> declaration { return declaration((*n).parent_declaration, (*this)); }
 
-#line 308 "reflect.h2"
-    [[nodiscard]] auto declaration::parent_is_function() const& -> bool { return CPP2_UFCS(parent_is_function)((*cpp2::assert_not_null(n))); }
-#line 309 "reflect.h2"
-    [[nodiscard]] auto declaration::parent_is_object() const& -> bool { return CPP2_UFCS(parent_is_object)((*cpp2::assert_not_null(n))); }
-#line 310 "reflect.h2"
-    [[nodiscard]] auto declaration::parent_is_type() const& -> bool { return CPP2_UFCS(parent_is_type)((*cpp2::assert_not_null(n))); }
-#line 311 "reflect.h2"
-    [[nodiscard]] auto declaration::parent_is_namespace() const& -> bool { return CPP2_UFCS(parent_is_namespace)((*cpp2::assert_not_null(n))); }
-#line 312 "reflect.h2"
-    [[nodiscard]] auto declaration::parent_is_alias() const& -> bool { return CPP2_UFCS(parent_is_alias)((*cpp2::assert_not_null(n))); }
+    [[nodiscard]] auto declaration::parent_is_function() const& -> bool { return CPP2_UFCS(parent_is_function)((*n)); }
+    [[nodiscard]] auto declaration::parent_is_object() const& -> bool { return CPP2_UFCS(parent_is_object)((*n)); }
+    [[nodiscard]] auto declaration::parent_is_type() const& -> bool { return CPP2_UFCS(parent_is_type)((*n)); }
+    [[nodiscard]] auto declaration::parent_is_namespace() const& -> bool { return CPP2_UFCS(parent_is_namespace)((*n)); }
+    [[nodiscard]] auto declaration::parent_is_alias() const& -> bool { return CPP2_UFCS(parent_is_alias)((*n)); }
 
-#line 314 "reflect.h2"
-    [[nodiscard]] auto declaration::parent_is_type_alias() const& -> bool { return CPP2_UFCS(parent_is_type_alias)((*cpp2::assert_not_null(n))); }
-#line 315 "reflect.h2"
-    [[nodiscard]] auto declaration::parent_is_namespace_alias() const& -> bool { return CPP2_UFCS(parent_is_namespace_alias)((*cpp2::assert_not_null(n)));  }
-#line 316 "reflect.h2"
-    [[nodiscard]] auto declaration::parent_is_object_alias() const& -> bool { return CPP2_UFCS(parent_is_object_alias)((*cpp2::assert_not_null(n))); }
+    [[nodiscard]] auto declaration::parent_is_type_alias() const& -> bool { return CPP2_UFCS(parent_is_type_alias)((*n)); }
+    [[nodiscard]] auto declaration::parent_is_namespace_alias() const& -> bool { return CPP2_UFCS(parent_is_namespace_alias)((*n));  }
+    [[nodiscard]] auto declaration::parent_is_object_alias() const& -> bool { return CPP2_UFCS(parent_is_object_alias)((*n)); }
 
-#line 318 "reflect.h2"
-    [[nodiscard]] auto declaration::parent_is_polymorphic() const& -> bool { return CPP2_UFCS(parent_is_polymorphic)((*cpp2::assert_not_null(n)));  }
+    [[nodiscard]] auto declaration::parent_is_polymorphic() const& -> bool { return CPP2_UFCS(parent_is_polymorphic)((*n));  }
 
-#line 320 "reflect.h2"
     auto declaration::mark_for_removal_from_enclosing_type() & -> void
 
     {
         if (cpp2::Type.has_handler() && !(parent_is_type()) ) { cpp2::Type.report_violation(""); }
-#line 323 "reflect.h2"
-        auto test {CPP2_UFCS(type_member_mark_for_removal)((*cpp2::assert_not_null(n)))}; 
+        auto test {CPP2_UFCS(type_member_mark_for_removal)((*n))}; 
         if (cpp2::Default.has_handler() && !(std::move(test)) ) { cpp2::Default.report_violation(""); }// ... to ensure this assert is true
     }
 
@@ -1106,105 +945,69 @@ declaration_base::declaration_base(declaration_base const& that)
 declaration::declaration(declaration const& that)
                                 : declaration_base{ static_cast<declaration_base const&>(that) }{}
 
-#line 336 "reflect.h2"
     function_declaration::function_declaration(
 
         declaration_node* n_, 
         cpp2::in<compiler_services> s
     )
         : declaration{ n_, s }
-#line 341 "reflect.h2"
     {
 
-        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_function)((*cpp2::assert_not_null(n)))) ) { cpp2::Default.report_violation(""); }
+        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_function)((*n))) ) { cpp2::Default.report_violation(""); }
     }
 
-#line 346 "reflect.h2"
-    [[nodiscard]] auto function_declaration::index_of_parameter_named(cpp2::in<std::string_view> s) const& -> int { return CPP2_UFCS(index_of_parameter_named)((*cpp2::assert_not_null(n)), s); }
-#line 347 "reflect.h2"
-    [[nodiscard]] auto function_declaration::has_parameter_named(cpp2::in<std::string_view> s) const& -> bool { return CPP2_UFCS(has_parameter_named)((*cpp2::assert_not_null(n)), s); }
-#line 348 "reflect.h2"
-    [[nodiscard]] auto function_declaration::has_in_parameter_named(cpp2::in<std::string_view> s) const& -> bool { return CPP2_UFCS(has_in_parameter_named)((*cpp2::assert_not_null(n)), s); }
-#line 349 "reflect.h2"
-    [[nodiscard]] auto function_declaration::has_out_parameter_named(cpp2::in<std::string_view> s) const& -> bool { return CPP2_UFCS(has_out_parameter_named)((*cpp2::assert_not_null(n)), s); }
-#line 350 "reflect.h2"
-    [[nodiscard]] auto function_declaration::has_move_parameter_named(cpp2::in<std::string_view> s) const& -> bool { return CPP2_UFCS(has_move_parameter_named)((*cpp2::assert_not_null(n)), s); }
-#line 351 "reflect.h2"
-    [[nodiscard]] auto function_declaration::first_parameter_name() const& -> std::string { return CPP2_UFCS(first_parameter_name)((*cpp2::assert_not_null(n))); }
+    [[nodiscard]] auto function_declaration::index_of_parameter_named(cpp2::in<std::string_view> s) const& -> int { return CPP2_UFCS(index_of_parameter_named)((*n), s); }
+    [[nodiscard]] auto function_declaration::has_parameter_named(cpp2::in<std::string_view> s) const& -> bool { return CPP2_UFCS(has_parameter_named)((*n), s); }
+    [[nodiscard]] auto function_declaration::has_in_parameter_named(cpp2::in<std::string_view> s) const& -> bool { return CPP2_UFCS(has_in_parameter_named)((*n), s); }
+    [[nodiscard]] auto function_declaration::has_out_parameter_named(cpp2::in<std::string_view> s) const& -> bool { return CPP2_UFCS(has_out_parameter_named)((*n), s); }
+    [[nodiscard]] auto function_declaration::has_move_parameter_named(cpp2::in<std::string_view> s) const& -> bool { return CPP2_UFCS(has_move_parameter_named)((*n), s); }
+    [[nodiscard]] auto function_declaration::first_parameter_name() const& -> std::string { return CPP2_UFCS(first_parameter_name)((*n)); }
 
-#line 353 "reflect.h2"
     [[nodiscard]] auto function_declaration::has_parameter_with_name_and_pass(cpp2::in<std::string_view> s, cpp2::in<passing_style> pass) const& -> bool { 
-                                                  return CPP2_UFCS(has_parameter_with_name_and_pass)((*cpp2::assert_not_null(n)), s, pass);  }
-#line 355 "reflect.h2"
-    [[nodiscard]] auto function_declaration::is_function_with_this() const& -> bool { return CPP2_UFCS(is_function_with_this)((*cpp2::assert_not_null(n))); }
-#line 356 "reflect.h2"
-    [[nodiscard]] auto function_declaration::is_virtual() const& -> bool { return CPP2_UFCS(is_virtual_function)((*cpp2::assert_not_null(n))); }
-#line 357 "reflect.h2"
-    [[nodiscard]] auto function_declaration::is_defaultable() const& -> bool { return CPP2_UFCS(is_defaultable_function)((*cpp2::assert_not_null(n))); }
-#line 358 "reflect.h2"
-    [[nodiscard]] auto function_declaration::is_constructor() const& -> bool { return CPP2_UFCS(is_constructor)((*cpp2::assert_not_null(n))); }
-#line 359 "reflect.h2"
-    [[nodiscard]] auto function_declaration::is_default_constructor() const& -> bool { return CPP2_UFCS(is_default_constructor)((*cpp2::assert_not_null(n))); }
-#line 360 "reflect.h2"
-    [[nodiscard]] auto function_declaration::is_move() const& -> bool { return CPP2_UFCS(is_move)((*cpp2::assert_not_null(n))); }
-#line 361 "reflect.h2"
-    [[nodiscard]] auto function_declaration::is_swap() const& -> bool { return CPP2_UFCS(is_swap)((*cpp2::assert_not_null(n))); }
-#line 362 "reflect.h2"
-    [[nodiscard]] auto function_declaration::is_constructor_with_that() const& -> bool { return CPP2_UFCS(is_constructor_with_that)((*cpp2::assert_not_null(n))); }
-#line 363 "reflect.h2"
-    [[nodiscard]] auto function_declaration::is_constructor_with_in_that() const& -> bool { return CPP2_UFCS(is_constructor_with_in_that)((*cpp2::assert_not_null(n))); }
-#line 364 "reflect.h2"
-    [[nodiscard]] auto function_declaration::is_constructor_with_move_that() const& -> bool { return CPP2_UFCS(is_constructor_with_move_that)((*cpp2::assert_not_null(n)));  }
-#line 365 "reflect.h2"
-    [[nodiscard]] auto function_declaration::is_assignment() const& -> bool { return CPP2_UFCS(is_assignment)((*cpp2::assert_not_null(n))); }
-#line 366 "reflect.h2"
-    [[nodiscard]] auto function_declaration::is_assignment_with_that() const& -> bool { return CPP2_UFCS(is_assignment_with_that)((*cpp2::assert_not_null(n))); }
-#line 367 "reflect.h2"
-    [[nodiscard]] auto function_declaration::is_assignment_with_in_that() const& -> bool { return CPP2_UFCS(is_assignment_with_in_that)((*cpp2::assert_not_null(n))); }
-#line 368 "reflect.h2"
-    [[nodiscard]] auto function_declaration::is_assignment_with_move_that() const& -> bool { return CPP2_UFCS(is_assignment_with_move_that)((*cpp2::assert_not_null(n)));  }
-#line 369 "reflect.h2"
-    [[nodiscard]] auto function_declaration::is_destructor() const& -> bool { return CPP2_UFCS(is_destructor)((*cpp2::assert_not_null(n))); }
+                                                  return CPP2_UFCS(has_parameter_with_name_and_pass)((*n), s, pass);  }
+    [[nodiscard]] auto function_declaration::is_function_with_this() const& -> bool { return CPP2_UFCS(is_function_with_this)((*n)); }
+    [[nodiscard]] auto function_declaration::is_virtual() const& -> bool { return CPP2_UFCS(is_virtual_function)((*n)); }
+    [[nodiscard]] auto function_declaration::is_defaultable() const& -> bool { return CPP2_UFCS(is_defaultable_function)((*n)); }
+    [[nodiscard]] auto function_declaration::is_constructor() const& -> bool { return CPP2_UFCS(is_constructor)((*n)); }
+    [[nodiscard]] auto function_declaration::is_default_constructor() const& -> bool { return CPP2_UFCS(is_default_constructor)((*n)); }
+    [[nodiscard]] auto function_declaration::is_move() const& -> bool { return CPP2_UFCS(is_move)((*n)); }
+    [[nodiscard]] auto function_declaration::is_swap() const& -> bool { return CPP2_UFCS(is_swap)((*n)); }
+    [[nodiscard]] auto function_declaration::is_constructor_with_that() const& -> bool { return CPP2_UFCS(is_constructor_with_that)((*n)); }
+    [[nodiscard]] auto function_declaration::is_constructor_with_in_that() const& -> bool { return CPP2_UFCS(is_constructor_with_in_that)((*n)); }
+    [[nodiscard]] auto function_declaration::is_constructor_with_move_that() const& -> bool { return CPP2_UFCS(is_constructor_with_move_that)((*n));  }
+    [[nodiscard]] auto function_declaration::is_assignment() const& -> bool { return CPP2_UFCS(is_assignment)((*n)); }
+    [[nodiscard]] auto function_declaration::is_assignment_with_that() const& -> bool { return CPP2_UFCS(is_assignment_with_that)((*n)); }
+    [[nodiscard]] auto function_declaration::is_assignment_with_in_that() const& -> bool { return CPP2_UFCS(is_assignment_with_in_that)((*n)); }
+    [[nodiscard]] auto function_declaration::is_assignment_with_move_that() const& -> bool { return CPP2_UFCS(is_assignment_with_move_that)((*n));  }
+    [[nodiscard]] auto function_declaration::is_destructor() const& -> bool { return CPP2_UFCS(is_destructor)((*n)); }
 
-#line 371 "reflect.h2"
     [[nodiscard]] auto function_declaration::is_copy_or_move() const& -> bool { return is_constructor_with_that() || is_assignment_with_that(); }
 
-#line 373 "reflect.h2"
-    [[nodiscard]] auto function_declaration::has_declared_return_type() const& -> bool { return CPP2_UFCS(has_declared_return_type)((*cpp2::assert_not_null(n))); }
-#line 374 "reflect.h2"
-    [[nodiscard]] auto function_declaration::has_deduced_return_type() const& -> bool { return CPP2_UFCS(has_deduced_return_type)((*cpp2::assert_not_null(n))); }
-#line 375 "reflect.h2"
-    [[nodiscard]] auto function_declaration::has_bool_return_type() const& -> bool { return CPP2_UFCS(has_bool_return_type)((*cpp2::assert_not_null(n))); }
-#line 376 "reflect.h2"
-    [[nodiscard]] auto function_declaration::has_non_void_return_type() const& -> bool { return CPP2_UFCS(has_non_void_return_type)((*cpp2::assert_not_null(n))); }
+    [[nodiscard]] auto function_declaration::has_declared_return_type() const& -> bool { return CPP2_UFCS(has_declared_return_type)((*n)); }
+    [[nodiscard]] auto function_declaration::has_deduced_return_type() const& -> bool { return CPP2_UFCS(has_deduced_return_type)((*n)); }
+    [[nodiscard]] auto function_declaration::has_bool_return_type() const& -> bool { return CPP2_UFCS(has_bool_return_type)((*n)); }
+    [[nodiscard]] auto function_declaration::has_non_void_return_type() const& -> bool { return CPP2_UFCS(has_non_void_return_type)((*n)); }
 
-#line 378 "reflect.h2"
-    [[nodiscard]] auto function_declaration::unnamed_return_type() const& -> std::string { return CPP2_UFCS(unnamed_return_type_to_string)((*cpp2::assert_not_null(n))); }
+    [[nodiscard]] auto function_declaration::unnamed_return_type() const& -> std::string { return CPP2_UFCS(unnamed_return_type_to_string)((*n)); }
 
-#line 380 "reflect.h2"
     [[nodiscard]] auto function_declaration::get_parameters() const& -> std::vector<object_declaration>
 
     {
         std::vector<object_declaration> ret {}; 
-        for ( auto const& param : CPP2_UFCS(get_function_parameters)((*cpp2::assert_not_null(n))) ) {
-            static_cast<void>(CPP2_UFCS(emplace_back)(ret, &*cpp2::assert_not_null((*cpp2::assert_not_null(param)).declaration), (*this)));
+        for ( auto const& param : CPP2_UFCS(get_function_parameters)((*n)) ) {
+            static_cast<void>(CPP2_UFCS(emplace_back)(ret, &*(*param).declaration, (*this)));
         }
         return ret; 
     }
 
-#line 390 "reflect.h2"
-    [[nodiscard]] auto function_declaration::is_binary_comparison_function() const& -> bool { return CPP2_UFCS(is_binary_comparison_function)((*cpp2::assert_not_null(n)));  }
+    [[nodiscard]] auto function_declaration::is_binary_comparison_function() const& -> bool { return CPP2_UFCS(is_binary_comparison_function)((*n));  }
 
-#line 392 "reflect.h2"
-    auto function_declaration::default_to_virtual() & -> void { static_cast<void>(CPP2_UFCS(make_function_virtual)((*cpp2::assert_not_null(n)))); }
+    auto function_declaration::default_to_virtual() & -> void { static_cast<void>(CPP2_UFCS(make_function_virtual)((*n))); }
 
-#line 394 "reflect.h2"
-    [[nodiscard]] auto function_declaration::make_virtual() & -> bool { return CPP2_UFCS(make_function_virtual)((*cpp2::assert_not_null(n))); }
+    [[nodiscard]] auto function_declaration::make_virtual() & -> bool { return CPP2_UFCS(make_function_virtual)((*n)); }
 
-#line 396 "reflect.h2"
     auto function_declaration::add_initializer(cpp2::in<std::string_view> source) & -> void
 
-#line 399 "reflect.h2"
     {
         if ((*this).has_handler() && !(!(has_initializer())) ) { (*this).report_violation(CPP2_CONTRACT_MSG("cannot add an initializer to a function that already has one")); }
         if ((*this).has_handler() && !(parent_is_type()) ) { (*this).report_violation(CPP2_CONTRACT_MSG("cannot add an initializer to a function that isn't in a type scope")); }
@@ -1213,48 +1016,41 @@ declaration::declaration(declaration const& that)
         //require( parent_is_type(),
         //         "cannot add an initializer to a function that isn't in a type scope");
 
-#line 405 "reflect.h2"
         auto stmt {parse_statement(source)}; 
         if (!((cpp2::as_<bool>(stmt)))) {
             error("cannot add an initializer that is not a valid statement");
             return ; 
         }
-        require(CPP2_UFCS(add_function_initializer)((*cpp2::assert_not_null(n)), std::move(stmt)), 
+        require(CPP2_UFCS(add_function_initializer)((*n), std::move(stmt)), 
                  std::string("unexpected error while attempting to add initializer"));
     }
 
     function_declaration::function_declaration(function_declaration const& that)
                                 : declaration{ static_cast<declaration const&>(that) }{}
 
-#line 423 "reflect.h2"
     object_declaration::object_declaration(
 
         declaration_node* n_, 
         cpp2::in<compiler_services> s
     )
         : declaration{ n_, s }
-#line 428 "reflect.h2"
     {
 
-        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_object)((*cpp2::assert_not_null(n)))) ) { cpp2::Default.report_violation(""); }
+        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_object)((*n))) ) { cpp2::Default.report_violation(""); }
     }
 
-#line 433 "reflect.h2"
-    [[nodiscard]] auto object_declaration::is_const() const& -> bool { return CPP2_UFCS(is_const)((*cpp2::assert_not_null(n))); }
-#line 434 "reflect.h2"
-    [[nodiscard]] auto object_declaration::has_wildcard_type() const& -> bool { return CPP2_UFCS(has_wildcard_type)((*cpp2::assert_not_null(n)));  }
+    [[nodiscard]] auto object_declaration::is_const() const& -> bool { return CPP2_UFCS(is_const)((*n)); }
+    [[nodiscard]] auto object_declaration::has_wildcard_type() const& -> bool { return CPP2_UFCS(has_wildcard_type)((*n));  }
 
-#line 436 "reflect.h2"
     [[nodiscard]] auto object_declaration::type() const& -> std::string{
-        auto ret {CPP2_UFCS(object_type)((*cpp2::assert_not_null(n)))}; 
+        auto ret {CPP2_UFCS(object_type)((*n))}; 
         require(!(contains(ret, "(*ERROR*)")), 
                  "cannot to_string this type: " + ret);
         return ret; 
     }
 
-#line 443 "reflect.h2"
     [[nodiscard]] auto object_declaration::initializer() const& -> std::string{
-        auto ret {CPP2_UFCS(object_initializer)((*cpp2::assert_not_null(n)))}; 
+        auto ret {CPP2_UFCS(object_initializer)((*n))}; 
         require(!(contains(ret, "(*ERROR*)")), 
                  "cannot to_string this initializer: " + ret);
         return ret; 
@@ -1263,20 +1059,17 @@ declaration::declaration(declaration const& that)
     object_declaration::object_declaration(object_declaration const& that)
                                 : declaration{ static_cast<declaration const&>(that) }{}
 
-#line 459 "reflect.h2"
     type_declaration::type_declaration(
 
         declaration_node* n_, 
         cpp2::in<compiler_services> s
     )
         : declaration{ n_, s }
-#line 464 "reflect.h2"
     {
 
-        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_type)((*cpp2::assert_not_null(n)))) ) { cpp2::Default.report_violation(""); }
+        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_type)((*n))) ) { cpp2::Default.report_violation(""); }
     }
 
-#line 469 "reflect.h2"
     auto type_declaration::reserve_names(cpp2::in<std::string_view> name, auto&& ...etc) const& -> void
     {                           // etc is not declared ':string_view' for compatibility with GCC 10.x
         for ( 
@@ -1289,103 +1082,90 @@ declaration::declaration(declaration const& that)
         }
     }
 
-#line 481 "reflect.h2"
-    [[nodiscard]] auto type_declaration::is_polymorphic() const& -> bool { return CPP2_UFCS(is_polymorphic)((*cpp2::assert_not_null(n))); }
-#line 482 "reflect.h2"
-    [[nodiscard]] auto type_declaration::is_final() const& -> bool { return CPP2_UFCS(is_type_final)((*cpp2::assert_not_null(n))); }
-#line 483 "reflect.h2"
-    [[nodiscard]] auto type_declaration::make_final() & -> bool { return CPP2_UFCS(make_type_final)((*cpp2::assert_not_null(n))); }
+    [[nodiscard]] auto type_declaration::is_polymorphic() const& -> bool { return CPP2_UFCS(is_polymorphic)((*n)); }
+    [[nodiscard]] auto type_declaration::is_final() const& -> bool { return CPP2_UFCS(is_type_final)((*n)); }
+    [[nodiscard]] auto type_declaration::make_final() & -> bool { return CPP2_UFCS(make_type_final)((*n)); }
 
-#line 485 "reflect.h2"
     [[nodiscard]] auto type_declaration::get_member_functions() const& -> std::vector<function_declaration>
 
     {
         std::vector<function_declaration> ret {}; 
         for ( 
-             auto const& d : CPP2_UFCS(get_type_scope_declarations)((*cpp2::assert_not_null(n)), declaration_node::functions) ) {
+             auto const& d : CPP2_UFCS(get_type_scope_declarations)((*n), declaration_node::functions) ) {
             static_cast<void>(CPP2_UFCS(emplace_back)(ret, d, (*this)));
         }
         return ret; 
     }
 
-#line 496 "reflect.h2"
     [[nodiscard]] auto type_declaration::get_member_functions_needing_initializer() const& -> std::vector<function_declaration>
 
     {
         std::vector<function_declaration> ret {}; 
         for ( 
-             auto const& d : CPP2_UFCS(get_type_scope_declarations)((*cpp2::assert_not_null(n)), declaration_node::functions) ) 
-        if ( !(CPP2_UFCS(has_initializer)((*cpp2::assert_not_null(d)))) 
-            && !(CPP2_UFCS(is_virtual_function)((*cpp2::assert_not_null(d)))) 
-            && !(CPP2_UFCS(is_defaultable_function)((*cpp2::assert_not_null(d))))) 
+             auto const& d : CPP2_UFCS(get_type_scope_declarations)((*n), declaration_node::functions) ) 
+        if ( !(CPP2_UFCS(has_initializer)((*d))) 
+            && !(CPP2_UFCS(is_virtual_function)((*d))) 
+            && !(CPP2_UFCS(is_defaultable_function)((*d)))) 
         {
             static_cast<void>(CPP2_UFCS(emplace_back)(ret, d, (*this)));
         }
         return ret; 
     }
 
-#line 511 "reflect.h2"
     [[nodiscard]] auto type_declaration::get_member_objects() const& -> std::vector<object_declaration>
 
     {
         std::vector<object_declaration> ret {}; 
-        for ( auto const& d : CPP2_UFCS(get_type_scope_declarations)((*cpp2::assert_not_null(n)), declaration_node::objects) ) {
+        for ( auto const& d : CPP2_UFCS(get_type_scope_declarations)((*n), declaration_node::objects) ) {
             static_cast<void>(CPP2_UFCS(emplace_back)(ret, d, (*this)));
         }
         return ret; 
     }
 
-#line 521 "reflect.h2"
     [[nodiscard]] auto type_declaration::get_member_types() const& -> std::vector<type_declaration>
 
     {
         std::vector<type_declaration> ret {}; 
-        for ( auto const& d : CPP2_UFCS(get_type_scope_declarations)((*cpp2::assert_not_null(n)), declaration_node::types) ) {
+        for ( auto const& d : CPP2_UFCS(get_type_scope_declarations)((*n), declaration_node::types) ) {
             static_cast<void>(CPP2_UFCS(emplace_back)(ret, d, (*this)));
         }
         return ret; 
     }
 
-#line 531 "reflect.h2"
     [[nodiscard]] auto type_declaration::get_member_aliases() const& -> std::vector<alias_declaration>
 
     {
         std::vector<alias_declaration> ret {}; 
-        for ( auto const& d : CPP2_UFCS(get_type_scope_declarations)((*cpp2::assert_not_null(n)), declaration_node::aliases) ) {
+        for ( auto const& d : CPP2_UFCS(get_type_scope_declarations)((*n), declaration_node::aliases) ) {
             static_cast<void>(CPP2_UFCS(emplace_back)(ret, d, (*this)));
         }
         return ret; 
     }
 
-#line 541 "reflect.h2"
     [[nodiscard]] auto type_declaration::get_members() const& -> std::vector<declaration>
 
     {
         std::vector<declaration> ret {}; 
-        for ( auto const& d : CPP2_UFCS(get_type_scope_declarations)((*cpp2::assert_not_null(n)), declaration_node::all) ) {
+        for ( auto const& d : CPP2_UFCS(get_type_scope_declarations)((*n), declaration_node::all) ) {
             static_cast<void>(CPP2_UFCS(emplace_back)(ret, d, (*this)));
         }
         return ret; 
     }
 
-#line 551 "reflect.h2"
     [[nodiscard]] auto type_declaration::query_declared_value_set_functions() const& -> query_declared_value_set_functions_ret
 
-#line 558 "reflect.h2"
     {
             cpp2::deferred_init<bool> out_this_in_that;
             cpp2::deferred_init<bool> out_this_move_that;
             cpp2::deferred_init<bool> inout_this_in_that;
             cpp2::deferred_init<bool> inout_this_move_that;
-#line 559 "reflect.h2"
-        auto declared {CPP2_UFCS(find_declared_value_set_functions)((*cpp2::assert_not_null(n)))}; 
+        auto declared {CPP2_UFCS(find_declared_value_set_functions)((*n))}; 
         out_this_in_that.construct(declared.out_this_in_that != nullptr);
-        out_this_move_that.construct(declared.out_this_move_that != nullptr);
-        inout_this_in_that.construct(declared.inout_this_in_that != nullptr);
-        inout_this_move_that.construct(std::move(declared).inout_this_move_that != nullptr);
+        out_this_move_that.construct(declared.out_this_move_that!=nullptr);
+        inout_this_in_that.construct(declared.inout_this_in_that!=nullptr);
+        inout_this_move_that.construct(std::move(declared).inout_this_move_that!=nullptr);
     return  { std::move(out_this_in_that.value()), std::move(out_this_move_that.value()), std::move(inout_this_in_that.value()), std::move(inout_this_move_that.value()) }; }
 
-#line 566 "reflect.h2"
     auto type_declaration::add_member(cpp2::in<std::string_view> source) & -> void
     {
         auto decl {parse_statement(source)}; 
@@ -1393,47 +1173,40 @@ declaration::declaration(declaration const& that)
             error("the provided source string is not a valid statement");
             return ; 
         }
-        if (!(CPP2_UFCS(is_declaration)((*cpp2::assert_not_null(decl))))) {
+        if (!(CPP2_UFCS(is_declaration)((*decl)))) {
             error("cannot add a member that is not a declaration");
         }
-        require(CPP2_UFCS(add_type_member)((*cpp2::assert_not_null(n)), std::move(decl)), 
+        require(CPP2_UFCS(add_type_member)((*n), std::move(decl)), 
                  std::string("unexpected error while attempting to add member:\n") + source);
     }
 
-#line 580 "reflect.h2"
-    auto type_declaration::remove_marked_members() & -> void { CPP2_UFCS(type_remove_marked_members)((*cpp2::assert_not_null(n)));  }
-#line 581 "reflect.h2"
-    auto type_declaration::remove_all_members() & -> void { CPP2_UFCS(type_remove_all_members)((*cpp2::assert_not_null(n))); }
+    auto type_declaration::remove_marked_members() & -> void { CPP2_UFCS(type_remove_marked_members)((*n));  }
+    auto type_declaration::remove_all_members() & -> void { CPP2_UFCS(type_remove_all_members)((*n)); }
 
-#line 583 "reflect.h2"
-    auto type_declaration::disable_member_function_generation() & -> void { CPP2_UFCS(type_disable_member_function_generation)((*cpp2::assert_not_null(n)));  }
+    auto type_declaration::disable_member_function_generation() & -> void { CPP2_UFCS(type_disable_member_function_generation)((*n));  }
 
     type_declaration::type_declaration(type_declaration const& that)
                                 : declaration{ static_cast<declaration const&>(that) }{}
 
-#line 594 "reflect.h2"
     alias_declaration::alias_declaration(
 
         declaration_node* n_, 
         cpp2::in<compiler_services> s
     )
         : declaration{ n_, s }
-#line 599 "reflect.h2"
     {
 
-        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_alias)((*cpp2::assert_not_null(n)))) ) { cpp2::Default.report_violation(""); }
+        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_alias)((*n))) ) { cpp2::Default.report_violation(""); }
     }
 
     alias_declaration::alias_declaration(alias_declaration const& that)
                                 : declaration{ static_cast<declaration const&>(that) }{}
 
-#line 618 "reflect.h2"
 auto add_virtual_destructor(meta::type_declaration& t) -> void
 {
     CPP2_UFCS(add_member)(t, "operator=: (virtual move this) = { }");
 }
 
-#line 636 "reflect.h2"
 auto interface(meta::type_declaration& t) -> void
 {
     auto has_dtor {false}; 
@@ -1460,7 +1233,6 @@ auto interface(meta::type_declaration& t) -> void
     }
 }
 
-#line 682 "reflect.h2"
 auto polymorphic_base(meta::type_declaration& t) -> void
 {
     auto has_dtor {false}; 
@@ -1485,7 +1257,6 @@ auto polymorphic_base(meta::type_declaration& t) -> void
     }
 }
 
-#line 727 "reflect.h2"
 auto ordered_impl(
     meta::type_declaration& t, 
     cpp2::in<std::string_view> ordering
@@ -1498,7 +1269,7 @@ auto ordered_impl(
         if (CPP2_UFCS(has_name)(mf, "operator<=>")) {
             has_spaceship = true;
             auto return_name {CPP2_UFCS(unnamed_return_type)(mf)}; 
-            if (CPP2_UFCS(find)(return_name, ordering) == return_name.npos) 
+            if (CPP2_UFCS(find)(return_name, ordering)==return_name.npos) 
             {
                 CPP2_UFCS(error)(mf, "operator<=> must return std::" + cpp2::as_<std::string>(ordering));
             }
@@ -1510,25 +1281,21 @@ auto ordered_impl(
     }
 }
 
-#line 756 "reflect.h2"
 auto ordered(meta::type_declaration& t) -> void
 {
     ordered_impl(t, "strong_ordering");
 }
 
-#line 764 "reflect.h2"
 auto weakly_ordered(meta::type_declaration& t) -> void
 {
     ordered_impl(t, "weak_ordering");
 }
 
-#line 772 "reflect.h2"
 auto partially_ordered(meta::type_declaration& t) -> void
 {
     ordered_impl(t, "partial_ordering");
 }
 
-#line 794 "reflect.h2"
 auto copyable(meta::type_declaration& t) -> void
 {
     //  If the user explicitly wrote any of the copy/move functions,
@@ -1550,7 +1317,6 @@ auto copyable(meta::type_declaration& t) -> void
     }}
 }
 
-#line 822 "reflect.h2"
 auto basic_value(meta::type_declaration& t) -> void
 {
     CPP2_UFCS(copyable)(t);
@@ -1569,28 +1335,24 @@ auto basic_value(meta::type_declaration& t) -> void
     }
 }
 
-#line 850 "reflect.h2"
 auto value(meta::type_declaration& t) -> void
 {
     CPP2_UFCS(ordered)(t);
     CPP2_UFCS(basic_value)(t);
 }
 
-#line 856 "reflect.h2"
 auto weakly_ordered_value(meta::type_declaration& t) -> void
 {
     CPP2_UFCS(weakly_ordered)(t);
     CPP2_UFCS(basic_value)(t);
 }
 
-#line 862 "reflect.h2"
 auto partially_ordered_value(meta::type_declaration& t) -> void
 {
     CPP2_UFCS(partially_ordered)(t);
     CPP2_UFCS(basic_value)(t);
 }
 
-#line 891 "reflect.h2"
 auto cpp1_rule_of_zero(meta::type_declaration& t) -> void
 {
     for ( auto& mf : CPP2_UFCS(get_member_functions)(t) ) 
@@ -1603,7 +1365,6 @@ auto cpp1_rule_of_zero(meta::type_declaration& t) -> void
     CPP2_UFCS(disable_member_function_generation)(t);
 }
 
-#line 928 "reflect.h2"
 auto cpp2_struct(meta::type_declaration& t) -> void
 {
     for ( auto& m : CPP2_UFCS(get_members)(t) ) 
@@ -1621,7 +1382,6 @@ auto cpp2_struct(meta::type_declaration& t) -> void
     CPP2_UFCS(cpp1_rule_of_zero)(t);
 }
 
-#line 969 "reflect.h2"
 auto basic_enum(
     meta::type_declaration& t, 
     auto const& nextval, 
@@ -1646,7 +1406,6 @@ auto basic_enum(
 {
 std::string value{"-1"};
 
-#line 992 "reflect.h2"
     for ( 
           auto const& m : CPP2_UFCS(get_members)(t) ) 
     if (  CPP2_UFCS(is_member_object)(m)) 
@@ -1668,11 +1427,11 @@ std::string value{"-1"};
 
         nextval(value, init);
 
-        auto v {std::strtoll(&CPP2_ASSERT_IN_BOUNDS_LITERAL(value, 0), nullptr, 10)}; // for non-numeric values we'll just get 0 which is okay for now
-        if (cpp2::cmp_less(v,min_value)) {
+        auto v {std::strtoll(&value[0], nullptr, 10)}; // for non-numeric values we'll just get 0 which is okay for now
+        if (v<min_value) {
             min_value = v;
         }
-        if (cpp2::cmp_greater(v,max_value)) {
+        if (v>max_value) {
             max_value = v;
         }
 
@@ -1684,29 +1443,28 @@ std::string value{"-1"};
     }
 }
 
-#line 1028 "reflect.h2"
     if ((CPP2_UFCS(empty)(enumerators))) {
         CPP2_UFCS(error)(t, "an enumeration must contain at least one enumerator value");
         return ; 
     }
 
     //  Compute the default underlying type, if it wasn't explicitly specified
-    if (underlying_type.value() == "") 
+    if (underlying_type.value()=="") 
     {
         CPP2_UFCS(require)(t, !(std::move(found_non_numeric)), 
             "if you write an enumerator with a non-numeric-literal value, you must specify the enumeration's underlying type");
 
         if (!(bitwise)) {
-            if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i8>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i8>::max())) {
+            if (min_value>=std::numeric_limits<cpp2::i8>::min() && max_value<=std::numeric_limits<cpp2::i8>::max()) {
                 underlying_type.value() = "i8";
             }
-            else {if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i16>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i16>::max())) {
+            else {if (min_value>=std::numeric_limits<cpp2::i16>::min() && max_value<=std::numeric_limits<cpp2::i16>::max()) {
                 underlying_type.value() = "i16";
             }
-            else {if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i32>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i32>::max())) {
+            else {if (min_value>=std::numeric_limits<cpp2::i32>::min() && max_value<=std::numeric_limits<cpp2::i32>::max()) {
                 underlying_type.value() = "i32";
             }
-            else {if (cpp2::cmp_greater_eq(std::move(min_value),std::numeric_limits<cpp2::i64>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i64>::max())) {
+            else {if (std::move(min_value)>=std::numeric_limits<cpp2::i64>::min() && max_value<=std::numeric_limits<cpp2::i64>::max()) {
                 underlying_type.value() = "i64";
             }
             else {
@@ -1715,13 +1473,13 @@ std::string value{"-1"};
         }
         else {
             auto umax {std::move(max_value) * cpp2::as_<cpp2::u64, 2>()}; 
-            if (cpp2::cmp_less_eq(umax,std::numeric_limits<cpp2::u8>::max())) {
+            if (umax<=std::numeric_limits<cpp2::u8>::max()) {
                 underlying_type.value() = "u8";
             }
-            else {if (cpp2::cmp_less_eq(umax,std::numeric_limits<cpp2::u16>::max())) {
+            else {if (umax<=std::numeric_limits<cpp2::u16>::max()) {
                 underlying_type.value() = "u16";
             }
-            else {if (cpp2::cmp_less_eq(std::move(umax),std::numeric_limits<cpp2::u32>::max())) {
+            else {if (std::move(umax)<=std::numeric_limits<cpp2::u32>::max()) {
                 underlying_type.value() = "u32";
             }
             else {
@@ -1730,7 +1488,6 @@ std::string value{"-1"};
         }
     }
 
-#line 1074 "reflect.h2"
     //  2. Replace: Erase the contents and replace with modified contents
     //
     //  Note that most values and functions are declared as '==' compile-time values, i.e. Cpp1 'constexpr'
@@ -1739,7 +1496,7 @@ std::string value{"-1"};
 
     //  Generate the 'none' value if appropriate, and use that or
     //  else the first enumerator as the default-constructed value
-    auto default_value {CPP2_ASSERT_IN_BOUNDS_LITERAL(enumerators, 0).name}; 
+    auto default_value {enumerators[0].name}; 
     if (bitwise) {
         default_value = "none";
         value_member_info e {"none", "", "0"}; 
@@ -1778,7 +1535,6 @@ std::string to_string{"    to_string: (this) -> std::string = { \n"};
 
     //  Provide a 'to_string' function to print enumerator name(s)
 
-#line 1119 "reflect.h2"
     {
         if (bitwise) {
             to_string += "    _ret   : std::string = \"(\";\n";
@@ -1788,9 +1544,9 @@ std::string to_string{"    to_string: (this) -> std::string = { \n"};
 
         for ( 
               auto const& e : enumerators ) {
-            if (e.name != "_") {// ignore unnamed values
+            if (e.name!="_") {  // ignore unnamed values
                 if (bitwise) {
-                    if (e.name != "none") {
+                    if (e.name!="none") {
                         to_string += ("    if (this & " + cpp2::to_string(e.name) + ") == " + cpp2::to_string(e.name) + " { _ret += _comma + \"" + cpp2::to_string(e.name) + "\"; _comma = \", \"; }\n");
                     }
                 }
@@ -1810,10 +1566,8 @@ std::string to_string{"    to_string: (this) -> std::string = { \n"};
         CPP2_UFCS(add_member)(t, std::move(to_string));
     }
 }
-#line 1149 "reflect.h2"
 }
 
-#line 1161 "reflect.h2"
 auto cpp2_enum(meta::type_declaration& t) -> void
 {
     //  Let basic_enum do its thing, with an incrementing value generator
@@ -1822,7 +1576,7 @@ auto cpp2_enum(meta::type_declaration& t) -> void
             if (!(CPP2_UFCS(empty)(specified_value))) {
                 value = specified_value;
             }else {
-                auto v {std::strtoll(&CPP2_ASSERT_IN_BOUNDS_LITERAL(value, 0), nullptr, 10)}; 
+                auto v {std::strtoll(&value[0], nullptr, 10)}; 
                 value = cpp2::as_<std::string>((std::move(v) + 1));
             }
         }, 
@@ -1830,7 +1584,6 @@ auto cpp2_enum(meta::type_declaration& t) -> void
     );
 }
 
-#line 1188 "reflect.h2"
 auto flag_enum(meta::type_declaration& t) -> void
 {
     //  Let basic_enum do its thing, with a power-of-two value generator
@@ -1839,8 +1592,8 @@ auto flag_enum(meta::type_declaration& t) -> void
             if (!(CPP2_UFCS(empty)(specified_value))) {
                 value = specified_value;
             }else {
-                auto v {std::strtoll(&CPP2_ASSERT_IN_BOUNDS_LITERAL(value, 0), nullptr, 10)}; 
-                if (cpp2::cmp_less(v,1)) {
+                auto v {std::strtoll(&value[0], nullptr, 10)}; 
+                if (v<1) {
                     value = "1";
                 }
                 else {
@@ -1852,7 +1605,6 @@ auto flag_enum(meta::type_declaration& t) -> void
     );
 }
 
-#line 1234 "reflect.h2"
 auto cpp2_union(meta::type_declaration& t) -> void
 {
     std::vector<value_member_info> alternatives {}; 
@@ -1861,7 +1613,6 @@ auto value{0};
 
     //  1. Gather: All the user-written members, and find/compute the max size
 
-#line 1241 "reflect.h2"
     for ( 
 
            auto const& m : CPP2_UFCS(get_members)(t) )  { do 
@@ -1886,22 +1637,20 @@ auto value{0};
     } while (false); ++value; }
 }
 
-#line 1264 "reflect.h2"
     std::string discriminator_type {}; 
-    if (cpp2::cmp_less(CPP2_UFCS(ssize)(alternatives),std::numeric_limits<cpp2::i8>::max())) {
+    if (CPP2_UFCS(ssize)(alternatives)<std::numeric_limits<cpp2::i8>::max()) {
         discriminator_type = "i8";
     }
-    else {if (cpp2::cmp_less(CPP2_UFCS(ssize)(alternatives),std::numeric_limits<cpp2::i16>::max())) {
+    else {if (CPP2_UFCS(ssize)(alternatives)<std::numeric_limits<cpp2::i16>::max()) {
         discriminator_type = "i16";
     }
-    else {if (cpp2::cmp_less(CPP2_UFCS(ssize)(alternatives),std::numeric_limits<cpp2::i32>::max())) {
+    else {if (CPP2_UFCS(ssize)(alternatives)<std::numeric_limits<cpp2::i32>::max()) {
         discriminator_type = "i32";
     }
     else {
         discriminator_type = "i64";
     }}}
 
-#line 1279 "reflect.h2"
     //  2. Replace: Erase the contents and replace with modified contents
 
     CPP2_UFCS(remove_marked_members)(t);
@@ -1910,12 +1659,10 @@ std::string storage{"    _storage: cpp2::aligned_storage<cpp2::max( "};
 
     //  Provide storage
 
-#line 1285 "reflect.h2"
     {
 {
 std::string comma{""};
 
-#line 1287 "reflect.h2"
         for ( 
 
               auto const& e : alternatives )  { do {
@@ -1923,12 +1670,10 @@ std::string comma{""};
         } while (false); comma = ", "; }
 }
 
-#line 1293 "reflect.h2"
         storage += "), cpp2::max( ";
 {
 std::string comma{""};
 
-#line 1296 "reflect.h2"
         for ( 
 
               auto const& e : alternatives )  { do {
@@ -1936,14 +1681,12 @@ std::string comma{""};
         } while (false); comma = ", "; }
 }
 
-#line 1302 "reflect.h2"
         storage += " )> = ();\n";
         CPP2_UFCS(add_member)(t, std::move(storage));
     }
 }
 
     //  Provide discriminator
-#line 1307 "reflect.h2"
     CPP2_UFCS(add_member)(t, ("    _discriminator: " + cpp2::to_string(std::move(discriminator_type)) + " = -1;\n"));
 
     //  Add the alternatives: is_alternative, get_alternative, and set_alternative
@@ -1965,7 +1708,6 @@ std::string destroy{"    private _destroy: (inout this) = {\n"};
 
     //  Add destroy
 
-#line 1326 "reflect.h2"
     {
         for ( 
               auto const& a : alternatives ) {
@@ -1979,7 +1721,6 @@ std::string destroy{"    private _destroy: (inout this) = {\n"};
 }
 
     //  Add the destructor
-#line 1338 "reflect.h2"
     CPP2_UFCS(add_member)(t, "    operator=: (move this) = { _destroy(); }");
 
     //  Add default constructor
@@ -1989,7 +1730,6 @@ std::string value_set{""};
 
     //  Add copy/move construction and assignment
 
-#line 1345 "reflect.h2"
     {
         for ( 
               auto const& a : alternatives ) {
@@ -2009,16 +1749,13 @@ std::string value_set{""};
                     );
     }
 }
-#line 1363 "reflect.h2"
 }
 
-#line 1370 "reflect.h2"
 auto print(cpp2::in<meta::type_declaration> t) -> void
 {
     std::cout << CPP2_UFCS(print)(t) << "\n";
 }
 
-#line 1389 "reflect.h2"
 auto regex_gen(meta::type_declaration& t) -> void
 {
     auto has_default {false}; 
@@ -2037,7 +1774,7 @@ auto regex_gen(meta::type_declaration& t) -> void
             }
             CPP2_UFCS(mark_for_removal_from_enclosing_type)(m);
 
-            if (name == prefix) {
+            if (name==prefix) {
                 if (has_default) {
                     CPP2_UFCS(error)(t, "Type can only contain one default named regular expression.");
                 }
@@ -2050,7 +1787,7 @@ auto regex_gen(meta::type_declaration& t) -> void
             }
             expr = CPP2_UFCS(substr)(expr, 1, CPP2_UFCS(size)(expr) - 2);
 
-            CPP2_ASSERT_IN_BOUNDS(expressions, name) = expr;
+            expressions[name] = expr;
         }
     }
 
@@ -2063,7 +1800,6 @@ auto regex_gen(meta::type_declaration& t) -> void
     }
 }
 
-#line 1438 "reflect.h2"
 [[nodiscard]] auto apply_metafunctions(
     declaration_node& n, 
     type_declaration& rtype, 
@@ -2077,7 +1813,7 @@ auto regex_gen(meta::type_declaration& t) -> void
     for ( 
           auto const& m : CPP2_UFCS(get_members)(rtype) ) 
     {
-        CPP2_UFCS(require)(m, !(CPP2_UFCS(starts_with)(CPP2_UFCS(name)(m), "_")) || CPP2_UFCS(ssize)(CPP2_UFCS(name)(m)) == 1, 
+        CPP2_UFCS(require)(m, !(CPP2_UFCS(starts_with)(CPP2_UFCS(name)(m), "_")) || CPP2_UFCS(ssize)(CPP2_UFCS(name)(m))==1, 
                     "a type that applies a metafunction cannot have a body that declares a name that starts with '_' - those names are reserved for the metafunction implementation");
     }
 
@@ -2087,67 +1823,67 @@ auto regex_gen(meta::type_declaration& t) -> void
     {
         //  Convert the name and any template arguments to strings
         //  and record that in rtype
-        auto name {CPP2_UFCS(to_string)((*cpp2::assert_not_null(meta)))}; 
+        auto name {CPP2_UFCS(to_string)((*meta))}; 
         name = CPP2_UFCS(substr)(name, 0, CPP2_UFCS(find)(name, '<'));
 
         std::vector<std::string> args {}; 
         for ( 
-             auto const& arg : CPP2_UFCS(template_arguments)((*cpp2::assert_not_null(meta))) ) 
+             auto const& arg : CPP2_UFCS(template_arguments)((*meta)) ) 
             CPP2_UFCS(push_back)(args, CPP2_UFCS(to_string)(arg));
 
         CPP2_UFCS(set_metafunction_name)(rtype, name, args);
 
         //  Dispatch
         //
-        if (name == "interface") {
+        if (name=="interface") {
             interface(rtype);
         }
-        else {if (name == "polymorphic_base") {
+        else {if (name=="polymorphic_base") {
             polymorphic_base(rtype);
         }
-        else {if (name == "ordered") {
+        else {if (name=="ordered") {
             ordered(rtype);
         }
-        else {if (name == "weakly_ordered") {
+        else {if (name=="weakly_ordered") {
             weakly_ordered(rtype);
         }
-        else {if (name == "partially_ordered") {
+        else {if (name=="partially_ordered") {
             partially_ordered(rtype);
         }
-        else {if (name == "copyable") {
+        else {if (name=="copyable") {
             copyable(rtype);
         }
-        else {if (name == "basic_value") {
+        else {if (name=="basic_value") {
             basic_value(rtype);
         }
-        else {if (name == "value") {
+        else {if (name=="value") {
             value(rtype);
         }
-        else {if (name == "weakly_ordered_value") {
+        else {if (name=="weakly_ordered_value") {
             weakly_ordered_value(rtype);
         }
-        else {if (name == "partially_ordered_value") {
+        else {if (name=="partially_ordered_value") {
             partially_ordered_value(rtype);
         }
-        else {if (name == "cpp1_rule_of_zero") {
+        else {if (name=="cpp1_rule_of_zero") {
             cpp1_rule_of_zero(rtype);
         }
-        else {if (name == "struct") {
+        else {if (name=="struct") {
             cpp2_struct(rtype);
         }
-        else {if (name == "enum") {
+        else {if (name=="enum") {
             cpp2_enum(rtype);
         }
-        else {if (name == "flag_enum") {
+        else {if (name=="flag_enum") {
             flag_enum(rtype);
         }
-        else {if (name == "union") {
+        else {if (name=="union") {
             cpp2_union(rtype);
         }
-        else {if (name == "print") {
+        else {if (name=="print") {
             print(rtype);
         }
-        else {if (name == "regex") {
+        else {if (name=="regex") {
             regex_gen(rtype);
         }
         else {
@@ -2161,7 +1897,7 @@ auto regex_gen(meta::type_declaration& t) -> void
             && !(CPP2_UFCS(arguments_were_used)(rtype)))) 
 
         {
-            error(name + " did not use its template arguments - did you mean to write '" + name + " <" + CPP2_ASSERT_IN_BOUNDS_LITERAL(args, 0) + "> type' (with the spaces)?");
+            error(name + " did not use its template arguments - did you mean to write '" + name + " <" + args[0] + "> type' (with the spaces)?");
             return false; 
         }
     }
@@ -2169,7 +1905,6 @@ auto regex_gen(meta::type_declaration& t) -> void
     return true; 
 }
 
-#line 1544 "reflect.h2"
 }
 
 }
