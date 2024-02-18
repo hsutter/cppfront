@@ -8,10 +8,10 @@ As always, `main` is the entry point of the program. For example:
 
 - No parameters: `main: () /*etc.*/`
 
-- One parameter of implicit type named `args`: `main: (args) /*etc*/`.
+- One parameter of implicit type named `args`: `main: (args) /*etc.*/`
     - The type of `args` cannot be explicitly specified. It is always `cpp2::args_t`, which behaves similarly to a `const std::array<std::string_view>`.
     - Using `args` performs zero heap allocations. Every `string_view` is directly bound to the string storage provided by host environment.
-    - `args.argc` and `args.argv` dditionally provide access to the raw C/C++ `main` parameters.
+    - `args.argc` and `args.argv` additionally provide access to the raw C/C++ `main` parameters.
 
 ``` cpp title="Examples: main with (args)"
 //  Print out command line arguments, then invoke

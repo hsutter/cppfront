@@ -25,12 +25,66 @@ f: ( v : std::vector<widget> ) = {
 }
 ```
 
+If the function has an output  that cannot be silently discarded, you can
 
-## Parameter passing
+
+## Parameters
 
 TODO
 
-All parameters and other objects in Cpp2 are `const` by default, except for local variables. For details, see [Design note: `const` objects by default](https://github.com/hsutter/cppfront/wiki/Design-note%3A-const-objects-by-default).
+> Note: All parameters and other objects in Cpp2 are `const` by default, except for local variables. For details, see [Design note: `const` objects by default](https://github.com/hsutter/cppfront/wiki/Design-note%3A-const-objects-by-default).
+
+
+## Return values
+
+TODO
+
+
+### Function outputs
+
+A function's outputs are its return values, and the "out" state of any `out` and `inout` parameters.
+
+Function outputs cannot be silently discarded. To explicitly discard a function output, assign it to `_`. For example:
+
+``` cpp title="Example: No silent discard"
+f: ()             -> void = { }
+g: ()             -> int  = { return 10; }
+h: (inout x: int) -> void = { x = 20; }
+
+main: ()
+= {
+    f();                    // ok, no return value
+
+    std::cout << g();       // ok, use return value
+    _ = g();                // ok, explicitly discard return value
+    g();                    // ERROR, return value is ignored
+
+    {
+        x := 0;
+        h( x );             // ok, x is referred to again...
+        std::cout << x;     // ... here, so its new value is used
+    }
+
+    {
+        x := 0;
+        h( x );             // ok, x is referred to again...
+        _ = x;              // ... here, its value explicitly discarded
+    }
+
+    {
+        x := 0;
+        h( x );             // ERROR, this is a definite last use of x
+    }                       // so x is not referred to again, and its
+                            // 'out' value can't be implicitly discarded
+}
+```
+
+> Cpp2 imbues Cpp1 code with nondiscardable semantics, while staying fully compatible as usual:
+>
+> - A function written in Cpp2 syntax that returns something other than `void` is always compiled to Cpp1 with `[[nodiscard]]`.
+>
+> - A function call written in Cpp2 `x.f()` member call syntax always treats a non-`void` return type as not discardable, even if the function was written in Cpp1 syntax that did not write `[[nodiscard]]`.
+
 
 ## Control flow
 

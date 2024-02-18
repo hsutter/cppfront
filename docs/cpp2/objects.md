@@ -45,8 +45,9 @@ f: () -> std::shared_ptr<widget>
     //  Dynamically allocate an object owned by a std::unique_ptr
     //  'vec' is a unique_ptr<vector<i32>> containing three values
     vec := new<std::vector<i32>>(1, 2, 3);
-        // shorthand for 'unique.new<...>(...)'
+            // shorthand for 'unique.new<...>(...)'
     std::cout << vec*.ssize();  // prints 3
+                    // note that * dereference is a suffix operator
 
     //  Dynamically allocate an object with shared ownership
     wid := cpp2::shared.new<widget>();
