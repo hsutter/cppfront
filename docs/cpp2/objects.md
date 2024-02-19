@@ -26,6 +26,75 @@ count := -1;        // same, deducing the object's type by just omitting it
 ```
 
 
+## Guaranteed initialization
+
+Every object must be initialized using `=` before it is used.
+
+An object in any scope can be initialized at its declaration. For example:
+
+``` cpp title="Example: Initializing objects when they are declared" hl_lines="4 10"
+shape: type = {
+    //  An object at type scope (data member)
+    //  initialized with its type's default value
+    points: std::vector<point2d> = ();
+
+    draw: (this, where: canvas) -> bool
+    = {
+        //  An object at function scope (local variable)
+        //  initialized with color::red
+        pen := color::red;
+
+        // ...
+    }
+
+    //  ...
+}
+```
+
+Additionally, at function local scope an object `obj` can be initialized separately from its declaration. This can be useful when the object must be declared before a program-meaningful initial value is known (to avoid a dead write of a wrong 'dummy' value), and/or when the object may be initialized in more than one way depending on other logic (e.g., by using different constructors on different paths). The way to do this is:
+
+- Declare `obj` without an initializer, such as `obj: some_type;`. This allocates stack space for the object, but does not construct it.
+
+- `obj` must have a definite first use on every `if`/`else` branch path, and
+
+- that definite first use must be of the form `obj = value;` which is a constructor call, or else pass `obj` as an `out` argument to an `out` parameter (which is also effectively a constructor call, and performs the construction in the callee).
+
+For example:
+
+``` cpp title="Example: Initializing local objects after they are declared"
+f: () = {
+    buf: std::array<std::byte, 1024>;   // uninitialized
+    //  ... calculate some things ...
+    //  ...  no uses of buf here  ...
+    buf = some_calculated_value;        // constructs (not assigns) buf
+    //  ...
+    std::cout buf[0];                   // ok, a has been initialized
+}
+
+g: () = {
+    buf: std::array<std::byte, 1024>;   // uninitialized
+    if flip_coin_is_heads() {
+        if heads_default_is_available {
+            buf = copy_heads_default(); // constructs buf
+        }
+        else {
+            buf = (other, constructor); // constructs buf
+        }
+    }
+    else {
+        load_from_disk( out buf );      // constructs buf (*)
+    }
+    std::cout buf[0];                   // ok, a has been initialized
+}
+
+load_from_disk: (out buffer) = {
+    x = /* data read from disk */ ;     // when `buffer` is uninitialized,
+}                                       // constructs it; otherwise, assigns
+```
+
+In the above example, note the simple rule for branches: The local variable must be initialized on both the `if` and `else` branches, or neither branch.
+
+
 ## Heap objects
 
 Objects can also be allocated on the heap using `arena.new <T> (/*initializer, arguments)` where `arena` is any object that acts as a memory arena and provides a `.new` function template. Two memory arena objects are provided in namespace `cpp2`:
@@ -57,9 +126,4 @@ f: () -> std::shared_ptr<widget>
 } // as always in C++, vec is destroyed here automatically, which
   // destroys the heap vector and deallocates its dynamic memory
 ```
-
-
-## Guaranteed initialization
-
-TODO
 

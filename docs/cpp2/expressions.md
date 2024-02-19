@@ -72,6 +72,17 @@ There are two kinds of `is`:
 - [`pure2-type-safety-1.cpp2`](https://github.com/hsutter/cppfront/tree/main/regression-tests/pure2-type-safety-1.cpp2)
 - [`pure2-type-safety-2-with-inspect-expression.cpp2`](https://github.com/hsutter/cppfront/tree/main/regression-tests/pure2-type-safety-2-with-inspect-expression.cpp2)
 
+Here are some `is` queries with their Cpp1 equivalents. In this table, uppercase names are type names, lowercase names are objects, `v` is a `std::variant` where one alternative is `T`, `o` is a `std::optional<T>`, and `a` is a `std::any`:
+
+| Some sample `is` queries | Cpp1 equivalent
+|---|---|
+| `X is Y && Y is X` | `std::is_same_v<X,Y>` |
+| `D is B` | `std::is_base_of<B,D>` |
+| `pb is *D` | `dynamic_cast<D*>(pb) != nullptr` |
+| `v is T`  | `std::holds_alternative<T>(v)` |
+| `a is T`  | `a.type() == typeid(T)` |
+| `o is T`  | `o.has_value()` |
+
 
 ## `as` — safe casts and conversions
 
@@ -96,6 +107,17 @@ test: (x) = {
     } << "\n";
 }
 ```
+
+Here are some `as` casts with their Cpp1 equivalents. In this table, uppercase names are type names, lowercase names are objects, `v` is a `std::variant` where one alternative is `T`, `o` is a `std::optional<T>`, and `a` is a `std::any`:
+
+| Some sample `as` casts | Cpp1 equivalent
+|---|---|
+| `x as Y` | `Y{x}` |
+| `pb as *D` | `dynamic_cast<D*>(pb)` |
+| `v as T`  | `std::get<T>(v)` |
+| `a as T`  | `std::any_cast<T>(a)` |
+| `o as T`  | `o.value()` |
+
 
 ## `inspect` — pattern matching
 

@@ -5,7 +5,7 @@
 
 TODO
 
-## Calling functions: Nonmember function syntax, and UFCS syntax
+## Calling functions: `f(x)` syntax, and `x.f()` UFCS syntax
 
 A function call like `f(x)` is a normal non-member function call. It will call non-member functions only.
 
@@ -15,7 +15,6 @@ For example:
 
 ``` cpp title="Example: Function calls"
 f: ( v : std::vector<widget> ) = {
-
     //  This calls std::vector::size()
     std::cout << v.size();
 
@@ -23,14 +22,31 @@ f: ( v : std::vector<widget> ) = {
     //  doesn't have a .ssize member function
     std::cout << v.ssize();
 }
-```
 
-If the function has an output  that cannot be silently discarded, you can
+//  Generic function to print "hello, ___!" for any printable type
+hello: (name) = {
+    //  Using the C standard library is arguably nicer with UFCS
+    myfile := fopen("xyzzy.txt", "w");
+    myfile.fprintf( "Hello, (name)%!\n" );
+    myfile.fclose();
+}
+```
 
 
 ## Parameters
 
-TODO
+There are six ways to pass parameters that cover all use cases:
+
+| Parameter kind | "Pass me an `x` I can ______" | Accepts arguments that are | Special semantics |
+|---|---|---|---|
+| `in` (default) | read from | anything | always `const`<p>automatically passes by value if cheaply copyable |
+| `copy` | take a copy of | anything | acts like a normal local variable initialized with the argument |
+| `inout` | read from and write to | lvalues | |
+| `out` | write to (including construct) | lvalues, including uninitialized lvalues | must `=` assign/construct before other uses |
+| `move` | move from | rvalues | automatically moves from every definite last use |
+| `forward` | forward | anything | automatically forwards from every definite last use |
+
+
 
 > Note: All parameters and other objects in Cpp2 are `const` by default, except for local variables. For details, see [Design note: `const` objects by default](https://github.com/hsutter/cppfront/wiki/Design-note%3A-const-objects-by-default).
 

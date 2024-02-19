@@ -59,6 +59,7 @@ nav:
     - 'Declaration syntax': cpp2/declarations.md
     - 'Objects, initialization, and memory': cpp2/objects.md
     - 'Functions': cpp2/functions.md
+    - 'Contracts': cpp2/contracts.md
     - 'Types': cpp2/types.md
     - 'Metafunctions & reflection API': cpp2/metafunctions.md
     - 'Namespaces': cpp2/namespaces.md
