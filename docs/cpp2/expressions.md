@@ -35,12 +35,12 @@ _ = vec.emplace_back(1,2,3);
 }
 ```
 
-For details, see [Design note: Explicit discard](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Explicit-discard). In Cpp2, data is always initialized, data is never silently lost, data flow is always visible. Data is precious, and it's always safe. This feels right and proper to me.
+For details, see [Design note: Explicit discard](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Explicit-discard). In Cpp2, data is always initialized, data is never silently lost, data flow is always visible. Data is precious, and it's always safe.
 
 
 ## `is` — safe type/value queries
 
-An `x is C` expression allows safe type and value queries, and evaluates to `true` if `x` matches constraint `C`. It supports both static and dynamic queries, including customization, with support for the standard dynamically typed libraries `std::variant`, `std::optional`, and `std::any` provided in the box.
+An `x is C` expression allows safe type and value queries, and evaluates to `true` if `x` matches constraint `C`. It supports both static and dynamic queries, including customization, with support for standard library dynamic types like `std::variant`, `std::optional`, `std::expected`, and `std::any` provided out of the box.
 
 There are two kinds of `is`:
 
@@ -60,7 +60,7 @@ There are two kinds of `is`:
 | Value | `x is 0` |
 | Value predicate | `x is (in(10, 20))` |
 
-`is` is useful throughout the language, including in `inspect` pattern matching alternatives. `is` is extensible, and works out of the box with `std::variant`, `std::optional`, and `std::any`. For examples, see:
+`is` is useful throughout the language, including in `inspect` pattern matching alternatives. `is` is extensible, and works out of the box with `std::variant`, `std::optional`, `std::expected`, and `std::any`. For examples, see:
 
 - [`mixed-inspect-templates.cpp2`](https://github.com/hsutter/cppfront/tree/main/regression-tests/mixed-inspect-templates.cpp2)
 - [`mixed-inspect-values.cpp2`](https://github.com/hsutter/cppfront/tree/main/regression-tests/mixed-inspect-values.cpp2)
@@ -86,7 +86,7 @@ Here are some `is` queries with their Cpp1 equivalents. In this table, uppercase
 
 ## `as` — safe casts and conversions
 
-An `x as T` expression allows safe type casts. `x` must be an object or expression, and `T` must be a type. It supports both static and dynamic typing, including customization with support for the standard dynamically typed libraries `std::variant`, `std::optional`, and `std::any` provided in the box. For example:
+An `x as T` expression allows safe type casts. `x` must be an object or expression, and `T` must be a type. Like `is`, `as` supports both static and dynamic typing, including customization, with support for standard library dynamic types like `std::variant`, `std::optional`, `std::expected`, and `std::any` provided out of the box. For example:
 
 ``` cpp title="Using as" hl_lines="4 6 14"
 main: () = {
