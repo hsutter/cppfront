@@ -599,9 +599,24 @@ named_string_start: <CharT> type == named_matcher_logic<CharT, "\\A", line_start
 
 
 // Regex syntax: <matcher>{min, max}  Example: a{2,4}
-range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
+range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, possessive: bool> type = {
 
-    match: (cur, inout ctx, tail)   match_greedy(0, cur, cur, ctx, tail);
+    match: <Iter> (cur: Iter, inout ctx, tail) -> _ = {
+        count: int;
+        r := match_min_count(cur, ctx, out count);
+        if r.matched {
+            if greedy {
+                return match_greedy(count, r.pos, r.pos, ctx, tail);
+            }
+            else {
+                return match_not_greedy(count, r.pos, ctx, tail);
+            }
+        }
+        else {
+            return r;
+        }
+    }
+
     reset_ranges: (inout ctx)     = M::reset_ranges(ctx);
 
     to_string: () -> bstring<CharT> = {
@@ -618,6 +633,13 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
       }
       else {
         r += "{(min_count)$,(max_count)$}";
+      }
+
+      if !greedy {
+        r += "?";
+      }
+      else if possessive {
+        r += "+";
       }
 
       return r;
@@ -639,14 +661,31 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
         return true;
     }
 
+    private match_min_count: <Iter> (cur: Iter, inout ctx, out count_r: int) -> _ = {
+        res := match_return(true, cur);
+        count := 0;
+
+        while is_below_lower_bound(count) && res.matched {
+            res = M::match(res.pos, ctx, no_tail<CharT>());
+            if res.matched {
+                count += 1;
+            }
+        }
+
+        count_r = count;
+        return res;
+    }
+
     private match_greedy: <Iter, Other> (count: int, cur: Iter, last_valid: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
-        r:= M::match(cur, ctx, no_tail<CharT>());
-        if  is_below_upper_bound(count) && r.matched &&
-            (is_below_lower_bound(count) || r.pos != cur)
+
+        r := M::match(cur, ctx, no_tail<CharT>());
+
+        if is_below_upper_bound(count) && r.matched && r.pos != cur
         {
             inner := match_greedy(count + 1, r.pos, cur, ctx, Other());
 
-            if inner.matched {
+            if possessive ||  // Do not backtrack if possessive.
+               inner.matched {
                 return inner;
             }
         }
@@ -667,13 +706,44 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int> type = {
             return match_return(false, ctx.end);
         }
     }
+
+    private match_not_greedy: <Iter, Other> (c: int, cur: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
+        count := c;
+        pos := cur;
+
+        while is_below_upper_bound(count) {
+            o:= Other::match(pos, ctx);
+            if o.matched {
+                return o;
+            }
+
+            r:= M::match(pos, ctx, no_tail<CharT>());
+            if !r.matched {
+                return match_return(false, ctx.end);
+            }
+            count += 1;
+            pos = r.pos;
+        }
+
+        return Other::match(pos, ctx); // Upper bound reached.
+    }
 }
 
 // Regex syntax: *, +, or ?  Example: aa*
 //
-special_range_matcher_logic: <CharT, M, min_count: int, max_count: int, symbol: CharT> type = {
-    this: range_matcher_logic<CharT, M, min_count, max_count> = ();
-    to_string: () M::to_string() + symbol;
+special_range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, possessive: bool, symbol: char> type = {
+    this: range_matcher_logic<CharT, M, min_count, max_count, greedy, possessive> = ();
+    to_string: () -> _ = {
+        r := M::to_string() + symbol;
+        if !greedy {
+            r += "?";
+        }
+        else if possessive {
+            r += "+";
+        }
+
+        return r;
+    }
 }
 
 // Regex syntax: \b or \B  Example: \bword\b
@@ -911,6 +981,15 @@ regex_parser: <Error_out> type = {
         else {
             n = '\0';
             return false;
+        }
+    }
+
+    peek: (inout this) -> char = {
+        if (pos + 1) < regex.size() {
+            return regex[pos + 1];
+        }
+        else {
+            return '\0';
         }
     }
 
@@ -1326,6 +1405,17 @@ regex_parser: <Error_out> type = {
         inner: std::string = trim_copy(regex.substr(pos + 1, end - pos - 1));
         if inner.empty() { error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'"); return false; }
 
+        greedy := true;
+        possessive := false;
+        if peek() == '?' {
+            greedy = false;
+            pos += 1;
+        }
+        else if peek() == '+' {
+            possessive = true;
+            pos += 1;
+        }
+
         min_count: std::string = "-1";
         min_count_number: int  = 0;
         max_count: std::string = "-1";
@@ -1362,7 +1452,7 @@ regex_parser: <Error_out> type = {
             return false;
         }
 
-        cur_state.wrap_last( :(inner) -> _ == create_matcher("range_matcher_logic", "(inner)$, (min_count$)$, (max_count$)$"));
+        cur_state.wrap_last( :(inner) -> _ == create_matcher("range_matcher_logic", "(inner)$, (min_count$)$, (max_count$)$, (greedy)$, (possessive)$"));
         pos = end;
 
         return true;
@@ -1385,12 +1475,23 @@ regex_parser: <Error_out> type = {
             return false;
         }
 
+        greedy := true;
+        possessive := false;
+        if peek() == '?' {
+            greedy = false;
+            pos += 1;
+        }
+        else if peek() == '+' {
+            possessive = true;
+            pos += 1;
+        }
+
         if cur_state.empty() {
             error("'(c)$' without previous element.");
             return false;
         }
 
-        cur_state.wrap_last(:(inner) -> _ == create_matcher("special_range_matcher_logic", "(inner)$, (min_range$)$, (max_range$)$, '(c$)$'"));
+        cur_state.wrap_last(:(inner) -> _ == create_matcher("special_range_matcher_logic", "(inner)$, (min_range$)$, (max_range$)$, (greedy)$, (possessive)$, '(c$)$'"));
         return true;
     }
 
