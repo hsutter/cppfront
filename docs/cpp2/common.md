@@ -113,7 +113,7 @@ Cpp2 supports using Cpp1 user-defined literals for compatibility, to support sea
 
 - You can write a 'constexpr' function like `nm: (value: i64) -> my_nanometer_type == { /*...*/ }` that takes an integer and returns a value of a strongly typed "nanometer" type, and then create a `nm` value by writing either `nm(123)` or **`123.nm()`**.
 
-Both **`123.n()`** and **`123.u8()`** are very similar to user-defined literal syntax, and more general.
+Both **`123.nm()`** and **`123.u8()`** are very similar to user-defined literal syntax, and more general.
 
 ## Operators
 
