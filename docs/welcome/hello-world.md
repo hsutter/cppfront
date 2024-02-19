@@ -1,5 +1,20 @@
 # **Hello, world!**
 
+<table><tr><td>
+``` cpp title="hello.cpp2"
+main: () = {
+    std::cout << "Hello, world!\n";
+}
+```
+</td><td>
+``` mermaid
+graph TB
+  A[hello.cpp2] ==> B([cppfront]);
+  B ==> C[hello.cpp];
+  C ==> D([Your favorite C++ compiler]);
+```
+</td></tr></table>
+
 ## A `hello.cpp2` program
 
 Here is the usual one-line starter program that prints `Hello, world!`. Note that this is a complete program, no `#!cpp #include` required:

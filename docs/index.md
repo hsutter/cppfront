@@ -1,6 +1,12 @@
 
 # Overview: What are Cpp2 and cppfront? How do I get and build cppfront?
 
+``` cpp title="hello.cpp2"
+main: () = {
+    std::cout << "Hello, world!\n";
+}
+```
+
 ## What is Cpp2?
 
 "Cpp2," short for "C++ syntax 2," is my ([Herb Sutter's](https://github.com/hsutter)) personal project to try to make writing ordinary C++ types/functions/objects be much **simpler and safer**, without breaking backward compatibility. Bjarne Stroustrup said it best:
