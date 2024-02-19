@@ -40,7 +40,7 @@ For details, see [Design note: Explicit discard](https://github.com/hsutter/cppf
 
 ## `is` — safe type/value queries
 
-An `x is C` expression allows safe type and value queries, and evaluates to `true` if `x` matches constraint `C`. It supports both static and dynamic queries, including customization, with support for standard library types like `std::variant`, `std::optional`, `std::expected`, and `std::any` provided out of the box.
+An `x is C` expression allows safe type and value queries, and evaluates to `true` if `x` matches constraint `C`. It supports both static and dynamic queries, including customization, with support for standard library dynamic types like `std::variant`, `std::optional`, `std::expected`, and `std::any` provided out of the box.
 
 There are two kinds of `is`:
 
@@ -86,7 +86,7 @@ Here are some `is` queries with their Cpp1 equivalents. In this table, uppercase
 
 ## `as` — safe casts and conversions
 
-An `x as T` expression allows safe type casts. `x` must be an object or expression, and `T` must be a type. Like `is`, `as` supports both static and dynamic typing, including customization, with support for standard library types like `std::variant`, `std::optional`, `std::expected`, and `std::any` provided out of the box. For example:
+An `x as T` expression allows safe type casts. `x` must be an object or expression, and `T` must be a type. Like `is`, `as` supports both static and dynamic typing, including customization, with support for standard library dynamic types like `std::variant`, `std::optional`, `std::expected`, and `std::any` provided out of the box. For example:
 
 ``` cpp title="Example: Using as"
 main: () = {
