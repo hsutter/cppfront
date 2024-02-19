@@ -95,9 +95,9 @@ skat_game: @enum<i16> type = {
 
 Consider `hearts`: It's a member object declaration, but it doesn't have a type (or a default value) which is normally illegal, but here it's okay because the `@enum<i16>` metafunction fills them in: It iterates over all the data members and gives each one the underlying type (here explicitly specified as `i16`, otherwise it would be computed as the smallest signed type that's big enough), and an initializer (by default one higher than the previous enumerator).
 
-Unlike C `enum`, this `@enum` is scoped and strongly typed (does not implicitly convert to the underlying type).
+Unlike C `#!cpp enum`, this `@enum` is scoped and strongly typed (does not implicitly convert to the underlying type).
 
-Unlike C++11 `enum class`, it's "just a `type`" which means it can naturally also have member functions and other things that a type can have:
+Unlike C++11 `#!cpp enum class`, it's "just a `type`" which means it can naturally also have member functions and other things that a type can have:
 
 ``` cpp title="An @enum type with a member function" hl_lines="1"
 janus: @enum type = {
@@ -167,7 +167,7 @@ main: () = {
 }
 ```
 
-Unlike C `union`, this `@union` is safe to use because it always ensures only the active type is accessed.
+Unlike C `#!cpp union`, this `@union` is safe to use because it always ensures only the active type is accessed.
 
 Unlike C++11 `std::variant`, this `@union` is easier to use because its alternatives are anonymous, and safer to use because each union type is a distinct type. [^variant]
 

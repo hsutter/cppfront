@@ -27,6 +27,7 @@ theme:
     - search.suggest
     - search.highlight
     - content.tabs.link
+    - content.code.annotate
     - content.code.annotation
     - content.code.copy
     - content.footnote.tooltips

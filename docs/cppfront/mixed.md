@@ -17,7 +17,7 @@ When cppfront compiles such a mixed file, it just passes through the Cpp1 code a
 
 For example, this source file is fine, where the Cpp2 and Cpp1 code are side by side and seamlessly call each other directly as usual:
 
-``` cpp title="mixed.cpp2  — Mixing Cpp1 and Cpp2 code side by side in the same source file is okay" linenums="1" hl_lines="4-7"
+``` cpp title="mixed.cpp2 — Mixing Cpp1 and Cpp2 code side by side in the same source file is okay" linenums="1" hl_lines="4-7"
 #include <iostream>                             // Cpp1
 #include <string_view>                          // Cpp1
 
@@ -55,5 +55,5 @@ main: () = {                                            // Cpp2
 }                                                       // Cpp2
 ```
 
-The above nesting is not supported because it would create not just parsing problems but also semantic ambiguities. For example, lines 11-13 are syntactically valid as Cpp1 or as Cpp2, but if they are treated as Cpp2 then the `words[0]` and `words[1]` expressions' `std::vector::operator[]` calls are bounds-checked and bounds-safe by default, whereas if they are treated as Cpp1 then they are not bounds-checked. And that's a pretty important difference to be sure about!
+The above nesting is not supported because it would create not just parsing problems but also semantic ambiguities. For example, lines 11-13 are syntactically valid as Cpp1 or as Cpp2, but if they are treated as Cpp2 then the `#!cpp words[0]` and `#!cpp words[1]` expressions' `#!cpp std::vector::operator[]` calls are bounds-checked and bounds-safe by default, whereas if they are treated as Cpp1 then they are not bounds-checked. And that's a pretty important difference to be sure about!
 

@@ -55,7 +55,7 @@ Additionally, at function local scope an object `obj` can be initialized separat
 
 - Declare `obj` without an initializer, such as `obj: some_type;`. This allocates stack space for the object, but does not construct it.
 
-- `obj` must have a definite first use on every `if`/`else` branch path, and
+- `obj` must have a definite first use on every `#!cpp if`/`#!cpp else` branch path, and
 
 - that definite first use must be of the form `obj = value;` which is a constructor call, or else pass `obj` as an `out` argument to an `out` parameter (which is also effectively a constructor call, and performs the construction in the callee).
 
@@ -92,18 +92,18 @@ load_from_disk: (out buffer) = {
 }                                       // constructs it; otherwise, assigns
 ```
 
-In the above example, note the simple rule for branches: The local variable must be initialized on both the `if` and `else` branches, or neither branch.
+In the above example, note the simple rule for branches: The local variable must be initialized on both the `#!cpp if` and `#!cpp else` branches, or neither branch.
 
 
 ## Heap objects
 
-Objects can also be allocated on the heap using `arena.new <T> (/*initializer, arguments)` where `arena` is any object that acts as a memory arena and provides a `.new` function template. Two memory arena objects are provided in namespace `cpp2`:
+Objects can also be allocated on the heap using `#!cpp arena.new <T> (/*initializer, arguments*/)` where `arena` is any object that acts as a memory arena and provides a `#!cpp .new` function template. Two memory arena objects are provided in namespace `cpp2`:
 
-- `unique.new<T>` calls `std::make_unique` and returns a `std::unique_ptr`.
+- `#!cpp unique.new<T>` calls `std::make_unique<T>` and returns a `std::unique_ptr<T>`.
 
-- `shared.new<T>` calls `std::make_shared` and returns a `std::shared_ptr`.
+- `#!cpp shared.new<T>` calls `std::make_shared<T>` and returns a `std::shared_ptr<T>`.
 
-The default is `unique.new` if you don't specify an arena object.
+The default is `#!cpp unique.new` if you don't specify an arena object.
 
 For example (see [types](types.md) for more details about writing types):
 

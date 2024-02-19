@@ -6,11 +6,14 @@ As always, `main` is the entry point of the program. For example:
 
 `main` can have either:
 
-- No parameters: `main: () /*etc.*/`
+- No parameters: &emsp; **`#!cpp main: () /*etc.*/`**
 
-- One parameter of implicit type named `args`: `main: (args) /*etc.*/`
-    - The type of `args` cannot be explicitly specified. It is always `cpp2::args_t`, which behaves similarly to a `const std::array<std::string_view>`.
+- One parameter of implicit type named `args`: &emsp; **`#!cpp main: (args) /*etc.*/`**
+
+    - The type of `args` cannot be explicitly specified. It is always `cpp2::args_t`, which behaves similarly to a `#!cpp const std::array<std::string_view>`.
+
     - Using `args` performs zero heap allocations. Every `string_view` is directly bound to the string storage provided by host environment.
+
     - `args.argc` and `args.argv` additionally provide access to the raw C/C++ `main` parameters.
 
 ``` cpp title="main with (args)" hl_lines="5 9"
@@ -29,16 +32,16 @@ main: (args) -> int
 
 `main` can return:
 
-- `void`, the default return value for functions. In this case, the compiled Cpp1 code returns an `int` (as required by the standard) with value `0`.
+- `#!cpp void`, the default return value for functions. No `#!cpp return` statement is allowed in the body. In this case, the compiled Cpp1 code behaves as if `main` returned `#!cpp int`.
 
-- `int`. If the body has no `return` statement, the default is to `return 0;` at the end of the function body.
+- `#!cpp int`. If the body has no `#!cpp return` statement, the default is to `#!cpp return 0;` at the end of the function body.
 
 - Some other type that your Cpp1 compiler(s) supports as a nonstandard extension.
 
 
 ## Comments
 
-The usual `// line comments` and `/* stream comments */` are supported. For example:
+The usual `#!cpp // line comments` and `#!cpp /* stream comments */` are supported. For example:
 
 ``` cpp title="Writing comments"
 //  A line comment: After //, the entire
@@ -82,21 +85,21 @@ Cpp2 supports the same fundamental types as today's Cpp1, but additionally provi
 
 | Variable-width types <br> (Cpp2-compatible single-word names) | Synonym for (these multi-word<br> names are not allowed in Cpp2) |
 |---|---|
-| `ushort`      | `unsigned short`       |
-| `uint`        | `unsigned int`         |
-| `ulong`       | `unsigned long`        |
-| `longlong`    | `long long`            |
-| `ulonglong`   | `unsigned long long`   |
-| `longdouble`  | `long double`          |
+| `ushort`      | `#!cpp unsigned short`       |
+| `uint`        | `#!cpp unsigned int`         |
+| `ulong`       | `#!cpp unsigned long`        |
+| `longlong`    | `#!cpp long long`            |
+| `ulonglong`   | `#!cpp unsigned long long`   |
+| `longdouble`  | `#!cpp long double`          |
 
 | For compatibility/interop only,<br> so deliberately ugly names | Synonym for | Notes |
 |---|---|---|
-| `_schar`     | `signed char`   | Normally, prefer `i8` instead |
-| `_uchar`     | `unsigned char` | Normally, prefer `u8` instead |
+| `_schar`     | `#!cpp signed char`   | Normally, prefer `i8` instead |
+| `_uchar`     | `#!cpp unsigned char` | Normally, prefer `u8` instead |
 
 ## Type qualifiers
 
-Types can be qualified with `const` and `*`. Types are written left-to-right, so a qualifier always applies to what immediately follows it. For example, to declare a `const` pointer to a non-`const` pointer to a `const i32` object, write:
+Types can be qualified with `#!cpp const` and `#!cpp *`. Types are written left-to-right, so a qualifier always applies to what immediately follows it. For example, to declare a `#!cpp const` pointer to a non-`#!cpp const` pointer to a `#!cpp const i32` object, write:
 
 ``` cpp title="Using type qualifiers"
 //  A const pointer to a non-const pointer to a const i32 object
@@ -105,13 +108,13 @@ p: const * * const i32;
 
 ## Literals
 
-Cpp2 supports the same `'c'`haracter, `"string"`, binary, integer, and floating point literals as Cpp1, including most Unicode encoding prefixes and raw string literals.
+Cpp2 supports the same `#!cpp 'c'`haracter, `#!cpp "string"`, binary, integer, and floating point literals as Cpp1, including most Unicode encoding prefixes and raw string literals.
 
 Cpp2 supports using Cpp1 user-defined literals for compatibility, to support seamlessly using existing libraries. However, because Cpp2 has unified function call syntax (UFCS), the preferred way to author the equivalent in Cpp2 is to just write a function or type name as a `.` call suffix. For example:
 
 - You can create a `u8` value by writing either `u8(123)` or **`123.u8()`**. [^u8using]
 
-- You can write a 'constexpr' function like `nm: (value: i64) -> my_nanometer_type == { /*...*/ }` that takes an integer and returns a value of a strongly typed "nanometer" type, and then create a `nm` value by writing either `nm(123)` or **`123.nm()`**.
+- You can write a 'constexpr' function like `#!cpp nm: (value: i64) -> my_nanometer_type == { /*...*/ }` that takes an integer and returns a value of a strongly typed "nanometer" type, and then create a `nm` value by writing either `nm(123)` or **`123.nm()`**.
 
 Both **`123.nm()`** and **`123.u8()`** are very similar to user-defined literal syntax, and more general.
 
@@ -132,8 +135,8 @@ if !vec.empty() {
 | Unary operator | Cpp2 example | Cpp1 equivalent |
 |---|---|---|
 | `!` | `!vec.empty()` | `!vec.empty()` |
-| `+` | `+100` | `+100` |
-| `-` | `-100` | `-100` |
+| `+` | `#!cpp +100` | `#!cpp +100` |
+| `-` | `#!cpp -100` | `#!cpp -100` |
 
 The operators `.`, `*`, `&`, `~`, `++`, `--`, `()`, `[]`, and `$` are postfix. For example:
 
@@ -152,15 +155,15 @@ Postfix notation lets the code read fluidly left-to-right, in the same order in 
 
 | Unary operator | Cpp2 example | Cpp1 equivalent |
 |---|---|---|
-| `.` | `obj.f()` | `obj.f()` |
-| `*` | `pobj*.f()` | `(*pobj).f()` or `pobj->f()` |
-| `&` | `obj&` | `&obj` |
-| `~` | `val~` | `~val` |
-| `++` | `iter++` | `++iter` |
-| `--` | `iter--` | `--iter` |
-| `(` `)` | `f( 1, 2, 3)` | `f( 1, 2, 3)` |
-| `[` `]` | `vec[123]` | `vec[123]` |
-| `$` | `val$` | (reflection — no C++23 equivalent) |
+| `#!cpp .` | `#!cpp obj.f()` | `#!cpp obj.f()` |
+| `#!cpp *` | `#!cpp pobj*.f()` | `#!cpp (*pobj).f()` or `#!cpp pobj->f()` |
+| `#!cpp &` | `#!cpp obj&` | `#!cpp &obj` |
+| `#!cpp ~` | `#!cpp val~` | `#!cpp ~val` |
+| `#!cpp ++` | `#!cpp iter++` | `#!cpp ++iter` |
+| `#!cpp --` | `#!cpp iter--` | `#!cpp --iter` |
+| `(` `)` | `#!cpp f( 1, 2, 3)` | `#!cpp f( 1, 2, 3)` |
+| `[` `]` | `#!cpp vec[123]` | `#!cpp vec[123]` |
+| `$` | `val$` | _reflection — no Cpp1 equivalent yet_ |
 
 > Because `++` and `--` always have in-place update semantics, we never need to remember "use prefix `++`/`--` unless you need a copy of the old value." If you do need a copy of the old value, just take the copy before calling `++`/`--`.
 
@@ -168,9 +171,9 @@ Unary suffix operators must not be preceded by whitespace. When `*`, `&`, and `~
 
 | Unary postfix operators that<br>are also binary operators | Cpp2 example | Cpp1 equivalent |
 |---|---|---|
-| `*` | `pobj* * 42` | `(*pobj)*42` |
-| `&` | `obj& & mask` <p> (note: allowed in unsafe code only) | `&obj & mask` |
-| `~` | `~val ~ bitcomplement` | `val~ ~ bitcomplement` |
+| `#!cpp *` | `#!cpp pobj* * 42` | `#!cpp (*pobj)*42` |
+| `#!cpp &` | `#!cpp obj& & mask` <p> (note: allowed in unsafe code only) | `#!cpp &obj & mask` |
+| `#!cpp ~` | `#!cpp ~val ~ bitcomplement` | `#!cpp val~ ~ bitcomplement` |
 
 For more details, see [Design note: Postfix unary operators vs binary operators](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Postfix-unary-operators-vs-binary-operators).
 

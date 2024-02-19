@@ -8,9 +8,11 @@ All Cpp2 declarations are written as **"_name_ `:` _kind_ `=` _statement_"**.
 
 - The `=` is pronounced **"defined as."**
 
-- The _statement_ is typically an expression statement (e.g., `a + b();`) or a compound statement (e.g., `{ /*...*/ return c(d) / e; }`).
+- The _statement_ is typically an expression statement (e.g., `#!cpp a + b();`) or a compound statement (e.g., `#!cpp { /*...*/ return c(d) / e; }`).
 
-- Various parts of the syntax allow a `_` "don't care" wildcard or can be omitted entirely to accept a default (e.g., `x: int = 0;` can be equivalently written `x: _ = 0;` or `x := 0;` both of which deduce the type).
+- Various parts of the syntax allow a `_` "don't care" wildcard or can be omitted entirely to accept a default (e.g., `#!cpp x: int = 0;` can be equivalently written `#!cpp x: _ = 0;` or `#!cpp x := 0;` both of which deduce the type).
+
+> Note: When the type is omitted, whitespace does not matter, and writing `#!cpp x: = 0;` or `#!cpp x : = 0;` or `#!cpp x := 0;` or other whitespace is just a stylistic choice. This documentation's style uses the last one, except when there are multiple adjacent declaration lines this style lines up their `:` and `=`.
 
 
 ## Examples

@@ -11,7 +11,7 @@ A function call like `f(x)` is a normal function call that will call non-member 
 
 A function call like `x.f()` is a unified function call syntax (aka UFCS) call. It will call a member function if one is available, and otherwise will call `f(x)`. Having UFCS is important for generic code that may want to call a member or a non-member function, whichever is available. It's also important to enable fluid programming styles and natural IDE autocompletion support.
 
-An operator notation call like `a + b` will call an overloaded operator function if one is available, as usual in C++.
+An operator notation call like `#!cpp a + b` will call an overloaded operator function if one is available, as usual in C++.
 
 For example:
 
@@ -56,7 +56,7 @@ There are six ways to pass parameters that cover all use cases:
 
 | Parameter kind | "Pass me an `x` I can ______" | Accepts arguments that are | Special semantics |
 |---|---|---|---|
-| `in` (default) | read from | anything | always `const`<p>automatically passes by value if cheaply copyable |
+| `in` (default) | read from | anything | always `#!cpp const`<p>automatically passes by value if cheaply copyable |
 | `copy` | take a copy of | anything | acts like a normal local variable initialized with the argument |
 | `inout` | read from and write to | lvalues | |
 | `out` | write to (including construct) | lvalues, including uninitialized lvalues | must `=` assign/construct before other uses |
@@ -65,7 +65,7 @@ There are six ways to pass parameters that cover all use cases:
 
 
 
-> Note: All parameters and other objects in Cpp2 are `const` by default, except for local variables. For details, see [Design note: `const` objects by default](https://github.com/hsutter/cppfront/wiki/Design-note%3A-const-objects-by-default).
+> Note: All parameters and other objects in Cpp2 are `#!cpp const` by default, except for local variables. For details, see [Design note: `#!cpp const` objects by default](https://github.com/hsutter/cppfront/wiki/Design-note%3A-const-objects-by-default).
 
 
 ## Return values
@@ -114,22 +114,22 @@ main: ()
 
 > Cpp2 imbues Cpp1 code with nondiscardable semantics, while staying fully compatible as usual:
 >
-> - A function written in Cpp2 syntax that returns something other than `void` is always compiled to Cpp1 with `[[nodiscard]]`.
+> - A function written in Cpp2 syntax that returns something other than `#!cpp void` is always compiled to Cpp1 with `[[nodiscard]]`.
 >
-> - A function call written in Cpp2 `x.f()` member call syntax always treats a non-`void` return type as not discardable, even if the function was written in Cpp1 syntax that did not write `[[nodiscard]]`.
+> - A function call written in Cpp2 `x.f()` member call syntax always treats a non-`#!cpp void` return type as not discardable, even if the function was written in Cpp1 syntax that did not write `[[nodiscard]]`.
 
 
 ## Control flow
 
-## `if`, `else` — Branches
+## `#!cpp if`, `#!cpp else` — Branches
 
 TODO
 
-## `for`, `while`, `do` — Loops
+## `#!cpp for`, `#!cpp while`, `#!cpp do` — Loops
 
 TODO
 
-Loops can be named using the usual **name `:`** name introduction syntax, and `break` and `continue` can refer to those names. For example:
+Loops can be named using the usual **name `:`** syntax that introduces all names, and `#!cpp break` and `#!cpp continue` can refer to those names. For example:
 
 ``` cpp title="Using named break and continue" hl_lines="6 10"
 outer: while i<M next i++ {      // loop named "outer"

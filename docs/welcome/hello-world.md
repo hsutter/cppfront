@@ -2,7 +2,7 @@
 
 ## A `hello.cpp2` program
 
-Here is the usual one-line starter program that prints `Hello, world!`. Note that this is a complete program, no `#include` required:
+Here is the usual one-line starter program that prints `Hello, world!`. Note that this is a complete program, no `#!cpp #include` required:
 
 ``` cpp title="hello.cpp2 — on one line"
 main: () = std::cout << "Hello, world!\n";
@@ -28,7 +28,7 @@ This short program code already illustrates a few Cpp2 essentials.
 
 - `main` **is a** function that takes no arguments and returns nothing, and is **defined as** the code body shown.
 
-- `words` **is a** `std::vector`, initially **defined as** holding `"Alice"` and `"Bob"`.
+- `words` **is a** `std::vector`, initially **defined as** holding `#!cpp "Alice"` and `#!cpp "Bob"`.
 
 - `hello` **is a** function that takes a `std::string_view` it will only read from and that returns nothing, and is **defined as** code that prints the string to `cout` the usual C++ way.
 
@@ -40,13 +40,13 @@ All grammar is context-free. In particular, we (the human reading the code, and 
 
 - Declaring `words` uses **"CTAD"** (C++'s normal [constructor template argument deduction](https://en.cppreference.com/w/cpp/language/class_template_argument_deduction)) to deduce the type of elements in the `vector`.
 
-- Calling `words[0]` and `words[1]` is **bounds-checked by default**. From Cpp2 code, ordinary `std::vector` subscript accesses are safely bounds-checked by default without requiring any upgrade to your favorite standard library, and that's true for any similar subscript of something whose size can be queried using `std::size()` and `std::ssize()`, and for which `std::begin()` returns a random access iterator, including any in-house integer-indexed container types you already have that can easily provide `std::size()` and `std::ssize()` if they don't already.
+- Calling `#!cpp words[0]` and `#!cpp words[1]` is **bounds-checked by default**. From Cpp2 code, ordinary `std::vector` subscript accesses are safely bounds-checked by default without requiring any upgrade to your favorite standard library, and that's true for any similar subscript of something whose size can be queried using `std::size()` and `std::ssize()`, and for which `std::begin()` returns a random access iterator, including any in-house integer-indexed container types you already have that can easily provide `std::size()` and `std::ssize()` if they don't already.
 
-- `hello` uses **string interpolation** to be able to write `"Hello, (msg)$!\n"` instead of `"Hello, " << msg << "!\n"`.
+- `hello` uses **string interpolation** to be able to write `#!cpp "Hello, (msg)$!\n"` instead of `#!cpp "Hello, " << msg << "!\n"`.
 
 **Simplicity through generality + defaults.** A major way that Cpp2 delivers simplicity is by providing just one powerful general syntax for a given thing (e.g., one function definition syntax), but designing it so you can omit the parts you're not currently using (e.g., where you're happy with the defaults). We're already using some of those defaults above:
 
-- We can omit writing the `-> void` return type for a function that doesn't return anything, as both of these functions do.
+- We can omit writing the `#!cpp -> void` return type for a function that doesn't return anything, as both of these functions do.
 
 - We can omit the `{` `}` around single-statement function bodies, as `hello` does.
 
@@ -56,9 +56,9 @@ For details, see [Design note: Defaults are one way to say the same thing](https
 
 **Order-independent by default.** Did you notice that `main` called `hello`, which was defined later? Cpp2 code is order-independent by default — there are no forward declarations.
 
-**Seamless compatibility and interop.** We can just use `std::cout` and `std::operator<<` and `std::string_view` directly as usual. Cpp2 code works with any C++ code or library, including the standard library, using ordinary direct calls without any wrapping/marshaling/thunking.
+**Seamless compatibility and interop.** We can just use `std::cout` and `#!cpp std::operator<<` and `std::string_view` directly as usual. Cpp2 code works with any C++ code or library, including the standard library, using ordinary direct calls without any wrapping/marshaling/thunking.
 
-**C++ standard library is always available.** We didn't need `#include <iostream>` or `import std;`. The full C++ standard library is always available by default if your source file contains only syntax-2 code and you compile using cppfront's `-p` (short for `-pure-cpp2`), or if you use `-im` (short for `-import-std`). Cppfront is regularly updated to be compatible with C++23 and the latest draft C++26 library additions as soon as the ISO C++ committee votes them into the C++26 working draft, so as soon as you have a C++ implementation that has a new standard (or bleeding-edge draft standard!) C++ library feature, you'll be able to fully use it in Cpp2 code.
+**C++ standard library is always available.** We didn't need `#!cpp #include <iostream>` or `#!cpp import std;`. The full C++ standard library is always available by default if your source file contains only syntax-2 code and you compile using cppfront's `-p` (short for `-pure-cpp2`), or if you use `-im` (short for `-import-std`). Cppfront is regularly updated to be compatible with C++23 and the latest draft C++26 library additions as soon as the ISO C++ committee votes them into the C++26 working draft, so as soon as you have a C++ implementation that has a new standard (or bleeding-edge draft standard!) C++ library feature, you'll be able to fully use it in Cpp2 code.
 
 
 ## Building `hello.cpp2`
@@ -99,13 +99,13 @@ Here we can see more of how Cpp2 makes it features work.
 **How: Simple, safe, and efficient by default.**
 
 - **Line 9: CTAD** just works, because it turns into ordinary C++ code which already supports CTAD.
-- **Lines 10-11: Automatic bounds checking** is added to `words[0]` and `words[1]` nonintrusively at the call site by default. Because it's nonintrusive, it works seamlessly with all existing container types that are `std::size` and `std::ssize`-aware, when you use them from safe Cpp2 code.
+- **Lines 10-11: Automatic bounds checking** is added to `#!cpp words[0]` and `#!cpp words[1]` nonintrusively at the call site by default. Because it's nonintrusive, it works seamlessly with all existing container types that are `std::size` and `std::ssize`-aware, when you use them from safe Cpp2 code.
 - **Line 11: Automatic move from last use** ensures the last use of `words` will automatically avoid a copy if it's being passed to something that's optimized for rvalues.
-- **Line 16: String interpolation** performs the string capture of `msg`'s current value via `cpp2::to_string`. That uses `std::to_string` when available, and it also works for additional types (such as `bool`, to print `false` and `true` instead of `0` and `1`, without having to remember to use `std::boolalpha`).
+- **Line 16: String interpolation** performs the string capture of `msg`'s current value via `cpp2::to_string`. That uses `std::to_string` when available, and it also works for additional types (such as `#!cpp bool`, to print `#!cpp false` and `#!cpp true` instead of `0` and `1`, without having to remember to use `std::boolalpha`).
 
 **How: Simplicity through generality + defaults.**
 
-- **Line 7: `in` parameters** are implemented using `cpp2::in<>`, which is smart enough to pass by `const` value when that's safe and appropriate, otherwise by `const&`, so you don't have to choose the right one by hand.
+- **Line 7: `in` parameters** are implemented using `#cpp2::in<>`, which is smart enough to pass by `#!cpp const` value when that's safe and appropriate, otherwise by `#!cpp const&`, so you don't have to choose the right one by hand.
 
 **How: Order-independent by default.**
 
@@ -117,7 +117,7 @@ Here we can see more of how Cpp2 makes it features work.
 
 **How: C++ standard library always available.**
 
-- **Lines 1 and 3: `std::` is available** because cppfront was invoked with `-p`, which implies either `-im` (short for `-import-std`) or `-in` (short for `-include-std`, for compilers that don't support modules yet). The generated code tells `cpp2util.h` to `import` the entire standard library as a module (or do the equivalent via headers if modules are not available).
+- **Lines 1 and 3: `std::` is available** because cppfront was invoked with `-p`, which implies either `-im` (short for `-import-std`) or `-in` (short for `-include-std`, for compilers that don't support modules yet). The generated code tells `cpp2util.h` to `#!cpp import` the entire standard library as a module (or do the equivalent via headers if modules are not available).
 
 
 ## Building and running `hello.cpp` with any recent C++ compiler

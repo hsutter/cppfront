@@ -40,7 +40,7 @@ For details, see [Design note: Explicit discard](https://github.com/hsutter/cppf
 
 ## `is` — safe type/value queries
 
-An `x is C` expression allows safe type and value queries, and evaluates to `true` if `x` matches constraint `C`. It supports both static and dynamic queries, including customization, with support for standard library dynamic types like `std::variant`, `std::optional`, `std::expected`, and `std::any` provided out of the box.
+An `x is C` expression allows safe type and value queries, and evaluates to `#!cpp true` if `x` matches constraint `C`. It supports both static and dynamic queries, including customization, with support for standard library dynamic types like `std::variant`, `std::optional`, `std::expected`, and `std::any` provided out of the box.
 
 There are two kinds of `is`:
 
@@ -57,8 +57,8 @@ There are two kinds of `is`:
 
 | Value constraint kind | Example |
 |---|---|
-| Value | `x is 0` |
-| Value predicate | `x is (in(10, 20))` |
+| Value | `#!cpp x is 0` |
+| Value predicate | `#!cpp x is (in(10, 20))` |
 
 `is` is useful throughout the language, including in `inspect` pattern matching alternatives. `is` is extensible, and works out of the box with `std::variant`, `std::optional`, `std::expected`, and `std::any`. For examples, see:
 
@@ -78,10 +78,12 @@ Here are some `is` queries with their Cpp1 equivalents. In this table, uppercase
 |---|---|
 | `X is Y && Y is X` | `std::is_same_v<X,Y>` |
 | `D is B` | `std::is_base_of<B,D>` |
-| `pb is *D` | `dynamic_cast<D*>(pb) != nullptr` |
+| `#!cpp pb is *D` | `#!cpp dynamic_cast<D*>(pb) != nullptr` |
 | `v is T`  | `std::holds_alternative<T>(v)` |
-| `a is T`  | `a.type() == typeid(T)` |
+| `a is T`  | `#!cpp a.type() == typeid(T)` |
 | `o is T`  | `o.has_value()` |
+
+> Note: `is` unifies a variety of differently-named Cpp1 language and library queries under one syntax, and supports only the type-safe ones.
 
 
 ## `as` — safe casts and conversions
@@ -113,10 +115,12 @@ Here are some `as` casts with their Cpp1 equivalents. In this table, uppercase n
 | Some sample `as` casts | Cpp1 equivalent
 |---|---|
 | `x as Y` | `Y{x}` |
-| `pb as *D` | `dynamic_cast<D*>(pb)` |
+| `#!cpp pb as *D` | `#!cpp dynamic_cast<D*>(pb)` |
 | `v as T`  | `std::get<T>(v)` |
 | `a as T`  | `std::any_cast<T>(a)` |
 | `o as T`  | `o.value()` |
+
+> Note: `as` unifies a variety of differently-named Cpp1 language and library casts and conversions under one syntax, and supports only the type-safe ones.
 
 
 ## `inspect` — pattern matching
@@ -124,8 +128,11 @@ Here are some `as` casts with their Cpp1 equivalents. In this table, uppercase n
 An `inspect expr -> Type` expression allows pattern matching using `is`.
 
 - `expr` is evaluated once.
+
 - Each alternative spelled `is C` is evaluated in order as if called with `expr is C`.
-- If an alternative evaluates to `true`, then its `= alternative;` body is used as the value of the entire `inspect` expression, and the meaning is the same as if the entire `inspect` expression had been written as just `:Type = alternative;` — i.e., an unnamed object expression (aka 'temporary object') of type `Type` initialized with `alternative`.
+
+- If an alternative evaluates to `#!cpp true`, then its `#!cpp = alternative;` body is used as the value of the entire `inspect` expression, and the meaning is the same as if the entire `inspect` expression had been written as just `#!cpp :Type = alternative;` — i.e., an unnamed object expression (aka 'temporary object') of type `Type` initialized with `alternative`.
+
 - A catchall `is _` is required.
 
 For example:
