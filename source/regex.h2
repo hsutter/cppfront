@@ -848,6 +848,7 @@ regex_parser_state: @struct type = {
 regex_parser: <Error_out> type = {
 
     regex: std::string_view;
+    modifier: std::string_view;
     cur_state: regex_parser_state = ();
     pos: size_t = 0;
 
@@ -862,8 +863,9 @@ regex_parser: <Error_out> type = {
     supported_classes: std::vector<std::string> = ("alnum", "alpha", "ascii", "blank", "cntrl", "digits", "graph",
                                                    "lower", "print", "punct", "space", "upper", "word", "xdigit");
 
-    operator=: (out this, r: std::string_view, e: Error_out) = {
+    operator=: (out this, r: std::string_view, m: std::string_view, e: Error_out) = {
         this.regex = r;
+        this.modifier = m;
         this.error_out = e;
     }
 
@@ -1395,23 +1397,43 @@ regex_parser: <Error_out> type = {
         }
     }
 
+    parse_modifier: (inout this) -> std::string = {
+        r: std::string = "0";
+        sep: std::string = " | ";
+
+        add := :(name, inout r) = {
+            r += "(sep$)$(name)$";
+        };
+
+        mod_pos := 0;
+        while mod_pos != modifier.size() next mod_pos += 1 {
+            c: char = modifier[mod_pos];
+
+            if c == 'i' { add("::cpp2::regex::expression_flags::case_insensitive", r); }
+            else { error("Unknown modifier: '(c)$'"); }
+        }
+
+        return r;
+    }
+
     parse:(inout this) -> std::string = {
         parse_until('\0');
 
         if has_error { return "Error"; }
 
+        mod   := parse_modifier();
         named_groups_arg := create_named_groups_arg();
         inner := create_matcher_from_state();
         start := create_matcher("group_matcher_start_logic", "0, \"\"");
         end   := create_matcher("group_matcher_end_logic", "0");
         list  := create_matcher("matcher_list", "(start)$, (inner)$, (end)$");
-        return   create_matcher("regular_expression", "0, (next_group_id)$, (alternatives_count)$, (named_groups_arg)$, (list)$");
+        return   create_matcher("regular_expression", "(mod)$, (next_group_id)$, (alternatives_count)$, (named_groups_arg)$, (list)$");
     }
 
 }
 
-generate_template: <Err> (regex: std::string_view, err: Err) -> std::string = {
-    parser: regex_parser<Err> = (regex, err);
+generate_template: <Err> (regex: std::string_view, modifier: std::string_view, err: Err) -> std::string = {
+    parser: regex_parser<Err> = (regex, modifier, err);
     r := parser.parse();
     _ = parser;
     return r;
