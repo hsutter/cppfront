@@ -122,7 +122,7 @@ Both **`123.nm()`** and **`123.u8()`** are very similar to user-defined literal 
 
 Operators have the same precedence and associativity as in Cpp1, but some unary operators that are prefix (always or sometimes) in Cpp1 are postfix (always) in Cpp2.
 
-## Unary operators
+### Unary operators
 
 The operators `!`, `+`, and `-` are prefix, as in Cpp1. For example:
 
@@ -178,7 +178,7 @@ Unary suffix operators must not be preceded by whitespace. When `*`, `&`, and `~
 For more details, see [Design note: Postfix unary operators vs binary operators](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Postfix-unary-operators-vs-binary-operators).
 
 
-## Binary operators
+### Binary operators
 
 Binary operators are the same as in Cpp1. From highest to lowest precedence:
 

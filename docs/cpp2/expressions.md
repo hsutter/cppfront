@@ -212,6 +212,68 @@ For more examples, see also the examples in the previous two sections on `is` an
 
 ## `$` — captures, including interpolations
 
-TODO
+Suffix `$` is pronounced **"paste the value of"** and captures the value of an expression at the point when the expression where the capture is written is evaluated. Depending the complexity of the capture expression `expr$` and where it is used, parentheses `(expr)$` may be required for precedence or to show the boundaries of the expression.
 
-For details, see [Design note: Capture](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Capture).
+`x$` always captures `x` by value. To capture by reference, take the address and capture a pointer using `x&$`. If the value is immediately used, dereference again; for example `:(val) total&$* += val` adds to the `total` local variable itself, not a copy.
+
+Any capture is evaluated at the point where it is written, in the function expression, contract postcondition, or string literal. The stored captured value can then be used later when the context it is in is evaluated, such as when the function expression body it's in is actually called later (one or more times), when the postcondition it's in is evaluated later when the function returns, or when the string literal it's in is read later.
+
+
+### Capture in function expressions (aka lambdas)
+
+Any capture in a function expression body is evaluated at the point where the function expression is written, at the declaration of the function expression. The function expression itself is then evaluated each time the function is invoked, and can reference the captured value.
+
+For example:
+
+``` cpp title="Capture in an unnamed function expression (aka lambda)" hl_lines="6 7"
+main: () = {
+    s := "-sh\n";
+    vec: std::vector = (1, 2, 3, 5, 8, 13 );
+
+    vec.std::ranges::for_each(
+        :(i) = { std::cout << i << s$; }
+        //  Function capture: Paste local variable value
+    );
+}
+```
+
+The design and syntax are selected so that capture is spelled the same way in all contexts. For details, see [Design note: Capture](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Capture).
+
+
+### Capture in contract postconditions
+
+Any capture in a postcondition is evaluated at the point where the postcondition is written, at the beginning (entry) of the function. The postcondition itself is then evaluated when the function returns, and can reference the captured value.
+
+For example:
+
+``` cpp title="Capture in contract postconditions" hl_lines="2 3"
+push_back: (coll, value)
+    [[post: coll.ssize() == coll.ssize()$ + 1]]
+        //  Postcondition capture: Paste  "old" size
+= {
+    // ...
+}
+```
+
+
+### Capture in string interpolation
+
+A string literal can capture the value of an expression `expr` by writing `(expr)$` inside the string literal. The `(` `)` are required, and cannot be nested.
+
+Any capture in a string literal is evaluated at the point where the string literal is written. The string literal can be used repeatedly later, and includes the captured value.
+
+For example:
+
+``` cpp title="Capture for string interpolation" hl_lines="2 4"
+x := 0;
+std::cout << "x is (x)$\n";
+x = 1;
+std::cout << "now x+2 is (x+2)$\n";
+
+//  prints:
+//      x is 0
+//      now x+2 is 3
+```
+
+A string literal has type `std::string` if it performs any captures, otherwise it is a normal C/C++ string literal (array of characters).
+

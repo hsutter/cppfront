@@ -55,8 +55,8 @@ nav:
     - 'Hello, world!': welcome/hello-world.md
     - 'Adding cppfront to your existing C++ project': welcome/integration.md
   - 'Cpp2 reference':
-    - 'Common programming concepts': cpp2/common.md
-    - 'Common expressions': cpp2/expressions.md
+    - 'Common concepts': cpp2/common.md
+    - 'Expressions': cpp2/expressions.md
     - 'Declaration syntax': cpp2/declarations.md
     - 'Objects, initialization, and memory': cpp2/objects.md
     - 'Functions, branches, and loops': cpp2/functions.md
