@@ -388,7 +388,7 @@ class_matcher_logic: <CharT, negate: bool, List ...> type =
 {
     match: <Other> (cur, inout ctx, _ : Other) -> _ = {
         if ctx.has_flag(expression_flags::case_insensitive) {
-            if cur != ctx.end && (negate != match_any<List...>(safe_tolower(cur*)) || negate != match_any<List...>(safe_toupper(cur*))) {
+            if cur != ctx.end && negate != ( match_any<List...>(safe_tolower(cur*)) || match_any<List...>(safe_toupper(cur*))) {
                 return Other::match(cur + 1, ctx);
             }
             else {
@@ -398,6 +398,9 @@ class_matcher_logic: <CharT, negate: bool, List ...> type =
         else {
             if cur != ctx.end && negate != match_any<List...>(cur*) {
                 return Other::match(cur + 1, ctx);
+            }
+            else {
+                return match_return(false, ctx.end);
             }
         }
     }
@@ -426,6 +429,14 @@ class_matcher_logic: <CharT, negate: bool, List ...> type =
 
         return r;
     }
+}
+
+// Regex syntax: none Example: -
+//
+empty_matcher_logic: <CharT> type = {
+    match: <Other> (cur, inout ctx, _ : Other) Other::match(cur, ctx);
+    reset_ranges: (inout ctx) = {}
+    to_string: () bstring<CharT>();
 }
 
 // Regex syntax: \<special character>  Example: \.
@@ -492,20 +503,27 @@ group_ref_matcher_logic: <CharT, group: int, symbol: fixed_string> type = {
         g := ctx.get_group(group);
 
         pos := cur;
-        while g.start != g.end && pos != ctx.end next (g.start++, pos++) {
+        group_pos := g.start;
+        while group_pos != g.end && pos != ctx.end next (group_pos++, pos++) {
             if ctx.has_flag(expression_flags::case_insensitive) {
-                if safe_tolower(g.start*) != safe_tolower(pos*) {
+                if safe_tolower(group_pos*) != safe_tolower(pos*) {
                     return match_return(false, ctx.end);
                 }
             }
             else {
-                if g.start* != pos* {
+                if group_pos* != pos* {
                     return match_return(false, ctx.end);
                 }
             }
         }
 
-        return Other::match(pos, ctx);
+        if group_pos == g.end {
+            return Other::match(pos, ctx);
+        }
+        else {
+            return match_return(false, ctx.end);
+        }
+
     }
     reset_ranges: (inout ctx) = {}
     to_string: ()               bstring<CharT>(symbol.data());
@@ -950,9 +968,10 @@ regex_parser: <Error_out> type = {
     create_matcher_from_state: (inout this) -> std::string = {
         if 0 == cur_state.alternate_match_lists.size() { return create_matcher_from_list(cur_state.cur_match_list); }
 
-        if 0 != cur_state.cur_match_list.size() {
-            cur_state.next_alternative();
+        if 0 == cur_state.cur_match_list.size() {
+            cur_state.add(create_matcher("empty_matcher_logic", ""));
         }
+        cur_state.next_alternative();
 
         list: std::string = "";
         separator: std::string = "";
@@ -1174,7 +1193,8 @@ regex_parser: <Error_out> type = {
         c_next: char = regex[pos];
 
         if '1' <= c_next <= '9' {
-            if !add_group_matcher(std::string(1, c_next)) { return false; }
+            group := grab_number();
+            if !add_group_matcher(group) { return false; }
         }
         else if std::string::npos != std::string("^.[]$()*{}?+|").find(c_next) {
             if c_next == '$' {
