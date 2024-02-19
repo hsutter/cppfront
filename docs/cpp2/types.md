@@ -7,7 +7,7 @@ A user-defined `type` is written using the same **name `:` kind `=` value** [dec
 
 In a `type`, data members are private by default, and functions and nested types are public by default. To explicitly declare a type scope declaration `public`, `protected`, or `private`, write that keyword at the beginning of the declaration.
 
-``` cpp title="Example: Writing a simple type"
+``` cpp title="Writing a simple type" hl_lines="1"
 mytype: type =
 {
     // data members are private by default
@@ -40,7 +40,7 @@ The name `this` may only be used for the first parameter of a type-scope functio
 
 For example, here is how to write read-only member function named `print` that takes a read-only string value and prints this object's data value and the string message:
 
-``` cpp title="Example: this"
+``` cpp title="The this parameter" hl_lines="4 6"
 mytype: type = {
     data: i32;   // some data member (private by default)
 
@@ -73,11 +73,11 @@ A `this` parameter can additionally be declared as one of the following:
 
 - **`final`**: Writing `myfunc: (final this /*...*/)` defines a final override of an existing base class virtual function.
 
-A pure virtual function is a function with a `virtual this` parameter and no body.
+A pure virtual function is a function with a `virtual this` or `override this` parameter and no body.
 
 For example:
 
-``` cpp title="Example: Virtual functions"
+``` cpp title="Virtual functions" hl_lines="3 4 14 15"
 abstract_base: type
 = {
     //  A pure virtual function: virtual + no body
@@ -187,7 +187,7 @@ All copy/move/comparison `operator=` functions are memberwise by default in Cpp2
 
 For example:
 
-``` cpp title="Memberwise operator= semantics
+``` cpp title="Memberwise operator= semantics" hl_lines="9-11 20-22"
 mytype: type
 = {
     //  data members (private by default)
@@ -241,6 +241,13 @@ Most of Cpp2's `operator<=>` has already been merged into ISO C++, except for al
 - **Valid chains: All `<`/`<=`, all `>`/`>=`, or all `==`.** All mathematically sound and safe chains like `a <= b < c` are supported, with efficient single evaluation of each term. They are "sound" because they are transitive; these chains imply a relationship between `a` and `c` (in this case, the chain implies that `a <= c` is also true).
 
 - **Invalid chains: Everything else.** Nonsense chains like `a >= b < c` and `a != b != c` are compile time errors. They are "nonsense" because they are non-transitive; these chains do not imply any relationship between `a` and `c`.
+
+``` cpp title="Chained comparisons" hl_lines="2"
+//  If requested is in the range of values [lo, hi)
+if lo <= requested < hi {
+    // ... do something ...
+}
+```
 
 For details, see [P0515 "Consistent comparison" section 3.3](https://wg21.link/p0515) and [P0893 "Chaining comparisons"](https://wg21.link/p0893).
 

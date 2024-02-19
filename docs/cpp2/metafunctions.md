@@ -15,7 +15,7 @@ The most important thing about metafunctions is that they are not hardwired lang
 
 Metafunctions provide an easy way for a type author to opt into a group of defaults, constraints, and generated functions: Just write `@name` afer the `:` of a declaration, where `name` is the name of the metafunctions. This lets the type author declare (and the human reader see) the intent up front: "This isn't just any `type`, this is a `@value type`" which automatically gives the type default/copy/move construction and assignment, `<=>` with `std::strong_ordering` comparisons, and guarantees that it has a public destructor and no protected or virtual functions:
 
-``` cpp title="Example: Using the value metafunction when writing a type"
+``` cpp title="Using the value metafunction when writing a type" hl_lines="1"
 point2d: @value type = {
     x: i32 = 0;
     y: i32 = 0;
@@ -69,7 +69,7 @@ TODO
 
 Cpp2 has no `enum` feature hardwired into the language. Instead you apply the `@enum` metafunction when writing an ordinary `type`:
 
-``` cpp title="Example: Using @enum"
+``` cpp title="Using the @enum metafunction when writing a type" hl_lines="14"
 // skat_game is declaratively a safe enumeration type: it has
 // default/copy/move construction/assignment and <=> with
 // std::strong_ordering, a minimal-size signed underlying type
@@ -99,7 +99,7 @@ Unlike C `enum`, this `@enum` is scoped and strongly typed (does not implicitly 
 
 Unlike C++11 `enum class`, it's "just a `type`" which means it can naturally also have member functions and other things that a type can have:
 
-``` cpp title="Example: An @enum type with a member function"
+``` cpp title="An @enum type with a member function" hl_lines="1"
 janus: @enum type = {
     past;
     future;
@@ -113,7 +113,7 @@ janus: @enum type = {
 
 There's also a `flag_enum` variation with power-of-two semantics and an unsigned underlying type:
 
-``` cpp title="Example: Using @flag_enum"
+``` cpp title="Using the @flag_enum metafunction when writing a type" hl_lines="11"
 // file_attributes is declaratively a safe flag enum type:
 // same as enum, but with a minimal-size unsigned underlying
 // type by default, and values that automatically start at 1
@@ -137,7 +137,7 @@ file_attributes: @flag_enum<u8> type = {
 
 `@union` declaratively opts into writing a safe discriminated union/variant dynamic type. For example:
 
-``` cpp title="Example: Using @union"
+``` cpp title="Using the @union metafunction when writing a type" hl_lines="9"
 // name_or_number is declaratively a safe union/variant type:
 // it has a discriminant that enforces only one alternative
 // can be active at a time, members always have a name, and
@@ -173,7 +173,7 @@ Each `@union` type has its own type-safe name, has clear and unambiguous named m
 
 Because a `@union type` is still a `type`, it can naturally have other things normal types can have, such as template parameter lists and member functions:
 
-``` cpp title="Example: A templated custom safe union type"
+``` cpp title="A templated custom safe union type" hl_lines="1"
 name_or_other: @union <T:type> type
 = {
     name  : std::string;

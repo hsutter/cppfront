@@ -1,3 +1,9 @@
+/*
+    the default font sizes look small and encourage zooming,
+    which loses the navigation side panels
+*/
+p { font-size: 16px; }
+td { font-size: 16px; }
 
 /*
     todo: try to make the nav pane section labels larger

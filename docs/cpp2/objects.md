@@ -13,7 +13,7 @@ Its declaration is written using the same **name `:` kind `=` value** [declarati
 
 For example:
 
-``` cpp title="Example: Declaring some objects"
+``` cpp title="Declaring some objects"
 //  numbers is an object of type std::vector<point2d>,
 //  defined as having the initial contents 1, 2, 3
 numbers: std::vector<int> = (1, 2, 3);
@@ -26,13 +26,13 @@ count := -1;        // same, deducing the object's type by just omitting it
 ```
 
 
-## Guaranteed initialization
+## <a id="Init"></a> Guaranteed initialization
 
 Every object must be initialized using `=` before it is used.
 
 An object in any scope can be initialized at its declaration. For example:
 
-``` cpp title="Example: Initializing objects when they are declared" hl_lines="4 10"
+``` cpp title="Initializing objects when they are declared" hl_lines="4 10"
 shape: type = {
     //  An object at type scope (data member)
     //  initialized with its type's default value
@@ -61,7 +61,7 @@ Additionally, at function local scope an object `obj` can be initialized separat
 
 For example:
 
-``` cpp title="Example: Initializing local objects after they are declared"
+``` cpp title="Initializing local objects after they are declared" hl_lines="5 14 17 21"
 f: () = {
     buf: std::array<std::byte, 1024>;   // uninitialized
     //  ... calculate some things ...
@@ -108,7 +108,7 @@ The default is `unique.new` if you don't specify an arena object.
 For example (see [types](types.md) for more details about writing types):
 
 
-``` cpp title="Example: Heap allocation"
+``` cpp title="Heap allocation" hl_lines="3-6 10-11"
 f: () -> std::shared_ptr<widget>
 = {
     //  Dynamically allocate an object owned by a std::unique_ptr

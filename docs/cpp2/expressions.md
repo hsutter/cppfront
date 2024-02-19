@@ -5,7 +5,7 @@
 
 `_` is pronounced **"don't care"** and allowed as a wildcard in most contexts. For example:
 
-``` cpp title="Example: _ wildcard"
+``` cpp title="Using the _ wildcard" hl_lines="2 5 11"
 //  We don't care about the guard variable's name
 _ : std::lock_guard = mut;
 
@@ -22,7 +22,7 @@ return inspect v -> std::string {
 
 Cpp2 treats all function outputs (return values, and results produced via `inout` and `out` parameters) as important, and does not let them be silently discarded by default. To explicitly discard such a value, assign it to `_`. For example:
 
-``` cpp title="Example: Using _ for explicit discard"
+``` cpp title="Using _ for explicit discard" hl_lines="1 8"
 _ = vec.emplace_back(1,2,3);
     // "_ =" is required to explicitly discard emplace_back's
     // return value (which is non-void since C++17)
@@ -88,7 +88,7 @@ Here are some `is` queries with their Cpp1 equivalents. In this table, uppercase
 
 An `x as T` expression allows safe type casts. `x` must be an object or expression, and `T` must be a type. It supports both static and dynamic typing, including customization with support for the standard dynamically typed libraries `std::variant`, `std::optional`, and `std::any` provided in the box. For example:
 
-``` cpp title="Example: Using as"
+``` cpp title="Using as" hl_lines="4 6 14"
 main: () = {
     a: std::any = 0;                // a's type is now int, value 0
     test(a);                        // prints "zero"
@@ -130,19 +130,21 @@ An `inspect expr -> Type` expression allows pattern matching using `is`.
 
 For example:
 
-``` cpp title="Example: Using inspect"
+``` cpp title="Using inspect" hl_lines="6-13"
 //  A generic function that takes an argument 'x' of any type
 //  and inspects various things about `x`
 test: (x) = {
     forty_two := 42;
-    std::cout << inspect x -> std::string {
-        is 0           = "zero";            // == 0
-        is (forty_two) = "the answer";      // == 42
-        is int         = "integer";         // is type int (and not 0 or 42)
-        is std::string = x as std::string;  // is type std::string
-        is std::vector = "a std::vector";   // is a vector</*of-some-type*/>
-        is _           = "(no match)";      // is something else
-    } << "\n";
+    std::cout
+        << inspect x -> std::string {
+            is 0           = "zero";            // == 0
+            is (forty_two) = "the answer";      // == 42
+            is int         = "integer";         // is type int (and not 0 or 42)
+            is std::string = x as std::string;  // is type std::string
+            is std::vector = "a std::vector";   // is a vector</*of-some-type*/>
+            is _           = "(no match)";      // is something else
+        }
+        << "\n";
 }
 
 //  Sample call site

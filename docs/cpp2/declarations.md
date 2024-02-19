@@ -15,7 +15,7 @@ All Cpp2 declarations are written as **"_name_ `:` _kind_ `=` _statement_"**.
 
 ## Examples
 
-``` cpp title="Example: Consistent declarations — name : kind = statement"
+``` cpp title="Consistent declarations — name : kind = statement" hl_lines="2 5 10 17 21 25 34 40"
 //  n is a namespace defined as the following scope
 n: namespace
 = {

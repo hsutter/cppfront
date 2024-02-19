@@ -13,7 +13,7 @@ As always, `main` is the entry point of the program. For example:
     - Using `args` performs zero heap allocations. Every `string_view` is directly bound to the string storage provided by host environment.
     - `args.argc` and `args.argv` additionally provide access to the raw C/C++ `main` parameters.
 
-``` cpp title="Examples: main with (args)"
+``` cpp title="main with (args)" hl_lines="5 9"
 //  Print out command line arguments, then invoke
 //  a Qt event loop for a non-UI Qt application
 main: (args) -> int
@@ -40,7 +40,7 @@ main: (args) -> int
 
 The usual `// line comments` and `/* stream comments */` are supported. For example:
 
-``` cpp title="Example: Comments"
+``` cpp title="Writing comments"
 //  A line comment: After //, the entire
 //  rest of the line is part of the comment
 
@@ -98,7 +98,7 @@ Cpp2 supports the same fundamental types as today's Cpp1, but additionally provi
 
 Types can be qualified with `const` and `*`. Types are written left-to-right, so a qualifier always applies to what immediately follows it. For example, to declare a `const` pointer to a non-`const` pointer to a `const i32` object, write:
 
-``` cpp title="Example: Type qualifiers"
+``` cpp title="Using type qualifiers"
 //  A const pointer to a non-const pointer to a const i32 object
 p: const * * const i32;
 ```
@@ -123,7 +123,7 @@ Operators have the same precedence and associativity as in Cpp1, but some unary 
 
 The operators `!`, `+`, and `-` are prefix, as in Cpp1. For example:
 
-``` cpp title="Example: Prefix operators"
+``` cpp title="Using prefix operators"
 if !vec.empty() {
     vec.emplace_back( -123.45 );
 }
@@ -137,7 +137,7 @@ if !vec.empty() {
 
 The operators `.`, `*`, `&`, `~`, `++`, `--`, `()`, `[]`, and `$` are postfix. For example:
 
-``` cpp title="Example: Postfix operators"
+``` cpp title="Using postfix operators"
 //  Cpp1 examples, from cppfront's own source code:
 //      address = &(*tokens)[pos + num];
 //      is_void = *(*u)->identifier == "void";

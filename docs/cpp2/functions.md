@@ -7,30 +7,47 @@ TODO
 
 ## Calling functions: `f(x)` syntax, and `x.f()` UFCS syntax
 
-A function call like `f(x)` is a normal non-member function call. It will call non-member functions only.
+A function call like `f(x)` is a normal function call that will call non-member functions only, as usual in C++.
 
 A function call like `x.f()` is a unified function call syntax (aka UFCS) call. It will call a member function if one is available, and otherwise will call `f(x)`. Having UFCS is important for generic code that may want to call a member or a non-member function, whichever is available. It's also important to enable fluid programming styles and natural IDE autocompletion support.
 
+An operator notation call like `a + b` will call an overloaded operator function if one is available, as usual in C++.
+
 For example:
 
-``` cpp title="Example: Function calls"
-f: ( v : std::vector<widget> ) = {
-    //  This calls std::vector::size()
-    std::cout << v.size();
+``` cpp title="Function calls" hl_lines="3 7 11 16 19 20"
+//  Generic function to log something
+//  This calls operator<< using operator notation
+log: (x) = clog << x;
 
-    //  This calls std::ssize(v), because v
-    //  doesn't have a .ssize member function
-    std::cout << v.ssize();
+f: ( v : std::vector<widget> ) = {
+    //  This calls log() with the result of std::vector::size()
+    log( v.size() );
+
+    //  This calls log() with the result of std::ssize(v), because
+    //  v doesn't have a .ssize member function
+    log( v.ssize() );
 }
 
 //  Generic function to print "hello, ___!" for any printable type
 hello: (name) = {
-    //  Using the C standard library is arguably nicer with UFCS
     myfile := fopen("xyzzy.txt", "w");
-    myfile.fprintf( "Hello, (name)%!\n" );
+    //  Direct calls to C nonmember functions, using UFCS and safe
+    //  string interpolation (instead of type-unsafe format strings)
+    myfile.fprintf( "Hello, (name)$!\n" );
     myfile.fclose();
+    //  The C and C++ standard libraries are not only fully available,
+    //  but safer (and arguably nicer) when used from Cpp2 syntax code
 }
 ```
+
+To explicitly treat an object name passed as an argument as `move` or `out`, write that keyword before the variable name.
+
+- Explicit `move` is rarely needed. Every definite last use of a local variable will apply `move` by default. Writing `move` from an object before its definite last use means that later uses may see a moved-from state.
+
+- Explicit `out` is needed only when initializing a local variable separately from its declaration using a call to a function with an `out` parameter. For details, see [Guaranteed initialization](../cpp2/objects.md#Init).
+
+For example:
 
 
 ## Parameters
@@ -62,7 +79,7 @@ A function's outputs are its return values, and the "out" state of any `out` and
 
 Function outputs cannot be silently discarded. To explicitly discard a function output, assign it to `_`. For example:
 
-``` cpp title="Example: No silent discard"
+``` cpp title="No silent discard" hl_lines="10 11 22 27"
 f: ()             -> void = { }
 g: ()             -> int  = { return 10; }
 h: (inout x: int) -> void = { x = 20; }
@@ -84,7 +101,7 @@ main: ()
     {
         x := 0;
         h( x );             // ok, x is referred to again...
-        _ = x;              // ... here, its value explicitly discarded
+        _ = x;              // ... here where its value explicitly discarded
     }
 
     {
@@ -114,7 +131,7 @@ TODO
 
 Loops can be named using the usual **name `:`** name introduction syntax, and `break` and `continue` can refer to those names. For example:
 
-``` cpp title="Example: Writing a simple type"
+``` cpp title="Using named break and continue" hl_lines="6 10"
 outer: while i<M next i++ {      // loop named "outer"
     // ...
     inner: while j<N next j++ {  // loop named "inner"
