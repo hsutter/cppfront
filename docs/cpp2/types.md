@@ -236,7 +236,7 @@ main: () = {
 
 > Note: This makes memberwise semantics symmetric for construction and assignment. In Cpp1, only non-copy/move constructors have a default, which is to initialize a member with its default initializer. In Cpp2, both constructors and assignment operators default to using the default initializer if it's a conversion function (non-`that`, aka non-copy/move), and using memberwise `member = that.member;` for copy/move functions.
 
-
+TODO: include an example of using `member = _;`
 
 
 ## `#!cpp operator<=>` — Unified comparisons
