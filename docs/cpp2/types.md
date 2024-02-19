@@ -218,8 +218,6 @@ mytype: type
         print();
     }
 
-    // TODO skipping the default memberwise assignment for later setting
-
     print: (this) = std::cout << "value is [(name)$] [(social_handle)$]\n";
 }
 
