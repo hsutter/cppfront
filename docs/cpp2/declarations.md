@@ -1,6 +1,6 @@
 # Declaration syntax
 
-## Unified declaration syntax
+## Overview: Unified declaration syntax
 
 All Cpp2 declarations are written as **"_name_ `:` _kind_ `=` _statement_"**.
 
@@ -61,10 +61,10 @@ n: namespace
 }
 ```
 
-> Note: `@enum` is a metafunction, which provides an easy way to opt into a group of defaults, constraints, and generated functions. For details, see [`@enum`, `@flag_enum`](metafunctions.md/#enum-flag_enum)
+> Note: `@enum` is a metafunction, which provides an easy way to opt into a group of defaults, constraints, and generated functions. For details, see [`@enum`, `@flag_enum`](metafunctions.md#enum-flag_enum)
 
 
-## `requires` constraints
+## <a id="requires"></a> `requires` constraints
 
 TODO
 

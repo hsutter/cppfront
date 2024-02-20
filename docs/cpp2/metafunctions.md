@@ -11,7 +11,7 @@ A metafunction is a compile-time function that can participate in interpreting t
 
 The most important thing about metafunctions is that they are not hardwired language features — they are compile-time library code that uses the reflection and code generation API, that lets the author of an ordinary type easily opt into a named set of defaults, requirements, and generated contents. This approach is essential to making the language simpler, because it lets us avoid hardwiring special "extra" types into the language and compiler.
 
-## Applying metafunctions
+## <a id="applying-metafunctions"></a> Applying metafunctions
 
 Metafunctions provide an easy way for a type author to opt into a group of defaults, constraints, and generated functions: Just write `@name` afer the `:` of a declaration, where `name` is the name of the metafunction. This lets the type author declare (and the human reader see) the intent up front: "This isn't just any `type`, this is a `@value type`" which automatically gives the type default/copy/move construction and assignment, `<=>` with `std::strong_ordering` comparisons, and guarantees that it has a public destructor and no protected or virtual functions:
 
@@ -26,12 +26,12 @@ point2d: @value type = {
 }
 ```
 
-## Generating source code at compile time
+## <a id="generating-source"></a>Generating source code at compile time
 
 TODO
 
 
-## Built-in metafunctions
+## <a id="built-in-metafunctions"></a>Built-in metafunctions
 
 The following metafunctions are provided in the box with cppfront.
 
@@ -45,7 +45,7 @@ TODO
 TODO
 
 
-### ordered, weakly_ordered, partially_ordered
+### <a id="ordered"></a>ordered, weakly_ordered, partially_ordered
 
 TODO
 
@@ -55,7 +55,7 @@ TODO
 TODO
 
 
-### basic_value, value, weakly_ordered_value, partially_ordered_value
+### <a id="value"></a>basic_value, value, weakly_ordered_value, partially_ordered_value
 
 TODO
 
@@ -65,7 +65,7 @@ TODO
 TODO
 
 
-### `enum`, `flag_enum`
+### `enum`
 
 Cpp2 has no `enum` feature hardwired into the language. Instead you apply the `@enum` metafunction when writing an ordinary `type`:
 
@@ -111,7 +111,9 @@ janus: @enum type = {
 }
 ```
 
-There's also a `flag_enum` variation with power-of-two semantics and an unsigned underlying type:
+### `flag_enum`
+
+`flag_enum` is a variation on `enum` that has power-of-two default enumerator values, a default unsigned underlying type, and supports bitwise operators:
 
 ``` cpp title="Using the @flag_enum metafunction when writing a type" hl_lines="11"
 // file_attributes is declaratively a safe flag enum type:
@@ -207,12 +209,12 @@ TODO
 TODO
 
 
-## Writing your own metafunctions
+## <a id="writing-metafunctions"></a> Writing your own metafunctions
 
 TODO
 
 
-## Reflection API reference
+## <a id="reflection-api"></a> Reflection API reference
 
 TODO
 

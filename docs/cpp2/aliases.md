@@ -1,18 +1,18 @@
 # Aliases
 
-## Namespace aliases
+## <a id="namespace-aliases"></a> Namespace aliases
 
 TODO
 
-## Type aliases
+## <a id="type-aliases"></a> Type aliases
 
 TODO
 
-## Function aliases
+## <a id="function-aliases"></a> Function aliases
 
 TODO
 
-## Object aliases
+## <a id="object-aliases"></a> Object aliases
 
 TODO
 

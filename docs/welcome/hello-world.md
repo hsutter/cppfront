@@ -2,12 +2,12 @@
 
 ``` mermaid
 graph LR
-  A[hello.cpp2] ==> B(["` **cppfront** `"]);
+  A["` hello.cpp**2** `"] ==> B(["` **cppfront** `"]);
   B ==> C[hello.cpp];
   C ==> D([Your favorite<br> C++ compiler<p>... and IDE / libraries / build<br>system / in-house tools / ...]);
 ```
 
-## A `hello.cpp2` program
+## <a id="hello-cpp2"></a> A `hello.cpp2` program
 
 Here is the usual one-line starter program that prints `Hello, world!`. Note that this is a complete program, no `#!cpp #include` required:
 
@@ -42,13 +42,11 @@ All grammar is context-free. In particular, we (the human reading the code, and 
 
 **Simple, safe, and efficient by default.** Cpp2 has contracts (tracking draft C++26 contracts), `inspect` pattern matching, string interpolation, automatic move from last use, and more.
 
-<a id="CTAD"></a>
-
-- Declaring `words` uses **"CTAD"** (C++'s normal [constructor template argument deduction](https://en.cppreference.com/w/cpp/language/class_template_argument_deduction)) to deduce the type of elements in the `vector`.
+- <a id="ctad"></a> Declaring `words` uses **"CTAD"** (C++'s normal [constructor template argument deduction](https://en.cppreference.com/w/cpp/language/class_template_argument_deduction)) to deduce the type of elements in the `vector`.
 
 - Calling `#!cpp words[0]` and `#!cpp words[1]` is **bounds-checked by default**. From Cpp2 code, ordinary `std::vector` subscript accesses are safely bounds-checked by default without requiring any upgrade to your favorite standard library, and that's true for any similar subscript of something whose size can be queried using `std::size()` and `std::ssize()`, and for which `std::begin()` returns a random access iterator, including any in-house integer-indexed container types you already have that can easily provide `std::size()` and `std::ssize()` if they don't already.
 
-- `hello` uses **string interpolation** to be able to write `#!cpp "Hello, (msg)$!\n"` instead of `#!cpp "Hello, " << msg << "!\n"`.
+- `hello` uses **string interpolation** to be able to write `#!cpp "Hello, (msg)$!\n"` instead of `#!cpp "Hello, " << msg << "!\n"`. String interpolation also supports [standard C++ format specifications](https://en.cppreference.com/w/cpp/utility/format/spec), so you won't need iostream manipulators.
 
 **Simplicity through generality + defaults.** A major way that Cpp2 delivers simplicity is by providing just one powerful general syntax for a given thing (e.g., one function definition syntax), but designing it so you can omit the parts you're not currently using (e.g., where you're happy with the defaults). We're already using some of those defaults above:
 
@@ -67,7 +65,7 @@ For details, see [Design note: Defaults are one way to say the same thing](https
 **C++ standard library is always available.** We didn't need `#!cpp #include <iostream>` or `#!cpp import std;`. The full C++ standard library is always available by default if your source file contains only syntax-2 code and you compile using cppfront's `-p` (short for `-pure-cpp2`), or if you use `-im` (short for `-import-std`). Cppfront is regularly updated to be compatible with C++23 and the latest draft C++26 library additions as soon as the ISO C++ committee votes them into the C++26 working draft, so as soon as you have a C++ implementation that has a new standard (or bleeding-edge draft standard!) C++ library feature, you'll be able to fully use it in Cpp2 code.
 
 
-## Building `hello.cpp2`
+## <a id="build-hello-cpp2"></a> Building `hello.cpp2`
 
 Now use `cppfront` to compile `hello.cpp2` to a standard C++ file `hello.cpp`:
 
@@ -125,7 +123,7 @@ Here we can see more of how Cpp2 makes it features work.
 - **Lines 1 and 3: `std::` is available** because cppfront was invoked with `-p`, which implies either `-im` (short for `-import-std`) or `-in` (short for `-include-std`, for compilers that don't support modules yet). The generated code tells `cpp2util.h` to `#!cpp import` the entire standard library as a module (or do the equivalent via headers if modules are not available).
 
 
-## Building and running `hello.cpp` with any recent C++ compiler
+## <a id="build-hello-cpp"></a> Building and running `hello.cpp` with any recent C++ compiler
 
 Finally, just build `hello.cpp` using your favorite C++20 compiler, where `CPPFRONT_INCLUDE` is the path to `/cppfront/include`:
 
