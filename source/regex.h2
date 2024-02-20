@@ -455,13 +455,24 @@ escaped_char_matcher_logic: <CharT, C: CharT, L: CharT, U: CharT> type =
     to_string: () "\\(C)$";
 }
 
+// Regex syntax: \K Example: \K
+//
+global_group_reset: <CharT> type = {
+    match: <Other> (cur, inout ctx, _ : Other) -> _ = {
+        ctx.set_group_start(0, cur);
+        return Other::match(cur, ctx);
+    }
+
+    reset_ranges: (inout ctx) = {}
+    to_string: () "\\K";
+}
+
 // Regex syntax: (<inner>) Example: (.*)
 //
 group_matcher_start_logic: <CharT, group: int, name: fixed_string> type = {
     match: <Other> (cur, inout ctx, _ : Other) -> _ = {
         ctx.set_group_start(group, cur);
-        r := Other::match(cur, ctx);
-        return r;
+        return Other::match(cur, ctx);
     }
 
     reset_ranges: (inout ctx) = ctx.set_group_invalid(group);
@@ -1290,6 +1301,10 @@ regex_parser: <Error_out> type = {
             group := grab_number();
             if !add_group_matcher(group) { return false; }
         }
+        else if std::string::npos != std::string("tnrfae").find(c_next) {
+            inner := create_matcher("char_matcher_logic", "'\\(c_next)$', '\\(c_next)$', '\\(c_next)$'");
+            cur_state.add(create_matcher("named_matcher_logic", "\"\\\\(c_next)$\", (inner)$"));
+        }
         else if std::string::npos != std::string("^.[]$()*{}?+|").find(c_next) {
             if c_next == '$' {
                 // TODO: Provide proper escape for cppfront capture
@@ -1328,6 +1343,9 @@ regex_parser: <Error_out> type = {
             group : std::string = "";
             if !(next(out c_next) && grab_until(term_char, out group)) { error("No ending bracket."); return false; }
             if !add_group_matcher(group) { return false; }
+        }
+        else if 'K' == c_next {
+            cur_state.add(create_matcher("global_group_reset", ""));
         }
         else if 'A' == c_next { cur_state.add(create_matcher("named_string_start", "")); }
         else if 'b' == c_next { cur_state.add(create_matcher("word_boundary_matcher_logic", "false")); }
