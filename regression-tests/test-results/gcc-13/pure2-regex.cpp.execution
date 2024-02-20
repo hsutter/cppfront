@@ -1,446 +1,359 @@
-Running basic3:
-1: OK regex: \) parsed_regex: \) str: () result: (1,2) expected_results (1,2)
-2: OK regex: \} parsed_regex: \} str: } result: (0,1) expected_results (0,1)
-3: OK regex: ] parsed_regex: ] str: ] result: (0,1) expected_results (0,1)
-4: OK regex: \$^ parsed_regex: \$^ str: NULL result: (0,0) expected_results (0,0)
-5: OK regex: a(\$) parsed_regex: a(\$) str: aa result: (1,2)(2,2) expected_results (1,2)(2,2)
-6: OK regex: a*(^a) parsed_regex: a*(^a) str: aa result: (0,1)(0,1) expected_results (0,1)(0,1)
-7: OK regex: (..)*(...)* parsed_regex: (..)*(...)* str: a result: (0,0)(?,?)(?,?) expected_results (0,0)(?,?)(?,?)
-8: OK regex: (..)*(...)* parsed_regex: (..)*(...)* str: abcd result: (0,4)(2,4)(?,?) expected_results (0,4)(2,4)(?,?)
-9: OK regex: (ab|a)(bc|c) parsed_regex: (ab|a)(bc|c) str: abc result: (0,3)(0,2)(2,3) expected_results (0,3)(0,2)(2,3)
-10: OK regex: (ab)c|abc parsed_regex: (ab)c|abc str: abc result: (0,3)(0,2) expected_results (0,3)(0,2)
-11: OK regex: a{0}b parsed_regex: a{0}b str: ab result: (1,2) expected_results (1,2)
-12: OK regex: (a*)(b?)(b+)b{3} parsed_regex: (a*)(b?)(b+)b{3} str: aaabbbbbbb result: (0,10)(0,3)(3,4)(4,7) expected_results (0,10)(0,3)(3,4)(4,7)
-13: OK regex: (a*)(b{0,1})(b{1,})b{3} parsed_regex: (a*)(b{0,1})(b{1,})b{3} str: aaabbbbbbb result: (0,10)(0,3)(3,4)(4,7) expected_results (0,10)(0,3)(3,4)(4,7)
-15: OK regex: ((a|a)|a) parsed_regex: ((a|a)|a) str: a result: (0,1)(0,1)(0,1) expected_results (0,1)(0,1)(0,1)
-16: OK regex: (a*)(a|aa) parsed_regex: (a*)(a|aa) str: aaaa result: (0,4)(0,3)(3,4) expected_results (0,4)(0,3)(3,4)
-17: OK regex: a*(a.|aa) parsed_regex: a*(a.|aa) str: aaaa result: (0,4)(2,4) expected_results (0,4)(2,4)
-18: OK regex: a(b)|c(d)|a(e)f parsed_regex: a(b)|c(d)|a(e)f str: aef result: (0,3)(?,?)(?,?)(1,2) expected_results (0,3)(?,?)(?,?)(1,2)
-19: OK regex: (a|b)?.* parsed_regex: (a|b)?.* str: b result: (0,1)(0,1) expected_results (0,1)(0,1)
-20: OK regex: (a|b)c|a(b|c) parsed_regex: (a|b)c|a(b|c) str: ac result: (0,2)(0,1)(?,?) expected_results (0,2)(0,1)(?,?)
-21: OK regex: (a|b)c|a(b|c) parsed_regex: (a|b)c|a(b|c) str: ab result: (0,2)(?,?)(1,2) expected_results (0,2)(?,?)(1,2)
-22: OK regex: (a|b)*c|(a|ab)*c parsed_regex: (a|b)*c|(a|ab)*c str: abc result: (0,3)(1,2)(?,?) expected_results (0,3)(1,2)(?,?)
-23: OK regex: (a|b)*c|(a|ab)*c parsed_regex: (a|b)*c|(a|ab)*c str: xc result: (1,2)(?,?)(?,?) expected_results (1,2)(?,?)(?,?)
-24: OK regex: (.a|.b).*|.*(.a|.b) parsed_regex: (.a|.b).*|.*(.a|.b) str: xa result: (0,2)(0,2)(?,?) expected_results (0,2)(0,2)(?,?)
-25: OK regex: a?(ab|ba)ab parsed_regex: a?(ab|ba)ab str: abab result: (0,4)(0,2) expected_results (0,4)(0,2)
-26: OK regex: a?(ac{0}b|ba)ab parsed_regex: a?(ac{0}b|ba)ab str: abab result: (0,4)(0,2) expected_results (0,4)(0,2)
-27: OK regex: ab|abab parsed_regex: ab|abab str: abbabab result: (0,2) expected_results (0,2)
-28: OK regex: aba|bab|bba parsed_regex: aba|bab|bba str: baaabbbaba result: (5,8) expected_results (5,8)
-29: OK regex: aba|bab parsed_regex: aba|bab str: baaabbbaba result: (6,9) expected_results (6,9)
-30: OK regex: (aa|aaa)*|(a|aaaaa) parsed_regex: (aa|aaa)*|(a|aaaaa) str: aa result: (0,2)(0,2)(?,?) expected_results (0,2)(0,2)(?,?)
-31: OK regex: (a.|.a.)*|(a|.a...) parsed_regex: (a.|.a.)*|(a|.a...) str: aa result: (0,2)(0,2)(?,?) expected_results (0,2)(0,2)(?,?)
-32: OK regex: ab|a parsed_regex: ab|a str: xabc result: (1,3) expected_results (1,3)
-33: OK regex: ab|a parsed_regex: ab|a str: xxabc result: (2,4) expected_results (2,4)
-M34: OK regex: (Ab|cD)* parsed_regex: (Ab|cD)* str: aBcD result: (0,0)(?,?) expected_results (0,4)(2,4)
-35: OK regex: :::1:::0:|:::1:1:0: parsed_regex: :::1:::0:|:::1:1:0: str: :::0:::1:::1:::0: result: (8,17) expected_results (8,17)
-36: OK regex: :::1:::0:|:::1:1:1: parsed_regex: :::1:::0:|:::1:1:1: str: :::0:::1:::1:::0: result: (8,17) expected_results (8,17)
-37: OK regex: [[:lower:]]+ parsed_regex: [[:lower:]]+ str: `az{ result: (1,3) expected_results (1,3)
-38: OK regex: [[:upper:]]+ parsed_regex: [[:upper:]]+ str: @AZ[ result: (1,3) expected_results (1,3)
-39: OK regex: (a)(b)(c) parsed_regex: (a)(b)(c) str: abc result: (0,3)(0,1)(1,2)(2,3) expected_results (0,3)(0,1)(1,2)(2,3)
-43  : OK regex: ((((((((((((((((((((((((((((((x)))))))))))))))))))))))))))))) parsed_regex: ((((((((((((((((((((((((((((((x)))))))))))))))))))))))))))))) str: x result: (0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1) expected_results (0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)
-44  : OK regex: ((((((((((((((((((((((((((((((x))))))))))))))))))))))))))))))* parsed_regex: ((((((((((((((((((((((((((((((x))))))))))))))))))))))))))))))* str: xx result: (0,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2) expected_results (0,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)(1,2)
-45: OK regex: a?(ab|ba)* parsed_regex: a?(ab|ba)* str: ababababababababababababababababababababababababababababababababababababababababa result: (0,81)(79,81) expected_results (0,81)(79,81)
-46: OK regex: abaa|abbaa|abbbaa|abbbbaa parsed_regex: abaa|abbaa|abbbaa|abbbbaa str: ababbabbbabbbabbbbabbbbaa result: (18,25) expected_results (18,25)
-47: OK regex: abaa|abbaa|abbbaa|abbbbaa parsed_regex: abaa|abbaa|abbbaa|abbbbaa str: ababbabbbabbbabbbbabaa result: (18,22) expected_results (18,22)
-48: OK regex: aaac|aabc|abac|abbc|baac|babc|bbac|bbbc parsed_regex: aaac|aabc|abac|abbc|baac|babc|bbac|bbbc str: baaabbbabac result: (7,11) expected_results (7,11)
-49: OK regex: aaaa|bbbb|cccc|ddddd|eeeeee|fffffff|gggg|hhhh|iiiii|jjjjj|kkkkk|llll parsed_regex: aaaa|bbbb|cccc|ddddd|eeeeee|fffffff|gggg|hhhh|iiiii|jjjjj|kkkkk|llll str: XaaaXbbbXcccXdddXeeeXfffXgggXhhhXiiiXjjjXkkkXlllXcbaXaaaa result: (53,57) expected_results (53,57)
-50: OK regex: a*a*a*a*a*b parsed_regex: a*a*a*a*a*b str: aaaaaaaaab result: (0,10) expected_results (0,10)
-51: OK regex: ab+bc parsed_regex: ab+bc str: abbc result: (0,4) expected_results (0,4)
-52: OK regex: ab+bc parsed_regex: ab+bc str: abbbbc result: (0,6) expected_results (0,6)
-53: OK regex: ab?bc parsed_regex: ab?bc str: abbc result: (0,4) expected_results (0,4)
-54: OK regex: ab?bc parsed_regex: ab?bc str: abc result: (0,3) expected_results (0,3)
-55: OK regex: ab?c parsed_regex: ab?c str: abc result: (0,3) expected_results (0,3)
-56: OK regex: ab|cd parsed_regex: ab|cd str: abc result: (0,2) expected_results (0,2)
-57: OK regex: ab|cd parsed_regex: ab|cd str: abcd result: (0,2) expected_results (0,2)
-58: OK regex: a\(b parsed_regex: a\(b str: a(b result: (0,3) expected_results (0,3)
-59: OK regex: a\(*b parsed_regex: a\(*b str: ab result: (0,2) expected_results (0,2)
-60: OK regex: a\(*b parsed_regex: a\(*b str: a((b result: (0,4) expected_results (0,4)
-61: OK regex: ((a)) parsed_regex: ((a)) str: abc result: (0,1)(0,1)(0,1) expected_results (0,1)(0,1)(0,1)
-62: OK regex: (a)b(c) parsed_regex: (a)b(c) str: abc result: (0,3)(0,1)(2,3) expected_results (0,3)(0,1)(2,3)
-63: OK regex: a+b+c parsed_regex: a+b+c str: aabbabc result: (4,7) expected_results (4,7)
-64: OK regex: a* parsed_regex: a* str: aaa result: (0,3) expected_results (0,3)
-65: OK regex: (a*)* parsed_regex: (a*)* str: - result: (0,0)(0,0) expected_results (0,0)(0,0)
-66: OK regex: (a*)+ parsed_regex: (a*)+ str: - result: (0,0)(0,0) expected_results (0,0)(0,0)
-67: OK regex: (a*|b)* parsed_regex: (a*|b)* str: - result: (0,0)(0,0) expected_results (0,0)(0,0)
-68: OK regex: (a+|b)* parsed_regex: (a+|b)* str: ab result: (0,2)(1,2) expected_results (0,2)(1,2)
-69: OK regex: (a+|b)+ parsed_regex: (a+|b)+ str: ab result: (0,2)(1,2) expected_results (0,2)(1,2)
-70: OK regex: (a+|b)? parsed_regex: (a+|b)? str: ab result: (0,1)(0,1) expected_results (0,1)(0,1)
-71: OK regex: (^)* parsed_regex: (^)* str: - result: (0,0)(0,0) expected_results (0,0)(0,0)
-72: OK regex: ([abc])*d parsed_regex: ([abc])*d str: abbbcd result: (0,6)(4,5) expected_results (0,6)(4,5)
-73: OK regex: ([abc])*bcd parsed_regex: ([abc])*bcd str: abcd result: (0,4)(0,1) expected_results (0,4)(0,1)
-74: OK regex: a|b|c|d|e parsed_regex: a|b|c|d|e str: e result: (0,1) expected_results (0,1)
-75: OK regex: (a|b|c|d|e)f parsed_regex: (a|b|c|d|e)f str: ef result: (0,2)(0,1) expected_results (0,2)(0,1)
-76: OK regex: ((a*|b))* parsed_regex: ((a*|b))* str: - result: (0,0)(0,0)(0,0) expected_results (0,0)(0,0)(0,0)
-77: OK regex: (ab|cd)e parsed_regex: (ab|cd)e str: abcde result: (2,5)(2,4) expected_results (2,5)(2,4)
-78: OK regex: (a|b)c*d parsed_regex: (a|b)c*d str: abcd result: (1,4)(1,2) expected_results (1,4)(1,2)
-79: OK regex: (ab|ab*)bc parsed_regex: (ab|ab*)bc str: abc result: (0,3)(0,1) expected_results (0,3)(0,1)
-80: OK regex: a([bc]*)c* parsed_regex: a([bc]*)c* str: abc result: (0,3)(1,3) expected_results (0,3)(1,3)
-81: OK regex: a([bc]*)(c*d) parsed_regex: a([bc]*)(c*d) str: abcd result: (0,4)(1,3)(3,4) expected_results (0,4)(1,3)(3,4)
-82: OK regex: a([bc]+)(c*d) parsed_regex: a([bc]+)(c*d) str: abcd result: (0,4)(1,3)(3,4) expected_results (0,4)(1,3)(3,4)
-83: OK regex: a([bc]*)(c+d) parsed_regex: a([bc]*)(c+d) str: abcd result: (0,4)(1,2)(2,4) expected_results (0,4)(1,2)(2,4)
-84: OK regex: a[bcd]*dcdcde parsed_regex: a[bcd]*dcdcde str: adcdcde result: (0,7) expected_results (0,7)
-85: OK regex: (ab|a)b*c parsed_regex: (ab|a)b*c str: abc result: (0,3)(0,2) expected_results (0,3)(0,2)
-86: OK regex: ((a)(b)c)(d) parsed_regex: ((a)(b)c)(d) str: abcd result: (0,4)(0,3)(0,1)(1,2)(3,4) expected_results (0,4)(0,3)(0,1)(1,2)(3,4)
-87: OK regex: ^a(bc+|b[eh])g|.h\$ parsed_regex: ^a(bc+|b[eh])g|.h\$ str: abh result: (1,3)(?,?) expected_results (1,3)(?,?)
-88: OK regex: (bc+d\$|ef*g.|h?i(j|k)) parsed_regex: (bc+d\$|ef*g.|h?i(j|k)) str: effgz result: (0,5)(0,5)(?,?) expected_results (0,5)(0,5)(?,?)
-89: OK regex: (bc+d\$|ef*g.|h?i(j|k)) parsed_regex: (bc+d\$|ef*g.|h?i(j|k)) str: ij result: (0,2)(0,2)(1,2) expected_results (0,2)(0,2)(1,2)
-90: OK regex: (bc+d\$|ef*g.|h?i(j|k)) parsed_regex: (bc+d\$|ef*g.|h?i(j|k)) str: reffgz result: (1,6)(1,6)(?,?) expected_results (1,6)(1,6)(?,?)
-91: OK regex: (((((((((a))))))))) parsed_regex: (((((((((a))))))))) str: a result: (0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1) expected_results (0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)(0,1)
-92: OK regex: (.*)c(.*) parsed_regex: (.*)c(.*) str: abcde result: (0,5)(0,2)(3,5) expected_results (0,5)(0,2)(3,5)
-93: OK regex: a(bc)d parsed_regex: a(bc)d str: abcd result: (0,4)(1,3) expected_results (0,4)(1,3)
-94: OK regex: a[-]?c parsed_regex: a[-]?c str: ac result: (0,3) expected_results (0,3)
-95: OK regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] parsed_regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] str: Muammar_Qaddafi result: (0,15)(?,?)(10,12) expected_results (0,15)(?,?)(10,12)
-96: OK regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] parsed_regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] str: Mo'ammar_Gadhafi result: (0,16)(?,?)(11,13) expected_results (0,16)(?,?)(11,13)
-97: OK regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] parsed_regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] str: Muammar_Kaddafi result: (0,15)(?,?)(10,12) expected_results (0,15)(?,?)(10,12)
-98: OK regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] parsed_regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] str: Muammar_Qadhafi result: (0,15)(?,?)(10,12) expected_results (0,15)(?,?)(10,12)
-99: OK regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] parsed_regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] str: Muammar_Gadafi result: (0,14)(?,?)(10,11) expected_results (0,14)(?,?)(10,11)
-100: OK regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] parsed_regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] str: Mu'ammar_Qadafi result: (0,15)(?,?)(11,12) expected_results (0,15)(?,?)(11,12)
-101: OK regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] parsed_regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] str: Moamar_Gaddafi result: (0,14)(?,?)(9,11) expected_results (0,14)(?,?)(9,11)
-102: OK regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] parsed_regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] str: Mu'ammar_Qadhdhafi result: (0,18)(?,?)(13,15) expected_results (0,18)(?,?)(13,15)
-103: OK regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] parsed_regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] str: Muammar_Khaddafi result: (0,16)(?,?)(11,13) expected_results (0,16)(?,?)(11,13)
-104: OK regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] parsed_regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] str: Muammar_Ghaddafy result: (0,16)(?,?)(11,13) expected_results (0,16)(?,?)(11,13)
-105: OK regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] parsed_regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] str: Muammar_Ghadafi result: (0,15)(?,?)(11,12) expected_results (0,15)(?,?)(11,12)
-106: OK regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] parsed_regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] str: Muammar_Ghaddafi result: (0,16)(?,?)(11,13) expected_results (0,16)(?,?)(11,13)
-107: OK regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] parsed_regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] str: Muamar_Kaddafi result: (0,14)(?,?)(9,11) expected_results (0,14)(?,?)(9,11)
-108: OK regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] parsed_regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] str: Muammar_Quathafi result: (0,16)(?,?)(11,13) expected_results (0,16)(?,?)(11,13)
-109: OK regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] parsed_regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] str: Muammar_Gheddafi result: (0,16)(?,?)(11,13) expected_results (0,16)(?,?)(11,13)
-110: OK regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] parsed_regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] str: Moammar_Khadafy result: (0,15)(?,?)(11,12) expected_results (0,15)(?,?)(11,12)
-111: OK regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] parsed_regex: M[ou]'?am+[ae]r_.*([AEae]l[-_])?[GKQ]h?[aeu]+([dtz][dhz]?)+af[iy] str: Moammar_Qudhafi result: (0,15)(?,?)(10,12) expected_results (0,15)(?,?)(10,12)
-112: OK regex: a+(b|c)*d+ parsed_regex: a+(b|c)*d+ str: aabcdd result: (0,6)(3,4) expected_results (0,6)(3,4)
-113: OK regex: ^.+\$ parsed_regex: ^.+\$ str: vivi result: (0,4) expected_results (0,4)
-114: OK regex: ^(.+)\$ parsed_regex: ^(.+)\$ str: vivi result: (0,4)(0,4) expected_results (0,4)(0,4)
-115: OK regex: ^([^!.]+).att.com!(.+)\$ parsed_regex: ^([^!.]+).att.com!(.+)\$ str: gryphon.att.com!eby result: (0,19)(0,7)(16,19) expected_results (0,19)(0,7)(16,19)
-116: OK regex: ^([^!]+!)?([^!]+)\$ parsed_regex: ^([^!]+!)?([^!]+)\$ str: bas result: (0,3)(?,?)(0,3) expected_results (0,3)(?,?)(0,3)
-117: OK regex: ^([^!]+!)?([^!]+)\$ parsed_regex: ^([^!]+!)?([^!]+)\$ str: bar!bas result: (0,7)(0,4)(4,7) expected_results (0,7)(0,4)(4,7)
-118: OK regex: ^([^!]+!)?([^!]+)\$ parsed_regex: ^([^!]+!)?([^!]+)\$ str: foo!bas result: (0,7)(0,4)(4,7) expected_results (0,7)(0,4)(4,7)
-119: OK regex: ^.+!([^!]+!)([^!]+)\$ parsed_regex: ^.+!([^!]+!)([^!]+)\$ str: foo!bar!bas result: (0,11)(4,8)(8,11) expected_results (0,11)(4,8)(8,11)
-120: OK regex: ((foo)|(bar))!bas parsed_regex: ((foo)|(bar))!bas str: bar!bas result: (0,7)(0,3)(?,?)(0,3) expected_results (0,7)(0,3)(?,?)(0,3)
-121: OK regex: ((foo)|(bar))!bas parsed_regex: ((foo)|(bar))!bas str: foo!bar!bas result: (4,11)(4,7)(?,?)(4,7) expected_results (4,11)(4,7)(?,?)(4,7)
-122: OK regex: ((foo)|(bar))!bas parsed_regex: ((foo)|(bar))!bas str: foo!bas result: (0,7)(0,3)(0,3)(?,?) expected_results (0,7)(0,3)(0,3)(?,?)
-123: OK regex: ((foo)|bar)!bas parsed_regex: ((foo)|bar)!bas str: bar!bas result: (0,7)(0,3)(?,?) expected_results (0,7)(0,3)(?,?)
-124: OK regex: ((foo)|bar)!bas parsed_regex: ((foo)|bar)!bas str: foo!bar!bas result: (4,11)(4,7)(?,?) expected_results (4,11)(4,7)(?,?)
-125: OK regex: ((foo)|bar)!bas parsed_regex: ((foo)|bar)!bas str: foo!bas result: (0,7)(0,3)(0,3) expected_results (0,7)(0,3)(0,3)
-126: OK regex: (foo|(bar))!bas parsed_regex: (foo|(bar))!bas str: bar!bas result: (0,7)(0,3)(0,3) expected_results (0,7)(0,3)(0,3)
-127: OK regex: (foo|(bar))!bas parsed_regex: (foo|(bar))!bas str: foo!bar!bas result: (4,11)(4,7)(4,7) expected_results (4,11)(4,7)(4,7)
-128: OK regex: (foo|(bar))!bas parsed_regex: (foo|(bar))!bas str: foo!bas result: (0,7)(0,3)(?,?) expected_results (0,7)(0,3)(?,?)
-129: OK regex: (foo|bar)!bas parsed_regex: (foo|bar)!bas str: bar!bas result: (0,7)(0,3) expected_results (0,7)(0,3)
-130: OK regex: (foo|bar)!bas parsed_regex: (foo|bar)!bas str: foo!bar!bas result: (4,11)(4,7) expected_results (4,11)(4,7)
-131: OK regex: (foo|bar)!bas parsed_regex: (foo|bar)!bas str: foo!bas result: (0,7)(0,3) expected_results (0,7)(0,3)
-132: OK regex: ^(([^!]+!)?([^!]+)|.+!([^!]+!)([^!]+))\$ parsed_regex: ^(([^!]+!)?([^!]+)|.+!([^!]+!)([^!]+))\$ str: foo!bar!bas result: (0,11)(0,11)(?,?)(?,?)(4,8)(8,11) expected_results (0,11)(0,11)(?,?)(?,?)(4,8)(8,11)
-133: OK regex: ^([^!]+!)?([^!]+)\$|^.+!([^!]+!)([^!]+)\$ parsed_regex: ^([^!]+!)?([^!]+)\$|^.+!([^!]+!)([^!]+)\$ str: bas result: (0,3)(?,?)(0,3)(?,?)(?,?) expected_results (0,3)(?,?)(0,3)(?,?)(?,?)
-134: OK regex: ^([^!]+!)?([^!]+)\$|^.+!([^!]+!)([^!]+)\$ parsed_regex: ^([^!]+!)?([^!]+)\$|^.+!([^!]+!)([^!]+)\$ str: bar!bas result: (0,7)(0,4)(4,7)(?,?)(?,?) expected_results (0,7)(0,4)(4,7)(?,?)(?,?)
-135: OK regex: ^([^!]+!)?([^!]+)\$|^.+!([^!]+!)([^!]+)\$ parsed_regex: ^([^!]+!)?([^!]+)\$|^.+!([^!]+!)([^!]+)\$ str: foo!bar!bas result: (0,11)(?,?)(?,?)(4,8)(8,11) expected_results (0,11)(?,?)(?,?)(4,8)(8,11)
-136: OK regex: ^([^!]+!)?([^!]+)\$|^.+!([^!]+!)([^!]+)\$ parsed_regex: ^([^!]+!)?([^!]+)\$|^.+!([^!]+!)([^!]+)\$ str: foo!bas result: (0,7)(0,4)(4,7)(?,?)(?,?) expected_results (0,7)(0,4)(4,7)(?,?)(?,?)
-137: OK regex: ^(([^!]+!)?([^!]+)|.+!([^!]+!)([^!]+))\$ parsed_regex: ^(([^!]+!)?([^!]+)|.+!([^!]+!)([^!]+))\$ str: bas result: (0,3)(0,3)(?,?)(0,3)(?,?)(?,?) expected_results (0,3)(0,3)(?,?)(0,3)(?,?)(?,?)
-138: OK regex: ^(([^!]+!)?([^!]+)|.+!([^!]+!)([^!]+))\$ parsed_regex: ^(([^!]+!)?([^!]+)|.+!([^!]+!)([^!]+))\$ str: bar!bas result: (0,7)(0,7)(0,4)(4,7)(?,?)(?,?) expected_results (0,7)(0,7)(0,4)(4,7)(?,?)(?,?)
-139: OK regex: ^(([^!]+!)?([^!]+)|.+!([^!]+!)([^!]+))\$ parsed_regex: ^(([^!]+!)?([^!]+)|.+!([^!]+!)([^!]+))\$ str: foo!bar!bas result: (0,11)(0,11)(?,?)(?,?)(4,8)(8,11) expected_results (0,11)(0,11)(?,?)(?,?)(4,8)(8,11)
-140: OK regex: ^(([^!]+!)?([^!]+)|.+!([^!]+!)([^!]+))\$ parsed_regex: ^(([^!]+!)?([^!]+)|.+!([^!]+!)([^!]+))\$ str: foo!bas result: (0,7)(0,7)(0,4)(4,7)(?,?)(?,?) expected_results (0,7)(0,7)(0,4)(4,7)(?,?)(?,?)
-141: OK regex: .*(/XXX).* parsed_regex: .*(/XXX).* str: /XXX result: (0,4)(0,4) expected_results (0,4)(0,4)
-142: OK regex: .*(\\XXX).* parsed_regex: .*(\\XXX).* str: \XXX result: (0,4)(0,4) expected_results (0,4)(0,4)
-143: OK regex: \\XXX parsed_regex: \\XXX str: \XXX result: (0,4) expected_results (0,4)
-144: OK regex: .*(/000).* parsed_regex: .*(/000).* str: /000 result: (0,4)(0,4) expected_results (0,4)(0,4)
-145: OK regex: .*(\\000).* parsed_regex: .*(\\000).* str: \000 result: (0,4)(0,4) expected_results (0,4)(0,4)
-146: OK regex: \\000 parsed_regex: \\000 str: \000 result: (0,4) expected_results (0,4)
+Running perl_tests:
+0_y: OK regex: abc parsed_regex: abc str: abc result_expr: $& expected_results abc
+1_y: OK regex: abc parsed_regex: abc str: abc result_expr: $-[0] expected_results 0
+2_y: OK regex: abc parsed_regex: abc str: abc result_expr: $+[0] expected_results 3
+3_n: OK regex: abc parsed_regex: abc str: xbc result_expr: - expected_results -
+4_n: OK regex: abc parsed_regex: abc str: axc result_expr: - expected_results -
+5_n: OK regex: abc parsed_regex: abc str: abx result_expr: - expected_results -
+6_y: OK regex: abc parsed_regex: abc str: xabcy result_expr: $& expected_results abc
+7_y: OK regex: abc parsed_regex: abc str: xabcy result_expr: $-[0] expected_results 1
+8_y: OK regex: abc parsed_regex: abc str: xabcy result_expr: $+[0] expected_results 4
+9_y: OK regex: abc parsed_regex: abc str: ababc result_expr: $& expected_results abc
+10_y: OK regex: abc parsed_regex: abc str: ababc result_expr: $-[0] expected_results 2
+11_y: OK regex: abc parsed_regex: abc str: ababc result_expr: $+[0] expected_results 5
+12_y: OK regex: ab*c parsed_regex: ab*c str: abc result_expr: $& expected_results abc
+13_y: OK regex: ab*c parsed_regex: ab*c str: abc result_expr: $-[0] expected_results 0
+14_y: OK regex: ab*c parsed_regex: ab*c str: abc result_expr: $+[0] expected_results 3
+15_y: OK regex: ab*bc parsed_regex: ab*bc str: abc result_expr: $& expected_results abc
+16_y: OK regex: ab*bc parsed_regex: ab*bc str: abc result_expr: $-[0] expected_results 0
+17_y: OK regex: ab*bc parsed_regex: ab*bc str: abc result_expr: $+[0] expected_results 3
+18_y: OK regex: ab*bc parsed_regex: ab*bc str: abbc result_expr: $& expected_results abbc
+19_y: OK regex: ab*bc parsed_regex: ab*bc str: abbc result_expr: $-[0] expected_results 0
+20_y: OK regex: ab*bc parsed_regex: ab*bc str: abbc result_expr: $+[0] expected_results 4
+21_y: OK regex: ab*bc parsed_regex: ab*bc str: abbbbc result_expr: $& expected_results abbbbc
+22_y: OK regex: ab*bc parsed_regex: ab*bc str: abbbbc result_expr: $-[0] expected_results 0
+23_y: OK regex: ab*bc parsed_regex: ab*bc str: abbbbc result_expr: $+[0] expected_results 6
+24_y: OK regex: .{1} parsed_regex: .{1} str: abbbbc result_expr: $& expected_results a
+25_y: OK regex: .{1} parsed_regex: .{1} str: abbbbc result_expr: $-[0] expected_results 0
+26_y: OK regex: .{1} parsed_regex: .{1} str: abbbbc result_expr: $+[0] expected_results 1
+27_y: OK regex: .{3,4} parsed_regex: .{3,4} str: abbbbc result_expr: $& expected_results abbb
+28_y: OK regex: .{3,4} parsed_regex: .{3,4} str: abbbbc result_expr: $-[0] expected_results 0
+29_y: OK regex: .{3,4} parsed_regex: .{3,4} str: abbbbc result_expr: $+[0] expected_results 4
+30_y: OK regex: \\N{1} parsed_regex: \\N{1} str: abbbbc result_expr: $& expected_results a
+31_y: OK regex: \\N{1} parsed_regex: \\N{1} str: abbbbc result_expr: $-[0] expected_results 0
+32_y: OK regex: \\N{1} parsed_regex: \\N{1} str: abbbbc result_expr: $+[0] expected_results 1
+33_y: OK regex: \\N{3,4} parsed_regex: \\N{3,4} str: abbbbc result_expr: $& expected_results abbb
+34_y: OK regex: \\N{3,4} parsed_regex: \\N{3,4} str: abbbbc result_expr: $-[0] expected_results 0
+35_y: OK regex: \\N{3,4} parsed_regex: \\N{3,4} str: abbbbc result_expr: $+[0] expected_results 4
+36_y: OK Warning: Parsed regex does not match. regex: \\N{ 3 , 4 } parsed_regex: \\N{3,4} str: abbbbc result_expr: $+[0] expected_results 4
+37_y: OK regex: ab{0,}bc parsed_regex: ab{0,}bc str: abbbbc result_expr: $& expected_results abbbbc
+38_y: OK regex: ab{0,}bc parsed_regex: ab{0,}bc str: abbbbc result_expr: $-[0] expected_results 0
+39_y: OK regex: ab{0,}bc parsed_regex: ab{0,}bc str: abbbbc result_expr: $+[0] expected_results 6
+40_y: OK regex: ab+bc parsed_regex: ab+bc str: abbc result_expr: $& expected_results abbc
+41_y: OK regex: ab+bc parsed_regex: ab+bc str: abbc result_expr: $-[0] expected_results 0
+42_y: OK regex: ab+bc parsed_regex: ab+bc str: abbc result_expr: $+[0] expected_results 4
+43_n: OK regex: ab+bc parsed_regex: ab+bc str: abc result_expr: - expected_results -
+44_n: OK regex: ab+bc parsed_regex: ab+bc str: abq result_expr: - expected_results -
+45_n: OK regex: ab{1,}bc parsed_regex: ab{1,}bc str: abq result_expr: - expected_results -
+46_y: OK regex: ab+bc parsed_regex: ab+bc str: abbbbc result_expr: $& expected_results abbbbc
+47_y: OK regex: ab+bc parsed_regex: ab+bc str: abbbbc result_expr: $-[0] expected_results 0
+48_y: OK regex: ab+bc parsed_regex: ab+bc str: abbbbc result_expr: $+[0] expected_results 6
+49_y: OK regex: ab{1,}bc parsed_regex: ab{1,}bc str: abbbbc result_expr: $& expected_results abbbbc
+50_y: OK regex: ab{1,}bc parsed_regex: ab{1,}bc str: abbbbc result_expr: $-[0] expected_results 0
+51_y: OK regex: ab{1,}bc parsed_regex: ab{1,}bc str: abbbbc result_expr: $+[0] expected_results 6
+52_y: OK regex: ab{1,3}bc parsed_regex: ab{1,3}bc str: abbbbc result_expr: $& expected_results abbbbc
+53_y: OK regex: ab{1,3}bc parsed_regex: ab{1,3}bc str: abbbbc result_expr: $-[0] expected_results 0
+54_y: OK regex: ab{1,3}bc parsed_regex: ab{1,3}bc str: abbbbc result_expr: $+[0] expected_results 6
+55_y: OK regex: ab{3,4}bc parsed_regex: ab{3,4}bc str: abbbbc result_expr: $& expected_results abbbbc
+56_y: OK regex: ab{3,4}bc parsed_regex: ab{3,4}bc str: abbbbc result_expr: $-[0] expected_results 0
+57_y: OK regex: ab{3,4}bc parsed_regex: ab{3,4}bc str: abbbbc result_expr: $+[0] expected_results 6
+58_n: OK regex: ab{4,5}bc parsed_regex: ab{4,5}bc str: abbbbc result_expr: - expected_results -
+59_y: OK regex: ab?bc parsed_regex: ab?bc str: abbc result_expr: $& expected_results abbc
+60_y: OK regex: ab?bc parsed_regex: ab?bc str: abc result_expr: $& expected_results abc
+61_y: OK regex: ab{0,1}bc parsed_regex: ab{0,1}bc str: abc result_expr: $& expected_results abc
+62_n: OK regex: ab?bc parsed_regex: ab?bc str: abbbbc result_expr: - expected_results -
+63_y: OK regex: ab?c parsed_regex: ab?c str: abc result_expr: $& expected_results abc
+64_y: OK regex: ab{0,1}c parsed_regex: ab{0,1}c str: abc result_expr: $& expected_results abc
+65_y: OK regex: ^abc\$ parsed_regex: ^abc\$ str: abc result_expr: $& expected_results abc
+66_n: OK regex: ^abc\$ parsed_regex: ^abc\$ str: abcc result_expr: - expected_results -
+67_y: OK regex: ^abc parsed_regex: ^abc str: abcc result_expr: $& expected_results abc
+68_n: OK regex: ^abc\$ parsed_regex: ^abc\$ str: aabc result_expr: - expected_results -
+69_y: OK regex: abc\$ parsed_regex: abc\$ str: aabc result_expr: $& expected_results abc
+70_n: OK regex: abc\$ parsed_regex: abc\$ str: aabcd result_expr: - expected_results -
+71_y: OK regex: ^ parsed_regex: ^ str: abc result_expr: $& expected_results 
+72_y: OK regex: \$ parsed_regex: \$ str: abc result_expr: $& expected_results 
+73_y: OK regex: a.c parsed_regex: a.c str: abc result_expr: $& expected_results abc
+74_y: OK regex: a.c parsed_regex: a.c str: axc result_expr: $& expected_results axc
+75_y: OK regex: a\\Nc parsed_regex: a\\Nc str: abc result_expr: $& expected_results abc
+76_y: OK regex: a.*c parsed_regex: a.*c str: axyzc result_expr: $& expected_results axyzc
+77_y: OK regex: a\\N*c parsed_regex: a\\N*c str: axyzc result_expr: $& expected_results axyzc
+78_n: OK regex: a.*c parsed_regex: a.*c str: axyzd result_expr: - expected_results -
+79_n: OK regex: a\\N*c parsed_regex: a\\N*c str: axyzd result_expr: - expected_results -
+80_n: OK regex: a[bc]d parsed_regex: a[bc]d str: abc result_expr: - expected_results -
+81_y: OK regex: a[bc]d parsed_regex: a[bc]d str: abd result_expr: $& expected_results abd
+82_y: OK regex: a[b]d parsed_regex: a[b]d str: abd result_expr: $& expected_results abd
+83_y: OK regex: [a][b][d] parsed_regex: [a][b][d] str: abd result_expr: $& expected_results abd
+84_y: OK regex: .[b]. parsed_regex: .[b]. str: abd result_expr: $& expected_results abd
+85_n: OK regex: .[b]. parsed_regex: .[b]. str: aBd result_expr: - expected_results -
+86_n: OK regex: a[b-d]e parsed_regex: a[b-d]e str: abd result_expr: - expected_results -
+87_y: OK regex: a[b-d]e parsed_regex: a[b-d]e str: ace result_expr: $& expected_results ace
+88_y: OK regex: a[b-d] parsed_regex: a[b-d] str: aac result_expr: $& expected_results ac
+89_y: OK regex: a[-b] parsed_regex: a[-b] str: a- result_expr: $& expected_results a-
+90_y: OK regex: a[b-] parsed_regex: a[b-] str: a- result_expr: $& expected_results a-
+91_y: OK regex: a] parsed_regex: a] str: a] result_expr: $& expected_results a]
+92_y: OK regex: a[]]b parsed_regex: a[]]b str: a]b result_expr: $& expected_results a]b
+93_y: OK regex: a[^bc]d parsed_regex: a[^bc]d str: aed result_expr: $& expected_results aed
+94_n: OK regex: a[^bc]d parsed_regex: a[^bc]d str: abd result_expr: - expected_results -
+95_y: OK regex: a[^-b]c parsed_regex: a[^-b]c str: adc result_expr: $& expected_results adc
+96_n: OK regex: a[^-b]c parsed_regex: a[^-b]c str: a-c result_expr: - expected_results -
+97_n: OK regex: a[^]b]c parsed_regex: a[^]b]c str: a]c result_expr: - expected_results -
+98_y: OK regex: a[^]b]c parsed_regex: a[^]b]c str: adc result_expr: $& expected_results adc
+99_y: OK regex: \ba\b parsed_regex: \ba\b str: a- result_expr: - expected_results -
+100_y: OK regex: \ba\b parsed_regex: \ba\b str: -a result_expr: - expected_results -
+101_y: OK regex: \ba\b parsed_regex: \ba\b str: -a- result_expr: - expected_results -
+102_n: OK regex: \by\b parsed_regex: \by\b str: xy result_expr: - expected_results -
+103_n: OK regex: \by\b parsed_regex: \by\b str: yz result_expr: - expected_results -
+104_n: OK regex: \by\b parsed_regex: \by\b str: xyz result_expr: - expected_results -
+105_n: OK regex: \Ba\B parsed_regex: \Ba\B str: a- result_expr: - expected_results -
+106_n: OK regex: \Ba\B parsed_regex: \Ba\B str: -a result_expr: - expected_results -
+107_n: OK regex: \Ba\B parsed_regex: \Ba\B str: -a- result_expr: - expected_results -
+108_y: OK regex: \By\b parsed_regex: \By\b str: xy result_expr: - expected_results -
+109_y: OK regex: \By\b parsed_regex: \By\b str: xy result_expr: $-[0] expected_results 1
+110_y: OK regex: \By\b parsed_regex: \By\b str: xy result_expr: $+[0] expected_results 2
+111_y: OK regex: \By\b parsed_regex: \By\b str: xy result_expr: - expected_results -
+112_y: OK regex: \by\B parsed_regex: \by\B str: yz result_expr: - expected_results -
+113_y: OK regex: \By\B parsed_regex: \By\B str: xyz result_expr: - expected_results -
+114_n: OK regex: \b parsed_regex: \b str:  result_expr: - expected_results -
+115_y: OK regex: \B parsed_regex: \B str:  result_expr: - expected_results -
+116_y: OK regex: \w parsed_regex: \w str: a result_expr: - expected_results -
+117_n: OK regex: \w parsed_regex: \w str: - result_expr: - expected_results -
+118_n: OK regex: \W parsed_regex: \W str: a result_expr: - expected_results -
+119_y: OK regex: \W parsed_regex: \W str: - result_expr: - expected_results -
+120_y: OK regex: a\sb parsed_regex: a\sb str: a b result_expr: - expected_results -
+121_n: OK regex: a\sb parsed_regex: a\sb str: a-b result_expr: - expected_results -
+122_n: OK regex: a\Sb parsed_regex: a\Sb str: a b result_expr: - expected_results -
+123_y: OK regex: a\Sb parsed_regex: a\Sb str: a-b result_expr: - expected_results -
+124_y: OK regex: \d parsed_regex: \d str: 1 result_expr: - expected_results -
+125_n: OK regex: \d parsed_regex: \d str: - result_expr: - expected_results -
+126_n: OK regex: \D parsed_regex: \D str: 1 result_expr: - expected_results -
+127_y: OK regex: \D parsed_regex: \D str: - result_expr: - expected_results -
+128_y: OK regex: [\w] parsed_regex: [\w] str: a result_expr: - expected_results -
+129_n: OK regex: [\w] parsed_regex: [\w] str: - result_expr: - expected_results -
+130_n: OK regex: [\W] parsed_regex: [\W] str: a result_expr: - expected_results -
+131_y: OK regex: [\W] parsed_regex: [\W] str: - result_expr: - expected_results -
+132_y: OK regex: a[\s]b parsed_regex: a[\s]b str: a b result_expr: - expected_results -
+133_n: OK regex: a[\s]b parsed_regex: a[\s]b str: a-b result_expr: - expected_results -
+134_n: OK regex: a[\S]b parsed_regex: a[\S]b str: a b result_expr: - expected_results -
+135_y: OK regex: a[\S]b parsed_regex: a[\S]b str: a-b result_expr: - expected_results -
+136_y: OK regex: [\d] parsed_regex: [\d] str: 1 result_expr: - expected_results -
+137_n: OK regex: [\d] parsed_regex: [\d] str: - result_expr: - expected_results -
+138_n: OK regex: [\D] parsed_regex: [\D] str: 1 result_expr: - expected_results -
+139_y: OK regex: [\D] parsed_regex: [\D] str: - result_expr: - expected_results -
+140_y: OK regex: ab|cd parsed_regex: ab|cd str: abc result_expr: $& expected_results ab
+141_y: OK regex: ab|cd parsed_regex: ab|cd str: abcd result_expr: $& expected_results ab
+142_y: OK regex: ()ef parsed_regex: ()ef str: def result_expr: $&-$1 expected_results ef-
+143_y: OK regex: ()ef parsed_regex: ()ef str: def result_expr: $-[0] expected_results 1
+144_y: OK regex: ()ef parsed_regex: ()ef str: def result_expr: $+[0] expected_results 3
+145_y: OK regex: ()ef parsed_regex: ()ef str: def result_expr: $-[1] expected_results 1
+146_y: OK regex: ()ef parsed_regex: ()ef str: def result_expr: $+[1] expected_results 1
+147_n: OK regex: \$b parsed_regex: \$b str: b result_expr: - expected_results -
+148_y: OK regex: a\(b parsed_regex: a\(b str: a(b result_expr: $&-$1 expected_results a(b-
+149_y: OK regex: a\(*b parsed_regex: a\(*b str: ab result_expr: $& expected_results ab
+150_y: OK regex: a\(*b parsed_regex: a\(*b str: a((b result_expr: $& expected_results a((b
+151_y: OK regex: a\\b parsed_regex: a\\b str: a\b result_expr: $& expected_results a\b
+152_y: OK regex: ((a)) parsed_regex: ((a)) str: abc result_expr: $&-$1-$2 expected_results a-a-a
+153_y: OK regex: ((a)) parsed_regex: ((a)) str: abc result_expr: $-[0]-$-[1]-$-[2] expected_results 0-0-0
+154_y: OK regex: ((a)) parsed_regex: ((a)) str: abc result_expr: $+[0]-$+[1]-$+[2] expected_results 1-1-1
+155_y: OK regex: (foo)(\g-2) parsed_regex: (foo)(\g-2) str: foofoo result_expr: $1-$2 expected_results foo-foo
+156_y: OK regex: (foo)(\g-2)(foo)(\g-2) parsed_regex: (foo)(\g-2)(foo)(\g-2) str: foofoofoofoo result_expr: $1-$2-$3-$4 expected_results foo-foo-foo-foo
+157_y: OK regex: (([abc]+) \g-1)(([abc]+) \g{-1}) parsed_regex: (([abc]+) \g-1)(([abc]+) \g{-1}) str: abc abccba cba result_expr: $2-$4 expected_results abc-cba
+158_y: OK regex: (a)(b)(c)\g1\g2\g3 parsed_regex: (a)(b)(c)\g1\g2\g3 str: abcabc result_expr: $1$2$3 expected_results abc
+159_y: OK regex: abc parsed_regex: abc str: ABC result_expr: $& expected_results ABC
+160_n: OK regex: abc parsed_regex: abc str: XBC result_expr: - expected_results -
+161_n: OK regex: abc parsed_regex: abc str: AXC result_expr: - expected_results -
+162_n: OK regex: abc parsed_regex: abc str: ABX result_expr: - expected_results -
+163_y: OK regex: abc parsed_regex: abc str: XABCY result_expr: $& expected_results ABC
+164_y: OK regex: abc parsed_regex: abc str: ABABC result_expr: $& expected_results ABC
+165_y: OK regex: ab*c parsed_regex: ab*c str: ABC result_expr: $& expected_results ABC
+166_y: OK regex: ab*bc parsed_regex: ab*bc str: ABC result_expr: $& expected_results ABC
+167_y: OK regex: ab*bc parsed_regex: ab*bc str: ABBC result_expr: $& expected_results ABBC
+168_y: OK regex: ab*?bc parsed_regex: ab*?bc str: ABBBBC result_expr: $& expected_results ABBBBC
+169_y: Failure: Regex should apply. regex: ab{0,}?bc parsed_regex: ab{0,}?bc str: ABBBBC result_expr: $& expected_results ABBBBC
+170_y: OK regex: ab+?bc parsed_regex: ab+?bc str: ABBC result_expr: $& expected_results ABBC
+171_n: OK regex: ab+bc parsed_regex: ab+bc str: ABC result_expr: - expected_results -
+172_n: OK regex: ab+bc parsed_regex: ab+bc str: ABQ result_expr: - expected_results -
+173_n: OK regex: ab{1,}bc parsed_regex: ab{1,}bc str: ABQ result_expr: - expected_results -
+174_y: OK regex: ab+bc parsed_regex: ab+bc str: ABBBBC result_expr: $& expected_results ABBBBC
+175_y: Failure: Regex should apply. regex: ab{1,}?bc parsed_regex: ab{1,}?bc str: ABBBBC result_expr: $& expected_results ABBBBC
+176_y: OK regex: ab{1,3}?bc parsed_regex: ab{1,3}?bc str: ABBBBC result_expr: $& expected_results ABBBBC
+177_y: Failure: Regex should apply. regex: ab{3,4}?bc parsed_regex: ab{3,4}?bc str: ABBBBC result_expr: $& expected_results ABBBBC
+178_n: OK regex: ab{4,5}?bc parsed_regex: ab{4,5}?bc str: ABBBBC result_expr: - expected_results -
+179_y: OK regex: ab??bc parsed_regex: ab??bc str: ABBC result_expr: $& expected_results ABBC
+180_y: OK regex: ab??bc parsed_regex: ab??bc str: ABC result_expr: $& expected_results ABC
+181_y: OK regex: ab{0,1}?bc parsed_regex: ab{0,1}?bc str: ABC result_expr: $& expected_results ABC
+182_n: OK regex: ab??bc parsed_regex: ab??bc str: ABBBBC result_expr: - expected_results -
+183_y: OK regex: ab??c parsed_regex: ab??c str: ABC result_expr: $& expected_results ABC
+184_y: OK regex: ab{0,1}?c parsed_regex: ab{0,1}?c str: ABC result_expr: $& expected_results ABC
+185_y: OK regex: ^abc\$ parsed_regex: ^abc\$ str: ABC result_expr: $& expected_results ABC
+186_n: OK regex: ^abc\$ parsed_regex: ^abc\$ str: ABCC result_expr: - expected_results -
+187_y: OK regex: ^abc parsed_regex: ^abc str: ABCC result_expr: $& expected_results ABC
+188_n: OK regex: ^abc\$ parsed_regex: ^abc\$ str: AABC result_expr: - expected_results -
+189_y: OK regex: abc\$ parsed_regex: abc\$ str: AABC result_expr: $& expected_results ABC
+190_y: OK regex: ^ parsed_regex: ^ str: ABC result_expr: $& expected_results 
+191_y: OK regex: \$ parsed_regex: \$ str: ABC result_expr: $& expected_results 
+192_y: OK regex: a.c parsed_regex: a.c str: ABC result_expr: $& expected_results ABC
+193_y: OK regex: a.c parsed_regex: a.c str: AXC result_expr: $& expected_results AXC
+194_y: OK regex: a\\Nc parsed_regex: a\\Nc str: ABC result_expr: $& expected_results ABC
+195_y: OK regex: a.*?c parsed_regex: a.*?c str: AXYZC result_expr: $& expected_results AXYZC
+196_n: OK regex: a.*c parsed_regex: a.*c str: AXYZD result_expr: - expected_results -
+197_n: OK regex: a[bc]d parsed_regex: a[bc]d str: ABC result_expr: - expected_results -
+198_y: OK regex: a[bc]d parsed_regex: a[bc]d str: ABD result_expr: $& expected_results ABD
+199_n: OK regex: a[b-d]e parsed_regex: a[b-d]e str: ABD result_expr: - expected_results -
+200_y: OK regex: a[b-d]e parsed_regex: a[b-d]e str: ACE result_expr: $& expected_results ACE
+201_y: OK regex: a[b-d] parsed_regex: a[b-d] str: AAC result_expr: $& expected_results AC
+202_y: OK regex: a[-b] parsed_regex: a[-b] str: A- result_expr: $& expected_results A-
+203_y: OK regex: a[b-] parsed_regex: a[b-] str: A- result_expr: $& expected_results A-
+204_y: OK regex: a] parsed_regex: a] str: A] result_expr: $& expected_results A]
+205_y: OK regex: a[]]b parsed_regex: a[]]b str: A]B result_expr: $& expected_results A]B
+206_y: OK regex: a[^bc]d parsed_regex: a[^bc]d str: AED result_expr: $& expected_results AED
+207_n: OK regex: a[^bc]d parsed_regex: a[^bc]d str: ABD result_expr: - expected_results -
+208_y: OK regex: a[^-b]c parsed_regex: a[^-b]c str: ADC result_expr: $& expected_results ADC
+209_n: OK regex: a[^-b]c parsed_regex: a[^-b]c str: A-C result_expr: - expected_results -
+210_n: OK regex: a[^]b]c parsed_regex: a[^]b]c str: A]C result_expr: - expected_results -
+211_y: OK regex: a[^]b]c parsed_regex: a[^]b]c str: ADC result_expr: $& expected_results ADC
+212_y: OK regex: ab|cd parsed_regex: ab|cd str: ABC result_expr: $& expected_results AB
+213_y: OK regex: ab|cd parsed_regex: ab|cd str: ABCD result_expr: $& expected_results AB
+214_y: OK regex: ()ef parsed_regex: ()ef str: DEF result_expr: $&-$1 expected_results EF-
+215_n: OK regex: \$b parsed_regex: \$b str: B result_expr: - expected_results -
+216_y: OK regex: a\(b parsed_regex: a\(b str: A(B result_expr: $&-$1 expected_results A(B-
+217_y: OK regex: a\(*b parsed_regex: a\(*b str: AB result_expr: $& expected_results AB
+218_y: OK regex: a\(*b parsed_regex: a\(*b str: A((B result_expr: $& expected_results A((B
+219_y: OK regex: a\\b parsed_regex: a\\b str: A\B result_expr: $& expected_results A\B
+220_y: OK regex: ((a)) parsed_regex: ((a)) str: ABC result_expr: $&-$1-$2 expected_results A-A-A
+221_y: OK regex: (a)b(c) parsed_regex: (a)b(c) str: ABC result_expr: $&-$1-$2 expected_results ABC-A-C
+222_y: OK regex: a+b+c parsed_regex: a+b+c str: AABBABC result_expr: $& expected_results ABC
+223_y: OK regex: a{1,}b{1,}c parsed_regex: a{1,}b{1,}c str: AABBABC result_expr: $& expected_results ABC
+224_y: OK regex: a.+?c parsed_regex: a.+?c str: ABCABC result_expr: $& expected_results ABC
+225_y: OK regex: a.*?c parsed_regex: a.*?c str: ABCABC result_expr: $& expected_results ABC
+226_y: Failure: Regex should apply. regex: a.{0,5}?c parsed_regex: a.{0,5}?c str: ABCABC result_expr: $& expected_results ABC
+227_y: OK regex: (a+|b)* parsed_regex: (a+|b)* str: AB result_expr: $&-$1 expected_results AB-B
+228_y: OK regex: (a+|b){0,} parsed_regex: (a+|b){0,} str: AB result_expr: $&-$1 expected_results AB-B
+229_y: OK regex: (a+|b)+ parsed_regex: (a+|b)+ str: AB result_expr: $&-$1 expected_results AB-B
+230_y: OK regex: (a+|b){1,} parsed_regex: (a+|b){1,} str: AB result_expr: $&-$1 expected_results AB-B
+231_y: OK regex: (a+|b)? parsed_regex: (a+|b)? str: AB result_expr: $&-$1 expected_results A-A
+232_y: OK regex: (a+|b){0,1} parsed_regex: (a+|b){0,1} str: AB result_expr: $&-$1 expected_results A-A
+233_y: Failure: Result is wrong. (is: A-A) regex: (a+|b){0,1}? parsed_regex: (a+|b){0,1}? str: AB result_expr: $&-$1 expected_results -
+234_y: OK regex: [^ab]* parsed_regex: [^ab]* str: CDE result_expr: $& expected_results CDE
+235_n: OK regex: abc parsed_regex: abc str:  result_expr: - expected_results -
+236_y: OK regex: a* parsed_regex: a* str:  result_expr: $& expected_results 
+237_y: OK regex: ([abc])*d parsed_regex: ([abc])*d str: ABBBCD result_expr: $&-$1 expected_results ABBBCD-C
+238_y: OK regex: ([abc])*bcd parsed_regex: ([abc])*bcd str: ABCD result_expr: $&-$1 expected_results ABCD-A
+239_y: OK regex: a|b|c|d|e parsed_regex: a|b|c|d|e str: E result_expr: $& expected_results E
+240_y: OK regex: (a|b|c|d|e)f parsed_regex: (a|b|c|d|e)f str: EF result_expr: $&-$1 expected_results EF-E
+241_y: OK regex: abcd*efg parsed_regex: abcd*efg str: ABCDEFG result_expr: $& expected_results ABCDEFG
+242_y: OK regex: ab* parsed_regex: ab* str: XABYABBBZ result_expr: $& expected_results AB
+243_y: OK regex: ab* parsed_regex: ab* str: XAYABBBZ result_expr: $& expected_results A
+244_y: OK regex: (ab|cd)e parsed_regex: (ab|cd)e str: ABCDE result_expr: $&-$1 expected_results CDE-CD
+245_y: OK regex: [abhgefdc]ij parsed_regex: [abhgefdc]ij str: HIJ result_expr: $& expected_results HIJ
+246_n: OK regex: ^(ab|cd)e parsed_regex: ^(ab|cd)e str: ABCDE result_expr: x$1y expected_results XY
+247_y: OK regex: (abc|)ef parsed_regex: (abc|)ef str: ABCDEF result_expr: $&-$1 expected_results EF-
+248_y: OK regex: (a|b)c*d parsed_regex: (a|b)c*d str: ABCD result_expr: $&-$1 expected_results BCD-B
+249_y: OK regex: (ab|ab*)bc parsed_regex: (ab|ab*)bc str: ABC result_expr: $&-$1 expected_results ABC-A
+250_y: OK regex: a([bc]*)c* parsed_regex: a([bc]*)c* str: ABC result_expr: $&-$1 expected_results ABC-BC
+251_y: OK regex: a([bc]*)(c*d) parsed_regex: a([bc]*)(c*d) str: ABCD result_expr: $&-$1-$2 expected_results ABCD-BC-D
+252_y: OK regex: a([bc]+)(c*d) parsed_regex: a([bc]+)(c*d) str: ABCD result_expr: $&-$1-$2 expected_results ABCD-BC-D
+253_y: OK regex: a([bc]*)(c+d) parsed_regex: a([bc]*)(c+d) str: ABCD result_expr: $&-$1-$2 expected_results ABCD-B-CD
+254_y: OK regex: a[bcd]*dcdcde parsed_regex: a[bcd]*dcdcde str: ADCDCDE result_expr: $& expected_results ADCDCDE
+255_n: OK regex: a[bcd]+dcdcde parsed_regex: a[bcd]+dcdcde str: ADCDCDE result_expr: - expected_results -
+256_y: OK regex: (ab|a)b*c parsed_regex: (ab|a)b*c str: ABC result_expr: $&-$1 expected_results ABC-AB
+257_y: OK regex: ((a)(b)c)(d) parsed_regex: ((a)(b)c)(d) str: ABCD result_expr: $1-$2-$3-$4 expected_results ABC-A-B-D
+258_y: OK regex: [a-zA-Z_][a-zA-Z0-9_]* parsed_regex: [a-zA-Z_][a-zA-Z0-9_]* str: ALPHA result_expr: $& expected_results ALPHA
+259_y: Failure: Result is wrong. (is: BH-BH) regex: ^a(bc+|b[eh])g|.h\$ parsed_regex: ^a(bc+|b[eh])g|.h\$ str: ABH result_expr: $&-$1 expected_results BH-
+260_y: OK regex: (bc+d\$|ef*g.|h?i(j|k)) parsed_regex: (bc+d\$|ef*g.|h?i(j|k)) str: EFFGZ result_expr: $&-$1-$2 expected_results EFFGZ-EFFGZ-
+261_y: OK regex: (bc+d\$|ef*g.|h?i(j|k)) parsed_regex: (bc+d\$|ef*g.|h?i(j|k)) str: IJ result_expr: $&-$1-$2 expected_results IJ-IJ-J
+262_n: OK regex: (bc+d\$|ef*g.|h?i(j|k)) parsed_regex: (bc+d\$|ef*g.|h?i(j|k)) str: EFFG result_expr: - expected_results -
+263_n: OK regex: (bc+d\$|ef*g.|h?i(j|k)) parsed_regex: (bc+d\$|ef*g.|h?i(j|k)) str: BCDD result_expr: - expected_results -
+264_y: OK regex: (bc+d\$|ef*g.|h?i(j|k)) parsed_regex: (bc+d\$|ef*g.|h?i(j|k)) str: REFFGZ result_expr: $&-$1-$2 expected_results EFFGZ-EFFGZ-
+265_y: OK regex: ((((((((((a)))))))))) parsed_regex: ((((((((((a)))))))))) str: A result_expr: $10 expected_results A
+266_y: OK regex: ((((((((((a))))))))))\10 parsed_regex: ((((((((((a))))))))))\10 str: AA result_expr: $& expected_results AA
+267_y: OK regex: (((((((((a))))))))) parsed_regex: (((((((((a))))))))) str: A result_expr: $& expected_results A
+268_n: OK regex: multiple words of text parsed_regex: multiple words of text str: UH-UH result_expr: - expected_results -
+269_y: OK regex: multiple words parsed_regex: multiple words str: MULTIPLE WORDS, YEAH result_expr: $& expected_results MULTIPLE WORDS
+270_y: OK regex: (.*)c(.*) parsed_regex: (.*)c(.*) str: ABCDE result_expr: $&-$1-$2 expected_results ABCDE-AB-DE
+271_y: OK regex: \((.*), (.*)\) parsed_regex: \((.*), (.*)\) str: (A, B) result_expr: ($2, $1) expected_results (B, A)
+272_n: OK regex: [k] parsed_regex: [k] str: AB result_expr: - expected_results -
+273_y: OK regex: abcd parsed_regex: abcd str: ABCD result_expr: $& expected_results ABCD
+274_y: OK regex: a(bc)d parsed_regex: a(bc)d str: ABCD result_expr: $1 expected_results BC
+275_y: OK regex: a[-]?c parsed_regex: a[-]?c str: AC result_expr: $& expected_results AC
+276_y: OK regex: (abc)\1 parsed_regex: (abc)\1 str: ABCABC result_expr: $1 expected_results ABC
+277_y: OK regex: ([a-c]*)\1 parsed_regex: ([a-c]*)\1 str: ABCABC result_expr: $1 expected_results ABC
+278_n: OK regex: a++a parsed_regex: a++a str: aaaaa result_expr: - expected_results -
+279_n: OK regex: a*+a parsed_regex: a*+a str: aaaaa result_expr: - expected_results -
+280_n: OK regex: a{1,5}+a parsed_regex: a{1,5}+a str: aaaaa result_expr: - expected_results -
+281_n: OK regex: a?+a parsed_regex: a?+a str: ab result_expr: - expected_results -
+282_y: OK regex: a++b parsed_regex: a++b str: aaaaab result_expr: $& expected_results aaaaab
+283_y: OK regex: a*+b parsed_regex: a*+b str: aaaaab result_expr: $& expected_results aaaaab
+284_y: OK regex: a{1,5}+b parsed_regex: a{1,5}+b str: aaaaab result_expr: $& expected_results aaaaab
+285_y: OK regex: a?+b parsed_regex: a?+b str: ab result_expr: $& expected_results ab
+286_n: OK regex: fooa++a parsed_regex: fooa++a str: fooaaaaa result_expr: - expected_results -
+287_n: OK regex: fooa*+a parsed_regex: fooa*+a str: fooaaaaa result_expr: - expected_results -
+288_n: OK regex: fooa{1,5}+a parsed_regex: fooa{1,5}+a str: fooaaaaa result_expr: - expected_results -
+289_n: OK regex: fooa?+a parsed_regex: fooa?+a str: fooab result_expr: - expected_results -
+290_y: OK regex: fooa++b parsed_regex: fooa++b str: fooaaaaab result_expr: $& expected_results fooaaaaab
+291_y: OK regex: fooa*+b parsed_regex: fooa*+b str: fooaaaaab result_expr: $& expected_results fooaaaaab
+292_y: OK regex: fooa{1,5}+b parsed_regex: fooa{1,5}+b str: fooaaaaab result_expr: $& expected_results fooaaaaab
+293_y: OK regex: fooa?+b parsed_regex: fooa?+b str: fooab result_expr: $& expected_results fooab
+294_n: OK regex: (aA)++(aA) parsed_regex: (aA)++(aA) str: aAaAaAaAaA result_expr: - expected_results aAaAaAaAaA
+295_n: OK regex: (aA|bB)++(aA|bB) parsed_regex: (aA|bB)++(aA|bB) str: aAaAbBaAbB result_expr: - expected_results aAaAbBaAbB
+296_n: OK regex: (aA)*+(aA) parsed_regex: (aA)*+(aA) str: aAaAaAaAaA result_expr: - expected_results aAaAaAaAaA
+297_n: OK regex: (aA|bB)*+(aA|bB) parsed_regex: (aA|bB)*+(aA|bB) str: aAaAbBaAaA result_expr: - expected_results aAaAbBaAaA
+298_n: OK regex: (aA){1,5}+(aA) parsed_regex: (aA){1,5}+(aA) str: aAaAaAaAaA result_expr: - expected_results aAaAaAaAaA
+299_n: OK regex: (aA|bB){1,5}+(aA|bB) parsed_regex: (aA|bB){1,5}+(aA|bB) str: aAaAbBaAaA result_expr: - expected_results aAaAbBaAaA
+300_n: OK regex: (aA)?+(aA) parsed_regex: (aA)?+(aA) str: aAb result_expr: - expected_results aAb
+301_n: OK regex: (aA|bB)?+(aA|bB) parsed_regex: (aA|bB)?+(aA|bB) str: bBb result_expr: - expected_results bBb
+302_y: OK regex: (aA)++b parsed_regex: (aA)++b str: aAaAaAaAaAb result_expr: $& expected_results aAaAaAaAaAb
+303_y: OK regex: (aA|bB)++b parsed_regex: (aA|bB)++b str: aAbBaAaAbBb result_expr: $& expected_results aAbBaAaAbBb
+304_y: OK regex: (aA)*+b parsed_regex: (aA)*+b str: aAaAaAaAaAb result_expr: $& expected_results aAaAaAaAaAb
+305_y: OK regex: (aA|bB)*+b parsed_regex: (aA|bB)*+b str: bBbBbBbBbBb result_expr: $& expected_results bBbBbBbBbBb
+306_y: OK regex: (aA){1,5}+b parsed_regex: (aA){1,5}+b str: aAaAaAaAaAb result_expr: $& expected_results aAaAaAaAaAb
+307_y: OK regex: (aA|bB){1,5}+b parsed_regex: (aA|bB){1,5}+b str: bBaAbBaAbBb result_expr: $& expected_results bBaAbBaAbBb
+308_y: OK regex: (aA)?+b parsed_regex: (aA)?+b str: aAb result_expr: $& expected_results aAb
+309_y: OK regex: (aA|bB)?+b parsed_regex: (aA|bB)?+b str: bBb result_expr: $& expected_results bBb
+310_n: OK regex: foo(aA)++(aA) parsed_regex: foo(aA)++(aA) str: fooaAaAaAaAaA result_expr: - expected_results fooaAaAaAaAaA
+311_n: OK regex: foo(aA|bB)++(aA|bB) parsed_regex: foo(aA|bB)++(aA|bB) str: foobBbBbBaAaA result_expr: - expected_results foobBbBbBaAaA
+312_n: OK regex: foo(aA)*+(aA) parsed_regex: foo(aA)*+(aA) str: fooaAaAaAaAaA result_expr: - expected_results fooaAaAaAaAaA
+313_n: OK regex: foo(aA|bB)*+(aA|bB) parsed_regex: foo(aA|bB)*+(aA|bB) str: foobBaAbBaAaA result_expr: - expected_results foobBaAbBaAaA
+314_n: OK regex: foo(aA){1,5}+(aA) parsed_regex: foo(aA){1,5}+(aA) str: fooaAaAaAaAaA result_expr: - expected_results fooaAaAaAaAaA
+315_n: OK regex: foo(aA|bB){1,5}+(aA|bB) parsed_regex: foo(aA|bB){1,5}+(aA|bB) str: fooaAbBbBaAaA result_expr: - expected_results fooaAbBbBaAaA
+316_n: OK regex: foo(aA)?+(aA) parsed_regex: foo(aA)?+(aA) str: fooaAb result_expr: - expected_results fooaAb
+317_n: OK regex: foo(aA|bB)?+(aA|bB) parsed_regex: foo(aA|bB)?+(aA|bB) str: foobBb result_expr: - expected_results foobBb
+318_y: OK regex: foo(aA)++b parsed_regex: foo(aA)++b str: fooaAaAaAaAaAb result_expr: $& expected_results fooaAaAaAaAaAb
+319_y: OK regex: foo(aA|bB)++b parsed_regex: foo(aA|bB)++b str: foobBaAbBaAbBb result_expr: $& expected_results foobBaAbBaAbBb
+320_y: OK regex: foo(aA)*+b parsed_regex: foo(aA)*+b str: fooaAaAaAaAaAb result_expr: $& expected_results fooaAaAaAaAaAb
+321_y: OK regex: foo(aA|bB)*+b parsed_regex: foo(aA|bB)*+b str: foobBbBaAaAaAb result_expr: $& expected_results foobBbBaAaAaAb
+322_y: OK regex: foo(aA){1,5}+b parsed_regex: foo(aA){1,5}+b str: fooaAaAaAaAaAb result_expr: $& expected_results fooaAaAaAaAaAb
+323_y: OK regex: foo(aA|bB){1,5}+b parsed_regex: foo(aA|bB){1,5}+b str: foobBaAaAaAaAb result_expr: $& expected_results foobBaAaAaAaAb
+324_y: OK regex: foo(aA)?+b parsed_regex: foo(aA)?+b str: fooaAb result_expr: $& expected_results fooaAb
+325_y: OK regex: foo(aA|bB)?+b parsed_regex: foo(aA|bB)?+b str: foobBb result_expr: $& expected_results foobBb
+326_y: OK regex: foo(\h+)bar parsed_regex: foo(\h+)bar str: foo	bar result_expr: $1 expected_results 	
+327_y: OK regex: (\H+)(\h) parsed_regex: (\H+)(\h) str: foo	bar result_expr: $1-$2 expected_results foo-	
+328_y: OK regex: (\h+)(\H) parsed_regex: (\h+)(\H) str: foo	bar result_expr: $1-$2 expected_results 	-b
+329_y: OK regex: foo(\h)bar parsed_regex: foo(\h)bar str: foo	bar result_expr: $1 expected_results 	
+330_y: OK regex: (\H)(\h) parsed_regex: (\H)(\h) str: foo	bar result_expr: $1-$2 expected_results o-	
+331_y: OK regex: (\h)(\H) parsed_regex: (\h)(\H) str: foo	bar result_expr: $1-$2 expected_results 	-b
+332_y: OK regex: foo(\v+)bar parsed_regex: foo(\v+)bar str: foo
 
-Running class:
-1: OK regex: aa* parsed_regex: aa* str: xaxaax result: (1,2) expected_results (1,2)
-2: OK regex: (a*)(ab)*(b*) parsed_regex: (a*)(ab)*(b*) str: abc result: (0,2)(0,1)(?,?)(1,2) expected_results (0,2)(0,1)(?,?)(1,2)
-M2: OK regex: (a*)(ab)*(b*) parsed_regex: (a*)(ab)*(b*) str: abc result: (0,2)(0,1)(?,?)(1,2) expected_results (0,2)(0,0)(0,2)(2,2)
-3: Failure: Ranges are wrong. regex: ((a*)(ab)*)((b*)(a*)) parsed_regex: ((a*)(ab)*)((b*)(a*)) str: aba result: (0,3)(0,1)(0,1)(?,?)(1,3)(1,2)(2,3) expected_results (0,3)(0,2)(0,0)(0,2)(2,3)(2,2)(2,3)
-4: OK regex: (...?.?)* parsed_regex: (...?.?)* str: xxxxxx result: (0,6)(4,6) expected_results (0,6)(4,6)
-5: Failure: Ranges are wrong. regex: (a|ab)(bc|c) parsed_regex: (a|ab)(bc|c) str: abcabc result: (0,3)(0,1)(1,3) expected_results (0,3)(0,2)(2,3)
-6: Failure: Ranges are wrong. regex: (aba|a*b)(aba|a*b) parsed_regex: (aba|a*b)(aba|a*b) str: ababa result: (0,4)(0,3)(3,4) expected_results (0,5)(0,2)(2,5)
-7: OK regex: (a*){2} parsed_regex: (a*){2} str: xxxxx result: (0,0)(0,0) expected_results (0,0)(0,0)
-8: OK regex: (a*)* parsed_regex: (a*)* str: a result: (0,1)(0,1) expected_results (0,1)(0,1)
-9: Failure: Ranges are wrong. regex: (aba|a*b)* parsed_regex: (aba|a*b)* str: ababa result: (0,4)(3,4) expected_results (0,5)(2,5)
-10: OK regex: (a(b)?)+ parsed_regex: (a(b)?)+ str: aba result: (0,3)(2,3)(?,?) expected_results (0,3)(2,3)(?,?)
-11: OK regex: .*(.*) parsed_regex: .*(.*) str: ab result: (0,2)(2,2) expected_results (0,2)(2,2)
-12: OK regex: (a?)((ab)?)(b?)a?(ab)?b? parsed_regex: (a?)((ab)?)(b?)a?(ab)?b? str: abab result: (0,4)(0,1)(1,1)(?,?)(1,2)(?,?) expected_results (0,4)(0,1)(1,1)(?,?)(1,2)(?,?)
-M12: OK regex: (a?)((ab)?)(b?)a?(ab)?b? parsed_regex: (a?)((ab)?)(b?)a?(ab)?b? str: abab result: (0,4)(0,1)(1,1)(?,?)(1,2)(?,?) expected_results (0,4)(0,1)(1,1)(?,?)(1,2)(2,4)
 
-Running left_assoc:
-M1: Failure: Ranges should be wrong. regex: (a|ab)(c|bcd)(d*) parsed_regex: (a|ab)(c|bcd)(d*) str: abcd result: (0,4)(0,1)(1,4)(4,4) expected_results (0,4)(0,1)(1,4)(4,4)
-M2: Failure: Ranges should be wrong. regex: (a|ab)(bcd|c)(d*) parsed_regex: (a|ab)(bcd|c)(d*) str: abcd result: (0,4)(0,1)(1,4)(4,4) expected_results (0,4)(0,1)(1,4)(4,4)
-M3: OK regex: (ab|a)(c|bcd)(d*) parsed_regex: (ab|a)(c|bcd)(d*) str: abcd result: (0,4)(0,2)(2,3)(3,4) expected_results (0,4)(0,1)(1,4)(4,4)
-M4: OK regex: (ab|a)(bcd|c)(d*) parsed_regex: (ab|a)(bcd|c)(d*) str: abcd result: (0,4)(0,2)(2,3)(3,4) expected_results (0,4)(0,1)(1,4)(4,4)
-M5: OK regex: (a*)(b|abc)(c*) parsed_regex: (a*)(b|abc)(c*) str: abc result: (0,3)(0,1)(1,2)(2,3) expected_results (0,3)(0,0)(0,3)(3,3)
-M6: OK regex: (a*)(abc|b)(c*) parsed_regex: (a*)(abc|b)(c*) str: abc result: (0,3)(0,1)(1,2)(2,3) expected_results (0,3)(0,0)(0,3)(3,3)
-M7: OK regex: (a*)(b|abc)(c*) parsed_regex: (a*)(b|abc)(c*) str: abc result: (0,3)(0,1)(1,2)(2,3) expected_results (0,3)(0,0)(0,3)(3,3)
-M8: OK regex: (a*)(abc|b)(c*) parsed_regex: (a*)(abc|b)(c*) str: abc result: (0,3)(0,1)(1,2)(2,3) expected_results (0,3)(0,0)(0,3)(3,3)
-M9: Failure: Ranges should be wrong. regex: (a|ab)(c|bcd)(d|.*) parsed_regex: (a|ab)(c|bcd)(d|.*) str: abcd result: (0,4)(0,1)(1,4)(4,4) expected_results (0,4)(0,1)(1,4)(4,4)
-M10: Failure: Ranges should be wrong. regex: (a|ab)(bcd|c)(d|.*) parsed_regex: (a|ab)(bcd|c)(d|.*) str: abcd result: (0,4)(0,1)(1,4)(4,4) expected_results (0,4)(0,1)(1,4)(4,4)
-M11: OK regex: (ab|a)(c|bcd)(d|.*) parsed_regex: (ab|a)(c|bcd)(d|.*) str: abcd result: (0,4)(0,2)(2,3)(3,4) expected_results (0,4)(0,1)(1,4)(4,4)
-M12: OK regex: (ab|a)(bcd|c)(d|.*) parsed_regex: (ab|a)(bcd|c)(d|.*) str: abcd result: (0,4)(0,2)(2,3)(3,4) expected_results (0,4)(0,1)(1,4)(4,4)
+bar result_expr: $1 expected_results 
 
-Running right_assoc:
-1: Failure: Ranges are wrong. regex: (a|ab)(c|bcd)(d*) parsed_regex: (a|ab)(c|bcd)(d*) str: abcd result: (0,4)(0,1)(1,4)(4,4) expected_results (0,4)(0,2)(2,3)(3,4)
-2: Failure: Ranges are wrong. regex: (a|ab)(bcd|c)(d*) parsed_regex: (a|ab)(bcd|c)(d*) str: abcd result: (0,4)(0,1)(1,4)(4,4) expected_results (0,4)(0,2)(2,3)(3,4)
-3: OK regex: (ab|a)(c|bcd)(d*) parsed_regex: (ab|a)(c|bcd)(d*) str: abcd result: (0,4)(0,2)(2,3)(3,4) expected_results (0,4)(0,2)(2,3)(3,4)
-4: OK regex: (ab|a)(bcd|c)(d*) parsed_regex: (ab|a)(bcd|c)(d*) str: abcd result: (0,4)(0,2)(2,3)(3,4) expected_results (0,4)(0,2)(2,3)(3,4)
-5: OK regex: (a*)(b|abc)(c*) parsed_regex: (a*)(b|abc)(c*) str: abc result: (0,3)(0,1)(1,2)(2,3) expected_results (0,3)(0,1)(1,2)(2,3)
-6: OK regex: (a*)(abc|b)(c*) parsed_regex: (a*)(abc|b)(c*) str: abc result: (0,3)(0,1)(1,2)(2,3) expected_results (0,3)(0,1)(1,2)(2,3)
-7: OK regex: (a*)(b|abc)(c*) parsed_regex: (a*)(b|abc)(c*) str: abc result: (0,3)(0,1)(1,2)(2,3) expected_results (0,3)(0,1)(1,2)(2,3)
-8: OK regex: (a*)(abc|b)(c*) parsed_regex: (a*)(abc|b)(c*) str: abc result: (0,3)(0,1)(1,2)(2,3) expected_results (0,3)(0,1)(1,2)(2,3)
-9: Failure: Ranges are wrong. regex: (a|ab)(c|bcd)(d|.*) parsed_regex: (a|ab)(c|bcd)(d|.*) str: abcd result: (0,4)(0,1)(1,4)(4,4) expected_results (0,4)(0,2)(2,3)(3,4)
-10: Failure: Ranges are wrong. regex: (a|ab)(bcd|c)(d|.*) parsed_regex: (a|ab)(bcd|c)(d|.*) str: abcd result: (0,4)(0,1)(1,4)(4,4) expected_results (0,4)(0,2)(2,3)(3,4)
-11: OK regex: (ab|a)(c|bcd)(d|.*) parsed_regex: (ab|a)(c|bcd)(d|.*) str: abcd result: (0,4)(0,2)(2,3)(3,4) expected_results (0,4)(0,2)(2,3)(3,4)
-12: OK regex: (ab|a)(bcd|c)(d|.*) parsed_regex: (ab|a)(bcd|c)(d|.*) str: abcd result: (0,4)(0,2)(2,3)(3,4) expected_results (0,4)(0,2)(2,3)(3,4)
 
-Running forced_assoc:
-1: OK regex: (a|ab)(c|bcd) parsed_regex: (a|ab)(c|bcd) str: abcd result: (0,4)(0,1)(1,4) expected_results (0,4)(0,1)(1,4)
-2: OK regex: (a|ab)(bcd|c) parsed_regex: (a|ab)(bcd|c) str: abcd result: (0,4)(0,1)(1,4) expected_results (0,4)(0,1)(1,4)
-3: Failure: Ranges are wrong. regex: (ab|a)(c|bcd) parsed_regex: (ab|a)(c|bcd) str: abcd result: (0,3)(0,2)(2,3) expected_results (0,4)(0,1)(1,4)
-4: Failure: Ranges are wrong. regex: (ab|a)(bcd|c) parsed_regex: (ab|a)(bcd|c) str: abcd result: (0,3)(0,2)(2,3) expected_results (0,4)(0,1)(1,4)
-5: OK regex: ((a|ab)(c|bcd))(d*) parsed_regex: ((a|ab)(c|bcd))(d*) str: abcd result: (0,4)(0,4)(0,1)(1,4)(4,4) expected_results (0,4)(0,4)(0,1)(1,4)(4,4)
-6: OK regex: ((a|ab)(bcd|c))(d*) parsed_regex: ((a|ab)(bcd|c))(d*) str: abcd result: (0,4)(0,4)(0,1)(1,4)(4,4) expected_results (0,4)(0,4)(0,1)(1,4)(4,4)
-7: Failure: Ranges are wrong. regex: ((ab|a)(c|bcd))(d*) parsed_regex: ((ab|a)(c|bcd))(d*) str: abcd result: (0,4)(0,3)(0,2)(2,3)(3,4) expected_results (0,4)(0,4)(0,1)(1,4)(4,4)
-8: Failure: Ranges are wrong. regex: ((ab|a)(bcd|c))(d*) parsed_regex: ((ab|a)(bcd|c))(d*) str: abcd result: (0,4)(0,3)(0,2)(2,3)(3,4) expected_results (0,4)(0,4)(0,1)(1,4)(4,4)
-9: Failure: Ranges are wrong. regex: (a|ab)((c|bcd)(d*)) parsed_regex: (a|ab)((c|bcd)(d*)) str: abcd result: (0,4)(0,1)(1,4)(1,4)(4,4) expected_results (0,4)(0,2)(2,4)(2,3)(3,4)
-10: Failure: Ranges are wrong. regex: (a|ab)((bcd|c)(d*)) parsed_regex: (a|ab)((bcd|c)(d*)) str: abcd result: (0,4)(0,1)(1,4)(1,4)(4,4) expected_results (0,4)(0,2)(2,4)(2,3)(3,4)
-11: OK regex: (ab|a)((c|bcd)(d*)) parsed_regex: (ab|a)((c|bcd)(d*)) str: abcd result: (0,4)(0,2)(2,4)(2,3)(3,4) expected_results (0,4)(0,2)(2,4)(2,3)(3,4)
-12: OK regex: (ab|a)((bcd|c)(d*)) parsed_regex: (ab|a)((bcd|c)(d*)) str: abcd result: (0,4)(0,2)(2,4)(2,3)(3,4) expected_results (0,4)(0,2)(2,4)(2,3)(3,4)
-13: Failure: Ranges are wrong. regex: (a*)(b|abc) parsed_regex: (a*)(b|abc) str: abc result: (0,2)(0,1)(1,2) expected_results (0,3)(0,0)(0,3)
-14: Failure: Ranges are wrong. regex: (a*)(abc|b) parsed_regex: (a*)(abc|b) str: abc result: (0,2)(0,1)(1,2) expected_results (0,3)(0,0)(0,3)
-15: Failure: Ranges are wrong. regex: ((a*)(b|abc))(c*) parsed_regex: ((a*)(b|abc))(c*) str: abc result: (0,3)(0,2)(0,1)(1,2)(2,3) expected_results (0,3)(0,3)(0,0)(0,3)(3,3)
-16: Failure: Ranges are wrong. regex: ((a*)(abc|b))(c*) parsed_regex: ((a*)(abc|b))(c*) str: abc result: (0,3)(0,2)(0,1)(1,2)(2,3) expected_results (0,3)(0,3)(0,0)(0,3)(3,3)
-17: OK regex: (a*)((b|abc)(c*)) parsed_regex: (a*)((b|abc)(c*)) str: abc result: (0,3)(0,1)(1,3)(1,2)(2,3) expected_results (0,3)(0,1)(1,3)(1,2)(2,3)
-18: OK regex: (a*)((abc|b)(c*)) parsed_regex: (a*)((abc|b)(c*)) str: abc result: (0,3)(0,1)(1,3)(1,2)(2,3) expected_results (0,3)(0,1)(1,3)(1,2)(2,3)
-19: Failure: Ranges are wrong. regex: (a*)(b|abc) parsed_regex: (a*)(b|abc) str: abc result: (0,2)(0,1)(1,2) expected_results (0,3)(0,0)(0,3)
-20: Failure: Ranges are wrong. regex: (a*)(abc|b) parsed_regex: (a*)(abc|b) str: abc result: (0,2)(0,1)(1,2) expected_results (0,3)(0,0)(0,3)
-21: Failure: Ranges are wrong. regex: ((a*)(b|abc))(c*) parsed_regex: ((a*)(b|abc))(c*) str: abc result: (0,3)(0,2)(0,1)(1,2)(2,3) expected_results (0,3)(0,3)(0,0)(0,3)(3,3)
-22: Failure: Ranges are wrong. regex: ((a*)(abc|b))(c*) parsed_regex: ((a*)(abc|b))(c*) str: abc result: (0,3)(0,2)(0,1)(1,2)(2,3) expected_results (0,3)(0,3)(0,0)(0,3)(3,3)
-23: OK regex: (a*)((b|abc)(c*)) parsed_regex: (a*)((b|abc)(c*)) str: abc result: (0,3)(0,1)(1,3)(1,2)(2,3) expected_results (0,3)(0,1)(1,3)(1,2)(2,3)
-24: OK regex: (a*)((abc|b)(c*)) parsed_regex: (a*)((abc|b)(c*)) str: abc result: (0,3)(0,1)(1,3)(1,2)(2,3) expected_results (0,3)(0,1)(1,3)(1,2)(2,3)
-25: Failure: Ranges are wrong. regex: (a|ab) parsed_regex: (a|ab) str: ab result: (0,1)(0,1) expected_results (0,2)(0,2)
-26: OK regex: (ab|a) parsed_regex: (ab|a) str: ab result: (0,2)(0,2) expected_results (0,2)(0,2)
-27: Failure: Ranges are wrong. regex: (a|ab)(b*) parsed_regex: (a|ab)(b*) str: ab result: (0,2)(0,1)(1,2) expected_results (0,2)(0,2)(2,2)
-28: OK regex: (ab|a)(b*) parsed_regex: (ab|a)(b*) str: ab result: (0,2)(0,2)(2,2) expected_results (0,2)(0,2)(2,2)
 
-Running nullsub3:
-1: OK regex: (a*)* parsed_regex: (a*)* str: a result: (0,1)(0,1) expected_results (0,1)(0,1)
-2: OK regex: (a*)* parsed_regex: (a*)* str: x result: (0,0)(0,0) expected_results (0,0)(0,0)
-3: OK regex: (a*)* parsed_regex: (a*)* str: aaaaaa result: (0,6)(0,6) expected_results (0,6)(0,6)
-4: OK regex: (a*)* parsed_regex: (a*)* str: aaaaaax result: (0,6)(0,6) expected_results (0,6)(0,6)
-5: OK regex: (a*)+ parsed_regex: (a*)+ str: a result: (0,1)(0,1) expected_results (0,1)(0,1)
-6: OK regex: (a*)+ parsed_regex: (a*)+ str: x result: (0,0)(0,0) expected_results (0,0)(0,0)
-7: OK regex: (a*)+ parsed_regex: (a*)+ str: aaaaaa result: (0,6)(0,6) expected_results (0,6)(0,6)
-8: OK regex: (a*)+ parsed_regex: (a*)+ str: aaaaaax result: (0,6)(0,6) expected_results (0,6)(0,6)
-9: OK regex: (a+)* parsed_regex: (a+)* str: a result: (0,1)(0,1) expected_results (0,1)(0,1)
-10: OK regex: (a+)* parsed_regex: (a+)* str: x result: (0,0)(?,?) expected_results (0,0)(?,?)
-11: OK regex: (a+)* parsed_regex: (a+)* str: aaaaaa result: (0,6)(0,6) expected_results (0,6)(0,6)
-12: OK regex: (a+)* parsed_regex: (a+)* str: aaaaaax result: (0,6)(0,6) expected_results (0,6)(0,6)
-13: OK regex: (a+)+ parsed_regex: (a+)+ str: a result: (0,1)(0,1) expected_results (0,1)(0,1)
-14: OK regex: (a+)+ parsed_regex: (a+)+ str: x result: NOMATCH expected_results NOMATCH
-15: OK regex: (a+)+ parsed_regex: (a+)+ str: aaaaaa result: (0,6)(0,6) expected_results (0,6)(0,6)
-16: OK regex: (a+)+ parsed_regex: (a+)+ str: aaaaaax result: (0,6)(0,6) expected_results (0,6)(0,6)
-17: OK regex: ([a]*)* parsed_regex: ([a]*)* str: a result: (0,1)(0,1) expected_results (0,1)(0,1)
-18: OK regex: ([a]*)* parsed_regex: ([a]*)* str: x result: (0,0)(0,0) expected_results (0,0)(0,0)
-19: OK regex: ([a]*)* parsed_regex: ([a]*)* str: aaaaaa result: (0,6)(0,6) expected_results (0,6)(0,6)
-20: OK regex: ([a]*)* parsed_regex: ([a]*)* str: aaaaaax result: (0,6)(0,6) expected_results (0,6)(0,6)
-21: OK regex: ([a]*)+ parsed_regex: ([a]*)+ str: a result: (0,1)(0,1) expected_results (0,1)(0,1)
-22: OK regex: ([a]*)+ parsed_regex: ([a]*)+ str: x result: (0,0)(0,0) expected_results (0,0)(0,0)
-23: OK regex: ([a]*)+ parsed_regex: ([a]*)+ str: aaaaaa result: (0,6)(0,6) expected_results (0,6)(0,6)
-24: OK regex: ([a]*)+ parsed_regex: ([a]*)+ str: aaaaaax result: (0,6)(0,6) expected_results (0,6)(0,6)
-25: OK regex: ([^b]*)* parsed_regex: ([^b]*)* str: a result: (0,1)(0,1) expected_results (0,1)(0,1)
-26: OK regex: ([^b]*)* parsed_regex: ([^b]*)* str: b result: (0,0)(0,0) expected_results (0,0)(0,0)
-27: OK regex: ([^b]*)* parsed_regex: ([^b]*)* str: aaaaaa result: (0,6)(0,6) expected_results (0,6)(0,6)
-28: OK regex: ([^b]*)* parsed_regex: ([^b]*)* str: aaaaaab result: (0,6)(0,6) expected_results (0,6)(0,6)
-29: OK regex: ([ab]*)* parsed_regex: ([ab]*)* str: a result: (0,1)(0,1) expected_results (0,1)(0,1)
-30: OK regex: ([ab]*)* parsed_regex: ([ab]*)* str: aaaaaa result: (0,6)(0,6) expected_results (0,6)(0,6)
-31: OK regex: ([ab]*)* parsed_regex: ([ab]*)* str: ababab result: (0,6)(0,6) expected_results (0,6)(0,6)
-32: OK regex: ([ab]*)* parsed_regex: ([ab]*)* str: bababa result: (0,6)(0,6) expected_results (0,6)(0,6)
-33: OK regex: ([ab]*)* parsed_regex: ([ab]*)* str: b result: (0,1)(0,1) expected_results (0,1)(0,1)
-34: OK regex: ([ab]*)* parsed_regex: ([ab]*)* str: bbbbbb result: (0,6)(0,6) expected_results (0,6)(0,6)
-35: OK regex: ([ab]*)* parsed_regex: ([ab]*)* str: aaaabcde result: (0,5)(0,5) expected_results (0,5)(0,5)
-36: OK regex: ([^a]*)* parsed_regex: ([^a]*)* str: b result: (0,1)(0,1) expected_results (0,1)(0,1)
-37: OK regex: ([^a]*)* parsed_regex: ([^a]*)* str: bbbbbb result: (0,6)(0,6) expected_results (0,6)(0,6)
-38: OK regex: ([^a]*)* parsed_regex: ([^a]*)* str: aaaaaa result: (0,0)(0,0) expected_results (0,0)(0,0)
-39: OK regex: ([^ab]*)* parsed_regex: ([^ab]*)* str: ccccxx result: (0,6)(0,6) expected_results (0,6)(0,6)
-40: OK regex: ([^ab]*)* parsed_regex: ([^ab]*)* str: ababab result: (0,0)(0,0) expected_results (0,0)(0,0)
-41: OK regex: ((z)+|a)* parsed_regex: ((z)+|a)* str: zabcde result: (0,2)(1,2)(?,?) expected_results (0,2)(1,2)(?,?)
-42: OK regex: (a) parsed_regex: (a) str: aaa result: (0,1)(0,1) expected_results (0,1)(0,1)
-46: OK regex: (a*)*(x) parsed_regex: (a*)*(x) str: x result: (0,1)(0,0)(0,1) expected_results (0,1)(0,0)(0,1)
-47: OK regex: (a*)*(x) parsed_regex: (a*)*(x) str: ax result: (0,2)(0,1)(1,2) expected_results (0,2)(0,1)(1,2)
-48: OK regex: (a*)*(x) parsed_regex: (a*)*(x) str: axa result: (0,2)(0,1)(1,2) expected_results (0,2)(0,1)(1,2)
-49: OK regex: (a*)+(x) parsed_regex: (a*)+(x) str: x result: (0,1)(0,0)(0,1) expected_results (0,1)(0,0)(0,1)
-50: OK regex: (a*)+(x) parsed_regex: (a*)+(x) str: ax result: (0,2)(0,1)(1,2) expected_results (0,2)(0,1)(1,2)
-51: OK regex: (a*)+(x) parsed_regex: (a*)+(x) str: axa result: (0,2)(0,1)(1,2) expected_results (0,2)(0,1)(1,2)
-52: OK regex: (a*){2}(x) parsed_regex: (a*){2}(x) str: x result: (0,1)(0,0)(0,1) expected_results (0,1)(0,0)(0,1)
-53: OK regex: (a*){2}(x) parsed_regex: (a*){2}(x) str: ax result: (0,2)(1,1)(1,2) expected_results (0,2)(1,1)(1,2)
-54: OK regex: (a*){2}(x) parsed_regex: (a*){2}(x) str: axa result: (0,2)(1,1)(1,2) expected_results (0,2)(1,1)(1,2)
+333_y: OK regex: (\V+)(\v) parsed_regex: (\V+)(\v) str: foo
 
-Running repetition2:
-1: OK regex: ((..)|(.)) parsed_regex: ((..)|(.)) str: NULL result: NOMATCH expected_results NOMATCH
-2: OK regex: ((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.)) str: NULL result: NOMATCH expected_results NOMATCH
-3: OK regex: ((..)|(.))((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.))((..)|(.)) str: NULL result: NOMATCH expected_results NOMATCH
-4: OK regex: ((..)|(.)){1} parsed_regex: ((..)|(.)){1} str: NULL result: NOMATCH expected_results NOMATCH
-5: OK regex: ((..)|(.)){2} parsed_regex: ((..)|(.)){2} str: NULL result: NOMATCH expected_results NOMATCH
-6: OK regex: ((..)|(.)){3} parsed_regex: ((..)|(.)){3} str: NULL result: NOMATCH expected_results NOMATCH
-7: OK regex: ((..)|(.))* parsed_regex: ((..)|(.))* str: NULL result: (0,0)(?,?)(?,?)(?,?) expected_results (0,0)(?,?)(?,?)(?,?)
-8: OK regex: ((..)|(.)) parsed_regex: ((..)|(.)) str: a result: (0,1)(0,1)(?,?)(0,1) expected_results (0,1)(0,1)(?,?)(0,1)
-9: OK regex: ((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.)) str: a result: NOMATCH expected_results NOMATCH
-10: OK regex: ((..)|(.))((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.))((..)|(.)) str: a result: NOMATCH expected_results NOMATCH
-11: OK regex: ((..)|(.)){1} parsed_regex: ((..)|(.)){1} str: a result: (0,1)(0,1)(?,?)(0,1) expected_results (0,1)(0,1)(?,?)(0,1)
-12: OK regex: ((..)|(.)){2} parsed_regex: ((..)|(.)){2} str: a result: NOMATCH expected_results NOMATCH
-13: OK regex: ((..)|(.)){3} parsed_regex: ((..)|(.)){3} str: a result: NOMATCH expected_results NOMATCH
-14: OK regex: ((..)|(.))* parsed_regex: ((..)|(.))* str: a result: (0,1)(0,1)(?,?)(0,1) expected_results (0,1)(0,1)(?,?)(0,1)
-15: OK regex: ((..)|(.)) parsed_regex: ((..)|(.)) str: aa result: (0,2)(0,2)(0,2)(?,?) expected_results (0,2)(0,2)(0,2)(?,?)
-16: OK regex: ((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.)) str: aa result: (0,2)(0,1)(?,?)(0,1)(1,2)(?,?)(1,2) expected_results (0,2)(0,1)(?,?)(0,1)(1,2)(?,?)(1,2)
-17: OK regex: ((..)|(.))((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.))((..)|(.)) str: aa result: NOMATCH expected_results NOMATCH
-18: OK regex: ((..)|(.)){1} parsed_regex: ((..)|(.)){1} str: aa result: (0,2)(0,2)(0,2)(?,?) expected_results (0,2)(0,2)(0,2)(?,?)
-19: Failure: Regex should apply. regex: ((..)|(.)){2} parsed_regex: ((..)|(.)){2} str: aa result: NOMATCH expected_results (0,2)(1,2)(?,?)(1,2)
-20: OK regex: ((..)|(.)){3} parsed_regex: ((..)|(.)){3} str: aa result: NOMATCH expected_results NOMATCH
-21: OK regex: ((..)|(.))* parsed_regex: ((..)|(.))* str: aa result: (0,2)(0,2)(0,2)(?,?) expected_results (0,2)(0,2)(0,2)(?,?)
-22: OK regex: ((..)|(.)) parsed_regex: ((..)|(.)) str: aaa result: (0,2)(0,2)(0,2)(?,?) expected_results (0,2)(0,2)(0,2)(?,?)
-23: OK regex: ((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.)) str: aaa result: (0,3)(0,2)(0,2)(?,?)(2,3)(?,?)(2,3) expected_results (0,3)(0,2)(0,2)(?,?)(2,3)(?,?)(2,3)
-24: OK regex: ((..)|(.))((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.))((..)|(.)) str: aaa result: (0,3)(0,1)(?,?)(0,1)(1,2)(?,?)(1,2)(2,3)(?,?)(2,3) expected_results (0,3)(0,1)(?,?)(0,1)(1,2)(?,?)(1,2)(2,3)(?,?)(2,3)
-25: OK regex: ((..)|(.)){1} parsed_regex: ((..)|(.)){1} str: aaa result: (0,2)(0,2)(0,2)(?,?) expected_results (0,2)(0,2)(0,2)(?,?)
-26: OK regex: ((..)|(.)){2} parsed_regex: ((..)|(.)){2} str: aaa result: (0,3)(2,3)(?,?)(2,3) expected_results (0,3)(2,3)(?,?)(2,3)
-27: Failure: Regex should apply. regex: ((..)|(.)){3} parsed_regex: ((..)|(.)){3} str: aaa result: NOMATCH expected_results (0,3)(2,3)(?,?)(2,3)
-28: OK regex: ((..)|(.))* parsed_regex: ((..)|(.))* str: aaa result: (0,3)(2,3)(?,?)(2,3) expected_results (0,3)(2,3)(?,?)(2,3)
-29: OK regex: ((..)|(.)) parsed_regex: ((..)|(.)) str: aaaa result: (0,2)(0,2)(0,2)(?,?) expected_results (0,2)(0,2)(0,2)(?,?)
-30: OK regex: ((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.)) str: aaaa result: (0,4)(0,2)(0,2)(?,?)(2,4)(2,4)(?,?) expected_results (0,4)(0,2)(0,2)(?,?)(2,4)(2,4)(?,?)
-31: OK regex: ((..)|(.))((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.))((..)|(.)) str: aaaa result: (0,4)(0,2)(0,2)(?,?)(2,3)(?,?)(2,3)(3,4)(?,?)(3,4) expected_results (0,4)(0,2)(0,2)(?,?)(2,3)(?,?)(2,3)(3,4)(?,?)(3,4)
-32: OK regex: ((..)|(.)){1} parsed_regex: ((..)|(.)){1} str: aaaa result: (0,2)(0,2)(0,2)(?,?) expected_results (0,2)(0,2)(0,2)(?,?)
-33: OK regex: ((..)|(.)){2} parsed_regex: ((..)|(.)){2} str: aaaa result: (0,4)(2,4)(2,4)(?,?) expected_results (0,4)(2,4)(2,4)(?,?)
-34: Failure: Regex should apply. regex: ((..)|(.)){3} parsed_regex: ((..)|(.)){3} str: aaaa result: NOMATCH expected_results (0,4)(3,4)(?,?)(3,4)
-35: OK regex: ((..)|(.))* parsed_regex: ((..)|(.))* str: aaaa result: (0,4)(2,4)(2,4)(?,?) expected_results (0,4)(2,4)(2,4)(?,?)
-36: OK regex: ((..)|(.)) parsed_regex: ((..)|(.)) str: aaaaa result: (0,2)(0,2)(0,2)(?,?) expected_results (0,2)(0,2)(0,2)(?,?)
-37: OK regex: ((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.)) str: aaaaa result: (0,4)(0,2)(0,2)(?,?)(2,4)(2,4)(?,?) expected_results (0,4)(0,2)(0,2)(?,?)(2,4)(2,4)(?,?)
-38: OK regex: ((..)|(.))((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.))((..)|(.)) str: aaaaa result: (0,5)(0,2)(0,2)(?,?)(2,4)(2,4)(?,?)(4,5)(?,?)(4,5) expected_results (0,5)(0,2)(0,2)(?,?)(2,4)(2,4)(?,?)(4,5)(?,?)(4,5)
-39: OK regex: ((..)|(.)){1} parsed_regex: ((..)|(.)){1} str: aaaaa result: (0,2)(0,2)(0,2)(?,?) expected_results (0,2)(0,2)(0,2)(?,?)
-40: OK regex: ((..)|(.)){2} parsed_regex: ((..)|(.)){2} str: aaaaa result: (0,4)(2,4)(2,4)(?,?) expected_results (0,4)(2,4)(2,4)(?,?)
-41: OK regex: ((..)|(.)){3} parsed_regex: ((..)|(.)){3} str: aaaaa result: (0,5)(4,5)(?,?)(4,5) expected_results (0,5)(4,5)(?,?)(4,5)
-42: OK regex: ((..)|(.))* parsed_regex: ((..)|(.))* str: aaaaa result: (0,5)(4,5)(?,?)(4,5) expected_results (0,5)(4,5)(?,?)(4,5)
-43: OK regex: ((..)|(.)) parsed_regex: ((..)|(.)) str: aaaaaa result: (0,2)(0,2)(0,2)(?,?) expected_results (0,2)(0,2)(0,2)(?,?)
-44: OK regex: ((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.)) str: aaaaaa result: (0,4)(0,2)(0,2)(?,?)(2,4)(2,4)(?,?) expected_results (0,4)(0,2)(0,2)(?,?)(2,4)(2,4)(?,?)
-45: OK regex: ((..)|(.))((..)|(.))((..)|(.)) parsed_regex: ((..)|(.))((..)|(.))((..)|(.)) str: aaaaaa result: (0,6)(0,2)(0,2)(?,?)(2,4)(2,4)(?,?)(4,6)(4,6)(?,?) expected_results (0,6)(0,2)(0,2)(?,?)(2,4)(2,4)(?,?)(4,6)(4,6)(?,?)
-46: OK regex: ((..)|(.)){1} parsed_regex: ((..)|(.)){1} str: aaaaaa result: (0,2)(0,2)(0,2)(?,?) expected_results (0,2)(0,2)(0,2)(?,?)
-47: OK regex: ((..)|(.)){2} parsed_regex: ((..)|(.)){2} str: aaaaaa result: (0,4)(2,4)(2,4)(?,?) expected_results (0,4)(2,4)(2,4)(?,?)
-48: OK regex: ((..)|(.)){3} parsed_regex: ((..)|(.)){3} str: aaaaaa result: (0,6)(4,6)(4,6)(?,?) expected_results (0,6)(4,6)(4,6)(?,?)
-49: OK regex: ((..)|(.))* parsed_regex: ((..)|(.))* str: aaaaaa result: (0,6)(4,6)(4,6)(?,?) expected_results (0,6)(4,6)(4,6)(?,?)
-100: OK regex: X(.?){0,}Y parsed_regex: X(.?){0,}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
-101: OK regex: X(.?){1,}Y parsed_regex: X(.?){1,}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
-102: OK regex: X(.?){2,}Y parsed_regex: X(.?){2,}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
-103: OK regex: X(.?){3,}Y parsed_regex: X(.?){3,}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
-104: OK regex: X(.?){4,}Y parsed_regex: X(.?){4,}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
-105: OK regex: X(.?){5,}Y parsed_regex: X(.?){5,}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
-106: OK regex: X(.?){6,}Y parsed_regex: X(.?){6,}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
-107: OK regex: X(.?){7,}Y parsed_regex: X(.?){7,}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
-108: Failure: Regex should apply. regex: X(.?){8,}Y parsed_regex: X(.?){8,}Y str: X1234567Y result: NOMATCH expected_results (0,9)(8,8)
-110: OK regex: X(.?){0,8}Y parsed_regex: X(.?){0,8}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
-111: OK regex: X(.?){1,8}Y parsed_regex: X(.?){1,8}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
-112: OK regex: X(.?){2,8}Y parsed_regex: X(.?){2,8}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
-113: OK regex: X(.?){3,8}Y parsed_regex: X(.?){3,8}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
-114: OK regex: X(.?){4,8}Y parsed_regex: X(.?){4,8}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
-115: OK regex: X(.?){5,8}Y parsed_regex: X(.?){5,8}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
-116: OK regex: X(.?){6,8}Y parsed_regex: X(.?){6,8}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
-117: OK regex: X(.?){7,8}Y parsed_regex: X(.?){7,8}Y str: X1234567Y result: (0,9)(7,8) expected_results (0,9)(7,8)
-118: Failure: Parsed regex does not match. regex: X(.?){8,8}Y parsed_regex: X(.?){8}Y str: X1234567Y result: NOMATCH expected_results (0,9)(8,8)
-260: Failure: Ranges are wrong. regex: (a|ab|c|bcd){0,}(d*) parsed_regex: (a|ab|c|bcd){0,}(d*) str: ababcd result: (0,1)(0,1)(1,1) expected_results (0,6)(3,6)(6,6)
-261: Failure: Ranges are wrong. regex: (a|ab|c|bcd){1,}(d*) parsed_regex: (a|ab|c|bcd){1,}(d*) str: ababcd result: (0,1)(0,1)(1,1) expected_results (0,6)(3,6)(6,6)
-262: Failure: Ranges are wrong. regex: (a|ab|c|bcd){2,}(d*) parsed_regex: (a|ab|c|bcd){2,}(d*) str: ababcd result: (2,6)(3,6)(6,6) expected_results (0,6)(3,6)(6,6)
-263: Failure: Regex should apply. regex: (a|ab|c|bcd){3,}(d*) parsed_regex: (a|ab|c|bcd){3,}(d*) str: ababcd result: NOMATCH expected_results (0,6)(3,6)(6,6)
-264: OK regex: (a|ab|c|bcd){4,}(d*) parsed_regex: (a|ab|c|bcd){4,}(d*) str: ababcd result: NOMATCH expected_results NOMATCH
-265: Failure: Ranges are wrong. regex: (a|ab|c|bcd){0,10}(d*) parsed_regex: (a|ab|c|bcd){0,10}(d*) str: ababcd result: (0,1)(0,1)(1,1) expected_results (0,6)(3,6)(6,6)
-266: Failure: Ranges are wrong. regex: (a|ab|c|bcd){1,10}(d*) parsed_regex: (a|ab|c|bcd){1,10}(d*) str: ababcd result: (0,1)(0,1)(1,1) expected_results (0,6)(3,6)(6,6)
-267: Failure: Ranges are wrong. regex: (a|ab|c|bcd){2,10}(d*) parsed_regex: (a|ab|c|bcd){2,10}(d*) str: ababcd result: (2,6)(3,6)(6,6) expected_results (0,6)(3,6)(6,6)
-268: Failure: Regex should apply. regex: (a|ab|c|bcd){3,10}(d*) parsed_regex: (a|ab|c|bcd){3,10}(d*) str: ababcd result: NOMATCH expected_results (0,6)(3,6)(6,6)
-269: OK regex: (a|ab|c|bcd){4,10}(d*) parsed_regex: (a|ab|c|bcd){4,10}(d*) str: ababcd result: NOMATCH expected_results NOMATCH
-270: Failure: Ranges are wrong. regex: (a|ab|c|bcd)*(d*) parsed_regex: (a|ab|c|bcd)*(d*) str: ababcd result: (0,1)(0,1)(1,1) expected_results (0,6)(3,6)(6,6)
-271: Failure: Ranges are wrong. regex: (a|ab|c|bcd)+(d*) parsed_regex: (a|ab|c|bcd)+(d*) str: ababcd result: (0,1)(0,1)(1,1) expected_results (0,6)(3,6)(6,6)
 
-Running totest:
-01: OK regex: a+ parsed_regex: a+ str: xaax result: (1,3) expected_results (1,3)
-03: Failure: Ranges are wrong. regex: (a?)((ab)?) parsed_regex: (a?)((ab)?) str: ab result: (0,1)(0,1)(1,1)(?,?) expected_results (0,2)(0,0)(0,2)(0,2)
-04: OK regex: (a?)((ab)?)(b?) parsed_regex: (a?)((ab)?)(b?) str: ab result: (0,2)(0,1)(1,1)(?,?)(1,2) expected_results (0,2)(0,1)(1,1)(?,?)(1,2)
-05: Failure: Ranges are wrong. regex: ((a?)((ab)?))(b?) parsed_regex: ((a?)((ab)?))(b?) str: ab result: (0,2)(0,1)(0,1)(1,1)(?,?)(1,2) expected_results (0,2)(0,2)(0,0)(0,2)(0,2)(2,2)
-06: OK regex: (a?)(((ab)?)(b?)) parsed_regex: (a?)(((ab)?)(b?)) str: ab result: (0,2)(0,1)(1,2)(1,1)(?,?)(1,2) expected_results (0,2)(0,1)(1,2)(1,1)(?,?)(1,2)
-07: OK regex: (.?) parsed_regex: (.?) str: x result: (0,1)(0,1) expected_results (0,1)(0,1)
-08: OK regex: (.?){1} parsed_regex: (.?){1} str: x result: (0,1)(0,1) expected_results (0,1)(0,1)
-09: OK regex: (.?)(.?) parsed_regex: (.?)(.?) str: x result: (0,1)(0,1)(1,1) expected_results (0,1)(0,1)(1,1)
-10: OK regex: (.?){2} parsed_regex: (.?){2} str: x result: (0,1)(1,1) expected_results (0,1)(1,1)
-11: OK regex: (.?)* parsed_regex: (.?)* str: x result: (0,1)(0,1) expected_results (0,1)(0,1)
-12: OK regex: (.?.?) parsed_regex: (.?.?) str: xxx result: (0,2)(0,2) expected_results (0,2)(0,2)
-13: OK regex: (.?.?){1} parsed_regex: (.?.?){1} str: xxx result: (0,2)(0,2) expected_results (0,2)(0,2)
-14: OK regex: (.?.?)(.?.?) parsed_regex: (.?.?)(.?.?) str: xxx result: (0,3)(0,2)(2,3) expected_results (0,3)(0,2)(2,3)
-15: OK regex: (.?.?){2} parsed_regex: (.?.?){2} str: xxx result: (0,3)(2,3) expected_results (0,3)(2,3)
-16: OK regex: (.?.?)(.?.?)(.?.?) parsed_regex: (.?.?)(.?.?)(.?.?) str: xxx result: (0,3)(0,2)(2,3)(3,3) expected_results (0,3)(0,2)(2,3)(3,3)
-17: OK regex: (.?.?){3} parsed_regex: (.?.?){3} str: xxx result: (0,3)(3,3) expected_results (0,3)(3,3)
-18: OK regex: (.?.?)* parsed_regex: (.?.?)* str: xxx result: (0,3)(2,3) expected_results (0,3)(2,3)
-19: OK regex: a?((ab)?)(b?) parsed_regex: a?((ab)?)(b?) str: ab result: (0,2)(1,1)(?,?)(1,2) expected_results (0,2)(1,1)(?,?)(1,2)
-20: OK regex: (a?)((ab)?)b? parsed_regex: (a?)((ab)?)b? str: ab result: (0,2)(0,1)(1,1)(?,?) expected_results (0,2)(0,1)(1,1)(?,?)
-21: OK regex: a?((ab)?)b? parsed_regex: a?((ab)?)b? str: ab result: (0,2)(1,1)(?,?) expected_results (0,2)(1,1)(?,?)
-22: OK regex: (a*){2} parsed_regex: (a*){2} str: xxxxx result: (0,0)(0,0) expected_results (0,0)(0,0)
-23: OK regex: (ab?)(b?a) parsed_regex: (ab?)(b?a) str: aba result: (0,3)(0,2)(2,3) expected_results (0,3)(0,2)(2,3)
-24: Failure: Ranges are wrong. regex: (a|ab)(ba|a) parsed_regex: (a|ab)(ba|a) str: aba result: (0,3)(0,1)(1,3) expected_results (0,3)(0,2)(2,3)
-25: Failure: Ranges are wrong. regex: (a|ab|ba) parsed_regex: (a|ab|ba) str: aba result: (0,1)(0,1) expected_results (0,2)(0,2)
-26: Failure: Ranges are wrong. regex: (a|ab|ba)(a|ab|ba) parsed_regex: (a|ab|ba)(a|ab|ba) str: aba result: (0,3)(0,1)(1,3) expected_results (0,3)(0,2)(2,3)
-27: Failure: Ranges are wrong. regex: (a|ab|ba)* parsed_regex: (a|ab|ba)* str: aba result: (0,3)(1,3) expected_results (0,3)(2,3)
-28: OK regex: (aba|a*b) parsed_regex: (aba|a*b) str: ababa result: (0,3)(0,3) expected_results (0,3)(0,3)
-29: Failure: Ranges are wrong. regex: (aba|a*b)(aba|a*b) parsed_regex: (aba|a*b)(aba|a*b) str: ababa result: (0,4)(0,3)(3,4) expected_results (0,5)(0,2)(2,5)
-1029: OK regex: (aba|a*b)(aba|a*b)(aba|a*b) parsed_regex: (aba|a*b)(aba|a*b)(aba|a*b) str: ababa result: NOMATCH expected_results NOMATCH
-30: Failure: Ranges are wrong. regex: (aba|a*b)* parsed_regex: (aba|a*b)* str: ababa result: (0,4)(3,4) expected_results (0,5)(2,5)
-31: OK regex: (aba|ab|a) parsed_regex: (aba|ab|a) str: ababa result: (0,3)(0,3) expected_results (0,3)(0,3)
-32: OK regex: (aba|ab|a)(aba|ab|a) parsed_regex: (aba|ab|a)(aba|ab|a) str: ababa result: (0,5)(0,2)(2,5) expected_results (0,5)(0,2)(2,5)
-1032: OK regex: (aba|ab|a)(aba|ab|a)(aba|ab|a) parsed_regex: (aba|ab|a)(aba|ab|a)(aba|ab|a) str: ababa result: (0,5)(0,2)(2,4)(4,5) expected_results (0,5)(0,2)(2,4)(4,5)
-33: Failure: Ranges are wrong. regex: (aba|ab|a)* parsed_regex: (aba|ab|a)* str: ababa result: (0,3)(0,3) expected_results (0,5)(2,5)
-34: OK regex: (a(b)?) parsed_regex: (a(b)?) str: aba result: (0,2)(0,2)(1,2) expected_results (0,2)(0,2)(1,2)
-35: OK regex: (a(b)?)(a(b)?) parsed_regex: (a(b)?)(a(b)?) str: aba result: (0,3)(0,2)(1,2)(2,3)(?,?) expected_results (0,3)(0,2)(1,2)(2,3)(?,?)
-36: OK regex: (a(b)?)+ parsed_regex: (a(b)?)+ str: aba result: (0,3)(2,3)(?,?) expected_results (0,3)(2,3)(?,?)
-37: OK regex: (.*)(.*) parsed_regex: (.*)(.*) str: xx result: (0,2)(0,2)(2,2) expected_results (0,2)(0,2)(2,2)
-38: OK regex: .*(.*) parsed_regex: .*(.*) str: xx result: (0,2)(2,2) expected_results (0,2)(2,2)
-39: OK regex: (a.*z|b.*y) parsed_regex: (a.*z|b.*y) str: azbazby result: (0,5)(0,5) expected_results (0,5)(0,5)
-40: OK regex: (a.*z|b.*y)(a.*z|b.*y) parsed_regex: (a.*z|b.*y)(a.*z|b.*y) str: azbazby result: (0,7)(0,5)(5,7) expected_results (0,7)(0,5)(5,7)
-41: OK regex: (a.*z|b.*y)* parsed_regex: (a.*z|b.*y)* str: azbazby result: (0,7)(5,7) expected_results (0,7)(5,7)
-42: Failure: Ranges are wrong. regex: (.|..)(.*) parsed_regex: (.|..)(.*) str: ab result: (0,2)(0,1)(1,2) expected_results (0,2)(0,2)(2,2)
-43: Failure: Ranges are wrong. regex: ((..)*(...)*) parsed_regex: ((..)*(...)*) str: xxx result: (0,2)(0,2)(0,2)(?,?) expected_results (0,3)(0,3)(?,?)(0,3)
-44: Failure: Ranges are wrong. regex: ((..)*(...)*)((..)*(...)*) parsed_regex: ((..)*(...)*)((..)*(...)*) str: xxx result: (0,2)(0,2)(0,2)(?,?)(2,2)(?,?)(?,?) expected_results (0,3)(0,3)(?,?)(0,3)(3,3)(?,?)(?,?)
-45: Failure: Ranges are wrong. regex: ((..)*(...)*)* parsed_regex: ((..)*(...)*)* str: xxx result: (0,2)(0,2)(0,2)(?,?) expected_results (0,3)(0,3)(?,?)(0,3)
-83: OK regex: (aa(b(b))?)+ parsed_regex: (aa(b(b))?)+ str: aabbaa result: (0,6)(4,6)(?,?)(?,?) expected_results (0,6)(4,6)(?,?)(?,?)
-84: OK regex: (a(b)?)+ parsed_regex: (a(b)?)+ str: aba result: (0,3)(2,3)(?,?) expected_results (0,3)(2,3)(?,?)
-85: OK regex: ([ab]+)([bc]+)([cd]*) parsed_regex: ([ab]+)([bc]+)([cd]*) str: abcd result: (0,4)(0,2)(2,3)(3,4) expected_results (0,4)(0,2)(2,3)(3,4)
-90: OK regex: ^(A([^B]*))?(B(.*))? parsed_regex: ^(A([^B]*))?(B(.*))? str: Aa result: (0,2)(0,2)(1,2)(?,?)(?,?) expected_results (0,2)(0,2)(1,2)(?,?)(?,?)
-91: OK regex: ^(A([^B]*))?(B(.*))? parsed_regex: ^(A([^B]*))?(B(.*))? str: Bb result: (0,2)(?,?)(?,?)(0,2)(1,2) expected_results (0,2)(?,?)(?,?)(0,2)(1,2)
-110: OK regex: (^){0,3} parsed_regex: (^){0,3} str: a result: (0,0)(0,0) expected_results (0,0)(0,0)
-111: OK regex: (\$){0,3} parsed_regex: (\$){0,3} str: a result: (0,0)(?,?) expected_results (0,0)(?,?)
-112: OK regex: (^){1,3} parsed_regex: (^){1,3} str: a result: (0,0)(0,0) expected_results (0,0)(0,0)
-113: OK regex: (\$){1,3} parsed_regex: (\$){1,3} str: a result: (1,1)(1,1) expected_results (1,1)(1,1)
-200: OK regex: ((s^)|(s)|(^)|(\$)|(^.))* parsed_regex: ((s^)|(s)|(^)|(\$)|(^.))* str: searchme result: (0,1)(0,1)(?,?)(0,1)(?,?)(?,?)(?,?) expected_results (0,1)(0,1)(?,?)(0,1)(?,?)(?,?)(?,?)
-201: OK regex: s(()|^)e parsed_regex: s(()|^)e str: searchme result: (0,2)(1,1)(1,1) expected_results (0,2)(1,1)(1,1)
-202: OK regex: s(^|())e parsed_regex: s(^|())e str: searchme result: (0,2)(1,1)(1,1) expected_results (0,2)(1,1)(1,1)
-203: OK regex: s(^|())e parsed_regex: s(^|())e str: searchme result: (0,2)(1,1)(1,1) expected_results (0,2)(1,1)(1,1)
-204: OK regex: s()?e parsed_regex: s()?e str: searchme result: (0,2)(1,1) expected_results (0,2)(1,1)
-205: OK regex: s(^)?e parsed_regex: s(^)?e str: searchme result: (0,2)(?,?) expected_results (0,2)(?,?)
-206: OK regex: ((s)|(e)|(a))* parsed_regex: ((s)|(e)|(a))* str: searchme result: (0,3)(2,3)(?,?)(?,?)(2,3) expected_results (0,3)(2,3)(?,?)(?,?)(2,3)
-207: OK regex: ((s)|(e)|())* parsed_regex: ((s)|(e)|())* str: searchme result: (0,2)(1,2)(?,?)(1,2)(?,?) expected_results (0,2)(1,2)(?,?)(1,2)(?,?)
-208: Failure: Ranges are wrong. regex: ((b*)|c(c*))* parsed_regex: ((b*)|c(c*))* str: cbb result: (0,0)(0,0)(0,0)(?,?) expected_results (0,3)(1,3)(1,3)(?,?)
-209: OK regex: (yyy|(x?)){2,4} parsed_regex: (yyy|(x?)){2,4} str: yyyyyy result: (0,6)(3,6)(?,?) expected_results (0,6)(3,6)(?,?)
-210: OK regex: (\$)|() parsed_regex: (\$)|() str: xxx result: (0,0)(?,?)(0,0) expected_results (0,0)(?,?)(0,0)
-211: OK regex: \$()|^() parsed_regex: \$()|^() str: ac\n result: (0,0)(?,?)(0,0) expected_results (0,0)(?,?)(0,0)
-212: OK regex: ^()|\$() parsed_regex: ^()|\$() str: ac\n result: (0,0)(0,0)(?,?) expected_results (0,0)(0,0)(?,?)
-213: OK regex: (\$)?(.) parsed_regex: (\$)?(.) str: __ result: (0,1)(?,?)(0,1) expected_results (0,1)(?,?)(0,1)
-214: OK regex: (.|()|())* parsed_regex: (.|()|())* str: c result: (0,1)(0,1)(?,?)(?,?) expected_results (0,1)(0,1)(?,?)(?,?)
-215: OK regex: ((a)|(b)){2,} parsed_regex: ((a)|(b)){2,} str: ab result: (0,2)(1,2)(?,?)(1,2) expected_results (0,2)(1,2)(?,?)(1,2)
-216: OK regex: .()|((.)?) parsed_regex: .()|((.)?) str: NULL result: (0,0)(?,?)(0,0)(?,?) expected_results (0,0)(?,?)(0,0)(?,?)
-217: OK regex: (.|\$){2,} parsed_regex: (.|\$){2,} str: xx result: (0,2)(1,2) expected_results (0,2)(1,2)
-218: Failure: Parsed regex does not match. regex: (.|\$){2,2} parsed_regex: (.|\$){2} str: xx result: NOMATCH expected_results (0,2)(1,2)
-219: OK regex: (.){2,} parsed_regex: (.){2,} str: xx result: (0,2)(1,2) expected_results (0,2)(1,2)
-220: OK regex: (a|())(b|())(c|()) parsed_regex: (a|())(b|())(c|()) str: abc result: (0,3)(0,1)(?,?)(1,2)(?,?)(2,3)(?,?) expected_results (0,3)(0,1)(?,?)(1,2)(?,?)(2,3)(?,?)
-230: Failure: Ranges are wrong. regex: ab()c|ab()c() parsed_regex: ab()c|ab()c() str: abc result: (0,3)(2,2)(?,?)(?,?) expected_results (0,3)(2,2)(-1,-1)(-1,-1)
-250: Failure: Ranges are wrong. regex: (b(c)|d(e))* parsed_regex: (b(c)|d(e))* str: bcde result: (0,4)(2,4)(?,?)(3,4) expected_results (0,4)(2,4)(-1,-1)(3,4)
-251: Failure: Ranges are wrong. regex: (a(b)*)* parsed_regex: (a(b)*)* str: aba result: (0,3)(2,3)(?,?) expected_results (0,3)(2,3)(-1,-1)
+bar result_expr: $1-$2 expected_results foo-
+334_y: OK regex: (\v+)(\V) parsed_regex: (\v+)(\V) str: foo
 
-Running osx_bsd_critical:
-1: OK regex: (()|.)(b) parsed_regex: (()|.)(b) str: ab result: (0,2)(0,1)(?,?)(1,2) expected_results (0,2)(0,1)(?,?)(1,2)
-M1: OK regex: (()|.)(b) parsed_regex: (()|.)(b) str: ab result: (0,2)(0,1)(?,?)(1,2) expected_results (1,2)(1,1)(1,1)(1,2)
-2: OK regex: (()|[ab])(b) parsed_regex: (()|[ab])(b) str: ab result: (0,2)(0,1)(?,?)(1,2) expected_results (0,2)(0,1)(?,?)(1,2)
-M2: OK regex: (()|[ab])(b) parsed_regex: (()|[ab])(b) str: ab result: (0,2)(0,1)(?,?)(1,2) expected_results (1,2)(1,1)(1,1)(1,2)
-3: Failure: Ranges are wrong. regex: (()|[ab])+b parsed_regex: (()|[ab])+b str: aaab result: (3,4)(3,3)(3,3) expected_results (0,4)(2,3)(?,?)
-M3: Failure: Ranges should be wrong. regex: (()|[ab])+b parsed_regex: (()|[ab])+b str: aaab result: (3,4)(3,3)(3,3) expected_results (3,4)(3,3)(3,3)
-11: OK regex: (.|())(b) parsed_regex: (.|())(b) str: ab result: (0,2)(0,1)(?,?)(1,2) expected_results (0,2)(0,1)(?,?)(1,2)
-12: OK regex: ([ab]|())(b) parsed_regex: ([ab]|())(b) str: ab result: (0,2)(0,1)(?,?)(1,2) expected_results (0,2)(0,1)(?,?)(1,2)
-14: OK regex: ([ab]|())+b parsed_regex: ([ab]|())+b str: aaab result: (0,4)(2,3)(?,?) expected_results (0,4)(2,3)(?,?)
-M14: OK regex: ([ab]|())+b parsed_regex: ([ab]|())+b str: aaab result: (0,4)(2,3)(?,?) expected_results (0,4)(3,3)(3,3)
-20: OK regex: (.?)(b) parsed_regex: (.?)(b) str: ab result: (0,2)(0,1)(1,2) expected_results (0,2)(0,1)(1,2)
+
+bar result_expr: $1-$2 expected_results 
+
+
+-b
+335_y: OK regex: foo(\v)bar parsed_regex: foo(\v)bar str: foobar result_expr: $1 expected_results 
+336_y: OK regex: (\V)(\v) parsed_regex: (\V)(\v) str: foobar result_expr: $1-$2 expected_results o-
+337_y: OK regex: (\v)(\V) parsed_regex: (\v)(\V) str: foobar result_expr: $1-$2 expected_results -b
+338_y: OK regex: foo\Kbar parsed_regex: foo\Kbar str: foobar result_expr: $& expected_results bar
+339_y: OK regex: foo\t\n\r\f\a\ebar parsed_regex: foo\t\n\r\f\a\ebar str: foo	
+bar result_expr: $& expected_results foo	
+bar
 
