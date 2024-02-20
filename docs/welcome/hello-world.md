@@ -95,7 +95,7 @@ auto hello(cpp2::in<std::string_view> msg) -> void {
     std::cout << ("Hello, " + cpp2::to_string(msg) + "!\n");  }
 ```
 
-Here we can see more of how Cpp2 makes it features work.
+Here we can see more of how Cpp2 makes its features work.
 
 **How: Consistent context-free syntax.**
 
@@ -110,15 +110,15 @@ Here we can see more of how Cpp2 makes it features work.
 
 **How: Simplicity through generality + defaults.**
 
-- **Line 7: `in` parameters** are implemented using `#cpp2::in<>`, which is smart enough to pass by `#!cpp const` value when that's safe and appropriate, otherwise by `#!cpp const&`, so you don't have to choose the right one by hand.
+- **Line 7: `in` parameters** are implemented using `#!cpp cpp2::in<>`, which is smart enough to pass by `#!cpp const` value when that's safe and appropriate, otherwise by `#!cpp const&`, so you don't have to choose the right one by hand.
 
 **How: Order-independent by default.**
 
-- **Lines 5 and 7: Order independence** happens because cppfront generates all the type and function forward declarations for you, so you don't have to. That's why `main` can just call `hello`: Both are forward-declared, so they can both see each other.
+- **Lines 5 and 7: Order independence** happens because cppfront generates all the type and function forward declarations for you, so you don't have to. That's why `main` can just call `hello`: both are forward-declared, so they can both see each other.
 
 **How: Seamless compatibility and interop.**
 
-- **Lines 9-11 and 16: Ordinary direct calls** to existing C++ code, so there's never a need for wrapping/marshaling/thunking.
+- **Lines 9-11 and 15: Ordinary direct calls** to existing C++ code, so there's never a need for wrapping/marshaling/thunking.
 
 **How: C++ standard library always available.**
 

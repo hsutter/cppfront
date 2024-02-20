@@ -3,6 +3,7 @@
 
 To start trying out Cpp2 syntax in any existing C++ project, just add a build step to translate the Cpp2 to Cpp1 syntax:
 
+- Copy the `.cpp` file to the same name with a `.cpp2` extension.
 - Add the `.cpp2` file to the project, and ensure the `.cpp` is in C++20 mode.
 - Tell the IDE to build that file using a custom build tool to invoke cppfront.
 
