@@ -212,7 +212,7 @@ For more examples, see also the examples in the previous two sections on `is` an
 
 ## `$` — captures, including interpolations
 
-Suffix `$` is pronounced **"paste the value of"** and captures the value of an expression at the point when the expression where the capture is written is evaluated. Depending the complexity of the capture expression `expr$` and where it is used, parentheses `(expr)$` may be required for precedence or to show the boundaries of the expression.
+Suffix `$` is pronounced **"paste the value"** and captures the value of an expression at the point when the expression where the capture is written is evaluated. Depending the complexity of the capture expression `expr$` and where it is used, parentheses `(expr)$` may be required for precedence or to show the boundaries of the expression.
 
 `x$` always captures `x` by value. To capture by reference, take the address and capture a pointer using `x&$`. If the value is immediately used, dereference again; for example `:(val) total&$* += val` adds to the `total` local variable itself, not a copy.
 
@@ -225,14 +225,14 @@ Any capture in a function expression body is evaluated at the point where the fu
 
 For example:
 
-``` cpp title="Capture in an unnamed function expression (aka lambda)" hl_lines="6 7"
+``` cpp title="Capture in an unnamed function expression (aka lambda)" hl_lines="6"
 main: () = {
     s := "-sh\n";
     vec: std::vector = (1, 2, 3, 5, 8, 13 );
 
     vec.std::ranges::for_each(
         :(i) = { std::cout << i << s$; }
-        //  Function capture: Paste local variable value
+           //  Paste the value of `s`
     );
 }
 ```
@@ -246,10 +246,10 @@ Any capture in a postcondition is evaluated at the point where the postcondition
 
 For example:
 
-``` cpp title="Capture in contract postconditions" hl_lines="2 3"
+``` cpp title="Capture in contract postconditions" hl_lines="2"
 push_back: (coll, value)
     [[post: coll.ssize() == coll.ssize()$ + 1]]
-        //  Postcondition capture: Paste  "old" size
+    //  Paste the value of `coll.ssize()`
 = {
     // ...
 }
@@ -258,22 +258,23 @@ push_back: (coll, value)
 
 ### Capture in string interpolation
 
-A string literal can capture the value of an expression `expr` by writing `(expr)$` inside the string literal. The `(` `)` are required, and cannot be nested.
+A string literal can capture the value of an expression `expr` by writing `(expr)$` inside the string literal. The `(` `)` are required, and cannot be nested. A string literal has type `std::string` if it performs any captures, otherwise it is a normal C/C++ string literal (array of characters).
 
 Any capture in a string literal is evaluated at the point where the string literal is written. The string literal can be used repeatedly later, and includes the captured value.
 
 For example:
 
-``` cpp title="Capture for string interpolation" hl_lines="2 4"
+``` cpp title="Capture for string interpolation" hl_lines="2 5"
 x := 0;
 std::cout << "x is (x)$\n";
+        // Paste the value of `x`
 x = 1;
 std::cout << "now x+2 is (x+2)$\n";
+        // Paste the value of `x+2`
 
 //  prints:
 //      x is 0
 //      now x+2 is 3
 ```
 
-A string literal has type `std::string` if it performs any captures, otherwise it is a normal C/C++ string literal (array of characters).
-
+A string literal capture can include a `:suffix` where the suffix is a [standard C++ format specification](https://en.cppreference.com/w/cpp/utility/format/spec). For example, `#!cpp (x.price(): <10.2f)$` evaluates `x.price()` and converts the result to a string with 10-character width, 2 digits of precision, and left-justified.

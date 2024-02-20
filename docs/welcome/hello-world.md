@@ -1,19 +1,11 @@
 # **Hello, world!**
 
-<table><tr><td>
-``` cpp title="hello.cpp2"
-main: () = {
-    std::cout << "Hello, world!\n";
-}
-```
-</td><td>
 ``` mermaid
-graph TB
-  A[hello.cpp2] ==> B([cppfront]);
+graph LR
+  A[hello.cpp2] ==> B(["` **cppfront** `"]);
   B ==> C[hello.cpp];
-  C ==> D([Your favorite C++ compiler]);
+  C ==> D([Your favorite<br> C++ compiler<p>... and IDE / libraries / build<br>system / in-house tools / ...]);
 ```
-</td></tr></table>
 
 ## A `hello.cpp2` program
 
@@ -30,7 +22,6 @@ main: () = {
     words: std::vector = ( "Alice", "Bob" );
     hello( words[0] );
     hello( words[1] );
-    std::cout << "... and goodnight\n";
 }
 
 hello: (msg: std::string_view) =
@@ -98,7 +89,6 @@ auto main() -> int{
     std::vector words {"Alice", "Bob"};
     hello(CPP2_ASSERT_IN_BOUNDS_LITERAL(words, 0));
     hello(CPP2_ASSERT_IN_BOUNDS_LITERAL(std::move(words), 1));
-    std::cout << "... and goodnight\n";
 }
 
 auto hello(cpp2::in<std::string_view> msg) -> void {
@@ -116,7 +106,7 @@ Here we can see more of how Cpp2 makes it features work.
 - **Line 9: CTAD** just works, because it turns into ordinary C++ code which already supports CTAD.
 - **Lines 10-11: Automatic bounds checking** is added to `#!cpp words[0]` and `#!cpp words[1]` nonintrusively at the call site by default. Because it's nonintrusive, it works seamlessly with all existing container types that are `std::size` and `std::ssize`-aware, when you use them from safe Cpp2 code.
 - **Line 11: Automatic move from last use** ensures the last use of `words` will automatically avoid a copy if it's being passed to something that's optimized for rvalues.
-- **Line 16: String interpolation** performs the string capture of `msg`'s current value via `cpp2::to_string`. That uses `std::to_string` when available, and it also works for additional types (such as `#!cpp bool`, to print `#!cpp false` and `#!cpp true` instead of `0` and `1`, without having to remember to use `std::boolalpha`).
+- **Line 15: String interpolation** performs the string capture of `msg`'s current value via `cpp2::to_string`. That uses `std::to_string` when available, and it also works for additional types (such as `#!cpp bool`, to print `#!cpp false` and `#!cpp true` instead of `0` and `1`, without having to remember to use `std::boolalpha`).
 
 **How: Simplicity through generality + defaults.**
 
@@ -128,7 +118,7 @@ Here we can see more of how Cpp2 makes it features work.
 
 **How: Seamless compatibility and interop.**
 
-- **Lines 9, 12, and 16: Ordinary direct calls** to existing C++ code, so there's never a need for wrapping/marshaling/thunking.
+- **Lines 9-11 and 16: Ordinary direct calls** to existing C++ code, so there's never a need for wrapping/marshaling/thunking.
 
 **How: C++ standard library always available.**
 
