@@ -1442,7 +1442,7 @@ regex_gen: (inout t: meta::type_declaration) =
     for expressions do (expr) {
         regular_expression:= ::cpp2::regex::generate_template(expr.second.first, expr.second.second, :(message: _) = t$.error(message););
 
-        t.add_member("(expr.first)$: (regular_expression)$ = ();");
+        t.add_member("public (expr.first)$: (regular_expression)$ = ();");
     }
 }
 
