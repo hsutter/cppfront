@@ -74,15 +74,15 @@ Cppfront builds with any major C++20 compiler.
 
 #### MSVC build instructions
 
-    cl cppfront.cpp -std:c++20 -EHsc
+    cl source\cppfront.cpp -std:c++20 -EHsc
 
 #### GCC build instructions
 
-    g++-10 cppfront.cpp -std=c++20 -o cppfront
+    g++-10 source/cppfront.cpp -std=c++20 -o cppfront
 
 #### Clang build instructions
 
-    clang++-12 cppfront.cpp -std=c++20 -o cppfront
+    clang++-12 source/cppfront.cpp -std=c++20 -o cppfront
 
 ## How do I build my `.cpp2` file?
 
