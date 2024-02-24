@@ -287,9 +287,9 @@ class issue_857_9: public issue_857_8 {
 };
 
 class issue_869_0 {
-  public: explicit issue_869_0([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2);
+  public: explicit issue_869_0([[maybe_unused]] cpp2::owning_reference<int>&& unnamed_param_2);
 #line 372 "pure2-last-use.cpp2"
-  public: auto operator=([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2) -> issue_869_0& ;
+  public: auto operator=([[maybe_unused]] cpp2::owning_reference<int>&& unnamed_param_2) -> issue_869_0& ;
   public: [[nodiscard]] auto operator<=>([[maybe_unused]] issue_869_0 const& that) const& -> std::strong_ordering = default;
 public: issue_869_0([[maybe_unused]] issue_869_0 const& that);
 
@@ -439,57 +439,57 @@ requires (std::is_reference_v<T>) {return CPP2_FORWARD(x); }
 #line 8 "pure2-last-use.cpp2"
 auto issue_313() -> void{
   static_cast<void>([]() mutable -> std::vector<int>{
-    auto a {cpp2_new<int>(0)}; 
+    auto a {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     return { *cpp2::assert_not_null(a), *cpp2::assert_not_null(identity_copy(std::move(a))) }; 
   });
   static_cast<void>([]() mutable -> std::vector<int>{
-    auto a {cpp2_new<int>(0)}; 
+    auto a {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     return { *cpp2::assert_not_null(*cpp2::assert_not_null(&a)), *cpp2::assert_not_null(identity_copy(std::move(a))) }; 
   });
   static_cast<void>([]() mutable -> int{
-    auto a {cpp2_new<int>(0)}; 
+    auto a {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     return *cpp2::assert_not_null(identity(a)) + *cpp2::assert_not_null(identity(a)); 
 
-    auto b {cpp2_new<int>(0)}; 
+    auto b {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     return *cpp2::assert_not_null(identity(b)) = *cpp2::assert_not_null(identity(b)); 
 
-    auto c {cpp2_new<int>(0)}; 
+    auto c {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     return *cpp2::assert_not_null(identity(c)) ^ *cpp2::assert_not_null(identity(c)); 
   });
   {
-    auto a {cpp2_new<int>(0)}; 
+    auto a {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     *cpp2::assert_not_null(identity(a)) = *cpp2::assert_not_null(identity(a));
 
-    auto b {cpp2_new<int>(0)}; 
+    auto b {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     int auto_1 {*cpp2::assert_not_null(identity(b)) = *cpp2::assert_not_null(identity(b))}; 
 
-    auto c {cpp2_new<int>(0)}; 
+    auto c {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     if (*cpp2::assert_not_null(identity(c)) * *cpp2::assert_not_null(identity(c))) {}
 
-    auto d {cpp2_new<int>(0)}; 
+    auto d {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     if ((*cpp2::assert_not_null(identity(d)) - *cpp2::assert_not_null(identity(d)))) {}
 
-    auto e {cpp2_new<int>(0)}; 
+    auto e {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     static_cast<void>(cpp2::is(e, (e)));
 
-    auto f {cpp2_new<int>(0)}; 
+    auto f {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     static_cast<void>(cpp2::is<std::type_identity_t<decltype(f)>>(f));// OK?
 
-    auto g {cpp2_new<int>(0)}; 
+    auto g {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     for ( 
     [[maybe_unused]] auto const& unnamed_param_1 : { *cpp2::assert_not_null(identity(g)) + *cpp2::assert_not_null(identity(g)) } ) 
     {}
 
-    auto h {cpp2_new<int>(0)}; 
+    auto h {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     while( *cpp2::assert_not_null(identity(h)) + *cpp2::assert_not_null(identity(h)) ) 
     {}
 
-    auto i {cpp2_new<int>(0)}; 
+    auto i {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     do {} while ( 
     *cpp2::assert_not_null(identity(i)) + *cpp2::assert_not_null(identity(i)));
 
-    auto j {cpp2_new<int>(0)}; 
-    auto k {cpp2_new<int>(0)}; 
+    auto j {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
+    auto k {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     static_cast<void>([&] () -> int { auto&& _expr = *cpp2::assert_not_null(identity(j)) + *cpp2::assert_not_null(identity(j));
         if (cpp2::is(_expr, (*cpp2::assert_not_null(identity(k)) + *cpp2::assert_not_null(identity(k))))) { if constexpr( requires{0;} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((0)),int> ) return 0; else return int{}; else return int{}; }
         else return 0; }
@@ -497,7 +497,7 @@ auto issue_313() -> void{
 
   }
   {
-    auto a {cpp2_new<int>(0)}; 
+    auto a {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     static_cast<void>([_0 = std::move(a)]() mutable -> auto { return *cpp2::assert_not_null(identity(_0)) + *cpp2::assert_not_null(identity(_0));  });
   }
 }
@@ -532,7 +532,7 @@ auto issue_683(auto const& args) -> void{
 auto issue_825() -> void{
   static_cast<void>([](std::unique_ptr<int> b) mutable -> auto { return f_copy(std::move(b));  });
   static_cast<void>([](std::unique_ptr<int>&& c) mutable -> auto { return f_copy(std::move(c));  });
-  static_cast<void>([](auto&& d) mutable -> auto { return f_copy(CPP2_FORWARD(d));  }(cpp2_new<int>(0)));
+  static_cast<void>([](auto&& d) mutable -> auto { return f_copy(CPP2_FORWARD(d));  }(*cpp2::assert_not_null(cpp2_new<int>(0))));
 }
 
 #line 119 "pure2-last-use.cpp2"
@@ -818,10 +818,10 @@ int gi {0};
   auto issue_857_9::g3() && -> void { CPP2_UFCS(d)(std::move((*this)));  }
 
 #line 372 "pure2-last-use.cpp2"
-  issue_869_0::issue_869_0([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2){}
+  issue_869_0::issue_869_0([[maybe_unused]] cpp2::owning_reference<int>&& unnamed_param_2){}
 #line 372 "pure2-last-use.cpp2"
-  auto issue_869_0::operator=([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2) -> issue_869_0& {
-                                                          return *this; }
+  auto issue_869_0::operator=([[maybe_unused]] cpp2::owning_reference<int>&& unnamed_param_2) -> issue_869_0& {
+                                                                 return *this; }
 
 
   issue_869_0::issue_869_0([[maybe_unused]] issue_869_0 const& that){}
@@ -869,13 +869,13 @@ issue_869_1::issue_869_1(issue_869_1 const& that)
   }
 #line 377 "pure2-last-use.cpp2"
 [[nodiscard]] auto issue_869_2() -> issue_869_2_ret{
-                                               issue_869_1 res {}; CPP2_UFCS(set_i)(res, cpp2_new<int>(0));
+                                               issue_869_1 res {}; CPP2_UFCS(set_i)(res, *cpp2::assert_not_null(cpp2_new<int>(0)));
 #line 378 "pure2-last-use.cpp2"
 return res; }
 #line 379 "pure2-last-use.cpp2"
 auto issue_884() -> void{
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     if (true) {}
     {
       {f_inout(x); }
@@ -884,7 +884,7 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     if (true) {
       f_copy(std::move(x));
     }
@@ -895,7 +895,7 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     if (true) {
       f_inout(x);
     }
@@ -907,7 +907,7 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     f_copy(std::move(x));
     if (true) {
       static_cast<void>(0);
@@ -920,7 +920,7 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     f_inout(x);
     if (true) {
       f_copy(std::move(x));
@@ -933,7 +933,7 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     f_inout(x);
     if (true) {
       static_cast<void>(0);
@@ -946,7 +946,7 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     f_inout(x);
     if (true) {
       static_cast<void>(0);
@@ -959,7 +959,7 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     f_inout(x);
     if (true) {
       static_cast<void>(0);
@@ -972,7 +972,7 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     f_inout(x);
     if (true) {
       f_copy(std::move(x));
@@ -985,7 +985,7 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     f_inout(x);
     if (true) {
       f_copy(std::move(x));
@@ -998,7 +998,7 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     f_inout(x);
     if (true) {
       f_inout(x);
@@ -1014,7 +1014,7 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     f_inout(x);
     if (true) {
       f_inout(x);
@@ -1030,7 +1030,7 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     f_inout(x);
     if (true) {
       f_copy(std::move(x));
@@ -1046,7 +1046,7 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     if (true) {
       if (true) {
         if (true) {
@@ -1059,7 +1059,7 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     if (true) {
       if (true) {
         if (true) {
@@ -1073,7 +1073,7 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     if (true) {
     }
     else {
@@ -1086,7 +1086,7 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     if (true) {
       f_copy(std::move(x));
     }
@@ -1100,9 +1100,9 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     if (true) {
-      auto y {cpp2_new<int>(0)}; 
+      auto y {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
       f_copy(std::move(x));
       f_copy(std::move(y));
     }
@@ -1117,9 +1117,9 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     if (true) {
-      auto y {cpp2_new<int>(0)}; 
+      auto y {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
       if (true) {}
       else {
         f_copy(std::move(x));
@@ -1129,7 +1129,7 @@ auto issue_884() -> void{
     else {
       if (true) {
         if (true) {
-          auto y {cpp2_new<int>(0)}; 
+          auto y {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
           f_copy(std::move(y));
           f_inout(x);
         }
@@ -1139,9 +1139,9 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     if (true) {
-      auto y {cpp2_new<int>(0)}; 
+      auto y {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
       if (true) {}
       else {
         f_copy(std::move(x));
@@ -1149,7 +1149,7 @@ auto issue_884() -> void{
       }
     }
     else {
-      auto y {cpp2_new<int>(0)}; 
+      auto y {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
       if (true) {
         if (true) {
           f_copy(std::move(x));
@@ -1163,13 +1163,13 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     if (true) {
       f_copy(std::move(x));
     }
     else {
       if (true) {
-        auto x {cpp2_new<int>(0)}; 
+        auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
         if (true) {
           f_inout(x);
         }
@@ -1182,10 +1182,10 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     if (true) {
       if (true) {
-        auto x {cpp2_new<int>(0)}; 
+        auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
         if (true) {
           f_inout(x);
         }
@@ -1201,7 +1201,7 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
 
     if (true) {
       f_inout(x);
@@ -1215,7 +1215,7 @@ auto issue_884() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     if (true) {
       if (true) {
         f_inout(x);
@@ -1281,10 +1281,10 @@ auto issue_888_1([[maybe_unused]] std::string unnamed_param_1, move_only_functio
 
 #line 783 "pure2-last-use.cpp2"
 auto issue_890() -> void{
-  auto x {cpp2_new<int>(0)}; 
+  auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
   if (cpp2::Default.has_handler() && !(*cpp2::assert_not_null(identity_copy(std::move(x))) == 0) ) { cpp2::Default.report_violation(""); }
 {
-auto const& x{cpp2_new<int>(0)};
+auto const& x{*cpp2::assert_not_null(cpp2_new<int>(0))};
 #line 786 "pure2-last-use.cpp2"
   if (cpp2::Default.has_handler() && !(*cpp2::assert_not_null(identity(x)) == 0) ) { cpp2::Default.report_violation(""); }
 }
@@ -1312,13 +1312,13 @@ auto enum_0() -> void{
 }
 #line 805 "pure2-last-use.cpp2"
 auto enum_1() -> void{
-    auto max_value {cpp2_new<int>(0)}; 
-    std::reference_wrapper<std::unique_ptr<int> const> min_value {max_value}; 
+    auto max_value {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
+    std::reference_wrapper<cpp2::owning_reference<int> const> min_value {max_value}; 
 
     for ( 
           auto x : { 0 } ) 
     {
-        auto v {cpp2_new<int>(identity_copy(std::move(x)))}; 
+        auto v {*cpp2::assert_not_null(cpp2_new<int>(identity_copy(std::move(x))))}; 
         if (pred(v, min_value)) {
             min_value = std::ref(identity(v)); // Not using 'else' will never move 'v'.
         }
@@ -1327,21 +1327,21 @@ auto enum_1() -> void{
         }
     }
 
-    auto y {cpp2_new<bool>(false)}; 
+    auto y {*cpp2::assert_not_null(cpp2_new<bool>(false))}; 
     while( *cpp2::assert_not_null(identity(y)) ) {
-        auto v {cpp2_new<int>(0)}; 
+        auto v {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
         f_copy(std::move(v));
     }
 
-    auto z {cpp2_new<bool>(false)}; 
+    auto z {*cpp2::assert_not_null(cpp2_new<bool>(false))}; 
     do {
-        auto v {cpp2_new<int>(0)}; 
+        auto v {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
         f_copy(std::move(v));
     } while ( *cpp2::assert_not_null(identity(z)));
 }
 #line 833 "pure2-last-use.cpp2"
 auto enum_2() -> void{
-    auto umax {cpp2_new<int>(0)}; 
+    auto umax {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     if (pred(umax)) {
     }
     else {if (pred(umax)) {
@@ -1387,14 +1387,14 @@ return std::move(p.value()); }
 #line 874 "pure2-last-use.cpp2"
 auto loops() -> void{
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     for ( 
     [[maybe_unused]] auto const& unnamed_param_1 : { 0 } ) 
     f_inout(x);
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     for ( 
 
     [[maybe_unused]] auto const& unnamed_param_1 : { 0 } )  { do 
@@ -1402,14 +1402,14 @@ auto loops() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     for ( 
     [[maybe_unused]] auto const& unnamed_param_1 : { 0 } ) 
     if (cpp2::Default.has_handler() && !(CPP2_UFCS(get)(x)) ) { cpp2::Default.report_violation(""); }
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     if (true) {
       f_copy(std::move(x));
     }
@@ -1425,10 +1425,10 @@ namespace captures {
 
 #line 914 "pure2-last-use.cpp2"
 auto f() -> void{
-  auto x {cpp2_new<int>(0)}; 
+  auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
   f_copy(std::move(x));
   auto id {[](auto const& x) mutable -> auto&& { return x;  }}; 
-  auto y {cpp2_new<int>(0)}; 
+  auto y {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
   if (cpp2::Default.has_handler() && !(&std::move(id)(y) == &y) ) { cpp2::Default.report_violation(""); }
 }
 
@@ -1448,13 +1448,13 @@ auto f() -> void{
 #line 939 "pure2-last-use.cpp2"
 auto g() -> void{
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     f_copy(std::move(x));
     static_cast<void>([_0 = std::array<int,[](auto const& x) mutable -> auto { return identity(x); }(0)>()]() mutable -> auto { return _0;  });// Fails on Clang 12 (lambda in unevaluated context).
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     f_inout(x);
     static_cast<void>([_0 = ([_0 = std::move(x)]() mutable -> auto { return *cpp2::assert_not_null(_0); })]() mutable -> int { return _0();  });
   });
@@ -1465,7 +1465,7 @@ auto g() -> void{
 #line 955 "pure2-last-use.cpp2"
 auto loops_and_captures() -> void{
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     f_copy(std::move(x));
     for ( 
     [[maybe_unused]] auto const& unnamed_param_1 : { [](auto const& x) mutable -> auto { return x; } } ) 
@@ -1473,7 +1473,7 @@ auto loops_and_captures() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     f_copy(std::move(x));
     for ( 
 
@@ -1483,7 +1483,7 @@ auto loops_and_captures() -> void{
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     for ( 
     [[maybe_unused]] auto const& unnamed_param_1 : { [_0 = std::move(x)]() mutable -> auto { return *cpp2::assert_not_null(_0); } } ) 
     {}
@@ -1502,10 +1502,10 @@ auto loops_and_captures() -> void{
 #line 993 "pure2-last-use.cpp2"
 auto skip_hidden_names() -> void{
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     f_copy(std::move(x));
 {
-auto x{cpp2_new<int>(0)};
+auto x{*cpp2::assert_not_null(cpp2_new<int>(0))};
 
 #line 998 "pure2-last-use.cpp2"
       f_copy(std::move(x));
@@ -1514,10 +1514,10 @@ auto x{cpp2_new<int>(0)};
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     static_cast<void>([_0 = std::move(x)]() mutable -> void{
       static_cast<void>(_0);
-      auto x {cpp2_new<int>(1)}; 
+      auto x {*cpp2::assert_not_null(cpp2_new<int>(1))}; 
       static_cast<void>([_0 = std::move(x)]() mutable -> void{
         static_cast<void>(_0);
       });
@@ -1525,13 +1525,13 @@ auto x{cpp2_new<int>(0)};
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     f_copy(std::move(x));
     for ( 
     auto x : { 0 } ) 
     static_cast<void>(identity_copy(std::move(x)));
 {
-auto x{cpp2_new<int>(0)};
+auto x{*cpp2::assert_not_null(cpp2_new<int>(0))};
 
 #line 1019 "pure2-last-use.cpp2"
       f_copy(std::move(x));
@@ -1540,7 +1540,7 @@ auto x{cpp2_new<int>(0)};
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     f_inout(x);
     {
       f_copy(std::move(x));
@@ -1550,10 +1550,10 @@ auto x{cpp2_new<int>(0)};
   });
 
   static_cast<void>([]() mutable -> void{
-    auto x {cpp2_new<int>(0)}; 
+    auto x {*cpp2::assert_not_null(cpp2_new<int>(0))}; 
     f_copy(std::move(x));
     static_cast<void>([]() mutable -> void{
-      static_assert(std::is_same_v<decltype(x),std::unique_ptr<int>>);
+      static_assert(std::is_same_v<decltype(x),cpp2::owning_reference<int>>);
       using captures::x;
       f_inout(x);
     });
