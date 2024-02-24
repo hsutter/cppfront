@@ -12,7 +12,12 @@ main: () -> int = {
         ( "hello", "big", "world" );
     view: std::span<std::string> = words;
 
-    i := new<int>(0);
+    p_i := new<int>(0);
+    if (!p_i) {
+        return 1;
+    }
+    i := p_i*;
+
     while i* < view.ssize() next i*++ {
         print( view[i*] );
     }
