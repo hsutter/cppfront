@@ -14,6 +14,7 @@ All Cpp2 declarations are written as **"_name_ `:` _kind_ `=` _statement_"**.
 
 > Note: When the type is omitted, whitespace does not matter, and writing `#!cpp x: = 0;` or `#!cpp x : = 0;` or `#!cpp x := 0;` or other whitespace is just a stylistic choice. This documentation's style uses the last one, except when there are multiple adjacent declaration lines this style lines up their `:` and `=`.
 
+> Note: The only variation to the above is that 'constexpr' functions are written with `==` instead of `=` (e.g., `#!cpp square: (i: int) == i * i;`).
 
 ## Examples
 
@@ -58,6 +59,9 @@ n: namespace
 
     //  color is an @enum type (see Note)
     color: @enum type = { red; green; blue; }
+
+    //  a constexpr function is defined with `==`
+    calc_next_year: (year: i32) -> i32 == { return year + 1; }
 }
 ```
 
