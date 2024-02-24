@@ -34,7 +34,7 @@ namespace ns {
 
 // Variables.
 
-template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> bool inline constexpr v0 = false;// Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
+template<t<CPP2_UFCS_NONLOCAL(f)(o)> UnnamedTypeParam1_1> bool inline constexpr v0 = false;// Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
 
 t<CPP2_UFCS_NONLOCAL(f)(o)> inline constexpr v1 = t<true>();// Fails on Clang 12 (lambda in unevaluated context).
 
@@ -42,7 +42,7 @@ bool inline constexpr v2 = CPP2_UFCS_NONLOCAL(f)(o);
 
 // Functions.
 
-template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> auto g() -> void;
+template<t<CPP2_UFCS_NONLOCAL(f)(o)> UnnamedTypeParam1_2> auto g() -> void;
 
 auto g([[maybe_unused]] cpp2::in<t<CPP2_UFCS_NONLOCAL(f)(o)>> unnamed_param_1) -> void;
 
@@ -52,9 +52,9 @@ auto g() -> void;
 
 // Aliases.
 
-template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> using a = bool;// Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
+template<t<CPP2_UFCS_NONLOCAL(f)(o)> UnnamedTypeParam1_3> using a = bool;// Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
 
-template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> auto inline constexpr b = false;// Fails on GCC ([GCC109781][]).
+template<t<CPP2_UFCS_NONLOCAL(f)(o)> UnnamedTypeParam1_4> auto inline constexpr b = false;// Fails on GCC ([GCC109781][]).
 
 using c = t<CPP2_UFCS_NONLOCAL(f)(o)>;// Fails on Clang 12 (lambda in unevaluated context) and Clang 12 (a lambda expression cannot appear in this context)
 
@@ -81,10 +81,12 @@ auto main() -> int;
 namespace ns {
 
 #line 21 "mixed-bugfix-for-ufcs-non-local.cpp2"
-template<t<CPP2_UFCS_NONLOCAL(f)(o)> _> auto g() -> void{}// Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
+template<t<CPP2_UFCS_NONLOCAL(f)(o)> UnnamedTypeParam1_2> auto g() -> void{}// Fails on GCC ([GCC109781][]) and Clang 12 (a lambda expression cannot appear in this context)
 
+#line 23 "mixed-bugfix-for-ufcs-non-local.cpp2"
 auto g([[maybe_unused]] cpp2::in<t<CPP2_UFCS_NONLOCAL(f)(o)>> unnamed_param_1) -> void{}// Fails on Clang 12 (lambda in unevaluated context).
 
+#line 25 "mixed-bugfix-for-ufcs-non-local.cpp2"
 auto g() -> void{
                      if (cpp2::Default.has_handler() && !(CPP2_UFCS(f)(o)) ) { cpp2::Default.report_violation(""); }}
 
@@ -100,5 +102,6 @@ auto g() -> void{
 #line 45 "mixed-bugfix-for-ufcs-non-local.cpp2"
 }
 
+#line 47 "mixed-bugfix-for-ufcs-non-local.cpp2"
 auto main() -> int{}
 

@@ -1,0 +1,22 @@
+
+fine: () -> int =
+{
+    up:= unique.new<int>(1);
+    sp:= shared.new<int>(2);
+    op: std::optional<int> = (3);
+    ex: std::expected<int, bool> = (4);
+
+    return up* + sp* + op* + ex*;
+}
+
+bad_expected_access: () -> int =
+{
+    ex: std::expected<int, bool> = std::unexpected(false);
+    return ex*;
+}
+
+main: () -> int =
+{
+    std::set_terminate(std::abort);
+    return fine() + bad_expected_access();
+}

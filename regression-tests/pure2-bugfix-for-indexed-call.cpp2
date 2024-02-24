@@ -1,0 +1,10 @@
+f: (_: i32) = { }
+main: () = {
+  array_of_functions: std::array = (f, f);
+  index := 0;
+  arguments: i32 = 0;
+  array_of_functions[index](arguments);
+  _ = array_of_functions;
+  _ = index;
+  _ = arguments;
+}

@@ -73,12 +73,15 @@ auto main(
             }
 
             if (flag_verbose) {
-                out << "   Cpp1: " << count.cpp1_lines << " line" << (count.cpp1_lines != 1 ? "s" : "");
-                out << "\n   Cpp2: " << count.cpp2_lines << " line" << (count.cpp2_lines != 1 ? "s" : "");
+                out << "   Cpp1: " << print_with_thousands(count.cpp1_lines) << " line" << (count.cpp1_lines != 1 ? "s" : "");
+                out << "\n   Cpp2: " << print_with_thousands(count.cpp2_lines) << " line" << (count.cpp2_lines != 1 ? "s" : "");
                 auto total = count.cpp1_lines + count.cpp2_lines;
                 if (total > 0) {
                     out << " (";
-                    if (count.cpp2_lines / count.cpp1_lines > 25) {
+                    if (count.cpp1_lines == 0) {
+                        out << 100;
+                    }
+                    else if (count.cpp2_lines / count.cpp1_lines > 25) {
                         out << std::setprecision(3)
                             << 100.0 * count.cpp2_lines / total;
                     }

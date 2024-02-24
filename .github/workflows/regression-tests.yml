@@ -1,0 +1,64 @@
+name: Regression tests
+
+on:
+  pull_request:
+    branches-ignore:
+      - docs
+  push:
+    branches-ignore:
+      - docs
+  workflow_dispatch:
+
+jobs:
+  regression-tests:
+    name: Run on ${{ matrix.os }} using ${{ matrix.compiler }}
+    runs-on: ${{ matrix.os }}
+    env:
+      CXX: ${{ matrix.compiler }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        compiler: [g++-10, g++-13, clang++-15]
+        include:
+          - os: ubuntu-20.04
+            compiler: clang++-12
+          - os: macos-13
+            compiler: clang++
+          - os: macos-13
+            compiler: clang++-15
+          - os: windows-latest
+            compiler: cl.exe
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: Prepare compilers
+      if: matrix.os == 'macos-13'
+      run: |
+        sudo xcode-select --switch /Applications/Xcode_14.3.1.app
+        sudo ln -s "$(brew --prefix llvm@15)/bin/clang" /usr/local/bin/clang++-15
+
+    - name: Run regression tests - Linux and macOS version
+      if: startsWith(matrix.os, 'ubuntu') || matrix.os == 'macos-13'
+      run: |
+        cd regression-tests
+        bash run-tests.sh -c ${{ matrix.compiler }} -l ${{ matrix.os }}
+
+    - name: Run regression tests - Windows version
+      if: matrix.os == 'windows-latest'
+      run: |
+        "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && ^
+        git config --local core.autocrlf false && ^
+        cd regression-tests && ^
+        bash run-tests.sh -c ${{ matrix.compiler }} -l ${{ matrix.os }}
+      shell: cmd
+
+    - name: Upload patch
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.os }}-${{ matrix.compiler }}.patch
+        path: regression-tests/${{ matrix.os }}-${{ matrix.compiler }}.patch
+        if-no-files-found: ignore

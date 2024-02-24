@@ -28,11 +28,6 @@ main: () -> int = {
     pa5 := pppa**;
     pa5 = 0;      // caught
 
-    //  TODO: @filipsajdak please take a look
-    //  The bugfix in get_declaration_of(t) to add `&& ri->position() <= t.position()`
-    //  to the condition is correct; it fixes issue #669 by not looking past the first
-    //  declaration of the name in t. However, that change made the following two
-    //  "caught" cases no longer be caught.
     fun(a)++;     // caught
     fp := fun(a);
     fp = 0;       // caught

@@ -42,6 +42,7 @@ struct my_type {};
     (); 
 }
 
+#line 18 "mixed-inspect-templates.cpp2"
 [[nodiscard]] auto fun2(auto const& v) -> std::string{
     if (cpp2::is<std::vector>(v)) {return "std::vector"; }
     if (cpp2::is<std::array>(v)) {return "std::array"; }
@@ -50,20 +51,21 @@ struct my_type {};
     return "unknown"; 
 }
 
+#line 26 "mixed-inspect-templates.cpp2"
 [[nodiscard]] auto main() -> int{
     std::vector<int> vec {1, 2, 3}; 
     std::array<int,4> arr {1, 2, 3, 4}; 
     std::variant<int,double,std::string> var {"C++ rulez"}; 
     my_type<int,double> myt {}; 
 
-    std::cout << "inspected vec : " + cpp2::to_string(fun(vec)) << std::endl;
-    std::cout << "inspected arr : " + cpp2::to_string(fun(arr)) << std::endl;
-    std::cout << "inspected var : " + cpp2::to_string(fun(var)) << std::endl;
-    std::cout << "inspected myt : " + cpp2::to_string(fun(myt)) << std::endl;
+    std::cout << ("inspected vec : " + cpp2::to_string(fun(vec))) << std::endl;
+    std::cout << ("inspected arr : " + cpp2::to_string(fun(arr))) << std::endl;
+    std::cout << ("inspected var : " + cpp2::to_string(fun(var))) << std::endl;
+    std::cout << ("inspected myt : " + cpp2::to_string(fun(myt))) << std::endl;
 
-    std::cout << "inspected vec : " + cpp2::to_string(fun2(std::move(vec))) << std::endl;
-    std::cout << "inspected arr : " + cpp2::to_string(fun2(std::move(arr))) << std::endl;
-    std::cout << "inspected var : " + cpp2::to_string(fun2(std::move(var))) << std::endl;
-    std::cout << "inspected myt : " + cpp2::to_string(fun2(std::move(myt))) << std::endl;
+    std::cout << ("inspected vec : " + cpp2::to_string(fun2(std::move(vec)))) << std::endl;
+    std::cout << ("inspected arr : " + cpp2::to_string(fun2(std::move(arr)))) << std::endl;
+    std::cout << ("inspected var : " + cpp2::to_string(fun2(std::move(var)))) << std::endl;
+    std::cout << ("inspected myt : " + cpp2::to_string(fun2(std::move(myt)))) << std::endl;
 }
 

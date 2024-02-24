@@ -57,13 +57,18 @@ int main() {
 #line 1 "mixed-out-destruction.cpp2"
 
 #line 22 "mixed-out-destruction.cpp2"
-auto f00() -> void     {   C auto_22_28 {"f00"}; cpp2::deferred_init<X> x; f01(cpp2::out(&x));}
-auto f01(cpp2::out<X> x) -> void{C auto_23_28 {"f01"}; x.construct();throw_1();}
+auto f00() -> void     {   C auto_1 {"f00"}; cpp2::deferred_init<X> x; f01(cpp2::out(&x));}
+#line 23 "mixed-out-destruction.cpp2"
+auto f01(cpp2::out<X> x) -> void{C auto_1 {"f01"}; x.construct();throw_1();}
 
 #line 27 "mixed-out-destruction.cpp2"
-auto f10() -> void     {   C auto_27_28 {"f10"}; cpp2::deferred_init<X> x; f11(cpp2::out(&x));}
-auto f11(cpp2::out<X> x) -> void{C auto_28_28 {"f11"}; f12(cpp2::out(&x));}
-auto f12(cpp2::out<X> x) -> void{C auto_29_28 {"f12"}; f13(cpp2::out(&x));throw_1();}
-auto f13(cpp2::out<X> x) -> void{C auto_30_28 {"f13"}; f14(cpp2::out(&x));}
-auto f14(cpp2::out<X> x) -> void{C auto_31_28 {"f14"}; x.construct();}
+auto f10() -> void     {   C auto_1 {"f10"}; cpp2::deferred_init<X> x; f11(cpp2::out(&x));}
+#line 28 "mixed-out-destruction.cpp2"
+auto f11(cpp2::out<X> x) -> void{C auto_1 {"f11"}; f12(cpp2::out(&x));}
+#line 29 "mixed-out-destruction.cpp2"
+auto f12(cpp2::out<X> x) -> void{C auto_1 {"f12"}; f13(cpp2::out(&x));throw_1();}
+#line 30 "mixed-out-destruction.cpp2"
+auto f13(cpp2::out<X> x) -> void{C auto_1 {"f13"}; f14(cpp2::out(&x));}
+#line 31 "mixed-out-destruction.cpp2"
+auto f14(cpp2::out<X> x) -> void{C auto_1 {"f14"}; x.construct();}
 

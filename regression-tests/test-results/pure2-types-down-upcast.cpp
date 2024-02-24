@@ -66,14 +66,19 @@ auto test_down() -> void;
 
 #line 4 "pure2-types-down-upcast.cpp2"
  auto A::const_foo() const -> void{std::cout << "const foo \n"; }
+#line 5 "pure2-types-down-upcast.cpp2"
  auto A::mut_foo() & -> void{std::cout << "foo \n"; }
 
 #line 13 "pure2-types-down-upcast.cpp2"
-auto func_mut(A& a) -> void     {std::cout << "Call A mut: " + cpp2::to_string(a.i) << std::endl;}
-auto func_mut(B& b) -> void     {std::cout << "Call B mut: " + cpp2::to_string(b.d) << std::endl;}
-auto func_const(cpp2::in<A> a) -> void{std::cout << "Call A const: " + cpp2::to_string(a.i) << std::endl;}
-auto func_const(cpp2::in<B> b) -> void{std::cout << "Call B const: " + cpp2::to_string(b.d) << std::endl;}
+auto func_mut(A& a) -> void     {std::cout << ("Call A mut: " + cpp2::to_string(a.i)) << std::endl;}
+#line 14 "pure2-types-down-upcast.cpp2"
+auto func_mut(B& b) -> void     {std::cout << ("Call B mut: " + cpp2::to_string(b.d)) << std::endl;}
+#line 15 "pure2-types-down-upcast.cpp2"
+auto func_const(cpp2::in<A> a) -> void{std::cout << ("Call A const: " + cpp2::to_string(a.i)) << std::endl;}
+#line 16 "pure2-types-down-upcast.cpp2"
+auto func_const(cpp2::in<B> b) -> void{std::cout << ("Call B const: " + cpp2::to_string(b.d)) << std::endl;}
 
+#line 18 "pure2-types-down-upcast.cpp2"
 auto test_const_foo() -> void{
  A s {}; 
   A const* sC {&s}; 
@@ -85,6 +90,7 @@ auto test_const_foo() -> void{
   static_cast<void>(std::move(sC));
 }
 
+#line 29 "pure2-types-down-upcast.cpp2"
 auto test_mut_foo() -> void{
  A s {}; 
   CPP2_UFCS(mut_foo)(s);
@@ -92,6 +98,7 @@ auto test_mut_foo() -> void{
   static_cast<void>(std::move(s));
 }
 
+#line 36 "pure2-types-down-upcast.cpp2"
 auto test_up() -> void{
   B b {}; 
   B const* bC {&b}; 
@@ -111,6 +118,7 @@ auto test_up() -> void{
   static_cast<void>(std::move(bC));
 }
 
+#line 55 "pure2-types-down-upcast.cpp2"
 auto test_down() -> void{
   B b {}; 
   B const* bC {&b}; 
@@ -133,6 +141,7 @@ auto test_down() -> void{
   static_cast<void>(std::move(aC));
 }
 
+#line 77 "pure2-types-down-upcast.cpp2"
 [[nodiscard]] auto main() -> int{
 
   test_const_foo();

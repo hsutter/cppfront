@@ -3,7 +3,7 @@ main: (args) = {
     local_int := 42;
 
     //  'in' (read-only) statement scope variable
-    (i := local_int) for args do (arg) {
+    (i := local_int) for args do (_) {
         std::cout << i << "\n";     // prints 42
     }
 
@@ -12,4 +12,9 @@ main: (args) = {
         i++;
     }
     std::cout << local_int << "\n";     // prints 43
+
+    _: std::chrono::duration<i32> = 0;
+    (copy _: std::chrono::duration<i32> = 0) { }
+    _: std::in_place_t = ();
+    (copy _: std::in_place_t = ()) { }
 }

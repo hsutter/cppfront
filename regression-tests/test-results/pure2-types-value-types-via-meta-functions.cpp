@@ -152,6 +152,7 @@ auto main() -> int{
     test<p_widget>();
 }
 
+#line 23 "pure2-types-value-types-via-meta-functions.cpp2"
 template<typename T> auto test() -> void{
     //  should be default constructible
     T a {}; 

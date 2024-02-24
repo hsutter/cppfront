@@ -1,5 +1,13 @@
 name: Multi-platform Build of cppfront
-on: push
+on:
+  pull_request:
+    branches-ignore:
+      - docs
+  push:
+    branches-ignore:
+      - docs
+  workflow_dispatch:
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -9,7 +17,7 @@ jobs:
       - name: Compiler name & version
         run: cl.exe
       - name: Build
-        run: cl.exe source/cppfront.cpp -std:c++latest -MD -EHsc -experimental:module -W4
+        run: cl.exe source/cppfront.cpp -std:c++latest -MD -EHsc -experimental:module -W4 -WX
   build-unix-like:
     strategy:
       fail-fast: false
@@ -36,7 +44,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     env:
       CXX: ${{ matrix.compiler }}
-      CXXFLAGS: -std=${{ matrix.cxx-std }} -Wall -Wextra -Wold-style-cast -pthread
+      CXXFLAGS: -std=${{ matrix.cxx-std }} -Wall -Wextra -Wold-style-cast -Wunused-parameter -Wpedantic -Werror -pthread -Wno-unknown-warning -Wno-unknown-warning-option
     steps:
     - uses: actions/checkout@v3
     - name: Install compiler

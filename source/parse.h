@@ -19,9 +19,6 @@
 #define CPP2_PARSE_H
 
 #include "lex.h"
-#include <memory>
-#include <variant>
-#include <iostream>
 
 
 namespace cpp2 {
@@ -160,6 +157,9 @@ struct primary_expression_node
     auto is_id_expression() const
         -> bool;
 
+    auto is_unqualified_id() const
+        -> bool;
+
     auto is_expression_list() const
         -> bool;
 
@@ -168,6 +168,9 @@ struct primary_expression_node
 
     auto is_literal() const
         -> bool;
+
+    auto get_literal() const
+        -> literal_node const*;
 
     auto template_arguments() const -> std::vector<template_argument> const&;
 
@@ -246,6 +249,9 @@ struct prefix_expression_node
     auto is_id_expression() const
         -> bool;
 
+    auto is_unqualified_id() const
+        -> bool;
+
     auto is_expression_list() const
         -> bool;
 
@@ -261,6 +267,9 @@ struct prefix_expression_node
 
     auto is_literal() const
         -> bool;
+
+    auto get_literal() const
+        -> literal_node const*;
 
     auto is_result_a_temporary_variable() const -> bool;
 
@@ -322,7 +331,7 @@ struct binary_expression_node
     auto terms_size() const
         -> int
     {
-        return std::ssize(terms);
+        return unsafe_narrow<int>(std::ssize(terms));
     }
 
     auto is_identifier() const
@@ -335,6 +344,12 @@ struct binary_expression_node
         -> bool
     {
         return terms.empty() && expr->is_id_expression();
+    }
+
+    auto is_unqualified_id() const
+        -> bool
+    {
+        return terms.empty() && expr->is_unqualified_id();
     }
 
     auto is_expression_list() const
@@ -355,7 +370,17 @@ struct binary_expression_node
     auto is_literal() const
         -> bool
     {
-        return terms.empty() && expr->is_literal();
+        return get_literal();
+    }
+
+    auto get_literal() const
+        -> literal_node const*
+    {
+        if (!terms.empty()) {
+            return nullptr;
+        }
+        //  Else
+        return expr->get_literal();
     }
 
     //  Get left-hand postfix-expression
@@ -520,6 +545,12 @@ struct expression_node
         return expr->is_id_expression();
     }
 
+    auto is_unqualified_id() const
+        -> bool
+    {
+        return expr->is_unqualified_id();
+    }
+
     auto is_expression_list() const
         -> bool
     {
@@ -538,7 +569,13 @@ struct expression_node
     auto is_literal() const
         -> bool
     {
-        return expr->is_literal();
+        return get_literal();
+    }
+
+    auto get_literal() const
+        -> literal_node const*
+    {
+        return expr->get_literal();
     }
 
     auto get_lhs_rhs_if_simple_assignment() const
@@ -706,7 +743,17 @@ auto primary_expression_node::get_expression_list() const
 auto primary_expression_node::is_literal() const
     -> bool
 {
-    return expr.index() == literal;
+    return get_literal();
+}
+
+auto primary_expression_node::get_literal() const
+    -> literal_node const*
+{
+    if (auto lit = std::get_if<literal>(&expr)) {
+        return (*lit).get();
+    }
+    //  Else
+    return nullptr;
 }
 
 
@@ -829,6 +876,12 @@ struct postfix_expression_node
         return ops.empty() && expr->is_id_expression();
     }
 
+    auto is_unqualified_id() const
+        -> bool
+    {
+        return ops.empty() && expr->is_unqualified_id();
+    }
+
     auto is_expression_list() const
         -> bool
     {
@@ -847,7 +900,17 @@ struct postfix_expression_node
     auto is_literal() const
         -> bool
     {
-        return ops.empty() && expr->is_literal();
+        return get_literal();
+    }
+
+    auto get_literal() const
+        -> literal_node const*
+    {
+        if (!ops.empty()) {
+            return nullptr;
+        }
+        //  Else
+        return expr->get_literal();
     }
 
     auto get_first_token_ignoring_this() const
@@ -896,6 +959,12 @@ auto prefix_expression_node::is_id_expression() const
     return ops.empty() && expr->is_id_expression();
 }
 
+auto prefix_expression_node::is_unqualified_id() const
+    -> bool
+{
+    return ops.empty() && expr->is_unqualified_id();
+}
+
 auto prefix_expression_node::is_expression_list() const
     -> bool
 {
@@ -914,7 +983,17 @@ auto prefix_expression_node::get_expression_list() const
 auto prefix_expression_node::is_literal() const
     -> bool
 {
-    return ops.empty() && expr->is_literal();
+    return get_literal();
+}
+
+auto prefix_expression_node::get_literal() const
+    -> literal_node const*
+{
+    if (!ops.empty()) {
+        return nullptr;
+    }
+    //  Else
+    return expr->get_literal();
 }
 
 auto prefix_expression_node::is_result_a_temporary_variable() const -> bool {
@@ -1360,6 +1439,12 @@ struct is_as_expression_node
         return ops.empty() && expr->is_id_expression();
     }
 
+    auto is_unqualified_id() const
+        -> bool
+    {
+        return ops.empty() && expr->is_unqualified_id();
+    }
+
     auto is_expression_list() const
         -> bool
     {
@@ -1378,7 +1463,17 @@ struct is_as_expression_node
     auto is_literal() const
         -> bool
     {
-        return ops.empty() && expr->is_literal();
+        return get_literal();
+    }
+
+    auto get_literal() const
+        -> literal_node const*
+    {
+        if (!ops.empty()) {
+            return nullptr;
+        }
+        //  Else
+        return expr->get_literal();
     }
 
     auto get_postfix_expression_node() const
@@ -1546,6 +1641,19 @@ postfix_expression_node::~postfix_expression_node()
     if (cap_grp) {
         cap_grp->remove(this);
     }
+}
+
+
+auto primary_expression_node::is_unqualified_id() const
+    -> bool
+{
+    if (is_identifier()) {
+        return true;
+    }
+    if (is_id_expression()) {
+        return std::get<id_expression>(expr)->is_unqualified();
+    }
+    return false;
 }
 
 
@@ -2167,6 +2275,7 @@ auto statement_node::visit(auto& v, int depth)
     try_visit<declaration>(statement, v, depth);
     try_visit<return_    >(statement, v, depth);
     try_visit<iteration  >(statement, v, depth);
+    try_visit<using_     >(statement, v, depth);
     try_visit<contract   >(statement, v, depth);
     try_visit<inspect    >(statement, v, depth);
     try_visit<jump       >(statement, v, depth);
@@ -2313,7 +2422,7 @@ struct function_type_node
     auto parameter_count() const
         -> int
     {
-        return std::ssize(parameters->parameters);
+        return unsafe_narrow<int>(std::ssize(parameters->parameters));
     }
 
     auto index_of_parameter_named(std::string_view s) const
@@ -2410,6 +2519,10 @@ struct function_type_node
             v.start(function_returns_tag{}, depth);
             r->visit(v, depth+1);
             v.end(function_returns_tag{}, depth);
+        }
+
+        for (auto const& c : contracts) {
+            c->visit(v, depth+1);
         }
         v.end(*this, depth);
     }
@@ -4069,7 +4182,7 @@ auto primary_expression_node::visit(auto& v, int depth)
 
 
 struct next_expression_tag { };
-struct loop_body_tag { token const* identifier; };
+struct loop_body_tag { iteration_statement_node const* n; };
 
 auto iteration_statement_node::visit(auto& v, int depth)
     -> void
@@ -4096,9 +4209,10 @@ auto iteration_statement_node::visit(auto& v, int depth)
     else {
         assert(range && parameter && body);
         range->visit(v, depth+1);
-        v.start(loop_body_tag{identifier}, depth);
+        v.start(loop_body_tag{this}, depth);
         parameter->visit(v, depth+1);
         body->visit(v, depth+1);
+        v.end(loop_body_tag{this}, depth);
     }
     v.end(*this, depth);
 }
@@ -4452,7 +4566,7 @@ auto pretty_print_visualize(expression_statement_node const& n, int indent)
 
     auto ret = pretty_print_visualize(*n.expr, indent);
 
-    if (n.has_semicolon) {
+    if (n.has_semicolon && ret.back() != ';') {
         ret += ";";
     }
 
@@ -4654,8 +4768,10 @@ auto pretty_print_visualize(iteration_statement_node const& n, int indent)
             + stmts
             + next_expr
             + "\n" + pre(indent) + "while "
-            + pretty_print_visualize(*n.condition, indent)
-            + ";";
+            + pretty_print_visualize(*n.condition, indent);
+        if (ret.back() != ';') {
+            ret += ";";
+        }
     }
     else {
         assert (n.range && n.parameter && n.body);
@@ -4679,7 +4795,9 @@ auto pretty_print_visualize(return_statement_node const& n, int indent)
         ret += " " + pretty_print_visualize(*n.expression, indent);
     }
 
-    ret += ";";
+    if (ret.back() != ';') {
+        ret += ";";
+    }
 
     return ret;
 }
@@ -4759,7 +4877,7 @@ auto pretty_print_visualize(contract_node const& n, int indent)
 
     ret += " )";
 
-    if (*n.kind == "assert") {
+    if (*n.kind == "assert" && ret.back() != ';') {
         ret += ";";
     }
 
@@ -4778,7 +4896,9 @@ auto pretty_print_visualize(jump_statement_node const& n, int indent)
         ret += " " + n.label->to_string();
     }
 
-    ret += ";";
+    if (ret.back() != ';') {
+        ret += ";";
+    }
 
     return ret;
 }
@@ -4795,7 +4915,10 @@ auto pretty_print_visualize(using_statement_node const& n, int indent)
         ret += "namespace ";
     }
 
-    ret += pretty_print_visualize(*n.id, indent) + ";";
+    ret += pretty_print_visualize(*n.id, indent);
+    if (ret.back() != ';') {
+        ret += ";";
+    }
 
     return ret;
 }
@@ -4952,10 +5075,19 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
     //  First compute the common parts
 
     auto metafunctions = std::string{};
-    if (include_metafunctions_list) {
-        for (auto& meta : n.metafunctions) {
-            metafunctions += " @" + pretty_print_visualize(*meta, indent);
-        }
+    {
+    auto as_comment =
+        !n.metafunctions.empty()
+        && !include_metafunctions_list;
+    if (as_comment) {
+        metafunctions += "/*";
+    }
+    for (auto& meta : n.metafunctions) {
+        metafunctions += " @" + pretty_print_visualize(*meta, indent);
+    }
+    if (as_comment) {
+        metafunctions += " */";
+    }
     }
 
     auto template_params = std::string{};
@@ -4979,6 +5111,9 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
             initializer += "=";
         }
         initializer += " " + pretty_print_visualize(*n.initializer, adjusted_indent);
+        if (initializer.ends_with(";;")) {
+            initializer.pop_back();
+        }
     }
     else if (!n.is_parameter) {
         initializer = ";";
@@ -5083,15 +5218,19 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
             ret += " type"
                 + requires_clause
                 + " == "
-                + pretty_print_visualize(*t, indent)
-                + ";";
+                + pretty_print_visualize(*t, indent);
+            if (ret.back() != ';') {
+                ret += ";";
+            }
         }
         else if (a->is_namespace_alias()) {
             auto& id = std::get<alias_node::a_namespace>(a->initializer);
             assert(id);
             ret += " namespace == "
-                + pretty_print_visualize(*id, indent)
-                + ";";
+                + pretty_print_visualize(*id, indent);
+            if (ret.back() != ';') {
+                ret += ";";
+            }
         }
         else if (a->is_object_alias()) {
             auto& expr = std::get<alias_node::an_object>(a->initializer);
@@ -5099,8 +5238,10 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
             ret += object_type_id
                 + requires_clause
                 + " == "
-                + pretty_print_visualize(*expr, indent)
-                + ";";
+                + pretty_print_visualize(*expr, indent);
+            if (ret.back() != ';') {
+                ret += ";";
+            }
         }
     }
 
@@ -5762,7 +5903,7 @@ private:
         }
 
         for (auto& e : expression_node::current_expressions) {
-            e->num_subexpressions += std::ssize(n->ops);
+            e->num_subexpressions += unsafe_narrow<int>(std::ssize(n->ops));
         }
 
         return n;
@@ -6307,13 +6448,13 @@ private:
     //G     is-as-expression as-type-cast
     //GTODO     type-id is-type-constraint
     //G
-    //G is-type-constraint
+    //G is-type-constraint:
     //G     'is' type-id
     //G
-    //G is-value-constraint
+    //G is-value-constraint:
     //G     'is' expression
     //G
-    //G as-type-cast
+    //G as-type-cast:
     //G     'as' type-id
     //G
     auto is_as_expression()
@@ -6397,10 +6538,10 @@ private:
     //G     ...
     //G
     //G template-id:
-    //G     identifier '<' template-argument-list? '>'
+    //G     identifier '<' template-arguments? '>'
     //G
-    //G template-argument-list:
-    //G     template-argument-list ',' template-argument
+    //G template-arguments:
+    //G     template-arguments ',' template-argument
     //G
     //G template-argument:
     //G     # note: < > << >> are not allowed in expressions until new ( is opened
@@ -6429,7 +6570,7 @@ private:
         one_past_identifier_end_pos.colno += curr().length();
         next();
 
-        //  Handle the template-argument-list if there is one
+        //  Handle the template-arguments if there is one
         if (
             curr().type() == lexeme::Less
             && curr().position() == one_past_identifier_end_pos
@@ -6502,11 +6643,7 @@ private:
         }
 
         else {
-            if (*n->identifier == "new") {
-                error( "use 'new<" + curr().to_string() + ">', not 'new " + curr().to_string() + "'", false);
-                return {};
-            }
-            if (*n->identifier == "co_await" || *n->identifier == "co_yield") {
+             if (*n->identifier == "co_await" || *n->identifier == "co_yield") {
                 error( "(temporary alpha limitation) coroutines are not yet supported in Cpp2", false);
                 return {};
             }
@@ -7195,7 +7332,7 @@ private:
         }
 
         if (curr().type() != lexeme::Semicolon) {
-            error("expected ; at end of jump-statement");
+            error("expected ';' at end of '" + n->keyword->to_string() + "' statement");
             return {};
         }
         next();
@@ -7205,7 +7342,7 @@ private:
 
 
     //G using-statement:
-    //G     'using' id-expression ';'
+    //G     'using' qualified-id ';'
     //G     'using' 'namespace' id-expression ';'
     //G
     auto using_statement()
@@ -7227,6 +7364,10 @@ private:
         auto id = id_expression();
         if (!id) {
             error(std::string{"expected valid id-expression after 'using"} + (n->for_namespace ? " namespace" : "") + "'");
+            return {};
+        }
+        if (!n->for_namespace && !id->is_qualified()) {
+            error("'using' for a specific name (not 'using namespace') must specify a qualified name", false);
             return {};
         }
 
@@ -7254,7 +7395,7 @@ private:
     //G     declaration
     //G     expression-statement
     //G
-    //G contract-statement
+    //G contract-statement:
     //G     contract ';'
     //
     //GTODO     try-block
@@ -7629,7 +7770,7 @@ private:
     }
 
 
-    //G parameter-declaration-list
+    //G parameter-declaration-list:
     //G     '(' parameter-declaration-seq? ')'
     //G
     //G parameter-declaration-seq:
@@ -7977,22 +8118,22 @@ private:
 
 
     //G unnamed-declaration:
-    //G     ':' meta-functions-list? template-parameter-declaration-list? function-type requires-clause? '=' statement
-    //G     ':' meta-functions-list? template-parameter-declaration-list? function-type statement
-    //G     ':' meta-functions-list? template-parameter-declaration-list? type-id? requires-clause? '=' statement
-    //G     ':' meta-functions-list? template-parameter-declaration-list? type-id
-    //G     ':' meta-functions-list? template-parameter-declaration-list? 'final'? 'type' requires-clause? '=' statement
+    //G     ':' meta-functions? template-parameters? function-type requires-clause? '=' statement
+    //G     ':' meta-functions? template-parameters? function-type statement
+    //G     ':' meta-functions? template-parameters? type-id? requires-clause? '=' statement
+    //G     ':' meta-functions? template-parameters? type-id
+    //G     ':' meta-functions? template-parameters? 'final'? 'type' requires-clause? '=' statement
     //G     ':' 'namespace' '=' statement
     //G
-    //G meta-functions-list:
+    //G meta-functions:
     //G     '@' id-expression
-    //G     meta-functions-list '@' id-expression
+    //G     meta-functions '@' id-expression
     //G
     //G requires-clause:
     //G      # note: for aliases, == is not allowed in expressions until new ( is opened
     //G      'requires' logical-or-expression
     //G
-    //G template-parameter-declaration-list
+    //G template-parameters:
     //G     '<' parameter-declaration-seq '>'
     //G
     auto unnamed_declaration(
@@ -8284,7 +8425,7 @@ private:
 
                 n->requires_pos = curr().position();
                 next();
-                auto e = logical_or_expression();
+                auto e = logical_or_expression(true, false);
                 if (!e) {
                     error("'requires' must be followed by an expression");
                     return {};
@@ -8401,6 +8542,41 @@ private:
 
         }
 
+        //  If this is a non-local named function with a single-statement body,
+        //  followed by a non-declaration statement, they probably forgot { }
+        //  so give a nicer diagnostic
+        if (
+            !done()
+            && n->is_function()
+            && n->has_name()
+            && !n->parent_is_function()
+            && n->initializer
+            && !n->initializer->is_compound()
+            )
+        {
+            auto start_pos = pos;
+            auto stmt = statement();
+            auto at_a_statement = stmt != nullptr && !stmt->is_declaration();
+            pos = start_pos;    // backtrack no matter what, we're just peeking here
+
+            if (at_a_statement) {
+                error("in this scope, a single-statement function body cannot be immediately followed by a statement - did you forget to put { } braces around a multi-statement function body?", false);
+                return n;
+            }
+        }
+
+        if (
+            n->is_type()
+            && n->initializer
+            && !done() && curr().type() == lexeme::Semicolon
+            )
+        {
+            if (n->initializer->is_compound() && n->has_name()) {
+                error("Cpp2 does not allow a semicolon after the closing brace of a type definition");
+                return {};
+            }
+        }
+
         //  A type initializer must be a compound expression
         if (
             n->is_type()
@@ -8500,9 +8676,9 @@ private:
 
 
     //G alias:
-    //G     ':' template-parameter-declaration-list? 'type' requires-clause? '==' type-id ';'
+    //G     ':' template-parameters? 'type' requires-clause? '==' type-id ';'
     //G     ':' 'namespace' '==' id-expression ';'
-    //G     ':' template-parameter-declaration-list? type-id? requires-clause? '==' expression ';'
+    //G     ':' template-parameters? type-id? requires-clause? '==' expression ';'
     //G
     //GT     ':' function-type '==' expression ';'
     //GT        # See commit 63efa6ed21c4d4f4f136a7a73e9f6b2c110c81d7 comment

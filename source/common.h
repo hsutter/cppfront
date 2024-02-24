@@ -11,8 +11,13 @@
 // THE SOFTWARE.
 
 
+//  We want cppfront to build cleanly at very high warning levels, with warnings
+//  as errors -- so disable a handful that fire incorrectly due to compiler bugs
 #ifdef _MSC_VER
-#pragma warning(disable: 4456)
+    #pragma warning(disable: 4456 4706)
+#endif
+#if defined(__GNUC__) && __GNUC__ >= 13 && !defined(__clang_major__)
+    #pragma GCC diagnostic ignored "-Wdangling-reference"
 #endif
 
 #include "cpp2util.h"
@@ -65,8 +70,8 @@ struct source_line
         -> int
     {
         return
-            std::find_if_not( text.begin(), text.end(), &isspace )
-                - text.begin();
+            unsafe_narrow<int>(std::find_if_not( text.begin(), text.end(), &isspace )
+                               - text.begin());
     }
 
     auto prefix() const
@@ -88,6 +93,7 @@ struct source_line
 
 using lineno_t = int32_t;
 using colno_t  = int32_t;   // not int16_t... encountered >80,000 char line during testing
+using index_t  = int32_t;
 
 struct source_position
 {
@@ -127,7 +133,7 @@ struct string_parts {
 
     string_parts(const std::string& beginseq,
                  const std::string& endseq,
-                 adds_sequences     strateg) 
+                 adds_sequences     strateg)
      : begin_seq{beginseq}
      , end_seq{endseq}
      , strategy{strateg}
@@ -137,23 +143,23 @@ struct string_parts {
         }
     }
 
-    void add_code(const std::string& text) { parts.push_back(cpp_code{text});}
-    void add_string(const std::string& text) { parts.push_back(raw_string{text});}
-    void add_string(const std::string_view& text) { parts.push_back(raw_string{std::string(text)});}
+    void add_code  (const std::string&      text) { parts.push_back(cpp_code{text}); }
+    void add_string(const std::string&      text) { parts.push_back(raw_string{text}); }
+    void add_string(const std::string_view& text) { parts.push_back(raw_string{std::string(text)}); }
 
     void clear() { parts.clear(); }
 
-    auto generate() const -> std::string {
-        
-        if (parts.empty()) { 
-            return (strategy & on_the_beginning ? begin_seq : std::string{}) 
-                 + (strategy & on_the_end ? end_seq : std::string{}); 
+    auto generate() const -> std::string
+    {
+        if (parts.empty()) {
+            return (strategy & on_the_beginning ? begin_seq : std::string{})
+                 + (strategy & on_the_end ? end_seq : std::string{});
         }
 
-        auto result = std::visit(begin_visit{begin_seq, strategy}, 
+        auto result = std::visit(begin_visit{begin_seq, strategy},
                                  parts.front());
 
-        if (std::ssize(parts) > 1) { 
+        if (std::ssize(parts) > 1) {
             auto it1 = parts.cbegin();
             auto it2 = parts.cbegin()+1;
             for(;it2 != parts.cend(); ++it1, ++it2) {
@@ -334,7 +340,7 @@ auto is_nondigit(char c)
         isalpha(c)
         || c == '_'
         ;
-};
+}
 
 //G identifier-start:
 //G     nondigit
@@ -379,7 +385,7 @@ auto starts_with_identifier(std::string_view s)
         return j;
     }
     return 0;
-};
+}
 
 
 //  Helper to allow one of the above or a digit separator
@@ -523,6 +529,22 @@ auto contains(
     -> bool
 {
     return s.find(value) != s.npos;
+}
+
+
+//  Print an integer with 1,000's separators (always commas, not locale-driven)
+template <typename T>
+    requires std::is_integral_v<T>  // Note: `std::integral` concept not yet available in Apple Clang
+auto print_with_thousands(T val)
+    -> std::string
+{
+    auto ret = std::to_string(val % 10);
+    auto pos = 0;
+    while ((val /= 10) > 0) {
+        if ((++pos % 3) == 0) { ret = ',' + ret; }
+        ret = std::to_string(val % 10) + ret;
+    }
+    return ret;
 }
 
 
@@ -759,7 +781,7 @@ public:
         auto length = std::ssize(name);
         if (opt_out) { length += 3; }   // space to print "[-]"
         if (max_flag_length < length) {
-            max_flag_length = length;
+            max_flag_length = unsafe_narrow<int>(length);
         }
     }
     struct register_flag {
@@ -821,7 +843,9 @@ public:
         -> void
     {
         help_requested = true;
-        print("\ncppfront compiler v0.3.0   Build "
+        print("\ncppfront compiler "
+            #include "version.info"
+        "   Build "
             #include "build.info"
         );
         print("\nCopyright(c) Herb Sutter   All rights reserved\n");
@@ -918,7 +942,7 @@ class stackinstr
 
     static auto print(auto&& ee, std::string_view label) {
         std::cout << "\n=== Stack debug information: " << label << " stack ===\n";
-        for (auto& e: ee) 
+        for (auto& e: ee)
         if  (e.ptr) {
             std::cout
                 << "  " << std::setw(6)

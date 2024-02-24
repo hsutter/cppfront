@@ -1,0 +1,34 @@
+
+A : type = {
+    operator() : (this) -> (x: int, y: int) = {
+        x = 12;
+        y = 34;
+        return;
+    }
+    operator* : (this) -> (x: int, y: int) = {
+        x = 23;
+        y = 45;
+        return;
+    }
+    operator[] : (this, idx: int) -> (x: int, y: int) = {
+        x = 34 * (idx+1);
+        y = 56 * (idx+1);
+        return;
+    }
+}
+
+
+main : () = {
+
+    a : A  = ();
+
+    t1 := a();
+    std::cout << t1.x << " , " << t1.y << "\n";
+
+    t2 := a*;
+    std::cout << t2.x << " , " << t2.y << "\n";
+
+    t3 := a[0];
+    std::cout << t3.x << " , " << t3.y << "\n";
+
+}

@@ -1,6 +1,6 @@
 pure2-print.cpp2...
 
-outer: type = 
+outer:/* @print */ type = 
 {
     object_alias: <T: type> T requires (true) == 42;
     mytype: final type = 
@@ -33,7 +33,7 @@ outer: type =
             inout m: std::map<const int, std::string>
         ) -> move std::string
             pre( m.empty() == false || false, "message" )
-            pre<Bounds,testing_enabled>( 0 < m.ssize() < 100 && true != false, "size is " + cpp2::to_string(m.ssize()) ) = 
+            pre<Bounds,testing_enabled>( 0 < m.ssize() < 100 && true != false, ("size is " + cpp2::to_string(m.ssize())) ) = 
         {
             a: = :() = 
                 {
@@ -124,6 +124,7 @@ outer: type =
         type_alias: type == array<int, 10>;
         object_alias_1: i8 == 42;
         object_alias_2: == 42;
+        object_alias_3: std::array == (4, 5, 6);
         var: ::outer::mytype = ();
         cout << var.g(42) << "\n";
         cout << inspect var.g(42) -> namespace_alias::string {

@@ -33,11 +33,13 @@ auto decorate_and_print(auto& thing) -> void;
 auto print(auto const& thing) -> void { 
     std::cout << ">> " << thing << "\n";  }
 
+#line 5 "pure2-intro-example-three-loops.cpp2"
 auto decorate_and_print(auto& thing) -> void{
     thing = "[" + thing + "]";
     print(thing);
 }
 
+#line 10 "pure2-intro-example-three-loops.cpp2"
 [[nodiscard]] auto main() -> int{
     std::vector<std::string> words {
         "hello", "big", "world"}; 
@@ -53,7 +55,7 @@ auto decorate_and_print(auto& thing) -> void{
     } while ( [&]{ --*cpp2::assert_not_null(i) ; return true; }() && cpp2::cmp_greater(*cpp2::assert_not_null(i),0));
 
     std::cout << "\n";
-    for ( auto& word : words ) 
+    for ( auto& word : std::move(words) ) 
         decorate_and_print(word);
 
     print(std::string{"end of program"});

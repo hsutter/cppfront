@@ -1,0 +1,29 @@
+x.to_string() is clubs
+x2.to_string() is clubs
+with if else: clubs
+with inspect: clubs
+
+file_attributes::cached.get_raw_value() is 1
+file_attributes::current.get_raw_value() is 2
+file_attributes::obsolete.get_raw_value() is 4
+file_attributes::cached_and_current.get_raw_value() is 3
+f. get_raw_value() is 1
+f2.get_raw_value() is 1
+f  is (cached)
+f2 is (cached)
+f2 is (none)
+f2 is (cached)
+f. get_raw_value() is 1
+f2.get_raw_value() is 1
+f  is (f2) is true
+f2 is (f ) is true
+
+f  is (cached, current, obsolete, cached_and_current)
+f2 is (cached, current, cached_and_current)
+f. get_raw_value() is 7
+f2.get_raw_value() is 3
+f  == f2   is false
+f  is (f2) is false
+f2 is (f ) is false
+(f & f2) == f2 is true
+inspecting f: includes all f2's flags ('cached' and 'current')

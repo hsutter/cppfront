@@ -1,5 +1,10 @@
+f0 : () -> _ = { return 42; }
+f1 : () -> _ = { return f0; }
+f2 : () -> _ = { return f1; }
+f3 : () -> _ = { return f2; }
+f4 : () -> _ = { return f3; }
 
 main: () -> int = {
-    std::cout << std::hash<int>()(0) << std::endl;
+    std::cout << f4()()()()() << std::endl;
     return 0;
 }

@@ -1,0 +1,21 @@
+
+fine: () -> int =
+{
+    up:= unique.new<int>(1);
+    sp:= shared.new<int>(2);
+    op: std::optional<int> = (3);
+
+    return up* + sp* + op*;
+}
+
+bad_optional_access: () -> int =
+{
+    op: std::optional<int> = std::nullopt;
+    return op*;
+}
+
+main: () -> int =
+{
+    std::set_terminate(std::abort);
+    return fine() + bad_optional_access();
+}

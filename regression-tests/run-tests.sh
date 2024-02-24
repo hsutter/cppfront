@@ -1,0 +1,334 @@
+#!/bin/bash
+
+################
+usage() {
+    echo "Usage: $0 -c <compiler> [-l <run label>] [-t <tests to run>]"
+    echo "    -c <compiler>     The compiler to use for the test"
+    echo "    -l <run label>    The label to use in output patch file name"
+    echo "    -t <tests to run> Runs only the provided, comma-separated tests (filenames including .cpp2)"
+    echo "                      If the argument is not used all tests are run"
+    exit 1
+}
+
+################
+# Check diff of the provided file using the given diff options
+# If the diff is not empty print it with the provided message
+report_diff () {
+    file="$1"
+    diff_opt="$2"
+    error_msg="$3"
+    patch_file="$4"
+
+    # Compare the content with the reference value checked in git
+    diff_output=$(git diff "$diff_opt" -- "$file")
+    if [[ -n "$diff_output" ]]; then
+        echo "            $error_msg:"
+        echo "                $file"
+        printf "\n$diff_output\n\n" | tee -a "$patch_file"
+        failure=1
+    fi
+}
+
+################
+# Check file existence and compare its state against the version in git
+check_file () {
+    file="$1"
+    description="$2"
+
+    if [[ ! -f "$file" ]]; then
+        echo "            The $description does not exist:"
+        echo "                $file"
+        failure=1
+        return
+    fi
+
+    # Check if the file is tracked by git
+    git ls-files --error-unmatch "$file" > /dev/null 2>&1
+    untracked=$?
+
+    patch_file="$label$cxx_compiler.patch"
+
+    if [[ $untracked -eq 1 ]]; then
+        # Add the file to the index to be able to diff it...
+        git add "$file"
+        # ... report the diff ...
+        report_diff "$file" \
+            "HEAD" \
+            "The $description is not tracked by git" \
+            "$patch_file"
+        # ... and remove the file from the index
+        git rm --cached -- "$file" > /dev/null 2>&1
+    else
+        # Compare the content with the reference value checked in git
+        report_diff "$file" \
+            "--ignore-cr-at-eol" \
+            "Non-matching $description" \
+            "$patch_file"
+    fi
+}
+
+optstring="c:l:t:"
+while getopts ${optstring} arg; do
+  case "${arg}" in
+    c)
+        cxx_compiler="${OPTARG}"
+        ;;
+    l)
+        label="${OPTARG}-"
+        ;;
+    t)
+        # Replace commas with spaces
+        chosen_tests=${OPTARG/,/ }
+        ;;
+    \?)
+        echo "Invalid option: -${OPTARG}."
+        echo
+        usage
+        ;;
+    :)
+        echo "Missing option argument for -$OPTARG"
+        echo
+        usage
+        ;;
+    *)
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+if [ -z "$cxx_compiler" ]; then
+    echo "Compiler not specified"
+    usage
+fi
+
+tests=$(ls | grep ".cpp2$")
+if [[ -n "$chosen_tests" ]]; then
+    for test in $chosen_tests; do
+        if ! [[ -f "$test" ]]; then
+            echo "Requested test ($test) not found"
+            exit 1
+        fi
+    done
+    echo "Performing tests:"
+    for test in $chosen_tests; do
+        echo "    $test"
+    done
+    echo
+    tests="$chosen_tests"
+else
+    printf "Performing all regression tests\n\n"
+fi
+
+expected_results_dir="test-results"
+
+################
+# Get the directory with the exec outputs and compilation command
+if [[ "$cxx_compiler" == *"cl.exe"* ]]; then
+    compiler_cmd='cl.exe -nologo -std:c++latest -MD -EHsc -I ..\..\..\include -Fe:'
+    exec_out_dir="$expected_results_dir/msvc-2022"
+    compiler_version=$(cl.exe)
+else
+    # Verify the compiler command
+    which "$cxx_compiler" > /dev/null
+    if [[ $? != 0 ]]; then
+        printf "The compiler '$cxx_compiler' is not installed\n\n"
+        exit 2
+    fi
+
+    cpp_std=c++2b
+    compiler_version=$("$cxx_compiler" --version)
+
+    if [[ "$compiler_version" == *"Apple clang version 14.0"* ||
+          "$compiler_version" == *"Homebrew clang version 15.0"* ]]; then
+        exec_out_dir="$expected_results_dir/apple-clang-14"
+    elif [[ "$compiler_version" == *"clang version 12.0"* ]]; then 
+        exec_out_dir="$expected_results_dir/clang-12"
+    elif [[ "$compiler_version" == *"clang version 15.0"* ]]; then 
+        exec_out_dir="$expected_results_dir/clang-15"
+        # c++2b causes starge issues on GitHub ubuntu-latest runner
+        cpp_std="c++20"
+    elif [[ "$compiler_version" == *"g++-10"* ]]; then
+        exec_out_dir="$expected_results_dir/gcc-10"
+        # GCC 10 does not support c++2b
+        cpp_std=c++20
+    elif [[ "$compiler_version" == *"g++-12"* ||
+            "$compiler_version" == *"g++-13"*
+         ]]; then
+        exec_out_dir="$expected_results_dir/gcc-13"
+    else
+        printf "Unhandled compiler version:\n$compiler_version\n\n"
+        exit 2
+    fi
+
+    compiler_cmd="$cxx_compiler -I../../../include -std=$cpp_std -pthread -o "
+fi
+
+if [[ -d "$exec_out_dir" ]]; then
+    printf "Full compiler version for '$cxx_compiler':\n$compiler_version\n\n"
+
+    printf "Directory with reference compilation/execution files to use:\n$exec_out_dir\n\n"
+else
+    printf "Directory with reference compilation/execution files not found for compiler: '$cxx_compiler'\n\n"
+    exit 2
+fi
+
+################
+cppfront_cmd="cppfront.exe"
+echo "Building cppfront"
+$compiler_cmd"$cppfront_cmd" ../source/cppfront.cpp
+if [[ $? -ne 0 ]]; then
+    echo "Compilation failed"
+    exit 2
+fi
+
+################
+# Build the `std` and `std.compat` modules so that the regression tests can use them (currently only supported by MSVC)
+# in order to support `import std.compat;`.
+regression_test_link_obj=""
+if [[ "$cxx_compiler" == *"cl.exe"* ]]; then
+    echo "Building std and std.compat modules"
+    (cd $exec_out_dir; \
+     cl.exe -nologo -std:c++latest -MD -EHsc -c "${VCToolsInstallDir}/modules/std.ixx";
+     cl.exe -nologo -std:c++latest -MD -EHsc -c "${VCToolsInstallDir}/modules/std.compat.ixx")
+    regression_test_link_obj="std.obj std.compat.obj"
+fi
+
+################
+failed_tests=()
+failed_compilations=()
+skipped_tests=()
+echo "Running regression tests"
+for test_file in $tests; do
+    test_name=${test_file%.*}
+    expected_output="$expected_results_dir/$test_file.output"
+    generated_cpp_name=$test_name.cpp
+    expected_src="$expected_results_dir/$generated_cpp_name"
+    test_bin="test.exe"
+
+    # Choose mode - default to mixed code
+    descr="mixed Cpp1 and Cpp2 code"
+    opt=""
+    # Using naming convention to discriminate pure Cpp2 code
+    if [[ $test_name == "pure2"* ]]; then
+        descr="pure Cpp2 code"
+        opt="-p"
+    fi
+    echo "    Testing $descr: $test_name.cpp2"
+
+    ########
+    # Run the translation test
+    echo "        Generating Cpp1 code"
+    ./"$cppfront_cmd" "$test_file" -o "$expected_src" $opt > "$expected_output" 2>&1
+
+    failure=0
+    compiler_issue=0
+    ########
+    # The C++1 generation output has to exist and to be tracked by git
+    check_file "$expected_output" "Cpp1 generation output file"
+
+    ########
+    # Check the generated code
+    if [ -f "$expected_src" ]; then
+        # The file was generated, so it should be tracked by git
+        check_file "$expected_src" "generated Cpp1 file"
+        ########
+        # Compile and run the generated code in a sub-shell
+        expected_src_compil_out="$exec_out_dir/$generated_cpp_name.output"
+        expected_src_exec_out="$exec_out_dir/$generated_cpp_name.execution"
+        expected_files="$expected_results_dir/$test_name.files"
+
+        echo "        Compiling the generated Cpp1 code"
+        
+        # For some tests the binary needs to be placed in "$exec_out_dir"
+        # For that reason the compilation is done directly in that dir
+        # The source is temporarily copied to avoid issues with bash paths in cl.exe
+        (cd $exec_out_dir; \
+         cp ../../$expected_src $generated_cpp_name;
+         $compiler_cmd"$test_bin" $regression_test_link_obj \
+                        $generated_cpp_name \
+                        > $generated_cpp_name.output 2>&1)
+        compilation_result=$?
+        rm $exec_out_dir/$generated_cpp_name
+
+        if [ -f "$expected_src_compil_out" ]; then
+            # Check for local compiler issues
+            if [[ $compilation_result -ne 0 ]]; then
+                # Workaround an issue with MSVC missing std modules
+                if cat $expected_src_compil_out | grep -q "error C1011"; then
+                    echo "            Skipping further checks due to missing std modules support"
+                    compiler_issue=1
+                fi
+            fi
+            ########
+            # Check the Cpp1 compilation message (if there are no local compiler issues)
+            if [[ $compiler_issue -ne 1 ]]; then
+                check_file "$expected_src_compil_out" "Cpp1 compilation message file"
+            fi
+            # Check the result of a successful compilation
+            if [[ $compilation_result -eq 0 ]]; then
+                ########
+                # Execute the compiled code in $exec_out_dir
+                echo "        Executing the compiled test binary"
+                # Run the binary in a sub-shell in $exec_out_dir so that files are written there
+                ( cd "$exec_out_dir"; ./$test_bin > "$generated_cpp_name.execution" 2>&1 )
+
+                check_file "$expected_src_exec_out" "execution output file"
+                # If the test generates files check their content
+                if [[ -f "$expected_files" ]]; then
+                    echo "        Checking files written by the binary"
+                    files="$(cat "$expected_files")"
+                    for file in ${files/,/ }; do
+                        check_file "$exec_out_dir/$file" "file meant to be written by the binary"
+                    done
+                fi
+            fi
+        fi
+    elif [[ $(cat "$expected_output") != *"error"* ]]; then
+         echo "            Missing generated src file treated as failure"
+         echo "                Failing compilation message needs to contain 'error'"
+         failure=1
+    fi
+
+    if [[ $failure -ne 0 ]]; then
+        failed_tests+=($test_name)
+    fi
+
+    if [[ $compiler_issue -ne 0 ]]; then
+        skipped_tests+=($test_name)
+    elif [[ $compilation_result -ne 0 ]]; then
+        failed_compilations+=($test_name)
+    fi
+done
+
+################
+# Report missing reference data directory
+if [[ ! -d "$exec_out_dir" ]]; then
+    echo "Reference data directory not found for compiler: '$cxx_compiler'"
+    exit 3
+fi
+
+################
+# Report skipped/failed tests
+report_issues() {
+    local msg=$1
+    shift 1
+    local reported_tests=("$@")
+    local num_reported_tests=$(wc -w <<< ${reported_tests[@]})
+    if [ $num_reported_tests -ne 0 ]; then
+        echo "$msg: $num_reported_tests"
+        for reported_test in ${reported_tests[@]}; do
+            echo "    $reported_test.cpp2"
+        done
+    fi
+    return $num_reported_tests
+}
+
+report_issues "Tests skipped due to compiler issues" "${skipped_tests[@]}"
+report_issues "Tests with failing compilation step" "${failed_compilations[@]}"
+report_issues "Failed tests" "${failed_tests[@]}"
+num_failed_tests=$?
+if [ $num_failed_tests -eq 0 ]; then
+    echo "All tests passed"
+fi
+exit $num_failed_tests

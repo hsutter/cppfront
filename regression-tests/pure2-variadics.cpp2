@@ -2,6 +2,29 @@
 //  Type pack expansion
 x: <Ts...: type> type = {
     tup: std::tuple<Ts...> = ();
+
+    func: () = {}
+}
+
+//  int pack expansion
+y: <Ts...: int> type = {
+
+    func: () ( 0 + ... + Ts);
+}
+
+// Discard type name pack expansion
+t0: @struct <_...> type = {
+  f: <_: int> () -> i32 = 0;
+}
+
+// Discard template type pack expansion
+t1: @struct <T...: _> type = {
+  f: <_: int> () -> i32 = 0;
+}
+
+// Discard typename and template type pack expansion
+t2: @struct <_...: _> type = {
+  f: <_: int> () -> i32 = 0;
 }
 
 left_fold_print: <Args...: type> (inout out: std::ostream, args...: Args) = {
@@ -29,4 +52,6 @@ main: ()
 
     std::cout << "\nfirst all() returned (all(true, true, true, false))$";
     std::cout << "\nsecond all() returned " << all(true, true, true, true) as std::string;
+
+    std::cout << "\nsum of (1, 2, 3, 100) is: " << y<1,2,3,100>().func() as std::string;
 }

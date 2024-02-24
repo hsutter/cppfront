@@ -80,29 +80,29 @@ auto main() -> int;
 
 #line 1 "pure2-union.cpp2"
 
-
 #line 1 "pure2-union.cpp2"
+
 [[nodiscard]] auto name_or_number::is_name() const& -> bool { return _discriminator == 0; }
 [[nodiscard]] auto name_or_number::name() const& -> std::string const& { 
                                                          if (cpp2::Default.has_handler() && !(is_name()) ) { cpp2::Default.report_violation(""); }return *cpp2::assert_not_null(reinterpret_cast<std::string const*>(&_storage)); }
 [[nodiscard]] auto name_or_number::name() & -> std::string& { 
                                                                if (cpp2::Default.has_handler() && !(is_name()) ) { cpp2::Default.report_violation(""); }return *cpp2::assert_not_null(reinterpret_cast<std::string*>(&_storage)); }
 auto name_or_number::set_name(cpp2::in<std::string> _value) & -> void{if (!(is_name())) {_destroy();std::construct_at(reinterpret_cast<std::string*>(&_storage), _value);}else {*cpp2::assert_not_null(reinterpret_cast<std::string*>(&_storage)) = _value;}_discriminator = 0;}
-auto name_or_number::set_name(auto&& ..._args) & -> void{if (!(is_name())) {_destroy();std::construct_at(reinterpret_cast<std::string*>(&_storage), _args...);}else {*cpp2::assert_not_null(reinterpret_cast<std::string*>(&_storage)) = std::string{_args...};}_discriminator = 0;}
+auto name_or_number::set_name(auto&& ..._args) & -> void{if (!(is_name())) {_destroy();std::construct_at(reinterpret_cast<std::string*>(&_storage), CPP2_FORWARD(_args)...);}else {*cpp2::assert_not_null(reinterpret_cast<std::string*>(&_storage)) = std::string{CPP2_FORWARD(_args)...};}_discriminator = 0;}
 [[nodiscard]] auto name_or_number::is_num() const& -> bool { return _discriminator == 1; }
 [[nodiscard]] auto name_or_number::num() const& -> cpp2::i32 const& { 
                                                if (cpp2::Default.has_handler() && !(is_num()) ) { cpp2::Default.report_violation(""); }return *cpp2::assert_not_null(reinterpret_cast<cpp2::i32 const*>(&_storage)); }
 [[nodiscard]] auto name_or_number::num() & -> cpp2::i32& { 
                                                      if (cpp2::Default.has_handler() && !(is_num()) ) { cpp2::Default.report_violation(""); }return *cpp2::assert_not_null(reinterpret_cast<cpp2::i32*>(&_storage)); }
 auto name_or_number::set_num(cpp2::in<cpp2::i32> _value) & -> void{if (!(is_num())) {_destroy();std::construct_at(reinterpret_cast<cpp2::i32*>(&_storage), _value);}else {*cpp2::assert_not_null(reinterpret_cast<cpp2::i32*>(&_storage)) = _value;}_discriminator = 1;}
-auto name_or_number::set_num(auto&& ..._args) & -> void{if (!(is_num())) {_destroy();std::construct_at(reinterpret_cast<cpp2::i32*>(&_storage), _args...);}else {*cpp2::assert_not_null(reinterpret_cast<cpp2::i32*>(&_storage)) = cpp2::i32{_args...};}_discriminator = 1;}
+auto name_or_number::set_num(auto&& ..._args) & -> void{if (!(is_num())) {_destroy();std::construct_at(reinterpret_cast<cpp2::i32*>(&_storage), CPP2_FORWARD(_args)...);}else {*cpp2::assert_not_null(reinterpret_cast<cpp2::i32*>(&_storage)) = cpp2::i32{CPP2_FORWARD(_args)...};}_discriminator = 1;}
 auto name_or_number::_destroy() & -> void{
 if (_discriminator == 0) {std::destroy_at(reinterpret_cast<std::string*>(&_storage));}
 if (_discriminator == 1) {std::destroy_at(reinterpret_cast<cpp2::i32*>(&_storage));}
 _discriminator = -1;
 }
 
-name_or_number::~name_or_number() noexcept{_destroy();}
+name_or_number::~name_or_number() noexcept{_destroy();static_cast<void>(std::move((*this)));}
 name_or_number::name_or_number(){}
 name_or_number::name_or_number(name_or_number const& that)
         : _storage{  }
@@ -144,21 +144,21 @@ template <typename T> [[nodiscard]] auto name_or_other<T>::name() const& -> std:
 template <typename T> [[nodiscard]] auto name_or_other<T>::name() & -> std::string& { 
                                                                if (cpp2::Default.has_handler() && !(is_name()) ) { cpp2::Default.report_violation(""); }return *cpp2::assert_not_null(reinterpret_cast<std::string*>(&_storage)); }
 template <typename T> auto name_or_other<T>::set_name(cpp2::in<std::string> _value) & -> void{if (!(is_name())) {_destroy();std::construct_at(reinterpret_cast<std::string*>(&_storage), _value);}else {*cpp2::assert_not_null(reinterpret_cast<std::string*>(&_storage)) = _value;}_discriminator = 0;}
-template <typename T> auto name_or_other<T>::set_name(auto&& ..._args) & -> void{if (!(is_name())) {_destroy();std::construct_at(reinterpret_cast<std::string*>(&_storage), _args...);}else {*cpp2::assert_not_null(reinterpret_cast<std::string*>(&_storage)) = std::string{_args...};}_discriminator = 0;}
+template <typename T> auto name_or_other<T>::set_name(auto&& ..._args) & -> void{if (!(is_name())) {_destroy();std::construct_at(reinterpret_cast<std::string*>(&_storage), CPP2_FORWARD(_args)...);}else {*cpp2::assert_not_null(reinterpret_cast<std::string*>(&_storage)) = std::string{CPP2_FORWARD(_args)...};}_discriminator = 0;}
 template <typename T> [[nodiscard]] auto name_or_other<T>::is_other() const& -> bool { return _discriminator == 1; }
 template <typename T> [[nodiscard]] auto name_or_other<T>::other() const& -> T const& { 
                                                  if (cpp2::Default.has_handler() && !(is_other()) ) { cpp2::Default.report_violation(""); }return *cpp2::assert_not_null(reinterpret_cast<T const*>(&_storage)); }
 template <typename T> [[nodiscard]] auto name_or_other<T>::other() & -> T& { 
                                                        if (cpp2::Default.has_handler() && !(is_other()) ) { cpp2::Default.report_violation(""); }return *cpp2::assert_not_null(reinterpret_cast<T*>(&_storage)); }
 template <typename T> auto name_or_other<T>::set_other(cpp2::in<T> _value) & -> void{if (!(is_other())) {_destroy();std::construct_at(reinterpret_cast<T*>(&_storage), _value);}else {*cpp2::assert_not_null(reinterpret_cast<T*>(&_storage)) = _value;}_discriminator = 1;}
-template <typename T> auto name_or_other<T>::set_other(auto&& ..._args) & -> void{if (!(is_other())) {_destroy();std::construct_at(reinterpret_cast<T*>(&_storage), _args...);}else {*cpp2::assert_not_null(reinterpret_cast<T*>(&_storage)) = T{_args...};}_discriminator = 1;}
+template <typename T> auto name_or_other<T>::set_other(auto&& ..._args) & -> void{if (!(is_other())) {_destroy();std::construct_at(reinterpret_cast<T*>(&_storage), CPP2_FORWARD(_args)...);}else {*cpp2::assert_not_null(reinterpret_cast<T*>(&_storage)) = T{CPP2_FORWARD(_args)...};}_discriminator = 1;}
 template <typename T> auto name_or_other<T>::_destroy() & -> void{
     if (_discriminator == 0) {std::destroy_at(reinterpret_cast<std::string*>(&_storage));}
     if (_discriminator == 1) {std::destroy_at(reinterpret_cast<T*>(&_storage));}
     _discriminator = -1;
     }
 
-    template <typename T> name_or_other<T>::~name_or_other() noexcept{_destroy();}
+    template <typename T> name_or_other<T>::~name_or_other() noexcept{_destroy();static_cast<void>(std::move((*this)));}
 template <typename T> name_or_other<T>::name_or_other(){}
 template <typename T> name_or_other<T>::name_or_other(name_or_other const& that)
         : _storage{  }
@@ -196,9 +196,11 @@ auto print_name(cpp2::in<name_or_number> non) -> void{
     }
 }
 
+#line 28 "pure2-union.cpp2"
 auto main() -> int{
     name_or_number x {}; 
-    std::cout << "sizeof(x) is " + cpp2::to_string(sizeof(x)) + "\n";
+    std::cout << "sizeof(x) - alignof(x) == max(sizeof(fields))" 
+              << (" is " + cpp2::to_string(sizeof(x) - alignof(name_or_number) == std::max(sizeof(cpp2::i32), sizeof(std::string))) + "\n");
 
     CPP2_UFCS(print_name)(x);
 

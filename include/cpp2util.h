@@ -26,40 +26,19 @@
     #undef CPP2_USE_SOURCE_LOCATION
 #endif
 
-//  If the cppfront user requested making the entire C++ standard library
-//  available via module import or header include, do that
+//  If the user requested making the entire C++ standard library available
+//  via module import (incl. via -pure-cpp2) or header include, do that
 #if defined(CPP2_IMPORT_STD) || defined(CPP2_INCLUDE_STD)
 
-    //  If C++23 'import std;' was requested and is available, use that
+    //  If C++23 'import std;' was requested but isn't available, fall back
+    //  to the 'include std' path
     #if defined(CPP2_IMPORT_STD) && defined(__cpp_lib_modules)
-
-        #ifndef _MSC_VER
-            //  This is the ideal -- note that we just voted "import std;"
-            //  into draft C++23 in late July 2022, so implementers haven't
-            //  had time to catch up yet
-            import std;
-        #else // MSVC
-            //  Note: When C++23 "import std;" is available, we will switch to that here
-            //  In the meantime, this is what works on MSVC which is the only compiler
-            //  I've been able to get access to that implements modules enough to demo
-            //  (but we'll have more full-C++20 compilers soon!)
-            #ifdef _MSC_VER
-                #include "intrin.h"
-            #endif
-            import std.core;
-            import std.filesystem;
-            import std.memory;
-            import std.regex;
-            import std.threading;
-
-            //  Suppress spurious MSVC modules warning
-            #pragma warning(disable:5050)
-        #endif
-
-    //  Otherwise, as a fallback if 'import std;' was requested, or else
-    //  because 'include all std' was requested, include all the standard
-    //  headers, with a feature test #ifdef for each header that
-    //  isn't yet supported by all of { VS 2022, g++-10, clang++-12 }
+        import std.compat;
+    //  If 'include std' was requested, include all standard headers.
+    //  This list tracks the current draft standard, so as of this
+    //  writing includes draft C++26 headers like <debugging>.
+    //  Use a feature test #ifdef for each header that isn't supported
+    //  by all of { VS 2022, g++-10, clang++-12 }
     #else
         #ifdef _MSC_VER
             #include "intrin.h"
@@ -106,6 +85,9 @@
         #endif
         #include <cwchar>
         #include <cwctype>
+        #ifdef __cpp_lib_debugging
+            #include <debugging>
+        #endif
         #include <deque>
         #ifndef CPP2_NO_EXCEPTIONS
             #include <exception>
@@ -138,6 +120,9 @@
         #ifdef __cpp_lib_generator
             #include <generator>
         #endif
+        #ifdef __cpp_lib_hazard_pointer
+            #include <hazard_pointer>
+        #endif
         #include <initializer_list>
         #include <iomanip>
         #include <ios>
@@ -150,6 +135,9 @@
             #include <latch>
         #endif
         #include <limits>
+        #ifdef __cpp_lib_linalg
+            #include <linalg>
+        #endif
         #include <list>
         #include <locale>
         #include <map>
@@ -173,6 +161,9 @@
         #include <random>
         #include <ranges>
         #include <ratio>
+        #ifdef __cpp_lib_rcu
+            #include <rcu>
+        #endif
         #include <regex>
         #include <scoped_allocator>
         #ifdef __cpp_lib_semaphore
@@ -197,7 +188,9 @@
         #endif
         #include <stdexcept>
         #if __has_include(<stdfloat>)
-            #include <stdfloat>
+            #if !defined(_MSC_VER) || _HAS_CXX23
+                #include <stdfloat>
+            #endif
         #endif
         #ifdef __cpp_lib_jthread
             #include <stop_token>
@@ -209,6 +202,9 @@
             #include <syncstream>
         #endif
         #include <system_error>
+        #ifdef __cpp_lib_text_encoding
+            #include <text_encoding>
+        #endif
         #include <thread>
         #include <tuple>
         #include <type_traits>
@@ -238,6 +234,9 @@
     #include <cstdio>
     #ifndef CPP2_NO_EXCEPTIONS
         #include <exception>
+    #endif
+    #ifdef __cpp_lib_expected
+        #include <expected>
     #endif
     #if defined(__cpp_lib_format) || (defined(_MSC_VER) && _MSC_VER >= 1929)
         #include <format>
@@ -269,6 +268,15 @@
 
 
 #define CPP2_TYPEOF(x)              std::remove_cvref_t<decltype(x)>
+#if __cplusplus >= 202302L && \
+    ( \
+     (defined(__clang_major__) && __clang_major__ >= 15) \
+     || (defined(__GNUC__) && __GNUC__ >= 12) \
+     )
+#define CPP2_COPY(x)                auto(x)
+#else
+#define CPP2_COPY(x)                CPP2_TYPEOF(x)(x)
+#endif
 #define CPP2_FORWARD(x)             std::forward<decltype(x)>(x)
 #define CPP2_PACK_EMPTY(x)          (sizeof...(x) == 0)
 #define CPP2_CONTINUE_BREAK(NAME)   goto CONTINUE_##NAME; CONTINUE_##NAME: continue; goto BREAK_##NAME; BREAK_##NAME: break;
@@ -341,6 +349,10 @@ struct aligned_storage {
     alignas(Align) unsigned char data[Len];
 };
 
+template <typename T>
+    requires requires { *std::declval<T&>(); }
+using deref_t = decltype(*std::declval<T&>());
+
 
 //-----------------------------------------------------------------------
 //
@@ -388,8 +400,8 @@ struct String
 #define CPP2_MESSAGE_PARAM  char const*
 #define CPP2_CONTRACT_MSG   cpp2::message_to_cstr_adapter
 
-auto message_to_cstr_adapter( CPP2_MESSAGE_PARAM msg ) -> CPP2_MESSAGE_PARAM { return msg ? msg : ""; }
-auto message_to_cstr_adapter( std::string const& msg ) -> CPP2_MESSAGE_PARAM { return msg.c_str(); }
+inline auto message_to_cstr_adapter( CPP2_MESSAGE_PARAM msg ) -> CPP2_MESSAGE_PARAM { return msg ? msg : ""; }
+inline auto message_to_cstr_adapter( std::string const& msg ) -> CPP2_MESSAGE_PARAM { return msg.c_str(); }
 
 class contract_group {
 public:
@@ -450,48 +462,112 @@ auto inline Testing = contract_group(
 );
 
 
-//  Null pointer deref checking
+//  Check for invalid dereference or indirection which would result in undefined behavior.
 //
-auto assert_not_null(auto&& p CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+//     - Null pointer
+//     - std::unique_ptr that owns nothing
+//     - std::shared_ptr with no managed object
+//     - std::optional with no value
+//     - std::expected containing an unexpected value
+//
+//  Note: For naming simplicity we consider all the above cases to be "null" states so that
+//        we can write: `*assert_not_null(object)`.
+//
+template<typename T>
+concept UniquePtr = std::is_same_v<T, std::unique_ptr<typename T::element_type, typename T::deleter_type>>;
+
+template<typename T>
+concept SharedPtr = std::is_same_v<T, std::shared_ptr<typename T::element_type>>;
+
+template<typename T>
+concept Optional = std::is_same_v<T, std::optional<typename T::value_type>>;
+
+#ifdef __cpp_lib_expected
+
+template<typename T>
+concept Expected = std::is_same_v<T, std::expected<typename T::value_type, typename T::error_type>>;
+
+#endif
+
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
 {
     //  NOTE: This "!= T{}" test may or may not work for STL iterators. The standard
     //        doesn't guarantee that using == and != will reliably report whether an
     //        STL iterator has the default-constructed value. So use it only for raw *...
-    if constexpr (std::is_pointer_v<CPP2_TYPEOF(p)>) {
-        if (p == CPP2_TYPEOF(p){}) {
+    if constexpr (std::is_pointer_v<CPP2_TYPEOF(arg)>) {
+        if (arg == CPP2_TYPEOF(arg){}) {
             Null.report_violation("dynamic null dereference attempt detected" CPP2_SOURCE_LOCATION_ARG);
         };
     }
-    return CPP2_FORWARD(p);
+    else if constexpr (UniquePtr<CPP2_TYPEOF(arg)>) {
+        if (!arg) {
+            Null.report_violation("std::unique_ptr is empty" CPP2_SOURCE_LOCATION_ARG);
+        }
+    }
+    else if constexpr (SharedPtr<CPP2_TYPEOF(arg)>) {
+        if (!arg) {
+            Null.report_violation("std::shared_ptr is empty" CPP2_SOURCE_LOCATION_ARG);
+        }
+    }
+    else if constexpr (Optional<CPP2_TYPEOF(arg)>) {
+        if (!arg.has_value()) {
+            Null.report_violation("std::optional does not contain a value" CPP2_SOURCE_LOCATION_ARG);
+        }
+    }
+#ifdef __cpp_lib_expected
+    else if constexpr (Expected<CPP2_TYPEOF(arg)>) {
+        if (!arg.has_value()) {
+            Null.report_violation("std::expected has an unexpected value" CPP2_SOURCE_LOCATION_ARG);
+        }
+    }
+#endif
+
+    return CPP2_FORWARD(arg);
 }
 
 //  Subscript bounds checking
 //
-auto assert_in_bounds_impl(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> void
-    requires (std::is_integral_v<CPP2_TYPEOF(arg)> &&
-             requires { std::size(x); std::ssize(x); x[arg]; std::begin(x) + 2; })
-{
-    auto max = [&]() -> auto {
-        if constexpr (std::is_signed_v<CPP2_TYPEOF(arg)>) { return std::ssize(x); }
-        else { return std::size(x); }
-    };
-    auto msg = "out of bounds access attempt detected - attempted access at index " + std::to_string(arg) + ", ";
-    if (max() > 0 ) {
-        msg += "[min,max] range is [0," + std::to_string(max()-1) + "]";
-    }
-    else {
-        msg += "but container is empty";
-    }
-    if (!(0 <= arg && arg < max())) {
-        Bounds.report_violation(msg.c_str()  CPP2_SOURCE_LOCATION_ARG);
-    }
+#define CPP2_ASSERT_IN_BOUNDS_IMPL \
+    requires (std::is_integral_v<CPP2_TYPEOF(arg)> && \
+             requires { std::size(x); std::ssize(x); x[arg]; std::begin(x) + 2; }) \
+{ \
+    auto max = [&]() -> auto { \
+        if constexpr (std::is_signed_v<CPP2_TYPEOF(arg)>) { return std::ssize(x); } \
+        else { return std::size(x); } \
+    }; \
+    auto msg = "out of bounds access attempt detected - attempted access at index " + std::to_string(arg) + ", "; \
+    if (max() > 0 ) { \
+        msg += "[min,max] range is [0," + std::to_string(max()-1) + "]"; \
+    } \
+    else { \
+        msg += "but container is empty"; \
+    } \
+    if (!(0 <= arg && arg < max())) { \
+        Bounds.report_violation(msg.c_str()  CPP2_SOURCE_LOCATION_ARG); \
+    } \
+    return CPP2_FORWARD(x) [ arg ]; \
 }
 
-auto assert_in_bounds_impl(auto&&, auto&& CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> void
+template<auto arg>
+auto assert_in_bounds(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+    CPP2_ASSERT_IN_BOUNDS_IMPL
+
+auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+    CPP2_ASSERT_IN_BOUNDS_IMPL
+
+template<auto arg>
+auto assert_in_bounds(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
 {
+    return CPP2_FORWARD(x) [ arg ];
 }
 
-#define CPP2_ASSERT_IN_BOUNDS(x, arg) (cpp2::assert_in_bounds_impl((x),(arg)), (x)[(arg)])
+auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+{
+    return CPP2_FORWARD(x) [ CPP2_FORWARD(arg) ];
+}
+
+#define CPP2_ASSERT_IN_BOUNDS(x,arg)         (cpp2::assert_in_bounds((x),(arg)))
+#define CPP2_ASSERT_IN_BOUNDS_LITERAL(x,arg) (cpp2::assert_in_bounds<(arg)>(x))
 
 
 //-----------------------------------------------------------------------
@@ -814,6 +890,7 @@ public:
     #endif
 #endif
 
+#define CPP2_UFCS_IDENTITY(...)  __VA_ARGS__
 #define CPP2_UFCS_REMPARENS(...) __VA_ARGS__
 
 // Ideally, the expression `CPP2_UFCS_IS_NOTHROW` expands to
@@ -822,18 +899,18 @@ public:
 // we instead make it a template parameter of the UFCS lambda.
 // But using a template parameter, Clang also ICEs on an application.
 // So we use these `NOTHROW` macros to fall back to the ideal for when not using GCC.
-#define CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,...) \
+#define CPP2_UFCS_IS_NOTHROW(MVFWD,QUALID,TEMPKW,...) \
    requires { requires  requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
               requires    noexcept(std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...)); } \
 || requires { requires !requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
-              requires noexcept(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(std::declval<Obj>(), std::declval<Params>()...)); }
-#define CPP2_UFCS_IS_NOTHROW_PARAM(...)               /*empty*/
-#define CPP2_UFCS_IS_NOTHROW_ARG(QUALID,TEMPKW,...)   CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,__VA_ARGS__)
+              requires noexcept(MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(std::declval<Obj>(), std::declval<Params>()...)); }
+#define CPP2_UFCS_IS_NOTHROW_PARAM(...)                     /*empty*/
+#define CPP2_UFCS_IS_NOTHROW_ARG(MVFWD,QUALID,TEMPKW,...)   CPP2_UFCS_IS_NOTHROW(MVFWD,QUALID,TEMPKW,__VA_ARGS__)
 #if defined(__GNUC__) && !defined(__clang__)
     #undef  CPP2_UFCS_IS_NOTHROW_PARAM
     #undef  CPP2_UFCS_IS_NOTHROW_ARG
-    #define CPP2_UFCS_IS_NOTHROW_PARAM(QUALID,TEMPKW,...) , bool IsNothrow = CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,__VA_ARGS__)
-    #define CPP2_UFCS_IS_NOTHROW_ARG(...)                 IsNothrow
+    #define CPP2_UFCS_IS_NOTHROW_PARAM(MVFWD,QUALID,TEMPKW,...) , bool IsNothrow = CPP2_UFCS_IS_NOTHROW(MVFWD,QUALID,TEMPKW,__VA_ARGS__)
+    #define CPP2_UFCS_IS_NOTHROW_ARG(...)                       IsNothrow
     #if __GNUC__ < 11
         #undef  CPP2_UFCS_IS_NOTHROW_PARAM
         #undef  CPP2_UFCS_IS_NOTHROW_ARG
@@ -850,41 +927,43 @@ public:
 // But using a template parameter, Clang also ICEs and GCC rejects a local 'F'.
 // Also, Clang rejects the SFINAE test case when using 'std::declval'.
 // So we use these `CONSTRAINT` macros to fall back to the ideal for when not using MSVC.
-#define CPP2_UFCS_CONSTRAINT_PARAM(...)               /*empty*/
-#define CPP2_UFCS_CONSTRAINT_ARG(QUALID,TEMPKW,...) \
+#define CPP2_UFCS_CONSTRAINT_PARAM(...)                   /*empty*/
+#define CPP2_UFCS_CONSTRAINT_ARG(MVFWD,QUALID,TEMPKW,...) \
    requires { CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); } \
-|| requires { CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); }
+|| requires { MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); }
 #if defined(_MSC_VER)
     #undef  CPP2_UFCS_CONSTRAINT_PARAM
     #undef  CPP2_UFCS_CONSTRAINT_ARG
-    #define CPP2_UFCS_CONSTRAINT_PARAM(QUALID,TEMPKW,...) , bool IsViable = \
+    #define CPP2_UFCS_CONSTRAINT_PARAM(MVFWD,QUALID,TEMPKW,...) , bool IsViable = \
    requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); } \
-|| requires { CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(std::declval<Obj>(), std::declval<Params>()...); }
+|| requires { MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(std::declval<Obj>(), std::declval<Params>()...); }
     #define CPP2_UFCS_CONSTRAINT_ARG(...)                 IsViable
 #endif
 
-#define CPP2_UFCS_(LAMBDADEFCAPT,QUALID,TEMPKW,...) \
+#define CPP2_UFCS_(LAMBDADEFCAPT,MVFWD,QUALID,TEMPKW,...) \
 [LAMBDADEFCAPT]< \
     typename Obj, typename... Params \
-    CPP2_UFCS_IS_NOTHROW_PARAM(QUALID,TEMPKW,__VA_ARGS__) \
-    CPP2_UFCS_CONSTRAINT_PARAM(QUALID,TEMPKW,__VA_ARGS__) \
+    CPP2_UFCS_IS_NOTHROW_PARAM(MVFWD,QUALID,TEMPKW,__VA_ARGS__) \
+    CPP2_UFCS_CONSTRAINT_PARAM(MVFWD,QUALID,TEMPKW,__VA_ARGS__) \
   > \
   CPP2_LAMBDA_NO_DISCARD (Obj&& obj, Params&& ...params) CPP2_FORCE_INLINE_LAMBDA_CLANG \
-  noexcept(CPP2_UFCS_IS_NOTHROW_ARG(QUALID,TEMPKW,__VA_ARGS__)) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) \
-    requires CPP2_UFCS_CONSTRAINT_ARG(QUALID,TEMPKW,__VA_ARGS__) { \
+  noexcept(CPP2_UFCS_IS_NOTHROW_ARG(MVFWD,QUALID,TEMPKW,__VA_ARGS__)) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) \
+    requires CPP2_UFCS_CONSTRAINT_ARG(MVFWD,QUALID,TEMPKW,__VA_ARGS__) { \
     if constexpr (requires{ CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
         return CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
     } else { \
-        return CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+        return MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
     } \
 }
 
-#define CPP2_UFCS(...)                                    CPP2_UFCS_(&,(),,__VA_ARGS__)
-#define CPP2_UFCS_TEMPLATE(...)                           CPP2_UFCS_(&,(),template,__VA_ARGS__)
-#define CPP2_UFCS_QUALIFIED_TEMPLATE(QUALID,...)          CPP2_UFCS_(&,QUALID,template,__VA_ARGS__)
-#define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,(),,__VA_ARGS__)
-#define CPP2_UFCS_TEMPLATE_NONLOCAL(...)                  CPP2_UFCS_(,(),template,__VA_ARGS__)
-#define CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL(QUALID,...) CPP2_UFCS_(,QUALID,template,__VA_ARGS__)
+#define CPP2_UFCS(...)                                    CPP2_UFCS_(&,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
+#define CPP2_UFCS_MOVE(...)                               CPP2_UFCS_(&,std::move,(),,__VA_ARGS__)
+#define CPP2_UFCS_FORWARD(...)                            CPP2_UFCS_(&,CPP2_FORWARD,(),,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE(...)                           CPP2_UFCS_(&,CPP2_UFCS_IDENTITY,(),template,__VA_ARGS__)
+#define CPP2_UFCS_QUALIFIED_TEMPLATE(QUALID,...)          CPP2_UFCS_(&,CPP2_UFCS_IDENTITY,QUALID,template,__VA_ARGS__)
+#define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE_NONLOCAL(...)                  CPP2_UFCS_(,CPP2_UFCS_IDENTITY,(),template,__VA_ARGS__)
+#define CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL(QUALID,...) CPP2_UFCS_(,CPP2_UFCS_IDENTITY,QUALID,template,__VA_ARGS__)
 
 
 //-----------------------------------------------------------------------
@@ -1066,44 +1145,39 @@ constexpr auto is( T const& ) -> bool {
 //  Types
 //
 template< typename C, typename X >
-auto is( X const& ) -> bool {
-    return false;
-}
-
-template< typename C, typename X >
-    requires std::is_same_v<C, X>
-auto is( X const& ) -> bool {
-    return true;
-}
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<C, X> && !std::is_same_v<C,X>)
-auto is( X const& ) -> bool {
-    return true;
-}
-
-template< typename C, typename X >
-    requires (
-        ( std::is_base_of_v<X, C> ||
-          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>)
-        ) && !std::is_same_v<C,X>)
 auto is( X const& x ) -> bool {
-    return Dynamic_cast<C const*>(&x) != nullptr;
-}
-
-template< typename C, typename X >
-    requires (
-        ( std::is_base_of_v<X, C> ||
-          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>)
-        ) && !std::is_same_v<C,X>)
-auto is( X const* x ) -> bool {
-    return Dynamic_cast<C const*>(x) != nullptr;
-}
-
-template< typename C, typename X >
-    requires (requires (X x) { *x; X(); } && std::is_same_v<C, empty>)
-auto is( X const& x ) -> bool {
-    return x == X();
+    if constexpr (
+        std::is_same_v<C, X>
+        || std::is_base_of_v<C, X>
+    )
+    {
+        return true;
+    }
+    else if constexpr (
+        std::is_base_of_v<X, C>
+        || (
+            std::is_polymorphic_v<C>
+            && std::is_polymorphic_v<X>
+            )
+    )
+    {
+        if constexpr (std::is_pointer_v<X>) {
+            return Dynamic_cast<C const*>(x) != nullptr;
+        }
+        else {
+            return Dynamic_cast<C const*>(&x) != nullptr;
+        }
+    }
+    else if constexpr (
+        requires { *x; X(); }
+        && std::is_same_v<C, empty>
+    )
+    {
+        return x == X();
+    }
+    else {
+        return false;
+    }
 }
 
 
@@ -1171,11 +1245,6 @@ inline constexpr bool is_castable_v =
 //  As
 //
 
-template< typename C >
-auto as(auto const&) -> auto {
-    return nonesuch;
-}
-
 template< typename C, auto x >
     requires (std::is_arithmetic_v<C> && std::is_arithmetic_v<CPP2_TYPEOF(x)>)
 inline constexpr auto as() -> auto
@@ -1187,108 +1256,83 @@ inline constexpr auto as() -> auto
     }
 }
 
-template< typename C >
-inline constexpr auto as(auto const& x) -> auto
-    requires (
+template< typename C, typename X >
+auto as(X const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto) {
+    if constexpr (
         std::is_floating_point_v<C> &&
         std::is_floating_point_v<CPP2_TYPEOF(x)> &&
         sizeof(CPP2_TYPEOF(x)) > sizeof(C)
     )
-{
-    return nonesuch;
-}
-
-//  Signed/unsigned conversions to a not-smaller type are handled as a precondition,
-//  and trying to cast from a value that is in the half of the value space that isn't
-//  representable in the target type C is flagged as a Type safety contract violation
-template< typename C >
-inline constexpr auto as(auto const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto
-    requires (
+    {
+        return CPP2_COPY(nonesuch);
+    }
+    //  Signed/unsigned conversions to a not-smaller type are handled as a precondition,
+    //  and trying to cast from a value that is in the half of the value space that isn't
+    //  representable in the target type C is flagged as a Type safety contract violation
+    else if constexpr (
         std::is_integral_v<C> &&
         std::is_integral_v<CPP2_TYPEOF(x)> &&
         std::is_signed_v<CPP2_TYPEOF(x)> != std::is_signed_v<C> &&
         sizeof(CPP2_TYPEOF(x)) <= sizeof(C)
     )
-{
-    const C c = static_cast<C>(x);
-    Type.enforce(   // precondition check: must be round-trippable => not lossy
-        static_cast<CPP2_TYPEOF(x)>(c) == x && (c < C{}) == (x < CPP2_TYPEOF(x){}),
-        "dynamic lossy narrowing conversion attempt detected" CPP2_SOURCE_LOCATION_ARG
-    );
-    return c;
-}
-
-template< typename C, typename X >
-    requires std::is_same_v<C, X>
-auto as( X const& x ) -> decltype(auto) {
-    return x;
-}
-
-template< typename C, typename X >
-    requires std::is_same_v<C, X>
-auto as( X& x ) -> decltype(auto) {
-    return x;
-}
-
-
-template< typename C, typename X >
-auto as(X const& x) -> C
-    requires (std::is_same_v<C, std::string> && std::is_integral_v<X>)
-{
-    return cpp2::to_string(x);
-}
-
-
-template< typename C, typename X >
-auto as( X const& x ) -> auto
-    requires (!std::is_same_v<C, X> && !std::is_base_of_v<C, X> && requires { C{x}; }
-              && !(std::is_same_v<C, std::string> && std::is_integral_v<X>) // exclude above case
-             )
-{
-    //  Experiment: Recognize the nested `::value_type` pattern for some dynamic library types
-    //  like std::optional, and try to prevent accidental narrowing conversions even when
-    //  those types themselves don't defend against them
-    if constexpr( requires { requires std::is_convertible_v<X, typename C::value_type>; } ) {
-        if constexpr( is_narrowing_v<typename C::value_type, X>) {
-            return nonesuch;
-        }
+    {
+        const C c = static_cast<C>(x);
+        Type.enforce(   // precondition check: must be round-trippable => not lossy
+            static_cast<CPP2_TYPEOF(x)>(c) == x && (c < C{}) == (x < CPP2_TYPEOF(x){}),
+            "dynamic lossy narrowing conversion attempt detected" CPP2_SOURCE_LOCATION_ARG
+        );
+        return CPP2_COPY(c);
     }
-    return C{x};
-}
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<C, X> && !std::is_same_v<C, X>)
-auto as( X& x ) -> C& {
-    return x;
-}
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<C, X> && !std::is_same_v<C, X>)
-auto as( X const& x ) -> C const& {
-    return x;
-}
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
-auto as( X& x ) -> C& {
-    return Dynamic_cast<C&>(x);
-}
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
-auto as( X const& x ) -> C const& {
-    return Dynamic_cast<C const&>(x);
-}
-
-template< typename C, typename X >
-    requires (
+    else if constexpr (std::is_same_v<C, std::string> && std::is_integral_v<X>) {
+        return cpp2::to_string(x);
+    }
+    else if constexpr (std::is_same_v<C, X>) {
+        return x;
+    }
+    else if constexpr (std::is_base_of_v<C, X>) {
+        return static_cast<C const&>(x);
+    }
+    else if constexpr (std::is_base_of_v<X, C>) {
+        return Dynamic_cast<C const&>(x);
+    }
+    else if constexpr (
         std::is_pointer_v<C>
         && std::is_pointer_v<X>
-        && std::is_base_of_v<CPP2_TYPEOF(*std::declval<X>()), CPP2_TYPEOF(*std::declval<C>())>
-        && !std::is_same_v<C, X>
+        && requires { requires std::is_base_of_v<deref_t<X>, deref_t<C>>; }
     )
-auto as( X x ) -> C {
-    return Dynamic_cast<C>(x);
+    {
+        return Dynamic_cast<C>(x);
+    }
+    else if constexpr (requires { C{x}; }) {
+        //  Experiment: Recognize the nested `::value_type` pattern for some dynamic library types
+        //  like std::optional, and try to prevent accidental narrowing conversions even when
+        //  those types themselves don't defend against them
+        if constexpr( requires { requires std::is_convertible_v<X, typename C::value_type>; } ) {
+            if constexpr( is_narrowing_v<typename C::value_type, X>) {
+                return nonesuch;
+            }
+        }
+        return C{x};
+    }
+    else {
+        return nonesuch;
+    }
+}
+
+template< typename C, typename X >
+auto as( X& x ) -> decltype(auto) {
+    if constexpr (std::is_same_v<C, X>) {
+        return x;
+    }
+    else if constexpr (std::is_base_of_v<C, X>) {
+        return static_cast<C&>(x);
+    }
+    else if constexpr (std::is_base_of_v<X, C>) {
+        return Dynamic_cast<C&>(x);
+    }
+    else {
+        return as<C>(std::as_const(x));
+    }
 }
 
 
@@ -1702,13 +1746,68 @@ private:
 
 //-----------------------------------------------------------------------
 //
-//  args: see main() arguments as vector<string_view>
+//  An implementation of GSL's narrow_cast with a clearly 'unsafe' name
 //
 //-----------------------------------------------------------------------
 //
-struct args_t : std::vector<std::string_view>
+template <typename C, typename X>
+constexpr auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
 {
-    args_t(int c, char** v) : vector{static_cast<std::size_t>(c)}, argc{c}, argv{v} {}
+    return static_cast<C>(CPP2_FORWARD(x));
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  args: see main() arguments as a container of string_views
+//
+//  Does not perform any dynamic memory allocation - each string_view
+//  is directly bound to the string provided by the host environment
+//
+//-----------------------------------------------------------------------
+//
+struct args_t
+{
+    args_t(int c, char** v) : argc{c}, argv{v} {}
+
+    class iterator {
+    public:
+        iterator(int c, char** v, int start) : argc{c}, argv{v}, curr{start} {}
+
+        auto operator*() const {
+            if (curr < argc) { return std::string_view{ argv[curr] }; }
+            else             { return std::string_view{}; }
+        }
+
+        auto operator+(int i) -> iterator  {
+            if (i > 0) { return { argc, argv, std::min(curr+i, argc) }; }
+            else       { return { argc, argv, std::max(curr+i, 0   ) }; }
+        }
+        auto operator-(int i) -> iterator  { return operator+(-i); }
+        auto operator++()     -> iterator& { curr = std::min(curr+1, argc);  return *this; }
+        auto operator--()     -> iterator& { curr = std::max(curr-1, 0   );  return *this; }
+        auto operator++(int)  -> iterator  { auto old = *this;  ++*this;  return old; }
+        auto operator--(int)  -> iterator  { auto old = *this;  ++*this;  return old; }
+
+        auto operator<=>(iterator const&) const = default;
+
+    private:
+        int    argc;
+        char** argv;
+        int    curr;
+    };
+
+    auto begin()  const -> iterator    { return iterator{ argc, argv, 0    }; }
+    auto end()    const -> iterator    { return iterator{ argc, argv, argc }; }
+    auto cbegin() const -> iterator    { return begin(); }
+    auto cend()   const -> iterator    { return end(); }
+    auto size()   const -> std::size_t { return cpp2::unsafe_narrow<std::size_t>(argc); }
+    auto ssize()  const -> int         { return argc; }
+
+    auto operator[](int i) const {
+        if (0 <= i && i < argc) { return std::string_view{ argv[i] }; }
+        else                    { return std::string_view{}; }
+    }
 
     mutable int        argc = 0;        //  mutable for compatibility with frameworks that take 'int& argc'
     char**             argv = nullptr;
@@ -1716,10 +1815,7 @@ struct args_t : std::vector<std::string_view>
 
 inline auto make_args(int argc, char** argv) -> args_t
 {
-    auto ret  = args_t{argc, argv};
-    auto args = std::span(argv, static_cast<std::size_t>(argc));
-    std::copy( args.begin(), args.end(), ret.data());
-    return ret;
+    return args_t{argc, argv};
 }
 
 
@@ -1732,19 +1828,6 @@ inline auto make_args(int argc, char** argv) -> args_t
 //
 template<typename T>
 using alien_memory = T volatile;
-
-
-//-----------------------------------------------------------------------
-//
-//  An implementation of GSL's narrow_cast with a clearly 'unsafe' name
-//
-//-----------------------------------------------------------------------
-//
-template <typename C, typename X>
-constexpr auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
-{
-    return static_cast<C>(CPP2_FORWARD(x));
-}
 
 
 //-----------------------------------------------------------------------

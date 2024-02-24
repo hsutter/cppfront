@@ -48,6 +48,7 @@ auto main() -> int;
 #line 4 "pure2-types-that-parameters.cpp2"
     myclass::myclass(){}
 
+#line 6 "pure2-types-that-parameters.cpp2"
     myclass::myclass(myclass const& that)
         : name{ that.name }
         , addr{ that.addr }{
@@ -63,6 +64,7 @@ auto main() -> int;
 #line 9 "pure2-types-that-parameters.cpp2"
     }
 
+#line 11 "pure2-types-that-parameters.cpp2"
     myclass::myclass(myclass&& that) noexcept
         : name{ std::move(that).name }
         , addr{ std::move(that).addr }{
@@ -78,8 +80,9 @@ auto main() -> int;
 #line 14 "pure2-types-that-parameters.cpp2"
     }
 
+#line 16 "pure2-types-that-parameters.cpp2"
     auto myclass::print() const& -> void{
-        std::cout << "name '" + cpp2::to_string(name) + "', addr '" + cpp2::to_string(addr) + "'\n";
+        std::cout << ("name '" + cpp2::to_string(name) + "', addr '" + cpp2::to_string(addr) + "'\n");
     }
 
 #line 25 "pure2-types-that-parameters.cpp2"

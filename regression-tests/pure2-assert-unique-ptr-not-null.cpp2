@@ -1,0 +1,22 @@
+
+fine: () -> int =
+{
+    up:= unique.new<int>(1);
+    sp:= shared.new<int>(2);
+    op: std::optional<int> = (3);
+
+    return up* + sp* + op*;
+}
+
+bad_unique_ptr_access: () -> int =
+{
+    up:= std::make_unique<int>(1);
+    up.reset();
+    return up*;
+}
+
+main: () -> int =
+{
+    std::set_terminate(std::abort);
+    return fine() + bad_unique_ptr_access();
+}

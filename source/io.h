@@ -20,8 +20,6 @@
 
 #include "common.h"
 #include <fstream>
-#include <ostream>
-#include <iterator>
 #include <cctype>
 
 
@@ -457,7 +455,7 @@ public:
     }
 
     auto current_depth() const -> int {
-        return std::ssize(open_braces);
+        return unsafe_narrow<int>(std::ssize(open_braces));
     }
 
     //  --- Preprocessor matching functions - #if/#else/#endif
@@ -610,7 +608,7 @@ auto process_cpp_line(
                 return r;
             }
             in_raw_string_literal = false;
-            i = end_pos+raw_string_closing_seq.size()-1;
+            i = unsafe_narrow<int>(end_pos+raw_string_closing_seq.size()-1);
         }
         else {
             r.all_comment_line = false;
@@ -797,7 +795,7 @@ auto process_cpp2_line(
 
     if (in_char_literal) {
         errors.emplace_back(
-            source_position(lineno, ssize(line)),
+            source_position(lineno, unsafe_narrow<colno_t>(ssize(line))),
             std::string("line ended before character literal was terminated")
         );
     }
@@ -957,7 +955,7 @@ public:
                             lines.back().text,
                             in_comment,
                             braces,
-                            std::ssize(lines)-1,
+                            unsafe_narrow<lineno_t>(std::ssize(lines)-1),
                             errors
                         )
                         && in.getline(&buf[0], max_line_len)
@@ -982,7 +980,7 @@ public:
                             in_raw_string_literal,
                             raw_string_closing_seq,
                             braces,
-                            std::ssize(lines) - 1
+                            unsafe_narrow<lineno_t>(std::ssize(lines)-1)
                         );
                         if (stats.all_comment_line) {
                             lines.back().cat = source_line::category::comment;
