@@ -10,7 +10,7 @@ for f in *.cpp
 do
     let count=count+1
     printf "[%s] Starting clang++-12 %s\n" "$count" "$f"
-    clang++-12 -I../../../include -std=c++20 -pthread -Wunused-parameter -o test.exe $f > $f.output 2>&1
+    clang++-12 -I../../../include -std=c++2b -pthread -Wunused-parameter -o test.exe $f > $f.output 2>&1
     rm -f $f
     if test -f "test.exe"; then
         let exe_count=exe_count+1
