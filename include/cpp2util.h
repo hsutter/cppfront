@@ -696,6 +696,7 @@ public:
     owning_reference& operator=(owning_reference&& ref) noexcept = default;
     typename std::add_lvalue_reference<T>::type operator*() const { return *assert_not_null(_ptr.get()); }
     typename std::add_lvalue_reference<T>::type operator->() const noexcept {return *assert_not_null(_ptr.get());}
+    auto get() const noexcept { return _ptr.get();}
 private:
    std::unique_ptr<T> _ptr; 
 };

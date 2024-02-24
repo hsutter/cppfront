@@ -29,7 +29,7 @@ main: () -> int =
     print( "1   is int? ", 1   is int );
 
     c := new<Circle>();     // safe by construction
-    s : * Shape = c.get();  // safe by Lifetime
+    s : * Shape = c*.get();  // safe by Lifetime
     print("\ns* is Shape?  ", s* is Shape  );
     print(  "s* is Circle? ", s* is Circle );
     print(  "s* is Square? ", s* is Square );
