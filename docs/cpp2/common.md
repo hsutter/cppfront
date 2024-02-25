@@ -92,7 +92,7 @@ Cpp2 supports the same fundamental types as today's Cpp1, but additionally provi
 | `ulonglong`   | `#!cpp unsigned long long`   |
 | `longdouble`  | `#!cpp long double`          |
 
-| For compatibility/interop only,<br> so deliberately ugly names | Synonym for | Notes |
+| For compatibility/interop only,<br> so deliberately ugly names | Synonym for (these multi-word<br> names are not allowed in Cpp2) | Notes |
 |---|---|---|
 | `_schar`     | `#!cpp signed char`   | Normally, prefer `i8` instead |
 | `_uchar`     | `#!cpp unsigned char` | Normally, prefer `u8` instead |
