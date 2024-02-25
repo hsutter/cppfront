@@ -251,7 +251,7 @@ For example:
 
 ``` cpp title="Writing the <=> operator" hl_lines="5-7 13"
 item: type = {
-    x: i32         = 0;
+    x: i32         = ();
     y: std::string = ();
 
     operator<=>: (this, that) -> std::strong_ordering;

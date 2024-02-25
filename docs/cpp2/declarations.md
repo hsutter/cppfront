@@ -6,35 +6,44 @@ All Cpp2 declarations are written as **"_name_ `:` _kind_ `=` _statement_"**.
 
 - The `:` is pronounced **"is a."**
 
-- The `=` is pronounced **"defined as."**
+- The `=` is pronounced **"defined as."** For the definition of something that will always have the same value, write `==`.
 
 - The _statement_ is typically an expression statement (e.g., `#!cpp a + b();`) or a compound statement (e.g., `#!cpp { /*...*/ return c(d) / e; }`).
 
 - Various parts of the syntax allow a `_` "don't care" wildcard or can be omitted entirely to accept a default (e.g., `#!cpp x: int = 0;` can be equivalently written `#!cpp x: _ = 0;` or `#!cpp x := 0;` both of which deduce the type).
 
-> Note: When the type is omitted, whitespace does not matter, and writing `#!cpp x: = 0;` or `#!cpp x : = 0;` or `#!cpp x := 0;` or other whitespace is just a stylistic choice. This documentation's style uses the last one, except when there are multiple adjacent declaration lines this style lines up their `:` and `=`.
-
-> Note: The only variation to the above is that 'constexpr' functions are written with `==` instead of `=` (e.g., `#!cpp square: (i: int) == i * i;`).
+> Notes:
+>
+> - When the type is omitted, whitespace does not matter, and writing `#!cpp x: = 0;` or `#!cpp x : = 0;` or `#!cpp x := 0;` or other whitespace is just a stylistic choice. This documentation's style uses the last one, except when there are multiple adjacent declaration lines this style lines up their `:` and `=`.
+>
+> - `==` stresses that this name will always have the given value, to express [aliases](./aliases.md) and side-effect-free 'constexpr' functions (e.g., `#!cpp square: (i: int) == i * i;`).
 
 ## Examples
 
-``` cpp title="Consistent declarations — name : kind = statement" hl_lines="2 5 10 17 21 25 34 40"
+``` cpp title="Consistent declarations — name : kind = statement" linenums="1" hl_lines="2 6 10 15 24 28 32 43 49 53"
 //  n is a namespace defined as the following scope
 n: namespace
 = {
-    //  shape is a type defined as the following scope
-    shape: type
+    //  shape is a templated type with one type parameter T
+    //  (equivalent to '<T: type>') defined as the following scope
+    shape: <T> type
     = {
-        //  points is an object of type std::vector<point2d>,
+        //  point is a type defined as being always the same as
+        //  (i.e., an alias for) T
+        point_type: type == T;
+
+        //  points is an object of type std::vector<point_type>,
         //  defined as having an empty default value
         //  (type-scope objects are private by default)
-        points: std::vector<point2d> = ();
+        points: std::vector<point_type> = ();
 
         //  draw is a function taking 'this' and 'canvas' parameters
         //  and returning bool, defined as the following body
         //  (type-scope functions are public by default)
-        //      - this is as if 'this: shape', an object of type shape
-        //      - where is an object of type canvas
+        //
+        //  this is an object of type shape (as if written 'this: shape')
+        //
+        //  where is an object of type canvas
         draw: (this, where: canvas) -> bool
         = {
             //  pen is an object of deduced (omitted) type 'color',
@@ -52,20 +61,23 @@ n: namespace
 
         //  count is a function taking 'this' and returning a type
         //  deduced from its body, defined as a single-expression body
+        //  (equivalent to '= { return points.ssize(); }' but omitting
+        //  syntax where we're using the language defaults)
         count: (this) = points.ssize();
 
         //  ...
     }
 
-    //  color is an @enum type (see Note)
+    //  color is an @enum type (see Note) defined as having these enumerators
     color: @enum type = { red; green; blue; }
 
-    //  a constexpr function is defined with `==`
-    calc_next_year: (year: i32) -> i32 == { return year + 1; }
+    //  calc_next_year is a function defined as always returning the same
+    //  value for the same input (i.e., 'constexpr', side effect-free)
+    calc_next_year: (year: i32) -> i32 == year + 1;
 }
 ```
 
-> Note: `@enum` is a metafunction, which provides an easy way to opt into a group of defaults, constraints, and generated functions. For details, see [`@enum`, `@flag_enum`](metafunctions.md#enum-flag_enum)
+> Note: `@enum` is a metafunction, which provides an easy way to opt into a group of defaults, constraints, and generated functions. For details, see [`@enum`](metafunctions.md#enum).
 
 
 ## <a id="requires"></a> `requires` constraints
