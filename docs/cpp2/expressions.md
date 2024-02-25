@@ -212,11 +212,13 @@ For more examples, see also the examples in the previous two sections on `is` an
 
 ## <a id="captures"></a> `$` — captures, including interpolations
 
-Suffix `$` is pronounced **"paste the value"** and captures the value of an expression at the point when the expression where the capture is written is evaluated. Depending the complexity of the capture expression `expr$` and where it is used, parentheses `(expr)$` may be required for precedence or to show the boundaries of the expression.
+Suffix `$` is pronounced **"paste the value of"** and captures the value of an expression at the point when the expression where the capture is written is evaluated. Depending on the complexity of the capture expression `expr$` and where it is used, parentheses `(expr)$` may be required for precedence or to show the boundaries of the expression.
 
 `x$` always captures `x` by value. To capture by reference, take the address and capture a pointer using `x&$`. If the value is immediately used, dereference again; for example `:(val) total&$* += val` adds to the `total` local variable itself, not a copy.
 
-Any capture is evaluated at the point where it is written, in the function expression, contract postcondition, or string literal. The stored captured value can then be used later when the context it is in is evaluated, such as when the function expression body it's in is actually called later (one or more times), when the postcondition it's in is evaluated later when the function returns, or when the string literal it's in is read later.
+Captures are evaluated at the point where they are written in function expressions, contract postconditions, and string literals. The stored captured value can then be used later when evaluating its context, such as when the function expression body containing the captured value is actually called later (one or more times), when the postcondition containing the captured value is evaluated later when the function returns, or when the string literal containing the captured value is read later.
+
+The design and syntax are selected so that capture is spelled the same way in all contexts. For details, see [Design note: Capture](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Capture).
 
 
 ### <a id="function-captures"></a> Capture in function expressions (aka lambdas)
@@ -225,19 +227,44 @@ Any capture in a function expression body is evaluated at the point where the fu
 
 For example:
 
-``` cpp title="Capture in an unnamed function expression (aka lambda)" hl_lines="6"
+``` cpp title="Capture in an unnamed function expression (aka lambda)" hl_lines="7 8 13-18"
 main: () = {
-    s := "-sh\n";
+    s := "-ish\n";
     vec: std::vector = (1, 2, 3, 5, 8, 13 );
 
-    vec.std::ranges::for_each(
-        :(i) = { std::cout << i << s$; }
-           //  Paste the value of `s`
+    std::ranges::for_each(
+        vec,
+        :(i) = std::cout << i << s$
+        //  Function capture: Paste the value of 's'
     );
 }
+
+//  prints:
+//      1-ish
+//      2-ish
+//      3-ish
+//      5-ish
+//      8-ish
+//      13-ish
 ```
 
-The design and syntax are selected so that capture is spelled the same way in all contexts. For details, see [Design note: Capture](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Capture).
+Another example:
+
+``` cpp title="Capture in a named function expression (aka lambda)" hl_lines="2 4 7 12 13"
+main: () = {
+    price := 100;
+    func := :() = {
+        std::cout << "Price = " << price$ << "\n";
+    };
+    func();
+    price = 200;
+    func();
+}
+
+//  prints:
+//      Price = 100
+//      Price = 100
+```
 
 
 ### <a id="postcondition-captures"></a> Capture in contract postconditions
