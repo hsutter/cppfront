@@ -227,29 +227,30 @@ Any capture in a function expression body is evaluated at the point where the fu
 
 For example:
 
-``` cpp title="Capture in an unnamed function expression (aka lambda)" hl_lines="6 7"
+``` cpp title="Capture in an unnamed function expression (aka lambda)" hl_lines="7 8 13-18"
 main: () = {
-    s := "-sh\n";
+    s := "-ish\n";
     vec: std::vector = (1, 2, 3, 5, 8, 13 );
 
-    vec.std::ranges::for_each(
-        :(i) = { std::cout << i << s$; }
+    std::ranges::for_each(
+        vec,
+        :(i) = std::cout << i << s$
         //  Function capture: Paste local variable value
     );
 }
 
 //  prints:
-//      1-sh
-//      2-sh
-//      3-sh
-//      5-sh
-//      8-sh
-//      13-sh
+//      1-ish
+//      2-ish
+//      3-ish
+//      5-ish
+//      8-ish
+//      13-ish
 ```
 
 Another example:
 
-``` cpp title="Capture in a named function expression (aka lambda)" hl_lines="2 4 7"
+``` cpp title="Capture in a named function expression (aka lambda)" hl_lines="2 4 7 12 13"
 main: () = {
     price := 100;
     func := :() = {
