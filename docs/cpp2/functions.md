@@ -6,7 +6,7 @@
 TODO
 
 
-## Parameters
+## <a id="parameters"></a> Parameters
 
 There are six ways to pass parameters that cover all use cases:
 
@@ -23,12 +23,12 @@ There are six ways to pass parameters that cover all use cases:
 > Note: All parameters and other objects in Cpp2 are `#!cpp const` by default, except for local variables. For details, see [Design note: `#!cpp const` objects by default](https://github.com/hsutter/cppfront/wiki/Design-note%3A-const-objects-by-default).
 
 
-## Return values
+## <a id="return-values"></a> Return values
 
 TODO
 
 
-### Function outputs
+### <a id="nodiscard-outputs"></a> Function outputs are not implicitly discardable
 
 A function's outputs are its return values, and the "out" state of any `out` and `inout` parameters.
 
@@ -74,13 +74,13 @@ main: ()
 > - A function call written in Cpp2 `x.f()` member call syntax always treats a non-`#!cpp void` return type as not discardable, even if the function was written in Cpp1 syntax that did not write `[[nodiscard]]`.
 
 
-## Control flow
+## <a id="control flow"></a> Control flow
 
-## `#!cpp if`, `#!cpp else` — Branches
+## <a id="branches"></a> `#!cpp if`, `#!cpp else` — Branches
 
 TODO
 
-## `#!cpp for`, `#!cpp while`, `#!cpp do` — Loops
+## <a id="loops"></a> `#!cpp for`, `#!cpp while`, `#!cpp do` — Loops
 
 TODO
 
@@ -104,15 +104,15 @@ outer: while i<M next i++ {      // loop named "outer"
 }
 ```
 
-## Unnamed function expressions (aka lambdas)
+## <a id="function-expressions"></a> Unnamed function expressions (aka lambdas)
 
 TODO
 
-## Move/forward from last use
+## <a id="definite-last-use"></a> Move/forward from definite last use
 
 TODO
 
-## Generality: Unifying functions and local scopes
+## <a id="function-scope-unification"></a> Generality: Unifying functions and local scopes
 
 TODO
 

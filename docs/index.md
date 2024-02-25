@@ -7,7 +7,7 @@ main: () = {
 }
 ```
 
-## What is Cpp2?
+## <a id="what-is-cpp2"></a> What is Cpp2?
 
 "Cpp2," short for "C++ syntax 2," is my ([Herb Sutter's](https://github.com/hsutter)) personal project to try to make writing ordinary C++ types/functions/objects be much **simpler and safer**, without breaking backward compatibility. Bjarne Stroustrup said it best:
 
@@ -28,14 +28,14 @@ We can't make an improvement that large to C++ via gradual evolution to today's 
 **What it is.** Cpp2 aims to be another "skin" for C++ itself, just a simpler and safer way to write ordinary C++ types/functions/objects. It seamlessly uses Standard C++ modules and concepts requirements and other features, and it works with all existing C++20 or higher compilers and tools right out of the box with zero overhead.
 
 
-## What is cppfront?
+## <a id="what-is-cppfront"></a> What is cppfront?
 
 [**Cppfront**](https://github.com/hsutter/cppfront) is a compiler that compiles Cpp2 syntax to today's Cpp1 syntax. This lets you start trying out Cpp2 syntax in any existing C++ project and build system just by renaming a source file from `.cpp` to `.cpp2` and [adding a build step](#adding-cppfront-in-your-ide-build-system), and the result Just Works with every C++20 or higher compiler and all existing C++ tools (debuggers, build systems, sanitizers, etc.).
 
 This deliberately follows Bjarne Stroustrup's wise approach with [**cfront**](https://en.wikipedia.org/wiki/Cfront), the original C++ compiler: In the 1980s and 1990s, Stroustrup created cfront to translate C++ to pure C, and similarly ensured that C++ could be interleaved with C in the same source file, and that C++ could always call any C code with no wrapping/marshaling/thunking. By providing a C++ compiler that emitted pure C, Stroustrup ensured full compatibility with the C ecosystems that already existed, and made it easy for people to start trying out C++ code in any existing C project by adding just another build step to translate the C++ to C first, and the result Just Worked with existing C tools.
 
 
-## How do I get and build cppfront?
+## <a id="build-cppfront"></a> How do I get and build cppfront?
 
 The full source code for cppfront is at the [**Cppfront GitHub repo**](https://github.com/hsutter/cppfront).
 

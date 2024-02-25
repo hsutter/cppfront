@@ -10,7 +10,7 @@ That's it... The result Just Works with every C++20 or higher compiler and all e
 
 The following uses Visual Studio as an example, but others have done the same in Xcode, Qt Creator, CMake, and other IDEs.
 
-## 1. Add the `.cpp2` file to the project, and ensure the `.cpp` is in C++20 mode
+## <a id="add-cpp2"></a> 1. Add the `.cpp2` file to the project, and ensure the `.cpp` is in C++20 mode
 
 For Visual Studio: In the Solution Explorer, right-click on Source Files and pick Add to add the file to the project.
 
@@ -21,7 +21,7 @@ Also in Solution Explorer, right-click on the `.cpp` file Properties and make su
 <p align="center"><img width="600" src="https://github.com/hsutter/cppfront/assets/1801526/f7a25778-5056-41b3-a6e3-3034bf0587fd"></p>
 
 
-## 2. Tell the project system to build that file using a custom build tool to invoke cppfront, and add `cppfront/include` to the include path
+## <a id="add-build-step"></a> 2. Tell the project system to build that file using a custom build tool to invoke cppfront, and add `cppfront/include` to the include path
 
 For Visual Studio: In Solution Explorer, right-click on the `.cpp2` file and select Properties, and add the custom build tool. Remember to also tell it that the custom build tool produces the `.cpp` file, so that it knows about the build dependency:
 
@@ -31,7 +31,8 @@ Finally, put the `/cppfront/include` directory on your `INCLUDE` path. In Soluti
 
 <p align="center"><img width="600" src="https://github.com/hsutter/cppfront/assets/1801526/866fc2b8-bfca-4568-823b-f0fecfae27f5"></p>
 
-## That's it: Error message outputs, debuggers, visualizers, and other tools should just work
+
+## <a id="it-just-works"></a> That's it: Error message outputs, debuggers, visualizers, and other tools should just work
 
 That's enough to enable builds, and the IDE just picks up the rest from the `.cpp` file that cppfront generated:
 

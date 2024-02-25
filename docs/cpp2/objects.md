@@ -6,7 +6,7 @@ Its declaration is written using the same **name `:` kind `=` value** [declarati
 
 - **name** starts with a letter and is followed by other letters, digits, or `_`. Examples: `count`, `skat_game`, `Point2D` are valid names.
 
-- **kind** is the object's type. In most places, except type scopes, you can write the `_` wildcard as the type (or omit the type entirely) to ask for the type to be deduced. When the type is a template, the templated arguments can be inferred from the constructor (via [CTAD](../welcome/hello-world.md#CTAD)).
+- **kind** is the object's type. In most places, except type scopes, you can write the `_` wildcard as the type (or omit the type entirely) to ask for the type to be deduced. When the type is a template, the templated arguments can be inferred from the constructor (via [CTAD](../welcome/hello-world.md#ctad)).
 
 - **value** is the object's initial value. To use the default-constructed value, write `()`.
 
@@ -26,7 +26,7 @@ count := -1;        // same, deducing the object's type by just omitting it
 ```
 
 
-## <a id="Init"></a> Guaranteed initialization
+## <a id="init"></a> Guaranteed initialization
 
 Every object must be initialized using `=` before it is used.
 
@@ -95,7 +95,7 @@ load_from_disk: (out buffer) = {
 In the above example, note the simple rule for branches: The local variable must be initialized on both the `#!cpp if` and `#!cpp else` branches, or neither branch.
 
 
-## Heap objects
+## <a id="heap"></a>Heap objects
 
 Objects can also be allocated on the heap using `#!cpp arena.new <T> (/*initializer, arguments*/)` where `arena` is any object that acts as a memory arena and provides a `#!cpp .new` function template. Two memory arena objects are provided in namespace `cpp2`:
 

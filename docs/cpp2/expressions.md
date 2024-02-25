@@ -1,7 +1,7 @@
 
 # Common expressions
 
-## Calling functions: `f(x)` syntax, and `x.f()` UFCS syntax
+## <a id="ufcs"></a> Calling functions: `f(x)` syntax, and `x.f()` UFCS syntax
 
 A function call like `f(x)` is a normal function call that will call non-member functions only, as usual in C++.
 
@@ -41,13 +41,13 @@ To explicitly treat an object name passed as an argument as `move` or `out`, wri
 
 - Explicit `move` is rarely needed. Every definite last use of a local variable will apply `move` by default. Writing `move` from an object before its definite last use means that later uses may see a moved-from state.
 
-- Explicit `out` is needed only when initializing a local variable separately from its declaration using a call to a function with an `out` parameter. For details, see [Guaranteed initialization](../cpp2/objects.md#Init).
+- Explicit `out` is needed only when initializing a local variable separately from its declaration using a call to a function with an `out` parameter. For details, see [Guaranteed initialization](../cpp2/objects.md#init).
 
 For example:
 
 
 
-## `_` — the "don't care" wildcard, including explicit discard
+## <a id="wildcard"></a> `_` — the "don't care" wildcard, including explicit discard
 
 `_` is pronounced **"don't care"** and allowed as a wildcard in most contexts. For example:
 
@@ -84,7 +84,7 @@ _ = vec.emplace_back(1,2,3);
 For details, see [Design note: Explicit discard](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Explicit-discard). In Cpp2, data is always initialized, data is never silently lost, data flow is always visible. Data is precious, and it's always safe.
 
 
-## `is` — safe type/value queries
+## <a id="is"></a> `is` — safe type/value queries
 
 An `x is C` expression allows safe type and value queries, and evaluates to `#!cpp true` if `x` matches constraint `C`. It supports both static and dynamic queries, including customization, with support for standard library dynamic types like `std::variant`, `std::optional`, `std::expected`, and `std::any` provided out of the box.
 
@@ -132,7 +132,7 @@ Here are some `is` queries with their Cpp1 equivalents. In this table, uppercase
 > Note: `is` unifies a variety of differently-named Cpp1 language and library queries under one syntax, and supports only the type-safe ones.
 
 
-## `as` — safe casts and conversions
+## <a id="as"></a> `as` — safe casts and conversions
 
 An `x as T` expression allows safe type casts. `x` must be an object or expression, and `T` must be a type. Like `is`, `as` supports both static and dynamic typing, including customization, with support for standard library dynamic types like `std::variant`, `std::optional`, `std::expected`, and `std::any` provided out of the box. For example:
 
@@ -169,7 +169,7 @@ Here are some `as` casts with their Cpp1 equivalents. In this table, uppercase n
 > Note: `as` unifies a variety of differently-named Cpp1 language and library casts and conversions under one syntax, and supports only the type-safe ones.
 
 
-## `inspect` — pattern matching
+## <a id="inspect"></a> `inspect` — pattern matching
 
 An `inspect expr -> Type` expression allows pattern matching using `is`.
 
@@ -210,7 +210,7 @@ test(42);
 For more examples, see also the examples in the previous two sections on `is` and `as`, many of which use `inspect`.
 
 
-## `$` — captures, including interpolations
+## <a id="captures"></a> `$` — captures, including interpolations
 
 Suffix `$` is pronounced **"paste the value of"** and captures the value of an expression at the point when the expression where the capture is written is evaluated. Depending on the complexity of the capture expression `expr$` and where it is used, parentheses `(expr)$` may be required for precedence or to show the boundaries of the expression.
 
@@ -221,7 +221,7 @@ Captures are evaluated at the point where they are written in function expressio
 The design and syntax are selected so that capture is spelled the same way in all contexts. For details, see [Design note: Capture](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Capture).
 
 
-### Capture in function expressions (aka lambdas)
+### <a id="function-captures"></a> Capture in function expressions (aka lambdas)
 
 Any capture in a function expression body is evaluated at the point where the function expression is written, at the declaration of the function expression. The function expression itself is then evaluated each time the function is invoked, and can reference the captured value.
 
@@ -235,7 +235,7 @@ main: () = {
     std::ranges::for_each(
         vec,
         :(i) = std::cout << i << s$
-        //  Function capture: Paste local variable value
+        //  Function capture: Paste the value of 's'
     );
 }
 
@@ -267,40 +267,41 @@ main: () = {
 ```
 
 
-### Capture in contract postconditions
+### <a id="postcondition-captures"></a> Capture in contract postconditions
 
 Any capture in a postcondition is evaluated at the point where the postcondition is written, at the beginning (entry) of the function. The postcondition itself is then evaluated when the function returns, and can reference the captured value.
 
 For example:
 
-``` cpp title="Capture in contract postconditions" hl_lines="2 3"
+``` cpp title="Capture in contract postconditions" hl_lines="2"
 push_back: (coll, value)
     [[post: coll.ssize() == coll.ssize()$ + 1]]
-        //  Postcondition capture: Paste  "old" size
+    //  Paste the value of `coll.ssize()`
 = {
     // ...
 }
 ```
 
 
-### Capture in string interpolation
+### <a id="interpolation"></a> Capture in string interpolation
 
-A string literal can capture the value of an expression `expr` by writing `(expr)$` inside the string literal. The `(` `)` are required, and cannot be nested.
+A string literal can capture the value of an expression `expr` by writing `(expr)$` inside the string literal. The `(` `)` are required, and cannot be nested. A string literal has type `std::string` if it performs any captures, otherwise it is a normal C/C++ string literal (array of characters).
 
 Any capture in a string literal is evaluated at the point where the string literal is written. The string literal can be used repeatedly later, and includes the captured value.
 
 For example:
 
-``` cpp title="Capture for string interpolation" hl_lines="2 4"
+``` cpp title="Capture for string interpolation" hl_lines="2 5"
 x := 0;
 std::cout << "x is (x)$\n";
+        // Paste the value of `x`
 x = 1;
 std::cout << "now x+2 is (x+2)$\n";
+        // Paste the value of `x+2`
 
 //  prints:
 //      x is 0
 //      now x+2 is 3
 ```
 
-A string literal has type `std::string` if it performs any captures, otherwise it is a normal C/C++ string literal (array of characters).
-
+A string literal capture can include a `:suffix` where the suffix is a [standard C++ format specification](https://en.cppreference.com/w/cpp/utility/format/spec). For example, `#!cpp (x.price(): <10.2f)$` evaluates `x.price()` and converts the result to a string with 10-character width, 2 digits of precision, and left-justified.

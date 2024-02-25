@@ -1,6 +1,6 @@
 # Common programming concepts
 
-## `main`
+## <a id="main"></a> `main`
 
 As always, `main` is the entry point of the program. For example:
 
@@ -39,7 +39,7 @@ main: (args) -> int
 - Some other type that your Cpp1 compiler(s) supports as a nonstandard extension.
 
 
-## Comments
+## <a id="comments"></a> Comments
 
 The usual `#!cpp // line comments` and `#!cpp /* stream comments */` are supported. For example:
 
@@ -55,7 +55,7 @@ The usual `#!cpp // line comments` and `#!cpp /* stream comments */` are support
 ```
 
 
-## Reserved keywords
+## <a id="keywords"></a> Reserved keywords
 
 Cpp2 has very few globally reserved keywords; nearly all keywords are contextual, where they have their special meaning when they appear in a particular place in the grammar. For example:
 
@@ -68,7 +68,7 @@ Cpp2 has very few globally reserved keywords; nearly all keywords are contextual
 In rare cases, usually when consuming code written in other languages, you may need to write a name that is a reserved keyword. The way to do that is to prefix it with `__identifer__`, which treats it as an ordinary identifier (without the prefix).
 
 
-## Fundamental data types
+## <a id="fundamental-types"></a> Fundamental data types
 
 Cpp2 supports the same fundamental types as today's Cpp1, but additionally provides the following aliases in namespace `cpp2`:
 
@@ -97,7 +97,7 @@ Cpp2 supports the same fundamental types as today's Cpp1, but additionally provi
 | `_schar`     | `#!cpp signed char`   | Normally, prefer `i8` instead |
 | `_uchar`     | `#!cpp unsigned char` | Normally, prefer `u8` instead |
 
-## Type qualifiers
+## <a id="type-qualifiers"></a> Type qualifiers
 
 Types can be qualified with `#!cpp const` and `#!cpp *`. Types are written left-to-right, so a qualifier always applies to what immediately follows it. For example, to declare a `#!cpp const` pointer to a non-`#!cpp const` pointer to a `#!cpp const i32` object, write:
 
@@ -106,7 +106,7 @@ Types can be qualified with `#!cpp const` and `#!cpp *`. Types are written left-
 p: const * * const i32;
 ```
 
-## Literals
+## <a id="literals"></a> Literals
 
 Cpp2 supports the same `#!cpp 'c'`haracter, `#!cpp "string"`, binary, integer, and floating point literals as Cpp1, including most Unicode encoding prefixes and raw string literals.
 
@@ -118,11 +118,11 @@ Cpp2 supports using Cpp1 user-defined literals for compatibility, to support sea
 
 Both **`123.nm()`** and **`123.u8()`** are very similar to user-defined literal syntax, and more general.
 
-## Operators
+## <a id="operators"></a> Operators
 
 Operators have the same precedence and associativity as in Cpp1, but some unary operators that are prefix (always or sometimes) in Cpp1 are postfix (always) in Cpp2.
 
-### Unary operators
+### <a id="unary-operators"></a> Unary operators
 
 The operators `!`, `+`, and `-` are prefix, as in Cpp1. For example:
 
@@ -178,7 +178,7 @@ Unary suffix operators must not be preceded by whitespace. When `*`, `&`, and `~
 For more details, see [Design note: Postfix unary operators vs binary operators](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Postfix-unary-operators-vs-binary-operators).
 
 
-### Binary operators
+### <a id="binary-operators"></a> Binary operators
 
 Binary operators are the same as in Cpp1. From highest to lowest precedence:
 
