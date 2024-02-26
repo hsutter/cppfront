@@ -3,7 +3,7 @@
 
 ## Overview
 
-A function is defined by writing a function signature after the `:` and a statement (expression or `{` `}` compound statement) after the `=`. After the optional [template parameters](declarations.md#template-parameters) available for all declarations, a function signatures consists of a possibly-empty [parameter list](#parameters), and an optional function [return values](#return-values).
+A function is defined by writing a function signature after the `:` and a statement (expression or `{` `}` compound statement) after the `=`. After the optional [template parameters](declarations.md#template-parameters) available for all declarations, a function signature consists of a possibly-empty [parameter list](#parameters), and one or more optional [return values](#return-values).
 
 For example, the minimal function named `func` that takes no parameters and returns nothing (`#!cpp void`) is:
 
@@ -14,7 +14,7 @@ func: ( /* no parameters */ ) = { /* empty body */ }
 
 ## <a id="parameters"></a> Parameters
 
-The parameter list is enclosed by `(` `)` parentheses, and the parameters separated by commas. Each parameter is declared using the [same syntax as any object](declarations.md). For example:
+The parameter list is enclosed by `(` `)` parentheses and the parameters are separated by commas. Each parameter is declared using the [same unified syntax](declarations.md) as used for all declarations. For example:
 
 ``` cpp title="Declaring parameters" hl_lines="2-4"
 func: (
@@ -67,7 +67,30 @@ add: (a, b) -> _ = a+b;
 
 (2) **`#!cpp -> ( /* parameter list */ )`** to return a list of named return parameters using the same [parameters](#parameters) syntax, but where the only passing styles are `out` (the default, which moves where possible) or `forward`. The function body must [initialize](objects.md#init) the value of each return-parameter `ret` in its body the same way as any other local variable. An explicit return statement is written just `#!cpp return;` and returns the named values; the function has an implicit `#!cpp return;` at the end. For example:
 
-``` cpp title="Functions with multiple/named return values" hl_lines="7 9 10 22-24"
+``` cpp title="Function with multiple/named return values" hl_lines="1 3-4 7-8 13-14 17-18"
+divide: (dividend: int, divisor: int) -> (quotient: int, remainder: int) = {
+    if divisor == 0 {
+        quotient = 0;
+        remainder = 0;
+    }
+    else {
+        quotient = dividend / divisor;
+        remainder = dividend % divisor;
+    }
+}
+
+main: () -> int = {
+    div:= divide(11, 5);
+    std::cout << div.quotient << ", " << div.remainder << "\n";
+    return 0;
+}
+//  Prints:
+//     2, 1
+```
+
+This next example declares a [member function](types.md#this-parameter) with multiple return values in a [type](types.md) named `set`:
+
+``` cpp title="Member function with multiple/named return values" hl_lines="7 9 10 22-24"
 set: <Key> type = {
     container: std::set<Key>;
     iterator : type == std::set<Key>::iterator;
