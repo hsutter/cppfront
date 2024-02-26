@@ -268,7 +268,7 @@ test: (x: item, y: item) = {
 }
 ```
 
-The above is the same as in Cpp1 because most of Cpp2's `#!cpp operator<=>` feature has already been merged into ISO C++ (Cpp1). In additiona, in Cpp2 comparisons with the same precedence can be safely chained, and always have the mathematically sound transitive meaning or else are rejected at compile time:
+The above is the same as in Cpp1 because most of Cpp2's `#!cpp operator<=>` feature has already been merged into ISO C++ (Cpp1). In addition, in Cpp2 comparisons with the same precedence can be safely chained, and always have the mathematically sound transitive meaning or else are rejected at compile time:
 
 - **Valid chains: All `<`/`<=`, all `>`/`>=`, or all `==`.** All mathematically sound and safe chains like `a <= b < c` are supported, with efficient single evaluation of each term. They are "sound" because they are transitive; these chains imply a relationship between `a` and `c` (in this case, the chain implies that `a <= c` is also true).
 

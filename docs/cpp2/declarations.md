@@ -6,6 +6,8 @@ All Cpp2 declarations are written as **"_name_ `:` _kind_ `=` _statement_"**.
 
 - The `:` is pronounced **"is a."**
 
+- The _kind_ can start with [template parameters](#template-parameters).
+
 - The `=` is pronounced **"defined as."** For the definition of something that will always have the same value, write `==`.
 
 - The _statement_ is typically an expression statement (e.g., `#!cpp a + b();`) or a compound statement (e.g., `#!cpp { /*...*/ return c(d) / e; }`).
@@ -17,6 +19,23 @@ All Cpp2 declarations are written as **"_name_ `:` _kind_ `=` _statement_"**.
 > - When the type is omitted, whitespace does not matter, and writing `#!cpp x: = 0;` or `#!cpp x : = 0;` or `#!cpp x := 0;` or other whitespace is just a stylistic choice. This documentation's style uses the last one, except when there are multiple adjacent declaration lines this style lines up their `:` and `=`.
 >
 > - `==` stresses that this name will always have the given value, to express [aliases](./aliases.md) and side-effect-free 'constexpr' functions (e.g., `#!cpp square: (i: int) == i * i;`).
+
+
+## <a id="template-parameters"></a> Template parameters
+
+A template parameter list is enclosed by `<` `>` angle brackets, and the parameters separated by commas. Each parameter is declared using the [same syntax as any type or object](declarations.md). If a parameter's **`:`** ***kind*** is not specified, the default is `: type`.
+
+For example:
+
+``` cpp title="Declaring template parameters" hl_lines="1-3"
+array: <T: type, size: i32> type
+    // parameter T is a type
+    // parameter size is a 32-bit int
+= {
+    // ...
+}
+```
+
 
 ## Examples
 

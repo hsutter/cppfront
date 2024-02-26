@@ -9,7 +9,7 @@ main: () = {
 
 ## <a id="what-is-cpp2"></a> What is Cpp2?
 
-"Cpp2", short for "C++ syntax 2", is my ([Herb Sutter's](https://github.com/hsutter)) personal project to try to make writing ordinary C++ types/functions/objects be much **simpler and safer**, without breaking backward compatibility. Bjarne Stroustrup said it best:
+"Cpp2," short for "C++ syntax 2," is my ([Herb Sutter's](https://github.com/hsutter)) personal project to try to make writing ordinary C++ types/functions/objects be much **simpler and safer**, without breaking backward compatibility. Bjarne Stroustrup said it best:
 
 > "Inside C++, there is a much smaller and cleaner language struggling to get out." <br>&emsp;&emsp;— Bjarne Stroustrup, _The Design and Evolution of C++_ (D&E), 1994
 >

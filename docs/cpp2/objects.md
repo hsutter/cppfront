@@ -13,7 +13,7 @@ Its declaration is written using the same **name `:` kind `=` value** [declarati
 
 For example:
 
-``` cpp title="Declaring some objects"
+``` cpp title="Declaring some objects" hl_lines="3 4 7-9 12 13"
 //  numbers is an object of type std::vector<point2d>,
 //  defined as having the initial contents 1, 2, 3
 numbers: std::vector<int> = (1, 2, 3);
@@ -23,6 +23,10 @@ numbers: std::vector = (1, 2, 3);       // same, deducing the vector's type
 count: int = -1;
 count: _ = -1;      // same, deducing the object's type with the _ wildcard
 count := -1;        // same, deducing the object's type by just omitting it
+
+//  pi is a variable template; == signifies the value never changes (constexpr)
+pi: <T: type> T == 3.14159'26535'89793'23846L;
+pi: _ == 3.14159'26535'89793'23846L;    // same, deducing the object's type
 ```
 
 

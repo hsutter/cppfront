@@ -3,10 +3,29 @@
 
 ## Overview
 
-TODO
+A function is defined by writing a function signature after the `:` and a statement (expression or `{` `}` compound statement) after the `=`. After the optional [template parameters](declarations.md#template-parameters) available for all declarations, a function signatures consists of a possibly-empty [parameter list](#parameters), and an optional function [return values](#return-values).
+
+For example, the minimal function named `func` that takes no parameters and returns nothing (`#!cpp void`) is:
+
+``` cpp title="A minimal function"
+func: ( /* no parameters */ ) = { /* empty body */ }
+```
 
 
 ## <a id="parameters"></a> Parameters
+
+The parameter list is enclosed by `(` `)` parentheses, and the parameters separated by commas. Each parameter is declared using the [same syntax as any object](declarations.md). For example:
+
+``` cpp title="Declaring parameters" hl_lines="2-4"
+func: (
+    x: i32,                         // parameter x is a 32-bit int
+    y: std::string,                 // parameter y is a std::string
+    z: std::map<i32, std::string>   // parameter z is a std::map
+    )
+= {
+    // ...
+}
+```
 
 There are six ways to pass parameters that cover all use cases:
 
@@ -25,7 +44,58 @@ There are six ways to pass parameters that cover all use cases:
 
 ## <a id="return-values"></a> Return values
 
-TODO
+A function can return either of the following. The default is `#!cpp -> void`.
+
+(1) **`#!cpp -> X`** to return a single unnamed value of type `X`, which can be  `#!cpp void` to signify the function has no return value. If `X` is not `#!cpp void`, the function body must have a `#!cpp return /*value*/;` statement that returns a value of type `X` on every path that exits the function. For example:
+
+``` cpp title="Functions with an unnamed return value" hl_lines="2 4 7 9 12 14"
+//  A function returning no value (void)
+increment_in_place: (inout a: i32) -> void = { a++; }
+//  Or, using syntactic defaults, the following has identical meaning:
+increment_in_place: (inout a: i32) = a++;
+
+//  A function returning a single value of type i32
+add_one: (a: i32) -> i32 = { return a+1; }
+//  Or, using syntactic defaults, the following has identical meaning:
+add_one: (a: i32) -> i32 = a+1;
+
+//  A generic function returning a single value of deduced type
+add: <T: type, U: type> (a:T, b:U) -> decltype(a+b) = { return a+b; }
+//  Or, using syntactic defaults, the following has identical meaning:
+add: (a, b) -> _ = a+b;
+```
+
+(2) **`#!cpp -> ( /* parameter list */ )`** to return a list of named return parameters using the same [parameters](#parameters) syntax, but where the only passing styles are `out` (the default, which moves where possible) or `forward`. The function body must [initialize](objects.md#init) the value of each return-parameter `ret` in its body the same way as any other local variable. An explicit return statement is written just `#!cpp return;` and returns the named values; the function has an implicit `#!cpp return;` at the end. For example:
+
+``` cpp title="Functions with multiple/named return values" hl_lines="7 9 10 22-24"
+set: <Key> type = {
+    container: std::set<Key>;
+    iterator : type == std::set<Key>::iterator;
+
+    //  A std::set::insert-like function using named return values
+    //  instead of just a std::pair/tuple
+    insert: (inout this, value: Key) -> (where: iterator, inserted: bool) = {
+        set_returned := container.insert(value);
+        where    = set_returned.first;
+        inserted = set_returned.second;
+    }
+
+    ssize: (this) -> i64 = std::ssize(container);
+
+    // ...
+}
+
+use_inserted_position: (_) = { }
+
+main: () = {
+    m: set<std::string> = ();
+    ret := m.insert("xyzzy");
+    if ret.inserted {
+        use_inserted_position( ret.where );
+    }
+    assert( m.ssize() == 1 );
+}
+```
 
 
 ### <a id="nodiscard-outputs"></a> Function outputs are not implicitly discardable
@@ -34,7 +104,7 @@ A function's outputs are its return values, and the "out" state of any `out` and
 
 Function outputs cannot be silently discarded. To explicitly discard a function output, assign it to `_`. For example:
 
-``` cpp title="No silent discard" hl_lines="10 11 22 27"
+``` cpp title="No silent discard" hl_lines="9 11 13 17-18 23-24 29-30"
 f: ()             -> void = { }
 g: ()             -> int  = { return 10; }
 h: (inout x: int) -> void = { x = 20; }
@@ -44,7 +114,9 @@ main: ()
     f();                    // ok, no return value
 
     std::cout << g();       // ok, use return value
+
     _ = g();                // ok, explicitly discard return value
+
     g();                    // ERROR, return value is ignored
 
     {
@@ -78,15 +150,87 @@ main: ()
 
 ## <a id="branches"></a> `#!cpp if`, `#!cpp else` — Branches
 
-TODO
+`if` and `else` are like always in C++, except that `(` `)` parentheses around the condition are not required. Instead, `{` `}` braces around a branch body *are* required. For example:
+
+``` cpp title="Using if and else" hl_lines="1 4"
+if vec.ssize() > 100 {
+    do_general_algorithm( container );
+}
+else {
+    do_linear_scan( vec );
+}
+```
+
 
 ## <a id="loops"></a> `#!cpp for`, `#!cpp while`, `#!cpp do` — Loops
 
-TODO
+**`#!cpp do`** and **`#!cpp while`** are like always in C++, except that `(` `)` parentheses around the condition are not required. Instead, `{` `}` braces around the loop body *are* required.
+
+**`#!cpp for range do (e)`** ***statement*** says "for each element in `range`, call it `e` and perform the statement." The loop parameter `(e)` is an ordinary parameter that can be passed isoing any [parameter passing style](#parameters); as always, the default is `in`, which is read-only and expresses a read-only loop. The statement is not required to be enclosed in braces.
+
+Every loop can have a `next` clause, that is performed at the end of each loop body execution. This makes it easy to have a counter for any loop, including a range `#!cpp for` loop.
+
+> Note: Whitespace is just a stylistic choice. This documentation's style generally puts each keyword on its own line and lines up what follows.
+
+For example:
+
+``` cpp title="Using loops" hl_lines="4 5 13 16 17 22-24"
+words: std::vector<std::string> = ("Adam", "Betty");
+i := 0;
+
+while i < words.ssize() // while this condition is true
+next  i++               // and increment i after each loop body is run
+{                       // do this loop body
+    std::cout << "word: (words[i])$\n";
+}
+//  prints:
+//      word: Adam
+//      word: Betty
+
+do {                    // do this loop body
+    std::cout << "**\n";
+}
+next  i--               // and decrement i after each loop body is run
+while i > 0;            // while this condition is true
+//  prints:
+//      **
+//      **
+
+for  words              // for each element in 'words'
+next i++                // and increment i after each loop body is run
+do   (inout word)       // declare via 'inout' the loop can change the contents
+{                       // do this loop body
+    word = "[" + word + "]";
+    std::cout << "counter: (i)$, word: (word)$\n";
+}
+//  prints:
+//      counter: 0, word: [Adam]
+//      counter: 1, word: [Betty]
+```
+
+There is no special "select" or "where" to perform the loop body for only a subset of matches, because this can naturally be expressed with `if`. For example:
+
+``` cpp title="Using loops + if" hl_lines="7"
+//  Continuing the previous example
+i = 0;
+
+for  words
+next i++
+do   (word)
+if   i % 2 == 1         // if i is odd
+{                       // do this loop body
+    std::cout << "counter: (i)$, word: (word)$\n";
+}
+//  prints:
+//      counter: 1, word: [Betty]
+```
+
+
+### Loop names, `#!cpp break`, and `#!cpp continue`
 
 Loops can be named using the usual **name `:`** syntax that introduces all names, and `#!cpp break` and `#!cpp continue` can refer to those names. For example:
 
-``` cpp title="Using named break and continue" hl_lines="6 10"
+``` cpp title="Using named break and continue" hl_lines="1 3 6 10"
 outer: while i<M next i++ {      // loop named "outer"
     // ...
     inner: while j<N next j++ {  // loop named "inner"
