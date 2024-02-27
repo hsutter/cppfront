@@ -120,7 +120,7 @@ All value operations are spelled `#!cpp operator=`, including construction, assi
 
 Unifying `#!cpp operator=` enables usable `out` parameters, which is essential for composable guaranteed initialization. We want the expression syntax `#!cpp x = value` to be able to call a constructor or an assignment operator, so naming them both `#!cpp operator=` is consistent.
 
-TODO Return type of assignment operator?
+An assignment operator always returns the same type as `#!cpp this` and automatically performs `#!cpp return this;`.
 
 > Note: Writing `=` always invokes an `#!cpp operator=` (in fact for a Cpp2-authored type, and semantically for a Cpp1-authored type). This avoids the Cpp1 inconsistency that "writing `=` calls `#!cpp operator=`, except when it doesn't" (such as in a Cpp1 variable initialization). Conversely, `#!cpp operator=` is always invoked by `=` in Cpp2.
 
@@ -188,7 +188,7 @@ In a hand-written `#!cpp operator=`:
 
 - If the body does not mention a member in the appropriate place in the beginning section, by default the member's default initializer is used.
 
-- In an assignment operator (`#!cpp inout this`), you can explicitly skip setting a member by writing `member = _;` where it would normally be set if you know you have a reason to set its value later instead or if the existing value needs to be preserved.
+- In an assignment operator (`#!cpp inout this`), you can explicitly skip setting a member by writing `member = _;` where it would normally be set if you know you have a reason to set its value later instead or if the existing value needs to be preserved. (This is rare; for an example, see the generated implementation of the [`union` metafunction](metafunctions.md#union).)
 
 For example:
 
@@ -235,8 +235,6 @@ main: () = {
 ```
 
 > Note: This makes memberwise semantics symmetric for construction and assignment. In Cpp1, only non-copy/move constructors have a default, which is to initialize a member with its default initializer. In Cpp2, both constructors and assignment operators default to using the default initializer if it's a conversion function (non-`that`, aka non-copy/move), and using memberwise `member = that.member;` for copy/move functions.
-
-TODO: include an example of using `member = _;`
 
 
 ## <a id="comparisons"></a> `#!cpp operator<=>` — Unified comparisons

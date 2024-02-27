@@ -139,7 +139,7 @@ file_attributes: @flag_enum<u8> type = {
 
 `@union` declaratively opts into writing a safe discriminated union/variant dynamic type. For example:
 
-``` cpp title="Using the @union metafunction when writing a type" hl_lines="9"
+``` cpp title="Using the @union metafunction when writing a type" hl_lines="10 18-20 25 26"
 // name_or_number is declaratively a safe union/variant type:
 // it has a discriminant that enforces only one alternative
 // can be active at a time, members always have a name, and
