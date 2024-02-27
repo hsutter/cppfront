@@ -67,22 +67,21 @@ add: (a, b) -> _ = a+b;
 
 (2) **`#!cpp -> ( /* parameter list */ )`** to return a list of named return parameters using the same [parameters](#parameters) syntax, but where the only passing styles are `out` (the default, which moves where possible) or `forward`. The function body must [initialize](objects.md#init) the value of each return-parameter `ret` in its body the same way as any other local variable. An explicit return statement is written just `#!cpp return;` and returns the named values; the function has an implicit `#!cpp return;` at the end. For example:
 
-``` cpp title="Function with multiple/named return values" hl_lines="1 3-4 7-8 13-14 17-18"
+``` cpp title="Function with multiple/named return values" hl_lines="1 3-4 7-8 14 16-17"
 divide: (dividend: int, divisor: int) -> (quotient: int, remainder: int) = {
     if divisor == 0 {
-        quotient = 0;
-        remainder = 0;
+        quotient  = 0;                      // constructs quotient
+        remainder = 0;                      // constructs remainder
     }
     else {
-        quotient = dividend / divisor;
-        remainder = dividend % divisor;
+        quotient = dividend / divisor;      // constructs quotient
+        remainder = dividend % divisor;     // constructs remainder
     }
 }
 
-main: () -> int = {
-    div:= divide(11, 5);
-    std::cout << div.quotient << ", " << div.remainder << "\n";
-    return 0;
+main: () = {
+    div := divide(11, 5);
+    std::cout << "(div.quotient)$, (div.remainder)$\n";
 }
 //  Prints:
 //     2, 1
