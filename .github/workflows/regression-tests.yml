@@ -24,6 +24,8 @@ jobs:
         include:
           - os: ubuntu-20.04
             compiler: clang++-12
+          - os: macos-14
+            compiler: clang++
           - os: macos-13
             compiler: clang++
           - os: macos-13
@@ -41,7 +43,7 @@ jobs:
         sudo ln -s "$(brew --prefix llvm@15)/bin/clang" /usr/local/bin/clang++-15
 
     - name: Run regression tests - Linux and macOS version
-      if: startsWith(matrix.os, 'ubuntu') || matrix.os == 'macos-13'
+      if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
       run: |
         cd regression-tests
         bash run-tests.sh -c ${{ matrix.compiler }} -l ${{ matrix.os }}
