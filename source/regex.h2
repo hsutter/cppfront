@@ -12,16 +12,6 @@
 
 #include <map>
 
-template<bool do_pop, typename Modifier>
-inline decltype(auto) pop_mod (Modifier& modifier) {
-    if constexpr (do_pop) {
-        return Modifier::pop();
-    }
-    else {
-        return modifier;
-    }
-}
-
 cpp2: namespace = {
 
 regex: namespace = {
@@ -39,7 +29,9 @@ bstring: <CharT> type == std::basic_string<CharT>;
 //
 
 expression_flags: type = {
-    case_insensitive : int == 1;
+    case_insensitive : int == 1;  // mod: i
+    multiple_lines: int    == 2;  // mod: m
+    single_line: int       == 4;  // mod: s
 }
 
 match_group: @struct <Iter> type = {
@@ -125,7 +117,7 @@ match_context: <CharT, Iter, max_groups: int, max_alternatives: int> type =
 match_modifiers_state_change: <has_change_: bool, reset_: bool, add_: int, remove_: int, str: fixed_string> type = {
 
     reset: bool == reset_;
-    add: bool == add_;
+    add: int == add_;
     remove: int == remove_;
     has_change: bool == has_change_;
 
@@ -394,9 +386,12 @@ alternative_matcher_logic: <CharT, alternative: size_t, List ...> type = {
 any_matcher_logic: <CharT> type =
 {
     match: <Other> (cur, inout ctx, modifiers, _ : Other) -> _ = {
-        if cur != ctx.end {
+        if cur != ctx.end &&
+          (modifiers.has_flag(expression_flags::single_line) ||
+           cur* != '\n') {
             return Other::match(cur + 1, ctx, modifiers);
-        } else {
+        }
+        else {
             return match_return(false, ctx.end);
         }
     }
@@ -600,15 +595,13 @@ group_ref_matcher_logic: <CharT, group: int, symbol: fixed_string> type = {
 
 // Regex syntax: $  Example: aa$
 //
-// Also matches new lines endings.
-//
 line_end_matcher_logic: <CharT, match_new_line: bool, match_new_line_before_end: bool> type =
 {
     match: <Other> (cur, inout ctx, modifiers, _ : Other) -> _ = {
-        if cur == ctx.end || (match_new_line && cur* == '\n') {
+        if cur == ctx.end || (match_new_line && modifiers.has_flag(expression_flags::multiple_lines) && cur* == '\n') {
             return Other::match(cur, ctx, modifiers);
         }
-        else if !match_new_line_before_end && (cur* == '\n' && (cur + 1) == ctx.end) { // Special cas for new line at end.
+        else if match_new_line_before_end && (cur* == '\n' && (cur + 1) == ctx.end) { // Special case for new line at end.
             return Other::match(cur, ctx, modifiers);
         }
         else {
@@ -622,12 +615,10 @@ line_end_matcher_logic: <CharT, match_new_line: bool, match_new_line_before_end:
 
 // Regex syntax: ^  Example: ^aa
 //
-// Also matches new line starts.
-//
 line_start_matcher_logic: <CharT, match_new_line: bool> type =
 {
     match: <Other> (cur, inout ctx, modifiers, _ : Other) -> _ = {
-        if cur == ctx.begin || (match_new_line && (cur - 1)* == '\n') {
+        if cur == ctx.begin || (match_new_line && modifiers.has_flag(expression_flags::multiple_lines)  && (cur - 1)* == '\n') {
             return Other::match(cur, ctx, modifiers);
         }
         else {
@@ -1185,6 +1176,15 @@ regex_parser: <Error_out> type = {
         add    := 0;
         remove := 0;
 
+        apply := :(flag: int) = {
+            if is_negative&$* {
+                remove&$* += flag;
+            }
+            else {
+                add&$* += flag;
+            }
+        };
+
         for change_str do (cur) {
             if cur == '^' {
                 is_reset = true;
@@ -1193,13 +1193,11 @@ regex_parser: <Error_out> type = {
                 if is_reset { error("No negative modifier allowed."); return false; }
                 is_negative = true;
             }
-            else if cur == 'i' {
-                if is_negative {
-                    remove += expression_flags::case_insensitive;
-                }
-                else {
-                    add += expression_flags::case_insensitive;
-                }
+            else if cur == 'i' { apply(expression_flags::case_insensitive); }
+            else if cur == 'm' { apply(expression_flags::multiple_lines); }
+            else if cur == 's' { apply(expression_flags::single_line); }
+            else {
+                error("Unknown modifier: (cur)$"); return false;
             }
         }
 
@@ -1224,7 +1222,7 @@ regex_parser: <Error_out> type = {
             return true;
         }
         else if c == '$' {
-            cur_state.add(create_matcher("line_end_matcher_logic", "true, false"));
+            cur_state.add(create_matcher("line_end_matcher_logic", "true, true"));
             return true;
         }
 
@@ -1407,7 +1405,7 @@ regex_parser: <Error_out> type = {
         else if std::string::npos != std::string("^.[]$()*{}?+|").find(c_next) {
             if c_next == '$' {
                 // TODO: Provide proper escape for cppfront capture
-                cur_state.add(create_matcher("line_end_matcher_logic", "true, false"));
+                cur_state.add(create_matcher("line_end_matcher_logic", "true, true"));
             }
             else {
                 cur_state.add(create_matcher("escaped_char_matcher_logic", "'(c_next)$', '(safe_tolower(c_next))$', '(safe_toupper(c_next))$'"));
@@ -1697,7 +1695,9 @@ regex_parser: <Error_out> type = {
         while mod_pos != modifier.size() next mod_pos += 1 {
             c: char = modifier[mod_pos];
 
-            if c == 'i' { add("::cpp2::regex::expression_flags::case_insensitive", r); }
+            if      c == 'i' { add("::cpp2::regex::expression_flags::case_insensitive", r); }
+            else if c == 'm' { add("::cpp2::regex::expression_flags::multiple_lines", r); }
+            else if c == 's' { add("::cpp2::regex::expression_flags::single_line", r); }
             else { error("Unknown modifier: '(c)$'"); }
         }
 
