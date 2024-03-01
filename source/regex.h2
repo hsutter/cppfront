@@ -44,7 +44,7 @@ match_return: @struct <Iter> type = {
     pos: Iter = ();
 }
 
-match_context: <CharT, Iter, max_groups: int, max_alternatives: int, flags: int> type =
+match_context: <CharT, Iter, max_groups: int, max_alternatives: int> type =
 {
     public begin: Iter;
     public end: Iter;
@@ -110,6 +110,11 @@ match_context: <CharT, Iter, max_groups: int, max_alternatives: int, flags: int>
 
         return r;
     }
+}
+
+match_modifiers: <flags_: int> type = {
+
+    flags : int == flags_;
 
     // Flag management
     //
@@ -125,14 +130,14 @@ match_context: <CharT, Iter, max_groups: int, max_alternatives: int, flags: int>
 //  Otherwise the matcher can try a different alternative.
 //
 matcher_list: <CharT, List...> type = {
-    match: (cur, inout ctx) match_select<List...>(cur, ctx);
+    match: (cur, inout ctx, modifiers) match_select<List...>(cur, ctx, modifiers);
 
-    match: <OtherList...> (cur, inout ctx, _: matcher_list<CharT, OtherList...>)
-        match_select<List..., OtherList...>(cur, ctx);
+    match: <OtherList...> (cur, inout ctx, modifiers, _: matcher_list<CharT, OtherList...>)
+        match_select<List..., OtherList...>(cur, ctx, modifiers);
 
-    private match_select: <First, Other...> (cur, inout ctx)
-        First::match(cur, ctx, matcher_list<CharT, Other...>());
-    private match_select: (cur, inout ctx) match_return(true, cur);
+    private match_select: <First, Other...> (cur, inout ctx, modifiers)
+        First::match(cur, ctx, modifiers, matcher_list<CharT, Other...>());
+    private match_select: (cur, inout ctx, modifiers) match_return(true, cur);
 
     reset_ranges: ( inout ctx) = (List::reset_ranges(ctx), ...);
     to_string: () (bstring<CharT>() + ... + List::to_string());
@@ -247,8 +252,8 @@ short_not_word_class       : <CharT> type == negated_class_entry<CharT, shorthan
 // Helper for greedy alternatives
 //
 extract_position_helper: <CharT, alternative: size_t> type = {
-    match: <Other> (cur, inout ctx, _ : Other) -> _ = {
-        r := Other::match(cur, ctx);
+    match: <Other> (cur, inout ctx, modifiers, _ : Other) -> _ = {
+        r := Other::match(cur, ctx, modifiers);
         if r.matched {
             ctx.set_alternative_pos(alternative, cur);
         }
@@ -265,38 +270,38 @@ extract_position_helper: <CharT, alternative: size_t> type = {
 //
 alternative_matcher_logic: <CharT, alternative: size_t, List ...> type = {
 
-    match: <Tail> (cur, inout ctx, tail: Tail) -> _ = {
+    match: <Tail> (cur, inout ctx, modifiers, tail: Tail) -> _ = {
         if constexpr greedy_alternative {
             max_overall_length: = 0;
             max_current_length: = 0;
-            r := match_greedy<Tail, List...>(cur, max_overall_length, max_current_length, ctx, tail);
+            r := match_greedy<Tail, List...>(cur, max_overall_length, max_current_length, ctx, modifiers, tail);
             _ = max_overall_length;
             _ = max_current_length;
             return r;
         } else {
-            return match_first<List...>(cur, ctx, tail);
+            return match_first<List...>(cur, ctx, modifiers, tail);
         }
     }
     reset_ranges: (inout ctx)     = (List::reset_ranges(ctx) , ...);
     to_string: ()                   (bstring<CharT>() + ... + ("|" + List::to_string())).substr(1); // substr: Remove first '|'.
 
-    private match_first: <First, Next ...> (cur, inout ctx, tail) -> _ = {
-        r := First::match(cur, ctx, tail);
+    private match_first: <First, Next ...> (cur, inout ctx, modifiers, tail) -> _ = {
+        r := First::match(cur, ctx, modifiers, tail);
         if r.matched {
             return r;
         } else {
             First::reset_ranges(ctx);
 
             if constexpr 0 != sizeof...(Next) {
-                return match_first<Next...>(cur, ctx, tail);
+                return match_first<Next...>(cur, ctx, modifiers, tail);
             } else {
                 return match_return(false, ctx.end);
             }
         }
     }
 
-    private match_greedy: <Tail, First, Next...> (cur, inout max_overall_length, inout max_current_length, inout ctx, _: Tail) -> _ = {
-        r := First::match(cur, ctx, Tail::prepend(extract_position_helper<CharT, alternative>()));
+    private match_greedy: <Tail, First, Next...> (cur, inout max_overall_length, inout max_current_length, inout ctx, modifiers, _: Tail) -> _ = {
+        r := First::match(cur, ctx, modifiers, Tail::prepend(extract_position_helper<CharT, alternative>()));
 
         // Get the end position of First.
         end_overall_pos := cur;
@@ -314,7 +319,7 @@ alternative_matcher_logic: <CharT, alternative: size_t, List ...> type = {
         // Check if someone other has something larker
         o := match_return(false, ctx.end);
         if constexpr 0 != sizeof...(Next) {
-            o = match_greedy<Tail, Next...>(cur, max_overall_length, max_current_length, ctx, Tail());
+            o = match_greedy<Tail, Next...>(cur, max_overall_length, max_current_length, ctx, modifiers, Tail());
         }
 
         my_current_length := unsafe_narrow<int>(std::distance(cur, end_current_pos));
@@ -328,7 +333,7 @@ alternative_matcher_logic: <CharT, alternative: size_t, List ...> type = {
             if my_current_length == max_current_length {
                 // Yes we are. Reset all groups by matching again.
                 (Next::reset_ranges(ctx) , ...); // Reset all other ranges.
-                return First::match(cur, ctx, Tail::prepend(extract_position_helper<CharT, alternative>()));
+                return First::match(cur, ctx, modifiers, Tail::prepend(extract_position_helper<CharT, alternative>()));
             }
             else {
                 // We are not, so there was an other match.
@@ -349,9 +354,9 @@ alternative_matcher_logic: <CharT, alternative: size_t, List ...> type = {
 //
 any_matcher_logic: <CharT> type =
 {
-    match: <Other> (cur, inout ctx, _ : Other) -> _ = {
+    match: <Other> (cur, inout ctx, modifiers, _ : Other) -> _ = {
         if cur != ctx.end {
-            return Other::match(cur + 1, ctx);
+            return Other::match(cur + 1, ctx, modifiers);
         } else {
             return match_return(false, ctx.end);
         }
@@ -365,10 +370,10 @@ any_matcher_logic: <CharT> type =
 //
 char_matcher_logic: <CharT, C: CharT, L: CharT, U: CharT> type =
 {
-    match: <Other> (cur, inout ctx, _ : Other) -> _ = {
-        if ctx.has_flag(expression_flags::case_insensitive) {
+    match: <Other> (cur, inout ctx, modifiers, _ : Other) -> _ = {
+        if modifiers.has_flag(expression_flags::case_insensitive) {
             if cur != ctx.end && (cur* == L || cur* == U) {
-                return Other::match(cur + 1, ctx);
+                return Other::match(cur + 1, ctx, modifiers);
             }
             else {
                 return match_return(false, ctx.end);
@@ -376,7 +381,7 @@ char_matcher_logic: <CharT, C: CharT, L: CharT, U: CharT> type =
         }
         else {
             if cur != ctx.end && cur* == C {
-                return Other::match(cur + 1, ctx);
+                return Other::match(cur + 1, ctx, modifiers);
             }
             else {
                 return match_return(false, ctx.end);
@@ -393,10 +398,10 @@ char_matcher_logic: <CharT, C: CharT, L: CharT, U: CharT> type =
 //
 class_matcher_logic: <CharT, negate: bool, List ...> type =
 {
-    match: <Other> (cur, inout ctx, _ : Other) -> _ = {
-        if ctx.has_flag(expression_flags::case_insensitive) {
+    match: <Other> (cur, inout ctx, modifiers, _ : Other) -> _ = {
+        if modifiers.has_flag(expression_flags::case_insensitive) {
             if cur != ctx.end && negate != ( match_any<List...>(safe_tolower(cur*)) || match_any<List...>(safe_toupper(cur*))) {
-                return Other::match(cur + 1, ctx);
+                return Other::match(cur + 1, ctx, modifiers);
             }
             else {
                 return match_return(false, ctx.end);
@@ -404,7 +409,7 @@ class_matcher_logic: <CharT, negate: bool, List ...> type =
         }
         else {
             if cur != ctx.end && negate != match_any<List...>(cur*) {
-                return Other::match(cur + 1, ctx);
+                return Other::match(cur + 1, ctx, modifiers);
             }
             else {
                 return match_return(false, ctx.end);
@@ -441,7 +446,7 @@ class_matcher_logic: <CharT, negate: bool, List ...> type =
 // Regex syntax: none Example: -
 //
 empty_matcher_logic: <CharT> type = {
-    match: <Other> (cur, inout ctx, _ : Other) Other::match(cur, ctx);
+    match: <Other> (cur, inout ctx, modifiers, _ : Other) Other::match(cur, ctx, modifiers);
     reset_ranges: (inout ctx) = {}
     to_string: () bstring<CharT>();
 }
@@ -458,9 +463,9 @@ escaped_char_matcher_logic: <CharT, C: CharT, L: CharT, U: CharT> type =
 // Regex syntax: \K Example: \K
 //
 global_group_reset: <CharT> type = {
-    match: <Other> (cur, inout ctx, _ : Other) -> _ = {
+    match: <Other> (cur, inout ctx, modifiers, _ : Other) -> _ = {
         ctx.set_group_start(0, cur);
-        return Other::match(cur, ctx);
+        return Other::match(cur, ctx, modifiers);
     }
 
     reset_ranges: (inout ctx) = {}
@@ -470,9 +475,9 @@ global_group_reset: <CharT> type = {
 // Regex syntax: (<inner>) Example: (.*)
 //
 group_matcher_start_logic: <CharT, group: int, name: fixed_string> type = {
-    match: <Other> (cur, inout ctx, _ : Other) -> _ = {
+    match: <Other> (cur, inout ctx, modifiers, _ : Other) -> _ = {
         ctx.set_group_start(group, cur);
-        return Other::match(cur, ctx);
+        return Other::match(cur, ctx, modifiers);
     }
 
     reset_ranges: (inout ctx) = ctx.set_group_invalid(group);
@@ -493,9 +498,9 @@ group_matcher_start_logic: <CharT, group: int, name: fixed_string> type = {
 }
 
 group_matcher_end_logic: <CharT, group: int> type = {
-    match: <Other> (cur, inout ctx, _ : Other) -> _ = {
+    match: <Other> (cur, inout ctx, modifiers, _ : Other) -> _ = {
         ctx.set_group_end(group, cur);
-        r := Other::match(cur, ctx);
+        r := Other::match(cur, ctx, modifiers);
         if !r.matched {
             ctx.set_group_invalid(group);
         }
@@ -517,13 +522,13 @@ group_matcher_end_logic: <CharT, group: int> type = {
 // Regex syntax: \<number>  Example: \1
 //
 group_ref_matcher_logic: <CharT, group: int, symbol: fixed_string> type = {
-    match: <Other> (cur, inout ctx, _ : Other) -> _ = {
+    match: <Other> (cur, inout ctx, modifiers, _ : Other) -> _ = {
         g := ctx.get_group(group);
 
         pos := cur;
         group_pos := g.start;
         while group_pos != g.end && pos != ctx.end next (group_pos++, pos++) {
-            if ctx.has_flag(expression_flags::case_insensitive) {
+            if modifiers.has_flag(expression_flags::case_insensitive) {
                 if safe_tolower(group_pos*) != safe_tolower(pos*) {
                     return match_return(false, ctx.end);
                 }
@@ -536,7 +541,7 @@ group_ref_matcher_logic: <CharT, group: int, symbol: fixed_string> type = {
         }
 
         if group_pos == g.end {
-            return Other::match(pos, ctx);
+            return Other::match(pos, ctx, modifiers);
         }
         else {
             return match_return(false, ctx.end);
@@ -553,12 +558,12 @@ group_ref_matcher_logic: <CharT, group: int, symbol: fixed_string> type = {
 //
 line_end_matcher_logic: <CharT, match_new_line: bool, match_new_line_before_end: bool> type =
 {
-    match: <Other> (cur, inout ctx, _ : Other) -> _ = {
+    match: <Other> (cur, inout ctx, modifiers, _ : Other) -> _ = {
         if cur == ctx.end || (match_new_line && cur* == '\n') {
-            return Other::match(cur, ctx);
+            return Other::match(cur, ctx, modifiers);
         }
         else if !match_new_line_before_end && (cur* == '\n' && (cur + 1) == ctx.end) { // Special cas for new line at end.
-            return Other::match(cur, ctx);
+            return Other::match(cur, ctx, modifiers);
         }
         else {
             return match_return(false, ctx.end);
@@ -575,9 +580,9 @@ line_end_matcher_logic: <CharT, match_new_line: bool, match_new_line_before_end:
 //
 line_start_matcher_logic: <CharT, match_new_line: bool> type =
 {
-    match: <Other> (cur, inout ctx, _ : Other) -> _ = {
+    match: <Other> (cur, inout ctx, modifiers, _ : Other) -> _ = {
         if cur == ctx.begin || (match_new_line && (cur - 1)* == '\n') {
-            return Other::match(cur, ctx);
+            return Other::match(cur, ctx, modifiers);
         }
         else {
             return match_return(false, ctx.end);
@@ -623,12 +628,12 @@ named_string_start: <CharT> type == named_matcher_logic<CharT, "\\A", line_start
 // Regex syntax: <matcher>{min, max}  Example: a{2,4}
 range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, possessive: bool> type = {
 
-    match: <Iter> (cur: Iter, inout ctx, tail) -> _ = {
+    match: <Iter> (cur: Iter, inout ctx, modifiers, tail) -> _ = {
         if greedy {
-            return match_greedy(0, cur, cur, ctx, tail);
+            return match_greedy(0, cur, cur, ctx, modifiers, tail);
         }
         else {
-            return match_not_greedy(cur, ctx, tail);
+            return match_not_greedy(cur, ctx, modifiers, tail);
         }
     }
 
@@ -676,12 +681,12 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, po
         return true;
     }
 
-    private match_min_count: <Iter> (cur: Iter, inout ctx, inout count_r: int) -> _ = { // TODO: count_r as out parameter introduces a performance loss.
+    private match_min_count: <Iter> (cur: Iter, inout ctx, modifiers, inout count_r: int) -> _ = { // TODO: count_r as out parameter introduces a performance loss.
         res := match_return(true, cur);
         count := 0;
 
         while is_below_lower_bound(count) && res.matched {
-            res = M::match(res.pos, ctx, no_tail<CharT>());
+            res = M::match(res.pos, ctx, modifiers, no_tail<CharT>());
             if res.matched {
                 count += 1;
             }
@@ -691,12 +696,12 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, po
         return res;
     }
 
-    private match_greedy: <Iter, Other> (count: int, cur: Iter, last_valid: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
-        r:= M::match(cur, ctx, no_tail<CharT>());
+    private match_greedy: <Iter, Other> (count: int, cur: Iter, last_valid: Iter, inout ctx, modifiers, _ : Other) -> match_return<Iter> = {
+        r:= M::match(cur, ctx, modifiers, no_tail<CharT>());
         if  is_below_upper_bound(count) && r.matched &&
             (is_below_lower_bound(count) || r.pos != cur)
         {
-            inner := match_greedy(count + 1, r.pos, cur, ctx, Other());
+            inner := match_greedy(count + 1, r.pos, cur, ctx, modifiers, Other());
 
             if possessive ||  // Do not backtrack if possessive.
                inner.matched {
@@ -706,12 +711,12 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, po
 
         // No match from the recursion. Try to match our tail.
         if is_in_range(count) {
-            o:= Other::match(cur, ctx);
+            o:= Other::match(cur, ctx, modifiers);
 
             if o.matched {
                 // Rematch M to set the groups.
                 M::reset_ranges(ctx);
-                _ = M::match(last_valid, ctx, no_tail<CharT>());
+                _ = M::match(last_valid, ctx, modifiers, no_tail<CharT>());
             }
 
             return o;
@@ -721,21 +726,21 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, po
         }
     }
 
-    private match_not_greedy: <Iter, Other> (cur: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
+    private match_not_greedy: <Iter, Other> (cur: Iter, inout ctx, modifiers, _ : Other) -> match_return<Iter> = {
         count := 0;
-        start := match_min_count(cur, ctx, count);
+        start := match_min_count(cur, ctx, modifiers, count);
         if !start.matched {
           return start;
         }
 
         pos := start.pos;
         while is_below_upper_bound(count) {
-            o:= Other::match(pos, ctx);
+            o:= Other::match(pos, ctx, modifiers);
             if o.matched {
                 return o;
             }
 
-            r:= M::match(pos, ctx, no_tail<CharT>());
+            r:= M::match(pos, ctx, modifiers, no_tail<CharT>());
             if !r.matched {
                 return match_return(false, ctx.end);
             }
@@ -743,7 +748,7 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, po
             pos = r.pos;
         }
 
-        return Other::match(pos, ctx); // Upper bound reached.
+        return Other::match(pos, ctx, modifiers); // Upper bound reached.
     }
 }
 
@@ -770,7 +775,7 @@ special_range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: 
 //
 word_boundary_matcher_logic: <CharT, negate: bool> type =
 {
-    match: <Other> (cur, inout ctx, _: Other) -> _ = {
+    match: <Other> (cur, inout ctx, modifiers, _: Other) -> _ = {
         words : word_class<CharT> = ();
         is_match := false;
         if cur == ctx.begin { // String start
@@ -792,7 +797,7 @@ word_boundary_matcher_logic: <CharT, negate: bool> type =
         }
 
         if is_match{
-            return Other::match(cur, ctx);
+            return Other::match(cur, ctx, modifiers);
         }
         else {
             return match_return(false, ctx.end);
@@ -838,7 +843,8 @@ group_name_list_end: type = {
 // Regular expression implementation
 regular_expression: <CharT, flags: int, groups: size_t, alternatives: size_t, named_groups, Matcher> type = {
 
-    context: <Iter> type == match_context<CharT, Iter, groups, alternatives, flags>;
+    context: <Iter> type == match_context<CharT, Iter, groups, alternatives>;
+    modifiers: type == match_modifiers<flags>;
 
     private get_iter: (str: view<CharT>, pos) -> _ = {
         if pos < str.size() {
@@ -883,7 +889,7 @@ regular_expression: <CharT, flags: int, groups: size_t, alternatives: size_t, na
     match: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> = {
         ctx: context = (start, end);
 
-        r := Matcher::match(start, ctx);
+        r := Matcher::match(start, ctx, modifiers());
         return search_return(r.matched && r.pos == end, ctx);
     }
 
@@ -896,7 +902,7 @@ regular_expression: <CharT, flags: int, groups: size_t, alternatives: size_t, na
 
         cur:= start;
         while true next (cur++) {
-            if Matcher::match(cur, ctx).matched {
+            if Matcher::match(cur, ctx, modifiers()).matched {
                 matched = true;
                 break;
             }
