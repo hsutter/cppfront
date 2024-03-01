@@ -624,18 +624,11 @@ named_string_start: <CharT> type == named_matcher_logic<CharT, "\\A", line_start
 range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, possessive: bool> type = {
 
     match: <Iter> (cur: Iter, inout ctx, tail) -> _ = {
-        count: int;
-        r := match_min_count(cur, ctx, out count);
-        if r.matched {
-            if greedy {
-                return match_greedy(count, r.pos, r.pos, ctx, tail);
-            }
-            else {
-                return match_not_greedy(count, r.pos, ctx, tail);
-            }
+        if greedy {
+            return match_greedy(0, cur, cur, ctx, tail);
         }
         else {
-            return r;
+            return match_not_greedy(cur, ctx, tail);
         }
     }
 
@@ -683,7 +676,7 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, po
         return true;
     }
 
-    private match_min_count: <Iter> (cur: Iter, inout ctx, out count_r: int) -> _ = {
+    private match_min_count: <Iter> (cur: Iter, inout ctx, inout count_r: int) -> _ = { // TODO: count_r as out parameter introduces a performance loss.
         res := match_return(true, cur);
         count := 0;
 
@@ -699,10 +692,9 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, po
     }
 
     private match_greedy: <Iter, Other> (count: int, cur: Iter, last_valid: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
-
-        r := M::match(cur, ctx, no_tail<CharT>());
-
-        if is_below_upper_bound(count) && r.matched && r.pos != cur
+        r:= M::match(cur, ctx, no_tail<CharT>());
+        if  is_below_upper_bound(count) && r.matched &&
+            (is_below_lower_bound(count) || r.pos != cur)
         {
             inner := match_greedy(count + 1, r.pos, cur, ctx, Other());
 
@@ -729,10 +721,14 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, po
         }
     }
 
-    private match_not_greedy: <Iter, Other> (c: int, cur: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
-        count := c;
-        pos := cur;
+    private match_not_greedy: <Iter, Other> (cur: Iter, inout ctx, _ : Other) -> match_return<Iter> = {
+        count := 0;
+        start := match_min_count(cur, ctx, count);
+        if !start.matched {
+          return start;
+        }
 
+        pos := start.pos;
         while is_below_upper_bound(count) {
             o:= Other::match(pos, ctx);
             if o.matched {
