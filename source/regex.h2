@@ -122,14 +122,15 @@ match_context: <CharT, Iter, max_groups: int, max_alternatives: int> type =
     }
 }
 
-match_modifiers: <flags_: int, Inner> type = {
+match_modifiers_state_change: <has_change_: bool, reset_: bool, add_: int, remove_: int, str: fixed_string> type = {
 
-    flags : int == flags_;
+    reset: bool == reset_;
+    add: bool == add_;
+    remove: int == remove_;
+    has_change: bool == has_change_;
 
-    // Push/pop management
-
-    private combine_inner: (reset: bool, add: int, remove: int) -> _ == {
-        new_flags := flags;
+    combine_inner: (old_flags: int) -> _ == {
+        new_flags := old_flags;
         if reset {
             new_flags = 0;
         }
@@ -139,11 +140,20 @@ match_modifiers: <flags_: int, Inner> type = {
         return new_flags;
     }
 
-    combine: <Reset, Add, Remove> (_ : Reset, _ : Add, _ : Remove) -> _ = {
-        return match_modifiers<combine_inner(Reset::value, Add::value, Remove::value), match_modifiers<flags, Inner>>();
-    }
+    to_string: () str.data();
+}
 
-    pop: () Inner();
+match_modifiers_no_change : type == match_modifiers_state_change<false, false, 0, 0, "">;
+
+match_modifiers: <flags_: int, Inner> type = {
+
+    flags : int == flags_;
+
+    // Push/pop management
+
+    push: <Change>   (_ : Change) match_modifiers<Change::combine_inner(flags), match_modifiers<flags, Inner>>();
+    pop:             ()           Inner();
+    replace: <Change>(_ : Change) match_modifiers<Change::combine_inner(flags), Inner>();
 
     // Flag management
     //
@@ -503,10 +513,12 @@ global_group_reset: <CharT> type = {
 
 // Regex syntax: (<inner>) Example: (.*)
 //
-group_matcher_start_logic: <CharT, group: int, name: fixed_string> type = {
-    match: <Other> (cur, inout ctx, modifiers, _ : Other) -> _ = {
-        ctx.set_group_start(group, cur);
-        return Other::match(cur, ctx, modifiers);
+group_matcher_start_logic: <CharT, group: int, ModifierChange, name: fixed_string> type = {
+    match: <Other, Modifiers> (cur, inout ctx, _ : Modifiers, _ : Other) -> _ = {
+        if -1 != group {
+            ctx.set_group_start(group, cur);
+        }
+        return Other::match(cur, ctx, Modifiers::push(ModifierChange()));
     }
 
     reset_ranges: (inout ctx) = ctx.set_group_invalid(group);
@@ -515,6 +527,9 @@ group_matcher_start_logic: <CharT, group: int, name: fixed_string> type = {
         if group != 0 {
             if 0 != name.size() {
                 return "(?<(name.data())$>";
+            }
+            else if ModifierChange::has_change {
+                return "(?(ModifierChange::to_string())$:";
             }
             else {
                 return "(";
@@ -526,11 +541,13 @@ group_matcher_start_logic: <CharT, group: int, name: fixed_string> type = {
     }
 }
 
-group_matcher_end_logic: <CharT, group: int, pop_modifier: bool> type = {
+group_matcher_end_logic: <CharT, group: int> type = {
     match: <Other, Modifier> (cur, inout ctx, modifiers: Modifier, _ : Other) -> _ = {
-        ctx.set_group_end(group, cur);
-        r := Other::match(cur, ctx, pop_mod<pop_modifier>(modifiers));
-        if !r.matched {
+        if -1 != group {
+            ctx.set_group_end(group, cur);
+        }
+        r := Other::match(cur, ctx, Modifier::pop());
+        if !r.matched && -1 != group {
             ctx.set_group_invalid(group);
         }
         return r;
@@ -624,16 +641,13 @@ line_start_matcher_logic: <CharT, match_new_line: bool> type =
 
 // Regex syntax: (?<modifiers>)  Example: (?i)
 //
-modifier_matcher_logic: <CharT, reset: bool, add_flags: int, remove_flags: int, str_mod: fixed_string> type =
+modifier_matcher_logic: <CharT, ModifierChange> type =
 {
     match: <Other, Modifier> (cur, inout ctx, _: Modifier, _ : Other) -> _ = {
-        return Other::match(cur, ctx, Modifier::combine(
-            std::bool_constant<reset>(),
-            std::integral_constant<int, add_flags>(),
-            std::integral_constant<int, remove_flags>()));
+        return Other::match(cur, ctx, Modifier::replace(ModifierChange()));
     }
     reset_ranges: (inout ctx) = {}
-    to_string: ()               "(?(str_mod.data())$)";
+    to_string: ()               "(?(ModifierChange::to_string())$)";
 }
 
 // Named character classes
@@ -976,8 +990,6 @@ regex_parser_state: @struct type = {
     /// List of alternate matcher lists. E.g. ab|cd|xy
     alternate_match_lists: std::vector<std::vector<std::string>> = ();
 
-    has_modifiers: bool = false;
-
     next_alternative: (inout this) = {
         new_list: std::vector<std::string> = ();
         std::swap(new_list, cur_match_list);
@@ -1053,6 +1065,14 @@ regex_parser: <Error_out> type = {
         }
     }
 
+    current: (in this) -> char = {
+        if pos < regex.size() {
+            return regex[pos];
+        } else {
+            return '\0';
+        }
+    }
+
     peek: (inout this) -> char = {
         if (pos + 1) < regex.size() {
             return regex[pos + 1];
@@ -1062,9 +1082,11 @@ regex_parser: <Error_out> type = {
         }
     }
 
-    grab_until: (inout this, in e: char, out r: std::string) -> bool = {
+    grab_until: (inout this, in e: char, out r: std::string) grab_until_one_of(std::string(1, e), out r);
+
+    grab_until_one_of: (inout this, in e: std::string, out r: std::string) -> bool = {
         start := pos;
-        end: = regex.find(e, pos);
+        end: = regex.find_first_of(e, pos);
 
         if end != std::string_view::npos {
             r = regex.substr(start, end - pos);
@@ -1156,14 +1178,14 @@ regex_parser: <Error_out> type = {
         return r;
     }
 
-    parse_modifiers: (inout this, modifier_change: std::string, out modifier_reset: bool, out modifier_add: int, out modifier_remove: int) -> bool = {
+    parse_modifiers: (inout this, change_str: std::string, out modifier_change: std::string) -> bool = {
         is_negative := false;
         is_reset    := false;
 
         add    := 0;
         remove := 0;
 
-        for modifier_change do (cur) {
+        for change_str do (cur) {
             if cur == '^' {
                 is_reset = true;
             }
@@ -1181,9 +1203,7 @@ regex_parser: <Error_out> type = {
             }
         }
 
-        modifier_reset  = is_reset;
-        modifier_add    = add;
-        modifier_remove = remove;
+        modifier_change = "::cpp2::regex::match_modifiers_state_change<true, (is_reset)$, (add)$, (remove)$, \"(change_str)$\">";
 
         return true;
     }
@@ -1454,11 +1474,9 @@ regex_parser: <Error_out> type = {
         if c != '(' { return false; }
 
         has_id := true;
+        has_pattern := true;
         group_name : std::string = "";
-        modifier_change: std::string = "";
-        modifier_reset  := false;
-        modifier_add    := 0;
-        modifier_remove := 0;
+        modifier_change: std::string = "::cpp2::regex::match_modifiers_no_change";
 
         c_next : char = '\0';
         // Skip the '('
@@ -1476,42 +1494,49 @@ regex_parser: <Error_out> type = {
             else {
                 // Simple modifier
                 has_id = false;
-                if !grab_until(')', out modifier_change) { error("Missing ending bracket for group."); return false; }
-                if !parse_modifiers(modifier_change, out modifier_reset, out modifier_add, out modifier_remove) {
+                change_str : std::string = "";
+                if !grab_until_one_of("):", out change_str) { error("Missing ending bracket for group."); return false; }
+                if !parse_modifiers(change_str, out modifier_change) {
                      return false;
+                }
+
+                if ')' == current() {
+                    has_pattern = false;
+                }
+                else {
+                    if !next(out c_next) /* skip ':' */ { error("Missing ending bracket for group."); return false; }
                 }
             }
         }
 
-        if has_id {
+        if has_pattern {
             // regular group
 
-            group_number := next_group_id;
-            next_group_id += 1;
+            group_number := -1;
+            if has_id {
+                group_number = next_group_id;
+                next_group_id += 1;
+            }
 
             old_state: _ = new_state();
             parse_until(')');
             inner:= create_matcher_from_state();
-            inner_has_modifiers := cur_state.has_modifiers;
             restore_state(old_state);
 
-            start_matcher := create_matcher("group_matcher_start_logic", "(group_number)$, \"\"");
+            start_matcher := create_matcher("group_matcher_start_logic", "(group_number)$, (modifier_change)$, \"(group_name)$\"");
             if 0 != group_name.size() {
-                start_matcher = create_matcher("group_matcher_start_logic", "(group_number)$, \"(group_name)$\"");
-
-                 if !named_groups.contains(group_name) { // Redefinition of group name is not an error. The left most one is retained.
+                if !named_groups.contains(group_name) { // Redefinition of group name is not an error. The left most one is retained.
                     named_groups[group_name] = group_number;
                 }
             }
-            end_matcher := create_matcher("group_matcher_end_logic", "(group_number)$, (inner_has_modifiers)$");
+            end_matcher := create_matcher("group_matcher_end_logic", "(group_number)$");
 
             v: std::vector<std::string> = (start_matcher, inner, end_matcher);
             cur_state.add(create_matcher_from_list(v));
         }
         else {
             // Only a modifier
-            cur_state.has_modifiers = true;
-            cur_state.add(create_matcher("modifier_matcher_logic", "(modifier_reset)$, (modifier_add)$, (modifier_remove)$, \"(modifier_change)$\""));
+            cur_state.add(create_matcher("modifier_matcher_logic", "(modifier_change)$"));
         }
 
         return true;
@@ -1687,8 +1712,8 @@ regex_parser: <Error_out> type = {
         mod   := parse_modifier();
         named_groups_arg := create_named_groups_arg();
         inner := create_matcher_from_state();
-        start := create_matcher("group_matcher_start_logic", "0, \"\"");
-        end   := create_matcher("group_matcher_end_logic", "0, false");
+        start := create_matcher("group_matcher_start_logic", "0, ::cpp2::regex::match_modifiers_no_change, \"\"");
+        end   := create_matcher("group_matcher_end_logic", "0");
         list  := create_matcher("matcher_list", "(start)$, (inner)$, (end)$");
         return   create_matcher("regular_expression", "(mod)$, (next_group_id)$, (alternatives_count)$, (named_groups_arg)$, (list)$");
     }
