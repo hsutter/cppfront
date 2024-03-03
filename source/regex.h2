@@ -66,13 +66,23 @@ match_context: <CharT, Iter, max_groups: int, max_alternatives: int> type =
     get_group: (in this, group) groups[group];
 
     get_group_string: (in this, group) -> std::string = {
-        if group >= max_groups {
+        if group >= max_groups || !groups[group].matched {
             return "";
         }
         return std::string(groups[group].start, groups[group].end);
     }
-    get_group_start:  (in this, group) std::distance(begin, groups[group].start);
-    get_group_end:    (in this, group) std::distance(begin, groups[group].end);
+    get_group_start:  (in this, group) -> int = {
+        if group >= max_groups || !groups[group].matched {
+            return 0;
+        }
+        return std::distance(begin, groups[group].start);
+    }
+    get_group_end:    (in this, group) -> int = {
+        if group >= max_groups || !groups[group].matched {
+            return 0;
+        }
+        return std::distance(begin, groups[group].end);
+    }
 
     set_group_end: (inout this, group, pos) = {
         groups[group].end = pos;
