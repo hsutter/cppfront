@@ -1056,6 +1056,13 @@ regex_parser: <Error_out> type = {
         }
     }
 
+    skip: (inout this) -> bool = {
+        c: char;
+        r := next(out c);
+        _ = c;
+        return r;
+    }
+
     current: (in this) -> char = {
         if pos < regex.size() {
             return regex[pos];
@@ -1563,11 +1570,12 @@ regex_parser: <Error_out> type = {
 
         if c != '{' { return false; }
         if cur_state.empty() { error("'{' without previous element.");  return false; }
+        if !skip() { error("End of regex before closing '}'."); return false; }
 
-        end: size_t = regex.find("}", pos);
-        if end == std::string::npos { error("Missing closing bracket."); return false; }
+        inner: std::string = "";
+        if !grab_until('}', out inner) { error("Missing closing bracket."); return false; }
 
-        inner: std::string = trim_copy(regex.substr(pos + 1, end - pos - 1));
+        inner = trim_copy(inner);
         if inner.empty() { error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'"); return false; }
 
         greedy := true;
@@ -1618,7 +1626,6 @@ regex_parser: <Error_out> type = {
         }
 
         cur_state.wrap_last( :(inner) -> _ == create_matcher("range_matcher_logic", "(inner)$, (min_count$)$, (max_count$)$, (greedy)$, (possessive)$"));
-        pos = end;
 
         return true;
     }
