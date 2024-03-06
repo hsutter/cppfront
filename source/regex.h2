@@ -520,7 +520,7 @@ global_group_reset: <CharT> type = {
 
 // Regex syntax: (<inner>) Example: (.*)
 //
-group_matcher_start_logic: <CharT, group: int, ModifierChange, name: fixed_string> type = {
+group_matcher_start_logic: <CharT, group: int, ModifierChange, name: fixed_string, name_brackets: bool> type = {
     match: <Other, Modifiers> (cur, inout ctx, _ : Modifiers, _ : Other) -> _ = {
         if -1 != group {
             ctx.set_group_start(group, cur);
@@ -533,7 +533,12 @@ group_matcher_start_logic: <CharT, group: int, ModifierChange, name: fixed_strin
     to_string: () -> std::string = {
         if group != 0 {
             if 0 != name.size() {
-                return "(?<(name.data())$>";
+                if name_brackets {
+                    return "(?<(name.data())$>";
+                }
+                else {
+                    return "(?'(name.data())$'";
+                }
             }
             else if ModifierChange::has_change {
                 return "(?(ModifierChange::to_string())$:";
@@ -1438,8 +1443,9 @@ regex_parser: <Error_out> type = {
 
         add_group_matcher:= :(name: std::string) -> bool = {
 
+            name_trim := trim_copy(name);
             group_id : int = 0;
-            if string_to_int(name, group_id) {
+            if string_to_int(name_trim, group_id) {
                 if group_id < 0 {
                     group_id = next_group_id + group_id;
 
@@ -1453,7 +1459,7 @@ regex_parser: <Error_out> type = {
             }
             else {
                 // Named group
-                iter := named_groups.find(name);
+                iter := named_groups.find(name_trim);
                 if iter == named_groups.end() { error("Group names does not exist. (Name is: (name)$)"); return false; }
 
                 group_id = iter*.second;
@@ -1543,6 +1549,7 @@ regex_parser: <Error_out> type = {
         has_id := cur_state.group_captures_have_numbers;
         has_pattern := true;
         group_name : std::string = "";
+        group_name_brackets := true;
         modifier_change: std::string = "::cpp2::regex::match_modifiers_no_change";
         group_capture_change_to := cur_state.group_captures_have_numbers;
         perl_code_syntax_change_to := cur_state.perl_code_syntax;
@@ -1554,11 +1561,17 @@ regex_parser: <Error_out> type = {
             // Special group
             if !next(out c_next) { error("Missing character after group opening."); return false; }
 
-            if c_next == '<' {
+            if c_next == '<' || c_next == '\'' {
                 // named group
+                end_char := c_next;
+                if end_char == '<' {
+                    end_char = '>';
+                } else {
+                    group_name_brackets = false;
+                }
                 has_id = true; // Force id for named groups.
                 if !next(out c_next) /* skip '<' */ { error("Missing ending bracket for named group."); return false; }
-                if !grab_until('>', out group_name) { error("Missing ending bracket for named group."); return false; }
+                if !grab_until(end_char, out group_name) { error("Missing ending bracket for named group."); return false; }
                 if !next(out c_next) { error("Group without closing bracket."); return false;}
             }
             else {
@@ -1595,7 +1608,7 @@ regex_parser: <Error_out> type = {
             inner:= create_matcher_from_state();
             restore_state(old_state);
 
-            start_matcher := create_matcher("group_matcher_start_logic", "(group_number)$, (modifier_change)$, \"(group_name)$\"");
+            start_matcher := create_matcher("group_matcher_start_logic", "(group_number)$, (modifier_change)$, \"(group_name)$\", (group_name_brackets)$");
             if 0 != group_name.size() {
                 if !named_groups.contains(group_name) { // Redefinition of group name is not an error. The left most one is retained.
                     named_groups[group_name] = group_number;
@@ -1801,7 +1814,7 @@ regex_parser: <Error_out> type = {
 
         named_groups_arg := create_named_groups_arg();
         inner := create_matcher_from_state();
-        start := create_matcher("group_matcher_start_logic", "0, ::cpp2::regex::match_modifiers_no_change, \"\"");
+        start := create_matcher("group_matcher_start_logic", "0, ::cpp2::regex::match_modifiers_no_change, \"\", false");
         end   := create_matcher("group_matcher_end_logic", "0");
         list  := create_matcher("matcher_list", "(start)$, (inner)$, (end)$");
         return   create_matcher("regular_expression", "(mod)$, (next_group_id)$, (alternatives_count)$, (named_groups_arg)$, (list)$");
