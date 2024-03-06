@@ -32,6 +32,7 @@ expression_flags: type = {
     case_insensitive : int == 1;  // mod: i
     multiple_lines: int    == 2;  // mod: m
     single_line: int       == 4;  // mod: s
+    no_group_captures: int == 8;  // mod: n
 }
 
 match_group: @struct <Iter> type = {
@@ -991,6 +992,8 @@ regex_parser_state: @struct type = {
     /// List of alternate matcher lists. E.g. ab|cd|xy
     alternate_match_lists: std::vector<std::vector<std::string>> = ();
 
+    group_captures_have_numbers : bool = true;
+
     next_alternative: (inout this) = {
         new_list: std::vector<std::string> = ();
         std::swap(new_list, cur_match_list);
@@ -1043,7 +1046,9 @@ regex_parser: <Error_out> type = {
     //
     new_state: (inout this) -> regex_parser_state = {
         old_state: regex_parser_state = ();
+        old_state.group_captures_have_numbers = cur_state.group_captures_have_numbers;
         old_state.swap(cur_state);
+
         return old_state;
     }
 
@@ -1186,7 +1191,7 @@ regex_parser: <Error_out> type = {
         return r;
     }
 
-    parse_modifiers: (inout this, change_str: std::string, out modifier_change: std::string) -> bool = {
+    parse_modifiers: (inout this, change_str: std::string, out modifier_change: std::string, inout group_captures_have_numbers: bool) -> bool = {
         is_negative := false;
         is_reset    := false;
 
@@ -1213,6 +1218,10 @@ regex_parser: <Error_out> type = {
             else if cur == 'i' { apply(expression_flags::case_insensitive); }
             else if cur == 'm' { apply(expression_flags::multiple_lines); }
             else if cur == 's' { apply(expression_flags::single_line); }
+            else if cur == 'n' {
+                apply(expression_flags::no_group_captures);
+                group_captures_have_numbers = is_negative;
+            }
             else {
                 error("Unknown modifier: (cur)$"); return false;
             }
@@ -1488,10 +1497,11 @@ regex_parser: <Error_out> type = {
     is_group: (inout this, c: char) -> bool = {
         if c != '(' { return false; }
 
-        has_id := true;
+        has_id := cur_state.group_captures_have_numbers;
         has_pattern := true;
         group_name : std::string = "";
         modifier_change: std::string = "::cpp2::regex::match_modifiers_no_change";
+        group_capture_change_to := cur_state.group_captures_have_numbers;
 
         c_next : char = '\0';
         // Skip the '('
@@ -1502,6 +1512,7 @@ regex_parser: <Error_out> type = {
 
             if c_next == '<' {
                 // named group
+                has_id = true; // Force id for named groups.
                 if !next(out c_next) /* skip '<' */ { error("Missing ending bracket for named group."); return false; }
                 if !grab_until('>', out group_name) { error("Missing ending bracket for named group."); return false; }
                 if !next(out c_next) { error("Group without closing bracket."); return false;}
@@ -1511,7 +1522,7 @@ regex_parser: <Error_out> type = {
                 has_id = false;
                 change_str : std::string = "";
                 if !grab_until_one_of("):", out change_str) { error("Missing ending bracket for group."); return false; }
-                if !parse_modifiers(change_str, out modifier_change) {
+                if !parse_modifiers(change_str, out modifier_change, group_capture_change_to) {
                      return false;
                 }
 
@@ -1534,6 +1545,7 @@ regex_parser: <Error_out> type = {
             }
 
             old_state: _ = new_state();
+            cur_state.group_captures_have_numbers = group_capture_change_to;
             parse_until(')');
             inner:= create_matcher_from_state();
             restore_state(old_state);
@@ -1551,6 +1563,7 @@ regex_parser: <Error_out> type = {
         }
         else {
             // Only a modifier
+            cur_state.group_captures_have_numbers = group_capture_change_to;
             cur_state.add(create_matcher("modifier_matcher_logic", "(modifier_change)$"));
         }
 
@@ -1715,6 +1728,10 @@ regex_parser: <Error_out> type = {
             if      c == 'i' { add("::cpp2::regex::expression_flags::case_insensitive", r); }
             else if c == 'm' { add("::cpp2::regex::expression_flags::multiple_lines", r); }
             else if c == 's' { add("::cpp2::regex::expression_flags::single_line", r); }
+            else if c == 'n' {
+                add("::cpp2::regex::expression_flags::no_group_captures", r);
+                cur_state.group_captures_have_numbers = false;
+            }
             else { error("Unknown modifier: '(c)$'"); }
         }
 
@@ -1722,11 +1739,11 @@ regex_parser: <Error_out> type = {
     }
 
     parse:(inout this) -> std::string = {
+        mod   := parse_modifier();
         parse_until('\0');
 
         if has_error { return "Error"; }
 
-        mod   := parse_modifier();
         named_groups_arg := create_named_groups_arg();
         inner := create_matcher_from_state();
         start := create_matcher("group_matcher_start_logic", "0, ::cpp2::regex::match_modifiers_no_change, \"\"");
