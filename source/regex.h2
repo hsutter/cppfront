@@ -1072,9 +1072,9 @@ regex_parser: <Error_out> type = {
     // Position management functions
     //
 
-    private get_next_position: (in this, in_class: bool, for_escape: bool) -> size_t = {
+    private get_next_position: (in this, in_class: bool, no_skip: bool) -> size_t = {
         perl_syntax := false;
-        if !for_escape {
+        if !no_skip {
             if in_class {
                 perl_syntax = cur_state.modifiers.perl_code_syntax && cur_state.modifiers.perl_code_syntax_in_classes;
             }
@@ -1110,8 +1110,8 @@ regex_parser: <Error_out> type = {
         return cur;
     }
 
-    private next_impl: (inout this, out n: char, in_class: bool, for_escape: bool) -> bool = {
-        pos = get_next_position(in_class, for_escape);
+    private next_impl: (inout this, out n: char, in_class: bool, no_skip: bool) -> bool = {
+        pos = get_next_position(in_class, no_skip);
         if pos != regex.size() {
             n = regex[pos];
             return true;
@@ -1123,7 +1123,10 @@ regex_parser: <Error_out> type = {
     }
 
     next: (inout this, out n: char)          next_impl(out n, false, false);
-    next_in_class: (inout this, out n: char, for_escape: bool) next_impl(out n, true, for_escape);
+    next_in_class: (inout this, out n: char) next_impl(out n, true, false);
+    next_no_skip: (inout this, out n: char)  next_impl(out n, false, true);
+
+
 
     skip: (inout this) -> bool = {
         c: char;
@@ -1373,7 +1376,7 @@ regex_parser: <Error_out> type = {
         negate:= false;
         first:= true;
         range:= false;
-        while next_in_class(out c_cur, false) & (c_cur != ']' || first) {
+        while next_in_class(out c_cur) & (c_cur != ']' || first) {
             if c_cur == '^' {
                 negate = true;
                 continue; // Skip rest of the loop. Also the first update.
@@ -1394,7 +1397,7 @@ regex_parser: <Error_out> type = {
                 _ = skip(); // Skip ':' pointing to the ending ']'.
             }
             else if c_cur == '\\' {
-                if next_in_class(out c_cur, true)  && (c_cur != ']') {
+                if next_no_skip(out c_cur)  && (c_cur != ']') {
                     if  ' ' == c_cur && cur_state.modifiers.perl_code_syntax && cur_state.modifiers.perl_code_syntax_in_classes {
                         classes.push_back(std::string(1, c_cur)); // TODO: UFCS error with char as argument.
                     }
@@ -1594,7 +1597,7 @@ regex_parser: <Error_out> type = {
         if !next(out c_next) { error("Group without closing bracket."); return false;}
         if c_next == '?' {
             // Special group
-            if !next(out c_next) { error("Missing character after group opening."); return false; }
+            if !next_no_skip(out c_next) { error("Missing character after group opening."); return false; }
 
             if c_next == '<' || c_next == '\'' {
                 // named group
@@ -1608,6 +1611,14 @@ regex_parser: <Error_out> type = {
                 if !next(out c_next) /* skip '<' */ { error("Missing ending bracket for named group."); return false; }
                 if !grab_until(end_char, out group_name) { error("Missing ending bracket for named group."); return false; }
                 if !next(out c_next) { error("Group without closing bracket."); return false;}
+            }
+            else if c_next == '#' {
+                // Comment
+                comment_str : std::string = "";
+                if !grab_until(")", out comment_str) { error("Group without closing bracket."); return false;}
+                // Do not add comment. Has problems with ranges.
+
+                return true;
             }
             else {
                 // Simple modifier
