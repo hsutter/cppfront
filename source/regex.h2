@@ -413,6 +413,14 @@ any_matcher_logic: <CharT> type =
     to_string: ()               bstring<CharT>(1, '.');
 }
 
+// Regex syntax: none Example: -
+//
+branch_reset_matcher_logic: <CharT> type = {
+    match: <Other> (cur, inout ctx, modifiers, _ : Other) Other::match(cur, ctx, modifiers);
+    reset_ranges: (inout ctx) = {}
+    to_string: () "(?|";
+}
+
 // Regex syntax: <any character>  Example: a
 //
 char_matcher_logic: <CharT, C: CharT, L: CharT, U: CharT> type =
@@ -576,6 +584,12 @@ group_matcher_end_logic: <CharT, group: int> type = {
             return "";
         }
     }
+}
+
+special_group_end_logic: <CharT> type = {
+    match: <Other> (cur, inout ctx, modifiers, _ : Other) Other::match(cur, ctx, modifiers);
+    reset_ranges: (inout ctx) = {}
+    to_string: () ")";
 }
 
 // Regex syntax: \<number>  Example: \1
@@ -1016,6 +1030,7 @@ regex_parser_state: @struct type = {
     swap: (inout this, inout t: regex_parser_state) = {
         std::swap(cur_match_list, t.cur_match_list);
         std::swap(alternate_match_lists, t.alternate_match_lists);
+        std::swap(modifiers, t.modifiers);
     }
 
     add: (inout this, matcher: _) = cur_match_list.push_back(matcher);
@@ -1030,15 +1045,41 @@ regex_parser_state: @struct type = {
     empty: (this) -> bool = cur_match_list.empty();
 }
 
+regex_branch_reset_state: @struct type = {
+    is_active : bool = false;
+    cur_group : int  = 1; // Global capture group.
+    max_group : int  = 1;
+    from      : int  = 1;
+
+    next: (inout this) -> int = {
+        g := cur_group;
+        cur_group += 1;
+        max_group = max(max_group, cur_group);
+
+        return g;
+    }
+
+    set_next: (inout this, g: int) = {
+        cur_group = g;
+        max_group = max(max_group, g);
+    }
+
+    next_alternative: (inout this) = {
+        if is_active {
+            cur_group = from;
+        }
+    }
+}
+
 
 regex_parser: <Error_out> type = {
 
     regex: std::string_view;
     modifier: std::string_view;
     cur_state: regex_parser_state = ();
+    cur_branch_reset_state: regex_branch_reset_state = ();
     pos: size_t = 0;
 
-    next_group_id: int = 1; // Global capture group.
     alternatives_count: int = 0;
 
     named_groups : std::map<std::string, int> = ();
@@ -1059,7 +1100,6 @@ regex_parser: <Error_out> type = {
     //
     new_state: (inout this) -> regex_parser_state = {
         old_state: regex_parser_state = ();
-        old_state.modifiers = cur_state.modifiers;
         old_state.swap(cur_state);
 
         return old_state;
@@ -1067,6 +1107,27 @@ regex_parser: <Error_out> type = {
 
     restore_state: (inout this, old_state: regex_parser_state) = {
         cur_state = old_state;
+    }
+
+    // Branch reset management functions
+    //
+
+    group_new_state: (inout this) -> regex_branch_reset_state = {
+        old_state: regex_branch_reset_state = ();
+        std::swap(old_state, cur_branch_reset_state);
+
+        cur_branch_reset_state.is_active = true;
+        cur_branch_reset_state.cur_group = old_state.cur_group;
+        cur_branch_reset_state.from      = cur_branch_reset_state.cur_group;
+        cur_branch_reset_state.max_group = cur_branch_reset_state.cur_group;
+
+        return old_state;
+    }
+
+    group_restore_state: (inout this, old_state: regex_branch_reset_state) = {
+        next_group := cur_branch_reset_state.max_group;
+        cur_branch_reset_state = old_state;
+        cur_branch_reset_state.set_next(next_group);
     }
 
     // Position management functions
@@ -1233,6 +1294,7 @@ regex_parser: <Error_out> type = {
             cur_state.add(create_matcher("empty_matcher_logic", ""));
         }
         cur_state.next_alternative();
+        cur_branch_reset_state.next_alternative();
 
         list: std::string = "";
         separator: std::string = "";
@@ -1341,6 +1403,7 @@ regex_parser: <Error_out> type = {
         if c != '|' { return false; }
 
         cur_state.next_alternative();
+        cur_branch_reset_state.next_alternative();
         return true;
     }
 
@@ -1485,7 +1548,7 @@ regex_parser: <Error_out> type = {
             group_id : int = 0;
             if string_to_int(name_trim, group_id) {
                 if group_id < 0 {
-                    group_id = next_group_id + group_id;
+                    group_id = cur_branch_reset_state.cur_group + group_id;
 
                     if group_id < 1 { // Negative and zero are no valid groups.
                         error("Relative group reference does not reference a valid group. (Would be (group_id)$.)");
@@ -1493,7 +1556,7 @@ regex_parser: <Error_out> type = {
                     }
                 }
 
-                if group_id >= next_group_id { error("Group reference is used before the group is declared."); return false; }
+                if group_id >= cur_branch_reset_state.cur_group { error("Group reference is used before the group is declared."); return false; }
             }
             else {
                 // Named group
@@ -1620,6 +1683,26 @@ regex_parser: <Error_out> type = {
 
                 return true;
             }
+            else if c_next == '|' {
+                // Branch reset group
+
+                if !next(out c_next) /* skip '|' */ { error("Missing ending bracket for named group."); return false; }
+
+                old_parser_state: _ = new_state();
+                old_branch_state: _ = group_new_state();
+                parse_until(')');
+                inner:= create_matcher_from_state();
+                group_restore_state(old_branch_state);
+                restore_state(old_parser_state);
+
+                start_matcher := create_matcher("branch_reset_matcher_logic", "");
+                end_matcher := create_matcher("special_group_end_logic", "");
+
+                v: std::vector<std::string> = (start_matcher, inner, end_matcher);
+                cur_state.add(create_matcher_from_list(v));
+
+                return true;
+            }
             else {
                 // Simple modifier
                 has_id = false;
@@ -1643,8 +1726,7 @@ regex_parser: <Error_out> type = {
 
             group_number := -1;
             if has_id {
-                group_number = next_group_id;
-                next_group_id += 1;
+                group_number = cur_branch_reset_state.next();
             }
 
             old_state: _ = new_state();
@@ -1862,7 +1944,7 @@ regex_parser: <Error_out> type = {
         start := create_matcher("group_matcher_start_logic", "0, ::cpp2::regex::match_modifiers_no_change, \"\", false");
         end   := create_matcher("group_matcher_end_logic", "0");
         list  := create_matcher("matcher_list", "(start)$, (inner)$, (end)$");
-        return   create_matcher("regular_expression", "(mod)$, (next_group_id)$, (alternatives_count)$, (named_groups_arg)$, (list)$");
+        return   create_matcher("regular_expression", "(mod)$, (cur_branch_reset_state.cur_group)$, (alternatives_count)$, (named_groups_arg)$, (list)$");
     }
 
 }
