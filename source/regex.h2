@@ -29,10 +29,11 @@ bstring: <CharT> type == std::basic_string<CharT>;
 //
 
 expression_flags: type = {
-    case_insensitive : int == 1;  // mod: i
-    multiple_lines: int    == 2;  // mod: m
-    single_line: int       == 4;  // mod: s
-    no_group_captures: int == 8;  // mod: n
+    case_insensitive : int ==  1;  // mod: i
+    multiple_lines: int    ==  2;  // mod: m
+    single_line: int       ==  4;  // mod: s
+    no_group_captures: int ==  8;  // mod: n
+    perl_code_syntax: int  == 16;  // mod: x or xx
 }
 
 match_group: @struct <Iter> type = {
@@ -993,6 +994,7 @@ regex_parser_state: @struct type = {
     alternate_match_lists: std::vector<std::vector<std::string>> = ();
 
     group_captures_have_numbers : bool = true;
+    perl_code_syntax: bool = false;
 
     next_alternative: (inout this) = {
         new_list: std::vector<std::string> = ();
@@ -1033,6 +1035,8 @@ regex_parser: <Error_out> type = {
     has_error: bool = false;
     error_out: Error_out;
 
+    perl_code_syntax_in_classes: bool = false;
+
     supported_classes: std::vector<std::string> = ("alnum", "alpha", "ascii", "blank", "cntrl", "digits", "graph",
                                                    "lower", "print", "punct", "space", "upper", "word", "xdigit");
 
@@ -1047,6 +1051,7 @@ regex_parser: <Error_out> type = {
     new_state: (inout this) -> regex_parser_state = {
         old_state: regex_parser_state = ();
         old_state.group_captures_have_numbers = cur_state.group_captures_have_numbers;
+        old_state.perl_code_syntax = cur_state.perl_code_syntax;
         old_state.swap(cur_state);
 
         return old_state;
@@ -1191,7 +1196,8 @@ regex_parser: <Error_out> type = {
         return r;
     }
 
-    parse_modifiers: (inout this, change_str: std::string, out modifier_change: std::string, inout group_captures_have_numbers: bool) -> bool = {
+    parse_modifiers: (inout this, change_str: std::string, out modifier_change: std::string,
+                      inout group_captures_have_numbers: bool, inout perl_code_syntax: bool) -> bool = {
         is_negative := false;
         is_reset    := false;
 
@@ -1221,6 +1227,10 @@ regex_parser: <Error_out> type = {
             else if cur == 'n' {
                 apply(expression_flags::no_group_captures);
                 group_captures_have_numbers = is_negative;
+            }
+            else if cur == 'x' {
+                apply(expression_flags::perl_code_syntax);
+                perl_code_syntax = !is_negative;
             }
             else {
                 error("Unknown modifier: (cur)$"); return false;
@@ -1502,6 +1512,7 @@ regex_parser: <Error_out> type = {
         group_name : std::string = "";
         modifier_change: std::string = "::cpp2::regex::match_modifiers_no_change";
         group_capture_change_to := cur_state.group_captures_have_numbers;
+        perl_code_syntax_change_to := cur_state.perl_code_syntax;
 
         c_next : char = '\0';
         // Skip the '('
@@ -1522,7 +1533,7 @@ regex_parser: <Error_out> type = {
                 has_id = false;
                 change_str : std::string = "";
                 if !grab_until_one_of("):", out change_str) { error("Missing ending bracket for group."); return false; }
-                if !parse_modifiers(change_str, out modifier_change, group_capture_change_to) {
+                if !parse_modifiers(change_str, out modifier_change, group_capture_change_to, perl_code_syntax_change_to) {
                      return false;
                 }
 
@@ -1546,6 +1557,7 @@ regex_parser: <Error_out> type = {
 
             old_state: _ = new_state();
             cur_state.group_captures_have_numbers = group_capture_change_to;
+            cur_state.perl_code_syntax = perl_code_syntax_change_to;
             parse_until(')');
             inner:= create_matcher_from_state();
             restore_state(old_state);
@@ -1564,6 +1576,7 @@ regex_parser: <Error_out> type = {
         else {
             // Only a modifier
             cur_state.group_captures_have_numbers = group_capture_change_to;
+            cur_state.perl_code_syntax = perl_code_syntax_change_to;
             cur_state.add(create_matcher("modifier_matcher_logic", "(modifier_change)$"));
         }
 
@@ -1722,7 +1735,7 @@ regex_parser: <Error_out> type = {
         };
 
         mod_pos := 0;
-        while mod_pos != modifier.size() next mod_pos += 1 {
+        while mod_pos < modifier.ssize() next mod_pos += 1 {
             c: char = modifier[mod_pos];
 
             if      c == 'i' { add("::cpp2::regex::expression_flags::case_insensitive", r); }
@@ -1731,6 +1744,16 @@ regex_parser: <Error_out> type = {
             else if c == 'n' {
                 add("::cpp2::regex::expression_flags::no_group_captures", r);
                 cur_state.group_captures_have_numbers = false;
+            }
+            else if c == 'x' {
+                add("::cpp2::regex::expression_flags::perl_code_syntax", r);
+                cur_state.perl_code_syntax = true;
+
+                // Check if we have 'xx'
+                mod_pos += 1;
+                if mod_pos < modifier.ssize() && 'x' == modifier[mod_pos] {
+                    perl_code_syntax_in_classes = true;
+                }
             }
             else { error("Unknown modifier: '(c)$'"); }
         }
