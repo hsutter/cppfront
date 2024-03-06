@@ -1064,9 +1064,39 @@ regex_parser: <Error_out> type = {
     // Position management functions
     //
 
-    next: (inout this, out n: char) -> bool = {
-        if (pos + 1) < regex.size() {
-            pos += 1;
+    private get_next_position: (in this, in_class: bool) -> size_t = {
+        perl_syntax:= cur_state.perl_code_syntax || (in_class && cur_state.perl_code_syntax && perl_code_syntax_in_classes);
+        cur := pos + 1;
+        if perl_syntax {
+            while cur < regex.size() next (cur += 1) {
+                n: = regex[cur];
+
+                if space_class<char>::includes(n) {
+                    continue;
+                }
+                else if !in_class && '#' == n {
+                    cur = regex.find("\n", cur);
+                    if std::string::npos == cur {
+                        // No new line, comment runs until the end of the pattern
+                        cur = regex.size();
+                    }
+                }
+                else { // None space none comment char
+                    break;
+                }
+            }
+        }
+
+        // Check for end of file.
+        if cur > regex.size() {
+            cur = regex.size();
+        }
+        return cur;
+    }
+
+    private next_impl: (inout this, out n: char, in_class: bool) -> bool = {
+        pos = get_next_position(in_class);
+        if pos != regex.size() {
             n = regex[pos];
             return true;
         }
@@ -1076,10 +1106,22 @@ regex_parser: <Error_out> type = {
         }
     }
 
+    next: (inout this, out n: char)          next_impl(out n, false);
+    next_in_class: (inout this, out n: char) next_impl(out n, true);
+
     skip: (inout this) -> bool = {
         c: char;
         r := next(out c);
         _ = c;
+        return r;
+    }
+
+    skip_n:(inout this, n: int) -> bool = {
+        r := true;
+        cur := 0;
+        while r && cur < n next (r = skip()) {
+            cur += 1;
+        }
         return r;
     }
 
@@ -1091,20 +1133,28 @@ regex_parser: <Error_out> type = {
         }
     }
 
-    peek: (inout this) -> char = {
-        if (pos + 1) < regex.size() {
-            return regex[pos + 1];
+    private peek_impl: (in this, in_class: bool) -> char = {
+        next_pos := get_next_position(in_class);
+        if next_pos < regex.size() {
+            return regex[next_pos];
         }
         else {
             return '\0';
         }
     }
 
-    grab_until: (inout this, in e: char, out r: std::string) grab_until_one_of(std::string(1, e), out r);
+    peek: (in this)          peek_impl(false);
+    peek_in_class: (in this) peek_impl(true);
 
-    grab_until_one_of: (inout this, in e: std::string, out r: std::string) -> bool = {
+    private grab_until_impl: (inout this, in e: std::string, out r: std::string, any: bool) -> bool = {
         start := pos;
-        end: = regex.find_first_of(e, pos);
+        end:= pos;
+        if any {
+            end = regex.find_first_of(e, pos);
+        }
+        else {
+            end = regex.find(e, pos);
+        }
 
         if end != std::string_view::npos {
             r = regex.substr(start, end - pos);
@@ -1116,6 +1166,10 @@ regex_parser: <Error_out> type = {
             return false;
         }
     }
+
+    grab_until: (inout this, in e: std::string, out r: std::string)        grab_until_impl(e, out r, false);
+    grab_until: (inout this, in e: char, out r: std::string)               grab_until_impl(std::string(1, e), out r, false);
+    grab_until_one_of: (inout this, in e: std::string, out r: std::string) grab_until_impl(e, out r, true);
 
     grab_number: (inout this) -> std::string = {
         start := pos;
@@ -1278,38 +1332,23 @@ regex_parser: <Error_out> type = {
 
         classes: std::vector<std::string> = ();
 
-        c_cur: char = regex[pos];
-        next_item:= :() -> bool = {
-            pos&$* += 1;
-            if pos&$* >= regex$.size() { return false; }
-
-            c_cur&$* = regex$[pos&$*];
-            return true;
-
-        };
-
-        peek_item:= :() -> char = {
-            if (pos$ + 1) >= regex$.size() { return '\0'; }
-            else { return regex[pos + 1]; }
-        };
+        c_cur: char = current();
 
         // First step: parse until the end bracket and push single chars, ranges or groups on the class stack.
         negate:= false;
         first:= true;
         range:= false;
-        while next_item() & (c_cur != ']' || first) {
+        while next_in_class(out c_cur) & (c_cur != ']' || first) {
             if c_cur == '^' {
                 negate = true;
                 continue; // Skip rest of the loop. Also the first update.
             }
-            if c_cur == '[' && peek_item() == ':' {
+            if c_cur == '[' && peek_in_class() == ':' {
                 // We have a character class.
-                pos += 2; // Skip ':]'
+                _ = skip_n(2);
 
-                end := regex.find(":]", pos);
-                if end == std::string::npos { error("Could not find end of character class."); return false; }
-
-                name := regex.substr(pos, end - pos);
+                name: std::string = "";
+                if !grab_until(":]", out name) { error("Could not find end of character class."); return false; }
                 if supported_classes.end() == std::find(supported_classes.begin(), supported_classes.end(), name) {
                     error("Unsupported character class. Supported ones are: (join(supported_classes))$");
                     return false;
@@ -1317,11 +1356,10 @@ regex_parser: <Error_out> type = {
 
                 classes.push_back("[:(name)$:]");
 
-                end += 1; // Skip ':' pointing to the ending ']'.
-                pos = end;
+                _ = skip(); // Skip ':' pointing to the ending ']'.
             }
             else if c_cur == '\\' {
-                if next_item()  && (c_cur != ']') {
+                if next_in_class(out c_cur)  && (c_cur != ']') {
                     name := "";
                          if 'd' == c_cur { name = "short_digits"; }
                     else if 'D' == c_cur { name = "short_not_digits"; }
@@ -1363,8 +1401,6 @@ regex_parser: <Error_out> type = {
             first = false;
         }
 
-        _ = next_item; // TODO: Use in while is not recognized.
-
         if c_cur != ']' {
             error("Error end of character class definition before terminating ']'.");
             return false;
@@ -1397,7 +1433,8 @@ regex_parser: <Error_out> type = {
         if c != '\\' { return false; }
 
         start := pos; // Keep start for group matchers.
-        pos += 1;
+        c_next := '\0';
+        if !next(out c_next) { error("Escape without a following character."); return false; }
 
         add_group_matcher:= :(name: std::string) -> bool = {
 
@@ -1425,10 +1462,6 @@ regex_parser: <Error_out> type = {
 
             return true;
         };
-
-        if pos >= regex.size() { error("Escape without a following character."); return false;}
-
-        c_next: char = regex[pos];
 
         if '1' <= c_next <= '9' {
             group := grab_number();
@@ -1618,11 +1651,11 @@ regex_parser: <Error_out> type = {
         possessive := false;
         if peek() == '?' {
             greedy = false;
-            pos += 1;
+            _ = skip();
         }
         else if peek() == '+' {
             possessive = true;
-            pos += 1;
+            _ = skip();
         }
 
         min_count: std::string = "-1";
@@ -1687,11 +1720,11 @@ regex_parser: <Error_out> type = {
         possessive := false;
         if peek() == '?' {
             greedy = false;
-            pos += 1;
+            _ = skip();
         }
         else if peek() == '+' {
             possessive = true;
-            pos += 1;
+            _ = skip();
         }
 
         if cur_state.empty() {
@@ -1704,9 +1737,8 @@ regex_parser: <Error_out> type = {
     }
 
     parse_until:(inout this, term: char) = {
-        while pos != regex.size() next pos += 1 {
-            c: char = regex[pos];
-
+        c: char = current();
+        while c != '\n' next _ = next(out c) {
             if c == term { return; }
 
             if !has_error && is_alternative(c) { continue; }
