@@ -1069,8 +1069,16 @@ regex_parser: <Error_out> type = {
     // Position management functions
     //
 
-    private get_next_position: (in this, in_class: bool) -> size_t = {
-        perl_syntax:= cur_state.perl_code_syntax || (in_class && cur_state.perl_code_syntax && perl_code_syntax_in_classes);
+    private get_next_position: (in this, in_class: bool, for_escape: bool) -> size_t = {
+        perl_syntax := false;
+        if !for_escape {
+            if in_class {
+                perl_syntax = cur_state.perl_code_syntax && perl_code_syntax_in_classes;
+            }
+            else {
+                perl_syntax = cur_state.perl_code_syntax;
+            }
+        }
         cur := pos + 1;
         if perl_syntax {
             while cur < regex.size() next (cur += 1) {
@@ -1099,8 +1107,8 @@ regex_parser: <Error_out> type = {
         return cur;
     }
 
-    private next_impl: (inout this, out n: char, in_class: bool) -> bool = {
-        pos = get_next_position(in_class);
+    private next_impl: (inout this, out n: char, in_class: bool, for_escape: bool) -> bool = {
+        pos = get_next_position(in_class, for_escape);
         if pos != regex.size() {
             n = regex[pos];
             return true;
@@ -1111,8 +1119,8 @@ regex_parser: <Error_out> type = {
         }
     }
 
-    next: (inout this, out n: char)          next_impl(out n, false);
-    next_in_class: (inout this, out n: char) next_impl(out n, true);
+    next: (inout this, out n: char)          next_impl(out n, false, false);
+    next_in_class: (inout this, out n: char, for_escape: bool) next_impl(out n, true, for_escape);
 
     skip: (inout this) -> bool = {
         c: char;
@@ -1139,7 +1147,7 @@ regex_parser: <Error_out> type = {
     }
 
     private peek_impl: (in this, in_class: bool) -> char = {
-        next_pos := get_next_position(in_class);
+        next_pos := get_next_position(in_class, false);
         if next_pos < regex.size() {
             return regex[next_pos];
         }
@@ -1343,7 +1351,7 @@ regex_parser: <Error_out> type = {
         negate:= false;
         first:= true;
         range:= false;
-        while next_in_class(out c_cur) & (c_cur != ']' || first) {
+        while next_in_class(out c_cur, false) & (c_cur != ']' || first) {
             if c_cur == '^' {
                 negate = true;
                 continue; // Skip rest of the loop. Also the first update.
@@ -1364,23 +1372,28 @@ regex_parser: <Error_out> type = {
                 _ = skip(); // Skip ':' pointing to the ending ']'.
             }
             else if c_cur == '\\' {
-                if next_in_class(out c_cur)  && (c_cur != ']') {
-                    name := "";
-                         if 'd' == c_cur { name = "short_digits"; }
-                    else if 'D' == c_cur { name = "short_not_digits"; }
-                    else if 'h' == c_cur { name = "short_hor_space"; }
-                    else if 'H' == c_cur { name = "short_not_hor_space"; }
-                    else if 's' == c_cur { name = "short_space"; }
-                    else if 'S' == c_cur { name = "short_not_space"; }
-                    else if 'v' == c_cur { name = "short_ver_space"; }
-                    else if 'V' == c_cur { name = "short_not_ver_space"; }
-                    else if 'w' == c_cur { name = "short_word"; }
-                    else if 'W' == c_cur { name = "short_not_word"; }
-                    else {
-                        error("Unknown group escape.");
-                        return false;
+                if next_in_class(out c_cur, true)  && (c_cur != ']') {
+                    if  ' ' == c_cur && cur_state.perl_code_syntax && perl_code_syntax_in_classes {
+                        classes.push_back(std::string(1, c_cur)); // TODO: UFCS error with char as argument.
                     }
-                    classes.push_back("[:(name)$:]");
+                    else {
+                        name := "";
+                            if 'd' == c_cur { name = "short_digits"; }
+                        else if 'D' == c_cur { name = "short_not_digits"; }
+                        else if 'h' == c_cur { name = "short_hor_space"; }
+                        else if 'H' == c_cur { name = "short_not_hor_space"; }
+                        else if 's' == c_cur { name = "short_space"; }
+                        else if 'S' == c_cur { name = "short_not_space"; }
+                        else if 'v' == c_cur { name = "short_ver_space"; }
+                        else if 'V' == c_cur { name = "short_not_ver_space"; }
+                        else if 'w' == c_cur { name = "short_word"; }
+                        else if 'W' == c_cur { name = "short_not_word"; }
+                        else {
+                            error("Unknown group escape.");
+                            return false;
+                        }
+                        classes.push_back("[:(name)$:]");
+                    }
                 } else {
                     error("Escape without a following character.");
                     return false;
