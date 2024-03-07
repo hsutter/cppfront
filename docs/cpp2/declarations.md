@@ -185,7 +185,7 @@ n: namespace
 
 ## <a id="aliases"></a> Aliases
 
-Aliases are pronounced **"synonym for**, and written using the same **name `:` kind `=` value** [declaration syntax](../cpp2/declarations.md) as everything in Cpp2:
+Aliases are pronounced **"synonym for"**, and written using the same **name `:` kind `=` value** [declaration syntax](../cpp2/declarations.md) as everything in Cpp2:
 
 - **name** is declared to be a synonym for **value**.
 
@@ -222,7 +222,7 @@ main: () = {
 
 ### <a id="type-aliases"></a> Type aliases
 
-A namespace alias is written the same way as a [type](types.md), but using `==` and with the name of another type as its value. For example:
+A type alias is written the same way as a [type](types.md), but using `==` and with the name of another type as its value. For example:
 
 ``` cpp title="Type aliases" hl_lines="1 2 7 10"
 //  'imap<T>' is a type defined as a synonym for 'std::map<i32, T>'
@@ -234,7 +234,7 @@ main: () = {
     map2: imap<std::string> = ();
 
     //  Assertion they are the same type, using the same_as concept
-    assert( std::same_as< decltype(map1), decltype(map2) > );
+    static_assert( std::same_as< decltype(map1), decltype(map2) > );
 }
 ```
 
@@ -252,7 +252,7 @@ main: () = {
     ints: std::array<i32, square(4)> = ();
 
     //  Assertion that the size is the square of 4
-    assert( ints.size() == 16 );
+    static_assert( ints.size() == 16 );
 
     //  And if can be used at run time, with run time values
     std::cout << "the square of 4 is (square(4))$\n";
@@ -274,7 +274,7 @@ BufferSize: i32 == 1'000'000;
 
 main: () = {
     buf: std::array<std::byte, BufferSize> = ();
-    assert( buf.size() == BufferSize );
+    static_assert( buf.size() == BufferSize );
 }
 ```
 
