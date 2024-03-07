@@ -762,8 +762,8 @@ class out {
     bool called_construct_ = false;
 
 public:
-    out(T*                 t_) noexcept : vt{ t_}, has_t{true}       { Default.enforce( t); }
-    out(deferred_init<T>* dt_) noexcept : vt{dt_}, has_t{false}      { Default.enforce(dt); }
+    out(T*                 t_) noexcept : vt{ t_}, has_t{true}       { Default.enforce( t_); }
+    out(deferred_init<T>* dt_) noexcept : vt{dt_}, has_t{false}      { Default.enforce(dt_); }
     out(out<T>*           ot_) noexcept : ot{ot_}, has_t{ot_->has_t} { Default.enforce(ot);
         if (has_t) { vt = std::get<0>(ot->vt);  }
         else       { vt = std::get<1>(ot->vt); }
