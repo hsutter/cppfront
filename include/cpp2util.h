@@ -798,7 +798,7 @@ public:
             Default.enforce( std::get<1>(vt) );
             if (std::get<1>(vt)->init) {
                 if constexpr (requires { *std::get<0>(vt) = T(CPP2_FORWARD(args)...); }) {
-                    *std::get<1>(vt)->value() = T(CPP2_FORWARD(args)...);
+                    std::get<1>(vt)->value() = T(CPP2_FORWARD(args)...);
                 }
                 else {
                     Default.report_violation("attempted to copy assign, but copy assignment is not available");
