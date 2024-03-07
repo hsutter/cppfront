@@ -751,8 +751,8 @@ public:
 
 template<typename T>
 class out {
-    //  Actually going to bother with std::variant here
-    std::variant<T*,deferd_init<T>*> vt;
+    //  Actually using std::variant here
+    std::variant<T*,deferred_init<T>*> vt;
     out<T>* ot = {};
     bool has_t;
 
@@ -787,7 +787,7 @@ public:
     auto construct(auto&& ...args) -> void {
         if (has_t || called_construct()) {
             if constexpr (requires { *std::get<0>(vt) = T(CPP2_FORWARD(args)...); }) {
-                Default.enforce( t );
+                Default.enforce( std::get<0>(vt) );
                 *std::get<0>(vt) = T(CPP2_FORWARD(args)...);
             }
             else {
@@ -795,10 +795,10 @@ public:
             }
         }
         else {
-            Default.enforce( dt );
+            Default.enforce( std::get<1>(vt) );
             if (std::get<1>(vt)->init) {
                 if constexpr (requires { *std::get<0>(vt) = T(CPP2_FORWARD(args)...); }) {
-                    std::get<1>(vt)->value() = T(CPP2_FORWARD(args)...);
+                    *std::get<1>(vt)->value() = T(CPP2_FORWARD(args)...);
                 }
                 else {
                     Default.report_violation("attempted to copy assign, but copy assignment is not available");
@@ -813,11 +813,11 @@ public:
 
     auto value() noexcept -> T& {
         if (has_t) {
-            Default.enforce( t );
+            Default.enforce( std::get<0>(vt) );
             return *std::get<0>(vt);
         }
         else {
-            Default.enforce( dt );
+            Default.enforce( std::get<1>(vt) );
             return std::get<1>(vt)->value();
         }
     }
