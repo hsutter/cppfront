@@ -751,11 +751,8 @@ public:
 
 template<typename T>
 class out {
-    //  Not going to bother with std::variant here
-    union {
-        T* t;
-        deferred_init<T>* dt;
-    };
+    //  Actually using std::variant here
+    std::variant<T*,deferred_init<T>*> vt;
     out<T>* ot = {};
     bool has_t;
 
@@ -765,11 +762,11 @@ class out {
     bool called_construct_ = false;
 
 public:
-    out(T*                 t_) noexcept :  t{ t_}, has_t{true}       { Default.enforce( t); }
-    out(deferred_init<T>* dt_) noexcept : dt{dt_}, has_t{false}      { Default.enforce(dt); }
+    out(T*                 t_) noexcept : vt{ t_}, has_t{true}       { Default.enforce( t); }
+    out(deferred_init<T>* dt_) noexcept : vt{dt_}, has_t{false}      { Default.enforce(dt); }
     out(out<T>*           ot_) noexcept : ot{ot_}, has_t{ot_->has_t} { Default.enforce(ot);
-        if (has_t) {  t = ot->t;  }
-        else       { dt = ot->dt; }
+        if (has_t) { vt = std::get<0>(ot->vt);  }
+        else       { vt = std::get<1>(ot->vt); }
     }
 
     auto called_construct() -> bool& {
@@ -782,33 +779,33 @@ public:
     ~out() {
         if (called_construct() && uncaught_count != Uncaught_exceptions()) {
             Default.enforce(!has_t);
-            dt->destroy();
+            std::get<1>(vt)->destroy();
             called_construct() = false;
         }
     }
 
     auto construct(auto&& ...args) -> void {
         if (has_t || called_construct()) {
-            if constexpr (requires { *t = T(CPP2_FORWARD(args)...); }) {
-                Default.enforce( t );
-                *t = T(CPP2_FORWARD(args)...);
+            if constexpr (requires { *std::get<0>(vt) = T(CPP2_FORWARD(args)...); }) {
+                Default.enforce( std::get<0>(vt) );
+                *std::get<0>(vt) = T(CPP2_FORWARD(args)...);
             }
             else {
                 Default.report_violation("attempted to copy assign, but copy assignment is not available");
             }
         }
         else {
-            Default.enforce( dt );
-            if (dt->init) {
-                if constexpr (requires { *t = T(CPP2_FORWARD(args)...); }) {
-                    dt->value() = T(CPP2_FORWARD(args)...);
+            Default.enforce( std::get<1>(vt) );
+            if (std::get<1>(vt)->init) {
+                if constexpr (requires { *std::get<0>(vt) = T(CPP2_FORWARD(args)...); }) {
+                    *std::get<1>(vt)->value() = T(CPP2_FORWARD(args)...);
                 }
                 else {
                     Default.report_violation("attempted to copy assign, but copy assignment is not available");
                 }
             }
             else {
-                dt->construct(CPP2_FORWARD(args)...);
+                std::get<1>(vt)->construct(CPP2_FORWARD(args)...);
                 called_construct() = true;
             }
         }
@@ -816,12 +813,12 @@ public:
 
     auto value() noexcept -> T& {
         if (has_t) {
-            Default.enforce( t );
-            return *t;
+            Default.enforce( std::get<0>(vt) );
+            return *std::get<0>(vt);
         }
         else {
-            Default.enforce( dt );
-            return dt->value();
+            Default.enforce( std::get<1>(vt) );
+            return std::get<1>(vt)->value();
         }
     }
 };
