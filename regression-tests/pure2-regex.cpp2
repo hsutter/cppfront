@@ -21,6 +21,13 @@ create_result: (resultExpr: std::string, r) -> std::string = {
 
     return std::stoi(std::string(start, iter));
   };
+  extract_until := :(inout iter, to: char) -> _ = {
+    start := iter;
+
+    while (to != iter*) next iter++ {} // TODO: Without bracket: error: postfix unary * (dereference) cannot be immediately followed by a (, identifier, or literal - add whitespace before * here if you meant binary * (multiplication)
+
+    return std::string(start, iter);
+  };
 
   iter := resultExpr.begin();
 
@@ -41,15 +48,27 @@ create_result: (resultExpr: std::string, r) -> std::string = {
         else if next* == '-' || next* == '+' {
           is_start := next* == '-';
           next++;
-          next++; // Skip [
-          group := extract_group_and_advance(next);
-          next++; // Skip ]
+          if next* == '{' {
+            next++; // Skip {
+            group := extract_until(next, '}');
+            next++; // Skip }
+            result += r.group(group);
+          }
+          else if next* == '[' {
+            next++; // Skip [
+            group := extract_group_and_advance(next);
+            next++; // Skip ]
 
-          if is_start {
-            result += std::to_string(r.group_start(group));
+            if is_start {
+              result += std::to_string(r.group_start(group));
+            }
+            else {
+              result += std::to_string(r.group_end(group));
+            }
           }
           else {
-            result += std::to_string(r.group_end(group));
+            // Return max group
+            result += r.group(r.group_number() - 1);
           }
         }
         else if std::isdigit(next*) {
@@ -102,7 +121,7 @@ test: <M> (regex: M, id: int, regex_str: std::string, str: std::string, kind: st
 
   r := regex.search(str);
 
-  if "y" == kind {
+  if "y" == kind || "yM" == kind || "yS" == kind {
     if !r.matched {
       status = "Failure: Regex should apply.";
     }
@@ -1551,10 +1570,192 @@ test_general_tests: @regex type = {
   var_regex_585 : std::string = "(?i:.[b].)";
   regex_586 := "(?i:\N[b]\N)";
   var_regex_586 : std::string = "(?i:\\N[b]\\N)";
-  regex_587 := "foo\Kbar";
-  var_regex_587 : std::string = "foo\Kbar";
-  regex_588 := "foo\t\n\r\f\a\ebar";
-  var_regex_588 : std::string = "foo\t\n\r\f\a\ebar";
+  regex_587 := "\N {1}";
+  regex_587_mod := "x";
+  var_regex_587 : std::string = "\\N {1}";
+  regex_588 := "\N {1}";
+  regex_588_mod := "x";
+  var_regex_588 : std::string = "\\N {1}";
+  regex_589 := "\N {1}";
+  regex_589_mod := "x";
+  var_regex_589 : std::string = "\\N {1}";
+  regex_590 := "\N {3,4}";
+  regex_590_mod := "x";
+  var_regex_590 : std::string = "\\N {3,4}";
+  regex_591 := "\N {3,4}";
+  regex_591_mod := "x";
+  var_regex_591 : std::string = "\\N {3,4}";
+  regex_592 := "\N {3,4}";
+  regex_592_mod := "x";
+  var_regex_592 : std::string = "\\N {3,4}";
+  regex_593 := "a\N c";
+  regex_593_mod := "x";
+  var_regex_593 : std::string = "a\\N c";
+  regex_594 := "a\N *c";
+  regex_594_mod := "x";
+  var_regex_594 : std::string = "a\\N *c";
+  regex_595 := "a\N *c";
+  regex_595_mod := "x";
+  var_regex_595 : std::string = "a\\N *c";
+  regex_596 := "[a b]";
+  regex_596_mod := "x";
+  var_regex_596 : std::string = "[a b]";
+  regex_597 := "[a b]";
+  regex_597_mod := "xx";
+  var_regex_597 : std::string = "[a b]";
+  regex_598 := "[a\ b]";
+  regex_598_mod := "xx";
+  var_regex_598 : std::string = "[a\ b]";
+  regex_599 := "[ ^ a b ]";
+  regex_599_mod := "xx";
+  var_regex_599 : std::string = "[ ^ a b ]";
+  regex_600 := "[ ^ a b ]";
+  regex_600_mod := "xx";
+  var_regex_600 : std::string = "[ ^ a b ]";
+  regex_601 := "[ ^ a b ]";
+  regex_601_mod := "xx";
+  var_regex_601 : std::string = "[ ^ a b ]";
+  regex_602 := "(?x:[a b])";
+  regex_602_mod := "xx";
+  var_regex_602 : std::string = "(?x:[a b])";
+  regex_603 := "(?xx:[a b])";
+  regex_603_mod := "x";
+  var_regex_603 : std::string = "(?xx:[a b])";
+  regex_604 := "(?x)[a b]";
+  regex_604_mod := "xx";
+  var_regex_604 : std::string = "(?x)[a b]";
+  regex_605 := "(?xx)[a b]";
+  regex_605_mod := "x";
+  var_regex_605 : std::string = "(?xx)[a b]";
+  regex_606 := "(?-x:[a b])";
+  regex_606_mod := "xx";
+  var_regex_606 : std::string = "(?-x:[a b])";
+  regex_607 := "\N {1}";
+  regex_607_mod := "x";
+  var_regex_607 : std::string = "\\N {1}";
+  regex_608 := "\N {1}";
+  regex_608_mod := "x";
+  var_regex_608 : std::string = "\\N {1}";
+  regex_609 := "\N {1}";
+  regex_609_mod := "x";
+  var_regex_609 : std::string = "\\N {1}";
+  regex_610 := "\N {3,4}";
+  regex_610_mod := "x";
+  var_regex_610 : std::string = "\\N {3,4}";
+  regex_611 := "\N {3,4}";
+  regex_611_mod := "x";
+  var_regex_611 : std::string = "\\N {3,4}";
+  regex_612 := "\N {3,4}";
+  regex_612_mod := "x";
+  var_regex_612 : std::string = "\\N {3,4}";
+  regex_613 := "a\N c";
+  regex_613_mod := "x";
+  var_regex_613 : std::string = "a\\N c";
+  regex_614 := "a\N *c";
+  regex_614_mod := "x";
+  var_regex_614 : std::string = "a\\N *c";
+  regex_615 := "a\N *c";
+  regex_615_mod := "x";
+  var_regex_615 : std::string = "a\\N *c";
+  regex_616 := "[#]";
+  var_regex_616 : std::string = "[#]";
+  regex_617 := "[#]b";
+  var_regex_617 : std::string = "[#]b";
+  regex_618 := "[#]";
+  regex_618_mod := "x";
+  var_regex_618 : std::string = "[#]";
+  regex_619 := "[#]b";
+  regex_619_mod := "x";
+  var_regex_619 : std::string = "[#]b";
+  regex_620 := "(?'n'foo) \g{n}";
+  var_regex_620 : std::string = "(?'n'foo) \g{n}";
+  regex_621 := "(?'n'foo) \g{ n }";
+  var_regex_621 : std::string = "(?'n'foo) \g{ n }";
+  regex_622 := "(?'n'foo) \g{n}";
+  var_regex_622 : std::string = "(?'n'foo) \g{n}";
+  regex_623 := "(?<n>foo) \g{n}";
+  var_regex_623 : std::string = "(?<n>foo) \g{n}";
+  regex_624 := "(?<n>foo) \g{n}";
+  var_regex_624 : std::string = "(?<n>foo) \g{n}";
+  regex_625 := "(?<as>as) (\w+) \g{as} (\w+)";
+  var_regex_625 : std::string = "(?<as>as) (\w+) \g{as} (\w+)";
+  regex_626 := "(?'n'foo) \k<n>";
+  var_regex_626 : std::string = "(?'n'foo) \k<n>";
+  regex_627 := "(?'n'foo) \k<n>";
+  var_regex_627 : std::string = "(?'n'foo) \k<n>";
+  regex_628 := "(?<n>foo) \k'n'";
+  var_regex_628 : std::string = "(?<n>foo) \k'n'";
+  regex_629 := "(?<n>foo) \k'n'";
+  var_regex_629 : std::string = "(?<n>foo) \k'n'";
+  regex_630 := "(?'a1'foo) \k'a1'";
+  var_regex_630 : std::string = "(?'a1'foo) \k'a1'";
+  regex_631 := "(?<a1>foo) \k<a1>";
+  var_regex_631 : std::string = "(?<a1>foo) \k<a1>";
+  regex_632 := "(?'_'foo) \k'_'";
+  var_regex_632 : std::string = "(?'_'foo) \k'_'";
+  regex_633 := "(?<_>foo) \k<_>";
+  var_regex_633 : std::string = "(?<_>foo) \k<_>";
+  regex_634 := "(?'_0_'foo) \k'_0_'";
+  var_regex_634 : std::string = "(?'_0_'foo) \k'_0_'";
+  regex_635 := "(?<_0_>foo) \k<_0_>";
+  var_regex_635 : std::string = "(?<_0_>foo) \k<_0_>";
+  regex_636 := "(?<as>as) (\w+) \k<as> (\w+)";
+  var_regex_636 : std::string = "(?<as>as) (\w+) \k<as> (\w+)";
+  regex_637 := "(?<as>as) (\w+) \k{as} (\w+)";
+  var_regex_637 : std::string = "(?<as>as) (\w+) \k{as} (\w+)";
+  regex_638 := "(?<as>as) (\w+) \k'as' (\w+)";
+  var_regex_638 : std::string = "(?<as>as) (\w+) \k'as' (\w+)";
+  regex_639 := "(?<as>as) (\w+) \k{ as } (\w+)";
+  var_regex_639 : std::string = "(?<as>as) (\w+) \k{ as } (\w+)";
+  regex_640 := "^a(?#xxx){3}c";
+  var_regex_640 : std::string = "^a(?#xxx){3}c";
+  regex_641 := "^a (?#xxx) (?#yyy) {3}c";
+  regex_641_mod := "x";
+  var_regex_641 : std::string = "^a (?#xxx) (?#yyy) {3}c";
+  regex_642 := "(?|(a))";
+  var_regex_642 : std::string = "(?|(a))";
+  regex_643 := "(?|a(.)b|d(.(o).)d|i(.)(.)j)(.)";
+  var_regex_643 : std::string = "(?|a(.)b|d(.(o).)d|i(.)(.)j)(.)";
+  regex_644 := "(?|a(.)b|d(.(o).)d|i(.)(.)j)(.)";
+  var_regex_644 : std::string = "(?|a(.)b|d(.(o).)d|i(.)(.)j)(.)";
+  regex_645 := "(?|a(.)b|d(.(o).)d|i(.)(.)j)(.)";
+  var_regex_645 : std::string = "(?|a(.)b|d(.(o).)d|i(.)(.)j)(.)";
+  regex_646 := "(?|(?|(a)|(b))|(?|(c)|(d)))";
+  var_regex_646 : std::string = "(?|(?|(a)|(b))|(?|(c)|(d)))";
+  regex_647 := "(?|(?|(a)|(b))|(?|(c)|(d)))";
+  var_regex_647 : std::string = "(?|(?|(a)|(b))|(?|(c)|(d)))";
+  regex_648 := "(?|(?|(a)|(b))|(?|(c)|(d)))";
+  var_regex_648 : std::string = "(?|(?|(a)|(b))|(?|(c)|(d)))";
+  regex_649 := "(?|(?|(a)|(b))|(?|(c)|(d)))";
+  var_regex_649 : std::string = "(?|(?|(a)|(b))|(?|(c)|(d)))";
+  regex_650 := "(.)(?|(.)(.)x|(.)d)(.)";
+  var_regex_650 : std::string = "(.)(?|(.)(.)x|(.)d)(.)";
+  regex_651 := "(\N)(?|(\N)(\N)x|(\N)d)(\N)";
+  var_regex_651 : std::string = "(\\N)(?|(\\N)(\\N)x|(\\N)d)(\\N)";
+  regex_652 := "(?|(?<foo>x))";
+  var_regex_652 : std::string = "(?|(?<foo>x))";
+  regex_653 := "(?|(?<foo>x)|(?<bar>y))";
+  var_regex_653 : std::string = "(?|(?<foo>x)|(?<bar>y))";
+  regex_654 := "(?|(?<bar>y)|(?<foo>x))";
+  var_regex_654 : std::string = "(?|(?<bar>y)|(?<foo>x))";
+  regex_655 := "(?<bar>)(?|(?<foo>x))";
+  var_regex_655 : std::string = "(?<bar>)(?|(?<foo>x))";
+  regex_656 := "foo\Kbar";
+  var_regex_656 : std::string = "foo\Kbar";
+  regex_657 := "foo\t\n\r\f\a\ebar";
+  var_regex_657 : std::string = "foo\t\n\r\f\a\ebar";
+  regex_658 := "(foo)";
+  regex_658_mod := "n";
+  var_regex_658 : std::string = "(foo)";
+  regex_659 := "(?-n)(foo)(?n)(bar)";
+  regex_659_mod := "n";
+  var_regex_659 : std::string = "(?-n)(foo)(?n)(bar)";
+  regex_660 := "(?-n:(foo)(?n:(bar)))";
+  regex_660_mod := "n";
+  var_regex_660 : std::string = "(?-n:(foo)(?n:(bar)))";
+  regex_661 := "foo # Match foo";
+  regex_661_mod := "x";
+  var_regex_661 : std::string = "foo # Match foo";
   run: (this) = {
     std::cout << "Running general_tests:"<< std::endl;
     test(regex_0, 0, "abc", "abc", "y", "$&", "abc");
@@ -2144,8 +2345,81 @@ test_general_tests: @regex type = {
     test(regex_584, 584, "\\Aa\\$", "a\n\n", "y", "$&", "a");
     test(regex_585, 585, "(?i:.[b].)", "abd", "y", "$&", "abd");
     test(regex_586, 586, "(?i:\\\\N[b]\\\\N)", "abd", "y", "$&", "abd");
-    test(regex_587, 587, "foo\\Kbar", "foobar", "y", "$&", "bar");
-    test(regex_588, 588, "foo\\t\\n\\r\\f\\a\\ebar", "foo\t\n\r\f\a\ebar", "y", "$&", "foo\t\n\r\f\a\ebar");
+    test(regex_587, 587, "\\\\N {1}", "abbbbc", "y", "$&", "a");
+    test(regex_588, 588, "\\\\N {1}", "abbbbc", "y", "$-[0]", "0");
+    test(regex_589, 589, "\\\\N {1}", "abbbbc", "y", "$+[0]", "1");
+    test(regex_590, 590, "\\\\N {3,4}", "abbbbc", "y", "$&", "abbb");
+    test(regex_591, 591, "\\\\N {3,4}", "abbbbc", "y", "$-[0]", "0");
+    test(regex_592, 592, "\\\\N {3,4}", "abbbbc", "y", "$+[0]", "4");
+    test(regex_593, 593, "a\\\\N c", "abc", "y", "$&", "abc");
+    test(regex_594, 594, "a\\\\N *c", "axyzc", "y", "$&", "axyzc");
+    test(regex_595, 595, "a\\\\N *c", "axyzd", "n", "-", "-");
+    test(regex_596, 596, "[a b]", " ", "yS", "$&", " ");
+    test(regex_597, 597, "[a b]", " ", "n", "-", "-");
+    test(regex_598, 598, "[a\\ b]", " ", "y", "$&", " ");
+    test(regex_599, 599, "[ ^ a b ]", "a", "n", "-", "-");
+    test(regex_600, 600, "[ ^ a b ]", "b", "n", "-", "-");
+    test(regex_601, 601, "[ ^ a b ]", "A", "y", "$&", "A");
+    test(regex_602, 602, "(?x:[a b])", " ", "yS", "$&", " ");
+    test(regex_603, 603, "(?xx:[a b])", " ", "n", "-", "-");
+    test(regex_604, 604, "(?x)[a b]", " ", "yS", "$&", " ");
+    test(regex_605, 605, "(?xx)[a b]", " ", "n", "-", "-");
+    test(regex_606, 606, "(?-x:[a b])", " ", "yS", "$&", " ");
+    test(regex_607, 607, "\\\\N {1}", "abbbbc", "y", "$&", "a");
+    test(regex_608, 608, "\\\\N {1}", "abbbbc", "y", "$-[0]", "0");
+    test(regex_609, 609, "\\\\N {1}", "abbbbc", "y", "$+[0]", "1");
+    test(regex_610, 610, "\\\\N {3,4}", "abbbbc", "y", "$&", "abbb");
+    test(regex_611, 611, "\\\\N {3,4}", "abbbbc", "y", "$-[0]", "0");
+    test(regex_612, 612, "\\\\N {3,4}", "abbbbc", "y", "$+[0]", "4");
+    test(regex_613, 613, "a\\\\N c", "abc", "y", "$&", "abc");
+    test(regex_614, 614, "a\\\\N *c", "axyzc", "y", "$&", "axyzc");
+    test(regex_615, 615, "a\\\\N *c", "axyzd", "n", "-", "-");
+    test(regex_616, 616, "[#]", "a#b", "y", "$&", "#");
+    test(regex_617, 617, "[#]b", "a#b", "y", "$&", "#b");
+    test(regex_618, 618, "[#]", "a#b", "y", "$&", "#");
+    test(regex_619, 619, "[#]b", "a#b", "y", "$&", "#b");
+    test(regex_620, 620, "(?'n'foo) \\g{n}", "..foo foo..", "y", "$1", "foo");
+    test(regex_621, 621, "(?'n'foo) \\g{ n }", "..foo foo..", "y", "$1", "foo");
+    test(regex_622, 622, "(?'n'foo) \\g{n}", "..foo foo..", "yM", "$+{n}", "foo");
+    test(regex_623, 623, "(?<n>foo) \\g{n}", "..foo foo..", "y", "$1", "foo");
+    test(regex_624, 624, "(?<n>foo) \\g{n}", "..foo foo..", "yM", "$+{n}", "foo");
+    test(regex_625, 625, "(?<as>as) (\\w+) \\g{as} (\\w+)", "as easy as pie", "y", "$1-$2-$3", "as-easy-pie");
+    test(regex_626, 626, "(?'n'foo) \\k<n>", "..foo foo..", "y", "$1", "foo");
+    test(regex_627, 627, "(?'n'foo) \\k<n>", "..foo foo..", "yM", "$+{n}", "foo");
+    test(regex_628, 628, "(?<n>foo) \\k'n'", "..foo foo..", "y", "$1", "foo");
+    test(regex_629, 629, "(?<n>foo) \\k'n'", "..foo foo..", "yM", "$+{n}", "foo");
+    test(regex_630, 630, "(?'a1'foo) \\k'a1'", "..foo foo..", "yM", "$+{a1}", "foo");
+    test(regex_631, 631, "(?<a1>foo) \\k<a1>", "..foo foo..", "yM", "$+{a1}", "foo");
+    test(regex_632, 632, "(?'_'foo) \\k'_'", "..foo foo..", "yM", "$+{_}", "foo");
+    test(regex_633, 633, "(?<_>foo) \\k<_>", "..foo foo..", "yM", "$+{_}", "foo");
+    test(regex_634, 634, "(?'_0_'foo) \\k'_0_'", "..foo foo..", "yM", "$+{_0_}", "foo");
+    test(regex_635, 635, "(?<_0_>foo) \\k<_0_>", "..foo foo..", "yM", "$+{_0_}", "foo");
+    test(regex_636, 636, "(?<as>as) (\\w+) \\k<as> (\\w+)", "as easy as pie", "y", "$1-$2-$3", "as-easy-pie");
+    test(regex_637, 637, "(?<as>as) (\\w+) \\k{as} (\\w+)", "as easy as pie", "y", "$1-$2-$3", "as-easy-pie");
+    test(regex_638, 638, "(?<as>as) (\\w+) \\k'as' (\\w+)", "as easy as pie", "y", "$1-$2-$3", "as-easy-pie");
+    test(regex_639, 639, "(?<as>as) (\\w+) \\k{ as } (\\w+)", "as easy as pie", "y", "$1-$2-$3", "as-easy-pie");
+    test(regex_640, 640, "^a(?#xxx){3}c", "aaac", "y", "$&", "aaac");
+    test(regex_641, 641, "^a (?#xxx) (?#yyy) {3}c", "aaac", "y", "$&", "aaac");
+    test(regex_642, 642, "(?|(a))", "a", "y", "$1-$+", "a-a");
+    test(regex_643, 643, "(?|a(.)b|d(.(o).)d|i(.)(.)j)(.)", "d!o!da", "y", "$1-$2-$3", "!o!-o-a");
+    test(regex_644, 644, "(?|a(.)b|d(.(o).)d|i(.)(.)j)(.)", "aabc", "y", "$1-$2-$3", "a--c");
+    test(regex_645, 645, "(?|a(.)b|d(.(o).)d|i(.)(.)j)(.)", "ixyjp", "y", "$1-$2-$3", "x-y-p");
+    test(regex_646, 646, "(?|(?|(a)|(b))|(?|(c)|(d)))", "a", "y", "$1", "a");
+    test(regex_647, 647, "(?|(?|(a)|(b))|(?|(c)|(d)))", "b", "y", "$1", "b");
+    test(regex_648, 648, "(?|(?|(a)|(b))|(?|(c)|(d)))", "c", "y", "$1", "c");
+    test(regex_649, 649, "(?|(?|(a)|(b))|(?|(c)|(d)))", "d", "y", "$1", "d");
+    test(regex_650, 650, "(.)(?|(.)(.)x|(.)d)(.)", "abcde", "y", "$1-$2-$3-$4-$5-", "b-c--e--");
+    test(regex_651, 651, "(\\\\N)(?|(\\\\N)(\\\\N)x|(\\\\N)d)(\\\\N)", "abcde", "y", "$1-$2-$3-$4-$5-", "b-c--e--");
+    test(regex_652, 652, "(?|(?<foo>x))", "x", "yM", "$+{foo}", "x");
+    test(regex_653, 653, "(?|(?<foo>x)|(?<bar>y))", "x", "yM", "$+{foo}", "x");
+    test(regex_654, 654, "(?|(?<bar>y)|(?<foo>x))", "x", "yM", "$+{foo}", "x");
+    test(regex_655, 655, "(?<bar>)(?|(?<foo>x))", "x", "yM", "$+{foo}", "x");
+    test(regex_656, 656, "foo\\Kbar", "foobar", "y", "$&", "bar");
+    test(regex_657, 657, "foo\\t\\n\\r\\f\\a\\ebar", "foo\t\n\r\f\a\ebar", "y", "$&", "foo\t\n\r\f\a\ebar");
+    test(regex_658, 658, "(foo)", "foobar", "y", "$&-$1", "foo-");
+    test(regex_659, 659, "(?-n)(foo)(?n)(bar)", "foobar", "y", "$&-$1-$2", "foobar-foo-");
+    test(regex_660, 660, "(?-n:(foo)(?n:(bar)))", "foobar", "y", "$&-$1-$2", "foobar-foo-");
+    test(regex_661, 661, "foo # Match foo", "foobar", "y", "$&", "foo");
     std::cout << std::endl;
   }
 }
