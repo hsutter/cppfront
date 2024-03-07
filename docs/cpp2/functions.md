@@ -270,15 +270,118 @@ outer: while i<M next i++ {      // loop named "outer"
 }
 ```
 
-## <a id="function-expressions"></a> Unnamed function expressions (aka lambdas)
-
-TODO
 
 ## <a id="definite-last-use"></a> Move/forward from definite last use
 
-TODO
+In a function body, a **definite last use** of a local name is a single use of that name in a statement that is not in a loop, where no control flow path after that statement mentions the name again.
 
-## <a id="function-scope-unification"></a> Generality: Unifying functions and local scopes
+For each definite last use:
 
-TODO
+- If the name is a local object or a `copy` or `move` parameter, we know the object will not be used again before being destroyed, and so the object is automatically treated as an rvalue (move candidate). If the expression that contains the last use is able to move from the rvalue, the move will happen automatically.
+
+- If the name is a `forward` parameter, the object is automatically forwarded to preserve its constness and value category (`std::forward`-ed).
+
+For example:
+
+``` cpp title="Definite last uses" linenums="1" hl_lines="13 16 19 21"
+f: (
+    copy    x: some_type,
+    move    y: some_type,
+    forward z: some_type
+    )
+= {
+    w: some_type = "y";
+
+    prepare(x);                     // NOT a definite last use
+
+    if something() {
+        process(y);
+        z.process(x);		        // definite last uses of x and z
+    }
+    else {
+        cout << z;		            // definite last use of z
+    }
+
+    transfer(y);                    // definite last use of y
+
+    offload(w);                     // definite last use of w
+}
+```
+
+In this example:
+
+- `x` has a definite last use on one path, but not another. Line 13 is a definite last use that automatically treats `x` as an rvalue. However, if the `#!cpp else` is taken, `x` gets no special automatic handling. Line 9 is not a definite last use because `x` could be used again where it is mentioned later on line 13.
+
+- `y` has a definite last use on every path, in this case the same on all executions of the function. Line 19 is a definite last use that automatically treats `x` as an rvalue.
+
+- `z` has a definite last use on every path, but unlike `y` it can be a different last use on different executions of the function. That's fine, each of lines 13 and 16 is a definite last use that automatically forwards the constness and value category of `z`.
+
+- `w` has a definite last use on every path, in this case the same on all executions of the function. Line 21 is a definite last use that automatically treats `w` as an rvalue.
+
+
+## <a id="function-defaults"></a> Generality note: Summary of function defaults
+
+There is a single function syntax, designed so we can just omit the parts we're not currently using.
+
+For example, let's express in full verbose detail that `equals` is a function template that has two type parameters `T` and `U`, two ordinary `in` parameters `a` and `b` of type `T` and `U` respectively, and a deduced return type, and its body returns the result of `a == b`:
+
+``` cpp title="equals: A generic function written in full detail (using no defaults)"
+equals: <T: type, U: type> (in a: T, in b: U) -> _ = { return a == b; }
+```
+
+We can write all that, but we don't have to.
+
+First, `: type` is the default for template parameters, so we can omit it since that's what we want:
+
+``` cpp title="equals: Identical meaning, now using the :type default for template parameters"
+equals: <T, U> (in a: T, in b: U) -> _ = { return a == b; }
+```
+
+So far, the return type is already using one common default available throughout Cpp2: the wildcard `_` (pronounced "don't care"). Since this function's body doesn't actually use the parameter type names `T` and `U`, we can just use wildcards for the parameter types too:
+
+``` cpp title="equals: Identical meaning, now using the _ wildcard also for the parameter types"
+equals: (in a: _, in b: _) -> _ = { return a == b; }
+```
+
+Next, `: _` is also the default parameter type, so we don't need to write even that:
+
+``` cpp title="equals: Identical meaning, now using the :_ default parameter type"
+equals: (in a, in b) -> _ = { return a == b; }
+```
+
+Next, `in` is the default [parameter passing mode](#parameters). So we can use that default too:
+
+``` cpp title="equals: Identical meaning, now using the 'in' default parameter passing style"
+equals: (a, b) -> _ = { return a == b; }
+```
+
+We already saw that `{` `}` is the default for a single-line function that returns nothing. Similarly, `{ return` and `}` is the default for a single-line function that returns something:
+
+``` cpp title="equals: Identical meaning, now using the { return ... } default body decoration"
+equals: (a, b) -> _ = a == b;
+```
+
+Next, `#!cpp -> _ =` (deduced return type) is the default for single-expression functions that return something and so can be omitted:
+
+``` cpp title="equals: Identical meaning, now using the -> _ = default for functions that return something"
+equals: (a, b) a == b;
+```
+
+Finally, at expression scope (aka "lamba/temporary") functions/objects aren't named, and the trailing `;` is optional:
+
+``` cpp title="(not) 'equals': Identical meaning, but without a name as an unnamed function at expression scope"
+:(a, b) a == b
+```
+
+Here are some additional examples of unnamed function expressions:
+
+``` cpp title="Some more examples of unnamed function expressions"
+std::ranges::for_each( a, :(x) = std::cout << x );
+
+std::ranges::transform( a, b, :(x) x+1 );
+
+where_is = std::ranges::find_if( a, :(x) x == waldo$ );
+```
+
+> Note: Cpp2 doesn't have a separate "lambda" syntax; you just use the regular function syntax at expression scope to write an unnamed function, and the syntactic defaults are chosen to make such function expressions convenient to write. And because in Cpp2 all local variable [capture](expressions.md#captures) (for example, `waldo$` above) is written in the body, it doesn't affect the function syntax.
 

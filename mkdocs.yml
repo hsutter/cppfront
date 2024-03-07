@@ -57,14 +57,13 @@ nav:
   - 'Cpp2 reference':
     - 'Common concepts': cpp2/common.md
     - 'Expressions': cpp2/expressions.md
-    - 'Declaration syntax': cpp2/declarations.md
+    - 'Declarations and aliases': cpp2/declarations.md
     - 'Objects, initialization, and memory': cpp2/objects.md
     - 'Functions, branches, and loops': cpp2/functions.md
     - 'Contracts and assertions': cpp2/contracts.md
     - 'Types and inheritance': cpp2/types.md
     - 'Metafunctions and reflection': cpp2/metafunctions.md
     - 'Namespaces': cpp2/namespaces.md
-    - 'Aliases': cpp2/aliases.md
     - 'Modules': cpp2/modules.md
   - 'Cppfront reference':
     - 'Using Cpp1 (today''s syntax) and Cpp2 in the same source file': cppfront/mixed.md
