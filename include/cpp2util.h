@@ -788,7 +788,7 @@ public:
     }
 
     auto construct(auto&& ...args) -> void {
-        if (has_t || called_construct()) {
+        if (has_t) {
             if constexpr (requires { *t = T(CPP2_FORWARD(args)...); }) {
                 Default.enforce( t );
                 *t = T(CPP2_FORWARD(args)...);
