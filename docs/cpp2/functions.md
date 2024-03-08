@@ -383,5 +383,5 @@ std::ranges::transform( a, b, :(x) x+1 );
 where_is = std::ranges::find_if( a, :(x) x == waldo$ );
 ```
 
-> Note: Cpp2 doesn't have a separate "lambda" syntax; you just use the regular function syntax at expression scope to write an unnamed function, and the syntactic defaults are chosen to make such function expressions convenient to write. And because in Cpp2 all local variable [capture](expressions.md#captures) (for example, `waldo$` above) is written in the body, it doesn't affect the function syntax.
+> Note: Cpp2 doesn't have a separate "lambda" syntax; you just use the regular function syntax at expression scope to write an unnamed function, and the syntactic defaults are chosen to make such function expressions convenient to write. And because in Cpp2 every local variable [capture](expressions.md#captures) (for example, `waldo$` above) is written in the body, it doesn't affect the function syntax.
 
