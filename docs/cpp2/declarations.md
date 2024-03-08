@@ -27,9 +27,9 @@ Various parts of the syntax allow a `_` "don't care" wildcard or can be omitted 
 
 In an expression, most declarations can be written without a name (just starting with `:`). Such unnamed declaration expressions are useful for single-use temporary variables or 'lambda' functions that don't need a name to be reused elsewhere. For example:
 
-- `#!cpp :widget = 42` is an unnamed expression-local (aka temporary) object of type `widget` defined as having the initial value `#!cpp 42`. It uses the same general syntax, just
+- `#!cpp :widget = 42` is an unnamed expression-local (aka temporary) object of type `widget` defined as having the initial value `#!cpp 42`. It uses the same general syntax, just without declaring a name.
 
-- `#!cpp :(x) = std::cout << x` is an unnamed expression-local generic function expression (aka lambda) defined as having the given one-statement body. The body can include [captures](expressions.md/#captures)
+- `#!cpp :(x) = std::cout << x` is an unnamed expression-local generic function expression (aka lambda) defined as having the given one-statement body. The body can include [captures](expressions.md/#captures).
 
 Both just omit the name and make the final `;` optional. Otherwise, they have the identical syntax and meaning as if you declared the same thing with a name outside expression scope (e.g., `w: widget = 42;` or `f: (x) = std::cout << x;`) and then used the name in the expression.
 
