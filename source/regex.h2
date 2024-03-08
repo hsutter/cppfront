@@ -1590,9 +1590,22 @@ regex_parser: <Error_out> type = {
             return true;
         };
 
-        if '1' <= c_next <= '9' {
+        if '0' <= c_next <= '9' {
             group := grab_number();
-            if !add_group_matcher(group) { return false; }
+            if group.ssize() >= 3 {
+                // \000 syntax
+                number := 0;
+                if !string_to_int(group, number, 8) { error("Could not convert octal to int."); return false; }
+
+                number_as_char : char = unsafe_narrow<char>(number);
+
+                syntax: std::string = "\\(int_to_string(number_as_char as int, 8))$";
+                char_matcher := create_matcher("char_matcher_logic", "'(number_as_char)$', '(safe_tolower(number_as_char))$', '(safe_toupper(number_as_char))$'");
+                cur_state.add(create_matcher("wrapped_matcher_logic", "\"(syntax)$\", (char_matcher)$"));
+            }
+            else {
+                if !add_group_matcher(group) { return false; }
+            }
         }
         else if std::string::npos != std::string("tnrfae").find(c_next) {
             inner := create_matcher("char_matcher_logic", "'\\(c_next)$', '\\(c_next)$', '\\(c_next)$'");
@@ -1645,6 +1658,7 @@ regex_parser: <Error_out> type = {
             has_brackets := false;
             number_str: std::string = "";
             if '{' == c_next {
+                // TODO: Currently does not work since the compiler handles \x also.
                 // Bracketed
                 has_brackets = true;
                 _  = skip(); // Skip '{'
@@ -1666,6 +1680,23 @@ regex_parser: <Error_out> type = {
                 syntax = "{(syntax)$}";
             }
             syntax = "\\x(syntax)$";
+            char_matcher := create_matcher("char_matcher_logic", "'(number_as_char)$', '(safe_tolower(number_as_char))$', '(safe_toupper(number_as_char))$'");
+            cur_state.add(create_matcher("wrapped_matcher_logic", "\"(syntax)$\", (char_matcher)$"));
+        }
+        else if 'o' == c_next {
+            if !next(out c_next) { error("o escape without bracket."); return false; }
+            number_str: std::string = "";
+            if '{' == c_next {
+                _  = skip(); // Skip '{'
+                if !grab_until('}', out number_str) { error("No ending bracket for \\o"); return false; }
+            }
+
+            number := 0;
+            if !string_to_int(number_str, number, 8) { error("Could not convert octal to int."); return false; }
+
+            number_as_char : char = unsafe_narrow<char>(number);
+
+            syntax: std::string = "\\o{(int_to_string(number_as_char as int, 8))$}";
             char_matcher := create_matcher("char_matcher_logic", "'(number_as_char)$', '(safe_tolower(number_as_char))$', '(safe_toupper(number_as_char))$'");
             cur_state.add(create_matcher("wrapped_matcher_logic", "\"(syntax)$\", (char_matcher)$"));
         }
