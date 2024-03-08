@@ -308,6 +308,14 @@ extract_position_helper: <CharT, alternative: size_t> type = {
     to_string: () -> _ = {}
 }
 
+// Helper for standard matchers with special syntax
+//
+//
+wrapped_matcher_logic: <CharT, syntax: fixed_string, base> type = {
+    this : base = ();
+    to_string: () syntax.data();
+}
+
 //  Regex syntax: |  Example: ab|ba
 //
 //  Non greedy implementation. First alternative that matches is chosen. 
@@ -1251,6 +1259,18 @@ regex_parser: <Error_out> type = {
     grab_until: (inout this, in e: char, out r: std::string)               grab_until_impl(std::string(1, e), out r, false);
     grab_until_one_of: (inout this, in e: std::string, out r: std::string) grab_until_impl(e, out r, true);
 
+    grab_n: (inout this, in n: int, out r: std::string) -> bool = {
+        if pos + n <= regex.size() {
+            r = regex.substr(pos, n);
+            pos += n - 1;
+            return true;
+        }
+        else {
+            r = "";
+            return false;
+        }
+    }
+
     grab_number: (inout this) -> std::string = {
         start := pos;
         start_search := pos;
@@ -1260,7 +1280,7 @@ regex_parser: <Error_out> type = {
         end := regex.find_first_not_of("1234567890", start_search);
 
         r : std::string;
-        if end != std::string_view::npos {
+        if end != std::string::npos {
             r = regex.substr(start, end - start);
             pos = end - 1;
         }
@@ -1619,6 +1639,35 @@ regex_parser: <Error_out> type = {
         }
         else if 'K' == c_next {
             cur_state.add(create_matcher("global_group_reset", ""));
+        }
+        else if 'x' == c_next {
+            if !next(out c_next) { error("x escape without number."); return false; }
+            has_brackets := false;
+            number_str: std::string = "";
+            if '{' == c_next {
+                // Bracketed
+                has_brackets = true;
+                _  = skip(); // Skip '{'
+                if !grab_until('}', out number_str) { error("No ending bracket for \\x"); return false; }
+            }
+            else {
+                // grab two chars
+
+                if !grab_n(2, out number_str) { error("Missing hexadecimal digits after \\x."); return false; }
+            }
+
+            number := 0;
+            if !string_to_int(number_str, number, 16) { error("Could not convert hexadecimal to int."); return false; }
+
+            number_as_char : char = unsafe_narrow<char>(number);
+
+            syntax: std::string = int_to_string(number_as_char as int, 16);
+            if has_brackets {
+                syntax = "{(syntax)$}";
+            }
+            syntax = "\\x(syntax)$";
+            char_matcher := create_matcher("char_matcher_logic", "'(number_as_char)$', '(safe_tolower(number_as_char))$', '(safe_toupper(number_as_char))$'");
+            cur_state.add(create_matcher("wrapped_matcher_logic", "\"(syntax)$\", (char_matcher)$"));
         }
         else if 'A' == c_next { cur_state.add(create_matcher("named_string_start", "")); }
         else if 'b' == c_next { cur_state.add(create_matcher("word_boundary_matcher_logic", "false")); }
