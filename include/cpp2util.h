@@ -754,7 +754,6 @@ class out {
     //  Actually using std::variant here
     std::variant<T*,deferred_init<T>*> vt;
     out<T>* ot = {};
-    bool has_t;
 
     //  Each out in a chain contains its own uncaught_count ...
     int  uncaught_count   = Uncaught_exceptions();
@@ -762,11 +761,11 @@ class out {
     bool called_construct_ = false;
 
 public:
-    out(T*                 t_) noexcept : vt{ t_}, has_t{true}       { Default.enforce( t_); }
-    out(deferred_init<T>* dt_) noexcept : vt{dt_}, has_t{false}      { Default.enforce(dt_); }
-    out(out<T>*           ot_) noexcept : ot{ot_}, has_t{ot_->has_t} { Default.enforce(ot);
-        if (has_t) { vt = std::get<0>(ot->vt);  }
-        else       { vt = std::get<1>(ot->vt); }
+    out(T*                 t_) noexcept : vt{ t_}     { Default.enforce( t_); }
+    out(deferred_init<T>* dt_) noexcept : vt{dt_}     { Default.enforce(dt_); }
+    out(out<T>*           ot_) noexcept : ot{ot_}     {
+        Default.enforce(ot_);
+        vt = ot_->vt;
     }
 
     auto called_construct() -> bool& {
@@ -778,14 +777,14 @@ public:
     //  then leave it in the same state on exit (strong guarantee)
     ~out() {
         if (called_construct() && uncaught_count != Uncaught_exceptions()) {
-            Default.enforce(!has_t);
+            Default.enforce(vt.index()!=0);
             std::get<1>(vt)->destroy();
             called_construct() = false;
         }
     }
 
     auto construct(auto&& ...args) -> void {
-        if (has_t) {
+        if (vt.index()==0) {
             if constexpr (requires { *std::get<0>(vt) = T(CPP2_FORWARD(args)...); }) {
                 Default.enforce( std::get<0>(vt) );
                 *std::get<0>(vt) = T(CPP2_FORWARD(args)...);
@@ -812,7 +811,7 @@ public:
     }
 
     auto value() noexcept -> T& {
-        if (has_t) {
+        if (vt.index()==0) {
             Default.enforce( std::get<0>(vt) );
             return *std::get<0>(vt);
         }
