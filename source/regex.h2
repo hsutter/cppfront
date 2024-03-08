@@ -545,7 +545,11 @@ group_matcher_start_logic: <CharT, group: int, ModifierChange, name: fixed_strin
         return Other::match(cur, ctx, Modifiers::push(ModifierChange()));
     }
 
-    reset_ranges: (inout ctx) = ctx.set_group_invalid(group);
+    reset_ranges: (inout ctx) = {
+        if -1 != group {
+            ctx.set_group_invalid(group);
+        }
+    }
 
     to_string: () -> std::string = {
         if group != 0 {
@@ -668,6 +672,29 @@ line_start_matcher_logic: <CharT, match_new_line: bool> type =
     }
     reset_ranges: (inout ctx) = {}
     to_string: ()               bstring<CharT>(1, '^');
+}
+
+// Regex syntax: (?=) or (?!) or (*pla), etc.  Example: (?=AA)
+//
+lookahead_matcher_logic: <CharT, positive: bool, name: fixed_string, Pattern> type =
+{
+    match: <Other> (cur, inout ctx, modifiers, _ : Other) -> _ = {
+        r := Pattern::match(cur, ctx, modifiers, no_tail<CharT>());
+
+        if !positive {
+            r.matched = !r.matched;
+        }
+
+        if r.matched {
+            return Other::match(cur, ctx, modifiers);
+        }
+        else {
+            return match_return(false, ctx.end);
+        }
+
+    }
+    reset_ranges: (inout ctx) = { Pattern::reset_ranges(ctx); }
+    to_string: ()               "((name.data())$(Pattern::to_string())$)"
 }
 
 // Regex syntax: (?<modifiers>)  Example: (?i)
@@ -1783,6 +1810,11 @@ regex_parser: <Error_out> type = {
 
                 return true;
             }
+            else if c_next == '=' || c_next == '!' {
+                _ = skip(); // Skip '!'
+                // Positive or negative lookahead
+                return parse_lookahead("?(c_next)$", c_next == '=');
+            }
             else {
                 // Simple modifier
                 has_id = false;
@@ -1798,6 +1830,22 @@ regex_parser: <Error_out> type = {
                 else {
                     if !next(out c_next) /* skip ':' */ { error("Missing ending bracket for group."); return false; }
                 }
+            }
+        }
+        else if c_next == '*' {
+            // named pattern
+            _ = skip(); // Skip *.
+            name: std::string = "";
+            if !grab_until(':', out name) { error("Missing colon for named pattern."); return false; }
+
+            if name == "pla" || name == "positive_lookahead" {
+                return parse_lookahead("*(name)$:", true);
+            }
+            else if name == "nla" || name == "negative_lookahead" {
+                return parse_lookahead("*(name)$:", false);
+            }
+            else {
+                error("Unknown named group pattern: '(name)$'"); return false;
             }
         }
 
@@ -1952,6 +2000,17 @@ regex_parser: <Error_out> type = {
         }
 
         cur_state.wrap_last(:(inner) -> _ == create_matcher("special_range_matcher_logic", "(inner)$, (min_range$)$, (max_range$)$, (greedy)$, (possessive)$, '(c$)$'"));
+        return true;
+    }
+
+    parse_lookahead: (inout this, name: std::string, positive: bool) -> bool = {
+        old_state: _ = new_state();
+        parse_until(')');
+        inner:= create_matcher_from_state();
+        restore_state(old_state);
+
+        cur_state.add(create_matcher("lookahead_matcher_logic", "(positive)$, \"(name)$\", (inner)$"));
+
         return true;
     }
 
