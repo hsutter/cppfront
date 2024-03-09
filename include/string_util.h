@@ -51,16 +51,20 @@ inline std::string trim_copy(std::string_view s) {
 template<typename CharT, std::size_t N>
 struct fixed_string {
     constexpr fixed_string(const CharT (&s)[N+1]) {
-        std::copy_n(s, N + 1, str);
+        std::copy_n(s, N + 1, c_str);
     }
     constexpr const CharT* data() const {
-        return str;
+        return c_str;
     }
     constexpr std::size_t size() const {
         return N;
     }
 
-    CharT str[N+1];
+    constexpr auto str() const {
+        return std::basic_string<CharT>(c_str);
+    }
+
+    CharT c_str[N+1];
 };
 
 template<typename CharT, std::size_t N>
@@ -72,9 +76,9 @@ inline bool is_escaped(std::string_view s) {
     return s.starts_with("\"") && s.ends_with("\"");
 }
 
-inline bool string_to_int(std::string const& s, int& v) {
+inline bool string_to_int(std::string const& s, int& v, int base = 10) {
     try {
-        v = stoi(s);
+        v = stoi(s, nullptr, base);
         return true;
     }
     catch (std::invalid_argument const& ex)
@@ -87,10 +91,34 @@ inline bool string_to_int(std::string const& s, int& v) {
     }
 }
 
+inline std::string int_to_string(int i, int base = 10) {
+    if (8 == base) {
+        return std::format("{:03o}", i);
+    }
+    else if (10 == base) {
+        return std::format("{}", i);
+    }
+    else if (16 == base) {
+        return std::format("{:02x}", i);
+    }
+    else {
+        throw std::runtime_error(std::format("Base {} not implemented.", base));
+    }
+}
+
 inline char safe_toupper(char ch) {
     return static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
 }
 
 inline char safe_tolower(char ch) {
     return static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+}
+
+inline std::string replace_all(std::string str, const std::string& from, const std::string& to) {
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+    }
+    return str;
 }

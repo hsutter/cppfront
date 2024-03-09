@@ -195,6 +195,13 @@ match_tail: <CharT, List...> type = {
     make_calling: <Call> (this, call: Call) calling_match_tail<CharT, Call, List...>(call);
 }
 
+//  Represents the remainder of the regular expression. Will call a function wen the end is reached.
+//
+//  TODO: Create common base with match_tail.
+//
+//  A matcher can ask this remainder if it would match. If yes a full match of the regular expression is found.
+//  Otherwise the matcher can try a different alternative.
+//
 calling_match_tail: <CharT, Call, List...> type = {
     call: Call;
 
@@ -215,14 +222,6 @@ calling_match_tail: <CharT, Call, List...> type = {
     to_string: () (bstring<CharT>() + ... + List::to_string());
 
     prepend: <Pre...> (this, _...: Pre) calling_match_tail<CharT, Call, Pre..., List...>(call);
-}
-
-matcher_list: <CharT, List...> type = {
-    match: (cur, inout ctx, modifiers, other)
-        other.prepend(List()...).match(cur, ctx, modifiers);
-
-    reset_ranges: ( inout ctx) = (List::reset_ranges(ctx), ...);
-    to_string: () (bstring<CharT>() + ... + List::to_string());
 }
 
 no_tail: <CharT> type == match_tail<CharT>;
@@ -323,11 +322,18 @@ short_not_word_class       : <CharT> type == negated_class_entry<CharT, shorthan
 
 //-----------------------------------------------------------------------
 //
-//  Matchers for regular expressions.
+//  Helper matchers for regular expressions.
 //
 //-----------------------------------------------------------------------
 //
 
+// Regex syntax: none Example: -
+//
+empty_matcher_logic: <CharT> type = {
+    match: (cur, inout ctx, modifiers, other) other.match(cur, ctx, modifiers);
+    reset_ranges: (inout ctx) = {}
+    to_string: () bstring<CharT>();
+}
 
 // Helper for greedy alternatives
 //
@@ -341,16 +347,34 @@ extract_position_helper: <CharT, alternative: size_t> type = {
     }
 
     reset_ranges: (inout ctx) = {}
-    to_string: () -> _ = {}
+    to_string: () bstring<CharT>();
+}
+
+// A list of matchers. Prepends to the current match tail.
+//
+matcher_list: <CharT, List...> type = {
+    match: (cur, inout ctx, modifiers, other)
+        other.prepend(List()...).match(cur, ctx, modifiers);
+
+    reset_ranges: ( inout ctx) = (List::reset_ranges(ctx), ...);
+    to_string: () (bstring<CharT>() + ... + List::to_string());
 }
 
 // Helper for standard matchers with special syntax
 //
 //
-wrapped_matcher_logic: <CharT, syntax: fixed_string, base> type = {
+special_syntax_wrapper: <CharT, syntax: fixed_string, base> type = {
     this : base = ();
-    to_string: () syntax.data();
+    to_string: () syntax.str();
 }
+
+//-----------------------------------------------------------------------
+//
+//  Matchers for regular expressions.
+//
+//-----------------------------------------------------------------------
+//
+
 
 //  Regex syntax: |  Example: ab|ba
 //
@@ -540,23 +564,6 @@ class_matcher_logic: <CharT, negate: bool, List ...> type =
 
         return r;
     }
-}
-
-// Regex syntax: none Example: -
-//
-empty_matcher_logic: <CharT> type = {
-    match: (cur, inout ctx, modifiers, other) other.match(cur, ctx, modifiers);
-    reset_ranges: (inout ctx) = {}
-    to_string: () bstring<CharT>();
-}
-
-// Regex syntax: \<special character>  Example: \.
-//
-escaped_char_matcher_logic: <CharT, C: CharT, L: CharT, U: CharT> type =
-{
-    this : char_matcher_logic<CharT, C, L, U> = ();
-
-    to_string: () "\\(C)$";
 }
 
 // Regex syntax: \K Example: \K
@@ -847,7 +854,7 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, po
         return res;
     }
 
-    private match_greedy: <Iter>(count: int, cur: Iter, last_valid: Iter, inout ctx, modifiers, other) -> _ = {
+    private match_greedy: <Iter>(count: int, cur: Iter, last_valid: Iter, inout ctx, modifiers, other) -> match_return<Iter> = {
         r:= M::match(cur, ctx, modifiers, no_tail<CharT>());
         if  is_below_upper_bound(count) && r.matched &&
             (is_below_lower_bound(count) || r.pos != cur)
@@ -877,7 +884,7 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, po
         }
     }
 
-    private match_not_greedy: <Iter>(cur: Iter, inout ctx, modifiers, other) -> _ = {
+    private match_not_greedy: <Iter>(cur: Iter, inout ctx, modifiers, other) -> match_return<Iter> = {
         count := 0;
         start := match_min_count(cur, ctx, modifiers, count);
         if !start.matched {
@@ -1664,27 +1671,25 @@ regex_parser: <Error_out> type = {
 
                 syntax: std::string = "\\(int_to_string(number_as_char as int, 8))$";
                 char_matcher := create_matcher("char_matcher_logic", "'(number_as_char)$', '(safe_tolower(number_as_char))$', '(safe_toupper(number_as_char))$'");
-                cur_state.add(create_matcher("wrapped_matcher_logic", "\"(syntax)$\", (char_matcher)$"));
+                cur_state.add(create_matcher("special_syntax_wrapper", "\"(syntax)$\", (char_matcher)$"));
             }
             else {
                 if !add_group_matcher(group) { return false; }
             }
         }
-        else if std::string::npos != std::string("tnrfae").find(c_next) {
-            inner := create_matcher("char_matcher_logic", "'\\(c_next)$', '\\(c_next)$', '\\(c_next)$'");
-            cur_state.add(create_matcher("named_matcher_logic", "\"\\\\(c_next)$\", (inner)$"));
-        }
-        else if std::string::npos != std::string("^.[]$()*{}?+|").find(c_next) {
+        else if std::string::npos != std::string("tnrfae^.[]$()*{}?+|").find(c_next) {
             if c_next == '$' {
                 // TODO: Provide proper escape for cppfront capture
                 cur_state.add(create_matcher("line_end_matcher_logic", "true, true"));
             }
             else {
-                cur_state.add(create_matcher("escaped_char_matcher_logic", "'(c_next)$', '(safe_tolower(c_next))$', '(safe_toupper(c_next))$'"));
+                inner := create_matcher("char_matcher_logic", "'\\(c_next)$', '\\(c_next)$', '\\(c_next)$'");
+                cur_state.add(create_matcher("special_syntax_wrapper", "\"\\\\(c_next)$\", (inner)$"));
             }
         }
         else if '\\' == c_next {
-            cur_state.add(create_matcher("escaped_char_matcher_logic", "'\\\\', '\\\\', '\\\\'"));
+            inner := create_matcher("char_matcher_logic", "'\\\\', '\\\\', '\\\\'");
+            cur_state.add(create_matcher("special_syntax_wrapper", "\"\\\\\\\\\", (inner)$"));
         }
         else if 'g' == c_next {
             if !next(out c_next) {error("Group escape without a following char."); return false; }
@@ -1744,7 +1749,7 @@ regex_parser: <Error_out> type = {
             }
             syntax = "\\x(syntax)$";
             char_matcher := create_matcher("char_matcher_logic", "'(number_as_char)$', '(safe_tolower(number_as_char))$', '(safe_toupper(number_as_char))$'");
-            cur_state.add(create_matcher("wrapped_matcher_logic", "\"(syntax)$\", (char_matcher)$"));
+            cur_state.add(create_matcher("special_syntax_wrapper", "\"(syntax)$\", (char_matcher)$"));
         }
         else if 'o' == c_next {
             if !next(out c_next) { error("o escape without bracket."); return false; }
@@ -1761,7 +1766,7 @@ regex_parser: <Error_out> type = {
 
             syntax: std::string = "\\o{(int_to_string(number_as_char as int, 8))$}";
             char_matcher := create_matcher("char_matcher_logic", "'(number_as_char)$', '(safe_tolower(number_as_char))$', '(safe_toupper(number_as_char))$'");
-            cur_state.add(create_matcher("wrapped_matcher_logic", "\"(syntax)$\", (char_matcher)$"));
+            cur_state.add(create_matcher("special_syntax_wrapper", "\"(syntax)$\", (char_matcher)$"));
         }
         else if 'A' == c_next { cur_state.add(create_matcher("named_string_start", "")); }
         else if 'b' == c_next { cur_state.add(create_matcher("word_boundary_matcher_logic", "false")); }
