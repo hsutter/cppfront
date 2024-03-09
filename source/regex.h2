@@ -131,6 +131,9 @@ match_context: <CharT, Iter, max_groups: int, max_alternatives: int> type =
 
 }
 
+// Flag change for matching modifiers. Creates a new flag for match_modifiers.
+// See expression_flags for possible flags.
+//
 match_modifiers_state_change: <has_change_: bool, reset_: bool, add_: int, remove_: int, str: fixed_string> type = {
 
     reset: bool == reset_;
@@ -154,6 +157,9 @@ match_modifiers_state_change: <has_change_: bool, reset_: bool, add_: int, remov
 
 match_modifiers_no_change : type == match_modifiers_state_change<false, false, 0, 0, "">;
 
+// Current modifiers for the regular expression.
+// See expression_flags for possible flags.
+//
 match_modifiers: <flags_: int, Inner> type = {
 
     flags : int == flags_;
@@ -179,9 +185,6 @@ match_modifiers: <flags_: int, Inner> type = {
 //
 match_tail: <CharT, List...> type = {
     match: (this, cur, inout ctx, modifiers) match_select<List...>(cur, ctx, modifiers);
-
-    // match: <OtherList...> (this, cur, inout ctx, modifiers, other: match_tail<CharT, OtherList...>)
-    //     other.match_select<List..., OtherList...>(cur, ctx, modifiers);
 
     private match_select: <First, Other...> (this, cur, inout ctx, modifiers)
         First::match(cur, ctx, modifiers, match_tail<CharT, Other...>());
@@ -210,9 +213,6 @@ calling_match_tail: <CharT, Call, List...> type = {
     }
 
     match: (this, cur, inout ctx, modifiers) match_select<List...>(cur, ctx, modifiers);
-
-    // match: <OtherList...> (this, cur, inout ctx, modifiers, other: calling_match_tail<CharT, Call, OtherList...>)
-    //     other.match_select<List..., OtherList...>(cur, ctx, modifiers);
 
     private match_select: <First, Other...> (this, cur, inout ctx, modifiers)
         First::match(cur, ctx, modifiers, calling_match_tail<CharT, Call, Other...>(call));
@@ -330,9 +330,9 @@ short_not_word_class       : <CharT> type == negated_class_entry<CharT, shorthan
 // Regex syntax: none Example: -
 //
 empty_matcher_logic: <CharT> type = {
-    match: (cur, inout ctx, modifiers, other) other.match(cur, ctx, modifiers);
+    match:        (cur, inout ctx, modifiers, other) other.match(cur, ctx, modifiers);
     reset_ranges: (inout ctx) = {}
-    to_string: () bstring<CharT>();
+    to_string:    () bstring<CharT>();
 }
 
 // Helper for greedy alternatives
@@ -347,7 +347,7 @@ extract_position_helper: <CharT, alternative: size_t> type = {
     }
 
     reset_ranges: (inout ctx) = {}
-    to_string: () bstring<CharT>();
+    to_string:    () bstring<CharT>();
 }
 
 // A list of matchers. Prepends to the current match tail.
@@ -357,7 +357,7 @@ matcher_list: <CharT, List...> type = {
         other.prepend(List()...).match(cur, ctx, modifiers);
 
     reset_ranges: ( inout ctx) = (List::reset_ranges(ctx), ...);
-    to_string: () (bstring<CharT>() + ... + List::to_string());
+    to_string:    () (bstring<CharT>() + ... + List::to_string());
 }
 
 // Helper for standard matchers with special syntax
@@ -365,7 +365,7 @@ matcher_list: <CharT, List...> type = {
 //
 special_syntax_wrapper: <CharT, syntax: fixed_string, base> type = {
     this : base = ();
-    to_string: () syntax.str();
+    to_string:    () syntax.str();
 }
 
 //-----------------------------------------------------------------------
@@ -478,7 +478,7 @@ any_matcher_logic: <CharT> type =
     }
 
     reset_ranges: (inout ctx) = {}
-    to_string: ()               bstring<CharT>(1, '.');
+    to_string:    ()          bstring<CharT>(1, '.');
 }
 
 // Regex syntax: none Example: -
@@ -486,7 +486,7 @@ any_matcher_logic: <CharT> type =
 branch_reset_matcher_logic: <CharT> type = {
     match: (cur, inout ctx, modifiers, other) other.match(cur, ctx, modifiers);
     reset_ranges: (inout ctx) = {}
-    to_string: () bstring<CharT>("(?|");
+    to_string:    ()          bstring<CharT>("(?|");
 }
 
 // Regex syntax: <any character>  Example: a
@@ -513,7 +513,7 @@ char_matcher_logic: <CharT, C: CharT, L: CharT, U: CharT> type =
 
     }
     reset_ranges: (inout ctx) = {}
-    to_string: ()               bstring<CharT>(1, C);
+    to_string:    ()          bstring<CharT>(1, C);
 }
 
 
@@ -575,7 +575,7 @@ global_group_reset: <CharT> type = {
     }
 
     reset_ranges: (inout ctx) = {}
-    to_string: () bstring<CharT>("\\K");
+    to_string:    ()          bstring<CharT>("\\K");
 }
 
 // Regex syntax: (<inner>) Example: (.*)
@@ -644,7 +644,7 @@ group_matcher_end_logic: <CharT, group: int> type = {
 special_group_end_logic: <CharT> type = {
     match: (cur, inout ctx, modifiers, other) other.match(cur, ctx, modifiers);
     reset_ranges: (inout ctx) = {}
-    to_string: () bstring<CharT>(")");
+    to_string:    ()          bstring<CharT>(")");
 }
 
 // Regex syntax: \<number>  Example: \1
@@ -677,7 +677,7 @@ group_ref_matcher_logic: <CharT, group: int, symbol: fixed_string> type = {
 
     }
     reset_ranges: (inout ctx) = {}
-    to_string: ()               symbol.str();
+    to_string:    ()          symbol.str();
 }
 
 // Regex syntax: $  Example: aa$
@@ -697,7 +697,7 @@ line_end_matcher_logic: <CharT, match_new_line: bool, match_new_line_before_end:
     }
 
     reset_ranges: (inout ctx) = {}
-    to_string: ()               bstring<CharT>("\\$");
+    to_string:    ()          bstring<CharT>("\\$");
 }
 
 // Regex syntax: ^  Example: ^aa
@@ -714,7 +714,7 @@ line_start_matcher_logic: <CharT, match_new_line: bool> type =
 
     }
     reset_ranges: (inout ctx) = {}
-    to_string: ()               bstring<CharT>(1, '^');
+    to_string:    ()          bstring<CharT>(1, '^');
 }
 
 // Regex syntax: (?=) or (?!) or (*pla), etc.  Example: (?=AA)
@@ -737,7 +737,7 @@ lookahead_matcher_logic: <CharT, positive: bool, name: fixed_string, Pattern> ty
 
     }
     reset_ranges: (inout ctx) = { Pattern::reset_ranges(ctx); }
-    to_string: ()               "((name.data())$(Pattern::to_string())$)"
+    to_string:    ()          "((name.data())$(Pattern::to_string())$)";
 }
 
 // Regex syntax: (?<modifiers>)  Example: (?i)
@@ -748,7 +748,7 @@ modifier_matcher_logic: <CharT, ModifierChange> type =
         return other.match(cur, ctx, Modifier::replace(ModifierChange()));
     }
     reset_ranges: (inout ctx) = {}
-    to_string: ()               "(?(ModifierChange::to_string())$)";
+    to_string:    ()          "(?(ModifierChange::to_string())$)";
 }
 
 // Named character classes
@@ -773,8 +773,8 @@ named_class_not_ver_space : <CharT> type == named_class_matcher_logic<CharT, "\\
 named_class_not_word      : <CharT> type == named_class_matcher_logic<CharT, "\\W", true, word_class<CharT>>;
 
 // Other named matchers
-named_string_end_or_before_new_line_at_end: <CharT> type == special_syntax_wrapper<CharT, "\\Z", line_end_matcher_logic<CharT, false, true>>;
-named_string_end: <CharT> type == special_syntax_wrapper<CharT, "\\z", line_end_matcher_logic<CharT, false, false>>;
+named_string_end_or_before_new_line_at_end: <CharT> type  == special_syntax_wrapper<CharT, "\\Z", line_end_matcher_logic<CharT, false, true>>;
+named_string_end: <CharT> type   == special_syntax_wrapper<CharT, "\\z", line_end_matcher_logic<CharT, false, false>>;
 named_string_start: <CharT> type == special_syntax_wrapper<CharT, "\\A", line_start_matcher_logic<CharT, false>>;
 
 
@@ -959,7 +959,7 @@ word_boundary_matcher_logic: <CharT, negate: bool> type =
 
     }
     reset_ranges: (inout ctx) = {}
-    to_string: () -> bstring<CharT> = {
+    to_string:    () -> bstring<CharT> = {
         if negate {
             return "\\B";
         } else {
