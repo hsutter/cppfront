@@ -121,7 +121,7 @@ test: <M> (regex: M, id: int, regex_str: std::string, str: std::string, kind: st
 
   r := regex.search(str);
 
-  if "y" == kind || "yM" == kind || "yS" == kind {
+  if "y" == kind || "yM" == kind || "yS" == kind || "yB" == kind {
     if !r.matched {
       status = "Failure: Regex should apply.";
     }
@@ -150,7 +150,7 @@ test: <M> (regex: M, id: int, regex_str: std::string, str: std::string, kind: st
 }
 
 
-test_general_tests: @regex type = {
+test_perl_tests_general: @regex type = {
   regex_0 := "abc";
   var_regex_0 : std::string = "abc";
   regex_1 := "abc";
@@ -1756,8 +1756,12 @@ test_general_tests: @regex type = {
   regex_661 := "foo # Match foo";
   regex_661_mod := "x";
   var_regex_661 : std::string = "foo # Match foo";
+  regex_662 := "\x41\x42";
+  var_regex_662 : std::string = "\x41\x42";
+  regex_663 := "\101\o{102}";
+  var_regex_663 : std::string = "\101\o{102}";
   run: (this) = {
-    std::cout << "Running general_tests:"<< std::endl;
+    std::cout << "Running perl_tests_general:"<< std::endl;
     test(regex_0, 0, "abc", "abc", "y", "$&", "abc");
     test(regex_1, 1, "abc", "abc", "y", "$-[0]", "0");
     test(regex_2, 2, "abc", "abc", "y", "$+[0]", "3");
@@ -2420,9 +2424,156 @@ test_general_tests: @regex type = {
     test(regex_659, 659, "(?-n)(foo)(?n)(bar)", "foobar", "y", "$&-$1-$2", "foobar-foo-");
     test(regex_660, 660, "(?-n:(foo)(?n:(bar)))", "foobar", "y", "$&-$1-$2", "foobar-foo-");
     test(regex_661, 661, "foo # Match foo", "foobar", "y", "$&", "foo");
+    test(regex_662, 662, "\\x41\\x42", "AB", "y", "$&", "AB");
+    test(regex_663, 663, "\\101\\o{102}", "AB", "y", "$&", "AB");
+    std::cout << std::endl;
+  }
+}
+test_perl_tests_lookahead: @regex type = {
+  regex_0 := "a(?!b).";
+  var_regex_0 : std::string = "a(?!b).";
+  regex_1 := "(?=)a";
+  var_regex_1 : std::string = "(?=)a";
+  regex_2 := "a(?=d).";
+  var_regex_2 : std::string = "a(?=d).";
+  regex_3 := "a(?=c|d).";
+  var_regex_3 : std::string = "a(?=c|d).";
+  regex_4 := "^(?:b|a(?=(.)))*\1";
+  var_regex_4 : std::string = "^(?:b|a(?=(.)))*\1";
+  regex_5 := "(?=(a+?))(\1ab)";
+  var_regex_5 : std::string = "(?=(a+?))(\1ab)";
+  regex_6 := "^(?=(a+?))\1ab";
+  var_regex_6 : std::string = "^(?=(a+?))\1ab";
+  regex_7 := "(?=(a+?))(\1ab)";
+  var_regex_7 : std::string = "(?=(a+?))(\1ab)";
+  regex_8 := "^(?=(a+?))\1ab";
+  var_regex_8 : std::string = "^(?=(a+?))\1ab";
+  regex_9 := "(.*)(?=c)";
+  var_regex_9 : std::string = "(.*)(?=c)";
+  regex_10 := "(.*)(?=c)c";
+  var_regex_10 : std::string = "(.*)(?=c)c";
+  regex_11 := "(.*)(?=b|c)";
+  var_regex_11 : std::string = "(.*)(?=b|c)";
+  regex_12 := "(.*)(?=b|c)c";
+  var_regex_12 : std::string = "(.*)(?=b|c)c";
+  regex_13 := "(.*)(?=c|b)";
+  var_regex_13 : std::string = "(.*)(?=c|b)";
+  regex_14 := "(.*)(?=c|b)c";
+  var_regex_14 : std::string = "(.*)(?=c|b)c";
+  regex_15 := "(.*)(?=[bc])";
+  var_regex_15 : std::string = "(.*)(?=[bc])";
+  regex_16 := "(.*)(?=[bc])c";
+  var_regex_16 : std::string = "(.*)(?=[bc])c";
+  regex_17 := "(.*?)(?=c)";
+  var_regex_17 : std::string = "(.*?)(?=c)";
+  regex_18 := "(.*?)(?=c)c";
+  var_regex_18 : std::string = "(.*?)(?=c)c";
+  regex_19 := "(.*?)(?=b|c)";
+  var_regex_19 : std::string = "(.*?)(?=b|c)";
+  regex_20 := "(.*?)(?=b|c)c";
+  var_regex_20 : std::string = "(.*?)(?=b|c)c";
+  regex_21 := "(.*?)(?=c|b)";
+  var_regex_21 : std::string = "(.*?)(?=c|b)";
+  regex_22 := "(.*?)(?=c|b)c";
+  var_regex_22 : std::string = "(.*?)(?=c|b)c";
+  regex_23 := "(.*?)(?=[bc])";
+  var_regex_23 : std::string = "(.*?)(?=[bc])";
+  regex_24 := "(.*?)(?=[bc])c";
+  var_regex_24 : std::string = "(.*?)(?=[bc])c";
+  regex_25 := "^(a*?)(?!(aa|aaaa)*\$)(?=a\z)";
+  var_regex_25 : std::string = "^(a*?)(?!(aa|aaaa)*\$)(?=a\z)";
+  regex_26 := "a(?!b(?!c))(..)";
+  var_regex_26 : std::string = "a(?!b(?!c))(..)";
+  regex_27 := "a(?!b(?=a))(..)";
+  var_regex_27 : std::string = "a(?!b(?=a))(..)";
+  regex_28 := "X(\w+)(?=\s)|X(\w+)";
+  var_regex_28 : std::string = "X(\w+)(?=\s)|X(\w+)";
+  regex_29 := "^a*(?=b)b";
+  var_regex_29 : std::string = "^a*(?=b)b";
+  regex_30 := "(?!\A)x";
+  regex_30_mod := "m";
+  var_regex_30 : std::string = "(?!\A)x";
+  regex_31 := "^(o)(?!.*\1)";
+  regex_31_mod := "i";
+  var_regex_31 : std::string = "^(o)(?!.*\1)";
+  regex_32 := ".*a(?!(b|cd)*e).*f";
+  var_regex_32 : std::string = ".*a(?!(b|cd)*e).*f";
+  regex_33 := "^(a*?)(?!(aa|aaaa)*\$)";
+  var_regex_33 : std::string = "^(a*?)(?!(aa|aaaa)*\$)";
+  regex_34 := "(?!)+?|(.{2,4})";
+  var_regex_34 : std::string = "(?!)+?|(.{2,4})";
+  regex_35 := "^(a*?)(?!(a{6}|a{5})*\$)";
+  var_regex_35 : std::string = "^(a*?)(?!(a{6}|a{5})*\$)";
+  regex_36 := "a(?!b(?!c(?!d(?!e))))...(.)";
+  var_regex_36 : std::string = "a(?!b(?!c(?!d(?!e))))...(.)";
+  regex_37 := "X(?!b+(?!(c+)*(?!(c+)*d))).*X";
+  var_regex_37 : std::string = "X(?!b+(?!(c+)*(?!(c+)*d))).*X";
+  regex_38 := "((?s).)c(?!.)";
+  var_regex_38 : std::string = "((?s).)c(?!.)";
+  regex_39 := "((?s).)c(?!.)";
+  var_regex_39 : std::string = "((?s).)c(?!.)";
+  regex_40 := "((?s)b.)c(?!.)";
+  var_regex_40 : std::string = "((?s)b.)c(?!.)";
+  regex_41 := "((?s)b.)c(?!.)";
+  var_regex_41 : std::string = "((?s)b.)c(?!.)";
+  regex_42 := "((?s)b.)c(?!\N)";
+  var_regex_42 : std::string = "((?s)b.)c(?!\\N)";
+  regex_43 := "(b.)c(?!\N)";
+  regex_43_mod := "s";
+  var_regex_43 : std::string = "(b.)c(?!\\N)";
+  regex_44 := "a*(?!)";
+  var_regex_44 : std::string = "a*(?!)";
+  run: (this) = {
+    std::cout << "Running perl_tests_lookahead:"<< std::endl;
+    test(regex_0, 0, "a(?!b).", "abad", "y", "$&", "ad");
+    test(regex_1, 1, "(?=)a", "a", "y", "$&", "a");
+    test(regex_2, 2, "a(?=d).", "abad", "y", "$&", "ad");
+    test(regex_3, 3, "a(?=c|d).", "abad", "y", "$&", "ad");
+    test(regex_4, 4, "^(?:b|a(?=(.)))*\\1", "abc", "y", "$&", "ab");
+    test(regex_5, 5, "(?=(a+?))(\\1ab)", "aaab", "y", "$2", "aab");
+    test(regex_6, 6, "^(?=(a+?))\\1ab", "aaab", "n", "-", "-");
+    test(regex_7, 7, "(?=(a+?))(\\1ab)", "aaab", "y", "$2", "aab");
+    test(regex_8, 8, "^(?=(a+?))\\1ab", "aaab", "n", "-", "-");
+    test(regex_9, 9, "(.*)(?=c)", "abcd", "y", "$1", "ab");
+    test(regex_10, 10, "(.*)(?=c)c", "abcd", "yB", "$1", "ab");
+    test(regex_11, 11, "(.*)(?=b|c)", "abcd", "y", "$1", "ab");
+    test(regex_12, 12, "(.*)(?=b|c)c", "abcd", "y", "$1", "ab");
+    test(regex_13, 13, "(.*)(?=c|b)", "abcd", "y", "$1", "ab");
+    test(regex_14, 14, "(.*)(?=c|b)c", "abcd", "y", "$1", "ab");
+    test(regex_15, 15, "(.*)(?=[bc])", "abcd", "y", "$1", "ab");
+    test(regex_16, 16, "(.*)(?=[bc])c", "abcd", "yB", "$1", "ab");
+    test(regex_17, 17, "(.*?)(?=c)", "abcd", "y", "$1", "ab");
+    test(regex_18, 18, "(.*?)(?=c)c", "abcd", "yB", "$1", "ab");
+    test(regex_19, 19, "(.*?)(?=b|c)", "abcd", "y", "$1", "a");
+    test(regex_20, 20, "(.*?)(?=b|c)c", "abcd", "y", "$1", "ab");
+    test(regex_21, 21, "(.*?)(?=c|b)", "abcd", "y", "$1", "a");
+    test(regex_22, 22, "(.*?)(?=c|b)c", "abcd", "y", "$1", "ab");
+    test(regex_23, 23, "(.*?)(?=[bc])", "abcd", "y", "$1", "a");
+    test(regex_24, 24, "(.*?)(?=[bc])c", "abcd", "yB", "$1", "ab");
+    test(regex_25, 25, "^(a*?)(?!(aa|aaaa)*\\$)(?=a\\z)", "aaaaaaaa", "y", "$1", "aaaaaaa");
+    test(regex_26, 26, "a(?!b(?!c))(..)", "abababc", "y", "$1", "bc");
+    test(regex_27, 27, "a(?!b(?=a))(..)", "abababc", "y", "$1", "bc");
+    test(regex_28, 28, "X(\\w+)(?=\\s)|X(\\w+)", "Xab", "y", "[$1-$2]", "[-ab]");
+    test(regex_29, 29, "^a*(?=b)b", "ab", "y", "$&", "ab");
+    test(regex_30, 30, "(?!\\A)x", "a\nxb\n", "y", "-", "-");
+    test(regex_31, 31, "^(o)(?!.*\\1)", "Oo", "n", "-", "-");
+    test(regex_32, 32, ".*a(?!(b|cd)*e).*f", "......abef", "n", "-", "-");
+    test(regex_33, 33, "^(a*?)(?!(aa|aaaa)*\\$)", "aaaaaaaaaaaaaaaaaaaa", "y", "$1", "a");
+    test(regex_34, 34, "(?!)+?|(.{2,4})", "abcde", "y", "$1", "abcd");
+    test(regex_35, 35, "^(a*?)(?!(a{6}|a{5})*\\$)", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "y", "$+[1]", "12");
+    test(regex_36, 36, "a(?!b(?!c(?!d(?!e))))...(.)", "abxabcdxabcde", "y", "$1", "e");
+    test(regex_37, 37, "X(?!b+(?!(c+)*(?!(c+)*d))).*X", "aXbbbbbbbcccccccccccccaaaX", "y", "-", "-");
+    test(regex_38, 38, "((?s).)c(?!.)", "a\nb\nc\n", "y", "$1", "\n");
+    test(regex_39, 39, "((?s).)c(?!.)", "a\nb\nc\n", "y", "$1:$&", "\n:\nc");
+    test(regex_40, 40, "((?s)b.)c(?!.)", "a\nb\nc\n", "y", "$1", "b\n");
+    test(regex_41, 41, "((?s)b.)c(?!.)", "a\nb\nc\n", "y", "$1:$&", "b\n:b\nc");
+    test(regex_42, 42, "((?s)b.)c(?!\\\\N)", "a\nb\nc\n", "y", "$1:$&", "b\n:b\nc");
+    test(regex_43, 43, "(b.)c(?!\\\\N)", "a\nb\nc\n", "y", "$1:$&", "b\n:b\nc");
+    test(regex_44, 44, "a*(?!)", "aaaab", "n", "-", "-");
     std::cout << std::endl;
   }
 }
 main: (args) = {
-    test_general_tests().run();
+    test_perl_tests_general().run();
+    test_perl_tests_lookahead().run();
 }
