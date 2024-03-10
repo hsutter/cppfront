@@ -1451,7 +1451,7 @@ auto interface(meta::type_declaration& t) -> void
             CPP2_UFCS(require)(mf, CPP2_UFCS(make_public)(mf), 
                         "interface functions must be public");
             CPP2_UFCS(default_to_virtual)(mf);
-            has_dtor |= CPP2_UFCS(is_destructor)(mf);
+            has_dtor |= CPP2_UFCS(is_destructor)(std::move(mf));
         }
     }
 
@@ -1614,7 +1614,7 @@ auto cpp2_struct(meta::type_declaration& t) -> void
             auto mf {CPP2_UFCS(as_function)(m)}; 
             CPP2_UFCS(require)(t, !(CPP2_UFCS(is_virtual)(mf)), 
                        "a struct may not have a virtual function");
-            CPP2_UFCS(require)(t, !(CPP2_UFCS(has_name)(mf, "operator=")), 
+            CPP2_UFCS(require)(t, !(CPP2_UFCS(has_name)(std::move(mf), "operator=")), 
                        "a struct may not have a user-defined operator=");
         }
     }
@@ -1663,25 +1663,25 @@ std::string value{"-1"};
 
         auto is_default_or_numeric {is_empty_or_a_decimal_number(init)}; 
         found_non_numeric |= !(CPP2_UFCS(empty)(init)) && !(is_default_or_numeric);
-        CPP2_UFCS(require)(m, !(is_default_or_numeric) || !(found_non_numeric) || CPP2_UFCS(has_name)(mo, "none"), 
+        CPP2_UFCS(require)(m, !(std::move(is_default_or_numeric)) || !(found_non_numeric) || CPP2_UFCS(has_name)(mo, "none"), 
             (cpp2::to_string(CPP2_UFCS(name)(mo)) + ": enumerators with non-numeric values must come after all default and numeric values"));
 
-        nextval(value, init);
+        nextval(value, std::move(init));
 
         auto v {std::strtoll(&CPP2_ASSERT_IN_BOUNDS_LITERAL(value, 0), nullptr, 10)}; // for non-numeric values we'll just get 0 which is okay for now
         if (cpp2::cmp_less(v,min_value)) {
             min_value = v;
         }
         if (cpp2::cmp_greater(v,max_value)) {
-            max_value = v;
+            max_value = std::move(v);
         }
 
         //  Adding local variable 'e' to work around a Clang warning
         value_member_info e {cpp2::as_<std::string>(CPP2_UFCS(name)(mo)), "", value}; 
-        CPP2_UFCS(push_back)(enumerators, e);
+        CPP2_UFCS(push_back)(enumerators, std::move(e));
 
         CPP2_UFCS(mark_for_removal_from_enclosing_type)(mo);
-        static_cast<void>(mo);
+        static_cast<void>(std::move(mo));
     }
 }
 
@@ -1707,7 +1707,7 @@ std::string value{"-1"};
             else {if (cpp2::cmp_greater_eq(min_value,std::numeric_limits<cpp2::i32>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i32>::max())) {
                 underlying_type.value() = "i32";
             }
-            else {if (cpp2::cmp_greater_eq(std::move(min_value),std::numeric_limits<cpp2::i64>::min()) && cpp2::cmp_less_eq(max_value,std::numeric_limits<cpp2::i64>::max())) {
+            else {if (cpp2::cmp_greater_eq(std::move(min_value),std::numeric_limits<cpp2::i64>::min()) && cpp2::cmp_less_eq(std::move(max_value),std::numeric_limits<cpp2::i64>::max())) {
                 underlying_type.value() = "i64";
             }
             else {
@@ -1788,7 +1788,7 @@ std::string to_string{"    to_string: (this) -> std::string = { \n"};
         }
 
         for ( 
-              auto const& e : enumerators ) {
+              auto const& e : std::move(enumerators) ) {
             if (e.name != "_") {// ignore unnamed values
                 if (bitwise) {
                     if (e.name != "none") {
@@ -1881,10 +1881,10 @@ auto value{0};
 
         //  Adding local variable 'e' to work around a Clang warning
         value_member_info e {cpp2::as_<std::string>(CPP2_UFCS(name)(mo)), CPP2_UFCS(type)(mo), cpp2::as_<std::string>(value)}; 
-        CPP2_UFCS(push_back)(alternatives, e);
+        CPP2_UFCS(push_back)(alternatives, std::move(e));
 
         CPP2_UFCS(mark_for_removal_from_enclosing_type)(mo);
-        static_cast<void>(mo);
+        static_cast<void>(std::move(mo));
     } while (false); ++value; }
 }
 
@@ -1994,7 +1994,7 @@ std::string value_set{""};
 #line 1347 "reflect.h2"
     {
         for ( 
-              auto const& a : alternatives ) {
+              auto const& a : std::move(alternatives) ) {
             value_set += ("        if that.is_" + cpp2::to_string(a.name) + "() { set_" + cpp2::to_string(a.name) + "( that." + cpp2::to_string(a.name) + "() ); }\n");
         }
         value_set += "    }\n";
@@ -2057,7 +2057,7 @@ auto regex_gen(meta::type_declaration& t) -> void
                 name = CPP2_UFCS(substr)(name, 0, CPP2_UFCS(size)(name) - CPP2_UFCS(size)(postfix));
 
                 if (CPP2_UFCS(contains)(expressions, name)) {
-                    CPP2_ASSERT_IN_BOUNDS(expressions, name).second = expr;
+                    CPP2_ASSERT_IN_BOUNDS(expressions, name).second = std::move(expr);
                 }
                 else {
                     CPP2_UFCS(error)(t, "Expression modifier defined without expression.");
@@ -2065,7 +2065,7 @@ auto regex_gen(meta::type_declaration& t) -> void
 
             }
             else {
-                CPP2_ASSERT_IN_BOUNDS(expressions, name) = std::make_pair(expr, "");
+                CPP2_ASSERT_IN_BOUNDS(expressions, name) = std::make_pair(std::move(expr), "");
             }
 
 #line 1439 "reflect.h2"
@@ -2074,10 +2074,10 @@ auto regex_gen(meta::type_declaration& t) -> void
 
     CPP2_UFCS(remove_marked_members)(t);
 
-    for ( auto const& expr : expressions ) {
+    for ( auto const& expr : std::move(expressions) ) {
         auto regular_expression {::cpp2::regex::generate_template(expr.second.first, expr.second.second, [_0 = t](auto const& message) mutable -> void { CPP2_UFCS(error)(_0, message);  })}; 
 
-        CPP2_UFCS(add_member)(t, ("public " + cpp2::to_string(expr.first) + ": " + cpp2::to_string(regular_expression) + " = ();"));
+        CPP2_UFCS(add_member)(t, ("public " + cpp2::to_string(expr.first) + ": " + cpp2::to_string(std::move(regular_expression)) + " = ();"));
     }
 }
 
@@ -2179,7 +2179,7 @@ auto regex_gen(meta::type_declaration& t) -> void
             && !(CPP2_UFCS(arguments_were_used)(rtype)))) 
 
         {
-            error(name + " did not use its template arguments - did you mean to write '" + name + " <" + CPP2_ASSERT_IN_BOUNDS_LITERAL(args, 0) + "> type' (with the spaces)?");
+            error(name + " did not use its template arguments - did you mean to write '" + name + " <" + CPP2_ASSERT_IN_BOUNDS_LITERAL(std::move(args), 0) + "> type' (with the spaces)?");
             return false; 
         }
     }
