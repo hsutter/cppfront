@@ -37,6 +37,15 @@ expression_flags: type = {
     perl_code_syntax_in_classes: int  == 32;  // mod: xx
 }
 
+// TODO: @enum as template parameter yields two error:
+//     error: type 'range_flags' of non-type template parameter is not a structural type
+//     error: non-type template parameter has incomplete type 'range_flags'
+range_flags: type = {
+    not_greedy: int == 1;
+    greedy:     int == 2;
+    possessive: int == 3;
+}
+
 match_group: @struct <Iter> type = {
     start: Iter = ();
     end: Iter = ();
@@ -780,16 +789,16 @@ named_string_start: <CharT> type == special_syntax_wrapper<CharT, "\\A", line_st
 
 
 // Regex syntax: <matcher>{min, max}  Example: a{2,4}
-range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, possessive: bool> type = {
+range_matcher_logic: <CharT, M, min_count: int, max_count: int, kind: int> type = {
 
     match: <Iter> (cur: Iter, inout ctx, modifiers, tail) -> _ = {
-        if possessive {
+        if range_flags::possessive == kind {
             return match_possessive(cur, ctx, modifiers, tail);
         }
-        else if greedy {
+        else if range_flags::greedy == kind {
             return match_greedy(0, cur, ctx.end, ctx, modifiers, tail);
         }
-        else {
+        else { // range_flags::not_greedy == kind
             return match_not_greedy(cur, ctx, modifiers, tail);
         }
     }
@@ -812,10 +821,10 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, po
         r += "{(min_count)$,(max_count)$}";
       }
 
-      if !greedy {
+      if kind == range_flags::not_greedy {
         r += "?";
       }
-      else if possessive {
+      else if kind == range_flags::possessive {
         r += "+";
       }
 
@@ -933,14 +942,14 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, po
 
 // Regex syntax: *, +, or ?  Example: aa*
 //
-special_range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, possessive: bool, symbol: char> type = {
-    this: range_matcher_logic<CharT, M, min_count, max_count, greedy, possessive> = ();
+special_range_matcher_logic: <CharT, M, min_count: int, max_count: int, kind: int, symbol: char> type = {
+    this: range_matcher_logic<CharT, M, min_count, max_count, kind> = ();
     to_string: () -> bstring<CharT> = {
         r := M::to_string() + symbol;
-        if !greedy {
+        if kind == range_flags::not_greedy {
             r += "?";
         }
-        else if possessive {
+        else if kind == range_flags::possessive {
             r += "+";
         }
 
@@ -2018,14 +2027,13 @@ regex_parser: <Error_out> type = {
         inner = trim_copy(inner);
         if inner.empty() { error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'"); return false; }
 
-        greedy := true;
-        possessive := false;
+        kind := range_flags::greedy;
         if peek() == '?' {
-            greedy = false;
+            kind = range_flags::not_greedy;
             _ = skip();
         }
         else if peek() == '+' {
-            possessive = true;
+            kind = range_flags::possessive;
             _ = skip();
         }
 
@@ -2065,7 +2073,7 @@ regex_parser: <Error_out> type = {
             return false;
         }
 
-        cur_group_state.wrap_last( :(inner) -> _ == create_matcher("range_matcher_logic", "(inner)$, (min_count$)$, (max_count$)$, (greedy)$, (possessive)$"));
+        cur_group_state.wrap_last( :(inner) -> _ == create_matcher("range_matcher_logic", "(inner)$, (min_count$)$, (max_count$)$, (kind)$"));
 
         return true;
     }
@@ -2087,14 +2095,13 @@ regex_parser: <Error_out> type = {
             return false;
         }
 
-        greedy := true;
-        possessive := false;
+        kind := range_flags::greedy;
         if peek() == '?' {
-            greedy = false;
+            kind = range_flags::not_greedy;
             _ = skip();
         }
         else if peek() == '+' {
-            possessive = true;
+            kind = range_flags::possessive;
             _ = skip();
         }
 
@@ -2103,7 +2110,7 @@ regex_parser: <Error_out> type = {
             return false;
         }
 
-        cur_group_state.wrap_last(:(inner) -> _ == create_matcher("special_range_matcher_logic", "(inner)$, (min_range$)$, (max_range$)$, (greedy)$, (possessive)$, '(c$)$'"));
+        cur_group_state.wrap_last(:(inner) -> _ == create_matcher("special_range_matcher_logic", "(inner)$, (min_range$)$, (max_range$)$, (kind)$, '(c$)$'"));
         return true;
     }
 
