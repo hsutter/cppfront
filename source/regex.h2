@@ -783,8 +783,11 @@ named_string_start: <CharT> type == special_syntax_wrapper<CharT, "\\A", line_st
 range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, possessive: bool> type = {
 
     match: <Iter> (cur: Iter, inout ctx, modifiers, tail) -> _ = {
-        if greedy {
-            return match_greedy(0, cur, cur, ctx, modifiers, tail);
+        if possessive {
+            return match_possessive(cur, ctx, modifiers, tail);
+        }
+        else if greedy {
+            return match_greedy(0, cur, ctx.end, ctx, modifiers, tail);
         }
         else {
             return match_not_greedy(cur, ctx, modifiers, tail);
@@ -851,33 +854,55 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int, greedy: bool, po
     }
 
     private match_greedy: <Iter>(count: int, cur: Iter, last_valid: Iter, inout ctx, modifiers, other) -> match_return<Iter> = {
-        r:= M::match(cur, ctx, modifiers, no_tail<CharT>());
-        if  is_below_upper_bound(count) && r.matched &&
-            (is_below_lower_bound(count) || r.pos != cur)
-        {
-            inner := match_greedy(count + 1, r.pos, cur, ctx, modifiers, other);
-
-            if possessive ||  // Do not backtrack if possessive.
-               inner.matched {
-                return inner;
-            }
+        inner_call := :(tail_cur, inout tail_ctx, tail_modifiers) -> _ == {
+            return match_greedy((count + 1)$, tail_cur, (cur)$, tail_ctx, tail_modifiers, (other&)$*);
+        };
+        is_m_valid := true;
+        r := ctx.fail();
+        if is_below_upper_bound(count) && (is_below_lower_bound(count) || cur != last_valid) {
+            is_m_valid = false;  // Group ranges in M are invalidated through the call.
+            r = match_tail<CharT, M>().make_calling(inner_call).match(cur, ctx, modifiers);
         }
 
-        // No match from the recursion. Try to match our tail.
-        if is_in_range(count) {
-            o:= other.match(cur, ctx, modifiers);
+        if !r.matched && is_in_range(count) {
+            // The recursion did not yield a match try now the tail
+            r = other.match(cur, ctx, modifiers);
 
-            if o.matched {
-                // Rematch M to set the groups.
+            if r.matched && !is_m_valid{
+                // We have a match rematch M if required
                 M::reset_ranges(ctx);
-                _ = M::match(last_valid, ctx, modifiers, no_tail<CharT>());
-            }
 
-            return o;
+                if count > 0 {
+                    _ = M::match(last_valid, ctx, modifiers, no_tail<CharT>());
+                }
+            }
         }
-        else {
-            return ctx.fail();
+
+        return r;
+    }
+
+    private match_possessive: <Iter>(cur: Iter, inout ctx, modifiers, other) -> match_return<Iter> = {
+        count :=0;
+        r := match_min_count(cur, ctx, modifiers, count);
+
+        if !r.matched {
+          return r;
         }
+
+        pos := r.pos;
+        while r.matched && is_below_upper_bound(count) {
+            r = M::match(pos, ctx, modifiers, no_tail<CharT>());
+
+            if pos == r.pos {
+                break; // Break infinite loop.
+            }
+            if r.matched {
+                count += 1;
+                pos = r.pos;
+            }
+        }
+
+        return other.match(pos, ctx, modifiers);
     }
 
     private match_not_greedy: <Iter>(cur: Iter, inout ctx, modifiers, other) -> match_return<Iter> = {

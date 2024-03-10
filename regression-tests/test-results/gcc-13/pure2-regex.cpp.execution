@@ -1083,7 +1083,7 @@ xb
 32_n: OK regex: .*a(?!(b|cd)*e).*f parsed_regex: .*a(?!(b|cd)*e).*f str: ......abef result_expr: - expected_results -
 33_y: OK regex: ^(a*?)(?!(aa|aaaa)*\$) parsed_regex: ^(a*?)(?!(aa|aaaa)*\$) str: aaaaaaaaaaaaaaaaaaaa result_expr: $1 expected_results a
 34_y: OK regex: (?!)+?|(.{2,4}) parsed_regex: (?!)+?|(.{2,4}) str: abcde result_expr: $1 expected_results abcd
-35_y: Failure: Result is wrong. (is: 0) regex: ^(a*?)(?!(a{6}|a{5})*\$) parsed_regex: ^(a*?)(?!(a{6}|a{5})*\$) str: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa result_expr: $+[1] expected_results 12
+35_y: OK regex: ^(a*?)(?!(a{6}|a{5})*\$) parsed_regex: ^(a*?)(?!(a{6}|a{5})*\$) str: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa result_expr: $+[1] expected_results 12
 36_y: OK regex: a(?!b(?!c(?!d(?!e))))...(.) parsed_regex: a(?!b(?!c(?!d(?!e))))...(.) str: abxabcdxabcde result_expr: $1 expected_results e
 37_y: OK regex: X(?!b+(?!(c+)*(?!(c+)*d))).*X parsed_regex: X(?!b+(?!(c+)*(?!(c+)*d))).*X str: aXbbbbbbbcccccccccccccaaaX result_expr: - expected_results -
 38_y: OK regex: ((?s).)c(?!.) parsed_regex: ((?s).)c(?!.) str: a
