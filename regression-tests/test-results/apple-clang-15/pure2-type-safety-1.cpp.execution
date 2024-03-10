@@ -1,0 +1,9 @@
+                         double is int? false
+      variant<int, int, double> is int? false
+                            any is int? false
+                  optional<int> is int? false
+
+                            int is int? true
+      variant<int, int, double> is int? true
+                            any is int? true
+                  optional<int> is int? true

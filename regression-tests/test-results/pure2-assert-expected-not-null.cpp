@@ -47,6 +47,7 @@
 #line 18 "pure2-assert-expected-not-null.cpp2"
 [[nodiscard]] auto main() -> int
 {
+    std::set_terminate(std::abort);
     return fine() + bad_expected_access(); 
 }
 

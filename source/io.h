@@ -20,8 +20,6 @@
 
 #include "common.h"
 #include <fstream>
-#include <ostream>
-#include <iterator>
 #include <cctype>
 
 

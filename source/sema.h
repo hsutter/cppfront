@@ -33,7 +33,7 @@ auto parser::apply_type_metafunctions( declaration_node& n )
     auto rtype = meta::type_declaration{ &n, cs };
 
     return apply_metafunctions(
-        n, 
+        n,
         rtype,
         [&](std::string const& msg) { error( msg, false ); }
     );
@@ -76,17 +76,33 @@ struct declaration_sym {
         assert (declaration);
         return declaration->position();
     }
+
+    auto get_token() const
+        -> token const*
+    {
+        return identifier;
+    }
 };
 
 struct identifier_sym {
+    enum kind { use, using_declaration, deactivation } kind_ = use;
     bool standalone_assignment_to = false;
+    bool is_captured = false;
+    bool safe_to_move = true;
+    int safe_to_move_context = 0;
     token const* identifier = {};
 
     identifier_sym(
         bool         a,
-        token const* id
+        token const* id,
+        kind         k = use,
+        bool         mv = true,
+        int          mvc = 0
     )
-        : standalone_assignment_to{a}
+        : kind_{k}
+        , standalone_assignment_to{a}
+        , safe_to_move{mv}
+        , safe_to_move_context{mvc}
         , identifier{id}
     { }
 
@@ -95,6 +111,30 @@ struct identifier_sym {
     {
         assert (identifier);
         return identifier->position();
+    }
+
+    auto get_token() const
+        -> token const*
+    {
+        return identifier;
+    }
+
+    auto is_use() const
+        -> bool
+    {
+        return kind_ == use;
+    }
+
+    auto is_using_declaration() const
+        -> bool
+    {
+        return kind_ == using_declaration;
+    }
+
+    auto is_deactivation() const
+        -> bool
+    {
+        return kind_ == deactivation;
     }
 };
 
@@ -115,6 +155,13 @@ struct selection_sym {
     {
         assert (selection);
         return selection->position();
+    }
+
+    auto get_token() const
+        -> token const*
+    {
+        assert (selection);
+        return selection->identifier;
     }
 };
 
@@ -139,6 +186,12 @@ struct compound_sym {
         assert (compound);
         return compound->position();
     }
+
+    auto get_token() const
+        -> token const*
+    {
+        return nullptr;
+    }
 };
 
 struct symbol {
@@ -155,7 +208,7 @@ struct symbol {
     bool start = true;
 
     symbol(int depth, declaration_sym const& sym) : depth{depth}, sym{sym}, start{sym.start} { }
-    symbol(int depth, identifier_sym  const& sym) : depth{depth}, sym{sym}                   { }
+    symbol(int depth, identifier_sym  const& sym) : depth{depth}, sym{sym}, start{!sym.is_deactivation()} { }
     symbol(int depth, selection_sym   const& sym) : depth{depth}, sym{sym}, start{sym.start} { }
     symbol(int depth, compound_sym    const& sym) : depth{depth}, sym{sym}, start{sym.start} { }
 
@@ -189,6 +242,46 @@ struct symbol {
             return { 0, 0 };
         }
     }
+
+    auto get_token() const
+        -> token const*
+    {
+        switch (sym.index())
+        {
+        break;case declaration: {
+            auto const& s = std::get<declaration>(sym);
+            return s.get_token();
+        }
+
+        break;case identifier: {
+            auto const& s = std::get<identifier>(sym);
+            return s.get_token();
+        }
+
+        break;case selection: {
+            auto const& s = std::get<selection>(sym);
+            return s.get_token();
+        }
+
+        break;case compound: {
+            auto const& s = std::get<compound>(sym);
+            return s.get_token();
+        }
+
+        break;default:
+            assert (!"illegal symbol state");
+            return nullptr;
+        }
+    }
+
+    auto get_global_token_order() const
+        -> index_t
+    {
+        if (auto t = get_token()) {
+            return t->get_global_token_order();
+        }
+        return 0;
+    }
 };
 
 
@@ -213,18 +306,21 @@ auto is_definite_initialization(token const* t)
 
 //  Keep a list of all token*'s found that are definite last uses
 //  for a local variable or copy or forward parameter x, which we
-//  will rewrite to move or forward from the variable.
+//   will rewrite to move or forward from the variable.
 //
 struct last_use {
     token const* t;
     bool         is_forward;
+    bool         safe_to_move;
 
     last_use(
         token const* t_,
-        bool         is_forward_ = false
+        bool         is_forward_ = false,
+        bool         safe_to_move_ = true
     )
         : t{t_}
         , is_forward{is_forward_}
+        , safe_to_move{safe_to_move_}
     { }
 
     bool operator==(last_use const& that) { return t == that.t; }
@@ -276,23 +372,26 @@ public:
     }
 
     //  Get the declaration of t within the same named function or beyond it
+    //  For a this parameter, optionally include uses of implicit this
     //
     auto get_declaration_of(
         token const* t,
-        bool         look_beyond_current_function = false
-    )
+        bool         look_beyond_current_function = false,
+        bool         include_implicit_this        = false
+    ) const
         -> declaration_sym const*
     {
         if (!t) {
             return {};
         }
-        return get_declaration_of(*t, look_beyond_current_function);
+        return get_declaration_of(*t, look_beyond_current_function, include_implicit_this);
     }
 
     auto get_declaration_of(
         token const& t,
-        bool         look_beyond_current_function = false
-    )
+        bool         look_beyond_current_function = false,
+        bool         include_implicit_this        = false
+    ) const
         -> declaration_sym const*
     {
         //  First find the position the query is coming from
@@ -300,7 +399,7 @@ public:
         auto i = symbols.cbegin();
         while (
             i != symbols.cend()
-            && i->position() < t.position()
+            && i->get_global_token_order() < t.get_global_token_order()
             )
         {
             ++i;
@@ -322,18 +421,27 @@ public:
         //  Then look backward to find the first declaration of
         //  this name that is not deeper (in a nested scope)
         //  and is in the same function
-        for (
-            auto ri = std::make_reverse_iterator(i+1);
-            ri != symbols.crend() && ri->position() <= t.position();    // TODO: See pure2-deducing-pointers-error.cpp2
-            ++ri
-            )
+        using I = std::vector<symbol>::const_iterator;
+        auto advance = [](I& i, int n, I bound) {  // TODO Use `std::ranges::advance`
+            auto in = i;
+            if (std::abs(n) >= std::abs(bound - i)) {
+                i = bound;
+            }
+            else {
+                std::advance(i, n);
+            }
+            return n - (i - in);
+        };
+        advance(i, -int(i->position() > t.position()), symbols.cbegin());
+        advance(i, 1, symbols.cend());
+        while (advance(i, -1, symbols.begin()) == 0)
         {
             if (
-                ri->sym.index() == symbol::active::declaration
-                && ri->depth <= depth
+                i->sym.index() == symbol::active::declaration
+                && i->depth <= depth
                 )
             {
-                auto const& decl = std::get<symbol::active::declaration>(ri->sym);
+                auto const& decl = std::get<symbol::active::declaration>(i->sym);
 
                 //  Conditionally look beyond the start of the current named (has identifier) function
                 //  (an unnamed function is ok to look beyond)
@@ -355,11 +463,65 @@ public:
                 {
                     return &decl;
                 }
-                depth = ri->depth;
+
+                //  If we reached a 'move this' parameter, look it up in the type members
+                if (
+                    include_implicit_this
+                    && decl.identifier
+                    && *decl.identifier == "this"
+                    )
+                {
+                    if (auto n = decl.declaration;
+                        decl.parameter
+                        && decl.parameter->pass == passing_style::move
+                        && n
+                        && n->parent_is_function()
+                        && (n = n->parent_declaration)->parent_is_type()
+                        && n->my_statement
+                        && n->my_statement->compound_parent
+                        && std::any_of(
+                               n->my_statement->compound_parent->statements.begin(),
+                               n->my_statement->compound_parent->statements.end(),
+                               [&t, n](std::unique_ptr<statement_node> const& s) mutable {
+                                   return s
+                                          && s->statement.index() == statement_node::declaration
+                                          && (n = &*std::get<statement_node::declaration>(s->statement))->identifier
+                                          && n->identifier->to_string() == t;
+                               })
+                        )
+                    {
+                        return &decl;
+                    }
+                    return nullptr;
+                }
+
+                depth = i->depth;
             }
         }
 
         return nullptr;
+    }
+
+    auto is_captured(token const& t) const
+        -> bool
+    {
+        //  TODO Use 'std::lower_bound' by filtering final positions of 0.
+        auto it = std::find_if(
+            symbols.begin(),
+            symbols.end(),
+            [&](symbol const& s) -> bool {
+                return s.get_global_token_order() == t.get_global_token_order();
+            });
+
+        if (identifier_sym const* sym = nullptr;
+            it != symbols.end()
+            && (sym = std::get_if<symbol::active::identifier>(&it->sym))
+            && sym->is_use()
+            )
+        {
+            return sym->is_captured;
+        }
+        return false;
     }
 
 
@@ -421,14 +583,22 @@ public:
             break;case symbol::active::identifier: {
                 auto const& sym = std::get<symbol::active::identifier>(s.sym);
                 assert (sym.identifier);
-                if (auto use = is_definite_last_use(sym.identifier)) {
+                if (last_use const* use = nullptr;
+                    sym.is_use()
+                    && (use = is_definite_last_use(sym.identifier))
+                    )
+                {
                     o << "*** " << sym.identifier->position().to_string()
                       << " DEFINITE LAST "
                       << (use->is_forward ? "FORWARDING" : "POTENTIALLY MOVING")
                       << " USE OF ";
                 }
 
-                if (is_definite_initialization(sym.identifier)) {
+                if (
+                    sym.is_use()
+                    && is_definite_initialization(sym.identifier)
+                    )
+                {
                     o << "*** " << sym.identifier->position().to_string()
                       << " DEFINITE INITIALIZATION OF ";
                 }
@@ -513,26 +683,17 @@ public:
 
         //  It's a local (incl. named return value or copy or move or forward parameter)
         //
-        auto is_potentially_movable_local = [&](symbol const& s)
+        auto is_local_declaration = [&](symbol const& s)
             -> declaration_sym const*
         {
             if (auto const* sym = std::get_if<symbol::active::declaration>(&s.sym)) {
                 if (
                     sym->start
                     && sym->declaration->is_object()
-                    && (!sym->parameter
-                        || sym->parameter->pass == passing_style::copy
-                        || sym->parameter->pass == passing_style::move
-                        || sym->parameter->pass == passing_style::forward
-                        )
                     )
                 {
                     //  Must be in function scope
-                    if (
-                        sym->declaration->parent_declaration
-                        && sym->declaration->parent_declaration->is_function()
-                        )
-                    {
+                    if (sym->declaration->parent_is_function()) {
                         return sym;
                     }
                     else {
@@ -563,13 +724,14 @@ public:
 
             //  If this is a copy, move, or forward parameter or a local variable,
             //  identify and tag its definite last uses to `std::move` from them
+            //  If it's some other parameter, just check that it is used
             //
-            if (auto decl = is_potentially_movable_local(symbols[sympos])) {
+            if (auto decl = is_local_declaration(symbols[sympos])) {
                 assert (decl->identifier);
                 find_definite_last_uses(
                     decl->identifier,
                     sympos,
-                    decl->parameter && decl->parameter->pass == passing_style::forward
+                    decl->parameter ? std::optional{decl->parameter->pass} : std::optional<passing_style>{}
                 );
             }
         }
@@ -582,95 +744,338 @@ private:
     //  given position and depth in the symbol/scope table
     //
     auto find_definite_last_uses(
-        token const* id,
-        int          pos,
-        bool         is_forward
+        token const*                 id,
+        int                          pos,
+        std::optional<passing_style> pass
     ) const
         -> void
     {
-        auto i = pos;
-        auto depth = symbols[pos].depth;
+        auto is_a_use = [&](identifier_sym const* sym) -> bool {
+            assert(!sym || sym->identifier);
+            declaration_sym const* decl = nullptr;
+            return sym
+                   && sym->is_use()
+                   && (
+                       *sym->identifier == *id
+                       //  For 'this', do include member names with implicit 'this.'
+                       || (
+                           *id == "this"
+                           && (decl = get_declaration_of(sym->get_token(), false, true))
+                           && decl->identifier
+                           && *decl->identifier == "this"
+                           )
+                       );
+        };
 
-        //  Maintain a stack of the depths of the most recently seen
-        //  selection statements, using the current depth-2 as a sentinel
-        auto selections = std::vector<int>{depth-2};
+        auto i = pos + 1;
 
-        //  Scan forward to the end of this scope, keeping track of
-        //  the trailing nest of selection statements
-        while (
-            i+1 < std::ssize(symbols)
-            && symbols[i+1].depth >= depth
+        struct pos_range
+        {
+            bool is_loop;
+            int  first;
+            int  last = 0;
+
+            pos_range  (bool l, int f) : is_loop{l}, first{f} { }
+            bool within(int x)   const { return first <= x && x <= last; }
+            bool skip  ()        const { return !is_loop; }
+        };
+
+        //  Ranges of positions which includes non-nested
+        //  1. Iteration statements (a use isn't a last use)
+        //  2. Ranges to skip (a last use can't be found in these)
+        //    - Function expressions (except in a capture)
+        //    - Where id is hidden by another declaration
+        auto pos_ranges = std::vector<pos_range>{{false, 0}}; // Keep sentinel for simpler code
+
+        auto skip_hidden_name = [&](bool record_pos_range) -> bool {
+            auto skip_to = [&](token const* identifier_end)
+            {
+                //  Can afford to just skip id and not member names
+                //  because in Cpp2 you can't shadow member names
+                //
+                //  TODO When local types are supported
+                //  consider where 'this' is implicitly declared
+                //  For example, see https://cpp2.godbolt.org/z/onfW6hns1
+
+                if (record_pos_range) {
+                    pos_ranges.emplace_back(false, i - 1);
+                }
+                ++i;
+                identifier_sym const* sym = nullptr;
+                while (
+                    i < std::ssize(symbols)
+                    && (
+                        !(sym = std::get_if<symbol::active::identifier>(&symbols[i].sym))
+                        || sym->identifier != identifier_end
+                        )
+                    )
+                {
+                    ++i;
+                }
+                assert(sym->identifier == identifier_end && sym->is_deactivation());
+                if (record_pos_range) {
+                    pos_ranges.back().last = i;
+                }
+            };
+
+            if (auto decl = std::get_if<symbol::active::declaration>(&symbols[i].sym);
+                decl
+                && decl->start
+                && decl->identifier
+                && *decl->identifier == *id
+                && *decl->identifier != "_"
+                )
+            {
+                skip_to(decl->identifier);
+                return true;
+            }
+            else if (auto sym = std::get_if<symbol::active::identifier>(&symbols[i].sym);
+                     sym
+                     && sym->is_using_declaration()
+                     && sym->identifier
+                     && *sym->identifier == *id
+                     )
+            {
+                skip_to(sym->identifier);
+                return true;
+            }
+            return false;
+        };
+
+        auto skip_function_expression = [&]() -> bool {
+            if (auto decl = std::get_if<symbol::active::declaration>(&symbols[i].sym);
+                decl
+                && decl->start
+                && decl->declaration->is_function_expression()
+                )
+            {
+                //  Record the skipped subranges without captures
+                auto function_expression_end = decl->declaration;
+                pos_ranges.emplace_back(false, i - 1);
+                ++i;
+                while (
+                    i < std::ssize(symbols)
+                    && (
+                        !(decl = std::get_if<symbol::active::declaration>(&symbols[i].sym))
+                        || decl->declaration != function_expression_end
+                        )
+                    )
+                {
+                    if (skip_hidden_name(false)) {
+                        continue;
+                    }
+                    else if (
+                        auto sym = std::get_if<symbol::active::identifier>(&symbols[i].sym);
+                        is_a_use(sym)
+                        && sym->is_captured
+                        )
+                    {
+                        pos_ranges.back().last = i - 1;
+                        pos_ranges.emplace_back(false, i + 1);
+                    }
+                    ++i;
+                }
+                assert(decl && decl->declaration == function_expression_end && !decl->start);
+                pos_ranges.back().last = i;
+                return true;
+            }
+            return false;
+        };
+
+        //  Scan forward to the end of this scope
+        for (auto start_depth = symbols[pos].depth;
+            i < std::ssize(symbols)
+            && symbols[i].depth >= start_depth;
+            ++i
             )
         {
-            assert (std::ssize(symbols) > 1);
-            if (symbols[i].sym.index() == symbol::selection) {
-                auto const& s = std::get<symbol::selection>(symbols[i].sym);
-                if (s.start) {
-                    selections.push_back(symbols[i].depth);
-                }
-                //else {
-                //    assert (symbols[i].depth-1 == selections.back());
-                //    selections.pop_back();
-                //}
+            if (
+                skip_function_expression()
+                || skip_hidden_name(true)
+                )
+            {
+                continue;
             }
-            ++i;
+
+            //  Record the loops
+            else if (auto sym = std::get_if<symbol::active::identifier>(&symbols[i].sym);
+                sym
+                && sym->identifier
+                && (
+                    *sym->identifier == "for"
+                    || *sym->identifier == "while"
+                    || *sym->identifier == "do"
+                    )
+                )
+            {
+                auto loop_depth = symbols[i].depth;
+                auto loop_id = sym->identifier;
+
+                //  If id is the loop parameter, this is its end
+                if (
+                    *loop_id == "for"
+                    && sym->is_deactivation()
+                    )
+                {
+                    assert(symbols[i].depth == start_depth && "Messed up in a nested loop");
+                    ++i;
+                    break;
+                }
+                assert(symbols[i].start);
+
+                pos_ranges.emplace_back(true, i);
+
+                //  Scan forward to the end of this loop
+                ++i;
+                while (
+                    i < std::ssize(symbols)
+                    && (
+                        symbols[i].depth > loop_depth
+                        || !(sym = std::get_if<symbol::active::identifier>(&symbols[i].sym))
+                        || sym->identifier != loop_id
+                        )
+                    )
+                {
+                    if (
+                        skip_function_expression()
+                        || skip_hidden_name(true)
+                        )
+                    {
+                        continue;
+                    }
+                    ++i;
+                }
+                assert(sym && sym->identifier == loop_id && sym->is_deactivation());
+                pos_ranges.back().last = i;
+            }
         }
 
         //  i is now at the end of id's scope, so start scanning backwards
-        //  until we find the first definite last use
-        for (auto found = false; i > pos; --i)
+        //  until we find the first definite last uses
+        --i;
+        bool found = false;
+        auto branch_depth = 0;
+        while (i > pos)
         {
-            //  Once we find something, don't continue back further
-            //  than the closest enclosing selection statement
-            if (
-                found
-                && symbols[i].depth <= selections.back()
+            //  Drop skipped ranges
+            while (pos_ranges.back().first >= i) {
+                pos_ranges.pop_back();
+            }
+            //  Skip ranges where a use of id would name another declaration
+            while (
+                pos_ranges.back().within(i)
+                && pos_ranges.back().skip()
                 )
             {
-                break;
+                i = pos_ranges.back().first;
+                pos_ranges.pop_back();
             }
 
-            if (symbols[i].sym.index() == symbol::active::identifier)
+            //  If found in a branch and we are at its start,
+            //  pop out of any containing scope of the branch
+            if (compound_sym const* comp = nullptr;
+                branch_depth != 0
+                && (comp = std::get_if<symbol::active::compound>(&symbols[i].sym))
+                && comp->kind_ == compound_sym::is_true
+                && branch_depth + 1 == symbols[i].depth
+                )
             {
-                auto const& sym = std::get<symbol::active::identifier>(symbols[i].sym);
-                assert (sym.identifier);
-
-                //  If we find a use of this identifier
-                if (*sym.identifier == *id)
+                while (
+                    i > pos
+                    && (
+                        !(comp = std::get_if<symbol::active::compound>(&symbols[i].sym))
+                        || branch_depth <= symbols[i].depth
+                        )
+                    )
                 {
-                    if (
-                        !found
-                        || symbols[i].depth > selections.back()+1
-                        )
-                    {
-                        definite_last_uses.emplace_back( sym.identifier, is_forward );
-                        found = true;
-                    }
-
-                    //  Pop any of the last branches that we're outside of
-                    while (symbols[i].depth <= selections.back()) {
-                        selections.pop_back();
-                        assert (!selections.empty());   // won't remove sentinel
-                    }
-                    //  Then skip over the earlier part of the current branch
-                    while (
-                        i > pos
-                        && symbols[i].depth > selections.back() + 1
-                        )
-                    {
-                        --i;
-                    }
+                    --i;
                 }
+
+                //  If found in a branch,
+                //  keep popping to its sibling (false branch)
+                //  or to its containing scope (true branch)
+                if (
+                    i > pos
+                    && comp
+                    && (
+                        comp->kind_ == compound_sym::is_false
+                        || comp->kind_ == compound_sym::is_true
+                        )
+                    )
+                {
+                    branch_depth = symbols[i].depth - 1;
+                }
+                else
+                {
+                    branch_depth = 0;
+                }
+                continue;
+            }
+
+            auto sym = std::get_if<symbol::active::identifier>(&symbols[i].sym);
+
+            if (!is_a_use(sym))
+            {
+                --i;
+                continue;
+            }
+
+            //  If found in a loop, it wasn't a last use
+            //  Set up to pop out of the scope containing the loop
+            if (pos_ranges.back().within(i))
+            {
+                assert(pos_ranges.back().is_loop && "Other ranges are skipped.");
+                i = pos_ranges.back().first; // The scope to pop is the scope of the loop
+                pos_ranges.pop_back();
+            }
+            else
+            {
+                definite_last_uses.emplace_back(
+                    sym->identifier,
+                    pass == passing_style::forward,
+                    sym->safe_to_move
+                    && (
+                        !pass
+                        || pass == passing_style::copy
+                        || pass == passing_style::move
+                        || pass == passing_style::forward
+                        )
+                    );
+            }
+            found = true;
+
+            compound_sym const* comp = nullptr;
+
+            //  Pop out of any containing scope of the last use
+            for (auto found_depth = symbols[i--].depth;
+                i > pos
+                && (
+                    !(comp = std::get_if<symbol::active::compound>(&symbols[i].sym))
+                    || comp->kind_ == compound_sym::is_scope
+                    || found_depth <= symbols[i].depth
+                    );
+                --i
+                )
+            {
+            }
+            assert(!comp || symbols[i].start);
+
+            //  If found in a branch, record its depth
+            if (
+                i > pos
+                && comp
+                && comp->kind_ != compound_sym::is_scope
+                )
+            {
+                branch_depth = symbols[i].depth - 1;
             }
         }
 
         //  If we arrived back at the declaration without finding a use
-        //  and this isn't generated code (ignore that for now)
         //  and this is a user-named object (not 'this', 'that', or '_')
         if (
-            i == pos                        
-            && id->position().lineno > 0    
-            && *id != "this"                
+            !found
+            && *id != "this"
             && *id != "that"
             && *id != "_"
             )
@@ -700,13 +1105,7 @@ private:
     ) const
         -> bool
     {
-        //  If this is a member variable in a constructor, the name doesn't
-        //  appear lexically right in the constructor, so prepending "this."
-        //  to the printed name might make the error more readable to the programmer
         auto name = decl->identifier->to_string();
-        if (decl->declaration->parent_is_type()) {
-            name += " (aka this." + name + ")";
-        }
 
         struct stack_entry{
             int pos;    // start of this selection statement
@@ -759,7 +1158,11 @@ private:
                 auto const& sym = std::get<symbol::active::identifier>(symbols[pos].sym);
                 assert (sym.identifier);
 
-                if (is_definite_initialization(sym.identifier)) {
+                if (
+                    sym.is_use()
+                    && is_definite_initialization(sym.identifier)
+                    )
+                {
                     errors.emplace_back(
                         sym.identifier->position(),
                         "local variable " + name
@@ -1613,16 +2016,146 @@ public:
     //-----------------------------------------------------------------------
     //  Visitor functions
     //
-    int  scope_depth                              = 0;
-    bool started_standalone_assignment_expression = false;
-    bool started_postfix_expression               = false;
-    bool is_out_expression                        = false;
-    bool inside_next_expression                   = false;
-    bool inside_parameter_list                    = false;
-    bool inside_parameter_identifier              = false;
-    bool inside_returns_list                      = false;
-    bool just_entered_for                         = false;
-    parameter_declaration_node const* inside_out_parameter = {};
+    int                               scope_depth                              = 0;
+    int                               safe_to_move_context                     = 1;
+    bool                              started_standalone_assignment_expression = false;
+    bool                              started_postfix_expression               = false;
+    std::vector<bool>                 started_postfix_operators_               = {false};
+    bool                              started_prefix_operators                 = false;
+    bool                              is_out_expression                        = false;
+    bool                              inside_next_expression                   = false;
+    bool                              inside_parameter_list                    = false;
+    bool                              inside_parameter_identifier              = false;
+    bool                              inside_returns_list                      = false;
+    bool                              just_entered_for                         = false;
+    token const*                      prev_token                               = nullptr;
+    token const*                      prev2_token                              = nullptr;
+    token const*                      accessed_member_for_ufcs                 = nullptr;
+    parameter_declaration_node const* inside_out_parameter                     = {};
+    std::vector<std::pair<int, int>>  uses_in_expression                       = {};
+    std::vector<std::pair<int, int>>  uses_at_postfix_expression               = {};
+    std::vector<std::vector<int>>     indices_of_uses_per_scope                = {{}};
+    std::vector<std::vector<int>>     indices_of_activations_per_scope         = {{}};
+
+    auto started_postfix_operators() -> bool
+    {
+        assert(!started_postfix_operators_.empty());
+        return started_postfix_operators_.back();
+    }
+
+    auto push(std::vector<std::pair<int, int>>& uses) -> void
+    {
+        uses.emplace_back(
+            unsafe_narrow<int>(std::ssize(indices_of_uses_per_scope) - 1),
+            unsafe_narrow<int>(std::ssize(indices_of_uses_per_scope.back()))
+        );
+    }
+
+    auto get(std::vector<std::pair<int, int>>& uses) -> std::span<const int>
+    {
+        assert(!uses.empty());
+        auto [i, j] = uses.back();
+        return std::span{indices_of_uses_per_scope[i]}.subspan(j);
+    }
+
+    //  Mark uses that are not safe to move
+    auto pop_uses_in_expression() -> void
+    {
+        auto identifier = [](symbol& s) { return &std::get<symbol::active::identifier>(s.sym); };
+
+        auto range = get(uses_in_expression);
+        for (auto i : range)
+        {
+            auto x = identifier(symbols[i]);
+            for (auto j : range)
+            {
+                auto y = identifier(symbols[j]);
+                if (
+                    i != j
+                    && *x->identifier == *y->identifier
+                    && x->safe_to_move_context != y->safe_to_move_context
+                    && !x->is_captured
+                    && !y->is_captured
+                    )
+                {
+                    x->safe_to_move = false;
+                    y->safe_to_move = false;
+                }
+            }
+        }
+
+        uses_in_expression.pop_back();
+    }
+
+    auto push_lifetime_scope() -> void
+    {
+        indices_of_uses_per_scope.emplace_back();
+        indices_of_activations_per_scope.emplace_back();
+    }
+
+    auto push_use(identifier_sym sym) -> void
+    {
+        assert(!indices_of_uses_per_scope.empty());
+        assert(sym.is_use());
+        assert(sym.identifier);
+
+        indices_of_uses_per_scope.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
+        symbols.emplace_back(scope_depth, sym);
+    }
+
+    auto push_activation(declaration_sym decl) -> void
+    {
+        assert(!indices_of_activations_per_scope.empty());
+        assert(decl.start);
+
+        if (
+            decl.identifier
+            && *decl.identifier != "_"
+            )
+        {
+            indices_of_activations_per_scope.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
+        }
+        symbols.emplace_back(scope_depth, decl);
+    }
+
+    auto push_activation(identifier_sym sym) -> void
+    {
+        assert(!indices_of_activations_per_scope.empty());
+        assert(sym.is_using_declaration());
+        assert(sym.identifier);
+
+        indices_of_activations_per_scope.back().push_back(cpp2::unsafe_narrow<int>(std::ssize(symbols)));
+        symbols.emplace_back(scope_depth, sym);
+    }
+
+    auto pop_lifetime_scope() -> void
+    {
+        assert(!indices_of_uses_per_scope.empty());
+        assert(!indices_of_activations_per_scope.empty());
+
+        for (auto i : indices_of_activations_per_scope.back()) {
+            if (auto decl = std::get_if<symbol::active::declaration>(&symbols[i].sym))
+            {
+                symbols.emplace_back( scope_depth, identifier_sym( false, decl->identifier, identifier_sym::deactivation ) );
+            }
+            else if (auto sym = std::get_if<symbol::active::identifier>(&symbols[i].sym))
+            {
+                symbols.emplace_back( scope_depth, identifier_sym( false, sym->identifier, identifier_sym::deactivation ) );
+            }
+        }
+
+        indices_of_uses_per_scope.pop_back();
+        indices_of_activations_per_scope.pop_back();
+    }
+
+    auto end(translation_unit_node const&, int) -> void
+    {
+        assert(uses_in_expression.empty());
+        assert(uses_at_postfix_expression.empty());
+        assert(started_postfix_operators_.size() == 1);
+        assert(indices_of_uses_per_scope.size() == 1);
+        assert(indices_of_activations_per_scope.size() == 1);
+    }
 
     auto start(next_expression_tag const&, int) -> void
     {
@@ -1637,6 +2170,7 @@ public:
     auto start(parameter_declaration_list_node const&, int) -> void
     {
         inside_parameter_list = true;
+        push_lifetime_scope();
     }
 
     auto end(parameter_declaration_list_node const&, int) -> void
@@ -1673,15 +2207,8 @@ public:
             inside_out_parameter = &n;
         }
 
-        if (
-            n.pass == passing_style::copy
-            || n.pass == passing_style::move
-            || n.pass == passing_style::forward
-            )
-        {
-            // Handle variables in unnamed functions. For such cases scope_depth is increased by +1
-            auto depth = scope_depth + ((n.declaration->parent_is_function() && n.declaration->parent_declaration->name() == nullptr) ? 1 : 0 );
-            symbols.emplace_back( depth, declaration_sym( true, n.declaration.get(), n.declaration->name(), n.declaration->initializer.get(), &n));
+        if (n.pass != passing_style::out) {
+            push_activation( declaration_sym( true, n.declaration.get(), n.declaration->name(), n.declaration->initializer.get(), &n));
         }
     }
 
@@ -1705,11 +2232,29 @@ public:
         inside_returns_list = false;
     }
 
-    auto start(loop_body_tag const &n, int) -> void
+    auto start(iteration_statement_node const& n, int) -> void
     {
-        if (*n.identifier == "for") {
-            just_entered_for = true;
+        if (*n.identifier != "for") {
+             symbols.emplace_back( scope_depth, identifier_sym( false, n.identifier ) );
         }
+    }
+
+    auto end(iteration_statement_node const& n, int) -> void
+    {
+        symbols.emplace_back( scope_depth, identifier_sym( false, n.identifier, identifier_sym::deactivation ) );
+    }
+
+    auto start(loop_body_tag const& n, int) -> void
+    {
+        assert(*n.n->identifier == "for");
+        symbols.emplace_back( scope_depth, identifier_sym( false, n.n->identifier ) );
+        push_lifetime_scope();
+        just_entered_for = true;
+    }
+
+    auto end(loop_body_tag const&, int) -> void
+    {
+        pop_lifetime_scope();
     }
 
     auto start(declaration_node const& n, int) -> void
@@ -1727,7 +2272,10 @@ public:
             //  Skip type scope (member) variables
             && !(n.parent_is_type() && n.is_object())
             //  Skip unnamed variables
-            && n.identifier
+            && (
+                n.identifier
+                || n.is_function_expression()
+                )
             //  Skip non-out parameters
             && (
                 !inside_parameter_list
@@ -1735,7 +2283,7 @@ public:
                 )
             )
         {
-            symbols.emplace_back( scope_depth, declaration_sym( true, &n, n.name(), n.initializer.get(), inside_out_parameter ) );
+            push_activation( declaration_sym( true, &n, n.name(), n.initializer.get(), inside_out_parameter ) );
             if (!n.is_object()) {
                 ++scope_depth;
             }
@@ -1744,12 +2292,22 @@ public:
 
     auto end(declaration_node const& n, int) -> void
     {
+        if (auto f = std::get_if<declaration_node::a_function>(&n.type)) {
+            if (std::get_if<function_type_node::list>(&(*f)->returns)) {
+                pop_lifetime_scope();
+            }
+            pop_lifetime_scope();
+        }
+
         if (
             !n.is_alias()
             //  Skip type scope (member) variables
             && !(n.parent_is_type() && n.is_object())
             //  Skip unnamed variables
-            && n.identifier 
+            && (
+                n.identifier
+                || n.is_function_expression()
+                )
             //  Skip non-out parameters
             && (
                 !inside_parameter_list
@@ -1764,18 +2322,81 @@ public:
         }
     }
 
+    auto is_binary_operator(lexeme l) -> bool {
+        switch (l) {
+        break;case lexeme::PlusPlus:
+              case lexeme::MinusMinus:
+              case lexeme::Arrow:
+              case lexeme::Tilde:
+              case lexeme::Not:         return false;
+        break;case lexeme::Plus:
+              case lexeme::Minus:       return !started_prefix_operators;
+        break;case lexeme::Multiply:
+              case lexeme::Ampersand:   return !started_postfix_operators();
+        break;default:                  return is_operator(l);
+        }
+    }
+
     auto start(token const& t, int) -> void
     {
-        //  We currently only care to look at identifiers
-        if (t.type() != lexeme::Identifier) {
+        auto guard = finally([&]() {
+            prev2_token = prev_token;
+            prev_token = &t;
+        });
+
+        if (
+            is_binary_operator(t.type())
+            || (
+                t.type() == cpp2::lexeme::Keyword
+                && (
+                    t == "is"
+                    || t == "as"
+                    )
+                )
+            )
+        {
+            ++safe_to_move_context;
+        }
+
+        //  Mark captures
+        if (t.type() == lexeme::Dollar)
+        {
+            for (auto i : get(uses_at_postfix_expression))
+            {
+                auto& sym = std::get<symbol::active::identifier>(symbols[i].sym);
+                assert(sym.is_use());
+                sym.is_captured = true;
+            }
+        }
+
+        //  Further look at variable identifiers only
+        if (
+            t.type() != lexeme::Identifier
+            && t != "this"
+            && !accessed_member_for_ufcs
+            )
+        {
             return;
         }
 
+        //  By giving tokens an order during sema
+        //  generated code can be equally checked
+        static index_t global_token_counter = 1;
+        t.set_global_token_order( global_token_counter++ );
+
+        auto started_member_access =
+            prev_token
+            && prev_token->type() == lexeme::Dot;
+        auto started_this_member_access =
+            started_member_access
+            && prev2_token
+            && *prev2_token == "this";
+
         //  If this is the first identifier since we started a new assignment,
         //  expression, then it's the left-hand side (target) of the assignment
-        else if (started_standalone_assignment_expression)
+        if (started_standalone_assignment_expression)
         {
-            symbols.emplace_back( scope_depth, identifier_sym( true, &t ) );
+            push_use( identifier_sym( true, &t ) );
             started_standalone_assignment_expression = false;   // we were the consumer for this information
         }
 
@@ -1785,28 +2406,67 @@ public:
         //  this an id-expression and add a sema rule to disallow complex expressions
         else if (is_out_expression)
         {
-            symbols.emplace_back( scope_depth, identifier_sym( true, &t ) );
+            push_use( identifier_sym( true, &t ) );
             is_out_expression = false;
         }
 
         //  Otherwise it's just an identifier use (if it's not a parameter name) and
-        //  it's the first identifier of a postfix_expressions (not a member name or something else)
-        else if (started_postfix_expression)
+        //  it's the first identifier of a postfix_expressions
+        //  or the function name in a UFCS expression
+        else if (
+            started_postfix_expression
+            || started_member_access
+            || started_this_member_access
+            || accessed_member_for_ufcs
+            )
         {
             started_postfix_expression = false;
-            if (!inside_parameter_identifier && !inside_next_expression)
+            if (!inside_parameter_identifier)
             {
                 //  Put this into the table if it's a use of an object in scope
                 //  or it's a 'copy' parameter (but to be a use it must be after
                 //  the declaration, not the token in the decl's name itself)
-                if (auto decl = get_declaration_of(t);
+                //  including an implicit 'this' access of a member name
+                auto push_use = [&](token const* u) {
+                    this->push_use( identifier_sym( false, u, {}, !inside_next_expression, safe_to_move_context ) );
+                };
+                if (accessed_member_for_ufcs) {
+                    if (t == "(") {
+                        push_use(accessed_member_for_ufcs);
+                    }
+                    accessed_member_for_ufcs = nullptr;
+                }
+                else if (auto decl = get_declaration_of(t, false, !started_this_member_access);
                     decl
                     && decl->declaration->name() != &t
                     )
                 {
-                    symbols.emplace_back( scope_depth, identifier_sym( false, &t ) );
+                    if (!started_member_access) {
+                        push_use(&t);
+                    }
+                    else {
+                        accessed_member_for_ufcs = &t;
+                    }
                 }
             }
+        }
+    }
+
+    auto end(statement_node const& n, int) -> void
+    {
+        if (n.parameters) {
+            pop_lifetime_scope();
+        }
+    }
+
+    auto start(using_statement_node const& n, int) -> void
+    {
+        if (auto id = get_if<id_expression_node::qualified>(&n.id->id);
+            !n.for_namespace
+            && id
+            )
+        {
+            push_activation( identifier_sym( false, (*id)->ids.back().id->identifier, identifier_sym::using_declaration ) );
         }
     }
 
@@ -1853,10 +2513,12 @@ public:
             compound_sym{ true, &n, kind_of(n) }
         );
         ++scope_depth;
+        push_lifetime_scope();
     }
 
     auto end(compound_statement_node const& n, int) -> void
     {
+        pop_lifetime_scope();
         symbols.emplace_back(
             scope_depth,
             compound_sym{ false, &n, kind_of(n) }
@@ -1864,7 +2526,21 @@ public:
         --scope_depth;
     }
 
-    auto start(assignment_expression_node const& n, int)
+    template<typename T> auto start(T const&, int) -> void
+        requires std::is_same_v<T, expression_node>
+                 || std::is_same_v<T, logical_or_expression_node>
+    {
+        push(uses_in_expression);
+    }
+
+    template<typename T> auto end(T const&, int) -> void
+        requires std::is_same_v<T, expression_node>
+                 || std::is_same_v<T, logical_or_expression_node>
+    {
+        pop_uses_in_expression();
+    }
+
+    auto start(assignment_expression_node const& n, int) -> void
     {
         if (
             n.is_standalone_expression()
@@ -1879,8 +2555,35 @@ public:
         }
     }
 
-    auto start(postfix_expression_node const&, int) {
-        started_postfix_expression = true;
+    auto start(bit_and_expression_node const&, int) -> void
+    {
+        started_postfix_operators_.push_back(false);
+    }
+
+    auto end(bit_and_expression_node const&, int) -> void
+    {
+        started_postfix_operators_.pop_back();
+    }
+
+    auto start(prefix_expression_node const&, int) -> void
+    {
+        started_prefix_operators = true;
+    }
+
+    auto start(postfix_expression_node const& n, int) -> void
+    {
+        started_prefix_operators = false;
+        started_postfix_operators_.push_back(true);
+        if (auto id = std::get_if<primary_expression_node::id_expression>(&n.expr->expr)) {
+            started_postfix_expression = (*id)->is_unqualified();
+        }
+        push(uses_at_postfix_expression);
+    }
+
+    auto end(postfix_expression_node const&, int) -> void
+    {
+        started_postfix_operators_.pop_back();
+        uses_at_postfix_expression.pop_back();
     }
 
     auto start(auto const&, int) -> void

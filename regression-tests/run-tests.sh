@@ -2,11 +2,31 @@
 
 ################
 usage() {
-    echo "Usage: $0 -c <compiler> [-t <tests to run>]"
+    echo "Usage: $0 -c <compiler> [-l <run label>] [-t <tests to run>]"
     echo "    -c <compiler>     The compiler to use for the test"
+    echo "    -l <run label>    The label to use in output patch file name"
     echo "    -t <tests to run> Runs only the provided, comma-separated tests (filenames including .cpp2)"
     echo "                      If the argument is not used all tests are run"
     exit 1
+}
+
+################
+# Check diff of the provided file using the given diff options
+# If the diff is not empty print it with the provided message
+report_diff () {
+    file="$1"
+    diff_opt="$2"
+    error_msg="$3"
+    patch_file="$4"
+
+    # Compare the content with the reference value checked in git
+    diff_output=$(git diff "$diff_opt" -- "$file")
+    if [[ -n "$diff_output" ]]; then
+        echo "            $error_msg:"
+        echo "                $file"
+        printf "\n$diff_output\n\n" | tee -a "$patch_file"
+        failure=1
+    fi
 }
 
 ################
@@ -26,33 +46,35 @@ check_file () {
     git ls-files --error-unmatch "$file" > /dev/null 2>&1
     untracked=$?
 
+    patch_file="$label$cxx_compiler.patch"
+
     if [[ $untracked -eq 1 ]]; then
-        echo "            The $description is not tracked by git:"
-        echo "                $file"
         # Add the file to the index to be able to diff it...
         git add "$file"
-        # ... print the diff ...
-        git --no-pager diff HEAD -- "$file" | tee -a "$cxx_compiler-patch.diff"
-        # ... and remove the file from the diff
+        # ... report the diff ...
+        report_diff "$file" \
+            "HEAD" \
+            "The $description is not tracked by git" \
+            "$patch_file"
+        # ... and remove the file from the index
         git rm --cached -- "$file" > /dev/null 2>&1
-        
-        failure=1
     else
         # Compare the content with the reference value checked in git
-        diff_output=$(git diff --ignore-cr-at-eol -- "$file")
-        if [[ -n "$diff_output" ]]; then
-            echo "            Non-matching $description:"
-            printf "\n$diff_output\n\n" | tee -a "$cxx_compiler-patch.diff"
-            failure=1
-        fi
+        report_diff "$file" \
+            "--ignore-cr-at-eol" \
+            "Non-matching $description" \
+            "$patch_file"
     fi
 }
 
-optstring="c:t:"
+optstring="c:l:t:"
 while getopts ${optstring} arg; do
   case "${arg}" in
     c)
         cxx_compiler="${OPTARG}"
+        ;;
+    l)
+        label="${OPTARG}-"
         ;;
     t)
         # Replace commas with spaces
@@ -103,28 +125,45 @@ expected_results_dir="test-results"
 ################
 # Get the directory with the exec outputs and compilation command
 if [[ "$cxx_compiler" == *"cl.exe"* ]]; then
-    compiler_cmd='cl.exe -nologo -std:c++latest -MD -EHsc -I ..\include -I ..\..\..\include -Fe:'
+    compiler_cmd='cl.exe -nologo -std:c++latest -MD -EHsc -I ..\..\..\include -Fe:'
     exec_out_dir="$expected_results_dir/msvc-2022"
     compiler_version=$(cl.exe)
 else
-    compiler_cmd="$cxx_compiler -I../include -I../../../include -std=c++20 -pthread -o "
-    
-    compiler_ver=$("$cxx_compiler" --version)
-    if [[ "$compiler_ver" == *"Apple clang version 14.0"* ]]; then
-        exec_out_dir="$expected_results_dir/apple-clang-14"
-    elif [[ "$compiler_ver" == *"clang version 12.0"* ]]; then 
-        exec_out_dir="$expected_results_dir/clang-12"
-    elif [[ "$compiler_ver" == *"clang version 15.0"* ]]; then 
-        exec_out_dir="$expected_results_dir/clang-15"
-    elif [[ "$compiler_ver" == *"g++-10"* ]]; then
-        exec_out_dir="$expected_results_dir/gcc-10"
-    elif [[ "$compiler_ver" == *"g++-12"* ||
-            "$compiler_ver" == *"g++-13"*
-         ]]; then
-        exec_out_dir="$expected_results_dir/gcc-13"
+    # Verify the compiler command
+    which "$cxx_compiler" > /dev/null
+    if [[ $? != 0 ]]; then
+        printf "The compiler '$cxx_compiler' is not installed\n\n"
+        exit 2
     fi
 
+    cpp_std=c++2b
     compiler_version=$("$cxx_compiler" --version)
+
+    if [[ "$compiler_version" == *"Apple clang version 14.0"* ||
+          "$compiler_version" == *"Homebrew clang version 15.0"* ]]; then
+        exec_out_dir="$expected_results_dir/apple-clang-14"
+    elif [[ "$compiler_version" == *"Apple clang version 15.0"* ]]; then
+        exec_out_dir="$expected_results_dir/apple-clang-15"
+    elif [[ "$compiler_version" == *"clang version 12.0"* ]]; then 
+        exec_out_dir="$expected_results_dir/clang-12"
+    elif [[ "$compiler_version" == *"clang version 15.0"* ]]; then 
+        exec_out_dir="$expected_results_dir/clang-15"
+        # c++2b causes starge issues on GitHub ubuntu-latest runner
+        cpp_std="c++20"
+    elif [[ "$compiler_version" == *"g++-10"* ]]; then
+        exec_out_dir="$expected_results_dir/gcc-10"
+        # GCC 10 does not support c++2b
+        cpp_std=c++20
+    elif [[ "$compiler_version" == *"g++-12"* ||
+            "$compiler_version" == *"g++-13"*
+         ]]; then
+        exec_out_dir="$expected_results_dir/gcc-13"
+    else
+        printf "Unhandled compiler version:\n$compiler_version\n\n"
+        exit 2
+    fi
+
+    compiler_cmd="$cxx_compiler -I../../../include -std=$cpp_std -pthread -o "
 fi
 
 if [[ -d "$exec_out_dir" ]]; then
@@ -132,7 +171,8 @@ if [[ -d "$exec_out_dir" ]]; then
 
     printf "Directory with reference compilation/execution files to use:\n$exec_out_dir\n\n"
 else
-    printf "not found for compiler: '$cxx_compiler'\n\n"
+    printf "Directory with reference compilation/execution files not found for compiler: '$cxx_compiler'\n\n"
+    exit 2
 fi
 
 ################

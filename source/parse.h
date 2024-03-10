@@ -19,9 +19,6 @@
 #define CPP2_PARSE_H
 
 #include "lex.h"
-#include <memory>
-#include <variant>
-#include <iostream>
 
 
 namespace cpp2 {
@@ -160,6 +157,9 @@ struct primary_expression_node
     auto is_id_expression() const
         -> bool;
 
+    auto is_unqualified_id() const
+        -> bool;
+
     auto is_expression_list() const
         -> bool;
 
@@ -247,6 +247,9 @@ struct prefix_expression_node
         -> bool;
 
     auto is_id_expression() const
+        -> bool;
+
+    auto is_unqualified_id() const
         -> bool;
 
     auto is_expression_list() const
@@ -341,6 +344,12 @@ struct binary_expression_node
         -> bool
     {
         return terms.empty() && expr->is_id_expression();
+    }
+
+    auto is_unqualified_id() const
+        -> bool
+    {
+        return terms.empty() && expr->is_unqualified_id();
     }
 
     auto is_expression_list() const
@@ -534,6 +543,12 @@ struct expression_node
         -> bool
     {
         return expr->is_id_expression();
+    }
+
+    auto is_unqualified_id() const
+        -> bool
+    {
+        return expr->is_unqualified_id();
     }
 
     auto is_expression_list() const
@@ -861,6 +876,12 @@ struct postfix_expression_node
         return ops.empty() && expr->is_id_expression();
     }
 
+    auto is_unqualified_id() const
+        -> bool
+    {
+        return ops.empty() && expr->is_unqualified_id();
+    }
+
     auto is_expression_list() const
         -> bool
     {
@@ -936,6 +957,12 @@ auto prefix_expression_node::is_id_expression() const
     -> bool
 {
     return ops.empty() && expr->is_id_expression();
+}
+
+auto prefix_expression_node::is_unqualified_id() const
+    -> bool
+{
+    return ops.empty() && expr->is_unqualified_id();
 }
 
 auto prefix_expression_node::is_expression_list() const
@@ -1412,6 +1439,12 @@ struct is_as_expression_node
         return ops.empty() && expr->is_id_expression();
     }
 
+    auto is_unqualified_id() const
+        -> bool
+    {
+        return ops.empty() && expr->is_unqualified_id();
+    }
+
     auto is_expression_list() const
         -> bool
     {
@@ -1608,6 +1641,19 @@ postfix_expression_node::~postfix_expression_node()
     if (cap_grp) {
         cap_grp->remove(this);
     }
+}
+
+
+auto primary_expression_node::is_unqualified_id() const
+    -> bool
+{
+    if (is_identifier()) {
+        return true;
+    }
+    if (is_id_expression()) {
+        return std::get<id_expression>(expr)->is_unqualified();
+    }
+    return false;
 }
 
 
@@ -2229,6 +2275,7 @@ auto statement_node::visit(auto& v, int depth)
     try_visit<declaration>(statement, v, depth);
     try_visit<return_    >(statement, v, depth);
     try_visit<iteration  >(statement, v, depth);
+    try_visit<using_     >(statement, v, depth);
     try_visit<contract   >(statement, v, depth);
     try_visit<inspect    >(statement, v, depth);
     try_visit<jump       >(statement, v, depth);
@@ -2472,6 +2519,10 @@ struct function_type_node
             v.start(function_returns_tag{}, depth);
             r->visit(v, depth+1);
             v.end(function_returns_tag{}, depth);
+        }
+
+        for (auto const& c : contracts) {
+            c->visit(v, depth+1);
         }
         v.end(*this, depth);
     }
@@ -4131,7 +4182,7 @@ auto primary_expression_node::visit(auto& v, int depth)
 
 
 struct next_expression_tag { };
-struct loop_body_tag { token const* identifier; };
+struct loop_body_tag { iteration_statement_node const* n; };
 
 auto iteration_statement_node::visit(auto& v, int depth)
     -> void
@@ -4158,9 +4209,10 @@ auto iteration_statement_node::visit(auto& v, int depth)
     else {
         assert(range && parameter && body);
         range->visit(v, depth+1);
-        v.start(loop_body_tag{identifier}, depth);
+        v.start(loop_body_tag{this}, depth);
         parameter->visit(v, depth+1);
         body->visit(v, depth+1);
+        v.end(loop_body_tag{this}, depth);
     }
     v.end(*this, depth);
 }

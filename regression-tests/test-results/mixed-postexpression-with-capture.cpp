@@ -74,7 +74,7 @@ auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void
     cpp2_finally_presuccess.add([&, _1 = CPP2_UFCS(length)(ret)]{if (cpp2::Default.has_handler() && !(CPP2_UFCS(length)(ret) == _1 + 5) ) { cpp2::Default.report_violation(""); }} );
 #line 26 "mixed-postexpression-with-capture.cpp2"
     ret += " and ";
-cpp2_finally_presuccess.run(); return std::move(ret); }
+cpp2_finally_presuccess.run(); return ret; }
 
 #line 29 "mixed-postexpression-with-capture.cpp2"
 [[nodiscard]] auto make_strings() -> make_strings_ret

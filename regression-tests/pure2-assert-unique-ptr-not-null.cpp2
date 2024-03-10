@@ -17,5 +17,6 @@ bad_unique_ptr_access: () -> int =
 
 main: () -> int =
 {
+    std::set_terminate(std::abort);
     return fine() + bad_unique_ptr_access();
 }

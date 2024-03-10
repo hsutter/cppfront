@@ -50,6 +50,6 @@ calculations like m["one"] + m["two"] = )test" + cpp2::to_string(CPP2_ASSERT_IN_
     std::cout << std::move(raw_str_multi) << std::endl;
     std::cout << std::move(raw_str_inter) << std::endl;
     std::cout << std::move(raw_str_inter_multi) << std::endl;
-    std::cout << (cpp2::to_string(CPP2_ASSERT_IN_BOUNDS(m, "one")) + R"(.)" + cpp2::to_string(CPP2_ASSERT_IN_BOUNDS(m, "two")) + R"(.)" + cpp2::to_string(CPP2_ASSERT_IN_BOUNDS(std::move(m), "three")) + R"(.)" + cpp2::to_string(std::move(i))) << std::endl;
+    std::cout << (cpp2::to_string(CPP2_ASSERT_IN_BOUNDS(m, "one")) + R"(.)" + cpp2::to_string(CPP2_ASSERT_IN_BOUNDS(m, "two")) + R"(.)" + cpp2::to_string(CPP2_ASSERT_IN_BOUNDS(m, "three")) + R"(.)" + cpp2::to_string(std::move(i))) << std::endl;
 }
 

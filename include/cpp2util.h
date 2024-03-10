@@ -268,6 +268,15 @@
 
 
 #define CPP2_TYPEOF(x)              std::remove_cvref_t<decltype(x)>
+#if __cplusplus >= 202302L && \
+    ( \
+     (defined(__clang_major__) && __clang_major__ >= 15) \
+     || (defined(__GNUC__) && __GNUC__ >= 12) \
+     )
+#define CPP2_COPY(x)                auto(x)
+#else
+#define CPP2_COPY(x)                CPP2_TYPEOF(x)(x)
+#endif
 #define CPP2_FORWARD(x)             std::forward<decltype(x)>(x)
 #define CPP2_PACK_EMPTY(x)          (sizeof...(x) == 0)
 #define CPP2_CONTINUE_BREAK(NAME)   goto CONTINUE_##NAME; CONTINUE_##NAME: continue; goto BREAK_##NAME; BREAK_##NAME: break;
@@ -340,6 +349,10 @@ template <std::size_t Len, std::size_t Align>
 struct aligned_storage {
     alignas(Align) unsigned char data[Len];
 };
+
+template <typename T>
+    requires requires { *std::declval<T&>(); }
+using deref_t = decltype(*std::declval<T&>());
 
 
 //-----------------------------------------------------------------------
@@ -451,13 +464,13 @@ auto inline Testing = contract_group(
 
 
 //  Check for invalid dereference or indirection which would result in undefined behavior.
-// 
+//
 //     - Null pointer
 //     - std::unique_ptr that owns nothing
 //     - std::shared_ptr with no managed object
 //     - std::optional with no value
 //     - std::expected containing an unexpected value
-// 
+//
 //  Note: For naming simplicity we consider all the above cases to be "null" states so that
 //        we can write: `*assert_not_null(object)`.
 //
@@ -861,6 +874,7 @@ public:
     #endif
 #endif
 
+#define CPP2_UFCS_IDENTITY(...)  __VA_ARGS__
 #define CPP2_UFCS_REMPARENS(...) __VA_ARGS__
 
 // Ideally, the expression `CPP2_UFCS_IS_NOTHROW` expands to
@@ -869,18 +883,18 @@ public:
 // we instead make it a template parameter of the UFCS lambda.
 // But using a template parameter, Clang also ICEs on an application.
 // So we use these `NOTHROW` macros to fall back to the ideal for when not using GCC.
-#define CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,...) \
+#define CPP2_UFCS_IS_NOTHROW(MVFWD,QUALID,TEMPKW,...) \
    requires { requires  requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
               requires    noexcept(std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...)); } \
 || requires { requires !requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); }; \
-              requires noexcept(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(std::declval<Obj>(), std::declval<Params>()...)); }
-#define CPP2_UFCS_IS_NOTHROW_PARAM(...)               /*empty*/
-#define CPP2_UFCS_IS_NOTHROW_ARG(QUALID,TEMPKW,...)   CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,__VA_ARGS__)
+              requires noexcept(MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(std::declval<Obj>(), std::declval<Params>()...)); }
+#define CPP2_UFCS_IS_NOTHROW_PARAM(...)                     /*empty*/
+#define CPP2_UFCS_IS_NOTHROW_ARG(MVFWD,QUALID,TEMPKW,...)   CPP2_UFCS_IS_NOTHROW(MVFWD,QUALID,TEMPKW,__VA_ARGS__)
 #if defined(__GNUC__) && !defined(__clang__)
     #undef  CPP2_UFCS_IS_NOTHROW_PARAM
     #undef  CPP2_UFCS_IS_NOTHROW_ARG
-    #define CPP2_UFCS_IS_NOTHROW_PARAM(QUALID,TEMPKW,...) , bool IsNothrow = CPP2_UFCS_IS_NOTHROW(QUALID,TEMPKW,__VA_ARGS__)
-    #define CPP2_UFCS_IS_NOTHROW_ARG(...)                 IsNothrow
+    #define CPP2_UFCS_IS_NOTHROW_PARAM(MVFWD,QUALID,TEMPKW,...) , bool IsNothrow = CPP2_UFCS_IS_NOTHROW(MVFWD,QUALID,TEMPKW,__VA_ARGS__)
+    #define CPP2_UFCS_IS_NOTHROW_ARG(...)                       IsNothrow
     #if __GNUC__ < 11
         #undef  CPP2_UFCS_IS_NOTHROW_PARAM
         #undef  CPP2_UFCS_IS_NOTHROW_ARG
@@ -897,41 +911,43 @@ public:
 // But using a template parameter, Clang also ICEs and GCC rejects a local 'F'.
 // Also, Clang rejects the SFINAE test case when using 'std::declval'.
 // So we use these `CONSTRAINT` macros to fall back to the ideal for when not using MSVC.
-#define CPP2_UFCS_CONSTRAINT_PARAM(...)               /*empty*/
-#define CPP2_UFCS_CONSTRAINT_ARG(QUALID,TEMPKW,...) \
+#define CPP2_UFCS_CONSTRAINT_PARAM(...)                   /*empty*/
+#define CPP2_UFCS_CONSTRAINT_ARG(MVFWD,QUALID,TEMPKW,...) \
    requires { CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); } \
-|| requires { CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); }
+|| requires { MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); }
 #if defined(_MSC_VER)
     #undef  CPP2_UFCS_CONSTRAINT_PARAM
     #undef  CPP2_UFCS_CONSTRAINT_ARG
-    #define CPP2_UFCS_CONSTRAINT_PARAM(QUALID,TEMPKW,...) , bool IsViable = \
+    #define CPP2_UFCS_CONSTRAINT_PARAM(MVFWD,QUALID,TEMPKW,...) , bool IsViable = \
    requires { std::declval<Obj>().CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(std::declval<Params>()...); } \
-|| requires { CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(std::declval<Obj>(), std::declval<Params>()...); }
+|| requires { MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(std::declval<Obj>(), std::declval<Params>()...); }
     #define CPP2_UFCS_CONSTRAINT_ARG(...)                 IsViable
 #endif
 
-#define CPP2_UFCS_(LAMBDADEFCAPT,QUALID,TEMPKW,...) \
+#define CPP2_UFCS_(LAMBDADEFCAPT,MVFWD,QUALID,TEMPKW,...) \
 [LAMBDADEFCAPT]< \
     typename Obj, typename... Params \
-    CPP2_UFCS_IS_NOTHROW_PARAM(QUALID,TEMPKW,__VA_ARGS__) \
-    CPP2_UFCS_CONSTRAINT_PARAM(QUALID,TEMPKW,__VA_ARGS__) \
+    CPP2_UFCS_IS_NOTHROW_PARAM(MVFWD,QUALID,TEMPKW,__VA_ARGS__) \
+    CPP2_UFCS_CONSTRAINT_PARAM(MVFWD,QUALID,TEMPKW,__VA_ARGS__) \
   > \
   CPP2_LAMBDA_NO_DISCARD (Obj&& obj, Params&& ...params) CPP2_FORCE_INLINE_LAMBDA_CLANG \
-  noexcept(CPP2_UFCS_IS_NOTHROW_ARG(QUALID,TEMPKW,__VA_ARGS__)) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) \
-    requires CPP2_UFCS_CONSTRAINT_ARG(QUALID,TEMPKW,__VA_ARGS__) { \
+  noexcept(CPP2_UFCS_IS_NOTHROW_ARG(MVFWD,QUALID,TEMPKW,__VA_ARGS__)) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) \
+    requires CPP2_UFCS_CONSTRAINT_ARG(MVFWD,QUALID,TEMPKW,__VA_ARGS__) { \
     if constexpr (requires{ CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
         return CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
     } else { \
-        return CPP2_UFCS_REMPARENS QUALID __VA_ARGS__(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+        return MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
     } \
 }
 
-#define CPP2_UFCS(...)                                    CPP2_UFCS_(&,(),,__VA_ARGS__)
-#define CPP2_UFCS_TEMPLATE(...)                           CPP2_UFCS_(&,(),template,__VA_ARGS__)
-#define CPP2_UFCS_QUALIFIED_TEMPLATE(QUALID,...)          CPP2_UFCS_(&,QUALID,template,__VA_ARGS__)
-#define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,(),,__VA_ARGS__)
-#define CPP2_UFCS_TEMPLATE_NONLOCAL(...)                  CPP2_UFCS_(,(),template,__VA_ARGS__)
-#define CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL(QUALID,...) CPP2_UFCS_(,QUALID,template,__VA_ARGS__)
+#define CPP2_UFCS(...)                                    CPP2_UFCS_(&,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
+#define CPP2_UFCS_MOVE(...)                               CPP2_UFCS_(&,std::move,(),,__VA_ARGS__)
+#define CPP2_UFCS_FORWARD(...)                            CPP2_UFCS_(&,CPP2_FORWARD,(),,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE(...)                           CPP2_UFCS_(&,CPP2_UFCS_IDENTITY,(),template,__VA_ARGS__)
+#define CPP2_UFCS_QUALIFIED_TEMPLATE(QUALID,...)          CPP2_UFCS_(&,CPP2_UFCS_IDENTITY,QUALID,template,__VA_ARGS__)
+#define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE_NONLOCAL(...)                  CPP2_UFCS_(,CPP2_UFCS_IDENTITY,(),template,__VA_ARGS__)
+#define CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL(QUALID,...) CPP2_UFCS_(,CPP2_UFCS_IDENTITY,QUALID,template,__VA_ARGS__)
 
 
 //-----------------------------------------------------------------------
@@ -1113,44 +1129,39 @@ constexpr auto is( T const& ) -> bool {
 //  Types
 //
 template< typename C, typename X >
-auto is( X const& ) -> bool {
-    return false;
-}
-
-template< typename C, typename X >
-    requires std::is_same_v<C, X>
-auto is( X const& ) -> bool {
-    return true;
-}
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<C, X> && !std::is_same_v<C,X>)
-auto is( X const& ) -> bool {
-    return true;
-}
-
-template< typename C, typename X >
-    requires (
-        ( std::is_base_of_v<X, C> ||
-          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>)
-        ) && !std::is_same_v<C,X>)
 auto is( X const& x ) -> bool {
-    return Dynamic_cast<C const*>(&x) != nullptr;
-}
-
-template< typename C, typename X >
-    requires (
-        ( std::is_base_of_v<X, C> ||
-          ( std::is_polymorphic_v<C> && std::is_polymorphic_v<X>)
-        ) && !std::is_same_v<C,X>)
-auto is( X const* x ) -> bool {
-    return Dynamic_cast<C const*>(x) != nullptr;
-}
-
-template< typename C, typename X >
-    requires (requires (X x) { *x; X(); } && std::is_same_v<C, empty>)
-auto is( X const& x ) -> bool {
-    return x == X();
+    if constexpr (
+        std::is_same_v<C, X>
+        || std::is_base_of_v<C, X>
+    )
+    {
+        return true;
+    }
+    else if constexpr (
+        std::is_base_of_v<X, C>
+        || (
+            std::is_polymorphic_v<C>
+            && std::is_polymorphic_v<X>
+            )
+    )
+    {
+        if constexpr (std::is_pointer_v<X>) {
+            return Dynamic_cast<C const*>(x) != nullptr;
+        }
+        else {
+            return Dynamic_cast<C const*>(&x) != nullptr;
+        }
+    }
+    else if constexpr (
+        requires { *x; X(); }
+        && std::is_same_v<C, empty>
+    )
+    {
+        return x == X();
+    }
+    else {
+        return false;
+    }
 }
 
 
@@ -1218,11 +1229,6 @@ inline constexpr bool is_castable_v =
 //  As
 //
 
-template< typename C >
-auto as(auto const&) -> auto {
-    return nonesuch;
-}
-
 template< typename C, auto x >
     requires (std::is_arithmetic_v<C> && std::is_arithmetic_v<CPP2_TYPEOF(x)>)
 inline constexpr auto as() -> auto
@@ -1234,108 +1240,83 @@ inline constexpr auto as() -> auto
     }
 }
 
-template< typename C >
-inline constexpr auto as(auto const& x) -> auto
-    requires (
+template< typename C, typename X >
+auto as(X const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto) {
+    if constexpr (
         std::is_floating_point_v<C> &&
         std::is_floating_point_v<CPP2_TYPEOF(x)> &&
         sizeof(CPP2_TYPEOF(x)) > sizeof(C)
     )
-{
-    return nonesuch;
-}
-
-//  Signed/unsigned conversions to a not-smaller type are handled as a precondition,
-//  and trying to cast from a value that is in the half of the value space that isn't
-//  representable in the target type C is flagged as a Type safety contract violation
-template< typename C >
-inline constexpr auto as(auto const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto
-    requires (
+    {
+        return CPP2_COPY(nonesuch);
+    }
+    //  Signed/unsigned conversions to a not-smaller type are handled as a precondition,
+    //  and trying to cast from a value that is in the half of the value space that isn't
+    //  representable in the target type C is flagged as a Type safety contract violation
+    else if constexpr (
         std::is_integral_v<C> &&
         std::is_integral_v<CPP2_TYPEOF(x)> &&
         std::is_signed_v<CPP2_TYPEOF(x)> != std::is_signed_v<C> &&
         sizeof(CPP2_TYPEOF(x)) <= sizeof(C)
     )
-{
-    const C c = static_cast<C>(x);
-    Type.enforce(   // precondition check: must be round-trippable => not lossy
-        static_cast<CPP2_TYPEOF(x)>(c) == x && (c < C{}) == (x < CPP2_TYPEOF(x){}),
-        "dynamic lossy narrowing conversion attempt detected" CPP2_SOURCE_LOCATION_ARG
-    );
-    return c;
-}
-
-template< typename C, typename X >
-    requires std::is_same_v<C, X>
-auto as( X const& x ) -> decltype(auto) {
-    return x;
-}
-
-template< typename C, typename X >
-    requires std::is_same_v<C, X>
-auto as( X& x ) -> decltype(auto) {
-    return x;
-}
-
-
-template< typename C, typename X >
-auto as(X const& x) -> C
-    requires (std::is_same_v<C, std::string> && std::is_integral_v<X>)
-{
-    return cpp2::to_string(x);
-}
-
-
-template< typename C, typename X >
-auto as( X const& x ) -> auto
-    requires (!std::is_same_v<C, X> && !std::is_base_of_v<C, X> && requires { C{x}; }
-              && !(std::is_same_v<C, std::string> && std::is_integral_v<X>) // exclude above case
-             )
-{
-    //  Experiment: Recognize the nested `::value_type` pattern for some dynamic library types
-    //  like std::optional, and try to prevent accidental narrowing conversions even when
-    //  those types themselves don't defend against them
-    if constexpr( requires { requires std::is_convertible_v<X, typename C::value_type>; } ) {
-        if constexpr( is_narrowing_v<typename C::value_type, X>) {
-            return nonesuch;
-        }
+    {
+        const C c = static_cast<C>(x);
+        Type.enforce(   // precondition check: must be round-trippable => not lossy
+            static_cast<CPP2_TYPEOF(x)>(c) == x && (c < C{}) == (x < CPP2_TYPEOF(x){}),
+            "dynamic lossy narrowing conversion attempt detected" CPP2_SOURCE_LOCATION_ARG
+        );
+        return CPP2_COPY(c);
     }
-    return C{x};
-}
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<C, X> && !std::is_same_v<C, X>)
-auto as( X& x ) -> C& {
-    return x;
-}
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<C, X> && !std::is_same_v<C, X>)
-auto as( X const& x ) -> C const& {
-    return x;
-}
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
-auto as( X& x ) -> C& {
-    return Dynamic_cast<C&>(x);
-}
-
-template< typename C, typename X >
-    requires (std::is_base_of_v<X, C> && !std::is_same_v<C,X>)
-auto as( X const& x ) -> C const& {
-    return Dynamic_cast<C const&>(x);
-}
-
-template< typename C, typename X >
-    requires (
+    else if constexpr (std::is_same_v<C, std::string> && std::is_integral_v<X>) {
+        return cpp2::to_string(x);
+    }
+    else if constexpr (std::is_same_v<C, X>) {
+        return x;
+    }
+    else if constexpr (std::is_base_of_v<C, X>) {
+        return static_cast<C const&>(x);
+    }
+    else if constexpr (std::is_base_of_v<X, C>) {
+        return Dynamic_cast<C const&>(x);
+    }
+    else if constexpr (
         std::is_pointer_v<C>
         && std::is_pointer_v<X>
-        && std::is_base_of_v<CPP2_TYPEOF(*std::declval<X>()), CPP2_TYPEOF(*std::declval<C>())>
-        && !std::is_same_v<C, X>
+        && requires { requires std::is_base_of_v<deref_t<X>, deref_t<C>>; }
     )
-auto as( X x ) -> C {
-    return Dynamic_cast<C>(x);
+    {
+        return Dynamic_cast<C>(x);
+    }
+    else if constexpr (requires { C{x}; }) {
+        //  Experiment: Recognize the nested `::value_type` pattern for some dynamic library types
+        //  like std::optional, and try to prevent accidental narrowing conversions even when
+        //  those types themselves don't defend against them
+        if constexpr( requires { requires std::is_convertible_v<X, typename C::value_type>; } ) {
+            if constexpr( is_narrowing_v<typename C::value_type, X>) {
+                return nonesuch;
+            }
+        }
+        return C{x};
+    }
+    else {
+        return nonesuch;
+    }
+}
+
+template< typename C, typename X >
+auto as( X& x ) -> decltype(auto) {
+    if constexpr (std::is_same_v<C, X>) {
+        return x;
+    }
+    else if constexpr (std::is_base_of_v<C, X>) {
+        return static_cast<C&>(x);
+    }
+    else if constexpr (std::is_base_of_v<X, C>) {
+        return Dynamic_cast<C&>(x);
+    }
+    else {
+        return as<C>(std::as_const(x));
+    }
 }
 
 
@@ -1749,13 +1730,68 @@ private:
 
 //-----------------------------------------------------------------------
 //
-//  args: see main() arguments as vector<string_view>
+//  An implementation of GSL's narrow_cast with a clearly 'unsafe' name
 //
 //-----------------------------------------------------------------------
 //
-struct args_t : std::vector<std::string_view>
+template <typename C, typename X>
+constexpr auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
 {
-    args_t(int c, char** v) : vector{static_cast<std::size_t>(c)}, argc{c}, argv{v} {}
+    return static_cast<C>(CPP2_FORWARD(x));
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  args: see main() arguments as a container of string_views
+//
+//  Does not perform any dynamic memory allocation - each string_view
+//  is directly bound to the string provided by the host environment
+//
+//-----------------------------------------------------------------------
+//
+struct args_t
+{
+    args_t(int c, char** v) : argc{c}, argv{v} {}
+
+    class iterator {
+    public:
+        iterator(int c, char** v, int start) : argc{c}, argv{v}, curr{start} {}
+
+        auto operator*() const {
+            if (curr < argc) { return std::string_view{ argv[curr] }; }
+            else             { return std::string_view{}; }
+        }
+
+        auto operator+(int i) -> iterator  {
+            if (i > 0) { return { argc, argv, std::min(curr+i, argc) }; }
+            else       { return { argc, argv, std::max(curr+i, 0   ) }; }
+        }
+        auto operator-(int i) -> iterator  { return operator+(-i); }
+        auto operator++()     -> iterator& { curr = std::min(curr+1, argc);  return *this; }
+        auto operator--()     -> iterator& { curr = std::max(curr-1, 0   );  return *this; }
+        auto operator++(int)  -> iterator  { auto old = *this;  ++*this;  return old; }
+        auto operator--(int)  -> iterator  { auto old = *this;  ++*this;  return old; }
+
+        auto operator<=>(iterator const&) const = default;
+
+    private:
+        int    argc;
+        char** argv;
+        int    curr;
+    };
+
+    auto begin()  const -> iterator    { return iterator{ argc, argv, 0    }; }
+    auto end()    const -> iterator    { return iterator{ argc, argv, argc }; }
+    auto cbegin() const -> iterator    { return begin(); }
+    auto cend()   const -> iterator    { return end(); }
+    auto size()   const -> std::size_t { return cpp2::unsafe_narrow<std::size_t>(argc); }
+    auto ssize()  const -> int         { return argc; }
+
+    auto operator[](int i) const {
+        if (0 <= i && i < argc) { return std::string_view{ argv[i] }; }
+        else                    { return std::string_view{}; }
+    }
 
     mutable int        argc = 0;        //  mutable for compatibility with frameworks that take 'int& argc'
     char**             argv = nullptr;
@@ -1763,10 +1799,7 @@ struct args_t : std::vector<std::string_view>
 
 inline auto make_args(int argc, char** argv) -> args_t
 {
-    auto ret  = args_t{argc, argv};
-    auto args = std::span(argv, static_cast<std::size_t>(argc));
-    std::copy( args.begin(), args.end(), ret.data());
-    return ret;
+    return args_t{argc, argv};
 }
 
 
@@ -1779,19 +1812,6 @@ inline auto make_args(int argc, char** argv) -> args_t
 //
 template<typename T>
 using alien_memory = T volatile;
-
-
-//-----------------------------------------------------------------------
-//
-//  An implementation of GSL's narrow_cast with a clearly 'unsafe' name
-//
-//-----------------------------------------------------------------------
-//
-template <typename C, typename X>
-constexpr auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
-{
-    return static_cast<C>(CPP2_FORWARD(x));
-}
 
 
 //-----------------------------------------------------------------------
