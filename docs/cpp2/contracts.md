@@ -7,7 +7,7 @@ Cpp2 currently supports three kinds of contracts:
 
 - **Preconditions and postconditions.** A function declaration can include `pre(condition)` and `post(condition)` before the `= /* function body */`. Before entering the function body, preconditions are fully evaluated and postconditions are captured (and performs their captures, if any). Immediately before exiting the function body via a normal return, postconditions are evaluated. If the function exits via an exception, postconditions are not evaluated.
 
-- **Assertions.** Inside a function body, writing `assert(condition)` assertion statements. Assertions are evaluated when control flow passes through them.
+- **Assertions.** A function body can write `assert(condition)` assertion statements. Assertions are evaluated when control flow passes through them.
 
 Notes:
 
