@@ -9,7 +9,7 @@ clang++ --version > clang-version.output 2>&1
 for f in *.cpp
 do
     printf "Starting apple clang++ %s\n" "$f"
-    clang++ -I../../../include -std=c++20 -pthread -o test.exe $f > $f.output 2>&1
+    clang++ -I../../../include -std=c++2b -pthread -o test.exe $f > $f.output 2>&1
     rm -f $f
     let count=count+1
     if test -f "test.exe"; then

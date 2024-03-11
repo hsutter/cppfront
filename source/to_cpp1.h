@@ -5784,7 +5784,7 @@ public:
                     printer.print_extra(
                         "\nusing "
                         + func_name + "_ret = "
-                        + r->parameters[0]->declaration->get_object_type()->to_string()
+                        + print_to_string( *r->parameters[0]->declaration->get_object_type() )
                         + ";"
                     );
                 }
