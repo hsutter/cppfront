@@ -60,7 +60,7 @@ nav:
     - 'Declarations and aliases': cpp2/declarations.md
     - 'Objects, initialization, and memory': cpp2/objects.md
     - 'Functions, branches, and loops': cpp2/functions.md
-    - 'Contracts and assertions': cpp2/contracts.md
+    - 'Contracts': cpp2/contracts.md
     - 'Types and inheritance': cpp2/types.md
     - 'Metafunctions and reflection': cpp2/metafunctions.md
     - 'Namespaces': cpp2/namespaces.md
