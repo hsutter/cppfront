@@ -122,4 +122,6 @@ call_my_framework: (msg: * const char) = {
         << msg << "]\n";
     exit(0);
 }
+//  Prints:
+//      sending error to my framework... [this is a test, this is only a test]
 ```
