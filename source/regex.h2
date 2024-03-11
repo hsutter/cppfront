@@ -1,0 +1,2163 @@
+
+//  Copyright (c) Herb Sutter
+//  SPDX-License-Identifier: CC-BY-NC-ND-4.0
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+#include <map>
+
+cpp2: namespace = {
+
+regex: namespace = {
+
+greedy_alternative : bool == false;
+
+bview: <CharT> type == std::basic_string_view<CharT>;
+bstring: <CharT> type == std::basic_string<CharT>;
+
+//-----------------------------------------------------------------------
+//
+//  Helper structures for the expression matching.
+//
+//-----------------------------------------------------------------------
+//
+
+expression_flags: type = {
+    case_insensitive : int            ==  1;  // mod: i
+    multiple_lines: int               ==  2;  // mod: m
+    single_line: int                  ==  4;  // mod: s
+    no_group_captures: int            ==  8;  // mod: n
+    perl_code_syntax: int             == 16;  // mod: x
+    perl_code_syntax_in_classes: int  == 32;  // mod: xx
+}
+
+// TODO: @enum as template parameter yields two error:
+//     error: type 'range_flags' of non-type template parameter is not a structural type
+//     error: non-type template parameter has incomplete type 'range_flags'
+range_flags: type = {
+    not_greedy: int == 1;
+    greedy:     int == 2;
+    possessive: int == 3;
+}
+
+match_group: @struct <Iter> type = {
+    start: Iter = ();
+    end: Iter = ();
+
+    matched: bool = false;
+}
+
+match_return: @struct <Iter> type = {
+    matched: bool = false;
+    pos: Iter = ();
+}
+
+match_context: <CharT, Iter, max_groups: int, max_alternatives: int> type =
+{
+    public begin: Iter;
+    public end: Iter;
+
+    private groups: std::array<match_group<Iter>, max_groups> = ();
+    private alternatives_pos: std::array<Iter, max_alternatives> = ();
+
+    operator=: (out this, begin_: Iter, end_: Iter) = {
+        begin = begin_;
+        end = end_;
+    }
+
+    operator=: (out this, that) = {}
+
+    // Getter and setter for groups
+    //
+    get_group: (in this, group) groups[group];
+
+    get_group_string: (in this, group) -> std::string = {
+        if group >= max_groups || !groups[group].matched {
+            return "";
+        }
+        return std::string(groups[group].start, groups[group].end);
+    }
+    get_group_start:  (in this, group) -> int = {
+        if group >= max_groups || !groups[group].matched {
+            return 0;
+        }
+        return std::distance(begin, groups[group].start);
+    }
+    get_group_end:    (in this, group) -> int = {
+        if group >= max_groups || !groups[group].matched {
+            return 0;
+        }
+        return std::distance(begin, groups[group].end);
+    }
+
+    set_group_end: (inout this, group, pos) = {
+        groups[group].end = pos;
+        groups[group].matched = true;
+    }
+
+    set_group_invalid: (inout this, group) = {
+        groups[group].matched = false;
+    }
+
+    set_group_start: (inout this, group, pos) = {
+        groups[group].start = pos;
+    }
+
+    size: (in this) max_groups;
+
+    // Getter and setter for alternatives
+
+    get_alternative_pos: (in this, alternative) alternatives_pos[alternative];
+
+    set_alternative_pos: (inout this, alternative, pos) = {
+        alternatives_pos[alternative] = pos;
+    }
+
+    // Misc functions
+    //
+    print_ranges: (in this) -> bstring<CharT> = {
+        r: bstring<CharT> = "";
+        for groups do (cur) {
+            if cur.matched {
+                r += "((std::distance(begin, cur.start))$,(std::distance(begin, cur.end))$)";
+            }
+            else {
+                r += "(?,?)";
+            }
+        }
+
+        return r;
+    }
+
+    fail: (in this)            match_return(false, end);
+    pass: (in this, cur: Iter) match_return(true, cur);
+
+}
+
+// Flag change for matching modifiers. Creates a new flag for match_modifiers.
+// See expression_flags for possible flags.
+//
+match_modifiers_state_change: <has_change_: bool, reset_: bool, add_: int, remove_: int, str: fixed_string> type = {
+
+    reset: bool == reset_;
+    add: int == add_;
+    remove: int == remove_;
+    has_change: bool == has_change_;
+
+    combine_inner: (old_flags: int) -> _ == {
+        new_flags := old_flags;
+        if reset {
+            new_flags = 0;
+        }
+        new_flags = new_flags | add;
+        new_flags = new_flags & (remove~);
+
+        return new_flags;
+    }
+
+    to_string: () str.data();
+}
+
+match_modifiers_no_change : type == match_modifiers_state_change<false, false, 0, 0, "">;
+
+// Current modifiers for the regular expression.
+// See expression_flags for possible flags.
+//
+match_modifiers: <flags_: int, Inner> type = {
+
+    flags : int == flags_;
+
+    // Push/pop management
+
+    push: <Change>   (_ : Change) match_modifiers<Change::combine_inner(flags), match_modifiers<flags, Inner>>();
+    pop:             ()           Inner();
+    replace: <Change>(_ : Change) match_modifiers<Change::combine_inner(flags), Inner>();
+
+    // Flag management
+    //
+
+    has_flag: (this, f: int) -> bool = {
+        return  0 != (f & flags);
+    }
+}
+
+//  Represents the remainder of the regular expression.
+//
+//  A matcher can ask this remainder if it would match. If yes a full match of the regular expression is found.
+//  Otherwise the matcher can try a different alternative.
+//
+match_tail: <CharT, List...> type = {
+    match: (this, cur, inout ctx, modifiers) match_select<List...>(cur, ctx, modifiers);
+
+    private match_select: <First, Other...> (this, cur, inout ctx, modifiers)
+        First::match(cur, ctx, modifiers, match_tail<CharT, Other...>());
+    private match_select: (this, cur, inout ctx, _) ctx.pass(cur);
+
+    reset_ranges: ( inout ctx) = (List::reset_ranges(ctx), ...);
+    to_string: () (bstring<CharT>() + ... + List::to_string());
+
+    prepend: <Pre...> (this, _...: Pre) match_tail<CharT, Pre..., List...>();
+
+    make_calling: <Call> (this, call: Call) calling_match_tail<CharT, Call, List...>(call);
+}
+
+//  Represents the remainder of the regular expression. Will call a function wen the end is reached.
+//
+//  TODO: Create common base with match_tail.
+//
+//  A matcher can ask this remainder if it would match. If yes a full match of the regular expression is found.
+//  Otherwise the matcher can try a different alternative.
+//
+calling_match_tail: <CharT, Call, List...> type = {
+    call: Call;
+
+    operator=: (out this, call_) = {
+        call = call_;
+    }
+
+    match: (this, cur, inout ctx, modifiers) match_select<List...>(cur, ctx, modifiers);
+
+    private match_select: <First, Other...> (this, cur, inout ctx, modifiers)
+        First::match(cur, ctx, modifiers, calling_match_tail<CharT, Call, Other...>(call));
+    private match_select: (this, cur, inout ctx, modifiers) call(cur, ctx, modifiers);
+
+    reset_ranges: ( inout ctx) = (List::reset_ranges(ctx), ...);
+    to_string: () (bstring<CharT>() + ... + List::to_string());
+
+    prepend: <Pre...> (this, _...: Pre) calling_match_tail<CharT, Call, Pre..., List...>(call);
+}
+
+no_tail: <CharT> type == match_tail<CharT>;
+
+//-----------------------------------------------------------------------
+//
+//  Character classes for regular expressions.
+//
+//-----------------------------------------------------------------------
+//
+
+// Class syntax: <any character> Example: a
+//
+single_class_entry: <CharT, C: CharT> type =
+{
+    includes: (c: CharT) c == C;
+    to_string: ()        bstring<CharT>(1, C);
+}
+
+// Class syntax: - Example: a-c
+//
+range_class_entry: <CharT, Start: CharT, End: CharT> type =
+{
+    includes: (c: CharT) Start <= c <= End;
+    to_string:        () "(Start)$-(End)$";
+}
+
+// Helper for combining two character classes
+//
+combined_class_entry: <CharT, List ...> type = {
+    includes: (c: CharT) (false || ... || List::includes(c));
+    to_string: ()        (bstring<CharT>() + ... + List::to_string());
+}
+
+// Class syntax: <list of characters>  Example: abcd
+//
+list_class_entry: <CharT, List ... : CharT> type = {
+    includes: (c: CharT) (false || ... || (List == c));
+    to_string: ()        (bstring<CharT>() + ... + List);
+}
+
+// Class syntax: [:<class name:]  Example: [:alnum:]
+//
+named_class_entry: <CharT, Name: fixed_string, Inner> type = {
+    includes: (c: CharT) Inner::includes(c);
+    to_string: ()        "[:(Name.data())$:]";
+}
+
+negated_class_entry: <CharT, Inner> type = {
+    this: Inner = ();
+    includes: (c: CharT) !Inner::includes(c);
+}
+
+// Short class syntax: \<character>  Example: \w
+//
+shorthand_class_entry: <CharT, Name: fixed_string, Inner> type = {
+    includes: (c: CharT) Inner::includes(c);
+    to_string: ()        Name.str();
+}
+
+
+// Named basic character classes
+//
+digits_class  : <CharT> type == named_class_entry<CharT, "digits", range_class_entry<CharT, '0', '9'>>;
+lower_class   : <CharT> type == named_class_entry<CharT, "lower", range_class_entry<CharT, 'a', 'z'>>;
+upper_class   : <CharT> type == named_class_entry<CharT, "upper", range_class_entry<CharT, 'A', 'Z'>>;
+
+// Named other classes
+//
+alnum_class     : <CharT> type == named_class_entry<CharT, "alnum", combined_class_entry<CharT, lower_class<CharT>, upper_class<CharT>, digits_class<CharT>>>;
+alpha_class     : <CharT> type == named_class_entry<CharT, "alpha", combined_class_entry<CharT, lower_class<CharT>, upper_class<CharT>>>;
+ascii_class     : <CharT> type == named_class_entry<CharT, "ascii", range_class_entry<CharT, '\x00', '\x7F'>>;
+blank_class     : <CharT> type == named_class_entry<CharT, "blank", list_class_entry<CharT, ' ', '\t'>>;
+cntrl_class     : <CharT> type == named_class_entry<CharT, "cntrl", combined_class_entry<CharT, range_class_entry<CharT, '\x00', '\x1F'>, single_class_entry<CharT, '\x7F'>>>;
+graph_class     : <CharT> type == named_class_entry<CharT, "graph", range_class_entry<CharT, '\x21', '\x7E'>>;
+hor_space_class : <CharT> type == named_class_entry<CharT, "hspace", list_class_entry<CharT, '\t', ' '>>;
+print_class     : <CharT> type == named_class_entry<CharT, "print", range_class_entry<CharT, '\x20', '\x7E'>>;
+punct_class     : <CharT> type == named_class_entry<CharT, "punct", list_class_entry<CharT, '[','!','"','#','$','%','&','\'','(',')','*','+',',','-','.','/',':',';','<','=','>','?','@','[','\\',']','^','_','`','{','|','}','~',']'>>;
+space_class     : <CharT> type == named_class_entry<CharT, "space", list_class_entry<CharT, ' ', '\t', '\r', '\n', '\v', '\f'>>;
+ver_space_class : <CharT> type == named_class_entry<CharT, "vspace", list_class_entry<CharT, '\n', '\v', '\f', '\r'>>;
+word_class      : <CharT> type == named_class_entry<CharT, "word", combined_class_entry<CharT, alnum_class<CharT>, single_class_entry<CharT, '_'>>>;
+xdigit_class    : <CharT> type == named_class_entry<CharT, "xdigit", combined_class_entry<CharT, range_class_entry<CharT, 'A', 'F'>, range_class_entry<CharT, 'a', 'f'>, digits_class<CharT>>>;
+
+// Shorthand class entries
+//
+short_digits_class     : <CharT> type == shorthand_class_entry<CharT, "\\d", digits_class<CharT>>;
+short_hor_space_class  : <CharT> type == shorthand_class_entry<CharT, "\\h", hor_space_class<CharT>>;
+short_space_class      : <CharT> type == shorthand_class_entry<CharT, "\\s", space_class<CharT>>;
+short_vert_space_class : <CharT> type == shorthand_class_entry<CharT, "\\v", ver_space_class<CharT>>;
+short_word_class       : <CharT> type == shorthand_class_entry<CharT, "\\w", word_class<CharT>>;
+
+
+short_not_digits_class     : <CharT> type == negated_class_entry<CharT, shorthand_class_entry<CharT, "\\D", digits_class<CharT>>>;
+short_not_hor_space_class  : <CharT> type == negated_class_entry<CharT, shorthand_class_entry<CharT, "\\H", hor_space_class<CharT>>>;
+short_not_space_class      : <CharT> type == negated_class_entry<CharT, shorthand_class_entry<CharT, "\\S", space_class<CharT>>>;
+short_not_vert_space_class : <CharT> type == negated_class_entry<CharT, shorthand_class_entry<CharT, "\\V", ver_space_class<CharT>>>;
+short_not_word_class       : <CharT> type == negated_class_entry<CharT, shorthand_class_entry<CharT, "\\W", word_class<CharT>>>;
+
+//-----------------------------------------------------------------------
+//
+//  Helper matchers for regular expressions.
+//
+//-----------------------------------------------------------------------
+//
+
+// Regex syntax: none Example: -
+//
+empty_matcher_logic: <CharT> type = {
+    match:        (cur, inout ctx, modifiers, other) other.match(cur, ctx, modifiers);
+    reset_ranges: (_) = {}
+    to_string:    () bstring<CharT>();
+}
+
+// Helper for greedy alternatives
+//
+extract_position_helper: <CharT, alternative: size_t> type = {
+    match: (cur, inout ctx, modifiers, other) -> _ = {
+        r := other.match(cur, ctx, modifiers);
+        if r.matched {
+            ctx.set_alternative_pos(alternative, cur);
+        }
+        return r;
+    }
+
+    reset_ranges: (_) = {}
+    to_string:    () bstring<CharT>();
+}
+
+// A list of matchers. Prepends to the current match tail.
+//
+matcher_list: <CharT, List...> type = {
+    match: (cur, inout ctx, modifiers, other)
+        other.prepend(List()...).match(cur, ctx, modifiers);
+
+    reset_ranges: ( inout ctx) = (List::reset_ranges(ctx), ...);
+    to_string:    () (bstring<CharT>() + ... + List::to_string());
+}
+
+// Helper for standard matchers with special syntax
+//
+//
+special_syntax_wrapper: <CharT, syntax: fixed_string, base> type = {
+    this : base = ();
+    to_string:    () syntax.str();
+}
+
+//-----------------------------------------------------------------------
+//
+//  Matchers for regular expressions.
+//
+//-----------------------------------------------------------------------
+//
+
+
+//  Regex syntax: |  Example: ab|ba
+//
+//  Non greedy implementation. First alternative that matches is chosen. 
+//
+alternative_matcher_logic: <CharT, alternative: size_t, List ...> type = {
+
+    match: (cur, inout ctx, modifiers, tail) -> _ = {
+        if constexpr greedy_alternative {
+            max_overall_length: = 0;
+            max_current_length: = 0;
+            r := match_greedy<List...>(cur, max_overall_length, max_current_length, ctx, modifiers, tail);
+            _ = max_overall_length;
+            _ = max_current_length;
+            return r;
+        } else {
+            return match_first<List...>(cur, ctx, modifiers, tail);
+        }
+    }
+    reset_ranges: (inout ctx)     = (List::reset_ranges(ctx) , ...);
+    to_string: ()                   (bstring<CharT>() + ... + ("|" + List::to_string())).substr(1); // substr: Remove first '|'.
+
+    private match_first: <First, Next ...> (cur, inout ctx, modifiers, tail) -> _ = {
+        r := First().match(cur, ctx, modifiers, tail);
+        if r.matched {
+            return r;
+        } else {
+            First::reset_ranges(ctx);
+
+            if constexpr 0 != sizeof...(Next) {
+                return match_first<Next...>(cur, ctx, modifiers, tail);
+            } else {
+                return ctx.fail();
+            }
+        }
+    }
+
+    private match_greedy: <First, Next...> (cur, inout max_overall_length, inout max_current_length, inout ctx, modifiers, tail) -> _ = {
+        r := First().match(cur, ctx, modifiers, tail.prepend(extract_position_helper<CharT, alternative>()));
+
+        // Get the end position of First.
+        end_overall_pos := cur;
+        end_current_pos := cur;
+        if r.matched {
+            end_overall_pos = r.pos;
+            end_current_pos = ctx.get_alternative_pos(alternative);
+        }
+
+        // Compute the new max length and our max length.
+        my_overall_length := unsafe_narrow<int>(std::distance(cur, end_overall_pos));
+        max_overall_length = std::max(max_overall_length, my_overall_length);
+
+
+        // Check if someone other has something larker
+        o := ctx.fail();
+        if constexpr 0 != sizeof...(Next) {
+            o = match_greedy<Next...>(cur, max_overall_length, max_current_length, ctx, modifiers, tail);
+        }
+
+        my_current_length := unsafe_narrow<int>(std::distance(cur, end_current_pos));
+        if max_overall_length == my_overall_length {
+            max_current_length = std::max(max_current_length, my_current_length);
+        }
+
+
+        if r.matched && my_overall_length == max_overall_length {
+            // We are the longest. Check now if we are also the longest in this alternative.
+            if my_current_length == max_current_length {
+                // Yes we are. Reset all groups by matching again.
+                (Next::reset_ranges(ctx) , ...); // Reset all other ranges.
+                return First::match(cur, ctx, modifiers, tail.prepend(extract_position_helper<CharT, alternative>()));
+            }
+            else {
+                // We are not, so there was an other match.
+                First::reset_ranges(ctx);
+
+                return o;
+            }
+        } else {
+            // We are not the largest one.
+            First::reset_ranges(ctx);
+
+            return o;
+        }
+    }
+}
+
+//  Regex syntax: .
+//
+any_matcher_logic: <CharT> type =
+{
+    match: (cur, inout ctx, modifiers, other) -> _ = {
+        if cur != ctx.end &&
+          (modifiers.has_flag(expression_flags::single_line) ||
+           cur* != '\n') {
+            return other.match(cur + 1, ctx, modifiers);
+        }
+        else {
+            return ctx.fail();
+        }
+    }
+
+    reset_ranges: (_) = {}
+    to_string:    ()          bstring<CharT>(1, '.');
+}
+
+// Regex syntax: none Example: -
+//
+branch_reset_matcher_logic: <CharT> type = {
+    match: (cur, inout ctx, modifiers, other) other.match(cur, ctx, modifiers);
+    reset_ranges: (_) = {}
+    to_string:    ()  bstring<CharT>("(?|");
+}
+
+// Regex syntax: <any character>  Example: a
+//
+char_matcher_logic: <CharT, C: CharT, L: CharT, U: CharT> type =
+{
+    match: (cur, inout ctx, modifiers, other) -> _ = {
+        if modifiers.has_flag(expression_flags::case_insensitive) {
+            if cur != ctx.end && (cur* == L || cur* == U) {
+                return other.match(cur + 1, ctx, modifiers);
+            }
+            else {
+                return ctx.fail();
+            }
+        }
+        else {
+            if cur != ctx.end && cur* == C {
+                return other.match(cur + 1, ctx, modifiers);
+            }
+            else {
+                return ctx.fail();
+            }
+        }
+
+    }
+    reset_ranges: (_) = {}
+    to_string:    ()  bstring<CharT>(1, C);
+}
+
+
+// Regex syntax: [<character classes>]  Example: [abcx-y[:digits:]]
+//
+class_matcher_logic: <CharT, negate: bool, List ...> type =
+{
+    match: (cur, inout ctx, modifiers, other) -> _ = {
+        if modifiers.has_flag(expression_flags::case_insensitive) {
+            if cur != ctx.end && negate != ( match_any<List...>(safe_tolower(cur*)) || match_any<List...>(safe_toupper(cur*))) {
+                return other.match(cur + 1, ctx, modifiers);
+            }
+            else {
+                return ctx.fail();
+            }
+        }
+        else {
+            if cur != ctx.end && negate != match_any<List...>(cur*) {
+                return other.match(cur + 1, ctx, modifiers);
+            }
+            else {
+                return ctx.fail();
+            }
+        }
+    }
+
+    private match_any: <First, Other ...> (c: CharT) -> bool = {
+        r: bool = First::includes(c);
+
+        if !r {
+            if constexpr 0 != sizeof...(Other) {
+                r = match_any<Other...>(c);
+            }
+        }
+
+        return r;
+    }
+
+    reset_ranges: (_) = {}
+
+    to_string: () -> bstring<CharT> = {
+        r: bstring<CharT> = "[";
+        if negate {
+            r += "^";
+        }
+        r += (bstring<CharT>() + ... + List::to_string());
+        r += "]";
+
+        return r;
+    }
+}
+
+// Regex syntax: \K Example: \K
+//
+global_group_reset: <CharT> type = {
+    match: (cur, inout ctx, modifiers, other) -> _ = {
+        ctx.set_group_start(0, cur);
+        return other.match(cur, ctx, modifiers);
+    }
+
+    reset_ranges: (_) = {}
+    to_string:    ()  bstring<CharT>("\\K");
+}
+
+// Regex syntax: (<inner>) Example: (.*)
+//
+group_matcher_start_logic: <CharT, group: int, ModifierChange, name: fixed_string, name_brackets: bool> type = {
+    match: <Modifiers> (cur, inout ctx, _ : Modifiers, other) -> _ = {
+        if -1 != group {
+            ctx.set_group_start(group, cur);
+        }
+        return other.match(cur, ctx, Modifiers::push(ModifierChange()));
+    }
+
+    reset_ranges: (inout ctx) = {
+        if -1 != group {
+            ctx.set_group_invalid(group);
+        }
+    }
+
+    to_string: () -> bstring<CharT> = {
+        if group != 0 {
+            if 0 != name.size() {
+                if name_brackets {
+                    return "(?<(name.data())$>";
+                }
+                else {
+                    return "(?'(name.data())$'";
+                }
+            }
+            else if ModifierChange::has_change {
+                return "(?(ModifierChange::to_string())$:";
+            }
+            else {
+                return "(";
+            }
+        }
+        else {
+            return "";
+        }
+    }
+}
+
+group_matcher_end_logic: <CharT, group: int> type = {
+    match: <Modifier> (cur, inout ctx, _: Modifier, other) -> _ = {
+        if -1 != group {
+            ctx.set_group_end(group, cur);
+        }
+        r := other.match(cur, ctx, Modifier::pop());
+        if !r.matched && -1 != group {
+            ctx.set_group_invalid(group);
+        }
+        return r;
+    }
+
+    reset_ranges: (_) = {}
+
+    to_string: () -> bstring<CharT> = {
+        if group != 0 {
+            return ")";
+        }
+        else {
+            return "";
+        }
+    }
+}
+
+special_group_end_logic: <CharT> type = {
+    match: (cur, inout ctx, modifiers, other) other.match(cur, ctx, modifiers);
+    reset_ranges: (_) = {}
+    to_string:    ()  bstring<CharT>(")");
+}
+
+// Regex syntax: \<number>  Example: \1
+//
+group_ref_matcher_logic: <CharT, group: int, symbol: fixed_string> type = {
+    match: (cur, inout ctx, modifiers, other) -> _ = {
+        g := ctx.get_group(group);
+
+        pos := cur;
+        group_pos := g.start;
+        while group_pos != g.end && pos != ctx.end next (group_pos++, pos++) {
+            if modifiers.has_flag(expression_flags::case_insensitive) {
+                if safe_tolower(group_pos*) != safe_tolower(pos*) {
+                    return ctx.fail();
+                }
+            }
+            else {
+                if group_pos* != pos* {
+                    return ctx.fail();
+                }
+            }
+        }
+
+        if group_pos == g.end {
+            return other.match(pos, ctx, modifiers);
+        }
+        else {
+            return ctx.fail();
+        }
+
+    }
+    reset_ranges: (_) = {}
+    to_string:    ()  symbol.str();
+}
+
+// Regex syntax: $  Example: aa$
+//
+line_end_matcher_logic: <CharT, match_new_line: bool, match_new_line_before_end: bool> type =
+{
+    match: (cur, inout ctx, modifiers, other) -> _ = {
+        if cur == ctx.end || (match_new_line && modifiers.has_flag(expression_flags::multiple_lines) && cur* == '\n') {
+            return other.match(cur, ctx, modifiers);
+        }
+        else if match_new_line_before_end && (cur* == '\n' && (cur + 1) == ctx.end) { // Special case for new line at end.
+            return other.match(cur, ctx, modifiers);
+        }
+        else {
+            return ctx.fail();
+        }
+    }
+
+    reset_ranges: (_) = {}
+    to_string:    ()  bstring<CharT>("\\$");
+}
+
+// Regex syntax: ^  Example: ^aa
+//
+line_start_matcher_logic: <CharT, match_new_line: bool> type =
+{
+    match: (cur, inout ctx, modifiers, other) -> _ = {
+        if cur == ctx.begin || (match_new_line && modifiers.has_flag(expression_flags::multiple_lines)  && (cur - 1)* == '\n') {
+            return other.match(cur, ctx, modifiers);
+        }
+        else {
+            return ctx.fail();
+        }
+
+    }
+    reset_ranges: (_) = {}
+    to_string:    ()  bstring<CharT>(1, '^');
+}
+
+// Regex syntax: (?=) or (?!) or (*pla), etc.  Example: (?=AA)
+//
+lookahead_matcher_logic: <CharT, positive: bool, name: fixed_string, Pattern> type =
+{
+    match: (cur, inout ctx, modifiers, other) -> _ = {
+        r := Pattern::match(cur, ctx, modifiers, no_tail<CharT>());
+
+        if !positive {
+            r.matched = !r.matched;
+        }
+
+        if r.matched {
+            return other.match(cur, ctx, modifiers);
+        }
+        else {
+            return ctx.fail();
+        }
+
+    }
+    reset_ranges: (inout ctx) = { Pattern::reset_ranges(ctx); }
+    to_string:    ()          "((name.data())$(Pattern::to_string())$)";
+}
+
+// Regex syntax: (?<modifiers>)  Example: (?i)
+//
+modifier_matcher_logic: <CharT, ModifierChange> type =
+{
+    match: <Modifier> (cur, inout ctx, _: Modifier, other) -> _ = {
+        return other.match(cur, ctx, Modifier::replace(ModifierChange()));
+    }
+    reset_ranges: (_) = {}
+    to_string:    ()  "(?(ModifierChange::to_string())$)";
+}
+
+// Named character classes
+//
+
+named_class_matcher_logic: <CharT, Name: fixed_string, negate: bool, List ...> type =  {
+    this: special_syntax_wrapper<CharT, Name, class_matcher_logic<CharT, negate, List...>> = ();
+}
+
+named_class_no_new_line: <CharT> type == named_class_matcher_logic<CharT, "\\\\N", true, single_class_entry<CharT, '\n'>>; // TODO: Remove second \, switch to raw strings.
+named_class_digits     : <CharT> type == named_class_matcher_logic<CharT, "\\d", false, digits_class<CharT>>;
+named_class_hor_space  : <CharT> type == named_class_matcher_logic<CharT, "\\h", false, hor_space_class<CharT>>;
+named_class_space      : <CharT> type == named_class_matcher_logic<CharT, "\\s", false, space_class<CharT>>;
+named_class_ver_space  : <CharT> type == named_class_matcher_logic<CharT, "\\v", false, ver_space_class<CharT>>;
+named_class_word       : <CharT> type == named_class_matcher_logic<CharT, "\\w", false, word_class<CharT>>;
+
+
+named_class_not_digits    : <CharT> type == named_class_matcher_logic<CharT, "\\D", true, digits_class<CharT>>;
+named_class_not_hor_space : <CharT> type == named_class_matcher_logic<CharT, "\\H", true, hor_space_class<CharT>>;
+named_class_not_space     : <CharT> type == named_class_matcher_logic<CharT, "\\S", true, space_class<CharT>>;
+named_class_not_ver_space : <CharT> type == named_class_matcher_logic<CharT, "\\V", true, ver_space_class<CharT>>;
+named_class_not_word      : <CharT> type == named_class_matcher_logic<CharT, "\\W", true, word_class<CharT>>;
+
+// Other named matchers
+named_string_end_or_before_new_line_at_end: <CharT> type  == special_syntax_wrapper<CharT, "\\Z", line_end_matcher_logic<CharT, false, true>>;
+named_string_end: <CharT> type   == special_syntax_wrapper<CharT, "\\z", line_end_matcher_logic<CharT, false, false>>;
+named_string_start: <CharT> type == special_syntax_wrapper<CharT, "\\A", line_start_matcher_logic<CharT, false>>;
+
+
+
+// Regex syntax: <matcher>{min, max}  Example: a{2,4}
+range_matcher_logic: <CharT, M, min_count: int, max_count: int, kind: int> type = {
+
+    match: <Iter> (cur: Iter, inout ctx, modifiers, tail) -> _ = {
+        if range_flags::possessive == kind {
+            return match_possessive(cur, ctx, modifiers, tail);
+        }
+        else if range_flags::greedy == kind {
+            return match_greedy(0, cur, ctx.end, ctx, modifiers, tail);
+        }
+        else { // range_flags::not_greedy == kind
+            return match_not_greedy(cur, ctx, modifiers, tail);
+        }
+    }
+
+    reset_ranges: (inout ctx)     = M::reset_ranges(ctx);
+
+    to_string: () -> bstring<CharT> = {
+      r: bstring<CharT> = M::to_string();
+
+      if min_count == max_count {
+        r += "{(min_count)$}";
+      }
+      else if min_count == -1 {
+        r += "{,(max_count)$}";
+      }
+      else if max_count == -1 {
+        r += "{(min_count)$,}";
+      }
+      else {
+        r += "{(min_count)$,(max_count)$}";
+      }
+
+      if kind == range_flags::not_greedy {
+        r += "?";
+      }
+      else if kind == range_flags::possessive {
+        r += "+";
+      }
+
+      return r;
+    }
+
+    private is_below_upper_bound: (count: int) -> bool = {
+        if -1 == max_count { return true; }
+        else { return count < max_count; }
+    }
+
+    private is_below_lower_bound: (count: int) -> bool = {
+        if -1 == min_count { return false; }
+        else { return count < min_count; }
+    }
+
+    private is_in_range: (count: int) -> bool = {
+        if -1 != min_count && count < min_count { return false; }
+        if -1 != max_count && count > max_count { return false; }
+        return true;
+    }
+
+    private match_min_count: <Iter> (cur: Iter, inout ctx, modifiers, inout count_r: int) -> _ = { // TODO: count_r as out parameter introduces a performance loss.
+        res := ctx.pass(cur);
+        count := 0;
+
+        while is_below_lower_bound(count) && res.matched {
+            res = M::match(res.pos, ctx, modifiers, no_tail<CharT>());
+            if res.matched {
+                count += 1;
+            }
+        }
+
+        count_r = count;
+        return res;
+    }
+
+    private match_greedy: <Iter>(count: int, cur: Iter, last_valid: Iter, inout ctx, modifiers, other) -> match_return<Iter> = {
+        inner_call := :(tail_cur, inout tail_ctx, tail_modifiers) -> _ == {
+            return match_greedy((count + 1)$, tail_cur, (cur)$, tail_ctx, tail_modifiers, (other&)$*);
+        };
+        is_m_valid := true;
+        r := ctx.fail();
+        if is_below_upper_bound(count) && (is_below_lower_bound(count) || cur != last_valid) {
+            is_m_valid = false;  // Group ranges in M are invalidated through the call.
+            r = match_tail<CharT, M>().make_calling(inner_call).match(cur, ctx, modifiers);
+        }
+
+        if !r.matched && is_in_range(count) {
+            // The recursion did not yield a match try now the tail
+            r = other.match(cur, ctx, modifiers);
+
+            if r.matched && !is_m_valid{
+                // We have a match rematch M if required
+                M::reset_ranges(ctx);
+
+                if count > 0 {
+                    _ = M::match(last_valid, ctx, modifiers, no_tail<CharT>());
+                }
+            }
+        }
+
+        return r;
+    }
+
+    private match_possessive: <Iter>(cur: Iter, inout ctx, modifiers, other) -> match_return<Iter> = {
+        count :=0;
+        r := match_min_count(cur, ctx, modifiers, count);
+
+        if !r.matched {
+          return r;
+        }
+
+        pos := r.pos;
+        while r.matched && is_below_upper_bound(count) {
+            r = M::match(pos, ctx, modifiers, no_tail<CharT>());
+
+            if pos == r.pos {
+                break; // Break infinite loop.
+            }
+            if r.matched {
+                count += 1;
+                pos = r.pos;
+            }
+        }
+
+        return other.match(pos, ctx, modifiers);
+    }
+
+    private match_not_greedy: <Iter>(cur: Iter, inout ctx, modifiers, other) -> match_return<Iter> = {
+        count := 0;
+        start := match_min_count(cur, ctx, modifiers, count);
+        if !start.matched {
+          return start;
+        }
+
+        pos := start.pos;
+        while is_below_upper_bound(count) {
+            o:= other.match(pos, ctx, modifiers);
+            if o.matched {
+                return o;
+            }
+
+            r:= M::match(pos, ctx, modifiers, no_tail<CharT>());
+            if !r.matched {
+                return ctx.fail();
+            }
+            count += 1;
+            pos = r.pos;
+        }
+
+        return other.match(pos, ctx, modifiers); // Upper bound reached.
+    }
+}
+
+// Regex syntax: *, +, or ?  Example: aa*
+//
+special_range_matcher_logic: <CharT, M, min_count: int, max_count: int, kind: int, symbol: char> type = {
+    this: range_matcher_logic<CharT, M, min_count, max_count, kind> = ();
+    to_string: () -> bstring<CharT> = {
+        r := M::to_string() + symbol;
+        if kind == range_flags::not_greedy {
+            r += "?";
+        }
+        else if kind == range_flags::possessive {
+            r += "+";
+        }
+
+        return r;
+    }
+}
+
+// Regex syntax: \b or \B  Example: \bword\b
+//
+// Matches the start end end of word boundaries.
+//
+word_boundary_matcher_logic: <CharT, negate: bool> type =
+{
+    match: (cur, inout ctx, modifiers, other) -> _ = {
+        words : word_class<CharT> = ();
+        is_match := false;
+        if cur == ctx.begin { // String start
+            if cur != ctx.end { // No empty string
+                is_match = words.includes(cur*);
+            }
+        }
+        else if cur == ctx.end { // String end
+            is_match = words.includes((cur - 1)*);
+        }
+        else { // Middle of string
+            is_match =
+                   (words.includes((cur - 1)*) && !words.includes(cur*))  // End of word: \w\W
+                || (!words.includes((cur - 1)*) && words.includes(cur*)); // Start of word: \W\w
+
+        }
+        if negate {
+            is_match = !is_match;
+        }
+
+        if is_match{
+            return other.match(cur, ctx, modifiers);
+        }
+        else {
+            return ctx.fail();
+        }
+
+    }
+    reset_ranges: (_) = {}
+    to_string:    () -> bstring<CharT> = {
+        if negate {
+            return "\\B";
+        } else {
+            return "\\b";
+        }
+    }
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  Regular expression implementation.
+//
+//-----------------------------------------------------------------------
+//
+
+// Helper for named groups.
+
+group_name_list: <name: fixed_string, group_id: int, Inner> type = {
+
+    get_group_id: (g) -> int = {
+        if g == name.str() {
+            return group_id;
+        }
+        else {
+            return Inner::get_group_id(g);
+        }
+    }
+}
+
+group_name_list_end: type = {
+    get_group_id: (_) -1;
+}
+
+// Regular expression implementation
+regular_expression: <CharT, flags: int, groups: size_t, alternatives: size_t, named_groups, Matcher> type = {
+
+    context: <Iter> type == match_context<CharT, Iter, groups, alternatives>;
+    modifiers: type      == match_modifiers<flags, int>;
+
+    // TODO: Named multiple return has problems with templates.
+    search_return: <Iter> type = {
+        public matched: bool;
+        public ctx: context<Iter>;
+
+        operator=:(out this, matched_: bool, ctx_: context<Iter>) = {
+            matched = matched_;
+            ctx = ctx_;
+        }
+
+        group_number: (this) ctx.size();
+        group:        (this, g: int) ctx.get_group_string(g);
+        group_start:  (this, g: int) ctx.get_group_start(g);
+        group_end:    (this, g: int) ctx.get_group_end(g);
+
+        group:        (this, g: bstring<CharT>) group(get_group_id(g));
+        group_start:  (this, g: bstring<CharT>) group_start(get_group_id(g));
+        group_end:    (this, g: bstring<CharT>) group_end(get_group_id(g));
+
+        private get_group_id: (this, g: bstring<CharT>) -> _ = {
+            group_id := named_groups::get_group_id(g);
+            if -1 == group_id {
+                // TODO: Throw error.
+            }
+            return group_id;
+        }
+    }
+
+    match: (in this, str: bview<CharT>)                 match(str.begin(), str.end());
+    match: (in this, str: bview<CharT>, start)          match(get_iter(str, start), str.end());
+    match: (in this, str: bview<CharT>, start, length)  match(get_iter(str, start), get_iter(str, start + length));
+    match: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> = {
+        ctx: context = (start, end);
+
+        r := Matcher().match(start, ctx, modifiers(), no_tail<CharT>());
+        return search_return(r.matched && r.pos == end, ctx);
+    }
+
+    search: (in this, str: bview<CharT>)                 search(str.begin(), str.end());
+    search: (in this, str: bview<CharT>, start)          search(get_iter(str, start), str.end());
+    search: (in this, str: bview<CharT>, start, length)  search(get_iter(str, start), get_iter(str, start + length));
+    search: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> = {
+        matched := false;
+        ctx: context = (start, end);
+
+        cur:= start;
+        while true next (cur++) {
+            if Matcher().match(cur, ctx, modifiers(), no_tail<CharT>()).matched {
+                matched = true;
+                break;
+            }
+
+            if cur == ctx.end {
+                break;
+            }
+        }
+
+        return search_return(matched, ctx);
+    }
+
+    to_string: (in this) Matcher::to_string();
+
+    // Helper functions
+    //
+
+    private get_iter: (str: bview<CharT>, pos) -> _ = {
+        if pos < str.size() {
+            return str.begin() + pos;
+        }
+        else {
+            return str.end();
+        }
+    }
+}
+
+//-----------------------------------------------------------------------
+//
+//  Parser for regular expression.
+//
+//-----------------------------------------------------------------------
+//
+
+// State of the expression modifiers.
+//
+regex_parser_modifier_state: @struct type = {
+    group_captures_have_numbers : bool = true;
+    perl_code_syntax:             bool = false;
+    perl_code_syntax_in_classes:  bool = false;
+}
+
+// State of the current group. See '(<pattern>)'
+regex_parser_group_state: @struct type = {
+
+    // Current list of matchers
+    cur_match_list: std::vector<std::string> = ();
+
+    // List of alternate matcher lists. E.g. ab|cd|xy
+    alternate_match_lists: std::vector<std::vector<std::string>> = ();
+
+    modifiers : regex_parser_modifier_state = ();
+
+    next_alternative: (inout this) = {
+        new_list: std::vector<std::string> = ();
+        std::swap(new_list, cur_match_list);
+        _ = alternate_match_lists.insert(alternate_match_lists.end(), new_list);
+    }
+
+    swap: (inout this, inout t: regex_parser_group_state) = {
+        std::swap(cur_match_list, t.cur_match_list);
+        std::swap(alternate_match_lists, t.alternate_match_lists);
+        std::swap(modifiers, t.modifiers);
+    }
+
+    add: (inout this, matcher: _) = cur_match_list.push_back(matcher);
+
+    wrap_last: (inout this, matcher) = {
+        last:= cur_match_list.back();
+        cur_match_list.back() = matcher(last);
+        _ = matcher;
+        _ = last;
+    }
+
+    empty: (this) -> bool = cur_match_list.empty();
+}
+
+// State for the branch reset. Takes care of the group numbering. See '(|<pattern>)'.
+regex_branch_reset_state: @struct type = {
+    is_active : bool = false;
+    cur_group : int  = 1; // Global capture group.
+    max_group : int  = 1;
+    from      : int  = 1;
+
+    next: (inout this) -> int = {
+        g := cur_group;
+        cur_group += 1;
+        max_group = max(max_group, cur_group);
+
+        return g;
+    }
+
+    set_next: (inout this, g: int) = {
+        cur_group = g;
+        max_group = max(max_group, g);
+    }
+
+    next_alternative: (inout this) = {
+        if is_active {
+            cur_group = from;
+        }
+    }
+}
+
+// Parser and generator for regular expressions.
+regex_parser: <Error_out> type = {
+
+    regex:     std::string_view;
+    modifier:  std::string_view;
+    error_out: Error_out;
+
+    cur_group_state:        regex_parser_group_state = ();
+    cur_branch_reset_state: regex_branch_reset_state = ();
+    pos:                    size_t = 0;
+    alternatives_count:     int = 0;
+    named_groups :          std::map<std::string, int> = ();
+    has_error:              bool = false;
+
+    supported_classes: std::vector<std::string> = ("alnum", "alpha", "ascii", "blank", "cntrl", "digits", "graph",
+                                                   "lower", "print", "punct", "space", "upper", "word", "xdigit");
+
+    operator=: (out this, r: std::string_view, m: std::string_view, e: Error_out) = {
+        this.regex = r;
+        this.modifier = m;
+        this.error_out = e;
+    }
+
+    // State management functions
+    //
+    group_new_state: (inout this) -> regex_parser_group_state = {
+        old_state: regex_parser_group_state = ();
+        old_state.swap(cur_group_state);
+
+        return old_state;
+    }
+
+    group_restore_state: (inout this, old_state: regex_parser_group_state) = {
+        cur_group_state = old_state;
+    }
+
+    // Branch reset management functions
+    //
+
+    branch_reset_new_state: (inout this) -> regex_branch_reset_state = {
+        old_state: regex_branch_reset_state = ();
+        std::swap(old_state, cur_branch_reset_state);
+
+        cur_branch_reset_state.is_active = true;
+        cur_branch_reset_state.cur_group = old_state.cur_group;
+        cur_branch_reset_state.from      = cur_branch_reset_state.cur_group;
+        cur_branch_reset_state.max_group = cur_branch_reset_state.cur_group;
+
+        return old_state;
+    }
+
+    branch_reset_restore_state: (inout this, old_state: regex_branch_reset_state) = {
+        next_group := cur_branch_reset_state.max_group;
+        cur_branch_reset_state = old_state;
+        cur_branch_reset_state.set_next(next_group);
+    }
+
+    // Position management functions
+    //
+
+    private get_next_position: (in this, in_class: bool, no_skip: bool) -> size_t = {
+        perl_syntax := false;
+        if !no_skip {
+            if in_class {
+                perl_syntax = cur_group_state.modifiers.perl_code_syntax && cur_group_state.modifiers.perl_code_syntax_in_classes;
+            }
+            else {
+                perl_syntax = cur_group_state.modifiers.perl_code_syntax;
+            }
+        }
+        cur := pos + 1;
+        if perl_syntax {
+            while cur < regex.size() next (cur += 1) {
+                n: = regex[cur];
+
+                if space_class<char>::includes(n) {
+                    continue;
+                }
+                else if !in_class && '#' == n {
+                    cur = regex.find("\n", cur);
+                    if std::string::npos == cur {
+                        // No new line, comment runs until the end of the pattern
+                        cur = regex.size();
+                    }
+                }
+                else { // None space none comment char
+                    break;
+                }
+            }
+        }
+
+        // Check for end of file.
+        if cur > regex.size() {
+            cur = regex.size();
+        }
+        return cur;
+    }
+
+    private next_impl: (inout this, out n: char, in_class: bool, no_skip: bool) -> bool = {
+        pos = get_next_position(in_class, no_skip);
+        if pos != regex.size() {
+            n = regex[pos];
+            return true;
+        }
+        else {
+            n = '\0';
+            return false;
+        }
+    }
+
+    next: (inout this, out n: char)          next_impl(out n, false, false);
+    next_in_class: (inout this, out n: char) next_impl(out n, true, false);
+    next_no_skip: (inout this, out n: char)  next_impl(out n, false, true);
+
+
+
+    skip: (inout this) -> bool = {
+        c: char;
+        r := next(out c);
+        _ = c;
+        return r;
+    }
+
+    skip_n:(inout this, n: int) -> bool = {
+        r := true;
+        cur := 0;
+        while r && cur < n next (r = skip()) {
+            cur += 1;
+        }
+        return r;
+    }
+
+    current: (in this) -> char = {
+        if pos < regex.size() {
+            return regex[pos];
+        } else {
+            return '\0';
+        }
+    }
+
+    private peek_impl: (in this, in_class: bool) -> char = {
+        next_pos := get_next_position(in_class, false);
+        if next_pos < regex.size() {
+            return regex[next_pos];
+        }
+        else {
+            return '\0';
+        }
+    }
+
+    peek: (in this)          peek_impl(false);
+    peek_in_class: (in this) peek_impl(true);
+
+    private grab_until_impl: (inout this, in e: std::string, out r: std::string, any: bool) -> bool = {
+        start := pos;
+        end:= pos;
+        if any {
+            end = regex.find_first_of(e, pos);
+        }
+        else {
+            end = regex.find(e, pos);
+        }
+
+        if end != std::string_view::npos {
+            r = regex.substr(start, end - pos);
+            pos = end;
+            return true;
+        }
+        else {
+            r = "";
+            return false;
+        }
+    }
+
+    grab_until: (inout this, in e: std::string, out r: std::string)        grab_until_impl(e, out r, false);
+    grab_until: (inout this, in e: char, out r: std::string)               grab_until_impl(std::string(1, e), out r, false);
+    grab_until_one_of: (inout this, in e: std::string, out r: std::string) grab_until_impl(e, out r, true);
+
+    grab_n: (inout this, in n: int, out r: std::string) -> bool = {
+        if pos + n <= regex.size() {
+            r = regex.substr(pos, n);
+            pos += n - 1;
+            return true;
+        }
+        else {
+            r = "";
+            return false;
+        }
+    }
+
+    grab_number: (inout this) -> std::string = {
+        start := pos;
+        start_search := pos;
+        if regex[start_search] == '-' {
+            start_search += 1;
+        }
+        end := regex.find_first_not_of("1234567890", start_search);
+
+        r : std::string;
+        if end != std::string::npos {
+            r = regex.substr(start, end - start);
+            pos = end - 1;
+        }
+        else {
+            r = regex.substr(start);
+            pos = regex.size() - 1;
+        }
+        return r;
+    }
+
+    // Misc functions
+    //
+    error:(inout this, message: std::string) = {
+        error_out("Error during parsing of regex '(regex)$' at position '(pos)$': (message)$");
+        has_error = true;
+    }
+
+    join: (list, func) -> std::string = {
+        r: std::string = "";
+
+        separator: std::string = "";
+        for list do (cur) {
+            r += separator + func(cur);
+            separator = ", ";
+        }
+
+        return r;
+    }
+
+    join: (list: std::vector<std::string>) join(list, :(arg) -> _ == arg); // Todo: Shorthand syntax for const lambda
+
+
+    // Creator functions for matchers.
+    //
+
+    create_matcher: (in this, name: std::string, template_arguments: std::string) -> _ = {
+        sep := ", ";
+        if template_arguments.empty() { sep = ""; }
+
+        return "::cpp2::regex::(name)$<char(sep)$(template_arguments)$>";
+    }
+
+    create_matcher_from_list: (inout this, list) create_matcher("matcher_list", join(list));
+
+    create_matcher_from_state: (inout this) -> std::string = {
+        if 0 == cur_group_state.alternate_match_lists.size() { return create_matcher_from_list(cur_group_state.cur_match_list); }
+
+        if 0 == cur_group_state.cur_match_list.size() {
+            cur_group_state.add(create_matcher("empty_matcher_logic", ""));
+        }
+        cur_group_state.next_alternative();
+        cur_branch_reset_state.next_alternative();
+
+        list := join(cur_group_state.alternate_match_lists, :(arg) -> _ == create_matcher_from_list(arg));
+        alternative_id := alternatives_count;
+        alternatives_count += 1;
+
+        return create_matcher("alternative_matcher_logic", "(alternative_id)$, (list)$");
+    }
+
+    create_named_groups_list: (in this) -> std::string = {
+        r : std::string = "::cpp2::regex::group_name_list_end";
+
+        for named_groups do (cur) {
+            r = "::cpp2::regex::group_name_list<\"(cur.first)$\", (cur.second)$, (r)$>";
+        }
+
+        return r;
+    }
+
+    // Parser helper functions.
+
+    parse_lookahead: (inout this, name: std::string, positive: bool) -> bool = {
+        old_state: _ = group_new_state();
+        parse_until(')');
+        inner:= create_matcher_from_state();
+        group_restore_state(old_state);
+
+        cur_group_state.add(create_matcher("lookahead_matcher_logic", "(positive)$, \"(name)$\", (inner)$"));
+
+        return true;
+    }
+
+    parser_expression_modifiers: (inout this) -> std::string = {
+        r: std::string = "0";
+        sep: std::string = " | ";
+
+        add := :(name, inout r) = {
+            r += "(sep$)$(name)$";
+        };
+
+        mod_pos := 0;
+        while mod_pos < modifier.ssize() next mod_pos += 1 {
+            c: char = modifier[mod_pos];
+
+            if      c == 'i' { add("::cpp2::regex::expression_flags::case_insensitive", r); }
+            else if c == 'm' { add("::cpp2::regex::expression_flags::multiple_lines", r); }
+            else if c == 's' { add("::cpp2::regex::expression_flags::single_line", r); }
+            else if c == 'n' {
+                add("::cpp2::regex::expression_flags::no_group_captures", r);
+                cur_group_state.modifiers.group_captures_have_numbers = false;
+            }
+            else if c == 'x' {
+                add("::cpp2::regex::expression_flags::perl_code_syntax", r);
+                cur_group_state.modifiers.perl_code_syntax = true;
+
+                // Check if we have 'xx'
+                mod_pos += 1;
+                if mod_pos < modifier.ssize() && 'x' == modifier[mod_pos] {
+                    add("::cpp2::regex::expression_flags::perl_code_syntax_in_classes", r);
+                    cur_group_state.modifiers.perl_code_syntax_in_classes = true;
+                }
+            }
+            else { error("Unknown modifier: '(c)$'"); }
+        }
+
+        return r;
+    }
+
+    parser_group_modifiers: (inout this, change_str: std::string, out modifier_change: std::string,
+                      inout parser_modifiers: regex_parser_modifier_state) -> bool = {
+        is_negative := false;
+        is_reset    := false;
+
+        add    := 0;
+        remove := 0;
+
+        apply := :(flag: int) = {
+            if is_negative&$* {
+                remove&$* |= flag;
+            }
+            else {
+                add&$* |= flag;
+            }
+        };
+
+        iter := change_str.begin();
+        while iter != change_str.end() next (iter++) {
+            cur := iter*;
+            if cur == '^' {
+                is_reset = true;
+            }
+            else if cur == '-' {
+                if is_reset { error("No negative modifier allowed."); return false; }
+                is_negative = true;
+            }
+            else if cur == 'i' { apply(expression_flags::case_insensitive); }
+            else if cur == 'm' { apply(expression_flags::multiple_lines); }
+            else if cur == 's' { apply(expression_flags::single_line); }
+            else if cur == 'n' {
+                apply(expression_flags::no_group_captures);
+                parser_modifiers.group_captures_have_numbers = is_negative;
+            }
+            else if cur == 'x' {
+                if (iter + 1) == change_str.end() || (iter + 1)* != 'x' {
+                    // x modifier
+                    apply(expression_flags::perl_code_syntax);
+                    parser_modifiers.perl_code_syntax = !is_negative;
+
+                    // Just x unsets xx and remove x also removes xx
+                    remove |= expression_flags::perl_code_syntax_in_classes;
+                    parser_modifiers.perl_code_syntax_in_classes = false;
+                }
+                else { // xx modifier
+                    // xx also sets or unsets x
+                    apply(expression_flags::perl_code_syntax);
+                    parser_modifiers.perl_code_syntax = !is_negative;
+
+                    apply(expression_flags::perl_code_syntax_in_classes);
+                    parser_modifiers.perl_code_syntax_in_classes = !is_negative;
+
+                    iter++; // Skip the second x
+                }
+            }
+            else {
+                error("Unknown modifier: (cur)$"); return false;
+            }
+        }
+
+        modifier_change = "::cpp2::regex::match_modifiers_state_change<true, (is_reset)$, (add)$, (remove)$, \"(change_str)$\">";
+
+        return true;
+    }
+
+    // Parsing functions
+    //
+
+    is_alternative: (inout this, c: char) -> bool = {
+        if c != '|' { return false; }
+
+        cur_group_state.next_alternative();
+        cur_branch_reset_state.next_alternative();
+        return true;
+    }
+
+    is_anchor: (inout this, c: char) -> bool = {
+        if c == '^' {
+            cur_group_state.add(create_matcher("line_start_matcher_logic", "true"));
+            return true;
+        }
+        else if c == '$' {
+            cur_group_state.add(create_matcher("line_end_matcher_logic", "true, true"));
+            return true;
+        }
+
+        return false;
+    }
+
+    is_any: (inout this, c: char) -> bool = {
+        if c != '.' { return false; }
+
+        cur_group_state.add(create_matcher("any_matcher_logic", ""));
+        return true;
+
+    }
+
+    is_class: (inout this, c: char) -> bool = {
+        if c != '[' { return false; }
+
+        classes: std::vector<std::string> = ();
+
+        c_cur: char = current();
+
+        // First step: parse until the end bracket and push single chars, ranges or groups on the class stack.
+        negate:= false;
+        first:= true;
+        range:= false;
+        while next_in_class(out c_cur) & (c_cur != ']' || first) {
+            if c_cur == '^' {
+                negate = true;
+                continue; // Skip rest of the loop. Also the first update.
+            }
+            if c_cur == '[' && peek_in_class() == ':' {
+                // We have a character class.
+                _ = skip_n(2);  // Skip [:
+
+                name: std::string = "";
+                if !grab_until(":]", out name) { error("Could not find end of character class."); return false; }
+                if supported_classes.end() == std::find(supported_classes.begin(), supported_classes.end(), name) {
+                    error("Unsupported character class. Supported ones are: (join(supported_classes))$");
+                    return false;
+                }
+
+                classes.push_back("[:(name)$:]");
+
+                _ = skip(); // Skip ':' pointing to the ending ']'.
+            }
+            else if c_cur == '\\' {
+                if next_no_skip(out c_cur)  && (c_cur != ']') {
+                    if  ' ' == c_cur && cur_group_state.modifiers.perl_code_syntax && cur_group_state.modifiers.perl_code_syntax_in_classes {
+                        classes.push_back(std::string(1, c_cur)); // TODO: UFCS error with char as argument.
+                    }
+                    else {
+                        name := "";
+                            if 'd' == c_cur { name = "short_digits"; }
+                        else if 'D' == c_cur { name = "short_not_digits"; }
+                        else if 'h' == c_cur { name = "short_hor_space"; }
+                        else if 'H' == c_cur { name = "short_not_hor_space"; }
+                        else if 's' == c_cur { name = "short_space"; }
+                        else if 'S' == c_cur { name = "short_not_space"; }
+                        else if 'v' == c_cur { name = "short_ver_space"; }
+                        else if 'V' == c_cur { name = "short_not_ver_space"; }
+                        else if 'w' == c_cur { name = "short_word"; }
+                        else if 'W' == c_cur { name = "short_not_word"; }
+                        else {
+                            error("Unknown group escape.");
+                            return false;
+                        }
+                        classes.push_back("[:(name)$:]");
+                    }
+                } else {
+                    error("Escape without a following character.");
+                    return false;
+                }
+            }
+            else if c_cur == '-' {
+                if first { // Literal if first entry.
+                    classes.push_back("(c_cur)$");
+                } else {
+                    range = true;
+                }
+            }
+            else {
+                if range { // Modify last element to be a range.
+                    classes.back() += "-(c_cur)$";
+                    range = false;
+                }
+                else {
+                    classes.push_back("(c_cur)$");
+                }
+            }
+
+            first = false;
+        }
+
+        if c_cur != ']' {
+            error("Error end of character class definition before terminating ']'.");
+            return false;
+        }
+
+        if range { // If '-' is last entry treat it as a literal char.
+            classes.push_back("-");
+        }
+
+        // Second step: Wrap the item on the class stack with corresponding class implementation.
+        for classes do (inout cur) {
+            if cur.starts_with("[:") {
+                name := cur.substr(2, cur.size() - 4);
+                cur = create_matcher("(name)$_class", "");
+            }
+            else if 1 != cur.size() {
+                cur = create_matcher("range_class_entry", "'(cur[0])$', '(cur[2])$'");
+            }
+            else {
+                cur = create_matcher("single_class_entry", "'(cur)$'");
+            }
+        }
+
+        inner := join(classes);
+        cur_group_state.add(create_matcher("class_matcher_logic", "(negate)$, (inner)$"));
+        return true;
+    }
+
+    is_escape: (inout this, c: char) -> bool = {
+        if c != '\\' { return false; }
+
+        start := pos; // Keep start for group matchers.
+        c_next := '\0';
+        if !next(out c_next) { error("Escape without a following character."); return false; }
+
+        add_group_matcher:= :(name: std::string) -> bool = {
+
+            name_trim := trim_copy(name);
+            group_id : int = 0;
+            if string_to_int(name_trim, group_id) {
+                if group_id < 0 {
+                    group_id = cur_branch_reset_state.cur_group + group_id;
+
+                    if group_id < 1 { // Negative and zero are no valid groups.
+                        error("Relative group reference does not reference a valid group. (Would be (group_id)$.)");
+                        return false;
+                    }
+                }
+
+                if group_id >= cur_branch_reset_state.cur_group { error("Group reference is used before the group is declared."); return false; }
+            }
+            else {
+                // Named group
+                iter := named_groups.find(name_trim);
+                if iter == named_groups.end() { error("Group names does not exist. (Name is: (name)$)"); return false; }
+
+                group_id = iter*.second;
+            }
+            cur_group_state.add(create_matcher("group_ref_matcher_logic", "(group_id)$, \"\\(regex.substr(start$, pos&$* - start$ + 1))$\""));
+
+            return true;
+        };
+
+        if '0' <= c_next <= '9' {
+            group := grab_number();
+            if group.ssize() >= 3 {
+                // \000 syntax
+                number := 0;
+                if !string_to_int(group, number, 8) { error("Could not convert octal to int."); return false; }
+
+                number_as_char : char = unsafe_narrow<char>(number);
+
+                syntax: std::string = "\\(int_to_string(number_as_char as int, 8))$";
+                char_matcher := create_matcher("char_matcher_logic", "'(number_as_char)$', '(safe_tolower(number_as_char))$', '(safe_toupper(number_as_char))$'");
+                cur_group_state.add(create_matcher("special_syntax_wrapper", "\"(syntax)$\", (char_matcher)$"));
+            }
+            else {
+                if !add_group_matcher(group) { return false; }
+            }
+        }
+        else if std::string::npos != std::string("tnrfae^.[]$()*{}?+|").find(c_next) {
+            if c_next == '$' {
+                // TODO: Provide proper escape for cppfront capture
+                cur_group_state.add(create_matcher("line_end_matcher_logic", "true, true"));
+            }
+            else {
+                inner := create_matcher("char_matcher_logic", "'\\(c_next)$', '\\(c_next)$', '\\(c_next)$'");
+                cur_group_state.add(create_matcher("special_syntax_wrapper", "\"\\\\(c_next)$\", (inner)$"));
+            }
+        }
+        else if '\\' == c_next {
+            inner := create_matcher("char_matcher_logic", "'\\\\', '\\\\', '\\\\'");
+            cur_group_state.add(create_matcher("special_syntax_wrapper", "\"\\\\\\\\\", (inner)$"));
+        }
+        else if 'g' == c_next {
+            if !next(out c_next) {error("Group escape without a following char."); return false; }
+
+            group : std::string = "";
+            if c_next == '{' {
+                if !(next(out c_next) && grab_until('}', out group)) { error("No ending bracket."); return false; }
+            }
+            else {
+                group = grab_number();
+            }
+            if !add_group_matcher(group) { return false; }
+        }
+        else if 'k' == c_next {
+            if !next(out c_next) {error("Group escape without a following char."); return false; }
+
+            term_char := '\0';
+            if c_next == '{' { term_char = '}'; }
+            else if c_next == '<' { term_char = '>'; }
+            else if c_next == '\'' { term_char = '\''; }
+            else {
+                error("Group escape has wrong operator."); return false;
+            }
+
+            group : std::string = "";
+            if !(next(out c_next) && grab_until(term_char, out group)) { error("No ending bracket."); return false; }
+            if !add_group_matcher(group) { return false; }
+        }
+        else if 'K' == c_next {
+            cur_group_state.add(create_matcher("global_group_reset", ""));
+        }
+        else if 'x' == c_next {
+            if !next(out c_next) { error("x escape without number."); return false; }
+            has_brackets := false;
+            number_str: std::string = "";
+            if '{' == c_next {
+                // TODO: Currently does not work since the compiler handles \x also.
+                // Bracketed
+                has_brackets = true;
+                _  = skip(); // Skip '{'
+                if !grab_until('}', out number_str) { error("No ending bracket for \\x"); return false; }
+            }
+            else {
+                // grab two chars
+
+                if !grab_n(2, out number_str) { error("Missing hexadecimal digits after \\x."); return false; }
+            }
+
+            number := 0;
+            if !string_to_int(number_str, number, 16) { error("Could not convert hexadecimal to int."); return false; }
+
+            number_as_char : char = unsafe_narrow<char>(number);
+
+            syntax: std::string = int_to_string(number_as_char as int, 16);
+            if has_brackets {
+                syntax = "{(syntax)$}";
+            }
+            syntax = "\\x(syntax)$";
+            char_matcher := create_matcher("char_matcher_logic", "'(number_as_char)$', '(safe_tolower(number_as_char))$', '(safe_toupper(number_as_char))$'");
+            cur_group_state.add(create_matcher("special_syntax_wrapper", "\"(syntax)$\", (char_matcher)$"));
+        }
+        else if 'o' == c_next {
+            if !next(out c_next) { error("o escape without bracket."); return false; }
+            number_str: std::string = "";
+            if '{' == c_next {
+                _  = skip(); // Skip '{'
+                if !grab_until('}', out number_str) { error("No ending bracket for \\o"); return false; }
+            }
+
+            number := 0;
+            if !string_to_int(number_str, number, 8) { error("Could not convert octal to int."); return false; }
+
+            number_as_char : char = unsafe_narrow<char>(number);
+
+            syntax: std::string = "\\o{(int_to_string(number_as_char as int, 8))$}";
+            char_matcher := create_matcher("char_matcher_logic", "'(number_as_char)$', '(safe_tolower(number_as_char))$', '(safe_toupper(number_as_char))$'");
+            cur_group_state.add(create_matcher("special_syntax_wrapper", "\"(syntax)$\", (char_matcher)$"));
+        }
+        else if 'A' == c_next { cur_group_state.add(create_matcher("named_string_start", "")); }
+        else if 'b' == c_next { cur_group_state.add(create_matcher("word_boundary_matcher_logic", "false")); }
+        else if 'B' == c_next { cur_group_state.add(create_matcher("word_boundary_matcher_logic", "true")); }
+        else if 'd' == c_next { cur_group_state.add(create_matcher("named_class_digits", "")); }
+        else if 'D' == c_next { cur_group_state.add(create_matcher("named_class_not_digits", "")); }
+        else if 'h' == c_next { cur_group_state.add(create_matcher("named_class_hor_space", "")); }
+        else if 'H' == c_next { cur_group_state.add(create_matcher("named_class_not_hor_space", "")); }
+        else if 'N' == c_next { cur_group_state.add(create_matcher("named_class_no_new_line", "")); }
+        else if 's' == c_next { cur_group_state.add(create_matcher("named_class_space", "")); }
+        else if 'S' == c_next { cur_group_state.add(create_matcher("named_class_not_space", "")); }
+        else if 'v' == c_next { cur_group_state.add(create_matcher("named_class_ver_space", "")); }
+        else if 'V' == c_next { cur_group_state.add(create_matcher("named_class_not_ver_space", "")); }
+        else if 'w' == c_next { cur_group_state.add(create_matcher("named_class_word", "")); }
+        else if 'W' == c_next { cur_group_state.add(create_matcher("named_class_not_word", "")); }
+        else if 'Z' == c_next { cur_group_state.add(create_matcher("named_string_end_or_before_new_line_at_end", "")); }
+        else if 'z' == c_next { cur_group_state.add(create_matcher("named_string_end", "")); }
+        else {
+            error("Unknown escape.");
+            return false;
+        }
+
+        return true;
+    }
+
+    is_group: (inout this, c: char) -> bool = {
+        if c != '(' { return false; }
+
+        has_id := cur_group_state.modifiers.group_captures_have_numbers;
+        has_pattern := true;
+        group_name : std::string = "";
+        group_name_brackets := true;
+        modifier_change: std::string = "::cpp2::regex::match_modifiers_no_change";
+
+        modifiers_change_to : = cur_group_state.modifiers;
+
+        c_next : char = '\0';
+        // Skip the '('
+        if !next(out c_next) { error("Group without closing bracket."); return false;}
+        if c_next == '?' {
+            // Special group
+            if !next_no_skip(out c_next) { error("Missing character after group opening."); return false; }
+
+            if c_next == '<' || c_next == '\'' {
+                // named group
+                end_char := c_next;
+                if end_char == '<' {
+                    end_char = '>';
+                } else {
+                    group_name_brackets = false;
+                }
+                has_id = true; // Force id for named groups.
+                if !next(out c_next) /* skip '<' */ { error("Missing ending bracket for named group."); return false; }
+                if !grab_until(end_char, out group_name) { error("Missing ending bracket for named group."); return false; }
+                if !next(out c_next) { error("Group without closing bracket."); return false;}
+            }
+            else if c_next == '#' {
+                // Comment
+                comment_str : std::string = "";
+                if !grab_until(")", out comment_str) { error("Group without closing bracket."); return false;}
+                // Do not add comment. Has problems with ranges.
+
+                return true;
+            }
+            else if c_next == '|' {
+                // Branch reset group
+
+                if !next(out c_next) /* skip '|' */ { error("Missing ending bracket for named group."); return false; }
+
+                old_parser_state: _ = group_new_state();
+                old_branch_state: _ = branch_reset_new_state();
+                parse_until(')');
+                inner:= create_matcher_from_state();
+                branch_reset_restore_state(old_branch_state);
+                group_restore_state(old_parser_state);
+
+                start_matcher := create_matcher("branch_reset_matcher_logic", "");
+                end_matcher := create_matcher("special_group_end_logic", "");
+
+                v: std::vector<std::string> = (start_matcher, inner, end_matcher);
+                cur_group_state.add(create_matcher_from_list(v));
+
+                return true;
+            }
+            else if c_next == '=' || c_next == '!' {
+                _ = skip(); // Skip '!'
+                // Positive or negative lookahead
+                return parse_lookahead("?(c_next)$", c_next == '=');
+            }
+            else {
+                // Simple modifier
+                has_id = false;
+                change_str : std::string = "";
+                if !grab_until_one_of("):", out change_str) { error("Missing ending bracket for group."); return false; }
+                if !parser_group_modifiers(change_str, out modifier_change, modifiers_change_to) {
+                     return false;
+                }
+
+                if ')' == current() {
+                    has_pattern = false;
+                }
+                else {
+                    if !next(out c_next) /* skip ':' */ { error("Missing ending bracket for group."); return false; }
+                }
+            }
+        }
+        else if c_next == '*' {
+            // named pattern
+            _ = skip(); // Skip *.
+            name: std::string = "";
+            if !grab_until(':', out name) { error("Missing colon for named pattern."); return false; }
+
+            if name == "pla" || name == "positive_lookahead" {
+                return parse_lookahead("*(name)$:", true);
+            }
+            else if name == "nla" || name == "negative_lookahead" {
+                return parse_lookahead("*(name)$:", false);
+            }
+            else {
+                error("Unknown named group pattern: '(name)$'"); return false;
+            }
+        }
+
+        if has_pattern {
+            // regular group
+
+            group_number := -1;
+            if has_id {
+                group_number = cur_branch_reset_state.next();
+            }
+
+            old_state: _ = group_new_state();
+            cur_group_state.modifiers = modifiers_change_to;
+            parse_until(')');
+            inner:= create_matcher_from_state();
+            group_restore_state(old_state);
+
+            start_matcher := create_matcher("group_matcher_start_logic", "(group_number)$, (modifier_change)$, \"(group_name)$\", (group_name_brackets)$");
+            if 0 != group_name.size() {
+                if !named_groups.contains(group_name) { // Redefinition of group name is not an error. The left most one is retained.
+                    named_groups[group_name] = group_number;
+                }
+            }
+            end_matcher := create_matcher("group_matcher_end_logic", "(group_number)$");
+
+            v: std::vector<std::string> = (start_matcher, inner, end_matcher);
+            cur_group_state.add(create_matcher_from_list(v));
+        }
+        else {
+            // Only a modifier
+            cur_group_state.modifiers = modifiers_change_to;
+            cur_group_state.add(create_matcher("modifier_matcher_logic", "(modifier_change)$"));
+        }
+
+        return true;
+    }
+
+    is_handle_special: (inout this, c: char) -> bool = {
+        if c != '\'' { return false; }
+
+        cur_group_state.add(create_matcher("char_matcher_logic", "'\\(c)$', '\\(c)$', '\\(c)$'"));
+        return true;
+    }
+
+    is_range: (inout this, c: char) -> bool = {
+
+        if c != '{' { return false; }
+        if cur_group_state.empty() { error("'{' without previous element.");  return false; }
+        if !skip() { error("End of regex before closing '}'."); return false; }
+
+        inner: std::string = "";
+        if !grab_until('}', out inner) { error("Missing closing bracket."); return false; }
+
+        inner = trim_copy(inner);
+        if inner.empty() { error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'"); return false; }
+
+        kind := range_flags::greedy;
+        if peek() == '?' {
+            kind = range_flags::not_greedy;
+            _ = skip();
+        }
+        else if peek() == '+' {
+            kind = range_flags::possessive;
+            _ = skip();
+        }
+
+        min_count: std::string = "-1";
+        min_count_number: int  = 0;
+        max_count: std::string = "-1";
+        max_count_number: int  = std::numeric_limits<int>::max();
+
+        sep: size_t = inner.find(",");
+        if sep == std::string::npos {
+            min_count = inner;
+            max_count = inner;
+            if !string_to_int(inner, min_count_number) { error("Could not convert range to number."); return false; }
+            max_count_number = min_count_number;
+        }
+        else {
+            inner_first: std::string = trim_copy(inner.substr(0, sep));
+            inner_last: std::string = trim_copy(inner.substr(sep + 1));
+
+            if (inner_first.empty() && inner_last.empty()) {
+                error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'");
+                return false;
+            }
+
+            if !inner_first.empty() {
+                min_count = inner_first;
+                if !string_to_int(inner, min_count_number) { error("Could not convert range to number."); return false; }
+            }
+            if !inner_last.empty() {
+                max_count = inner_last;
+                if !string_to_int(inner, max_count_number) { error("Could not convert range to number."); return false; }
+            }
+        }
+
+        if !(0 <= min_count_number <= max_count_number) {
+            error("Min and max values in range are wrong it should hold 0 <= min <= max. Have 0 <= (min_count_number)$ <= (max_count_number)$");
+            return false;
+        }
+
+        cur_group_state.wrap_last( :(inner) -> _ == create_matcher("range_matcher_logic", "(inner)$, (min_count$)$, (max_count$)$, (kind)$"));
+
+        return true;
+    }
+
+    is_special_range: (inout this, c: char) -> bool = {
+        min_range: std::string = "0";
+        max_range: std::string = "-1";
+        if c == '*' {
+            min_range = "0";
+        }
+        else if c == '+' {
+            min_range = "1";
+        }
+        else if c == '?' {
+            min_range = "0";
+            max_range = "1";
+        }
+        else {
+            return false;
+        }
+
+        kind := range_flags::greedy;
+        if peek() == '?' {
+            kind = range_flags::not_greedy;
+            _ = skip();
+        }
+        else if peek() == '+' {
+            kind = range_flags::possessive;
+            _ = skip();
+        }
+
+        if cur_group_state.empty() {
+            error("'(c)$' without previous element.");
+            return false;
+        }
+
+        cur_group_state.wrap_last(:(inner) -> _ == create_matcher("special_range_matcher_logic", "(inner)$, (min_range$)$, (max_range$)$, (kind)$, '(c$)$'"));
+        return true;
+    }
+
+    parse_until:(inout this, term: char) = {
+        c: char = current();
+        while c != '\n' next _ = next(out c) {
+            if c == term { return; }
+
+            if !has_error && is_alternative(c) { continue; }
+            if !has_error && is_any(c) { continue; }
+            if !has_error && is_class(c) { continue; }
+            if !has_error && is_escape(c) { continue; }
+            if !has_error && is_anchor(c) { continue; }
+            if !has_error && is_group(c) { continue; }
+            if !has_error && is_handle_special(c) { continue; }
+            if !has_error && is_range(c) { continue; }
+            if !has_error && is_special_range(c) { continue; }
+
+            if has_error { return; }
+
+            // No special char, push a character match
+            cur_group_state.add(create_matcher("char_matcher_logic", "'(c)$', '(safe_tolower(c))$', '(safe_toupper(c))$'"));
+        }
+    }
+
+    parse:(inout this) -> std::string = {
+        mod   := parser_expression_modifiers();
+        parse_until('\0');
+
+        if has_error { return "Error"; }
+
+        named_groups_arg := create_named_groups_list();
+        inner := create_matcher_from_state();
+        start := create_matcher("group_matcher_start_logic", "0, ::cpp2::regex::match_modifiers_no_change, \"\", false");
+        end   := create_matcher("group_matcher_end_logic", "0");
+        list  := create_matcher("matcher_list", "(start)$, (inner)$, (end)$");
+        return   create_matcher("regular_expression", "(mod)$, (cur_branch_reset_state.cur_group)$, (alternatives_count)$, (named_groups_arg)$, (list)$");
+    }
+
+}
+
+generate_template: <Err> (regex: std::string_view, modifier: std::string_view, err: Err) -> std::string = {
+    parser: regex_parser<Err> = (regex, modifier, err);
+    r := parser.parse();
+    _ = parser;
+    return r;
+}
+
+}
+}

@@ -16,6 +16,7 @@
 //===========================================================================
 
 #include "parse.h"
+#include "cpp2regex.h"
 
 cpp2: namespace = {
 
@@ -1373,6 +1374,80 @@ print: (t: meta::type_declaration) =
     std::cout << t.print() << "\n";
 }
 
+//-----------------------------------------------------------------------
+//
+//  regex - creates regular expressions from members
+//
+//  Each member that starts with `regex` is replaced by a regular expression
+//  of the initializer string. E.g.:
+//  ```
+//    regex := "ab";
+//  ```
+//  is replaced with
+//  ```
+//    regex := ::cpp2::regex::regular_expression<...>;
+//  ```
+//
+regex_gen: (inout t: meta::type_declaration) =
+{
+    has_default: = false;
+    prefix:= "regex";
+    postfix: std::string = "_mod";  // TODO: Remove mod syntax when 'm.initializer()' can be '("pat", "mod")'.
+
+    expressions: std::map<std::string, std::pair<std::string, std::string>> = ();
+
+    for t.get_member_objects() do (inout m)
+    {
+        name: std::string = m.name();
+
+        if name.starts_with(prefix) {
+
+            if !m.has_initializer() {
+                t.error("Regular expression must have an initializer.");
+            }
+            m.mark_for_removal_from_enclosing_type();
+
+            if name == prefix {
+                if has_default {
+                    t.error("Type can only contain one default named regular expression.");
+                }
+                has_default = true;
+            }
+
+            expr: std::string = m.initializer();
+            if !expr.is_escaped() {
+                t.error("Unknown string format '(expr)$'");
+            }
+            expr = expr.substr(1, expr.size() - 2);
+
+            if name.ends_with(postfix) {
+                name = name.substr(0, name.size() - postfix.size());
+
+                if expressions.contains(name) {
+                    expressions[name].second = expr;
+                }
+                else {
+                    t.error("Expression modifier defined without expression.");
+                }
+
+            }
+            else {
+                expressions[name] = std::make_pair(expr, "");
+            }
+
+
+        }
+    }
+
+    t.remove_marked_members();
+
+    for expressions do (expr) {
+        regular_expression:= ::cpp2::regex::generate_template(expr.second.first, expr.second.second, :(message: _) = t$.error(message););
+
+        t.add_member("public (expr.first)$: (regular_expression)$ = ();");
+    }
+}
+
 
 //-----------------------------------------------------------------------
 //
@@ -1461,9 +1536,12 @@ apply_metafunctions: (
         else if name == "print" {
             print( rtype );
         }
+        else if name == "regex" {
+            regex_gen( rtype );
+        }
         else {
             error( "unrecognized metafunction name: " + name );
-            error( "(temporary alpha limitation) currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum, union, cpp1_rule_of_zero, print" );
+            error( "(temporary alpha limitation) currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum, union, cpp1_rule_of_zero, regex, print" );
             return false;
         }
 

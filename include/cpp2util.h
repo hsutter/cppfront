@@ -290,6 +290,7 @@
     #define CPP2_CONSTEXPR constexpr
 #endif
 
+#include "string_util.h"
 
 namespace cpp2 {
 
@@ -2060,6 +2061,7 @@ inline constexpr auto as_() -> decltype(auto)
 
 }
 
+#include "cpp2regex.h"
 
 using cpp2::cpp2_new;
 
