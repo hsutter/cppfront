@@ -198,7 +198,7 @@
         #include <streambuf>
         #include <string>
         #include <string_view>
-        #ifdef __cpp_lib_syncstream
+        #ifdef __cpp_lib_syncbuf
             #include <syncstream>
         #endif
         #include <system_error>
