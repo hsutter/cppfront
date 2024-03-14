@@ -170,7 +170,7 @@ compiler_services: @polymorphic_base @copyable type =
         throw( std::runtime_error("  ==> programming bug found in metafunction @(metafunction_name)$ - contract violation - see previous errors") );
     }
 
-    has_handler:(this) true;
+    is_active:(this) true;
 }
 
 
@@ -317,7 +317,7 @@ declaration: @polymorphic_base @copyable type =
     parent_is_polymorphic: (this) -> bool = n*.parent_is_polymorphic();
 
     mark_for_removal_from_enclosing_type: (inout this)
-        pre<Type>( parent_is_type() )               // this precondition should be sufficient ...
+        pre<type_safety>( parent_is_type() )        // this precondition should be sufficient ...
     = {
         test := n*.type_member_mark_for_removal();
         assert( test );                             // ... to ensure this assert is true

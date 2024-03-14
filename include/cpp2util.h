@@ -409,8 +409,7 @@ public:
 
     constexpr contract_group  (handler h = {}) : reporter{h} { }
     constexpr auto set_handler(handler h = {}) { reporter = h; }
-    constexpr auto get_handler() const -> handler { return reporter; }
-    constexpr auto has_handler() const -> bool    { return reporter != handler{}; }
+    constexpr auto is_active  () const -> bool    { return reporter != handler{}; }
 
     constexpr auto enforce(bool b, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
                                           -> void { if (!b) report_violation(msg CPP2_SOURCE_LOCATION_ARG); }
@@ -435,27 +434,27 @@ private:
     std::terminate();
 }
 
-auto inline Default = contract_group(
+auto inline cpp2_default = contract_group(
     [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
         report_and_terminate("Contract",      msg CPP2_SOURCE_LOCATION_ARG);
     }
 );
-auto inline Bounds  = contract_group(
+auto inline bounds_safety = contract_group(
     [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
         report_and_terminate("Bounds safety", msg CPP2_SOURCE_LOCATION_ARG);
     }
 );
-auto inline Null    = contract_group(
+auto inline null_safety = contract_group(
     [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
         report_and_terminate("Null safety",   msg CPP2_SOURCE_LOCATION_ARG);
     }
 );
-auto inline Type    = contract_group(
+auto inline type_safety = contract_group(
     [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
         report_and_terminate("Type safety",   msg CPP2_SOURCE_LOCATION_ARG);
     }
 );
-auto inline Testing = contract_group(
+auto inline testing = contract_group(
     [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
         report_and_terminate("Testing",       msg CPP2_SOURCE_LOCATION_ARG);
     }
@@ -496,28 +495,28 @@ auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decl
     //        STL iterator has the default-constructed value. So use it only for raw *...
     if constexpr (std::is_pointer_v<CPP2_TYPEOF(arg)>) {
         if (arg == CPP2_TYPEOF(arg){}) {
-            Null.report_violation("dynamic null dereference attempt detected" CPP2_SOURCE_LOCATION_ARG);
+            null_safety.report_violation("dynamic null dereference attempt detected" CPP2_SOURCE_LOCATION_ARG);
         };
     }
     else if constexpr (UniquePtr<CPP2_TYPEOF(arg)>) {
         if (!arg) {
-            Null.report_violation("std::unique_ptr is empty" CPP2_SOURCE_LOCATION_ARG);
+            null_safety.report_violation("std::unique_ptr is empty" CPP2_SOURCE_LOCATION_ARG);
         }
     }
     else if constexpr (SharedPtr<CPP2_TYPEOF(arg)>) {
         if (!arg) {
-            Null.report_violation("std::shared_ptr is empty" CPP2_SOURCE_LOCATION_ARG);
+            null_safety.report_violation("std::shared_ptr is empty" CPP2_SOURCE_LOCATION_ARG);
         }
     }
     else if constexpr (Optional<CPP2_TYPEOF(arg)>) {
         if (!arg.has_value()) {
-            Null.report_violation("std::optional does not contain a value" CPP2_SOURCE_LOCATION_ARG);
+            null_safety.report_violation("std::optional does not contain a value" CPP2_SOURCE_LOCATION_ARG);
         }
     }
 #ifdef __cpp_lib_expected
     else if constexpr (Expected<CPP2_TYPEOF(arg)>) {
         if (!arg.has_value()) {
-            Null.report_violation("std::expected has an unexpected value" CPP2_SOURCE_LOCATION_ARG);
+            null_safety.report_violation("std::expected has an unexpected value" CPP2_SOURCE_LOCATION_ARG);
         }
     }
 #endif
@@ -543,7 +542,7 @@ auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decl
         msg += "but container is empty"; \
     } \
     if (!(0 <= arg && arg < max())) { \
-        Bounds.report_violation(msg.c_str()  CPP2_SOURCE_LOCATION_ARG); \
+        bounds_safety.report_violation(msg.c_str()  CPP2_SOURCE_LOCATION_ARG); \
     } \
     return CPP2_FORWARD(x) [ arg ]; \
 }
@@ -591,7 +590,7 @@ auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAU
     if (msg) {
         err += " and the message \"" + msg + "\"";
     }
-    Type.report_violation( err );
+    type_safety.report_violation( err );
     std::terminate();
 #else
     throw CPP2_FORWARD(x);
@@ -609,7 +608,7 @@ inline auto Uncaught_exceptions() -> int {
 template<typename T>
 auto Dynamic_cast( [[maybe_unused]] auto&& x ) -> decltype(auto) {
 #ifdef CPP2_NO_RTTI
-    Type.report_violation( "'as' dynamic casting is disabled with -fno-rtti" );
+    type_safety.report_violation( "'as' dynamic casting is disabled with -fno-rtti" );
     return nullptr;
 #else
     return dynamic_cast<T>(CPP2_FORWARD(x));
@@ -619,7 +618,7 @@ auto Dynamic_cast( [[maybe_unused]] auto&& x ) -> decltype(auto) {
 template<typename T>
 auto Typeid() -> decltype(auto) {
 #ifdef CPP2_NO_RTTI
-    Type.report_violation( "'any' dynamic casting is disabled with -fno-rtti" );
+    type_safety.report_violation( "'any' dynamic casting is disabled with -fno-rtti" );
 #else
     return typeid(T);
 #endif
@@ -627,7 +626,7 @@ auto Typeid() -> decltype(auto) {
 
 auto Typeid( [[maybe_unused]] auto&& x ) -> decltype(auto) {
 #ifdef CPP2_NO_RTTI
-    Type.report_violation( "'typeid' is disabled with -fno-rtti" );
+    type_safety.report_violation( "'typeid' is disabled with -fno-rtti" );
 #else
     return typeid(CPP2_FORWARD(x));
 #endif
@@ -743,9 +742,9 @@ class deferred_init {
 public:
     deferred_init() noexcept       { }
    ~deferred_init() noexcept       { destroy(); }
-    auto value()    noexcept -> T& { Default.enforce(init);  return t(); }
+    auto value()    noexcept -> T& { cpp2_default.enforce(init);  return t(); }
 
-    auto construct(auto&& ...args) -> void { Default.enforce(!init);  new (&data) T{CPP2_FORWARD(args)...};  init = true; }
+    auto construct(auto&& ...args) -> void { cpp2_default.enforce(!init);  new (&data) T{CPP2_FORWARD(args)...};  init = true; }
 };
 
 
@@ -765,9 +764,9 @@ class out {
     bool called_construct_ = false;
 
 public:
-    out(T*                 t_) noexcept :  t{ t_}, has_t{true}       { Default.enforce( t); }
-    out(deferred_init<T>* dt_) noexcept : dt{dt_}, has_t{false}      { Default.enforce(dt); }
-    out(out<T>*           ot_) noexcept : ot{ot_}, has_t{ot_->has_t} { Default.enforce(ot);
+    out(T*                 t_) noexcept :  t{ t_}, has_t{true}       { cpp2_default.enforce( t); }
+    out(deferred_init<T>* dt_) noexcept : dt{dt_}, has_t{false}      { cpp2_default.enforce(dt); }
+    out(out<T>*           ot_) noexcept : ot{ot_}, has_t{ot_->has_t} { cpp2_default.enforce(ot);
         if (has_t) {  t = ot->t;  }
         else       { dt = ot->dt; }
     }
@@ -781,7 +780,7 @@ public:
     //  then leave it in the same state on exit (strong guarantee)
     ~out() {
         if (called_construct() && uncaught_count != Uncaught_exceptions()) {
-            Default.enforce(!has_t);
+            cpp2_default.enforce(!has_t);
             dt->destroy();
             called_construct() = false;
         }
@@ -790,21 +789,21 @@ public:
     auto construct(auto&& ...args) -> void {
         if (has_t || called_construct()) {
             if constexpr (requires { *t = T(CPP2_FORWARD(args)...); }) {
-                Default.enforce( t );
+                cpp2_default.enforce( t );
                 *t = T(CPP2_FORWARD(args)...);
             }
             else {
-                Default.report_violation("attempted to copy assign, but copy assignment is not available");
+                cpp2_default.report_violation("attempted to copy assign, but copy assignment is not available");
             }
         }
         else {
-            Default.enforce( dt );
+            cpp2_default.enforce( dt );
             if (dt->init) {
                 if constexpr (requires { *t = T(CPP2_FORWARD(args)...); }) {
                     dt->value() = T(CPP2_FORWARD(args)...);
                 }
                 else {
-                    Default.report_violation("attempted to copy assign, but copy assignment is not available");
+                    cpp2_default.report_violation("attempted to copy assign, but copy assignment is not available");
                 }
             }
             else {
@@ -816,11 +815,11 @@ public:
 
     auto value() noexcept -> T& {
         if (has_t) {
-            Default.enforce( t );
+            cpp2_default.enforce( t );
             return *t;
         }
         else {
-            Default.enforce( dt );
+            cpp2_default.enforce( dt );
             return dt->value();
         }
     }
@@ -1251,7 +1250,7 @@ auto as(X const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto) {
     }
     //  Signed/unsigned conversions to a not-smaller type are handled as a precondition,
     //  and trying to cast from a value that is in the half of the value space that isn't
-    //  representable in the target type C is flagged as a Type safety contract violation
+    //  representable in the target type C is flagged as a type_safety contract violation
     else if constexpr (
         std::is_integral_v<C> &&
         std::is_integral_v<CPP2_TYPEOF(x)> &&
@@ -1260,7 +1259,7 @@ auto as(X const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto) {
     )
     {
         const C c = static_cast<C>(x);
-        Type.enforce(   // precondition check: must be round-trippable => not lossy
+        type_safety.enforce(   // precondition check: must be round-trippable => not lossy
             static_cast<CPP2_TYPEOF(x)>(c) == x && (c < C{}) == (x < CPP2_TYPEOF(x){}),
             "dynamic lossy narrowing conversion attempt detected" CPP2_SOURCE_LOCATION_ARG
         );
