@@ -2,7 +2,7 @@ pure2-print.cpp2...
 
 outer:/* @print */ type = 
 {
-    object_alias: <T: type> T requires (true) == 42;
+    object_alias: <T: type> T requires (true) == sizeof(type T::value_type);
     mytype: final type = 
     {
         protected f:() -> move int = 42;

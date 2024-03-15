@@ -89,7 +89,7 @@ bool testing_enabled {false};
 
 #line 8 "pure2-print.cpp2"
     template<typename T> 
-requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
+requires (true) inline CPP2_CONSTEXPR T outer::object_alias = sizeof(typename T::value_type);
 #line 9 "pure2-print.cpp2"
 
 #line 12 "pure2-print.cpp2"

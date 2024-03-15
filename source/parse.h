@@ -656,13 +656,15 @@ auto to_string_view(passing_style pass) -> std::string_view {
 }
 
 
+struct type_id_node;
+
 struct expression_list_node
 {
     token const* open_paren  = {};
     token const* close_paren = {};
     bool inside_initializer  = false;
 
-    struct term {
+    struct expression_term {
         passing_style                    pass = {};
         std::unique_ptr<expression_node> expr;
 
@@ -674,7 +676,29 @@ struct expression_list_node
             v.end(*this, depth);
         }
     };
-    std::vector< term > expressions;
+    struct type_id_term {
+        bool                          has_disambiguating_type = {};
+        std::unique_ptr<type_id_node> type;
+
+        auto visit(auto& v, int depth) -> void;
+    };
+    struct term {
+        enum active { expression=0, type };
+        std::variant<
+            std::unique_ptr<expression_term>,
+            std::unique_ptr<type_id_term>
+        > argument;
+
+        auto visit(auto& v, int depth)
+            -> void
+        {
+            v.start(*this, depth);
+            try_visit<expression>(argument, v, depth);
+            try_visit<type      >(argument, v, depth);
+            v.end(*this, depth);
+        }
+    };
+    std::vector< term > arguments;
 
 
     //  API
@@ -685,8 +709,10 @@ struct expression_list_node
         //  This is a fold-expression if any subexpression
         //  has an identifier named "..."
         auto ret = false;
-        for (auto& x : expressions) {
-            ret |= x.expr->is_fold_expression();
+        for (auto& x : arguments) {
+            if (auto expr = std::get_if<term::expression>(&x.argument)) {
+                ret |= (*expr)->expr->is_fold_expression();
+            }
         }
         return ret;
     }
@@ -706,7 +732,7 @@ struct expression_list_node
         -> void
     {
         v.start(*this, depth);
-        for (auto& x : expressions) {
+        for (auto& x : arguments) {
             x.visit(v, depth+1);
         }
         v.end(*this, depth);
@@ -1077,7 +1103,6 @@ auto prefix_expression_node::visit(auto& v, int depth)
 }
 
 
-struct type_id_node;
 struct template_args_tag { };
 
 struct template_argument
@@ -1397,6 +1422,14 @@ auto template_argument::to_string() const
     }
     // else
     return {};
+}
+
+auto expression_list_node::type_id_term::visit(auto& v, int depth) -> void
+{
+    v.start(*this, depth);
+    assert(type);
+    type->visit(v, depth+1);
+    v.end(*this, depth);
 }
 
 
@@ -4537,18 +4570,30 @@ auto pretty_print_visualize(expression_list_node const& n, int indent)
 
     auto ret = n.open_paren->to_string();
 
-    for (auto i = 0; auto& expr : n.expressions) {
-        assert(expr.expr);
-        if (
-            expr.pass == passing_style::out
-            || expr.pass == passing_style::move
-            || expr.pass == passing_style::forward
-            )
+    for (auto i = 0; auto& arg : n.arguments) {
+        if (auto expr = std::get_if<expression_list_node::term::expression>(&arg.argument))
         {
-            ret += to_string_view(expr.pass) + std::string{" "};
+            assert((*expr)->expr);
+            if (
+                (*expr)->pass == passing_style::out
+                || (*expr)->pass == passing_style::move
+                || (*expr)->pass == passing_style::forward
+                )
+            {
+                ret += to_string_view((*expr)->pass) + std::string{" "};
+            }
+            ret += pretty_print_visualize(*(*expr)->expr, indent);
         }
-        ret += pretty_print_visualize(*expr.expr, indent);
-        if (++i < std::ssize(n.expressions)) {
+        else if (auto type = std::get_if<expression_list_node::term::type>(&arg.argument))
+        {
+            assert((*type)->type);
+            if ((*type)->has_disambiguating_type)
+            {
+                ret += "type ";
+            }
+            ret += pretty_print_visualize(*(*type)->type, indent);
+        }
+        if (++i < std::ssize(n.arguments)) {
             ret += ", ";
         }
     }
@@ -5914,9 +5959,6 @@ private:
     //G     postfix-expression
     //G     prefix-operator prefix-expression
     //GTODO     await-expression
-    //GTODO     'sizeof' '(' type-id ')'
-    //GTODO     'sizeof' '...' ( identifier ')'
-    //GTODO     'alignof' '(' type-id ')'
     //GTODO     throws-expression
     //G
     auto prefix_expression()
@@ -6321,7 +6363,10 @@ private:
     }
 
     //G expression-list:
+    //G     'type' type-id
+    //G     'const' type-id
     //G     parameter-direction? expression
+    //G     type-id
     //G     expression-list ',' parameter-direction? expression
     //G
     auto expression_list(
@@ -6330,10 +6375,38 @@ private:
     )
         -> std::unique_ptr<expression_list_node>
     {
-        auto pass = passing_style::in;
+        auto pass = std::optional<passing_style>();
         auto n = std::make_unique<expression_list_node>();
         n->open_paren = open_paren;
         n->inside_initializer = inside_initializer;
+
+        auto add_expr = [&](std::unique_ptr<expression_node>&& x) {
+            n->arguments.push_back(
+                {std::make_unique<expression_list_node::expression_term>(
+                    expression_list_node::expression_term{
+                        pass.value_or(passing_style::in),
+                        std::move(x)
+                    }
+                )}
+            );
+            pass.reset();
+        };
+        auto parses_type_id = [&]() -> bool {
+            if (pass.has_value()) {
+                return false;
+            }
+            auto res = std::make_unique<expression_list_node::type_id_term>();
+            next((res->has_disambiguating_type = curr() == "type"));
+            if ((res->type = type_id()))
+            {
+                n->arguments.push_back( {std::move(res)} );
+                return true;
+            }
+            if (curr().type() == lexeme::Multiply) {
+                error("prefix '*ptr' dereference is not valid Cpp2; use postfix 'ptr*' instead", false);
+            }
+            return false;
+        };
 
         if (auto dir = to_passing_style(curr());
             (
@@ -6348,15 +6421,29 @@ private:
             pass = dir;
             next();
         }
-        auto x = expression();
-
-        //  If this is an empty expression_list, we're done
-        if (!x) {
-            return n;
+        decltype(expression()) x = {};
+        //  If it doesn't start with * or const (which can only be a type id),
+        //  try parsing it as an expression
+        if (
+            curr().type() != lexeme::Multiply // '*'
+            && curr() != "const"              // 'const'
+            && curr() != "type"               // 'type'
+            )
+        {
+            x = expression();
         }
 
+        //  If this is an empty expression_list, we're done
+        if (!x)
+        {
+            if (!parses_type_id()) {
+                return n;
+            }
+        }
         //  Otherwise remember the first expression
-        n->expressions.push_back( { pass, std::move(x) } );
+        else {
+            add_expr( std::move(x) );
+        }
         //  and see if there are more...
         while (curr().type() == lexeme::Comma) {
             next();
@@ -6370,12 +6457,29 @@ private:
                 pass = dir;
                 next();
             }
-            auto expr = expression();
-            if (!expr) {
+            decltype(expression()) expr = {};
+            //  If it doesn't start with * or const (which can only be a type id),
+            //  try parsing it as an expression
+            if (
+                curr().type() != lexeme::Multiply // '*'
+                && curr() != "const"              // 'const'
+                && curr() != "type"               // 'type'
+                )
+            {
+                expr = expression();
+            }
+            if (
+                !expr
+                && !parses_type_id()
+                )
+            {
                 error("invalid text in expression list", true, {}, true);
                 return {};
             }
-            n->expressions.push_back( { pass, std::move(expr) } );
+            else
+            {
+                add_expr( std::move(expr) );
+            }
         }
         return n;
     }
@@ -9141,12 +9245,21 @@ public:
             << static_cast<void const*>(n.my_statement) << "]\n";
     }
 
-    auto start(expression_list_node::term const&n, int indent) -> void
+    auto start(expression_list_node::term const&, int indent) -> void
     {
         o << pre(indent) << "expression-list term\n";
+    }
+
+    auto start(expression_list_node::expression_term const&n, int indent) -> void
+    {
         if (n.pass == passing_style::out) {
-            o << pre(indent+1) << "out\n";
+            o << pre(indent) << "out\n";
         }
+    }
+
+    auto start(expression_list_node::type_id_term const&, int indent) -> void
+    {
+        o << pre(indent) << "type\n";
     }
 
     auto start(expression_list_node const&, int indent) -> void
