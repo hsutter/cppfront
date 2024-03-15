@@ -4720,7 +4720,7 @@ public:
                 name = group;
             }
             if (
-                name == "default"
+                name == "cpp2_default"
                 || name == "bounds_safety"
                 || name == "null_safety"
                 || name == "type_safety"
