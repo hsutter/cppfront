@@ -461,7 +461,7 @@ auto issue_313() -> void{
     *cpp2::assert_not_null(identity(a)) = *cpp2::assert_not_null(identity(a));
 
     auto b {cpp2_new<int>(0)}; 
-    int auto_1 {*cpp2::assert_not_null(identity(b)) = *cpp2::assert_not_null(identity(b))}; 
+    [[maybe_unused]] int auto_1 {*cpp2::assert_not_null(identity(b)) = *cpp2::assert_not_null(identity(b))}; 
 
     auto c {cpp2_new<int>(0)}; 
     if (*cpp2::assert_not_null(identity(c)) * *cpp2::assert_not_null(identity(c))) {}

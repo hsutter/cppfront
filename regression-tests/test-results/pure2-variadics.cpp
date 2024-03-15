@@ -121,7 +121,7 @@ template  <typename T, typename ...Args> [[nodiscard]] auto make(Args&& ...args)
 #line 43 "pure2-variadics.cpp2"
 auto main() -> int
 {
-    x<int,long,std::string> auto_1 {}; 
+    [[maybe_unused]] x<int,long,std::string> auto_1 {}; 
 
     std::cout << std::string("xyzzy", 3) << "\n";
     std::cout << make_string("plugh", cpp2::u8{3}) << "\n";

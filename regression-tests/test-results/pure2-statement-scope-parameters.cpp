@@ -46,14 +46,14 @@ auto& i{local_int};
 #line 14 "pure2-statement-scope-parameters.cpp2"
     std::cout << std::move(local_int) << "\n";// prints 43
 
-    std::chrono::duration<cpp2::i32> auto_1 {0}; 
+    [[maybe_unused]] std::chrono::duration<cpp2::i32> auto_1 {0}; 
 {
 [[maybe_unused]] std::chrono::duration<cpp2::i32> unnamed_param_1{0};
 #line 17 "pure2-statement-scope-parameters.cpp2"
     {}
 }
 #line 18 "pure2-statement-scope-parameters.cpp2"
-    std::in_place_t auto_2 {}; 
+    [[maybe_unused]] std::in_place_t auto_2 {}; 
 {
 [[maybe_unused]] std::in_place_t unnamed_param_1{};
 #line 19 "pure2-statement-scope-parameters.cpp2"
