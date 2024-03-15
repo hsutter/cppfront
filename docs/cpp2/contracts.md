@@ -31,7 +31,7 @@ For example:
 
 ``` cpp title="Precondition and postcondition examples" hl_lines="2 3"
 insert_at: (container, where: int, val: int)
-    pre<bounds>( 0 <= where <= vec.ssize(), "position (where)$ is outside 'val'" )
+    pre<Bounds>( 0 <= where <= container.ssize(), "position (where)$ is outside 'container'" )
     post       ( container.ssize() == container.ssize()$ + 1 )
 = {
     _ = container.insert( container.begin()+where, val );
@@ -42,7 +42,7 @@ In this example:
 
 - The `$` captures are performed before entering the function.
 
-- The precondition is part of the `Bounds` safety contract group and is checked before entering the function. If the check fails, say because `where` is `#!cpp -1`, then `#!cpp cpp2::Bounds.report_violation("position -1 is outside 'val'")` is called.
+- The precondition is part of the `Bounds` safety contract group and is checked before entering the function. If the check fails, say because `where` is `#!cpp -1`, then `#!cpp cpp2::Bounds.report_violation("position -1 is outside 'container'")` is called.
 
 - The postcondition is part of the `Default` safety contract group.  If the check fails, then `#!cpp cpp2::Default.report_violation()` is called.
 
@@ -57,7 +57,7 @@ Contract groups are useful to enable or disable or [set custom handlers](#violat
 
 You can create new contract groups just by creating new objects that have a `.report_violation` function. The object's name is the contract group's name. The object can be at any scope: local, global, or heap.
 
-For example, here are some ways to use contract groups, for convenience using [`cpp2::contract_group`](#violation_handlers) which is a convenient group type:
+For example, here are some ways to use contract groups of type [`cpp2::contract_group`](#violation_handlers), which is a convenient group type:
 
 ``` cpp title="Using contract groups" hl_lines="1 4 6 10-12"
 group_a: cpp2::contract_group = ();          // a global group
@@ -75,7 +75,7 @@ func: () = {
 }
 ```
 
-You can make all the objects in a class hierarchy into a contract group by having a `.report_violation` function in a base class, and then writing contracts in that hierarchy using `<this>` as desired. This technique used in cppfront's own reflection API:
+You can make all the objects in a class hierarchy into a contract group by having a `.report_violation` function in a base class, and then writing contracts in that hierarchy using `<this>` as desired. This technique is used in cppfront's own reflection API:
 
 ``` cpp title="Example of using 'this' as a contract group, from cppfront 'reflect.h2'" hl_lines="8 9"
 function_declaration: @copyable type =
