@@ -228,21 +228,21 @@ class issue_857_4 {
   public: auto h1() && -> void;
   public: auto h2(issue_857_4 const& that) && -> void;
   public: auto h3(issue_857_4 const& that) && -> void;
-  public: auto h4(cpp2::in<int> x) && -> void;
-  public: auto h5(cpp2::in<int> x) && -> void;
-  public: auto h6(cpp2::in<int> x) && -> void;
-  public: auto h7(cpp2::in<int> x) && -> void;
-  public: auto h8(cpp2::in<int> x) && -> void;
-  public: auto i0(cpp2::in<int> x) && -> void;
+  public: auto h4(cpp2::impl::in<int> x) && -> void;
+  public: auto h5(cpp2::impl::in<int> x) && -> void;
+  public: auto h6(cpp2::impl::in<int> x) && -> void;
+  public: auto h7(cpp2::impl::in<int> x) && -> void;
+  public: auto h8(cpp2::impl::in<int> x) && -> void;
+  public: auto i0(cpp2::impl::in<int> x) && -> void;
 
 #line 295 "pure2-last-use.cpp2"
-  public: auto i1(cpp2::in<int> x) && -> void;
+  public: auto i1(cpp2::impl::in<int> x) && -> void;
 
 #line 299 "pure2-last-use.cpp2"
-  public: auto i2(cpp2::in<int> x) && -> void;
+  public: auto i2(cpp2::impl::in<int> x) && -> void;
 
 #line 303 "pure2-last-use.cpp2"
-  public: auto i3(cpp2::in<int> x) && -> void;
+  public: auto i3(cpp2::impl::in<int> x) && -> void;
 
 #line 307 "pure2-last-use.cpp2"
   public: auto z(issue_857_4 const& that) && -> void;
@@ -304,7 +304,7 @@ class issue_869_1 {
 private: cpp2::aligned_storage<cpp2::max(sizeof(issue_869_0)),cpp2::max(alignof(issue_869_0))> _storage {}; private: cpp2::i8 _discriminator {-1}; public: [[nodiscard]] auto is_i() const& -> bool;
 public: [[nodiscard]] auto i() const& -> issue_869_0 const&;
 public: [[nodiscard]] auto i() & -> issue_869_0&;
-public: auto set_i(cpp2::in<issue_869_0> _value) & -> void;
+public: auto set_i(cpp2::impl::in<issue_869_0> _value) & -> void;
 public: auto set_i(auto&& ..._args) & -> void;
 private: auto _destroy() & -> void;
 public: ~issue_869_1() noexcept;
@@ -334,7 +334,7 @@ auto issue_888_1([[maybe_unused]] std::string unnamed_param_1, move_only_functio
 auto issue_890() -> void;
 
 #line 789 "pure2-last-use.cpp2"
-auto issue_962(cpp2::in<::std::string> s) -> void;
+auto issue_962(cpp2::impl::in<::std::string> s) -> void;
 
 #line 794 "pure2-last-use.cpp2"
 auto draw() -> void;
@@ -440,70 +440,70 @@ requires (std::is_reference_v<T>) {return CPP2_FORWARD(x); }
 auto issue_313() -> void{
   static_cast<void>([]() mutable -> std::vector<int>{
     auto a {cpp2_new<int>(0)}; 
-    return { *cpp2::assert_not_null(a), *cpp2::assert_not_null(identity_copy(std::move(a))) }; 
+    return { *cpp2::impl::assert_not_null(a), *cpp2::impl::assert_not_null(identity_copy(std::move(a))) }; 
   });
   static_cast<void>([]() mutable -> std::vector<int>{
     auto a {cpp2_new<int>(0)}; 
-    return { *cpp2::assert_not_null(*cpp2::assert_not_null(&a)), *cpp2::assert_not_null(identity_copy(std::move(a))) }; 
+    return { *cpp2::impl::assert_not_null(*cpp2::impl::assert_not_null(&a)), *cpp2::impl::assert_not_null(identity_copy(std::move(a))) }; 
   });
   static_cast<void>([]() mutable -> int{
     auto a {cpp2_new<int>(0)}; 
-    return *cpp2::assert_not_null(identity(a)) + *cpp2::assert_not_null(identity(a)); 
+    return *cpp2::impl::assert_not_null(identity(a)) + *cpp2::impl::assert_not_null(identity(a)); 
 
     auto b {cpp2_new<int>(0)}; 
-    return *cpp2::assert_not_null(identity(b)) = *cpp2::assert_not_null(identity(b)); 
+    return *cpp2::impl::assert_not_null(identity(b)) = *cpp2::impl::assert_not_null(identity(b)); 
 
     auto c {cpp2_new<int>(0)}; 
-    return *cpp2::assert_not_null(identity(c)) ^ *cpp2::assert_not_null(identity(c)); 
+    return *cpp2::impl::assert_not_null(identity(c)) ^ *cpp2::impl::assert_not_null(identity(c)); 
   });
   {
     auto a {cpp2_new<int>(0)}; 
-    *cpp2::assert_not_null(identity(a)) = *cpp2::assert_not_null(identity(a));
+    *cpp2::impl::assert_not_null(identity(a)) = *cpp2::impl::assert_not_null(identity(a));
 
     auto b {cpp2_new<int>(0)}; 
-    int auto_1 {*cpp2::assert_not_null(identity(b)) = *cpp2::assert_not_null(identity(b))}; 
+    int auto_1 {*cpp2::impl::assert_not_null(identity(b)) = *cpp2::impl::assert_not_null(identity(b))}; 
 
     auto c {cpp2_new<int>(0)}; 
-    if (*cpp2::assert_not_null(identity(c)) * *cpp2::assert_not_null(identity(c))) {}
+    if (*cpp2::impl::assert_not_null(identity(c)) * *cpp2::impl::assert_not_null(identity(c))) {}
 
     auto d {cpp2_new<int>(0)}; 
-    if ((*cpp2::assert_not_null(identity(d)) - *cpp2::assert_not_null(identity(d)))) {}
+    if ((*cpp2::impl::assert_not_null(identity(d)) - *cpp2::impl::assert_not_null(identity(d)))) {}
 
     auto e {cpp2_new<int>(0)}; 
-    static_cast<void>(cpp2::is(e, (e)));
+    static_cast<void>(cpp2::impl::is(e, (e)));
 
     auto f {cpp2_new<int>(0)}; 
-    static_cast<void>(cpp2::is<std::type_identity_t<decltype(f)>>(f));// OK?
+    static_cast<void>(cpp2::impl::is<std::type_identity_t<decltype(f)>>(f));// OK?
 
     auto g {cpp2_new<int>(0)}; 
     for ( 
-    [[maybe_unused]] auto const& unnamed_param_1 : { *cpp2::assert_not_null(identity(g)) + *cpp2::assert_not_null(identity(g)) } ) 
+    [[maybe_unused]] auto const& unnamed_param_1 : { *cpp2::impl::assert_not_null(identity(g)) + *cpp2::impl::assert_not_null(identity(g)) } ) 
     {}
 
     auto h {cpp2_new<int>(0)}; 
-    while( *cpp2::assert_not_null(identity(h)) + *cpp2::assert_not_null(identity(h)) ) 
+    while( *cpp2::impl::assert_not_null(identity(h)) + *cpp2::impl::assert_not_null(identity(h)) ) 
     {}
 
     auto i {cpp2_new<int>(0)}; 
     do {} while ( 
-    *cpp2::assert_not_null(identity(i)) + *cpp2::assert_not_null(identity(i)));
+    *cpp2::impl::assert_not_null(identity(i)) + *cpp2::impl::assert_not_null(identity(i)));
 
     auto j {cpp2_new<int>(0)}; 
     auto k {cpp2_new<int>(0)}; 
-    static_cast<void>([&] () -> int { auto&& _expr = *cpp2::assert_not_null(identity(j)) + *cpp2::assert_not_null(identity(j));
-        if (cpp2::is(_expr, (*cpp2::assert_not_null(identity(k)) + *cpp2::assert_not_null(identity(k))))) { if constexpr( requires{0;} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((0)),int> ) return 0; else return int{}; else return int{}; }
+    static_cast<void>([&] () -> int { auto&& _expr = *cpp2::impl::assert_not_null(identity(j)) + *cpp2::impl::assert_not_null(identity(j));
+        if (cpp2::impl::is(_expr, (*cpp2::impl::assert_not_null(identity(k)) + *cpp2::impl::assert_not_null(identity(k))))) { if constexpr( requires{0;} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((0)),int> ) return 0; else return int{}; else return int{}; }
         else return 0; }
     ());
 
   }
   {
     auto a {cpp2_new<int>(0)}; 
-    static_cast<void>([_0 = std::move(a)]() mutable -> auto { return *cpp2::assert_not_null(identity(_0)) + *cpp2::assert_not_null(identity(_0));  });
+    static_cast<void>([_0 = std::move(a)]() mutable -> auto { return *cpp2::impl::assert_not_null(identity(_0)) + *cpp2::impl::assert_not_null(identity(_0));  });
   }
 }
 #line 72 "pure2-last-use.cpp2"
 auto issue_313_1(std::unique_ptr<int> x) -> void{
-                                                                                 if (cpp2::cpp2_default.is_active() && !(*cpp2::assert_not_null(identity(x)) + *cpp2::assert_not_null(identity(x))) ) { cpp2::cpp2_default.report_violation(""); }}
+                                                                                 if (cpp2::cpp2_default.is_active() && !(*cpp2::impl::assert_not_null(identity(x)) + *cpp2::impl::assert_not_null(identity(x))) ) { cpp2::cpp2_default.report_violation(""); }}
 
 #line 74 "pure2-last-use.cpp2"
 auto issue_350() -> void{
@@ -524,7 +524,7 @@ auto issue_683(auto const& args) -> void{
         static_cast<void>(n);
     }
 
-    cpp2::deferred_init<int> n; 
+    cpp2::impl::deferred_init<int> n; 
     n.construct(0);
 }
 
@@ -737,32 +737,32 @@ int gi {0};
 #line 285 "pure2-last-use.cpp2"
   auto issue_857_4::h3(issue_857_4 const& that) && -> void { static_cast<void>(that.f);  }
 #line 286 "pure2-last-use.cpp2"
-  auto issue_857_4::h4(cpp2::in<int> x) && -> void { static_cast<void>(CPP2_UFCS_MOVE(mg)(x));  }
+  auto issue_857_4::h4(cpp2::impl::in<int> x) && -> void { static_cast<void>(CPP2_UFCS_MOVE(mg)(x));  }
 #line 287 "pure2-last-use.cpp2"
-  auto issue_857_4::h5(cpp2::in<int> x) && -> void { static_cast<void>(f() + CPP2_UFCS_MOVE(g)(x));  }// FIXME #313.
+  auto issue_857_4::h5(cpp2::impl::in<int> x) && -> void { static_cast<void>(f() + CPP2_UFCS_MOVE(g)(x));  }// FIXME #313.
 #line 288 "pure2-last-use.cpp2"
-  auto issue_857_4::h6(cpp2::in<int> x) && -> void { static_cast<void>(CPP2_UFCS(g)(x) + std::move(*this).f());  }// FIXME #313.
+  auto issue_857_4::h6(cpp2::impl::in<int> x) && -> void { static_cast<void>(CPP2_UFCS(g)(x) + std::move(*this).f());  }// FIXME #313.
 #line 289 "pure2-last-use.cpp2"
-  auto issue_857_4::h7(cpp2::in<int> x) && -> void { static_cast<void>(CPP2_UFCS(f)((*this)) + CPP2_UFCS_MOVE(g)(x));  }// FIXME #313.
+  auto issue_857_4::h7(cpp2::impl::in<int> x) && -> void { static_cast<void>(CPP2_UFCS(f)((*this)) + CPP2_UFCS_MOVE(g)(x));  }// FIXME #313.
 #line 290 "pure2-last-use.cpp2"
-  auto issue_857_4::h8(cpp2::in<int> x) && -> void { static_cast<void>(CPP2_UFCS(g)(x) + CPP2_UFCS(f)(std::move((*this))));  }// FIXME #313.
+  auto issue_857_4::h8(cpp2::impl::in<int> x) && -> void { static_cast<void>(CPP2_UFCS(g)(x) + CPP2_UFCS(f)(std::move((*this))));  }// FIXME #313.
 #line 291 "pure2-last-use.cpp2"
-  auto issue_857_4::i0(cpp2::in<int> x) && -> void{
+  auto issue_857_4::i0(cpp2::impl::in<int> x) && -> void{
     static_cast<void>(f());
     static_cast<void>(CPP2_UFCS_MOVE(mg)(x));
   }
 #line 295 "pure2-last-use.cpp2"
-  auto issue_857_4::i1(cpp2::in<int> x) && -> void{
+  auto issue_857_4::i1(cpp2::impl::in<int> x) && -> void{
     static_cast<void>(CPP2_UFCS(g)(x));
     static_cast<void>(std::move(*this).mf());
   }
 #line 299 "pure2-last-use.cpp2"
-  auto issue_857_4::i2(cpp2::in<int> x) && -> void{
+  auto issue_857_4::i2(cpp2::impl::in<int> x) && -> void{
     static_cast<void>(CPP2_UFCS(f)((*this)));
     static_cast<void>(CPP2_UFCS_MOVE(mg)(x));
   }
 #line 303 "pure2-last-use.cpp2"
-  auto issue_857_4::i3(cpp2::in<int> x) && -> void{
+  auto issue_857_4::i3(cpp2::impl::in<int> x) && -> void{
     static_cast<void>(CPP2_UFCS(g)(x));
     static_cast<void>(CPP2_UFCS(mf)(std::move((*this))));
   }
@@ -834,11 +834,11 @@ auto issue_869_0::operator=([[maybe_unused]] issue_869_0&& that) noexcept -> iss
 issue_869_0::issue_869_0(){}
 [[nodiscard]] auto issue_869_1::is_i() const& -> bool { return _discriminator == 0; }
 [[nodiscard]] auto issue_869_1::i() const& -> issue_869_0 const& { 
-                                                   if (cpp2::cpp2_default.is_active() && !(is_i()) ) { cpp2::cpp2_default.report_violation(""); }return *cpp2::assert_not_null(reinterpret_cast<issue_869_0 const*>(&_storage)); }
+                                                   if (cpp2::cpp2_default.is_active() && !(is_i()) ) { cpp2::cpp2_default.report_violation(""); }return *cpp2::impl::assert_not_null(reinterpret_cast<issue_869_0 const*>(&_storage)); }
 [[nodiscard]] auto issue_869_1::i() & -> issue_869_0& { 
-                                                         if (cpp2::cpp2_default.is_active() && !(is_i()) ) { cpp2::cpp2_default.report_violation(""); }return *cpp2::assert_not_null(reinterpret_cast<issue_869_0*>(&_storage)); }
-auto issue_869_1::set_i(cpp2::in<issue_869_0> _value) & -> void{if (!(is_i())) {_destroy();std::construct_at(reinterpret_cast<issue_869_0*>(&_storage), _value);}else {*cpp2::assert_not_null(reinterpret_cast<issue_869_0*>(&_storage)) = _value;}_discriminator = 0;}
-auto issue_869_1::set_i(auto&& ..._args) & -> void{if (!(is_i())) {_destroy();std::construct_at(reinterpret_cast<issue_869_0*>(&_storage), CPP2_FORWARD(_args)...);}else {*cpp2::assert_not_null(reinterpret_cast<issue_869_0*>(&_storage)) = issue_869_0{CPP2_FORWARD(_args)...};}_discriminator = 0;}
+                                                         if (cpp2::cpp2_default.is_active() && !(is_i()) ) { cpp2::cpp2_default.report_violation(""); }return *cpp2::impl::assert_not_null(reinterpret_cast<issue_869_0*>(&_storage)); }
+auto issue_869_1::set_i(cpp2::impl::in<issue_869_0> _value) & -> void{if (!(is_i())) {_destroy();std::construct_at(reinterpret_cast<issue_869_0*>(&_storage), _value);}else {*cpp2::impl::assert_not_null(reinterpret_cast<issue_869_0*>(&_storage)) = _value;}_discriminator = 0;}
+auto issue_869_1::set_i(auto&& ..._args) & -> void{if (!(is_i())) {_destroy();std::construct_at(reinterpret_cast<issue_869_0*>(&_storage), CPP2_FORWARD(_args)...);}else {*cpp2::impl::assert_not_null(reinterpret_cast<issue_869_0*>(&_storage)) = issue_869_0{CPP2_FORWARD(_args)...};}_discriminator = 0;}
 auto issue_869_1::_destroy() & -> void{
   if (_discriminator == 0) {std::destroy_at(reinterpret_cast<issue_869_0*>(&_storage));}
   _discriminator = -1;
@@ -1282,17 +1282,17 @@ auto issue_888_1([[maybe_unused]] std::string unnamed_param_1, move_only_functio
 #line 783 "pure2-last-use.cpp2"
 auto issue_890() -> void{
   auto x {cpp2_new<int>(0)}; 
-  if (cpp2::cpp2_default.is_active() && !(*cpp2::assert_not_null(identity_copy(std::move(x))) == 0) ) { cpp2::cpp2_default.report_violation(""); }
+  if (cpp2::cpp2_default.is_active() && !(*cpp2::impl::assert_not_null(identity_copy(std::move(x))) == 0) ) { cpp2::cpp2_default.report_violation(""); }
 {
 auto const& x{cpp2_new<int>(0)};
 #line 786 "pure2-last-use.cpp2"
-  if (cpp2::cpp2_default.is_active() && !(*cpp2::assert_not_null(identity(x)) == 0) ) { cpp2::cpp2_default.report_violation(""); }
+  if (cpp2::cpp2_default.is_active() && !(*cpp2::impl::assert_not_null(identity(x)) == 0) ) { cpp2::cpp2_default.report_violation(""); }
 }
 #line 787 "pure2-last-use.cpp2"
 }
 
 #line 789 "pure2-last-use.cpp2"
-auto issue_962(cpp2::in<::std::string> s) -> void{
+auto issue_962(cpp2::impl::in<::std::string> s) -> void{
   using ::std::string;
   std::cout << ("A: " + cpp2::to_string(s)) << std::endl;
 }
@@ -1306,7 +1306,7 @@ auto draw() -> void{
 
 #line 800 "pure2-last-use.cpp2"
 auto enum_0() -> void{
-    cpp2::deferred_init<std::string> underlying_type; 
+    cpp2::impl::deferred_init<std::string> underlying_type; 
     if (true) {}
     underlying_type.construct("");
 }
@@ -1328,7 +1328,7 @@ auto enum_1() -> void{
     }
 
     auto y {cpp2_new<bool>(false)}; 
-    while( *cpp2::assert_not_null(identity(y)) ) {
+    while( *cpp2::impl::assert_not_null(identity(y)) ) {
         auto v {cpp2_new<int>(0)}; 
         f_copy(std::move(v));
     }
@@ -1337,7 +1337,7 @@ auto enum_1() -> void{
     do {
         auto v {cpp2_new<int>(0)}; 
         f_copy(std::move(v));
-    } while ( *cpp2::assert_not_null(identity(z)));
+    } while ( *cpp2::impl::assert_not_null(identity(z)));
 }
 #line 833 "pure2-last-use.cpp2"
 auto enum_2() -> void{
@@ -1365,21 +1365,21 @@ auto enum_2() -> void{
 return ret; }
 #line 858 "pure2-last-use.cpp2"
 auto deferred_non_copyable_0() -> void{
-  cpp2::deferred_init<std::unique_ptr<int>> p; 
+  cpp2::impl::deferred_init<std::unique_ptr<int>> p; 
   p.construct();
   f_copy(std::move(p.value()));
 }
 
 #line 864 "pure2-last-use.cpp2"
 [[nodiscard]] auto deferred_non_copyable_1() -> auto{
-  cpp2::deferred_init<std::unique_ptr<int>> p; 
+  cpp2::impl::deferred_init<std::unique_ptr<int>> p; 
   p.construct();
   return std::move(p.value()); 
 }
 
 #line 870 "pure2-last-use.cpp2"
 [[nodiscard]] auto deferred_non_copyable_2() -> deferred_non_copyable_2_ret{
-      cpp2::deferred_init<std::unique_ptr<int>> p;
+      cpp2::impl::deferred_init<std::unique_ptr<int>> p;
 #line 871 "pure2-last-use.cpp2"
   p.construct();
 return std::move(p.value()); }
@@ -1456,7 +1456,7 @@ auto g() -> void{
   static_cast<void>([]() mutable -> void{
     auto x {cpp2_new<int>(0)}; 
     f_inout(x);
-    static_cast<void>([_0 = ([_0 = std::move(x)]() mutable -> auto { return *cpp2::assert_not_null(_0); })]() mutable -> int { return _0();  });
+    static_cast<void>([_0 = ([_0 = std::move(x)]() mutable -> auto { return *cpp2::impl::assert_not_null(_0); })]() mutable -> int { return _0();  });
   });
 }
 
@@ -1485,17 +1485,17 @@ auto loops_and_captures() -> void{
   static_cast<void>([]() mutable -> void{
     auto x {cpp2_new<int>(0)}; 
     for ( 
-    [[maybe_unused]] auto const& unnamed_param_1 : { [_0 = std::move(x)]() mutable -> auto { return *cpp2::assert_not_null(_0); } } ) 
+    [[maybe_unused]] auto const& unnamed_param_1 : { [_0 = std::move(x)]() mutable -> auto { return *cpp2::impl::assert_not_null(_0); } } ) 
     {}
   });
 }
 
 #line 985 "pure2-last-use.cpp2"
-  auto types::f() && -> void { static_cast<void>([&, _1 = std::move(*this).x]() mutable -> auto { return *cpp2::assert_not_null(_1);  });  }
+  auto types::f() && -> void { static_cast<void>([&, _1 = std::move(*this).x]() mutable -> auto { return *cpp2::impl::assert_not_null(_1);  });  }
 #line 986 "pure2-last-use.cpp2"
   auto types::g() && -> void{
     for ( 
-    [[maybe_unused]] auto const& unnamed_param_1 : { [&, _1 = std::move(*this).x]() mutable -> auto { return *cpp2::assert_not_null(_1); } } ) 
+    [[maybe_unused]] auto const& unnamed_param_1 : { [&, _1 = std::move(*this).x]() mutable -> auto { return *cpp2::impl::assert_not_null(_1); } } ) 
     {}
   }
 
@@ -1562,7 +1562,7 @@ auto x{cpp2_new<int>(0)};
 
 #line 1043 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int{
-  auto const args = cpp2::make_args(argc_, argv_); 
+  auto const args = cpp2::impl::make_args(argc_, argv_); 
 #line 1044 "pure2-last-use.cpp2"
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());

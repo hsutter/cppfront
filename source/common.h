@@ -442,6 +442,27 @@ auto strip_path(std::string const& file)
 
 //-----------------------------------------------------------------------
 //
+//  String: A helper workaround for passing a string literal as a
+//  template argument
+//
+//-----------------------------------------------------------------------
+//
+template<std::size_t N>
+struct String
+{
+    constexpr String(const char (&str)[N])
+    {
+        std::copy_n(str, N, value);
+    }
+
+    auto operator<=>(String const&) const = default;
+
+    char value[N] = {};
+};
+
+
+//-----------------------------------------------------------------------
+//
 //  Misc helpers
 //
 //-----------------------------------------------------------------------

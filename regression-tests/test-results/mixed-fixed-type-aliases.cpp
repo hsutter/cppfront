@@ -39,7 +39,7 @@ template<typename T> class mytype {
 #line 9 "mixed-fixed-type-aliases.cpp2"
 auto test(auto const& x) -> void{
     std::cout 
-        << cpp2::as_<std::string>(std::is_floating_point_v<CPP2_TYPEOF(x)>) 
+        << cpp2::impl::as_<std::string>(std::is_floating_point_v<CPP2_TYPEOF(x)>) 
         << "\n";
 }
 
@@ -48,7 +48,7 @@ auto test(auto const& x) -> void{
 
 #line 19 "mixed-fixed-type-aliases.cpp2"
 [[nodiscard]] auto main(int const argc_, char** argv_) -> int{
-    auto const args = cpp2::make_args(argc_, argv_); 
+    auto const args = cpp2::impl::make_args(argc_, argv_); 
 #line 20 "mixed-fixed-type-aliases.cpp2"
     my::u16 y {42}; 
     test(std::move(y));

@@ -20,7 +20,7 @@
 auto test_generic(auto const& x, auto const& msg) -> void;
 
 #line 29 "pure2-type-safety-1.cpp2"
-auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
+auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void;
 #line 35 "pure2-type-safety-1.cpp2"
 
 #line 1 "pure2-type-safety-1.cpp2"
@@ -55,12 +55,12 @@ auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void;
 #line 24 "pure2-type-safety-1.cpp2"
 auto test_generic(auto const& x, auto const& msg) -> void{
     std::string msgx {msg}; 
-    print(std::move(msgx) + " is int? ", cpp2::is<int>(x));
+    print(std::move(msgx) + " is int? ", cpp2::impl::is<int>(x));
 }
 
 #line 29 "pure2-type-safety-1.cpp2"
-auto print(cpp2::in<std::string> msg, cpp2::in<bool> b) -> void{
-    cpp2::deferred_init<char const*> bmsg; 
+auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void{
+    cpp2::impl::deferred_init<char const*> bmsg; 
     if (b) { bmsg.construct("true");}
     else {bmsg.construct("false"); }
     std::cout << std::setw(40) << msg << std::move(bmsg.value()) << "\n";

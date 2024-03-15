@@ -45,7 +45,7 @@ auto test_generic(auto const& x, auto const& msg) -> void{
     std::cout 
         << "\n" << msg << "\n    ..." 
         << [&] () -> std::string { auto&& _expr = x;
-            if (cpp2::is<void>(_expr)) { if constexpr( requires{" VOYDE AND EMPTIE";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((" VOYDE AND EMPTIE")),std::string> ) return " VOYDE AND EMPTIE"; else return std::string{}; else return std::string{}; }
+            if (cpp2::impl::is<void>(_expr)) { if constexpr( requires{" VOYDE AND EMPTIE";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((" VOYDE AND EMPTIE")),std::string> ) return " VOYDE AND EMPTIE"; else return std::string{}; else return std::string{}; }
             else return " no match"; }
         () 
         << "\n";

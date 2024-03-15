@@ -2113,7 +2113,7 @@ public:
                     statement.pop_back();
                 }
 
-                replace_all( statement, "cpp2::as_<", "cpp2::as<" );
+                replace_all( statement, "cpp2::impl::as_<", "cpp2::impl::as<" );
 
                 //  If this is an inspect-expression, we'll have to wrap each alternative
                 //  in an 'if constexpr' so that its type is ignored for mismatches with
@@ -2134,11 +2134,11 @@ public:
                 else {
                     printer.print_cpp2("if " + constexpr_qualifier, alt->position());
                     if (alt->type_id) {
-                        printer.print_cpp2("(cpp2::is<" + id + ">(_expr)) ", alt->position());
+                        printer.print_cpp2("(cpp2::impl::is<" + id + ">(_expr)) ", alt->position());
                     }
                     else {
                         assert (alt->value);
-                        printer.print_cpp2("(cpp2::is(_expr, " + id + ")) ", alt->position());
+                        printer.print_cpp2("(cpp2::impl::is(_expr, " + id + ")) ", alt->position());
                     }
                     printer.print_cpp2(return_prefix, alt->position());
                 }
@@ -3291,7 +3291,7 @@ public:
                             "("
                             + print_to_string(id, false)
                             + "::),"
-                            + print_to_string(*cpp2::assert_not_null(id.ids.back().id), 0, true, true);
+                            + print_to_string(*cpp2::impl::assert_not_null(id.ids.back().id), 0, true, true);
                     }
                     ufcs_string += "_TEMPLATE";
                 }
@@ -3397,7 +3397,7 @@ public:
                     && i->op->type() == lexeme::Multiply
                     )
                 {
-                    prefix.emplace_back( "cpp2::assert_not_null(", i->op->position() );
+                    prefix.emplace_back( "cpp2::impl::assert_not_null(", i->op->position() );
                 }
                 if (
                     flag_safe_null_pointers
@@ -3593,7 +3593,7 @@ public:
             ++i
             )
         {
-            //  If it's "ISORAS type", emit "cpp2::ISORAS<type>(expr)"
+            //  If it's "ISORAS type", emit "cpp2::impl::ISORAS<type>(expr)"
             if (i->type)
             {
                 if (i->type->is_wildcard()) {
@@ -3616,15 +3616,15 @@ public:
                     if (op_name == "as") {
                         op_name = "as_";    // use the static_assert-checked 'as' by default...
                     }                       // we'll override this inside inspect-expressions
-                    prefix += "cpp2::" + op_name + "<" + print_to_string(*i->type) + ">(";
+                    prefix += "cpp2::impl::" + op_name + "<" + print_to_string(*i->type) + ">(";
                     suffix = ")" + suffix;
                 }
             }
-            //  Else it's "is value", emit "cpp2::is(expr, value)"
+            //  Else it's "is value", emit "cpp2::impl::is(expr, value)"
             else
             {
                 assert(i->expr);
-                prefix += "cpp2::" + i->op->to_string() + "(";
+                prefix += "cpp2::impl::" + i->op->to_string() + "(";
                 suffix = ", " + print_to_string(*i->expr) + ")" + suffix;
             }
         }
@@ -3684,13 +3684,13 @@ public:
                 if (flag_safe_comparisons) {
                     switch (op.type()) {
                     break;case lexeme::Less:
-                        printer.print_cpp2( "cpp2::cmp_less(", n.position());
+                        printer.print_cpp2( "cpp2::impl::cmp_less(", n.position());
                     break;case lexeme::LessEq:
-                        printer.print_cpp2( "cpp2::cmp_less_eq(", n.position());
+                        printer.print_cpp2( "cpp2::impl::cmp_less_eq(", n.position());
                     break;case lexeme::Greater:
-                        printer.print_cpp2( "cpp2::cmp_greater(", n.position());
+                        printer.print_cpp2( "cpp2::impl::cmp_greater(", n.position());
                     break;case lexeme::GreaterEq:
-                        printer.print_cpp2( "cpp2::cmp_greater_eq(", n.position());
+                        printer.print_cpp2( "cpp2::impl::cmp_greater_eq(", n.position());
                     break;default:
                         ;
                     }
@@ -3780,13 +3780,13 @@ public:
                     if (flag_safe_comparisons) {
                         switch (term.op->type()) {
                         break;case lexeme::Less:
-                            lambda_body += "cpp2::cmp_less(";
+                            lambda_body += "cpp2::impl::cmp_less(";
                         break;case lexeme::LessEq:
-                            lambda_body += "cpp2::cmp_less_eq(";
+                            lambda_body += "cpp2::impl::cmp_less_eq(";
                         break;case lexeme::Greater:
-                            lambda_body += "cpp2::cmp_greater(";
+                            lambda_body += "cpp2::impl::cmp_greater(";
                         break;case lexeme::GreaterEq:
-                            lambda_body += "cpp2::cmp_greater_eq(";
+                            lambda_body += "cpp2::impl::cmp_greater_eq(";
                         break;default:
                             ;
                         }
@@ -4027,7 +4027,7 @@ public:
                 );
                 if (x.pass == passing_style::out) {
                     is_out = true;
-                    printer.print_cpp2("cpp2::out(&", n.position());
+                    printer.print_cpp2("cpp2::impl::out(&", n.position());
                 }
                 else if (x.pass == passing_style::move) {
                     printer.print_cpp2("std::move(", n.position());
@@ -4485,8 +4485,8 @@ public:
             )
         {
             switch (n.pass) {
-            break;case passing_style::in     : printer.print_cpp2( "cpp2::in<",  n.position() );
-            break;case passing_style::out    : printer.print_cpp2( "cpp2::out<", n.position() );
+            break;case passing_style::in     : printer.print_cpp2( "cpp2::impl::in<",  n.position() );
+            break;case passing_style::out    : printer.print_cpp2( "cpp2::impl::out<", n.position() );
             break;default: ;
             }
         }
@@ -4534,7 +4534,7 @@ public:
             //  and then generate the out<> as a stack local with the expected name "identifier"
             break;case passing_style::out    : printer.print_cpp2( name,           n.position() );
                                                current_functions.back().prolog.statements.push_back(
-                                                   "auto " + identifier + " = cpp2::out(" + identifier + "_); "
+                                                   "auto " + identifier + " = cpp2::impl::out(" + identifier + "_); "
                                                );
                                                identifier += "_";
 
@@ -4813,7 +4813,7 @@ public:
                 n.parameters->position()
             );
             current_functions.back().prolog.statements.push_back(
-                "auto const args = cpp2::make_args(argc_, argv_); "
+                "auto const args = cpp2::impl::make_args(argc_, argv_); "
             );
         }
         else {
@@ -6559,7 +6559,7 @@ public:
 
                         auto loc = std::string{};
                         if (!decl.initializer) {
-                            loc += ("    cpp2::deferred_init<");
+                            loc += ("    cpp2::impl::deferred_init<");
                         }
 
                         //  For convenience, just capture the id-expression as a string
@@ -6751,10 +6751,10 @@ public:
             }
             //  Otherwise, emit the type
             else {
-                //  If there isn't an initializer, use cpp2::deferred_init<T>
+                //  If there isn't an initializer, use deferred_init<T>
                 if (!n.initializer) {
                     if (n.parent_is_function()) {
-                        printer.print_cpp2( "cpp2::deferred_init<", n.position() );
+                        printer.print_cpp2( "cpp2::impl::deferred_init<", n.position() );
                     }
                     else if (!n.parent_is_type()) {
                         errors.emplace_back(

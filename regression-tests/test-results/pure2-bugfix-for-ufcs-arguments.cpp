@@ -29,7 +29,7 @@ class B;
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-bugfix-for-ufcs-arguments.cpp2"
-[[nodiscard]] auto print_res(cpp2::in<cpp2::i32> x) -> cpp2::i32;
+[[nodiscard]] auto print_res(cpp2::impl::in<cpp2::i32> x) -> cpp2::i32;
 
 #line 7 "pure2-bugfix-for-ufcs-arguments.cpp2"
 class t {
@@ -40,11 +40,11 @@ class t {
   public: template<typename UnnamedTypeParam1_3, typename U> [[nodiscard]] auto f([[maybe_unused]] auto const& unnamed_param_2, [[maybe_unused]] auto const& unnamed_param_3) & -> cpp2::i32;
 };
 
-[[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1) -> cpp2::i32;
-[[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2) -> cpp2::i32;
-template<typename UnnamedTypeParam1_4> [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1) -> cpp2::i32;
-template<typename UnnamedTypeParam1_5> [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2) -> cpp2::i32;
-template<typename UnnamedTypeParam1_6, typename U> [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2, [[maybe_unused]] auto const& unnamed_param_3) -> cpp2::i32;
+[[nodiscard]] auto f([[maybe_unused]] cpp2::impl::in<t> unnamed_param_1) -> cpp2::i32;
+[[nodiscard]] auto f([[maybe_unused]] cpp2::impl::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2) -> cpp2::i32;
+template<typename UnnamedTypeParam1_4> [[nodiscard]] auto f([[maybe_unused]] cpp2::impl::in<t> unnamed_param_1) -> cpp2::i32;
+template<typename UnnamedTypeParam1_5> [[nodiscard]] auto f([[maybe_unused]] cpp2::impl::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2) -> cpp2::i32;
+template<typename UnnamedTypeParam1_6, typename U> [[nodiscard]] auto f([[maybe_unused]] cpp2::impl::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2, [[maybe_unused]] auto const& unnamed_param_3) -> cpp2::i32;
 
 extern t m;
 extern t const n;
@@ -70,7 +70,7 @@ extern cpp2::i32 auto_19;
 
 namespace ns {
 template<int T, int U> class t {
-  public: template<int V> [[nodiscard]] static auto f([[maybe_unused]] cpp2::in<int> unnamed_param_1) -> cpp2::i32;
+  public: template<int V> [[nodiscard]] static auto f([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1) -> cpp2::i32;
 };
 } // namespace ns
 
@@ -87,7 +87,7 @@ class B {
 //=== Cpp2 function definitions =================================================
 
 #line 1 "pure2-bugfix-for-ufcs-arguments.cpp2"
-[[nodiscard]] auto print_res(cpp2::in<cpp2::i32> x) -> cpp2::i32{
+[[nodiscard]] auto print_res(cpp2::impl::in<cpp2::i32> x) -> cpp2::i32{
 #line 2 "pure2-bugfix-for-ufcs-arguments.cpp2"
   std::cout << x;
   if (x == 9) {std::cout << '\n'; }
@@ -106,15 +106,15 @@ class B {
   template<typename UnnamedTypeParam1_3, typename U> [[nodiscard]] auto t::f([[maybe_unused]] auto const& unnamed_param_2, [[maybe_unused]] auto const& unnamed_param_3) & -> cpp2::i32 { return print_res(4);  }
 
 #line 15 "pure2-bugfix-for-ufcs-arguments.cpp2"
-[[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1) -> cpp2::i32 { return print_res(5);  }
+[[nodiscard]] auto f([[maybe_unused]] cpp2::impl::in<t> unnamed_param_1) -> cpp2::i32 { return print_res(5);  }
 #line 16 "pure2-bugfix-for-ufcs-arguments.cpp2"
-[[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2) -> cpp2::i32 { return print_res(6);  }
+[[nodiscard]] auto f([[maybe_unused]] cpp2::impl::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2) -> cpp2::i32 { return print_res(6);  }
 #line 17 "pure2-bugfix-for-ufcs-arguments.cpp2"
-template<typename UnnamedTypeParam1_4> [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1) -> cpp2::i32 { return print_res(7);  }
+template<typename UnnamedTypeParam1_4> [[nodiscard]] auto f([[maybe_unused]] cpp2::impl::in<t> unnamed_param_1) -> cpp2::i32 { return print_res(7);  }
 #line 18 "pure2-bugfix-for-ufcs-arguments.cpp2"
-template<typename UnnamedTypeParam1_5> [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2) -> cpp2::i32 { return print_res(8);  }
+template<typename UnnamedTypeParam1_5> [[nodiscard]] auto f([[maybe_unused]] cpp2::impl::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2) -> cpp2::i32 { return print_res(8);  }
 #line 19 "pure2-bugfix-for-ufcs-arguments.cpp2"
-template<typename UnnamedTypeParam1_6, typename U> [[nodiscard]] auto f([[maybe_unused]] cpp2::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2, [[maybe_unused]] auto const& unnamed_param_3) -> cpp2::i32 { return print_res(9);  }
+template<typename UnnamedTypeParam1_6, typename U> [[nodiscard]] auto f([[maybe_unused]] cpp2::impl::in<t> unnamed_param_1, [[maybe_unused]] auto const& unnamed_param_2, [[maybe_unused]] auto const& unnamed_param_3) -> cpp2::i32 { return print_res(9);  }
 
 t m {}; 
 t const n {}; 
@@ -157,7 +157,7 @@ cpp2::i32 auto_19 {CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL((ns::t<0,0>::),f<0>)(0)
 namespace ns {
 
 #line 60 "pure2-bugfix-for-ufcs-arguments.cpp2"
-  template <int T, int U> template<int V> [[nodiscard]] auto t<T,U>::f([[maybe_unused]] cpp2::in<int> unnamed_param_1) -> cpp2::i32 { return 0;  }
+  template <int T, int U> template<int V> [[nodiscard]] auto t<T,U>::f([[maybe_unused]] cpp2::impl::in<int> unnamed_param_1) -> cpp2::i32 { return 0;  }
 
 }
 

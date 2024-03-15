@@ -24,7 +24,7 @@
 #line 14 "mixed-postexpression-with-capture.cpp2"
 extern std::vector<int> vec;
 
-auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void;
+auto insert_at(cpp2::impl::in<int> where, cpp2::impl::in<int> val) -> void;
 using make_string_ret = std::string;
 
 
@@ -54,12 +54,12 @@ struct make_strings_ret { std::string a; std::string b; };
 std::vector<int> vec {}; 
 
 #line 16 "mixed-postexpression-with-capture.cpp2"
-auto insert_at(cpp2::in<int> where, cpp2::in<int> val) -> void
+auto insert_at(cpp2::impl::in<int> where, cpp2::impl::in<int> val) -> void
 
 #line 19 "mixed-postexpression-with-capture.cpp2"
 {
     cpp2::finally_presuccess cpp2_finally_presuccess;
-    if (cpp2::cpp2_default.is_active() && !(cpp2::cmp_less_eq(0,where) && cpp2::cmp_less_eq(where,CPP2_UFCS(ssize)(vec))) ) { cpp2::cpp2_default.report_violation(""); }
+    if (cpp2::cpp2_default.is_active() && !(cpp2::impl::cmp_less_eq(0,where) && cpp2::impl::cmp_less_eq(where,CPP2_UFCS(ssize)(vec))) ) { cpp2::cpp2_default.report_violation(""); }
     cpp2_finally_presuccess.add([&, _1 = CPP2_UFCS(size)(vec)]{if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(size)(vec) == _1 + 1) ) { cpp2::cpp2_default.report_violation(""); }} );
 #line 20 "mixed-postexpression-with-capture.cpp2"
     CPP2_UFCS(push_back)(vec, val);

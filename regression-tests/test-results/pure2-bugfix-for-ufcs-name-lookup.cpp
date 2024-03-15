@@ -114,12 +114,12 @@ auto const& f{t().f()};
   {
     auto f {[]() mutable -> void{
 {
-cpp2::in<identity> f{identity()};
+cpp2::impl::in<identity> f{identity()};
 #line 59 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
       if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(f)(t()) == 0) ) { cpp2::cpp2_default.report_violation(""); }
 }
 {
-cpp2::in<identity> f{identity()};
+cpp2::impl::in<identity> f{identity()};
 #line 60 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
       static_cast<void>(CPP2_UFCS(f)(u()));
 }

@@ -16,7 +16,7 @@
 [[nodiscard]] auto main() -> int;
 
 #line 10 "mixed-bounds-safety-with-assert-2.cpp2"
-auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> void;
+auto add_42_to_subrange(auto& rng, cpp2::impl::in<int> start, cpp2::impl::in<int> end) -> void;
 #line 23 "mixed-bounds-safety-with-assert-2.cpp2"
 
 #include <vector>
@@ -38,16 +38,16 @@ auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> vo
 }
 
 #line 10 "mixed-bounds-safety-with-assert-2.cpp2"
-auto add_42_to_subrange(auto& rng, cpp2::in<int> start, cpp2::in<int> end) -> void
+auto add_42_to_subrange(auto& rng, cpp2::impl::in<int> start, cpp2::impl::in<int> end) -> void
 {
-    if (cpp2::bounds_safety.is_active() && !(cpp2::cmp_less_eq(0,start)) ) { cpp2::bounds_safety.report_violation(""); }
-    if (cpp2::bounds_safety.is_active() && !(cpp2::cmp_less_eq(end,CPP2_UFCS(ssize)(rng))) ) { cpp2::bounds_safety.report_violation(""); }
+    if (cpp2::bounds_safety.is_active() && !(cpp2::impl::cmp_less_eq(0,start)) ) { cpp2::bounds_safety.report_violation(""); }
+    if (cpp2::bounds_safety.is_active() && !(cpp2::impl::cmp_less_eq(end,CPP2_UFCS(ssize)(rng))) ) { cpp2::bounds_safety.report_violation(""); }
 
     auto count {0}; 
     for ( 
 
           auto& i : rng )  { do 
-        if ([_0 = start, _1 = count, _2 = end]{ return cpp2::cmp_less_eq(_0,_1) && cpp2::cmp_less_eq(_1,_2); }()) {
+        if ([_0 = start, _1 = count, _2 = end]{ return cpp2::impl::cmp_less_eq(_0,_1) && cpp2::impl::cmp_less_eq(_1,_2); }()) {
             i += 42;
         } while (false); ++count; }
 }

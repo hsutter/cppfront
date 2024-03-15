@@ -20,7 +20,7 @@
 auto copy_from([[maybe_unused]] auto unnamed_param_1) -> void;
 
 auto parameter_styles(
-    [[maybe_unused]] cpp2::in<std::string> unnamed_param_1, // "in" is default
+    [[maybe_unused]] cpp2::impl::in<std::string> unnamed_param_1, // "in" is default
     std::string b, 
     [[maybe_unused]] std::string& unnamed_param_3, 
     std::string&& d
@@ -38,7 +38,7 @@ auto copy_from([[maybe_unused]] auto unnamed_param_1) -> void{}
 
 #line 8 "mixed-parameter-passing.cpp2"
 auto parameter_styles(
-    [[maybe_unused]] cpp2::in<std::string> unnamed_param_1, 
+    [[maybe_unused]] cpp2::impl::in<std::string> unnamed_param_1, 
     std::string b, 
     [[maybe_unused]] std::string& unnamed_param_3, 
     std::string&& d

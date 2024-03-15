@@ -41,7 +41,7 @@ using g_ret = int;
 
 #line 9 "pure2-look-up-parameter-across-unnamed-function.cpp2"
 [[nodiscard]] auto g() -> g_ret{
-        cpp2::deferred_init<int> ri;
+        cpp2::impl::deferred_init<int> ri;
 #line 10 "pure2-look-up-parameter-across-unnamed-function.cpp2"
     ri.construct(0);
     auto pred {[](auto const& e) mutable -> auto { return e == 1;  }}; 

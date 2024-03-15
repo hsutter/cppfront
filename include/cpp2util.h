@@ -15,6 +15,27 @@
 //  Cpp2 utilities:
 //      Language support implementations
 //      #include'd by generated Cpp1 code
+
+//  There are two kinds of entities in this file.
+//
+//  1)  Entities in namespace cpp2:: itself, and documented at /cppfront/docs
+//
+//      These are intended for programs to use directly, to the extent
+//      described in the documentation. Using any parts not described in the
+//      documentation is not supported.
+//
+//  2)  Entities in namespace cpp2::impl::, and macros
+//
+//      These should not be used by the program. They form the language
+//      support library intended to be called only from generated Cpp2 code.
+// 
+//      For example, if a Cpp2 function leaves a local variable
+//      uninitialized, cppfront will generate uses of impl::deferred_init<>
+//      under the covers and guarantee it is constructed exactly once, so
+//      the implementation here doesn't need to check for double construction
+//      because it can't happen; using the name impl::deferred_init directly
+//      from program code is not supported.
+// 
 //===========================================================================
 
 #ifndef CPP2_UTIL_H
@@ -267,6 +288,12 @@
 #endif
 
 
+//-----------------------------------------------------------------------
+//
+//  Macros
+//
+//-----------------------------------------------------------------------
+//
 #define CPP2_TYPEOF(x)              std::remove_cvref_t<decltype(x)>
 #if __cplusplus >= 202302L && \
     ( \
@@ -356,27 +383,6 @@ using deref_t = decltype(*std::declval<T&>());
 
 //-----------------------------------------------------------------------
 //
-//  String: A helper workaround for passing a string literal as a
-//  template argument
-//
-//-----------------------------------------------------------------------
-//
-template<std::size_t N>
-struct String
-{
-    constexpr String(const char (&str)[N])
-    {
-        std::copy_n(str, N, value);
-    }
-
-    auto operator<=>(String const&) const = default;
-
-    char value[N] = {};
-};
-
-
-//-----------------------------------------------------------------------
-//
 //  contract_group
 //
 //-----------------------------------------------------------------------
@@ -461,6 +467,10 @@ auto inline testing = contract_group(
 );
 
 
+namespace impl {
+
+//-----------------------------------------------------------------------
+// 
 //  Check for invalid dereference or indirection which would result in undefined behavior.
 //
 //     - Null pointer
@@ -565,8 +575,8 @@ auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAU
     return CPP2_FORWARD(x) [ CPP2_FORWARD(arg) ];
 }
 
-#define CPP2_ASSERT_IN_BOUNDS(x,arg)         (cpp2::assert_in_bounds((x),(arg)))
-#define CPP2_ASSERT_IN_BOUNDS_LITERAL(x,arg) (cpp2::assert_in_bounds<(arg)>(x))
+#define CPP2_ASSERT_IN_BOUNDS(x,arg)         (cpp2::impl::assert_in_bounds((x),(arg)))
+#define CPP2_ASSERT_IN_BOUNDS_LITERAL(x,arg) (cpp2::impl::assert_in_bounds<(arg)>(x))
 
 
 //-----------------------------------------------------------------------
@@ -632,6 +642,8 @@ auto Typeid( [[maybe_unused]] auto&& x ) -> decltype(auto) {
 #endif
 }
 
+} // impl
+
 
 //-----------------------------------------------------------------------
 //
@@ -691,6 +703,9 @@ template<typename T>
     return unique.cpp2_new<T>(CPP2_FORWARD(args)...);
 }
 
+
+
+namespace impl {
 
 //-----------------------------------------------------------------------
 //
@@ -947,6 +962,9 @@ public:
 #define CPP2_UFCS_TEMPLATE_NONLOCAL(...)                  CPP2_UFCS_(,CPP2_UFCS_IDENTITY,(),template,__VA_ARGS__)
 #define CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL(QUALID,...) CPP2_UFCS_(,CPP2_UFCS_IDENTITY,QUALID,template,__VA_ARGS__)
 
+} // impl
+
+
 
 //-----------------------------------------------------------------------
 //
@@ -1078,6 +1096,8 @@ inline auto to_string(auto&& value, std::string_view) -> std::string
 }
 #endif
 
+
+namespace impl {
 
 //-----------------------------------------------------------------------
 //
@@ -1624,6 +1644,9 @@ constexpr auto as( X const& x ) -> decltype(auto)
     { return x.value(); }
 
 
+} // impl
+
+
 //-----------------------------------------------------------------------
 //
 //  A variation of GSL's final_action_success / finally
@@ -1739,6 +1762,8 @@ constexpr auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
 }
 
 
+namespace impl {
+
 //-----------------------------------------------------------------------
 //
 //  args: see main() arguments as a container of string_views
@@ -1799,6 +1824,8 @@ inline auto make_args(int argc, char** argv) -> args_t
 {
     return args_t{argc, argv};
 }
+
+} // impl
 
 
 //-----------------------------------------------------------------------
@@ -1877,7 +1904,7 @@ inline auto fopen( const char* filename, const char* mode ) {
     #endif
 
     if (!x) {
-        Throw( std::make_error_condition(std::errc::no_such_file_or_directory), "'fopen' attempt failed");
+        impl::Throw(std::make_error_condition(std::errc::no_such_file_or_directory), "'fopen' attempt failed");
     }
     return c_raii( x, &std::fclose );
 }
@@ -1892,6 +1919,9 @@ inline auto fopen( const char* filename, const char* mode ) {
 //  but perhaps c_raii may be useful for bringing forward third-party C code too,
 //  with cpp2::fopen as a starting example.
 
+
+
+namespace impl {
 
 //-----------------------------------------------------------------------
 //
@@ -2055,6 +2085,8 @@ inline constexpr auto as_() -> decltype(auto)
     //  else
     return as<C,x>();
 }
+
+} // impl
 
 
 }

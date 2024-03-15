@@ -12,14 +12,14 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-bugfix-for-indexed-call.cpp2"
-auto f([[maybe_unused]] cpp2::in<cpp2::i32> unnamed_param_1) -> void;
+auto f([[maybe_unused]] cpp2::impl::in<cpp2::i32> unnamed_param_1) -> void;
 #line 2 "pure2-bugfix-for-indexed-call.cpp2"
 auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
 
 #line 1 "pure2-bugfix-for-indexed-call.cpp2"
-auto f([[maybe_unused]] cpp2::in<cpp2::i32> unnamed_param_1) -> void{}
+auto f([[maybe_unused]] cpp2::impl::in<cpp2::i32> unnamed_param_1) -> void{}
 #line 2 "pure2-bugfix-for-indexed-call.cpp2"
 auto main() -> int{
   std::array array_of_functions {f, f}; 

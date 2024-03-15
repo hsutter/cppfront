@@ -45,13 +45,13 @@ class X {
     private: Y* py; 
 
     //  Note: A constructor with an 'out' parameter
-    public: explicit X(cpp2::out<Y> y);
+    public: explicit X(cpp2::impl::out<Y> y);
 #line 10 "pure2-types-order-independence-and-nesting.cpp2"
-    public: auto operator=(cpp2::out<Y> y) -> X& ;
+    public: auto operator=(cpp2::impl::out<Y> y) -> X& ;
 
 #line 34 "pure2-types-order-independence-and-nesting.cpp2"
     //  X::exx member function description here
-    public: auto exx(cpp2::in<int> count) const& -> void;
+    public: auto exx(cpp2::impl::in<int> count) const& -> void;
     public: X(X const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(X const&) -> void = delete;
 
@@ -68,7 +68,7 @@ class Y {
 #line 49 "pure2-types-order-independence-and-nesting.cpp2"
     public: auto operator=(X* x) -> Y& ;
 
-    public: auto why(cpp2::in<int> count) const& -> void;
+    public: auto why(cpp2::impl::in<int> count) const& -> void;
     public: Y(Y const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(Y const&) -> void = delete;
 
@@ -111,7 +111,7 @@ auto main() -> int;
 namespace N {
 
 #line 10 "pure2-types-order-independence-and-nesting.cpp2"
-    X::X(cpp2::out<Y> y)
+    X::X(cpp2::impl::out<Y> y)
         : py{(y.construct(&(*this)), &y.value() )}{
         //  === The following comments will stay close to, but not exactly at,
         //      the corresponding lines that get moved to the Cpp1 mem-init-list
@@ -137,7 +137,7 @@ namespace N {
         std::cout << "made a safely initialized cycle\n";
     }
 #line 10 "pure2-types-order-independence-and-nesting.cpp2"
-    auto X::operator=(cpp2::out<Y> y) -> X& {
+    auto X::operator=(cpp2::impl::out<Y> y) -> X& {
         y.construct(&(*this));
         py = &y.value();
 
@@ -148,11 +148,11 @@ namespace N {
     }
 
 #line 35 "pure2-types-order-independence-and-nesting.cpp2"
-    auto X::exx(cpp2::in<int> count) const& -> void{
+    auto X::exx(cpp2::impl::in<int> count) const& -> void{
         //  Exercise '_' anonymous objects too while we're at it
         cpp2::finally auto_1 {[&]() mutable -> void { std::cout << ("leaving call to 'why(" + cpp2::to_string(count) + ")'\n");  }}; 
-        if (cpp2::cmp_less(count,5)) {
-            CPP2_UFCS(why)((*cpp2::assert_not_null(py)), count + 1);// use Y object from X
+        if (cpp2::impl::cmp_less(count,5)) {
+            CPP2_UFCS(why)((*cpp2::impl::assert_not_null(py)), count + 1);// use Y object from X
         }
     }
 
@@ -165,8 +165,8 @@ namespace N {
                                    return *this;  }
 
 #line 51 "pure2-types-order-independence-and-nesting.cpp2"
-    auto Y::why(cpp2::in<int> count) const& -> void { 
-        CPP2_UFCS(exx)((*cpp2::assert_not_null(px)), count + 1);  }// use X object from Y
+    auto Y::why(cpp2::impl::in<int> count) const& -> void { 
+        CPP2_UFCS(exx)((*cpp2::impl::assert_not_null(px)), count + 1);  }// use X object from Y
 
 #line 55 "pure2-types-order-independence-and-nesting.cpp2"
 namespace M {
@@ -182,8 +182,8 @@ namespace M {
 #line 70 "pure2-types-order-independence-and-nesting.cpp2"
 auto main() -> int
 {
-    cpp2::deferred_init<N::Y> y; // declare an uninitialized Y object
-    N::X x {cpp2::out(&y)}; // construct y and x, and point them at each other
+    cpp2::impl::deferred_init<N::Y> y; // declare an uninitialized Y object
+    N::X x {cpp2::impl::out(&y)}; // construct y and x, and point them at each other
 
     // now have the two objects call each other back and forth a few times
     CPP2_UFCS(exx)(std::move(x), 1);

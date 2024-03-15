@@ -24,7 +24,7 @@ auto main(int const argc_, char** argv_) -> int;
 
 #line 3 "pure2-for-loop-range-with-lambda.cpp2"
 auto main(int const argc_, char** argv_) -> int{
-   auto const args = cpp2::make_args(argc_, argv_); 
+   auto const args = cpp2::impl::make_args(argc_, argv_); 
 #line 4 "pure2-for-loop-range-with-lambda.cpp2"
    std::array const ints {1, 2, 3, 4, 5}; 
    // OK

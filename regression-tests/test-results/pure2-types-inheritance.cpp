@@ -41,7 +41,7 @@ class Human {
 
 namespace N {
     template<int I> class Machine {
-        public: explicit Machine([[maybe_unused]] cpp2::in<std::string> unnamed_param_2);
+        public: explicit Machine([[maybe_unused]] cpp2::impl::in<std::string> unnamed_param_2);
         public: virtual auto work() const -> void = 0;
         public: virtual ~Machine() noexcept;
 
@@ -58,7 +58,7 @@ struct Cyborg_address_as_base { std::string address; };
 class Cyborg: public Cyborg_name_as_base, public Human, public Cyborg_address_as_base, public N::Machine<99> {
 
 #line 19 "pure2-types-inheritance.cpp2"
-    public: explicit Cyborg(cpp2::in<std::string> n);
+    public: explicit Cyborg(cpp2::impl::in<std::string> n);
 
 #line 25 "pure2-types-inheritance.cpp2"
     public: auto speak() const -> void override;
@@ -78,10 +78,10 @@ class Cyborg: public Cyborg_name_as_base, public Human, public Cyborg_address_as
 #line 36 "pure2-types-inheritance.cpp2"
 };
 
-auto make_speak(cpp2::in<Human> h) -> void;
+auto make_speak(cpp2::impl::in<Human> h) -> void;
 
 #line 43 "pure2-types-inheritance.cpp2"
-auto do_work(cpp2::in<N::Machine<99>> m) -> void;
+auto do_work(cpp2::impl::in<N::Machine<99>> m) -> void;
 
 #line 48 "pure2-types-inheritance.cpp2"
 auto main() -> int;
@@ -96,7 +96,7 @@ Human::~Human() noexcept{}
 namespace N {
 
 #line 8 "pure2-types-inheritance.cpp2"
-        template <int I> Machine<I>::Machine([[maybe_unused]] cpp2::in<std::string> unnamed_param_2){}
+        template <int I> Machine<I>::Machine([[maybe_unused]] cpp2::impl::in<std::string> unnamed_param_2){}
 
         template <int I> Machine<I>::~Machine() noexcept{}
 
@@ -104,7 +104,7 @@ namespace N {
 }
 
 #line 19 "pure2-types-inheritance.cpp2"
-    Cyborg::Cyborg(cpp2::in<std::string> n)
+    Cyborg::Cyborg(cpp2::impl::in<std::string> n)
         : Cyborg_name_as_base{ n }
         , Human{  }
         , Cyborg_address_as_base{ "123 Main St." }
@@ -131,13 +131,13 @@ namespace N {
         std::cout << ("Tired but satisfied after another successful day, " + cpp2::to_string(std::move(*this).name) + " checks out and goes home to their family\n");  }
 
 #line 38 "pure2-types-inheritance.cpp2"
-auto make_speak(cpp2::in<Human> h) -> void{
+auto make_speak(cpp2::impl::in<Human> h) -> void{
     std::cout << "-> [vcall: make_speak] ";
     CPP2_UFCS(speak)(h);
 }
 
 #line 43 "pure2-types-inheritance.cpp2"
-auto do_work(cpp2::in<N::Machine<99>> m) -> void{
+auto do_work(cpp2::impl::in<N::Machine<99>> m) -> void{
     std::cout << "-> [vcall: do_work] ";
     CPP2_UFCS(work)(m);
 }

@@ -33,7 +33,7 @@ auto print_an_int(auto const& x) -> void{
         << std::setw(30) << cpp2::to_string(x) 
         << " value is " 
         << [&] () -> std::string { auto&& _expr = x;
-            if (cpp2::is<int>(_expr)) { if constexpr( requires{std::to_string(cpp2::as<int>(x));} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((std::to_string(cpp2::as<int>(x)))),std::string> ) return std::to_string(cpp2::as<int>(x)); else return std::string{}; else return std::string{}; }
+            if (cpp2::impl::is<int>(_expr)) { if constexpr( requires{std::to_string(cpp2::impl::as<int>(x));} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((std::to_string(cpp2::impl::as<int>(x)))),std::string> ) return std::to_string(cpp2::impl::as<int>(x)); else return std::string{}; else return std::string{}; }
             else return "not an int"; }
         () 
         << "\n";

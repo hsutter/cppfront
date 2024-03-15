@@ -23,7 +23,7 @@ auto test_generic(auto const& x, auto const& msg) -> void;
 [[nodiscard]] auto main() -> int{
 #line 2 "pure2-inspect-expression-in-generic-function-multiple-types.cpp2"
     std::variant<int,int,double> v {42.0}; 
-    std::any a {cpp2::as_<std::string>("xyzzy")}; 
+    std::any a {cpp2::impl::as_<std::string>("xyzzy")}; 
     std::optional<int> o {}; 
 
     test_generic(3.14, "double");
@@ -46,8 +46,8 @@ auto test_generic(auto const& x, auto const& msg) -> void{
         << std::setw(30) << msg 
         << " value is " 
         << [&] () -> std::string { auto&& _expr = x;
-            if (cpp2::is<int>(_expr)) { if constexpr( requires{"integer " + std::to_string(cpp2::as<int>(x));} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("integer " + std::to_string(cpp2::as<int>(x)))),std::string> ) return "integer " + std::to_string(cpp2::as<int>(x)); else return std::string{}; else return std::string{}; }
-            else if (cpp2::is<std::string>(_expr)) { if constexpr( requires{'"' + cpp2::as<std::string>(x) + '"';} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(('"' + cpp2::as<std::string>(x) + '"')),std::string> ) return '"' + cpp2::as<std::string>(x) + '"'; else return std::string{}; else return std::string{}; }
+            if (cpp2::impl::is<int>(_expr)) { if constexpr( requires{"integer " + std::to_string(cpp2::impl::as<int>(x));} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("integer " + std::to_string(cpp2::impl::as<int>(x)))),std::string> ) return "integer " + std::to_string(cpp2::impl::as<int>(x)); else return std::string{}; else return std::string{}; }
+            else if (cpp2::impl::is<std::string>(_expr)) { if constexpr( requires{'"' + cpp2::impl::as<std::string>(x) + '"';} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(('"' + cpp2::impl::as<std::string>(x) + '"')),std::string> ) return '"' + cpp2::impl::as<std::string>(x) + '"'; else return std::string{}; else return std::string{}; }
             else return "not an int or string"; }
         () 
         << "\n";
