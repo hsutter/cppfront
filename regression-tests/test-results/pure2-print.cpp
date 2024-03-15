@@ -120,8 +120,8 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
 
 #line 36 "pure2-print.cpp2"
         {
-            if (cpp2::Default.has_handler() && !(CPP2_UFCS(empty)(m) == false || false) ) { cpp2::Default.report_violation(CPP2_CONTRACT_MSG("message")); }
-            if (cpp2::Bounds.has_handler() && testing_enabled && !([_0 = 0, _1 = CPP2_UFCS(ssize)(m), _2 = 100]{ return cpp2::cmp_less(_0,_1) && cpp2::cmp_less(_1,_2); }() && true != false) ) { cpp2::Bounds.report_violation(CPP2_CONTRACT_MSG(("size is " + cpp2::to_string(CPP2_UFCS(ssize)(m))))); }
+            if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(empty)(m) == false || false) ) { cpp2::cpp2_default.report_violation(CPP2_CONTRACT_MSG("message")); }
+            if (testing_enabled && cpp2::bounds_safety.is_active() && !([_0 = 0, _1 = CPP2_UFCS(ssize)(m), _2 = 100]{ return cpp2::cmp_less(_0,_1) && cpp2::cmp_less(_1,_2); }() && true != false) ) { cpp2::bounds_safety.report_violation(CPP2_CONTRACT_MSG(("size is " + cpp2::to_string(CPP2_UFCS(ssize)(m))))); }
 #line 37 "pure2-print.cpp2"
             auto a {[]() mutable -> void{}}; 
             auto b {[]() mutable -> void{}}; 
@@ -138,7 +138,7 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
             else {if (!(CPP2_UFCS(empty)(m))) {std::move(b)(); }
             else {std::move(c)(); }}
 
-            if (cpp2::Default.has_handler() && !(true) ) { cpp2::Default.report_violation(""); }
+            if (cpp2::cpp2_default.is_active() && !(true) ) { cpp2::cpp2_default.report_violation(""); }
 
             return [_0 = (s + CPP2_ASSERT_IN_BOUNDS_LITERAL(m, 0))]() mutable -> std::string { return _0;  }(); 
         }

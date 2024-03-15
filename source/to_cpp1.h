@@ -1711,6 +1711,7 @@ public:
             || n == "struct"
             || n == "enum"
             || n == "union"
+            || n == "default"
             )
         {
             printer.print_cpp2("cpp2_"+n.to_string(), pos);
@@ -4711,7 +4712,7 @@ public:
 
         //  If this is one of Cpp2's predefined contract groups,
         //  make it convenient to use without cpp2:: qualification
-        auto name = std::string{"cpp2::Default"};
+        auto name = std::string{"cpp2::cpp2_default"};
         if (n.group)
         {
             auto group = print_to_string(*n.group);
@@ -4719,11 +4720,11 @@ public:
                 name = group;
             }
             if (
-                name == "Default"
-                || name == "Bounds"
-                || name == "Null"
-                || name == "Type"
-                || name == "Testing"
+                name == "default"
+                || name == "bounds_safety"
+                || name == "null_safety"
+                || name == "type_safety"
+                || name == "testing"
                 )
             {
                 name.insert(0, "cpp2::");
@@ -4733,7 +4734,7 @@ public:
         //  "Unevaluated" is for static analysis only, and are never evaluated, so just skip them
         //  (The only requirement for an Unevaluated condition is that it parses; and even that's
         //  easy to relax if we ever want to allow arbitrary tokens in an Unevaluated condition)
-        if (n.group && n.group->to_string() == "Unevaluated") {
+        if (n.group && n.group->to_string() == "unevaluated") {
             return;
         }
 
@@ -4756,16 +4757,22 @@ public:
             message = "CPP2_CONTRACT_MSG(" + print_to_string(*n.message) + ")";
         }
 
+        auto separator = std::string{""};
         printer.print_cpp2(
-            "if (" + name + ".has_handler()",
+            "if (",
             n.position()
         );
         for (auto const& flag : n.flags) {
             printer.print_cpp2(
-                " && " + print_to_string(*flag),
+                separator + print_to_string(*flag),
                 n.position()
             );
+            separator = " && ";
         }
+        printer.print_cpp2(
+            separator + name + ".is_active()",
+            n.position()
+        );
         printer.print_cpp2(
             " && !(" + print_to_string(*n.condition) + ") ) " +
                 "{ " + name + ".report_violation(" + message + "); }",

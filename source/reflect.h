@@ -147,7 +147,7 @@ using parse_statement_ret = std::unique_ptr<statement_node>;
     public: auto report_violation(auto const& msg) const& -> void;
 
 #line 173 "reflect.h2"
-    public: [[nodiscard]] auto has_handler() const& -> auto;
+    public: [[nodiscard]] auto is_active() const& -> auto;
     public: virtual ~compiler_services() noexcept;
 public: compiler_services(compiler_services const& that);
 
@@ -878,7 +878,7 @@ auto newline_pos{CPP2_UFCS(find)(source, '\n')};
         auto tokens {&CPP2_UFCS(back)(generated_lexers)}; 
         CPP2_UFCS(lex)((*cpp2::assert_not_null(tokens)), *cpp2::assert_not_null(std::move(lines)), true);
 
-        if (cpp2::Default.has_handler() && !(std::ssize(CPP2_UFCS(get_map)((*cpp2::assert_not_null(tokens)))) == 1) ) { cpp2::Default.report_violation(""); }
+        if (cpp2::cpp2_default.is_active() && !(std::ssize(CPP2_UFCS(get_map)((*cpp2::assert_not_null(tokens)))) == 1) ) { cpp2::cpp2_default.report_violation(""); }
 
         //  Now parse this single declaration from
         //  the lexed tokens
@@ -927,7 +927,7 @@ auto newline_pos{CPP2_UFCS(find)(source, '\n')};
     }
 
 #line 173 "reflect.h2"
-    [[nodiscard]] auto compiler_services::has_handler() const& -> auto { return true;  }
+    [[nodiscard]] auto compiler_services::is_active() const& -> auto { return true;  }
 
     compiler_services::~compiler_services() noexcept{}
 compiler_services::compiler_services(compiler_services const& that)
@@ -951,7 +951,7 @@ compiler_services::compiler_services(compiler_services const& that)
     {
 
 #line 237 "reflect.h2"
-        if (cpp2::Default.has_handler() && !(n) ) { cpp2::Default.report_violation(CPP2_CONTRACT_MSG("a meta::declaration must point to a valid declaration_node, not null")); }
+        if (cpp2::cpp2_default.is_active() && !(n) ) { cpp2::cpp2_default.report_violation(CPP2_CONTRACT_MSG("a meta::declaration must point to a valid declaration_node, not null")); }
     }
 
 #line 240 "reflect.h2"
@@ -1078,10 +1078,10 @@ declaration_base::declaration_base(declaration_base const& that)
     auto declaration::mark_for_removal_from_enclosing_type() & -> void
 
     {
-        if (cpp2::Type.has_handler() && !(parent_is_type()) ) { cpp2::Type.report_violation(""); }
+        if (cpp2::type_safety.is_active() && !(parent_is_type()) ) { cpp2::type_safety.report_violation(""); }
 #line 322 "reflect.h2"
         auto test {CPP2_UFCS(type_member_mark_for_removal)((*cpp2::assert_not_null(n)))}; 
-        if (cpp2::Default.has_handler() && !(std::move(test)) ) { cpp2::Default.report_violation(""); }// ... to ensure this assert is true
+        if (cpp2::cpp2_default.is_active() && !(std::move(test)) ) { cpp2::cpp2_default.report_violation(""); }// ... to ensure this assert is true
     }
 
     declaration::~declaration() noexcept{}
@@ -1098,7 +1098,7 @@ declaration::declaration(declaration const& that)
 #line 340 "reflect.h2"
     {
 
-        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_function)((*cpp2::assert_not_null(n)))) ) { cpp2::Default.report_violation(""); }
+        if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(is_function)((*cpp2::assert_not_null(n)))) ) { cpp2::cpp2_default.report_violation(""); }
     }
 
 #line 345 "reflect.h2"
@@ -1188,8 +1188,8 @@ declaration::declaration(declaration const& that)
 
 #line 398 "reflect.h2"
     {
-        if ((*this).has_handler() && !(!(has_initializer())) ) { (*this).report_violation(CPP2_CONTRACT_MSG("cannot add an initializer to a function that already has one")); }
-        if ((*this).has_handler() && !(parent_is_type()) ) { (*this).report_violation(CPP2_CONTRACT_MSG("cannot add an initializer to a function that isn't in a type scope")); }
+        if ((*this).is_active() && !(!(has_initializer())) ) { (*this).report_violation(CPP2_CONTRACT_MSG("cannot add an initializer to a function that already has one")); }
+        if ((*this).is_active() && !(parent_is_type()) ) { (*this).report_violation(CPP2_CONTRACT_MSG("cannot add an initializer to a function that isn't in a type scope")); }
         //require( !has_initializer(),
         //         "cannot add an initializer to a function that already has one");
         //require( parent_is_type(),
@@ -1218,7 +1218,7 @@ declaration::declaration(declaration const& that)
 #line 427 "reflect.h2"
     {
 
-        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_object)((*cpp2::assert_not_null(n)))) ) { cpp2::Default.report_violation(""); }
+        if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(is_object)((*cpp2::assert_not_null(n)))) ) { cpp2::cpp2_default.report_violation(""); }
     }
 
 #line 432 "reflect.h2"
@@ -1255,7 +1255,7 @@ declaration::declaration(declaration const& that)
 #line 463 "reflect.h2"
     {
 
-        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_type)((*cpp2::assert_not_null(n)))) ) { cpp2::Default.report_violation(""); }
+        if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(is_type)((*cpp2::assert_not_null(n)))) ) { cpp2::cpp2_default.report_violation(""); }
     }
 
 #line 468 "reflect.h2"
@@ -1403,7 +1403,7 @@ declaration::declaration(declaration const& that)
 #line 598 "reflect.h2"
     {
 
-        if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_alias)((*cpp2::assert_not_null(n)))) ) { cpp2::Default.report_violation(""); }
+        if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(is_alias)((*cpp2::assert_not_null(n)))) ) { cpp2::cpp2_default.report_violation(""); }
     }
 
     alias_declaration::alias_declaration(alias_declaration const& that)
@@ -2010,7 +2010,7 @@ auto print(cpp2::in<meta::type_declaration> t) -> void
     ) -> bool
 
 {
-    if (cpp2::Default.has_handler() && !(CPP2_UFCS(is_type)(n)) ) { cpp2::Default.report_violation(""); }
+    if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(is_type)(n)) ) { cpp2::cpp2_default.report_violation(""); }
 
     //  Check for _names reserved for the metafunction implementation
     for ( 

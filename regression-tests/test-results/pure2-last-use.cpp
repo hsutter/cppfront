@@ -503,7 +503,7 @@ auto issue_313() -> void{
 }
 #line 72 "pure2-last-use.cpp2"
 auto issue_313_1(std::unique_ptr<int> x) -> void{
-                                                                                 if (cpp2::Default.has_handler() && !(*cpp2::assert_not_null(identity(x)) + *cpp2::assert_not_null(identity(x))) ) { cpp2::Default.report_violation(""); }}
+                                                                                 if (cpp2::cpp2_default.is_active() && !(*cpp2::assert_not_null(identity(x)) + *cpp2::assert_not_null(identity(x))) ) { cpp2::cpp2_default.report_violation(""); }}
 
 #line 74 "pure2-last-use.cpp2"
 auto issue_350() -> void{
@@ -834,9 +834,9 @@ auto issue_869_0::operator=([[maybe_unused]] issue_869_0&& that) noexcept -> iss
 issue_869_0::issue_869_0(){}
 [[nodiscard]] auto issue_869_1::is_i() const& -> bool { return _discriminator == 0; }
 [[nodiscard]] auto issue_869_1::i() const& -> issue_869_0 const& { 
-                                                   if (cpp2::Default.has_handler() && !(is_i()) ) { cpp2::Default.report_violation(""); }return *cpp2::assert_not_null(reinterpret_cast<issue_869_0 const*>(&_storage)); }
+                                                   if (cpp2::cpp2_default.is_active() && !(is_i()) ) { cpp2::cpp2_default.report_violation(""); }return *cpp2::assert_not_null(reinterpret_cast<issue_869_0 const*>(&_storage)); }
 [[nodiscard]] auto issue_869_1::i() & -> issue_869_0& { 
-                                                         if (cpp2::Default.has_handler() && !(is_i()) ) { cpp2::Default.report_violation(""); }return *cpp2::assert_not_null(reinterpret_cast<issue_869_0*>(&_storage)); }
+                                                         if (cpp2::cpp2_default.is_active() && !(is_i()) ) { cpp2::cpp2_default.report_violation(""); }return *cpp2::assert_not_null(reinterpret_cast<issue_869_0*>(&_storage)); }
 auto issue_869_1::set_i(cpp2::in<issue_869_0> _value) & -> void{if (!(is_i())) {_destroy();std::construct_at(reinterpret_cast<issue_869_0*>(&_storage), _value);}else {*cpp2::assert_not_null(reinterpret_cast<issue_869_0*>(&_storage)) = _value;}_discriminator = 0;}
 auto issue_869_1::set_i(auto&& ..._args) & -> void{if (!(is_i())) {_destroy();std::construct_at(reinterpret_cast<issue_869_0*>(&_storage), CPP2_FORWARD(_args)...);}else {*cpp2::assert_not_null(reinterpret_cast<issue_869_0*>(&_storage)) = issue_869_0{CPP2_FORWARD(_args)...};}_discriminator = 0;}
 auto issue_869_1::_destroy() & -> void{
@@ -1282,11 +1282,11 @@ auto issue_888_1([[maybe_unused]] std::string unnamed_param_1, move_only_functio
 #line 783 "pure2-last-use.cpp2"
 auto issue_890() -> void{
   auto x {cpp2_new<int>(0)}; 
-  if (cpp2::Default.has_handler() && !(*cpp2::assert_not_null(identity_copy(std::move(x))) == 0) ) { cpp2::Default.report_violation(""); }
+  if (cpp2::cpp2_default.is_active() && !(*cpp2::assert_not_null(identity_copy(std::move(x))) == 0) ) { cpp2::cpp2_default.report_violation(""); }
 {
 auto const& x{cpp2_new<int>(0)};
 #line 786 "pure2-last-use.cpp2"
-  if (cpp2::Default.has_handler() && !(*cpp2::assert_not_null(identity(x)) == 0) ) { cpp2::Default.report_violation(""); }
+  if (cpp2::cpp2_default.is_active() && !(*cpp2::assert_not_null(identity(x)) == 0) ) { cpp2::cpp2_default.report_violation(""); }
 }
 #line 787 "pure2-last-use.cpp2"
 }
@@ -1405,7 +1405,7 @@ auto loops() -> void{
     auto x {cpp2_new<int>(0)}; 
     for ( 
     [[maybe_unused]] auto const& unnamed_param_1 : { 0 } ) 
-    if (cpp2::Default.has_handler() && !(CPP2_UFCS(get)(x)) ) { cpp2::Default.report_violation(""); }
+    if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(get)(x)) ) { cpp2::cpp2_default.report_violation(""); }
   });
 
   static_cast<void>([]() mutable -> void{
@@ -1429,7 +1429,7 @@ auto f() -> void{
   f_copy(std::move(x));
   auto id {[](auto const& x) mutable -> auto&& { return x;  }}; 
   auto y {cpp2_new<int>(0)}; 
-  if (cpp2::Default.has_handler() && !(&std::move(id)(y) == &y) ) { cpp2::Default.report_violation(""); }
+  if (cpp2::cpp2_default.is_active() && !(&std::move(id)(y) == &y) ) { cpp2::cpp2_default.report_violation(""); }
 }
 
 #line 926 "pure2-last-use.cpp2"

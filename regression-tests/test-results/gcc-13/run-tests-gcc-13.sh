@@ -5,7 +5,7 @@ cp ../*.cpp .
 rm -f *.output
 count=0
 exe_count=0
-gcc --version > gcc-version.output 2>&1
+g++ --version > gcc-version.output 2>&1
 for f in *.cpp
 do
     let count=count+1
