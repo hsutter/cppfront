@@ -1,0 +1,90 @@
+// `std::expected` requires C++23 so a dedicated test file is needed
+// since only MSVC supports it at time of writing, and there's no #ifdef
+// or `static if` support in Cpp2 (yet?).
+
+main: () -> int = {
+    
+    ex1: std::expected<int, int> = (123);
+    ex2: std::expected<int, int> = std::unexpected(-1);
+    ex3: std::expected<std::string, size_t> = ("Expect the unexpected");
+
+    if ex1 is int {
+        std::cout << "ex1 is int\n";
+    }
+
+    if ex1 is bool {
+        std::cout << "BUG - ex1 is not a bool\n";
+        return -1;
+    }
+
+    if ex1 is void {
+        std::cout << "BUG - ex1 is not 'empty'\n";
+        return -1;
+    }
+
+    if ex1 is std::unexpected<int> {
+        std::cout << "BUG - ex1 is not unexpected\n";
+        return -1;
+    }
+
+    if ex1 is 123 {
+        std::cout << "ex1 is 123\n";
+    }
+
+    if ex1 is 100 {
+        std::cout << "BUG - ex1's value is not 100\n";
+        return -1;
+    }
+
+    val1:= ex1 as int;
+    std::cout << "ex1 as int = " << val1 << "\n";
+
+    if ex2 is int {
+        std::cout << "BUG - ex2 is not an int\n";
+        return -1;
+    }
+
+    if ex2 is bool {
+        std::cout << "BUG - ex2 is not a bool\n";
+        return -1;
+    }
+
+    if ex2 is 123 {
+        std::cout << "BUG - ex2 does not have a value\n";
+        return -1;
+    }
+
+    if ex2 is std::unexpected<int> {
+        std::cout << "ex2 is unexpected<int> and error is: " << ex2.error() << "\n";
+    }
+
+    if ex2 is void {
+        std::cout << "ex2 is 'empty' aka unexpected<int> and error is: " << ex2.error() << "\n";
+    }
+
+    ex2_err:= ex2 as std::unexpected<int>;
+    std::cout << "ex2 as std::unexpected<int> and error = " << ex2_err.error() << "\n";
+
+    test_inspect(ex1, "expected<int, int> with value");
+    test_inspect(ex2, "expected<int, int> with unexpected");
+    test_inspect(ex3, "expected<string, size_t> with value");
+
+    return 0;
+}
+
+test_inspect: ( x: _, msg: _ ) = {
+
+    unwrap:= :(unexp: std::unexpected<int>) -> _ = {
+        return unexp.error();
+    };
+
+    std::cout
+        << "\n" << msg << "\n    ..."
+        << inspect x -> std::string {
+            is int = "integer " + std::to_string(x as int);
+            is std::unexpected<int> = "unexpected<int> " + std::to_string(unwrap(x as std::unexpected<int>));
+            is std::string = "string " + x as std::string;
+            is _   = " no match";
+        }
+        << "\n";
+}

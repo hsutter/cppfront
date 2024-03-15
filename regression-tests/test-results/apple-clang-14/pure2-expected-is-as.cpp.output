@@ -1,0 +1,72 @@
+pure2-expected-is-as.cpp2:7:10: error: no member named 'expected' in namespace 'std'
+    std::expected<int,int> ex1 {123}; 
+    ~~~~~^
+pure2-expected-is-as.cpp2:7:22: error: expected '(' for function-style cast or type construction
+    std::expected<int,int> ex1 {123}; 
+                  ~~~^
+pure2-expected-is-as.cpp2:8:10: error: no member named 'expected' in namespace 'std'
+    std::expected<int,int> ex2 {std::unexpected(-1)}; 
+    ~~~~~^
+pure2-expected-is-as.cpp2:8:22: error: expected '(' for function-style cast or type construction
+    std::expected<int,int> ex2 {std::unexpected(-1)}; 
+                  ~~~^
+pure2-expected-is-as.cpp2:9:10: error: no member named 'expected' in namespace 'std'
+    std::expected<std::string,size_t> ex3 {"Expect the unexpected"}; 
+    ~~~~~^
+pure2-expected-is-as.cpp2:9:30: error: expected '(' for function-style cast or type construction
+    std::expected<std::string,size_t> ex3 {"Expect the unexpected"}; 
+                  ~~~~~~~~~~~^
+In file included from pure2-expected-is-as.cpp:7:
+In file included from ../../../include/cpp2util.h:46:
+In file included from /Applications/Xcode_14.3.1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/algorithm:1712:
+In file included from /Applications/Xcode_14.3.1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/memory:877:
+In file included from /Applications/Xcode_14.3.1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/iterator:684:
+In file included from /Applications/Xcode_14.3.1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/common_iterator.h:22:
+/Applications/Xcode_14.3.1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/variant:1282:3: error: static_assert failed due to requirement '0 < sizeof...(_Types)' "variant must consist of at least one alternative."
+  static_assert(0 < sizeof...(_Types),
+  ^             ~~~~~~~~~~~~~~~~~~~~~
+pure2-expected-is-as.cpp2:11:23: note: in instantiation of template class 'std::variant<>' requested here
+    if (cpp2::is<int>(ex1)) {
+                      ^
+pure2-expected-is-as.cpp2:11:23: error: use of undeclared identifier 'ex1'
+    if (cpp2::is<int>(ex1)) {
+                      ^
+pure2-expected-is-as.cpp2:15:24: error: use of undeclared identifier 'ex1'
+    if (cpp2::is<bool>(ex1)) {
+                       ^
+pure2-expected-is-as.cpp2:20:24: error: use of undeclared identifier 'ex1'
+    if (cpp2::is<void>(ex1)) {
+                       ^
+pure2-expected-is-as.cpp2:25:23: error: no member named 'unexpected' in namespace 'std'
+    if (cpp2::is<std::unexpected<int>>(ex1)) {
+                 ~~~~~^
+pure2-expected-is-as.cpp2:25:37: error: expected '(' for function-style cast or type construction
+    if (cpp2::is<std::unexpected<int>>(ex1)) {
+                                 ~~~^
+pure2-expected-is-as.cpp2:25:40: error: use of undeclared identifier 'ex1'; did you mean 'exp'?
+    if (cpp2::is<std::unexpected<int>>(ex1)) {
+                                       ^~~
+                                       exp
+/Applications/Xcode_14.3.1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/c++/v1/math.h:895:1: note: 'exp' declared here
+exp(_A1 __lcpp_x) _NOEXCEPT {return ::exp((double)__lcpp_x);}
+^
+pure2-expected-is-as.cpp2:30:18: error: use of undeclared identifier 'ex1'
+    if (cpp2::is(ex1, 123)) {
+                 ^
+pure2-expected-is-as.cpp2:34:18: error: use of undeclared identifier 'ex1'
+    if (cpp2::is(ex1, 100)) {
+                 ^
+pure2-expected-is-as.cpp2:39:31: error: use of undeclared identifier 'ex1'
+    auto val1 {cpp2::as_<int>(ex1)}; 
+                              ^
+pure2-expected-is-as.cpp2:42:23: error: use of undeclared identifier 'ex2'
+    if (cpp2::is<int>(ex2)) {
+                      ^
+pure2-expected-is-as.cpp2:47:24: error: use of undeclared identifier 'ex2'
+    if (cpp2::is<bool>(ex2)) {
+                       ^
+pure2-expected-is-as.cpp2:52:18: error: use of undeclared identifier 'ex2'
+    if (cpp2::is(ex2, 123)) {
+                 ^
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+20 errors generated.
