@@ -15,7 +15,7 @@ Notes:
 
 - Optionally, `condition` may be followed by `, "message"`, a message to include if a violation occurs. For example, `pre(condition, "message")`.
 
-- Optionally, a `<group, pred1, pred2>` can be written inside `<` `>` angle brackets immediately before the `(`, to designate that this test is part of the [contract group](#groups) named `group` and (also optionally) [contract predicates](#predicates) `pred1` and `pred2. If a violation occurs, `Group.report_violation()` will be called. For example, `pre<group>(condition)`.
+- Optionally, a `<group, pred1, pred2>` can be written inside `<` `>` angle brackets immediately before the `(`, to designate that this test is part of the [contract group](#groups) named `group` and (also optionally) [contract predicates](#predicates) `pred1` and `pred2`. If a violation occurs, `Group.report_violation()` will be called. For example, `pre<group>(condition)`.
 
 The order of evaluation is:
 
@@ -31,7 +31,7 @@ For example:
 
 ``` cpp title="Precondition and postcondition examples" hl_lines="2 3"
 insert_at: (container, where: int, val: int)
-    pre<Bounds>( 0 <= where <= container.ssize(), "position (where)$ is outside 'container'" )
+    pre<bounds_safety>( 0 <= where <= container.ssize(), "position (where)$ is outside 'container'" )
     post       ( container.ssize() == container.ssize()$ + 1 )
 = {
     _ = container.insert( container.begin()+where, val );
@@ -42,9 +42,9 @@ In this example:
 
 - The `$` captures are performed before entering the function.
 
-- The precondition is part of the `Bounds` safety contract group and is checked before entering the function. If the check fails, say because `where` is `#!cpp -1`, then `#!cpp cpp2::Bounds.report_violation("position -1 is outside 'container'")` is called.
+- The precondition is part of the `bounds_safety` contract group and is checked before entering the function. If the check fails, say because `where` is `#!cpp -1`, then `#!cpp cpp2::bounds_safety.report_violation("position -1 is outside 'container'")` is called.
 
-- The postcondition is part of the `Default` safety contract group.  If the check fails, then `#!cpp cpp2::Default.report_violation()` is called.
+- The postcondition is part of the `default` safety contract group.  If the check fails, then `#!cpp cpp2::default.report_violation()` is called.
 
 
 ## <a id="groups"></a> Contract groups
