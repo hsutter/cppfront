@@ -6360,6 +6360,12 @@ private:
         //  and see if there are more...
         while (curr().type() == lexeme::Comma) {
             next();
+
+            //  Allow a trailing comma in the list
+            if (curr().type() == lexeme::RightParen) {
+                break;
+            }
+
             pass = passing_style::in;
             if (auto dir = to_passing_style(curr());
                 dir == passing_style::out
@@ -6377,6 +6383,7 @@ private:
             }
             n->expressions.push_back( { pass, std::move(expr) } );
         }
+
         return n;
     }
 
@@ -7809,11 +7816,9 @@ private:
         auto param = std::make_unique<parameter_declaration_node>();
 
         auto count = 1;
-        auto expect_another_param_decl = false;
 
         while ((param = parameter_declaration(is_returns, is_named, is_template, is_statement)) != nullptr)
         {
-            expect_another_param_decl = false;
             param->ordinal = count;
             ++count;
 
@@ -7830,6 +7835,17 @@ private:
             if (curr().type() == closer) {
                 break;
             }
+
+            //  Allow a trailing comma in the list
+            else if (
+                curr().type() == lexeme::Comma
+                && peek(1)->type() == closer
+                )
+            {
+                next();
+                break;
+            }
+
             else if (curr().type() != lexeme::Comma) {
                 if (is_statement) {
                     pos = start_pos;    // backtrack
@@ -7840,12 +7856,7 @@ private:
                 return {};
             }
 
-            expect_another_param_decl = true;
             next();
-        }
-
-        if (expect_another_param_decl) {
-            error("invalid parameter list: a comma must be followed by another parameter", true, {}, true);
         }
 
         if (curr().type() != closer) {
