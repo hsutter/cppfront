@@ -27,7 +27,7 @@
 //  2)  Entities in namespace cpp2::impl::, and macros
 //
 //      These should not be used by the program. They form the language
-//      support library intended to be called only from generated Cpp2 code.
+//      support library intended to be called only from generated code.
 // 
 //      For example, if a Cpp2 function leaves a local variable
 //      uninitialized, cppfront will generate uses of impl::deferred_init<>
@@ -937,6 +937,8 @@ public:
     #define CPP2_UFCS_CONSTRAINT_ARG(...)                 IsViable
 #endif
 
+template <class T> struct dependent_false : std::false_type {};
+
 #define CPP2_UFCS_(LAMBDADEFCAPT,MVFWD,QUALID,TEMPKW,...) \
 [LAMBDADEFCAPT]< \
     typename Obj, typename... Params \
@@ -945,13 +947,24 @@ public:
   > \
   CPP2_LAMBDA_NO_DISCARD (Obj&& obj, Params&& ...params) CPP2_FORCE_INLINE_LAMBDA_CLANG \
   noexcept(CPP2_UFCS_IS_NOTHROW_ARG(MVFWD,QUALID,TEMPKW,__VA_ARGS__)) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) \
-    requires CPP2_UFCS_CONSTRAINT_ARG(MVFWD,QUALID,TEMPKW,__VA_ARGS__) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
-        return CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
-    } else { \
-        return MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+    /* requires CPP2_UFCS_CONSTRAINT_ARG(MVFWD,QUALID,TEMPKW,__VA_ARGS__) */ \
+  { \
+    if constexpr      (requires{ CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
+        return                   CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
     } \
-}
+    else if constexpr (requires{ MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); }) { \
+        return                   MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+    } \
+    else if constexpr (requires{ obj.CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
+        static_assert( cpp2::impl::dependent_false<Obj>::value, "this function call syntax tries 'obj.func(...)', then 'func(obj,...);' - both failed, but the first would have succeeded if obj were an lvalue - the likely problem is that this is a definite last use of the object, and the function cannot accept an rvalue" ); \
+    } \
+    else if constexpr (requires{ MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(obj, CPP2_FORWARD(params)...); }) { \
+        static_assert( cpp2::impl::dependent_false<Obj>::value, "this function call syntax tries 'obj.func(...)', then 'func(obj,...);' - both failed, but the second would have succeeded if obj were an lvalue - the likely problem is that this is a definite last use of the object, and the function cannot accept an rvalue" ); \
+    } \
+    else { \
+        static_assert( cpp2::impl::dependent_false<Obj>::value, "this function call syntax tries 'obj.func(...)', then 'func(obj,...);' - both failed, did you spell the function name correctly?" ); \
+    } \
+  }
 
 #define CPP2_UFCS(...)                                    CPP2_UFCS_(&,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
 #define CPP2_UFCS_MOVE(...)                               CPP2_UFCS_(&,std::move,(),,__VA_ARGS__)

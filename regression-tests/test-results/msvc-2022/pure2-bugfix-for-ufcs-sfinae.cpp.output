@@ -1,1 +1,23 @@
 pure2-bugfix-for-ufcs-sfinae.cpp
+pure2-bugfix-for-ufcs-sfinae.cpp2(1): error C2338: static_assert failed: 'this function call syntax tries 'obj.func(...)', then 'func(obj,...);' - both failed, did you spell the function name correctly?'
+pure2-bugfix-for-ufcs-sfinae.cpp2(1): note: the template instantiation context (the oldest one first) is
+pure2-bugfix-for-ufcs-sfinae.cpp2(7): note: see reference to variable template 'const bool is_invocable_v<`main'::`2'::<lambda_1> &&,B>' being compiled
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.38.33130\include\type_traits(1845): note: see reference to alias template instantiation 'std::_Decltype_invoke_nonzero<_Callable,B,>' being compiled
+        with
+        [
+            _Callable=main::<lambda_1> &&
+        ]
+pure2-bugfix-for-ufcs-sfinae.cpp2(1): note: see reference to function template instantiation 'decltype(auto) <lambda_11_>::operator ()<T,,false>(Obj &&) noexcept(false) const' being compiled
+        with
+        [
+            T=B,
+            Obj=B
+        ]
+pure2-bugfix-for-ufcs-sfinae.cpp2(1): error C2338: static_assert failed: 'this function call syntax tries 'obj.func(...)', then 'func(obj,...);' - both failed, did you spell the function name correctly?'
+pure2-bugfix-for-ufcs-sfinae.cpp2(1): note: the template instantiation context (the oldest one first) is
+pure2-bugfix-for-ufcs-sfinae.cpp2(1): note: see reference to function template instantiation 'decltype(auto) <lambda_12_>::operator ()<T,,false>(Obj &&) noexcept(false) const' being compiled
+        with
+        [
+            T=B,
+            Obj=B
+        ]
