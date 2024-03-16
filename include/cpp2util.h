@@ -887,6 +887,7 @@ public:
     #endif
 #endif
 
+#define CPP2_UFCS_EMPTY(...)
 #define CPP2_UFCS_IDENTITY(...)  __VA_ARGS__
 #define CPP2_UFCS_REMPARENS(...) __VA_ARGS__
 
@@ -939,7 +940,7 @@ public:
 
 template <class T> struct dependent_false : std::false_type {};
 
-#define CPP2_UFCS_(LAMBDADEFCAPT,MVFWD,QUALID,TEMPKW,...) \
+#define CPP2_UFCS_(LAMBDADEFCAPT,SFINAE,MVFWD,QUALID,TEMPKW,...) \
 [LAMBDADEFCAPT]< \
     typename Obj, typename... Params \
     CPP2_UFCS_IS_NOTHROW_PARAM(MVFWD,QUALID,TEMPKW,__VA_ARGS__) \
@@ -947,7 +948,7 @@ template <class T> struct dependent_false : std::false_type {};
   > \
   CPP2_LAMBDA_NO_DISCARD (Obj&& obj, Params&& ...params) CPP2_FORCE_INLINE_LAMBDA_CLANG \
   noexcept(CPP2_UFCS_IS_NOTHROW_ARG(MVFWD,QUALID,TEMPKW,__VA_ARGS__)) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) \
-    /* requires CPP2_UFCS_CONSTRAINT_ARG(MVFWD,QUALID,TEMPKW,__VA_ARGS__) */ \
+    SFINAE( requires CPP2_UFCS_CONSTRAINT_ARG(MVFWD,QUALID,TEMPKW,__VA_ARGS__) ) \
   { \
     if constexpr      (requires{ CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
         return                   CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
@@ -956,24 +957,30 @@ template <class T> struct dependent_false : std::false_type {};
         return                   MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
     } \
     else if constexpr (requires{ obj.CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
-        static_assert( cpp2::impl::dependent_false<Obj>::value, "this function call syntax tries 'obj.func(...)', then 'func(obj,...);' - both failed, but the first would have succeeded if obj were an lvalue - the likely problem is that this is a definite last use of the object, and the function cannot accept an rvalue" ); \
+        static_assert( cpp2::impl::dependent_false<Obj>::value, "this function call syntax tries 'obj.func(...)', then 'func(obj,...);' - both failed, but the first would have succeeded if obj were an lvalue - the likely problem is that this is a definite last use of the object (which automatically treats it as an rvalue / move candidate), and the function cannot accept an rvalue" ); \
+        CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
+        MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
     } \
     else if constexpr (requires{ MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(obj, CPP2_FORWARD(params)...); }) { \
-        static_assert( cpp2::impl::dependent_false<Obj>::value, "this function call syntax tries 'obj.func(...)', then 'func(obj,...);' - both failed, but the second would have succeeded if obj were an lvalue - the likely problem is that this is a definite last use of the object, and the function cannot accept an rvalue" ); \
+        static_assert( cpp2::impl::dependent_false<Obj>::value, "this function call syntax tries 'obj.func(...)', then 'func(obj,...);' - both failed, but the second would have succeeded if obj were an lvalue - the likely problem is that this is a definite last use of the object, (which automatically treats it as an rvalue / move candidate) and the function cannot accept an rvalue" ); \
+        CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
+        MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
     } \
     else { \
         static_assert( cpp2::impl::dependent_false<Obj>::value, "this function call syntax tries 'obj.func(...)', then 'func(obj,...);' - both failed, did you spell the function name correctly?" ); \
+        CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
+        MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
     } \
   }
 
-#define CPP2_UFCS(...)                                    CPP2_UFCS_(&,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
-#define CPP2_UFCS_MOVE(...)                               CPP2_UFCS_(&,std::move,(),,__VA_ARGS__)
-#define CPP2_UFCS_FORWARD(...)                            CPP2_UFCS_(&,CPP2_FORWARD,(),,__VA_ARGS__)
-#define CPP2_UFCS_TEMPLATE(...)                           CPP2_UFCS_(&,CPP2_UFCS_IDENTITY,(),template,__VA_ARGS__)
-#define CPP2_UFCS_QUALIFIED_TEMPLATE(QUALID,...)          CPP2_UFCS_(&,CPP2_UFCS_IDENTITY,QUALID,template,__VA_ARGS__)
-#define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
-#define CPP2_UFCS_TEMPLATE_NONLOCAL(...)                  CPP2_UFCS_(,CPP2_UFCS_IDENTITY,(),template,__VA_ARGS__)
-#define CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL(QUALID,...) CPP2_UFCS_(,CPP2_UFCS_IDENTITY,QUALID,template,__VA_ARGS__)
+#define CPP2_UFCS(...)                                    CPP2_UFCS_(&,CPP2_UFCS_EMPTY,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
+#define CPP2_UFCS_MOVE(...)                               CPP2_UFCS_(&,CPP2_UFCS_EMPTY,std::move,(),,__VA_ARGS__)
+#define CPP2_UFCS_FORWARD(...)                            CPP2_UFCS_(&,CPP2_UFCS_EMPTY,CPP2_FORWARD,(),,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE(...)                           CPP2_UFCS_(&,CPP2_UFCS_EMPTY,CPP2_UFCS_IDENTITY,(),template,__VA_ARGS__)
+#define CPP2_UFCS_QUALIFIED_TEMPLATE(QUALID,...)          CPP2_UFCS_(&,CPP2_UFCS_EMPTY,CPP2_UFCS_IDENTITY,QUALID,template,__VA_ARGS__)
+#define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,CPP2_UFCS_IDENTITY,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE_NONLOCAL(...)                  CPP2_UFCS_(,CPP2_UFCS_IDENTITY,CPP2_UFCS_IDENTITY,(),template,__VA_ARGS__)
+#define CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL(QUALID,...) CPP2_UFCS_(,CPP2_UFCS_IDENTITY,CPP2_UFCS_IDENTITY,QUALID,template,__VA_ARGS__)
 
 } // impl
 
