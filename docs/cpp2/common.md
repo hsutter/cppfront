@@ -55,6 +55,56 @@ The usual `#!cpp // line comments` and `#!cpp /* stream comments */` are support
 ```
 
 
+## <a id="lists"></a> Lists and commas
+
+All lists use `,` commas between list items, and may be enclosed by
+
+- `(` `)` parentheses, for most lists
+
+- `[` `]` brackets, for calling the subscript operator
+
+- `<` `>` angle brackets, for template parameter/argument lists
+
+For example:
+
+``` cpp title="Lists, using optional trailing commas just because we can" hl_lines="1 4 6 7"
+print: <T,U> (t: T, u: U) = std::cout << t << u << "\n";
+
+main: () = {
+    array: std::array = ('A', 'B', 'C');
+
+    for (0, 1, 2) do (e) {
+        print( e, array[e] );
+    }
+    //  Prints:
+    //      0A
+    //      1B
+    //      2C
+}
+```
+
+
+An extra comma at the end of the list, before the closing `)` or `>`, is always allowed but ignored if present (for details, see [Design note: Commas](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Commas)).
+
+For example:
+
+``` cpp title="Lists, using optional trailing commas just because we can" hl_lines="1 4 6 7"
+print: <T,U,> (t: T, u: U,) = std::cout << t << u << "\n";
+
+main: () = {
+    array: std::array = ('A', 'B', 'C',);
+
+    for (0, 1, 2,) do (e) {
+        print( e, array[e,], );
+    }
+    //  Prints:
+    //      0A
+    //      1B
+    //      2C
+}
+```
+
+
 ## <a id="keywords"></a> Reserved keywords
 
 Cpp2 has very few globally reserved keywords; nearly all keywords are contextual, where they have their special meaning when they appear in a particular place in the grammar. For example:
@@ -110,7 +160,7 @@ p: const * * const i32;
 
 Cpp2 supports the same `#!cpp 'c'`haracter, `#!cpp "string"`, binary, integer, and floating point literals as Cpp1, including most Unicode encoding prefixes and raw string literals.
 
-Cpp2 supports using Cpp1 user-defined literals for compatibility, to support seamlessly using existing libraries. However, because Cpp2 has unified function call syntax (UFCS), the preferred way to author the equivalent in Cpp2 is to just write a function or type name as a `.` call suffix. For example:
+Cpp2 supports using Cpp1 user-defined literals for compatibility, to support seamlessly using existing libraries. However, because Cpp2 has [unified function call syntax (UFCS)](expressions.md#ufcs), the preferred way to author the equivalent in Cpp2 is to just write a function or type name as a `.` call suffix. For example:
 
 - You can create a `u8` value by writing either `u8(123)` or **`123.u8()`**. [^u8using]
 

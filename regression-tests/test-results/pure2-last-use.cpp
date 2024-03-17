@@ -1562,7 +1562,7 @@ auto x{cpp2_new<int>(0)};
 
 #line 1043 "pure2-last-use.cpp2"
 auto main(int const argc_, char** argv_) -> int{
-  auto const args = cpp2::impl::make_args(argc_, argv_); 
+  auto const args = cpp2::make_args(argc_, argv_); 
 #line 1044 "pure2-last-use.cpp2"
   issue_683(args);
   issue_847_2(std::vector<std::unique_ptr<int>>());

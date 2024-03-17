@@ -14,7 +14,7 @@ func: ( /* no parameters */ ) = { /* empty body */ }
 
 ## <a id="parameters"></a> Parameters
 
-The parameter list is enclosed by `(` `)` parentheses and the parameters are separated by commas. Each parameter is declared using the [same unified syntax](declarations.md) as used for all declarations. For example:
+The parameter list is a [list](common.md#lists) enclosed by `(` `)` parentheses. Each parameter is declared using the [same unified syntax](declarations.md) as used for all declarations. For example:
 
 ``` cpp title="Declaring parameters" hl_lines="2-4"
 func: (

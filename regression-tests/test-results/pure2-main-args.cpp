@@ -18,7 +18,7 @@ auto main(int const argc_, char** argv_) -> int;
 
 #line 1 "pure2-main-args.cpp2"
 auto main(int const argc_, char** argv_) -> int{
-    auto const args = cpp2::impl::make_args(argc_, argv_); 
+    auto const args = cpp2::make_args(argc_, argv_); 
     // Explicit call to string is necessary
     // std::filesystem::path is base on and implicitly convertible to
     // - std::string (on POSIX systems)

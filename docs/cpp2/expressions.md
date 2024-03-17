@@ -3,6 +3,8 @@
 
 ## <a id="ufcs"></a> Calling functions: `f(x)` syntax, and `x.f()` UFCS syntax
 
+A function argument list is a [list](common.md#lists) of arguments enclosed by `(` `)` parentheses.
+
 A function call like `f(x)` is a normal function call that will call non-member functions only, as usual in C++.
 
 A function call like `x.f()` is a unified function call syntax (aka UFCS) call. It will call a member function if one is available, and otherwise will call `f(x)`. Having UFCS is important for generic code that may want to call a member or a non-member function, whichever is available. It's also important to enable fluid programming styles and natural IDE autocompletion support.

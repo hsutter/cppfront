@@ -28,7 +28,7 @@ using doubler_ret = int;
 #line 9 "pure2-trailing-commas.cpp2"
 class vals {public: int i; };
 
-[[nodiscard]] auto main() -> int;
+auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
 
@@ -46,7 +46,7 @@ template<typename T, typename U> [[nodiscard]] auto g(T const& a, U const& b) ->
 return std::move(i.value()); }
 
 #line 11 "pure2-trailing-commas.cpp2"
-[[nodiscard]] auto main() -> int{
+auto main() -> int{
 {
 auto a{42};
 #line 12 "pure2-trailing-commas.cpp2"

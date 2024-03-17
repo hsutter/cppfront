@@ -85,7 +85,7 @@ f:(x: int = init) = statement;      // same, { } is implicit
 
 ### <a id="template-parameters"></a> Template parameters
 
-A template parameter list is enclosed by `<` `>` angle brackets, and the parameters separated by commas. Each parameter is declared using the [same syntax as any type or object](declarations.md). If a parameter's **`:`** ***kind*** is not specified, the default is `: type`.
+A template parameter list is a [list](common.md#lists) enclosed by `<` `>` angle brackets, and the parameters separated by commas. Each parameter is declared using the [same syntax as any type or object](declarations.md). If a parameter's **`:`** ***kind*** is not specified, the default is `: type`.
 
 For example:
 

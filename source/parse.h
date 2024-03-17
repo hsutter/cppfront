@@ -5630,8 +5630,7 @@ private:
     //G     inspect-expression
     //G     id-expression
     //G     literal
-    //G     '(' expression-list ')'
-    //GT     '{' expression-list '}'
+    //G     '(' expression-list ','? ')'
     //G     unnamed-declaration
     //G
     auto primary_expression()
@@ -5667,7 +5666,7 @@ private:
             auto close = close_paren_type(open_paren->type());
             auto close_text = [&] () -> std::string { if (close == lexeme::RightParen) { return ")"; } return "}"; }();
             next();
-            auto expr_list = expression_list(open_paren, inside_initializer);
+            auto expr_list = expression_list(open_paren, lexeme::RightParen, inside_initializer);
             if (!expr_list) {
                 error("unexpected text - ( is not followed by an expression-list");
                 next();
@@ -5760,8 +5759,8 @@ private:
     //G postfix-expression:
     //G     primary-expression
     //G     postfix-expression postfix-operator     [Note: without whitespace before the operator]
-    //G     postfix-expression '[' expression-list? ']'
-    //G     postfix-expression '(' expression-list? ')'
+    //G     postfix-expression '[' expression-list? ','? ']'
+    //G     postfix-expression '(' expression-list? ','? ')'
     //G     postfix-expression '.' id-expression
     //G
     auto postfix_expression()
@@ -5839,7 +5838,7 @@ private:
 
             if (term.op->type() == lexeme::LeftBracket)
             {
-                term.expr_list = expression_list(term.op);
+                term.expr_list = expression_list(term.op, lexeme::RightBracket);
                 if (!term.expr_list)
                 {
                     error("[ is not followed by a valid expression list");
@@ -5860,7 +5859,7 @@ private:
                 //  If not, then this wasn't a call expression so backtrack to
                 //  the '(' which will be part of the next grammar production
 
-                term.expr_list = expression_list(term.op);
+                term.expr_list = expression_list(term.op, lexeme::RightParen);
                 if (
                     term.expr_list
                     && curr().type() == lexeme::RightParen
@@ -6326,7 +6325,8 @@ private:
     //G
     auto expression_list(
         token const* open_paren,
-        bool inside_initializer = false
+        lexeme       closer,
+        bool         inside_initializer = false
     )
         -> std::unique_ptr<expression_list_node>
     {
@@ -6362,7 +6362,7 @@ private:
             next();
 
             //  Allow a trailing comma in the list
-            if (curr().type() == lexeme::RightParen) {
+            if (curr().type() == closer) {
                 break;
             }
 
@@ -7778,7 +7778,7 @@ private:
 
 
     //G parameter-declaration-list:
-    //G     '(' parameter-declaration-seq? ')'
+    //G     '(' parameter-declaration-seq? ','? ')'
     //G
     //G parameter-declaration-seq:
     //G     parameter-declaration

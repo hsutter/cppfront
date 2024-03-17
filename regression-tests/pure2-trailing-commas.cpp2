@@ -8,7 +8,7 @@ doubler: (a: int,) -> (i : int,) = {
 
 vals: @struct type = { i: int; }
 
-main: () -> int = {
+main: () = {
     (copy a := 42,) while false { a++; }
     _ = g(1, 2,);
 

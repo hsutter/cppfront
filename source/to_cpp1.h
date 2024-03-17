@@ -4813,7 +4813,7 @@ public:
                 n.parameters->position()
             );
             current_functions.back().prolog.statements.push_back(
-                "auto const args = cpp2::impl::make_args(argc_, argv_); "
+                "auto const args = cpp2::make_args(argc_, argv_); "
             );
         }
         else {

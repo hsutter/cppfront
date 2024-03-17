@@ -1782,8 +1782,6 @@ constexpr auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
 }
 
 
-namespace impl {
-
 //-----------------------------------------------------------------------
 //
 //  args: see main() arguments as a container of string_views
@@ -1844,8 +1842,6 @@ inline auto make_args(int argc, char** argv) -> args_t
 {
     return args_t{argc, argv};
 }
-
-} // impl
 
 
 //-----------------------------------------------------------------------
