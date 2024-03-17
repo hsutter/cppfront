@@ -1284,20 +1284,16 @@ union: (inout t : meta::type_declaration)
     //  Provide storage
     (copy storage: std::string = "    _storage: cpp2::aligned_storage<cpp2::max( ")
     {
-        (copy comma: std::string = "")
         for  alternatives
-        next comma = ", "
         do   (e) {
-            storage += comma + "sizeof((e.type)$)";
+            storage += "sizeof((e.type)$), ";
         }
 
         storage += "), cpp2::max( ";
 
-        (copy comma: std::string = "")
         for  alternatives
-        next comma = ", "
         do   (e) {
-            storage += comma + "alignof((e.type)$)";
+            storage += "alignof((e.type)$), ";
         }
 
         storage += " )> = ();\n";

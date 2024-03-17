@@ -724,6 +724,7 @@ public:
                             if (arg+1 == args.end()) {
                                 print("Missing argument to option " + arg->text + " (try -help)\n");
                                 help_requested = true;
+                                break;
                             }
                             arg->pos = processed;
                             ++arg;  // move to next argument, which is the argument to this switch
