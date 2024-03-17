@@ -6,9 +6,9 @@ Copyright (c) Herb Sutter &#x2022; See [License](LICENSE)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![Build (clang, gcc, vs)](https://github.com/hsutter/cppfront/actions/workflows/build-cppfront.yaml/badge.svg)](https://github.com/hsutter/cppfront/actions/workflows/build-cppfront.yaml)
 
-Cppfront is an experimental compiler from a potential C++ 'syntax 2' (Cpp2) to today's 'syntax 1' (Cpp1), to learn some things, prove out some concepts, and share some ideas.
+Cppfront is a compiler from an experimental C++ 'syntax 2' (Cpp2) to today's 'syntax 1' (Cpp1), to prove out some concepts, share some ideas, and prototype features that can also be proposed for evolving today's C++.
 
-## Documentation is [available here](https://hsutter.github.io/cppfront/)
+## Documentation: [available here](https://hsutter.github.io/cppfront/)
 
 ## What's different about this project?
 
