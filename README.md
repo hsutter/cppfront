@@ -4,7 +4,7 @@ Copyright (c) Herb Sutter
 
 See [License](LICENSE)
 
-<a href="https://hsutter.github.io/cppfront/welcome/hello-world/"><img width="400" src="https://github.com/hsutter/cppfront/assets/1801526/1e1592da-dbc3-4268-9774-cb0fb08bc016"></a>
+<a href="https://hsutter.github.io/cppfront/welcome/hello-world/"><img width="440" src="[https://github.com/hsutter/cppfront/assets/1801526/1e1592da-dbc3-4268-9774-cb0fb08bc016](https://github.com/hsutter/cppfront/assets/1801526/9e8e9b06-72ab-4bd4-b06f-c8bf1701e24c)"></a>
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![Build (clang, gcc, vs)](https://github.com/hsutter/cppfront/actions/workflows/build-cppfront.yaml/badge.svg)](https://github.com/hsutter/cppfront/actions/workflows/build-cppfront.yaml)
