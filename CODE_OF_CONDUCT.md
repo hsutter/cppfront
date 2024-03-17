@@ -1,10 +1,6 @@
 # cppfront
 
-An experimental C++ Syntax 2 -> Syntax 1 transpiler
-
-Copyright (c) Herb Sutter
-SPDX-License-Identifier: CC-BY-NC-ND-4.0
-See [License](LICENSE)
+This project is an experimental C++ Syntax 2 -> Syntax 1 transpiler, copyright (c) Herb Sutter &#x2022; See [License](LICENSE)
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
