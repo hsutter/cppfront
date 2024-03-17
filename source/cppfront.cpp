@@ -45,6 +45,10 @@ auto main(
         return EXIT_FAILURE;
     }
 
+    if (std::filesystem::exists(flag_cwd)) {
+        std::filesystem::current_path(flag_cwd);
+    }
+
     //  For each Cpp2 source file
     int exit_status = EXIT_SUCCESS;
     for (auto const& arg : cmdline.arguments())
