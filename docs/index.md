@@ -9,23 +9,25 @@ main: () = {
 
 ## <a id="what-is-cpp2"></a> What is Cpp2?
 
-"Cpp2," short for "C++ syntax 2," is my ([Herb Sutter's](https://github.com/hsutter)) personal project to try to make writing ordinary C++ types/functions/objects be much **simpler and safer**, without breaking backward compatibility. Bjarne Stroustrup said it best:
+"Cpp2," short for "C++ syntax 2," is my ([Herb Sutter's](https://github.com/hsutter)) personal project to try to make writing ordinary C++ types/functions/objects be much **simpler and safer**, without breaking backward compatibility.
 
-> "Inside C++, there is a much smaller and cleaner language struggling to get out." <br>&emsp;&emsp;— Bjarne Stroustrup, _The Design and Evolution of C++_ (D&E), 1994
+**What it isn't.** Cpp2 is not a successor or alternate language with its own divergent or incompatible ecosystem. For example, it does not have its own nonstandard incompatible modules/concepts/etc. that compete with the Standard C++ features; it does not replace your Standard C++ compiler and other tools; and it does not require any updates to your Standard C++ compiler and standard library and other libraries and tools to keep fully using all of them.
+
+**What it is.** Cpp2 aims to be another "skin" for C++ itself, just a simpler and safer way to write ordinary C++ types/functions/objects, and a faster way to experiment with proposals for future new Standard C++ features in a simpler compiler and syntax flavor. It seamlessly uses Standard C++ modules and concepts requirements and other features, and it works with all existing C++20 or higher compilers and tools right out of the box with no updates required (and therefore no ABI changes required) to use them all seamlessly and directly with zero overhead.
+
+ Bjarne Stroustrup said it best:
+
+ > "Inside C++, there is a much smaller and cleaner language struggling to get out." <br>&emsp;&emsp;— Bjarne Stroustrup, _The Design and Evolution of C++_ (D&E), 1994
 >
 > "Say 10% of the size of C++ in definition and similar in front-end compiler size. ... most of the simplification would come from generalization." <br>&emsp;&emsp;— Bjarne Stroustrup, _ACM History of Programming Languages III_, 2007
 
-My goal is to try to prove that Stroustrup is right: that it's possible and desirable to have true C++ with all its expressive power and control and with full backward compatibility, but in a flavor that's 10x simpler with fewer quirks and special cases to remember, [^simpler] and 50x safer where it's far easier to not write security bugs by accident.
+**My goal is to try to prove that Stroustrup is right:** that it's possible and desirable to have true C++ with all its expressive power and control and with full backward compatibility, but in a flavor that's 10x simpler with fewer quirks and special cases to remember, [^simpler] and 50x safer where it's far easier to not write security bugs by accident.
 
 We can't make an improvement that large to C++ via gradual evolution to today's syntax, because some important changes would require changing the meaning of code written in today's syntax. For example, we can never change a language feature default in today's syntax, not even if the default creates a security vulnerability pitfall, because changing a default would break vast swathes of existing code. Having a distinct alternative syntax gives us a "bubble of new code" that doesn't exist today, and have:
 
 - **Freedom to make any desired improvement, without breaking any of today's code.** Cpp2 is designed to take all the consensus C++ best-practices guidance we already teach, and make them the default when using "syntax 2." Examples: Writing unsafe type casts is just not possible in Cpp2 syntax; and Cpp2 can change language defaults to make them simpler and safer. You can always "break the glass" when needed to violate the guidance, but you have to opt out explicitly to write unsafe code, so if the program has a bug you can grep for those places to look at first. For details, see [Design note: unsafe code](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Unsafe-code).
 
 - **Perfect link compatibility always on, perfect source compatibility always available (but you pay for it only if you use it).** Any type/function/object/namespace written in either syntax is always still just a normal C++ type/function/object/namespace, so any code or library written in either Cpp2 or today's C++ syntax ("Cpp1" for short) can seamlessly call each other, with no wrapping/marshaling/thunking. You can write a "mixed" source file that has both Cpp2 and Cpp1 code and get perfect backward C++ source compatibility (even SFINAE and macros), or you can write a "pure" all-Cpp2 source file and write code in a 10x simpler syntax.
-
-**What it isn't.** Cpp2 is not a successor or alternate language with its own divergent or incompatible ecosystem. For example, it does not have its own nonstandard incompatible modules/concepts/etc. that compete with the Standard C++ features; and it does not replace your Standard C++ compiler and other tools.
-
-**What it is.** Cpp2 aims to be another "skin" for C++ itself, just a simpler and safer way to write ordinary C++ types/functions/objects. It seamlessly uses Standard C++ modules and concepts requirements and other features, and it works with all existing C++20 or higher compilers and tools right out of the box with zero overhead.
 
 
 ## <a id="what-is-cppfront"></a> What is cppfront?

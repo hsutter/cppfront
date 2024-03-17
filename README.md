@@ -16,9 +16,9 @@ In short, it aims to help evolve C++ itself, not to be a "C++ successor."
 
 Elaborating:
 
-**What it isn't.** Cpp2 is not a successor or alternate language with its own divergent or incompatible ecosystem. For example, it does not have its own nonstandard incompatible modules/concepts/etc. that compete with the Standard C++ features; and it does not replace your Standard C++ compiler and other tools.
+**What it isn't.** Cpp2 is not a successor or alternate language with its own divergent or incompatible ecosystem. For example, it does not have its own nonstandard incompatible modules/concepts/etc. that compete with the Standard C++ features; it does not replace your Standard C++ compiler and other tools; and it does not require any updates to your Standard C++ compiler and standard library and other libraries and tools to keep fully using all of them.
 
-**What it is.** Cpp2 aims to be another "skin" for C++ itself, just a simpler and safer way to write ordinary C++ types/functions/objects. It seamlessly uses Standard C++ modules and concepts requirements and other features, and it works with all existing C++20 or higher compilers and tools right out of the box with zero overhead.
+**What it is.** Cpp2 aims to be another "skin" for C++ itself, just a simpler and safer way to write ordinary C++ types/functions/objects, and a faster way to experiment with proposals for future new Standard C++ features in a simpler compiler and syntax flavor. It seamlessly uses Standard C++ modules and concepts requirements and other features, and it works with all existing C++20 or higher compilers and tools right out of the box with no updates required (and therefore no ABI changes required) to use them all seamlessly and directly with zero overhead.
 
 For more, see [What is Cpp2?](https://hsutter.github.io/cppfront/#what-is-cpp2).
 
