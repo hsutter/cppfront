@@ -32,7 +32,7 @@ Many more people are listed below for their help with specific parts of the desi
 
 To learn more, please see:
 
-- [**The documentation**](https://hsutter.github.io/cppfront/)
+- [**👀 The documentation 👀**](https://hsutter.github.io/cppfront/)
 - [My CppCon 2022 talk, "Can C++ be 10x simpler and safer ...?"](https://www.youtube.com/watch?v=ELeZAKCN4tY)
 - [My CppCon 2023 talk, "Cooperative C++ Evolution: Toward a TypeScript for C++"](https://www.youtube.com/watch?v=8U3hl8XMm8c)
 - [This repo's wiki](https://github.com/hsutter/cppfront/wiki)
