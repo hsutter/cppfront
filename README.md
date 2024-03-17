@@ -34,7 +34,7 @@ To learn more, please see:
 
 - [**My CppCon 2022 talk, "Can C++ be 10x simpler and safer ...?"**](https://www.youtube.com/watch?v=ELeZAKCN4tY)
 - [**My CppCon 2023 talk, "Cooperative C++ Evolution: Toward a TypeScript for C++"**](https://www.youtube.com/watch?v=8U3hl8XMm8c)
-- This repo's wiki
+- [This repo's wiki](https://github.com/hsutter/cppfront/wiki)
 - The list of papers and talks below
 
 ### Papers and talks derived from this work (presented in current syntax as contributions toward ISO C++'s evolution itself)
