@@ -1,11 +1,8 @@
 # cppfront
 
-Copyright (c) Herb Sutter
+Copyright (c) Herb Sutter &#x2022; See [License](LICENSE)
 
-See [License](LICENSE)
-
-<a href="https://hsutter.github.io/cppfront/welcome/hello-world/"><img width="440" src="[https://github.com/hsutter/cppfront/assets/1801526/1e1592da-dbc3-4268-9774-cb0fb08bc016](https://github.com/hsutter/cppfront/assets/1801526/9e8e9b06-72ab-4bd4-b06f-c8bf1701e24c)"></a>
-
+<a href="https://hsutter.github.io/cppfront/welcome/hello-world/"><img width="410" src="https://github.com/hsutter/cppfront/assets/1801526/1e160e93-f966-4aee-8377-9f9f3982a95f"></a><br>
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![Build (clang, gcc, vs)](https://github.com/hsutter/cppfront/actions/workflows/build-cppfront.yaml/badge.svg)](https://github.com/hsutter/cppfront/actions/workflows/build-cppfront.yaml)
 
