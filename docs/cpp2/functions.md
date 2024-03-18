@@ -27,17 +27,28 @@ func: (
 }
 ```
 
-There are six ways to pass parameters that cover all use cases:
+There are six ways to pass parameters that cover all use cases, that can be written before the parameter name:
 
 | Parameter ***kind*** | "Pass me an `x` I can ______" | Accepts arguments that are | Special semantics | ***kind*** `x: X` Compiles to Cpp1 as |
 |---|---|---|---|---|
 | `in` (default) | read from | anything | always `#!cpp const`<p>automatically passes by value if cheaply copyable | `X const x` or `X const& x` |
 | `copy` | take a copy of | anything | acts like a normal local variable initialized with the argument | `X x` |
 | `inout` | read from and write to | lvalues | | `X& x` |
-| `out` | write to (including construct) | lvalues, including uninitialized lvalues | must `=` assign/construct before other uses | `cpp2::out<X>` |
-| `move` | move from | rvalues | automatically moves from every definite last use | `X&&` |
+| `out` | write to (including construct) | lvalues (including uninitialized) | must `=` assign/construct before other uses | `cpp2::impl::out<X>` |
+| `move` | move from (consume the value of) | rvalues | automatically moves from every definite last use | `X&&` |
 | `forward` | forward | anything | automatically forwards from every definite last use | `T&&` constrained to type `X` |
 
+For example:
+
+``` cpp title="Declaring parameters" hl_lines="2 3"
+func: (
+    x       : i32,              // ('in' is default) x is const within func
+    inout y : std::string       // y is modifiable
+    )
+= {
+    // ...
+}
+```
 
 > Note: All parameters and other objects in Cpp2 are `#!cpp const` by default, except for local variables. For details, see [Design note: `#!cpp const` objects by default](https://github.com/hsutter/cppfront/wiki/Design-note%3A-const-objects-by-default).
 
