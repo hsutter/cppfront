@@ -49,7 +49,7 @@ For example:
 
 
 
-## <a id="wildcard"></a> `_` — the "don't care" wildcard, including explicit discard
+## <a id="wildcard"></a> <a id="discard"></a> `_` — the "don't care" wildcard, including explicit discard
 
 `_` is pronounced **"don't care"** and allowed as a wildcard in most contexts. For example:
 
