@@ -40,13 +40,21 @@ There are six ways to pass parameters that cover all use cases, that can be writ
 
 For example:
 
-``` cpp title="Declaring parameters" hl_lines="2 3"
-func: (
-    x       : i32,              // ('in' is default) x is const within func
-    inout y : std::string       // y is modifiable
+``` cpp title="Declaring parameter kinds" hl_lines="2 3 10"
+append_x_to_y: (
+    x       : i32,          // an i32 I can read from (i.e., const)
+    inout y : std::string   // a string I can read from and write to
     )
 = {
-    // ...
+    y = y + to_string(x);   // read x, read and write y
+}
+
+wrap_f: (
+    forward x               // a generic value of deduced type I can forward
+)                           //  (omitting x's  type means the same as ': _')
+= {
+    global_counter += x;    // ok to read x
+    f(x);                   // last use: automatically does 'std::forward<T>(x)'
 }
 ```
 
