@@ -14,16 +14,20 @@ parameter_styles: (
     )
 = {
     z: int = 12;
+    y: std::pair = (17, 29);
 
     z++;
+    y.first--;
     b += "plugh";
 
     if std::rand()%2 {
         z++;
+        y.first--;
         copy_from(b);   // definite last use
     }
     else {
         copy_from(b&);  // NB: better not move from this (why not?)
+        copy_from(y.second&);  // Ditto
         copy_from(d);
         copy_from(z++);
         copy_from(e);
