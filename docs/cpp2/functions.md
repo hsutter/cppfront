@@ -38,6 +38,8 @@ There are six ways to pass parameters that cover all use cases, that can be writ
 | `move` | move from (consume the value of) | rvalues | automatically moves from every definite last use | `X&&` |
 | `forward` | forward | anything | automatically forwards from every definite last use | `T&&` constrained to type `X` |
 
+> Note: All parameters and other objects in Cpp2 are `#!cpp const` by default, except for local variables. For details, see [Design note: `#!cpp const` objects by default](https://github.com/hsutter/cppfront/wiki/Design-note%3A-const-objects-by-default).
+
 For example:
 
 ``` cpp title="Declaring parameter kinds" hl_lines="2 3 10"
@@ -57,8 +59,6 @@ wrap_f: (
     f(x);                   // last use: automatically does 'std::forward<T>(x)'
 }
 ```
-
-> Note: All parameters and other objects in Cpp2 are `#!cpp const` by default, except for local variables. For details, see [Design note: `#!cpp const` objects by default](https://github.com/hsutter/cppfront/wiki/Design-note%3A-const-objects-by-default).
 
 
 ## <a id="return-values"></a> Return values

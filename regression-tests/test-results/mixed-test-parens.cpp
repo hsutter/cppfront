@@ -28,7 +28,7 @@ constexpr int a = 1;
 #line 8 "mixed-test-parens.cpp2"
 [[nodiscard]] auto main() -> int{
     std::vector<int> v {1, 2, 3}; 
-    std::cout << (1 + 2) * (3 + CPP2_ASSERT_IN_BOUNDS_LITERAL(std::move(v), 0));
+    std::cout << (1 + 2) * (3 + CPP2_ASSERT_IN_BOUNDS_LITERAL(cpp2::move(v), 0));
     f<(cpp2::impl::cmp_greater(1,2))>(3, 4);
     f<a + a>(5, 6);
 }

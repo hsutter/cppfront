@@ -103,14 +103,14 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
             int ret {i}; 
             int const* const p {&ret}; 
             if (cpp2::impl::cmp_less(*cpp2::impl::assert_not_null(p),0)) {
-                ret = -*cpp2::impl::assert_not_null(std::move(p));
+                ret = -*cpp2::impl::assert_not_null(cpp2::move(p));
             }
             ret += strlen(s) - 10 + CPP2_UFCS(strlen)(s) * (16 / (3 & 2)) % 3;
 
             map<int const,string> m {}; 
             CPP2_ASSERT_IN_BOUNDS_LITERAL(m, 0) = cpp2::impl::as_<string>("har");
             ret -= CPP2_UFCS(length)(h("x", m));
-            static_cast<void>(std::move(m));
+            static_cast<void>(cpp2::move(m));
 
             return ret; 
         }
@@ -134,9 +134,9 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
             for ( [[maybe_unused]] auto const& unnamed_param_1 : m ) { { do {goto CONTINUE_label; } while (false); c(); } CPP2_CONTINUE_BREAK(label) }
 
 #line 47 "pure2-print.cpp2"
-            if (cpp2::impl::is(!(CPP2_UFCS(empty)(s)), (true))) {std::move(a)(); }
-            else {if (!(CPP2_UFCS(empty)(m))) {std::move(b)(); }
-            else {std::move(c)(); }}
+            if (cpp2::impl::is(!(CPP2_UFCS(empty)(s)), (true))) {cpp2::move(a)(); }
+            else {if (!(CPP2_UFCS(empty)(m))) {cpp2::move(b)(); }
+            else {cpp2::move(c)(); }}
 
             if (cpp2::cpp2_default.is_active() && !(true) ) { cpp2::cpp2_default.report_violation(""); }
 
@@ -150,7 +150,7 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
 #line 57 "pure2-print.cpp2"
             offset.construct(53);
             name.construct("plugh");
-        return  { std::move(offset.value()), std::move(name.value()) }; }
+        return  { cpp2::move(offset.value()), cpp2::move(name.value()) }; }
 
 #line 61 "pure2-print.cpp2"
         outer::mytype::mytype(){}
@@ -182,7 +182,7 @@ requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...)) {(std::cout << ..
         ::outer::mytype var {}; 
         cout << CPP2_UFCS(g)(var, 42) << "\n";
 
-        cout << [&] () -> namespace_alias::string { auto&& _expr = CPP2_UFCS(g)(std::move(var), 42);
+        cout << [&] () -> namespace_alias::string { auto&& _expr = CPP2_UFCS(g)(cpp2::move(var), 42);
             if (cpp2::impl::is(_expr, 43)) { if constexpr( requires{"forty-and-three";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("forty-and-three")),namespace_alias::string> ) return "forty-and-three"; else return namespace_alias::string{}; else return namespace_alias::string{}; }
             else return "default case"; }
         () << "\n";

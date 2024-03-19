@@ -35,6 +35,6 @@ template<typename T> [[nodiscard]] auto f() -> std::type_identity_t<decltype(CPP
 #line 5 "pure2-bugfix-for-ufcs-sfinae.cpp2"
 auto main() -> int{
   auto g {[]<typename T>([[maybe_unused]] T const& unnamed_param_1) mutable -> std::void_t<decltype(f<T>())>{}}; 
-  static_assert(!(std::is_invocable_v<decltype(std::move(g)),B>));
+  static_assert(!(std::is_invocable_v<decltype(cpp2::move(g)),B>));
 }
 

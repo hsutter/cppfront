@@ -1785,7 +1785,7 @@ public:
             && !in_non_rvalue_context.back()
             && !is_class_member_access;
 
-        //  Add `std::move(*this).` when implicitly moving a member on last use
+        //  Add `cpp2::move(*this).` when implicitly moving a member on last use
         //  This way, members of lvalue reference type won't be implicitly moved
         bool add_this =
             add_move
@@ -1822,7 +1822,7 @@ public:
         }
 
         if (add_move) {
-            printer.print_cpp2("std::move(", n.position());
+            printer.print_cpp2("cpp2::move(", n.position());
         }
         if (add_forward) {
             printer.print_cpp2("CPP2_FORWARD(", {n.position().lineno, n.position().colno - 8});
@@ -3330,8 +3330,8 @@ public:
                 //
                 //  Note: This ensures a valid member call is still prioritized
                 //  by leveraging the last use only in the non-member branch
-                //  For example, `x.f()` won't emit as 'CPP2_UFCS(std::move(f))(x)'
-                //  to never take the branch that wants to call `x.std::move(f)()`
+                //  For example, `x.f()` won't emit as 'CPP2_UFCS(cpp2::move(f))(x)'
+                //  to never take the branch that wants to call `x.cpp2::move(f)()`
                 if (auto last_use = is_definite_last_use(i->id_expr->get_token());
                     last_use
                     && last_use->safe_to_move
@@ -3355,7 +3355,7 @@ public:
                 //  If the computed function name is an explicit member access
                 //  we don't need to go through the UFCS macro
                 //  Note: This also works around compiler bugs
-                if (funcname.starts_with("std::move(*this).")) {
+                if (funcname.starts_with("cpp2::move(*this).")) {
                     prefix.emplace_back(funcname + "(", args.value().open_pos );
                 }
                 else {
@@ -3500,7 +3500,7 @@ public:
             printer.print_cpp2(e.text, n.position());
         }
 
-        //  If this is an --, ++, or &, don't add std::move on the lhs
+        //  If this is an --, ++, or &, don't add cpp2::move on the lhs
         //  even if this is a definite last use (only do that when an rvalue is okay)
         if (
             n.ops.front().op->type() == lexeme::MinusMinus
@@ -3850,7 +3850,7 @@ public:
             }
         }
 
-        //  Else if this is an assignment expression, don't add std::move on the lhs
+        //  Else if this is an assignment expression, don't add cpp2::move on the lhs
         //  even if this is a definite last use (only do that when an rvalue is okay)
         if (
             !n.terms.empty()
@@ -4030,7 +4030,7 @@ public:
                     printer.print_cpp2("cpp2::impl::out(&", n.position());
                 }
                 else if (x.pass == passing_style::move) {
-                    printer.print_cpp2("std::move(", n.position());
+                    printer.print_cpp2("cpp2::move(", n.position());
                 }
             }
 
@@ -4548,11 +4548,11 @@ public:
 
             auto name = n.declaration->identifier->get_token();
             assert(name);
-            auto req = std::string{"std::is_same_v<CPP2_TYPEOF("};
-            req += *name;
-            req += "), ";
+            auto req = std::string{"std::is_same_v<"};
             req += param_type;
-            req += ">";
+            req += ", CPP2_TYPEOF(";
+            req += *name;
+            req += ")>";
             function_requires_conditions.push_back(req);
         }
         else {

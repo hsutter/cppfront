@@ -48,7 +48,7 @@ auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void
     cpp2::impl::deferred_init<char const*> bmsg; 
     if (b) { bmsg.construct("true");}
     else {bmsg.construct("false"); }
-    std::cout << msg << std::move(bmsg.value()) << "\n";
+    std::cout << msg << cpp2::move(bmsg.value()) << "\n";
 }
 
 #line 26 "mixed-type-safety-1.cpp2"
@@ -58,9 +58,9 @@ auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void
     print( "1   is int? ", cpp2::impl::is<int>(1));
 
     auto c {cpp2_new<Circle>()}; // safe by construction
-    Shape* s {CPP2_UFCS(get)(std::move(c))}; // safe by Lifetime
+    Shape* s {CPP2_UFCS(get)(cpp2::move(c))}; // safe by Lifetime
     print("\ns* is Shape?  ", cpp2::impl::is<Shape>(*cpp2::impl::assert_not_null(s)));
     print(  "s* is Circle? ", cpp2::impl::is<Circle>(*cpp2::impl::assert_not_null(s)));
-    print(  "s* is Square? ", cpp2::impl::is<Square>(*cpp2::impl::assert_not_null(std::move(s))));
+    print(  "s* is Square? ", cpp2::impl::is<Square>(*cpp2::impl::assert_not_null(cpp2::move(s))));
 }
 

@@ -51,11 +51,11 @@ auto parameter_styles(
 
     if (std::rand() % 2) {
         ++z;
-        copy_from(std::move(b));// definite last use
+        copy_from(cpp2::move(b));// definite last use
     }
     else {
         copy_from(&b);  // NB: better not move from this (why not?)
-        copy_from(std::move(d));
+        copy_from(cpp2::move(d));
         copy_from(++z);
     }
 
@@ -64,7 +64,7 @@ auto parameter_styles(
     copy_from(z);
 
     if (std::time(nullptr) % 2 == 0) {
-        copy_from(std::move(z));
+        copy_from(cpp2::move(z));
     }
 
 }

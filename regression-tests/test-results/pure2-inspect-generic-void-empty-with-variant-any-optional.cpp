@@ -33,11 +33,11 @@ auto test_generic(auto const& x, auto const& msg) -> void;
 
     std::cout << "\nAll these cases satisfy \"VOYDE AND EMPTIE\"\n";
 
-    test_generic(std::move(p), "unique_ptr");
-    test_generic(std::move(i), "vector<int>::iterator");
-    test_generic(std::move(v), "variant<monostate, int, int, string>");
-    test_generic(std::move(a), "any");
-    test_generic(std::move(o), "optional<string>");
+    test_generic(cpp2::move(p), "unique_ptr");
+    test_generic(cpp2::move(i), "vector<int>::iterator");
+    test_generic(cpp2::move(v), "variant<monostate, int, int, string>");
+    test_generic(cpp2::move(a), "any");
+    test_generic(cpp2::move(o), "optional<string>");
 }
 
 #line 18 "pure2-inspect-generic-void-empty-with-variant-any-optional.cpp2"

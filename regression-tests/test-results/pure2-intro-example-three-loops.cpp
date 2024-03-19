@@ -55,7 +55,7 @@ auto decorate_and_print(auto& thing) -> void{
     } while ( [&]{ --*cpp2::impl::assert_not_null(i) ; return true; }() && cpp2::impl::cmp_greater(*cpp2::impl::assert_not_null(i),0));
 
     std::cout << "\n";
-    for ( auto& word : std::move(words) ) 
+    for ( auto& word : cpp2::move(words) ) 
         decorate_and_print(word);
 
     print(std::string{"end of program"});

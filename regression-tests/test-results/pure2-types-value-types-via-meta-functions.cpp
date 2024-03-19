@@ -159,7 +159,7 @@ template<typename T> auto test() -> void{
 
     //  widget should be comparable
     T b {2}; 
-    if ((cpp2::impl::cmp_less(std::move(a),std::move(b)))) {
+    if ((cpp2::impl::cmp_less(cpp2::move(a),cpp2::move(b)))) {
         std::cout << "less ";
     }
     else {

@@ -43,7 +43,7 @@ template<typename T, typename U> [[nodiscard]] auto g(T const& a, U const& b) ->
         cpp2::impl::deferred_init<int> i;
 #line 6 "pure2-trailing-commas.cpp2"
     i.construct(a * 2);
-return std::move(i.value()); }
+return cpp2::move(i.value()); }
 
 #line 11 "pure2-trailing-commas.cpp2"
 auto main() -> int{
@@ -59,7 +59,7 @@ auto a{42};
 
     std::array array {0, 1, 2}; 
 
-    static_cast<void>(std::move(array));
-    static_cast<void>(std::move(grouping));
+    static_cast<void>(cpp2::move(array));
+    static_cast<void>(cpp2::move(grouping));
 }
 

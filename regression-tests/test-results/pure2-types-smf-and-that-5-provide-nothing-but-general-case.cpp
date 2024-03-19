@@ -138,16 +138,16 @@ auto main() -> int{
     CPP2_UFCS(print)(y, "   cp-construct  ", " <- ");
     CPP2_UFCS(print)(x, "", "\n");
 
-    auto z {std::move(x)}; 
+    auto z {cpp2::move(x)}; 
     CPP2_UFCS(print)(z, "   mv-construct  ", " <- ");
-    CPP2_UFCS(print)(std::move(x), "", "\n");
+    CPP2_UFCS(print)(cpp2::move(x), "", "\n");
 
     z = y;
     CPP2_UFCS(print)(z, "   cp-assign     ", " <- ");
     CPP2_UFCS(print)(y, "", "\n");
 
-    z = { std::move(y) };
-    CPP2_UFCS(print)(std::move(z), "   mv-assign     ", " <- ");
-    CPP2_UFCS(print)(std::move(y), "", "\n");
+    z = { cpp2::move(y) };
+    CPP2_UFCS(print)(cpp2::move(z), "   mv-assign     ", " <- ");
+    CPP2_UFCS(print)(cpp2::move(y), "", "\n");
 }
 

@@ -255,9 +255,9 @@ auto do_break_outer() -> void
 auto for_continue_inner() -> void
 {
     std::vector vi {0, 1, 2}; 
-    for ( auto const& i : std::move(vi) ) {
+    for ( auto const& i : cpp2::move(vi) ) {
         std::vector vj {0, 1, 2}; 
-        for ( auto const& j : std::move(vj) ) {{
+        for ( auto const& j : cpp2::move(vj) ) {{
 #line 166 "pure2-break-continue.cpp2"
             std::cout << i << j << " ";
             if (j == 1) {
@@ -275,10 +275,10 @@ auto for_continue_inner() -> void
 auto for_continue_outer() -> void
 {
     std::vector vi {0, 1, 2}; 
-    for ( auto const& i : std::move(vi) ) {{
+    for ( auto const& i : cpp2::move(vi) ) {{
 #line 181 "pure2-break-continue.cpp2"
         std::vector vj {0, 1, 2}; 
-        for ( auto const& j : std::move(vj) ) {
+        for ( auto const& j : cpp2::move(vj) ) {
             std::cout << i << j << " ";
             if (j == 1) {
                 goto CONTINUE_outer;
@@ -295,9 +295,9 @@ auto for_continue_outer() -> void
 auto for_break_inner() -> void
 {
     std::vector vi {0, 1, 2}; 
-    for ( auto const& i : std::move(vi) ) {
+    for ( auto const& i : cpp2::move(vi) ) {
         std::vector vj {0, 1, 2}; 
-        for ( auto const& j : std::move(vj) ) {{
+        for ( auto const& j : cpp2::move(vj) ) {{
 #line 200 "pure2-break-continue.cpp2"
             std::cout << i << j << " ";
             if (j == 1) {
@@ -315,10 +315,10 @@ auto for_break_inner() -> void
 auto for_break_outer() -> void
 {
     std::vector vi {0, 1, 2}; 
-    for ( auto const& i : std::move(vi) ) {{
+    for ( auto const& i : cpp2::move(vi) ) {{
 #line 215 "pure2-break-continue.cpp2"
         std::vector vj {0, 1, 2}; 
-        for ( auto const& j : std::move(vj) ) {
+        for ( auto const& j : cpp2::move(vj) ) {
             std::cout << i << j << " ";
             if (j == 1) {
                 goto BREAK_outer;

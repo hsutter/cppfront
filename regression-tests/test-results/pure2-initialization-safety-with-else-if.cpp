@@ -32,7 +32,7 @@ auto main(int const argc_, char** argv_) -> int{
     }else {if (true) {
         if (CPP2_UFCS(size)(args) == 2) {
             p.construct(&c);
-        }else {if (cpp2::impl::cmp_greater(std::move(b),0)) {
+        }else {if (cpp2::impl::cmp_greater(cpp2::move(b),0)) {
                 p.construct(&a);
         }
         else {
@@ -42,6 +42,6 @@ auto main(int const argc_, char** argv_) -> int{
         p.construct(&c);
     }}
 
-    std::cout << *cpp2::impl::assert_not_null(std::move(p.value())) << std::endl;
+    std::cout << *cpp2::impl::assert_not_null(cpp2::move(p.value())) << std::endl;
 }
 

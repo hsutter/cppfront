@@ -42,10 +42,10 @@ auto f(auto x_) -> void{
 [[nodiscard]] auto main() -> int{
     cpp2::impl::deferred_init<int> a; 
     f(cpp2::impl::out(&a));
-    std::cout << std::move(a.value()) << "\n";
+    std::cout << cpp2::move(a.value()) << "\n";
 
     cpp2::impl::deferred_init<X> b; 
     f(cpp2::impl::out(&b));
-    std::cout << std::move(b.value()) << "\n";
+    std::cout << cpp2::move(b.value()) << "\n";
 }
 

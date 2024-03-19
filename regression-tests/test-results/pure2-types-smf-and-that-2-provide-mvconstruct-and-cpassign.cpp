@@ -67,7 +67,7 @@ auto main() -> int;
 
 #line 8 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
     myclass::myclass(myclass&& that) noexcept
-        : name{ std::move(that).name + "(CM)" }
+        : name{ cpp2::move(that).name + "(CM)" }
         , addr{ std::move(that).addr }{
 
 #line 10 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
@@ -87,7 +87,7 @@ auto main() -> int;
 #line 13 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
     auto myclass::operator=(myclass&& that) noexcept -> myclass& {
         name = std::move(that).name;
-        addr = std::move(that).addr + "(AC)";
+        addr = cpp2::move(that).addr + "(AC)";
 
 #line 15 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
         std::cout << "assign - copy        ";
@@ -135,16 +135,16 @@ auto main() -> int{
     CPP2_UFCS(print)(y, "   cp-construct  ", " <- ");
     CPP2_UFCS(print)(x, "", "\n");
 
-    auto z {std::move(x)}; 
+    auto z {cpp2::move(x)}; 
     CPP2_UFCS(print)(z, "   mv-construct  ", " <- ");
-    CPP2_UFCS(print)(std::move(x), "", "\n");
+    CPP2_UFCS(print)(cpp2::move(x), "", "\n");
 
     z = y;
     CPP2_UFCS(print)(z, "   cp-assign     ", " <- ");
     CPP2_UFCS(print)(y, "", "\n");
 
-    z = { std::move(y) };
-    CPP2_UFCS(print)(std::move(z), "   mv-assign     ", " <- ");
-    CPP2_UFCS(print)(std::move(y), "", "\n");
+    z = { cpp2::move(y) };
+    CPP2_UFCS(print)(cpp2::move(z), "   mv-assign     ", " <- ");
+    CPP2_UFCS(print)(cpp2::move(y), "", "\n");
 }
 

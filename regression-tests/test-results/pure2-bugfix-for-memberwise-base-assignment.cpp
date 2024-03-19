@@ -79,6 +79,6 @@ auto main() -> int;
 auto main() -> int{
   auto d {Derived()}; 
   auto d2 {d}; 
-  d2 = std::move(d);
+  d2 = cpp2::move(d);
 }
 

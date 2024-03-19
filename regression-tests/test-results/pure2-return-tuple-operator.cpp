@@ -57,7 +57,7 @@ auto main() -> int;
 #line 4 "pure2-return-tuple-operator.cpp2"
         x.construct(12);
         y.construct(34);
-        return  { std::move(x.value()), std::move(y.value()) }; 
+        return  { cpp2::move(x.value()), cpp2::move(y.value()) }; 
     }
 #line 8 "pure2-return-tuple-operator.cpp2"
     [[nodiscard]] auto A::operator*() const& -> operator_dereference_ret{
@@ -66,7 +66,7 @@ auto main() -> int;
 #line 9 "pure2-return-tuple-operator.cpp2"
         x.construct(23);
         y.construct(45);
-        return  { std::move(x.value()), std::move(y.value()) }; 
+        return  { cpp2::move(x.value()), cpp2::move(y.value()) }; 
     }
 #line 13 "pure2-return-tuple-operator.cpp2"
     [[nodiscard]] auto A::operator[](cpp2::impl::in<int> idx) const& -> operator_subscript_ret{
@@ -75,7 +75,7 @@ auto main() -> int;
 #line 14 "pure2-return-tuple-operator.cpp2"
         x.construct(34 * (idx + 1));
         y.construct(56 * (idx + 1));
-        return  { std::move(x.value()), std::move(y.value()) }; 
+        return  { cpp2::move(x.value()), cpp2::move(y.value()) }; 
     }
 
 #line 21 "pure2-return-tuple-operator.cpp2"
@@ -89,7 +89,7 @@ auto main() -> int{
     auto t2 {*cpp2::impl::assert_not_null(a)}; 
     std::cout << t2.x << " , " << t2.y << "\n";
 
-    auto t3 {CPP2_ASSERT_IN_BOUNDS_LITERAL(std::move(a), 0)}; 
+    auto t3 {CPP2_ASSERT_IN_BOUNDS_LITERAL(cpp2::move(a), 0)}; 
     std::cout << t3.x << " , " << t3.y << "\n";
 
 }

@@ -109,7 +109,7 @@ auto main() -> int;
 auto main() -> int{
     my_integer a {1}; 
     my_integer b {2}; 
-    if (cpp2::impl::cmp_less(std::move(a),std::move(b))) {
+    if (cpp2::impl::cmp_less(cpp2::move(a),cpp2::move(b))) {
         std::cout << "less ";
     }
     else {
@@ -118,7 +118,7 @@ auto main() -> int{
 
     case_insensitive_string c {"def"}; 
     case_insensitive_string d {"abc"}; 
-    if (cpp2::impl::cmp_less(std::move(c),std::move(d))) {
+    if (cpp2::impl::cmp_less(cpp2::move(c),cpp2::move(d))) {
         std::cout << "less ";
     }
     else {
@@ -127,7 +127,7 @@ auto main() -> int{
 
     person_in_family_tree e {20}; 
     person_in_family_tree f {23}; 
-    if (cpp2::impl::cmp_less(std::move(e),std::move(f))) {
+    if (cpp2::impl::cmp_less(cpp2::move(e),cpp2::move(f))) {
         std::cout << "less\n";
     }
     else {

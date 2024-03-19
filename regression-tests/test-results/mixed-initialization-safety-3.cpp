@@ -45,7 +45,7 @@ auto print_decorated(auto const& x) -> void;
     }else {
         fill(cpp2::impl::out(&x), "plugh", 40);// note: constructs x!
     }
-    print_decorated(std::move(x.value()));
+    print_decorated(cpp2::move(x.value()));
 }
 
 #line 16 "mixed-initialization-safety-3.cpp2"

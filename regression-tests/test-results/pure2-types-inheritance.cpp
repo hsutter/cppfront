@@ -128,7 +128,7 @@ namespace N {
 
 #line 34 "pure2-types-inheritance.cpp2"
     Cyborg::~Cyborg() noexcept { 
-        std::cout << ("Tired but satisfied after another successful day, " + cpp2::to_string(std::move(*this).name) + " checks out and goes home to their family\n");  }
+        std::cout << ("Tired but satisfied after another successful day, " + cpp2::to_string(cpp2::move(*this).name) + " checks out and goes home to their family\n");  }
 
 #line 38 "pure2-types-inheritance.cpp2"
 auto make_speak(cpp2::impl::in<Human> h) -> void{
@@ -147,6 +147,6 @@ auto main() -> int{
     Cyborg c {"Parsnip"}; 
     CPP2_UFCS(print)(c);
     CPP2_UFCS(make_speak)(c);
-    CPP2_UFCS(do_work)(std::move(c));
+    CPP2_UFCS(do_work)(cpp2::move(c));
 }
 

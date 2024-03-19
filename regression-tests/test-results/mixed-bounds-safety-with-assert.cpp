@@ -33,7 +33,7 @@ auto print_subrange(auto const& rng, cpp2::impl::in<int> start, cpp2::impl::in<i
     std::set_terminate(std::abort);
 
     std::vector<int> v {1, 2, 3, 4, 5}; 
-    print_subrange(std::move(v), 1, 13);
+    print_subrange(cpp2::move(v), 1, 13);
 }
 
 #line 9 "mixed-bounds-safety-with-assert.cpp2"

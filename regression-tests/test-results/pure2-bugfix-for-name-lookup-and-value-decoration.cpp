@@ -26,12 +26,12 @@ using vals_ret = int;
         cpp2::impl::deferred_init<int> i;
 #line 2 "pure2-bugfix-for-name-lookup-and-value-decoration.cpp2"
     i.construct(42);
-    return std::move(i.value()); 
+    return cpp2::move(i.value()); 
 }
 
 #line 6 "pure2-bugfix-for-name-lookup-and-value-decoration.cpp2"
 [[nodiscard]] auto main() -> int{
     auto v {vals()}; 
-    static_cast<void>(std::move(v));
+    static_cast<void>(cpp2::move(v));
 }
 

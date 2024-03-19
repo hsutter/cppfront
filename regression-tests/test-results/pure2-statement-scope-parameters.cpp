@@ -44,7 +44,7 @@ auto& i{local_int};
     }
 }
 #line 14 "pure2-statement-scope-parameters.cpp2"
-    std::cout << std::move(local_int) << "\n";// prints 43
+    std::cout << cpp2::move(local_int) << "\n";// prints 43
 
     std::chrono::duration<cpp2::i32> auto_1 {0}; 
 {

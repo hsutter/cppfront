@@ -41,7 +41,7 @@ int const global {42};
 [[nodiscard]] auto main() -> int{
     std::vector v {1, 2, 3}; 
     first(v) = 4;
-    std::cout << first(std::move(v)) << std::endl;// prints: 4
+    std::cout << first(cpp2::move(v)) << std::endl;// prints: 4
     std::cout << f() << std::endl; // prints: 42
 }
 
