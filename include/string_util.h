@@ -2,6 +2,7 @@
 
 #include <string>
 #include <algorithm>
+#include <sstream>
 
 // From https://stackoverflow.com/questions/216823/how-to-trim-a-stdstring
 
@@ -81,11 +82,11 @@ inline bool string_to_int(std::string const& s, int& v, int base = 10) {
         v = stoi(s, nullptr, base);
         return true;
     }
-    catch (std::invalid_argument const& ex)
+    catch (std::invalid_argument const&)
     {
         return false;
     }
-    catch (std::out_of_range const& ex)
+    catch (std::out_of_range const&)
     {
         return false;
     }
@@ -93,16 +94,20 @@ inline bool string_to_int(std::string const& s, int& v, int base = 10) {
 
 inline std::string int_to_string(int i, int base = 10) {
     if (8 == base) {
-        return std::format("{:03o}", i);
+        std::ostringstream oss;
+        oss << std::oct << i;
+        return oss.str();
     }
     else if (10 == base) {
-        return std::format("{}", i);
+        return std::to_string(i);
     }
     else if (16 == base) {
-        return std::format("{:02x}", i);
+        std::ostringstream oss;
+        oss << std::hex << i;
+        return oss.str();
     }
     else {
-        throw std::runtime_error(std::format("Base {} not implemented.", base));
+        throw std::runtime_error("Base " + std::to_string(i) + " not implemented.");
     }
 }
 
