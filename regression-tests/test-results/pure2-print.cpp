@@ -150,7 +150,7 @@ requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
 #line 57 "pure2-print.cpp2"
             offset.construct(53);
             name.construct("plugh");
-        return  { cpp2::move(offset.value()), cpp2::move(name.value()) }; }
+        return  { std::move(offset.value()), std::move(name.value()) }; }
 
 #line 61 "pure2-print.cpp2"
         outer::mytype::mytype(){}

@@ -43,7 +43,7 @@ template<typename T, typename U> [[nodiscard]] auto g(T const& a, U const& b) ->
         cpp2::impl::deferred_init<int> i;
 #line 6 "pure2-trailing-commas.cpp2"
     i.construct(a * 2);
-return cpp2::move(i.value()); }
+return std::move(i.value()); }
 
 #line 11 "pure2-trailing-commas.cpp2"
 auto main() -> int{

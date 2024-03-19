@@ -26,7 +26,7 @@ using vals_ret = int;
         cpp2::impl::deferred_init<int> i;
 #line 2 "pure2-bugfix-for-name-lookup-and-value-decoration.cpp2"
     i.construct(42);
-    return cpp2::move(i.value()); 
+    return std::move(i.value()); 
 }
 
 #line 6 "pure2-bugfix-for-name-lookup-and-value-decoration.cpp2"

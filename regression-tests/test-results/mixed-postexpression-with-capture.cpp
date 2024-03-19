@@ -86,7 +86,7 @@ std::string a {"xyzzy"};
 std::string b {"plugh"};
 cpp2_finally_presuccess.add([&]{if (cpp2::cpp2_default.is_active() && !([_0 = CPP2_UFCS(length)(a), _1 = CPP2_UFCS(length)(b), _2 = 5]{ return _0==_1 && _1==_2; }()) ) { cpp2::cpp2_default.report_violation(""); }} );
 #line 30 "mixed-postexpression-with-capture.cpp2"
-cpp2_finally_presuccess.run(); return  { cpp2::move(a), cpp2::move(b) }; 
+cpp2_finally_presuccess.run(); return  { std::move(a), std::move(b) }; 
 
 #line 36 "mixed-postexpression-with-capture.cpp2"
     // 'return' is generated when omitted like this

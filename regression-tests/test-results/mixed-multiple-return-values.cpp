@@ -59,7 +59,7 @@ bool flip_a_coin() {
         s.construct("plugh");
     }
 
-    return  { cpp2::move(i.value()), cpp2::move(s.value()) }; 
+    return  { std::move(i.value()), std::move(s.value()) }; 
 }
 
 #line 22 "mixed-multiple-return-values.cpp2"

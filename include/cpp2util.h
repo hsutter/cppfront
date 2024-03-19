@@ -365,13 +365,13 @@ using _uchar     = unsigned char;    // normally use u8 instead
 //
 
 template <typename T>
-    requires (std::move_constructible<std::remove_cvref_t<T>>)
+    requires (std::copy_constructible<std::remove_cvref_t<T>>)
 auto move(T&& t) -> decltype(auto) {
     return std::move(t);
 }
 
 template <typename T>
-    requires (!std::move_constructible<std::remove_cvref_t<T>>)
+    requires (!std::copy_constructible<std::remove_cvref_t<T>>)
 auto move(T&& t) -> decltype(auto) {
     return std::forward<T>(t);
 }

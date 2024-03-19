@@ -96,7 +96,7 @@ auto main() -> int{
     CPP2_UFCS(print)(cpp2::move(y));
 
     std::cout << "-----\n";
-    auto z {cpp2::move(x)}; 
+    auto z {std::move(x)}; 
     CPP2_UFCS(print)(cpp2::move(x));
     CPP2_UFCS(print)(cpp2::move(z));
 }

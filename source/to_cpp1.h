@@ -1767,6 +1767,17 @@ public:
             && !in_non_rvalue_context.back()
             && !is_class_member_access;
 
+        //  We always want to std::move from named return values,
+        //  regardless of their types, so use std::move for that
+        bool add_std_move =
+            synthesized_multi_return_size > 1
+            || (
+                synthesized_multi_return_size == 1
+                && decl
+                && !decl->initializer
+                );
+
+        //  Otherwise we'll use cpp2::move
         bool add_move =
             !add_forward
             && (
@@ -1774,12 +1785,7 @@ public:
                 || last_use->safe_to_move
                 )
             && (
-                synthesized_multi_return_size > 1
-                || (
-                    synthesized_multi_return_size == 1
-                    && decl
-                    && !decl->initializer
-                    )
+                add_std_move
                 || (last_use && !suppress_move_from_last_use)
                 )
             && !in_non_rvalue_context.back()
@@ -1821,12 +1827,17 @@ public:
             add_forward = current_args.back().ptoken == n.identifier;
         }
 
-        if (add_move) {
+        if (add_std_move) {
+            printer.print_cpp2("std::move(", n.position());
+        }
+        else if (add_move) {
             printer.print_cpp2("cpp2::move(", n.position());
         }
+
         if (add_forward) {
             printer.print_cpp2("CPP2_FORWARD(", {n.position().lineno, n.position().colno - 8});
         }
+
         if (add_this) {
             printer.print_cpp2("*this).", n.position());
         }
@@ -1887,6 +1898,7 @@ public:
             !add_this
             && (
                 add_move
+                || add_std_move
                 || add_forward
                 )
             )
@@ -4030,7 +4042,7 @@ public:
                     printer.print_cpp2("cpp2::impl::out(&", n.position());
                 }
                 else if (x.pass == passing_style::move) {
-                    printer.print_cpp2("cpp2::move(", n.position());
+                    printer.print_cpp2("std::move(", n.position());
                 }
             }
 

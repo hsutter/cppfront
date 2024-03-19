@@ -57,7 +57,7 @@ auto main() -> int;
 #line 4 "pure2-return-tuple-operator.cpp2"
         x.construct(12);
         y.construct(34);
-        return  { cpp2::move(x.value()), cpp2::move(y.value()) }; 
+        return  { std::move(x.value()), std::move(y.value()) }; 
     }
 #line 8 "pure2-return-tuple-operator.cpp2"
     [[nodiscard]] auto A::operator*() const& -> operator_dereference_ret{
@@ -66,7 +66,7 @@ auto main() -> int;
 #line 9 "pure2-return-tuple-operator.cpp2"
         x.construct(23);
         y.construct(45);
-        return  { cpp2::move(x.value()), cpp2::move(y.value()) }; 
+        return  { std::move(x.value()), std::move(y.value()) }; 
     }
 #line 13 "pure2-return-tuple-operator.cpp2"
     [[nodiscard]] auto A::operator[](cpp2::impl::in<int> idx) const& -> operator_subscript_ret{
@@ -75,7 +75,7 @@ auto main() -> int;
 #line 14 "pure2-return-tuple-operator.cpp2"
         x.construct(34 * (idx + 1));
         y.construct(56 * (idx + 1));
-        return  { cpp2::move(x.value()), cpp2::move(y.value()) }; 
+        return  { std::move(x.value()), std::move(y.value()) }; 
     }
 
 #line 21 "pure2-return-tuple-operator.cpp2"

@@ -888,7 +888,7 @@ auto newline_pos{CPP2_UFCS(find)(source, '\n')};
               ));
         if (!(ret.value())) {
             error(("parse failed - the source string is not a valid statement:\n" + cpp2::to_string(cpp2::move(original_source))));
-        }return cpp2::move(ret.value()); 
+        }return std::move(ret.value()); 
     }
 
 #line 136 "reflect.h2"
@@ -1201,7 +1201,7 @@ declaration::declaration(declaration const& that)
             error("cannot add an initializer that is not a valid statement");
             return ; 
         }
-        require(CPP2_UFCS(add_function_initializer)((*cpp2::impl::assert_not_null(n)), cpp2::move(stmt)), 
+        require(CPP2_UFCS(add_function_initializer)((*cpp2::impl::assert_not_null(n)), std::move(cpp2::move(stmt))), 
                  std::string("unexpected error while attempting to add initializer"));
     }
 
@@ -1365,7 +1365,7 @@ declaration::declaration(declaration const& that)
         out_this_move_that.construct(declared.out_this_move_that != nullptr);
         inout_this_in_that.construct(declared.inout_this_in_that != nullptr);
         inout_this_move_that.construct(cpp2::move(declared).inout_this_move_that != nullptr);
-    return  { cpp2::move(out_this_in_that.value()), cpp2::move(out_this_move_that.value()), cpp2::move(inout_this_in_that.value()), cpp2::move(inout_this_move_that.value()) }; }
+    return  { std::move(out_this_in_that.value()), std::move(out_this_move_that.value()), std::move(inout_this_in_that.value()), std::move(inout_this_move_that.value()) }; }
 
 #line 565 "reflect.h2"
     auto type_declaration::add_member(cpp2::impl::in<std::string_view> source) & -> void
@@ -1378,7 +1378,7 @@ declaration::declaration(declaration const& that)
         if (!(CPP2_UFCS(is_declaration)((*cpp2::impl::assert_not_null(decl))))) {
             error("cannot add a member that is not a declaration");
         }
-        require(CPP2_UFCS(add_type_member)((*cpp2::impl::assert_not_null(n)), cpp2::move(decl)), 
+        require(CPP2_UFCS(add_type_member)((*cpp2::impl::assert_not_null(n)), std::move(cpp2::move(decl))), 
                  std::string("unexpected error while attempting to add member:\n") + source);
     }
 
