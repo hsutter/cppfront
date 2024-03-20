@@ -2696,8 +2696,8 @@ struct declaration_node
     bool member_function_generation = true;
 
     //  Cache some context
-    bool is_template_parameter = false;
-    bool is_parameter          = false;
+    bool is_a_template_parameter = false;
+    bool is_a_parameter          = false;
 
     //  Constructor
     //
@@ -2707,6 +2707,19 @@ struct declaration_node
 
     //  API
     //
+
+    auto is_template_parameter() const
+        -> bool
+    {
+        return is_a_template_parameter;
+    }
+
+    auto is_parameter() const
+        -> bool
+    {
+        return is_a_parameter;
+    }
+
     auto type_member_mark_for_removal()
         -> bool
     {
@@ -5115,7 +5128,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
             initializer.pop_back();
         }
     }
-    else if (!n.is_parameter) {
+    else if (!n.is_parameter()) {
         initializer = ";";
     }
 
@@ -5128,7 +5141,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
     if (
         !n.parent_is_function()
         && !n.parent_is_object()
-        && !n.is_parameter
+        && !n.is_parameter()
         )
     {
         static declaration_node const* last_parent_type = {};
@@ -5144,7 +5157,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
             ret += "\n";
         }
     }
-    if (!n.is_parameter && n.name()) {
+    if (!n.is_parameter() && n.name()) {
         ret += std::string{"\n"} + pre(indent);
     }
 
@@ -5159,7 +5172,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
         ret += pretty_print_visualize(*n.identifier, indent);
     }
 
-    if (n.is_parameter && (n.has_name("this") || n.has_name("that"))) {
+    if (n.is_parameter() && (n.has_name("this") || n.has_name("that"))) {
         return ret;
     }
 
@@ -5758,7 +5771,7 @@ private:
 
     //G postfix-expression:
     //G     primary-expression
-    //G     postfix-expression postfix-operator     [Note: without whitespace before the operator]
+    //G     postfix-expression postfix-operator     // Note: without whitespace before the operator
     //G     postfix-expression '[' expression-list? ','? ']'
     //G     postfix-expression '(' expression-list? ','? ')'
     //G     postfix-expression '.' id-expression
@@ -9074,8 +9087,8 @@ private:
         }
 
         //  Cache some context
-        n->is_template_parameter = is_template_parameter;
-        n->is_parameter          = is_parameter;
+        n->is_a_template_parameter = is_template_parameter;
+        n->is_a_parameter          = is_parameter;
 
         return n;
     }
