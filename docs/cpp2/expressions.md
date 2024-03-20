@@ -277,7 +277,7 @@ For example:
 
 ``` cpp title="Capture in contract postconditions" hl_lines="2"
 push_back: (coll, value)
-    [[post: coll.ssize() == coll.ssize()$ + 1]]
+    post(coll.ssize() == coll.ssize()$ + 1)
     //  Paste the value of `coll.ssize()`
 = {
     // ...
