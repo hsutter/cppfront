@@ -17,7 +17,7 @@
 #line 26 "pure2-ufcs-member-access-and-chaining.cpp2"
 auto no_return([[maybe_unused]] auto const& unnamed_param_1) -> void;
 
-[[nodiscard]] auto ufcs(cpp2::in<int> i) -> int;
+[[nodiscard]] auto ufcs(cpp2::impl::in<int> i) -> int;
 using fun_ret = int;
 
 
@@ -38,7 +38,7 @@ extern int y;
 [[nodiscard]] auto main() -> int{
 #line 2 "pure2-ufcs-member-access-and-chaining.cpp2"
     auto i {42}; 
-    static_cast<void>(CPP2_UFCS(ufcs)(std::move(i)));
+    static_cast<void>(CPP2_UFCS(ufcs)(cpp2::move(i)));
 
     auto j {fun()}; 
     static_cast<void>(CPP2_UFCS(ufcs)(j));
@@ -46,7 +46,7 @@ extern int y;
     static_cast<void>(CPP2_UFCS(ufcs)(fun()));
 
     auto k {fun()}; 
-    static_cast<void>(CPP2_UFCS(ufcs)(std::move(k)));
+    static_cast<void>(CPP2_UFCS(ufcs)(cpp2::move(k)));
 
     static_cast<void>(CPP2_UFCS(ufcs)(get_i(j)));
 
@@ -54,24 +54,24 @@ extern int y;
 
     auto res {CPP2_UFCS(ufcs)((42))}; 
 
-    static_cast<void>(CPP2_UFCS(ufcs)((std::move(j))));
+    static_cast<void>(CPP2_UFCS(ufcs)((cpp2::move(j))));
 
     CPP2_UFCS(no_return)(42);
 
-    CPP2_UFCS(no_return)(std::move(res));
+    CPP2_UFCS(no_return)(cpp2::move(res));
 }
 
 #line 26 "pure2-ufcs-member-access-and-chaining.cpp2"
 auto no_return([[maybe_unused]] auto const& unnamed_param_1) -> void{}
 
 #line 28 "pure2-ufcs-member-access-and-chaining.cpp2"
-[[nodiscard]] auto ufcs(cpp2::in<int> i) -> int{
+[[nodiscard]] auto ufcs(cpp2::impl::in<int> i) -> int{
     return i + 2; 
 }
 
 #line 32 "pure2-ufcs-member-access-and-chaining.cpp2"
 [[nodiscard]] auto fun() -> fun_ret{
-        cpp2::deferred_init<int> i;
+        cpp2::impl::deferred_init<int> i;
 #line 33 "pure2-ufcs-member-access-and-chaining.cpp2"
     i.construct(42);
     return std::move(i.value()); 

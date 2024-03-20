@@ -170,7 +170,7 @@ compiler_services: @polymorphic_base @copyable type =
         throw( std::runtime_error("  ==> programming bug found in metafunction @(metafunction_name)$ - contract violation - see previous errors") );
     }
 
-    has_handler:(this) true;
+    is_active:(this) true;
 }
 
 
@@ -317,7 +317,7 @@ declaration: @polymorphic_base @copyable type =
     parent_is_polymorphic: (this) -> bool = n*.parent_is_polymorphic();
 
     mark_for_removal_from_enclosing_type: (inout this)
-        pre<Type>( parent_is_type() )               // this precondition should be sufficient ...
+        pre<type_safety>( parent_is_type() )        // this precondition should be sufficient ...
     = {
         test := n*.type_member_mark_for_removal();
         assert( test );                             // ... to ensure this assert is true
@@ -406,7 +406,7 @@ function_declaration: @copyable type =
             error( "cannot add an initializer that is not a valid statement");
             return;
         }
-        require (n*.add_function_initializer(stmt),
+        require (n*.add_function_initializer(move stmt),
                  std::string("unexpected error while attempting to add initializer"));
     }
 }
@@ -572,7 +572,7 @@ type_declaration: @copyable type =
         if !decl*.is_declaration() {
             error("cannot add a member that is not a declaration");
         }
-        require( n*.add_type_member(decl),
+        require( n*.add_type_member(move decl),
                  std::string("unexpected error while attempting to add member:\n") + source );
     }
 
@@ -1284,20 +1284,16 @@ union: (inout t : meta::type_declaration)
     //  Provide storage
     (copy storage: std::string = "    _storage: cpp2::aligned_storage<cpp2::max( ")
     {
-        (copy comma: std::string = "")
         for  alternatives
-        next comma = ", "
         do   (e) {
-            storage += comma + "sizeof((e.type)$)";
+            storage += "sizeof((e.type)$), ";
         }
 
         storage += "), cpp2::max( ";
 
-        (copy comma: std::string = "")
         for  alternatives
-        next comma = ", "
         do   (e) {
-            storage += comma + "alignof((e.type)$)";
+            storage += "alignof((e.type)$), ";
         }
 
         storage += " )> = ();\n";

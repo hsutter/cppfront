@@ -1,5 +1,5 @@
 arithmetic: <T> concept = std::integral<T> || std::floating_point<T>;
 main: ()                = {
-  assert<Testing>( arithmetic<i32> );
-  assert<Testing>( arithmetic<float> );
+  assert<testing>( arithmetic<i32> );
+  assert<testing>( arithmetic<float> );
 }

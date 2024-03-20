@@ -66,15 +66,15 @@ auto main() -> int;
 
 #line 11 "pure2-types-that-parameters.cpp2"
     myclass::myclass(myclass&& that) noexcept
-        : name{ std::move(that).name }
-        , addr{ std::move(that).addr }{
+        : name{ cpp2::move(that).name }
+        , addr{ cpp2::move(that).addr }{
 
 #line 14 "pure2-types-that-parameters.cpp2"
     }
 #line 11 "pure2-types-that-parameters.cpp2"
     auto myclass::operator=(myclass&& that) noexcept -> myclass& {
-        name = std::move(that).name;
-        addr = std::move(that).addr;
+        name = cpp2::move(that).name;
+        addr = cpp2::move(that).addr;
         return *this;
 
 #line 14 "pure2-types-that-parameters.cpp2"
@@ -93,11 +93,11 @@ auto main() -> int{
     std::cout << "-----\n";
     auto y {x}; 
     CPP2_UFCS(print)(x);
-    CPP2_UFCS(print)(std::move(y));
+    CPP2_UFCS(print)(cpp2::move(y));
 
     std::cout << "-----\n";
     auto z {std::move(x)}; 
-    CPP2_UFCS(print)(std::move(x));
-    CPP2_UFCS(print)(std::move(z));
+    CPP2_UFCS(print)(cpp2::move(x));
+    CPP2_UFCS(print)(cpp2::move(z));
 }
 

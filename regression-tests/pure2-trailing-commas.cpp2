@@ -1,0 +1,21 @@
+f: (a, b, ) a + b;
+
+g: <T, U, > (a: T, b: U) a + b;
+
+doubler: (a: int,) -> (i : int,) = {
+    i = a * 2;
+}
+
+vals: @struct type = { i: int; }
+
+main: () = {
+    (copy a := 42,) while false { a++; }
+    _ = g(1, 2,);
+
+    grouping: std::vector = (0, 1, 2,);
+
+    array: std::array = (0, 1, 2,);
+
+    _ = array;
+    _ = grouping;
+}

@@ -4417,7 +4417,7 @@ auto pre(int indent)
     assert (indent >= 0);
     return {
         indent_str.c_str(),
-        as<size_t>( std::min( indent*indent_spaces, _as<int>(std::ssize(indent_str))) )
+        impl::as<size_t>( std::min( indent*indent_spaces, _as<int>(std::ssize(indent_str))) )
     };
 }
 
@@ -5630,8 +5630,7 @@ private:
     //G     inspect-expression
     //G     id-expression
     //G     literal
-    //G     '(' expression-list ')'
-    //GT     '{' expression-list '}'
+    //G     '(' expression-list ','? ')'
     //G     unnamed-declaration
     //G
     auto primary_expression()
@@ -5667,7 +5666,7 @@ private:
             auto close = close_paren_type(open_paren->type());
             auto close_text = [&] () -> std::string { if (close == lexeme::RightParen) { return ")"; } return "}"; }();
             next();
-            auto expr_list = expression_list(open_paren, inside_initializer);
+            auto expr_list = expression_list(open_paren, lexeme::RightParen, inside_initializer);
             if (!expr_list) {
                 error("unexpected text - ( is not followed by an expression-list");
                 next();
@@ -5760,8 +5759,8 @@ private:
     //G postfix-expression:
     //G     primary-expression
     //G     postfix-expression postfix-operator     [Note: without whitespace before the operator]
-    //G     postfix-expression '[' expression-list? ']'
-    //G     postfix-expression '(' expression-list? ')'
+    //G     postfix-expression '[' expression-list? ','? ']'
+    //G     postfix-expression '(' expression-list? ','? ')'
     //G     postfix-expression '.' id-expression
     //G
     auto postfix_expression()
@@ -5839,7 +5838,7 @@ private:
 
             if (term.op->type() == lexeme::LeftBracket)
             {
-                term.expr_list = expression_list(term.op);
+                term.expr_list = expression_list(term.op, lexeme::RightBracket);
                 if (!term.expr_list)
                 {
                     error("[ is not followed by a valid expression list");
@@ -5860,7 +5859,7 @@ private:
                 //  If not, then this wasn't a call expression so backtrack to
                 //  the '(' which will be part of the next grammar production
 
-                term.expr_list = expression_list(term.op);
+                term.expr_list = expression_list(term.op, lexeme::RightParen);
                 if (
                     term.expr_list
                     && curr().type() == lexeme::RightParen
@@ -6326,7 +6325,8 @@ private:
     //G
     auto expression_list(
         token const* open_paren,
-        bool inside_initializer = false
+        lexeme       closer,
+        bool         inside_initializer = false
     )
         -> std::unique_ptr<expression_list_node>
     {
@@ -6360,6 +6360,12 @@ private:
         //  and see if there are more...
         while (curr().type() == lexeme::Comma) {
             next();
+
+            //  Allow a trailing comma in the list
+            if (curr().type() == closer) {
+                break;
+            }
+
             pass = passing_style::in;
             if (auto dir = to_passing_style(curr());
                 dir == passing_style::out
@@ -6377,6 +6383,7 @@ private:
             }
             n->expressions.push_back( { pass, std::move(expr) } );
         }
+
         return n;
     }
 
@@ -7771,7 +7778,7 @@ private:
 
 
     //G parameter-declaration-list:
-    //G     '(' parameter-declaration-seq? ')'
+    //G     '(' parameter-declaration-seq? ','? ')'
     //G
     //G parameter-declaration-seq:
     //G     parameter-declaration
@@ -7809,11 +7816,9 @@ private:
         auto param = std::make_unique<parameter_declaration_node>();
 
         auto count = 1;
-        auto expect_another_param_decl = false;
 
         while ((param = parameter_declaration(is_returns, is_named, is_template, is_statement)) != nullptr)
         {
-            expect_another_param_decl = false;
             param->ordinal = count;
             ++count;
 
@@ -7830,6 +7835,17 @@ private:
             if (curr().type() == closer) {
                 break;
             }
+
+            //  Allow a trailing comma in the list
+            else if (
+                curr().type() == lexeme::Comma
+                && peek(1)->type() == closer
+                )
+            {
+                next();
+                break;
+            }
+
             else if (curr().type() != lexeme::Comma) {
                 if (is_statement) {
                     pos = start_pos;    // backtrack
@@ -7840,12 +7856,7 @@ private:
                 return {};
             }
 
-            expect_another_param_decl = true;
             next();
-        }
-
-        if (expect_another_param_decl) {
-            error("invalid parameter list: a comma must be followed by another parameter", true, {}, true);
         }
 
         if (curr().type() != closer) {

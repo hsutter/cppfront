@@ -33,14 +33,14 @@
     auto sp {CPP2_UFCS_TEMPLATE(cpp2_new<int>)(cpp2::shared, 2)}; 
     std::optional<int> op {3}; 
 
-    return *cpp2::assert_not_null(std::move(up)) + *cpp2::assert_not_null(std::move(sp)) + *cpp2::assert_not_null(std::move(op)); 
+    return *cpp2::impl::assert_not_null(cpp2::move(up)) + *cpp2::impl::assert_not_null(cpp2::move(sp)) + *cpp2::impl::assert_not_null(cpp2::move(op)); 
 }
 
 #line 11 "pure2-assert-optional-not-null.cpp2"
 [[nodiscard]] auto bad_optional_access() -> int
 {
     std::optional<int> op {std::nullopt}; 
-    return *cpp2::assert_not_null(std::move(op)); 
+    return *cpp2::impl::assert_not_null(cpp2::move(op)); 
 }
 
 #line 17 "pure2-assert-optional-not-null.cpp2"

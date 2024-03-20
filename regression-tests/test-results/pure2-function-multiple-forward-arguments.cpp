@@ -13,7 +13,7 @@
 
 #line 1 "pure2-function-multiple-forward-arguments.cpp2"
 auto fun(auto&& s1, auto&& s2, auto&& s3) -> void
-CPP2_REQUIRES (std::is_same_v<CPP2_TYPEOF(s1), std::string> && std::is_same_v<CPP2_TYPEOF(s2), std::string> && std::is_same_v<CPP2_TYPEOF(s3), std::string>) ;
+CPP2_REQUIRES (std::is_same_v<std::string, CPP2_TYPEOF(s1)> && std::is_same_v<std::string, CPP2_TYPEOF(s2)> && std::is_same_v<std::string, CPP2_TYPEOF(s3)>) ;
 
 #line 5 "pure2-function-multiple-forward-arguments.cpp2"
 auto main() -> int;
@@ -22,7 +22,7 @@ auto main() -> int;
 
 #line 1 "pure2-function-multiple-forward-arguments.cpp2"
 auto fun(auto&& s1, auto&& s2, auto&& s3) -> void
-requires (std::is_same_v<CPP2_TYPEOF(s1), std::string> && std::is_same_v<CPP2_TYPEOF(s2), std::string> && std::is_same_v<CPP2_TYPEOF(s3), std::string>) {
+requires (std::is_same_v<std::string, CPP2_TYPEOF(s1)> && std::is_same_v<std::string, CPP2_TYPEOF(s2)> && std::is_same_v<std::string, CPP2_TYPEOF(s3)>) {
 #line 2 "pure2-function-multiple-forward-arguments.cpp2"
     std::cout << CPP2_FORWARD(s1) << CPP2_FORWARD(s2) << CPP2_FORWARD(s3) << std::endl;
 }
@@ -31,7 +31,7 @@ requires (std::is_same_v<CPP2_TYPEOF(s1), std::string> && std::is_same_v<CPP2_TY
 auto main() -> int{
     std::string b {"b"}; 
     std::string c {"c"}; 
-    fun(std::string("a"), b, std::move(c));
+    fun(std::string("a"), b, cpp2::move(c));
     b = "";
 }
 

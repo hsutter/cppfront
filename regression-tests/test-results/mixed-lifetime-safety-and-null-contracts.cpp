@@ -34,7 +34,7 @@ auto call_my_framework(char const* msg) -> void;
 
 #line 6 "mixed-lifetime-safety-and-null-contracts.cpp2"
 [[nodiscard]] auto main() -> int{
-    CPP2_UFCS(set_handler)(cpp2::Null, &call_my_framework);
+    CPP2_UFCS(set_handler)(cpp2::null_safety, &call_my_framework);
     try_pointer_stuff();
     std::cout << "done\n";
 }
@@ -42,7 +42,7 @@ auto call_my_framework(char const* msg) -> void;
 #line 15 "mixed-lifetime-safety-and-null-contracts.cpp2"
 auto try_pointer_stuff() -> void{
     int* p {null_from_cpp1()}; 
-    *cpp2::assert_not_null(p) = 42;// deliberate null dereference
+    *cpp2::impl::assert_not_null(p) = 42;// deliberate null dereference
                 // to show -n
 }
 

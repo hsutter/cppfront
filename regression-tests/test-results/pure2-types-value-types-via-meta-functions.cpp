@@ -27,9 +27,9 @@ class p_widget;
 #line 2 "pure2-types-value-types-via-meta-functions.cpp2"
 class widget {
     private: int val {0}; 
-    public: explicit widget(cpp2::in<int> i);
+    public: explicit widget(cpp2::impl::in<int> i);
 #line 4 "pure2-types-value-types-via-meta-functions.cpp2"
-    public: auto operator=(cpp2::in<int> i) -> widget& ;
+    public: auto operator=(cpp2::impl::in<int> i) -> widget& ;
     public: [[nodiscard]] auto operator<=>(widget const& that) const& -> std::strong_ordering = default;
 public: widget(widget const& that);
 
@@ -43,9 +43,9 @@ public: explicit widget();
 
 class w_widget {
     private: int val {0}; 
-    public: explicit w_widget(cpp2::in<int> i);
+    public: explicit w_widget(cpp2::impl::in<int> i);
 #line 9 "pure2-types-value-types-via-meta-functions.cpp2"
-    public: auto operator=(cpp2::in<int> i) -> w_widget& ;
+    public: auto operator=(cpp2::impl::in<int> i) -> w_widget& ;
     public: [[nodiscard]] auto operator<=>(w_widget const& that) const& -> std::weak_ordering = default;
 public: w_widget(w_widget const& that);
 
@@ -59,9 +59,9 @@ public: explicit w_widget();
 
 class p_widget {
     private: int val {0}; 
-    public: explicit p_widget(cpp2::in<int> i);
+    public: explicit p_widget(cpp2::impl::in<int> i);
 #line 14 "pure2-types-value-types-via-meta-functions.cpp2"
-    public: auto operator=(cpp2::in<int> i) -> p_widget& ;
+    public: auto operator=(cpp2::impl::in<int> i) -> p_widget& ;
     public: [[nodiscard]] auto operator<=>(p_widget const& that) const& -> std::partial_ordering = default;
 public: p_widget(p_widget const& that);
 
@@ -83,10 +83,10 @@ template<typename T> auto test() -> void;
 #line 1 "pure2-types-value-types-via-meta-functions.cpp2"
 
 #line 4 "pure2-types-value-types-via-meta-functions.cpp2"
-    widget::widget(cpp2::in<int> i)
+    widget::widget(cpp2::impl::in<int> i)
                                       : val{ i }{}
 #line 4 "pure2-types-value-types-via-meta-functions.cpp2"
-    auto widget::operator=(cpp2::in<int> i) -> widget& {
+    auto widget::operator=(cpp2::impl::in<int> i) -> widget& {
                                       val = i;
                                       return *this; }
 
@@ -104,10 +104,10 @@ auto widget::operator=(widget&& that) noexcept -> widget& {
                                 return *this;}
 widget::widget(){}
 #line 9 "pure2-types-value-types-via-meta-functions.cpp2"
-    w_widget::w_widget(cpp2::in<int> i)
+    w_widget::w_widget(cpp2::impl::in<int> i)
                                       : val{ i }{}
 #line 9 "pure2-types-value-types-via-meta-functions.cpp2"
-    auto w_widget::operator=(cpp2::in<int> i) -> w_widget& {
+    auto w_widget::operator=(cpp2::impl::in<int> i) -> w_widget& {
                                       val = i;
                                       return *this; }
 
@@ -125,10 +125,10 @@ auto w_widget::operator=(w_widget&& that) noexcept -> w_widget& {
                                 return *this;}
 w_widget::w_widget(){}
 #line 14 "pure2-types-value-types-via-meta-functions.cpp2"
-    p_widget::p_widget(cpp2::in<int> i)
+    p_widget::p_widget(cpp2::impl::in<int> i)
                                       : val{ i }{}
 #line 14 "pure2-types-value-types-via-meta-functions.cpp2"
-    auto p_widget::operator=(cpp2::in<int> i) -> p_widget& {
+    auto p_widget::operator=(cpp2::impl::in<int> i) -> p_widget& {
                                       val = i;
                                       return *this; }
 
@@ -159,7 +159,7 @@ template<typename T> auto test() -> void{
 
     //  widget should be comparable
     T b {2}; 
-    if ((cpp2::cmp_less(std::move(a),std::move(b)))) {
+    if ((cpp2::impl::cmp_less(cpp2::move(a),cpp2::move(b)))) {
         std::cout << "less ";
     }
     else {

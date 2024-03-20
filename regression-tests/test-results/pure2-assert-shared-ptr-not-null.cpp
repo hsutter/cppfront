@@ -33,7 +33,7 @@
     auto sp {CPP2_UFCS_TEMPLATE(cpp2_new<int>)(cpp2::shared, 2)}; 
     std::optional<int> op {3}; 
 
-    return *cpp2::assert_not_null(std::move(up)) + *cpp2::assert_not_null(std::move(sp)) + *cpp2::assert_not_null(std::move(op)); 
+    return *cpp2::impl::assert_not_null(cpp2::move(up)) + *cpp2::impl::assert_not_null(cpp2::move(sp)) + *cpp2::impl::assert_not_null(cpp2::move(op)); 
 }
 
 #line 11 "pure2-assert-shared-ptr-not-null.cpp2"
@@ -41,7 +41,7 @@
 {
     auto sp {std::make_shared<int>(1)}; 
     CPP2_UFCS(reset)(sp);
-    return *cpp2::assert_not_null(std::move(sp)); 
+    return *cpp2::impl::assert_not_null(cpp2::move(sp)); 
 }
 
 #line 18 "pure2-assert-shared-ptr-not-null.cpp2"

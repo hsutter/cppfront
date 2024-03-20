@@ -73,7 +73,7 @@ namespace N {
 auto myfunc() -> void{
     N1::pmr_vec<myclass::str> v {"xyzzy", "plugh"}; 
 {
-auto const& v2{std::move(v)};
+auto const& v2{cpp2::move(v)};
 
 #line 21 "pure2-type-and-namespace-aliases.cpp2"
     for ( auto const& s : v2 ) 

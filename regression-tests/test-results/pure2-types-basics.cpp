@@ -26,17 +26,17 @@ namespace N {
 
 class myclass {
 
-    public: myclass(cpp2::in<int> x);
+    public: myclass(cpp2::impl::in<int> x);
 #line 6 "pure2-types-basics.cpp2"
-    public: auto operator=(cpp2::in<int> x) -> myclass& ;
+    public: auto operator=(cpp2::impl::in<int> x) -> myclass& ;
 
 #line 13 "pure2-types-basics.cpp2"
-    public: explicit myclass(cpp2::in<std::string> s);
+    public: explicit myclass(cpp2::impl::in<std::string> s);
 #line 13 "pure2-types-basics.cpp2"
-    public: auto operator=(cpp2::in<std::string> s) -> myclass& ;
+    public: auto operator=(cpp2::impl::in<std::string> s) -> myclass& ;
 
 #line 20 "pure2-types-basics.cpp2"
-    public: explicit myclass(cpp2::in<int> x, cpp2::in<std::string> s);
+    public: explicit myclass(cpp2::impl::in<int> x, cpp2::impl::in<std::string> s);
 
 #line 27 "pure2-types-basics.cpp2"
     public: explicit myclass();
@@ -51,7 +51,7 @@ class myclass {
     public: ~myclass() noexcept;
 
 #line 46 "pure2-types-basics.cpp2"
-    public: auto f(cpp2::in<int> x) const& -> void;
+    public: auto f(cpp2::impl::in<int> x) const& -> void;
 
 #line 50 "pure2-types-basics.cpp2"
     private: int data {42 * 12}; 
@@ -89,7 +89,7 @@ auto main() -> int;
 namespace N {
 
 #line 6 "pure2-types-basics.cpp2"
-    myclass::myclass(cpp2::in<int> x)
+    myclass::myclass(cpp2::impl::in<int> x)
         : data{ x }{
 
         // use default initializer for this.more
@@ -98,7 +98,7 @@ namespace N {
         print();
     }
 #line 6 "pure2-types-basics.cpp2"
-    auto myclass::operator=(cpp2::in<int> x) -> myclass& {
+    auto myclass::operator=(cpp2::impl::in<int> x) -> myclass& {
         data = x;
         more = std::to_string(42 * 12);
 
@@ -110,7 +110,7 @@ namespace N {
     }
 
 #line 13 "pure2-types-basics.cpp2"
-    myclass::myclass(cpp2::in<std::string> s)
+    myclass::myclass(cpp2::impl::in<std::string> s)
         : data{ 99 }
         , more{ s }{
 
@@ -119,7 +119,7 @@ namespace N {
         print();
     }
 #line 13 "pure2-types-basics.cpp2"
-    auto myclass::operator=(cpp2::in<std::string> s) -> myclass& {
+    auto myclass::operator=(cpp2::impl::in<std::string> s) -> myclass& {
         data = 99;
         more = s;
 
@@ -131,7 +131,7 @@ namespace N {
     }
 
 #line 20 "pure2-types-basics.cpp2"
-    myclass::myclass(cpp2::in<int> x, cpp2::in<std::string> s)
+    myclass::myclass(cpp2::impl::in<int> x, cpp2::impl::in<std::string> s)
         : data{ 77 }
         , more{ s + std::to_string(x) + " plugh" }{
 
@@ -157,7 +157,7 @@ namespace N {
 
 #line 38 "pure2-types-basics.cpp2"
     auto myclass::print() && -> void{
-        std::cout << ("    (move print) data: " + cpp2::to_string(data) + ", more: " + cpp2::to_string(std::move(*this).more) + "\n");
+        std::cout << ("    (move print) data: " + cpp2::to_string(data) + ", more: " + cpp2::to_string(cpp2::move(*this).more) + "\n");
     }
 
 #line 42 "pure2-types-basics.cpp2"
@@ -166,7 +166,7 @@ namespace N {
     }
 
 #line 46 "pure2-types-basics.cpp2"
-    auto myclass::f(cpp2::in<int> x) const& -> void{
+    auto myclass::f(cpp2::impl::in<int> x) const& -> void{
         std::cout << ("N::myclass::f with " + cpp2::to_string(x) + "\n");
     }
 

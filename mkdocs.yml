@@ -1,0 +1,91 @@
+# To view the documentation locally on your machine, use the following steps
+#
+# Clone the GitHub cppfront repo locally, then on the command line:
+#
+#   cd /github/cppfront
+#   python -m venv venv
+#   source venv/bin/activate
+#   pip install mkdocs-material
+#   mkdocs new .
+#   mkdocs serve
+#
+# The last command should eventually print something like
+#   Serving on http://127.0.0.1:8000/
+# and you can open that URL in a local brower. If you are locally editing
+# the documentation, leave the server process running and the browser
+# pages will auto-reload as you save edits.
+#
+site_name: "Cpp2 and cppfront — An experimental 'C++ syntax 2' and its first compiler"
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.instant
+    - navigation.instant.preview
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotate
+    - content.code.annotation
+    - content.code.copy
+    - content.footnote.tooltips
+  language: en
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+      primary: teal
+      accent: purple
+    - scheme: slate
+      toggle:
+        icon: material/toggle-switch
+        name: switch to light mode
+        primary: teal
+        accent: lime
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - 'Welcome & getting started':
+    - 'Overview: What are Cpp2 and cppfront? How do I get and build cppfront?': index.md
+    - 'Hello, world!': welcome/hello-world.md
+    - 'Adding cppfront to your existing C++ project': welcome/integration.md
+  - 'Cpp2 reference':
+    - 'Common concepts': cpp2/common.md
+    - 'Expressions': cpp2/expressions.md
+    - 'Declarations and aliases': cpp2/declarations.md
+    - 'Objects, initialization, and memory': cpp2/objects.md
+    - 'Functions, branches, and loops': cpp2/functions.md
+    - 'Contracts': cpp2/contracts.md
+    - 'Types and inheritance': cpp2/types.md
+    - 'Metafunctions and reflection': cpp2/metafunctions.md
+    - 'Namespaces': cpp2/namespaces.md
+    # - 'Modules': cpp2/modules.md
+  - 'Cppfront reference':
+    - 'Using Cpp1 (today''s syntax) and Cpp2 in the same source file': cppfront/mixed.md
+    - 'Cppfront command line options': cppfront/options.md
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.mark
+  - attr_list
+
+copyright: |
+  &copy <a href="https://github.com/hsutter" target="_blank" rel="noopener">Herb Sutter</a> &bull; <a href="https://github.com/hsutter/cppfront/blob/main/LICENSE">cppfront license </a>

@@ -32,12 +32,12 @@
 
     auto y {"\n"}; 
     std::ranges::for_each
-        (vec, [_0 = std::move(y)](auto const& x) mutable -> void { std::cout << x << _0;  });
+        (vec, [_0 = cpp2::move(y)](auto const& x) mutable -> void { std::cout << x << _0;  });
 
     auto callback {[](auto& x) mutable -> void { x += "-ish";  }}; 
-    std::ranges::for_each(vec, std::move(callback));
+    std::ranges::for_each(vec, cpp2::move(callback));
 
-    for ( auto const& str : std::move(vec) ) 
+    for ( auto const& str : cpp2::move(vec) ) 
         std::cout << str << "\n";
 }
 

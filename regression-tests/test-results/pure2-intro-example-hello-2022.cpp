@@ -28,9 +28,9 @@ auto print_it(auto const& x, auto const& len) -> void;
     std::vector<std::string> vec {
             "hello", "2022"}; 
 
-    for ( auto& str : std::move(vec) ) {
+    for ( auto& str : cpp2::move(vec) ) {
         auto len {decorate(str)}; 
-        print_it(str, std::move(len));
+        print_it(str, cpp2::move(len));
     }
 }
 

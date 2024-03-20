@@ -15,6 +15,27 @@
 //  Cpp2 utilities:
 //      Language support implementations
 //      #include'd by generated Cpp1 code
+
+//  There are two kinds of entities in this file.
+//
+//  1)  Entities in namespace cpp2:: itself, and documented at /cppfront/docs
+//
+//      These are intended for programs to use directly, to the extent
+//      described in the documentation. Using any parts not described in the
+//      documentation is not supported.
+//
+//  2)  Entities in namespace cpp2::impl::, and macros
+//
+//      These should not be used by the program. They form the language
+//      support library intended to be called only from generated code.
+// 
+//      For example, if a Cpp2 function leaves a local variable
+//      uninitialized, cppfront will generate uses of impl::deferred_init<>
+//      under the covers and guarantee it is constructed exactly once, so
+//      the implementation here doesn't need to check for double construction
+//      because it can't happen; using the name impl::deferred_init directly
+//      from program code is not supported.
+// 
 //===========================================================================
 
 #ifndef CPP2_UTIL_H
@@ -198,7 +219,7 @@
         #include <streambuf>
         #include <string>
         #include <string_view>
-        #ifdef __cpp_lib_syncstream
+        #ifdef __cpp_lib_syncbuf
             #include <syncstream>
         #endif
         #include <system_error>
@@ -267,6 +288,12 @@
 #endif
 
 
+//-----------------------------------------------------------------------
+//
+//  Macros
+//
+//-----------------------------------------------------------------------
+//
 #define CPP2_TYPEOF(x)              std::remove_cvref_t<decltype(x)>
 #if __cplusplus >= 202302L && \
     ( \
@@ -337,6 +364,18 @@ using _uchar     = unsigned char;    // normally use u8 instead
 //-----------------------------------------------------------------------
 //
 
+template <typename T>
+    requires (std::is_copy_constructible_v<std::remove_cvref_t<T>>)
+auto move(T&& t) -> decltype(auto) {
+    return std::move(t);
+}
+
+template <typename T>
+    requires (!std::is_copy_constructible_v<std::remove_cvref_t<T>>)
+auto move(T&& t) -> decltype(auto) {
+    return std::forward<T>(t);
+}
+
 inline constexpr auto max(auto... values) {
     return std::max( { values... } );
 }
@@ -352,27 +391,6 @@ struct aligned_storage {
 template <typename T>
     requires requires { *std::declval<T&>(); }
 using deref_t = decltype(*std::declval<T&>());
-
-
-//-----------------------------------------------------------------------
-//
-//  String: A helper workaround for passing a string literal as a
-//  template argument
-//
-//-----------------------------------------------------------------------
-//
-template<std::size_t N>
-struct String
-{
-    constexpr String(const char (&str)[N])
-    {
-        std::copy_n(str, N, value);
-    }
-
-    auto operator<=>(String const&) const = default;
-
-    char value[N] = {};
-};
 
 
 //-----------------------------------------------------------------------
@@ -409,8 +427,7 @@ public:
 
     constexpr contract_group  (handler h = {}) : reporter{h} { }
     constexpr auto set_handler(handler h = {}) { reporter = h; }
-    constexpr auto get_handler() const -> handler { return reporter; }
-    constexpr auto has_handler() const -> bool    { return reporter != handler{}; }
+    constexpr auto is_active  () const -> bool    { return reporter != handler{}; }
 
     constexpr auto enforce(bool b, CPP2_MESSAGE_PARAM msg = "" CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT)
                                           -> void { if (!b) report_violation(msg CPP2_SOURCE_LOCATION_ARG); }
@@ -435,33 +452,37 @@ private:
     std::terminate();
 }
 
-auto inline Default = contract_group(
+auto inline cpp2_default = contract_group(
     [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
         report_and_terminate("Contract",      msg CPP2_SOURCE_LOCATION_ARG);
     }
 );
-auto inline Bounds  = contract_group(
+auto inline bounds_safety = contract_group(
     [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
         report_and_terminate("Bounds safety", msg CPP2_SOURCE_LOCATION_ARG);
     }
 );
-auto inline Null    = contract_group(
+auto inline null_safety = contract_group(
     [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
         report_and_terminate("Null safety",   msg CPP2_SOURCE_LOCATION_ARG);
     }
 );
-auto inline Type    = contract_group(
+auto inline type_safety = contract_group(
     [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
         report_and_terminate("Type safety",   msg CPP2_SOURCE_LOCATION_ARG);
     }
 );
-auto inline Testing = contract_group(
+auto inline testing = contract_group(
     [](CPP2_MESSAGE_PARAM msg CPP2_SOURCE_LOCATION_PARAM)noexcept {
         report_and_terminate("Testing",       msg CPP2_SOURCE_LOCATION_ARG);
     }
 );
 
 
+namespace impl {
+
+//-----------------------------------------------------------------------
+// 
 //  Check for invalid dereference or indirection which would result in undefined behavior.
 //
 //     - Null pointer
@@ -496,28 +517,28 @@ auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decl
     //        STL iterator has the default-constructed value. So use it only for raw *...
     if constexpr (std::is_pointer_v<CPP2_TYPEOF(arg)>) {
         if (arg == CPP2_TYPEOF(arg){}) {
-            Null.report_violation("dynamic null dereference attempt detected" CPP2_SOURCE_LOCATION_ARG);
+            null_safety.report_violation("dynamic null dereference attempt detected" CPP2_SOURCE_LOCATION_ARG);
         };
     }
     else if constexpr (UniquePtr<CPP2_TYPEOF(arg)>) {
         if (!arg) {
-            Null.report_violation("std::unique_ptr is empty" CPP2_SOURCE_LOCATION_ARG);
+            null_safety.report_violation("std::unique_ptr is empty" CPP2_SOURCE_LOCATION_ARG);
         }
     }
     else if constexpr (SharedPtr<CPP2_TYPEOF(arg)>) {
         if (!arg) {
-            Null.report_violation("std::shared_ptr is empty" CPP2_SOURCE_LOCATION_ARG);
+            null_safety.report_violation("std::shared_ptr is empty" CPP2_SOURCE_LOCATION_ARG);
         }
     }
     else if constexpr (Optional<CPP2_TYPEOF(arg)>) {
         if (!arg.has_value()) {
-            Null.report_violation("std::optional does not contain a value" CPP2_SOURCE_LOCATION_ARG);
+            null_safety.report_violation("std::optional does not contain a value" CPP2_SOURCE_LOCATION_ARG);
         }
     }
 #ifdef __cpp_lib_expected
     else if constexpr (Expected<CPP2_TYPEOF(arg)>) {
         if (!arg.has_value()) {
-            Null.report_violation("std::expected has an unexpected value" CPP2_SOURCE_LOCATION_ARG);
+            null_safety.report_violation("std::expected has an unexpected value" CPP2_SOURCE_LOCATION_ARG);
         }
     }
 #endif
@@ -543,7 +564,7 @@ auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decl
         msg += "but container is empty"; \
     } \
     if (!(0 <= arg && arg < max())) { \
-        Bounds.report_violation(msg.c_str()  CPP2_SOURCE_LOCATION_ARG); \
+        bounds_safety.report_violation(msg.c_str()  CPP2_SOURCE_LOCATION_ARG); \
     } \
     return CPP2_FORWARD(x) [ arg ]; \
 }
@@ -566,8 +587,8 @@ auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAU
     return CPP2_FORWARD(x) [ CPP2_FORWARD(arg) ];
 }
 
-#define CPP2_ASSERT_IN_BOUNDS(x,arg)         (cpp2::assert_in_bounds((x),(arg)))
-#define CPP2_ASSERT_IN_BOUNDS_LITERAL(x,arg) (cpp2::assert_in_bounds<(arg)>(x))
+#define CPP2_ASSERT_IN_BOUNDS(x,arg)         (cpp2::impl::assert_in_bounds((x),(arg)))
+#define CPP2_ASSERT_IN_BOUNDS_LITERAL(x,arg) (cpp2::impl::assert_in_bounds<(arg)>(x))
 
 
 //-----------------------------------------------------------------------
@@ -591,7 +612,7 @@ auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAU
     if (msg) {
         err += " and the message \"" + msg + "\"";
     }
-    Type.report_violation( err );
+    type_safety.report_violation( err );
     std::terminate();
 #else
     throw CPP2_FORWARD(x);
@@ -609,7 +630,7 @@ inline auto Uncaught_exceptions() -> int {
 template<typename T>
 auto Dynamic_cast( [[maybe_unused]] auto&& x ) -> decltype(auto) {
 #ifdef CPP2_NO_RTTI
-    Type.report_violation( "'as' dynamic casting is disabled with -fno-rtti" );
+    type_safety.report_violation( "'as' dynamic casting is disabled with -fno-rtti" );
     return nullptr;
 #else
     return dynamic_cast<T>(CPP2_FORWARD(x));
@@ -619,7 +640,7 @@ auto Dynamic_cast( [[maybe_unused]] auto&& x ) -> decltype(auto) {
 template<typename T>
 auto Typeid() -> decltype(auto) {
 #ifdef CPP2_NO_RTTI
-    Type.report_violation( "'any' dynamic casting is disabled with -fno-rtti" );
+    type_safety.report_violation( "'any' dynamic casting is disabled with -fno-rtti" );
 #else
     return typeid(T);
 #endif
@@ -627,11 +648,13 @@ auto Typeid() -> decltype(auto) {
 
 auto Typeid( [[maybe_unused]] auto&& x ) -> decltype(auto) {
 #ifdef CPP2_NO_RTTI
-    Type.report_violation( "'typeid' is disabled with -fno-rtti" );
+    type_safety.report_violation( "'typeid' is disabled with -fno-rtti" );
 #else
     return typeid(CPP2_FORWARD(x));
 #endif
 }
+
+} // impl
 
 
 //-----------------------------------------------------------------------
@@ -711,6 +734,9 @@ template<typename T>
 }
 
 
+
+namespace impl {
+
 //-----------------------------------------------------------------------
 //
 //  in<T>       For "in" parameter
@@ -761,9 +787,9 @@ class deferred_init {
 public:
     deferred_init() noexcept       { }
    ~deferred_init() noexcept       { destroy(); }
-    auto value()    noexcept -> T& { Default.enforce(init);  return t(); }
+    auto value()    noexcept -> T& { cpp2_default.enforce(init);  return t(); }
 
-    auto construct(auto&& ...args) -> void { Default.enforce(!init);  new (&data) T{CPP2_FORWARD(args)...};  init = true; }
+    auto construct(auto&& ...args) -> void { cpp2_default.enforce(!init);  new (&data) T{CPP2_FORWARD(args)...};  init = true; }
 };
 
 
@@ -783,9 +809,9 @@ class out {
     bool called_construct_ = false;
 
 public:
-    out(T*                 t_) noexcept :  t{ t_}, has_t{true}       { Default.enforce( t); }
-    out(deferred_init<T>* dt_) noexcept : dt{dt_}, has_t{false}      { Default.enforce(dt); }
-    out(out<T>*           ot_) noexcept : ot{ot_}, has_t{ot_->has_t} { Default.enforce(ot);
+    out(T*                 t_) noexcept :  t{ t_}, has_t{true}       { cpp2_default.enforce( t); }
+    out(deferred_init<T>* dt_) noexcept : dt{dt_}, has_t{false}      { cpp2_default.enforce(dt); }
+    out(out<T>*           ot_) noexcept : ot{ot_}, has_t{ot_->has_t} { cpp2_default.enforce(ot);
         if (has_t) {  t = ot->t;  }
         else       { dt = ot->dt; }
     }
@@ -799,7 +825,7 @@ public:
     //  then leave it in the same state on exit (strong guarantee)
     ~out() {
         if (called_construct() && uncaught_count != Uncaught_exceptions()) {
-            Default.enforce(!has_t);
+            cpp2_default.enforce(!has_t);
             dt->destroy();
             called_construct() = false;
         }
@@ -808,21 +834,21 @@ public:
     auto construct(auto&& ...args) -> void {
         if (has_t || called_construct()) {
             if constexpr (requires { *t = T(CPP2_FORWARD(args)...); }) {
-                Default.enforce( t );
+                cpp2_default.enforce( t );
                 *t = T(CPP2_FORWARD(args)...);
             }
             else {
-                Default.report_violation("attempted to copy assign, but copy assignment is not available");
+                cpp2_default.report_violation("attempted to copy assign, but copy assignment is not available");
             }
         }
         else {
-            Default.enforce( dt );
+            cpp2_default.enforce( dt );
             if (dt->init) {
                 if constexpr (requires { *t = T(CPP2_FORWARD(args)...); }) {
                     dt->value() = T(CPP2_FORWARD(args)...);
                 }
                 else {
-                    Default.report_violation("attempted to copy assign, but copy assignment is not available");
+                    cpp2_default.report_violation("attempted to copy assign, but copy assignment is not available");
                 }
             }
             else {
@@ -834,11 +860,11 @@ public:
 
     auto value() noexcept -> T& {
         if (has_t) {
-            Default.enforce( t );
+            cpp2_default.enforce( t );
             return *t;
         }
         else {
-            Default.enforce( dt );
+            cpp2_default.enforce( dt );
             return dt->value();
         }
     }
@@ -891,6 +917,7 @@ public:
     #endif
 #endif
 
+#define CPP2_UFCS_EMPTY(...)
 #define CPP2_UFCS_IDENTITY(...)  __VA_ARGS__
 #define CPP2_UFCS_REMPARENS(...) __VA_ARGS__
 
@@ -941,7 +968,9 @@ public:
     #define CPP2_UFCS_CONSTRAINT_ARG(...)                 IsViable
 #endif
 
-#define CPP2_UFCS_(LAMBDADEFCAPT,MVFWD,QUALID,TEMPKW,...) \
+template <class T> struct dependent_false : std::false_type {};
+
+#define CPP2_UFCS_(LAMBDADEFCAPT,SFINAE,MVFWD,QUALID,TEMPKW,...) \
 [LAMBDADEFCAPT]< \
     typename Obj, typename... Params \
     CPP2_UFCS_IS_NOTHROW_PARAM(MVFWD,QUALID,TEMPKW,__VA_ARGS__) \
@@ -949,22 +978,42 @@ public:
   > \
   CPP2_LAMBDA_NO_DISCARD (Obj&& obj, Params&& ...params) CPP2_FORCE_INLINE_LAMBDA_CLANG \
   noexcept(CPP2_UFCS_IS_NOTHROW_ARG(MVFWD,QUALID,TEMPKW,__VA_ARGS__)) CPP2_FORCE_INLINE_LAMBDA -> decltype(auto) \
-    requires CPP2_UFCS_CONSTRAINT_ARG(MVFWD,QUALID,TEMPKW,__VA_ARGS__) { \
-    if constexpr (requires{ CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
-        return CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
-    } else { \
-        return MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+    SFINAE( requires CPP2_UFCS_CONSTRAINT_ARG(MVFWD,QUALID,TEMPKW,__VA_ARGS__) ) \
+  { \
+    if constexpr      (requires{ CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
+        return                   CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
     } \
-}
+    else if constexpr (requires{ MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); }) { \
+        return                   MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+    } \
+    else if constexpr (requires{ obj.CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); }) { \
+        static_assert( cpp2::impl::dependent_false<Obj>::value, "error: implicit discard of an object's modified value is not allowed - this function call modifies 'obj', but 'obj' is never used again in the function so the new value is never used - if that's what you intended, add another line '_ = obj;' afterward to explicitly discard the new value of the object" ); \
+        CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
+        MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+    } \
+    else if constexpr (requires{ MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(obj, CPP2_FORWARD(params)...); }) { \
+        static_assert( cpp2::impl::dependent_false<Obj>::value, "error: implicit discard of an object's modified value is not allowed - this function call modifies 'obj', but 'obj' is never used again in the function so the new value is never used - if that's what you intended, add another line '_ = obj;' afterward to explicitly discard the new value of the object" ); \
+        CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
+        MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+    } \
+    else { \
+        static_assert( cpp2::impl::dependent_false<Obj>::value, "this function call syntax tries 'obj.func(...)', then 'func(obj,...);', but both failed - if this function call is passing a local variable that will be modified by the function, but that variable is never used again in the function so the new value is never used, that's likely the problem - if that's what you intended, add another line '_ = obj;' afterward to explicitly discard the new value of the object" ); \
+        CPP2_FORWARD(obj).CPP2_UFCS_REMPARENS QUALID TEMPKW __VA_ARGS__(CPP2_FORWARD(params)...); \
+        MVFWD(CPP2_UFCS_REMPARENS QUALID __VA_ARGS__)(CPP2_FORWARD(obj), CPP2_FORWARD(params)...); \
+    } \
+  }
 
-#define CPP2_UFCS(...)                                    CPP2_UFCS_(&,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
-#define CPP2_UFCS_MOVE(...)                               CPP2_UFCS_(&,std::move,(),,__VA_ARGS__)
-#define CPP2_UFCS_FORWARD(...)                            CPP2_UFCS_(&,CPP2_FORWARD,(),,__VA_ARGS__)
-#define CPP2_UFCS_TEMPLATE(...)                           CPP2_UFCS_(&,CPP2_UFCS_IDENTITY,(),template,__VA_ARGS__)
-#define CPP2_UFCS_QUALIFIED_TEMPLATE(QUALID,...)          CPP2_UFCS_(&,CPP2_UFCS_IDENTITY,QUALID,template,__VA_ARGS__)
-#define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
-#define CPP2_UFCS_TEMPLATE_NONLOCAL(...)                  CPP2_UFCS_(,CPP2_UFCS_IDENTITY,(),template,__VA_ARGS__)
-#define CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL(QUALID,...) CPP2_UFCS_(,CPP2_UFCS_IDENTITY,QUALID,template,__VA_ARGS__)
+#define CPP2_UFCS(...)                                    CPP2_UFCS_(&,CPP2_UFCS_EMPTY,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
+#define CPP2_UFCS_MOVE(...)                               CPP2_UFCS_(&,CPP2_UFCS_EMPTY,std::move,(),,__VA_ARGS__)
+#define CPP2_UFCS_FORWARD(...)                            CPP2_UFCS_(&,CPP2_UFCS_EMPTY,CPP2_FORWARD,(),,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE(...)                           CPP2_UFCS_(&,CPP2_UFCS_EMPTY,CPP2_UFCS_IDENTITY,(),template,__VA_ARGS__)
+#define CPP2_UFCS_QUALIFIED_TEMPLATE(QUALID,...)          CPP2_UFCS_(&,CPP2_UFCS_EMPTY,CPP2_UFCS_IDENTITY,QUALID,template,__VA_ARGS__)
+#define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,CPP2_UFCS_IDENTITY,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
+#define CPP2_UFCS_TEMPLATE_NONLOCAL(...)                  CPP2_UFCS_(,CPP2_UFCS_IDENTITY,CPP2_UFCS_IDENTITY,(),template,__VA_ARGS__)
+#define CPP2_UFCS_QUALIFIED_TEMPLATE_NONLOCAL(QUALID,...) CPP2_UFCS_(,CPP2_UFCS_IDENTITY,CPP2_UFCS_IDENTITY,QUALID,template,__VA_ARGS__)
+
+} // impl
+
 
 
 //-----------------------------------------------------------------------
@@ -1097,6 +1146,8 @@ inline auto to_string(auto&& value, std::string_view) -> std::string
 }
 #endif
 
+
+namespace impl {
 
 //-----------------------------------------------------------------------
 //
@@ -1269,7 +1320,7 @@ auto as(X const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto) {
     }
     //  Signed/unsigned conversions to a not-smaller type are handled as a precondition,
     //  and trying to cast from a value that is in the half of the value space that isn't
-    //  representable in the target type C is flagged as a Type safety contract violation
+    //  representable in the target type C is flagged as a type_safety contract violation
     else if constexpr (
         std::is_integral_v<C> &&
         std::is_integral_v<CPP2_TYPEOF(x)> &&
@@ -1278,7 +1329,7 @@ auto as(X const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto) {
     )
     {
         const C c = static_cast<C>(x);
-        Type.enforce(   // precondition check: must be round-trippable => not lossy
+        type_safety.enforce(   // precondition check: must be round-trippable => not lossy
             static_cast<CPP2_TYPEOF(x)>(c) == x && (c < C{}) == (x < CPP2_TYPEOF(x){}),
             "dynamic lossy narrowing conversion attempt detected" CPP2_SOURCE_LOCATION_ARG
         );
@@ -1643,6 +1694,9 @@ constexpr auto as( X const& x ) -> decltype(auto)
     { return x.value(); }
 
 
+} // impl
+
+
 //-----------------------------------------------------------------------
 //
 //  A variation of GSL's final_action_success / finally
@@ -1896,7 +1950,7 @@ inline auto fopen( const char* filename, const char* mode ) {
     #endif
 
     if (!x) {
-        Throw( std::make_error_condition(std::errc::no_such_file_or_directory), "'fopen' attempt failed");
+        impl::Throw(std::make_error_condition(std::errc::no_such_file_or_directory), "'fopen' attempt failed");
     }
     return c_raii( x, &std::fclose );
 }
@@ -1911,6 +1965,9 @@ inline auto fopen( const char* filename, const char* mode ) {
 //  but perhaps c_raii may be useful for bringing forward third-party C code too,
 //  with cpp2::fopen as a starting example.
 
+
+
+namespace impl {
 
 //-----------------------------------------------------------------------
 //
@@ -2074,6 +2131,8 @@ inline constexpr auto as_() -> decltype(auto)
     //  else
     return as<C,x>();
 }
+
+} // impl
 
 
 }

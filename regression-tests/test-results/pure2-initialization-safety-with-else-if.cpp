@@ -20,7 +20,7 @@ auto main(int const argc_, char** argv_) -> int;
 auto main(int const argc_, char** argv_) -> int{
     auto const args = cpp2::make_args(argc_, argv_); 
 #line 2 "pure2-initialization-safety-with-else-if.cpp2"
-    cpp2::deferred_init<int*> p; 
+    cpp2::impl::deferred_init<int*> p; 
 
     auto a {1}; 
     auto b {2}; 
@@ -32,7 +32,7 @@ auto main(int const argc_, char** argv_) -> int{
     }else {if (true) {
         if (CPP2_UFCS(size)(args) == 2) {
             p.construct(&c);
-        }else {if (cpp2::cmp_greater(std::move(b),0)) {
+        }else {if (cpp2::impl::cmp_greater(cpp2::move(b),0)) {
                 p.construct(&a);
         }
         else {
@@ -42,6 +42,6 @@ auto main(int const argc_, char** argv_) -> int{
         p.construct(&c);
     }}
 
-    std::cout << *cpp2::assert_not_null(std::move(p.value())) << std::endl;
+    std::cout << *cpp2::impl::assert_not_null(cpp2::move(p.value())) << std::endl;
 }
 

@@ -12,7 +12,7 @@
 //=== Cpp2 type definitions and function declarations ===========================
 
 #line 1 "pure2-synthesize-rightshift-and-rightshifteq.cpp2"
-[[nodiscard]] auto f(cpp2::in<int> a, cpp2::in<int> b) -> int;
+[[nodiscard]] auto f(cpp2::impl::in<int> a, cpp2::impl::in<int> b) -> int;
 
 #line 7 "pure2-synthesize-rightshift-and-rightshifteq.cpp2"
 [[nodiscard]] auto main() -> int;
@@ -20,11 +20,11 @@
 //=== Cpp2 function definitions =================================================
 
 #line 1 "pure2-synthesize-rightshift-and-rightshifteq.cpp2"
-[[nodiscard]] auto f(cpp2::in<int> a, cpp2::in<int> b) -> int{
+[[nodiscard]] auto f(cpp2::impl::in<int> a, cpp2::impl::in<int> b) -> int{
 #line 2 "pure2-synthesize-rightshift-and-rightshifteq.cpp2"
     auto x {a}; 
     x >>= b * 2;
-    return std::move(x) >> 1; 
+    return cpp2::move(x) >> 1; 
 }
 
 #line 7 "pure2-synthesize-rightshift-and-rightshifteq.cpp2"
