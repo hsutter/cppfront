@@ -16,7 +16,7 @@ main: () -> int = {
     if (!p_i) {
         return 1;
     }
-    i := p_i*;
+    i := (move p_i*);
 
     while i* < view.ssize() next i*++ {
         print( view[i*] );

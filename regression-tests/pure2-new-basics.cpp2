@@ -19,11 +19,16 @@ test_movable : () = {
     a.test();
     call_test(a);
 
-    b : Movable = a;
+    b : Movable =  (move a);
     b.test();
     call_test(b);
 
     //a.test(); // not allowed
+}
+
+move_to : (move c : _) = {
+            call_test(c*);
+            c*.test();
 }
 
 test_movable_ref : () = {
@@ -32,10 +37,8 @@ test_movable_ref : () = {
     if (a) {
         a**.test();
         call_test(a**);
-        //b : _ = a**;      // cannot create copy       
-        c : _ = a*;
-        call_test(c*);
-        c*.test();
+        //b : _ = a**;      // cannot create copy
+        move_to(move a*);
         // a**.test(); // not allowed
     }
 }
@@ -75,7 +78,7 @@ test_copyable_ref : () = {
         b.test();
         a**.test(); // allowed
 
-        c : _ = a*;     // move owning reference from optional
+        c : _ = (move a*);     // move owning reference from optional
         call_test(c*);
         c*.test();
         //a**.test(); // no longer allowed

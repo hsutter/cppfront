@@ -713,12 +713,14 @@ struct {
 template<typename T>
 class owning_reference {
 public:
-    explicit owning_reference(std::unique_ptr<T>&& ptr):_ptr(assert_not_null(std::move(ptr))){}
+    explicit owning_reference(std::unique_ptr<T>&& ptr):_ptr(cpp2::impl::assert_not_null(std::move(ptr))){}
     ~owning_reference() = default;
+    owning_reference(const owning_reference& ref) = delete;
+    owning_reference& operator=(const owning_reference& ref) noexcept = delete;
     owning_reference(owning_reference&& ref) = default;
     owning_reference& operator=(owning_reference&& ref) noexcept = default;
-    typename std::add_lvalue_reference<T>::type operator*() const { return *assert_not_null(_ptr.get()); }
-    typename std::add_lvalue_reference<T>::type operator->() const noexcept {return *assert_not_null(_ptr.get());}
+    typename std::add_lvalue_reference<T>::type operator*() const { return *cpp2::impl::assert_not_null(_ptr.get()); }
+    typename std::add_lvalue_reference<T>::type operator->() const noexcept {return *cpp2::impl::assert_not_null(_ptr.get());}
     auto get() const noexcept { return _ptr.get();}
 private:
    std::unique_ptr<T> _ptr; 
