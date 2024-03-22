@@ -1,2 +1,3 @@
-pure2-new-basics.cpp2... ok (all Cpp2, passes safety checks)
+pure2-new-basics.cpp2...
+pure2-new-basics.cpp2(40,9): error: invalid statement encountered inside a compound-statement (at 'move_test')
 
