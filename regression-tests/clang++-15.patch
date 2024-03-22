@@ -1,0 +1,2505 @@
+
+diff --git a/regression-tests/test-results/mixed-type-safety-1.cpp b/regression-tests/test-results/mixed-type-safety-1.cpp
+index f175980..20aecdc 100644
+--- a/regression-tests/test-results/mixed-type-safety-1.cpp
++++ b/regression-tests/test-results/mixed-type-safety-1.cpp
+@@ -58,7 +58,7 @@ auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void
+     print( "1   is int? ", cpp2::impl::is<int>(1));
+ 
+     auto c {cpp2_new<Circle>()}; // safe by construction
+-    Shape* s {CPP2_UFCS(get)(cpp2::move(c))}; // safe by Lifetime
++    Shape* s {CPP2_UFCS(get)((*cpp2::impl::assert_not_null(cpp2::move(c))))}; // safe by Lifetime
+     print("
+s* is Shape?  ", cpp2::impl::is<Shape>(*cpp2::impl::assert_not_null(s)));
+     print(  "s* is Circle? ", cpp2::impl::is<Circle>(*cpp2::impl::assert_not_null(s)));
+     print(  "s* is Square? ", cpp2::impl::is<Square>(*cpp2::impl::assert_not_null(cpp2::move(s))));
+
+
+diff --git a/regression-tests/test-results/clang-15/pure2-assert-expected-not-null.cpp.output b/regression-tests/test-results/clang-15/pure2-assert-expected-not-null.cpp.output
+index 17021ed..cfefcc2 100644
+--- a/regression-tests/test-results/clang-15/pure2-assert-expected-not-null.cpp.output
++++ b/regression-tests/test-results/clang-15/pure2-assert-expected-not-null.cpp.output
+@@ -5,7 +5,7 @@ pure2-assert-expected-not-null.cpp2:7:10: error: no member named 'expected' in n
+     std::expected<int,bool> ex {4}; 
+     ~~~~~^~~~~~~~
+          unexpected
+-/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/exception:107:8: note: 'unexpected' declared here
++/usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/c++/11/exception:95:8: note: 'unexpected' declared here
+   void unexpected() __attribute__ ((__noreturn__));
+        ^
+ pure2-assert-expected-not-null.cpp2:9:193: error: use of undeclared identifier 'ex'
+@@ -18,7 +18,7 @@ pure2-assert-expected-not-null.cpp2:14:10: error: no member named 'expected' in
+     std::expected<int,bool> ex {std::unexpected(false)}; 
+     ~~~~~^~~~~~~~
+          unexpected
+-/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/exception:107:8: note: 'unexpected' declared here
++/usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/c++/11/exception:95:8: note: 'unexpected' declared here
+   void unexpected() __attribute__ ((__noreturn__));
+        ^
+ pure2-assert-expected-not-null.cpp2:15:52: error: use of undeclared identifier 'ex'
+
+
+diff --git a/regression-tests/test-results/clang-15/pure2-interpolation.cpp.execution b/regression-tests/test-results/clang-15/pure2-interpolation.cpp.execution
+index 850cfc6..7dbfcb5 100644
+--- a/regression-tests/test-results/clang-15/pure2-interpolation.cpp.execution
++++ b/regression-tests/test-results/clang-15/pure2-interpolation.cpp.execution
+@@ -9,4 +9,4 @@ g0g0g
+ pl(ug$h
+ 0pl(ug$h
+ Dog kennel           color mauve      price 3.14       in stock = true
+-Dog kennel           color mauve      price 3.14       in stock = true
++Dog kennel color mauve price 3.140000 in stock = true
+
+
+diff --git a/regression-tests/test-results/pure2-intro-example-three-loops.cpp b/regression-tests/test-results/pure2-intro-example-three-loops.cpp
+index 500f293..ea0af88 100644
+--- a/regression-tests/test-results/pure2-intro-example-three-loops.cpp
++++ b/regression-tests/test-results/pure2-intro-example-three-loops.cpp
+@@ -45,7 +45,12 @@ auto decorate_and_print(auto& thing) -> void{
+         "hello", "big", "world"}; 
+     std::span<std::string> view {words}; 
+ 
+-    auto i {cpp2_new<int>(0)}; 
++    auto p_i {cpp2_new<int>(0)}; 
++    if ((!(p_i))) {
++        return 1; 
++    }
++    auto i {*cpp2::impl::assert_not_null(cpp2::move(p_i))}; 
++
+     for( ; cpp2::impl::cmp_less(*cpp2::impl::assert_not_null(i),CPP2_UFCS(ssize)(view)); ++*cpp2::impl::assert_not_null(i) ) {
+         print(CPP2_ASSERT_IN_BOUNDS(view, *cpp2::impl::assert_not_null(i)));
+     }
+
+
+diff --git a/regression-tests/test-results/clang-15/pure2-intro-example-three-loops.cpp.output b/regression-tests/test-results/clang-15/pure2-intro-example-three-loops.cpp.output
+index e69de29..b3b3fdb 100644
+--- a/regression-tests/test-results/clang-15/pure2-intro-example-three-loops.cpp.output
++++ b/regression-tests/test-results/clang-15/pure2-intro-example-three-loops.cpp.output
+@@ -0,0 +1,7 @@
++pure2-intro-example-three-loops.cpp2:19:10: error: call to implicitly-deleted copy constructor of 'cpp2::owning_reference<int>'
++    auto i {*cpp2::impl::assert_not_null(cpp2::move(p_i))}; 
++         ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++../../../include/cpp2util.h:718:5: note: copy constructor is implicitly deleted because 'owning_reference<int>' has a user-declared move constructor
++    owning_reference(owning_reference&& ref) = default;
++    ^
++1 error generated.
+
+
+diff --git a/regression-tests/test-results/pure2-last-use.cpp b/regression-tests/test-results/pure2-last-use.cpp
+index 8d72435..ec663a6 100644
+--- a/regression-tests/test-results/pure2-last-use.cpp
++++ b/regression-tests/test-results/pure2-last-use.cpp
+@@ -362,9 +362,9 @@ class issue_857_9: public issue_857_8 {
+ };
+ 
+ class issue_869_0 {
+-  public: explicit issue_869_0([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2);
++  public: explicit issue_869_0([[maybe_unused]] cpp2::owning_reference<int>&& unnamed_param_2);
+ #line 373 "pure2-last-use.cpp2"
+-  public: auto operator=([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2) -> issue_869_0& ;
++  public: auto operator=([[maybe_unused]] cpp2::owning_reference<int>&& unnamed_param_2) -> issue_869_0& ;
+   public: [[nodiscard]] auto operator<=>([[maybe_unused]] issue_869_0 const& that) const& -> std::strong_ordering = default;
+ public: issue_869_0([[maybe_unused]] issue_869_0 const& that);
+ 
+@@ -520,57 +520,57 @@ requires (!(std::copyable<decltype(x)>))  { return std::move(cpp2::move(x));  }
+ #line 9 "pure2-last-use.cpp2"
+ auto issue_313() -> void{
+ //   _ = :() -> std::vector<int> = {
+-//     a := new<int>(0);
++//     a := new<int>(0)*;
+ //     return (a*, identity_copy(a)*);
+ //   };
+ //   _ = :() -> std::vector<int> = {
+-//     a := new<int>(0);
++//     a := new<int>(0)*;
+ //     return (a&**, identity_copy(a)*);
+ //   };
+   static_cast<void>([]() mutable -> int{
+-    auto a {cpp2_new<int>(0)}; 
++    auto a {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     return *cpp2::impl::assert_not_null(identity(a)) + *cpp2::impl::assert_not_null(identity(a)); 
+ 
+-    auto b {cpp2_new<int>(0)}; 
++    auto b {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     return *cpp2::impl::assert_not_null(identity(b)) = *cpp2::impl::assert_not_null(identity(b)); 
+ 
+-    auto c {cpp2_new<int>(0)}; 
++    auto c {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     return *cpp2::impl::assert_not_null(identity(c)) ^ *cpp2::impl::assert_not_null(identity(c)); 
+   });
+   {
+-    auto a {cpp2_new<int>(0)}; 
++    auto a {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     *cpp2::impl::assert_not_null(identity(a)) = *cpp2::impl::assert_not_null(identity(a));
+ 
+-    auto b {cpp2_new<int>(0)}; 
++    auto b {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     int auto_1 {*cpp2::impl::assert_not_null(identity(b)) = *cpp2::impl::assert_not_null(identity(b))}; 
+ 
+-    auto c {cpp2_new<int>(0)}; 
++    auto c {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (*cpp2::impl::assert_not_null(identity(c)) * *cpp2::impl::assert_not_null(identity(c))) {}
+ 
+-    auto d {cpp2_new<int>(0)}; 
++    auto d {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if ((*cpp2::impl::assert_not_null(identity(d)) - *cpp2::impl::assert_not_null(identity(d)))) {}
+ 
+-    auto e {cpp2_new<int>(0)}; 
++    auto e {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     static_cast<void>(cpp2::impl::is(e, (e)));
+ 
+-    auto f {cpp2_new<int>(0)}; 
++    auto f {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     static_cast<void>(cpp2::impl::is<std::type_identity_t<decltype(f)>>(f));// OK?
+ 
+-    auto g {cpp2_new<int>(0)}; 
++    auto g {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     for ( 
+     [[maybe_unused]] auto const& unnamed_param_1 : { *cpp2::impl::assert_not_null(identity(g)) + *cpp2::impl::assert_not_null(identity(g)) } ) 
+     {}
+ 
+-    auto h {cpp2_new<int>(0)}; 
++    auto h {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     while( *cpp2::impl::assert_not_null(identity(h)) + *cpp2::impl::assert_not_null(identity(h)) ) 
+     {}
+ 
+-    auto i {cpp2_new<int>(0)}; 
++    auto i {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     do {} while ( 
+     *cpp2::impl::assert_not_null(identity(i)) + *cpp2::impl::assert_not_null(identity(i)));
+ 
+-    auto j {cpp2_new<int>(0)}; 
+-    auto k {cpp2_new<int>(0)}; 
++    auto j {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
++    auto k {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     static_cast<void>([&] () -> int { auto&& _expr = *cpp2::impl::assert_not_null(identity(j)) + *cpp2::impl::assert_not_null(identity(j));
+         if (cpp2::impl::is(_expr, (*cpp2::impl::assert_not_null(identity(k)) + *cpp2::impl::assert_not_null(identity(k))))) { if constexpr( requires{0;} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((0)),int> ) return 0; else return int{}; else return int{}; }
+         else return 0; }
+@@ -578,7 +578,7 @@ auto issue_313() -> void{
+ 
+   }
+ //   {
+-//     a := new<int>(0);
++//     a := new<int>(0)*;
+ //     _ = :() identity(a$)* + identity(a$)*;
+ //   }
+ }
+@@ -613,7 +613,7 @@ auto issue_683(auto const& args) -> void{
+ auto issue_825() -> void{
+   static_cast<void>([](std::unique_ptr<int> b) mutable -> auto { return f_copy(std::move(cpp2::move(b)));  });
+   static_cast<void>([](std::unique_ptr<int>&& c) mutable -> auto { return f_copy(std::move(cpp2::move(c)));  });
+-  static_cast<void>([](auto&& d) mutable -> auto { return f_copy(CPP2_FORWARD(d));  }(cpp2_new<int>(0)));
++  static_cast<void>([](auto&& d) mutable -> auto { return f_copy(CPP2_FORWARD(d));  }(*cpp2::impl::assert_not_null(cpp2_new<int>(0))));
+ }
+ 
+ #line 120 "pure2-last-use.cpp2"
+@@ -730,10 +730,10 @@ int gi {0};
+   auto issue_857_9::g2() && -> void { f_inout(cpp2::move((*this)).c);  }
+ 
+ #line 373 "pure2-last-use.cpp2"
+-  issue_869_0::issue_869_0([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2){}
++  issue_869_0::issue_869_0([[maybe_unused]] cpp2::owning_reference<int>&& unnamed_param_2){}
+ #line 373 "pure2-last-use.cpp2"
+-  auto issue_869_0::operator=([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2) -> issue_869_0& {
+-                                                          return *this; }
++  auto issue_869_0::operator=([[maybe_unused]] cpp2::owning_reference<int>&& unnamed_param_2) -> issue_869_0& {
++                                                                 return *this; }
+ 
+ 
+   issue_869_0::issue_869_0([[maybe_unused]] issue_869_0 const& that){}
+@@ -781,13 +781,13 @@ issue_869_1::issue_869_1(issue_869_1 const& that)
+   }
+ #line 378 "pure2-last-use.cpp2"
+ [[nodiscard]] auto issue_869_2() -> issue_869_2_ret{
+-                                               issue_869_1 res {}; CPP2_UFCS(set_i)(res, cpp2_new<int>(0));
++                                               issue_869_1 res {}; CPP2_UFCS(set_i)(res, *cpp2::impl::assert_not_null(cpp2_new<int>(0)));
+ #line 379 "pure2-last-use.cpp2"
+ return res; }
+ #line 380 "pure2-last-use.cpp2"
+ auto issue_884() -> void{
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {}
+     {
+       {f_inout(x); }
+@@ -796,7 +796,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+     }
+@@ -807,7 +807,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       f_inout(x);
+     }
+@@ -819,7 +819,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_copy(std::move(cpp2::move(x)));
+     if (true) {
+       static_cast<void>(0);
+@@ -832,7 +832,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+@@ -845,7 +845,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       static_cast<void>(0);
+@@ -858,7 +858,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       static_cast<void>(0);
+@@ -871,7 +871,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       static_cast<void>(0);
+@@ -884,7 +884,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+@@ -897,7 +897,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+@@ -910,7 +910,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       f_inout(x);
+@@ -926,7 +926,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       f_inout(x);
+@@ -942,7 +942,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+@@ -958,7 +958,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       if (true) {
+         if (true) {
+@@ -971,7 +971,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       if (true) {
+         if (true) {
+@@ -985,7 +985,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+     }
+     else {
+@@ -998,7 +998,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+     }
+@@ -1012,9 +1012,9 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+-      auto y {cpp2_new<int>(0)}; 
++      auto y {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+       f_copy(std::move(cpp2::move(x)));
+       f_copy(std::move(cpp2::move(y)));
+     }
+@@ -1029,9 +1029,9 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+-      auto y {cpp2_new<int>(0)}; 
++      auto y {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+       if (true) {}
+       else {
+         f_copy(std::move(cpp2::move(x)));
+@@ -1041,7 +1041,7 @@ auto issue_884() -> void{
+     else {
+       if (true) {
+         if (true) {
+-          auto y {cpp2_new<int>(0)}; 
++          auto y {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+           f_copy(std::move(cpp2::move(y)));
+           f_inout(x);
+         }
+@@ -1051,9 +1051,9 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+-      auto y {cpp2_new<int>(0)}; 
++      auto y {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+       if (true) {}
+       else {
+         f_copy(std::move(cpp2::move(x)));
+@@ -1061,7 +1061,7 @@ auto issue_884() -> void{
+       }
+     }
+     else {
+-      auto y {cpp2_new<int>(0)}; 
++      auto y {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+       if (true) {
+         if (true) {
+           f_copy(std::move(cpp2::move(x)));
+@@ -1075,13 +1075,13 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+     }
+     else {
+       if (true) {
+-        auto x {cpp2_new<int>(0)}; 
++        auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+         if (true) {
+           f_inout(x);
+         }
+@@ -1094,10 +1094,10 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       if (true) {
+-        auto x {cpp2_new<int>(0)}; 
++        auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+         if (true) {
+           f_inout(x);
+         }
+@@ -1113,7 +1113,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+ 
+     if (true) {
+       f_inout(x);
+@@ -1127,7 +1127,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       if (true) {
+         f_inout(x);
+@@ -1193,9 +1193,9 @@ auto issue_888_1([[maybe_unused]] std::string unnamed_param_1, move_only_functio
+ 
+ #line 784 "pure2-last-use.cpp2"
+ auto issue_890() -> void{
+-  auto x {cpp2_new<int>(0)}; 
++  auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+ {
+-auto const& x{cpp2_new<int>(0)};
++auto const& x{*cpp2::impl::assert_not_null(cpp2_new<int>(0))};
+ //   assert(identity_copy(x)* == 0);
+ #line 787 "pure2-last-use.cpp2"
+   if (cpp2::cpp2_default.is_active() && !(*cpp2::impl::assert_not_null(identity(x)) == 0) ) { cpp2::cpp2_default.report_violation(""); }
+@@ -1224,13 +1224,13 @@ auto enum_0() -> void{
+ }
+ #line 806 "pure2-last-use.cpp2"
+ auto enum_1() -> void{
+-    auto max_value {cpp2_new<int>(0)}; 
+-    std::reference_wrapper<std::unique_ptr<int> const> min_value {cpp2::move(max_value)}; 
++    auto max_value {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
++    std::reference_wrapper<cpp2::owning_reference<int> const> min_value {cpp2::move(max_value)}; 
+ 
+     // for  (0)
+     // do   (copy x)
+     // {
+-    //     v := new<int>(identity_copy(x));
++    //     v := new<int>(identity_copy(x))*;
+     //     if pred(v, min_value) {
+     //         min_value = std::ref(identity(v)); // Not using 'else' will never move 'v'.
+     //     }
+@@ -1239,21 +1239,21 @@ auto enum_1() -> void{
+     //     }
+     // }
+ 
+-    auto y {cpp2_new<bool>(false)}; 
++    auto y {*cpp2::impl::assert_not_null(cpp2_new<bool>(false))}; 
+     while( *cpp2::impl::assert_not_null(identity(y)) ) {
+-        auto v {cpp2_new<int>(0)}; 
++        auto v {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+         f_copy(std::move(cpp2::move(v)));
+     }
+ 
+-    auto z {cpp2_new<bool>(false)}; 
++    auto z {*cpp2::impl::assert_not_null(cpp2_new<bool>(false))}; 
+     do {
+-        auto v {cpp2_new<int>(0)}; 
++        auto v {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+         f_copy(std::move(cpp2::move(v)));
+     } while ( *cpp2::impl::assert_not_null(identity(z)));
+ }
+ #line 834 "pure2-last-use.cpp2"
+ auto enum_2() -> void{
+-    auto umax {cpp2_new<int>(0)}; 
++    auto umax {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (pred(umax)) {
+     }
+     else {if (pred(umax)) {
+@@ -1299,14 +1299,14 @@ return std::move(p.value()); }
+ #line 875 "pure2-last-use.cpp2"
+ auto loops() -> void{
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     for ( 
+     [[maybe_unused]] auto const& unnamed_param_1 : { 0 } ) 
+     f_inout(x);
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     for ( 
+ 
+     [[maybe_unused]] auto const& unnamed_param_1 : { 0 } )  { do 
+@@ -1314,14 +1314,14 @@ auto loops() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     for ( 
+     [[maybe_unused]] auto const& unnamed_param_1 : { 0 } ) 
+     if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(get)(x)) ) { cpp2::cpp2_default.report_violation(""); }
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+     }
+@@ -1337,10 +1337,10 @@ namespace captures {
+ 
+ #line 915 "pure2-last-use.cpp2"
+ auto f() -> void{
+-  auto x {cpp2_new<int>(0)}; 
++  auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+   f_copy(std::move(cpp2::move(x)));
+   auto id {[](auto const& x) mutable -> auto&& { return x;  }}; 
+-  auto y {cpp2_new<int>(0)}; 
++  auto y {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+   if (cpp2::cpp2_default.is_active() && !(&cpp2::move(id)(y) == &y) ) { cpp2::cpp2_default.report_violation(""); }
+ }
+ 
+@@ -1360,13 +1360,13 @@ auto f() -> void{
+ #line 940 "pure2-last-use.cpp2"
+ auto g() -> void{
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_copy(std::move(cpp2::move(x)));
+     static_cast<void>([_0 = std::array<int,[](auto const& x) mutable -> auto { return identity(x); }(0)>()]() mutable -> auto { return _0;  });// Fails on Clang 12 (lambda in unevaluated context).
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(cpp2::move(x));
+     // _ = :() -> int = (:() x$*)$();
+   });
+@@ -1377,7 +1377,7 @@ auto g() -> void{
+ #line 956 "pure2-last-use.cpp2"
+ auto loops_and_captures() -> void{
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_copy(std::move(cpp2::move(x)));
+     for ( 
+     [[maybe_unused]] auto const& unnamed_param_1 : { [](auto const& x) mutable -> auto { return x; } } ) 
+@@ -1385,7 +1385,7 @@ auto loops_and_captures() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_copy(std::move(cpp2::move(x)));
+     for ( 
+ 
+@@ -1395,7 +1395,7 @@ auto loops_and_captures() -> void{
+   });
+ 
+ //   _ = :() = {
+-//     x := new<int>(0);
++//     x := new<int>(0)*;
+ //     for (:() x$*)
+ //     do (_)
+ //     { }
+@@ -1405,10 +1405,10 @@ auto loops_and_captures() -> void{
+ #line 994 "pure2-last-use.cpp2"
+ auto skip_hidden_names() -> void{
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_copy(std::move(cpp2::move(x)));
+ {
+-auto x{cpp2_new<int>(0)};
++auto x{*cpp2::impl::assert_not_null(cpp2_new<int>(0))};
+ 
+ #line 999 "pure2-last-use.cpp2"
+       f_copy(std::move(cpp2::move(x)));
+@@ -1417,10 +1417,10 @@ auto x{cpp2_new<int>(0)};
+   });
+ 
+ //   _ = :() = {
+-//     x := new<int>(0);
++//     x := new<int>(0)*;
+ //     _ = :() = {
+ //       _ = x$;
+-//       x := new<int>(1);
++//       x := new<int>(1)*;
+ //       _ = :() = {
+ //         _ = x$;
+ //       };
+@@ -1429,8 +1429,8 @@ auto x{cpp2_new<int>(0)};
+ 
+   static_cast<void>([]() mutable -> void{
+ {
+-auto x{cpp2_new<int>(0)};
+-    // x := new<int>(0);
++auto x{*cpp2::impl::assert_not_null(cpp2_new<int>(0))};
++    // x := new<int>(0)*;
+     // f_copy(x);
+     // for (0)
+     // do (copy x)
+@@ -1443,7 +1443,7 @@ auto x{cpp2_new<int>(0)};
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     {
+       f_copy(std::move(cpp2::move(x)));
+@@ -1453,10 +1453,10 @@ auto x{cpp2_new<int>(0)};
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_copy(std::move(cpp2::move(x)));
+     static_cast<void>([]() mutable -> void{
+-      static_assert(std::is_same_v<decltype(x),std::unique_ptr<int>>);
++      static_assert(std::is_same_v<decltype(x),cpp2::owning_reference<int>>);
+       using captures::x;
+       f_inout(x);
+     });
+
+
+diff --git a/regression-tests/test-results/pure2-new-basics.cpp2.output b/regression-tests/test-results/pure2-new-basics.cpp2.output
+index 1be2648..cb7037c 100644
+--- a/regression-tests/test-results/pure2-new-basics.cpp2.output
++++ b/regression-tests/test-results/pure2-new-basics.cpp2.output
+@@ -1,2 +1,3 @@
+-pure2-new-basics.cpp2... ok (all Cpp2, passes safety checks)
++pure2-new-basics.cpp2...
++pure2-new-basics.cpp2(40,9): error: invalid statement encountered inside a compound-statement (at 'move_test')
+ 
+
+
+diff --git a/regression-tests/test-results/clang-15/pure2-new-basics.cpp.output b/regression-tests/test-results/clang-15/pure2-new-basics.cpp.output
+index e69de29..4b68b87 100644
+--- a/regression-tests/test-results/clang-15/pure2-new-basics.cpp.output
++++ b/regression-tests/test-results/clang-15/pure2-new-basics.cpp.output
+@@ -0,0 +1,135 @@
++pure2-new-basics.cpp2:33:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
++                          ^~~~~~~~~~~~~~~~~~~~~
++                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:33:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
++                                                 ^~~~~~~~~~~~~~~~~~~~~
++                                                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:34:20: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        call_test(*cpp2::assert_not_null(*cpp2::assert_not_null(a)));
++                   ^~~~~~~~~~~~~~~~~~~~~
++                   cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:34:43: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        call_test(*cpp2::assert_not_null(*cpp2::assert_not_null(a)));
++                                          ^~~~~~~~~~~~~~~~~~~~~
++                                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:36:18: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        auto c {*cpp2::assert_not_null(std::move(a))}; 
++                 ^~~~~~~~~~~~~~~~~~~~~
++                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:37:20: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        call_test(*cpp2::assert_not_null(c));
++                   ^~~~~~~~~~~~~~~~~~~~~
++                   cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:38:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(std::move(c))));
++                          ^~~~~~~~~~~~~~~~~~~~~
++                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:46:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
++                          ^~~~~~~~~~~~~~~~~~~~~
++                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:46:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
++                                                 ^~~~~~~~~~~~~~~~~~~~~
++                                                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:51:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(std::move(a)))));
++                          ^~~~~~~~~~~~~~~~~~~~~
++                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:51:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(std::move(a)))));
++                                                 ^~~~~~~~~~~~~~~~~~~~~
++                                                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:71:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
++                          ^~~~~~~~~~~~~~~~~~~~~
++                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:71:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
++                                                 ^~~~~~~~~~~~~~~~~~~~~
++                                                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:72:20: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        call_test(*cpp2::assert_not_null(*cpp2::assert_not_null(a)));
++                   ^~~~~~~~~~~~~~~~~~~~~
++                   cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:72:43: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        call_test(*cpp2::assert_not_null(*cpp2::assert_not_null(a)));
++                                          ^~~~~~~~~~~~~~~~~~~~~
++                                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:73:18: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        auto b {*cpp2::assert_not_null(*cpp2::assert_not_null(a))}; // create copy
++                 ^~~~~~~~~~~~~~~~~~~~~
++                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:73:41: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        auto b {*cpp2::assert_not_null(*cpp2::assert_not_null(a))}; // create copy
++                                        ^~~~~~~~~~~~~~~~~~~~~
++                                        cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:76:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));// allowed
++                          ^~~~~~~~~~~~~~~~~~~~~
++                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:76:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));// allowed
++                                                 ^~~~~~~~~~~~~~~~~~~~~
++                                                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++fatal error: too many errors emitted, stopping now [-ferror-limit=]
++20 errors generated.
+
+
+diff --git a/regression-tests/test-results/mixed-type-safety-1.cpp b/regression-tests/test-results/mixed-type-safety-1.cpp
+index f175980..20aecdc 100644
+--- a/regression-tests/test-results/mixed-type-safety-1.cpp
++++ b/regression-tests/test-results/mixed-type-safety-1.cpp
+@@ -58,7 +58,7 @@ auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void
+     print( "1   is int? ", cpp2::impl::is<int>(1));
+ 
+     auto c {cpp2_new<Circle>()}; // safe by construction
+-    Shape* s {CPP2_UFCS(get)(cpp2::move(c))}; // safe by Lifetime
++    Shape* s {CPP2_UFCS(get)((*cpp2::impl::assert_not_null(cpp2::move(c))))}; // safe by Lifetime
+     print("
+s* is Shape?  ", cpp2::impl::is<Shape>(*cpp2::impl::assert_not_null(s)));
+     print(  "s* is Circle? ", cpp2::impl::is<Circle>(*cpp2::impl::assert_not_null(s)));
+     print(  "s* is Square? ", cpp2::impl::is<Square>(*cpp2::impl::assert_not_null(cpp2::move(s))));
+
+
+diff --git a/regression-tests/test-results/clang-15/pure2-assert-expected-not-null.cpp.output b/regression-tests/test-results/clang-15/pure2-assert-expected-not-null.cpp.output
+index 17021ed..cfefcc2 100644
+--- a/regression-tests/test-results/clang-15/pure2-assert-expected-not-null.cpp.output
++++ b/regression-tests/test-results/clang-15/pure2-assert-expected-not-null.cpp.output
+@@ -5,7 +5,7 @@ pure2-assert-expected-not-null.cpp2:7:10: error: no member named 'expected' in n
+     std::expected<int,bool> ex {4}; 
+     ~~~~~^~~~~~~~
+          unexpected
+-/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/exception:107:8: note: 'unexpected' declared here
++/usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/c++/11/exception:95:8: note: 'unexpected' declared here
+   void unexpected() __attribute__ ((__noreturn__));
+        ^
+ pure2-assert-expected-not-null.cpp2:9:193: error: use of undeclared identifier 'ex'
+@@ -18,7 +18,7 @@ pure2-assert-expected-not-null.cpp2:14:10: error: no member named 'expected' in
+     std::expected<int,bool> ex {std::unexpected(false)}; 
+     ~~~~~^~~~~~~~
+          unexpected
+-/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/exception:107:8: note: 'unexpected' declared here
++/usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/c++/11/exception:95:8: note: 'unexpected' declared here
+   void unexpected() __attribute__ ((__noreturn__));
+        ^
+ pure2-assert-expected-not-null.cpp2:15:52: error: use of undeclared identifier 'ex'
+
+
+diff --git a/regression-tests/test-results/clang-15/pure2-interpolation.cpp.execution b/regression-tests/test-results/clang-15/pure2-interpolation.cpp.execution
+index 850cfc6..7dbfcb5 100644
+--- a/regression-tests/test-results/clang-15/pure2-interpolation.cpp.execution
++++ b/regression-tests/test-results/clang-15/pure2-interpolation.cpp.execution
+@@ -9,4 +9,4 @@ g0g0g
+ pl(ug$h
+ 0pl(ug$h
+ Dog kennel           color mauve      price 3.14       in stock = true
+-Dog kennel           color mauve      price 3.14       in stock = true
++Dog kennel color mauve price 3.140000 in stock = true
+
+
+diff --git a/regression-tests/test-results/pure2-intro-example-three-loops.cpp b/regression-tests/test-results/pure2-intro-example-three-loops.cpp
+index 500f293..ea0af88 100644
+--- a/regression-tests/test-results/pure2-intro-example-three-loops.cpp
++++ b/regression-tests/test-results/pure2-intro-example-three-loops.cpp
+@@ -45,7 +45,12 @@ auto decorate_and_print(auto& thing) -> void{
+         "hello", "big", "world"}; 
+     std::span<std::string> view {words}; 
+ 
+-    auto i {cpp2_new<int>(0)}; 
++    auto p_i {cpp2_new<int>(0)}; 
++    if ((!(p_i))) {
++        return 1; 
++    }
++    auto i {*cpp2::impl::assert_not_null(cpp2::move(p_i))}; 
++
+     for( ; cpp2::impl::cmp_less(*cpp2::impl::assert_not_null(i),CPP2_UFCS(ssize)(view)); ++*cpp2::impl::assert_not_null(i) ) {
+         print(CPP2_ASSERT_IN_BOUNDS(view, *cpp2::impl::assert_not_null(i)));
+     }
+
+
+diff --git a/regression-tests/test-results/pure2-last-use.cpp b/regression-tests/test-results/pure2-last-use.cpp
+index 8d72435..ec663a6 100644
+--- a/regression-tests/test-results/pure2-last-use.cpp
++++ b/regression-tests/test-results/pure2-last-use.cpp
+@@ -362,9 +362,9 @@ class issue_857_9: public issue_857_8 {
+ };
+ 
+ class issue_869_0 {
+-  public: explicit issue_869_0([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2);
++  public: explicit issue_869_0([[maybe_unused]] cpp2::owning_reference<int>&& unnamed_param_2);
+ #line 373 "pure2-last-use.cpp2"
+-  public: auto operator=([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2) -> issue_869_0& ;
++  public: auto operator=([[maybe_unused]] cpp2::owning_reference<int>&& unnamed_param_2) -> issue_869_0& ;
+   public: [[nodiscard]] auto operator<=>([[maybe_unused]] issue_869_0 const& that) const& -> std::strong_ordering = default;
+ public: issue_869_0([[maybe_unused]] issue_869_0 const& that);
+ 
+@@ -520,57 +520,57 @@ requires (!(std::copyable<decltype(x)>))  { return std::move(cpp2::move(x));  }
+ #line 9 "pure2-last-use.cpp2"
+ auto issue_313() -> void{
+ //   _ = :() -> std::vector<int> = {
+-//     a := new<int>(0);
++//     a := new<int>(0)*;
+ //     return (a*, identity_copy(a)*);
+ //   };
+ //   _ = :() -> std::vector<int> = {
+-//     a := new<int>(0);
++//     a := new<int>(0)*;
+ //     return (a&**, identity_copy(a)*);
+ //   };
+   static_cast<void>([]() mutable -> int{
+-    auto a {cpp2_new<int>(0)}; 
++    auto a {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     return *cpp2::impl::assert_not_null(identity(a)) + *cpp2::impl::assert_not_null(identity(a)); 
+ 
+-    auto b {cpp2_new<int>(0)}; 
++    auto b {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     return *cpp2::impl::assert_not_null(identity(b)) = *cpp2::impl::assert_not_null(identity(b)); 
+ 
+-    auto c {cpp2_new<int>(0)}; 
++    auto c {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     return *cpp2::impl::assert_not_null(identity(c)) ^ *cpp2::impl::assert_not_null(identity(c)); 
+   });
+   {
+-    auto a {cpp2_new<int>(0)}; 
++    auto a {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     *cpp2::impl::assert_not_null(identity(a)) = *cpp2::impl::assert_not_null(identity(a));
+ 
+-    auto b {cpp2_new<int>(0)}; 
++    auto b {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     int auto_1 {*cpp2::impl::assert_not_null(identity(b)) = *cpp2::impl::assert_not_null(identity(b))}; 
+ 
+-    auto c {cpp2_new<int>(0)}; 
++    auto c {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (*cpp2::impl::assert_not_null(identity(c)) * *cpp2::impl::assert_not_null(identity(c))) {}
+ 
+-    auto d {cpp2_new<int>(0)}; 
++    auto d {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if ((*cpp2::impl::assert_not_null(identity(d)) - *cpp2::impl::assert_not_null(identity(d)))) {}
+ 
+-    auto e {cpp2_new<int>(0)}; 
++    auto e {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     static_cast<void>(cpp2::impl::is(e, (e)));
+ 
+-    auto f {cpp2_new<int>(0)}; 
++    auto f {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     static_cast<void>(cpp2::impl::is<std::type_identity_t<decltype(f)>>(f));// OK?
+ 
+-    auto g {cpp2_new<int>(0)}; 
++    auto g {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     for ( 
+     [[maybe_unused]] auto const& unnamed_param_1 : { *cpp2::impl::assert_not_null(identity(g)) + *cpp2::impl::assert_not_null(identity(g)) } ) 
+     {}
+ 
+-    auto h {cpp2_new<int>(0)}; 
++    auto h {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     while( *cpp2::impl::assert_not_null(identity(h)) + *cpp2::impl::assert_not_null(identity(h)) ) 
+     {}
+ 
+-    auto i {cpp2_new<int>(0)}; 
++    auto i {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     do {} while ( 
+     *cpp2::impl::assert_not_null(identity(i)) + *cpp2::impl::assert_not_null(identity(i)));
+ 
+-    auto j {cpp2_new<int>(0)}; 
+-    auto k {cpp2_new<int>(0)}; 
++    auto j {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
++    auto k {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     static_cast<void>([&] () -> int { auto&& _expr = *cpp2::impl::assert_not_null(identity(j)) + *cpp2::impl::assert_not_null(identity(j));
+         if (cpp2::impl::is(_expr, (*cpp2::impl::assert_not_null(identity(k)) + *cpp2::impl::assert_not_null(identity(k))))) { if constexpr( requires{0;} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((0)),int> ) return 0; else return int{}; else return int{}; }
+         else return 0; }
+@@ -578,7 +578,7 @@ auto issue_313() -> void{
+ 
+   }
+ //   {
+-//     a := new<int>(0);
++//     a := new<int>(0)*;
+ //     _ = :() identity(a$)* + identity(a$)*;
+ //   }
+ }
+@@ -613,7 +613,7 @@ auto issue_683(auto const& args) -> void{
+ auto issue_825() -> void{
+   static_cast<void>([](std::unique_ptr<int> b) mutable -> auto { return f_copy(std::move(cpp2::move(b)));  });
+   static_cast<void>([](std::unique_ptr<int>&& c) mutable -> auto { return f_copy(std::move(cpp2::move(c)));  });
+-  static_cast<void>([](auto&& d) mutable -> auto { return f_copy(CPP2_FORWARD(d));  }(cpp2_new<int>(0)));
++  static_cast<void>([](auto&& d) mutable -> auto { return f_copy(CPP2_FORWARD(d));  }(*cpp2::impl::assert_not_null(cpp2_new<int>(0))));
+ }
+ 
+ #line 120 "pure2-last-use.cpp2"
+@@ -730,10 +730,10 @@ int gi {0};
+   auto issue_857_9::g2() && -> void { f_inout(cpp2::move((*this)).c);  }
+ 
+ #line 373 "pure2-last-use.cpp2"
+-  issue_869_0::issue_869_0([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2){}
++  issue_869_0::issue_869_0([[maybe_unused]] cpp2::owning_reference<int>&& unnamed_param_2){}
+ #line 373 "pure2-last-use.cpp2"
+-  auto issue_869_0::operator=([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2) -> issue_869_0& {
+-                                                          return *this; }
++  auto issue_869_0::operator=([[maybe_unused]] cpp2::owning_reference<int>&& unnamed_param_2) -> issue_869_0& {
++                                                                 return *this; }
+ 
+ 
+   issue_869_0::issue_869_0([[maybe_unused]] issue_869_0 const& that){}
+@@ -781,13 +781,13 @@ issue_869_1::issue_869_1(issue_869_1 const& that)
+   }
+ #line 378 "pure2-last-use.cpp2"
+ [[nodiscard]] auto issue_869_2() -> issue_869_2_ret{
+-                                               issue_869_1 res {}; CPP2_UFCS(set_i)(res, cpp2_new<int>(0));
++                                               issue_869_1 res {}; CPP2_UFCS(set_i)(res, *cpp2::impl::assert_not_null(cpp2_new<int>(0)));
+ #line 379 "pure2-last-use.cpp2"
+ return res; }
+ #line 380 "pure2-last-use.cpp2"
+ auto issue_884() -> void{
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {}
+     {
+       {f_inout(x); }
+@@ -796,7 +796,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+     }
+@@ -807,7 +807,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       f_inout(x);
+     }
+@@ -819,7 +819,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_copy(std::move(cpp2::move(x)));
+     if (true) {
+       static_cast<void>(0);
+@@ -832,7 +832,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+@@ -845,7 +845,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       static_cast<void>(0);
+@@ -858,7 +858,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       static_cast<void>(0);
+@@ -871,7 +871,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       static_cast<void>(0);
+@@ -884,7 +884,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+@@ -897,7 +897,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+@@ -910,7 +910,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       f_inout(x);
+@@ -926,7 +926,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       f_inout(x);
+@@ -942,7 +942,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+@@ -958,7 +958,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       if (true) {
+         if (true) {
+@@ -971,7 +971,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       if (true) {
+         if (true) {
+@@ -985,7 +985,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+     }
+     else {
+@@ -998,7 +998,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+     }
+@@ -1012,9 +1012,9 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+-      auto y {cpp2_new<int>(0)}; 
++      auto y {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+       f_copy(std::move(cpp2::move(x)));
+       f_copy(std::move(cpp2::move(y)));
+     }
+@@ -1029,9 +1029,9 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+-      auto y {cpp2_new<int>(0)}; 
++      auto y {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+       if (true) {}
+       else {
+         f_copy(std::move(cpp2::move(x)));
+@@ -1041,7 +1041,7 @@ auto issue_884() -> void{
+     else {
+       if (true) {
+         if (true) {
+-          auto y {cpp2_new<int>(0)}; 
++          auto y {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+           f_copy(std::move(cpp2::move(y)));
+           f_inout(x);
+         }
+@@ -1051,9 +1051,9 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+-      auto y {cpp2_new<int>(0)}; 
++      auto y {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+       if (true) {}
+       else {
+         f_copy(std::move(cpp2::move(x)));
+@@ -1061,7 +1061,7 @@ auto issue_884() -> void{
+       }
+     }
+     else {
+-      auto y {cpp2_new<int>(0)}; 
++      auto y {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+       if (true) {
+         if (true) {
+           f_copy(std::move(cpp2::move(x)));
+@@ -1075,13 +1075,13 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+     }
+     else {
+       if (true) {
+-        auto x {cpp2_new<int>(0)}; 
++        auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+         if (true) {
+           f_inout(x);
+         }
+@@ -1094,10 +1094,10 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       if (true) {
+-        auto x {cpp2_new<int>(0)}; 
++        auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+         if (true) {
+           f_inout(x);
+         }
+@@ -1113,7 +1113,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+ 
+     if (true) {
+       f_inout(x);
+@@ -1127,7 +1127,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       if (true) {
+         f_inout(x);
+@@ -1193,9 +1193,9 @@ auto issue_888_1([[maybe_unused]] std::string unnamed_param_1, move_only_functio
+ 
+ #line 784 "pure2-last-use.cpp2"
+ auto issue_890() -> void{
+-  auto x {cpp2_new<int>(0)}; 
++  auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+ {
+-auto const& x{cpp2_new<int>(0)};
++auto const& x{*cpp2::impl::assert_not_null(cpp2_new<int>(0))};
+ //   assert(identity_copy(x)* == 0);
+ #line 787 "pure2-last-use.cpp2"
+   if (cpp2::cpp2_default.is_active() && !(*cpp2::impl::assert_not_null(identity(x)) == 0) ) { cpp2::cpp2_default.report_violation(""); }
+@@ -1224,13 +1224,13 @@ auto enum_0() -> void{
+ }
+ #line 806 "pure2-last-use.cpp2"
+ auto enum_1() -> void{
+-    auto max_value {cpp2_new<int>(0)}; 
+-    std::reference_wrapper<std::unique_ptr<int> const> min_value {cpp2::move(max_value)}; 
++    auto max_value {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
++    std::reference_wrapper<cpp2::owning_reference<int> const> min_value {cpp2::move(max_value)}; 
+ 
+     // for  (0)
+     // do   (copy x)
+     // {
+-    //     v := new<int>(identity_copy(x));
++    //     v := new<int>(identity_copy(x))*;
+     //     if pred(v, min_value) {
+     //         min_value = std::ref(identity(v)); // Not using 'else' will never move 'v'.
+     //     }
+@@ -1239,21 +1239,21 @@ auto enum_1() -> void{
+     //     }
+     // }
+ 
+-    auto y {cpp2_new<bool>(false)}; 
++    auto y {*cpp2::impl::assert_not_null(cpp2_new<bool>(false))}; 
+     while( *cpp2::impl::assert_not_null(identity(y)) ) {
+-        auto v {cpp2_new<int>(0)}; 
++        auto v {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+         f_copy(std::move(cpp2::move(v)));
+     }
+ 
+-    auto z {cpp2_new<bool>(false)}; 
++    auto z {*cpp2::impl::assert_not_null(cpp2_new<bool>(false))}; 
+     do {
+-        auto v {cpp2_new<int>(0)}; 
++        auto v {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+         f_copy(std::move(cpp2::move(v)));
+     } while ( *cpp2::impl::assert_not_null(identity(z)));
+ }
+ #line 834 "pure2-last-use.cpp2"
+ auto enum_2() -> void{
+-    auto umax {cpp2_new<int>(0)}; 
++    auto umax {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (pred(umax)) {
+     }
+     else {if (pred(umax)) {
+@@ -1299,14 +1299,14 @@ return std::move(p.value()); }
+ #line 875 "pure2-last-use.cpp2"
+ auto loops() -> void{
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     for ( 
+     [[maybe_unused]] auto const& unnamed_param_1 : { 0 } ) 
+     f_inout(x);
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     for ( 
+ 
+     [[maybe_unused]] auto const& unnamed_param_1 : { 0 } )  { do 
+@@ -1314,14 +1314,14 @@ auto loops() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     for ( 
+     [[maybe_unused]] auto const& unnamed_param_1 : { 0 } ) 
+     if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(get)(x)) ) { cpp2::cpp2_default.report_violation(""); }
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+     }
+@@ -1337,10 +1337,10 @@ namespace captures {
+ 
+ #line 915 "pure2-last-use.cpp2"
+ auto f() -> void{
+-  auto x {cpp2_new<int>(0)}; 
++  auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+   f_copy(std::move(cpp2::move(x)));
+   auto id {[](auto const& x) mutable -> auto&& { return x;  }}; 
+-  auto y {cpp2_new<int>(0)}; 
++  auto y {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+   if (cpp2::cpp2_default.is_active() && !(&cpp2::move(id)(y) == &y) ) { cpp2::cpp2_default.report_violation(""); }
+ }
+ 
+@@ -1360,13 +1360,13 @@ auto f() -> void{
+ #line 940 "pure2-last-use.cpp2"
+ auto g() -> void{
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_copy(std::move(cpp2::move(x)));
+     static_cast<void>([_0 = std::array<int,[](auto const& x) mutable -> auto { return identity(x); }(0)>()]() mutable -> auto { return _0;  });// Fails on Clang 12 (lambda in unevaluated context).
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(cpp2::move(x));
+     // _ = :() -> int = (:() x$*)$();
+   });
+@@ -1377,7 +1377,7 @@ auto g() -> void{
+ #line 956 "pure2-last-use.cpp2"
+ auto loops_and_captures() -> void{
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_copy(std::move(cpp2::move(x)));
+     for ( 
+     [[maybe_unused]] auto const& unnamed_param_1 : { [](auto const& x) mutable -> auto { return x; } } ) 
+@@ -1385,7 +1385,7 @@ auto loops_and_captures() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_copy(std::move(cpp2::move(x)));
+     for ( 
+ 
+@@ -1395,7 +1395,7 @@ auto loops_and_captures() -> void{
+   });
+ 
+ //   _ = :() = {
+-//     x := new<int>(0);
++//     x := new<int>(0)*;
+ //     for (:() x$*)
+ //     do (_)
+ //     { }
+@@ -1405,10 +1405,10 @@ auto loops_and_captures() -> void{
+ #line 994 "pure2-last-use.cpp2"
+ auto skip_hidden_names() -> void{
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_copy(std::move(cpp2::move(x)));
+ {
+-auto x{cpp2_new<int>(0)};
++auto x{*cpp2::impl::assert_not_null(cpp2_new<int>(0))};
+ 
+ #line 999 "pure2-last-use.cpp2"
+       f_copy(std::move(cpp2::move(x)));
+@@ -1417,10 +1417,10 @@ auto x{cpp2_new<int>(0)};
+   });
+ 
+ //   _ = :() = {
+-//     x := new<int>(0);
++//     x := new<int>(0)*;
+ //     _ = :() = {
+ //       _ = x$;
+-//       x := new<int>(1);
++//       x := new<int>(1)*;
+ //       _ = :() = {
+ //         _ = x$;
+ //       };
+@@ -1429,8 +1429,8 @@ auto x{cpp2_new<int>(0)};
+ 
+   static_cast<void>([]() mutable -> void{
+ {
+-auto x{cpp2_new<int>(0)};
+-    // x := new<int>(0);
++auto x{*cpp2::impl::assert_not_null(cpp2_new<int>(0))};
++    // x := new<int>(0)*;
+     // f_copy(x);
+     // for (0)
+     // do (copy x)
+@@ -1443,7 +1443,7 @@ auto x{cpp2_new<int>(0)};
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     {
+       f_copy(std::move(cpp2::move(x)));
+@@ -1453,10 +1453,10 @@ auto x{cpp2_new<int>(0)};
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_copy(std::move(cpp2::move(x)));
+     static_cast<void>([]() mutable -> void{
+-      static_assert(std::is_same_v<decltype(x),std::unique_ptr<int>>);
++      static_assert(std::is_same_v<decltype(x),cpp2::owning_reference<int>>);
+       using captures::x;
+       f_inout(x);
+     });
+
+
+diff --git a/regression-tests/test-results/clang-15/pure2-last-use.cpp.output b/regression-tests/test-results/clang-15/pure2-last-use.cpp.output
+index e69de29..14dd077 100644
+--- a/regression-tests/test-results/clang-15/pure2-last-use.cpp.output
++++ b/regression-tests/test-results/clang-15/pure2-last-use.cpp.output
+@@ -0,0 +1,34 @@
++pure2-last-use.cpp2:142:5: error: no matching function for call to 'f_inout'
++    f_inout(cpp2::move(x));
++    ^~~~~~~
++pure2-last-use.cpp2:1:6: note: candidate function [with unnamed_param_1:auto = std::unique_ptr<int>] not viable: expects an lvalue for 1st argument
++auto f_inout([[maybe_unused]] auto& unnamed_param_1) -> void{}
++     ^
++pure2-last-use.cpp2:175:5: error: no matching function for call to 'f_inout'
++    f_inout(cpp2::move((*this)).b);
++    ^~~~~~~
++pure2-last-use.cpp2:1:6: note: candidate function [with unnamed_param_1:auto = std::unique_ptr<int>] not viable: expects an lvalue for 1st argument
++auto f_inout([[maybe_unused]] auto& unnamed_param_1) -> void{}
++     ^
++pure2-last-use.cpp2:366:39: error: no matching function for call to 'f_inout'
++  auto issue_857_9::g0() && -> void { f_inout(cpp2::move((*this)).a);  }
++                                      ^~~~~~~
++pure2-last-use.cpp2:1:6: note: candidate function [with unnamed_param_1:auto = std::unique_ptr<int>] not viable: expects an lvalue for 1st argument
++auto f_inout([[maybe_unused]] auto& unnamed_param_1) -> void{}
++     ^
++pure2-last-use.cpp2:808:63: error: no matching constructor for initialization of 'std::reference_wrapper<const cpp2::owning_reference<int>>'
++    std::reference_wrapper<cpp2::owning_reference<int> const> min_value {cpp2::move(max_value)}; 
++                                                              ^         ~~~~~~~~~~~~~~~~~~~~~~~
++/usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/c++/11/bits/refwrap.h:326:7: note: candidate constructor not viable: no known conversion from 'cpp2::owning_reference<int>' to 'const std::reference_wrapper<const cpp2::owning_reference<int>>' for 1st argument
++      reference_wrapper(const reference_wrapper&) = default;
++      ^
++/usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/c++/11/bits/refwrap.h:321:2: note: candidate template ignored: substitution failure [with _Up = cpp2::owning_reference<int>, $1 = void, $2 = void]: call to deleted function '_S_fun'
++        reference_wrapper(_Up&& __uref)
++        ^
++pure2-last-use.cpp2:949:5: error: no matching function for call to 'f_inout'
++    f_inout(cpp2::move(x));
++    ^~~~~~~
++pure2-last-use.cpp2:1:6: note: candidate function [with unnamed_param_1:auto = cpp2::owning_reference<int>] not viable: expects an lvalue for 1st argument
++auto f_inout([[maybe_unused]] auto& unnamed_param_1) -> void{}
++     ^
++5 errors generated.
+
+
+diff --git a/regression-tests/test-results/pure2-new-basics.cpp2.output b/regression-tests/test-results/pure2-new-basics.cpp2.output
+index 1be2648..cb7037c 100644
+--- a/regression-tests/test-results/pure2-new-basics.cpp2.output
++++ b/regression-tests/test-results/pure2-new-basics.cpp2.output
+@@ -1,2 +1,3 @@
+-pure2-new-basics.cpp2... ok (all Cpp2, passes safety checks)
++pure2-new-basics.cpp2...
++pure2-new-basics.cpp2(40,9): error: invalid statement encountered inside a compound-statement (at 'move_test')
+ 
+
+
+diff --git a/regression-tests/test-results/clang-15/pure2-new-basics.cpp.output b/regression-tests/test-results/clang-15/pure2-new-basics.cpp.output
+index e69de29..4b68b87 100644
+--- a/regression-tests/test-results/clang-15/pure2-new-basics.cpp.output
++++ b/regression-tests/test-results/clang-15/pure2-new-basics.cpp.output
+@@ -0,0 +1,135 @@
++pure2-new-basics.cpp2:33:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
++                          ^~~~~~~~~~~~~~~~~~~~~
++                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:33:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
++                                                 ^~~~~~~~~~~~~~~~~~~~~
++                                                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:34:20: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        call_test(*cpp2::assert_not_null(*cpp2::assert_not_null(a)));
++                   ^~~~~~~~~~~~~~~~~~~~~
++                   cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:34:43: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        call_test(*cpp2::assert_not_null(*cpp2::assert_not_null(a)));
++                                          ^~~~~~~~~~~~~~~~~~~~~
++                                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:36:18: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        auto c {*cpp2::assert_not_null(std::move(a))}; 
++                 ^~~~~~~~~~~~~~~~~~~~~
++                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:37:20: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        call_test(*cpp2::assert_not_null(c));
++                   ^~~~~~~~~~~~~~~~~~~~~
++                   cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:38:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(std::move(c))));
++                          ^~~~~~~~~~~~~~~~~~~~~
++                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:46:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
++                          ^~~~~~~~~~~~~~~~~~~~~
++                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:46:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
++                                                 ^~~~~~~~~~~~~~~~~~~~~
++                                                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:51:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(std::move(a)))));
++                          ^~~~~~~~~~~~~~~~~~~~~
++                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:51:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(std::move(a)))));
++                                                 ^~~~~~~~~~~~~~~~~~~~~
++                                                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:71:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
++                          ^~~~~~~~~~~~~~~~~~~~~
++                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:71:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
++                                                 ^~~~~~~~~~~~~~~~~~~~~
++                                                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:72:20: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        call_test(*cpp2::assert_not_null(*cpp2::assert_not_null(a)));
++                   ^~~~~~~~~~~~~~~~~~~~~
++                   cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:72:43: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        call_test(*cpp2::assert_not_null(*cpp2::assert_not_null(a)));
++                                          ^~~~~~~~~~~~~~~~~~~~~
++                                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:73:18: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        auto b {*cpp2::assert_not_null(*cpp2::assert_not_null(a))}; // create copy
++                 ^~~~~~~~~~~~~~~~~~~~~
++                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:73:41: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        auto b {*cpp2::assert_not_null(*cpp2::assert_not_null(a))}; // create copy
++                                        ^~~~~~~~~~~~~~~~~~~~~
++                                        cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:76:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));// allowed
++                          ^~~~~~~~~~~~~~~~~~~~~
++                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:76:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));// allowed
++                                                 ^~~~~~~~~~~~~~~~~~~~~
++                                                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++fatal error: too many errors emitted, stopping now [-ferror-limit=]
++20 errors generated.
+
+
+diff --git a/regression-tests/test-results/mixed-type-safety-1.cpp b/regression-tests/test-results/mixed-type-safety-1.cpp
+index f175980..20aecdc 100644
+--- a/regression-tests/test-results/mixed-type-safety-1.cpp
++++ b/regression-tests/test-results/mixed-type-safety-1.cpp
+@@ -58,7 +58,7 @@ auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void
+     print( "1   is int? ", cpp2::impl::is<int>(1));
+ 
+     auto c {cpp2_new<Circle>()}; // safe by construction
+-    Shape* s {CPP2_UFCS(get)(cpp2::move(c))}; // safe by Lifetime
++    Shape* s {CPP2_UFCS(get)((*cpp2::impl::assert_not_null(cpp2::move(c))))}; // safe by Lifetime
+     print("
+s* is Shape?  ", cpp2::impl::is<Shape>(*cpp2::impl::assert_not_null(s)));
+     print(  "s* is Circle? ", cpp2::impl::is<Circle>(*cpp2::impl::assert_not_null(s)));
+     print(  "s* is Square? ", cpp2::impl::is<Square>(*cpp2::impl::assert_not_null(cpp2::move(s))));
+
+
+diff --git a/regression-tests/test-results/clang-15/pure2-assert-expected-not-null.cpp.output b/regression-tests/test-results/clang-15/pure2-assert-expected-not-null.cpp.output
+index 17021ed..cfefcc2 100644
+--- a/regression-tests/test-results/clang-15/pure2-assert-expected-not-null.cpp.output
++++ b/regression-tests/test-results/clang-15/pure2-assert-expected-not-null.cpp.output
+@@ -5,7 +5,7 @@ pure2-assert-expected-not-null.cpp2:7:10: error: no member named 'expected' in n
+     std::expected<int,bool> ex {4}; 
+     ~~~~~^~~~~~~~
+          unexpected
+-/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/exception:107:8: note: 'unexpected' declared here
++/usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/c++/11/exception:95:8: note: 'unexpected' declared here
+   void unexpected() __attribute__ ((__noreturn__));
+        ^
+ pure2-assert-expected-not-null.cpp2:9:193: error: use of undeclared identifier 'ex'
+@@ -18,7 +18,7 @@ pure2-assert-expected-not-null.cpp2:14:10: error: no member named 'expected' in
+     std::expected<int,bool> ex {std::unexpected(false)}; 
+     ~~~~~^~~~~~~~
+          unexpected
+-/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/exception:107:8: note: 'unexpected' declared here
++/usr/bin/../lib/gcc/x86_64-linux-gnu/11/../../../../include/c++/11/exception:95:8: note: 'unexpected' declared here
+   void unexpected() __attribute__ ((__noreturn__));
+        ^
+ pure2-assert-expected-not-null.cpp2:15:52: error: use of undeclared identifier 'ex'
+
+
+diff --git a/regression-tests/test-results/clang-15/pure2-interpolation.cpp.execution b/regression-tests/test-results/clang-15/pure2-interpolation.cpp.execution
+index 850cfc6..7dbfcb5 100644
+--- a/regression-tests/test-results/clang-15/pure2-interpolation.cpp.execution
++++ b/regression-tests/test-results/clang-15/pure2-interpolation.cpp.execution
+@@ -9,4 +9,4 @@ g0g0g
+ pl(ug$h
+ 0pl(ug$h
+ Dog kennel           color mauve      price 3.14       in stock = true
+-Dog kennel           color mauve      price 3.14       in stock = true
++Dog kennel color mauve price 3.140000 in stock = true
+
+
+diff --git a/regression-tests/test-results/pure2-intro-example-three-loops.cpp b/regression-tests/test-results/pure2-intro-example-three-loops.cpp
+index 500f293..c204473 100644
+--- a/regression-tests/test-results/pure2-intro-example-three-loops.cpp
++++ b/regression-tests/test-results/pure2-intro-example-three-loops.cpp
+@@ -21,7 +21,7 @@ auto decorate_and_print(auto& thing) -> void;
+ 
+ #line 10 "pure2-intro-example-three-loops.cpp2"
+ [[nodiscard]] auto main() -> int;
+-#line 35 "pure2-intro-example-three-loops.cpp2"
++#line 31 "pure2-intro-example-three-loops.cpp2"
+ 
+ #line 1 "pure2-intro-example-three-loops.cpp2"
+ 
+@@ -45,7 +45,8 @@ auto decorate_and_print(auto& thing) -> void{
+         "hello", "big", "world"}; 
+     std::span<std::string> view {words}; 
+ 
+-    auto i {cpp2_new<int>(0)}; 
++    auto i {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
++
+     for( ; cpp2::impl::cmp_less(*cpp2::impl::assert_not_null(i),CPP2_UFCS(ssize)(view)); ++*cpp2::impl::assert_not_null(i) ) {
+         print(CPP2_ASSERT_IN_BOUNDS(view, *cpp2::impl::assert_not_null(i)));
+     }
+
+
+diff --git a/regression-tests/test-results/pure2-last-use.cpp b/regression-tests/test-results/pure2-last-use.cpp
+index 8d72435..ec663a6 100644
+--- a/regression-tests/test-results/pure2-last-use.cpp
++++ b/regression-tests/test-results/pure2-last-use.cpp
+@@ -362,9 +362,9 @@ class issue_857_9: public issue_857_8 {
+ };
+ 
+ class issue_869_0 {
+-  public: explicit issue_869_0([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2);
++  public: explicit issue_869_0([[maybe_unused]] cpp2::owning_reference<int>&& unnamed_param_2);
+ #line 373 "pure2-last-use.cpp2"
+-  public: auto operator=([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2) -> issue_869_0& ;
++  public: auto operator=([[maybe_unused]] cpp2::owning_reference<int>&& unnamed_param_2) -> issue_869_0& ;
+   public: [[nodiscard]] auto operator<=>([[maybe_unused]] issue_869_0 const& that) const& -> std::strong_ordering = default;
+ public: issue_869_0([[maybe_unused]] issue_869_0 const& that);
+ 
+@@ -520,57 +520,57 @@ requires (!(std::copyable<decltype(x)>))  { return std::move(cpp2::move(x));  }
+ #line 9 "pure2-last-use.cpp2"
+ auto issue_313() -> void{
+ //   _ = :() -> std::vector<int> = {
+-//     a := new<int>(0);
++//     a := new<int>(0)*;
+ //     return (a*, identity_copy(a)*);
+ //   };
+ //   _ = :() -> std::vector<int> = {
+-//     a := new<int>(0);
++//     a := new<int>(0)*;
+ //     return (a&**, identity_copy(a)*);
+ //   };
+   static_cast<void>([]() mutable -> int{
+-    auto a {cpp2_new<int>(0)}; 
++    auto a {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     return *cpp2::impl::assert_not_null(identity(a)) + *cpp2::impl::assert_not_null(identity(a)); 
+ 
+-    auto b {cpp2_new<int>(0)}; 
++    auto b {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     return *cpp2::impl::assert_not_null(identity(b)) = *cpp2::impl::assert_not_null(identity(b)); 
+ 
+-    auto c {cpp2_new<int>(0)}; 
++    auto c {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     return *cpp2::impl::assert_not_null(identity(c)) ^ *cpp2::impl::assert_not_null(identity(c)); 
+   });
+   {
+-    auto a {cpp2_new<int>(0)}; 
++    auto a {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     *cpp2::impl::assert_not_null(identity(a)) = *cpp2::impl::assert_not_null(identity(a));
+ 
+-    auto b {cpp2_new<int>(0)}; 
++    auto b {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     int auto_1 {*cpp2::impl::assert_not_null(identity(b)) = *cpp2::impl::assert_not_null(identity(b))}; 
+ 
+-    auto c {cpp2_new<int>(0)}; 
++    auto c {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (*cpp2::impl::assert_not_null(identity(c)) * *cpp2::impl::assert_not_null(identity(c))) {}
+ 
+-    auto d {cpp2_new<int>(0)}; 
++    auto d {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if ((*cpp2::impl::assert_not_null(identity(d)) - *cpp2::impl::assert_not_null(identity(d)))) {}
+ 
+-    auto e {cpp2_new<int>(0)}; 
++    auto e {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     static_cast<void>(cpp2::impl::is(e, (e)));
+ 
+-    auto f {cpp2_new<int>(0)}; 
++    auto f {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     static_cast<void>(cpp2::impl::is<std::type_identity_t<decltype(f)>>(f));// OK?
+ 
+-    auto g {cpp2_new<int>(0)}; 
++    auto g {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     for ( 
+     [[maybe_unused]] auto const& unnamed_param_1 : { *cpp2::impl::assert_not_null(identity(g)) + *cpp2::impl::assert_not_null(identity(g)) } ) 
+     {}
+ 
+-    auto h {cpp2_new<int>(0)}; 
++    auto h {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     while( *cpp2::impl::assert_not_null(identity(h)) + *cpp2::impl::assert_not_null(identity(h)) ) 
+     {}
+ 
+-    auto i {cpp2_new<int>(0)}; 
++    auto i {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     do {} while ( 
+     *cpp2::impl::assert_not_null(identity(i)) + *cpp2::impl::assert_not_null(identity(i)));
+ 
+-    auto j {cpp2_new<int>(0)}; 
+-    auto k {cpp2_new<int>(0)}; 
++    auto j {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
++    auto k {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     static_cast<void>([&] () -> int { auto&& _expr = *cpp2::impl::assert_not_null(identity(j)) + *cpp2::impl::assert_not_null(identity(j));
+         if (cpp2::impl::is(_expr, (*cpp2::impl::assert_not_null(identity(k)) + *cpp2::impl::assert_not_null(identity(k))))) { if constexpr( requires{0;} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF((0)),int> ) return 0; else return int{}; else return int{}; }
+         else return 0; }
+@@ -578,7 +578,7 @@ auto issue_313() -> void{
+ 
+   }
+ //   {
+-//     a := new<int>(0);
++//     a := new<int>(0)*;
+ //     _ = :() identity(a$)* + identity(a$)*;
+ //   }
+ }
+@@ -613,7 +613,7 @@ auto issue_683(auto const& args) -> void{
+ auto issue_825() -> void{
+   static_cast<void>([](std::unique_ptr<int> b) mutable -> auto { return f_copy(std::move(cpp2::move(b)));  });
+   static_cast<void>([](std::unique_ptr<int>&& c) mutable -> auto { return f_copy(std::move(cpp2::move(c)));  });
+-  static_cast<void>([](auto&& d) mutable -> auto { return f_copy(CPP2_FORWARD(d));  }(cpp2_new<int>(0)));
++  static_cast<void>([](auto&& d) mutable -> auto { return f_copy(CPP2_FORWARD(d));  }(*cpp2::impl::assert_not_null(cpp2_new<int>(0))));
+ }
+ 
+ #line 120 "pure2-last-use.cpp2"
+@@ -730,10 +730,10 @@ int gi {0};
+   auto issue_857_9::g2() && -> void { f_inout(cpp2::move((*this)).c);  }
+ 
+ #line 373 "pure2-last-use.cpp2"
+-  issue_869_0::issue_869_0([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2){}
++  issue_869_0::issue_869_0([[maybe_unused]] cpp2::owning_reference<int>&& unnamed_param_2){}
+ #line 373 "pure2-last-use.cpp2"
+-  auto issue_869_0::operator=([[maybe_unused]] std::unique_ptr<int>&& unnamed_param_2) -> issue_869_0& {
+-                                                          return *this; }
++  auto issue_869_0::operator=([[maybe_unused]] cpp2::owning_reference<int>&& unnamed_param_2) -> issue_869_0& {
++                                                                 return *this; }
+ 
+ 
+   issue_869_0::issue_869_0([[maybe_unused]] issue_869_0 const& that){}
+@@ -781,13 +781,13 @@ issue_869_1::issue_869_1(issue_869_1 const& that)
+   }
+ #line 378 "pure2-last-use.cpp2"
+ [[nodiscard]] auto issue_869_2() -> issue_869_2_ret{
+-                                               issue_869_1 res {}; CPP2_UFCS(set_i)(res, cpp2_new<int>(0));
++                                               issue_869_1 res {}; CPP2_UFCS(set_i)(res, *cpp2::impl::assert_not_null(cpp2_new<int>(0)));
+ #line 379 "pure2-last-use.cpp2"
+ return res; }
+ #line 380 "pure2-last-use.cpp2"
+ auto issue_884() -> void{
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {}
+     {
+       {f_inout(x); }
+@@ -796,7 +796,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+     }
+@@ -807,7 +807,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       f_inout(x);
+     }
+@@ -819,7 +819,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_copy(std::move(cpp2::move(x)));
+     if (true) {
+       static_cast<void>(0);
+@@ -832,7 +832,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+@@ -845,7 +845,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       static_cast<void>(0);
+@@ -858,7 +858,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       static_cast<void>(0);
+@@ -871,7 +871,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       static_cast<void>(0);
+@@ -884,7 +884,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+@@ -897,7 +897,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+@@ -910,7 +910,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       f_inout(x);
+@@ -926,7 +926,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       f_inout(x);
+@@ -942,7 +942,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+@@ -958,7 +958,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       if (true) {
+         if (true) {
+@@ -971,7 +971,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       if (true) {
+         if (true) {
+@@ -985,7 +985,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+     }
+     else {
+@@ -998,7 +998,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+     }
+@@ -1012,9 +1012,9 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+-      auto y {cpp2_new<int>(0)}; 
++      auto y {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+       f_copy(std::move(cpp2::move(x)));
+       f_copy(std::move(cpp2::move(y)));
+     }
+@@ -1029,9 +1029,9 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+-      auto y {cpp2_new<int>(0)}; 
++      auto y {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+       if (true) {}
+       else {
+         f_copy(std::move(cpp2::move(x)));
+@@ -1041,7 +1041,7 @@ auto issue_884() -> void{
+     else {
+       if (true) {
+         if (true) {
+-          auto y {cpp2_new<int>(0)}; 
++          auto y {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+           f_copy(std::move(cpp2::move(y)));
+           f_inout(x);
+         }
+@@ -1051,9 +1051,9 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+-      auto y {cpp2_new<int>(0)}; 
++      auto y {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+       if (true) {}
+       else {
+         f_copy(std::move(cpp2::move(x)));
+@@ -1061,7 +1061,7 @@ auto issue_884() -> void{
+       }
+     }
+     else {
+-      auto y {cpp2_new<int>(0)}; 
++      auto y {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+       if (true) {
+         if (true) {
+           f_copy(std::move(cpp2::move(x)));
+@@ -1075,13 +1075,13 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+     }
+     else {
+       if (true) {
+-        auto x {cpp2_new<int>(0)}; 
++        auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+         if (true) {
+           f_inout(x);
+         }
+@@ -1094,10 +1094,10 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       if (true) {
+-        auto x {cpp2_new<int>(0)}; 
++        auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+         if (true) {
+           f_inout(x);
+         }
+@@ -1113,7 +1113,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+ 
+     if (true) {
+       f_inout(x);
+@@ -1127,7 +1127,7 @@ auto issue_884() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       if (true) {
+         f_inout(x);
+@@ -1193,9 +1193,9 @@ auto issue_888_1([[maybe_unused]] std::string unnamed_param_1, move_only_functio
+ 
+ #line 784 "pure2-last-use.cpp2"
+ auto issue_890() -> void{
+-  auto x {cpp2_new<int>(0)}; 
++  auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+ {
+-auto const& x{cpp2_new<int>(0)};
++auto const& x{*cpp2::impl::assert_not_null(cpp2_new<int>(0))};
+ //   assert(identity_copy(x)* == 0);
+ #line 787 "pure2-last-use.cpp2"
+   if (cpp2::cpp2_default.is_active() && !(*cpp2::impl::assert_not_null(identity(x)) == 0) ) { cpp2::cpp2_default.report_violation(""); }
+@@ -1224,13 +1224,13 @@ auto enum_0() -> void{
+ }
+ #line 806 "pure2-last-use.cpp2"
+ auto enum_1() -> void{
+-    auto max_value {cpp2_new<int>(0)}; 
+-    std::reference_wrapper<std::unique_ptr<int> const> min_value {cpp2::move(max_value)}; 
++    auto max_value {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
++    std::reference_wrapper<cpp2::owning_reference<int> const> min_value {cpp2::move(max_value)}; 
+ 
+     // for  (0)
+     // do   (copy x)
+     // {
+-    //     v := new<int>(identity_copy(x));
++    //     v := new<int>(identity_copy(x))*;
+     //     if pred(v, min_value) {
+     //         min_value = std::ref(identity(v)); // Not using 'else' will never move 'v'.
+     //     }
+@@ -1239,21 +1239,21 @@ auto enum_1() -> void{
+     //     }
+     // }
+ 
+-    auto y {cpp2_new<bool>(false)}; 
++    auto y {*cpp2::impl::assert_not_null(cpp2_new<bool>(false))}; 
+     while( *cpp2::impl::assert_not_null(identity(y)) ) {
+-        auto v {cpp2_new<int>(0)}; 
++        auto v {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+         f_copy(std::move(cpp2::move(v)));
+     }
+ 
+-    auto z {cpp2_new<bool>(false)}; 
++    auto z {*cpp2::impl::assert_not_null(cpp2_new<bool>(false))}; 
+     do {
+-        auto v {cpp2_new<int>(0)}; 
++        auto v {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+         f_copy(std::move(cpp2::move(v)));
+     } while ( *cpp2::impl::assert_not_null(identity(z)));
+ }
+ #line 834 "pure2-last-use.cpp2"
+ auto enum_2() -> void{
+-    auto umax {cpp2_new<int>(0)}; 
++    auto umax {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (pred(umax)) {
+     }
+     else {if (pred(umax)) {
+@@ -1299,14 +1299,14 @@ return std::move(p.value()); }
+ #line 875 "pure2-last-use.cpp2"
+ auto loops() -> void{
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     for ( 
+     [[maybe_unused]] auto const& unnamed_param_1 : { 0 } ) 
+     f_inout(x);
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     for ( 
+ 
+     [[maybe_unused]] auto const& unnamed_param_1 : { 0 } )  { do 
+@@ -1314,14 +1314,14 @@ auto loops() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     for ( 
+     [[maybe_unused]] auto const& unnamed_param_1 : { 0 } ) 
+     if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(get)(x)) ) { cpp2::cpp2_default.report_violation(""); }
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     if (true) {
+       f_copy(std::move(cpp2::move(x)));
+     }
+@@ -1337,10 +1337,10 @@ namespace captures {
+ 
+ #line 915 "pure2-last-use.cpp2"
+ auto f() -> void{
+-  auto x {cpp2_new<int>(0)}; 
++  auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+   f_copy(std::move(cpp2::move(x)));
+   auto id {[](auto const& x) mutable -> auto&& { return x;  }}; 
+-  auto y {cpp2_new<int>(0)}; 
++  auto y {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+   if (cpp2::cpp2_default.is_active() && !(&cpp2::move(id)(y) == &y) ) { cpp2::cpp2_default.report_violation(""); }
+ }
+ 
+@@ -1360,13 +1360,13 @@ auto f() -> void{
+ #line 940 "pure2-last-use.cpp2"
+ auto g() -> void{
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_copy(std::move(cpp2::move(x)));
+     static_cast<void>([_0 = std::array<int,[](auto const& x) mutable -> auto { return identity(x); }(0)>()]() mutable -> auto { return _0;  });// Fails on Clang 12 (lambda in unevaluated context).
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(cpp2::move(x));
+     // _ = :() -> int = (:() x$*)$();
+   });
+@@ -1377,7 +1377,7 @@ auto g() -> void{
+ #line 956 "pure2-last-use.cpp2"
+ auto loops_and_captures() -> void{
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_copy(std::move(cpp2::move(x)));
+     for ( 
+     [[maybe_unused]] auto const& unnamed_param_1 : { [](auto const& x) mutable -> auto { return x; } } ) 
+@@ -1385,7 +1385,7 @@ auto loops_and_captures() -> void{
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_copy(std::move(cpp2::move(x)));
+     for ( 
+ 
+@@ -1395,7 +1395,7 @@ auto loops_and_captures() -> void{
+   });
+ 
+ //   _ = :() = {
+-//     x := new<int>(0);
++//     x := new<int>(0)*;
+ //     for (:() x$*)
+ //     do (_)
+ //     { }
+@@ -1405,10 +1405,10 @@ auto loops_and_captures() -> void{
+ #line 994 "pure2-last-use.cpp2"
+ auto skip_hidden_names() -> void{
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_copy(std::move(cpp2::move(x)));
+ {
+-auto x{cpp2_new<int>(0)};
++auto x{*cpp2::impl::assert_not_null(cpp2_new<int>(0))};
+ 
+ #line 999 "pure2-last-use.cpp2"
+       f_copy(std::move(cpp2::move(x)));
+@@ -1417,10 +1417,10 @@ auto x{cpp2_new<int>(0)};
+   });
+ 
+ //   _ = :() = {
+-//     x := new<int>(0);
++//     x := new<int>(0)*;
+ //     _ = :() = {
+ //       _ = x$;
+-//       x := new<int>(1);
++//       x := new<int>(1)*;
+ //       _ = :() = {
+ //         _ = x$;
+ //       };
+@@ -1429,8 +1429,8 @@ auto x{cpp2_new<int>(0)};
+ 
+   static_cast<void>([]() mutable -> void{
+ {
+-auto x{cpp2_new<int>(0)};
+-    // x := new<int>(0);
++auto x{*cpp2::impl::assert_not_null(cpp2_new<int>(0))};
++    // x := new<int>(0)*;
+     // f_copy(x);
+     // for (0)
+     // do (copy x)
+@@ -1443,7 +1443,7 @@ auto x{cpp2_new<int>(0)};
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_inout(x);
+     {
+       f_copy(std::move(cpp2::move(x)));
+@@ -1453,10 +1453,10 @@ auto x{cpp2_new<int>(0)};
+   });
+ 
+   static_cast<void>([]() mutable -> void{
+-    auto x {cpp2_new<int>(0)}; 
++    auto x {*cpp2::impl::assert_not_null(cpp2_new<int>(0))}; 
+     f_copy(std::move(cpp2::move(x)));
+     static_cast<void>([]() mutable -> void{
+-      static_assert(std::is_same_v<decltype(x),std::unique_ptr<int>>);
++      static_assert(std::is_same_v<decltype(x),cpp2::owning_reference<int>>);
+       using captures::x;
+       f_inout(x);
+     });
+
+
+diff --git a/regression-tests/test-results/pure2-new-basics.cpp2.output b/regression-tests/test-results/pure2-new-basics.cpp2.output
+index 1be2648..cb7037c 100644
+--- a/regression-tests/test-results/pure2-new-basics.cpp2.output
++++ b/regression-tests/test-results/pure2-new-basics.cpp2.output
+@@ -1,2 +1,3 @@
+-pure2-new-basics.cpp2... ok (all Cpp2, passes safety checks)
++pure2-new-basics.cpp2...
++pure2-new-basics.cpp2(40,9): error: invalid statement encountered inside a compound-statement (at 'move_test')
+ 
+
+
+diff --git a/regression-tests/test-results/clang-15/pure2-new-basics.cpp.output b/regression-tests/test-results/clang-15/pure2-new-basics.cpp.output
+index e69de29..4b68b87 100644
+--- a/regression-tests/test-results/clang-15/pure2-new-basics.cpp.output
++++ b/regression-tests/test-results/clang-15/pure2-new-basics.cpp.output
+@@ -0,0 +1,135 @@
++pure2-new-basics.cpp2:33:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
++                          ^~~~~~~~~~~~~~~~~~~~~
++                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:33:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
++                                                 ^~~~~~~~~~~~~~~~~~~~~
++                                                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:34:20: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        call_test(*cpp2::assert_not_null(*cpp2::assert_not_null(a)));
++                   ^~~~~~~~~~~~~~~~~~~~~
++                   cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:34:43: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        call_test(*cpp2::assert_not_null(*cpp2::assert_not_null(a)));
++                                          ^~~~~~~~~~~~~~~~~~~~~
++                                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:36:18: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        auto c {*cpp2::assert_not_null(std::move(a))}; 
++                 ^~~~~~~~~~~~~~~~~~~~~
++                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:37:20: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        call_test(*cpp2::assert_not_null(c));
++                   ^~~~~~~~~~~~~~~~~~~~~
++                   cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:38:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(std::move(c))));
++                          ^~~~~~~~~~~~~~~~~~~~~
++                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:46:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
++                          ^~~~~~~~~~~~~~~~~~~~~
++                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:46:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
++                                                 ^~~~~~~~~~~~~~~~~~~~~
++                                                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:51:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(std::move(a)))));
++                          ^~~~~~~~~~~~~~~~~~~~~
++                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:51:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(std::move(a)))));
++                                                 ^~~~~~~~~~~~~~~~~~~~~
++                                                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:71:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
++                          ^~~~~~~~~~~~~~~~~~~~~
++                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:71:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
++                                                 ^~~~~~~~~~~~~~~~~~~~~
++                                                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:72:20: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        call_test(*cpp2::assert_not_null(*cpp2::assert_not_null(a)));
++                   ^~~~~~~~~~~~~~~~~~~~~
++                   cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:72:43: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        call_test(*cpp2::assert_not_null(*cpp2::assert_not_null(a)));
++                                          ^~~~~~~~~~~~~~~~~~~~~
++                                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:73:18: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        auto b {*cpp2::assert_not_null(*cpp2::assert_not_null(a))}; // create copy
++                 ^~~~~~~~~~~~~~~~~~~~~
++                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:73:41: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        auto b {*cpp2::assert_not_null(*cpp2::assert_not_null(a))}; // create copy
++                                        ^~~~~~~~~~~~~~~~~~~~~
++                                        cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:76:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));// allowed
++                          ^~~~~~~~~~~~~~~~~~~~~
++                          cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++pure2-new-basics.cpp2:76:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
++        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));// allowed
++                                                 ^~~~~~~~~~~~~~~~~~~~~
++                                                 cpp2::impl::assert_not_null
++../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
++auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
++     ^
++fatal error: too many errors emitted, stopping now [-ferror-limit=]
++20 errors generated.
+
