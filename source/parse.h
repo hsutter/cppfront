@@ -8544,6 +8544,9 @@ private:
     auto apply_type_metafunctions( declaration_node& decl )
         -> bool;
 
+    auto apply_function_metafunctions( declaration_node& decl )
+        -> bool;
+
 
     //G unnamed-declaration:
     //G     ':' meta-functions? template-parameters? function-type requires-clause? '=' statement
@@ -8753,14 +8756,6 @@ private:
         {
             n->type = std::move(t);
             assert (n->is_function());
-
-            if (!n->metafunctions.empty()) {
-                errors.emplace_back(
-                    n->metafunctions.front()->position(),
-                    "(temporary alpha limitation) metafunctions are currently not supported on functions, only on types"
-                );
-                return {};
-            }
         }
 
         //  Or a namespace
@@ -9121,6 +9116,17 @@ private:
                 n->equal_sign.lineno,
                 peek(-1)->position().lineno
             );
+        }
+
+        //  If this is a function with metafunctions, apply those
+        if (n->is_function()) {
+            if (!apply_function_metafunctions(*n)) {
+                error(
+                    "error encountered while applying function metafunctions",
+                    false, {}, true
+                );
+                return {};
+            }
         }
 
         return n;

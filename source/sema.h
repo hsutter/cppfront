@@ -39,6 +39,22 @@ auto parser::apply_type_metafunctions( declaration_node& n )
     );
 }
 
+auto parser::apply_function_metafunctions( declaration_node& n )
+    -> bool
+{
+    assert(n.is_function());
+
+    //  Get the reflection state ready to pass to the function
+    auto cs = meta::compiler_services{ &errors, &includes, generated_tokens };
+    auto rfunc = meta::function_declaration{ &n, cs };
+
+    return apply_metafunctions(
+        n,
+        rfunc,
+        [&](std::string const& msg) { error( msg, false ); }
+    );
+}
+
 
 //-----------------------------------------------------------------------
 //

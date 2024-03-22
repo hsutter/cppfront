@@ -1501,13 +1501,17 @@ union: (inout t : meta::type_declaration)
 
 //-----------------------------------------------------------------------
 //
-//  print - output a pretty-printed visualization of t
+//  print - output a pretty-printed visualization of t or f
 //
 print: (t: meta::type_declaration) =
 {
     std::cout << t.print() << "\n";
 }
 
+print: (f: meta::function_declaration) =
+{
+    std::cout << f.print() << "\n";
+}
 
 //-----------------------------------------------------------------------
 //
@@ -3630,7 +3634,7 @@ regex_gen: (inout t: meta::type_declaration) =
 
 //-----------------------------------------------------------------------
 //
-//  apply_metafunctions
+//  apply_metafunctions - for types
 //
 apply_metafunctions: (
     inout n     : declaration_node,
@@ -3723,7 +3727,7 @@ apply_metafunctions: (
             regex_gen( rtype );
         }
         else {
-            error( "unrecognized metafunction name: " + name );
+            error( "unrecognized metafunction name: '" + name + "' for type declaration" );
             error( 
                 "(temporary alpha limitation) currently the supported names are: "
                 "interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, "
@@ -3739,6 +3743,60 @@ apply_metafunctions: (
             )
         {
             error( name + " did not use its template arguments - did you mean to write '" + name + " <" + args[0] + "> type' (with the spaces)?");
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+//-----------------------------------------------------------------------
+//
+//  apply_metafunctions - for functions
+//
+apply_metafunctions: (
+    inout n     : declaration_node,
+    inout rfunc : function_declaration,
+    error
+    )
+    -> bool
+= {
+    assert( n.is_function() );
+
+    //  For each metafunction, apply it
+    for n.metafunctions
+    do  (meta)
+    {
+        //  Convert the name and any template arguments to strings
+        //  and record that in rfunc
+        name := meta*.to_string();
+        name = name.substr(0, name.find('<'));
+
+        args: std::vector<std::string> = ();
+        for meta*.template_arguments()
+        do  (arg)
+            args.push_back( arg.to_string() );
+
+        rfunc.set_metafunction_name( name, args );
+
+        //  Dispatch
+        //
+        if name == "print" {
+            print( rfunc );
+        }
+        else {
+            error( "unrecognized metafunction name '" + name + "' for function declaration" );
+            error( "(temporary alpha limitation) currently the supported names are: print" );
+            return false;
+        }
+
+        if (
+            !args.empty()
+            && !rfunc.arguments_were_used()
+            )
+        {
+            error( name + " did not use its template arguments - did you mean to write '" + name + " <" + args[0] + "> ()' (with the spaces)?");
             return false;
         }
     }
