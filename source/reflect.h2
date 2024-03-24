@@ -329,6 +329,7 @@ declaration: @polymorphic_base @copyable type =
         if has_name() { return n*.name()*.as_string_view(); }
         else          { return ""; }
     }
+    fully_qualified_name: (this) -> std::string = n*.fully_qualified_name();
 
     has_initializer: (this) -> bool = n*.has_initializer();
 
