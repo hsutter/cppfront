@@ -593,8 +593,7 @@ auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAU
 #ifdef CPP2_NO_RTTI
 // Compile-Time type name deduction for -fno-rtti builds
 //
-
-auto process_type_name(std::string_view name) -> std::string_view {
+constexpr auto process_type_name(std::string_view name) -> std::string_view {
 #if defined(__clang__) || defined(__GNUC__)
     constexpr auto type_prefix = std::string_view("T = ");
     constexpr auto types_close_parenthesis = ']';
@@ -625,14 +624,15 @@ auto process_type_name(std::string_view name) -> std::string_view {
 }
 
 template<typename T>
-auto type_name() -> std::string_view {
+constexpr auto type_name() -> std::string_view {
 #if defined(__clang__) || defined(__GNUC__)    
-    return process_type_name(__PRETTY_FUNCTION__);
+    constexpr auto ret = process_type_name(__PRETTY_FUNCTION__);
 #elif defined(_MSC_VER)
-    return process_type_name(__FUNCSIG__);
+    constexpr auto ret = process_type_name(__FUNCSIG__);
 #else
-    return "<cannot determine type>";
+    constexpr auto ret = "<cannot determine type>";
 #endif
+    return ret;
 }
 
 #endif 
@@ -654,7 +654,7 @@ auto type_name() -> std::string_view {
 
 [[noreturn]] auto Throw(auto&& x, [[maybe_unused]] char const* msg) -> void {
 #ifdef CPP2_NO_EXCEPTIONS
-    auto err = std::string{"Attempted to throw exception with type \""};
+    auto err = std::string{"Throw exception (-fno-exception) with type \""};
  
     #ifdef CPP2_NO_RTTI
     err += type_name<decltype(x)>();
