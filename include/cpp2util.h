@@ -381,12 +381,33 @@ using argument_of_t = CPP2_TYPEOF(argument_of_helper(std::declval<T>()));
 template <typename T>
 using pointee_t = std::iter_value_t<T>;
 
+template <template <typename...> class C, typename... Ts>
+constexpr auto specialization_of_template_helper(C< Ts...> const& ) -> std::true_type {
+    return {};
+}
+
+template <template <typename, auto...> class C, typename T, auto... Ns>
+    requires (sizeof...(Ns) > 0)
+constexpr auto specialization_of_template_helper(C< T, Ns... > const& ) -> std::true_type {
+    return {};
+}
+
 //-----------------------------------------------------------------------
 //
 //  Concepts
 //
 //-----------------------------------------------------------------------
 //
+
+template <typename X, template<typename...> class C>
+concept specialization_of_template = requires (X x) {
+    { specialization_of_template_helper<C>(std::forward<X>(x)) } -> std::same_as<std::true_type>;
+};
+
+template <typename X, template<typename,auto...> class C>
+concept specialization_of_template_type_and_nttp = requires (X x) {
+    { specialization_of_template_helper<C>(std::forward<X>(x)) } -> std::same_as<std::true_type>;
+};
 
 template <typename X>
 concept dereferencable = requires (X x) { *x; };
@@ -1214,31 +1235,24 @@ using empty = void;
 
 //  Templates
 //
-template <template <typename...> class C, typename... Ts>
-constexpr auto is(C< Ts...> const& ) -> bool {
-    return true;
+template <template <typename...> class C, typename X>
+constexpr auto is( X&& ) {
+    if constexpr (specialization_of_template<X, C>) {
+        return std::true_type{};
+    }
+    else {
+        return std::false_type{};
+    }
 }
 
-#if defined(_MSC_VER)
-    template <template <typename, typename...> class C, typename T>
-    constexpr auto is( T const& ) -> bool {
-        return false;
+template <template <typename, auto> class C, typename X>
+constexpr auto is( X&& ) {
+    if constexpr (specialization_of_template_type_and_nttp<X, C>) {
+        return std::true_type{};
     }
-#else
-    template <template <typename...> class C, typename T>
-    constexpr auto is( T const& ) -> bool {
-        return false;
+    else {
+        return std::false_type{};
     }
-#endif
-
-template <template <typename,auto> class C, typename T, auto V>
-constexpr auto is( C<T, V> const& ) -> bool {
-    return true;
-}
-
-template <template <typename,auto> class C, typename T>
-constexpr auto is( T const& ) -> bool {
-    return false;
 }
 
 //  Types
