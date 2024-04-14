@@ -1,0 +1,19 @@
+fun: (v) = {
+    if v is (:(x:int) x>3;) {
+        std::cout << "(v)$ is integer bigger than 3" << std::endl;
+    }
+
+    if v is (:(x:double) x>3;) {
+        std::cout << "(v)$ is double bigger than 3" << std::endl;
+    }
+
+    if v is (:(x) x>3;) {
+        std::cout << "(v)$ is bigger than 3" << std::endl;
+    }
+}
+
+main: () -> int = {
+    fun(3.14);
+    fun(42);
+    fun('a');
+}
