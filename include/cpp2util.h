@@ -356,6 +356,71 @@ using longdouble = long double;
 using _schar     = signed char;      // normally use i8 instead
 using _uchar     = unsigned char;    // normally use u8 instead
 
+//-----------------------------------------------------------------------
+//
+//  Helper for concepts
+//
+//-----------------------------------------------------------------------
+//
+
+template<typename Ret, typename Arg>
+auto argument_of_helper(Ret(*) (Arg)) -> Arg;
+
+template<typename Ret, typename F, typename Arg>
+auto argument_of_helper(Ret(F::*) (Arg)) -> Arg;
+
+template<typename Ret, typename F, typename Arg>
+auto argument_of_helper(Ret(F::*) (Arg) const) -> Arg;
+
+template <typename F>
+auto argument_of_helper(F) -> CPP2_TYPEOF(argument_of_helper(&F::operator()));
+
+template <typename T>
+using argument_of_t = CPP2_TYPEOF(argument_of_helper(std::declval<T>()));
+
+template <typename T>
+using pointee_t = std::iter_value_t<T>;
+
+//-----------------------------------------------------------------------
+//
+//  Concepts
+//
+//-----------------------------------------------------------------------
+//
+
+template <typename X>
+concept dereferencable = requires (X x) { *x; };
+
+template <typename X>
+concept default_constructible = std::is_default_constructible_v<std::remove_cvref_t<X>>;
+
+template <typename X>
+concept bounded_array = std::is_bounded_array_v<std::remove_cvref_t<X>>;
+
+template <typename X>
+concept pointer_like = dereferencable<X> && default_constructible<X> && std::equality_comparable<X>
+                       && !bounded_array<X>;
+
+template< typename From, typename To >
+concept brace_initializable_to = requires (From x) { To{x}; };
+
+template< typename X, typename C >
+concept same_type_as = std::same_as<std::remove_cvref_t<X>, std::remove_cvref_t<C>>;
+
+template <typename X>
+concept has_defined_argument = requires {
+	std::declval<argument_of_t<X>>();
+};
+
+template <typename X, typename F>
+concept covertible_to_argument_of = same_type_as<X,argument_of_t<F>>
+                                 || (pointer_like<argument_of_t<F>> && brace_initializable_to<X, pointee_t<argument_of_t<F>>>)
+                                 || (!pointer_like<argument_of_t<F>> && brace_initializable_to<X, argument_of_t<F>>)
+                                 ;
+
+template <typename F, typename X>
+concept valid_predicate = (std::predicate<F, X> && !has_defined_argument<F>)
+                          || (std::predicate<F, X> && has_defined_argument<F> && covertible_to_argument_of<X, F>);
 
 //-----------------------------------------------------------------------
 //
@@ -1225,11 +1290,8 @@ inline constexpr auto is( auto const& x, auto&& value ) -> bool
     }
 
     //  Predicate case
-    else if constexpr (requires{ bool{ value(x) }; }) {
+    else if constexpr (valid_predicate<decltype(value), decltype(x)>) {
         return value(x);
-    }
-    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
-        return false;
     }
 
     //  Value equality case
@@ -1239,6 +1301,15 @@ inline constexpr auto is( auto const& x, auto&& value ) -> bool
     return false;
 }
 
+//-----------------------------------------------------------------------
+//
+//  and "is predicate" for generic function used as predicate
+//
+
+template <typename X>
+inline constexpr auto is( X const& x, bool (*value)(X const&) ) -> bool {
+    return value(x);
+}
 
 //-------------------------------------------------------------------------------------------------------------
 //  Built-in as
