@@ -370,13 +370,31 @@ template<typename Ret, typename F, typename Arg>
 auto argument_of_helper(Ret(F::*) (Arg)) -> Arg;
 
 template<typename Ret, typename F, typename Arg>
+auto argument_of_helper(Ret(F::*) (Arg)&) -> Arg;
+
+template<typename Ret, typename F, typename Arg>
+auto argument_of_helper(Ret(F::*) (Arg)&&) -> Arg;
+
+template<typename Ret, typename F, typename Arg>
 auto argument_of_helper(Ret(F::*) (Arg) const) -> Arg;
 
+template<typename Ret, typename F, typename Arg>
+auto argument_of_helper(Ret(F::*) (Arg) const&) -> Arg;
+
+template<typename Ret, typename F, typename Arg>
+auto argument_of_helper(Ret(F::*) (Arg) const&&) -> Arg;
+
 template <typename F>
-auto argument_of_helper(F) -> CPP2_TYPEOF(argument_of_helper(&F::operator()));
+auto argument_of_helper(F const&) -> CPP2_TYPEOF(argument_of_helper(&F::operator()));
 
 template <typename T>
 using argument_of_t = CPP2_TYPEOF(argument_of_helper(std::declval<T>()));
+
+template <typename F>
+auto argument_of_helper_op_is(F const&) -> CPP2_TYPEOF(argument_of_helper(&F::op_is));
+
+template <typename T>
+using argument_of_op_is_t = CPP2_TYPEOF(argument_of_helper_op_is(std::declval<T>()));
 
 template <typename T>
 using pointee_t = std::iter_value_t<T>;
@@ -429,6 +447,9 @@ template< typename X, typename C >
 concept same_type_as = std::same_as<std::remove_cvref_t<X>, std::remove_cvref_t<C>>;
 
 template <typename X>
+concept defined = requires { std::declval<X>(); };
+
+template <typename X>
 concept has_defined_argument = requires {
 	std::declval<argument_of_t<X>>();
 };
@@ -442,6 +463,18 @@ concept covertible_to_argument_of = same_type_as<X,argument_of_t<F>>
 template <typename F, typename X>
 concept valid_predicate = (std::predicate<F, X> && !has_defined_argument<F>)
                           || (std::predicate<F, X> && has_defined_argument<F> && covertible_to_argument_of<X, F>);
+
+template <typename X, typename O, auto mem_fun_ptr>
+concept predicate_member_fun = requires (X x, O o) {
+    { (o.*mem_fun_ptr)(x) } -> std::convertible_to<bool>;
+};
+
+template <typename F, typename X>
+concept valid_custom_is_operator = predicate_member_fun<X, F, &F::op_is>
+                      && ( 
+                        !defined<argument_of_op_is_t<F>>
+                        || brace_initializable_to<X, argument_of_op_is_t<F>> 
+                      );
 
 //-----------------------------------------------------------------------
 //
@@ -1299,7 +1332,7 @@ auto is( X const& x ) -> bool {
 inline constexpr auto is( auto const& x, auto&& value ) -> bool
 {
     //  Value with customized operator_is case
-    if constexpr (requires{ x.op_is(value); }) {
+    if constexpr (valid_custom_is_operator<decltype(x), decltype(value)>) {
         return x.op_is(value);
     }
 
