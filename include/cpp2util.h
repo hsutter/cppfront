@@ -1348,6 +1348,9 @@ auto as(X const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto) {
         }
         return C{x};
     }
+    else if constexpr (!std::is_reference_v<C> && std::is_same_v<CPP2_TYPEOF(x),std::any> && !std::is_same_v<C,std::any>) {
+        return std::any_cast<C>( x );
+    }
     else {
         return nonesuch;
     }
