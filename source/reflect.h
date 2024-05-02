@@ -39,7 +39,7 @@ class alias_declaration;
 #line 963 "reflect.h2"
 class value_member_info;
 
-#line 1562 "reflect.h2"
+#line 1563 "reflect.h2"
 }
 
 }
@@ -778,7 +778,7 @@ auto print(cpp2::in<meta::type_declaration> t) -> void;
 //
 auto regex_gen(meta::type_declaration& t) -> void;
 
-#line 1452 "reflect.h2"
+#line 1453 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  apply_metafunctions
@@ -789,7 +789,7 @@ auto regex_gen(meta::type_declaration& t) -> void;
     auto const& error
     ) -> bool;
 
-#line 1562 "reflect.h2"
+#line 1563 "reflect.h2"
 }
 
 }
@@ -2077,11 +2077,12 @@ auto regex_gen(meta::type_declaration& t) -> void
     for ( auto const& expr : std::move(expressions) ) {
         auto regular_expression {::cpp2::regex::generate_template(expr.second.first, expr.second.second, [_0 = t](auto const& message) mutable -> void { CPP2_UFCS(error)(_0, message);  })}; 
 
-        CPP2_UFCS(add_member)(t, ("public " + cpp2::to_string(expr.first) + ": " + cpp2::to_string(std::move(regular_expression)) + " = ();"));
+        CPP2_UFCS(add_member)(t, ("public " + cpp2::to_string(expr.first) + "_matcher: type = " + cpp2::to_string(std::move(regular_expression))));
+        CPP2_UFCS(add_member)(t, ("public " + cpp2::to_string(expr.first) + ": cpp2::regex::regular_expression_with_matcher<char, " + cpp2::to_string(expr.first) + "_matcher> = ();"));
     }
 }
 
-#line 1456 "reflect.h2"
+#line 1457 "reflect.h2"
 [[nodiscard]] auto apply_metafunctions(
     declaration_node& n, 
     type_declaration& rtype, 
@@ -2187,7 +2188,7 @@ auto regex_gen(meta::type_declaration& t) -> void
     return true; 
 }
 
-#line 1562 "reflect.h2"
+#line 1563 "reflect.h2"
 }
 
 }

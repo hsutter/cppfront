@@ -1078,6 +1078,87 @@ regular_expression: <CharT, flags: int, groups: size_t, alternatives: size_t, na
     }
 }
 
+// Regular expression implementation
+regular_expression_with_matcher: <CharT, Matcher> type = {
+
+    context: <Iter> type == match_context<CharT, Iter, Matcher::group_count::value, 0>;
+    modifiers: type      == match_modifiers<Matcher::initial_flags::value, int>;
+
+    // TODO: Named multiple return has problems with templates.
+    search_return: <Iter> type = {
+        public matched: bool;
+        public ctx: context<Iter>;
+
+        operator=:(out this, matched_: bool, ctx_: context<Iter>) = {
+            matched = matched_;
+            ctx = ctx_;
+        }
+
+        group_number: (this) ctx.size();
+        group:        (this, g: int) ctx.get_group_string(g);
+        group_start:  (this, g: int) ctx.get_group_start(g);
+        group_end:    (this, g: int) ctx.get_group_end(g);
+
+        group:        (this, g: bstring<CharT>) group(get_group_id(g));
+        group_start:  (this, g: bstring<CharT>) group_start(get_group_id(g));
+        group_end:    (this, g: bstring<CharT>) group_end(get_group_id(g));
+
+        private get_group_id: (this, g: bstring<CharT>) -> _ = {
+            group_id := Matcher::get_named_group_index(g);
+            if -1 == group_id {
+                // TODO: Throw error.
+            }
+            return group_id;
+        }
+    }
+
+    match: (in this, str: bview<CharT>)                 match(str.begin(), str.end());
+    match: (in this, str: bview<CharT>, start)          match(get_iter(str, start), str.end());
+    match: (in this, str: bview<CharT>, start, length)  match(get_iter(str, start), get_iter(str, start + length));
+    match: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> = {
+        ctx: context = (start, end);
+
+        r := Matcher::entry(start, ctx, modifiers());
+        return search_return(r.matched && r.pos == end, ctx);
+    }
+
+    search: (in this, str: bview<CharT>)                 search(str.begin(), str.end());
+    search: (in this, str: bview<CharT>, start)          search(get_iter(str, start), str.end());
+    search: (in this, str: bview<CharT>, start, length)  search(get_iter(str, start), get_iter(str, start + length));
+    search: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> = {
+        matched := false;
+        ctx: context = (start, end);
+
+        cur:= start;
+        while true next (cur++) {
+            if Matcher::entry(cur, ctx, modifiers()).matched {
+                matched = true;
+                break;
+            }
+
+            if cur == ctx.end {
+                break;
+            }
+        }
+
+        return search_return(matched, ctx);
+    }
+
+    to_string: (in this) Matcher::to_string();
+
+    // Helper functions
+    //
+
+    private get_iter: (str: bview<CharT>, pos) -> _ = {
+        if pos < str.size() {
+            return str.begin() + pos;
+        }
+        else {
+            return str.end();
+        }
+    }
+}
+
 //-----------------------------------------------------------------------
 //
 //  Parser for regular expression.
@@ -2105,20 +2186,52 @@ regex_parser: <Error_out> type = {
         }
     }
 
+    create_named_group_lookup: (this) -> std::string = {
+        res: std::string = "get_named_group_index: (name) -> int = {\n";
+
+        // Generate if selection.
+        sep: std::string = "";
+        for named_groups do (cur) {
+            res += "(sep)$if name == \"(cur.first)$\" { return (cur.second)$; }";
+            sep = "else ";
+        }
+
+        // Generate else branch or return if list is empty.
+        if named_groups.empty() {
+            res += "  _ = name;\n";
+            res += "  return -1;\n";
+        }
+        else {
+            res += "  else { return -1; }\n";
+        }
+        res += "}\n";
+        return res;
+    }
+
     parse:(inout this) -> std::string = {
         mod   := parser_expression_modifiers();
         parse_until('\0');
 
         if has_error { return "Error"; }
 
-        named_groups_arg := create_named_groups_list();
         inner := create_matcher_from_state();
         start := create_matcher("group_matcher_start_logic", "0, ::cpp2::regex::match_modifiers_no_change, \"\", false");
         end   := create_matcher("group_matcher_end_logic", "0");
         list  := create_matcher("matcher_list", "(start)$, (inner)$, (end)$");
-        return   create_matcher("regular_expression", "(mod)$, (cur_branch_reset_state.cur_group)$, (alternatives_count)$, (named_groups_arg)$, (list)$");
-    }
 
+        res: std::string = "{\n";
+        res += "  group_count: type == std::integral_constant<int, (cur_branch_reset_state.cur_group)$>;  //TODO: Use static constexpr when alpha limitation of nested types declarations is lifted.\n";
+        res += "  initial_flags: type == std::integral_constant<int, (mod)$>;  //TODO: Use static constexpr when alpha limitation of nested types declarations is lifted.\n";
+        res += "  to_string: () \"TODO\";\n"; // (regex)$\";\n";
+        res += create_named_group_lookup();
+        res += "  entry: (cur, inout ctx, modifiers) -> _ = {\n";
+        res += "    return (list)$::match(cur, ctx, modifiers, cpp2::regex::true_end_func());\n";
+        res += "  }\n";
+        res += "}\n";
+
+        std::cout << res << std::endl;
+        return res;
+    }
 }
 
 generate_template: <Err> (regex: std::string_view, modifier: std::string_view, err: Err) -> std::string = {
