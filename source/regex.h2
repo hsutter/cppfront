@@ -446,8 +446,30 @@ char_token: @polymorphic_base type = {
     generate_code: (override this, inout ctx: generation_context) = {
         upper: = safe_toupper(token);
         lower: = safe_tolower(token);
-        ctx.add_check("match_char<char, '(token)$', '(lower)$', '(upper)$'>((ctx.match_parameters())$)");
+        ctx.add_check("char_token_matcher<char, '(token)$', '(lower)$', '(upper)$'>((ctx.match_parameters())$)");
     }
+}
+
+char_token_matcher: <CharT, C: CharT, L: CharT, U: CharT> (inout cur, inout ctx, modifiers) -> bool = {
+    if modifiers.has_flag(expression_flags::case_insensitive) {
+        if cur != ctx.end && (cur* == L || cur* == U) {
+            cur += 1;
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if cur != ctx.end && cur* == C {
+            cur += 1;
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
 }
 
 
@@ -598,28 +620,6 @@ char_matcher_logic: <CharT, C: CharT, L: CharT, U: CharT> type =
     }
     reset_ranges: (_) = {}
     to_string:    ()  bstring<CharT>(1, C);
-}
-
-match_char: <CharT, C: CharT, L: CharT, U: CharT> (inout cur, inout ctx, modifiers) -> bool = {
-    if modifiers.has_flag(expression_flags::case_insensitive) {
-        if cur != ctx.end && (cur* == L || cur* == U) {
-            cur += 1;
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-    else {
-        if cur != ctx.end && cur* == C {
-            cur += 1;
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
 }
 
 
