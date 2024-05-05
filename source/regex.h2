@@ -358,6 +358,8 @@ parse_context: type = {
 
     pos: size_t = 0;
 
+    error_text: std::string = "";
+
     public cur_state: std::vector<std::shared_ptr<regex_token>> = ();
 
     operator=:(out this, r: std::string_view) = {
@@ -366,6 +368,20 @@ parse_context: type = {
 
     add_token: (inout this, token: std::shared_ptr<regex_token>) = {
         cur_state.push_back(token);
+    }
+
+    has_token: (this) -> bool = {
+        return !cur_state.empty();
+    }
+
+    pop_token: (inout this) -> std::shared_ptr<regex_token> = {
+        r : std::shared_ptr<regex_token> = nullptr;
+        if has_token() {
+            r = cur_state.back();
+            cur_state.pop_back();
+        }
+
+        return r;
     }
 
     current: (this) -> char = { return regex[pos]; }
@@ -377,8 +393,92 @@ parse_context: type = {
         }
 
         return false;
-     }
-    valid: (this) -> bool = { return has_next(); }
+    }
+
+    valid: (this) -> bool = { return has_next() && error_text.empty(); }
+
+    error: (inout this, err: std::string) -> std::shared_ptr<regex_token> = {
+        error_text = err;
+        return nullptr;
+    }
+
+    private get_next_position: (in this, in_class: bool, no_skip: bool) -> size_t = {
+        perl_syntax := false;
+        if !no_skip {
+            // TODO:
+            // if in_class {
+            //     perl_syntax = cur_group_state.modifiers.perl_code_syntax && cur_group_state.modifiers.perl_code_syntax_in_classes;
+            // }
+            // else {
+            //     perl_syntax = cur_group_state.modifiers.perl_code_syntax;
+            // }
+        }
+        cur := pos + 1;
+        if perl_syntax {
+            while cur < regex.size() next (cur += 1) {
+                n: = regex[cur];
+
+                if space_class<char>::includes(n) {
+                    continue;
+                }
+                else if !in_class && '#' == n {
+                    cur = regex.find("\n", cur);
+                    if std::string::npos == cur {
+                        // No new line, comment runs until the end of the pattern
+                        cur = regex.size();
+                    }
+                }
+                else { // None space none comment char
+                    break;
+                }
+            }
+        }
+
+        // Check for end of file.
+        if cur > regex.size() {
+            cur = regex.size();
+        }
+        return cur;
+    }
+
+
+    private grab_until_impl: (inout this, in e: std::string, out r: std::string, any: bool) -> bool = {
+        start := pos;
+        end:= pos;
+        if any {
+            end = regex.find_first_of(e, pos);
+        }
+        else {
+            end = regex.find(e, pos);
+        }
+
+        if end != std::string_view::npos {
+            r = regex.substr(start, end - pos);
+            pos = end;
+            return true;
+        }
+        else {
+            r = "";
+            return false;
+        }
+    }
+
+    grab_until: (inout this, in e: std::string, out r: std::string)        grab_until_impl(e, out r, false);
+    grab_until: (inout this, in e: char, out r: std::string)               grab_until_impl(std::string(1, e), out r, false);
+    grab_until_one_of: (inout this, in e: std::string, out r: std::string) grab_until_impl(e, out r, true);
+
+    private peek_impl: (in this, in_class: bool) -> char = {
+        next_pos := get_next_position(in_class, false);
+        if next_pos < regex.size() {
+            return regex[next_pos];
+        }
+        else {
+            return '\0';
+        }
+    }
+
+    peek: (in this)          peek_impl(false);
+    peek_in_class: (in this) peek_impl(true);
 
 
 }
@@ -405,37 +505,41 @@ generation_context: @struct type = {
     }
 }
 
-regex_token: @interface type = {
+regex_token: @polymorphic_base type = {
 
-    //parse: (inout ctx: parse_context) -> std::shared_ptr<regex_token>;
-    generate_code: (this, inout _: generation_context);
+    public needs_state: bool;
+    public string_rep: std::string;
 
-    get_groups: (this) -> std::vector<int>;
-    requires_state: (this) -> bool;
-    to_string: (this) -> std::string;
-}
-
-stateless_regex_token: @polymorphic_base type = {
-    this: regex_token = ();
-
-    string_rep: std::string;
-
-    operator=:(out this, str: std::string) = {
+    operator=:(out this, state: bool, str: std::string) = {
+        needs_state = state;
         string_rep = str;
     }
 
+    //parse: (inout ctx: parse_context) -> std::shared_ptr<regex_token>;
+    generate_code: (virtual this, inout _: generation_context);
+
+    get_groups: (virtual this) -> std::vector<int>;
+    requires_state: (this) -> bool = { return needs_state; }
+    to_string: (this) -> std::string = { return string_rep; }
+}
+
+regex_token_base: @polymorphic_base type = {
+    this: regex_token;
+
+    operator=:(out this, state: bool, str: std::string) = {
+        regex_token = (state, str);
+    }
+
     get_groups: (override this) -> std::vector<int> = { return (); }
-    requires_state: (override this) -> bool         = { return false; }
-    to_string: (override this) -> std::string       = { return string_rep; }
 }
 
 char_token: @polymorphic_base type = {
-    this: stateless_regex_token;
+    this: regex_token_base;
 
     token: char;
 
     operator=: (out this, t: char) = {
-        stateless_regex_token = std::string(1, t);
+        regex_token_base = (false, std::string(1, t));
         token = t;
     }
 
@@ -469,10 +573,113 @@ char_token_matcher: <CharT, C: CharT, L: CharT, U: CharT> (inout cur, inout ctx,
             return false;
         }
     }
-
 }
 
+range_token: @polymorphic_base type = {
+    this: regex_token = (true, "");
 
+    min_count: int = -1;
+    max_count: int = -1;
+    kind:      int = range_flags::greedy;
+    inner_token: std::shared_ptr<regex_token> = nullptr;
+
+    operator=: (out this) = {}
+
+    parse: (inout ctx: parse_context) -> std::shared_ptr<regex_token> = {
+        r: std::shared_ptr<range_token> = ();
+        if ctx.current() == '{' {
+            if !ctx.has_token() { return ctx.error("'{' without previous element."); }
+
+            inner: std::string = "";
+            if !ctx.grab_until('}', out inner) { return ctx.error("Missing closing bracket '}'."); }
+
+            inner = trim_copy(inner.substr(1)); // Remove '{' and white spaces.
+            if inner.empty() { return ctx.error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'"); }
+
+
+            if ctx.peek() == '?' {
+                r*.kind = range_flags::not_greedy;
+                _ = ctx.next();
+            }
+            else if ctx.peek() == '+' {
+                r*.kind = range_flags::possessive;
+                _ = ctx.next();
+            }
+
+            min_count_str: std::string = "-1";
+            max_count_str: std::string = "-1";
+
+            sep: size_t = inner.find(",");
+            if sep == std::string::npos {
+                min_count_str = inner;
+                max_count_str = inner;
+                if !string_to_int(inner, r*.min_count) { return ctx.error("Could not convert range to number."); }
+                r*.max_count = r*.min_count;
+            }
+            else {
+                inner_first: std::string = trim_copy(inner.substr(0, sep));
+                inner_last: std::string = trim_copy(inner.substr(sep + 1));
+
+                if (inner_first.empty() && inner_last.empty()) {
+                    return ctx.error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'");
+                }
+
+                if !inner_first.empty() {
+                    min_count_str = inner_first;
+                    if !string_to_int(inner_first, r*.min_count) { return ctx.error("Could not convert range to number."); }
+                }
+                if !inner_last.empty() {
+                    max_count_str = inner_last;
+                    if !string_to_int(inner_last, r*.max_count) { return ctx.error("Could not convert range to number."); }
+                }
+            }
+
+            if !(0 <= r*.min_count <= r*.max_count) {
+                return ctx.error("Min and max values in range are wrong it should hold 0 <= min <= max. Have 0 <= (r*.min_count)$ <= (r*.max_count)$");
+            }
+
+
+            r*.inner_token = ctx.pop_token();
+            r*.string_rep = r*.inner_token*.to_string() + r*.gen_string();
+
+            return r;
+        }
+
+        return nullptr;
+    }
+
+    gen_string: (this) -> std::string = {
+        r : std::string = "";
+        if min_count == max_count {
+            r += "{(min_count)$}";
+        }
+        else if min_count == -1 {
+            r += "{,(max_count)$}";
+        }
+        else if max_count == -1 {
+            r += "{(min_count)$,}";
+        }
+        else {
+            r += "{(min_count)$,(max_count)$}";
+        }
+
+        if kind == range_flags::not_greedy {
+            r += "?";
+        }
+        else if kind == range_flags::possessive {
+            r += "+";
+        }
+        return r;
+    }
+
+    generate_code: (override this, inout ctx: generation_context) = {
+        _ = ctx;
+        //ctx.add_statefull("range_matcher_logic<char, (inner_func)$, (inner_func)$, (min_count)$, (max_count)$, (kind)$)>::match((ctx.get_arguments())$, (ctx.get_tail())$)")
+
+    }
+
+    get_groups: (override this) -> std::vector<int> = { return (); } // TODO: Implement
+}
 
 //-----------------------------------------------------------------------
 //
@@ -886,7 +1093,7 @@ named_string_start: <CharT> type == special_syntax_wrapper<CharT, "\\A", line_st
 
 
 // Regex syntax: <matcher>{min, max}  Example: a{2,4}
-range_matcher_logic: <CharT, M, min_count: int, max_count: int, kind: int> type = {
+range_matcher_logic: <CharT, M, R, min_count: int, max_count: int, kind: int> type = {
 
     match: <Iter> (cur: Iter, inout ctx, modifiers, end_func, tail) -> _ = {
         if range_flags::possessive == kind {
@@ -1039,8 +1246,8 @@ range_matcher_logic: <CharT, M, min_count: int, max_count: int, kind: int> type 
 
 // Regex syntax: *, +, or ?  Example: aa*
 //
-special_range_matcher_logic: <CharT, M, min_count: int, max_count: int, kind: int, symbol: char> type = {
-    this: range_matcher_logic<CharT, M, min_count, max_count, kind> = ();
+special_range_matcher_logic: <CharT, M, R, min_count: int, max_count: int, kind: int, symbol: char> type = {
+    this: range_matcher_logic<CharT, M, R, min_count, max_count, kind> = ();
     to_string: () -> bstring<CharT> = {
         r := M::to_string() + symbol;
         if kind == range_flags::not_greedy {
@@ -2325,7 +2532,9 @@ regex_parser: <Error_out> type = {
         while parse_ctx.valid() next _ = parse_ctx.next() {
             if term == parse_ctx.current() { break; }
 
-            cur_token = char_token::parse(parse_ctx);
+            cur_token = nullptr;
+            if !cur_token && parse_ctx.valid() { cur_token = range_token::parse(parse_ctx); }
+            if !cur_token && parse_ctx.valid() { cur_token = char_token::parse(parse_ctx); }
 
             if cur_token && parse_ctx.valid() {
                 parse_ctx.add_token(cur_token);
