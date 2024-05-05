@@ -348,6 +348,112 @@ special_syntax_wrapper: <CharT, syntax: fixed_string, base> type = {
 
 //-----------------------------------------------------------------------
 //
+// Matchers and generators for regular expressions.
+//
+//-----------------------------------------------------------------------
+//
+
+parse_context: type = {
+    regex: std::string_view;
+
+    pos: size_t = 0;
+
+    public cur_state: std::vector<std::shared_ptr<regex_token>> = ();
+
+    operator=:(out this, r: std::string_view) = {
+        regex = r;
+    }
+
+    add_token: (inout this, token: std::shared_ptr<regex_token>) = {
+        cur_state.push_back(token);
+    }
+
+    current: (this) -> char = { return regex[pos]; }
+
+    has_next: (this) -> bool = { return pos < regex.size(); }
+    next: (inout this) -> bool = {
+        if has_next() {
+            pos += 1; return true;
+        }
+
+        return false;
+     }
+    valid: (this) -> bool = { return has_next(); }
+
+
+}
+generation_context: @struct type = {
+
+    code: std::string = "";
+    tabs: int = 2;
+
+    match_parameters: (this) -> std::string = { return "r.pos, ctx, modifiers"; }
+
+    add_check: (inout this, check: std::string) = {
+        code += "(gen_tabs())$if !cpp2::regex::(check)$ { r = ctx.fail(); return r; }\n";
+    }
+
+    gen_tabs: (this) -> std::string = {
+        tab : std::string = "  ";
+        res : std::string = "";
+
+        i := 0;
+        while i < tabs next i += 1 {
+            res += tab;
+        }
+        return tab;
+    }
+}
+
+regex_token: @interface type = {
+
+    //parse: (inout ctx: parse_context) -> std::shared_ptr<regex_token>;
+    generate_code: (this, inout _: generation_context);
+
+    get_groups: (this) -> std::vector<int>;
+    requires_state: (this) -> bool;
+    to_string: (this) -> std::string;
+}
+
+stateless_regex_token: @polymorphic_base type = {
+    this: regex_token = ();
+
+    string_rep: std::string;
+
+    operator=:(out this, str: std::string) = {
+        string_rep = str;
+    }
+
+    get_groups: (override this) -> std::vector<int> = { return (); }
+    requires_state: (override this) -> bool         = { return false; }
+    to_string: (override this) -> std::string       = { return string_rep; }
+}
+
+char_token: @polymorphic_base type = {
+    this: stateless_regex_token;
+
+    token: char;
+
+    operator=: (out this, t: char) = {
+        stateless_regex_token = std::string(1, t);
+        token = t;
+    }
+
+    parse: (inout ctx: parse_context) -> std::shared_ptr<regex_token> = {
+        return shared.new<char_token>(ctx.current());
+    }
+
+    generate_code: (override this, inout ctx: generation_context) = {
+        upper: = safe_toupper(token);
+        lower: = safe_tolower(token);
+        ctx.add_check("match_char<char, '(token)$', '(lower)$', '(upper)$'>((ctx.match_parameters())$)");
+    }
+}
+
+
+
+//-----------------------------------------------------------------------
+//
 //  Matchers for regular expressions.
 //
 //-----------------------------------------------------------------------
@@ -2212,27 +2318,23 @@ regex_parser: <Error_out> type = {
     }
 
     parse_until_new:(inout this, term: char) -> std::string = {
-        c: char = current();
-        while c != '\n' next _ = next(out c) {
-            if c == term { break; }
+        parse_ctx: parse_context = (regex);
 
-            // if !has_error && is_alternative(c) { continue; }
-            // if !has_error && is_any(c) { continue; }
-            // if !has_error && is_class(c) { continue; }
-            // if !has_error && is_escape(c) { continue; }
-            // if !has_error && is_anchor(c) { continue; }
-            // if !has_error && is_group(c) { continue; }
-            // if !has_error && is_handle_special(c) { continue; }
-            // if !has_error && is_range(c) { continue; }
-            // if !has_error && is_special_range(c) { continue; }
+        cur_token: std::shared_ptr<regex_token> = ();
 
-            if has_error { break; }
+        while parse_ctx.valid() next _ = parse_ctx.next() {
+            if term == parse_ctx.current() { break; }
 
-            // No special char, push a character match
-            cur_group_state.add("if !cpp2::regex::match_char<char, '(c)$', '(safe_tolower(c))$', '(safe_toupper(c))$'>(r.pos, ctx, modifiers) { r = ctx.fail(); return r; }\n");
+            cur_token = char_token::parse(parse_ctx);
+
+            if cur_token && parse_ctx.valid() {
+                parse_ctx.add_token(cur_token);
+            } else {
+                // TODO: error(parse_ctx);
+            }
         }
 
-        return generate_parse_func(cur_group_state.cur_match_list);
+        return generate_parse_func(parse_ctx);
     }
 
     create_named_group_lookup: (this) -> std::string = {
@@ -2257,17 +2359,19 @@ regex_parser: <Error_out> type = {
         return res;
     }
 
-    generate_parse_func: (inout this, matcher_list) -> std::string = {
+    generate_parse_func: (inout this, ctx: parse_context) -> std::string = {
         cur_id : = parse_func;
         parse_func += 1;
         name: std::string = "func_(cur_id)$";
+        gen_ctx: generation_context = ();
 
         source += "(name)$: type = {\n";
         source += "  operator(): (this, cur, inout ctx, modifiers, other) -> _ = {\n";
         source += "    r:= ctx.pass(cur);\n";
-        for matcher_list do (matcher) {
-            source += matcher;
+        for ctx.cur_state do (matcher) {
+            matcher*.generate_code(gen_ctx);
         }
+        source += gen_ctx.code;
         source += "\n";
         source += "    r = other(r.pos, ctx, modifiers);\n";
         source += "    return r;\n";
