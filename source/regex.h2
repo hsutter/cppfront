@@ -494,6 +494,28 @@ char_matcher_logic: <CharT, C: CharT, L: CharT, U: CharT> type =
     to_string:    ()  bstring<CharT>(1, C);
 }
 
+match_char: <CharT, C: CharT, L: CharT, U: CharT> (inout cur, inout ctx, modifiers) -> bool = {
+    if modifiers.has_flag(expression_flags::case_insensitive) {
+        if cur != ctx.end && (cur* == L || cur* == U) {
+            cur += 1;
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if cur != ctx.end && cur* == C {
+            cur += 1;
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+}
+
 
 // Regex syntax: [<character classes>]  Example: [abcx-y[:digits:]]
 //
@@ -1249,6 +1271,9 @@ regex_parser: <Error_out> type = {
     alternatives_count:     int = 0;
     named_groups :          std::map<std::string, int> = ();
     has_error:              bool = false;
+
+    parse_func: int = 0;
+    source: std::string = "";
 
     supported_classes: std::vector<std::string> = ("alnum", "alpha", "ascii", "blank", "cntrl", "digits", "graph",
                                                    "lower", "print", "punct", "space", "upper", "word", "xdigit");
@@ -2186,6 +2211,30 @@ regex_parser: <Error_out> type = {
         }
     }
 
+    parse_until_new:(inout this, term: char) -> std::string = {
+        c: char = current();
+        while c != '\n' next _ = next(out c) {
+            if c == term { break; }
+
+            // if !has_error && is_alternative(c) { continue; }
+            // if !has_error && is_any(c) { continue; }
+            // if !has_error && is_class(c) { continue; }
+            // if !has_error && is_escape(c) { continue; }
+            // if !has_error && is_anchor(c) { continue; }
+            // if !has_error && is_group(c) { continue; }
+            // if !has_error && is_handle_special(c) { continue; }
+            // if !has_error && is_range(c) { continue; }
+            // if !has_error && is_special_range(c) { continue; }
+
+            if has_error { break; }
+
+            // No special char, push a character match
+            cur_group_state.add("if !cpp2::regex::match_char<char, '(c)$', '(safe_tolower(c))$', '(safe_toupper(c))$'>(r.pos, ctx, modifiers) { r = ctx.fail(); return r; }\n");
+        }
+
+        return generate_parse_func(cur_group_state.cur_match_list);
+    }
+
     create_named_group_lookup: (this) -> std::string = {
         res: std::string = "get_named_group_index: (name) -> int = {\n";
 
@@ -2208,29 +2257,50 @@ regex_parser: <Error_out> type = {
         return res;
     }
 
+    generate_parse_func: (inout this, matcher_list) -> std::string = {
+        cur_id : = parse_func;
+        parse_func += 1;
+        name: std::string = "func_(cur_id)$";
+
+        source += "(name)$: type = {\n";
+        source += "  operator(): (this, cur, inout ctx, modifiers, other) -> _ = {\n";
+        source += "    r:= ctx.pass(cur);\n";
+        for matcher_list do (matcher) {
+            source += matcher;
+        }
+        source += "\n";
+        source += "    r = other(r.pos, ctx, modifiers);\n";
+        source += "    return r;\n";
+        source += "  }\n";
+        source += "}\n";
+
+        return name;
+    }
+
     parse:(inout this) -> std::string = {
         mod   := parser_expression_modifiers();
-        parse_until('\0');
 
+        source += "{\n";
+        source += "  group_count: type == std::integral_constant<int, (cur_branch_reset_state.cur_group)$>;  //TODO: Use static constexpr when alpha limitation of nested types declarations is lifted.\n";
+        source += "  initial_flags: type == std::integral_constant<int, (mod)$>;  //TODO: Use static constexpr when alpha limitation of nested types declarations is lifted.\n";
+
+        start_name := parse_until_new('\0');
+        source += "  entry: (cur, inout ctx, modifiers) -> _ = {\n";
+        source += "    ctx.set_group_start(0, cur);";
+        source += "    r := (start_name)$()(cur, ctx, modifiers, cpp2::regex::true_end_func());\n";
+        source += "    if r.matched { ctx.set_group_end(0, r.pos); }";
+        source += "    return r;\n";
+        source += "  }\n";
+
+        source += "  to_string: () \"TODO\";\n"; // (regex)$\";\n";
+        source += create_named_group_lookup();
+        source += "}\n";
+
+
+        std::cout << source << std::endl;
         if has_error { return "Error"; }
 
-        inner := create_matcher_from_state();
-        start := create_matcher("group_matcher_start_logic", "0, ::cpp2::regex::match_modifiers_no_change, \"\", false");
-        end   := create_matcher("group_matcher_end_logic", "0");
-        list  := create_matcher("matcher_list", "(start)$, (inner)$, (end)$");
-
-        res: std::string = "{\n";
-        res += "  group_count: type == std::integral_constant<int, (cur_branch_reset_state.cur_group)$>;  //TODO: Use static constexpr when alpha limitation of nested types declarations is lifted.\n";
-        res += "  initial_flags: type == std::integral_constant<int, (mod)$>;  //TODO: Use static constexpr when alpha limitation of nested types declarations is lifted.\n";
-        res += "  to_string: () \"TODO\";\n"; // (regex)$\";\n";
-        res += create_named_group_lookup();
-        res += "  entry: (cur, inout ctx, modifiers) -> _ = {\n";
-        res += "    return (list)$::match(cur, ctx, modifiers, cpp2::regex::true_end_func());\n";
-        res += "  }\n";
-        res += "}\n";
-
-        std::cout << res << std::endl;
-        return res;
+        return source;
     }
 }
 
