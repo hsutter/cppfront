@@ -353,6 +353,27 @@ special_syntax_wrapper: <CharT, syntax: fixed_string, base> type = {
 //-----------------------------------------------------------------------
 //
 
+regex_token: @polymorphic_base type = {
+
+    public needs_state: bool;
+    public string_rep: std::string;
+
+    operator=:(out this, state: bool, str: std::string) = {
+        needs_state = state;
+        string_rep = str;
+    }
+
+    //parse: (inout ctx: parse_context) -> token_ptr;
+    generate_code: (virtual this, inout _: generation_context);
+
+    get_groups: (virtual this) -> std::vector<int>;
+    requires_state: (this) -> bool = { return needs_state; }
+    to_string: (this) -> std::string = { return string_rep; }
+}
+
+token_ptr : type == std::shared_ptr<regex_token>;
+token_vec: type == std::vector<token_ptr>;
+
 parse_context: type = {
     regex: std::string_view;
 
@@ -360,13 +381,13 @@ parse_context: type = {
 
     error_text: std::string = "";
 
-    public cur_state: std::vector<std::shared_ptr<regex_token>> = ();
+    public cur_state: token_vec = ();
 
     operator=:(out this, r: std::string_view) = {
         regex = r;
     }
 
-    add_token: (inout this, token: std::shared_ptr<regex_token>) = {
+    add_token: (inout this, token: token_ptr) = {
         cur_state.push_back(token);
     }
 
@@ -374,14 +395,18 @@ parse_context: type = {
         return !cur_state.empty();
     }
 
-    pop_token: (inout this) -> std::shared_ptr<regex_token> = {
-        r : std::shared_ptr<regex_token> = nullptr;
+    pop_token: (inout this) -> token_ptr = {
+        r : token_ptr = nullptr;
         if has_token() {
             r = cur_state.back();
             cur_state.pop_back();
         }
 
         return r;
+    }
+
+    get_tokens: (this) -> token_vec = {
+        return cur_state;
     }
 
     current: (this) -> char = { return regex[pos]; }
@@ -397,7 +422,7 @@ parse_context: type = {
 
     valid: (this) -> bool = { return has_next() && error_text.empty(); }
 
-    error: (inout this, err: std::string) -> std::shared_ptr<regex_token> = {
+    error: (inout this, err: std::string) -> token_ptr = {
         error_text = err;
         return nullptr;
     }
@@ -485,42 +510,68 @@ parse_context: type = {
 generation_context: @struct type = {
 
     code: std::string = "";
-    tabs: int = 2;
+    tabs: std::string = "    ";
+
+    new_state : bool = true;
+    matcher_func: int         = 0;
+    entry_func:   std::string = "";
 
     match_parameters: (this) -> std::string = { return "r.pos, ctx, modifiers"; }
 
     add_check: (inout this, check: std::string) = {
-        code += "(gen_tabs())$if !cpp2::regex::(check)$ { r = ctx.fail(); return r; }\n";
+        code += "(tabs)$if !cpp2::regex::(check)$ { r = ctx.fail(); return r; }\n";
     }
 
-    gen_tabs: (this) -> std::string = {
-        tab : std::string = "  ";
-        res : std::string = "";
+    generate_match_code: (inout this, tokens: token_vec) -> std::string = {
+        entry_func = start_func();
+        for tokens do (token) {
 
-        i := 0;
-        while i < tabs next i += 1 {
-            res += tab;
+            token*.generate_code(this);
         }
-        return tab;
-    }
-}
+        end_func();
 
-regex_token: @polymorphic_base type = {
-
-    public needs_state: bool;
-    public string_rep: std::string;
-
-    operator=:(out this, state: bool, str: std::string) = {
-        needs_state = state;
-        string_rep = str;
+        return code;
     }
 
-    //parse: (inout ctx: parse_context) -> std::shared_ptr<regex_token>;
-    generate_code: (virtual this, inout _: generation_context);
+    start_func: (inout this) -> std::string = {
+        name := gen_func_name();
+        code += "(tabs)$(name)$: type = {\n";
+        code += "(tabs)$  operator(): (this, cur, inout ctx, modifiers, other) -> _ = {\n";
+        code += "(tabs)$    r := ctx.pass(cur);\n";
+        add_tabs(2);
 
-    get_groups: (virtual this) -> std::vector<int>;
-    requires_state: (this) -> bool = { return needs_state; }
-    to_string: (this) -> std::string = { return string_rep; }
+        return name;
+    }
+
+    end_func: (inout this) = {
+        remove_tabs(2);
+        code += "\n";
+        code += "(tabs)$    r = other(r.pos, ctx, modifiers);\n";
+        code += "(tabs)$    return r;\n";
+        code += "(tabs)$  }\n";
+        code += "(tabs)$}\n";
+    }
+
+    get_entry_func: (this) -> std::string = {
+        return entry_func;
+    }
+
+    gen_func_name: (inout this) -> std::string = {
+        cur_id : = matcher_func;
+        matcher_func += 1;
+        return "func_(cur_id)$";
+    }
+
+    add_tabs: (inout this, c: int) = {
+        i: int = 0;
+        while i < c next i += 1 {
+            tabs += "  ";
+        }
+    }
+
+    remove_tabs: (inout this, c: int) = {
+        tabs = tabs.substr(0, c * 2);
+    }
 }
 
 regex_token_base: @polymorphic_base type = {
@@ -543,7 +594,7 @@ char_token: @polymorphic_base type = {
         token = t;
     }
 
-    parse: (inout ctx: parse_context) -> std::shared_ptr<regex_token> = {
+    parse: (inout ctx: parse_context) -> token_ptr = {
         return shared.new<char_token>(ctx.current());
     }
 
@@ -581,11 +632,11 @@ range_token: @polymorphic_base type = {
     min_count: int = -1;
     max_count: int = -1;
     kind:      int = range_flags::greedy;
-    inner_token: std::shared_ptr<regex_token> = nullptr;
+    inner_token: token_ptr = nullptr;
 
     operator=: (out this) = {}
 
-    parse: (inout ctx: parse_context) -> std::shared_ptr<regex_token> = {
+    parse: (inout ctx: parse_context) -> token_ptr = {
         r: std::shared_ptr<range_token> = ();
         if ctx.current() == '{' {
             if !ctx.has_token() { return ctx.error("'{' without previous element."); }
@@ -1585,7 +1636,6 @@ regex_parser: <Error_out> type = {
     named_groups :          std::map<std::string, int> = ();
     has_error:              bool = false;
 
-    parse_func: int = 0;
     source: std::string = "";
 
     supported_classes: std::vector<std::string> = ("alnum", "alpha", "ascii", "blank", "cntrl", "digits", "graph",
@@ -2527,7 +2577,7 @@ regex_parser: <Error_out> type = {
     parse_until_new:(inout this, term: char) -> std::string = {
         parse_ctx: parse_context = (regex);
 
-        cur_token: std::shared_ptr<regex_token> = ();
+        cur_token: token_ptr = ();
 
         while parse_ctx.valid() next _ = parse_ctx.next() {
             if term == parse_ctx.current() { break; }
@@ -2543,7 +2593,9 @@ regex_parser: <Error_out> type = {
             }
         }
 
-        return generate_parse_func(parse_ctx);
+        gen_ctx: generation_context = ();
+        source += gen_ctx.generate_match_code(parse_ctx.get_tokens());
+        return gen_ctx.get_entry_func();
     }
 
     create_named_group_lookup: (this) -> std::string = {
@@ -2566,28 +2618,6 @@ regex_parser: <Error_out> type = {
         }
         res += "}\n";
         return res;
-    }
-
-    generate_parse_func: (inout this, ctx: parse_context) -> std::string = {
-        cur_id : = parse_func;
-        parse_func += 1;
-        name: std::string = "func_(cur_id)$";
-        gen_ctx: generation_context = ();
-
-        source += "(name)$: type = {\n";
-        source += "  operator(): (this, cur, inout ctx, modifiers, other) -> _ = {\n";
-        source += "    r:= ctx.pass(cur);\n";
-        for ctx.cur_state do (matcher) {
-            matcher*.generate_code(gen_ctx);
-        }
-        source += gen_ctx.code;
-        source += "\n";
-        source += "    r = other(r.pos, ctx, modifiers);\n";
-        source += "    return r;\n";
-        source += "  }\n";
-        source += "}\n";
-
-        return name;
     }
 
     parse:(inout this) -> std::string = {
