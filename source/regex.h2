@@ -353,6 +353,11 @@ special_syntax_wrapper: <CharT, syntax: fixed_string, base> type = {
 //-----------------------------------------------------------------------
 //
 
+
+no_reset: @struct type = {
+    operator(): (this, inout _:) = {}
+}
+
 regex_token: @polymorphic_base type = {
 
     public needs_state: bool;
@@ -379,9 +384,9 @@ parse_context: type = {
 
     pos: size_t = 0;
 
-    error_text: std::string = "";
+    public error_text: std::string = "";
 
-    public cur_state: token_vec = ();
+    cur_state: token_vec = ();
 
     operator=:(out this, r: std::string_view) = {
         regex = r;
@@ -507,49 +512,128 @@ parse_context: type = {
 
 
 }
+
+generation_function_context: @struct type = {
+    code: std::string = "";
+    tabs: std::string = "";
+
+    add_tabs: (inout this, c: int) = {
+        i: int = 0;
+        while i < c next i += 1 {
+            tabs += "  ";
+        }
+    }
+
+    remove_tabs: (inout this, c: int) = {
+        tabs = tabs.substr(0, c * 2);
+    }
+}
+
 generation_context: @struct type = {
 
-    code: std::string = "";
-    tabs: std::string = "    ";
+    gen_stack: std::vector<generation_function_context> = (1);
 
     new_state : bool = true;
     matcher_func: int         = 0;
+    reset_func:   int         = 0;
     entry_func:   std::string = "";
 
     match_parameters: (this) -> std::string = { return "r.pos, ctx, modifiers"; }
 
     add_check: (inout this, check: std::string) = {
-        code += "(tabs)$if !cpp2::regex::(check)$ { r = ctx.fail(); return r; }\n";
+        cur := get_current();
+        cur*.code += "(cur*.tabs)$if !cpp2::regex::(check)$ { r = ctx.fail(); return r; }\n";
     }
 
-    generate_match_code: (inout this, tokens: token_vec) -> std::string = {
-        entry_func = start_func();
-        for tokens do (token) {
+    add_statefull: (inout this, next_func: std::string, c: std::string) = {
+        end_func_statefull(c);
 
+        start_func_named(next_func);
+    }
+
+    run: (inout this, tokens: token_vec) -> std::string = {
+        entry_func = generate_func(tokens);
+
+        return get_base()*.code;
+    }
+
+    generate_func: (inout this, tokens: token_vec) -> std::string = {
+        name := start_func();
+        for tokens do (token) {
             token*.generate_code(this);
         }
         end_func();
 
-        return code;
+        return name;
     }
 
-    start_func: (inout this) -> std::string = {
-        name := gen_func_name();
-        code += "(tabs)$(name)$: type = {\n";
-        code += "(tabs)$  operator(): (this, cur, inout ctx, modifiers, other) -> _ = {\n";
-        code += "(tabs)$    r := ctx.pass(cur);\n";
-        add_tabs(2);
+    generate_func: (inout this, token: token_ptr) -> std::string = {
+        name := start_func();
+        token*.generate_code(this);
+        end_func();
 
         return name;
     }
 
+    generate_reset: (inout this, groups: std::vector<int>) -> std::string = {
+        if groups.empty() {
+            return "cpp2::regex::no_reset";
+        }
+
+        name := gen_reset_func_name();
+        cur := new_context();
+
+        cur*.code += "(cur*.tabs)$(name)$: @struct type = {\n";
+        cur*.code += "(cur*.tabs)  operator(): (this, inout ctx) = {\n";
+        for groups do (g) {
+            cur*.code += "(cur*.tabs)  ctx.set_group_invalid((g)$);\n";
+        }
+        cur*.code += "(cur*.tabs)  }\n";
+        cur*.code += "(cur*.tabs)}\n";
+
+        finish_context();
+
+        return name;
+    }
+
+
+    get_current: (inout this) -> *generation_function_context = {
+        return gen_stack.back()&;
+    }
+
+    get_base: (inout this) -> *generation_function_context = {
+        return gen_stack[0]&;
+    }
+
+    start_func_named: (inout this, name: std::string) = {
+        cur := new_context();
+
+        cur*.code += "(cur*.tabs)$(name)$: @struct type = {\n";
+        cur*.code += "(cur*.tabs)$  operator(): (this, cur, inout ctx, modifiers, other) -> _ = {\n";
+        cur*.code += "(cur*.tabs)$    r := ctx.pass(cur);\n";
+        cur*.add_tabs(2);
+    }
+
+    start_func: (inout this) -> std::string = {
+        name := gen_func_name();
+        start_func_named(name);
+        return name;
+    }
+
+    end_func_statefull: (inout this, s: std::string) = {
+        cur := get_current();
+        cur*.remove_tabs(2);
+        cur*.code += "\n";
+        cur*.code += "(cur*.tabs)$    r = (s)$;\n";
+        cur*.code += "(cur*.tabs)$    return r;\n";
+        cur*.code += "(cur*.tabs)$  }\n";
+        cur*.code += "(cur*.tabs)$}\n";
+
+        finish_context();
+    }
+
     end_func: (inout this) = {
-        remove_tabs(2);
-        code += "\n";
-        code += "(tabs)$    r = other(r.pos, ctx, modifiers);\n";
-        code += "(tabs)$    return r;\n";
-        code += "(tabs)$  }\n";
-        code += "(tabs)$}\n";
+        end_func_statefull("other(r.pos, ctx, modifiers)");
     }
 
     get_entry_func: (this) -> std::string = {
@@ -562,15 +646,26 @@ generation_context: @struct type = {
         return "func_(cur_id)$";
     }
 
-    add_tabs: (inout this, c: int) = {
-        i: int = 0;
-        while i < c next i += 1 {
-            tabs += "  ";
-        }
+    gen_reset_func_name: (inout this) -> std::string = {
+        cur_id : = reset_func;
+        reset_func += 1;
+        return "reset_(cur_id)$";
     }
 
-    remove_tabs: (inout this, c: int) = {
-        tabs = tabs.substr(0, c * 2);
+    new_context: (inout this) -> *generation_function_context = {
+        gen_stack.push_back(generation_function_context());
+        cur := get_current();
+        cur*.tabs = "    ";
+
+        return cur;
+    }
+
+    finish_context: (inout this) = {
+        cur := get_current();
+        base := get_base();
+        base*.code += cur*.code;
+
+        gen_stack.pop_back();
     }
 }
 
@@ -637,7 +732,7 @@ range_token: @polymorphic_base type = {
     operator=: (out this) = {}
 
     parse: (inout ctx: parse_context) -> token_ptr = {
-        r: std::shared_ptr<range_token> = ();
+        r := shared.new<range_token>();
         if ctx.current() == '{' {
             if !ctx.has_token() { return ctx.error("'{' without previous element."); }
 
@@ -685,10 +780,21 @@ range_token: @polymorphic_base type = {
                 }
             }
 
-            if !(0 <= r*.min_count <= r*.max_count) {
-                return ctx.error("Min and max values in range are wrong it should hold 0 <= min <= max. Have 0 <= (r*.min_count)$ <= (r*.max_count)$");
+            if -1 != r*.min_count {
+                if !(0 <= r*.min_count) {
+                    return ctx.error("Min value in range is negative. Have (r*.min_count)$)");
+                }
             }
-
+            if -1 != r*.max_count {
+                if !(0 <= r*.max_count) {
+                    return ctx.error("Max value in range is negative. Have (r*.max_count)$)");
+                }
+                if -1 != r*.min_count {
+                    if !(r*.min_count <= r*.max_count) {
+                        return ctx.error("Min and max values in range are wrong it should hold 0 <= min <= max. Have 0 <= (r*.min_count)$ <= (r*.max_count)$");
+                    }
+                }
+            }
 
             r*.inner_token = ctx.pop_token();
             r*.string_rep = r*.inner_token*.to_string() + r*.gen_string();
@@ -724,9 +830,11 @@ range_token: @polymorphic_base type = {
     }
 
     generate_code: (override this, inout ctx: generation_context) = {
-        _ = ctx;
-        //ctx.add_statefull("range_matcher_logic<char, (inner_func)$, (inner_func)$, (min_count)$, (max_count)$, (kind)$)>::match((ctx.get_arguments())$, (ctx.get_tail())$)")
+        inner_name := ctx.generate_func(inner_token);
+        reset_name := ctx.generate_reset(inner_token*.get_groups());
 
+        next_name := ctx.gen_func_name();
+        ctx.add_statefull(next_name, "cpp2::regex::range_matcher_logic<char, (inner_name)$, (min_count)$, (max_count)$, (kind)$>::match((ctx.match_parameters())$, (reset_name)$(), other, (next_name)$())");
     }
 
     get_groups: (override this) -> std::vector<int> = { return (); } // TODO: Implement
@@ -1144,14 +1252,14 @@ named_string_start: <CharT> type == special_syntax_wrapper<CharT, "\\A", line_st
 
 
 // Regex syntax: <matcher>{min, max}  Example: a{2,4}
-range_matcher_logic: <CharT, M, R, min_count: int, max_count: int, kind: int> type = {
+range_matcher_logic: <CharT, M, min_count: int, max_count: int, kind: int> type = {
 
-    match: <Iter> (cur: Iter, inout ctx, modifiers, end_func, tail) -> _ = {
+    match: <Iter> (cur: Iter, inout ctx, modifiers, reset_func, end_func, tail) -> _ = {
         if range_flags::possessive == kind {
             return match_possessive(cur, ctx, modifiers, end_func, tail);
         }
         else if range_flags::greedy == kind {
-            return match_greedy(0, cur, ctx.end, ctx, modifiers, end_func, tail);
+            return match_greedy(0, cur, ctx.end, ctx, modifiers, reset_func, end_func, tail);
         }
         else { // range_flags::not_greedy == kind
             return match_not_greedy(cur, ctx, modifiers, end_func, tail);
@@ -1207,7 +1315,7 @@ range_matcher_logic: <CharT, M, R, min_count: int, max_count: int, kind: int> ty
         count := 0;
 
         while is_below_lower_bound(count) && res.matched {
-            res = M::match(res.pos, ctx, modifiers, end_func, no_tail<CharT>());
+            res = M()(res.pos, ctx, modifiers, end_func);
             if res.matched {
                 count += 1;
             }
@@ -1217,27 +1325,27 @@ range_matcher_logic: <CharT, M, R, min_count: int, max_count: int, kind: int> ty
         return res;
     }
 
-    private match_greedy: <Iter, Other> (count: int, cur: Iter, last_valid: Iter, inout ctx, modifiers, end_func, _ : Other) -> match_return<Iter> = {
+    private match_greedy: <Iter> (count: int, cur: Iter, last_valid: Iter, inout ctx, modifiers, reset_func, end_func, other) -> match_return<Iter> = {
         inner_call := :(tail_cur, inout tail_ctx, _ /* ignore new modifiers */) -> _ == {
-            return match_greedy((count + 1)$, tail_cur, (cur)$, tail_ctx, (modifiers)$, (end_func)$, Other());
+            return match_greedy((count + 1)$, tail_cur, (cur)$, tail_ctx, (modifiers)$, (reset_func)$, (end_func)$, (other)$);
         };
         is_m_valid := true;
         r := ctx.fail();
         if is_below_upper_bound(count) && (is_below_lower_bound(count) || cur != last_valid) {
             is_m_valid = false;  // Group ranges in M are invalidated through the call.
-            r = M::match(cur, ctx, modifiers, inner_call, no_tail<CharT>());
+            r = M()(cur, ctx, modifiers, inner_call);
         }
 
         if !r.matched && is_in_range(count) {
             // The recursion did not yield a match try now the tail
-            r = Other::match(cur, ctx, modifiers, end_func);
+            r = other(cur, ctx, modifiers, end_func);
 
             if r.matched && !is_m_valid{
                 // We have a match rematch M if required
-                M::reset_ranges(ctx);
+                reset_func(ctx);
 
                 if count > 0 {
-                    _ = M::match(last_valid, ctx, modifiers, end_func, no_tail<CharT>());
+                    _ = M()(last_valid, ctx, modifiers, end_func);
                 }
             }
         }
@@ -1245,7 +1353,7 @@ range_matcher_logic: <CharT, M, R, min_count: int, max_count: int, kind: int> ty
         return r;
     }
 
-    private match_possessive: <Iter, Other> (cur: Iter, inout ctx, modifiers, end_func, _ : Other) -> match_return<Iter> = {
+    private match_possessive: <Iter>(cur: Iter, inout ctx, modifiers, end_func, other) -> match_return<Iter> = {
         count :=0;
         r := match_min_count(cur, ctx, modifiers, end_func, count);
 
@@ -1255,7 +1363,7 @@ range_matcher_logic: <CharT, M, R, min_count: int, max_count: int, kind: int> ty
 
         pos := r.pos;
         while r.matched && is_below_upper_bound(count) {
-            r = M::match(pos, ctx, modifiers, true_end_func(), no_tail<CharT>());
+            r = M()(pos, ctx, modifiers, true_end_func());
 
             if pos == r.pos {
                 break; // Break infinite loop.
@@ -1266,10 +1374,10 @@ range_matcher_logic: <CharT, M, R, min_count: int, max_count: int, kind: int> ty
             }
         }
 
-        return Other::match(pos, ctx, modifiers, end_func);
+        return other(pos, ctx, modifiers, end_func);
     }
 
-    private match_not_greedy: <Iter, Other> (cur: Iter, inout ctx, modifiers, end_func, _ : Other) -> match_return<Iter> = {
+    private match_not_greedy: <Iter> (cur: Iter, inout ctx, modifiers, end_func, other) -> match_return<Iter> = {
         count := 0;
         start := match_min_count(cur, ctx, modifiers, end_func, count);
         if !start.matched {
@@ -1278,12 +1386,12 @@ range_matcher_logic: <CharT, M, R, min_count: int, max_count: int, kind: int> ty
 
         pos := start.pos;
         while is_below_upper_bound(count) {
-            o:= Other::match(pos, ctx, modifiers, end_func);
+            o:= other(pos, ctx, modifiers, end_func);
             if o.matched {
                 return o;
             }
 
-            r:= M::match(pos, ctx, modifiers, end_func, no_tail<CharT>());
+            r:= M()(pos, ctx, modifiers, end_func);
             if !r.matched {
                 return ctx.fail();
             }
@@ -1291,14 +1399,14 @@ range_matcher_logic: <CharT, M, R, min_count: int, max_count: int, kind: int> ty
             pos = r.pos;
         }
 
-        return Other::match(pos, ctx, modifiers, end_func); // Upper bound reached.
+        return other(pos, ctx, modifiers, end_func); // Upper bound reached.
     }
 }
 
 // Regex syntax: *, +, or ?  Example: aa*
 //
-special_range_matcher_logic: <CharT, M, R, min_count: int, max_count: int, kind: int, symbol: char> type = {
-    this: range_matcher_logic<CharT, M, R, min_count, max_count, kind> = ();
+special_range_matcher_logic: <CharT, M, min_count: int, max_count: int, kind: int, symbol: char> type = {
+    this: range_matcher_logic<CharT, M, min_count, max_count, kind> = ();
     to_string: () -> bstring<CharT> = {
         r := M::to_string() + symbol;
         if kind == range_flags::not_greedy {
@@ -2589,12 +2697,13 @@ regex_parser: <Error_out> type = {
             if cur_token && parse_ctx.valid() {
                 parse_ctx.add_token(cur_token);
             } else {
-                // TODO: error(parse_ctx);
+                error(parse_ctx.error_text);
+                return "";
             }
         }
 
         gen_ctx: generation_context = ();
-        source += gen_ctx.generate_match_code(parse_ctx.get_tokens());
+        source += gen_ctx.run(parse_ctx.get_tokens());
         return gen_ctx.get_entry_func();
     }
 
