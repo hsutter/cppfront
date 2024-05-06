@@ -2571,105 +2571,6 @@ regex_parser: <Error_out> type = {
         return true;
     }
 
-    is_range: (inout this, c: char) -> bool = {
-
-        if c != '{' { return false; }
-        if cur_group_state.empty() { error("'{' without previous element.");  return false; }
-        if !skip() { error("End of regex before closing '}'."); return false; }
-
-        inner: std::string = "";
-        if !grab_until('}', out inner) { error("Missing closing bracket."); return false; }
-
-        inner = trim_copy(inner);
-        if inner.empty() { error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'"); return false; }
-
-        kind := range_flags::greedy;
-        if peek() == '?' {
-            kind = range_flags::not_greedy;
-            _ = skip();
-        }
-        else if peek() == '+' {
-            kind = range_flags::possessive;
-            _ = skip();
-        }
-
-        min_count: std::string = "-1";
-        min_count_number: int  = 0;
-        max_count: std::string = "-1";
-        max_count_number: int  = std::numeric_limits<int>::max();
-
-        sep: size_t = inner.find(",");
-        if sep == std::string::npos {
-            min_count = inner;
-            max_count = inner;
-            if !string_to_int(inner, min_count_number) { error("Could not convert range to number."); return false; }
-            max_count_number = min_count_number;
-        }
-        else {
-            inner_first: std::string = trim_copy(inner.substr(0, sep));
-            inner_last: std::string = trim_copy(inner.substr(sep + 1));
-
-            if (inner_first.empty() && inner_last.empty()) {
-                error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'");
-                return false;
-            }
-
-            if !inner_first.empty() {
-                min_count = inner_first;
-                if !string_to_int(inner, min_count_number) { error("Could not convert range to number."); return false; }
-            }
-            if !inner_last.empty() {
-                max_count = inner_last;
-                if !string_to_int(inner, max_count_number) { error("Could not convert range to number."); return false; }
-            }
-        }
-
-        if !(0 <= min_count_number <= max_count_number) {
-            error("Min and max values in range are wrong it should hold 0 <= min <= max. Have 0 <= (min_count_number)$ <= (max_count_number)$");
-            return false;
-        }
-
-        cur_group_state.wrap_last( :(inner) -> _ == create_matcher("range_matcher_logic", "(inner)$, (min_count$)$, (max_count$)$, (kind)$"));
-
-        return true;
-    }
-
-    is_special_range: (inout this, c: char) -> bool = {
-        min_range: std::string = "0";
-        max_range: std::string = "-1";
-        if c == '*' {
-            min_range = "0";
-        }
-        else if c == '+' {
-            min_range = "1";
-        }
-        else if c == '?' {
-            min_range = "0";
-            max_range = "1";
-        }
-        else {
-            return false;
-        }
-
-        kind := range_flags::greedy;
-        if peek() == '?' {
-            kind = range_flags::not_greedy;
-            _ = skip();
-        }
-        else if peek() == '+' {
-            kind = range_flags::possessive;
-            _ = skip();
-        }
-
-        if cur_group_state.empty() {
-            error("'(c)$' without previous element.");
-            return false;
-        }
-
-        cur_group_state.wrap_last(:(inner) -> _ == create_matcher("special_range_matcher_logic", "(inner)$, (min_range$)$, (max_range$)$, (kind)$, '(c$)$'"));
-        return true;
-    }
-
     parse_until:(inout this, term: char) = {
         c: char = current();
         while c != '\n' next _ = next(out c) {
@@ -2682,8 +2583,6 @@ regex_parser: <Error_out> type = {
             if !has_error && is_anchor(c) { continue; }
             if !has_error && is_group(c) { continue; }
             if !has_error && is_handle_special(c) { continue; }
-            if !has_error && is_range(c) { continue; }
-            if !has_error && is_special_range(c) { continue; }
 
             if has_error { return; }
 
