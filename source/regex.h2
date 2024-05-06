@@ -721,13 +721,15 @@ char_token_matcher: <CharT, C: CharT, L: CharT, U: CharT> (inout cur, inout ctx,
     }
 }
 
+// Regex syntax: <matcher>{min, max}  Example: a{2,4}
+//
 range_token: @polymorphic_base type = {
     this: regex_token = (true, "");
 
-    min_count: int = -1;
-    max_count: int = -1;
-    kind:      int = range_flags::greedy;
-    inner_token: token_ptr = nullptr;
+    protected min_count: int = -1;
+    protected max_count: int = -1;
+    protected kind:      int = range_flags::greedy;
+    protected inner_token: token_ptr = nullptr;
 
     operator=: (out this) = {}
 
@@ -742,16 +744,10 @@ range_token: @polymorphic_base type = {
             inner = trim_copy(inner.substr(1)); // Remove '{' and white spaces.
             if inner.empty() { return ctx.error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'"); }
 
+            // Non-greedy or possessive
+            r*.parse_modifier(ctx);
 
-            if ctx.peek() == '?' {
-                r*.kind = range_flags::not_greedy;
-                _ = ctx.next();
-            }
-            else if ctx.peek() == '+' {
-                r*.kind = range_flags::possessive;
-                _ = ctx.next();
-            }
-
+            // Get range arguments
             min_count_str: std::string = "-1";
             max_count_str: std::string = "-1";
 
@@ -780,6 +776,8 @@ range_token: @polymorphic_base type = {
                 }
             }
 
+
+            // Check validity of the range.
             if -1 != r*.min_count {
                 if !(0 <= r*.min_count) {
                     return ctx.error("Min value in range is negative. Have (r*.min_count)$)");
@@ -797,7 +795,7 @@ range_token: @polymorphic_base type = {
             }
 
             r*.inner_token = ctx.pop_token();
-            r*.string_rep = r*.inner_token*.to_string() + r*.gen_string();
+            r*.string_rep = r*.inner_token*.to_string() + r*.gen_range_string() + r*.gen_mod_string();
 
             return r;
         }
@@ -805,7 +803,30 @@ range_token: @polymorphic_base type = {
         return nullptr;
     }
 
-    gen_string: (this) -> std::string = {
+    parse_modifier: (inout this, inout ctx: parse_context) = {
+        if ctx.peek() == '?' {
+            kind = range_flags::not_greedy;
+            _ = ctx.next();
+        }
+        else if ctx.peek() == '+' {
+            kind = range_flags::possessive;
+            _ = ctx.next();
+        }
+    }
+
+    gen_mod_string: (this) -> std::string = {
+        if kind == range_flags::not_greedy {
+            return "?";
+        }
+        else if kind == range_flags::possessive {
+            return "+";
+        }
+        else {
+            return "";
+        }
+    }
+
+    gen_range_string: (this) -> std::string = {
         r : std::string = "";
         if min_count == max_count {
             r += "{(min_count)$}";
@@ -840,7 +861,6 @@ range_token: @polymorphic_base type = {
     get_groups: (override this) -> std::vector<int> = { return (); } // TODO: Implement
 }
 
-// Regex syntax: <matcher>{min, max}  Example: a{2,4}
 range_token_matcher: <CharT, min_count: int, max_count: int, kind: int> type = {
 
     match: <Iter> (cur: Iter, inout ctx, modifiers, inner, reset_func, end_func, tail) -> _ = {
@@ -961,6 +981,42 @@ range_token_matcher: <CharT, min_count: int, max_count: int, kind: int> type = {
         }
 
         return other(pos, ctx, modifiers, end_func); // Upper bound reached.
+    }
+}
+
+// Regex syntax: *, +, or ?  Example: aa*
+//
+special_range_token: @polymorphic_base type = {
+    this : range_token = ();
+
+    parse: (inout ctx: parse_context) -> token_ptr = {
+        r := shared.new<special_range_token>();
+        symbol: char = '\0';
+        if ctx.current() == '*' {
+            r*.min_count = 0;
+            r*.max_count = -1;
+            symbol = '*';
+        }
+        else if ctx.current() == '+' {
+            r*.min_count = 1;
+            r*.max_count = -1;
+            symbol = '+';
+        } else if ctx.current() == '?' {
+            r*.min_count = 0;
+            r*.max_count = 1;
+            symbol = '?';
+        } else {
+            return nullptr;
+        }
+
+        if !ctx.has_token() { return ctx.error("'(ctx.current())$' without previous element."); }
+
+
+        r*.parse_modifier(ctx);
+
+        r*.inner_token = ctx.pop_token();
+        r*.string_rep = r*.inner_token*.to_string() + symbol + r*.gen_mod_string();
+        return r;
     }
 }
 
@@ -1373,24 +1429,6 @@ named_class_not_word      : <CharT> type == named_class_matcher_logic<CharT, "\\
 named_string_end_or_before_new_line_at_end: <CharT> type  == special_syntax_wrapper<CharT, "\\Z", line_end_matcher_logic<CharT, false, true>>;
 named_string_end: <CharT> type   == special_syntax_wrapper<CharT, "\\z", line_end_matcher_logic<CharT, false, false>>;
 named_string_start: <CharT> type == special_syntax_wrapper<CharT, "\\A", line_start_matcher_logic<CharT, false>>;
-
-
-// // Regex syntax: *, +, or ?  Example: aa*
-// //
-// special_range_matcher_logic: <CharT, M, min_count: int, max_count: int, kind: int, symbol: char> type = {
-//     this: range_matcher_logic<CharT, M, min_count, max_count, kind> = ();
-//     to_string: () -> bstring<CharT> = {
-//         r := M::to_string() + symbol;
-//         if kind == range_flags::not_greedy {
-//             r += "?";
-//         }
-//         else if kind == range_flags::possessive {
-//             r += "+";
-//         }
-
-//         return r;
-//     }
-// }
 
 // Regex syntax: \b or \B  Example: \bword\b
 //
@@ -2664,6 +2702,7 @@ regex_parser: <Error_out> type = {
 
             cur_token = nullptr;
             if !cur_token && parse_ctx.valid() { cur_token = range_token::parse(parse_ctx); }
+            if !cur_token && parse_ctx.valid() { cur_token = special_range_token::parse(parse_ctx); }
             if !cur_token && parse_ctx.valid() { cur_token = char_token::parse(parse_ctx); }
 
             if cur_token && parse_ctx.valid() {
