@@ -208,7 +208,7 @@ class regex_branch_reset_state;
 #line 1790 "regex.h2"
 template<typename Error_out> class regex_parser;
 
-#line 2701 "regex.h2"
+#line 2702 "regex.h2"
 }
 }
 
@@ -1503,12 +1503,12 @@ template<typename Error_out> class regex_parser {
     public: auto operator=(regex_parser const&) -> void = delete;
 
 
-#line 2692 "regex.h2"
+#line 2693 "regex.h2"
 };
 
 template<typename Err> [[nodiscard]] auto generate_template(cpp2::in<std::string_view> regex, cpp2::in<std::string_view> modifier, Err const& err) -> std::string;
 
-#line 2701 "regex.h2"
+#line 2702 "regex.h2"
 }
 }
 
@@ -4128,7 +4128,7 @@ template<typename CharT, CharT C, CharT L, CharT U> [[nodiscard]] auto char_toke
         source += ("  initial_flags: type == std::integral_constant<int, " + cpp2::to_string(std::move(mod)) + ">;  //TODO: Use static constexpr when alpha limitation of nested types declarations is lifted.\n");
 
         generation_context gen_ctx {}; 
-        source += CPP2_UFCS(run)(gen_ctx, CPP2_UFCS(get_tokens)(std::move(parse_ctx)));
+        source += CPP2_UFCS(run)(gen_ctx, CPP2_UFCS(get_tokens)(parse_ctx));
         source += "  entry: (cur, inout ctx, modifiers) -> _ = {\n";
         source += "    ctx.set_group_start(0, cur);\n";
         source += ("    r := " + cpp2::to_string(CPP2_UFCS(get_entry_func)(std::move(gen_ctx))) + "()(cur, ctx, modifiers, cpp2::regex::true_end_func());\n");
@@ -4136,17 +4136,18 @@ template<typename CharT, CharT C, CharT L, CharT U> [[nodiscard]] auto char_toke
         source += "    return r;\n";
         source += "  }\n";
 
-        source += "  to_string: () \"TODO\";\n"; // (regex)$\";\n";
+        auto string {CPP2_UFCS(to_string)((*cpp2::assert_not_null(CPP2_UFCS(get_tokens)(std::move(parse_ctx)))))}; 
+        source += ("  to_string: () -> std::string = { return \"" + cpp2::to_string(std::move(string)) + "\"; }\n");
         source += create_named_group_lookup();
         source += "}\n";
 
-#line 2688 "regex.h2"
+#line 2689 "regex.h2"
         std::cout << source << std::endl;
 
         return source; 
     }
 
-#line 2694 "regex.h2"
+#line 2695 "regex.h2"
 template<typename Err> [[nodiscard]] auto generate_template(cpp2::in<std::string_view> regex, cpp2::in<std::string_view> modifier, Err const& err) -> std::string{
     regex_parser<Err> parser {regex, modifier, err}; 
     auto r {CPP2_UFCS(parse)(parser)}; 

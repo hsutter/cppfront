@@ -2680,7 +2680,8 @@ regex_parser: <Error_out> type = {
         source += "    return r;\n";
         source += "  }\n";
 
-        source += "  to_string: () \"TODO\";\n"; // (regex)$\";\n";
+        string := parse_ctx.get_tokens()*.to_string();
+        source += "  to_string: () -> std::string = { return \"(string)$\"; }\n";
         source += create_named_group_lookup();
         source += "}\n";
 
