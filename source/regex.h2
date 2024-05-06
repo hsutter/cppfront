@@ -360,11 +360,9 @@ no_reset: @struct type = {
 
 regex_token: @polymorphic_base type = {
 
-    public needs_state: bool;
     public string_rep: std::string;
 
-    operator=:(out this, state: bool, str: std::string) = {
-        needs_state = state;
+    operator=:(out this, str: std::string) = {
         string_rep = str;
     }
 
@@ -372,7 +370,6 @@ regex_token: @polymorphic_base type = {
     generate_code: (virtual this, inout _: generation_context);
 
     get_groups: (virtual this) -> std::vector<int>;
-    requires_state: (this) -> bool = { return needs_state; }
     to_string: (this) -> std::string = { return string_rep; }
 }
 
@@ -410,8 +407,8 @@ parse_context: type = {
         return r;
     }
 
-    get_tokens: (this) -> token_vec = {
-        return cur_state;
+    get_tokens: (this) -> token_ptr = {
+        return shared.new<regex_token_list>(cur_state);
     }
 
     current: (this) -> char = { return regex[pos]; }
@@ -510,6 +507,29 @@ parse_context: type = {
     peek: (in this)          peek_impl(false);
     peek_in_class: (in this) peek_impl(true);
 
+    parse_until:(inout this, term: char) -> bool = {
+        cur_token: token_ptr = ();
+
+        while valid() next _ = next() {
+            if term == current() { break; }
+
+            cur_token = nullptr;
+            if !cur_token && valid() { cur_token = range_token::parse(this); }
+            if !cur_token && valid() { cur_token = special_range_token::parse(this); }
+            if !cur_token && valid() { cur_token = char_token::parse(this); }
+
+            if cur_token && valid() {
+                add_token(cur_token);
+            } else {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    parse: (inout this) parse_until('\0');
+
 
 }
 
@@ -551,20 +571,10 @@ generation_context: @struct type = {
         start_func_named(next_func);
     }
 
-    run: (inout this, tokens: token_vec) -> std::string = {
-        entry_func = generate_func(tokens);
+    run: (inout this, token: token_ptr) -> std::string = {
+        entry_func = generate_func(token);
 
         return get_base()*.code;
-    }
-
-    generate_func: (inout this, tokens: token_vec) -> std::string = {
-        name := start_func();
-        for tokens do (token) {
-            token*.generate_code(this);
-        }
-        end_func();
-
-        return name;
     }
 
     generate_func: (inout this, token: token_ptr) -> std::string = {
@@ -669,11 +679,47 @@ generation_context: @struct type = {
     }
 }
 
+regex_token_list: @polymorphic_base type = {
+    this: regex_token;
+
+    public tokens: token_vec;
+
+    operator=:(out this, t: token_vec) = {
+        regex_token = (gen_string(t));
+        tokens = t;
+    }
+
+    generate_code: (virtual this, inout ctx: generation_context) = {
+        for tokens do (token) {
+            token*.generate_code(ctx);
+        }
+    }
+
+    get_groups: (virtual this) -> std::vector<int> = {
+        r : std::vector<int> = ();
+        for tokens do (token) {
+            c := token*.get_groups();
+            _ = r.insert(r.end(), c.begin(), c.end());
+        }
+
+        return r;
+    }
+
+    gen_string: (vec: token_vec) -> std::string = {
+        r : std::string = "";
+        for vec do (token) {
+            r += token*.to_string();
+        }
+        return r;
+    }
+}
+
+
 regex_token_base: @polymorphic_base type = {
     this: regex_token;
 
-    operator=:(out this, state: bool, str: std::string) = {
-        regex_token = (state, str);
+    operator=:(out this, str: std::string) = {
+        regex_token = (str);
     }
 
     get_groups: (override this) -> std::vector<int> = { return (); }
@@ -685,7 +731,7 @@ char_token: @polymorphic_base type = {
     token: char;
 
     operator=: (out this, t: char) = {
-        regex_token_base = (false, std::string(1, t));
+        regex_token_base = (std::string(1, t));
         token = t;
     }
 
@@ -724,7 +770,7 @@ char_token_matcher: <CharT, C: CharT, L: CharT, U: CharT> (inout cur, inout ctx,
 // Regex syntax: <matcher>{min, max}  Example: a{2,4}
 //
 range_token: @polymorphic_base type = {
-    this: regex_token = (true, "");
+    this: regex_token = ("");
 
     protected min_count: int = -1;
     protected max_count: int = -1;
@@ -2591,32 +2637,6 @@ regex_parser: <Error_out> type = {
         }
     }
 
-    parse_until_new:(inout this, term: char) -> std::string = {
-        parse_ctx: parse_context = (regex);
-
-        cur_token: token_ptr = ();
-
-        while parse_ctx.valid() next _ = parse_ctx.next() {
-            if term == parse_ctx.current() { break; }
-
-            cur_token = nullptr;
-            if !cur_token && parse_ctx.valid() { cur_token = range_token::parse(parse_ctx); }
-            if !cur_token && parse_ctx.valid() { cur_token = special_range_token::parse(parse_ctx); }
-            if !cur_token && parse_ctx.valid() { cur_token = char_token::parse(parse_ctx); }
-
-            if cur_token && parse_ctx.valid() {
-                parse_ctx.add_token(cur_token);
-            } else {
-                error(parse_ctx.error_text);
-                return "";
-            }
-        }
-
-        gen_ctx: generation_context = ();
-        source += gen_ctx.run(parse_ctx.get_tokens());
-        return gen_ctx.get_entry_func();
-    }
-
     create_named_group_lookup: (this) -> std::string = {
         res: std::string = "get_named_group_index: (name) -> int = {\n";
 
@@ -2641,16 +2661,22 @@ regex_parser: <Error_out> type = {
 
     parse:(inout this) -> std::string = {
         mod   := parser_expression_modifiers();
+        parse_ctx: parse_context = (regex);
+        if !parse_ctx.parse() {
+            error(parse_ctx.error_text);
+            return "Error";
+        }
 
         source += "{\n";
         source += "  group_count: type == std::integral_constant<int, (cur_branch_reset_state.cur_group)$>;  //TODO: Use static constexpr when alpha limitation of nested types declarations is lifted.\n";
         source += "  initial_flags: type == std::integral_constant<int, (mod)$>;  //TODO: Use static constexpr when alpha limitation of nested types declarations is lifted.\n";
 
-        start_name := parse_until_new('\0');
+        gen_ctx: generation_context = ();
+        source += gen_ctx.run(parse_ctx.get_tokens());
         source += "  entry: (cur, inout ctx, modifiers) -> _ = {\n";
-        source += "    ctx.set_group_start(0, cur);";
-        source += "    r := (start_name)$()(cur, ctx, modifiers, cpp2::regex::true_end_func());\n";
-        source += "    if r.matched { ctx.set_group_end(0, r.pos); }";
+        source += "    ctx.set_group_start(0, cur);\n";
+        source += "    r := (gen_ctx.get_entry_func())$()(cur, ctx, modifiers, cpp2::regex::true_end_func());\n";
+        source += "    if r.matched { ctx.set_group_end(0, r.pos); }\n";
         source += "    return r;\n";
         source += "  }\n";
 
@@ -2660,7 +2686,6 @@ regex_parser: <Error_out> type = {
 
 
         std::cout << source << std::endl;
-        if has_error { return "Error"; }
 
         return source;
     }
