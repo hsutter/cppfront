@@ -834,11 +834,136 @@ range_token: @polymorphic_base type = {
         reset_name := ctx.generate_reset(inner_token*.get_groups());
 
         next_name := ctx.gen_func_name();
-        ctx.add_statefull(next_name, "cpp2::regex::range_matcher_logic<char, (inner_name)$, (min_count)$, (max_count)$, (kind)$>::match((ctx.match_parameters())$, (reset_name)$(), other, (next_name)$())");
+        ctx.add_statefull(next_name, "cpp2::regex::range_token_matcher<char, (min_count)$, (max_count)$, (kind)$>::match((ctx.match_parameters())$, (inner_name)$(), (reset_name)$(), other, (next_name)$())");
     }
 
     get_groups: (override this) -> std::vector<int> = { return (); } // TODO: Implement
 }
+
+// Regex syntax: <matcher>{min, max}  Example: a{2,4}
+range_token_matcher: <CharT, min_count: int, max_count: int, kind: int> type = {
+
+    match: <Iter> (cur: Iter, inout ctx, modifiers, inner, reset_func, end_func, tail) -> _ = {
+        if range_flags::possessive == kind {
+            return match_possessive(cur, ctx, modifiers, inner, end_func, tail);
+        }
+        else if range_flags::greedy == kind {
+            return match_greedy(0, cur, ctx.end, ctx, modifiers, inner, reset_func, end_func, tail);
+        }
+        else { // range_flags::not_greedy == kind
+            return match_not_greedy(cur, ctx, modifiers, inner, end_func, tail);
+        }
+    }
+
+    private is_below_upper_bound: (count: int) -> bool = {
+        if -1 == max_count { return true; }
+        else { return count < max_count; }
+    }
+
+    private is_below_lower_bound: (count: int) -> bool = {
+        if -1 == min_count { return false; }
+        else { return count < min_count; }
+    }
+
+    private is_in_range: (count: int) -> bool = {
+        if -1 != min_count && count < min_count { return false; }
+        if -1 != max_count && count > max_count { return false; }
+        return true;
+    }
+
+    private match_min_count: <Iter> (cur: Iter, inout ctx, modifiers, inner, end_func, inout count_r: int) -> _ = { // TODO: count_r as out parameter introduces a performance loss.
+        res := ctx.pass(cur);
+        count := 0;
+
+        while is_below_lower_bound(count) && res.matched {
+            res = inner(res.pos, ctx, modifiers, end_func);
+            if res.matched {
+                count += 1;
+            }
+        }
+
+        count_r = count;
+        return res;
+    }
+
+    private match_greedy: <Iter> (count: int, cur: Iter, last_valid: Iter, inout ctx, modifiers, inner, reset_func, end_func, other) -> match_return<Iter> = {
+        inner_call := :(tail_cur, inout tail_ctx, _ /* ignore new modifiers */) -> _ == {
+            return match_greedy((count + 1)$, tail_cur, (cur)$, tail_ctx, (modifiers)$, (inner)$, (reset_func)$, (end_func)$, (other)$);
+        };
+        is_m_valid := true;
+        r := ctx.fail();
+        if is_below_upper_bound(count) && (is_below_lower_bound(count) || cur != last_valid) {
+            is_m_valid = false;  // Group ranges in M are invalidated through the call.
+            r = inner(cur, ctx, modifiers, inner_call);
+        }
+
+        if !r.matched && is_in_range(count) {
+            // The recursion did not yield a match try now the tail
+            r = other(cur, ctx, modifiers, end_func);
+
+            if r.matched && !is_m_valid{
+                // We have a match rematch M if required
+                reset_func(ctx);
+
+                if count > 0 {
+                    _ = inner(last_valid, ctx, modifiers, end_func);
+                }
+            }
+        }
+
+        return r;
+    }
+
+    private match_possessive: <Iter>(cur: Iter, inout ctx, modifiers, inner, end_func, other) -> match_return<Iter> = {
+        count :=0;
+        r := match_min_count(cur, ctx, modifiers, inner, end_func, count);
+
+        if !r.matched {
+          return r;
+        }
+
+        pos := r.pos;
+        while r.matched && is_below_upper_bound(count) {
+            r = inner(pos, ctx, modifiers, true_end_func());
+
+            if pos == r.pos {
+                break; // Break infinite loop.
+            }
+            if r.matched {
+                count += 1;
+                pos = r.pos;
+            }
+        }
+
+        return other(pos, ctx, modifiers, end_func);
+    }
+
+    private match_not_greedy: <Iter> (cur: Iter, inout ctx, modifiers, inner, end_func, other) -> match_return<Iter> = {
+        count := 0;
+        start := match_min_count(cur, ctx, modifiers, inner, end_func, count);
+        if !start.matched {
+          return start;
+        }
+
+        pos := start.pos;
+        while is_below_upper_bound(count) {
+            o:= other(pos, ctx, modifiers, end_func);
+            if o.matched {
+                return o;
+            }
+
+            r:= inner(pos, ctx, modifiers, end_func);
+            if !r.matched {
+                return ctx.fail();
+            }
+            count += 1;
+            pos = r.pos;
+        }
+
+        return other(pos, ctx, modifiers, end_func); // Upper bound reached.
+    }
+}
+
 
 //-----------------------------------------------------------------------
 //
@@ -1250,175 +1375,22 @@ named_string_end: <CharT> type   == special_syntax_wrapper<CharT, "\\z", line_en
 named_string_start: <CharT> type == special_syntax_wrapper<CharT, "\\A", line_start_matcher_logic<CharT, false>>;
 
 
+// // Regex syntax: *, +, or ?  Example: aa*
+// //
+// special_range_matcher_logic: <CharT, M, min_count: int, max_count: int, kind: int, symbol: char> type = {
+//     this: range_matcher_logic<CharT, M, min_count, max_count, kind> = ();
+//     to_string: () -> bstring<CharT> = {
+//         r := M::to_string() + symbol;
+//         if kind == range_flags::not_greedy {
+//             r += "?";
+//         }
+//         else if kind == range_flags::possessive {
+//             r += "+";
+//         }
 
-// Regex syntax: <matcher>{min, max}  Example: a{2,4}
-range_matcher_logic: <CharT, M, min_count: int, max_count: int, kind: int> type = {
-
-    match: <Iter> (cur: Iter, inout ctx, modifiers, reset_func, end_func, tail) -> _ = {
-        if range_flags::possessive == kind {
-            return match_possessive(cur, ctx, modifiers, end_func, tail);
-        }
-        else if range_flags::greedy == kind {
-            return match_greedy(0, cur, ctx.end, ctx, modifiers, reset_func, end_func, tail);
-        }
-        else { // range_flags::not_greedy == kind
-            return match_not_greedy(cur, ctx, modifiers, end_func, tail);
-        }
-    }
-
-    reset_ranges: (inout ctx)     = M::reset_ranges(ctx);
-
-    to_string: () -> bstring<CharT> = {
-      r: bstring<CharT> = M::to_string();
-
-      if min_count == max_count {
-        r += "{(min_count)$}";
-      }
-      else if min_count == -1 {
-        r += "{,(max_count)$}";
-      }
-      else if max_count == -1 {
-        r += "{(min_count)$,}";
-      }
-      else {
-        r += "{(min_count)$,(max_count)$}";
-      }
-
-      if kind == range_flags::not_greedy {
-        r += "?";
-      }
-      else if kind == range_flags::possessive {
-        r += "+";
-      }
-
-      return r;
-    }
-
-    private is_below_upper_bound: (count: int) -> bool = {
-        if -1 == max_count { return true; }
-        else { return count < max_count; }
-    }
-
-    private is_below_lower_bound: (count: int) -> bool = {
-        if -1 == min_count { return false; }
-        else { return count < min_count; }
-    }
-
-    private is_in_range: (count: int) -> bool = {
-        if -1 != min_count && count < min_count { return false; }
-        if -1 != max_count && count > max_count { return false; }
-        return true;
-    }
-
-    private match_min_count: <Iter> (cur: Iter, inout ctx, modifiers, end_func, inout count_r: int) -> _ = { // TODO: count_r as out parameter introduces a performance loss.
-        res := ctx.pass(cur);
-        count := 0;
-
-        while is_below_lower_bound(count) && res.matched {
-            res = M()(res.pos, ctx, modifiers, end_func);
-            if res.matched {
-                count += 1;
-            }
-        }
-
-        count_r = count;
-        return res;
-    }
-
-    private match_greedy: <Iter> (count: int, cur: Iter, last_valid: Iter, inout ctx, modifiers, reset_func, end_func, other) -> match_return<Iter> = {
-        inner_call := :(tail_cur, inout tail_ctx, _ /* ignore new modifiers */) -> _ == {
-            return match_greedy((count + 1)$, tail_cur, (cur)$, tail_ctx, (modifiers)$, (reset_func)$, (end_func)$, (other)$);
-        };
-        is_m_valid := true;
-        r := ctx.fail();
-        if is_below_upper_bound(count) && (is_below_lower_bound(count) || cur != last_valid) {
-            is_m_valid = false;  // Group ranges in M are invalidated through the call.
-            r = M()(cur, ctx, modifiers, inner_call);
-        }
-
-        if !r.matched && is_in_range(count) {
-            // The recursion did not yield a match try now the tail
-            r = other(cur, ctx, modifiers, end_func);
-
-            if r.matched && !is_m_valid{
-                // We have a match rematch M if required
-                reset_func(ctx);
-
-                if count > 0 {
-                    _ = M()(last_valid, ctx, modifiers, end_func);
-                }
-            }
-        }
-
-        return r;
-    }
-
-    private match_possessive: <Iter>(cur: Iter, inout ctx, modifiers, end_func, other) -> match_return<Iter> = {
-        count :=0;
-        r := match_min_count(cur, ctx, modifiers, end_func, count);
-
-        if !r.matched {
-          return r;
-        }
-
-        pos := r.pos;
-        while r.matched && is_below_upper_bound(count) {
-            r = M()(pos, ctx, modifiers, true_end_func());
-
-            if pos == r.pos {
-                break; // Break infinite loop.
-            }
-            if r.matched {
-                count += 1;
-                pos = r.pos;
-            }
-        }
-
-        return other(pos, ctx, modifiers, end_func);
-    }
-
-    private match_not_greedy: <Iter> (cur: Iter, inout ctx, modifiers, end_func, other) -> match_return<Iter> = {
-        count := 0;
-        start := match_min_count(cur, ctx, modifiers, end_func, count);
-        if !start.matched {
-          return start;
-        }
-
-        pos := start.pos;
-        while is_below_upper_bound(count) {
-            o:= other(pos, ctx, modifiers, end_func);
-            if o.matched {
-                return o;
-            }
-
-            r:= M()(pos, ctx, modifiers, end_func);
-            if !r.matched {
-                return ctx.fail();
-            }
-            count += 1;
-            pos = r.pos;
-        }
-
-        return other(pos, ctx, modifiers, end_func); // Upper bound reached.
-    }
-}
-
-// Regex syntax: *, +, or ?  Example: aa*
-//
-special_range_matcher_logic: <CharT, M, min_count: int, max_count: int, kind: int, symbol: char> type = {
-    this: range_matcher_logic<CharT, M, min_count, max_count, kind> = ();
-    to_string: () -> bstring<CharT> = {
-        r := M::to_string() + symbol;
-        if kind == range_flags::not_greedy {
-            r += "?";
-        }
-        else if kind == range_flags::possessive {
-            r += "+";
-        }
-
-        return r;
-    }
-}
+//         return r;
+//     }
+// }
 
 // Regex syntax: \b or \B  Example: \bword\b
 //
