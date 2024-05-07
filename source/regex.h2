@@ -419,9 +419,14 @@ parse_context_group_state: @struct type = {
         //std::swap(modifiers, t.modifiers); // TODO:
     }
 
-    get_tokens: (this) -> token_ptr = {
-        // TODO: Check alternatives
-        return shared.new<regex_token_list>(cur_match_list);
+    get_tokens: (inout this) -> token_ptr = {
+        if alternate_match_lists.empty() {
+            return shared.new<regex_token_list>(cur_match_list);
+        }
+        else {
+            next_alternative();
+            return shared.new<alternative_token_gen>(alternate_match_lists);
+        }
     }
 
     add: (inout this, token: token_ptr) = cur_match_list.push_back(token);
@@ -465,6 +470,11 @@ parse_context: type = {
         return inner;
     }
 
+    next_alternative: (inout this) = {
+        cur_group_state.next_alternative();
+        //cur_branch_reset_state.next_alternative(); // TODO:
+    }
+
     add_token: (inout this, token: token_ptr) = {
         cur_group_state.add(token);
     }
@@ -483,7 +493,7 @@ parse_context: type = {
         return r;
     }
 
-    get_tokens: (this) -> token_ptr = {
+    get_tokens: (inout this) -> token_ptr = {
         return cur_group_state.get_tokens();
     }
 
@@ -590,9 +600,13 @@ parse_context: type = {
             if term == current() { break; }
 
             cur_token = nullptr;
+
+            if !cur_token && valid() { cur_token = alternative_token::parse(this); }
             if !cur_token && valid() { cur_token = group_token::parse(this); }
             if !cur_token && valid() { cur_token = range_token::parse(this); }
             if !cur_token && valid() { cur_token = special_range_token::parse(this); }
+
+            // Everything else is matched as it is.
             if !cur_token && valid() { cur_token = char_token::parse(this); }
 
             if cur_token && valid() {
@@ -626,7 +640,7 @@ generation_function_context: @struct type = {
     }
 }
 
-generation_context: @struct type = {
+generation_context: type = {
 
     gen_stack: std::vector<generation_function_context> = (1);
 
@@ -651,7 +665,8 @@ generation_context: @struct type = {
     add_statefull: (inout this, next_func: std::string, c: std::string) = {
         end_func_statefull(c);
 
-        start_func_named(next_func);
+        name := next_func.substr(0, next_func.ssize() - 2);
+        start_func_named(name);
     }
 
     run: (inout this, token: token_ptr) -> std::string = {
@@ -670,7 +685,7 @@ generation_context: @struct type = {
 
     generate_reset: (inout this, groups: std::vector<int>) -> std::string = {
         if groups.empty() {
-            return "cpp2::regex::no_reset";
+            return "cpp2::regex::no_reset()";
         }
 
         name := gen_reset_func_name();
@@ -686,7 +701,7 @@ generation_context: @struct type = {
 
         finish_context();
 
-        return name;
+        return name + "()";
     }
 
 
@@ -698,7 +713,11 @@ generation_context: @struct type = {
         return gen_stack[0]&;
     }
 
-    start_func_named: (inout this, name: std::string) = {
+    next_func_name: (inout this) -> std::string = {
+        return gen_func_name() + "()";
+    }
+
+    protected start_func_named: (inout this, name: std::string) = {
         cur := new_context();
 
         cur*.code += "(cur*.tabs)$(name)$: @struct type = {\n";
@@ -710,7 +729,7 @@ generation_context: @struct type = {
     start_func: (inout this) -> std::string = {
         name := gen_func_name();
         start_func_named(name);
-        return name;
+        return name + "()";
     }
 
     end_func_statefull: (inout this, s: std::string) = {
@@ -733,13 +752,13 @@ generation_context: @struct type = {
         return entry_func;
     }
 
-    gen_func_name: (inout this) -> std::string = {
+    protected gen_func_name: (inout this) -> std::string = {
         cur_id : = matcher_func;
         matcher_func += 1;
         return "func_(cur_id)$";
     }
 
-    gen_reset_func_name: (inout this) -> std::string = {
+    protected gen_reset_func_name: (inout this) -> std::string = {
         cur_id : = reset_func;
         reset_func += 1;
         return "reset_(cur_id)$";
@@ -811,7 +830,106 @@ regex_token_base: @polymorphic_base type = {
         regex_token = (str);
     }
 
+    operator=:(out this) = {
+        regex_token = ();
+    }
+
     get_groups: (override this) -> std::vector<int> = { return (); }
+}
+
+//  Regex syntax: |  Example: ab|ba
+//
+//  Non greedy implementation. First alternative that matches is chosen.
+//
+alternative_token: @polymorphic_base type = {
+    this: regex_token_base = ();
+
+    operator=:(out this) = {}
+
+    parse: (inout ctx: parse_context) -> token_ptr = {
+        if ctx.current() != '|' { return nullptr; }
+
+        if !ctx.has_token() { return ctx.error("Alternative with no content."); }
+        ctx.next_alternative();
+        return shared.new<alternative_token>();
+    }
+
+    generate_code: (override this, inout _: generation_context) = {
+        // No code gen here. alternative_token_gen is created in the parse_context
+    }
+}
+
+alternative_token_gen: @polymorphic_base type = {
+    this: regex_token;
+
+
+    alternatives: token_vec;
+
+    operator=: (out this, a: token_vec) = {
+        regex_token = gen_string(a);
+        alternatives = a;
+    }
+
+    generate_code: (override this, inout ctx: generation_context) = {
+        functions: std::string = "";
+
+        i: int = 0;
+        while i < alternatives.ssize() next i += 1 {
+            functions += ", " + ctx.generate_func(alternatives[i]);
+            functions += ", " + ctx.generate_reset(alternatives[i]*.get_groups());
+        }
+
+        next_name := ctx.next_func_name();
+
+        ctx.add_statefull(next_name, "cpp2::regex::alternative_token_matcher<char>::match((ctx.match_parameters())$, other, (next_name)$ (functions)$)");
+    }
+
+    get_groups: (override this) -> std::vector<int> = {
+        r: std::vector<int> = ();
+
+        for alternatives do (cur) {
+            t := cur*.get_groups();
+            _ = r.insert(r.end(), t.begin(), t.end());
+        }
+
+        return r;
+    }
+
+    gen_string: (a: token_vec) -> std::string = {
+        r: std::string = "";
+        sep: std::string = "";
+
+        for a do (cur) {
+            r += sep + cur*.to_string();
+            sep = "|";
+        }
+
+        return r;
+    }
+}
+
+alternative_token_matcher: <CharT> type = {
+
+    match: (cur, inout ctx, modifiers, end_func, tail, functions ...) -> _ = {
+        return match_first(cur, ctx, modifiers, end_func, tail, functions...);
+    }
+    private match_first: <Other ...> (cur, inout ctx, modifiers, end_func, tail, cur_func, cur_reset, other ...: Other) -> _ = {
+        inner_call := :(tail_cur, inout tail_ctx, tail_modifiers) -> _ == {
+            return (tail)$(tail_cur, tail_ctx, tail_modifiers, (end_func)$);
+        };
+        r := cur_func(cur, ctx, modifiers, inner_call);
+        if r.matched {
+            return r;
+        } else {
+            cur_reset(ctx);
+
+            if constexpr 0 != sizeof...(Other) {
+                return match_first(cur, ctx, modifiers, end_func, tail, other...);
+            } else {
+                return ctx.fail();
+            }
+        }
+    }
 }
 
 char_token: @polymorphic_base type = {
@@ -1040,8 +1158,8 @@ range_token: @polymorphic_base type = {
         inner_name := ctx.generate_func(inner_token);
         reset_name := ctx.generate_reset(inner_token*.get_groups());
 
-        next_name := ctx.gen_func_name();
-        ctx.add_statefull(next_name, "cpp2::regex::range_token_matcher<char, (min_count)$, (max_count)$, (kind)$>::match((ctx.match_parameters())$, (inner_name)$(), (reset_name)$(), other, (next_name)$())");
+        next_name := ctx.next_func_name();
+        ctx.add_statefull(next_name, "cpp2::regex::range_token_matcher<char, (min_count)$, (max_count)$, (kind)$>::match((ctx.match_parameters())$, (inner_name)$, (reset_name)$, other, (next_name)$)");
     }
 
     get_groups: (override this) -> std::vector<int> = { return (); } // TODO: Implement
@@ -2815,7 +2933,7 @@ regex_parser: <Error_out> type = {
         source += gen_ctx.run(parse_ctx.get_tokens());
         source += "  entry: (cur, inout ctx, modifiers) -> _ = {\n";
         source += "    ctx.set_group_start(0, cur);\n";
-        source += "    r := (gen_ctx.get_entry_func())$()(cur, ctx, modifiers, cpp2::regex::true_end_func());\n";
+        source += "    r := (gen_ctx.get_entry_func())$(cur, ctx, modifiers, cpp2::regex::true_end_func());\n";
         source += "    if r.matched { ctx.set_group_end(0, r.pos); }\n";
         source += "    return r;\n";
         source += "  }\n";
@@ -2825,6 +2943,7 @@ regex_parser: <Error_out> type = {
         source += create_named_group_lookup();
         source += "}\n";
 
+        _ = parse_ctx;
 
         std::cout << source << std::endl;
 
