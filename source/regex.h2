@@ -434,6 +434,40 @@ parse_context_group_state: @struct type = {
     empty: (this) -> bool = cur_match_list.empty();
 }
 
+// State for the branch reset. Takes care of the group numbering. See '(|<pattern>)'.
+parse_context_branch_reset_state: @struct type = {
+    is_active : bool = false;
+    cur_group : int  = 1; // Global capture group.
+    max_group : int  = 1;
+    from      : int  = 1;
+
+    next: (inout this) -> int = {
+        g := cur_group;
+        cur_group += 1;
+        max_group = max(max_group, cur_group);
+
+        return g;
+    }
+
+    set_next: (inout this, g: int) = {
+        cur_group = g;
+        max_group = max(max_group, g);
+    }
+
+    next_alternative: (inout this) = {
+        if is_active {
+            cur_group = from;
+        }
+    }
+
+    set_active_reset: (inout this, restart: int) = {
+        is_active = true;
+        cur_group = restart;
+        from      = restart;
+        max_group = restart;
+    }
+}
+
 parse_context: type = {
     regex: std::string_view;
 
@@ -441,15 +475,9 @@ parse_context: type = {
 
     public error_text: std::string = "";
 
-    public group_count: int = 1; // Root group.
-
     cur_group_state:        parse_context_group_state = ();
-
-    next_group: (inout this) -> int = {
-        id := group_count;
-        group_count += 1;
-        return id;
-    }
+    cur_branch_reset_state: parse_context_branch_reset_state = ();
+    named_groups :          std::map<std::string, int> = ();
 
     operator=:(out this, r: std::string_view) = {
         regex = r;
@@ -470,9 +498,27 @@ parse_context: type = {
         return inner;
     }
 
+    // Branch reset management functions
+    //
+
+    branch_reset_new_state: (inout this) -> parse_context_branch_reset_state = {
+        old_state: parse_context_branch_reset_state = ();
+        std::swap(old_state, cur_branch_reset_state);
+
+        cur_branch_reset_state.set_active_reset(old_state.cur_group);
+        return old_state;
+    }
+
+    branch_reset_restore_state: (inout this, old_state: parse_context_branch_reset_state) = {
+        max_group := cur_branch_reset_state.max_group;
+        cur_branch_reset_state = old_state;
+        cur_branch_reset_state.set_next(max_group);
+    }
+
+
     next_alternative: (inout this) = {
         cur_group_state.next_alternative();
-        //cur_branch_reset_state.next_alternative(); // TODO:
+        cur_branch_reset_state.next_alternative();
     }
 
     add_token: (inout this, token: token_ptr) = {
@@ -495,6 +541,25 @@ parse_context: type = {
 
     get_tokens: (inout this) -> token_ptr = {
         return cur_group_state.get_tokens();
+    }
+
+    // Group management
+    get_cur_group: (this) -> int = {
+        return cur_branch_reset_state.cur_group;
+    }
+
+    next_group: (inout this) -> int = {
+        return cur_branch_reset_state.next();
+    }
+
+    get_named_group: (this, name: std::string) -> int = {
+        iter := named_groups.find(name);
+        if iter == named_groups.end() {
+             return -1;
+        }
+        else {
+            return iter*.second;
+        }
     }
 
     current: (this) -> char = { return regex[pos]; }
@@ -580,6 +645,38 @@ parse_context: type = {
     grab_until: (inout this, in e: char, out r: std::string)               grab_until_impl(std::string(1, e), out r, false);
     grab_until_one_of: (inout this, in e: std::string, out r: std::string) grab_until_impl(e, out r, true);
 
+    grab_n: (inout this, in n: int, out r: std::string) -> bool = {
+        if pos + n <= regex.size() {
+            r = regex.substr(pos, n);
+            pos += n - 1;
+            return true;
+        }
+        else {
+            r = "";
+            return false;
+        }
+    }
+
+    grab_number: (inout this) -> std::string = {
+        start := pos;
+        start_search := pos;
+        if regex[start_search] == '-' {
+            start_search += 1;
+        }
+        end := regex.find_first_not_of("1234567890", start_search);
+
+        r : std::string;
+        if end != std::string::npos {
+            r = regex.substr(start, end - start);
+            pos = end - 1;
+        }
+        else {
+            r = regex.substr(start);
+            pos = regex.size() - 1;
+        }
+        return r;
+    }
+
     private peek_impl: (in this, in_class: bool) -> char = {
         next_pos := get_next_position(in_class, false);
         if next_pos < regex.size() {
@@ -603,6 +700,7 @@ parse_context: type = {
 
             if !cur_token && valid() { cur_token = alternative_token::parse(this); }
             if !cur_token && valid() { cur_token = any_token::parse(this); }
+            if !cur_token && valid() { cur_token = group_ref_token::parse(this); }
             if !cur_token && valid() { cur_token = group_token::parse(this); }
             if !cur_token && valid() { cur_token = range_token::parse(this); }
             if !cur_token && valid() { cur_token = special_range_token::parse(this); }
@@ -1001,6 +1099,144 @@ char_token_matcher: <CharT, C: CharT, L: CharT, U: CharT> (inout cur, inout ctx,
         else {
             return false;
         }
+    }
+}
+
+// Regex syntax: \<number>  Example: \1
+//               \g{name_or_number}
+//               \k{name_or_number}
+//               \k<name_or_number>
+//               \k'name_or_number'
+//
+group_ref_token: @polymorphic_base type = {
+    this: regex_token_base = ();
+
+    id: int;
+
+    operator=:(out this, id_: int, str: std::string) = {
+        regex_token_base = str;
+        id = id_;
+    }
+
+    parse: (inout ctx: parse_context) -> token_ptr = {
+        if ctx.current() != '\\' { return nullptr; }
+
+        str : std::string = "\\\\";
+        group : std::string = "";
+
+        if '0' <= ctx.peek() <= '9' {
+            _ = ctx.next(); // Skip escape
+            group = ctx.grab_number();
+            if group.ssize() >= 3 {
+                // Octal syntax (\000) not a group ref matcher.
+                number := 0;
+                if !string_to_int(group, number, 8) { return ctx.error("Could not convert octal to int."); }
+
+                number_as_char : char = unsafe_narrow<char>(number);
+
+                token := shared.new<char_token>(number_as_char);
+                token*.set_string("\\(int_to_string(number_as_char as int, 8))$");
+
+                return token;
+            }
+
+            str += group;
+            // Regular group ref
+        }
+        else if 'g' == ctx.peek() {
+            _ = ctx.next(); // Skip escape
+            if !ctx.next() { return ctx.error("Group escape without a following char."); } // Skip g
+
+            str += "g";
+
+            if ctx.current() == '{' {
+                str += "{";
+                if !(ctx.next() && ctx.grab_until('}', out group)) { return ctx.error("No ending bracket."); }
+
+                str += group + "}";
+            }
+            else {
+                group = ctx.grab_number();
+                str += group;
+            }
+        }
+        else if 'k' == ctx.peek() {
+            _ = ctx.next(); // Skip escape
+            if !ctx.next() { return ctx.error("Group escape without a following char."); } // Skip k
+
+            str += "k";
+
+            term_char := '\0';
+            if ctx.current() == '{' { term_char = '}'; }
+            else if ctx.current() == '<' { term_char = '>'; }
+            else if ctx.current() == '\'' { term_char = '\''; }
+            else {
+                return ctx.error("Group escape has wrong operator.");
+            }
+
+            str += ctx.current();
+
+            if !(ctx.next() && ctx.grab_until(term_char, out group)) { return ctx.error("No ending bracket."); }
+
+            str += group + term_char;
+        }
+        else {
+            // No group ref matcher
+            return nullptr;
+        }
+
+        // Parse the group
+        group = trim_copy(group);
+        group_id : int = 0;
+        if string_to_int(group, group_id) {
+            if group_id < 0 {
+                group_id = ctx.get_cur_group() + group_id;
+
+                if group_id < 1 { // Negative and zero are no valid groups.
+                    return ctx.error("Relative group reference does not reference a valid group. (Would be (group_id)$.)");
+                }
+            }
+
+            if group_id >= ctx.get_cur_group() {
+                return ctx.error("Group reference is used before the group is declared.");
+            }
+        }
+        else {
+            // Named group
+            group_id = ctx.get_named_group(group);
+            if -1 == group_id { return ctx.error("Group names does not exist. (Name is: (group)$)");}
+        }
+
+        return shared.new<group_ref_token>(group_id, str);
+    }
+
+    generate_code: (override this, inout ctx: generation_context) = {
+        ctx.add_check("group_ref_token_matcher<char, (id)$>((ctx.match_parameters())$)");
+    }
+}
+
+group_ref_token_matcher: <CharT, group: int> (inout cur, inout ctx, modifiers) -> bool = {
+    g := ctx.get_group(group);
+
+    group_pos := g.start;
+    while group_pos != g.end && cur != ctx.end next (group_pos++, cur++) {
+        if modifiers.has_flag(expression_flags::case_insensitive) {
+            if safe_tolower(group_pos*) != safe_tolower(cur*) {
+                return false;
+            }
+        }
+        else {
+            if group_pos* != cur* {
+                return false;
+            }
+        }
+    }
+
+    if group_pos == g.end {
+        return true;
+    }
+    else {
+        return false;
     }
 }
 
@@ -1527,39 +1763,6 @@ special_group_end_logic: <CharT> type = {
     match: <Other> (cur, inout ctx, modifiers, end_func, _ : Other) Other::match(cur, ctx, modifiers, end_func);
     reset_ranges: (_) = {}
     to_string:    ()  bstring<CharT>(")");
-}
-
-// Regex syntax: \<number>  Example: \1
-//
-group_ref_matcher_logic: <CharT, group: int, symbol: fixed_string> type = {
-    match: <Other> (cur, inout ctx, modifiers, end_func, _ : Other) -> _ = {
-        g := ctx.get_group(group);
-
-        pos := cur;
-        group_pos := g.start;
-        while group_pos != g.end && pos != ctx.end next (group_pos++, pos++) {
-            if modifiers.has_flag(expression_flags::case_insensitive) {
-                if safe_tolower(group_pos*) != safe_tolower(pos*) {
-                    return ctx.fail();
-                }
-            }
-            else {
-                if group_pos* != pos* {
-                    return ctx.fail();
-                }
-            }
-        }
-
-        if group_pos == g.end {
-            return Other::match(pos, ctx, modifiers, end_func);
-        }
-        else {
-            return ctx.fail();
-        }
-
-    }
-    reset_ranges: (_) = {}
-    to_string:    ()  symbol.str();
 }
 
 // Regex syntax: $  Example: aa$
@@ -2124,63 +2327,6 @@ regex_parser: <Error_out> type = {
     peek: (in this)          peek_impl(false);
     peek_in_class: (in this) peek_impl(true);
 
-    private grab_until_impl: (inout this, in e: std::string, out r: std::string, any: bool) -> bool = {
-        start := pos;
-        end:= pos;
-        if any {
-            end = regex.find_first_of(e, pos);
-        }
-        else {
-            end = regex.find(e, pos);
-        }
-
-        if end != std::string_view::npos {
-            r = regex.substr(start, end - pos);
-            pos = end;
-            return true;
-        }
-        else {
-            r = "";
-            return false;
-        }
-    }
-
-    grab_until: (inout this, in e: std::string, out r: std::string)        grab_until_impl(e, out r, false);
-    grab_until: (inout this, in e: char, out r: std::string)               grab_until_impl(std::string(1, e), out r, false);
-    grab_until_one_of: (inout this, in e: std::string, out r: std::string) grab_until_impl(e, out r, true);
-
-    grab_n: (inout this, in n: int, out r: std::string) -> bool = {
-        if pos + n <= regex.size() {
-            r = regex.substr(pos, n);
-            pos += n - 1;
-            return true;
-        }
-        else {
-            r = "";
-            return false;
-        }
-    }
-
-    grab_number: (inout this) -> std::string = {
-        start := pos;
-        start_search := pos;
-        if regex[start_search] == '-' {
-            start_search += 1;
-        }
-        end := regex.find_first_not_of("1234567890", start_search);
-
-        r : std::string;
-        if end != std::string::npos {
-            r = regex.substr(start, end - start);
-            pos = end - 1;
-        }
-        else {
-            r = regex.substr(start);
-            pos = regex.size() - 1;
-        }
-        return r;
-    }
-
     // Misc functions
     //
     error:(inout this, message: std::string) = {
@@ -2497,56 +2643,10 @@ regex_parser: <Error_out> type = {
     is_escape: (inout this, c: char) -> bool = {
         if c != '\\' { return false; }
 
-        start := pos; // Keep start for group matchers.
         c_next := '\0';
         if !next(out c_next) { error("Escape without a following character."); return false; }
 
-        add_group_matcher:= :(name: std::string) -> bool = {
-
-            name_trim := trim_copy(name);
-            group_id : int = 0;
-            if string_to_int(name_trim, group_id) {
-                if group_id < 0 {
-                    group_id = cur_branch_reset_state.cur_group + group_id;
-
-                    if group_id < 1 { // Negative and zero are no valid groups.
-                        error("Relative group reference does not reference a valid group. (Would be (group_id)$.)");
-                        return false;
-                    }
-                }
-
-                if group_id >= cur_branch_reset_state.cur_group { error("Group reference is used before the group is declared."); return false; }
-            }
-            else {
-                // Named group
-                iter := named_groups.find(name_trim);
-                if iter == named_groups.end() { error("Group names does not exist. (Name is: (name)$)"); return false; }
-
-                group_id = iter*.second;
-            }
-            cur_group_state.add(create_matcher("group_ref_matcher_logic", "(group_id)$, \"\\(regex.substr(start$, pos&$* - start$ + 1))$\""));
-
-            return true;
-        };
-
-        if '0' <= c_next <= '9' {
-            group := grab_number();
-            if group.ssize() >= 3 {
-                // \000 syntax
-                number := 0;
-                if !string_to_int(group, number, 8) { error("Could not convert octal to int."); return false; }
-
-                number_as_char : char = unsafe_narrow<char>(number);
-
-                syntax: std::string = "\\(int_to_string(number_as_char as int, 8))$";
-                char_matcher := create_matcher("char_matcher_logic", "'(number_as_char)$', '(safe_tolower(number_as_char))$', '(safe_toupper(number_as_char))$'");
-                cur_group_state.add(create_matcher("special_syntax_wrapper", "\"(syntax)$\", (char_matcher)$"));
-            }
-            else {
-                if !add_group_matcher(group) { return false; }
-            }
-        }
-        else if std::string::npos != std::string("tnrfae^.[]$()*{}?+|").find(c_next) {
+        if std::string::npos != std::string("tnrfae^.[]$()*{}?+|").find(c_next) {
             if c_next == '$' {
                 // TODO: Provide proper escape for cppfront capture
                 cur_group_state.add(create_matcher("line_end_matcher_logic", "true, true"));
@@ -2559,33 +2659,6 @@ regex_parser: <Error_out> type = {
         else if '\\' == c_next {
             inner := create_matcher("char_matcher_logic", "'\\\\', '\\\\', '\\\\'");
             cur_group_state.add(create_matcher("special_syntax_wrapper", "\"\\\\\\\\\", (inner)$"));
-        }
-        else if 'g' == c_next {
-            if !next(out c_next) {error("Group escape without a following char."); return false; }
-
-            group : std::string = "";
-            if c_next == '{' {
-                if !(next(out c_next) && grab_until('}', out group)) { error("No ending bracket."); return false; }
-            }
-            else {
-                group = grab_number();
-            }
-            if !add_group_matcher(group) { return false; }
-        }
-        else if 'k' == c_next {
-            if !next(out c_next) {error("Group escape without a following char."); return false; }
-
-            term_char := '\0';
-            if c_next == '{' { term_char = '}'; }
-            else if c_next == '<' { term_char = '>'; }
-            else if c_next == '\'' { term_char = '\''; }
-            else {
-                error("Group escape has wrong operator."); return false;
-            }
-
-            group : std::string = "";
-            if !(next(out c_next) && grab_until(term_char, out group)) { error("No ending bracket."); return false; }
-            if !add_group_matcher(group) { return false; }
         }
         else if 'K' == c_next {
             cur_group_state.add(create_matcher("global_group_reset", ""));
@@ -2805,8 +2878,6 @@ regex_parser: <Error_out> type = {
         while c != '\n' next _ = next(out c) {
             if c == term { return; }
 
-            if !has_error && is_alternative(c) { continue; }
-            if !has_error && is_any(c) { continue; }
             if !has_error && is_class(c) { continue; }
             if !has_error && is_escape(c) { continue; }
             if !has_error && is_anchor(c) { continue; }
@@ -2851,7 +2922,7 @@ regex_parser: <Error_out> type = {
         }
 
         source += "{\n";
-        source += "  group_count: type == std::integral_constant<int, (parse_ctx.group_count)$>;  //TODO: Use static constexpr when alpha limitation of nested types declarations is lifted.\n";
+        source += "  group_count: type == std::integral_constant<int, (parse_ctx.get_cur_group())$>;  //TODO: Use static constexpr when alpha limitation of nested types declarations is lifted.\n";
         source += "  initial_flags: type == std::integral_constant<int, (mod)$>;  //TODO: Use static constexpr when alpha limitation of nested types declarations is lifted.\n";
 
         gen_ctx: generation_context = ();
