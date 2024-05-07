@@ -602,6 +602,7 @@ parse_context: type = {
             cur_token = nullptr;
 
             if !cur_token && valid() { cur_token = alternative_token::parse(this); }
+            if !cur_token && valid() { cur_token = any_token::parse(this); }
             if !cur_token && valid() { cur_token = group_token::parse(this); }
             if !cur_token && valid() { cur_token = range_token::parse(this); }
             if !cur_token && valid() { cur_token = special_range_token::parse(this); }
@@ -929,6 +930,35 @@ alternative_token_matcher: <CharT> type = {
                 return ctx.fail();
             }
         }
+    }
+}
+
+//  Regex syntax: .
+//
+any_token: @polymorphic_base type = {
+    this: regex_token_base = (".");
+
+    operator=:(out this) = {} // TODO: Base class constructor is ignored.
+
+    parse: (inout ctx: parse_context) -> token_ptr = {
+        if '.' != ctx.current() { return nullptr;}
+
+        return shared.new<any_token>();
+    }
+
+    generate_code: (override this, inout ctx: generation_context) = {
+        ctx.add_check("any_token_matcher<char>((ctx.match_parameters())$)");
+    }
+}
+
+any_token_matcher: <CharT> (inout cur, inout ctx, modifiers) -> bool = {
+    if cur != ctx.end // Any char except the end
+        && (modifiers.has_flag(expression_flags::single_line) || cur* != '\n') { // Do not match new lines in multi line mode.
+        cur += 1;
+        return true;
+    }
+    else {
+        return false;
     }
 }
 
@@ -1332,111 +1362,6 @@ special_range_token: @polymorphic_base type = {
 //-----------------------------------------------------------------------
 //
 
-
-//  Regex syntax: |  Example: ab|ba
-//
-//  Non greedy implementation. First alternative that matches is chosen. 
-//
-alternative_matcher_logic: <CharT, alternative: size_t, List ...> type = {
-
-    match: <Tail> (cur, inout ctx, modifiers, end_func, tail: Tail) -> _ = {
-        if constexpr greedy_alternative {
-            max_overall_length: = 0;
-            max_current_length: = 0;
-            r := match_greedy<Tail, List...>(cur, max_overall_length, max_current_length, ctx, modifiers, end_func, tail);
-            _ = max_overall_length;
-            _ = max_current_length;
-            return r;
-        } else {
-            return match_first<List...>(cur, ctx, modifiers, end_func, tail);
-        }
-    }
-    reset_ranges: (inout ctx)     = (List::reset_ranges(ctx) , ...);
-    to_string: ()                   (bstring<CharT>() + ... + ("|" + List::to_string())).substr(1); // substr: Remove first '|'.
-
-    private match_first: <First, Next ...> (cur, inout ctx, modifiers, end_func, tail) -> _ = {
-        r := First::match(cur, ctx, modifiers, end_func, tail);
-        if r.matched {
-            return r;
-        } else {
-            First::reset_ranges(ctx);
-
-            if constexpr 0 != sizeof...(Next) {
-                return match_first<Next...>(cur, ctx, modifiers, end_func, tail);
-            } else {
-                return ctx.fail();
-            }
-        }
-    }
-
-    private match_greedy: <Tail, First, Next...> (cur, inout max_overall_length, inout max_current_length, inout ctx, modifiers, end_func, _: Tail) -> _ = {
-        r := First::match(cur, ctx, modifiers, end_func, Tail::prepend(extract_position_helper<CharT, alternative>()));
-
-        // Get the end position of First.
-        end_overall_pos := cur;
-        end_current_pos := cur;
-        if r.matched {
-            end_overall_pos = r.pos;
-            end_current_pos = ctx.get_alternative_pos(alternative);
-        }
-
-        // Compute the new max length and our max length.
-        my_overall_length := unsafe_narrow<int>(std::distance(cur, end_overall_pos));
-        max_overall_length = std::max(max_overall_length, my_overall_length);
-
-
-        // Check if someone other has something larker
-        o := ctx.fail();
-        if constexpr 0 != sizeof...(Next) {
-            o = match_greedy<Tail, Next...>(cur, max_overall_length, max_current_length, ctx, modifiers, end_func, Tail());
-        }
-
-        my_current_length := unsafe_narrow<int>(std::distance(cur, end_current_pos));
-        if max_overall_length == my_overall_length {
-            max_current_length = std::max(max_current_length, my_current_length);
-        }
-
-
-        if r.matched && my_overall_length == max_overall_length {
-            // We are the longest. Check now if we are also the longest in this alternative.
-            if my_current_length == max_current_length {
-                // Yes we are. Reset all groups by matching again.
-                (Next::reset_ranges(ctx) , ...); // Reset all other ranges.
-                return First::match(cur, ctx, modifiers, end_func, Tail::prepend(extract_position_helper<CharT, alternative>()));
-            }
-            else {
-                // We are not, so there was an other match.
-                First::reset_ranges(ctx);
-
-                return o;
-            }
-        } else {
-            // We are not the largest one.
-            First::reset_ranges(ctx);
-
-            return o;
-        }
-    }
-}
-
-//  Regex syntax: .
-//
-any_matcher_logic: <CharT> type =
-{
-    match: <Other> (cur, inout ctx, modifiers, end_func, _ : Other) -> _ = {
-        if cur != ctx.end &&
-          (modifiers.has_flag(expression_flags::single_line) ||
-           cur* != '\n') {
-            return Other::match(cur + 1, ctx, modifiers, end_func);
-        }
-        else {
-            return ctx.fail();
-        }
-    }
-
-    reset_ranges: (_) = {}
-    to_string:    ()          bstring<CharT>(1, '.');
-}
 
 // Regex syntax: none Example: -
 //
