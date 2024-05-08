@@ -503,6 +503,10 @@ parse_context: type = {
         return (); // TODO:
     }
 
+    set_modifiers: (inout this, mod: regex_parser_modifier_state) = {
+        _ = mod;
+    }
+
     // Branch reset management functions
     //
 
@@ -561,6 +565,12 @@ parse_context: type = {
 
     next_group: (inout this) -> int = {
         return cur_branch_reset_state.next();
+    }
+
+    set_named_group: (inout this, name: std::string, id: int) = {
+        if !named_groups.contains(name) { // Redefinition of group name is not an error. The left most one is retained.
+            named_groups[name] = id;
+        }
     }
 
     get_named_group: (this, name: std::string) -> int = {
@@ -730,6 +740,71 @@ parse_context: type = {
 
     peek: (in this)          peek_impl(false);
     peek_in_class: (in this) peek_impl(true);
+
+    parser_group_modifiers: (inout this, change_str: std::string, out modifier_change: std::string,
+                      inout parser_modifiers: regex_parser_modifier_state) -> bool = {
+        is_negative := false;
+        is_reset    := false;
+
+        add    := 0;
+        remove := 0;
+
+        apply := :(flag: int) = {
+            if is_negative&$* {
+                remove&$* |= flag;
+            }
+            else {
+                add&$* |= flag;
+            }
+        };
+
+        iter := change_str.begin();
+        while iter != change_str.end() next (iter++) {
+            cur := iter*;
+            if cur == '^' {
+                is_reset = true;
+            }
+            else if cur == '-' {
+                if is_reset { _= error("No negative modifier allowed."); return false; }
+                is_negative = true;
+            }
+            else if cur == 'i' { apply(expression_flags::case_insensitive); }
+            else if cur == 'm' { apply(expression_flags::multiple_lines); }
+            else if cur == 's' { apply(expression_flags::single_line); }
+            else if cur == 'n' {
+                apply(expression_flags::no_group_captures);
+                parser_modifiers.group_captures_have_numbers = is_negative;
+            }
+            else if cur == 'x' {
+                if (iter + 1) == change_str.end() || (iter + 1)* != 'x' {
+                    // x modifier
+                    apply(expression_flags::perl_code_syntax);
+                    parser_modifiers.perl_code_syntax = !is_negative;
+
+                    // Just x unsets xx and remove x also removes xx
+                    remove |= expression_flags::perl_code_syntax_in_classes;
+                    parser_modifiers.perl_code_syntax_in_classes = false;
+                }
+                else { // xx modifier
+                    // xx also sets or unsets x
+                    apply(expression_flags::perl_code_syntax);
+                    parser_modifiers.perl_code_syntax = !is_negative;
+
+                    apply(expression_flags::perl_code_syntax_in_classes);
+                    parser_modifiers.perl_code_syntax_in_classes = !is_negative;
+
+                    iter++; // Skip the second x
+                }
+            }
+            else {
+                _= error("Unknown modifier: (cur)$"); return false;
+            }
+        }
+
+        modifier_change = "::cpp2::regex::match_modifiers_state_change<true, (is_reset)$, (add)$, (remove)$, \"(change_str)$\">";
+
+        return true;
+    }
 
     parse_until:(inout this, term: char) -> bool = {
         cur_token: token_ptr = ();
@@ -992,6 +1067,19 @@ regex_token_check: @polymorphic_base type = {
 
     generate_code: (override this, inout ctx: generation_context) = {
         ctx.add_check(check + "(" + ctx.match_parameters() + ")");
+    }
+}
+
+
+regex_token_empty: @polymorphic_base type = {
+    this: regex_token_base;
+
+    operator=:(out this, str: std::string) = {
+        regex_token_base = (str);
+    }
+
+    generate_code: (override this, inout _: generation_context) = {
+        // Nothing.
     }
 }
 
@@ -1486,29 +1574,156 @@ group_token: @polymorphic_base type = {
 
     number: int      = -1;
     inner: token_ptr = nullptr;
+    mod: std::string = "::cpp2::regex::match_modifiers_no_change";
 
     parse: (inout ctx: parse_context) -> token_ptr = {
         if ctx.current() != '(' { return nullptr; }
 
-        if !ctx.next() { return ctx.error("No closing bracket for group."); }
+        has_id :=  ctx.get_modifiers().group_captures_have_numbers;
+        has_pattern := true;
+        group_name : std::string = "";
+        group_name_brackets := true;
+        modifier_change: std::string = "::cpp2::regex::match_modifiers_no_change";
+        modifiers : std::string = "";
 
-        r := shared.new<group_token>();
+        modifiers_change_to : =  ctx.get_modifiers();
 
+        // Skip the '('
+        if !ctx.next() { return ctx.error("Group without closing bracket."); }
+        if ctx.current() == '?' {
+            // Special group
+            if !ctx.next_no_skip() { return ctx.error("Missing character after group opening.");  }
 
-        r*.number = ctx.next_group();
+            if ctx.current() == '<' || ctx.current() == '\'' {
+                // named group
+                end_char := ctx.current();
+                if end_char == '<' {
+                    end_char = '>';
+                } else {
+                    group_name_brackets = false;
+                }
+                has_id = true; // Force id for named groups.
+                if !ctx.next() /* skip '<' */ { return ctx.error("Missing ending bracket for named group.");  }
+                if !ctx.grab_until(end_char, out group_name) { return ctx.error("Missing ending bracket for named group.");  }
+                if !ctx.next() { return ctx.error("Group without closing bracket."); }
+            }
+            else if ctx.current() == '#' {
+                // Comment
+                comment_str : std::string = "";
+                if !ctx.grab_until(")", out comment_str) { return ctx.error("Group without closing bracket."); }
+                // Do not add comment. Has problems with ranges.
 
-        old_state: _ = ctx.start_group();
-        if !ctx.parse_until(')') { return nullptr; }
-        r*.inner = ctx.end_group(old_state);
-        r*.set_string("((r*.inner*.to_string())$)");
+                return shared.new<regex_token_empty>("(?#(comment_str)$)");
+            }
+            else if ctx.current() == '|' {
+                // Branch reset group
 
-        return r;
+                if !ctx.next() /* skip '|' */ { return ctx.error("Missing ending bracket for named group.");  }
+
+                old_parser_state := ctx.start_group();
+                old_branch_state  := ctx.branch_reset_new_state();
+                if !ctx.parse_until(')') { return nullptr; }
+                ctx.branch_reset_restore_state(old_branch_state);
+                inner_ := ctx.end_group(old_parser_state);
+
+                list: token_vec = (shared.new<regex_token_empty>("(?|"), inner_, shared.new<regex_token_empty>(")"));
+                return shared.new<regex_token_list>(list);
+            }
+            else if ctx.current() == '=' || ctx.current() == '!' {
+                _ = ctx.next(); // Skip '!'
+                // Positive or negative lookahead
+                // TODO: return parse_lookahead("?(ctx.current())$", ctx.current() == '=');
+                return nullptr;
+            }
+            else {
+                // Simple modifier
+                has_id = false;
+                if !ctx.grab_until_one_of("):", out modifiers) { return ctx.error("Missing ending bracket for group."); }
+                if !ctx.parser_group_modifiers(modifiers, out modifier_change, modifiers_change_to) {
+                     return nullptr;
+                }
+
+                if ')' == ctx.current() {
+                    has_pattern = false;
+                }
+                else {
+                    if !ctx.next() /* skip ':' */ { return ctx.error("Missing ending bracket for group.");  }
+                }
+            }
+        }
+        else if ctx.current() == '*' {
+            // named pattern
+            _ = ctx.next(); // Skip *.
+            name: std::string = "";
+            if !ctx.grab_until(':', out name) { return ctx.error("Missing colon for named pattern.");  }
+
+            if name == "pla" || name == "positive_lookahead" {
+                // TODO: return parse_lookahead("*(name)$:", true);
+                return nullptr;
+            }
+            else if name == "nla" || name == "negative_lookahead" {
+                // TODO: return parse_lookahead("*(name)$:", false);
+                return nullptr;
+            }
+            else {
+                return ctx.error("Unknown named group pattern: '(name)$'");
+            }
+        }
+
+        if has_pattern {
+            // regular group
+
+            r := shared.new<group_token>();
+            if has_id {
+                r*.number = ctx.next_group();
+
+                if 0 != group_name.size() {
+                    ctx.set_named_group(group_name, r*.number);
+                }
+            }
+
+            old_state := ctx.start_group();
+            ctx.set_modifiers(modifiers_change_to);
+            if !ctx.parse_until(')') { return nullptr; }
+            r*.inner = ctx.end_group(old_state);
+            r*.set_string(gen_string(group_name, group_name_brackets, modifiers, r*.inner));
+            r*.mod = modifier_change;
+
+            return r;
+        }
+        else {
+            // Only a modifier
+            ctx.set_modifiers(modifiers_change_to);
+
+            return shared.new<modifier_token>(modifier_change);
+        }
+    }
+
+    gen_string: (name: std::string, name_brackets: bool, modifiers: std::string, inner_: token_ptr) -> std::string = {
+        start : std::string = "(";
+        if 0 != name.size() {
+            if name_brackets {
+                start += "?<(name.data())$>";
+            }
+            else {
+                start += "?'(name.data())$'";
+            }
+        }
+        else if ! modifiers.empty() {
+            start += "?" + modifiers + ":";
+        }
+
+        return start + inner_*.to_string() + ")";
     }
 
     generate_code: (override this, inout ctx: generation_context) = {
         if -1 != number {
             ctx.add("ctx.set_group_start((number)$, r.pos);");
         }
+
+        next_name := ctx.next_func_name();
+        ctx.add_statefull(next_name, "cpp2::regex::apply_modifiers_matcher<char, true, (mod)$>::match((ctx.match_parameters())$, other, (next_name)$)");
+
         inner*.generate_code(ctx);
         if -1 != number {
             ctx.add("ctx.set_group_end((number)$, r.pos);");
@@ -1520,15 +1735,52 @@ group_token: @polymorphic_base type = {
             ctx.add("});");
             ctx.add("_ = (tmp_name)$;"); // TODO: Guard object problem.
         }
+
+        next_name = ctx.next_func_name();
+        ctx.add_statefull(next_name, "cpp2::regex::pop_modifiers_matcher<char>::match((ctx.match_parameters())$, other, (next_name)$)");
     }
 
     get_groups: (override this) -> std::vector<int> = {
-        if -1 == number {
-            return ();
+        r := inner*.get_groups();
+        if -1 != number {
+            r.push_back(number);
+        }
+        return r;
+    }
+}
+
+modifier_token: @polymorphic_base type = {
+    this: regex_token_base;
+
+    mod: std::string;
+
+    operator=: (out this, mod_: std::string) = {
+        regex_token_base = ("(?(mod_)$)");
+        mod = mod_;
+    }
+
+    generate_code: (override this, inout ctx: generation_context) = {
+        next_name := ctx.next_func_name();
+        ctx.add_statefull(next_name, "cpp2::regex::apply_modifiers_matcher<char, false, (mod)$>::match((ctx.match_parameters())$, other, (next_name)$)");
+    }
+}
+
+apply_modifiers_matcher: <CharT, push: bool, ModifierChange> type = {
+
+    match: <Iter, Modifiers> (cur: Iter, inout ctx, _: Modifiers, end_func, tail) -> _ = {
+        if constexpr push {
+            return tail(cur, ctx, Modifiers::push(ModifierChange()), end_func);
         }
         else {
-            return (number);
+            return tail(cur, ctx, Modifiers::replace(ModifierChange()), end_func);
         }
+    }
+}
+
+pop_modifiers_matcher: <CharT> type = {
+
+    match: <Iter, Modifiers> (cur: Iter, inout ctx, _: Modifiers, end_func, tail) -> _ = {
+        return tail(cur, ctx, Modifiers::pop(), end_func);
     }
 }
 
@@ -1971,75 +2223,6 @@ global_group_reset: <CharT> type = {
     to_string:    ()  bstring<CharT>("\\K");
 }
 
-// Regex syntax: (<inner>) Example: (.*)
-//
-group_matcher_start_logic: <CharT, group: int, ModifierChange, name: fixed_string, name_brackets: bool> type = {
-    match: <Other, Modifiers> (cur, inout ctx, _ : Modifiers, end_func, _ : Other) -> _ = {
-        if -1 != group {
-            ctx.set_group_start(group, cur);
-        }
-        return Other::match(cur, ctx, Modifiers::push(ModifierChange()), end_func);
-    }
-
-    reset_ranges: (inout ctx) = {
-        if -1 != group {
-            ctx.set_group_invalid(group);
-        }
-    }
-
-    to_string: () -> bstring<CharT> = {
-        if group != 0 {
-            if 0 != name.size() {
-                if name_brackets {
-                    return "(?<(name.data())$>";
-                }
-                else {
-                    return "(?'(name.data())$'";
-                }
-            }
-            else if ModifierChange::has_change {
-                return "(?(ModifierChange::to_string())$:";
-            }
-            else {
-                return "(";
-            }
-        }
-        else {
-            return "";
-        }
-    }
-}
-
-group_matcher_end_logic: <CharT, group: int> type = {
-    match: <Other, Modifier> (cur, inout ctx, _: Modifier, end_func, _ : Other) -> _ = {
-        if -1 != group {
-            ctx.set_group_end(group, cur);
-        }
-        r := Other::match(cur, ctx, Modifier::pop(), end_func);
-        if !r.matched && -1 != group {
-            ctx.set_group_invalid(group);
-        }
-        return r;
-    }
-
-    reset_ranges: (_) = {}
-
-    to_string: () -> bstring<CharT> = {
-        if group != 0 {
-            return ")";
-        }
-        else {
-            return "";
-        }
-    }
-}
-
-special_group_end_logic: <CharT> type = {
-    match: <Other> (cur, inout ctx, modifiers, end_func, _ : Other) Other::match(cur, ctx, modifiers, end_func);
-    reset_ranges: (_) = {}
-    to_string:    ()  bstring<CharT>(")");
-}
-
 // Regex syntax: (?=) or (?!) or (*pla), etc.  Example: (?=AA)
 //
 lookahead_matcher_logic: <CharT, positive: bool, name: fixed_string, Pattern> type =
@@ -2061,17 +2244,6 @@ lookahead_matcher_logic: <CharT, positive: bool, name: fixed_string, Pattern> ty
     }
     reset_ranges: (inout ctx) = { Pattern::reset_ranges(ctx); }
     to_string:    ()          "((name.data())$(Pattern::to_string())$)";
-}
-
-// Regex syntax: (?<modifiers>)  Example: (?i)
-//
-modifier_matcher_logic: <CharT, ModifierChange> type =
-{
-    match: <Other, Modifier> (cur, inout ctx, _: Modifier, end_func, _ : Other) -> _ = {
-        return Other::match(cur, ctx, Modifier::replace(ModifierChange()), end_func);
-    }
-    reset_ranges: (_) = {}
-    to_string:    ()  "(?(ModifierChange::to_string())$)";
 }
 
 // Named character classes
@@ -2673,71 +2845,6 @@ regex_parser: <Error_out> type = {
         return r;
     }
 
-    parser_group_modifiers: (inout this, change_str: std::string, out modifier_change: std::string,
-                      inout parser_modifiers: regex_parser_modifier_state) -> bool = {
-        is_negative := false;
-        is_reset    := false;
-
-        add    := 0;
-        remove := 0;
-
-        apply := :(flag: int) = {
-            if is_negative&$* {
-                remove&$* |= flag;
-            }
-            else {
-                add&$* |= flag;
-            }
-        };
-
-        iter := change_str.begin();
-        while iter != change_str.end() next (iter++) {
-            cur := iter*;
-            if cur == '^' {
-                is_reset = true;
-            }
-            else if cur == '-' {
-                if is_reset { error("No negative modifier allowed."); return false; }
-                is_negative = true;
-            }
-            else if cur == 'i' { apply(expression_flags::case_insensitive); }
-            else if cur == 'm' { apply(expression_flags::multiple_lines); }
-            else if cur == 's' { apply(expression_flags::single_line); }
-            else if cur == 'n' {
-                apply(expression_flags::no_group_captures);
-                parser_modifiers.group_captures_have_numbers = is_negative;
-            }
-            else if cur == 'x' {
-                if (iter + 1) == change_str.end() || (iter + 1)* != 'x' {
-                    // x modifier
-                    apply(expression_flags::perl_code_syntax);
-                    parser_modifiers.perl_code_syntax = !is_negative;
-
-                    // Just x unsets xx and remove x also removes xx
-                    remove |= expression_flags::perl_code_syntax_in_classes;
-                    parser_modifiers.perl_code_syntax_in_classes = false;
-                }
-                else { // xx modifier
-                    // xx also sets or unsets x
-                    apply(expression_flags::perl_code_syntax);
-                    parser_modifiers.perl_code_syntax = !is_negative;
-
-                    apply(expression_flags::perl_code_syntax_in_classes);
-                    parser_modifiers.perl_code_syntax_in_classes = !is_negative;
-
-                    iter++; // Skip the second x
-                }
-            }
-            else {
-                error("Unknown modifier: (cur)$"); return false;
-            }
-        }
-
-        modifier_change = "::cpp2::regex::match_modifiers_state_change<true, (is_reset)$, (add)$, (remove)$, \"(change_str)$\">";
-
-        return true;
-    }
-
     // Parsing functions
     //
 
@@ -2835,138 +2942,6 @@ regex_parser: <Error_out> type = {
         return true;
     }
 
-    is_group: (inout this, c: char) -> bool = {
-        if c != '(' { return false; }
-
-        has_id := cur_group_state.modifiers.group_captures_have_numbers;
-        has_pattern := true;
-        group_name : std::string = "";
-        group_name_brackets := true;
-        modifier_change: std::string = "::cpp2::regex::match_modifiers_no_change";
-
-        modifiers_change_to : = cur_group_state.modifiers;
-
-        c_next : char = '\0';
-        // Skip the '('
-        if !next(out c_next) { error("Group without closing bracket."); return false;}
-        if c_next == '?' {
-            // Special group
-            if !next_no_skip(out c_next) { error("Missing character after group opening."); return false; }
-
-            if c_next == '<' || c_next == '\'' {
-                // named group
-                end_char := c_next;
-                if end_char == '<' {
-                    end_char = '>';
-                } else {
-                    group_name_brackets = false;
-                }
-                has_id = true; // Force id for named groups.
-                if !next(out c_next) /* skip '<' */ { error("Missing ending bracket for named group."); return false; }
-                if !grab_until(end_char, out group_name) { error("Missing ending bracket for named group."); return false; }
-                if !next(out c_next) { error("Group without closing bracket."); return false;}
-            }
-            else if c_next == '#' {
-                // Comment
-                comment_str : std::string = "";
-                if !grab_until(")", out comment_str) { error("Group without closing bracket."); return false;}
-                // Do not add comment. Has problems with ranges.
-
-                return true;
-            }
-            else if c_next == '|' {
-                // Branch reset group
-
-                if !next(out c_next) /* skip '|' */ { error("Missing ending bracket for named group."); return false; }
-
-                old_parser_state: _ = group_new_state();
-                old_branch_state: _ = branch_reset_new_state();
-                parse_until(')');
-                inner:= create_matcher_from_state();
-                branch_reset_restore_state(old_branch_state);
-                group_restore_state(old_parser_state);
-
-                start_matcher := create_matcher("branch_reset_matcher_logic", "");
-                end_matcher := create_matcher("special_group_end_logic", "");
-
-                v: std::vector<std::string> = (start_matcher, inner, end_matcher);
-                cur_group_state.add(create_matcher_from_list(v));
-
-                return true;
-            }
-            else if c_next == '=' || c_next == '!' {
-                _ = skip(); // Skip '!'
-                // Positive or negative lookahead
-                return parse_lookahead("?(c_next)$", c_next == '=');
-            }
-            else {
-                // Simple modifier
-                has_id = false;
-                change_str : std::string = "";
-                if !grab_until_one_of("):", out change_str) { error("Missing ending bracket for group."); return false; }
-                if !parser_group_modifiers(change_str, out modifier_change, modifiers_change_to) {
-                     return false;
-                }
-
-                if ')' == current() {
-                    has_pattern = false;
-                }
-                else {
-                    if !next(out c_next) /* skip ':' */ { error("Missing ending bracket for group."); return false; }
-                }
-            }
-        }
-        else if c_next == '*' {
-            // named pattern
-            _ = skip(); // Skip *.
-            name: std::string = "";
-            if !grab_until(':', out name) { error("Missing colon for named pattern."); return false; }
-
-            if name == "pla" || name == "positive_lookahead" {
-                return parse_lookahead("*(name)$:", true);
-            }
-            else if name == "nla" || name == "negative_lookahead" {
-                return parse_lookahead("*(name)$:", false);
-            }
-            else {
-                error("Unknown named group pattern: '(name)$'"); return false;
-            }
-        }
-
-        if has_pattern {
-            // regular group
-
-            group_number := -1;
-            if has_id {
-                group_number = cur_branch_reset_state.next();
-            }
-
-            old_state: _ = group_new_state();
-            cur_group_state.modifiers = modifiers_change_to;
-            parse_until(')');
-            inner:= create_matcher_from_state();
-            group_restore_state(old_state);
-
-            start_matcher := create_matcher("group_matcher_start_logic", "(group_number)$, (modifier_change)$, \"(group_name)$\", (group_name_brackets)$");
-            if 0 != group_name.size() {
-                if !named_groups.contains(group_name) { // Redefinition of group name is not an error. The left most one is retained.
-                    named_groups[group_name] = group_number;
-                }
-            }
-            end_matcher := create_matcher("group_matcher_end_logic", "(group_number)$");
-
-            v: std::vector<std::string> = (start_matcher, inner, end_matcher);
-            cur_group_state.add(create_matcher_from_list(v));
-        }
-        else {
-            // Only a modifier
-            cur_group_state.modifiers = modifiers_change_to;
-            cur_group_state.add(create_matcher("modifier_matcher_logic", "(modifier_change)$"));
-        }
-
-        return true;
-    }
-
     is_handle_special: (inout this, c: char) -> bool = {
         if c != '\'' { return false; }
 
@@ -2980,7 +2955,6 @@ regex_parser: <Error_out> type = {
             if c == term { return; }
 
             if !has_error && is_escape(c) { continue; }
-            if !has_error && is_group(c) { continue; }
             if !has_error && is_handle_special(c) { continue; }
 
             if has_error { return; }
