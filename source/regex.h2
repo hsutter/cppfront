@@ -817,6 +817,7 @@ parse_context: type = {
             if !cur_token && valid() { cur_token = alternative_token::parse(this); }
             if !cur_token && valid() { cur_token = any_token::parse(this); }
             if !cur_token && valid() { cur_token = class_token::parse(this); }
+            if !cur_token && valid() { cur_token = escape_token_parse(this); }
             if !cur_token && valid() { cur_token = group_ref_token::parse(this); }
             if !cur_token && valid() { cur_token = group_token::parse(this); }
             if !cur_token && valid() { cur_token = line_end_token_parse(this); }
@@ -1429,6 +1430,48 @@ class_token_matcher: <CharT, negate: bool, List ...> type =
 
     //     return r;
     // }
+}
+
+escape_token_parse: (inout ctx: parse_context) -> token_ptr = {
+    if ctx.current() != '\\' { return nullptr; }
+
+
+    if std::string::npos == std::string("afenrt^.[]()*{}?+|\\").find(ctx.peek()) {
+        return nullptr;
+    }
+
+    _ = ctx.next(); // Skip escape
+
+    if std::string::npos != std::string("afenrt").find(ctx.current()) {
+        // Escape of string special char
+        return shared.new<escaped_char_token>(ctx.current());
+    } else {
+        // Escape of regex special char
+        r := shared.new<char_token>(ctx.current());
+        r*.set_string("\\\\(ctx.current())$");
+
+        return r;
+    }
+
+}
+
+escaped_char_token: @polymorphic_base type = {
+    this: regex_token_base;
+
+    token: char;
+
+    operator=: (out this, t: char) = {
+        regex_token_base = "\\\\(t)$";
+        token = t;
+    }
+
+    parse: (inout ctx: parse_context) -> token_ptr = {
+        return shared.new<char_token>(ctx.current());
+    }
+
+    generate_code: (override this, inout ctx: generation_context) = {
+        ctx.add_check("char_token_matcher<char, '\\(token)$', '\\(token)$', '\\(token)$'>((ctx.match_parameters())$)");
+    }
 }
 
 // Regex syntax: \<number>  Example: \1
@@ -2854,21 +2897,8 @@ regex_parser: <Error_out> type = {
         c_next := '\0';
         if !next(out c_next) { error("Escape without a following character."); return false; }
 
-        if std::string::npos != std::string("tnrfae^.[]$()*{}?+|").find(c_next) {
-            if c_next == '$' {
-                // TODO: Provide proper escape for cppfront capture
-                cur_group_state.add(create_matcher("line_end_matcher_logic", "true, true"));
-            }
-            else {
-                inner := create_matcher("char_matcher_logic", "'\\(c_next)$', '\\(c_next)$', '\\(c_next)$'");
-                cur_group_state.add(create_matcher("special_syntax_wrapper", "\"\\\\(c_next)$\", (inner)$"));
-            }
-        }
-        else if '\\' == c_next {
-            inner := create_matcher("char_matcher_logic", "'\\\\', '\\\\', '\\\\'");
-            cur_group_state.add(create_matcher("special_syntax_wrapper", "\"\\\\\\\\\", (inner)$"));
-        }
-        else if 'K' == c_next {
+
+        if 'K' == c_next {
             cur_group_state.add(create_matcher("global_group_reset", ""));
         }
         else if 'x' == c_next {
