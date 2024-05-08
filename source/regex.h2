@@ -822,6 +822,7 @@ parse_context: type = {
             if !cur_token && valid() { cur_token = group_token::parse(this); }
             if !cur_token && valid() { cur_token = line_end_token_parse(this); }
             if !cur_token && valid() { cur_token = line_start_token_parse(this); }
+            if !cur_token && valid() { cur_token = named_class_token_parse(this); }
             if !cur_token && valid() { cur_token = range_token::parse(this); }
             if !cur_token && valid() { cur_token = special_range_token::parse(this); }
             if !cur_token && valid() { cur_token = word_boundary_token_parse(this); }
@@ -1877,6 +1878,46 @@ line_start_token_matcher: <CharT, match_new_line: bool> (cur, inout ctx, modifie
            (match_new_line && modifiers.has_flag(expression_flags::multiple_lines)  && (cur - 1)* == '\n'); // Start of new line
 }
 
+// Named character classes
+//
+
+named_class_token_parse: (inout ctx: parse_context) -> token_ptr = {
+    if ctx.current() != '\\' { return nullptr; }
+
+    name := "";
+    c_next := ctx.peek();
+
+    if 'd' == c_next { name = "named_class_digits"; }
+    else if 'D' == c_next { name = "named_class_not_digits"; }
+    else if 'h' == c_next { name = "named_class_hor_space"; }
+    else if 'H' == c_next { name = "named_class_not_hor_space"; }
+    else if 'N' == c_next { name = "named_class_no_new_line"; }
+    else if 's' == c_next { name = "named_class_space"; }
+    else if 'S' == c_next { name = "named_class_not_space"; }
+    else if 'v' == c_next { name = "named_class_ver_space"; }
+    else if 'V' == c_next { name = "named_class_not_ver_space"; }
+    else if 'w' == c_next { name = "named_class_word"; }
+    else if 'W' == c_next { name = "named_class_not_word"; }
+    else { return nullptr; }
+
+    _ = ctx.next(); // Skip escape
+
+    return shared.new<regex_token_check>("\\\\(ctx.current())$", "(name)$<char>::match");
+}
+
+named_class_no_new_line: <CharT> type == class_token_matcher<CharT, true, single_class_entry<CharT, '\n'>>;
+named_class_digits     : <CharT> type == class_token_matcher<CharT, false, digits_class<CharT>>;
+named_class_hor_space  : <CharT> type == class_token_matcher<CharT, false, hor_space_class<CharT>>;
+named_class_space      : <CharT> type == class_token_matcher<CharT, false, space_class<CharT>>;
+named_class_ver_space  : <CharT> type == class_token_matcher<CharT, false, ver_space_class<CharT>>;
+named_class_word       : <CharT> type == class_token_matcher<CharT, false, word_class<CharT>>;
+
+named_class_not_digits    : <CharT> type == class_token_matcher<CharT, true, digits_class<CharT>>;
+named_class_not_hor_space : <CharT> type == class_token_matcher<CharT, true, hor_space_class<CharT>>;
+named_class_not_space     : <CharT> type == class_token_matcher<CharT, true, space_class<CharT>>;
+named_class_not_ver_space : <CharT> type == class_token_matcher<CharT, true, ver_space_class<CharT>>;
+named_class_not_word      : <CharT> type == class_token_matcher<CharT, true, word_class<CharT>>;
+
 // Regex syntax: <matcher>{min, max}  Example: a{2,4}
 //
 range_token: @polymorphic_base type = {
@@ -2349,28 +2390,6 @@ lookahead_matcher_logic: <CharT, positive: bool, name: fixed_string, Pattern> ty
     reset_ranges: (inout ctx) = { Pattern::reset_ranges(ctx); }
     to_string:    ()          "((name.data())$(Pattern::to_string())$)";
 }
-
-// Named character classes
-//
-
-named_class_matcher_logic: <CharT, Name: fixed_string, negate: bool, List ...> type =  {
-    this: special_syntax_wrapper<CharT, Name, class_matcher_logic<CharT, negate, List...>> = ();
-}
-
-named_class_no_new_line: <CharT> type == named_class_matcher_logic<CharT, "\\\\N", true, single_class_entry<CharT, '\n'>>; // TODO: Remove second \, switch to raw strings.
-named_class_digits     : <CharT> type == named_class_matcher_logic<CharT, "\\d", false, digits_class<CharT>>;
-named_class_hor_space  : <CharT> type == named_class_matcher_logic<CharT, "\\h", false, hor_space_class<CharT>>;
-named_class_space      : <CharT> type == named_class_matcher_logic<CharT, "\\s", false, space_class<CharT>>;
-named_class_ver_space  : <CharT> type == named_class_matcher_logic<CharT, "\\v", false, ver_space_class<CharT>>;
-named_class_word       : <CharT> type == named_class_matcher_logic<CharT, "\\w", false, word_class<CharT>>;
-
-
-named_class_not_digits    : <CharT> type == named_class_matcher_logic<CharT, "\\D", true, digits_class<CharT>>;
-named_class_not_hor_space : <CharT> type == named_class_matcher_logic<CharT, "\\H", true, hor_space_class<CharT>>;
-named_class_not_space     : <CharT> type == named_class_matcher_logic<CharT, "\\S", true, space_class<CharT>>;
-named_class_not_ver_space : <CharT> type == named_class_matcher_logic<CharT, "\\V", true, ver_space_class<CharT>>;
-named_class_not_word      : <CharT> type == named_class_matcher_logic<CharT, "\\W", true, word_class<CharT>>;
-
 
 //-----------------------------------------------------------------------
 //
@@ -2959,17 +2978,6 @@ regex_parser: <Error_out> type = {
             char_matcher := create_matcher("char_matcher_logic", "'(number_as_char)$', '(safe_tolower(number_as_char))$', '(safe_toupper(number_as_char))$'");
             cur_group_state.add(create_matcher("special_syntax_wrapper", "\"(syntax)$\", (char_matcher)$"));
         }
-        else if 'd' == c_next { cur_group_state.add(create_matcher("named_class_digits", "")); }
-        else if 'D' == c_next { cur_group_state.add(create_matcher("named_class_not_digits", "")); }
-        else if 'h' == c_next { cur_group_state.add(create_matcher("named_class_hor_space", "")); }
-        else if 'H' == c_next { cur_group_state.add(create_matcher("named_class_not_hor_space", "")); }
-        else if 'N' == c_next { cur_group_state.add(create_matcher("named_class_no_new_line", "")); }
-        else if 's' == c_next { cur_group_state.add(create_matcher("named_class_space", "")); }
-        else if 'S' == c_next { cur_group_state.add(create_matcher("named_class_not_space", "")); }
-        else if 'v' == c_next { cur_group_state.add(create_matcher("named_class_ver_space", "")); }
-        else if 'V' == c_next { cur_group_state.add(create_matcher("named_class_not_ver_space", "")); }
-        else if 'w' == c_next { cur_group_state.add(create_matcher("named_class_word", "")); }
-        else if 'W' == c_next { cur_group_state.add(create_matcher("named_class_not_word", "")); }
         else {
             error("Unknown escape.");
             return false;
