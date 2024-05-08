@@ -1831,10 +1831,19 @@ pop_modifiers_matcher: <CharT> type = {
 // Regex syntax: $  Example: aa$
 //
 line_end_token_parse: (inout ctx: parse_context) -> token_ptr = {
-    if ctx.current() != '$' && !(ctx.current() == '\\' && ctx.peek() == '$') { return nullptr; }
+    if ctx.current() == '$' || (ctx.current() == '\\' && ctx.peek() == '$') {
+        if (ctx.current() == '\\') { _ = ctx.next(); } // Skip escape
+        return shared.new<regex_token_check>("\\\\$", "line_end_token_matcher<char, true, true>");
+    }
+    else if ctx.current() == '\\' && (ctx.peek() == 'z' || ctx.peek() == 'Z') {
+        _ = ctx.next(); // Skip escape
 
-    if (ctx.current() == '\\') { _ = ctx.next(); } // Skip escape
-    return shared.new<regex_token_check>("\\\\$", "line_end_token_matcher<char, true, true>");
+        negate := ctx.current() == 'Z';
+        return shared.new<regex_token_check>("\\\\(ctx.current())$", "line_end_token_matcher<char, false, (negate)$>");
+    }
+    else {
+        return nullptr;
+    }
 }
 
 line_end_token_matcher: <CharT, match_new_line: bool, match_new_line_before_end: bool> (cur, inout ctx, modifiers) -> bool = {
@@ -1852,9 +1861,15 @@ line_end_token_matcher: <CharT, match_new_line: bool, match_new_line_before_end:
 // Regex syntax: ^  Example: ^aa
 //
 line_start_token_parse: (inout ctx: parse_context) -> token_ptr = {
-    if ctx.current() != '^' { return nullptr; }
+    if ctx.current() != '^' && !(ctx.current() == '\\' && ctx.peek() == 'A') { return nullptr; }
 
-    return shared.new<regex_token_check>("^", "line_start_token_matcher<char, true>");
+    if ctx.current() == '\\' {
+        _ = ctx.next();
+        return shared.new<regex_token_check>("\\\\A", "line_start_token_matcher<char, false>");
+    }
+    else {
+        return shared.new<regex_token_check>("^", "line_start_token_matcher<char, true>");
+    }
 }
 
 line_start_token_matcher: <CharT, match_new_line: bool> (cur, inout ctx, modifiers) -> bool = {
@@ -2356,10 +2371,6 @@ named_class_not_space     : <CharT> type == named_class_matcher_logic<CharT, "\\
 named_class_not_ver_space : <CharT> type == named_class_matcher_logic<CharT, "\\V", true, ver_space_class<CharT>>;
 named_class_not_word      : <CharT> type == named_class_matcher_logic<CharT, "\\W", true, word_class<CharT>>;
 
-// Other named matchers
-// named_string_end_or_before_new_line_at_end: <CharT> type  == special_syntax_wrapper<CharT, "\\Z", line_end_matcher_logic<CharT, false, true>>;
-// named_string_end: <CharT> type   == special_syntax_wrapper<CharT, "\\z", line_end_matcher_logic<CharT, false, false>>;
-// named_string_start: <CharT> type == special_syntax_wrapper<CharT, "\\A", line_start_matcher_logic<CharT, false>>;
 
 //-----------------------------------------------------------------------
 //
@@ -2948,7 +2959,6 @@ regex_parser: <Error_out> type = {
             char_matcher := create_matcher("char_matcher_logic", "'(number_as_char)$', '(safe_tolower(number_as_char))$', '(safe_toupper(number_as_char))$'");
             cur_group_state.add(create_matcher("special_syntax_wrapper", "\"(syntax)$\", (char_matcher)$"));
         }
-        else if 'A' == c_next { cur_group_state.add(create_matcher("named_string_start", "")); }
         else if 'd' == c_next { cur_group_state.add(create_matcher("named_class_digits", "")); }
         else if 'D' == c_next { cur_group_state.add(create_matcher("named_class_not_digits", "")); }
         else if 'h' == c_next { cur_group_state.add(create_matcher("named_class_hor_space", "")); }
@@ -2960,8 +2970,6 @@ regex_parser: <Error_out> type = {
         else if 'V' == c_next { cur_group_state.add(create_matcher("named_class_not_ver_space", "")); }
         else if 'w' == c_next { cur_group_state.add(create_matcher("named_class_word", "")); }
         else if 'W' == c_next { cur_group_state.add(create_matcher("named_class_not_word", "")); }
-        else if 'Z' == c_next { cur_group_state.add(create_matcher("named_string_end_or_before_new_line_at_end", "")); }
-        else if 'z' == c_next { cur_group_state.add(create_matcher("named_string_end", "")); }
         else {
             error("Unknown escape.");
             return false;
