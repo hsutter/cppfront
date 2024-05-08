@@ -485,6 +485,7 @@ parse_context: type = {
 
     // State management functions
     //
+
     start_group: (inout this) -> parse_context_group_state = {
         old_state: parse_context_group_state = ();
         old_state.swap(cur_group_state);
@@ -496,6 +497,10 @@ parse_context: type = {
         inner := cur_group_state.get_tokens();
         cur_group_state = old_state;
         return inner;
+    }
+
+    get_modifiers: (this) -> regex_parser_modifier_state = {
+        return (); // TODO:
     }
 
     // Branch reset management functions
@@ -515,11 +520,17 @@ parse_context: type = {
         cur_branch_reset_state.set_next(max_group);
     }
 
-
     next_alternative: (inout this) = {
         cur_group_state.next_alternative();
         cur_branch_reset_state.next_alternative();
     }
+
+    // Position management functions
+    //
+
+    get_pos: (this) pos;
+
+    get_range: (this, start: int, end: int) std::string(regex.substr(start, end - start + 1));
 
     add_token: (inout this, token: token_ptr) = {
         cur_group_state.add(token);
@@ -564,14 +575,30 @@ parse_context: type = {
 
     current: (this) -> char = { return regex[pos]; }
 
-    has_next: (this) -> bool = { return pos < regex.size(); }
-    next: (inout this) -> bool = {
-        if has_next() {
-            pos += 1; return true;
+    private next_impl: (inout this, in_class: bool, no_skip: bool) -> bool = {
+        pos = get_next_position(in_class, no_skip);
+        if pos != regex.size() {
+            return true;
         }
-
-        return false;
+        else {
+            return false;
+        }
     }
+
+    next: (inout this)          next_impl(false, false);
+    next_in_class: (inout this) next_impl(true, false);
+    next_no_skip: (inout this)  next_impl(false, true);
+
+    next_n: (inout this, n: int) -> bool = {
+        r := true;
+        cur := 0;
+        while r && cur < n next (r = next()) {
+            cur += 1;
+        }
+        return r;
+    }
+
+    has_next: (this) -> bool = { return pos < regex.size(); }
 
     valid: (this) -> bool = { return has_next() && error_text.empty(); }
 
@@ -579,6 +606,20 @@ parse_context: type = {
         error_text = err;
         return nullptr;
     }
+
+    join: (list, func) -> std::string = {
+        r: std::string = "";
+
+        separator: std::string = "";
+        for list do (cur) {
+            r += separator + func(cur);
+            separator = ", ";
+        }
+
+        return r;
+    }
+
+    join: (list: std::vector<std::string>) join(list, :(arg) -> _ == arg); // Todo: Shorthand syntax for const lambda
 
     private get_next_position: (in this, in_class: bool, no_skip: bool) -> size_t = {
         perl_syntax := false;
@@ -700,6 +741,7 @@ parse_context: type = {
 
             if !cur_token && valid() { cur_token = alternative_token::parse(this); }
             if !cur_token && valid() { cur_token = any_token::parse(this); }
+            if !cur_token && valid() { cur_token = class_token::parse(this); }
             if !cur_token && valid() { cur_token = group_ref_token::parse(this); }
             if !cur_token && valid() { cur_token = group_token::parse(this); }
             if !cur_token && valid() { cur_token = line_end_token_parse(this); }
@@ -1119,6 +1161,188 @@ char_token_matcher: <CharT, C: CharT, L: CharT, U: CharT> (inout cur, inout ctx,
     }
 }
 
+// Regex syntax: [<character classes>]  Example: [abcx-y[:digits:]]
+//
+class_token: @polymorphic_base type = {
+    this: regex_token_base = ();
+
+    negate: bool;
+    class_str: std::string;
+
+    operator=: (out this, negate_: bool, class_str_: std::string, str: std::string) = {
+        regex_token_base = str;
+        negate = negate_;
+        class_str = class_str_;
+    }
+
+    // TODO: Rework class generation: Generate check functions for classes.
+    parse: (inout ctx: parse_context) -> token_ptr = {
+        if ctx.current() != '[' { return nullptr; }
+
+        start_pos := ctx.get_pos();
+
+        supported_classes: std::vector<std::string> = ("alnum", "alpha", "ascii", "blank", "cntrl", "digits", "graph",
+                                                       "lower", "print", "punct", "space", "upper", "word", "xdigit");
+
+        classes: std::vector<std::string> = ();
+
+        // First step: parse until the end bracket and push single chars, ranges or groups on the class stack.
+        is_negate:= false;
+        first:= true;
+        range:= false;
+        while ctx.next_in_class() & (ctx.current() != ']' || first) {
+            if ctx.current() == '^' {
+                is_negate = true;
+                continue; // Skip rest of the loop. Also the first update.
+            }
+            if ctx.current() == '[' && ctx.peek_in_class() == ':' {
+                // We have a character class.
+                _ = ctx.next_n(2);  // Skip [:
+
+                name: std::string = "";
+                if !ctx.grab_until(":]", out name) { return ctx.error("Could not find end of character class."); }
+                if supported_classes.end() == std::find(supported_classes.begin(), supported_classes.end(), name) {
+                    return ctx.error("Unsupported character class. Supported ones are: (ctx.join(supported_classes))$");
+                }
+
+                classes.push_back("[:(name)$:]");
+
+                _ = ctx.next(); // Skip ':' pointing to the ending ']'.
+            }
+            else if ctx.current() == '\\' {
+                if ctx.next_no_skip()  && (ctx.current() != ']') {
+                    if  ' ' == ctx.current() && ctx.get_modifiers().perl_code_syntax && ctx.get_modifiers().perl_code_syntax_in_classes {
+                        classes.push_back(std::string(1, ctx.current())); // TODO: UFCS error with char as argument.
+                    }
+                    else {
+                        name := "";
+                            if 'd' == ctx.current() { name = "short_digits"; }
+                        else if 'D' == ctx.current() { name = "short_not_digits"; }
+                        else if 'h' == ctx.current() { name = "short_hor_space"; }
+                        else if 'H' == ctx.current() { name = "short_not_hor_space"; }
+                        else if 's' == ctx.current() { name = "short_space"; }
+                        else if 'S' == ctx.current() { name = "short_not_space"; }
+                        else if 'v' == ctx.current() { name = "short_ver_space"; }
+                        else if 'V' == ctx.current() { name = "short_not_ver_space"; }
+                        else if 'w' == ctx.current() { name = "short_word"; }
+                        else if 'W' == ctx.current() { name = "short_not_word"; }
+                        else {
+                            return ctx.error("Unknown group escape.");
+                        }
+                        classes.push_back("[:(name)$:]");
+                    }
+                } else {
+                    return ctx.error("Escape without a following character.");
+                }
+            }
+            else if ctx.current() == '-' {
+                if first { // Literal if first entry.
+                    classes.push_back("(ctx.current())$");
+                } else {
+                    range = true;
+                }
+            }
+            else {
+                if range { // Modify last element to be a range.
+                    classes.back() += "-(ctx.current())$";
+                    range = false;
+                }
+                else {
+                    classes.push_back("(ctx.current())$");
+                }
+            }
+
+            first = false;
+        }
+
+        if ctx.current() != ']' {
+            return ctx.error("Error end of character class definition before terminating ']'.");
+        }
+        end_pos := ctx.get_pos();
+
+        if range { // If '-' is last entry treat it as a literal char.
+            classes.push_back("-");
+        }
+
+        // Second step: Wrap the item on the class stack with corresponding class implementation.
+        for classes do (inout cur) {
+            if cur.starts_with("[:") {
+                name := cur.substr(2, cur.size() - 4);
+                cur = create_matcher("(name)$_class", "");
+            }
+            else if 1 != cur.size() {
+                cur = create_matcher("range_class_entry", "'(cur[0])$', '(cur[2])$'");
+            }
+            else {
+                cur = create_matcher("single_class_entry", "'(cur)$'");
+            }
+        }
+
+        inner := ctx.join(classes);
+        return shared.new<class_token>(is_negate, inner, ctx.get_range(start_pos, end_pos));
+    }
+
+    generate_code: (override this, inout ctx: generation_context) = {
+        ctx.add_check("class_token_matcher<char, (negate)$, (class_str)$>::match((ctx.match_parameters())$)");
+    }
+
+
+    private create_matcher: (name: std::string, template_arguments: std::string) -> std::string = {
+        sep := ", ";
+        if template_arguments.empty() { sep = ""; }
+
+        return "::cpp2::regex::(name)$<char(sep)$(template_arguments)$>";
+    }
+}
+
+class_token_matcher: <CharT, negate: bool, List ...> type =
+{
+    match: (inout cur, inout ctx, modifiers) -> bool = {
+        if modifiers.has_flag(expression_flags::case_insensitive) {
+            if cur != ctx.end && negate != ( match_any<List...>(safe_tolower(cur*)) || match_any<List...>(safe_toupper(cur*))) {
+                cur += 1;
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        else {
+            if cur != ctx.end && negate != match_any<List...>(cur*) {
+                cur += 1;
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+    }
+
+    private match_any: <First, Other ...> (c: CharT) -> bool = {
+        r: bool = First::includes(c);
+
+        if !r {
+            if constexpr 0 != sizeof...(Other) {
+                r = match_any<Other...>(c);
+            }
+        }
+
+        return r;
+    }
+
+    // TODO: Implement proper to string
+    // to_string: () -> bstring<CharT> = {
+    //     r: bstring<CharT> = "[";
+    //     if negate {
+    //         r += "^";
+    //     }
+    //     r += (bstring<CharT>() + ... + List::to_string());
+    //     r += "]";
+
+    //     return r;
+    // }
+}
+
 // Regex syntax: \<number>  Example: \1
 //               \g{name_or_number}
 //               \k{name_or_number}
@@ -1314,7 +1538,7 @@ line_end_token_parse: (inout ctx: parse_context) -> token_ptr = {
     if ctx.current() != '$' && !(ctx.current() == '\\' && ctx.peek() == '$') { return nullptr; }
 
     if (ctx.current() == '\\') { _ = ctx.next(); } // Skip escape
-    return shared.new<regex_token_check>("\\$", "line_end_token_matcher<char, true, true>");
+    return shared.new<regex_token_check>("\\\\$", "line_end_token_matcher<char, true, true>");
 }
 
 line_end_token_matcher: <CharT, match_new_line: bool, match_new_line_before_end: bool> (cur, inout ctx, modifiers) -> bool = {
@@ -2202,8 +2426,7 @@ regex_parser: <Error_out> type = {
 
     source: std::string = "";
 
-    supported_classes: std::vector<std::string> = ("alnum", "alpha", "ascii", "blank", "cntrl", "digits", "graph",
-                                                   "lower", "print", "punct", "space", "upper", "word", "xdigit");
+
 
     operator=: (out this, r: std::string_view, m: std::string_view, e: Error_out) = {
         this.regex = r;
@@ -2518,113 +2741,6 @@ regex_parser: <Error_out> type = {
     // Parsing functions
     //
 
-    is_class: (inout this, c: char) -> bool = {
-        if c != '[' { return false; }
-
-        classes: std::vector<std::string> = ();
-
-        c_cur: char = current();
-
-        // First step: parse until the end bracket and push single chars, ranges or groups on the class stack.
-        negate:= false;
-        first:= true;
-        range:= false;
-        while next_in_class(out c_cur) & (c_cur != ']' || first) {
-            if c_cur == '^' {
-                negate = true;
-                continue; // Skip rest of the loop. Also the first update.
-            }
-            if c_cur == '[' && peek_in_class() == ':' {
-                // We have a character class.
-                _ = skip_n(2);  // Skip [:
-
-                name: std::string = "";
-                if !grab_until(":]", out name) { error("Could not find end of character class."); return false; }
-                if supported_classes.end() == std::find(supported_classes.begin(), supported_classes.end(), name) {
-                    error("Unsupported character class. Supported ones are: (join(supported_classes))$");
-                    return false;
-                }
-
-                classes.push_back("[:(name)$:]");
-
-                _ = skip(); // Skip ':' pointing to the ending ']'.
-            }
-            else if c_cur == '\\' {
-                if next_no_skip(out c_cur)  && (c_cur != ']') {
-                    if  ' ' == c_cur && cur_group_state.modifiers.perl_code_syntax && cur_group_state.modifiers.perl_code_syntax_in_classes {
-                        classes.push_back(std::string(1, c_cur)); // TODO: UFCS error with char as argument.
-                    }
-                    else {
-                        name := "";
-                            if 'd' == c_cur { name = "short_digits"; }
-                        else if 'D' == c_cur { name = "short_not_digits"; }
-                        else if 'h' == c_cur { name = "short_hor_space"; }
-                        else if 'H' == c_cur { name = "short_not_hor_space"; }
-                        else if 's' == c_cur { name = "short_space"; }
-                        else if 'S' == c_cur { name = "short_not_space"; }
-                        else if 'v' == c_cur { name = "short_ver_space"; }
-                        else if 'V' == c_cur { name = "short_not_ver_space"; }
-                        else if 'w' == c_cur { name = "short_word"; }
-                        else if 'W' == c_cur { name = "short_not_word"; }
-                        else {
-                            error("Unknown group escape.");
-                            return false;
-                        }
-                        classes.push_back("[:(name)$:]");
-                    }
-                } else {
-                    error("Escape without a following character.");
-                    return false;
-                }
-            }
-            else if c_cur == '-' {
-                if first { // Literal if first entry.
-                    classes.push_back("(c_cur)$");
-                } else {
-                    range = true;
-                }
-            }
-            else {
-                if range { // Modify last element to be a range.
-                    classes.back() += "-(c_cur)$";
-                    range = false;
-                }
-                else {
-                    classes.push_back("(c_cur)$");
-                }
-            }
-
-            first = false;
-        }
-
-        if c_cur != ']' {
-            error("Error end of character class definition before terminating ']'.");
-            return false;
-        }
-
-        if range { // If '-' is last entry treat it as a literal char.
-            classes.push_back("-");
-        }
-
-        // Second step: Wrap the item on the class stack with corresponding class implementation.
-        for classes do (inout cur) {
-            if cur.starts_with("[:") {
-                name := cur.substr(2, cur.size() - 4);
-                cur = create_matcher("(name)$_class", "");
-            }
-            else if 1 != cur.size() {
-                cur = create_matcher("range_class_entry", "'(cur[0])$', '(cur[2])$'");
-            }
-            else {
-                cur = create_matcher("single_class_entry", "'(cur)$'");
-            }
-        }
-
-        inner := join(classes);
-        cur_group_state.add(create_matcher("class_matcher_logic", "(negate)$, (inner)$"));
-        return true;
-    }
-
     is_escape: (inout this, c: char) -> bool = {
         if c != '\\' { return false; }
 
@@ -2863,7 +2979,6 @@ regex_parser: <Error_out> type = {
         while c != '\n' next _ = next(out c) {
             if c == term { return; }
 
-            if !has_error && is_class(c) { continue; }
             if !has_error && is_escape(c) { continue; }
             if !has_error && is_group(c) { continue; }
             if !has_error && is_handle_special(c) { continue; }
