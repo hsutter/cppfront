@@ -824,6 +824,7 @@ parse_context: type = {
             if !cur_token && valid() { cur_token = line_start_token_parse(this); }
             if !cur_token && valid() { cur_token = range_token::parse(this); }
             if !cur_token && valid() { cur_token = special_range_token::parse(this); }
+            if !cur_token && valid() { cur_token = word_boundary_token_parse(this); }
 
             // Everything else is matched as it is.
             if !cur_token && valid() { cur_token = char_token::parse(this); }
@@ -2160,6 +2161,51 @@ special_range_token: @polymorphic_base type = {
     }
 }
 
+// Regex syntax: \b or \B  Example: \bword\b
+//
+// Matches the start end end of word boundaries.
+//
+word_boundary_token_parse: (inout ctx: parse_context) -> token_ptr = {
+    if ctx.current() != '\\' { return nullptr; }
+
+    if ctx.peek() == 'b' {
+        _ = ctx.next();
+        return shared.new<regex_token_check>("\\\\b", "word_boundary_token_matcher<char, false>");
+    }
+    else if ctx.peek() == 'B' {
+        _ = ctx.next();
+        return shared.new<regex_token_check>("\\\\B", "word_boundary_token_matcher<char, true>");
+    }
+    else {
+        return nullptr;
+    }
+}
+
+word_boundary_token_matcher: <CharT, negate: bool> (inout cur, inout ctx, modifiers) -> bool = {
+    _ = modifiers;
+    words : word_class<CharT> = ();
+    is_match := false;
+    if cur == ctx.begin { // String start
+        if cur != ctx.end { // No empty string
+            is_match = words.includes(cur*);
+        }
+    }
+    else if cur == ctx.end { // String end
+        is_match = words.includes((cur - 1)*);
+    }
+    else { // Middle of string
+        is_match =
+                (words.includes((cur - 1)*) && !words.includes(cur*))  // End of word: \w\W
+            || (!words.includes((cur - 1)*) && words.includes(cur*)); // Start of word: \W\w
+
+    }
+    if negate {
+        is_match = !is_match;
+    }
+
+    return is_match;
+}
+
 
 //-----------------------------------------------------------------------
 //
@@ -2314,52 +2360,6 @@ named_class_not_word      : <CharT> type == named_class_matcher_logic<CharT, "\\
 // named_string_end_or_before_new_line_at_end: <CharT> type  == special_syntax_wrapper<CharT, "\\Z", line_end_matcher_logic<CharT, false, true>>;
 // named_string_end: <CharT> type   == special_syntax_wrapper<CharT, "\\z", line_end_matcher_logic<CharT, false, false>>;
 // named_string_start: <CharT> type == special_syntax_wrapper<CharT, "\\A", line_start_matcher_logic<CharT, false>>;
-
-// Regex syntax: \b or \B  Example: \bword\b
-//
-// Matches the start end end of word boundaries.
-//
-word_boundary_matcher_logic: <CharT, negate: bool> type =
-{
-    match: <Other> (cur, inout ctx, modifiers, end_func, _: Other) -> _ = {
-        words : word_class<CharT> = ();
-        is_match := false;
-        if cur == ctx.begin { // String start
-            if cur != ctx.end { // No empty string
-                is_match = words.includes(cur*);
-            }
-        }
-        else if cur == ctx.end { // String end
-            is_match = words.includes((cur - 1)*);
-        }
-        else { // Middle of string
-            is_match =
-                   (words.includes((cur - 1)*) && !words.includes(cur*))  // End of word: \w\W
-                || (!words.includes((cur - 1)*) && words.includes(cur*)); // Start of word: \W\w
-
-        }
-        if negate {
-            is_match = !is_match;
-        }
-
-        if is_match{
-            return Other::match(cur, ctx, modifiers, end_func);
-        }
-        else {
-            return ctx.fail();
-        }
-
-    }
-    reset_ranges: (_) = {}
-    to_string:    () -> bstring<CharT> = {
-        if negate {
-            return "\\B";
-        } else {
-            return "\\b";
-        }
-    }
-}
-
 
 //-----------------------------------------------------------------------
 //
@@ -2949,8 +2949,6 @@ regex_parser: <Error_out> type = {
             cur_group_state.add(create_matcher("special_syntax_wrapper", "\"(syntax)$\", (char_matcher)$"));
         }
         else if 'A' == c_next { cur_group_state.add(create_matcher("named_string_start", "")); }
-        else if 'b' == c_next { cur_group_state.add(create_matcher("word_boundary_matcher_logic", "false")); }
-        else if 'B' == c_next { cur_group_state.add(create_matcher("word_boundary_matcher_logic", "true")); }
         else if 'd' == c_next { cur_group_state.add(create_matcher("named_class_digits", "")); }
         else if 'D' == c_next { cur_group_state.add(create_matcher("named_class_not_digits", "")); }
         else if 'h' == c_next { cur_group_state.add(create_matcher("named_class_hor_space", "")); }
