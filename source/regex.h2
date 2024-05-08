@@ -702,6 +702,8 @@ parse_context: type = {
             if !cur_token && valid() { cur_token = any_token::parse(this); }
             if !cur_token && valid() { cur_token = group_ref_token::parse(this); }
             if !cur_token && valid() { cur_token = group_token::parse(this); }
+            if !cur_token && valid() { cur_token = line_end_token_parse(this); }
+            if !cur_token && valid() { cur_token = line_start_token_parse(this); }
             if !cur_token && valid() { cur_token = range_token::parse(this); }
             if !cur_token && valid() { cur_token = special_range_token::parse(this); }
 
@@ -934,6 +936,21 @@ regex_token_base: @polymorphic_base type = {
     }
 
     get_groups: (override this) -> std::vector<int> = { return (); }
+}
+
+regex_token_check: @polymorphic_base type = {
+    this: regex_token_base;
+
+    check: std::string;
+
+    operator=:(out this, str: std::string, check_: std::string) = {
+        regex_token_base = (str);
+        check = check_;
+    }
+
+    generate_code: (override this, inout ctx: generation_context) = {
+        ctx.add_check(check + "(" + ctx.match_parameters() + ")");
+    }
 }
 
 //  Regex syntax: |  Example: ab|ba
@@ -1289,6 +1306,40 @@ group_token: @polymorphic_base type = {
             return (number);
         }
     }
+}
+
+// Regex syntax: $  Example: aa$
+//
+line_end_token_parse: (inout ctx: parse_context) -> token_ptr = {
+    if ctx.current() != '$' && !(ctx.current() == '\\' && ctx.peek() == '$') { return nullptr; }
+
+    if (ctx.current() == '\\') { _ = ctx.next(); } // Skip escape
+    return shared.new<regex_token_check>("\\$", "line_end_token_matcher<char, true, true>");
+}
+
+line_end_token_matcher: <CharT, match_new_line: bool, match_new_line_before_end: bool> (cur, inout ctx, modifiers) -> bool = {
+    if cur == ctx.end || (match_new_line && modifiers.has_flag(expression_flags::multiple_lines) && cur* == '\n') {
+        return true;
+    }
+    else if match_new_line_before_end && (cur* == '\n' && (cur + 1) == ctx.end) { // Special case for new line at end.
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+// Regex syntax: ^  Example: ^aa
+//
+line_start_token_parse: (inout ctx: parse_context) -> token_ptr = {
+    if ctx.current() != '^' { return nullptr; }
+
+    return shared.new<regex_token_check>("^", "line_start_token_matcher<char, true>");
+}
+
+line_start_token_matcher: <CharT, match_new_line: bool> (cur, inout ctx, modifiers) -> bool = {
+    return cur == ctx.begin || // Start of string
+           (match_new_line && modifiers.has_flag(expression_flags::multiple_lines)  && (cur - 1)* == '\n'); // Start of new line
 }
 
 // Regex syntax: <matcher>{min, max}  Example: a{2,4}
@@ -1765,43 +1816,6 @@ special_group_end_logic: <CharT> type = {
     to_string:    ()  bstring<CharT>(")");
 }
 
-// Regex syntax: $  Example: aa$
-//
-line_end_matcher_logic: <CharT, match_new_line: bool, match_new_line_before_end: bool> type =
-{
-    match: <Other> (cur, inout ctx, modifiers, end_func, _ : Other) -> _ = {
-        if cur == ctx.end || (match_new_line && modifiers.has_flag(expression_flags::multiple_lines) && cur* == '\n') {
-            return Other::match(cur, ctx, modifiers, end_func);
-        }
-        else if match_new_line_before_end && (cur* == '\n' && (cur + 1) == ctx.end) { // Special case for new line at end.
-            return Other::match(cur, ctx, modifiers, end_func);
-        }
-        else {
-            return ctx.fail();
-        }
-    }
-
-    reset_ranges: (_) = {}
-    to_string:    ()  bstring<CharT>("\\$");
-}
-
-// Regex syntax: ^  Example: ^aa
-//
-line_start_matcher_logic: <CharT, match_new_line: bool> type =
-{
-    match: <Other> (cur, inout ctx, modifiers, end_func, _ : Other) -> _ = {
-        if cur == ctx.begin || (match_new_line && modifiers.has_flag(expression_flags::multiple_lines)  && (cur - 1)* == '\n') {
-            return Other::match(cur, ctx, modifiers, end_func);
-        }
-        else {
-            return ctx.fail();
-        }
-
-    }
-    reset_ranges: (_) = {}
-    to_string:    ()  bstring<CharT>(1, '^');
-}
-
 // Regex syntax: (?=) or (?!) or (*pla), etc.  Example: (?=AA)
 //
 lookahead_matcher_logic: <CharT, positive: bool, name: fixed_string, Pattern> type =
@@ -1858,9 +1872,9 @@ named_class_not_ver_space : <CharT> type == named_class_matcher_logic<CharT, "\\
 named_class_not_word      : <CharT> type == named_class_matcher_logic<CharT, "\\W", true, word_class<CharT>>;
 
 // Other named matchers
-named_string_end_or_before_new_line_at_end: <CharT> type  == special_syntax_wrapper<CharT, "\\Z", line_end_matcher_logic<CharT, false, true>>;
-named_string_end: <CharT> type   == special_syntax_wrapper<CharT, "\\z", line_end_matcher_logic<CharT, false, false>>;
-named_string_start: <CharT> type == special_syntax_wrapper<CharT, "\\A", line_start_matcher_logic<CharT, false>>;
+// named_string_end_or_before_new_line_at_end: <CharT> type  == special_syntax_wrapper<CharT, "\\Z", line_end_matcher_logic<CharT, false, true>>;
+// named_string_end: <CharT> type   == special_syntax_wrapper<CharT, "\\z", line_end_matcher_logic<CharT, false, false>>;
+// named_string_start: <CharT> type == special_syntax_wrapper<CharT, "\\A", line_start_matcher_logic<CharT, false>>;
 
 // Regex syntax: \b or \B  Example: \bword\b
 //
@@ -2504,35 +2518,6 @@ regex_parser: <Error_out> type = {
     // Parsing functions
     //
 
-    is_alternative: (inout this, c: char) -> bool = {
-        if c != '|' { return false; }
-
-        cur_group_state.next_alternative();
-        cur_branch_reset_state.next_alternative();
-        return true;
-    }
-
-    is_anchor: (inout this, c: char) -> bool = {
-        if c == '^' {
-            cur_group_state.add(create_matcher("line_start_matcher_logic", "true"));
-            return true;
-        }
-        else if c == '$' {
-            cur_group_state.add(create_matcher("line_end_matcher_logic", "true, true"));
-            return true;
-        }
-
-        return false;
-    }
-
-    is_any: (inout this, c: char) -> bool = {
-        if c != '.' { return false; }
-
-        cur_group_state.add(create_matcher("any_matcher_logic", ""));
-        return true;
-
-    }
-
     is_class: (inout this, c: char) -> bool = {
         if c != '[' { return false; }
 
@@ -2880,7 +2865,6 @@ regex_parser: <Error_out> type = {
 
             if !has_error && is_class(c) { continue; }
             if !has_error && is_escape(c) { continue; }
-            if !has_error && is_anchor(c) { continue; }
             if !has_error && is_group(c) { continue; }
             if !has_error && is_handle_special(c) { continue; }
 
