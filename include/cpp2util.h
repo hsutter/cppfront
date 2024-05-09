@@ -1353,6 +1353,15 @@ auto as(X const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto) {
     }
 }
 
+template<typename T>
+struct is_optional : std::false_type {};
+
+template<typename T>
+struct is_optional<std::optional<T>> : std::true_type {};
+
+template<typename T>
+constexpr auto  is_optional_v{is_optional<T>::value};
+
 template< typename C, typename X >
 auto as( X& x ) -> decltype(auto) {
     if constexpr (std::is_same_v<C, X>) {
@@ -1364,6 +1373,9 @@ auto as( X& x ) -> decltype(auto) {
     else if constexpr (std::is_base_of_v<X, C>) {
         return Dynamic_cast<C&>(x);
     }
+	else if constexpr (is_optional_v<X>) {
+		return x.value();
+	}
     else {
         return as<C>(std::as_const(x));
     }
