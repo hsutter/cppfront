@@ -1,6 +1,7 @@
 #ifndef CPP2_POSITIONAL_PRINTER_H
 #define CPP2_POSITIONAL_PRINTER_H
 
+#include <filesystem>
 #include "../parse.h"
 
 namespace cpp2 {
