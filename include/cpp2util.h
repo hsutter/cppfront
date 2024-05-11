@@ -654,7 +654,7 @@ constexpr auto type_name() -> std::string_view {
 
 [[noreturn]] auto Throw(auto&& x, [[maybe_unused]] char const* msg) -> void {
 #ifdef CPP2_NO_EXCEPTIONS
-    auto err = std::string{"Throw exception (-fno-exception) with type \""};
+    auto err = std::string{"exceptions are disabled with -fno-exceptions - attempted to throw exception with type \""};
  
     #ifdef CPP2_NO_RTTI
     err += type_name<decltype(x)>();
