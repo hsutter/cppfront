@@ -26,18 +26,6 @@
 
 namespace cpp2 {
 
-//  Defined out of line here just to avoid bringing <iostream> in before this,
-//  so that we can't accidentally start depending on iostreams in earlier phases
-auto cmdline_processor::print(std::string_view s, int width)
-    -> void
-{
-    if (width > 0) {
-        std::cout << std::setw(width) << std::left;
-    }
-    std::cout << s;
-}
-
-
 //-----------------------------------------------------------------------
 //
 //  cppfront: a compiler instance

@@ -1116,7 +1116,7 @@ inline auto to_string(std::tuple<Ts...> const& t) -> std::string
 #if defined(__cpp_lib_format) || (defined(_MSC_VER) && _MSC_VER >= 1929)
 inline auto to_string(auto&& value, std::string_view fmt) -> std::string
 {
-    return std::vformat(fmt, std::make_format_args(CPP2_FORWARD(value)));
+    return std::vformat(fmt, std::make_format_args(value));
 }
 #else
 inline auto to_string(auto&& value, std::string_view) -> std::string
