@@ -1235,7 +1235,7 @@ inline auto to_string(std::tuple<Ts...> const& t) -> std::string
 #if defined(__cpp_lib_format) || (defined(_MSC_VER) && _MSC_VER >= 1929)
 inline auto to_string(auto&& value, std::string_view fmt) -> std::string
 {
-    return std::vformat(fmt, std::make_format_args(CPP2_FORWARD(value)));
+    return std::vformat(fmt, std::make_format_args(value));
 }
 #else
 inline auto to_string(auto&& value, std::string_view) -> std::string
@@ -1341,7 +1341,13 @@ inline constexpr auto is( auto const& x, auto&& value ) -> bool
         return value(x);
     }
 
-    //  Value equality case
+    //  Value equality case: C/C++ arrays or individual values
+    else if constexpr (std::is_array_v<CPP2_TYPEOF(x)> && std::is_array_v<CPP2_TYPEOF(value)>) {
+        if (std::ssize(x) == std::ssize(value)) {
+            return std::equal( std::begin(x), std::end(x), std::begin(value));
+        }
+        return false;
+    }
     else if constexpr (requires{ bool{x == value}; }) {
         return x == value;
     }

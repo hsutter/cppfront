@@ -68,7 +68,7 @@ auto fun(auto const& name, auto const& v) -> void{
                 if (cpp2::impl::is(_expr, (42))) { if constexpr( requires{"42";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("42")),std::string> ) return "42"; else return std::string{}; else return std::string{}; }
                 else if (cpp2::impl::is(_expr, 123)) { if constexpr( requires{"op_is";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("op_is")),std::string> ) return "op_is"; else return std::string{}; else return std::string{}; }
                 else if (cpp2::impl::is(_expr, -123)) { if constexpr( requires{"generic op_is";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("generic op_is")),std::string> ) return "generic op_is"; else return std::string{}; else return std::string{}; }
-                else if (cpp2::impl::is(_expr, 4321)) { if constexpr( requires{"comperable";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("comperable")),std::string> ) return "comperable"; else return std::string{}; else return std::string{}; }
+                else if (cpp2::impl::is(_expr, 4321)) { if constexpr( requires{"comparable";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("comparable")),std::string> ) return "comparable"; else return std::string{}; else return std::string{}; }
                 else if (cpp2::impl::is(_expr, "text")) { if constexpr( requires{"text";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("text")),std::string> ) return "text"; else return std::string{}; else return std::string{}; }
                 else return "unknown"; }
               () 

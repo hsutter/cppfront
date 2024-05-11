@@ -1,10 +1,10 @@
 fun: (name, v) = {
-    std::cout << name << ": " << 
+    std::cout << name << ": " <<
                 inspect v -> std::string {
                 is (42) = "42";
                 is (123) = "op_is";
                 is (-123) = "generic op_is";
-                is (4321) = "comperable";
+                is (4321) = "comparable";
                 is ("text") = "text";
                 is _ = "unknown";
               }
