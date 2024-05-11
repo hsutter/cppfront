@@ -50,6 +50,7 @@ auto multi_return_type_name(declaration_node const& n)
     return ret;
 }
 
+
 //-----------------------------------------------------------------------
 //
 //  positional_printer: a Syntax 1 pretty printer
@@ -58,15 +59,15 @@ auto multi_return_type_name(declaration_node const& n)
 //
 static auto flag_emit_cppfront_info = false;
 static cmdline_processor::register_flag cmd_emit_cppfront_info(
-    9,
+    8,
     "emit-cppfront-info",
-    "Emit cppfront version/build in output file",
+    "Emit cppfront version/build in Cpp1 file",
     []{ flag_emit_cppfront_info = true; }
 );
 
 static auto flag_clean_cpp1 = false;
 static cmdline_processor::register_flag cmd_clean_cpp1(
-    9,
+    8,
     "clean-cpp1",
     "Emit clean Cpp1 without #line directives",
     []{ flag_clean_cpp1 = true; }
@@ -74,7 +75,7 @@ static cmdline_processor::register_flag cmd_clean_cpp1(
 
 static auto flag_line_paths = false;
 static cmdline_processor::register_flag cmd_line_paths(
-    9,
+    8,
     "line-paths",
     "Emit absolute paths in #line directives",
     [] { flag_line_paths = true; }
@@ -138,19 +139,11 @@ static cmdline_processor::register_flag cmd_enable_source_info(
 
 static auto flag_cpp1_filename = std::string{};
 static cmdline_processor::register_flag cmd_cpp1_filename(
-    9,
+    8,
     "output filename",
     "Output to 'filename' (can be 'stdout') - default is *.cpp/*.h",
     nullptr,
     [](std::string const& name) { flag_cpp1_filename = name; }
-);
-
-static auto flag_print_colon_errors = false;
-static cmdline_processor::register_flag cmd_print_colon_errors(
-    9,
-    "format-colon-errors",
-    "Emit ':line:col:' format for messages - lights up some tools",
-    []{ flag_print_colon_errors = true; }
 );
 
 static auto flag_verbose = false;
@@ -183,38 +176,14 @@ struct text_with_pos{
     text_with_pos(std::string const& t, source_position p) : text{t}, pos{p} { }
 };
 
-// Defined out of line so we can use flag_print_colon_errors.
-auto error_entry::print(
-    auto&              o,
-    std::string const& file
-) const
-    -> void
-{
-    o << file ;
-    if (where.lineno > 0) {
-        if (flag_print_colon_errors) {
-            o << ":" << (where.lineno);
-            if (where.colno >= 0) {
-                o << ":" << where.colno;
-            }
-        }
-        else {
-            o << "("<< (where.lineno);
-            if (where.colno >= 0) {
-                o << "," << where.colno;
-            }
-            o  << ")";
-        }
-    }
-    o << ":";
-    if (internal) {
-        o << " internal compiler";
-    }
-    o << " error: " << msg << "\n";
-}
-
 class positional_printer
 {
+public:
+    positional_printer()                          = default;
+private:
+    positional_printer(positional_printer const&) = delete;
+    void operator=(positional_printer const&)     = delete;
+
     //  Core information
     std::ofstream               out_file        = {}; // Cpp1 syntax output file
     std::ostream*               out             = {}; // will point to out_file or cout
@@ -1009,7 +978,6 @@ public:
     }
 
 };
-
 } // namespace cpp2
 
 #endif
