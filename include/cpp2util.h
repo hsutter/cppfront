@@ -709,6 +709,52 @@ auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAU
 #define CPP2_ASSERT_IN_BOUNDS(x,arg)         (cpp2::impl::assert_in_bounds((x),(arg)))
 #define CPP2_ASSERT_IN_BOUNDS_LITERAL(x,arg) (cpp2::impl::assert_in_bounds<(arg)>(x))
 
+#ifdef CPP2_NO_RTTI
+// Compile-Time type name deduction for -fno-rtti builds
+//
+constexpr auto process_type_name(std::string_view name) -> std::string_view {
+#if defined(__clang__) || defined(__GNUC__)
+    constexpr auto type_prefix = std::string_view("T = ");
+    constexpr auto types_close_parenthesis = ']';
+#elif defined(_MSC_VER)
+    constexpr auto type_prefix = std::string_view("type_name<");
+    constexpr auto types_close_parenthesis = '>';
+#endif
+    auto pos = name.find(type_prefix);
+    if (pos != std::string_view::npos) {
+        name = name.substr(pos);
+        name.remove_prefix(type_prefix.size());
+    }
+
+    pos = name.find_last_of(types_close_parenthesis);
+    if (pos != std::string_view::npos) {
+        name = name.substr(0, pos);
+    }
+
+#if defined(__GNUC__)
+    constexpr auto type_separator = ';';
+    pos = name.find(type_separator);
+    if (pos != std::string_view::npos) {
+        name = name.substr(0, pos);
+    }
+#endif
+
+    return name;
+}
+
+template<typename T>
+constexpr auto type_name() -> std::string_view {
+#if defined(__clang__) || defined(__GNUC__)    
+    constexpr auto ret = process_type_name(__PRETTY_FUNCTION__);
+#elif defined(_MSC_VER)
+    constexpr auto ret = process_type_name(__FUNCSIG__);
+#else
+    constexpr auto ret = "<cannot determine type>";
+#endif
+    return ret;
+}
+
+#endif 
 
 //-----------------------------------------------------------------------
 //
@@ -727,11 +773,18 @@ auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAU
 
 [[noreturn]] auto Throw(auto&& x, [[maybe_unused]] char const* msg) -> void {
 #ifdef CPP2_NO_EXCEPTIONS
-    auto err = std::string{"exceptions are disabled with -fno-exceptions - attempted to throw exception with type \"" + typeid(decltype(x)).name() + "\""};
+    auto err = std::string{"exceptions are disabled with -fno-exceptions - attempted to throw exception with type \""};
+ 
+    #ifdef CPP2_NO_RTTI
+    err += type_name<decltype(x)>();
+    #else 
+    err += typeid(decltype(x)).name();
+    #endif
+    err += "\"";
     if (msg) {
-        err += " and the message \"" + msg + "\"";
+        err += std::string{" and the message \""} + msg + "\"";
     }
-    type_safety.report_violation( err );
+    type_safety.report_violation( err.c_str() );
     std::terminate();
 #else
     throw CPP2_FORWARD(x);
