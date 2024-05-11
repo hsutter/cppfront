@@ -250,44 +250,6 @@ struct multiline_raw_string
     source_position end = {0, 0};
 };
 
-//-----------------------------------------------------------------------
-//
-//  error: represents a user-readable error message
-//
-//-----------------------------------------------------------------------
-//
-struct error_entry
-{
-    source_position where;
-    std::string     msg;
-    bool            internal = false;
-    bool            fallback = false;   // only emit this message if there was nothing better
-
-    error_entry(
-        source_position  w,
-        std::string_view m,
-        bool             i = false,
-        bool             f = false
-    )
-        : where{w}
-        , msg{m}
-        , internal{i}
-        , fallback{f}
-    { }
-
-    auto operator==(error_entry const& that)
-        -> bool
-    {
-        return
-            where == that.where
-            && msg == that.msg
-            ;
-    }
-
-    auto print(auto& o, std::string const& file) const
-        -> void;
-};
-
 
 //-----------------------------------------------------------------------
 //
@@ -639,13 +601,18 @@ class cmdline_processor
     std::unordered_map<int, std::string> labels = {
         { 2, "Additional dynamic safety checks and contract information" },
         { 4, "Support for constrained target environments" },
-        { 9, "Other options" }
+        { 8, "Cpp1 file emission options" },
+        { 9, "Cppfront output options" }
     };
 
-    //  Define this in the main .cpp to avoid bringing <iostream> into the headers,
-    //  so that we can't accidentally start depending on iostreams in the compiler body
-    static auto print(std::string_view, int width = 0)
-        -> void;
+    static auto print(std::string_view s, int width = 0)
+        -> void
+    {
+        if (width > 0) {
+            std::cout << std::setw(width) << std::left;
+        }
+        std::cout << s;
+    }
 
 public:
     auto process_flags()
@@ -924,6 +891,77 @@ static cmdline_processor::register_flag cmd_internal_debug(
     "Generate internal debug instrumentation",
     []{ flag_internal_debug = true; }
 );
+
+static auto flag_print_colon_errors = false;
+static cmdline_processor::register_flag cmd_print_colon_errors(
+    9,
+    "format-colon-errors",
+    "Emit ':line:col:' format for messages - lights up some tools",
+    []{ flag_print_colon_errors = true; }
+);
+
+
+//-----------------------------------------------------------------------
+//
+//  error: represents a user-readable error message
+//
+//-----------------------------------------------------------------------
+//
+struct error_entry
+{
+    source_position where;
+    std::string     msg;
+    bool            internal = false;
+    bool            fallback = false;   // only emit this message if there was nothing better
+
+    error_entry(
+        source_position  w,
+        std::string_view m,
+        bool             i = false,
+        bool             f = false
+    )
+        : where{w}
+        , msg{m}
+        , internal{i}
+        , fallback{f}
+    { }
+
+    auto operator==(error_entry const& that)
+        -> bool
+    {
+        return
+            where == that.where
+            && msg == that.msg
+            ;
+    }
+
+    auto print(auto& o, std::string const& file) const
+        -> void
+    {
+        o << file ;
+        if (where.lineno > 0) {
+            if (flag_print_colon_errors) {
+                o << ":" << (where.lineno);
+                if (where.colno >= 0) {
+                    o << ":" << where.colno;
+                }
+            }
+            else {
+                o << "("<< (where.lineno);
+                if (where.colno >= 0) {
+                    o << "," << where.colno;
+                }
+                o  << ")";
+            }
+        }
+        o << ":";
+        if (internal) {
+            o << " internal compiler";
+        }
+        o << " error: " << msg << "\n";
+    }
+
+};
 
 
 //-----------------------------------------------------------------------
