@@ -1648,6 +1648,19 @@ group_token: @polymorphic_base type = {
     inner: token_ptr = nullptr;
     mod: std::string = "::cpp2::regex::match_modifiers_no_change";
 
+    parse_lookahead: (inout ctx: parse_context, syntax: std::string, positive: bool) -> token_ptr = {
+        _ = ctx.next(); // Skip last token defining the syntax
+
+        r := shared.new<lookahead_token>(positive);
+
+        old_state := ctx.start_group();
+        if !ctx.parse_until(')') { return ctx.error("Lookahead without a closing bracket."); }
+        r*.inner = ctx.end_group(old_state);
+        r*.set_string("((syntax)$(r*.inner*.to_string())$)");
+
+        return r;
+    }
+
     parse: (inout ctx: parse_context) -> token_ptr = {
         if ctx.current() != '(' { return nullptr; }
 
@@ -1702,10 +1715,7 @@ group_token: @polymorphic_base type = {
                 return shared.new<regex_token_list>(list);
             }
             else if ctx.current() == '=' || ctx.current() == '!' {
-                _ = ctx.next(); // Skip '!'
-                // Positive or negative lookahead
-                // TODO: return parse_lookahead("?(ctx.current())$", ctx.current() == '=');
-                return nullptr;
+                return parse_lookahead(ctx, "?(ctx.current())$", ctx.current() == '=');
             }
             else {
                 // Simple modifier
@@ -1730,12 +1740,10 @@ group_token: @polymorphic_base type = {
             if !ctx.grab_until(':', out name) { return ctx.error("Missing colon for named pattern.");  }
 
             if name == "pla" || name == "positive_lookahead" {
-                // TODO: return parse_lookahead("*(name)$:", true);
-                return nullptr;
+                return parse_lookahead(ctx, "*(name)$:", true);
             }
             else if name == "nla" || name == "negative_lookahead" {
-                // TODO: return parse_lookahead("*(name)$:", false);
-                return nullptr;
+                return parse_lookahead(ctx, "*(name)$:", false);
             }
             else {
                 return ctx.error("Unknown named group pattern: '(name)$'");
@@ -1944,6 +1952,36 @@ line_start_token_parse: (inout ctx: parse_context) -> token_ptr = {
 line_start_token_matcher: <CharT, match_new_line: bool> (cur, inout ctx, modifiers) -> bool = {
     return cur == ctx.begin || // Start of string
            (match_new_line && modifiers.has_flag(expression_flags::multiple_lines)  && (cur - 1)* == '\n'); // Start of new line
+}
+
+// Regex syntax: (?=) or (?!) or (*pla), etc.  Example: (?=AA)
+//
+lookahead_token: @polymorphic_base type = {
+    this: regex_token = ("");
+
+    protected positive: bool;
+    public inner: token_ptr = nullptr;
+
+    operator=: (out this, positive_: bool) = {
+        positive = positive_;
+    }
+
+    generate_code: (override this, inout ctx: generation_context) = {
+        inner_name := ctx.generate_func(inner);
+
+        ctx.add_check("lookahead_token_matcher<char, (positive)$>((ctx.match_parameters())$, (inner_name)$)");
+    }
+
+    get_groups: (override this) -> std::vector<int> = { return (); } // TODO: Implement
+}
+
+lookahead_token_matcher: <CharT, positive: bool> (cur, inout ctx, modifiers, func) -> bool = {
+    r := func(cur, ctx, modifiers, true_end_func());
+    if !positive {
+        r.matched = !r.matched;
+    }
+
+    return r.matched;
 }
 
 // Named character classes
@@ -2451,28 +2489,6 @@ class_matcher_logic: <CharT, negate: bool, List ...> type =
     }
 }
 
-// Regex syntax: (?=) or (?!) or (*pla), etc.  Example: (?=AA)
-//
-lookahead_matcher_logic: <CharT, positive: bool, name: fixed_string, Pattern> type =
-{
-    match: <Other> (cur, inout ctx, modifiers, end_func, _ : Other) -> _ = {
-        r := Pattern::match(cur, ctx, modifiers, true_end_func(), no_tail<CharT>());
-
-        if !positive {
-            r.matched = !r.matched;
-        }
-
-        if r.matched {
-            return Other::match(cur, ctx, modifiers, end_func);
-        }
-        else {
-            return ctx.fail();
-        }
-
-    }
-    reset_ranges: (inout ctx) = { Pattern::reset_ranges(ctx); }
-    to_string:    ()          "((name.data())$(Pattern::to_string())$)";
-}
 
 //-----------------------------------------------------------------------
 //
@@ -3004,68 +3020,6 @@ regex_parser: <Error_out> type = {
     // Parsing functions
     //
 
-    is_escape: (inout this, c: char) -> bool = {
-        if c != '\\' { return false; }
-
-        c_next := '\0';
-        if !next(out c_next) { error("Escape without a following character."); return false; }
-
-
-        if 'x' == c_next {
-            if !next(out c_next) { error("x escape without number."); return false; }
-            has_brackets := false;
-            number_str: std::string = "";
-            if '{' == c_next {
-                // TODO: Currently does not work since the compiler handles \x also.
-                // Bracketed
-                has_brackets = true;
-                _  = skip(); // Skip '{'
-                if !grab_until('}', out number_str) { error("No ending bracket for \\x"); return false; }
-            }
-            else {
-                // grab two chars
-
-                if !grab_n(2, out number_str) { error("Missing hexadecimal digits after \\x."); return false; }
-            }
-
-            number := 0;
-            if !string_to_int(number_str, number, 16) { error("Could not convert hexadecimal to int."); return false; }
-
-            number_as_char : char = unsafe_narrow<char>(number);
-
-            syntax: std::string = int_to_string(number_as_char as int, 16);
-            if has_brackets {
-                syntax = "{(syntax)$}";
-            }
-            syntax = "\\x(syntax)$";
-            char_matcher := create_matcher("char_matcher_logic", "'(number_as_char)$', '(safe_tolower(number_as_char))$', '(safe_toupper(number_as_char))$'");
-            cur_group_state.add(create_matcher("special_syntax_wrapper", "\"(syntax)$\", (char_matcher)$"));
-        }
-        else if 'o' == c_next {
-            if !next(out c_next) { error("o escape without bracket."); return false; }
-            number_str: std::string = "";
-            if '{' == c_next {
-                _  = skip(); // Skip '{'
-                if !grab_until('}', out number_str) { error("No ending bracket for \\o"); return false; }
-            }
-
-            number := 0;
-            if !string_to_int(number_str, number, 8) { error("Could not convert octal to int."); return false; }
-
-            number_as_char : char = unsafe_narrow<char>(number);
-
-            syntax: std::string = "\\o{(int_to_string(number_as_char as int, 8))$}";
-            char_matcher := create_matcher("char_matcher_logic", "'(number_as_char)$', '(safe_tolower(number_as_char))$', '(safe_toupper(number_as_char))$'");
-            cur_group_state.add(create_matcher("special_syntax_wrapper", "\"(syntax)$\", (char_matcher)$"));
-        }
-        else {
-            error("Unknown escape.");
-            return false;
-        }
-
-        return true;
-    }
-
     is_handle_special: (inout this, c: char) -> bool = {
         if c != '\'' { return false; }
 
@@ -3078,7 +3032,6 @@ regex_parser: <Error_out> type = {
         while c != '\n' next _ = next(out c) {
             if c == term { return; }
 
-            if !has_error && is_escape(c) { continue; }
             if !has_error && is_handle_special(c) { continue; }
 
             if has_error { return; }
