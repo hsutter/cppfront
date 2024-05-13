@@ -356,6 +356,125 @@ using longdouble = long double;
 using _schar     = signed char;      // normally use i8 instead
 using _uchar     = unsigned char;    // normally use u8 instead
 
+//-----------------------------------------------------------------------
+//
+//  Helper for concepts
+//
+//-----------------------------------------------------------------------
+//
+
+template<typename Ret, typename Arg>
+auto argument_of_helper(Ret(*) (Arg)) -> Arg;
+
+template<typename Ret, typename F, typename Arg>
+auto argument_of_helper(Ret(F::*) (Arg)) -> Arg;
+
+template<typename Ret, typename F, typename Arg>
+auto argument_of_helper(Ret(F::*) (Arg)&) -> Arg;
+
+template<typename Ret, typename F, typename Arg>
+auto argument_of_helper(Ret(F::*) (Arg)&&) -> Arg;
+
+template<typename Ret, typename F, typename Arg>
+auto argument_of_helper(Ret(F::*) (Arg) const) -> Arg;
+
+template<typename Ret, typename F, typename Arg>
+auto argument_of_helper(Ret(F::*) (Arg) const&) -> Arg;
+
+template<typename Ret, typename F, typename Arg>
+auto argument_of_helper(Ret(F::*) (Arg) const&&) -> Arg;
+
+template <typename F>
+auto argument_of_helper(F const&) -> CPP2_TYPEOF(argument_of_helper(&F::operator()));
+
+template <typename T>
+using argument_of_t = CPP2_TYPEOF(argument_of_helper(std::declval<T>()));
+
+template <typename F>
+auto argument_of_helper_op_is(F const&) -> CPP2_TYPEOF(argument_of_helper(&F::op_is));
+
+template <typename T>
+using argument_of_op_is_t = CPP2_TYPEOF(argument_of_helper_op_is(std::declval<T>()));
+
+template <typename T>
+using pointee_t = std::iter_value_t<T>;
+
+template <template <typename...> class C, typename... Ts>
+constexpr auto specialization_of_template_helper(C< Ts...> const& ) -> std::true_type {
+    return {};
+}
+
+template <template <typename, auto...> class C, typename T, auto... Ns>
+    requires (sizeof...(Ns) > 0)
+constexpr auto specialization_of_template_helper(C< T, Ns... > const& ) -> std::true_type {
+    return {};
+}
+
+//-----------------------------------------------------------------------
+//
+//  Concepts
+//
+//-----------------------------------------------------------------------
+//
+
+template <typename X, template<typename...> class C>
+concept specialization_of_template = requires (X x) {
+    { specialization_of_template_helper<C>(std::forward<X>(x)) } -> std::same_as<std::true_type>;
+};
+
+template <typename X, template<typename,auto...> class C>
+concept specialization_of_template_type_and_nttp = requires (X x) {
+    { specialization_of_template_helper<C>(std::forward<X>(x)) } -> std::same_as<std::true_type>;
+};
+
+template <typename X>
+concept dereferencable = requires (X x) { *x; };
+
+template <typename X>
+concept default_constructible = std::is_default_constructible_v<std::remove_cvref_t<X>>;
+
+template <typename X>
+concept bounded_array = std::is_bounded_array_v<std::remove_cvref_t<X>>;
+
+template <typename X>
+concept pointer_like = dereferencable<X> && default_constructible<X> && std::equality_comparable<X>
+                       && !bounded_array<X>;
+
+template< typename From, typename To >
+concept brace_initializable_to = requires (From x) { To{x}; };
+
+template< typename X, typename C >
+concept same_type_as = std::same_as<std::remove_cvref_t<X>, std::remove_cvref_t<C>>;
+
+template <typename X>
+concept defined = requires { std::declval<X>(); };
+
+template <typename X>
+concept has_defined_argument = requires {
+	std::declval<argument_of_t<X>>();
+};
+
+template <typename X, typename F>
+concept covertible_to_argument_of = same_type_as<X,argument_of_t<F>>
+                                 || (pointer_like<argument_of_t<F>> && brace_initializable_to<X, pointee_t<argument_of_t<F>>>)
+                                 || (!pointer_like<argument_of_t<F>> && brace_initializable_to<X, argument_of_t<F>>)
+                                 ;
+
+template <typename F, typename X>
+concept valid_predicate = (std::predicate<F, X> && !has_defined_argument<F>)
+                          || (std::predicate<F, X> && has_defined_argument<F> && covertible_to_argument_of<X, F>);
+
+template <typename X, typename O, auto mem_fun_ptr>
+concept predicate_member_fun = requires (X x, O o) {
+    { (o.*mem_fun_ptr)(x) } -> std::convertible_to<bool>;
+};
+
+template <typename F, typename X>
+concept valid_custom_is_operator = predicate_member_fun<X, F, &F::op_is>
+                      && ( 
+                        !defined<argument_of_op_is_t<F>>
+                        || brace_initializable_to<X, argument_of_op_is_t<F>> 
+                      );
 
 //-----------------------------------------------------------------------
 //
@@ -590,6 +709,52 @@ auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAU
 #define CPP2_ASSERT_IN_BOUNDS(x,arg)         (cpp2::impl::assert_in_bounds((x),(arg)))
 #define CPP2_ASSERT_IN_BOUNDS_LITERAL(x,arg) (cpp2::impl::assert_in_bounds<(arg)>(x))
 
+#ifdef CPP2_NO_RTTI
+// Compile-Time type name deduction for -fno-rtti builds
+//
+constexpr auto process_type_name(std::string_view name) -> std::string_view {
+#if defined(__clang__) || defined(__GNUC__)
+    constexpr auto type_prefix = std::string_view("T = ");
+    constexpr auto types_close_parenthesis = ']';
+#elif defined(_MSC_VER)
+    constexpr auto type_prefix = std::string_view("type_name<");
+    constexpr auto types_close_parenthesis = '>';
+#endif
+    auto pos = name.find(type_prefix);
+    if (pos != std::string_view::npos) {
+        name = name.substr(pos);
+        name.remove_prefix(type_prefix.size());
+    }
+
+    pos = name.find_last_of(types_close_parenthesis);
+    if (pos != std::string_view::npos) {
+        name = name.substr(0, pos);
+    }
+
+#if defined(__GNUC__)
+    constexpr auto type_separator = ';';
+    pos = name.find(type_separator);
+    if (pos != std::string_view::npos) {
+        name = name.substr(0, pos);
+    }
+#endif
+
+    return name;
+}
+
+template<typename T>
+constexpr auto type_name() -> std::string_view {
+#if defined(__clang__) || defined(__GNUC__)    
+    constexpr auto ret = process_type_name(__PRETTY_FUNCTION__);
+#elif defined(_MSC_VER)
+    constexpr auto ret = process_type_name(__FUNCSIG__);
+#else
+    constexpr auto ret = "<cannot determine type>";
+#endif
+    return ret;
+}
+
+#endif 
 
 //-----------------------------------------------------------------------
 //
@@ -608,11 +773,18 @@ auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAU
 
 [[noreturn]] auto Throw(auto&& x, [[maybe_unused]] char const* msg) -> void {
 #ifdef CPP2_NO_EXCEPTIONS
-    auto err = std::string{"exceptions are disabled with -fno-exceptions - attempted to throw exception with type \"" + typeid(decltype(x)).name() + "\""};
+    auto err = std::string{"exceptions are disabled with -fno-exceptions - attempted to throw exception with type \""};
+ 
+    #ifdef CPP2_NO_RTTI
+    err += type_name<decltype(x)>();
+    #else 
+    err += typeid(decltype(x)).name();
+    #endif
+    err += "\"";
     if (msg) {
-        err += " and the message \"" + msg + "\"";
+        err += std::string{" and the message \""} + msg + "\"";
     }
-    type_safety.report_violation( err );
+    type_safety.report_violation( err.c_str() );
     std::terminate();
 #else
     throw CPP2_FORWARD(x);
@@ -1149,31 +1321,24 @@ using empty = void;
 
 //  Templates
 //
-template <template <typename...> class C, typename... Ts>
-constexpr auto is(C< Ts...> const& ) -> bool {
-    return true;
+template <template <typename...> class C, typename X>
+constexpr auto is( X&& ) {
+    if constexpr (specialization_of_template<X, C>) {
+        return std::true_type{};
+    }
+    else {
+        return std::false_type{};
+    }
 }
 
-#if defined(_MSC_VER)
-    template <template <typename, typename...> class C, typename T>
-    constexpr auto is( T const& ) -> bool {
-        return false;
+template <template <typename, auto> class C, typename X>
+constexpr auto is( X&& ) {
+    if constexpr (specialization_of_template_type_and_nttp<X, C>) {
+        return std::true_type{};
     }
-#else
-    template <template <typename...> class C, typename T>
-    constexpr auto is( T const& ) -> bool {
-        return false;
+    else {
+        return std::false_type{};
     }
-#endif
-
-template <template <typename,auto> class C, typename T, auto V>
-constexpr auto is( C<T, V> const& ) -> bool {
-    return true;
-}
-
-template <template <typename,auto> class C, typename T>
-constexpr auto is( T const& ) -> bool {
-    return false;
 }
 
 //  Types
@@ -1220,25 +1385,37 @@ auto is( X const& x ) -> bool {
 inline constexpr auto is( auto const& x, auto&& value ) -> bool
 {
     //  Value with customized operator_is case
-    if constexpr (requires{ x.op_is(value); }) {
+    if constexpr (valid_custom_is_operator<decltype(x), decltype(value)>) {
         return x.op_is(value);
     }
 
     //  Predicate case
-    else if constexpr (requires{ bool{ value(x) }; }) {
+    else if constexpr (valid_predicate<decltype(value), decltype(x)>) {
         return value(x);
     }
-    else if constexpr (std::is_function_v<decltype(value)> || requires{ &value.operator(); }) {
+
+    //  Value equality case: C/C++ arrays or individual values
+    else if constexpr (std::is_array_v<CPP2_TYPEOF(x)> && std::is_array_v<CPP2_TYPEOF(value)>) {
+        if (std::ssize(x) == std::ssize(value)) {
+            return std::equal( std::begin(x), std::end(x), std::begin(value));
+        }
         return false;
     }
-
-    //  Value equality case
     else if constexpr (requires{ bool{x == value}; }) {
         return x == value;
     }
     return false;
 }
 
+//-----------------------------------------------------------------------
+//
+//  and "is predicate" for generic function used as predicate
+//
+
+template <typename X>
+inline constexpr auto is( X const& x, bool (*value)(X const&) ) -> bool {
+    return value(x);
+}
 
 //-------------------------------------------------------------------------------------------------------------
 //  Built-in as

@@ -266,6 +266,22 @@ if   i % 2 == 1         // if i is odd
 //      counter: 1, word: [Betty]
 ```
 
+Here is the equivalent of the Cpp1 code `for ( int i = 0; i < 10; ++i ){ std::cout << i; }`:
+
+``` cpp title="Equivalent of Cpp1 'for ( int i = 0; i < 10; ++i ){ std::cout << i; }'"
+(copy i := 0)
+while i < 10
+next  i++ {
+    std::cout << i;
+}
+```
+
+Line by line:
+
+- `(copy i := 0)`: Any statement can have [statement-local parameters](declarations.md#from-functions-to-local-scopes-and-back-again), and this is declaring `i` as an `int` that's local to the loop. Parameters by default are `const`, and for not-cheap-to-copy types they bind to the original value; so because we want to modify `i` we say `copy` to explicitly declare this is the loop's own mutable scratch variable.
+- `while i < 10`: The termination condition.
+- `next i++`: The end-of-loop-iteration statement. Note `++` is always postfix in Cpp2.
+
 
 ### Loop names, `#!cpp break`, and `#!cpp continue`
 
