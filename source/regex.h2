@@ -821,9 +821,11 @@ parse_context: type = {
             if !cur_token && valid() { cur_token = global_group_reset_token_parse(this); }
             if !cur_token && valid() { cur_token = group_ref_token::parse(this); }
             if !cur_token && valid() { cur_token = group_token::parse(this); }
+            if !cur_token && valid() { cur_token = hexadecimal_token_parse(this); }
             if !cur_token && valid() { cur_token = line_end_token_parse(this); }
             if !cur_token && valid() { cur_token = line_start_token_parse(this); }
             if !cur_token && valid() { cur_token = named_class_token_parse(this); }
+            if !cur_token && valid() { cur_token = octal_token_parse(this); }
             if !cur_token && valid() { cur_token = range_token::parse(this); }
             if !cur_token && valid() { cur_token = special_range_token::parse(this); }
             if !cur_token && valid() { cur_token = word_boundary_token_parse(this); }
@@ -1819,6 +1821,47 @@ group_token: @polymorphic_base type = {
     }
 }
 
+// Regex syntax: \x<number> or \x{<number>}  Example: \x{62}
+//
+hexadecimal_token_parse: (inout ctx: parse_context) -> token_ptr = {
+    if !(ctx.current() == '\\' && ctx.peek() == 'x') { return nullptr; }
+
+    _ = ctx.next(); // Skip escape.
+
+    if !ctx.next() { return ctx.error("x escape without number.");}
+
+    has_brackets := false;
+    number_str: std::string = "";
+    if '{' == ctx.current() {
+        // TODO: Currently does not work since the compiler handles \x also.
+        // Bracketed
+        has_brackets = true;
+        _  = ctx.next(); // Skip '{'
+        if !ctx.grab_until('}', out number_str) { return ctx.error("No ending bracket for \\x"); }
+    }
+    else {
+        // grab two chars
+
+        if !ctx.grab_n(2, out number_str) { return ctx.error("Missing hexadecimal digits after \\x."); }
+    }
+
+    number := 0;
+    if !string_to_int(number_str, number, 16) { return ctx.error("Could not convert hexadecimal to int."); }
+
+    // TODO: Change for unicode.
+    number_as_char : char = unsafe_narrow<char>(number);
+
+    syntax: std::string = int_to_string(number_as_char as int, 16);
+    if has_brackets {
+        syntax = "{(syntax)$}";
+    }
+    syntax = "\\\\x(syntax)$";
+
+    r := shared.new<char_token>(number_as_char);
+    r*.set_string(syntax);
+    return r;
+}
+
 modifier_token: @polymorphic_base type = {
     this: regex_token_base;
 
@@ -1942,6 +1985,33 @@ named_class_not_hor_space : <CharT> type == class_token_matcher<CharT, true, hor
 named_class_not_space     : <CharT> type == class_token_matcher<CharT, true, space_class<CharT>>;
 named_class_not_ver_space : <CharT> type == class_token_matcher<CharT, true, ver_space_class<CharT>>;
 named_class_not_word      : <CharT> type == class_token_matcher<CharT, true, word_class<CharT>>;
+
+
+// Regex syntax: \o{<number>}  Example: \o{142}
+//
+octal_token_parse: (inout ctx: parse_context) -> token_ptr = {
+    if !(ctx.current() == '\\' && ctx.peek() == 'o') { return nullptr; }
+
+    _ = ctx.next(); // Skip escape.
+
+    if !ctx.next() { return ctx.error("o escape without number.");}
+    if ctx.current() != '{' { return ctx.error("Missing opening bracket for \\o."); }
+
+    number_str: std::string = "";
+    _  = ctx.next(); // Skip '{'
+    if !ctx.grab_until('}', out number_str) { return ctx.error("No ending bracket for \\o"); }
+
+    number := 0;
+    if !string_to_int(number_str, number, 8) { return ctx.error("Could not convert octal to int."); }
+
+    // TODO: Change for unicode.
+    number_as_char : char = unsafe_narrow<char>(number);
+
+    syntax: std::string = "\\o{(int_to_string(number_as_char as int, 8))$}";
+    r := shared.new<char_token>(number_as_char);
+    r*.set_string(syntax);
+    return r;
+}
 
 // Regex syntax: <matcher>{min, max}  Example: a{2,4}
 //
