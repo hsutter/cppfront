@@ -818,6 +818,7 @@ parse_context: type = {
             if !cur_token && valid() { cur_token = any_token::parse(this); }
             if !cur_token && valid() { cur_token = class_token::parse(this); }
             if !cur_token && valid() { cur_token = escape_token_parse(this); }
+            if !cur_token && valid() { cur_token = global_group_reset_token_parse(this); }
             if !cur_token && valid() { cur_token = group_ref_token::parse(this); }
             if !cur_token && valid() { cur_token = group_token::parse(this); }
             if !cur_token && valid() { cur_token = line_end_token_parse(this); }
@@ -1070,6 +1071,21 @@ regex_token_check: @polymorphic_base type = {
 
     generate_code: (override this, inout ctx: generation_context) = {
         ctx.add_check(check + "(" + ctx.match_parameters() + ")");
+    }
+}
+
+regex_token_code: @polymorphic_base type = {
+    this: regex_token_base;
+
+    code: std::string;
+
+    operator=:(out this, str: std::string, code_: std::string) = {
+        regex_token_base = (str);
+        code = code_;
+    }
+
+    generate_code: (override this, inout ctx: generation_context) = {
+        ctx.add(code);
     }
 }
 
@@ -1474,6 +1490,15 @@ escaped_char_token: @polymorphic_base type = {
     generate_code: (override this, inout ctx: generation_context) = {
         ctx.add_check("char_token_matcher<char, '\\(token)$', '\\(token)$', '\\(token)$'>((ctx.match_parameters())$)");
     }
+}
+
+// Regex syntax: \K Example: ab\Kcd
+//
+global_group_reset_token_parse: (inout ctx: parse_context) -> token_ptr = {
+    if !(ctx.current() == '\\' && ctx.peek() == 'K') { return nullptr; }
+
+    _ = ctx.next(); // Skip escape.
+    return shared.new<regex_token_code>("\\\\K", "ctx.set_group_start(0, r.pos);");
 }
 
 // Regex syntax: \<number>  Example: \1
@@ -2356,18 +2381,6 @@ class_matcher_logic: <CharT, negate: bool, List ...> type =
     }
 }
 
-// Regex syntax: \K Example: \K
-//
-global_group_reset: <CharT> type = {
-    match: <Other> (cur, inout ctx, modifiers, end_func, _ : Other) -> _ = {
-        ctx.set_group_start(0, cur);
-        return Other::match(cur, ctx, modifiers, end_func);
-    }
-
-    reset_ranges: (_) = {}
-    to_string:    ()  bstring<CharT>("\\K");
-}
-
 // Regex syntax: (?=) or (?!) or (*pla), etc.  Example: (?=AA)
 //
 lookahead_matcher_logic: <CharT, positive: bool, name: fixed_string, Pattern> type =
@@ -2928,10 +2941,7 @@ regex_parser: <Error_out> type = {
         if !next(out c_next) { error("Escape without a following character."); return false; }
 
 
-        if 'K' == c_next {
-            cur_group_state.add(create_matcher("global_group_reset", ""));
-        }
-        else if 'x' == c_next {
+        if 'x' == c_next {
             if !next(out c_next) { error("x escape without number."); return false; }
             has_brackets := false;
             number_str: std::string = "";
