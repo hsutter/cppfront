@@ -397,6 +397,14 @@ regex_token: @polymorphic_base type = {
 token_ptr : type == std::shared_ptr<regex_token>;
 token_vec: type == std::vector<token_ptr>;
 
+// State of the expression modifiers.
+//
+parse_context_modifier_state: @struct type = {
+    group_captures_have_numbers : bool = true;
+    perl_code_syntax:             bool = false;
+    perl_code_syntax_in_classes:  bool = false;
+}
+
 // State of the current group. See '(<pattern>)'
 parse_context_group_state: @struct type = {
 
@@ -406,7 +414,7 @@ parse_context_group_state: @struct type = {
     // List of alternate matcher lists. E.g. ab|cd|xy
     alternate_match_lists: token_vec = ();
 
-    //modifiers : parse_context_modifier_state = (); // TODO:
+    modifiers : parse_context_modifier_state = ();
 
     next_alternative: (inout this) = {
         new_list: token_vec = ();
@@ -417,7 +425,7 @@ parse_context_group_state: @struct type = {
     swap: (inout this, inout t: parse_context_group_state) = {
         std::swap(cur_match_list, t.cur_match_list);
         std::swap(alternate_match_lists, t.alternate_match_lists);
-        //std::swap(modifiers, t.modifiers); // TODO:
+        std::swap(modifiers, t.modifiers);
     }
 
     get_tokens: (inout this) -> token_ptr = {
@@ -500,12 +508,12 @@ parse_context: type = {
         return inner;
     }
 
-    get_modifiers: (this) -> regex_parser_modifier_state = {
-        return (); // TODO:
+    get_modifiers: (this) -> parse_context_modifier_state = {
+        return cur_group_state.modifiers;
     }
 
-    set_modifiers: (inout this, mod: regex_parser_modifier_state) = {
-        _ = mod;
+    set_modifiers: (inout this, mod: parse_context_modifier_state) = {
+        cur_group_state.modifiers = mod;
     }
 
     // Branch reset management functions
@@ -635,13 +643,12 @@ parse_context: type = {
     private get_next_position: (in this, in_class: bool, no_skip: bool) -> size_t = {
         perl_syntax := false;
         if !no_skip {
-            // TODO:
-            // if in_class {
-            //     perl_syntax = cur_group_state.modifiers.perl_code_syntax && cur_group_state.modifiers.perl_code_syntax_in_classes;
-            // }
-            // else {
-            //     perl_syntax = cur_group_state.modifiers.perl_code_syntax;
-            // }
+            if in_class {
+                perl_syntax = cur_group_state.modifiers.perl_code_syntax && cur_group_state.modifiers.perl_code_syntax_in_classes;
+            }
+            else {
+                perl_syntax = cur_group_state.modifiers.perl_code_syntax;
+            }
         }
         cur := pos + 1;
         if perl_syntax {
@@ -743,7 +750,7 @@ parse_context: type = {
     peek_in_class: (in this) peek_impl(true);
 
     parser_group_modifiers: (inout this, change_str: std::string, out modifier_change: std::string,
-                      inout parser_modifiers: regex_parser_modifier_state) -> bool = {
+                      inout parser_modifiers: parse_context_modifier_state) -> bool = {
         is_negative := false;
         is_reset    := false;
 
