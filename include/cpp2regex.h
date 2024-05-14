@@ -1242,7 +1242,7 @@ class modifier_token: public regex_token_base {
 #line 1900 "regex.h2"
     private: std::string mod; 
 
-    public: explicit modifier_token(cpp2::in<std::string> mod_);
+    public: explicit modifier_token(cpp2::in<std::string> mod_, cpp2::in<std::string> mod_str);
 
 #line 1907 "regex.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
@@ -3108,7 +3108,7 @@ template<typename CharT, CharT C, CharT L, CharT U> [[nodiscard]] auto char_toke
 
     static_cast<void>(CPP2_UFCS(next)(ctx));// Skip escape
 
-    if (std::string::npos != CPP2_UFCS(find)(std::string("afenrt"), CPP2_UFCS(current)(ctx))) {
+    if (std::string::npos != CPP2_UFCS(find)(std::string("afenrt\\"), CPP2_UFCS(current)(ctx))) {
         // Escape of string special char
         return CPP2_UFCS_TEMPLATE(cpp2_new<escaped_char_token>)(cpp2::shared, CPP2_UFCS(current)(ctx)); 
     }else {
@@ -3412,7 +3412,7 @@ template<typename CharT, int group> [[nodiscard]] auto group_ref_token_matcher(a
             // Only a modifier
             CPP2_UFCS(set_modifiers)(ctx, std::move(modifiers_change_to));
 
-            return CPP2_UFCS_TEMPLATE(cpp2_new<modifier_token>)(cpp2::shared, std::move(modifier_change)); 
+            return CPP2_UFCS_TEMPLATE(cpp2_new<modifier_token>)(cpp2::shared, std::move(modifier_change), std::move(modifiers)); 
         }
     }
 
@@ -3510,8 +3510,8 @@ template<typename CharT, int group> [[nodiscard]] auto group_ref_token_matcher(a
 }
 
 #line 1902 "regex.h2"
-    modifier_token::modifier_token(cpp2::in<std::string> mod_)
-        : regex_token_base{ ("(?" + cpp2::to_string(mod_) + ")") }
+    modifier_token::modifier_token(cpp2::in<std::string> mod_, cpp2::in<std::string> mod_str)
+        : regex_token_base{ ("(?" + cpp2::to_string(mod_str) + ")") }
         , mod{ mod_ }{
 
 #line 1905 "regex.h2"

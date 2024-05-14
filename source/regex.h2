@@ -1487,7 +1487,7 @@ escape_token_parse: (inout ctx: parse_context) -> token_ptr = {
 
     _ = ctx.next(); // Skip escape
 
-    if std::string::npos != std::string("afenrt").find(ctx.current()) {
+    if std::string::npos != std::string("afenrt\\").find(ctx.current()) {
         // Escape of string special char
         return shared.new<escaped_char_token>(ctx.current());
     } else {
@@ -1800,7 +1800,7 @@ group_token: @polymorphic_base type = {
             // Only a modifier
             ctx.set_modifiers(modifiers_change_to);
 
-            return shared.new<modifier_token>(modifier_change);
+            return shared.new<modifier_token>(modifier_change, modifiers);
         }
     }
 
@@ -1899,8 +1899,8 @@ modifier_token: @polymorphic_base type = {
 
     mod: std::string;
 
-    operator=: (out this, mod_: std::string) = {
-        regex_token_base = ("(?(mod_)$)");
+    operator=: (out this, mod_: std::string, mod_str: std::string) = {
+        regex_token_base = ("(?(mod_str)$)");
         mod = mod_;
     }
 
