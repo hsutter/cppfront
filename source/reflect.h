@@ -2078,7 +2078,7 @@ auto regex_gen(meta::type_declaration& t) -> void
         auto regular_expression {::cpp2::regex::generate_template(expr.second.first, expr.second.second, [_0 = t](auto const& message) mutable -> void { CPP2_UFCS(error)(_0, message);  })}; 
 
         CPP2_UFCS(add_member)(t, ("public " + cpp2::to_string(expr.first) + "_matcher: type = " + cpp2::to_string(std::move(regular_expression))));
-        CPP2_UFCS(add_member)(t, ("public " + cpp2::to_string(expr.first) + ": cpp2::regex::regular_expression_with_matcher<char, " + cpp2::to_string(expr.first) + "_matcher> = ();"));
+        CPP2_UFCS(add_member)(t, ("public " + cpp2::to_string(expr.first) + ": cpp2::regex::regular_expression<char, " + cpp2::to_string(expr.first) + "_matcher> = ();"));
     }
 }
 

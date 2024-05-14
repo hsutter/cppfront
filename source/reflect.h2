@@ -1445,7 +1445,7 @@ regex_gen: (inout t: meta::type_declaration) =
         regular_expression:= ::cpp2::regex::generate_template(expr.second.first, expr.second.second, :(message: _) = t$.error(message););
 
         t.add_member("public (expr.first)$_matcher: type = (regular_expression)$");
-        t.add_member("public (expr.first)$: cpp2::regex::regular_expression_with_matcher<char, (expr.first)$_matcher> = ();");
+        t.add_member("public (expr.first)$: cpp2::regex::regular_expression<char, (expr.first)$_matcher> = ();");
     }
 }
 

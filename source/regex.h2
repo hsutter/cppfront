@@ -488,8 +488,9 @@ parse_context: type = {
     cur_branch_reset_state: parse_context_branch_reset_state = ();
     named_groups :          std::map<std::string, int> = ();
 
-    operator=:(out this, r: std::string_view) = {
+    operator=:(out this, r: std::string_view, modifiers: parse_context_modifier_state) = {
         regex = r;
+        set_modifiers(modifiers);
     }
 
     // State management functions
@@ -2504,107 +2505,8 @@ class_matcher_logic: <CharT, negate: bool, List ...> type =
 //-----------------------------------------------------------------------
 //
 
-// Helper for named groups.
-
-group_name_list: <name: fixed_string, group_id: int, Inner> type = {
-
-    get_group_id: (g) -> int = {
-        if g == name.str() {
-            return group_id;
-        }
-        else {
-            return Inner::get_group_id(g);
-        }
-    }
-}
-
-group_name_list_end: type = {
-    get_group_id: (_) -1;
-}
-
 // Regular expression implementation
-regular_expression: <CharT, flags: int, groups: size_t, alternatives: size_t, named_groups, Matcher> type = {
-
-    context: <Iter> type == match_context<CharT, Iter, groups, alternatives>;
-    modifiers: type      == match_modifiers<flags, int>;
-
-    // TODO: Named multiple return has problems with templates.
-    search_return: <Iter> type = {
-        public matched: bool;
-        public ctx: context<Iter>;
-
-        operator=:(out this, matched_: bool, ctx_: context<Iter>) = {
-            matched = matched_;
-            ctx = ctx_;
-        }
-
-        group_number: (this) ctx.size();
-        group:        (this, g: int) ctx.get_group_string(g);
-        group_start:  (this, g: int) ctx.get_group_start(g);
-        group_end:    (this, g: int) ctx.get_group_end(g);
-
-        group:        (this, g: bstring<CharT>) group(get_group_id(g));
-        group_start:  (this, g: bstring<CharT>) group_start(get_group_id(g));
-        group_end:    (this, g: bstring<CharT>) group_end(get_group_id(g));
-
-        private get_group_id: (this, g: bstring<CharT>) -> _ = {
-            group_id := named_groups::get_group_id(g);
-            if -1 == group_id {
-                // TODO: Throw error.
-            }
-            return group_id;
-        }
-    }
-
-    match: (in this, str: bview<CharT>)                 match(str.begin(), str.end());
-    match: (in this, str: bview<CharT>, start)          match(get_iter(str, start), str.end());
-    match: (in this, str: bview<CharT>, start, length)  match(get_iter(str, start), get_iter(str, start + length));
-    match: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> = {
-        ctx: context = (start, end);
-
-        r := Matcher::match(start, ctx, modifiers(), true_end_func());
-        return search_return(r.matched && r.pos == end, ctx);
-    }
-
-    search: (in this, str: bview<CharT>)                 search(str.begin(), str.end());
-    search: (in this, str: bview<CharT>, start)          search(get_iter(str, start), str.end());
-    search: (in this, str: bview<CharT>, start, length)  search(get_iter(str, start), get_iter(str, start + length));
-    search: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> = {
-        matched := false;
-        ctx: context = (start, end);
-
-        cur:= start;
-        while true next (cur++) {
-            if Matcher::match(cur, ctx, modifiers(), true_end_func()).matched {
-                matched = true;
-                break;
-            }
-
-            if cur == ctx.end {
-                break;
-            }
-        }
-
-        return search_return(matched, ctx);
-    }
-
-    to_string: (in this) Matcher::to_string();
-
-    // Helper functions
-    //
-
-    private get_iter: (str: bview<CharT>, pos) -> _ = {
-        if pos < str.size() {
-            return str.begin() + pos;
-        }
-        else {
-            return str.end();
-        }
-    }
-}
-
-// Regular expression implementation
-regular_expression_with_matcher: <CharT, Matcher> type = {
+regular_expression: <CharT, Matcher> type = {
 
     context: <Iter> type == match_context<CharT, Iter, Matcher::group_count::value, 0>;
     modifiers: type      == match_modifiers<Matcher::initial_flags::value, int>;
@@ -2691,76 +2593,6 @@ regular_expression_with_matcher: <CharT, Matcher> type = {
 //-----------------------------------------------------------------------
 //
 
-// State of the expression modifiers.
-//
-regex_parser_modifier_state: @struct type = {
-    group_captures_have_numbers : bool = true;
-    perl_code_syntax:             bool = false;
-    perl_code_syntax_in_classes:  bool = false;
-}
-
-// State of the current group. See '(<pattern>)'
-regex_parser_group_state: @struct type = {
-
-    // Current list of matchers
-    cur_match_list: std::vector<std::string> = ();
-
-    // List of alternate matcher lists. E.g. ab|cd|xy
-    alternate_match_lists: std::vector<std::vector<std::string>> = ();
-
-    modifiers : regex_parser_modifier_state = ();
-
-    next_alternative: (inout this) = {
-        new_list: std::vector<std::string> = ();
-        std::swap(new_list, cur_match_list);
-        _ = alternate_match_lists.insert(alternate_match_lists.end(), new_list);
-    }
-
-    swap: (inout this, inout t: regex_parser_group_state) = {
-        std::swap(cur_match_list, t.cur_match_list);
-        std::swap(alternate_match_lists, t.alternate_match_lists);
-        std::swap(modifiers, t.modifiers);
-    }
-
-    add: (inout this, matcher: _) = cur_match_list.push_back(matcher);
-
-    wrap_last: (inout this, matcher) = {
-        last:= cur_match_list.back();
-        cur_match_list.back() = matcher(last);
-        _ = matcher;
-        _ = last;
-    }
-
-    empty: (this) -> bool = cur_match_list.empty();
-}
-
-// State for the branch reset. Takes care of the group numbering. See '(|<pattern>)'.
-regex_branch_reset_state: @struct type = {
-    is_active : bool = false;
-    cur_group : int  = 1; // Global capture group.
-    max_group : int  = 1;
-    from      : int  = 1;
-
-    next: (inout this) -> int = {
-        g := cur_group;
-        cur_group += 1;
-        max_group = max(max_group, cur_group);
-
-        return g;
-    }
-
-    set_next: (inout this, g: int) = {
-        cur_group = g;
-        max_group = max(max_group, g);
-    }
-
-    next_alternative: (inout this) = {
-        if is_active {
-            cur_group = from;
-        }
-    }
-}
-
 // Parser and generator for regular expressions.
 regex_parser: <Error_out> type = {
 
@@ -2768,8 +2600,6 @@ regex_parser: <Error_out> type = {
     modifier:  std::string_view;
     error_out: Error_out;
 
-    cur_group_state:        regex_parser_group_state = ();
-    cur_branch_reset_state: regex_branch_reset_state = ();
     pos:                    size_t = 0;
     alternatives_count:     int = 0;
     named_groups :          std::map<std::string, int> = ();
@@ -2785,136 +2615,6 @@ regex_parser: <Error_out> type = {
         this.error_out = e;
     }
 
-    // State management functions
-    //
-    group_new_state: (inout this) -> regex_parser_group_state = {
-        old_state: regex_parser_group_state = ();
-        old_state.swap(cur_group_state);
-
-        return old_state;
-    }
-
-    group_restore_state: (inout this, old_state: regex_parser_group_state) = {
-        cur_group_state = old_state;
-    }
-
-    // Branch reset management functions
-    //
-
-    branch_reset_new_state: (inout this) -> regex_branch_reset_state = {
-        old_state: regex_branch_reset_state = ();
-        std::swap(old_state, cur_branch_reset_state);
-
-        cur_branch_reset_state.is_active = true;
-        cur_branch_reset_state.cur_group = old_state.cur_group;
-        cur_branch_reset_state.from      = cur_branch_reset_state.cur_group;
-        cur_branch_reset_state.max_group = cur_branch_reset_state.cur_group;
-
-        return old_state;
-    }
-
-    branch_reset_restore_state: (inout this, old_state: regex_branch_reset_state) = {
-        next_group := cur_branch_reset_state.max_group;
-        cur_branch_reset_state = old_state;
-        cur_branch_reset_state.set_next(next_group);
-    }
-
-    // Position management functions
-    //
-
-    private get_next_position: (in this, in_class: bool, no_skip: bool) -> size_t = {
-        perl_syntax := false;
-        if !no_skip {
-            if in_class {
-                perl_syntax = cur_group_state.modifiers.perl_code_syntax && cur_group_state.modifiers.perl_code_syntax_in_classes;
-            }
-            else {
-                perl_syntax = cur_group_state.modifiers.perl_code_syntax;
-            }
-        }
-        cur := pos + 1;
-        if perl_syntax {
-            while cur < regex.size() next (cur += 1) {
-                n: = regex[cur];
-
-                if space_class<char>::includes(n) {
-                    continue;
-                }
-                else if !in_class && '#' == n {
-                    cur = regex.find("\n", cur);
-                    if std::string::npos == cur {
-                        // No new line, comment runs until the end of the pattern
-                        cur = regex.size();
-                    }
-                }
-                else { // None space none comment char
-                    break;
-                }
-            }
-        }
-
-        // Check for end of file.
-        if cur > regex.size() {
-            cur = regex.size();
-        }
-        return cur;
-    }
-
-    private next_impl: (inout this, out n: char, in_class: bool, no_skip: bool) -> bool = {
-        pos = get_next_position(in_class, no_skip);
-        if pos != regex.size() {
-            n = regex[pos];
-            return true;
-        }
-        else {
-            n = '\0';
-            return false;
-        }
-    }
-
-    next: (inout this, out n: char)          next_impl(out n, false, false);
-    next_in_class: (inout this, out n: char) next_impl(out n, true, false);
-    next_no_skip: (inout this, out n: char)  next_impl(out n, false, true);
-
-
-
-    skip: (inout this) -> bool = {
-        c: char;
-        r := next(out c);
-        _ = c;
-        return r;
-    }
-
-    skip_n:(inout this, n: int) -> bool = {
-        r := true;
-        cur := 0;
-        while r && cur < n next (r = skip()) {
-            cur += 1;
-        }
-        return r;
-    }
-
-    current: (in this) -> char = {
-        if pos < regex.size() {
-            return regex[pos];
-        } else {
-            return '\0';
-        }
-    }
-
-    private peek_impl: (in this, in_class: bool) -> char = {
-        next_pos := get_next_position(in_class, false);
-        if next_pos < regex.size() {
-            return regex[next_pos];
-        }
-        else {
-            return '\0';
-        }
-    }
-
-    peek: (in this)          peek_impl(false);
-    peek_in_class: (in this) peek_impl(true);
-
     // Misc functions
     //
     error:(inout this, message: std::string) = {
@@ -2922,79 +2622,17 @@ regex_parser: <Error_out> type = {
         has_error = true;
     }
 
-    join: (list, func) -> std::string = {
-        r: std::string = "";
-
-        separator: std::string = "";
-        for list do (cur) {
-            r += separator + func(cur);
-            separator = ", ";
-        }
-
-        return r;
-    }
-
-    join: (list: std::vector<std::string>) join(list, :(arg) -> _ == arg); // Todo: Shorthand syntax for const lambda
-
-
-    // Creator functions for matchers.
-    //
-
-    create_matcher: (in this, name: std::string, template_arguments: std::string) -> _ = {
-        sep := ", ";
-        if template_arguments.empty() { sep = ""; }
-
-        return "::cpp2::regex::(name)$<char(sep)$(template_arguments)$>";
-    }
-
-    create_matcher_from_list: (inout this, list) create_matcher("matcher_list", join(list));
-
-    create_matcher_from_state: (inout this) -> std::string = {
-        if 0 == cur_group_state.alternate_match_lists.size() { return create_matcher_from_list(cur_group_state.cur_match_list); }
-
-        if 0 == cur_group_state.cur_match_list.size() {
-            cur_group_state.add(create_matcher("empty_matcher_logic", ""));
-        }
-        cur_group_state.next_alternative();
-        cur_branch_reset_state.next_alternative();
-
-        list := join(cur_group_state.alternate_match_lists, :(arg) -> _ == create_matcher_from_list(arg));
-        alternative_id := alternatives_count;
-        alternatives_count += 1;
-
-        return create_matcher("alternative_matcher_logic", "(alternative_id)$, (list)$");
-    }
-
-    create_named_groups_list: (in this) -> std::string = {
-        r : std::string = "::cpp2::regex::group_name_list_end";
-
-        for named_groups do (cur) {
-            r = "::cpp2::regex::group_name_list<\"(cur.first)$\", (cur.second)$, (r)$>";
-        }
-
-        return r;
-    }
-
     // Parser helper functions.
 
-    parse_lookahead: (inout this, name: std::string, positive: bool) -> bool = {
-        old_state: _ = group_new_state();
-        parse_until(')');
-        inner:= create_matcher_from_state();
-        group_restore_state(old_state);
-
-        cur_group_state.add(create_matcher("lookahead_matcher_logic", "(positive)$, \"(name)$\", (inner)$"));
-
-        return true;
-    }
-
-    parser_expression_modifiers: (inout this) -> std::string = {
+    parser_expression_modifiers: (inout this, out mods : parse_context_modifier_state) -> std::string = {
         r: std::string = "0";
         sep: std::string = " | ";
 
         add := :(name, inout r) = {
             r += "(sep$)$(name)$";
         };
+
+        mods = ();
 
         mod_pos := 0;
         while mod_pos < modifier.ssize() next mod_pos += 1 {
@@ -3005,17 +2643,17 @@ regex_parser: <Error_out> type = {
             else if c == 's' { add("::cpp2::regex::expression_flags::single_line", r); }
             else if c == 'n' {
                 add("::cpp2::regex::expression_flags::no_group_captures", r);
-                cur_group_state.modifiers.group_captures_have_numbers = false;
+                mods.group_captures_have_numbers = false;
             }
             else if c == 'x' {
                 add("::cpp2::regex::expression_flags::perl_code_syntax", r);
-                cur_group_state.modifiers.perl_code_syntax = true;
+                mods.perl_code_syntax = true;
 
                 // Check if we have 'xx'
                 mod_pos += 1;
                 if mod_pos < modifier.ssize() && 'x' == modifier[mod_pos] {
                     add("::cpp2::regex::expression_flags::perl_code_syntax_in_classes", r);
-                    cur_group_state.modifiers.perl_code_syntax_in_classes = true;
+                    mods.perl_code_syntax_in_classes = true;
                 }
             }
             else { error("Unknown modifier: '(c)$'"); }
@@ -3026,27 +2664,6 @@ regex_parser: <Error_out> type = {
 
     // Parsing functions
     //
-
-    is_handle_special: (inout this, c: char) -> bool = {
-        if c != '\'' { return false; }
-
-        cur_group_state.add(create_matcher("char_matcher_logic", "'\\(c)$', '\\(c)$', '\\(c)$'"));
-        return true;
-    }
-
-    parse_until:(inout this, term: char) = {
-        c: char = current();
-        while c != '\n' next _ = next(out c) {
-            if c == term { return; }
-
-            if !has_error && is_handle_special(c) { continue; }
-
-            if has_error { return; }
-
-            // No special char, push a character match
-            cur_group_state.add(create_matcher("char_matcher_logic", "'(c)$', '(safe_tolower(c))$', '(safe_toupper(c))$'"));
-        }
-    }
 
     create_named_group_lookup: (this) -> std::string = {
         res: std::string = "get_named_group_index: (name) -> int = {\n";
@@ -3071,8 +2688,9 @@ regex_parser: <Error_out> type = {
     }
 
     parse:(inout this) -> std::string = {
-        mod   := parser_expression_modifiers();
-        parse_ctx: parse_context = (regex);
+        modifiers : parse_context_modifier_state;
+        mod   := parser_expression_modifiers(out modifiers);
+        parse_ctx: parse_context = (regex, modifiers);
         if !parse_ctx.parse() {
             error(parse_ctx.error_text);
             return "Error";
