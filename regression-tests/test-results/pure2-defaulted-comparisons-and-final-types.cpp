@@ -21,9 +21,9 @@ class widget final
  {
     private: int v; 
 
-    public: explicit widget(cpp2::in<int> value);
+    public: explicit widget(cpp2::impl::in<int> value);
 #line 6 "pure2-defaulted-comparisons-and-final-types.cpp2"
-    public: auto operator=(cpp2::in<int> value) -> widget& ;
+    public: auto operator=(cpp2::impl::in<int> value) -> widget& ;
 
     public: [[nodiscard]] auto operator==(widget const& that) const& -> bool = default;
 
@@ -41,10 +41,10 @@ auto main() -> int;
 #line 1 "pure2-defaulted-comparisons-and-final-types.cpp2"
 
 #line 6 "pure2-defaulted-comparisons-and-final-types.cpp2"
-    widget::widget(cpp2::in<int> value)
+    widget::widget(cpp2::impl::in<int> value)
                                           : v{ value }{}
 #line 6 "pure2-defaulted-comparisons-and-final-types.cpp2"
-    auto widget::operator=(cpp2::in<int> value) -> widget& {
+    auto widget::operator=(cpp2::impl::in<int> value) -> widget& {
                                           v = value;
                                           return *this; }
 
@@ -52,7 +52,7 @@ auto main() -> int;
 auto main() -> int{
     widget a {1}; 
     widget b {2}; 
-    if (cpp2::cmp_less(std::move(a),std::move(b))) {
+    if (cpp2::impl::cmp_less(cpp2::move(a),cpp2::move(b))) {
         std::cout << "less";
     }
     else {

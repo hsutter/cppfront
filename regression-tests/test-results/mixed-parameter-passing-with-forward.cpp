@@ -20,13 +20,13 @@
 auto copy_from([[maybe_unused]] auto unnamed_param_1) -> void;
 
 auto parameter_styles(
-    [[maybe_unused]] cpp2::in<std::string> unnamed_param_1, // "in" is default
+    [[maybe_unused]] cpp2::impl::in<std::string> unnamed_param_1, // "in" is default
     std::string b, 
     [[maybe_unused]] std::string& unnamed_param_3, 
     std::string&& d, 
     auto&& e
     ) -> void
-CPP2_REQUIRES (std::is_same_v<CPP2_TYPEOF(e), std::string>) 
+CPP2_REQUIRES (std::is_same_v<std::string, CPP2_TYPEOF(e)>) 
 #line 8 "mixed-parameter-passing-with-forward.cpp2"
 ;
 
@@ -42,13 +42,13 @@ auto copy_from([[maybe_unused]] auto unnamed_param_1) -> void{}
 
 #line 8 "mixed-parameter-passing-with-forward.cpp2"
 auto parameter_styles(
-    [[maybe_unused]] cpp2::in<std::string> unnamed_param_1, 
+    [[maybe_unused]] cpp2::impl::in<std::string> unnamed_param_1, 
     std::string b, 
     [[maybe_unused]] std::string& unnamed_param_3, 
     std::string&& d, 
     auto&& e
     ) -> void
-requires (std::is_same_v<CPP2_TYPEOF(e), std::string>) 
+requires (std::is_same_v<std::string, CPP2_TYPEOF(e)>) 
 #line 15 "mixed-parameter-passing-with-forward.cpp2"
 {
     int z {12}; 
@@ -58,11 +58,11 @@ requires (std::is_same_v<CPP2_TYPEOF(e), std::string>)
 
     if (std::rand() % 2) {
         ++z;
-        copy_from(std::move(b));// definite last use
+        copy_from(cpp2::move(b));// definite last use
     }
     else {
         copy_from(&b);  // NB: better not move from this (why not?)
-        copy_from(std::move(d));
+        copy_from(cpp2::move(d));
         copy_from(++z);
         copy_from(CPP2_FORWARD(e));
     }
@@ -72,7 +72,7 @@ requires (std::is_same_v<CPP2_TYPEOF(e), std::string>)
     copy_from(z);
 
     if (std::time(nullptr) % 2 == 0) {
-        copy_from(std::move(z));
+        copy_from(cpp2::move(z));
     }
 
 }

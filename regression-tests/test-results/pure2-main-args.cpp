@@ -27,7 +27,7 @@ auto main(int const argc_, char** argv_) -> int{
     auto exe {CPP2_UFCS(string)(CPP2_UFCS(filename)(std::filesystem::path(CPP2_ASSERT_IN_BOUNDS_LITERAL(args.argv, 0))))}; 
     std::cout 
         << ("args.argc            is " + cpp2::to_string(args.argc) + "\n") 
-        << ("args.argv[0]         is " + cpp2::to_string(std::move(exe)) + "\n");
+        << ("args.argv[0]         is " + cpp2::to_string(cpp2::move(exe)) + "\n");
 
 }
 

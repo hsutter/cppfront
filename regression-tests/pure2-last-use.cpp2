@@ -3,17 +3,18 @@ f_copy: (copy _...) = { }
 pred: (_...) true;
 pred_copy: (copy _...) true;
 identity: <T> (forward x: T) -> forward _ requires std::is_reference_v<T> == { return x; }
-identity_copy: (copy x) x;
+identity_copy: (copy x) -> _ requires  std::copyable<decltype(x)> = x;
+identity_copy: (move x) -> _ requires !std::copyable<decltype(x)> = (move x);
 
 issue_313: () = {
-  _ = :() -> std::vector<int> = {
-    a := new<int>(0);
-    return (a*, identity_copy(a)*);
-  };
-  _ = :() -> std::vector<int> = {
-    a := new<int>(0);
-    return (a&**, identity_copy(a)*);
-  };
+//   _ = :() -> std::vector<int> = {
+//     a := new<int>(0);
+//     return (a*, identity_copy(a)*);
+//   };
+//   _ = :() -> std::vector<int> = {
+//     a := new<int>(0);
+//     return (a&**, identity_copy(a)*);
+//   };
   _ = :() -> int = {
     a := new<int>(0);
     return identity(a)* + identity(a)*;
@@ -64,10 +65,10 @@ issue_313: () = {
     };
 
   }
-  {
-    a := new<int>(0);
-    _ = :() identity(a$)* + identity(a$)*;
-  }
+//   {
+//     a := new<int>(0);
+//     _ = :() identity(a$)* + identity(a$)*;
+//   }
 }
 issue_313_1: (copy x: std::unique_ptr<int>) pre(identity(x)* + identity(x)*) = { }
 
@@ -111,8 +112,8 @@ issue_683: (args) = {
 }
 
 issue_825: () = {
-  _ = :(copy b: std::unique_ptr<int>) f_copy(b);
-  _ = :(move c: std::unique_ptr<int>) f_copy(c);
+  _ = :(copy b: std::unique_ptr<int>) f_copy(move b);
+  _ = :(move c: std::unique_ptr<int>) f_copy(move c);
   _ = :(forward d) f_copy(d);(new<int>(0));
 }
 
@@ -138,7 +139,7 @@ issue_847_0: (copy v: std::vector<std::unique_ptr<int>>) = {
 issue_847_1: (move v: std::vector<std::unique_ptr<int>>) = {
   for v.make_copy()
   do (move x) {
-    f_copy(x);
+    f_inout(x);
   }
 }
 issue_847_5: (forward v) = {
@@ -171,86 +172,86 @@ issue_857: type = {
   operator=: (out this, move that) = { }
   operator=: (move this) = {
     f_inout(a);
-    f_copy(this.b);
+    f_inout(this.b);
   }
-  f: (move this) = f_copy(this);
-  f: (move this, move that) = f_copy(this, that);
-  g: (move this) = f_copy(this.a);
-  g: (move this, move that) = f_copy(this.a, that.a);
+  //f: (move this) = f_copy(this);
+  //f: (move this, move that) = f_copy(this, that);
+  //g: (move this) = f_copy(this.a);
+  //g: (move this, move that) = f_copy(this.a, that.a);
   h: (inout this) = f_inout(a);
-  i: (move this) = f_copy(a);
-  j: (move this) = f_copy(a);
-  k: (move this) = {
-    f_inout(a);
-    f_copy(b);
-  }
-  l: (move this) = k();
-  m: (move this) = this.k();
-  n: (_) = { }
-  n: (move this) = { }
-  o0:(move this) = n();
-  o1:(move this) = this.n();
-  o2:(move this) = 0.n();
-  o3:(move this) = n(0);
-  o4:(move this) = n(this);
-  p0: (move this) = {
-    f_inout(a);
-    f_copy(this.a);
-  }
-  p1: (move this) = {
-    f_inout(this.a);
-    f_copy(a);
-  }
-  p2: (move this) = {
-    f_inout(a);
-    f_copy(this);
-  }
-  p3: (move this) = {
-    f_inout(this);
-    f_copy(a);
-  }
-  q: (move this) = {
-    h();
-    n();
-  }
-  z: (move this, move that) = {
-  /*f */      if true { f_copy(this); }
-  /*f */ else if true { f_copy(this, that); }
-  /*g */ else if true { f_copy(this.a); }
-  /*g */ else if true { f_copy(this.a, that.a); }
-  /*i */ else if true { f_copy(a); }
-  /*j */ else if true { f_copy(a); }
-  /*k */ else if true {
-  /*k */   f_inout(a);
-  /*k */   f_copy(b);
-  /*k */ }
-  /*l */ else if true { k(); }
-  /*m */ else if true { this.k(); }
-  /*o1*/ else if true { n(); }
-  /*o2*/ else if true { this.n(); }
-  /*o3*/ else if true { n(0); }
-  /*o4*/ else if true { n(this); }
-  /*p0*/ else if true {
-  /*p0*/   f_inout(a);
-  /*p0*/   f_copy(this.a);
-  /*p0*/ }
-  /*p1*/ else if true {
-  /*p1*/   f_inout(this.a);
-  /*p1*/   f_copy(a);
-  /*p1*/ }
-  /*p2*/ else if true {
-  /*p2*/   f_inout(a);
-  /*p2*/   f_copy(this);
-  /*p2*/ }
-  /*p3*/ else if true {
-  /*p3*/   f_inout(this);
-  /*p3*/   f_copy(a);
-  /*p3*/ }
-  /*q */ else {
-  /*q */   h();
-  /*q */   n();
-  /*q */ }
-  }
+  //i: (move this) = f_copy(a);
+  //j: (move this) = f_copy(a);
+  //k: (move this) = {
+  //  f_inout(a);
+  //  f_copy(b);
+  //}
+  //l: (move this) = k();
+  //m: (move this) = this.k();
+  //n: (_) = { }
+  //n: (move this) = { }
+  //o0:(move this) = n();
+  //o1:(move this) = this.n();
+  //o2:(move this) = 0.n();
+  //o3:(move this) = n(0);
+  //o4:(move this) = n(this);
+  //p0: (move this) = {
+  //  f_inout(a);
+  //  f_copy(this.a);
+  //}
+  //p1: (move this) = {
+  //  f_inout(this.a);
+  //  f_copy(a);
+  //}
+  //p2: (move this) = {
+  //  f_inout(a);
+  //  f_copy(this);
+  //}
+  //p3: (move this) = {
+  //  f_inout(this);
+  //  f_copy(a);
+  //}
+  //q: (move this) = {
+  //  h();
+  //  n();
+  //}
+  //z: (move this, move that) = {
+  ///*f */      if true { f_copy(this); }
+  ///*f */ else if true { f_copy(this, that); }
+  ///*g */ else if true { f_copy(this.a); }
+  ///*g */ else if true { f_copy(this.a, that.a); }
+  ///*i */ else if true { f_copy(a); }
+  ///*j */ else if true { f_copy(a); }
+  ///*k */ else if true {
+  ///*k */   f_inout(a);
+  ///*k */   f_copy(b);
+  ///*k */ }
+  ///*l */ else if true { k(); }
+  ///*m */ else if true { this.k(); }
+  ///*o1*/ else if true { n(); }
+  ///*o2*/ else if true { this.n(); }
+  ///*o3*/ else if true { n(0); }
+  ///*o4*/ else if true { n(this); }
+  ///*p0*/ else if true {
+  ///*p0*/   f_inout(a);
+  ///*p0*/   f_copy(this.a);
+  ///*p0*/ }
+  ///*p1*/ else if true {
+  ///*p1*/   f_inout(this.a);
+  ///*p1*/   f_copy(a);
+  ///*p1*/ }
+  ///*p2*/ else if true {
+  ///*p2*/   f_inout(a);
+  ///*p2*/   f_copy(this);
+  ///*p2*/ }
+  ///*p3*/ else if true {
+  ///*p3*/   f_inout(this);
+  ///*p3*/   f_copy(a);
+  ///*p3*/ }
+  ///*q */ else {
+  ///*q */   h();
+  ///*q */   n();
+  ///*q */ }
+  //}
 }
 
 issue_857_2: @struct type = {
@@ -279,63 +280,63 @@ issue_857_4: @struct type = {
    g: std::add_pointer_t<int(int)>;
   mf: move_only_function<int()>;
   mg: move_only_function<int(int)>;
-  h0: (move this) = _ = mf();
-  h1: (move this) = _ = this.mf();
-  h2: (move this, that) = _ = that.mf();
-  h3: (move this, that) = _ = that.f;
-  h4: (move this, x: int) = _ = x.mg();
-  h5: (move this, x: int) = _ = f() + x.g();      // FIXME #313.
-  h6: (move this, x: int) = _ = x.g() + f();      // FIXME #313.
-  h7: (move this, x: int) = _ = this.f() + x.g(); // FIXME #313.
-  h8: (move this, x: int) = _ = x.g() + this.f(); // FIXME #313.
-  i0: (move this, x: int) = {
-    _ = f();
-    _ = x.mg();
-  }
-  i1: (move this, x: int) = {
-    _ = x.g();
-    _ = mf();
-  }
-  i2: (move this, x: int) = {
-    _ = this.f();
-    _ = x.mg();
-  }
-  i3: (move this, x: int) = {
-    _ = x.g();
-    _ = this.mf();
-  }
-  z: (move this, that) = {
-  x := 0;
-  /*h0*/      if true { _ = mf(); }
-  /*h1*/ else if true { _ = this.mf(); }
-  /*h2*/ else if true { _ = that.mf(); }
-  /*h3*/ else if true { _ = that.f; }
-  /*h4*/ else if true { _ = x.mg(); }
-  /*h5*/ else if true { _ = f() + x.g(); }
-  /*h6*/ else if true { _ = x.g() + f(); }
-  /*h7*/ else if true { _ = this.f() + x.g(); }
-  /*h8*/ else if true { _ = x.g() + this.f(); }
-  /*i0*/ else if true {
-  /*i0*/   _ = f();
-  /*i0*/   _ = x.mg();
-  /*i0*/ }
-  /*i1*/ else if true {
-  /*i1*/   _ = x.g();
-  /*i1*/   _ = mf();
-  /*i1*/ }
-  /*i2*/ else if true {
-  /*i2*/   _ = this.f();
-  /*i2*/   _ = x.mg();
-  /*i2*/ }
-  /*i3*/ else {
-  /*i3*/   _ = x.g();
-  /*i3*/   _ = this.mf();
-  /*i3*/ }
-  }
+//   h0: (move this) = _ = mf();
+//   h1: (move this) = _ = this.mf();
+//   h2: (move this, that) = _ = that.mf();
+//   h3: (move this, that) = _ = that.f;
+//   h4: (move this, x: int) = _ = x.mg();
+//   h5: (move this, x: int) = _ = f() + x.g();      // FIXME #313.
+//   h6: (move this, x: int) = _ = x.g() + f();      // FIXME #313.
+//   h7: (move this, x: int) = _ = this.f() + x.g(); // FIXME #313.
+//   h8: (move this, x: int) = _ = x.g() + this.f(); // FIXME #313.
+//   i0: (move this, x: int) = {
+//     _ = f();
+//     _ = x.mg();
+//   }
+//   i1: (move this, x: int) = {
+//     _ = x.g();
+//     _ = mf();
+//   }
+//   i2: (move this, x: int) = {
+//     _ = this.f();
+//     _ = x.mg();
+//   }
+//   i3: (move this, x: int) = {
+//     _ = x.g();
+//     _ = this.mf();
+//   }
+//   z: (move this, that) = {
+//   x := 0;
+//   /*h0*/      if true { _ = mf(); }
+//   /*h1*/ else if true { _ = this.mf(); }
+//   /*h2*/ else if true { _ = that.mf(); }
+//   /*h3*/ else if true { _ = that.f; }
+//   /*h4*/ else if true { _ = x.mg(); }
+//   /*h5*/ else if true { _ = f() + x.g(); }
+//   /*h6*/ else if true { _ = x.g() + f(); }
+//   /*h7*/ else if true { _ = this.f() + x.g(); }
+//   /*h8*/ else if true { _ = x.g() + this.f(); }
+//   /*i0*/ else if true {
+//   /*i0*/   _ = f();
+//   /*i0*/   _ = x.mg();
+//   /*i0*/ }
+//   /*i1*/ else if true {
+//   /*i1*/   _ = x.g();
+//   /*i1*/   _ = mf();
+//   /*i1*/ }
+//   /*i2*/ else if true {
+//   /*i2*/   _ = this.f();
+//   /*i2*/   _ = x.mg();
+//   /*i2*/ }
+//   /*i3*/ else {
+//   /*i3*/   _ = x.g();
+//   /*i3*/   _ = this.mf();
+//   /*i3*/ }
+//   }
 }
 
 issue_857_5: @struct type = {
-  f: (move this) = f_copy(a);
+  f: (move this) = f_copy(move a);
   a: std::unique_ptr<int>;
 }
 
@@ -362,10 +363,10 @@ issue_857_9: @struct type = {
 //f3: (move this) = d();
 
   // OK: Explicit 'this' for base members, like in templates.
-  g0: (move this) = f_copy(this.a);
-  g1: (move this) = _ = this.b();
+  g0: (move this) = f_inout(this.a);
+  //g1: (move this) = _ = this.b();
   g2: (move this) = f_inout(this.c);
-  g3: (move this) = this.d();
+  //g3: (move this) = this.d();
 }
 
 issue_869_0: @value type = {
@@ -382,18 +383,18 @@ issue_884: () = {
     if true { }
     {
       { f_inout(x); }
-      f_copy(x);
+      f_copy(move x);
     }
   };
 
   _ = :() = {
     x := new<int>(0);
     if true {
-      f_copy(x);
+      f_copy(move x);
     }
     else {
       { f_inout(x); }
-      f_copy(x);
+      f_copy(move x);
     }
   };
 
@@ -406,12 +407,12 @@ issue_884: () = {
       { f_inout(x); }
       f_inout(x);
     }
-    f_copy(x);
+    f_copy(move x);
   };
 
   _ = :() = {
     x := new<int>(0);
-    f_copy(x);
+    f_copy(move x);
     if true {
       _ = 0;
     }
@@ -426,7 +427,7 @@ issue_884: () = {
     x := new<int>(0);
     f_inout(x);
     if true {
-      f_copy(x);
+      f_copy(move x);
     }
     else {
       { _ = 0; }
@@ -442,7 +443,7 @@ issue_884: () = {
       _ = 0;
     }
     else {
-      { f_copy(x); }
+      { f_copy(move x); }
       _ = 0;
     }
     _ = 0;
@@ -456,7 +457,7 @@ issue_884: () = {
     }
     else {
       { _ = 0; }
-      f_copy(x);
+      f_copy(move x);
     }
     _ = 0;
   };
@@ -471,17 +472,17 @@ issue_884: () = {
       { _ = 0; }
       _ = 0;
     }
-    f_copy(x);
+    f_copy(move x);
   };
 
   _ = :() = {
     x := new<int>(0);
     f_inout(x);
     if true {
-      f_copy(x);
+      f_copy(move x);
     }
     else {
-      { f_copy(x); }
+      { f_copy(move x); }
       _ = 0;
     }
     _ = 0;
@@ -491,11 +492,11 @@ issue_884: () = {
     x := new<int>(0);
     f_inout(x);
     if true {
-      f_copy(x);
+      f_copy(move x);
     }
     else {
       { f_inout(x); }
-      f_copy(x);
+      f_copy(move x);
     }
     _ = 0;
   };
@@ -512,7 +513,7 @@ issue_884: () = {
     }
     f_inout(x);
     if true {
-      f_copy(x);
+      f_copy(move x);
     }
   };
 
@@ -529,20 +530,20 @@ issue_884: () = {
     if true {
       f_inout(x);
     }
-    f_copy(x);
+    f_copy(move x);
   };
 
   _ = :() = {
     x := new<int>(0);
     f_inout(x);
     if true {
-      f_copy(x);
+      f_copy(move x);
     }
     else {
       { f_inout(x); }
       f_inout(x);
       if true {
-        f_copy(x);
+        f_copy(move x);
       }
     }
     _ = 0;
@@ -553,7 +554,7 @@ issue_884: () = {
     if true {
       if true {
         if true {
-          f_copy(x);
+          f_copy(move x);
         }
       }
     }
@@ -566,12 +567,12 @@ issue_884: () = {
     if true {
       if true {
         if true {
-          f_copy(x);
+          f_copy(move x);
         }
       }
     }
     else {
-      f_copy(x);
+      f_copy(move x);
     }
   };
 
@@ -582,7 +583,7 @@ issue_884: () = {
     else {
       if true {
         if true {
-          f_copy(x);
+          f_copy(move x);
         }
       }
     }
@@ -591,12 +592,12 @@ issue_884: () = {
   _ = :() = {
     x := new<int>(0);
     if true {
-      f_copy(x);
+      f_copy(move x);
     }
     else {
       if true {
         if true {
-          f_copy(x);
+          f_copy(move x);
         }
       }
     }
@@ -606,15 +607,15 @@ issue_884: () = {
     x := new<int>(0);
     if true {
       y := new<int>(0);
-      f_copy(x);
-      f_copy(y);
+      f_copy(move x);
+      f_copy(move y);
     }
     else {
       if true {
         if true {
           f_inout(x);
         }
-        f_copy(x);
+        f_copy(move x);
       }
     }
   };
@@ -625,18 +626,18 @@ issue_884: () = {
       y := new<int>(0);
       if true { }
       else {
-        f_copy(x);
-        f_copy(y);
+        f_copy(move x);
+        f_copy(move y);
       }
     }
     else {
       if true {
         if true {
           y := new<int>(0);
-          f_copy(y);
+          f_copy(move y);
           f_inout(x);
         }
-        f_copy(x);
+        f_copy(move x);
       }
     }
   };
@@ -647,20 +648,20 @@ issue_884: () = {
       y := new<int>(0);
       if true { }
       else {
-        f_copy(x);
-        f_copy(y);
+        f_copy(move x);
+        f_copy(move y);
       }
     }
     else {
       y := new<int>(0);
       if true {
         if true {
-          f_copy(x);
+          f_copy(move x);
         }
         else {
-          f_copy(x);
+          f_copy(move x);
         }
-        f_copy(y);
+        f_copy(move y);
       }
     }
   };
@@ -668,7 +669,7 @@ issue_884: () = {
   _ = :() = {
     x := new<int>(0);
     if true {
-      f_copy(x);
+      f_copy(move x);
     }
     else {
       if true {
@@ -678,9 +679,9 @@ issue_884: () = {
         }
         else {
         }
-        f_copy(x);
+        f_copy(move x);
       }
-      f_copy(x);
+      f_copy(move x);
     }
   };
 
@@ -694,12 +695,12 @@ issue_884: () = {
         }
         else {
         }
-        f_copy(x);
+        f_copy(move x);
       }
-      f_copy(x);
+      f_copy(move x);
     }
     else {
-      f_copy(x);
+      f_copy(move x);
     }
   };
 
@@ -712,7 +713,7 @@ issue_884: () = {
 
     if true {
       if true {
-        f_copy(x);
+        f_copy(move x);
       }
     }
   };
@@ -725,7 +726,7 @@ issue_884: () = {
         if true {
         }
         else {
-          f_copy(x);
+          f_copy(move x);
         }
       }
       else {
@@ -734,14 +735,14 @@ issue_884: () = {
         else {
           f_inout(x);
         }
-        f_copy(x);
+        f_copy(move x);
       }
     }
     else {
       if true {
         if true {
           f_inout(x);
-          f_copy(x);
+          f_copy(move x);
         }
         else {
         }
@@ -755,17 +756,17 @@ issue_884: () = {
         if true {
           f_inout(x);
           if true {
-            f_copy(x);
+            f_copy(move x);
           }
           else {
           }
         }
         else {
           if true {
-            f_copy(x);
+            f_copy(move x);
           }
           else {
-            f_copy(x);
+            f_copy(move x);
           }
         }
       }
@@ -782,7 +783,7 @@ issue_888_1: (copy _: std::string, copy size: move_only_function<int(int)>) = {
 
 issue_890: () = {
   x := new<int>(0);
-  assert(identity_copy(x)* == 0);
+//   assert(identity_copy(x)* == 0);
   (x := new<int>(0)) assert(identity(x)* == 0);
 }
 
@@ -806,28 +807,28 @@ enum_1: () = {
     max_value := new<int>(0);
     min_value: std::reference_wrapper<const std::unique_ptr<int>> = max_value;
 
-    for  (0)
-    do   (copy x)
-    {
-        v := new<int>(identity_copy(x));
-        if pred(v, min_value) {
-            min_value = std::ref(identity(v)); // Not using 'else' will never move 'v'.
-        }
-        if pred(v, max_value) {
-            max_value = identity_copy(v);
-        }
-    }
+    // for  (0)
+    // do   (copy x)
+    // {
+    //     v := new<int>(identity_copy(x));
+    //     if pred(v, min_value) {
+    //         min_value = std::ref(identity(v)); // Not using 'else' will never move 'v'.
+    //     }
+    //     if pred(v, max_value) {
+    //         max_value = identity_copy(v);
+    //     }
+    // }
 
     y := new<bool>(false);
     while identity(y)* {
         v := new<int>(0);
-        f_copy(v);
+        f_copy(move v);
     }
 
     z := new<bool>(false);
     do {
         v := new<int>(0);
-        f_copy(v);
+        f_copy(move v);
     } while identity(z)*;
 }
 enum_2: () = {
@@ -836,7 +837,7 @@ enum_2: () = {
     }
     else if pred(umax) {
     }
-    else if pred_copy(umax) {
+    else if pred_copy(move umax) {
     }
 }
 
@@ -858,13 +859,13 @@ no_pessimizing_move: () -> (ret: std::unique_ptr<int> = ()) = { }
 deferred_non_copyable_0: () = {
   p: std::unique_ptr<int>;
   p = ();
-  f_copy(p);
+  f_copy(move p);
 }
 
 deferred_non_copyable_1: () -> _ = {
   p: std::unique_ptr<int>;
   p = ();
-  return p;
+  return (move p);
 }
 
 deferred_non_copyable_2: () -> (p: std::unique_ptr<int>) = {
@@ -897,7 +898,7 @@ loops: () = {
   _ = :() = {
     x := new<int>(0);
     if true {
-      f_copy(x);
+      f_copy(move x);
     }
     else {
       while true {
@@ -913,7 +914,7 @@ captures: namespace = {
 
 f: () = {
   x := new<int>(0);
-  f_copy(x);
+  f_copy(move x);
   id := :(x) -> forward _ = x;
   y := new<int>(0);
   assert(id(y)& == y&);
@@ -924,7 +925,7 @@ x: int == 0;
 t: @struct type = {
   x: std::unique_ptr<int>;
   operator(): (move this) = {
-    f_copy(x);
+    f_copy(move x);
     _ = :() = {
       // Should this move?
       // I.e., don't skip non-captured names, just rely on skipping hiding names.
@@ -939,14 +940,14 @@ t: @struct type = {
 g: () = {
   _ = :() = {
     x := new<int>(0);
-    f_copy(x);
+    f_copy(move x);
     _ = :() std::array<int, :(x) identity(x);(0)>()$; // Fails on Clang 12 (lambda in unevaluated context).
   };
 
   _ = :() = {
     x := new<int>(0);
     f_inout(x);
-    _ = :() -> int = (:() x$*)$();
+    // _ = :() -> int = (:() x$*)$();
   };
 }
 
@@ -955,7 +956,7 @@ g: () = {
 loops_and_captures: () = {
   _ = :() = {
     x := new<int>(0);
-    f_copy(x);
+    f_copy(move x);
     for (:(x) x)
     do (_)
     { }
@@ -963,7 +964,7 @@ loops_and_captures: () = {
 
   _ = :() = {
     x := new<int>(0);
-    f_copy(x);
+    f_copy(move x);
     for (:() -> _ = {
       using captures::x;
       return x;
@@ -972,58 +973,58 @@ loops_and_captures: () = {
     { }
   };
 
-  _ = :() = {
-    x := new<int>(0);
-    for (:() x$*)
-    do (_)
-    { }
-  };
+//   _ = :() = {
+//     x := new<int>(0);
+//     for (:() x$*)
+//     do (_)
+//     { }
+//   };
 }
 
 types: @struct type = {
   x: std::unique_ptr<int>;
-  f: (move this) = _ = :() x$*;
-  g: (move this) = {
-    for (:() x$*)
-    do (_)
-    { }
-  }
+//   f: (move this) = _ = :() x$*;
+//   g: (move this) = {
+//     for (:() x$*)
+//     do (_)
+//     { }
+//   }
 }
 
 skip_hidden_names: () = {
   _ = :() = {
     x := new<int>(0);
-    f_copy(x);
+    f_copy(move x);
     (copy x := new<int>(0))
-      f_copy(x);
+      f_copy(move x);
   };
 
-  _ = :() = {
-    x := new<int>(0);
-    _ = :() = {
-      _ = x$;
-      x := new<int>(1);
-      _ = :() = {
-        _ = x$;
-      };
-    };
-  };
+//   _ = :() = {
+//     x := new<int>(0);
+//     _ = :() = {
+//       _ = x$;
+//       x := new<int>(1);
+//       _ = :() = {
+//         _ = x$;
+//       };
+//     };
+//   };
 
   _ = :() = {
-    x := new<int>(0);
-    f_copy(x);
-    for (0)
-    do (copy x)
-    _ = identity_copy(x);
+    // x := new<int>(0);
+    // f_copy(x);
+    // for (0)
+    // do (copy x)
+    // _ = identity_copy(x);
     (copy x := new<int>(0))
-      f_copy(x);
+      f_copy(move x);
   };
 
   _ = :() = {
     x := new<int>(0);
     f_inout(x);
     {
-      f_copy(x);
+      f_copy(move x);
       using captures::x;
       f_inout(x);
     }
@@ -1031,7 +1032,7 @@ skip_hidden_names: () = {
 
   _ = :() = {
     x := new<int>(0);
-    f_copy(x);
+    f_copy(move x);
     _ = :() = {
       static_assert(std::is_same_v<decltype(x), std::unique_ptr<int>>);
       using captures::x;

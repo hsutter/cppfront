@@ -25,6 +25,14 @@ static cpp2::cmdline_processor::register_flag cmd_debug(
     []{ flag_debug_output = true; }
 );
 
+static auto flag_quiet = false;
+static cpp2::cmdline_processor::register_flag cmd_quiet(
+    9,
+    "quiet",
+    "Print only error output",
+    []{ flag_quiet = true; }
+);
+
 auto main(
     int   argc,
     char* argv[]
@@ -51,7 +59,9 @@ auto main(
     {
         auto& out = flag_cpp1_filename != "stdout" ? std::cout : std::cerr;
 
-        out << arg.text << "...";
+        if (!flag_quiet) {
+            out << arg.text << "...";
+        }
 
         //  Load + lex + parse + sema
         cppfront c(arg.text);
@@ -62,37 +72,40 @@ auto main(
         //  If there were no errors, say so and generate Cpp1
         if (c.had_no_errors())
         {
-            if (!c.has_cpp1()) {
-                out << " ok (all Cpp2, passes safety checks)\n";
-            }
-            else if (c.has_cpp2()) {
-                out << " ok (mixed Cpp1/Cpp2, Cpp2 code passes safety checks)\n";
-            }
-            else {
-                out << " ok (all Cpp1)\n";
-            }
-
-            if (flag_verbose) {
-                out << "   Cpp1: " << print_with_thousands(count.cpp1_lines) << " line" << (count.cpp1_lines != 1 ? "s" : "");
-                out << "\n   Cpp2: " << print_with_thousands(count.cpp2_lines) << " line" << (count.cpp2_lines != 1 ? "s" : "");
-                auto total = count.cpp1_lines + count.cpp2_lines;
-                if (total > 0) {
-                    out << " (";
-                    if (count.cpp1_lines == 0) {
-                        out << 100;
-                    }
-                    else if (count.cpp2_lines / count.cpp1_lines > 25) {
-                        out << std::setprecision(3)
-                            << 100.0 * count.cpp2_lines / total;
-                    }
-                    else {
-                        out << 100 * count.cpp2_lines / total;
-                    }
-                    out << "%)";
+            if (!flag_quiet)
+            {
+                if (!c.has_cpp1()) {
+                    out << " ok (all Cpp2, passes safety checks)\n";
                 }
-            }
+                else if (c.has_cpp2()) {
+                    out << " ok (mixed Cpp1/Cpp2, Cpp2 code passes safety checks)\n";
+                }
+                else {
+                    out << " ok (all Cpp1)\n";
+                }
 
-            out << "\n";
+                if (flag_verbose) {
+                    out << "   Cpp1: " << print_with_thousands(count.cpp1_lines) << " line" << (count.cpp1_lines != 1 ? "s" : "");
+                    out << "\n   Cpp2: " << print_with_thousands(count.cpp2_lines) << " line" << (count.cpp2_lines != 1 ? "s" : "");
+                    auto total = count.cpp1_lines + count.cpp2_lines;
+                    if (total > 0) {
+                        out << " (";
+                        if (count.cpp1_lines == 0) {
+                            out << 100;
+                        }
+                        else if (count.cpp2_lines / count.cpp1_lines > 25) {
+                            out << std::setprecision(3)
+                                << 100.0 * count.cpp2_lines / total;
+                        }
+                        else {
+                            out << 100 * count.cpp2_lines / total;
+                        }
+                        out << "%)";
+                    }
+                }
+
+                out << "\n";
+            }
         }
         //  Otherwise, print the errors
         else

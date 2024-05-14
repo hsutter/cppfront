@@ -88,6 +88,7 @@ struct identifier_sym {
     enum kind { use, using_declaration, deactivation } kind_ = use;
     bool standalone_assignment_to = false;
     bool is_captured = false;
+    bool is_after_dot = false;
     bool safe_to_move = true;
     int safe_to_move_context = 0;
     token const* identifier = {};
@@ -97,10 +98,12 @@ struct identifier_sym {
         token const* id,
         kind         k = use,
         bool         mv = true,
-        int          mvc = 0
+        int          mvc = 0,
+        bool         after_dot = false
     )
         : kind_{k}
         , standalone_assignment_to{a}
+        , is_after_dot{after_dot}
         , safe_to_move{mv}
         , safe_to_move_context{mvc}
         , identifier{id}
@@ -731,7 +734,8 @@ public:
                 find_definite_last_uses(
                     decl->identifier,
                     sympos,
-                    decl->parameter ? std::optional{decl->parameter->pass} : std::optional<passing_style>{}
+                    decl->parameter ? std::optional{decl->parameter->pass} : std::optional<passing_style>{},
+                    decl->parameter
                 );
             }
         }
@@ -746,7 +750,8 @@ private:
     auto find_definite_last_uses(
         token const*                 id,
         int                          pos,
-        std::optional<passing_style> pass
+        std::optional<passing_style> pass,
+        bool                         is_parameter
     ) const
         -> void
     {
@@ -883,12 +888,47 @@ private:
         };
 
         //  Scan forward to the end of this scope
+        auto found_end_of_our_initialization = false;
         for (auto start_depth = symbols[pos].depth;
             i < std::ssize(symbols)
             && symbols[i].depth >= start_depth;
             ++i
             )
         {
+            //  While we're here, if this is a non-parameter local, check for
+            //  any uses before the end of the initializer
+            if (
+                !is_parameter
+                && !found_end_of_our_initialization
+                )
+            {
+                if (symbols[i].depth == start_depth)
+                {
+                    if (auto decl = std::get_if<symbol::active::declaration>(&symbols[i].sym);
+                        decl
+                        && decl->declaration->is_object()
+                        && decl->declaration->has_name(*id)
+                        && !decl->start
+                        )
+                    {
+                        found_end_of_our_initialization = true;
+                    }
+                }
+
+                if (auto sym = std::get_if<symbol::active::identifier>(&symbols[i].sym);
+                    sym
+                    && !sym->is_after_dot
+                    && is_a_use(sym)
+                    )
+                {
+                    assert(sym->identifier);
+                    errors.emplace_back(
+                        sym->identifier->position(),
+                        "local variable " + sym->identifier->to_string()
+                            + " cannot be used in its own initializer");
+                }
+            }
+
             if (
                 skip_function_expression()
                 || skip_hidden_name(true)
@@ -953,7 +993,7 @@ private:
         //  i is now at the end of id's scope, so start scanning backwards
         //  until we find the first definite last uses
         --i;
-        bool found = false;
+        //bool found = false;
         auto branch_depth = 0;
         while (i > pos)
         {
@@ -1042,7 +1082,7 @@ private:
                         )
                     );
             }
-            found = true;
+            //found = true;
 
             compound_sym const* comp = nullptr;
 
@@ -1071,20 +1111,23 @@ private:
             }
         }
 
-        //  If we arrived back at the declaration without finding a use
-        //  and this is a user-named object (not 'this', 'that', or '_')
-        if (
-            !found
-            && *id != "this"
-            && *id != "that"
-            && *id != "_"
-            )
-        {
-            errors.emplace_back(
-                id->position(),
-                "local variable '" + id->to_string() + "' is not used; consider changing its name to '_' to make it explicitly anonymous, or removing it entirely if its side effects are not needed"
-            );
-        }
+        //  This warning is noisy until we fix a couple of bugs,
+        //  so disable it at least temporarily
+        // 
+        ////  If we arrived back at the declaration without finding a use
+        ////  and this is a user-named object (not 'this', 'that', or '_')
+        //if (
+        //    !found
+        //    && *id != "this"
+        //    && *id != "that"
+        //    && *id != "_"
+        //    )
+        //{
+        //    errors.emplace_back(
+        //        id->position(),
+        //        "local variable '" + id->to_string() + "' is not used; consider changing its name to '_' to make it explicitly anonymous, or removing it entirely if its side effects are not needed"
+        //    );
+        //}
     }
 
 
@@ -1562,9 +1605,9 @@ public:
         if (n.identifier && *n.identifier->identifier == "this")
         {
             if (
-                n.is_template_parameter
+                n.is_template_parameter()
                 || (
-                    !n.is_parameter
+                    !n.is_parameter()
                     && !n.parent_is_type()
                     )
                 )
@@ -2427,12 +2470,19 @@ public:
                 //  or it's a 'copy' parameter (but to be a use it must be after
                 //  the declaration, not the token in the decl's name itself)
                 //  including an implicit 'this' access of a member name
-                auto push_use = [&](token const* u) {
-                    this->push_use( identifier_sym( false, u, {}, !inside_next_expression, safe_to_move_context ) );
+                auto push_use = [&](token const* u, bool is_dot_access = false) {
+                    this->push_use( identifier_sym(
+                        false,
+                        u,
+                        {},
+                        !inside_next_expression,
+                        safe_to_move_context,
+                        is_dot_access
+                    ) );
                 };
                 if (accessed_member_for_ufcs) {
                     if (t == "(") {
-                        push_use(accessed_member_for_ufcs);
+                        push_use(accessed_member_for_ufcs, true);
                     }
                     accessed_member_for_ufcs = nullptr;
                 }

@@ -23,7 +23,7 @@
 #line 1 "pure2-more-wildcards.cpp2"
 
 #line 2 "pure2-more-wildcards.cpp2"
-[[nodiscard]] auto less_than(auto const& value) -> auto { return [_0 = value](auto const& x) mutable -> auto { return cpp2::cmp_less(x,_0); }; }
+[[nodiscard]] auto less_than(auto const& value) -> auto { return [_0 = value](auto const& x) mutable -> auto { return cpp2::impl::cmp_less(x,_0); }; }
 
 #line 4 "pure2-more-wildcards.cpp2"
 [[nodiscard]] auto main() -> int
@@ -31,9 +31,9 @@
     auto const x {2}; 
     auto* p {&x}; 
     auto const* q {&p}; 
-    if (cpp2::Default.has_handler() && !(std::move(q)) ) { cpp2::Default.report_violation(""); }
+    if (cpp2::cpp2_default.is_active() && !(cpp2::move(q)) ) { cpp2::cpp2_default.report_violation(""); }
 
-    if (cpp2::is(x, (less_than(20)))) {
+    if (cpp2::impl::is(x, (less_than(20)))) {
         std::cout << "yes, less\n";
     }
 

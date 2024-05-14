@@ -37,7 +37,7 @@ bool flip_a_coin() {
 [[nodiscard]] auto main() -> int{
     int x {42}; 
     int y {43}; 
-    cpp2::deferred_init<int*> p; 
+    cpp2::impl::deferred_init<int*> p; 
 
     // ... more code ...
     if (flip_a_coin()) {
@@ -47,7 +47,7 @@ bool flip_a_coin() {
         p.construct(&x);
     }
 
-    print_and_decorate(*cpp2::assert_not_null(std::move(p.value())));
+    print_and_decorate(*cpp2::impl::assert_not_null(cpp2::move(p.value())));
 }
 
 #line 21 "mixed-lifetime-safety-pointer-init-4.cpp2"

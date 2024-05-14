@@ -79,9 +79,9 @@ auto for_break_outer() -> void;
 auto while_continue_inner() -> void
 {
     auto i {0}; 
-    for( ; cpp2::cmp_less(i,3); ++i ) {
+    for( ; cpp2::impl::cmp_less(i,3); ++i ) {
         auto j {0}; 
-        for( ; cpp2::cmp_less(j,3); ++j ) {{
+        for( ; cpp2::impl::cmp_less(j,3); ++j ) {{
 #line 26 "pure2-break-continue.cpp2"
             std::cout << i << j << " ";
             if (j == 1) {
@@ -98,10 +98,10 @@ auto while_continue_inner() -> void
 auto while_continue_outer() -> void
 {
     auto i {0}; 
-    for( ; cpp2::cmp_less(i,3); ++i ) {{
+    for( ; cpp2::impl::cmp_less(i,3); ++i ) {{
 #line 40 "pure2-break-continue.cpp2"
         auto j {0}; 
-        for( ; cpp2::cmp_less(j,3); ++j ) {
+        for( ; cpp2::impl::cmp_less(j,3); ++j ) {
             std::cout << i << j << " ";
             if (j == 1) {
                 goto CONTINUE_outer;
@@ -117,9 +117,9 @@ auto while_continue_outer() -> void
 auto while_break_inner() -> void
 {
     auto i {0}; 
-    for( ; cpp2::cmp_less(i,3); ++i ) {
+    for( ; cpp2::impl::cmp_less(i,3); ++i ) {
         auto j {0}; 
-        for( ; cpp2::cmp_less(j,3); ++j ) {{
+        for( ; cpp2::impl::cmp_less(j,3); ++j ) {{
 #line 58 "pure2-break-continue.cpp2"
             std::cout << i << j << " ";
             if (j == 1) {
@@ -136,10 +136,10 @@ auto while_break_inner() -> void
 auto while_break_outer() -> void
 {
     auto i {0}; 
-    for( ; cpp2::cmp_less(i,3); ++i ) {{
+    for( ; cpp2::impl::cmp_less(i,3); ++i ) {{
 #line 72 "pure2-break-continue.cpp2"
         auto j {0}; 
-        for( ; cpp2::cmp_less(j,3); ++j ) {
+        for( ; cpp2::impl::cmp_less(j,3); ++j ) {
             std::cout << i << j << " ";
             if (j == 1) {
                 goto BREAK_outer;
@@ -169,11 +169,11 @@ auto do_continue_inner() -> void
          while ( [&]{ 
 
 #line 96 "pure2-break-continue.cpp2"
-        ++j ; return true; }() && cpp2::cmp_less(j,3));
+        ++j ; return true; }() && cpp2::impl::cmp_less(j,3));
 
         std::cout << "outer ";
     } while ( [&]{ 
-    ++i ; return true; }() && cpp2::cmp_less(i,3));
+    ++i ; return true; }() && cpp2::impl::cmp_less(i,3));
 }
 
 #line 103 "pure2-break-continue.cpp2"
@@ -190,7 +190,7 @@ auto do_continue_outer() -> void
             }
             std::cout << "inner ";
         } while ( [&]{ 
-        ++j ; return true; }() && cpp2::cmp_less(j,3));
+        ++j ; return true; }() && cpp2::impl::cmp_less(j,3));
 
         std::cout << "outer ";
     } CPP2_CONTINUE_BREAK(outer) }
@@ -198,7 +198,7 @@ auto do_continue_outer() -> void
      while ( [&]{ 
 
 #line 119 "pure2-break-continue.cpp2"
-    ++i ; return true; }() && cpp2::cmp_less(i,3));
+    ++i ; return true; }() && cpp2::impl::cmp_less(i,3));
 }
 
 #line 122 "pure2-break-continue.cpp2"
@@ -219,11 +219,11 @@ auto do_break_inner() -> void
          while ( [&]{ 
 
 #line 134 "pure2-break-continue.cpp2"
-        ++j ; return true; }() && cpp2::cmp_less(j,3));
+        ++j ; return true; }() && cpp2::impl::cmp_less(j,3));
 
         std::cout << "outer ";
     } while ( [&]{ 
-    ++i ; return true; }() && cpp2::cmp_less(i,3));
+    ++i ; return true; }() && cpp2::impl::cmp_less(i,3));
 }
 
 #line 141 "pure2-break-continue.cpp2"
@@ -240,7 +240,7 @@ auto do_break_outer() -> void
             }
             std::cout << "inner ";
         } while ( [&]{ 
-        ++j ; return true; }() && cpp2::cmp_less(j,3));
+        ++j ; return true; }() && cpp2::impl::cmp_less(j,3));
 
         std::cout << "outer ";
     } CPP2_CONTINUE_BREAK(outer) }
@@ -248,16 +248,16 @@ auto do_break_outer() -> void
      while ( [&]{ 
 
 #line 157 "pure2-break-continue.cpp2"
-    ++i ; return true; }() && cpp2::cmp_less(i,3));
+    ++i ; return true; }() && cpp2::impl::cmp_less(i,3));
 }
 
 #line 160 "pure2-break-continue.cpp2"
 auto for_continue_inner() -> void
 {
     std::vector vi {0, 1, 2}; 
-    for ( auto const& i : std::move(vi) ) {
+    for ( auto const& i : cpp2::move(vi) ) {
         std::vector vj {0, 1, 2}; 
-        for ( auto const& j : std::move(vj) ) {{
+        for ( auto const& j : cpp2::move(vj) ) {{
 #line 166 "pure2-break-continue.cpp2"
             std::cout << i << j << " ";
             if (j == 1) {
@@ -275,10 +275,10 @@ auto for_continue_inner() -> void
 auto for_continue_outer() -> void
 {
     std::vector vi {0, 1, 2}; 
-    for ( auto const& i : std::move(vi) ) {{
+    for ( auto const& i : cpp2::move(vi) ) {{
 #line 181 "pure2-break-continue.cpp2"
         std::vector vj {0, 1, 2}; 
-        for ( auto const& j : std::move(vj) ) {
+        for ( auto const& j : cpp2::move(vj) ) {
             std::cout << i << j << " ";
             if (j == 1) {
                 goto CONTINUE_outer;
@@ -295,9 +295,9 @@ auto for_continue_outer() -> void
 auto for_break_inner() -> void
 {
     std::vector vi {0, 1, 2}; 
-    for ( auto const& i : std::move(vi) ) {
+    for ( auto const& i : cpp2::move(vi) ) {
         std::vector vj {0, 1, 2}; 
-        for ( auto const& j : std::move(vj) ) {{
+        for ( auto const& j : cpp2::move(vj) ) {{
 #line 200 "pure2-break-continue.cpp2"
             std::cout << i << j << " ";
             if (j == 1) {
@@ -315,10 +315,10 @@ auto for_break_inner() -> void
 auto for_break_outer() -> void
 {
     std::vector vi {0, 1, 2}; 
-    for ( auto const& i : std::move(vi) ) {{
+    for ( auto const& i : cpp2::move(vi) ) {{
 #line 215 "pure2-break-continue.cpp2"
         std::vector vj {0, 1, 2}; 
-        for ( auto const& j : std::move(vj) ) {
+        for ( auto const& j : cpp2::move(vj) ) {
             std::cout << i << j << " ";
             if (j == 1) {
                 goto BREAK_outer;

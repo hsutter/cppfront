@@ -3,6 +3,6 @@ t: @struct type = {
   this: std::integral_constant<u, :u = (17, 29)>;
 }
 main: () = {
-  assert<Testing>( t::value[0] == 17 );
-  assert<Testing>( t::value[1] == 29 );
+  assert<testing>( t::value[0] == 17 );
+  assert<testing>( t::value[1] == 29 );
 }

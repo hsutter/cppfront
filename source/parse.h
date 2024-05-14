@@ -2696,8 +2696,8 @@ struct declaration_node
     bool member_function_generation = true;
 
     //  Cache some context
-    bool is_template_parameter = false;
-    bool is_parameter          = false;
+    bool is_a_template_parameter = false;
+    bool is_a_parameter          = false;
 
     //  Constructor
     //
@@ -2707,6 +2707,19 @@ struct declaration_node
 
     //  API
     //
+
+    auto is_template_parameter() const
+        -> bool
+    {
+        return is_a_template_parameter;
+    }
+
+    auto is_parameter() const
+        -> bool
+    {
+        return is_a_parameter;
+    }
+
     auto type_member_mark_for_removal()
         -> bool
     {
@@ -4417,7 +4430,7 @@ auto pre(int indent)
     assert (indent >= 0);
     return {
         indent_str.c_str(),
-        as<size_t>( std::min( indent*indent_spaces, _as<int>(std::ssize(indent_str))) )
+        impl::as<size_t>( std::min( indent*indent_spaces, _as<int>(std::ssize(indent_str))) )
     };
 }
 
@@ -5115,7 +5128,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
             initializer.pop_back();
         }
     }
-    else if (!n.is_parameter) {
+    else if (!n.is_parameter()) {
         initializer = ";";
     }
 
@@ -5128,7 +5141,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
     if (
         !n.parent_is_function()
         && !n.parent_is_object()
-        && !n.is_parameter
+        && !n.is_parameter()
         )
     {
         static declaration_node const* last_parent_type = {};
@@ -5144,7 +5157,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
             ret += "\n";
         }
     }
-    if (!n.is_parameter && n.name()) {
+    if (!n.is_parameter() && n.name()) {
         ret += std::string{"\n"} + pre(indent);
     }
 
@@ -5159,7 +5172,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
         ret += pretty_print_visualize(*n.identifier, indent);
     }
 
-    if (n.is_parameter && (n.has_name("this") || n.has_name("that"))) {
+    if (n.is_parameter() && (n.has_name("this") || n.has_name("that"))) {
         return ret;
     }
 
@@ -5630,8 +5643,7 @@ private:
     //G     inspect-expression
     //G     id-expression
     //G     literal
-    //G     '(' expression-list ')'
-    //GT     '{' expression-list '}'
+    //G     '(' expression-list ','? ')'
     //G     unnamed-declaration
     //G
     auto primary_expression()
@@ -5667,7 +5679,7 @@ private:
             auto close = close_paren_type(open_paren->type());
             auto close_text = [&] () -> std::string { if (close == lexeme::RightParen) { return ")"; } return "}"; }();
             next();
-            auto expr_list = expression_list(open_paren, inside_initializer);
+            auto expr_list = expression_list(open_paren, lexeme::RightParen, inside_initializer);
             if (!expr_list) {
                 error("unexpected text - ( is not followed by an expression-list");
                 next();
@@ -5759,9 +5771,9 @@ private:
 
     //G postfix-expression:
     //G     primary-expression
-    //G     postfix-expression postfix-operator     [Note: without whitespace before the operator]
-    //G     postfix-expression '[' expression-list? ']'
-    //G     postfix-expression '(' expression-list? ')'
+    //G     postfix-expression postfix-operator
+    //G     postfix-expression '[' expression-list? ','? ']'
+    //G     postfix-expression '(' expression-list? ','? ')'
     //G     postfix-expression '.' id-expression
     //G
     auto postfix_expression()
@@ -5776,23 +5788,18 @@ private:
         while (
             !done()
             && (
-                (is_postfix_operator(curr().type())
-                    //  Postfix operators must be lexically adjacent
-                    && curr().position().lineno == peek(-1)->position().lineno
-                    && curr().position().colno == peek(-1)->position().colno + peek(-1)->length()
-                )
+                is_postfix_operator(curr().type())
                 || curr().type() == lexeme::LeftBracket
                 || curr().type() == lexeme::LeftParen
                 || curr().type() == lexeme::Dot
             )
             )
         {
-            //  these can't be unary operators if followed by a (, identifier, or literal
+            //  * and & can't be unary operators if followed by a (, identifier, or literal
             if (
                 (
                     curr().type() == lexeme::Multiply
                     || curr().type() == lexeme::Ampersand
-                    || curr().type() == lexeme::Tilde
                     )
                 && peek(1)
                 && (
@@ -5802,18 +5809,6 @@ private:
                     )
                 )
             {
-                auto op  = curr().to_string();
-                auto msg = "postfix unary " + op;
-                if      (curr().type() == lexeme::Multiply ) { msg += " (dereference)"          ; }
-                else if (curr().type() == lexeme::Ampersand) { msg += " (address-of)"           ; }
-                else if (curr().type() == lexeme::Tilde    ) { msg += " (unary bit-complement)" ; }
-                msg += " cannot be immediately followed by a (, identifier, or literal - add whitespace before "
-                    + op + " here if you meant binary " + op;
-                if      (curr().type() == lexeme::Multiply ) { msg += " (multiplication)"       ; }
-                else if (curr().type() == lexeme::Ampersand) { msg += " (bitwise and)"          ; }
-                else if (curr().type() == lexeme::Tilde    ) { msg += " (binary bit-complement)"; }
-
-                error(msg, false);
                 break;
             }
 
@@ -5839,7 +5834,7 @@ private:
 
             if (term.op->type() == lexeme::LeftBracket)
             {
-                term.expr_list = expression_list(term.op);
+                term.expr_list = expression_list(term.op, lexeme::RightBracket);
                 if (!term.expr_list)
                 {
                     error("[ is not followed by a valid expression list");
@@ -5860,7 +5855,7 @@ private:
                 //  If not, then this wasn't a call expression so backtrack to
                 //  the '(' which will be part of the next grammar production
 
-                term.expr_list = expression_list(term.op);
+                term.expr_list = expression_list(term.op, lexeme::RightParen);
                 if (
                     term.expr_list
                     && curr().type() == lexeme::RightParen
@@ -6326,7 +6321,8 @@ private:
     //G
     auto expression_list(
         token const* open_paren,
-        bool inside_initializer = false
+        lexeme       closer,
+        bool         inside_initializer = false
     )
         -> std::unique_ptr<expression_list_node>
     {
@@ -6360,6 +6356,12 @@ private:
         //  and see if there are more...
         while (curr().type() == lexeme::Comma) {
             next();
+
+            //  Allow a trailing comma in the list
+            if (curr().type() == closer) {
+                break;
+            }
+
             pass = passing_style::in;
             if (auto dir = to_passing_style(curr());
                 dir == passing_style::out
@@ -6377,6 +6379,7 @@ private:
             }
             n->expressions.push_back( { pass, std::move(expr) } );
         }
+
         return n;
     }
 
@@ -7771,7 +7774,7 @@ private:
 
 
     //G parameter-declaration-list:
-    //G     '(' parameter-declaration-seq? ')'
+    //G     '(' parameter-declaration-seq? ','? ')'
     //G
     //G parameter-declaration-seq:
     //G     parameter-declaration
@@ -7809,11 +7812,9 @@ private:
         auto param = std::make_unique<parameter_declaration_node>();
 
         auto count = 1;
-        auto expect_another_param_decl = false;
 
         while ((param = parameter_declaration(is_returns, is_named, is_template, is_statement)) != nullptr)
         {
-            expect_another_param_decl = false;
             param->ordinal = count;
             ++count;
 
@@ -7830,6 +7831,17 @@ private:
             if (curr().type() == closer) {
                 break;
             }
+
+            //  Allow a trailing comma in the list
+            else if (
+                curr().type() == lexeme::Comma
+                && peek(1)->type() == closer
+                )
+            {
+                next();
+                break;
+            }
+
             else if (curr().type() != lexeme::Comma) {
                 if (is_statement) {
                     pos = start_pos;    // backtrack
@@ -7840,12 +7852,7 @@ private:
                 return {};
             }
 
-            expect_another_param_decl = true;
             next();
-        }
-
-        if (expect_another_param_decl) {
-            error("invalid parameter list: a comma must be followed by another parameter", true, {}, true);
         }
 
         if (curr().type() != closer) {
@@ -9063,8 +9070,8 @@ private:
         }
 
         //  Cache some context
-        n->is_template_parameter = is_template_parameter;
-        n->is_parameter          = is_parameter;
+        n->is_a_template_parameter = is_template_parameter;
+        n->is_a_parameter          = is_parameter;
 
         return n;
     }

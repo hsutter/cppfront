@@ -17,9 +17,9 @@ class quantity;
 class quantity {
 #line 2 "pure2-bugfix-for-discard-precedence.cpp2"
   private: cpp2::i32 number; 
-  public: explicit quantity(cpp2::in<cpp2::i32> x);
+  public: explicit quantity(cpp2::impl::in<cpp2::i32> x);
 #line 3 "pure2-bugfix-for-discard-precedence.cpp2"
-  public: auto operator=(cpp2::in<cpp2::i32> x) -> quantity& ;
+  public: auto operator=(cpp2::impl::in<cpp2::i32> x) -> quantity& ;
   public: [[nodiscard]] auto operator+(quantity const& that) & -> quantity;
   public: quantity(quantity const&) = delete; /* No 'that' constructor, suppress copy */
   public: auto operator=(quantity const&) -> void = delete;
@@ -34,10 +34,10 @@ auto main(int const argc_, char** argv_) -> int;
 #line 1 "pure2-bugfix-for-discard-precedence.cpp2"
 
 #line 3 "pure2-bugfix-for-discard-precedence.cpp2"
-  quantity::quantity(cpp2::in<cpp2::i32> x)
+  quantity::quantity(cpp2::impl::in<cpp2::i32> x)
                                   : number{ x } {  }
 #line 3 "pure2-bugfix-for-discard-precedence.cpp2"
-  auto quantity::operator=(cpp2::in<cpp2::i32> x) -> quantity&  { 
+  auto quantity::operator=(cpp2::impl::in<cpp2::i32> x) -> quantity&  { 
                                   number = x;
                                   return *this; }
 #line 4 "pure2-bugfix-for-discard-precedence.cpp2"
