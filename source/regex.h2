@@ -482,11 +482,12 @@ parse_context: type = {
 
     pos: size_t = 0;
 
-    public error_text: std::string = "";
+    public error_text:    std::string = "";
+    public named_groups:  std::map<std::string, int> = ();
 
     cur_group_state:        parse_context_group_state = ();
     cur_branch_reset_state: parse_context_branch_reset_state = ();
-    named_groups :          std::map<std::string, int> = ();
+
 
     operator=:(out this, r: std::string_view, modifiers: parse_context_modifier_state) = {
         regex = r;
@@ -1017,6 +1018,28 @@ generation_context: type = {
         base*.code += cur*.code;
 
         gen_stack.pop_back();
+    }
+
+    create_named_group_lookup: (this, named_groups: std::map<std::string, int>) -> std::string = {
+        res: std::string = "get_named_group_index: (name) -> int = {\n";
+
+        // Generate if selection.
+        sep: std::string = "";
+        for named_groups do (cur) {
+            res += "(sep)$if name == \"(cur.first)$\" { return (cur.second)$; }";
+            sep = "else ";
+        }
+
+        // Generate else branch or return if list is empty.
+        if named_groups.empty() {
+            res += "  _ = name;\n";
+            res += "  return -1;\n";
+        }
+        else {
+            res += "  else { return -1; }\n";
+        }
+        res += "}\n";
+        return res;
     }
 }
 
@@ -2602,12 +2625,9 @@ regex_parser: <Error_out> type = {
 
     pos:                    size_t = 0;
     alternatives_count:     int = 0;
-    named_groups :          std::map<std::string, int> = ();
     has_error:              bool = false;
 
     source: std::string = "";
-
-
 
     operator=: (out this, r: std::string_view, m: std::string_view, e: Error_out) = {
         this.regex = r;
@@ -2665,28 +2685,6 @@ regex_parser: <Error_out> type = {
     // Parsing functions
     //
 
-    create_named_group_lookup: (this) -> std::string = {
-        res: std::string = "get_named_group_index: (name) -> int = {\n";
-
-        // Generate if selection.
-        sep: std::string = "";
-        for named_groups do (cur) {
-            res += "(sep)$if name == \"(cur.first)$\" { return (cur.second)$; }";
-            sep = "else ";
-        }
-
-        // Generate else branch or return if list is empty.
-        if named_groups.empty() {
-            res += "  _ = name;\n";
-            res += "  return -1;\n";
-        }
-        else {
-            res += "  else { return -1; }\n";
-        }
-        res += "}\n";
-        return res;
-    }
-
     parse:(inout this) -> std::string = {
         modifiers : parse_context_modifier_state;
         mod   := parser_expression_modifiers(out modifiers);
@@ -2711,12 +2709,10 @@ regex_parser: <Error_out> type = {
 
         string := parse_ctx.get_tokens()*.to_string();
         source += "  to_string: () -> std::string = { return \"(string)$\"; }\n";
-        source += create_named_group_lookup();
+        source += gen_ctx.create_named_group_lookup(parse_ctx.named_groups);
         source += "}\n";
 
         _ = parse_ctx;
-
-        std::cout << source << std::endl;
 
         return source;
     }
