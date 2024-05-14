@@ -11,6 +11,7 @@
 // THE SOFTWARE.
 
 #include <map>
+#include <set>
 
 cpp2: namespace = {
 
@@ -388,7 +389,7 @@ regex_token: @polymorphic_base type = {
     //parse: (inout ctx: parse_context) -> token_ptr;
     generate_code: (virtual this, inout _: generation_context);
 
-    get_groups: (virtual this) -> std::vector<int>;
+    add_groups: (virtual this, inout _: std::set<int>);
     to_string: (this) -> std::string         = { return string_rep; }
     set_string: (inout this, s: std::string) = { string_rep = s; }
 }
@@ -907,7 +908,7 @@ generation_context: type = {
         return name;
     }
 
-    generate_reset: (inout this, groups: std::vector<int>) -> std::string = {
+    generate_reset: (inout this, groups: std::set<int>) -> std::string = {
         if groups.empty() {
             return "cpp2::regex::no_reset()";
         }
@@ -1027,14 +1028,10 @@ regex_token_list: @polymorphic_base type = {
         }
     }
 
-    get_groups: (virtual this) -> std::vector<int> = {
-        r : std::vector<int> = ();
+    add_groups: (virtual this, inout groups: std::set<int>) = {
         for tokens do (token) {
-            c := token*.get_groups();
-            _ = r.insert(r.end(), c.begin(), c.end());
+            token*.add_groups(groups);
         }
-
-        return r;
     }
 
     gen_string: (vec: token_vec) -> std::string = {
@@ -1058,7 +1055,7 @@ regex_token_base: @polymorphic_base type = {
         regex_token = ();
     }
 
-    get_groups: (override this) -> std::vector<int> = { return (); }
+    add_groups: (override this, inout _: std::set<int>) = {}
 }
 
 regex_token_check: @polymorphic_base type = {
@@ -1140,10 +1137,12 @@ alternative_token_gen: @polymorphic_base type = {
     generate_code: (override this, inout ctx: generation_context) = {
         functions: std::string = "";
 
-        i: int = 0;
-        while i < alternatives.ssize() next i += 1 {
-            functions += ", " + ctx.generate_func(alternatives[i]);
-            functions += ", " + ctx.generate_reset(alternatives[i]*.get_groups());
+        for alternatives do (cur) {
+            groups: std::set<int> = ();
+            cur*.add_groups(groups);
+
+            functions += ", " + ctx.generate_func(cur);
+            functions += ", " + ctx.generate_reset(groups);
         }
 
         next_name := ctx.next_func_name();
@@ -1151,15 +1150,10 @@ alternative_token_gen: @polymorphic_base type = {
         ctx.add_statefull(next_name, "cpp2::regex::alternative_token_matcher<char>::match((ctx.match_parameters())$, other, (next_name)$ (functions)$)");
     }
 
-    get_groups: (override this) -> std::vector<int> = {
-        r: std::vector<int> = ();
-
+    add_groups: (override this, inout groups: std::set<int>) = {
         for alternatives do (cur) {
-            t := cur*.get_groups();
-            _ = r.insert(r.end(), t.begin(), t.end());
+            cur*.add_groups(groups);
         }
-
-        return r;
     }
 
     gen_string: (a: token_vec) -> std::string = {
@@ -1820,12 +1814,11 @@ group_token: @polymorphic_base type = {
         ctx.add_statefull(next_name, "cpp2::regex::pop_modifiers_matcher<char>::match((ctx.match_parameters())$, other, (next_name)$)");
     }
 
-    get_groups: (override this) -> std::vector<int> = {
-        r := inner*.get_groups();
+    add_groups: (override this, inout groups: std::set<int>) = {
+        inner*.add_groups(groups);
         if -1 != number {
-            r.push_back(number);
+            _ = groups.insert(number);
         }
-        return r;
     }
 }
 
@@ -1972,7 +1965,9 @@ lookahead_token: @polymorphic_base type = {
         ctx.add_check("lookahead_token_matcher<char, (positive)$>((ctx.match_parameters())$, (inner_name)$)");
     }
 
-    get_groups: (override this) -> std::vector<int> = { return (); } // TODO: Implement
+    add_groups: (override this, inout groups: std::set<int>) = {
+        inner*.add_groups(groups);
+    }
 }
 
 lookahead_token_matcher: <CharT, positive: bool> (cur, inout ctx, modifiers, func) -> bool = {
@@ -2182,13 +2177,18 @@ range_token: @polymorphic_base type = {
 
     generate_code: (override this, inout ctx: generation_context) = {
         inner_name := ctx.generate_func(inner_token);
-        reset_name := ctx.generate_reset(inner_token*.get_groups());
+        groups: std::set<int> = ();
+        inner_token*.add_groups(groups);
+        reset_name := ctx.generate_reset(groups);
 
         next_name := ctx.next_func_name();
         ctx.add_statefull(next_name, "cpp2::regex::range_token_matcher<char, (min_count)$, (max_count)$, (kind)$>::match((ctx.match_parameters())$, (inner_name)$, (reset_name)$, other, (next_name)$)");
     }
 
-    get_groups: (override this) -> std::vector<int> = { return (); } // TODO: Implement
+    add_groups: (override this, inout groups: std::set<int>) = {
+        inner_token*.add_groups(groups);
+    }
+
 }
 
 range_token_matcher: <CharT, min_count: int, max_count: int, kind: int> type = {
