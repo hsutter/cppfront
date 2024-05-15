@@ -1759,7 +1759,7 @@ std::string value{"-1"};
         CPP2_UFCS(add_member)(t, ("    operator| : (       this, that ) -> " + cpp2::to_string(CPP2_UFCS(name)(t)) + "  == _value |  that._value;"));
         CPP2_UFCS(add_member)(t, ("    operator& : (       this, that ) -> " + cpp2::to_string(CPP2_UFCS(name)(t)) + "  == _value &  that._value;"));
         CPP2_UFCS(add_member)(t, ("    operator^ : (       this, that ) -> " + cpp2::to_string(CPP2_UFCS(name)(t)) + "  == _value ^  that._value;"));
-        CPP2_UFCS(add_member)(t, "    has       : ( inout this, that ) -> bool         == _value &  that._value;");
+        CPP2_UFCS(add_member)(t, "    has       : (       this, that ) -> bool         == _value &  that._value;");
         CPP2_UFCS(add_member)(t, "    set       : ( inout this, that )                 == _value |= that._value;");
         CPP2_UFCS(add_member)(t, "    clear     : ( inout this, that )                 == _value &= that._value~;");
     }

@@ -1099,7 +1099,7 @@ basic_enum: (
         t.add_member( "    operator| : (       this, that ) -> (t.name())$  == _value |  that._value;");
         t.add_member( "    operator& : (       this, that ) -> (t.name())$  == _value &  that._value;");
         t.add_member( "    operator^ : (       this, that ) -> (t.name())$  == _value ^  that._value;");
-        t.add_member( "    has       : ( inout this, that ) -> bool         == _value &  that._value;");
+        t.add_member( "    has       : (       this, that ) -> bool         == _value &  that._value;");
         t.add_member( "    set       : ( inout this, that )                 == _value |= that._value;");
         t.add_member( "    clear     : ( inout this, that )                 == _value &= that._value~;");
     }
