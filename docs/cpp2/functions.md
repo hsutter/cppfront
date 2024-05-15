@@ -207,7 +207,7 @@ else {
 
 **`#!cpp do`** and **`#!cpp while`** are like always in C++, except that `(` `)` parentheses around the condition are not required. Instead, `{` `}` braces around the loop body *are* required.
 
-**`#!cpp for range do (e)`** ***statement*** says "for each element in `range`, call it `e` and perform the statement." The loop parameter `(e)` is an ordinary parameter that can be passed isoing any [parameter passing style](#parameters); as always, the default is `in`, which is read-only and expresses a read-only loop. The statement is not required to be enclosed in braces.
+**`#!cpp for range do (e)`** ***statement*** says "for each element in `range`, call it `e` and perform the statement." The loop parameter `(e)` is an ordinary parameter that can be passed using any [parameter passing style](#parameters); as always, the default is `in`, which is read-only and expresses a read-only loop. The statement is not required to be enclosed in braces.
 
 Every loop can have a `next` clause, that is performed at the end of each loop body execution. This makes it easy to have a counter for any loop, including a range `#!cpp for` loop.
 
