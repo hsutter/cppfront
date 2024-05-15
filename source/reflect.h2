@@ -1554,6 +1554,27 @@ print: (f: meta::function_declaration) =
     std::cout << f.print() << "\n";
 }
 
+
+//-----------------------------------------------------------------------
+//
+//  meta - mark f as a metafunction and generate registration code for it
+//
+meta: (inout f: meta::function_declaration) =
+{
+    // TODO(DyXel): Check that the function:
+    //  * has ::cpp2::meta::function_declaration as only parameter, OR,
+    //  * has ::cpp2::meta::type_declaration as only paramater, OR,
+    //  * function_declaration or type_declaration (implicitly deduced to be the above), AND,
+    //  * either in or inout paramater passing style, AND,
+    //  * to be publicly accessible, AND,
+    //  * to not be on header file, AND,
+    //  * to have void return type.
+    fqn := f.fully_qualified_name();
+    f.append_declaration_to_translation_unit("_: namespace = { _: ::cpp2::meta::register_metafunction = (\"(fqn)$\",(fqn)$&); }");
+    f.add_runtime_support_include("cpp2reflect_api.h");
+}
+
+
 //-----------------------------------------------------------------------
 //
 //  regex - creates regular expressions from members
@@ -3700,15 +3721,15 @@ apply_metafunctions: (
 
     //  For each metafunction, apply it
     for n.metafunctions
-    do  (meta)
+    do  (metafunc)
     {
         //  Convert the name and any template arguments to strings
         //  and record that in rtype
-        name := meta*.to_string();
+        name := metafunc*.to_string();
         name = name.substr(0, name.find('<'));
 
         args: std::vector<std::string> = ();
-        for meta*.template_arguments()
+        for metafunc*.template_arguments()
         do  (arg)
             args.push_back( arg.to_string() );
 
@@ -3807,15 +3828,15 @@ apply_metafunctions: (
 
     //  For each metafunction, apply it
     for n.metafunctions
-    do  (meta)
+    do  (metafunc)
     {
         //  Convert the name and any template arguments to strings
         //  and record that in rfunc
-        name := meta*.to_string();
+        name := metafunc*.to_string();
         name = name.substr(0, name.find('<'));
 
         args: std::vector<std::string> = ();
-        for meta*.template_arguments()
+        for metafunc*.template_arguments()
         do  (arg)
             args.push_back( arg.to_string() );
 
@@ -3823,12 +3844,15 @@ apply_metafunctions: (
 
         //  Dispatch
         //
-        if name == "print" {
+        if name == "meta" {
+            meta( rfunc );
+        }
+        else if name == "print" {
             print( rfunc );
         }
         else {
             error( "unrecognized metafunction name '" + name + "' for function declaration" );
-            error( "(temporary alpha limitation) currently the supported names are: print" );
+            error( "(temporary alpha limitation) currently the supported names are: meta, print" );
             return false;
         }
 
