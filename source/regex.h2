@@ -29,13 +29,13 @@ bstring: <CharT> type == std::basic_string<CharT>;
 //-----------------------------------------------------------------------
 //
 
-expression_flags: type = {
-    case_insensitive : int            ==  1;  // mod: i
-    multiple_lines: int               ==  2;  // mod: m
-    single_line: int                  ==  4;  // mod: s
-    no_group_captures: int            ==  8;  // mod: n
-    perl_code_syntax: int             == 16;  // mod: x
-    perl_code_syntax_in_classes: int  == 32;  // mod: xx
+expression_flags: @flag_enum<u8> type = {
+    case_insensitive;             // mod: i
+    multiple_lines;               // mod: m
+    single_line;                  // mod: s
+    no_group_captures;            // mod: n
+    perl_code_syntax;             // mod: x
+    perl_code_syntax_in_classes;  // mod: xx
 }
 
 // TODO: @enum as template parameter yields two error:
@@ -141,53 +141,6 @@ match_context: <CharT, Iter, max_groups: int, max_alternatives: int> type =
 
 }
 
-// Flag change for matching modifiers. Creates a new flag for match_modifiers.
-// See expression_flags for possible flags.
-//
-match_modifiers_state_change: <has_change_: bool, reset_: bool, add_: int, remove_: int, str: fixed_string> type = {
-
-    reset: bool == reset_;
-    add: int == add_;
-    remove: int == remove_;
-    has_change: bool == has_change_;
-
-    combine_inner: (old_flags: int) -> _ == {
-        new_flags := old_flags;
-        if reset {
-            new_flags = 0;
-        }
-        new_flags = new_flags | add;
-        new_flags = new_flags & (remove~);
-
-        return new_flags;
-    }
-
-    to_string: () str.data();
-}
-
-match_modifiers_no_change : type == match_modifiers_state_change<false, false, 0, 0, "">;
-
-// Current modifiers for the regular expression.
-// See expression_flags for possible flags.
-//
-match_modifiers: @struct <flags_: int, Inner> type = {
-
-    flags : int == flags_;
-
-    // Push/pop management
-
-    push: <Change>   (_ : Change) match_modifiers<Change::combine_inner(flags), match_modifiers<flags, Inner>>();
-    pop:             ()           Inner();
-    replace: <Change>(_ : Change) match_modifiers<Change::combine_inner(flags), Inner>();
-
-    // Flag management
-    //
-
-    has_flag: (this, f: int) -> bool = {
-        return  0 != (f & flags);
-    }
-}
-
 //  Represents the remainder of the regular expression.
 //
 //  A matcher can ask this remainder if it would match. If yes a full match of the regular expression is found.
@@ -211,7 +164,7 @@ matcher_list: <CharT, List...> type = {
 
 no_tail: <CharT> type == matcher_list<CharT>;
 true_end_func: @struct type = {
-    operator(): (in this, cur, inout ctx, _) ctx.pass(cur);
+    operator(): (in this, cur, inout ctx) ctx.pass(cur);
 }
 
 //-----------------------------------------------------------------------
@@ -397,14 +350,6 @@ regex_token: @polymorphic_base type = {
 token_ptr : type == std::shared_ptr<regex_token>;
 token_vec: type == std::vector<token_ptr>;
 
-// State of the expression modifiers.
-//
-parse_context_modifier_state: @struct type = {
-    group_captures_have_numbers : bool = true;
-    perl_code_syntax:             bool = false;
-    perl_code_syntax_in_classes:  bool = false;
-}
-
 // State of the current group. See '(<pattern>)'
 parse_context_group_state: @struct type = {
 
@@ -414,7 +359,7 @@ parse_context_group_state: @struct type = {
     // List of alternate matcher lists. E.g. ab|cd|xy
     alternate_match_lists: token_vec = ();
 
-    modifiers : parse_context_modifier_state = ();
+    modifiers : expression_flags = ();
 
     next_alternative: (inout this) = {
         new_list: token_vec = ();
@@ -488,10 +433,12 @@ parse_context: type = {
     cur_group_state:        parse_context_group_state = ();
     cur_branch_reset_state: parse_context_branch_reset_state = ();
 
+    root: token_ptr;
 
-    operator=:(out this, r: std::string_view, modifiers: parse_context_modifier_state) = {
+
+    operator=:(out this, r: std::string_view) = {
         regex = r;
-        set_modifiers(modifiers);
+        root = shared.new<regex_token_empty>("");
     }
 
     // State management functions
@@ -510,11 +457,11 @@ parse_context: type = {
         return inner;
     }
 
-    get_modifiers: (this) -> parse_context_modifier_state = {
+    get_modifiers: (this) -> expression_flags = {
         return cur_group_state.modifiers;
     }
 
-    set_modifiers: (inout this, mod: parse_context_modifier_state) = {
+    set_modifiers: (inout this, mod: expression_flags) = {
         cur_group_state.modifiers = mod;
     }
 
@@ -566,7 +513,7 @@ parse_context: type = {
     }
 
     get_tokens: (inout this) -> token_ptr = {
-        return cur_group_state.get_tokens();
+        return root;
     }
 
     // Group management
@@ -646,10 +593,10 @@ parse_context: type = {
         perl_syntax := false;
         if !no_skip {
             if in_class {
-                perl_syntax = cur_group_state.modifiers.perl_code_syntax && cur_group_state.modifiers.perl_code_syntax_in_classes;
+                perl_syntax = get_modifiers().has(expression_flags::perl_code_syntax) && get_modifiers().has(expression_flags::perl_code_syntax_in_classes);
             }
             else {
-                perl_syntax = cur_group_state.modifiers.perl_code_syntax;
+                perl_syntax = get_modifiers().has(expression_flags::perl_code_syntax);
             }
         }
         cur := pos + 1;
@@ -751,20 +698,19 @@ parse_context: type = {
     peek: (in this)          peek_impl(false);
     peek_in_class: (in this) peek_impl(true);
 
-    parser_group_modifiers: (inout this, change_str: std::string, out modifier_change: std::string,
-                      inout parser_modifiers: parse_context_modifier_state) -> bool = {
+    parser_group_modifiers: (inout this, change_str: std::string, inout parser_modifiers: expression_flags) -> bool = {
         is_negative := false;
         is_reset    := false;
 
         add    := 0;
         remove := 0;
 
-        apply := :(flag: int) = {
+        apply := :(flag: expression_flags) = {
             if is_negative&$* {
-                remove&$* |= flag;
+                parser_modifiers&$*.clear(flag);
             }
             else {
-                add&$* |= flag;
+                parser_modifiers&$*.set(flag);
             }
         };
 
@@ -773,6 +719,7 @@ parse_context: type = {
             cur := iter*;
             if cur == '^' {
                 is_reset = true;
+                parser_modifiers = expression_flags::none;
             }
             else if cur == '-' {
                 if is_reset { _= error("No negative modifier allowed."); return false; }
@@ -781,27 +728,19 @@ parse_context: type = {
             else if cur == 'i' { apply(expression_flags::case_insensitive); }
             else if cur == 'm' { apply(expression_flags::multiple_lines); }
             else if cur == 's' { apply(expression_flags::single_line); }
-            else if cur == 'n' {
-                apply(expression_flags::no_group_captures);
-                parser_modifiers.group_captures_have_numbers = is_negative;
-            }
+            else if cur == 'n' { apply(expression_flags::no_group_captures); }
             else if cur == 'x' {
                 if (iter + 1) == change_str.end() || (iter + 1)* != 'x' {
                     // x modifier
                     apply(expression_flags::perl_code_syntax);
-                    parser_modifiers.perl_code_syntax = !is_negative;
 
                     // Just x unsets xx and remove x also removes xx
-                    remove |= expression_flags::perl_code_syntax_in_classes;
-                    parser_modifiers.perl_code_syntax_in_classes = false;
+                    parser_modifiers.clear(expression_flags::perl_code_syntax_in_classes);
                 }
                 else { // xx modifier
                     // xx also sets or unsets x
                     apply(expression_flags::perl_code_syntax);
-                    parser_modifiers.perl_code_syntax = !is_negative;
-
                     apply(expression_flags::perl_code_syntax_in_classes);
-                    parser_modifiers.perl_code_syntax_in_classes = !is_negative;
 
                     iter++; // Skip the second x
                 }
@@ -810,8 +749,6 @@ parse_context: type = {
                 _= error("Unknown modifier: (cur)$"); return false;
             }
         }
-
-        modifier_change = "::cpp2::regex::match_modifiers_state_change<true, (is_reset)$, (add)$, (remove)$, \"(change_str)$\">";
 
         return true;
     }
@@ -853,7 +790,19 @@ parse_context: type = {
         return true;
     }
 
-    parse: (inout this) parse_until('\0');
+    parse: (inout this, modifiers: std::string) -> bool = {
+
+        flags : expression_flags = ();
+        if !parser_group_modifiers(modifiers, flags) { return false; }
+        set_modifiers(flags);
+
+        r := parse_until('\0');
+        if r {
+            root = cur_group_state.get_tokens();
+        }
+
+        return r;
+    }
 
 
 }
@@ -884,7 +833,7 @@ generation_context: type = {
     temp_name:    int         = 0;
     entry_func:   std::string = "";
 
-    match_parameters: (this) -> std::string = { return "r.pos, ctx, modifiers"; }
+    match_parameters: (this) -> std::string = { return "r.pos, ctx"; }
 
     add: (inout this, s: std::string) = {
         cur := get_current();
@@ -955,7 +904,7 @@ generation_context: type = {
         cur := new_context();
 
         cur*.code += "(cur*.tabs)$(name)$: @struct type = {\n";
-        cur*.code += "(cur*.tabs)$  operator(): (this, cur, inout ctx, modifiers, other) -> _ = {\n";
+        cur*.code += "(cur*.tabs)$  operator(): (this, cur, inout ctx, other) -> _ = {\n";
         cur*.code += "(cur*.tabs)$    r := ctx.pass(cur);\n";
         cur*.add_tabs(2);
     }
@@ -979,7 +928,7 @@ generation_context: type = {
     }
 
     end_func: (inout this) = {
-        end_func_statefull("other(r.pos, ctx, modifiers)");
+        end_func_statefull("other(r.pos, ctx)");
     }
 
     get_entry_func: (this) -> std::string = {
@@ -1202,21 +1151,21 @@ alternative_token_gen: @polymorphic_base type = {
 
 alternative_token_matcher: <CharT> type = {
 
-    match: (cur, inout ctx, modifiers, end_func, tail, functions ...) -> _ = {
-        return match_first(cur, ctx, modifiers, end_func, tail, functions...);
+    match: (cur, inout ctx, end_func, tail, functions ...) -> _ = {
+        return match_first(cur, ctx, end_func, tail, functions...);
     }
-    private match_first: <Other ...> (cur, inout ctx, modifiers, end_func, tail, cur_func, cur_reset, other ...: Other) -> _ = {
-        inner_call := :(tail_cur, inout tail_ctx, tail_modifiers) -> _ == {
-            return (tail)$(tail_cur, tail_ctx, tail_modifiers, (end_func)$);
+    private match_first: <Other ...> (cur, inout ctx, end_func, tail, cur_func, cur_reset, other ...: Other) -> _ = {
+        inner_call := :(tail_cur, inout tail_ctx) -> _ == {
+            return (tail)$(tail_cur, tail_ctx, (end_func)$);
         };
-        r := cur_func(cur, ctx, modifiers, inner_call);
+        r := cur_func(cur, ctx, inner_call);
         if r.matched {
             return r;
         } else {
             cur_reset(ctx);
 
             if constexpr 0 != sizeof...(Other) {
-                return match_first(cur, ctx, modifiers, end_func, tail, other...);
+                return match_first(cur, ctx, end_func, tail, other...);
             } else {
                 return ctx.fail();
             }
@@ -1229,22 +1178,26 @@ alternative_token_matcher: <CharT> type = {
 any_token: @polymorphic_base type = {
     this: regex_token_base = (".");
 
-    operator=:(out this) = {} // TODO: Base class constructor is ignored.
+    single_line: bool;
+
+    operator=:(out this, single_line_: bool) = {
+        single_line = single_line_;
+    }
 
     parse: (inout ctx: parse_context) -> token_ptr = {
         if '.' != ctx.current() { return nullptr;}
 
-        return shared.new<any_token>();
+        return shared.new<any_token>(ctx.get_modifiers().has(expression_flags::single_line));
     }
 
     generate_code: (override this, inout ctx: generation_context) = {
-        ctx.add_check("any_token_matcher<char>((ctx.match_parameters())$)");
+        ctx.add_check("any_token_matcher<char, (single_line)$>((ctx.match_parameters())$)");
     }
 }
 
-any_token_matcher: <CharT> (inout cur, inout ctx, modifiers) -> bool = {
+any_token_matcher: <CharT, single_line: bool> (inout cur, inout ctx) -> bool = {
     if cur != ctx.end // Any char except the end
-        && (modifiers.has_flag(expression_flags::single_line) || cur* != '\n') { // Do not match new lines in multi line mode.
+        && (single_line || cur* != '\n') { // Do not match new lines in multi line mode.
         cur += 1;
         return true;
     }
@@ -1257,41 +1210,53 @@ char_token: @polymorphic_base type = {
     this: regex_token_base;
 
     token: char;
+    ignore_case: bool;
 
-    operator=: (out this, t: char) = {
+    operator=: (out this, t: char, ignore_case_: bool) = {
         regex_token_base = (std::string(1, t));
         token = t;
+        ignore_case = ignore_case_;
     }
 
     parse: (inout ctx: parse_context) -> token_ptr = {
-        return shared.new<char_token>(ctx.current());
+        return shared.new<char_token>(ctx.current(), ctx.get_modifiers().has(expression_flags::case_insensitive));
     }
 
     generate_code: (override this, inout ctx: generation_context) = {
-        upper: = safe_toupper(token);
-        lower: = safe_tolower(token);
-        ctx.add_check("char_token_matcher<char, '(token)$', '(lower)$', '(upper)$'>((ctx.match_parameters())$)");
+        if ignore_case {
+            upper: = safe_toupper(token);
+            lower: = safe_tolower(token);
+
+            if upper != lower {
+                ctx.add_check("char_token_case_insensitive_matcher<char, '(lower)$', '(upper)$'>((ctx.match_parameters())$)");
+            }
+            else {
+                ctx.add_check("char_token_matcher<char, '(token)$'>((ctx.match_parameters())$)");
+            }
+        }
+        else {
+            ctx.add_check("char_token_matcher<char, '(token)$'>((ctx.match_parameters())$)");
+        }
     }
 }
 
-char_token_matcher: <CharT, C: CharT, L: CharT, U: CharT> (inout cur, inout ctx, modifiers) -> bool = {
-    if modifiers.has_flag(expression_flags::case_insensitive) {
-        if cur != ctx.end && (cur* == L || cur* == U) {
-            cur += 1;
-            return true;
-        }
-        else {
-            return false;
-        }
+char_token_matcher: <CharT, C: CharT> (inout cur, inout ctx) -> bool = {
+    if cur != ctx.end && cur* == C {
+        cur += 1;
+        return true;
     }
     else {
-        if cur != ctx.end && cur* == C {
-            cur += 1;
-            return true;
-        }
-        else {
-            return false;
-        }
+        return false;
+    }
+}
+
+char_token_case_insensitive_matcher: <CharT, L: CharT, U: CharT> (inout cur, inout ctx) -> bool = {
+    if cur != ctx.end && (cur* == L || cur* == U) {
+        cur += 1;
+        return true;
+    }
+    else {
+        return false;
     }
 }
 
@@ -1301,11 +1266,13 @@ class_token: @polymorphic_base type = {
     this: regex_token_base = ();
 
     negate: bool;
+    case_insensitive: bool;
     class_str: std::string;
 
-    operator=: (out this, negate_: bool, class_str_: std::string, str: std::string) = {
+    operator=: (out this, negate_: bool, case_insensitive_: bool, class_str_: std::string, str: std::string) = {
         regex_token_base = str;
         negate = negate_;
+        case_insensitive = case_insensitive_;
         class_str = class_str_;
     }
 
@@ -1345,7 +1312,7 @@ class_token: @polymorphic_base type = {
             }
             else if ctx.current() == '\\' {
                 if ctx.next_no_skip()  && (ctx.current() != ']') {
-                    if  ' ' == ctx.current() && ctx.get_modifiers().perl_code_syntax && ctx.get_modifiers().perl_code_syntax_in_classes {
+                    if  ' ' == ctx.current() && ctx.get_modifiers().has(expression_flags::perl_code_syntax) && ctx.get_modifiers().has(expression_flags::perl_code_syntax_in_classes) {
                         classes.push_back(std::string(1, ctx.current())); // TODO: UFCS error with char as argument.
                     }
                     else {
@@ -1413,11 +1380,13 @@ class_token: @polymorphic_base type = {
         }
 
         inner := ctx.join(classes);
-        return shared.new<class_token>(is_negate, inner, ctx.get_range(start_pos, end_pos));
+        string_rep := ctx.get_range(start_pos, end_pos);
+        string_rep = replace_all(string_rep, "\\", "\\\\");
+        return shared.new<class_token>(is_negate, ctx.get_modifiers().has(expression_flags::case_insensitive), inner, string_rep);
     }
 
     generate_code: (override this, inout ctx: generation_context) = {
-        ctx.add_check("class_token_matcher<char, (negate)$, (class_str)$>::match((ctx.match_parameters())$)");
+        ctx.add_check("class_token_matcher<char, (negate)$, (case_insensitive)$, (class_str)$>::match((ctx.match_parameters())$)");
     }
 
 
@@ -1429,10 +1398,10 @@ class_token: @polymorphic_base type = {
     }
 }
 
-class_token_matcher: <CharT, negate: bool, List ...> type =
+class_token_matcher: <CharT, negate: bool, case_insensitive: bool, List ...> type =
 {
-    match: (inout cur, inout ctx, modifiers) -> bool = {
-        if modifiers.has_flag(expression_flags::case_insensitive) {
+    match: (inout cur, inout ctx) -> bool = {
+        if constexpr case_insensitive {
             if cur != ctx.end && negate != ( match_any<List...>(safe_tolower(cur*)) || match_any<List...>(safe_toupper(cur*))) {
                 cur += 1;
                 return true;
@@ -1492,7 +1461,7 @@ escape_token_parse: (inout ctx: parse_context) -> token_ptr = {
         return shared.new<escaped_char_token>(ctx.current());
     } else {
         // Escape of regex special char
-        r := shared.new<char_token>(ctx.current());
+        r := shared.new<char_token>(ctx.current(), false);
         r*.set_string("\\\\(ctx.current())$");
 
         return r;
@@ -1510,12 +1479,8 @@ escaped_char_token: @polymorphic_base type = {
         token = t;
     }
 
-    parse: (inout ctx: parse_context) -> token_ptr = {
-        return shared.new<char_token>(ctx.current());
-    }
-
     generate_code: (override this, inout ctx: generation_context) = {
-        ctx.add_check("char_token_matcher<char, '\\(token)$', '\\(token)$', '\\(token)$'>((ctx.match_parameters())$)");
+        ctx.add_check("char_token_matcher<char, '\\(token)$'>((ctx.match_parameters())$)");
     }
 }
 
@@ -1538,10 +1503,12 @@ group_ref_token: @polymorphic_base type = {
     this: regex_token_base = ();
 
     id: int;
+    case_insensitive: bool;
 
-    operator=:(out this, id_: int, str: std::string) = {
+    operator=:(out this, id_: int, case_insensitive_: bool, str: std::string) = {
         regex_token_base = str;
         id = id_;
+        case_insensitive = case_insensitive_;
     }
 
     parse: (inout ctx: parse_context) -> token_ptr = {
@@ -1560,7 +1527,7 @@ group_ref_token: @polymorphic_base type = {
 
                 number_as_char : char = unsafe_narrow<char>(number);
 
-                token := shared.new<char_token>(number_as_char);
+                token := shared.new<char_token>(number_as_char, ctx.get_modifiers().has(expression_flags::case_insensitive));
                 token*.set_string("\\(int_to_string(number_as_char as int, 8))$");
 
                 return token;
@@ -1633,20 +1600,20 @@ group_ref_token: @polymorphic_base type = {
             if -1 == group_id { return ctx.error("Group names does not exist. (Name is: (group)$)");}
         }
 
-        return shared.new<group_ref_token>(group_id, str);
+        return shared.new<group_ref_token>(group_id, ctx.get_modifiers().has(expression_flags::case_insensitive), str);
     }
 
     generate_code: (override this, inout ctx: generation_context) = {
-        ctx.add_check("group_ref_token_matcher<char, (id)$>((ctx.match_parameters())$)");
+        ctx.add_check("group_ref_token_matcher<char, (id)$, (case_insensitive)$>((ctx.match_parameters())$)");
     }
 }
 
-group_ref_token_matcher: <CharT, group: int> (inout cur, inout ctx, modifiers) -> bool = {
+group_ref_token_matcher: <CharT, group: int, case_insensitive: bool> (inout cur, inout ctx) -> bool = {
     g := ctx.get_group(group);
 
     group_pos := g.start;
     while group_pos != g.end && cur != ctx.end next (group_pos++, cur++) {
-        if modifiers.has_flag(expression_flags::case_insensitive) {
+        if constexpr case_insensitive {
             if safe_tolower(group_pos*) != safe_tolower(cur*) {
                 return false;
             }
@@ -1671,7 +1638,6 @@ group_token: @polymorphic_base type = {
 
     number: int      = -1;
     inner: token_ptr = nullptr;
-    mod: std::string = "::cpp2::regex::match_modifiers_no_change";
 
     parse_lookahead: (inout ctx: parse_context, syntax: std::string, positive: bool) -> token_ptr = {
         _ = ctx.next(); // Skip last token defining the syntax
@@ -1689,11 +1655,10 @@ group_token: @polymorphic_base type = {
     parse: (inout ctx: parse_context) -> token_ptr = {
         if ctx.current() != '(' { return nullptr; }
 
-        has_id :=  ctx.get_modifiers().group_captures_have_numbers;
+        has_id :=  !ctx.get_modifiers().has(expression_flags::no_group_captures);
         has_pattern := true;
         group_name : std::string = "";
         group_name_brackets := true;
-        modifier_change: std::string = "::cpp2::regex::match_modifiers_no_change";
         modifiers : std::string = "";
 
         modifiers_change_to : =  ctx.get_modifiers();
@@ -1720,10 +1685,21 @@ group_token: @polymorphic_base type = {
             else if ctx.current() == '#' {
                 // Comment
                 comment_str : std::string = "";
+                _ = ctx.next(); // Skip #
                 if !ctx.grab_until(")", out comment_str) { return ctx.error("Group without closing bracket."); }
                 // Do not add comment. Has problems with ranges.
 
-                return shared.new<regex_token_empty>("(?#(comment_str)$)");
+                // Pop token and add a list. This fixes comments between a token and a range
+                if ctx.has_token() {
+                    list : token_vec = ();
+                    list.push_back(ctx.pop_token());
+                    list.push_back(shared.new<regex_token_empty>("(?#(comment_str)$)"));
+
+                    return shared.new<regex_token_list>(list);
+                }
+                else {
+                    return shared.new<regex_token_empty>("(?#(comment_str)$)");
+                }
             }
             else if ctx.current() == '|' {
                 // Branch reset group
@@ -1746,7 +1722,7 @@ group_token: @polymorphic_base type = {
                 // Simple modifier
                 has_id = false;
                 if !ctx.grab_until_one_of("):", out modifiers) { return ctx.error("Missing ending bracket for group."); }
-                if !ctx.parser_group_modifiers(modifiers, out modifier_change, modifiers_change_to) {
+                if !ctx.parser_group_modifiers(modifiers, modifiers_change_to) {
                      return nullptr;
                 }
 
@@ -1792,7 +1768,6 @@ group_token: @polymorphic_base type = {
             if !ctx.parse_until(')') { return nullptr; }
             r*.inner = ctx.end_group(old_state);
             r*.set_string(gen_string(group_name, group_name_brackets, modifiers, r*.inner));
-            r*.mod = modifier_change;
 
             return r;
         }
@@ -1800,7 +1775,7 @@ group_token: @polymorphic_base type = {
             // Only a modifier
             ctx.set_modifiers(modifiers_change_to);
 
-            return shared.new<modifier_token>(modifier_change, modifiers);
+            return shared.new<regex_token_empty>("(?(modifiers)$)");
         }
     }
 
@@ -1826,9 +1801,6 @@ group_token: @polymorphic_base type = {
             ctx.add("ctx.set_group_start((number)$, r.pos);");
         }
 
-        next_name := ctx.next_func_name();
-        ctx.add_statefull(next_name, "cpp2::regex::apply_modifiers_matcher<char, true, (mod)$>::match((ctx.match_parameters())$, other, (next_name)$)");
-
         inner*.generate_code(ctx);
         if -1 != number {
             ctx.add("ctx.set_group_end((number)$, r.pos);");
@@ -1840,9 +1812,6 @@ group_token: @polymorphic_base type = {
             ctx.add("});");
             ctx.add("_ = (tmp_name)$;"); // TODO: Guard object problem.
         }
-
-        next_name = ctx.next_func_name();
-        ctx.add_statefull(next_name, "cpp2::regex::pop_modifiers_matcher<char>::match((ctx.match_parameters())$, other, (next_name)$)");
     }
 
     add_groups: (override this, inout groups: std::set<int>) = {
@@ -1889,44 +1858,9 @@ hexadecimal_token_parse: (inout ctx: parse_context) -> token_ptr = {
     }
     syntax = "\\\\x(syntax)$";
 
-    r := shared.new<char_token>(number_as_char);
+    r := shared.new<char_token>(number_as_char, ctx.get_modifiers().has(expression_flags::case_insensitive));
     r*.set_string(syntax);
     return r;
-}
-
-modifier_token: @polymorphic_base type = {
-    this: regex_token_base;
-
-    mod: std::string;
-
-    operator=: (out this, mod_: std::string, mod_str: std::string) = {
-        regex_token_base = ("(?(mod_str)$)");
-        mod = mod_;
-    }
-
-    generate_code: (override this, inout ctx: generation_context) = {
-        next_name := ctx.next_func_name();
-        ctx.add_statefull(next_name, "cpp2::regex::apply_modifiers_matcher<char, false, (mod)$>::match((ctx.match_parameters())$, other, (next_name)$)");
-    }
-}
-
-apply_modifiers_matcher: <CharT, push: bool, ModifierChange> type = {
-
-    match: <Iter, Modifiers> (cur: Iter, inout ctx, _: Modifiers, end_func, tail) -> _ = {
-        if constexpr push {
-            return tail(cur, ctx, Modifiers::push(ModifierChange()), end_func);
-        }
-        else {
-            return tail(cur, ctx, Modifiers::replace(ModifierChange()), end_func);
-        }
-    }
-}
-
-pop_modifiers_matcher: <CharT> type = {
-
-    match: <Iter, Modifiers> (cur: Iter, inout ctx, _: Modifiers, end_func, tail) -> _ = {
-        return tail(cur, ctx, Modifiers::pop(), end_func);
-    }
 }
 
 // Regex syntax: $  Example: aa$
@@ -1934,7 +1868,7 @@ pop_modifiers_matcher: <CharT> type = {
 line_end_token_parse: (inout ctx: parse_context) -> token_ptr = {
     if ctx.current() == '$' || (ctx.current() == '\\' && ctx.peek() == '$') {
         if (ctx.current() == '\\') { _ = ctx.next(); } // Skip escape
-        return shared.new<regex_token_check>("\\\\$", "line_end_token_matcher<char, true, true>");
+        return shared.new<regex_token_check>("\\\\$", "line_end_token_matcher<char, (ctx.get_modifiers().has(expression_flags::multiple_lines))$, true>");
     }
     else if ctx.current() == '\\' && (ctx.peek() == 'z' || ctx.peek() == 'Z') {
         _ = ctx.next(); // Skip escape
@@ -1947,8 +1881,8 @@ line_end_token_parse: (inout ctx: parse_context) -> token_ptr = {
     }
 }
 
-line_end_token_matcher: <CharT, match_new_line: bool, match_new_line_before_end: bool> (cur, inout ctx, modifiers) -> bool = {
-    if cur == ctx.end || (match_new_line && modifiers.has_flag(expression_flags::multiple_lines) && cur* == '\n') {
+line_end_token_matcher: <CharT, match_new_line: bool, match_new_line_before_end: bool> (cur, inout ctx) -> bool = {
+    if cur == ctx.end || (match_new_line && cur* == '\n') {
         return true;
     }
     else if match_new_line_before_end && (cur* == '\n' && (cur + 1) == ctx.end) { // Special case for new line at end.
@@ -1969,13 +1903,13 @@ line_start_token_parse: (inout ctx: parse_context) -> token_ptr = {
         return shared.new<regex_token_check>("\\\\A", "line_start_token_matcher<char, false>");
     }
     else {
-        return shared.new<regex_token_check>("^", "line_start_token_matcher<char, true>");
+        return shared.new<regex_token_check>("^", "line_start_token_matcher<char, (ctx.get_modifiers().has(expression_flags::multiple_lines))$>");
     }
 }
 
-line_start_token_matcher: <CharT, match_new_line: bool> (cur, inout ctx, modifiers) -> bool = {
+line_start_token_matcher: <CharT, match_new_line: bool> (cur, inout ctx) -> bool = {
     return cur == ctx.begin || // Start of string
-           (match_new_line && modifiers.has_flag(expression_flags::multiple_lines)  && (cur - 1)* == '\n'); // Start of new line
+           (match_new_line && (cur - 1)* == '\n'); // Start of new line
 }
 
 // Regex syntax: (?=) or (?!) or (*pla), etc.  Example: (?=AA)
@@ -2001,8 +1935,8 @@ lookahead_token: @polymorphic_base type = {
     }
 }
 
-lookahead_token_matcher: <CharT, positive: bool> (cur, inout ctx, modifiers, func) -> bool = {
-    r := func(cur, ctx, modifiers, true_end_func());
+lookahead_token_matcher: <CharT, positive: bool> (cur, inout ctx, func) -> bool = {
+    r := func(cur, ctx, true_end_func());
     if !positive {
         r.matched = !r.matched;
     }
@@ -2034,21 +1968,21 @@ named_class_token_parse: (inout ctx: parse_context) -> token_ptr = {
 
     _ = ctx.next(); // Skip escape
 
-    return shared.new<regex_token_check>("\\\\(ctx.current())$", "(name)$<char>::match");
+    return shared.new<regex_token_check>("\\\\\\\\(ctx.current())$", "(name)$<char, (ctx.get_modifiers().has(expression_flags::case_insensitive))$>::match");
 }
 
-named_class_no_new_line: <CharT> type == class_token_matcher<CharT, true, single_class_entry<CharT, '\n'>>;
-named_class_digits     : <CharT> type == class_token_matcher<CharT, false, digits_class<CharT>>;
-named_class_hor_space  : <CharT> type == class_token_matcher<CharT, false, hor_space_class<CharT>>;
-named_class_space      : <CharT> type == class_token_matcher<CharT, false, space_class<CharT>>;
-named_class_ver_space  : <CharT> type == class_token_matcher<CharT, false, ver_space_class<CharT>>;
-named_class_word       : <CharT> type == class_token_matcher<CharT, false, word_class<CharT>>;
+named_class_no_new_line: <CharT, case_insensitive: bool> type == class_token_matcher<CharT, true, case_insensitive, single_class_entry<CharT, '\n'>>;
+named_class_digits     : <CharT, case_insensitive: bool> type == class_token_matcher<CharT, false, case_insensitive, digits_class<CharT>>;
+named_class_hor_space  : <CharT, case_insensitive: bool> type == class_token_matcher<CharT, false, case_insensitive, hor_space_class<CharT>>;
+named_class_space      : <CharT, case_insensitive: bool> type == class_token_matcher<CharT, false, case_insensitive, space_class<CharT>>;
+named_class_ver_space  : <CharT, case_insensitive: bool> type == class_token_matcher<CharT, false, case_insensitive, ver_space_class<CharT>>;
+named_class_word       : <CharT, case_insensitive: bool> type == class_token_matcher<CharT, false, case_insensitive, word_class<CharT>>;
 
-named_class_not_digits    : <CharT> type == class_token_matcher<CharT, true, digits_class<CharT>>;
-named_class_not_hor_space : <CharT> type == class_token_matcher<CharT, true, hor_space_class<CharT>>;
-named_class_not_space     : <CharT> type == class_token_matcher<CharT, true, space_class<CharT>>;
-named_class_not_ver_space : <CharT> type == class_token_matcher<CharT, true, ver_space_class<CharT>>;
-named_class_not_word      : <CharT> type == class_token_matcher<CharT, true, word_class<CharT>>;
+named_class_not_digits    : <CharT, case_insensitive: bool> type == class_token_matcher<CharT, true, case_insensitive, digits_class<CharT>>;
+named_class_not_hor_space : <CharT, case_insensitive: bool> type == class_token_matcher<CharT, true, case_insensitive, hor_space_class<CharT>>;
+named_class_not_space     : <CharT, case_insensitive: bool> type == class_token_matcher<CharT, true, case_insensitive, space_class<CharT>>;
+named_class_not_ver_space : <CharT, case_insensitive: bool> type == class_token_matcher<CharT, true, case_insensitive, ver_space_class<CharT>>;
+named_class_not_word      : <CharT, case_insensitive: bool> type == class_token_matcher<CharT, true, case_insensitive, word_class<CharT>>;
 
 
 // Regex syntax: \o{<number>}  Example: \o{142}
@@ -2072,7 +2006,7 @@ octal_token_parse: (inout ctx: parse_context) -> token_ptr = {
     number_as_char : char = unsafe_narrow<char>(number);
 
     syntax: std::string = "\\o{(int_to_string(number_as_char as int, 8))$}";
-    r := shared.new<char_token>(number_as_char);
+    r := shared.new<char_token>(number_as_char, ctx.get_modifiers().has(expression_flags::case_insensitive));
     r*.set_string(syntax);
     return r;
 }
@@ -2224,15 +2158,15 @@ range_token: @polymorphic_base type = {
 
 range_token_matcher: <CharT, min_count: int, max_count: int, kind: int> type = {
 
-    match: <Iter> (cur: Iter, inout ctx, modifiers, inner, reset_func, end_func, tail) -> _ = {
+    match: <Iter> (cur: Iter, inout ctx, inner, reset_func, end_func, tail) -> _ = {
         if range_flags::possessive == kind {
-            return match_possessive(cur, ctx, modifiers, inner, end_func, tail);
+            return match_possessive(cur, ctx, inner, end_func, tail);
         }
         else if range_flags::greedy == kind {
-            return match_greedy(0, cur, ctx.end, ctx, modifiers, inner, reset_func, end_func, tail);
+            return match_greedy(0, cur, ctx.end, ctx, inner, reset_func, end_func, tail);
         }
         else { // range_flags::not_greedy == kind
-            return match_not_greedy(cur, ctx, modifiers, inner, end_func, tail);
+            return match_not_greedy(cur, ctx, inner, end_func, tail);
         }
     }
 
@@ -2252,12 +2186,12 @@ range_token_matcher: <CharT, min_count: int, max_count: int, kind: int> type = {
         return true;
     }
 
-    private match_min_count: <Iter> (cur: Iter, inout ctx, modifiers, inner, end_func, inout count_r: int) -> _ = { // TODO: count_r as out parameter introduces a performance loss.
+    private match_min_count: <Iter> (cur: Iter, inout ctx, inner, end_func, inout count_r: int) -> _ = { // TODO: count_r as out parameter introduces a performance loss.
         res := ctx.pass(cur);
         count := 0;
 
         while is_below_lower_bound(count) && res.matched {
-            res = inner(res.pos, ctx, modifiers, end_func);
+            res = inner(res.pos, ctx, end_func);
             if res.matched {
                 count += 1;
             }
@@ -2267,27 +2201,27 @@ range_token_matcher: <CharT, min_count: int, max_count: int, kind: int> type = {
         return res;
     }
 
-    private match_greedy: <Iter> (count: int, cur: Iter, last_valid: Iter, inout ctx, modifiers, inner, reset_func, end_func, other) -> match_return<Iter> = {
-        inner_call := :(tail_cur, inout tail_ctx, _ /* ignore new modifiers */) -> _ == {
-            return match_greedy((count + 1)$, tail_cur, (cur)$, tail_ctx, (modifiers)$, (inner)$, (reset_func)$, (end_func)$, (other)$);
+    private match_greedy: <Iter> (count: int, cur: Iter, last_valid: Iter, inout ctx, inner, reset_func, end_func, other) -> match_return<Iter> = {
+        inner_call := :(tail_cur, inout tail_ctx) -> _ == {
+            return match_greedy((count + 1)$, tail_cur, (cur)$, tail_ctx, (inner)$, (reset_func)$, (end_func)$, (other)$);
         };
         is_m_valid := true;
         r := ctx.fail();
         if is_below_upper_bound(count) && (is_below_lower_bound(count) || cur != last_valid) {
             is_m_valid = false;  // Group ranges in M are invalidated through the call.
-            r = inner(cur, ctx, modifiers, inner_call);
+            r = inner(cur, ctx, inner_call);
         }
 
         if !r.matched && is_in_range(count) {
             // The recursion did not yield a match try now the tail
-            r = other(cur, ctx, modifiers, end_func);
+            r = other(cur, ctx, end_func);
 
             if r.matched && !is_m_valid{
                 // We have a match rematch M if required
                 reset_func(ctx);
 
                 if count > 0 {
-                    _ = inner(last_valid, ctx, modifiers, end_func);
+                    _ = inner(last_valid, ctx, true_end_func());
                 }
             }
         }
@@ -2295,9 +2229,9 @@ range_token_matcher: <CharT, min_count: int, max_count: int, kind: int> type = {
         return r;
     }
 
-    private match_possessive: <Iter>(cur: Iter, inout ctx, modifiers, inner, end_func, other) -> match_return<Iter> = {
+    private match_possessive: <Iter>(cur: Iter, inout ctx, inner, end_func, other) -> match_return<Iter> = {
         count :=0;
-        r := match_min_count(cur, ctx, modifiers, inner, end_func, count);
+        r := match_min_count(cur, ctx, inner, end_func, count);
 
         if !r.matched {
           return r;
@@ -2305,7 +2239,7 @@ range_token_matcher: <CharT, min_count: int, max_count: int, kind: int> type = {
 
         pos := r.pos;
         while r.matched && is_below_upper_bound(count) {
-            r = inner(pos, ctx, modifiers, true_end_func());
+            r = inner(pos, ctx, true_end_func());
 
             if pos == r.pos {
                 break; // Break infinite loop.
@@ -2316,24 +2250,24 @@ range_token_matcher: <CharT, min_count: int, max_count: int, kind: int> type = {
             }
         }
 
-        return other(pos, ctx, modifiers, end_func);
+        return other(pos, ctx, end_func);
     }
 
-    private match_not_greedy: <Iter> (cur: Iter, inout ctx, modifiers, inner, end_func, other) -> match_return<Iter> = {
+    private match_not_greedy: <Iter> (cur: Iter, inout ctx, inner, end_func, other) -> match_return<Iter> = {
         count := 0;
-        start := match_min_count(cur, ctx, modifiers, inner, end_func, count);
+        start := match_min_count(cur, ctx, inner, end_func, count);
         if !start.matched {
           return start;
         }
 
         pos := start.pos;
         while is_below_upper_bound(count) {
-            o:= other(pos, ctx, modifiers, end_func);
+            o:= other(pos, ctx, end_func);
             if o.matched {
                 return o;
             }
 
-            r:= inner(pos, ctx, modifiers, end_func);
+            r:= inner(pos, ctx, end_func);
             if !r.matched {
                 return ctx.fail();
             }
@@ -2341,7 +2275,7 @@ range_token_matcher: <CharT, min_count: int, max_count: int, kind: int> type = {
             pos = r.pos;
         }
 
-        return other(pos, ctx, modifiers, end_func); // Upper bound reached.
+        return other(pos, ctx, end_func); // Upper bound reached.
     }
 }
 
@@ -2401,8 +2335,7 @@ word_boundary_token_parse: (inout ctx: parse_context) -> token_ptr = {
     }
 }
 
-word_boundary_token_matcher: <CharT, negate: bool> (inout cur, inout ctx, modifiers) -> bool = {
-    _ = modifiers;
+word_boundary_token_matcher: <CharT, negate: bool> (inout cur, inout ctx) -> bool = {
     words : word_class<CharT> = ();
     is_match := false;
     if cur == ctx.begin { // String start
@@ -2429,100 +2362,6 @@ word_boundary_token_matcher: <CharT, negate: bool> (inout cur, inout ctx, modifi
 
 //-----------------------------------------------------------------------
 //
-//  Matchers for regular expressions.
-//
-//-----------------------------------------------------------------------
-//
-
-
-// Regex syntax: none Example: -
-//
-branch_reset_matcher_logic: <CharT> type = {
-    match: <Other> (cur, inout ctx, modifiers, end_func, _ : Other) Other::match(cur, ctx, modifiers, end_func);
-    reset_ranges: (_) = {}
-    to_string:    ()  bstring<CharT>("(?|");
-}
-
-// Regex syntax: <any character>  Example: a
-//
-char_matcher_logic: <CharT, C: CharT, L: CharT, U: CharT> type =
-{
-    match: <Other> (cur, inout ctx, modifiers, end_func, _ : Other) -> _ = {
-        if modifiers.has_flag(expression_flags::case_insensitive) {
-            if cur != ctx.end && (cur* == L || cur* == U) {
-                return Other::match(cur + 1, ctx, modifiers, end_func);
-            }
-            else {
-                return ctx.fail();
-            }
-        }
-        else {
-            if cur != ctx.end && cur* == C {
-                return Other::match(cur + 1, ctx, modifiers, end_func);
-            }
-            else {
-                return ctx.fail();
-            }
-        }
-
-    }
-    reset_ranges: (_) = {}
-    to_string:    ()  bstring<CharT>(1, C);
-}
-
-
-// Regex syntax: [<character classes>]  Example: [abcx-y[:digits:]]
-//
-class_matcher_logic: <CharT, negate: bool, List ...> type =
-{
-    match: <Other> (cur, inout ctx, modifiers, end_func, _ : Other) -> _ = {
-        if modifiers.has_flag(expression_flags::case_insensitive) {
-            if cur != ctx.end && negate != ( match_any<List...>(safe_tolower(cur*)) || match_any<List...>(safe_toupper(cur*))) {
-                return Other::match(cur + 1, ctx, modifiers, end_func);
-            }
-            else {
-                return ctx.fail();
-            }
-        }
-        else {
-            if cur != ctx.end && negate != match_any<List...>(cur*) {
-                return Other::match(cur + 1, ctx, modifiers, end_func);
-            }
-            else {
-                return ctx.fail();
-            }
-        }
-    }
-
-    private match_any: <First, Other ...> (c: CharT) -> bool = {
-        r: bool = First::includes(c);
-
-        if !r {
-            if constexpr 0 != sizeof...(Other) {
-                r = match_any<Other...>(c);
-            }
-        }
-
-        return r;
-    }
-
-    reset_ranges: (_) = {}
-
-    to_string: () -> bstring<CharT> = {
-        r: bstring<CharT> = "[";
-        if negate {
-            r += "^";
-        }
-        r += (bstring<CharT>() + ... + List::to_string());
-        r += "]";
-
-        return r;
-    }
-}
-
-
-//-----------------------------------------------------------------------
-//
 //  Regular expression implementation.
 //
 //-----------------------------------------------------------------------
@@ -2532,7 +2371,6 @@ class_matcher_logic: <CharT, negate: bool, List ...> type =
 regular_expression: <CharT, Matcher> type = {
 
     context: <Iter> type == match_context<CharT, Iter, Matcher::group_count::value, 0>;
-    modifiers: type      == match_modifiers<Matcher::initial_flags::value, int>;
 
     // TODO: Named multiple return has problems with templates.
     search_return: <Iter> type = {
@@ -2568,7 +2406,7 @@ regular_expression: <CharT, Matcher> type = {
     match: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> = {
         ctx: context = (start, end);
 
-        r := Matcher::entry(start, ctx, modifiers());
+        r := Matcher::entry(start, ctx);
         return search_return(r.matched && r.pos == end, ctx);
     }
 
@@ -2581,7 +2419,7 @@ regular_expression: <CharT, Matcher> type = {
 
         cur:= start;
         while true next (cur++) {
-            if Matcher::entry(cur, ctx, modifiers()).matched {
+            if Matcher::entry(cur, ctx).matched {
                 matched = true;
                 break;
             }
@@ -2642,67 +2480,25 @@ regex_parser: <Error_out> type = {
         has_error = true;
     }
 
-    // Parser helper functions.
-
-    parser_expression_modifiers: (inout this, out mods : parse_context_modifier_state) -> std::string = {
-        r: std::string = "0";
-        sep: std::string = " | ";
-
-        add := :(name, inout r) = {
-            r += "(sep$)$(name)$";
-        };
-
-        mods = ();
-
-        mod_pos := 0;
-        while mod_pos < modifier.ssize() next mod_pos += 1 {
-            c: char = modifier[mod_pos];
-
-            if      c == 'i' { add("::cpp2::regex::expression_flags::case_insensitive", r); }
-            else if c == 'm' { add("::cpp2::regex::expression_flags::multiple_lines", r); }
-            else if c == 's' { add("::cpp2::regex::expression_flags::single_line", r); }
-            else if c == 'n' {
-                add("::cpp2::regex::expression_flags::no_group_captures", r);
-                mods.group_captures_have_numbers = false;
-            }
-            else if c == 'x' {
-                add("::cpp2::regex::expression_flags::perl_code_syntax", r);
-                mods.perl_code_syntax = true;
-
-                // Check if we have 'xx'
-                mod_pos += 1;
-                if mod_pos < modifier.ssize() && 'x' == modifier[mod_pos] {
-                    add("::cpp2::regex::expression_flags::perl_code_syntax_in_classes", r);
-                    mods.perl_code_syntax_in_classes = true;
-                }
-            }
-            else { error("Unknown modifier: '(c)$'"); }
-        }
-
-        return r;
-    }
-
     // Parsing functions
     //
 
     parse:(inout this) -> std::string = {
-        modifiers : parse_context_modifier_state;
-        mod   := parser_expression_modifiers(out modifiers);
-        parse_ctx: parse_context = (regex, modifiers);
-        if !parse_ctx.parse() {
+        parse_ctx: parse_context = (regex);
+        mod : std::string = modifier;
+        if !parse_ctx.parse(mod) {
             error(parse_ctx.error_text);
             return "Error";
         }
 
         source += "{\n";
         source += "  group_count: type == std::integral_constant<int, (parse_ctx.get_cur_group())$>;  //TODO: Use static constexpr when alpha limitation of nested types declarations is lifted.\n";
-        source += "  initial_flags: type == std::integral_constant<int, (mod)$>;  //TODO: Use static constexpr when alpha limitation of nested types declarations is lifted.\n";
 
         gen_ctx: generation_context = ();
         source += gen_ctx.run(parse_ctx.get_tokens());
-        source += "  entry: (cur, inout ctx, modifiers) -> _ = {\n";
+        source += "  entry: (cur, inout ctx) -> _ = {\n";
         source += "    ctx.set_group_start(0, cur);\n";
-        source += "    r := (gen_ctx.get_entry_func())$(cur, ctx, modifiers, cpp2::regex::true_end_func());\n";
+        source += "    r := (gen_ctx.get_entry_func())$(cur, ctx, cpp2::regex::true_end_func());\n";
         source += "    if r.matched { ctx.set_group_end(0, r.pos); }\n";
         source += "    return r;\n";
         source += "  }\n";
