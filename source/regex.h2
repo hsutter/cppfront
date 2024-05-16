@@ -13,6 +13,9 @@
 #include <map>
 #include <set>
 
+template<typename matcher_wrapper, typename Iter, typename CharT>
+using matcher_wrapper_type = typename matcher_wrapper::wrap<Iter, CharT>;
+
 cpp2: namespace = {
 
 regex: namespace = {
@@ -59,13 +62,12 @@ match_return: @struct <Iter> type = {
     pos: Iter = ();
 }
 
-match_context: <CharT, Iter, max_groups: int, max_alternatives: int> type =
+match_context: <CharT, Iter, max_groups: int> type =
 {
     public begin: Iter;
     public end: Iter;
 
     private groups: std::array<match_group<Iter>, max_groups> = ();
-    private alternatives_pos: std::array<Iter, max_alternatives> = ();
 
     operator=: (out this, begin_: Iter, end_: Iter) = {
         begin = begin_;
@@ -111,14 +113,6 @@ match_context: <CharT, Iter, max_groups: int, max_alternatives: int> type =
     }
 
     size: (in this) max_groups;
-
-    // Getter and setter for alternatives
-
-    get_alternative_pos: (in this, alternative) alternatives_pos[alternative];
-
-    set_alternative_pos: (inout this, alternative, pos) = {
-        alternatives_pos[alternative] = pos;
-    }
 
     // Misc functions
     //
@@ -904,7 +898,7 @@ generation_context: type = {
         cur := new_context();
 
         cur*.code += "(cur*.tabs)$(name)$: @struct type = {\n";
-        cur*.code += "(cur*.tabs)$  operator(): (this, cur, inout ctx, other) -> _ = {\n";
+        cur*.code += "(cur*.tabs)$  operator(): (this, cur: Iter, inout ctx: context, other) -> cpp2::regex::match_return<Iter> = {\n";
         cur*.code += "(cur*.tabs)$    r := ctx.pass(cur);\n";
         cur*.add_tabs(2);
     }
@@ -2368,9 +2362,11 @@ word_boundary_token_matcher: <CharT, negate: bool> (inout cur, inout ctx) -> boo
 //
 
 // Regular expression implementation
-regular_expression: <CharT, Matcher> type = {
+regular_expression: <CharT, matcher_wrapper> type = {
 
-    context: <Iter> type == match_context<CharT, Iter, Matcher::group_count::value, 0>;
+
+    matcher: <Iter> type == matcher_wrapper_type<matcher_wrapper, Iter, CharT>; // TODO: Remove when nested types are allowed: https://github.com/hsutter/cppfront/issues/727
+    context: <Iter> type == matcher<Iter>::context;
 
     // TODO: Named multiple return has problems with templates.
     search_return: <Iter> type = {
@@ -2392,7 +2388,7 @@ regular_expression: <CharT, Matcher> type = {
         group_end:    (this, g: bstring<CharT>) group_end(get_group_id(g));
 
         private get_group_id: (this, g: bstring<CharT>) -> _ = {
-            group_id := Matcher::get_named_group_index(g);
+            group_id := matcher<Iter>::get_named_group_index(g);
             if -1 == group_id {
                 // TODO: Throw error.
             }
@@ -2404,10 +2400,10 @@ regular_expression: <CharT, Matcher> type = {
     match: (in this, str: bview<CharT>, start)          match(get_iter(str, start), str.end());
     match: (in this, str: bview<CharT>, start, length)  match(get_iter(str, start), get_iter(str, start + length));
     match: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> = {
-        ctx: context = (start, end);
+        ctx: context<Iter> = (start, end);
 
-        r := Matcher::entry(start, ctx);
-        return search_return(r.matched && r.pos == end, ctx);
+        r := matcher<Iter>::entry(start, ctx);
+        return search_return<Iter>(r.matched && r.pos == end, ctx);
     }
 
     search: (in this, str: bview<CharT>)                 search(str.begin(), str.end());
@@ -2415,11 +2411,11 @@ regular_expression: <CharT, Matcher> type = {
     search: (in this, str: bview<CharT>, start, length)  search(get_iter(str, start), get_iter(str, start + length));
     search: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> = {
         matched := false;
-        ctx: context = (start, end);
+        ctx: context<Iter> = (start, end);
 
         cur:= start;
         while true next (cur++) {
-            if Matcher::entry(cur, ctx).matched {
+            if matcher<Iter>::entry(cur, ctx).matched {
                 matched = true;
                 break;
             }
@@ -2429,10 +2425,10 @@ regular_expression: <CharT, Matcher> type = {
             }
         }
 
-        return search_return(matched, ctx);
+        return search_return<Iter>(matched, ctx);
     }
 
-    to_string: (in this) Matcher::to_string();
+    to_string: (in this) matcher_wrapper::to_string();
 
     // Helper functions
     //
@@ -2462,7 +2458,6 @@ regex_parser: <Error_out> type = {
     error_out: Error_out;
 
     pos:                    size_t = 0;
-    alternatives_count:     int = 0;
     has_error:              bool = false;
 
     source: std::string = "";
@@ -2492,20 +2487,23 @@ regex_parser: <Error_out> type = {
         }
 
         source += "{\n";
-        source += "  group_count: type == std::integral_constant<int, (parse_ctx.get_cur_group())$>;  //TODO: Use static constexpr when alpha limitation of nested types declarations is lifted.\n";
+        source += " wrap: <Iter, CharT> type = {\n"; // TODO: Remove wrapper when template template parameters are available.
+        source += "  context: type == cpp2::regex::match_context<CharT, Iter, (parse_ctx.get_cur_group())$>;";
 
         gen_ctx: generation_context = ();
         source += gen_ctx.run(parse_ctx.get_tokens());
-        source += "  entry: (cur, inout ctx) -> _ = {\n";
+        source += "  entry: (cur: Iter, inout ctx: context) -> cpp2::regex::match_return<Iter> = {\n";
         source += "    ctx.set_group_start(0, cur);\n";
         source += "    r := (gen_ctx.get_entry_func())$(cur, ctx, cpp2::regex::true_end_func());\n";
         source += "    if r.matched { ctx.set_group_end(0, r.pos); }\n";
         source += "    return r;\n";
         source += "  }\n";
 
+        source += gen_ctx.create_named_group_lookup(parse_ctx.named_groups);
+        source += "}\n";
+
         string := parse_ctx.get_tokens()*.to_string();
         source += "  to_string: () -> std::string = { return \"(string)$\"; }\n";
-        source += gen_ctx.create_named_group_lookup(parse_ctx.named_groups);
         source += "}\n";
 
         _ = parse_ctx;
