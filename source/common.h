@@ -30,16 +30,18 @@
 #ifndef CPP2_COMMON_H
 #define CPP2_COMMON_H
 
+#include <algorithm>
+#include <cassert>
+#include <cctype>
+#include <chrono>
+#include <compare>
+#include <cstdint>
+#include <iomanip>
+#include <map>
 #include <string>
 #include <string_view>
-#include <vector>
-#include <cstdint>
-#include <cctype>
-#include <cassert>
-#include <iomanip>
-#include <compare>
-#include <algorithm>
 #include <unordered_map>
+#include <vector>
 
 namespace cpp2 {
 
@@ -971,6 +973,14 @@ struct error_entry
 //-----------------------------------------------------------------------
 //
 
+//-----------------------------------------------------------------------
+//
+//  stackinstr: builds debug information to find causes of large stacks
+//
+//  Useful if we need to optimize deep recursion to use less stack
+//
+//-----------------------------------------------------------------------
+//
 class stackinstr
 {
     struct entry
@@ -1043,6 +1053,137 @@ std::vector<stackinstr::entry> stackinstr::deepest;
 std::vector<stackinstr::entry> stackinstr::largest;
 
 #define STACKINSTR stackinstr::guard _s_guard{ __func__, __FILE__, __LINE__, reinterpret_cast<char*>(&_s_guard) };
+
+
+//-----------------------------------------------------------------------
+//
+//  timer:  a little profiling timer to measure time spent in
+//          specific sections of code
+//
+//  This is a tool for cppfront developers to measure the run-time of
+//  specific parts of cppfront code.
+//
+//  Do still use a profiler too. But once you know where to measure,
+//  this has some advantages:
+//
+//    - Precise: It's easy to accurately measure specific parts of
+//      code across the run of the program, not relying on sampling to
+//      representatively hit those regions
+//
+//    - Flexible: You can have as many timers as you want, each with
+//      a clearly readable name, including nested timers (see example
+//      below)
+//
+//    - Portable: It's part of cppfront itself, no separate tool needed
+//
+//    - Integrated: Reports are printed automatically by -verbose
+//
+//  Usage guide
+//  -----------
+//
+//  To measure the total time spent in a specific section of code, create
+//  a scope_timer guard object in that scope and give it a readable
+//  string name that will remind you what it's measuring.
+//
+//  Example: Today I wanted to measure how long get_declaration_of is
+//  taking. So add this line at the start of that function's body:
+// 
+//     auto guard = scope_timer("get_declaration_of");
+//
+//  Recompile cppfront, then run with -verbose:
+//
+//      cppfront pure2-last-use.cpp2 -p -verb
+//
+//  Sample output:
+// 
+//      pure2-last-use.cpp2... ok (all Cpp2, passes safety checks)
+//         Cpp1  0 lines
+//         Cpp2  1,050 lines (100%)
+//         Time  1,629 ms
+//               1,120 ms in get_declaration_of
+//
+//  The first "Time:" is the total run time of the compiland. It is then
+//  followed by any active scope_timer names, in alphabetical order
+//  (you can choose names so that related timers appear together).
+//
+//  Here, this one function is taking most of the total runtime. It
+//  consists of two major loops, one run before the other, so we can
+//  measure the cost of each part, using names that will be
+//  reported together and in understandable order with -verbose:
+//
+//    - The function's first loop is to find a starting point, so
+//      enclose that in { } with a scope_timer:
+// 
+//          {
+//           auto guard = scope_timer("get_declaration_of step 1, initial find loop");
+//           /* the code I want to measure */
+//          }
+//
+//    - Immediately after that, install a second timer to measure the
+//      second loop which covers the entire rest of the function body:
+//
+//          auto guard2 = scope_timer("get_declaration_of step 2, rest of lookup");
+//          /* followed by the rest of the function's body */
+//
+//    - And, since it's easy, throw in a third timer to measure one
+//      sub-part of the step 2 loop... right before the 'move this'
+//      branch we can add this to measure the time spent in oly that
+//      trailing 1/3 of each loop iteration (starting and stopping the
+//      timer at those points in each loop iteration to measure just
+//      the sum of all those loop fragments):
+//
+//          auto guard = scope_timer("get_declaration_of step 2b, 'move this' branch");
+//
+//  Recompile cppfront and run again with -verbose... sample output:
+//
+//      pure2-last-use.cpp2... ok (all Cpp2, passes safety checks)
+//         Cpp1  0 lines
+//         Cpp2  1,050 lines (100%)
+//         Time  1,471 ms
+//               1,139 ms in get_declaration_of
+//                 540 ms in get_declaration_of step 1, initial find loop
+//                 567 ms in get_declaration_of step 2, rest of lookup
+//                 148 ms in get_declaration_of step 2b, 'move this' branch
+//
+//-----------------------------------------------------------------------
+//
+class timer
+{
+    using clock = std::chrono::high_resolution_clock;
+
+    bool                           running  = false;
+    std::chrono::time_point<clock> start_tm = clock::now();
+    std::chrono::duration<double>  duration = {};
+
+public:
+    auto start() {
+        testing.enforce( !running );
+        running  = true;
+        start_tm = clock::now();
+    }
+
+    auto stop() {
+        testing.enforce( running );
+        running   = false;
+        duration += clock::now() - start_tm;
+    }
+
+    void reset() {
+        duration = {};
+    }
+
+    auto elapsed() const {
+        testing.enforce( !running );
+        return std::chrono::duration_cast<std::chrono::milliseconds>(duration);
+    }
+};
+
+static std::map<std::string, timer> timers;     // global named timers
+
+auto scope_timer(std::string const& name) {
+    timers[name].start();
+    return finally( [=]{ timers[name].stop(); } );
+}
 
 
 }
