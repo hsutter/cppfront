@@ -506,7 +506,7 @@ struct expression_statement_node;
 
 struct expression_node
 {
-    static inline std::vector<expression_node*> current_expressions = {};
+    static inline std::vector<expression_node*> current_expressions = {};   // TODO: static ?
 
     std::unique_ptr<assignment_expression_node> expr;
     int num_subexpressions = 0;
@@ -759,7 +759,7 @@ auto primary_expression_node::get_literal() const
 
 struct expression_statement_node
 {
-    static inline std::vector<expression_statement_node*> current_expression_statements = {};
+    static inline std::vector<expression_statement_node*> current_expression_statements = {};   // TODO: static ?
 
     std::unique_ptr<expression_node> expr;
     bool has_semicolon = false;

@@ -357,9 +357,11 @@ class sema
 {
 public:
     std::vector<error_entry>& errors;
-    std::vector<symbol>       symbols;
+    stable_vector<symbol>     symbols;
 
     std::vector<selection_statement_node const*> active_selections;
+
+    mutable std::unordered_map< token const*, cpp2::stable_vector<symbol>::const_iterator > token_to_symbol_iterator;
 
 public:
     //-----------------------------------------------------------------------
@@ -397,34 +399,54 @@ public:
     ) const
         -> declaration_sym const*
     {
+        auto timer  = scope_timer("get_declaration_of");
+
         //  First find the position the query is coming from
         //  and remember its depth
         auto i = symbols.cbegin();
-        while (
-            i != symbols.cend()
-            && i->get_global_token_order() < t.get_global_token_order()
-            )
-        {
-            ++i;
-        }
 
-        while (
-            i == symbols.cend()
-            || !i->start
+        //{
+        //auto timer1 = scope_timer("get_declaration_of step 1, initial find loop");
+
+        //  Check the cache first to avoid repeated computations
+        if (auto it = token_to_symbol_iterator.find(&t);
+            it != token_to_symbol_iterator.end()
             )
         {
-            if (i == symbols.cbegin()) {
-                return nullptr;
-            }
-            --i;
+            i = it->second;
         }
+        else
+        {
+            while (
+                i != symbols.cend()
+                && i->get_global_token_order() < t.get_global_token_order()
+                )
+            {
+                ++i;
+            }
+
+            while (
+                i == symbols.cend()
+                || !i->start
+                )
+            {
+                if (i == symbols.cbegin()) {
+                    return nullptr;
+                }
+                --i;
+            }
+            token_to_symbol_iterator[&t] = i;
+        }
+        //}
 
         auto depth = i->depth;
+
+        //auto timer2 = scope_timer("get_declaration_of step 2, rest of lookup");
 
         //  Then look backward to find the first declaration of
         //  this name that is not deeper (in a nested scope)
         //  and is in the same function
-        using I = std::vector<symbol>::const_iterator;
+        using I = cpp2::stable_vector<symbol>::const_iterator;
         auto advance = [](I& i, int n, I bound) {  // TODO Use `std::ranges::advance`
             auto in = i;
             if (std::abs(n) >= std::abs(bound - i)) {
@@ -2424,7 +2446,7 @@ public:
 
         //  By giving tokens an order during sema
         //  generated code can be equally checked
-        static index_t global_token_counter = 1;
+        static index_t global_token_counter = 1;            // TODO static
         t.set_global_token_order( global_token_counter++ );
 
         auto started_member_access =

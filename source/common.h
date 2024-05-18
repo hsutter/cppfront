@@ -37,6 +37,7 @@
 #include <compare>
 #include <cstdint>
 #include <iomanip>
+#include <iterator>
 #include <map>
 #include <string>
 #include <string_view>
@@ -968,6 +969,168 @@ struct error_entry
 
 //-----------------------------------------------------------------------
 //
+//  stable_vector: a simple segmented vector with limited interface
+//                 that doesn't invalidate by moving memory
+//
+//-----------------------------------------------------------------------
+//
+template <typename T>
+class stable_vector
+{
+    static constexpr size_t PageSize = 3; // 1'000;
+
+    std::vector< std::vector<T> > data;
+
+    auto add_segment() -> void {
+        data.push_back( {} );
+        data.back().reserve(PageSize);
+    }
+
+public:
+    stable_vector() {
+        add_segment();
+    }
+
+    auto empty() const -> bool {
+        return data.size() == 1 && data.back().empty();
+    }
+
+    auto size() const -> size_t {
+        return (data.size() - 1) * PageSize + data.back().size();
+    }
+
+    auto ssize() const -> ptrdiff_t {
+        return unsafe_narrow<ptrdiff_t>(size());
+    }
+
+    auto operator[](size_t idx) -> T& {
+        testing.enforce(idx < size());
+        return data[idx / PageSize][idx % PageSize];
+    }
+
+    auto operator[](size_t idx) const -> T const& {
+        testing.enforce(idx < size());
+        return data[idx / PageSize][idx % PageSize];
+    }
+
+    auto back() -> T& {
+        return data.back().back();
+    }
+
+    auto push_back(T const& t) -> void {
+        if (data.back().size() == data.back().capacity()) {
+            add_segment();
+        }
+        data.back().push_back(t);
+    }
+
+    template< class... Args >
+    auto emplace_back( Args&&... args ) -> T& {
+        if (data.back().size() == data.back().capacity()) {
+            add_segment();
+        }
+        return data.back().emplace_back(CPP2_FORWARD(args)...);
+    }
+
+    auto pop_back() -> void {
+        data.back().pop_back();
+        if (data.back().size() == 0) {
+            data.pop_back();
+        }
+    }
+
+    //-------------------------------------------------------------------
+    //  Debug interface
+    //
+    auto debug_print() -> void {
+        std::cout << "stable_vector:\n";
+        for (auto i = 0; auto& chunk : data) {
+            std::cout << "  -- page " << i++ << " --\n    ";
+            for (auto e : chunk) {
+                std::cout << e << ' ';
+            }
+            std::cout << "\n";
+        }
+    }
+
+    //-------------------------------------------------------------------
+    //  Iterator interface
+    //
+    class iterator {
+        stable_vector* v;
+        size_t         pos = 0;
+    public:
+        using value_type        = T;
+        using difference_type   = std::ptrdiff_t;
+        using pointer           = T*;
+        using reference         = T&;
+        using iterator_category = std::random_access_iterator_tag;
+
+        iterator( stable_vector* v_ = nullptr, size_t pos_ = 0) : v{v_}, pos{pos_} { }
+        auto operator++ ()           -> void     { if (pos < v->size()) { ++pos; } }
+        auto operator-- ()           -> void     { if (pos > 0        ) { --pos; } }
+        auto operator+= (size_t off) -> void     { if (pos + off < v->size()) { pos += off; } else { pos = v->size(); } }
+        auto operator-= (size_t off) -> void     { if (pos - off > 0        ) { pos -= off; } else { pos = 0;         } }
+        auto operator*  ()           -> T&       { return  (*v)[pos      ]; }
+        auto operator-> ()           -> T*       { return &(*v)[pos      ]; }
+        auto operator[] (size_t off) -> T&       { return  (*v)[pos + off]; }
+        auto operator+  (size_t off) -> iterator { auto i = *this; i += off; return i; }
+        auto operator-  (size_t off) -> iterator { auto i = *this; i -= off; return i; }
+        auto operator-  (iterator const& that)   -> ptrdiff_t { return pos - that.pos; }
+        auto operator<=>(iterator const&) const  -> std::strong_ordering = default;
+    };
+
+    class const_iterator {
+        stable_vector const* v;
+        size_t               pos = 0;
+    public:
+        using value_type        = const T;
+        using difference_type   = std::ptrdiff_t;
+        using pointer           = T const*;
+        using reference         = T const&;
+        using iterator_category = std::random_access_iterator_tag;
+
+        const_iterator( stable_vector const* v_ = nullptr, size_t pos_ = 0) : v{v_}, pos{pos_} { }
+        auto operator++ ()           -> void           { if (pos < v->size()) { ++pos; } }
+        auto operator-- ()           -> void           { if (pos > 0        ) { --pos; } }
+        auto operator+= (size_t off) -> void           { if (pos + off < v->size()) { pos += off; } else { pos = v->size(); } }
+        auto operator-= (size_t off) -> void           { if (pos - off > 0        ) { pos -= off; } else { pos = 0;         } }
+        auto operator*  ()           -> T const&       { return  (*v)[pos      ]; }
+        auto operator-> ()           -> T const*       { return &(*v)[pos      ]; }
+        auto operator[] (size_t off) -> T const&       { return  (*v)[pos + off]; }
+        auto operator+  (size_t off) -> const_iterator { auto i = *this; i += off; return i; }
+        auto operator-  (size_t off) -> const_iterator { auto i = *this; i -= off; return i; }
+        auto operator-  (const_iterator const& that)   -> ptrdiff_t { return pos - that.pos; }
+        auto operator<=>(const_iterator const&) const  -> std::strong_ordering = default;
+    };
+
+    auto  begin()       -> iterator       { return {this, 0     }; }
+    auto  end  ()       -> iterator       { return {this, size()}; }
+    auto  begin() const -> const_iterator { return {this, 0     }; }
+    auto  end  () const -> const_iterator { return {this, size()}; }
+    auto cbegin() const -> const_iterator { return {this, 0     }; }
+    auto cend  () const -> const_iterator { return {this, size()}; }
+};
+
+template <typename T>
+auto operator+ (size_t off, typename stable_vector<T>::iterator const& it) -> typename stable_vector<T>::iterator { auto i = it; i += off; return i; }
+
+template <typename T>
+auto operator+ (size_t off, typename stable_vector<T>::const_iterator const& it) -> typename stable_vector<T>::const_iterator { auto i = it; i += off; return i; }
+
+//  And now jump over to std:: to drop in the size/ssize overloads
+}
+namespace std {
+    template <typename T>
+    auto  size(cpp2::stable_vector<T> const& v) -> ptrdiff_t { return v. size();  }
+    template <typename T>
+    auto ssize(cpp2::stable_vector<T> const& v) -> ptrdiff_t { return v.ssize();  }
+}
+namespace cpp2 {
+
+
+//-----------------------------------------------------------------------
+//
 //  Internal instrumentation
 //
 //-----------------------------------------------------------------------
@@ -1088,7 +1251,7 @@ std::vector<stackinstr::entry> stackinstr::largest;
 //  Example: Today I wanted to measure how long get_declaration_of is
 //  taking. So add this line at the start of that function's body:
 // 
-//     auto guard = scope_timer("get_declaration_of");
+//     auto timer = scope_timer("get_declaration_of");
 //
 //  Recompile cppfront, then run with -verbose:
 //
@@ -1115,14 +1278,14 @@ std::vector<stackinstr::entry> stackinstr::largest;
 //      enclose that in { } with a scope_timer:
 // 
 //          {
-//           auto guard = scope_timer("get_declaration_of step 1, initial find loop");
+//           auto timer1 = scope_timer("get_declaration_of step 1, initial find loop");
 //           /* the code I want to measure */
 //          }
 //
 //    - Immediately after that, install a second timer to measure the
 //      second loop which covers the entire rest of the function body:
 //
-//          auto guard2 = scope_timer("get_declaration_of step 2, rest of lookup");
+//          auto timer2 = scope_timer("get_declaration_of step 2, rest of lookup");
 //          /* followed by the rest of the function's body */
 //
 //    - And, since it's easy, throw in a third timer to measure one
@@ -1132,7 +1295,7 @@ std::vector<stackinstr::entry> stackinstr::largest;
 //      timer at those points in each loop iteration to measure just
 //      the sum of all those loop fragments):
 //
-//          auto guard = scope_timer("get_declaration_of step 2b, 'move this' branch");
+//          auto timer2b = scope_timer("get_declaration_of step 2b, 'move this' branch");
 //
 //  Recompile cppfront and run again with -verbose... sample output:
 //

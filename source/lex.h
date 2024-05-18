@@ -342,11 +342,11 @@ auto labelized_position(token const* t)
     struct label {
         std::string text;
         label() {
-            static auto ordinal = 0;
+            static auto ordinal = 0;                                        // TODO: static
             text = std::to_string(++ordinal);
         }
     };
-    static auto labels = std::unordered_map<token const*, label const>{};
+    static auto labels = std::unordered_map<token const*, label const>{};   // TODO: static
 
     assert (t);
     return labels[t].text;
@@ -614,11 +614,11 @@ auto expand_raw_string_literal(
 //  A stable place to store additional text for source tokens that are merged
 //  into a whitespace-containing token (to merge the Cpp1 multi-token keywords)
 //  -- this isn't about tokens generated later, that's tokens::generated_tokens
-static auto generated_text  = std::deque<std::string>{};
-static auto generated_lines = std::deque<std::vector<source_line>>{};
+static auto generated_text  = std::deque<std::string>{};                // TODO: static
+static auto generated_lines = std::deque<std::vector<source_line>>{};   // TODO: static
 
 
-static auto multiline_raw_strings = std::deque<multiline_raw_string>{};
+static auto multiline_raw_strings = std::deque<multiline_raw_string>{}; // TODO: static
 
 auto lex_line(
     std::string&               mutable_line,
@@ -2070,7 +2070,7 @@ public:
 
 };
 
-static auto generated_lexers = std::deque<tokens>{};
+static auto generated_lexers = std::deque<tokens>{};    // TODO: static
 
 }
 
