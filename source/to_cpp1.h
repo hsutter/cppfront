@@ -168,7 +168,7 @@ static auto flag_verbose = false;
 static cmdline_processor::register_flag cmd_verbose(
     9,
     "verbose",
-    "Print verbose statistics and -debug output",
+    "Print verbose output and statistics",
     []{ flag_verbose = true; }
 );
 
@@ -6872,7 +6872,7 @@ public:
     //-----------------------------------------------------------------------
     //  debug_print
     //
-    auto debug_print()
+    auto debug_print() const
         -> void
     {
         //  Only create debug output files if we managed to load the source file.

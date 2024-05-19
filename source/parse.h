@@ -5534,7 +5534,7 @@ public:
     //-----------------------------------------------------------------------
     //  visit
     //
-    auto visit(auto& v) -> void
+    auto visit(auto& v) const -> void
     {
         parse_tree->visit(v, 0);
     }
@@ -9098,7 +9098,7 @@ public:
     //-----------------------------------------------------------------------
     //  debug_print
     //
-    auto debug_print(std::ostream& o)
+    auto debug_print(std::ostream& o) const
         -> void;
 };
 
@@ -9406,7 +9406,7 @@ public:
 };
 
 
-auto parser::debug_print(std::ostream& o)
+auto parser::debug_print(std::ostream& o) const
 
     -> void
 {

@@ -215,6 +215,16 @@ struct symbol {
     symbol(int depth, selection_sym   const& sym) : depth{depth}, sym{sym}, start{sym.start} { }
     symbol(int depth, compound_sym    const& sym) : depth{depth}, sym{sym}, start{sym.start} { }
 
+    auto is_declaration() const -> bool  { return sym.index() == declaration; }
+    auto is_identifier () const -> bool  { return sym.index() == identifier ; }
+    auto is_selection  () const -> bool  { return sym.index() == selection  ; }
+    auto is_compound   () const -> bool  { return sym.index() == compound   ; }
+
+    auto as_declaration() const -> auto& { return std::get<declaration>(sym); }
+    auto as_identifier () const -> auto& { return std::get<identifier >(sym); }
+    auto as_selection  () const -> auto& { return std::get<selection  >(sym); }
+    auto as_compound   () const -> auto& { return std::get<compound   >(sym); }
+
     auto position() const
         -> source_position
     {
@@ -353,6 +363,28 @@ auto is_definite_last_use(token const* t)
 //
 //-----------------------------------------------------------------------
 //
+
+//  Optimization helper: We'll cache results of calls to get_definition_of
+//  in an unordered_map, using this struct for the g_d_o params as a key
+//
+struct gdo_params {
+    token const* pt; bool a; bool b;
+    auto operator<=>(gdo_params const&) const -> std::strong_ordering = default;
+};
+}
+namespace std {
+    template <>
+    struct hash<cpp2::gdo_params> {
+        auto operator()(const cpp2::gdo_params& key) const -> std::size_t {
+            return std::hash<cpp2::token const*>()(key.pt); // first is enough
+        }
+    };
+}
+namespace cpp2 {
+
+
+//  Now back to class sema...
+//
 class sema
 {
 public:
@@ -361,7 +393,22 @@ public:
 
     std::vector<selection_statement_node const*> active_selections;
 
-    mutable std::unordered_map< token const*, cpp2::stable_vector<symbol>::const_iterator > token_to_symbol_iterator;
+    //  The following data is for lookup optimization
+    //
+    mutable std::unordered_map< gdo_params, declaration_sym const* > gdo_cached_results;
+
+    struct declaration_start {
+        int                                   token_order;
+        stable_vector<symbol>::const_iterator iter;
+
+        declaration_start( int to, cpp2::stable_vector<symbol>::const_iterator it)
+            : token_order{to}
+            , iter{it}
+        { }
+
+        auto operator<=>(int to) const { return token_order <=> to; }
+    };
+    mutable stable_vector< declaration_start > declaration_starts;
 
 public:
     //-----------------------------------------------------------------------
@@ -374,6 +421,7 @@ public:
     )
         : errors{ errors_ }
     {
+        declaration_starts.emplace_back( -1, symbols.cbegin() );
     }
 
     //  Get the declaration of t within the same named function or beyond it
@@ -392,61 +440,95 @@ public:
         return get_declaration_of(*t, look_beyond_current_function, include_implicit_this);
     }
 
+    //-----------------------------------------------------------------------
+    //  Until I'm confident these optimizations are solid, use this dispatcher...
+    //
+    mutable stable_vector<symbol>::const_iterator initial_find_old;
+    mutable stable_vector<symbol>::const_iterator initial_find_new;
+
     auto get_declaration_of(
+        token const& t,
+        bool         look_beyond_current_function = false,
+        bool         include_implicit_this = false
+    ) const
+        -> declaration_sym const*
+    {
+        auto result_new = get_declaration_of_new(t, look_beyond_current_function, include_implicit_this);
+
+        ////  ... during testing, check for regression bugs by invoking both versions
+        ////  of get_declaration_of and compare the results of both levels of optimization
+        ////  (the cached overall result, and the initial start for the table scan)
+        //auto result_old = get_declaration_of_old(t, look_beyond_current_function, include_implicit_this);
+        //if (
+        //    initial_find_old != initial_find_new
+        //    || result_old != result_new
+        //    )
+        //{
+        //    std::cerr << "\n  Internal compiler error - see cppfront-ice-data.out for debug information\n\n";
+
+        //    auto out = std::ofstream{"cppfront-ice-data.out"};
+
+        //    out << "g_d_o arguments:\n";
+        //    out << "    " << t.as_string_view() << " (on line " << t.position().lineno
+        //        << "), order " << t.get_global_token_order() << "\n\n";
+        //    out << "    " << std::boolalpha << look_beyond_current_function << "\n";
+        //    out << "    " << std::boolalpha << include_implicit_this << "\n";
+
+        //    out << "initial_find_old: " << (initial_find_old - symbols.cbegin()) << "\n";
+        //    out << "initial_find_new: " << (initial_find_new - symbols.cbegin()) << "\n\n";
+
+        //    out << "result_old: "       << (void*)result_old << "\n";
+        //    out << "result_new: "       << (void*)result_new << "\n\n";
+
+        //    debug_print(out);
+
+        //    exit(EXIT_FAILURE);
+        //}
+
+        return result_new;
+    }
+
+    //-----------------------------------------------------------------------
+    //  Unoptimized version: Baseline to check against for regressions
+    //
+    auto get_declaration_of_old(
         token const& t,
         bool         look_beyond_current_function = false,
         bool         include_implicit_this        = false
     ) const
         -> declaration_sym const*
     {
-        auto timer  = scope_timer("get_declaration_of");
+        auto timer  = scope_timer("get_declaration_of - old");
 
         //  First find the position the query is coming from
         //  and remember its depth
         auto i = symbols.cbegin();
-
-        //{
-        //auto timer1 = scope_timer("get_declaration_of step 1, initial find loop");
-
-        //  Check the cache first to avoid repeated computations
-        if (auto it = token_to_symbol_iterator.find(&t);
-            it != token_to_symbol_iterator.end()
+        while (
+            i != symbols.cend()
+            && i->get_global_token_order() < t.get_global_token_order()
             )
         {
-            i = it->second;
+            ++i;
         }
-        else
-        {
-            while (
-                i != symbols.cend()
-                && i->get_global_token_order() < t.get_global_token_order()
-                )
-            {
-                ++i;
-            }
+        initial_find_old = i;
 
-            while (
-                i == symbols.cend()
-                || !i->start
-                )
-            {
-                if (i == symbols.cbegin()) {
-                    return nullptr;
-                }
-                --i;
+        while (
+            i == symbols.cend()
+            || !i->start
+            )
+        {
+            if (i == symbols.cbegin()) {
+                return nullptr;
             }
-            token_to_symbol_iterator[&t] = i;
+            --i;
         }
-        //}
 
         auto depth = i->depth;
-
-        //auto timer2 = scope_timer("get_declaration_of step 2, rest of lookup");
 
         //  Then look backward to find the first declaration of
         //  this name that is not deeper (in a nested scope)
         //  and is in the same function
-        using I = cpp2::stable_vector<symbol>::const_iterator;
+        using I = stable_vector<symbol>::const_iterator;
         auto advance = [](I& i, int n, I bound) {  // TODO Use `std::ranges::advance`
             auto in = i;
             if (std::abs(n) >= std::abs(bound - i)) {
@@ -527,6 +609,197 @@ public:
         return nullptr;
     }
 
+    //-----------------------------------------------------------------------
+    //  Optimized version:
+    //      1. Cache previous results for the same arguments
+    //      2. Build a table to skip quickly to the right area in the first loop,
+    //         to avoid avoid repeated quadratic scans from the start of the table
+    //
+    auto get_declaration_of_new(
+        token const& t,
+        bool         look_beyond_current_function = false,
+        bool         include_implicit_this        = false
+    ) const
+        -> declaration_sym const*
+    {
+        auto timer  = scope_timer("get_declaration_of");
+
+        ////  Optimization (1) -- currently commented
+        ////
+        ////  Check the cache first to avoid duplicate computations
+        //auto my_params = gdo_params{&t, look_beyond_current_function, include_implicit_this};
+        //if (auto probe = gdo_cached_results.find(my_params);
+        //    probe != gdo_cached_results.cend()
+        //    )
+        //{
+        //    //  Ignore this debug comparison data since the new version
+        //    //  didn't need to recompute it in this cached case
+        //    initial_find_old = initial_find_new = {};
+
+        //    return probe->second;
+        //}
+
+        //  First find the position the query is coming from
+        //  and remember its depth
+        auto i = symbols.cbegin();
+
+        //{
+        //auto timer1 = scope_timer("get_declaration_of step 1, initial find loop");
+
+        //  If the declaration_starts list got this far yet, use that to
+        //  skip repeating the whole linear search from the table beginning
+        //
+        auto probe = std::lower_bound(
+                        declaration_starts.begin(),
+                        declaration_starts.end(),
+                        t.get_global_token_order()
+                    );
+        if (probe != declaration_starts.end())
+        {
+            if (probe->iter->get_global_token_order() != t.get_global_token_order()) {
+                --probe;
+            }
+            i = probe->iter;
+        }
+
+        //  Else resume appending values to the declaration_starts list
+        //
+        else
+        {
+            //  Start right after where we left off
+            i = declaration_starts.back().iter;
+        }
+
+        while (
+            i != symbols.cend()
+            && i->get_global_token_order() < t.get_global_token_order()
+            )
+        {
+            if (
+                i->is_declaration()
+                && i->as_declaration().start
+                )
+            {
+                if (auto to = i->get_global_token_order();
+                    to > 0
+                    && declaration_starts.back().token_order < to)
+                {
+                    declaration_starts.emplace_back( to, i );
+                }
+            }
+
+            ++i;
+        }
+
+        initial_find_new = i;
+
+        while (
+            i == symbols.cend()
+            || !i->start
+            )
+        {
+            if (i == symbols.cbegin()) {
+                //return gdo_cached_results[my_params] = nullptr;
+                return nullptr;
+            }
+            --i;
+        }
+
+        //}
+
+        auto depth = i->depth;
+
+        //auto timer2 = scope_timer("get_declaration_of step 2, rest of lookup");
+
+        //  Then look backward to find the first declaration of
+        //  this name that is not deeper (in a nested scope)
+        //  and is in the same function
+        using I = stable_vector<symbol>::const_iterator;
+        auto advance = [](I& i, int n, I bound) {  // TODO Use `std::ranges::advance`
+            auto in = i;
+            if (std::abs(n) >= std::abs(bound - i)) {
+                i = bound;
+            }
+            else {
+                std::advance(i, n);
+            }
+            return n - (i - in);
+        };
+        advance(i, -int(i->position() > t.position()), symbols.cbegin());
+        advance(i, 1, symbols.cend());
+        while (advance(i, -1, symbols.begin()) == 0)
+        {
+            if (
+                i->sym.index() == symbol::active::declaration
+                && i->depth <= depth
+                )
+            {
+                auto const& decl = std::get<symbol::active::declaration>(i->sym);
+
+                //  Conditionally look beyond the start of the current named (has identifier) function
+                //  (an unnamed function is ok to look beyond)
+                assert(decl.declaration);
+                if (
+                    decl.declaration->type.index() == declaration_node::a_function
+                    && decl.declaration->identifier
+                    && !look_beyond_current_function
+                    )
+                {
+                    //return gdo_cached_results[my_params] = nullptr;
+                    return nullptr;
+                }
+
+                //  If the name matches, this is it
+                if (
+                    decl.identifier
+                    && *decl.identifier == t
+                    )
+                {
+                    //return gdo_cached_results[my_params] = &decl;
+                    return &decl;
+                }
+
+                //  If we reached a 'move this' parameter, look it up in the type members
+                if (
+                    include_implicit_this
+                    && decl.identifier
+                    && *decl.identifier == "this"
+                    )
+                {
+                    if (auto n = decl.declaration;
+                        decl.parameter
+                        && decl.parameter->pass == passing_style::move
+                        && n
+                        && n->parent_is_function()
+                        && (n = n->parent_declaration)->parent_is_type()
+                        && n->my_statement
+                        && n->my_statement->compound_parent
+                        && std::any_of(
+                               n->my_statement->compound_parent->statements.begin(),
+                               n->my_statement->compound_parent->statements.end(),
+                               [&t, n](std::unique_ptr<statement_node> const& s) mutable {
+                                   return s
+                                          && s->statement.index() == statement_node::declaration
+                                          && (n = &*std::get<statement_node::declaration>(s->statement))->identifier
+                                          && n->identifier->to_string() == t;
+                               })
+                        )
+                    {
+                        //return gdo_cached_results[my_params] = &decl;
+                        return &decl;
+                    }
+                    //return gdo_cached_results[my_params] = nullptr;
+                    return nullptr;
+                }
+
+                depth = i->depth;
+            }
+        }
+
+        //return gdo_cached_results[my_params] = nullptr;
+        return nullptr;
+    }
+
     auto is_captured(token const& t) const
         -> bool
     {
@@ -553,7 +826,7 @@ public:
     //-----------------------------------------------------------------------
     //  Factor out the uninitialized var decl test
     //
-    auto is_uninitialized_decl(declaration_sym const& sym)
+    auto is_uninitialized_decl(declaration_sym const& sym) const
         -> bool
     {
         return
@@ -565,13 +838,24 @@ public:
     }
 
 
-    auto debug_print(std::ostream& o)
+    auto debug_print(std::ostream& o) const
         -> void
     {
-        for (auto const& s : symbols)
+        o << "---------------------------------------\n";
+        o << declaration_starts.size() << " declaration_starts:\n";
+        for (auto i = 0; auto& e : declaration_starts) {
+            o << std::setw(4) << i++ << " | ";
+            o << e.token_order << " -> symbols[" << (e.iter - symbols.cbegin()) << "]\n";
+        }
+        o << "\n---------------------------------------\n";
+
+        for (auto i = 0; auto const& s : symbols)
         {
-            o << std::setw(3) << s.depth << " |";
-            o << std::setw(s.depth*2+1) << " ";
+            o << std::setw(4) << i++                          << " |";
+            o << std::setw(5) << s.get_global_token_order()   << " |";
+            o << std::setw(5) << static_cast<void const*>(&s) << " |";
+            o << std::setw(3) << s.depth                      << " |";
+            o << std::setw(s.depth*2+1)                       << " ";
 
             switch (s.sym.index()) {
 
@@ -648,7 +932,7 @@ public:
                 auto const& sym = std::get<symbol::active::compound>(s.sym);
                 if (!sym.start) {
                     o << "/";
-                    --scope_depth;
+                    //--scope_depth;
                 }
                 if (sym.kind_ == sym.is_true) {
                     o << "true branch";

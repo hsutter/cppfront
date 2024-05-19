@@ -1004,12 +1004,12 @@ public:
     }
 
     auto operator[](size_t idx) -> T& {
-        testing.enforce(idx < size());
+        bounds_safety.enforce(idx < size());
         return data[idx / PageSize][idx % PageSize];
     }
 
     auto operator[](size_t idx) const -> T const& {
-        testing.enforce(idx < size());
+        bounds_safety.enforce(idx < size());
         return data[idx / PageSize][idx % PageSize];
     }
 
@@ -1042,14 +1042,16 @@ public:
     //-------------------------------------------------------------------
     //  Debug interface
     //
-    auto debug_print() -> void {
-        std::cout << "stable_vector:\n";
+    auto debug_print(std::ostream& o) const
+        -> void
+    {
+        o << "stable_vector:\n";
         for (auto i = 0; auto& chunk : data) {
-            std::cout << "  -- page " << i++ << " --\n    ";
+            o << "  -- page " << i++ << " --\n    ";
             for (auto e : chunk) {
-                std::cout << e << ' ';
+                o << e << ' ';
             }
-            std::cout << "\n";
+            o << "\n";
         }
     }
 
@@ -1067,12 +1069,12 @@ public:
         using iterator_category = std::random_access_iterator_tag;
 
         iterator( stable_vector* v_ = nullptr, size_t pos_ = 0) : v{v_}, pos{pos_} { }
-        auto operator++ ()           -> void     { if (pos < v->size()) { ++pos; } }
-        auto operator-- ()           -> void     { if (pos > 0        ) { --pos; } }
-        auto operator+= (size_t off) -> void     { if (pos + off < v->size()) { pos += off; } else { pos = v->size(); } }
-        auto operator-= (size_t off) -> void     { if (pos - off > 0        ) { pos -= off; } else { pos = 0;         } }
-        auto operator*  ()           -> T&       { return  (*v)[pos      ]; }
-        auto operator-> ()           -> T*       { return &(*v)[pos      ]; }
+        auto operator++ ()           -> iterator { if (pos < v->size()) { ++pos; } return *this; }
+        auto operator-- ()           -> iterator { if (pos > 0        ) { --pos; } return *this; }
+        auto operator+= (size_t off) -> iterator { if (pos + off < v->size()) { pos += off; } else { pos = v->size(); } return *this; }
+        auto operator-= (size_t off) -> iterator { if (pos - off > 0        ) { pos -= off; } else { pos = 0;         } return *this; }
+        auto operator*  () const     -> T&       { return  (*v)[pos      ]; }
+        auto operator-> () const     -> T*       { return &(*v)[pos      ]; }
         auto operator[] (size_t off) -> T&       { return  (*v)[pos + off]; }
         auto operator+  (size_t off) -> iterator { auto i = *this; i += off; return i; }
         auto operator-  (size_t off) -> iterator { auto i = *this; i -= off; return i; }
@@ -1091,12 +1093,12 @@ public:
         using iterator_category = std::random_access_iterator_tag;
 
         const_iterator( stable_vector const* v_ = nullptr, size_t pos_ = 0) : v{v_}, pos{pos_} { }
-        auto operator++ ()           -> void           { if (pos < v->size()) { ++pos; } }
-        auto operator-- ()           -> void           { if (pos > 0        ) { --pos; } }
-        auto operator+= (size_t off) -> void           { if (pos + off < v->size()) { pos += off; } else { pos = v->size(); } }
-        auto operator-= (size_t off) -> void           { if (pos - off > 0        ) { pos -= off; } else { pos = 0;         } }
-        auto operator*  ()           -> T const&       { return  (*v)[pos      ]; }
-        auto operator-> ()           -> T const*       { return &(*v)[pos      ]; }
+        auto operator++ ()           -> const_iterator { if (pos < v->size()) { ++pos; } return *this; }
+        auto operator-- ()           -> const_iterator { if (pos > 0        ) { --pos; } return *this; }
+        auto operator+= (size_t off) -> const_iterator { if (pos + off < v->size()) { pos += off; } else { pos = v->size(); } return *this; }
+        auto operator-= (size_t off) -> const_iterator { if (pos - off > 0        ) { pos -= off; } else { pos = 0;         } return *this; }
+        auto operator*  () const     -> T const&       { return  (*v)[pos      ]; }
+        auto operator-> () const     -> T const*       { return &(*v)[pos      ]; }
         auto operator[] (size_t off) -> T const&       { return  (*v)[pos + off]; }
         auto operator+  (size_t off) -> const_iterator { auto i = *this; i += off; return i; }
         auto operator-  (size_t off) -> const_iterator { auto i = *this; i -= off; return i; }
