@@ -8,57 +8,57 @@ identity_copy: (move x) -> _ requires !std::copyable<decltype(x)> = (move x);
 
 issue_313: () = {
 //   _ = :() -> std::vector<int> = {
-//     a := new<int>(0);
+//     a := new<int>(0)*;
 //     return (a*, identity_copy(a)*);
 //   };
 //   _ = :() -> std::vector<int> = {
-//     a := new<int>(0);
+//     a := new<int>(0)*;
 //     return (a&**, identity_copy(a)*);
 //   };
   _ = :() -> int = {
-    a := new<int>(0);
+    a := new<int>(0)*;
     return identity(a)* + identity(a)*;
 
-    b := new<int>(0);
+    b := new<int>(0)*;
     return identity(b)* = identity(b)*;
 
-    c := new<int>(0);
+    c := new<int>(0)*;
     return identity(c)* ^ identity(c)*;
   };
   {
-    a := new<int>(0);
+    a := new<int>(0)*;
     identity(a)* = identity(a)*;
 
-    b := new<int>(0);
+    b := new<int>(0)*;
     _: int = identity(b)* = identity(b)*;
 
-    c := new<int>(0);
+    c := new<int>(0)*;
     if identity(c)* * identity(c)* { }
 
-    d := new<int>(0);
+    d := new<int>(0)*;
     if (identity(d)* - identity(d)*) { }
 
-    e := new<int>(0);
+    e := new<int>(0)*;
     _ = e is (e);
 
-    f := new<int>(0);
+    f := new<int>(0)*;
     _ = f is std::type_identity_t<decltype(f)>; // OK?
 
-    g := new<int>(0);
+    g := new<int>(0)*;
     for (identity(g)* + identity(g)*)
     do (_)
     { }
 
-    h := new<int>(0);
+    h := new<int>(0)*;
     while identity(h)* + identity(h)*
     { }
 
-    i := new<int>(0);
+    i := new<int>(0)*;
     do { }
     while identity(i)* + identity(i)*;
 
-    j := new<int>(0);
-    k := new<int>(0);
+    j := new<int>(0)*;
+    k := new<int>(0)*;
     _ = inspect identity(j)* + identity(j)* -> int {
         is (identity(k)* + identity(k)*) = 0;
         is _ = 0;
@@ -66,7 +66,7 @@ issue_313: () = {
 
   }
 //   {
-//     a := new<int>(0);
+//     a := new<int>(0)*;
 //     _ = :() identity(a$)* + identity(a$)*;
 //   }
 }
@@ -114,7 +114,7 @@ issue_683: (args) = {
 issue_825: () = {
   _ = :(copy b: std::unique_ptr<int>) f_copy(move b);
   _ = :(move c: std::unique_ptr<int>) f_copy(move c);
-  _ = :(forward d) f_copy(d);(new<int>(0));
+  _ = :(forward d) f_copy(d);(new<int>(0)*);
 }
 
 issue_832: () = {
@@ -370,16 +370,16 @@ issue_857_9: @struct type = {
 }
 
 issue_869_0: @value type = {
-  operator=: (out this, move _: std::unique_ptr<int>) = { }
+  operator=: (out this, move _: cpp2::owning_reference<int>) = { }
 }
 issue_869_1: @union type = {
   i: issue_869_0;
 }
-issue_869_2: () -> (res: issue_869_1 = ()) = { res.set_i(new<int>(0)); }
+issue_869_2: () -> (res: issue_869_1 = ()) = { res.set_i(new<int>(0)*); }
 
 issue_884: () = {
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     if true { }
     {
       { f_inout(x); }
@@ -388,7 +388,7 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     if true {
       f_copy(move x);
     }
@@ -399,7 +399,7 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     if true {
       f_inout(x);
     }
@@ -411,7 +411,7 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     f_copy(move x);
     if true {
       _ = 0;
@@ -424,7 +424,7 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     f_inout(x);
     if true {
       f_copy(move x);
@@ -437,7 +437,7 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     f_inout(x);
     if true {
       _ = 0;
@@ -450,7 +450,7 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     f_inout(x);
     if true {
       _ = 0;
@@ -463,7 +463,7 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     f_inout(x);
     if true {
       _ = 0;
@@ -476,7 +476,7 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     f_inout(x);
     if true {
       f_copy(move x);
@@ -489,7 +489,7 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     f_inout(x);
     if true {
       f_copy(move x);
@@ -502,7 +502,7 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     f_inout(x);
     if true {
       f_inout(x);
@@ -518,7 +518,7 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     f_inout(x);
     if true {
       f_inout(x);
@@ -534,7 +534,7 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     f_inout(x);
     if true {
       f_copy(move x);
@@ -550,7 +550,7 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     if true {
       if true {
         if true {
@@ -563,7 +563,7 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     if true {
       if true {
         if true {
@@ -577,7 +577,7 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     if true {
     }
     else {
@@ -590,7 +590,7 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     if true {
       f_copy(move x);
     }
@@ -604,9 +604,9 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     if true {
-      y := new<int>(0);
+      y := new<int>(0)*;
       f_copy(move x);
       f_copy(move y);
     }
@@ -621,9 +621,9 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     if true {
-      y := new<int>(0);
+      y := new<int>(0)*;
       if true { }
       else {
         f_copy(move x);
@@ -633,7 +633,7 @@ issue_884: () = {
     else {
       if true {
         if true {
-          y := new<int>(0);
+          y := new<int>(0)*;
           f_copy(move y);
           f_inout(x);
         }
@@ -643,9 +643,9 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     if true {
-      y := new<int>(0);
+      y := new<int>(0)*;
       if true { }
       else {
         f_copy(move x);
@@ -653,7 +653,7 @@ issue_884: () = {
       }
     }
     else {
-      y := new<int>(0);
+      y := new<int>(0)*;
       if true {
         if true {
           f_copy(move x);
@@ -667,13 +667,13 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     if true {
       f_copy(move x);
     }
     else {
       if true {
-        x := new<int>(0);
+        x := new<int>(0)*;
         if true {
           f_inout(x);
         }
@@ -686,10 +686,10 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     if true {
       if true {
-        x := new<int>(0);
+        x := new<int>(0)*;
         if true {
           f_inout(x);
         }
@@ -705,7 +705,7 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
 
     if true {
       f_inout(x);
@@ -719,7 +719,7 @@ issue_884: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     if true {
       if true {
         f_inout(x);
@@ -782,9 +782,9 @@ issue_888_1: (copy _: std::string, copy size: move_only_function<int(int)>) = {
 }
 
 issue_890: () = {
-  x := new<int>(0);
+  x := new<int>(0)*;
 //   assert(identity_copy(x)* == 0);
-  (x := new<int>(0)) assert(identity(x)* == 0);
+  (x := new<int>(0)*) assert(identity(x)* == 0);
 }
 
 issue_962: (s: ::std::string) = {
@@ -804,13 +804,13 @@ enum_0: () = {
     underlying_type = "";
 }
 enum_1: () = {
-    max_value := new<int>(0);
-    min_value: std::reference_wrapper<const std::unique_ptr<int>> = max_value;
+    max_value := new<int>(0)*;
+    min_value: std::reference_wrapper<const cpp2::owning_reference<int>> = max_value;
 
     // for  (0)
     // do   (copy x)
     // {
-    //     v := new<int>(identity_copy(x));
+    //     v := new<int>(identity_copy(x))*;
     //     if pred(v, min_value) {
     //         min_value = std::ref(identity(v)); // Not using 'else' will never move 'v'.
     //     }
@@ -819,20 +819,20 @@ enum_1: () = {
     //     }
     // }
 
-    y := new<bool>(false);
+    y := new<bool>(false)*;
     while identity(y)* {
-        v := new<int>(0);
+        v := new<int>(0)*;
         f_copy(move v);
     }
 
-    z := new<bool>(false);
+    z := new<bool>(false)*;
     do {
-        v := new<int>(0);
+        v := new<int>(0)*;
         f_copy(move v);
     } while identity(z)*;
 }
 enum_2: () = {
-    umax := new<int>(0);
+    umax := new<int>(0)*;
     if pred(umax) {
     }
     else if pred(umax) {
@@ -874,14 +874,14 @@ deferred_non_copyable_2: () -> (p: std::unique_ptr<int>) = {
 
 loops: () = {
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     for (0)
     do (_)
     f_inout(x);
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     for (0)
     next f_inout(x)
     do (_)
@@ -889,14 +889,14 @@ loops: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     for (0)
     do (_)
     assert(x.get());
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     if true {
       f_copy(move x);
     }
@@ -913,10 +913,10 @@ captures: namespace = {
 // Skip non captured name in function expression
 
 f: () = {
-  x := new<int>(0);
+  x := new<int>(0)*;
   f_copy(move x);
   id := :(x) -> forward _ = x;
-  y := new<int>(0);
+  y := new<int>(0)*;
   assert(id(y)& == y&);
 }
 
@@ -939,13 +939,13 @@ t: @struct type = {
 
 g: () = {
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     f_copy(move x);
     _ = :() std::array<int, :(x) identity(x);(0)>()$; // Fails on Clang 12 (lambda in unevaluated context).
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     f_inout(x);
     // _ = :() -> int = (:() x$*)$();
   };
@@ -955,7 +955,7 @@ g: () = {
 
 loops_and_captures: () = {
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     f_copy(move x);
     for (:(x) x)
     do (_)
@@ -963,7 +963,7 @@ loops_and_captures: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     f_copy(move x);
     for (:() -> _ = {
       using captures::x;
@@ -974,7 +974,7 @@ loops_and_captures: () = {
   };
 
 //   _ = :() = {
-//     x := new<int>(0);
+//     x := new<int>(0)*;
 //     for (:() x$*)
 //     do (_)
 //     { }
@@ -993,17 +993,17 @@ types: @struct type = {
 
 skip_hidden_names: () = {
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     f_copy(move x);
-    (copy x := new<int>(0))
+    (copy x := new<int>(0)*)
       f_copy(move x);
   };
 
 //   _ = :() = {
-//     x := new<int>(0);
+//     x := new<int>(0)*;
 //     _ = :() = {
 //       _ = x$;
-//       x := new<int>(1);
+//       x := new<int>(1)*;
 //       _ = :() = {
 //         _ = x$;
 //       };
@@ -1011,17 +1011,17 @@ skip_hidden_names: () = {
 //   };
 
   _ = :() = {
-    // x := new<int>(0);
+    // x := new<int>(0)*;
     // f_copy(x);
     // for (0)
     // do (copy x)
     // _ = identity_copy(x);
-    (copy x := new<int>(0))
+    (copy x := new<int>(0)*)
       f_copy(move x);
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     f_inout(x);
     {
       f_copy(move x);
@@ -1031,10 +1031,10 @@ skip_hidden_names: () = {
   };
 
   _ = :() = {
-    x := new<int>(0);
+    x := new<int>(0)*;
     f_copy(move x);
     _ = :() = {
-      static_assert(std::is_same_v<decltype(x), std::unique_ptr<int>>);
+      static_assert(std::is_same_v<decltype(x), cpp2::owning_reference<int>>);
       using captures::x;
       f_inout(x);
     };

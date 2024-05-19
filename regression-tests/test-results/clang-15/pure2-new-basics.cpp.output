@@ -1,0 +1,135 @@
+pure2-new-basics.cpp2:33:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
+        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
+                          ^~~~~~~~~~~~~~~~~~~~~
+                          cpp2::impl::assert_not_null
+../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+     ^
+pure2-new-basics.cpp2:33:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
+        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
+                                                 ^~~~~~~~~~~~~~~~~~~~~
+                                                 cpp2::impl::assert_not_null
+../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+     ^
+pure2-new-basics.cpp2:34:20: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
+        call_test(*cpp2::assert_not_null(*cpp2::assert_not_null(a)));
+                   ^~~~~~~~~~~~~~~~~~~~~
+                   cpp2::impl::assert_not_null
+../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+     ^
+pure2-new-basics.cpp2:34:43: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
+        call_test(*cpp2::assert_not_null(*cpp2::assert_not_null(a)));
+                                          ^~~~~~~~~~~~~~~~~~~~~
+                                          cpp2::impl::assert_not_null
+../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+     ^
+pure2-new-basics.cpp2:36:18: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
+        auto c {*cpp2::assert_not_null(std::move(a))}; 
+                 ^~~~~~~~~~~~~~~~~~~~~
+                 cpp2::impl::assert_not_null
+../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+     ^
+pure2-new-basics.cpp2:37:20: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
+        call_test(*cpp2::assert_not_null(c));
+                   ^~~~~~~~~~~~~~~~~~~~~
+                   cpp2::impl::assert_not_null
+../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+     ^
+pure2-new-basics.cpp2:38:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
+        CPP2_UFCS(test)((*cpp2::assert_not_null(std::move(c))));
+                          ^~~~~~~~~~~~~~~~~~~~~
+                          cpp2::impl::assert_not_null
+../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+     ^
+pure2-new-basics.cpp2:46:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
+        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
+                          ^~~~~~~~~~~~~~~~~~~~~
+                          cpp2::impl::assert_not_null
+../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+     ^
+pure2-new-basics.cpp2:46:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
+        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
+                                                 ^~~~~~~~~~~~~~~~~~~~~
+                                                 cpp2::impl::assert_not_null
+../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+     ^
+pure2-new-basics.cpp2:51:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
+        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(std::move(a)))));
+                          ^~~~~~~~~~~~~~~~~~~~~
+                          cpp2::impl::assert_not_null
+../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+     ^
+pure2-new-basics.cpp2:51:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
+        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(std::move(a)))));
+                                                 ^~~~~~~~~~~~~~~~~~~~~
+                                                 cpp2::impl::assert_not_null
+../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+     ^
+pure2-new-basics.cpp2:71:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
+        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
+                          ^~~~~~~~~~~~~~~~~~~~~
+                          cpp2::impl::assert_not_null
+../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+     ^
+pure2-new-basics.cpp2:71:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
+        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));
+                                                 ^~~~~~~~~~~~~~~~~~~~~
+                                                 cpp2::impl::assert_not_null
+../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+     ^
+pure2-new-basics.cpp2:72:20: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
+        call_test(*cpp2::assert_not_null(*cpp2::assert_not_null(a)));
+                   ^~~~~~~~~~~~~~~~~~~~~
+                   cpp2::impl::assert_not_null
+../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+     ^
+pure2-new-basics.cpp2:72:43: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
+        call_test(*cpp2::assert_not_null(*cpp2::assert_not_null(a)));
+                                          ^~~~~~~~~~~~~~~~~~~~~
+                                          cpp2::impl::assert_not_null
+../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+     ^
+pure2-new-basics.cpp2:73:18: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
+        auto b {*cpp2::assert_not_null(*cpp2::assert_not_null(a))}; // create copy
+                 ^~~~~~~~~~~~~~~~~~~~~
+                 cpp2::impl::assert_not_null
+../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+     ^
+pure2-new-basics.cpp2:73:41: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
+        auto b {*cpp2::assert_not_null(*cpp2::assert_not_null(a))}; // create copy
+                                        ^~~~~~~~~~~~~~~~~~~~~
+                                        cpp2::impl::assert_not_null
+../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+     ^
+pure2-new-basics.cpp2:76:27: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
+        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));// allowed
+                          ^~~~~~~~~~~~~~~~~~~~~
+                          cpp2::impl::assert_not_null
+../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+     ^
+pure2-new-basics.cpp2:76:50: error: no member named 'assert_not_null' in namespace 'cpp2'; did you mean 'cpp2::impl::assert_not_null'?
+        CPP2_UFCS(test)((*cpp2::assert_not_null(*cpp2::assert_not_null(a))));// allowed
+                                                 ^~~~~~~~~~~~~~~~~~~~~
+                                                 cpp2::impl::assert_not_null
+../../../include/cpp2util.h:513:6: note: 'cpp2::impl::assert_not_null' declared here
+auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+     ^
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+20 errors generated.
