@@ -20,8 +20,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        compiler: [g++-10, g++-13, clang++-15]
+        compiler: [g++-10, clang++-15]
         include:
+          - os: ubuntu-24.04
+            compiler: g++-13
           - os: ubuntu-20.04
             compiler: clang++-12
           - os: macos-14
