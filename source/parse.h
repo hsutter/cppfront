@@ -5331,7 +5331,7 @@ class parser
     };
 
     std::vector<token> const* tokens = {};
-    std::deque<token>* generated_tokens = {};
+    stable_vector<token>*     generated_tokens = {};
     int pos = 0;
     std::string parse_kind = {};
 
@@ -5430,8 +5430,8 @@ public:
     //  sections in a TU to build the whole TU's parse tree
     //
     auto parse(
-        std::vector<token> const& tokens_,
-        std::deque<token>&        generated_tokens_
+        std::vector<token> const&  tokens_,
+        stable_vector<token>&      generated_tokens_
     )
         -> bool
     {
@@ -5469,7 +5469,7 @@ public:
     //
     auto parse_one_declaration(
         std::vector<token> const& tokens_,
-        std::deque<token>&        generated_tokens_
+        stable_vector<token>&     generated_tokens_
     )
         -> std::unique_ptr<statement_node>
     {

@@ -38,6 +38,7 @@
 #include <cstdint>
 #include <iomanip>
 #include <iterator>
+#include <memory>
 #include <map>
 #include <string>
 #include <string_view>
@@ -887,12 +888,20 @@ static cmdline_processor::register_flag cmd_gen_version(
     []{ cmdline.gen_version(); }
 );
 
+static auto flag_verbose = false;
+static cmdline_processor::register_flag cmd_verbose(
+    9,
+    "verbose",
+    "Print verbose output and statistics",
+    []{ flag_verbose = true; }
+);
+
 static auto flag_internal_debug = false;
 static cmdline_processor::register_flag cmd_internal_debug(
     0,
     "_debug",
-    "Generate internal debug instrumentation",
-    []{ flag_internal_debug = true; }
+    "Generate internal debug data, implies -verbose",
+    []{ flag_internal_debug = true; flag_verbose = true; }
 );
 
 static auto flag_print_colon_errors = false;
@@ -981,14 +990,14 @@ class stable_vector
 
     std::vector< std::vector<T> > data;
 
-    auto add_segment() -> void {
-        data.push_back( {} );
+    auto add_segment( std::initializer_list<T> init = {} ) -> void {
+        data.push_back( init );
         data.back().reserve(PageSize);
     }
 
 public:
-    stable_vector() {
-        add_segment();
+    stable_vector( std::initializer_list<T> init = {}) {
+        add_segment( init);
     }
 
     auto empty() const -> bool {
@@ -1348,11 +1357,16 @@ public:
     }
 };
 
-static std::map<std::string, timer> timers;     // global named timers
+static std::unordered_map<std::string_view, timer> timers;  // global named timers
 
-auto scope_timer(std::string const& name) {
-    timers[name].start();
-    return finally( [=]{ timers[name].stop(); } );
+auto scope_timer(std::string_view name) -> std::shared_ptr<void> {
+    if (flag_internal_debug) {
+        timers[name].start();
+        auto stop = [=]{ timers[name].stop(); };
+        return std::make_shared<finally<decltype(stop)>>( std::move(stop) );
+    }
+    //  Else
+    return {};
 }
 
 

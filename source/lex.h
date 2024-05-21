@@ -21,7 +21,6 @@
 #include "io.h"
 #include <map>
 #include <climits>
-#include <deque>
 #include <cstring>
 
 
@@ -614,11 +613,11 @@ auto expand_raw_string_literal(
 //  A stable place to store additional text for source tokens that are merged
 //  into a whitespace-containing token (to merge the Cpp1 multi-token keywords)
 //  -- this isn't about tokens generated later, that's tokens::generated_tokens
-static auto generated_text  = std::deque<std::string>{};                // TODO: static
-static auto generated_lines = std::deque<std::vector<source_line>>{};   // TODO: static
+static auto generated_text  = stable_vector<std::string>{};                // TODO: static
+static auto generated_lines = stable_vector<std::vector<source_line>>{};   // TODO: static
 
 
-static auto multiline_raw_strings = std::deque<multiline_raw_string>{}; // TODO: static
+static auto multiline_raw_strings = stable_vector<multiline_raw_string>{}; // TODO: static
 
 auto lex_line(
     std::string&               mutable_line,
@@ -1885,7 +1884,7 @@ class tokens
     std::vector<comment> comments;
 
     //  A stable place to store additional tokens that are synthesized later
-    std::deque<token> generated_tokens;
+    stable_vector<token> generated_tokens;
 
 public:
     //-----------------------------------------------------------------------
@@ -2070,7 +2069,7 @@ public:
 
 };
 
-static auto generated_lexers = std::deque<tokens>{};    // TODO: static
+static auto generated_lexers = stable_vector<tokens>{};    // TODO: static
 
 }
 
