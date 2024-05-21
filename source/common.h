@@ -977,7 +977,7 @@ struct error_entry
 template <typename T>
 class stable_vector
 {
-    static constexpr size_t PageSize = 3; // 1'000;
+    static constexpr size_t PageSize = 1'000;
 
     std::vector< std::vector<T> > data;
 
@@ -1033,10 +1033,15 @@ public:
     }
 
     auto pop_back() -> void {
-        data.back().pop_back();
-        if (data.back().size() == 0) {
+        bounds_safety.enforce(size() > 0);
+        if (
+            data.back().empty()
+            && data.size() > 1
+            )
+        {
             data.pop_back();
         }
+        data.back().pop_back();
     }
 
     //-------------------------------------------------------------------
@@ -1190,21 +1195,21 @@ class stackinstr
 
 public:
     struct guard {
-        guard( std::string_view name, std::string_view file, int line, char* p ) {
-            if (flag_internal_debug) {
-                entries.emplace_back(name, file, line ,p);
-                if (ssize(deepest) < ssize(entries)) {
-                    deepest = entries;
-                }
-                if (largest.empty() || largest.back().cumulative < entries.back().cumulative) {
-                    largest = entries;
-                }
-            }
+        guard( std::string_view /*name*/, std::string_view /*file*/, int /*line*/, char* /*p*/ ) {
+            //if (flag_internal_debug) {
+            //    entries.emplace_back(name, file, line ,p);
+            //    if (ssize(deepest) < ssize(entries)) {
+            //        deepest = entries;
+            //    }
+            //    if (largest.empty() || largest.back().cumulative < entries.back().cumulative) {
+            //        largest = entries;
+            //    }
+            //}
         }
         ~guard() {
-            if (flag_internal_debug) {
-                entries.pop_back();
-            }
+            //if (flag_internal_debug) {
+            //    entries.pop_back();
+            //}
         }
     };
 

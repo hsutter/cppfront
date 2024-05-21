@@ -141,10 +141,10 @@ auto main(
         }
     }
 
-    if (flag_internal_debug) {
-        stackinstr::print_deepest();
-        stackinstr::print_largest();
-    }
+    //if (flag_internal_debug) {
+    //    stackinstr::print_deepest();
+    //    stackinstr::print_largest();
+    //}
 
     return exit_status;
 }
