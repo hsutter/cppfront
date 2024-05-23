@@ -1,4 +1,4 @@
-REM This is intended to be run in the /test-results/msvc-2022 directory
+REM This is intended to be run in the /test-results/msvc-2022-c++latest directory
 REM in a VS2022 Command Prompt (which sets the path and other environment)
 REM
 REM After installing VS2022, to finish setting up std modules in your environment, run:
