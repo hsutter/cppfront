@@ -481,7 +481,7 @@ public:
         }
         //--------- END TEMPORARY REGRESSION TEST CODE FOR G_D_O OPTIMIZATION VERIFICATION -----------
 
-        auto timer = scope_timer("get_declaration_of_new - including external caching");
+        CPP2_SCOPE_TIMER("get_declaration_of_new - including external caching");
 
         //  Check the cache first to avoid duplicate computations
         //
@@ -554,7 +554,7 @@ public:
     ) const
         -> declaration_sym const*
     {
-        auto timer  = scope_timer("get_declaration_of - old");
+        CPP2_SCOPE_TIMER("get_declaration_of - old");
 
         //  First find the position the query is coming from
         //  and remember its depth
@@ -750,7 +750,7 @@ public:
     ) const
         -> declaration_sym const*
     {
-        auto timer = scope_timer("get_declaration_of_new");
+        CPP2_SCOPE_TIMER("get_declaration_of_new");
 
         //  First find the position the query is coming from
         //  and remember its depth
@@ -758,7 +758,7 @@ public:
         auto depth = 0;
 
         {
-        auto timer1 = scope_timer("get_declaration_of_new - phase 1 initial loop");
+        CPP2_SCOPE_TIMER("get_declaration_of_new - phase 1 initial loop");
 
         //  If the declaration_starts list got this far yet, use that to
         //  skip repeating the whole linear search from the table beginning
@@ -887,20 +887,20 @@ public:
         }
         }
 
-        auto timer2 = scope_timer("get_declaration_of_new - phase 2 backward scan loop");
+        CPP2_SCOPE_TIMER("get_declaration_of_new - phase 2 backward scan loop");
 
         //  Then look backward to find the first declaration of
         //  this name that is not deeper (in a nested scope)
         //  and is in the same function
         using I = stable_vector<symbol>::const_iterator;
         auto advance = [](I& i, int n, I bound) {  // TODO Use `std::ranges::advance`
-            auto timer2a = scope_timer("get_declaration_of_new - phase 2a 'advance' part of loop");
+            CPP2_SCOPE_TIMER("get_declaration_of_new - phase 2a 'advance' part of loop");
             auto in = i;
             if (std::abs(n) >= std::abs(bound - i)) {
                 i = bound;
             }
             else {
-                auto timer2aa = scope_timer("get_declaration_of_new - phase 2aa 'std::advance' specifically");
+                CPP2_SCOPE_TIMER("get_declaration_of_new - phase 2aa 'std::advance' specifically");
                 std::advance(i, n);
             }
             return n - (i - in);
@@ -942,7 +942,7 @@ public:
                     return &decl;
                 }
 
-                auto timer2b = scope_timer("get_declaration_of_new - phase 2b 'move this' part of loop");
+                CPP2_SCOPE_TIMER("get_declaration_of_new - phase 2b 'move this' part of loop");
 
                 //  If we reached a 'move this' parameter, look it up in the type members
                 if (

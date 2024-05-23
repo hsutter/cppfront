@@ -24,6 +24,14 @@
 
 
 //===========================================================================
+//  When defined, builds cppfront in an instrumented (and slower) mode that
+//  prints more information under -_debug
+//===========================================================================
+
+//#define CPP2_DEBUG_BUILD
+
+
+//===========================================================================
 //  Common types
 //===========================================================================
 
@@ -1005,6 +1013,7 @@ public:
     }
 
     auto size() const -> size_t {
+        testing.enforce(!data.empty());
         return (data.size() - 1) * PageSize + data.back().size();
     }
 
@@ -1359,16 +1368,19 @@ public:
 
 static std::unordered_map<std::string_view, timer> timers;  // global named timers
 
-auto scope_timer(std::string_view name) -> std::shared_ptr<void> {
-    if (flag_internal_debug) {
-        timers[name].start();
-        auto stop = [=]{ timers[name].stop(); };
-        return std::make_shared<finally<decltype(stop)>>( std::move(stop) );
-    }
-    //  Else
-    return {};
+auto scope_timer(std::string_view name) {
+    timers[name].start();
+    auto stop = [=]{ timers[name].stop(); };
+    return finally( std::move(stop) );
 }
 
+#ifdef CPP2_DEBUG_BUILD
+#define CPP2_CONCAT(x,y)       x##y
+#define CPP2_UNIQUE_NAME(x,y)  CPP2_CONCAT(x,y)
+#define CPP2_SCOPE_TIMER(name) auto CPP2_UNIQUE_NAME(timer,__LINE__) = scope_timer(name)
+#else
+#define CPP2_SCOPE_TIMER(name)
+#endif
 
 }
 
