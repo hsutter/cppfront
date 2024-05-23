@@ -1,0 +1,7 @@
+mixed-captures-in-expressions-and-postconditions.cpp2:12:18: error: no member named 'for_each' in namespace 'std::ranges'
+    std::ranges::for_each(vec, callback);
+    ~~~~~~~~~~~~~^
+mixed-captures-in-expressions-and-postconditions.cpp2:14:18: error: no member named 'for_each' in namespace 'std::ranges'
+    std::ranges::for_each(cpp2::move(vec), cpp2::move(callback));
+    ~~~~~~~~~~~~~^
+2 errors generated.

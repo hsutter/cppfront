@@ -11,7 +11,7 @@ on:
 
 jobs:
   regression-tests:
-    name: Run on ${{ matrix.os }} using ${{ matrix.compiler }}
+    name: ${{ matrix.shortosname }} | ${{ matrix.compiler }} | ${{ matrix.cxx_std }} | ${{ matrix.stdlib }} | ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     env:
       CXX: ${{ matrix.compiler }}
@@ -20,22 +20,61 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-24.04]
-        compiler: [g++-13, g++-14, clang++-18]
+        shortosname: [ubu-24]
+        compiler: [g++-14, g++-13]
+        cxx_std: [c++2b]
+        stdlib: [libstdc++]
         include:
-          - os: ubuntu-22.04
-            compiler: clang++-15
           - os: ubuntu-20.04
-            compiler: clang++-12
-          - os: ubuntu-20.04
+            shortosname: ubu-20
             compiler: g++-10
-          - os: macos-14
-            compiler: clang++
-          - os: macos-13
-            compiler: clang++
-          - os: macos-13
+            cxx_std: c++20
+            stdlib: libstdc++
+          - os: ubuntu-24.04
+            shortosname: ubu-24
+            compiler: clang++-18
+            cxx_std: c++20
+            stdlib: libstdc++
+          - os: ubuntu-22.04
+            shortosname: ubu-22
             compiler: clang++-15
-          - os: windows-latest
+            cxx_std: c++20
+            stdlib: libstdc++
+          - os: ubuntu-22.04
+            shortosname: ubu-22
+            compiler: clang++-15
+            cxx_std: c++20
+            stdlib: libc++-15-dev
+          - os: ubuntu-20.04
+            shortosname: ubu-20
+            compiler: clang++-12
+            cxx_std: c++20
+            stdlib: libstdc++
+          - os: macos-14
+            shortosname: mac-14
+            compiler: clang++
+            cxx_std: c++2b
+            stdlib: default
+          - os: macos-13
+            shortosname: mac-13
+            compiler: clang++
+            cxx_std: c++2b
+            stdlib: default
+          - os: macos-13
+            shortosname: mac-13
+            compiler: clang++-15
+            cxx_std: c++2b
+            stdlib: default
+          - os: windows-2022
+            shortosname: win-22
             compiler: cl.exe
+            cxx_std: c++latest
+            stdlib: default
+          - os: windows-2022
+            shortosname: win-22
+            compiler: cl.exe
+            cxx_std: c++20
+            stdlib: default
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
@@ -50,7 +89,7 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
       run: |
         cd regression-tests
-        bash run-tests.sh -c ${{ matrix.compiler }} -l ${{ matrix.os }}
+        bash run-tests.sh -c ${{ matrix.compiler }} -s ${{ matrix.cxx_std }} -d ${{ matrix.stdlib }} -l ${{ matrix.os }}
 
     - name: Run regression tests - Windows version
       if: matrix.os == 'windows-latest'
@@ -58,13 +97,13 @@ jobs:
         "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" && ^
         git config --local core.autocrlf false && ^
         cd regression-tests && ^
-        bash run-tests.sh -c ${{ matrix.compiler }} -l ${{ matrix.os }}
+        bash run-tests.sh -c ${{ matrix.compiler }} -s ${{ matrix.cxx_std }} -d ${{ matrix.stdlib }} -l ${{ matrix.os }}
       shell: cmd
 
     - name: Upload patch
       if: ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.os }}-${{ matrix.compiler }}.patch
-        path: regression-tests/${{ matrix.os }}-${{ matrix.compiler }}.patch
+        name: ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.cxx_std }}-${{ matrix.stdlib }}.patch
+        path: regression-tests/${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.cxx_std }}-${{ matrix.stdlib }}.patch
         if-no-files-found: ignore
