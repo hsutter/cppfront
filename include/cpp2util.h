@@ -2302,10 +2302,48 @@ inline constexpr auto as_() -> decltype(auto)
     return as<C,x>();
 }
 
+#if __cplusplus < 202302L
+
+// For C++ < 23 std::unique suffises - it works for forward-declared types
+using std::unique_ptr;
+using std::make_unique;
+
+#else
+
+// For C++ >= 23 a custom solution is necessary
+// This is due to the fact that std::unique_ptr became more constexpr-friendly
+// However, as a result, it does not work for forward-declared types
+// The use of a trivial custom deleter solves the problem
+
+template<typename T>
+struct custom_delete {
+    void operator()(T* ptr) const {
+        delete ptr;
+    }
+};
+
+// Not necessary for current use in cppfront, but added for completeness
+template<typename T>
+struct custom_delete<T[]> {
+    void operator()(T* ptr) const {
+        delete[] ptr;
+    }
+};
+
+template<typename T>
+using unique_ptr = std::unique_ptr<T, impl::custom_delete<T>>;
+
+template<typename T, typename ...Args>
+unique_ptr<T> make_unique(Args ...args) {
+    return unique_ptr<T>(std::make_unique<T>(args...).release());
+}
+
+#endif
+
 } // impl
 
 
-}
+} // cpp2
 
 
 using cpp2::cpp2_new;

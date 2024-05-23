@@ -719,7 +719,7 @@ public:
                         && std::any_of(
                                n->my_statement->compound_parent->statements.begin(),
                                n->my_statement->compound_parent->statements.end(),
-                               [&t, n](std::unique_ptr<statement_node> const& s) mutable {
+                               [&t, n](cpp2::impl::unique_ptr<statement_node> const& s) mutable {
                                    return s
                                           && s->statement.index() == statement_node::declaration
                                           && (n = &*std::get<statement_node::declaration>(s->statement))->identifier
@@ -962,7 +962,7 @@ public:
                         && std::any_of(
                                n->my_statement->compound_parent->statements.begin(),
                                n->my_statement->compound_parent->statements.end(),
-                               [&t, n](std::unique_ptr<statement_node> const& s) mutable {
+                               [&t, n](cpp2::impl::unique_ptr<statement_node> const& s) mutable {
                                    return s
                                           && s->statement.index() == statement_node::declaration
                                           && (n = &*std::get<statement_node::declaration>(s->statement))->identifier

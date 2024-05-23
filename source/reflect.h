@@ -115,7 +115,7 @@ class compiler_services
 
 #line 81 "reflect.h2"
     public: [[nodiscard]] auto arguments_were_used() const& -> bool;
-using parse_statement_ret = std::unique_ptr<statement_node>;
+using parse_statement_ret = cpp2::impl::unique_ptr<statement_node>;
 
 
 #line 83 "reflect.h2"
@@ -837,7 +837,7 @@ namespace meta {
     ) & -> parse_statement_ret
 
     {
-            cpp2::impl::deferred_init<std::unique_ptr<statement_node>> ret;
+            cpp2::impl::deferred_init<cpp2::impl::unique_ptr<statement_node>> ret;
 #line 89 "reflect.h2"
         auto original_source {source}; 
 

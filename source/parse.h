@@ -25,6 +25,7 @@ namespace cpp2 {
 
 auto violates_lifetime_safety = false;
 
+
 //-----------------------------------------------------------------------
 //  Operator categorization
 //
@@ -136,11 +137,11 @@ struct primary_expression_node
     std::variant<
         std::monostate,
         token const*,
-        std::unique_ptr<expression_list_node>,
-        std::unique_ptr<id_expression_node>,
-        std::unique_ptr<declaration_node>,
-        std::unique_ptr<inspect_expression_node>,
-        std::unique_ptr<literal_node>
+        cpp2::impl::unique_ptr<expression_list_node>,
+        cpp2::impl::unique_ptr<id_expression_node>,
+        cpp2::impl::unique_ptr<declaration_node>,
+        cpp2::impl::unique_ptr<inspect_expression_node>,
+        cpp2::impl::unique_ptr<literal_node>
     > expr;
     // Cache to work around <https://github.com/llvm/llvm-project/issues/73336>.
     bool expression_list_is_fold_expression = false;
@@ -236,7 +237,7 @@ struct postfix_expression_node;
 struct prefix_expression_node
 {
     std::vector<token const*> ops;
-    std::unique_ptr<postfix_expression_node> expr;
+    cpp2::impl::unique_ptr<postfix_expression_node> expr;
 
     //  API
     //
@@ -292,7 +293,7 @@ template<
 >
 struct binary_expression_node
 {
-    std::unique_ptr<Term>  expr;
+    cpp2::impl::unique_ptr<Term>  expr;
     expression_node const* my_expression = {};
 
     binary_expression_node();
@@ -300,7 +301,7 @@ struct binary_expression_node
     struct term
     {
         token const* op;
-        std::unique_ptr<Term> expr;
+        cpp2::impl::unique_ptr<Term> expr;
     };
     std::vector<term> terms;
 
@@ -508,7 +509,7 @@ struct expression_node
 {
     static inline std::vector<expression_node*> current_expressions = {};   // TODO: static ?
 
-    std::unique_ptr<assignment_expression_node> expr;
+    cpp2::impl::unique_ptr<assignment_expression_node> expr;
     int num_subexpressions = 0;
     expression_statement_node const* my_statement = {};
 
@@ -664,7 +665,7 @@ struct expression_list_node
 
     struct term {
         passing_style                    pass = {};
-        std::unique_ptr<expression_node> expr;
+        cpp2::impl::unique_ptr<expression_node> expr;
 
         auto visit(auto& v, int depth) -> void
         {
@@ -761,7 +762,7 @@ struct expression_statement_node
 {
     static inline std::vector<expression_statement_node*> current_expression_statements = {};   // TODO: static ?
 
-    std::unique_ptr<expression_node> expr;
+    cpp2::impl::unique_ptr<expression_node> expr;
     bool has_semicolon = false;
 
     //  API
@@ -836,17 +837,17 @@ struct capture_group {
 
 struct postfix_expression_node
 {
-    std::unique_ptr<primary_expression_node> expr;
+    cpp2::impl::unique_ptr<primary_expression_node> expr;
 
     struct term
     {
         token const* op;
 
         //  This is used if *op is . - can be null
-        std::unique_ptr<id_expression_node> id_expr = {};
+        cpp2::impl::unique_ptr<id_expression_node> id_expr = {};
 
         //  These are used if *op is [ or ( - can be null
-        std::unique_ptr<expression_list_node> expr_list = {};
+        cpp2::impl::unique_ptr<expression_list_node> expr_list = {};
         token const* op_close = {};
     };
     std::vector<term> ops;
@@ -1086,8 +1087,8 @@ struct template_argument
     source_position comma;
     std::variant<
         std::monostate,
-        std::unique_ptr<expression_node>,
-        std::unique_ptr<type_id_node>
+        cpp2::impl::unique_ptr<expression_node>,
+        cpp2::impl::unique_ptr<type_id_node>
     > arg;
 
     auto to_string() const
@@ -1164,7 +1165,7 @@ struct qualified_id_node
 {
     struct term {
         token const* scope_op;
-        std::unique_ptr<unqualified_id_node> id = {};
+        cpp2::impl::unique_ptr<unqualified_id_node> id = {};
 
         term( token const* o ) : scope_op{o} { }
     };
@@ -1257,8 +1258,8 @@ struct type_id_node
     enum active { empty=0, qualified, unqualified, keyword };
     std::variant<
         std::monostate,
-        std::unique_ptr<qualified_id_node>,
-        std::unique_ptr<unqualified_id_node>,
+        cpp2::impl::unique_ptr<qualified_id_node>,
+        cpp2::impl::unique_ptr<unqualified_id_node>,
         token const*
     > id;
 
@@ -1402,17 +1403,17 @@ auto template_argument::to_string() const
 
 struct is_as_expression_node
 {
-    std::unique_ptr<prefix_expression_node> expr;
+    cpp2::impl::unique_ptr<prefix_expression_node> expr;
 
     struct term
     {
         token const* op = {};
 
         //  This is used if *op is a type - can be null
-        std::unique_ptr<type_id_node> type = {};
+        cpp2::impl::unique_ptr<type_id_node> type = {};
 
         //  This is used if *op is an expression - can be null
-        std::unique_ptr<expression_node> expr = {};
+        cpp2::impl::unique_ptr<expression_node> expr = {};
     };
     std::vector<term> ops;
 
@@ -1555,8 +1556,8 @@ struct id_expression_node
     enum active { empty=0, qualified, unqualified };
     std::variant<
         std::monostate,
-        std::unique_ptr<qualified_id_node>,
-        std::unique_ptr<unqualified_id_node>
+        cpp2::impl::unique_ptr<qualified_id_node>,
+        cpp2::impl::unique_ptr<unqualified_id_node>
     > id;
 
     auto template_arguments() const
@@ -1738,7 +1739,7 @@ struct compound_statement_node
 {
     source_position open_brace;
     source_position close_brace;
-    std::vector<std::unique_ptr<statement_node>> statements;
+    std::vector<cpp2::impl::unique_ptr<statement_node>> statements;
 
     colno_t body_indent = 0;
 
@@ -1759,9 +1760,9 @@ struct selection_statement_node
     bool                                        is_constexpr = false;
     token const*                                identifier   = {};
     source_position                             else_pos;
-    std::unique_ptr<logical_or_expression_node> expression;
-    std::unique_ptr<compound_statement_node>    true_branch;
-    std::unique_ptr<compound_statement_node>    false_branch;
+    cpp2::impl::unique_ptr<logical_or_expression_node> expression;
+    cpp2::impl::unique_ptr<compound_statement_node>    true_branch;
+    cpp2::impl::unique_ptr<compound_statement_node>    false_branch;
     bool                                        has_source_false_branch = false;
 
     auto position() const
@@ -1795,12 +1796,12 @@ struct iteration_statement_node
 {
     token const*                                label      = {};
     token const*                                identifier = {};
-    std::unique_ptr<assignment_expression_node> next_expression;    // if used, else null
-    std::unique_ptr<logical_or_expression_node> condition;          // used for "do" and "while", else null
-    std::unique_ptr<compound_statement_node>    statements;         // used for "do" and "while", else null
-    std::unique_ptr<expression_node>            range;              // used for "for", else null
-    std::unique_ptr<parameter_declaration_node> parameter;          // used for "for", else null
-    std::unique_ptr<statement_node>             body;               // used for "for", else null
+    cpp2::impl::unique_ptr<assignment_expression_node> next_expression;    // if used, else null
+    cpp2::impl::unique_ptr<logical_or_expression_node> condition;          // used for "do" and "while", else null
+    cpp2::impl::unique_ptr<compound_statement_node>    statements;         // used for "do" and "while", else null
+    cpp2::impl::unique_ptr<expression_node>            range;              // used for "for", else null
+    cpp2::impl::unique_ptr<parameter_declaration_node> parameter;          // used for "for", else null
+    cpp2::impl::unique_ptr<statement_node>             body;               // used for "for", else null
     bool                                        for_with_in = false;// used for "for," says whether loop variable is 'in'
 
     auto position() const
@@ -1821,7 +1822,7 @@ struct iteration_statement_node
 struct return_statement_node
 {
     token const*                     identifier = {};
-    std::unique_ptr<expression_node> expression;
+    cpp2::impl::unique_ptr<expression_node> expression;
 
     auto position() const
         -> source_position
@@ -1844,15 +1845,15 @@ struct return_statement_node
 
 struct alternative_node
 {
-    std::unique_ptr<unqualified_id_node> name;
+    cpp2::impl::unique_ptr<unqualified_id_node> name;
     token const*                         is_as_keyword = {};
 
     //  One of these will be used
-    std::unique_ptr<type_id_node>            type_id;
-    std::unique_ptr<postfix_expression_node> value;
+    cpp2::impl::unique_ptr<type_id_node>            type_id;
+    cpp2::impl::unique_ptr<postfix_expression_node> value;
 
     source_position                      equal_sign;
-    std::unique_ptr<statement_node>      statement;
+    cpp2::impl::unique_ptr<statement_node>      statement;
 
     auto position() const
         -> source_position
@@ -1870,12 +1871,12 @@ struct inspect_expression_node
 {
     bool                                     is_constexpr = false;
     token const*                             identifier   = {};
-    std::unique_ptr<expression_node>         expression;
-    std::unique_ptr<type_id_node>            result_type;
+    cpp2::impl::unique_ptr<expression_node>         expression;
+    cpp2::impl::unique_ptr<type_id_node>            result_type;
     source_position                          open_brace;
     source_position                          close_brace;
 
-    std::vector<std::unique_ptr<alternative_node>> alternatives;
+    std::vector<cpp2::impl::unique_ptr<alternative_node>> alternatives;
 
     auto position() const
         -> source_position
@@ -1911,10 +1912,10 @@ struct contract_node
 
     source_position                                  open_bracket;
     token const*                                     kind = {};
-    std::unique_ptr<id_expression_node>              group;
-    std::vector<std::unique_ptr<id_expression_node>> flags;
-    std::unique_ptr<logical_or_expression_node>      condition;
-    std::unique_ptr<expression_node>                 message = {};
+    cpp2::impl::unique_ptr<id_expression_node>              group;
+    std::vector<cpp2::impl::unique_ptr<id_expression_node>> flags;
+    cpp2::impl::unique_ptr<logical_or_expression_node>      condition;
+    cpp2::impl::unique_ptr<expression_node>                 message = {};
 
     contract_node( source_position pos )
         : open_bracket{pos}
@@ -1985,7 +1986,7 @@ struct using_statement_node
 {
     token const*                        keyword = {};
     bool                                for_namespace = false;
-    std::unique_ptr<id_expression_node> id;
+    cpp2::impl::unique_ptr<id_expression_node> id;
 
     auto position() const
         -> source_position
@@ -2009,23 +2010,23 @@ struct parameter_declaration_list_node;
 
 struct statement_node
 {
-    std::unique_ptr<parameter_declaration_list_node> parameters;
+    cpp2::impl::unique_ptr<parameter_declaration_list_node> parameters;
     compound_statement_node* compound_parent = nullptr;
 
     statement_node(compound_statement_node* compound_parent_ = nullptr);
 
     enum active { expression=0, compound, selection, declaration, return_, iteration, using_, contract, inspect, jump };
     std::variant<
-        std::unique_ptr<expression_statement_node>,
-        std::unique_ptr<compound_statement_node>,
-        std::unique_ptr<selection_statement_node>,
-        std::unique_ptr<declaration_node>,
-        std::unique_ptr<return_statement_node>,
-        std::unique_ptr<iteration_statement_node>,
-        std::unique_ptr<using_statement_node>,
-        std::unique_ptr<contract_node>,
-        std::unique_ptr<inspect_expression_node>,
-        std::unique_ptr<jump_statement_node>
+        cpp2::impl::unique_ptr<expression_statement_node>,
+        cpp2::impl::unique_ptr<compound_statement_node>,
+        cpp2::impl::unique_ptr<selection_statement_node>,
+        cpp2::impl::unique_ptr<declaration_node>,
+        cpp2::impl::unique_ptr<return_statement_node>,
+        cpp2::impl::unique_ptr<iteration_statement_node>,
+        cpp2::impl::unique_ptr<using_statement_node>,
+        cpp2::impl::unique_ptr<contract_node>,
+        cpp2::impl::unique_ptr<inspect_expression_node>,
+        cpp2::impl::unique_ptr<jump_statement_node>
     > statement;
 
     bool emitted = false;               // a note field that's used during lowering to Cpp1
@@ -2049,7 +2050,7 @@ struct statement_node
     auto get_if()
         -> Node*
     {
-        auto pnode = std::get_if<std::unique_ptr<Node>>(&statement);
+        auto pnode = std::get_if<cpp2::impl::unique_ptr<Node>>(&statement);
         if (pnode) {
             return pnode->get();
         }
@@ -2061,7 +2062,7 @@ struct statement_node
     auto get_if() const
         -> Node const*
     {
-        auto pnode = std::get_if<std::unique_ptr<Node>>(&statement);
+        auto pnode = std::get_if<cpp2::impl::unique_ptr<Node>>(&statement);
         if (pnode) {
             return pnode->get();
         }
@@ -2143,7 +2144,7 @@ struct parameter_declaration_node
     enum class modifier { none=0, implicit, virtual_, override_, final_ };
     modifier mod = modifier::none;
 
-    std::unique_ptr<declaration_node> declaration;
+    cpp2::impl::unique_ptr<declaration_node> declaration;
 
     //  API
     //
@@ -2220,7 +2221,7 @@ struct parameter_declaration_list_node
     token const* open_paren  = {};
     token const* close_paren = {};
 
-    std::vector<std::unique_ptr<parameter_declaration_node>> parameters;
+    std::vector<cpp2::impl::unique_ptr<parameter_declaration_node>> parameters;
 
     //  API
     //
@@ -2289,11 +2290,11 @@ struct function_type_node
 {
     declaration_node* my_decl;
 
-    std::unique_ptr<parameter_declaration_list_node> parameters;
+    cpp2::impl::unique_ptr<parameter_declaration_list_node> parameters;
     bool throws = false;
 
     struct single_type_id {
-        std::unique_ptr<type_id_node> type;
+        cpp2::impl::unique_ptr<type_id_node> type;
         passing_style pass = passing_style::move;
     };
 
@@ -2301,10 +2302,10 @@ struct function_type_node
     std::variant<
         std::monostate,
         single_type_id,
-        std::unique_ptr<parameter_declaration_list_node>
+        cpp2::impl::unique_ptr<parameter_declaration_list_node>
     > returns;
 
-    std::vector<std::unique_ptr<contract_node>> contracts;
+    std::vector<cpp2::impl::unique_ptr<contract_node>> contracts;
 
     function_type_node(declaration_node* decl);
 
@@ -2599,13 +2600,13 @@ struct namespace_node
 struct alias_node
 {
     token const* type = {};
-    std::unique_ptr<type_id_node> type_id;   // for objects
+    cpp2::impl::unique_ptr<type_id_node> type_id;   // for objects
 
     enum active : std::uint8_t { a_type, a_namespace, an_object };
     std::variant<
-        std::unique_ptr<type_id_node>,
-        std::unique_ptr<id_expression_node>,
-        std::unique_ptr<expression_node>
+        cpp2::impl::unique_ptr<type_id_node>,
+        cpp2::impl::unique_ptr<id_expression_node>,
+        cpp2::impl::unique_ptr<expression_node>
     > initializer;
 
     alias_node( token const* t ) : type{t} { }
@@ -2668,25 +2669,25 @@ struct declaration_node
     bool                                 is_variadic = false;
     bool                                 is_constexpr = false;
     bool                                 terse_no_equals = false;
-    std::unique_ptr<unqualified_id_node> identifier;
+    cpp2::impl::unique_ptr<unqualified_id_node> identifier;
     accessibility                        access = accessibility::default_;
 
     enum active : std::uint8_t { a_function, an_object, a_type, a_namespace, an_alias };
     std::variant<
-        std::unique_ptr<function_type_node>,
-        std::unique_ptr<type_id_node>,
-        std::unique_ptr<type_node>,
-        std::unique_ptr<namespace_node>,
-        std::unique_ptr<alias_node>
+        cpp2::impl::unique_ptr<function_type_node>,
+        cpp2::impl::unique_ptr<type_id_node>,
+        cpp2::impl::unique_ptr<type_node>,
+        cpp2::impl::unique_ptr<namespace_node>,
+        cpp2::impl::unique_ptr<alias_node>
     > type;
 
-    std::vector<std::unique_ptr<id_expression_node>> metafunctions;
-    std::unique_ptr<parameter_declaration_list_node> template_parameters;
+    std::vector<cpp2::impl::unique_ptr<id_expression_node>> metafunctions;
+    cpp2::impl::unique_ptr<parameter_declaration_list_node> template_parameters;
     source_position                                  requires_pos = {};
-    std::unique_ptr<logical_or_expression_node>      requires_clause_expression;
+    cpp2::impl::unique_ptr<logical_or_expression_node>      requires_clause_expression;
 
     source_position                 equal_sign = {};
-    std::unique_ptr<statement_node> initializer;
+    cpp2::impl::unique_ptr<statement_node> initializer;
 
     declaration_node*               parent_declaration = {};
     statement_node*                 my_statement = {};
@@ -3122,7 +3123,7 @@ public:
     }
 
 
-    auto add_type_member( std::unique_ptr<statement_node>&& statement )
+    auto add_type_member( cpp2::impl::unique_ptr<statement_node>&& statement )
         -> bool
     {
         if (
@@ -3154,7 +3155,7 @@ public:
     }
 
 
-    auto add_function_initializer( std::unique_ptr<statement_node>&& statement )
+    auto add_function_initializer( cpp2::impl::unique_ptr<statement_node>&& statement )
         -> bool
     {
         if (
@@ -4323,7 +4324,7 @@ auto parameter_declaration_node::visit(auto& v, int depth)
 
 struct translation_unit_node
 {
-    std::vector< std::unique_ptr<declaration_node> > declarations;
+    std::vector< cpp2::impl::unique_ptr<declaration_node> > declarations;
 
     auto position() const -> source_position
     {
@@ -5286,7 +5287,7 @@ class parser
 {
     std::vector<error_entry>& errors;
 
-    std::unique_ptr<translation_unit_node> parse_tree = {};
+    cpp2::impl::unique_ptr<translation_unit_node> parse_tree = {};
 
     //  Keep a stack of current capture groups (contracts/decls still being parsed)
     std::vector<capture_group*> current_capture_groups = {};
@@ -5410,12 +5411,12 @@ public:
     //
     parser( std::vector<error_entry>& errors_ )
         : errors{ errors_ }
-        , parse_tree{std::make_unique<translation_unit_node>()}
+        , parse_tree{cpp2::impl::make_unique<translation_unit_node>()}
     { }
 
     parser( parser const& that )
         : errors{ that.errors }
-        , parse_tree{std::make_unique<translation_unit_node>()}
+        , parse_tree{cpp2::impl::make_unique<translation_unit_node>()}
     { }
 
 
@@ -5471,7 +5472,7 @@ public:
         std::vector<token> const& tokens_,
         stable_vector<token>&     generated_tokens_
     )
-        -> std::unique_ptr<statement_node>
+        -> cpp2::impl::unique_ptr<statement_node>
     {
         parse_kind = "source string during code generation";
 
@@ -5647,9 +5648,9 @@ private:
     //G     unnamed-declaration
     //G
     auto primary_expression()
-        -> std::unique_ptr<primary_expression_node>
+        -> cpp2::impl::unique_ptr<primary_expression_node>
     {
-        auto n = std::make_unique<primary_expression_node>();
+        auto n = cpp2::impl::make_unique<primary_expression_node>();
 
         if (auto inspect = inspect_expression(true))
         {
@@ -5777,9 +5778,9 @@ private:
     //G     postfix-expression '.' id-expression
     //G
     auto postfix_expression()
-        -> std::unique_ptr<postfix_expression_node>
+        -> cpp2::impl::unique_ptr<postfix_expression_node>
     {
-        auto n = std::make_unique<postfix_expression_node>();
+        auto n = cpp2::impl::make_unique<postfix_expression_node>();
         n->expr = primary_expression();
         if (!(n->expr)) {
             return {};
@@ -5915,9 +5916,9 @@ private:
     //GTODO     throws-expression
     //G
     auto prefix_expression()
-        -> std::unique_ptr<prefix_expression_node>
+        -> cpp2::impl::unique_ptr<prefix_expression_node>
     {
-        auto n = std::make_unique<prefix_expression_node>();
+        auto n = cpp2::impl::make_unique<prefix_expression_node>();
         for ( ;
             is_prefix_operator(curr());
             next()
@@ -5962,9 +5963,9 @@ private:
         ValidateOp validate_op,
         TermFunc   term
     )
-        -> std::unique_ptr<Binary>
+        -> cpp2::impl::unique_ptr<Binary>
     {
-        auto n = std::make_unique<Binary>();
+        auto n = cpp2::impl::make_unique<Binary>();
         if ( (n->expr = term()) )
         {
             while (!done())
@@ -6233,9 +6234,9 @@ private:
     auto assignment_expression(
         bool allow_angle_operators = true
     )
-        -> std::unique_ptr<assignment_expression_node>
+        -> cpp2::impl::unique_ptr<assignment_expression_node>
     {
-        auto ret = std::unique_ptr<assignment_expression_node>{};
+        auto ret = cpp2::impl::unique_ptr<assignment_expression_node>{};
 
         if (allow_angle_operators)
         {
@@ -6286,9 +6287,9 @@ private:
         bool allow_angle_operators = true,
         bool check_arrow           = true
     )
-        -> std::unique_ptr<expression_node>
+        -> cpp2::impl::unique_ptr<expression_node>
     {
-        auto n = std::make_unique<expression_node>();
+        auto n = cpp2::impl::make_unique<expression_node>();
 
         {
         expression_node::current_expressions.push_back(n.get());
@@ -6324,10 +6325,10 @@ private:
         lexeme       closer,
         bool         inside_initializer = false
     )
-        -> std::unique_ptr<expression_list_node>
+        -> cpp2::impl::unique_ptr<expression_list_node>
     {
         auto pass = passing_style::in;
-        auto n = std::make_unique<expression_list_node>();
+        auto n = cpp2::impl::make_unique<expression_list_node>();
         n->open_paren = open_paren;
         n->inside_initializer = inside_initializer;
 
@@ -6397,9 +6398,9 @@ private:
     //G     '*'
     //G
     auto type_id()
-        -> std::unique_ptr<type_id_node>
+        -> cpp2::impl::unique_ptr<type_id_node>
     {
-        auto n = std::make_unique<type_id_node>();
+        auto n = cpp2::impl::make_unique<type_id_node>();
 
         while (
             (curr().type() == lexeme::Keyword && curr() == "const")
@@ -6461,9 +6462,9 @@ private:
     //G     'as' type-id
     //G
     auto is_as_expression()
-        -> std::unique_ptr<is_as_expression_node>
+        -> cpp2::impl::unique_ptr<is_as_expression_node>
     {
-        auto n = std::make_unique<is_as_expression_node>();
+        auto n = cpp2::impl::make_unique<is_as_expression_node>();
         n->expr = prefix_expression();
         if (!(n->expr)) {
             return {};
@@ -6553,7 +6554,7 @@ private:
     //G     type-id
     //G
     auto unqualified_id()
-        -> std::unique_ptr<unqualified_id_node>
+        -> cpp2::impl::unique_ptr<unqualified_id_node>
     {
         //  Handle the identifier
         if (
@@ -6566,7 +6567,7 @@ private:
             return {};
         }
 
-        auto n = std::make_unique<unqualified_id_node>();
+        auto n = cpp2::impl::make_unique<unqualified_id_node>();
 
         n->identifier = &curr();
         auto one_past_identifier_end_pos = curr().position();
@@ -6668,9 +6669,9 @@ private:
     //G     unqualified-id '.'
     //G
     auto qualified_id()
-        -> std::unique_ptr<qualified_id_node>
+        -> cpp2::impl::unique_ptr<qualified_id_node>
     {
-        auto n = std::make_unique<qualified_id_node>();
+        auto n = cpp2::impl::make_unique<qualified_id_node>();
 
         auto term = qualified_id_node::term{nullptr};
 
@@ -6740,9 +6741,9 @@ private:
     //G     unqualified-id
     //G
     auto id_expression()
-        -> std::unique_ptr<id_expression_node>
+        -> cpp2::impl::unique_ptr<id_expression_node>
     {
-        auto n = std::make_unique<id_expression_node>();
+        auto n = cpp2::impl::make_unique<id_expression_node>();
         if (auto id = qualified_id()) {
             n->pos = id->position();
             n->id  = std::move(id);
@@ -6768,10 +6769,10 @@ private:
     //G     user-defined-literal ud-suffix?
     //G
     auto literal()
-        -> std::unique_ptr<literal_node>
+        -> cpp2::impl::unique_ptr<literal_node>
     {
         if (is_literal(curr().type())) {
-            auto n = std::make_unique<literal_node>();
+            auto n = cpp2::impl::make_unique<literal_node>();
             n->literal = &curr();
             next();
             if (curr().type() == lexeme::UserDefinedLiteralSuffix) {
@@ -6790,9 +6791,9 @@ private:
     auto expression_statement(
         bool semicolon_required
     )
-        -> std::unique_ptr<expression_statement_node>
+        -> cpp2::impl::unique_ptr<expression_statement_node>
     {
-        auto n = std::make_unique<expression_statement_node>();
+        auto n = cpp2::impl::make_unique<expression_statement_node>();
 
         expression_statement_node::current_expression_statements.push_back(n.get());
         auto guard = finally([&]{ expression_statement_node::current_expression_statements.pop_back(); });
@@ -6834,7 +6835,7 @@ private:
     //G     'if' 'constexpr'? logical-or-expression compound-statement 'else' compound-statement
     //G
     auto selection_statement()
-        -> std::unique_ptr<selection_statement_node>
+        -> cpp2::impl::unique_ptr<selection_statement_node>
     {
         if (
             curr().type() != lexeme::Keyword
@@ -6843,7 +6844,7 @@ private:
         {
             return {};
         }
-        auto n = std::make_unique<selection_statement_node>();
+        auto n = cpp2::impl::make_unique<selection_statement_node>();
         n->identifier = &curr();
         next();
 
@@ -6885,7 +6886,7 @@ private:
             //  Add empty else branch to simplify processing elsewhere
             //  Note: Position (0,0) signifies it's implicit (no source location)
             n->false_branch =
-                std::make_unique<compound_statement_node>( source_position(0,0) );
+                cpp2::impl::make_unique<compound_statement_node>( source_position(0,0) );
         }
         else {
             n->else_pos = curr().position();
@@ -6918,7 +6919,7 @@ private:
     //G     return expression? ';'
     //G
     auto return_statement()
-        -> std::unique_ptr<return_statement_node>
+        -> cpp2::impl::unique_ptr<return_statement_node>
     {
         if (
             curr().type() != lexeme::Keyword
@@ -6928,7 +6929,7 @@ private:
             return {};
         }
 
-        auto n = std::make_unique<return_statement_node>();
+        auto n = cpp2::impl::make_unique<return_statement_node>();
         n->identifier = &curr();
         next();
 
@@ -6970,9 +6971,9 @@ private:
     //G     'next' assignment-expression
     //G
     auto iteration_statement()
-        -> std::unique_ptr<iteration_statement_node>
+        -> cpp2::impl::unique_ptr<iteration_statement_node>
     {
-        auto n = std::make_unique<iteration_statement_node>();
+        auto n = cpp2::impl::make_unique<iteration_statement_node>();
 
         //  If the next three tokens are:
         //      identifier ':' 'for/while/do'
@@ -7148,9 +7149,9 @@ private:
     //G     unqualified-id ':'
     //G
     auto alternative()
-        -> std::unique_ptr<alternative_node>
+        -> cpp2::impl::unique_ptr<alternative_node>
     {
-        auto n = std::make_unique<alternative_node>();
+        auto n = cpp2::impl::make_unique<alternative_node>();
 
         if (
             curr().type() == lexeme::Identifier
@@ -7214,7 +7215,7 @@ private:
     //G     alternative-seq alternative
     //G
     auto inspect_expression(bool is_expression)
-        -> std::unique_ptr<inspect_expression_node>
+        -> cpp2::impl::unique_ptr<inspect_expression_node>
     {
         if (curr() != "inspect") {
             return {};
@@ -7228,7 +7229,7 @@ private:
             return {};
         }
 
-        auto n = std::make_unique<inspect_expression_node>();
+        auto n = cpp2::impl::make_unique<inspect_expression_node>();
         n->identifier = &curr();
         next();
 
@@ -7314,9 +7315,9 @@ private:
     //G     'continue' identifier? ';'
     //G
     auto jump_statement()
-        -> std::unique_ptr<jump_statement_node>
+        -> cpp2::impl::unique_ptr<jump_statement_node>
     {
-        auto n = std::make_unique<jump_statement_node>();
+        auto n = cpp2::impl::make_unique<jump_statement_node>();
 
         if (
             curr() != "break"
@@ -7349,9 +7350,9 @@ private:
     //G     'using' 'namespace' id-expression ';'
     //G
     auto using_statement()
-        -> std::unique_ptr<using_statement_node>
+        -> cpp2::impl::unique_ptr<using_statement_node>
     {
-        auto n = std::make_unique<using_statement_node>();
+        auto n = cpp2::impl::make_unique<using_statement_node>();
 
         if (curr() != "using") {
             return {};
@@ -7409,14 +7410,14 @@ private:
         bool                     parameters_allowed = false,
         compound_statement_node* compound_parent    = nullptr
     )
-        -> std::unique_ptr<statement_node>
+        -> cpp2::impl::unique_ptr<statement_node>
     {
         if (!done() && curr().type() == lexeme::Semicolon) {
             error("empty statement is not allowed - remove extra semicolon");
             return {};
         }
 
-        auto n = std::make_unique<statement_node>(compound_parent);
+        auto n = cpp2::impl::make_unique<statement_node>(compound_parent);
 
         //  If a parameter list is allowed here, try to parse one
         if (parameters_allowed) {
@@ -7524,7 +7525,7 @@ private:
         source_position equal_sign                      = source_position{},
         bool            allow_single_unbraced_statement = false
     )
-        -> std::unique_ptr<compound_statement_node>
+        -> cpp2::impl::unique_ptr<compound_statement_node>
     {
         bool is_braced = curr().type() == lexeme::LeftBrace;
         if (
@@ -7535,7 +7536,7 @@ private:
             return {};
         }
 
-        auto n = std::make_unique<compound_statement_node>();
+        auto n = cpp2::impl::make_unique<compound_statement_node>();
         if (!is_braced) {
             n->body_indent = curr().position().colno-1;
         }
@@ -7611,13 +7612,13 @@ private:
         bool is_template  = true,
         bool is_statement = false
     )
-        -> std::unique_ptr<parameter_declaration_node>
+        -> cpp2::impl::unique_ptr<parameter_declaration_node>
     {
         //  Remember current position, because we may need to backtrack if this is just
         //  a parenthesized expression statement, not a statement parameter list
         auto start_pos = pos;
 
-        auto n = std::make_unique<parameter_declaration_node>();
+        auto n = cpp2::impl::make_unique<parameter_declaration_node>();
         n->pass =
             is_returns ? passing_style::out  :
             passing_style::in;
@@ -7786,7 +7787,7 @@ private:
         bool is_template   = false,
         bool is_statement  = false
     )
-        -> std::unique_ptr<parameter_declaration_list_node>
+        -> cpp2::impl::unique_ptr<parameter_declaration_list_node>
     {
         //  Remember current position, because we need to look ahead in
         //  the case of seeing whether a local statement starts with a
@@ -7805,11 +7806,11 @@ private:
             return {};
         }
 
-        auto n = std::make_unique<parameter_declaration_list_node>();
+        auto n = cpp2::impl::make_unique<parameter_declaration_list_node>();
         n->open_paren = &curr();
         next();
 
-        auto param = std::make_unique<parameter_declaration_node>();
+        auto param = cpp2::impl::make_unique<parameter_declaration_node>();
 
         auto count = 1;
 
@@ -7885,9 +7886,9 @@ private:
     //G     'pre' 'post' 'assert'
     //G
     auto contract()
-        -> std::unique_ptr<contract_node>
+        -> cpp2::impl::unique_ptr<contract_node>
     {
-        auto n = std::make_unique<contract_node>(curr().position());
+        auto n = cpp2::impl::make_unique<contract_node>(curr().position());
         auto guard = capture_groups_stack_guard(this, &n->captures);
 
         if (
@@ -7983,9 +7984,9 @@ private:
         declaration_node* my_decl,
         bool              is_named = true
         )
-        -> std::unique_ptr<function_type_node>
+        -> cpp2::impl::unique_ptr<function_type_node>
     {
-        auto n = std::make_unique<function_type_node>( my_decl );
+        auto n = cpp2::impl::make_unique<function_type_node>( my_decl );
 
         //  Parameters
         auto parameters = parameter_declaration_list(false, is_named, false);
@@ -8028,7 +8029,7 @@ private:
             pos = start_pos;    // backtrack no matter what, we're just peeking here
 
             if (at_an_expression) {
-                n->returns = function_type_node::single_type_id{ std::make_unique<type_id_node>() };
+                n->returns = function_type_node::single_type_id{ cpp2::impl::make_unique<type_id_node>() };
                 assert(n->returns.index() == function_type_node::id);
                 n->my_decl->terse_no_equals = true;
                 return n;
@@ -8150,14 +8151,14 @@ private:
         bool                                 named                 = false,
         bool                                 is_parameter          = false,
         bool                                 is_template_parameter = false,
-        std::unique_ptr<unqualified_id_node> id                    = {},
+        cpp2::impl::unique_ptr<unqualified_id_node> id                    = {},
         accessibility                        access                = {},
         bool                                 is_variadic           = false,
         statement_node*                      my_stmt               = {}
     )
-        -> std::unique_ptr<declaration_node>
+        -> cpp2::impl::unique_ptr<declaration_node>
     {
-        auto n = std::make_unique<declaration_node>( current_declarations.back() );
+        auto n = cpp2::impl::make_unique<declaration_node>( current_declarations.back() );
         n->pos = start;
 
         n->identifier   = std::move(id);
@@ -8175,7 +8176,7 @@ private:
             && curr().type() == lexeme::Semicolon
             )
         {
-            n->type = std::make_unique<type_id_node>();
+            n->type = cpp2::impl::make_unique<type_id_node>();
             assert (n->is_object());
             next();
             return n;
@@ -8199,7 +8200,7 @@ private:
 
             //  So we can create the type_node
 
-            auto t = std::make_unique<type_node>( &generated_tokens->back() );
+            auto t = cpp2::impl::make_unique<type_node>( &generated_tokens->back() );
 
             n->type = std::move(t);
             assert (n->is_type());
@@ -8241,10 +8242,10 @@ private:
 
             //  So we can create the typeid_id_node and its unqualified_id_node
 
-            auto gen_id = std::make_unique<unqualified_id_node>();
+            auto gen_id = cpp2::impl::make_unique<unqualified_id_node>();
             gen_id->identifier = &generated_tokens->back();
 
-            auto type = std::make_unique<type_id_node>();
+            auto type = cpp2::impl::make_unique<type_id_node>();
             type->pos = start;
             type->id = std::move(gen_id);
 
@@ -8288,8 +8289,8 @@ private:
 
         auto guard =
             captures_allowed
-            ? std::make_unique<capture_groups_stack_guard>(this, &n->captures)
-            : std::unique_ptr<capture_groups_stack_guard>()
+            ? cpp2::impl::make_unique<capture_groups_stack_guard>(this, &n->captures)
+            : cpp2::impl::unique_ptr<capture_groups_stack_guard>()
             ;
 
         auto guard2 = current_declarations_stack_guard(this, n.get());
@@ -8307,7 +8308,7 @@ private:
                 )
             )
         {
-            n->type = std::make_unique<type_node>( &curr(), curr() == "final" );
+            n->type = cpp2::impl::make_unique<type_node>( &curr(), curr() == "final" );
 
             if (curr() == "final") {
                 next();
@@ -8343,7 +8344,7 @@ private:
         //  Or a namespace
         else if (curr() == "namespace")
         {
-            n->type = std::make_unique<namespace_node>( &curr() );
+            n->type = cpp2::impl::make_unique<namespace_node>( &curr() );
             assert (n->type.index() == declaration_node::a_namespace);
             next();
 
@@ -8395,7 +8396,7 @@ private:
         //  Or nothing, declaring an object of deduced type,
         //  which we'll represent using an empty type-id
         else {
-            n->type = std::make_unique<type_id_node>();
+            n->type = cpp2::impl::make_unique<type_id_node>();
             assert (n->is_object());
             deduced_type = true;
         }
@@ -8660,10 +8661,10 @@ private:
                 ++last_pos.lineno;
                 generated_tokens->emplace_back( "return", last_pos, lexeme::Keyword);
 
-                auto ret = std::make_unique<return_statement_node>();
+                auto ret = cpp2::impl::make_unique<return_statement_node>();
                 ret->identifier = &generated_tokens->back();
 
-                auto stmt = std::make_unique<statement_node>();
+                auto stmt = cpp2::impl::make_unique<statement_node>();
                 stmt->statement = std::move(ret);
 
                 body->statements.push_back(std::move(stmt));
@@ -8692,12 +8693,12 @@ private:
     //GT        # for why I don't see a need to enable this yet
     //
     auto alias()
-        -> std::unique_ptr<declaration_node>
+        -> cpp2::impl::unique_ptr<declaration_node>
     {
         //  Remember current position, because we need to look ahead
         auto start_pos = pos;
 
-        auto n = std::make_unique<declaration_node>( current_declarations.back() );
+        auto n = cpp2::impl::make_unique<declaration_node>( current_declarations.back() );
 
         if (curr().type() != lexeme::Colon) {
             return {};
@@ -8714,7 +8715,7 @@ private:
             n->template_parameters = std::move(template_parameters);
         }
 
-        auto a = std::make_unique<alias_node>( &curr() );
+        auto a = cpp2::impl::make_unique<alias_node>( &curr() );
 
         //  Next must be 'type', 'namespace', a type-id, or we're at the 'requires' or '=='
         if (curr() == "type")
@@ -8889,14 +8890,14 @@ private:
         bool            is_template_parameter = false,
         statement_node* my_stmt               = {}
     )
-        -> std::unique_ptr<declaration_node>
+        -> cpp2::impl::unique_ptr<declaration_node>
     {
         if (done()) { return {}; }
 
         //  Remember current position, because we need to look ahead
         auto start_pos = pos;
 
-        auto n = std::unique_ptr<declaration_node>{};
+        auto n = cpp2::impl::unique_ptr<declaration_node>{};
 
         //  This scope is to ensure that once we've moved 'id' into the
         //  declaration_node, we don't access the moved-from local name
@@ -9085,9 +9086,9 @@ private:
     //G     declaration-seq?
     //
     auto translation_unit()
-        -> std::unique_ptr<translation_unit_node>
+        -> cpp2::impl::unique_ptr<translation_unit_node>
     {
-        auto n = std::make_unique<translation_unit_node>();
+        auto n = cpp2::impl::make_unique<translation_unit_node>();
         for (auto d = declaration(); d; d = declaration()) {
             n->declarations.push_back( std::move(d) );
         }
