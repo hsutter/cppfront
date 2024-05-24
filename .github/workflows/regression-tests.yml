@@ -33,8 +33,13 @@ jobs:
           - os: ubuntu-24.04
             shortosname: ubu-24
             compiler: clang++-18
+            cxx_std: c++2b
+            stdlib: libc++-18-dev
+          - os: ubuntu-24.04
+            shortosname: ubu-24
+            compiler: clang++-18
             cxx_std: c++20
-            stdlib: libstdc++
+            stdlib: libc++-18-dev
           - os: ubuntu-22.04
             shortosname: ubu-22
             compiler: clang++-15
