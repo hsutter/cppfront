@@ -87,7 +87,7 @@ class compiler_services
     //
     private: std::vector<error_entry>* errors; 
     private: int errors_original_size; 
-    private: std::deque<token>* generated_tokens; 
+    private: stable_vector<token>* generated_tokens; 
     private: cpp2::parser parser; 
     private: std::string metafunction_name {}; 
     private: std::vector<std::string> metafunction_args {}; 
@@ -98,7 +98,7 @@ class compiler_services
     public: explicit compiler_services(
 
         std::vector<error_entry>* errors_, 
-        std::deque<token>* generated_tokens_
+        stable_vector<token>* generated_tokens_
     );
 
 #line 59 "reflect.h2"
@@ -808,7 +808,7 @@ namespace meta {
     compiler_services::compiler_services(
 
         std::vector<error_entry>* errors_, 
-        std::deque<token>* generated_tokens_
+        stable_vector<token>* generated_tokens_
     )
         : errors{ errors_ }
         , errors_original_size{ cpp2::unsafe_narrow<int>(std::ssize(*cpp2::impl::assert_not_null(errors))) }

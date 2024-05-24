@@ -36,7 +36,7 @@ compiler_services: @polymorphic_base @copyable type =
     //
     errors               : *std::vector<error_entry>;
     errors_original_size : int;
-    generated_tokens     : *std::deque<token>;
+    generated_tokens     : *stable_vector<token>;
     parser               : cpp2::parser;
     metafunction_name    : std::string = ();
     metafunction_args    : std::vector<std::string> = ();
@@ -47,7 +47,7 @@ compiler_services: @polymorphic_base @copyable type =
     operator=: (
         out this,
         errors_          : *std::vector<error_entry>,
-        generated_tokens_: *std::deque<token>
+        generated_tokens_: *stable_vector<token>
     )
     = {
         errors = errors_;

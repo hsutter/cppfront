@@ -6,12 +6,12 @@ pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2:3:46: error: expect
 In file included from pure2-bugfix-for-requires-clause-in-forward-declaration.cpp:7:
 ../../../include/cpp2util.h:10005:47: error: static assertion failed: GCC 11 or higher is required to support variables and type-scope functions that have a 'requires' clause. This includes a type-scope 'forward' parameter of non-wildcard type, such as 'func: (this, forward s: std::string)', which relies on being able to add a 'requires' clause - in that case, use 'forward s: _' instead if you need the result to compile with GCC 10.
 pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2:4:1: note: in expansion of macro ‘CPP2_REQUIRES_’
-pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2:3:3: error: no declaration matches ‘element::element(auto:91&&) requires  is_same_v<std::__cxx11::string, typename std::remove_cv<typename std::remove_reference<decltype(element::__ct ::n)>::type>::type>’
+pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2:3:3: error: no declaration matches ‘element::element(auto:92&&) requires  is_same_v<std::__cxx11::string, typename std::remove_cv<typename std::remove_reference<decltype(element::__ct ::n)>::type>::type>’
 pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2:5:11: note: candidates are: ‘element::element(const element&)’
-pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2:3:20: note:                 ‘template<class auto:89> element::element(auto:89&&)’
+pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2:3:20: note:                 ‘template<class auto:90> element::element(auto:90&&)’
 pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2:1:7: note: ‘class element’ defined here
 pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2:5:78: error: expected unqualified-id before ‘{’ token
-pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2:3:8: error: no declaration matches ‘element& element::operator=(auto:92&&) requires  is_same_v<std::__cxx11::string, typename std::remove_cv<typename std::remove_reference<decltype(element::operator=::n)>::type>::type>’
+pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2:3:8: error: no declaration matches ‘element& element::operator=(auto:93&&) requires  is_same_v<std::__cxx11::string, typename std::remove_cv<typename std::remove_reference<decltype(element::operator=::n)>::type>::type>’
 pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2:6:16: note: candidates are: ‘void element::operator=(const element&)’
-pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2:3:16: note:                 ‘template<class auto:90> element& element::operator=(auto:90&&)’
+pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2:3:16: note:                 ‘template<class auto:91> element& element::operator=(auto:91&&)’
 pure2-bugfix-for-requires-clause-in-forward-declaration.cpp2:1:7: note: ‘class element’ defined here

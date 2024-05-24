@@ -1468,8 +1468,27 @@ inline constexpr auto as() -> auto
     }
 }
 
-template< typename C, typename X >
-auto as(X const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto) {
+template< typename C, auto x >
+    requires (std::is_same_v<C, std::string> && std::is_integral_v<CPP2_TYPEOF(x)>)
+inline constexpr auto as() -> auto
+{
+    return cpp2::to_string(CPP2_FORWARD(x));
+}
+
+template< typename C >
+auto as(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+    //  This "requires" list may need to be tweaked further. The idea is to have
+    //  this function used for all the cases it's supposed to cover, but not
+    //  hide user-supplied extensions (such as the ones later in this file for
+    //  std:: polymorphic types like any/optional/variant)
+    requires (
+                (std::is_scalar_v<CPP2_TYPEOF(x)> && !std::is_enum_v<CPP2_TYPEOF(x)>)
+            ||  std::is_floating_point_v<CPP2_TYPEOF(x)>
+            ||  std::is_base_of_v<C, CPP2_TYPEOF(x)>
+            ||  std::is_base_of_v<CPP2_TYPEOF(x), C>
+            ||  requires { C{CPP2_FORWARD(x)}; }
+            )
+{
     if constexpr (
         std::is_floating_point_v<C> &&
         std::is_floating_point_v<CPP2_TYPEOF(x)> &&
@@ -1488,62 +1507,54 @@ auto as(X const& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto) {
         sizeof(CPP2_TYPEOF(x)) <= sizeof(C)
     )
     {
-        const C c = static_cast<C>(x);
+        const C c = static_cast<C>(CPP2_FORWARD(x));
         type_safety.enforce(   // precondition check: must be round-trippable => not lossy
             static_cast<CPP2_TYPEOF(x)>(c) == x && (c < C{}) == (x < CPP2_TYPEOF(x){}),
             "dynamic lossy narrowing conversion attempt detected" CPP2_SOURCE_LOCATION_ARG
         );
         return CPP2_COPY(c);
     }
-    else if constexpr (std::is_same_v<C, std::string> && std::is_integral_v<X>) {
-        return cpp2::to_string(x);
+    else if constexpr (std::is_same_v<C, std::string> && std::is_integral_v<CPP2_TYPEOF(x)>) {
+        return cpp2::to_string(CPP2_FORWARD(x));
     }
-    else if constexpr (std::is_same_v<C, X>) {
-        return x;
+    else if constexpr (std::is_same_v<C, CPP2_TYPEOF(x)>) {
+        return CPP2_FORWARD(x);
     }
-    else if constexpr (std::is_base_of_v<C, X>) {
-        return static_cast<C const&>(x);
+    else if constexpr (std::is_base_of_v<C, CPP2_TYPEOF(x)>) {
+        if constexpr (std::is_const_v<std::remove_reference_t<decltype(x)>>) {
+            return static_cast<C const&>(CPP2_FORWARD(x));
+        } else {
+            return static_cast<C&>(CPP2_FORWARD(x));
+        }
     }
-    else if constexpr (std::is_base_of_v<X, C>) {
-        return Dynamic_cast<C const&>(x);
+    else if constexpr (std::is_base_of_v<CPP2_TYPEOF(x), C>) {
+        if constexpr (std::is_const_v<std::remove_reference_t<decltype(x)>>) {
+            return Dynamic_cast<C const&>(CPP2_FORWARD(x));
+        } else {
+            return Dynamic_cast<C&>(CPP2_FORWARD(x));
+        }
     }
     else if constexpr (
         std::is_pointer_v<C>
-        && std::is_pointer_v<X>
-        && requires { requires std::is_base_of_v<deref_t<X>, deref_t<C>>; }
+        && std::is_pointer_v<CPP2_TYPEOF(x)>
+        && requires { requires std::is_base_of_v<deref_t<CPP2_TYPEOF(x)>, deref_t<C>>; }
     )
     {
-        return Dynamic_cast<C>(x);
+        return Dynamic_cast<C>(CPP2_FORWARD(x));
     }
-    else if constexpr (requires { C{x}; }) {
+    else if constexpr (requires { C{CPP2_FORWARD(x)}; }) {
         //  Experiment: Recognize the nested `::value_type` pattern for some dynamic library types
         //  like std::optional, and try to prevent accidental narrowing conversions even when
         //  those types themselves don't defend against them
-        if constexpr( requires { requires std::is_convertible_v<X, typename C::value_type>; } ) {
-            if constexpr( is_narrowing_v<typename C::value_type, X>) {
+        if constexpr( requires { requires std::is_convertible_v<CPP2_TYPEOF(x), typename C::value_type>; } ) {
+            if constexpr( is_narrowing_v<typename C::value_type, CPP2_TYPEOF(x)>) {
                 return nonesuch;
             }
         }
-        return C{x};
+        return C{CPP2_FORWARD(x)};
     }
     else {
         return nonesuch;
-    }
-}
-
-template< typename C, typename X >
-auto as( X& x ) -> decltype(auto) {
-    if constexpr (std::is_same_v<C, X>) {
-        return x;
-    }
-    else if constexpr (std::is_base_of_v<C, X>) {
-        return static_cast<C&>(x);
-    }
-    else if constexpr (std::is_base_of_v<X, C>) {
-        return Dynamic_cast<C&>(x);
-    }
-    else {
-        return as<C>(std::as_const(x));
     }
 }
 

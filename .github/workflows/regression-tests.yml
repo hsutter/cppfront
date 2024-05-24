@@ -19,11 +19,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        compiler: [g++-10, g++-13, clang++-15]
+        os: [ubuntu-24.04]
+        compiler: [g++-13, g++-14, clang++-18]
         include:
+          - os: ubuntu-22.04
+            compiler: clang++-15
           - os: ubuntu-20.04
             compiler: clang++-12
+          - os: ubuntu-20.04
+            compiler: g++-10
           - os: macos-14
             compiler: clang++
           - os: macos-13

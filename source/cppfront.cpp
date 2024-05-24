@@ -57,6 +57,9 @@ auto main(
     int exit_status = EXIT_SUCCESS;
     for (auto const& arg : cmdline.arguments())
     {
+        cpp2::timer t;
+        t.start();
+
         auto& out = flag_cpp1_filename != "stdout" ? std::cout : std::cerr;
 
         if (!flag_quiet) {
@@ -85,9 +88,14 @@ auto main(
                 }
 
                 if (flag_verbose) {
-                    out << "   Cpp1: " << print_with_thousands(count.cpp1_lines) << " line" << (count.cpp1_lines != 1 ? "s" : "");
-                    out << "\n   Cpp2: " << print_with_thousands(count.cpp2_lines) << " line" << (count.cpp2_lines != 1 ? "s" : "");
                     auto total = count.cpp1_lines + count.cpp2_lines;
+                    auto total_lines = print_with_thousands(total);
+                    out << "   Cpp1  "
+                        << std::right << std::setw(total_lines.size())
+                        << print_with_thousands(count.cpp1_lines) << " line" << (count.cpp1_lines != 1 ? "s" : "");
+                    out << "\n   Cpp2  "
+                        << std::right << std::setw(total_lines.size())
+                        << print_with_thousands(count.cpp2_lines) << " line" << (count.cpp2_lines != 1 ? "s" : "");
                     if (total > 0) {
                         out << " (";
                         if (count.cpp1_lines == 0) {
@@ -101,6 +109,22 @@ auto main(
                             out << 100 * count.cpp2_lines / total;
                         }
                         out << "%)";
+                    }
+
+                    t.stop();
+                    auto total_time = print_with_thousands(t.elapsed().count());
+                    std::cout << "\n   Time  " << total_time << " ms";
+
+                    std::multimap< long long, std::string_view, std::greater<long long> > sorted_timers;
+                    for (auto [name, t] : timers) {
+                        sorted_timers.insert({t.elapsed().count(), name});
+                    }
+
+                    for (auto [elapsed, name] : sorted_timers) {
+                        std::cout
+                            << "\n         "
+                            << std::right << std::setw(total_time.size())
+                            << print_with_thousands(elapsed) << " ms" << " in " << name;
                     }
                 }
 
@@ -122,10 +146,10 @@ auto main(
         }
     }
 
-    if (flag_internal_debug) {
-        stackinstr::print_deepest();
-        stackinstr::print_largest();
-    }
+    //if (flag_internal_debug) {
+    //    stackinstr::print_deepest();
+    //    stackinstr::print_largest();
+    //}
 
     return exit_status;
 }

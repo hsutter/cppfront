@@ -164,14 +164,6 @@ static cmdline_processor::register_flag cmd_cpp1_filename(
     [](std::string const& name) { flag_cpp1_filename = name; }
 );
 
-static auto flag_verbose = false;
-static cmdline_processor::register_flag cmd_verbose(
-    9,
-    "verbose",
-    "Print verbose statistics and -debug output",
-    []{ flag_verbose = true; }
-);
-
 static auto flag_no_exceptions = false;
 static cmdline_processor::register_flag cmd_no_exceptions(
     4,
@@ -1087,7 +1079,7 @@ class cppfront
     };
     class current_functions_
     {
-        std::deque<function_info> list = { {} };
+        stable_vector<function_info> list = { {} };
     public:
         auto push(
             declaration_node const*                    decl,
@@ -6872,7 +6864,7 @@ public:
     //-----------------------------------------------------------------------
     //  debug_print
     //
-    auto debug_print()
+    auto debug_print() const
         -> void
     {
         //  Only create debug output files if we managed to load the source file.

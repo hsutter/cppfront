@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on: [ubuntu-latest]
+        runs-on: [ubuntu-22.04]
         compiler: [g++-10, g++-11, g++-12, clang++-12, clang++-14]
         cxx-std: ['c++20', 'c++2b']
         exclude:
@@ -38,6 +38,18 @@ jobs:
           - runs-on: macos-latest
             compiler: clang++
             cxx-std: 'c++20'
+          - runs-on: ubuntu-24.04
+            compiler: clang++-16
+            cxx-std: 'c++20'
+          - runs-on: ubuntu-24.04
+            compiler: clang++-17
+            cxx-std: 'c++20'
+          - runs-on: ubuntu-24.04
+            compiler: clang++-18
+            cxx-std: 'c++20'
+          - runs-on: ubuntu-24.04
+            compiler: g++-14
+            cxx-std: 'c++2b'
     runs-on: ${{ matrix.runs-on }}
     env:
       CXX: ${{ matrix.compiler }}
