@@ -1,0 +1,20 @@
+pure2-assert-expected-not-null.cpp
+pure2-assert-expected-not-null.cpp2(7): error C2039: 'expected': is not a member of 'std'
+predefined C++ types (compiler internal)(348): note: see declaration of 'std'
+pure2-assert-expected-not-null.cpp2(7): error C2062: type 'int' unexpected
+pure2-assert-expected-not-null.cpp2(7): error C2143: syntax error: missing ';' before '{'
+pure2-assert-expected-not-null.cpp2(7): error C2143: syntax error: missing ';' before '}'
+pure2-assert-expected-not-null.cpp2(9): error C2065: 'ex': undeclared identifier
+pure2-assert-expected-not-null.cpp2(9): error C2672: 'cpp2::impl::assert_not_null': no matching overloaded function found
+..\..\..\include\cpp2util.h(632): note: could be 'decltype(auto) cpp2::impl::assert_not_null(_T0 &&)'
+pure2-assert-expected-not-null.cpp2(14): error C2039: 'expected': is not a member of 'std'
+predefined C++ types (compiler internal)(348): note: see declaration of 'std'
+pure2-assert-expected-not-null.cpp2(14): error C2062: type 'int' unexpected
+pure2-assert-expected-not-null.cpp2(14): error C2143: syntax error: missing ';' before '{'
+pure2-assert-expected-not-null.cpp2(14): error C2039: 'unexpected': is not a member of 'std'
+predefined C++ types (compiler internal)(348): note: see declaration of 'std'
+pure2-assert-expected-not-null.cpp2(14): error C3861: 'unexpected': identifier not found
+pure2-assert-expected-not-null.cpp2(14): error C2143: syntax error: missing ';' before '}'
+pure2-assert-expected-not-null.cpp2(15): error C2065: 'ex': undeclared identifier
+pure2-assert-expected-not-null.cpp2(15): error C2672: 'cpp2::impl::assert_not_null': no matching overloaded function found
+..\..\..\include\cpp2util.h(632): note: could be 'decltype(auto) cpp2::impl::assert_not_null(_T0 &&)'

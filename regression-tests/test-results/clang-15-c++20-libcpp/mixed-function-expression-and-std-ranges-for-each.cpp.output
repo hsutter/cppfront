@@ -1,0 +1,7 @@
+mixed-function-expression-and-std-ranges-for-each.cpp2:12:18: error: no member named 'for_each' in namespace 'std::ranges'
+    std::ranges::for_each
+    ~~~~~~~~~~~~~^
+mixed-function-expression-and-std-ranges-for-each.cpp2:16:18: error: no member named 'for_each' in namespace 'std::ranges'
+    std::ranges::for_each(vec, cpp2::move(callback));
+    ~~~~~~~~~~~~~^
+2 errors generated.
