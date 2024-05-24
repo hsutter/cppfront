@@ -254,7 +254,7 @@ main: () = {
     //  Assertion that the size is the square of 4
     static_assert( ints.size() == 16 );
 
-    //  And if can be used at run time, with run time values
+    //  And it can be used at run time, with run time values
     std::cout << "the square of 4 is (square(4))$\n";
 }
 //  Prints:
