@@ -894,21 +894,37 @@ public:
         //  and is in the same function
         using I = stable_vector<symbol>::const_iterator;
         auto advance = [](I& i, int n, I bound) {  // TODO Use `std::ranges::advance`
-            CPP2_SCOPE_TIMER("get_declaration_of_new - phase 2a 'advance' part of loop");
+            //CPP2_SCOPE_TIMER("get_declaration_of_new - phase 2a 'advance' part of loop");
             auto in = i;
             if (std::abs(n) >= std::abs(bound - i)) {
                 i = bound;
             }
             else {
-                CPP2_SCOPE_TIMER("get_declaration_of_new - phase 2aa 'std::advance' specifically");
+                //CPP2_SCOPE_TIMER("get_declaration_of_new - phase 2aa 'std::advance' specifically");
                 std::advance(i, n);
             }
             return n - (i - in);
         };
         advance(i, -int(i->position() > t.position()), symbols.cbegin());
         advance(i, 1, symbols.cend());
-        while (advance(i, -1, symbols.begin()) == 0)
+
+//  --- PERFORMANCE NOTE ---
+//  In this hot function, this is a hot loop, and changing this lambda call...
+//
+//      while (advance(i, -1, symbols.begin()) == 0)
+//      {
+//
+//  ... to this instead...
+//
+        while (i != symbols.begin())
         {
+            --i;
+//  
+//  ... is a 25% performance improvement on this entire loop in the `pure2-last-use.cpp2`
+//  test code. That's unexpected, so documenting it so we don't inadvertently change it
+//  back to `advance` "for consistency" with the previous lines.
+//  --- END PERFORMANCE NOTE ---
+
             if (
                 i->sym.index() == symbol::active::declaration
                 && i->depth <= depth
@@ -942,7 +958,7 @@ public:
                     return &decl;
                 }
 
-                CPP2_SCOPE_TIMER("get_declaration_of_new - phase 2b 'move this' part of loop");
+                //CPP2_SCOPE_TIMER("get_declaration_of_new - phase 2b 'move this' part of loop");
 
                 //  If we reached a 'move this' parameter, look it up in the type members
                 if (
