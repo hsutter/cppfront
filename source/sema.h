@@ -393,6 +393,7 @@ class sema
 public:
     std::vector<error_entry>& errors;
     stable_vector<symbol>     symbols;
+    index_t                   global_token_counter = 1;
 
     std::vector<selection_statement_node const*> active_selections;
 
@@ -567,11 +568,11 @@ public:
             ++i;
         }
 
+        initial_find_old = i;
+
         if (i == symbols.cbegin()) {
             return nullptr;
         }
-
-        initial_find_old = i;
 
         auto depth = 0;
 
@@ -754,35 +755,23 @@ public:
 
         //  First find the position the query is coming from
         //  and remember its depth
-        auto i = symbols.cbegin();
-        auto depth = 0;
-
-        {
-        CPP2_SCOPE_TIMER("get_declaration_of_new - phase 1 initial loop");
-
-        //  If the declaration_starts list got this far yet, use that to
-        //  skip repeating the whole linear search from the table beginning
-        //
         auto probe = std::lower_bound(
                         declaration_starts.begin(),
                         declaration_starts.end(),
                         t.get_global_token_order()
                     );
-        if (probe != declaration_starts.end())
+        if (
+            probe != declaration_starts.end()
+            && probe->token_order > t.get_global_token_order()
+            )
         {
-            if (probe->iter->get_global_token_order() != t.get_global_token_order()) {
-                --probe;
-            }
-            i = probe->iter;
+            --probe;
         }
+        auto i = probe != declaration_starts.end() ? probe->iter : declaration_starts.back().iter;
+        auto depth = 0;
 
-        //  Else resume appending values to the declaration_starts list
-        //
-        else
         {
-            //  Start right after where we left off
-            i = declaration_starts.back().iter;
-        }
+        CPP2_SCOPE_TIMER("get_declaration_of_new - phase 1 initial loop");
 
         while (
             i != symbols.cend()
@@ -805,11 +794,11 @@ public:
             ++i;
         }
 
+        initial_find_new = i;
+
         if (i == symbols.cbegin()) {
             return nullptr;
         }
-
-        initial_find_new = i;
 
         //  If we found it exactly, we have its depth
         if (
@@ -2789,6 +2778,7 @@ public:
 
         if (n.pass != passing_style::out) {
             push_activation( declaration_sym( true, n.declaration.get(), n.declaration->name(), n.declaration->initializer.get(), &n, inside_returns_list));
+            declaration_starts.emplace_back( global_token_counter, symbols.cend()-1 );
         }
     }
 
@@ -2864,6 +2854,13 @@ public:
             )
         {
             push_activation( declaration_sym( true, &n, n.name(), n.initializer.get(), inside_out_parameter, false, inside_returns_list ) );
+            if (
+                n.has_name()
+                && !n.has_name("_")
+                )
+            {
+                declaration_starts.emplace_back( global_token_counter, symbols.cend()-1 );
+            }
             if (!n.is_object()) {
                 ++scope_depth;
             }
@@ -2961,7 +2958,6 @@ public:
 
         //  By giving tokens an order during sema
         //  generated code can be equally checked
-        static index_t global_token_counter = 1;            // TODO static
         t.set_global_token_order( global_token_counter++ );
 
         auto started_member_access =
