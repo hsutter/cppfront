@@ -3959,6 +3959,11 @@ public:
     )
         -> void
     {   STACKINSTR
+        if (n.default_initializer) {
+          printer.print_cpp2("{}", n.position());
+          return;
+        }
+
         auto add_parens =
             should_add_expression_list_parens()
             && !n.inside_initializer

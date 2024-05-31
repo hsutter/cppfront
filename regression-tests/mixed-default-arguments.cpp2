@@ -1,0 +1,10 @@
+auto cxx(int x, std::string y) -> void {}
+
+cxx2 : (x : int, y : std::string) = {}
+
+main : () = {
+	cxx(1, "test");
+	cxx((), ());
+	cxx2(1, "test");
+	cxx2((), ());
+}
