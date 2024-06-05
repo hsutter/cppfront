@@ -177,7 +177,7 @@ An `inspect expr -> Type = { /* alternatives */ }` expression allows pattern mat
 
 - `expr` is evaluated once.
 
-- Each alternative is spelled `is C = statement;` and are evaluated in order. Each `is C` is evaluated if called with `expr is C`, and if it alternative evaluates to `#!cpp true`, then its `#!cpp = alternative;` body is used as the value of the entire `inspect` expression, and the meaning is the same as if the entire `inspect` expression had been written as just `#!cpp :Type = alternative;` — i.e., an unnamed object expression (aka 'temporary object') of type `Type` initialized with `alternative`.
+- Each alternative is spelled `is C = statement;` and are evaluated in order. Each `is C` is evaluated as if called with `expr is C`, and if it evaluates to `#!cpp true`, then its `#!cpp = alternative;` body is used as the value of the entire `inspect` expression, and the meaning is the same as if the entire `inspect` expression had been written as just `#!cpp :Type = alternative;` — i.e., an unnamed object expression (aka 'temporary object') of type `Type` initialized with `alternative`.
 
 - A catchall `is _` is required.
 
