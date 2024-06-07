@@ -512,6 +512,12 @@ template <typename T>
     requires requires { *std::declval<T&>(); }
 using deref_t = decltype(*std::declval<T&>());
 
+//  Guaranteed to be a total order, unlike built-in operator== for T*
+template <typename T>
+auto pointer_eq(T const* a, T const* b) {
+    return std::compare_three_way{}(a, b) == std::strong_ordering::equal;
+}
+
 
 //-----------------------------------------------------------------------
 //

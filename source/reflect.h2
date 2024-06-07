@@ -346,8 +346,11 @@ function_declaration: @copyable type =
     index_of_parameter_named     : (this, s: std::string_view) -> int  = n*.index_of_parameter_named(s);
     has_parameter_named          : (this, s: std::string_view) -> bool = n*.has_parameter_named(s);
     has_in_parameter_named       : (this, s: std::string_view) -> bool = n*.has_in_parameter_named(s);
+    has_copy_parameter_named     : (this, s: std::string_view) -> bool = n*.has_copy_parameter_named(s);
+    has_inout_parameter_named    : (this, s: std::string_view) -> bool = n*.has_inout_parameter_named(s);
     has_out_parameter_named      : (this, s: std::string_view) -> bool = n*.has_out_parameter_named(s);
     has_move_parameter_named     : (this, s: std::string_view) -> bool = n*.has_move_parameter_named(s);
+    has_forward_parameter_named  : (this, s: std::string_view) -> bool = n*.has_forward_parameter_named(s);
     first_parameter_name         : (this) -> std::string               = n*.first_parameter_name();
 
     has_parameter_with_name_and_pass: (this, s: std::string_view, pass: passing_style) -> bool

@@ -1,0 +1,19 @@
+pure2-assert-expected-not-null.cpp2:7:10: error: no member named 'expected' in namespace 'std'
+    std::expected<int,bool> ex {4}; 
+    ~~~~~^
+pure2-assert-expected-not-null.cpp2:7:22: error: expected '(' for function-style cast or type construction
+    std::expected<int,bool> ex {4}; 
+                  ~~~^
+pure2-assert-expected-not-null.cpp2:9:193: error: use of undeclared identifier 'ex'
+    return *cpp2::impl::assert_not_null(cpp2::move(up)) + *cpp2::impl::assert_not_null(cpp2::move(sp)) + *cpp2::impl::assert_not_null(cpp2::move(op)) + *cpp2::impl::assert_not_null(cpp2::move(ex)); 
+                                                                                                                                                                                                ^
+pure2-assert-expected-not-null.cpp2:14:10: error: no member named 'expected' in namespace 'std'
+    std::expected<int,bool> ex {std::unexpected(false)}; 
+    ~~~~~^
+pure2-assert-expected-not-null.cpp2:14:22: error: expected '(' for function-style cast or type construction
+    std::expected<int,bool> ex {std::unexpected(false)}; 
+                  ~~~^
+pure2-assert-expected-not-null.cpp2:15:52: error: use of undeclared identifier 'ex'
+    return *cpp2::impl::assert_not_null(cpp2::move(ex)); 
+                                                   ^
+6 errors generated.

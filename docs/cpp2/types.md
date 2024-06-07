@@ -81,7 +81,7 @@ For example:
 abstract_base: type
 = {
     //  A pure virtual function: virtual + no body
-    print: (virtual this, msg: std::string);
+    print: (virtual this, msg: std::string) = { /*...*/ }
 
     // ...
 }
@@ -92,7 +92,7 @@ derived: type
     this: abstract_base;
 
     //  Explicit override
-    print: (override this, msg: std::string);
+    print: (override this, msg: std::string) = { /*...*/ }
 
     // ...
 }
@@ -199,7 +199,7 @@ mytype: type
     name:          std::string;
     social_handle: std::string = "(unknown)";
 
-    //  conversion from string
+    //  conversion from string (construction + assignment)
     operator=: (out this, who: std::string) = {
         name = who;
         //  if social_handle is not mentioned, defaults to:

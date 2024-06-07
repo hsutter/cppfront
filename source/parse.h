@@ -2479,6 +2479,18 @@ struct function_type_node
         return has_parameter_with_name_and_pass(s, passing_style::in);
     }
 
+    auto has_copy_parameter_named(std::string_view s) const
+        -> bool
+    {
+        return has_parameter_with_name_and_pass(s, passing_style::copy);
+    }
+
+    auto has_inout_parameter_named(std::string_view s) const
+        -> bool
+    {
+        return has_parameter_with_name_and_pass(s, passing_style::inout);
+    }
+
     auto has_out_parameter_named(std::string_view s) const
         -> bool
     {
@@ -2489,6 +2501,12 @@ struct function_type_node
         -> bool
     {
         return has_parameter_with_name_and_pass(s, passing_style::move);
+    }
+
+    auto has_forward_parameter_named(std::string_view s) const
+        -> bool
+    {
+        return has_parameter_with_name_and_pass(s, passing_style::forward);
     }
 
     //  Internals
@@ -2923,6 +2941,24 @@ public:
         return std::get<a_function>(type)->has_in_parameter_named(s);
     }
 
+    auto has_copy_parameter_named(std::string_view s) const
+        -> bool
+    {
+        if (!is_function()) {
+            return false;
+        }
+        return std::get<a_function>(type)->has_copy_parameter_named(s);
+    }
+
+    auto has_inout_parameter_named(std::string_view s) const
+        -> bool
+    {
+        if (!is_function()) {
+            return false;
+        }
+        return std::get<a_function>(type)->has_inout_parameter_named(s);
+    }
+
     auto has_out_parameter_named(std::string_view s) const
         -> bool
     {
@@ -2939,6 +2975,15 @@ public:
             return false;
         }
         return std::get<a_function>(type)->has_move_parameter_named(s);
+    }
+
+    auto has_forward_parameter_named(std::string_view s) const
+        -> bool
+    {
+        if (!is_function()) {
+            return false;
+        }
+        return std::get<a_function>(type)->has_forward_parameter_named(s);
     }
 
     auto nth_parameter_type_name(int n) const

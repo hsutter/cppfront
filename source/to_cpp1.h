@@ -2379,13 +2379,14 @@ public:
                     is_parameter_name
                     && (
                         current_functions.back().decl->has_in_parameter_named(*tok)
+                        || current_functions.back().decl->has_copy_parameter_named(*tok)
                         || current_functions.back().decl->has_move_parameter_named(*tok)
                         )
                     )
                 {
                     errors.emplace_back(
                         n.position(),
-                        "a 'forward' return type cannot return an 'in' or 'move' parameter"
+                        "a 'forward' return type cannot return an 'in', 'copy', or 'move' parameter"
                     );
                     return;
                 }
@@ -2406,7 +2407,7 @@ public:
                 {
                     errors.emplace_back(
                         n.position(),
-                        "a 'forward' return type cannot return a temporary variable"
+                        "a 'forward' return type must return an 'inout', 'out', or 'forward' parameter; it cannot return a complex expression -- for example: for a function that takes a stream object 'output`, instead of 'return output << data;' write 'output << data; return output;'"
                     );
                     return;
                 }

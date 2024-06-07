@@ -1362,7 +1362,7 @@ template<typename CharT, typename matcher_wrapper> class regular_expression {
 #line 2368 "regex.h2"
     public: template<typename Iter> using matcher = matcher_wrapper_type<matcher_wrapper,Iter,CharT>;// TODO: Remove when nested types are allowed: https://github.com/hsutter/cppfront/issues/727
     public: template<typename Iter> using context = matcher<Iter>::context;
-    
+
     // TODO: Named multiple return has problems with templates.
     public: template<typename Iter> class search_return {
         public: bool matched; 
