@@ -7731,7 +7731,7 @@ private:
 
         //  Now the main declaration
         //
-        if (!(n->declaration = declaration(false, true, is_template))) {
+        if (!(n->declaration = declaration(false, true, is_template, {}, false))) {
             pos = start_pos;    // backtrack
             return {};
         }
@@ -8198,7 +8198,8 @@ private:
         std::unique_ptr<unqualified_id_node> id                    = {},
         accessibility                        access                = {},
         bool                                 is_variadic           = false,
-        statement_node*                      my_stmt               = {}
+        statement_node*                      my_stmt               = {},
+        bool                                 semicolon_allowed     = true
     )
         -> std::unique_ptr<declaration_node>
     {
@@ -8506,7 +8507,10 @@ private:
                 //  Then there may be a semicolon
                 //  If there is a semicolon, eat it
                 if (!done() && curr().type() == lexeme::Semicolon) {
-                    next();
+                    if (semicolon_allowed)
+                      next();
+                    else
+                      error("unexpected semicolon after declaration", {}, {}, {});
                 }
                 // But if there isn't one and it was required, diagnose an error
                 else if (semicolon_required) {
@@ -8932,7 +8936,8 @@ private:
         bool            semicolon_required    = true,
         bool            is_parameter          = false,
         bool            is_template_parameter = false,
-        statement_node* my_stmt               = {}
+        statement_node* my_stmt               = {},
+        bool            semicolon_allowed     = true
     )
         -> std::unique_ptr<declaration_node>
     {
@@ -9089,7 +9094,8 @@ private:
                 std::move(id),
                 access,
                 is_variadic,
-                my_stmt
+                my_stmt,
+                semicolon_allowed
             );
             if (!n) {
                 pos = start_pos;    // backtrack
