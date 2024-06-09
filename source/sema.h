@@ -419,26 +419,6 @@ public:
     ) const
         -> declaration_sym const*
     {
-        //--------- START TEMPORARY REGRESSION TEST CODE FOR G_D_O OPTIMIZATION VERIFICATION ---------
-        auto result_old = static_cast<declaration_sym const*>(nullptr);
-        if (flag_internal_debug)
-        {
-            auto debug = false; // t == "xxx" && t.position().colno > 20;
-            if (debug)
-            {
-                std::cout << "\nlooking up " << t.as_string_view() << " (" << static_cast<void const*>(&t) << ", " << look_beyond_current_function << ", " << include_implicit_this << ") from " << t.position().to_string();
-                std::cout << " ... symbol table state is:\n";
-                debug_print(std::cout);
-            }
-
-            result_old = get_declaration_of_old(t, look_beyond_current_function, include_implicit_this );
-
-            if (debug) {
-                std::cout << "\n  found -> " << static_cast<void const*>(result_old);
-            }
-        }
-        //--------- END TEMPORARY REGRESSION TEST CODE FOR G_D_O OPTIMIZATION VERIFICATION -----------
-
         //  Calculate result using declaration_of[]
         auto result = static_cast<declaration_sym const*>(nullptr);
 
@@ -502,226 +482,34 @@ public:
 
         }
 
-        //--------- START TEMPORARY REGRESSION TEST CODE FOR G_D_O OPTIMIZATION VERIFICATION ---------
-        //  Now do a regression test violation check
-        //
-        if (
-            flag_internal_debug
-            && result_old != result
-            )
-        {
-            std::cerr << "\n  Internal compiler error - see cppfront-ice-data.out for debug information\n\n";
+        ////--------- START TEMPORARY REGRESSION TEST CODE FOR G_D_O OPTIMIZATION VERIFICATION ---------
+        ////  Now do a regression test violation check
+        ////
+        //if (
+        //    flag_internal_debug
+        //    && result_old != result
+        //    )
+        //{
+        //    std::cerr << "\n  Internal compiler error - see cppfront-ice-data.out for debug information\n\n";
 
-            auto out = std::ofstream{"cppfront-ice-data.out"};
+        //    auto out = std::ofstream{"cppfront-ice-data.out"};
 
-            out << "g_d_o arguments:\n";
-            out << "    " << static_cast<void const*>(&t) << " -> " << t.as_string_view() << " @ " << t.position().to_string()
-                << ", token order # " << t.get_global_token_order() << "\n";
-            out << "    look_beyond_current_function: " << std::boolalpha << look_beyond_current_function << "\n";
-            out << "    include_implicit_this:        " << std::boolalpha << include_implicit_this        << "\n";
+        //    out << "g_d_o arguments:\n";
+        //    out << "    " << static_cast<void const*>(&t) << " -> " << t.as_string_view() << " @ " << t.position().to_string()
+        //        << ", token order # " << t.get_global_token_order() << "\n";
+        //    out << "    look_beyond_current_function: " << std::boolalpha << look_beyond_current_function << "\n";
+        //    out << "    include_implicit_this:        " << std::boolalpha << include_implicit_this        << "\n";
 
-            out << "result_old:    "       << static_cast<void const*>(result_old) << "\n";
-            out << "result:        "       << static_cast<void const*>(result    ) << "\n\n";
+        //    out << "result_old:    "       << static_cast<void const*>(result_old) << "\n";
+        //    out << "result:        "       << static_cast<void const*>(result    ) << "\n\n";
 
-            debug_print(out);
+        //    debug_print(out);
 
-            exit(EXIT_FAILURE);
-        }
-        //--------- END TEMPORARY REGRESSION TEST CODE FOR G_D_O OPTIMIZATION VERIFICATION -----------
+        //    exit(EXIT_FAILURE);
+        //}
+        ////--------- END TEMPORARY REGRESSION TEST CODE FOR G_D_O OPTIMIZATION VERIFICATION -----------
 
         return result;
-    }
-
-    //-----------------------------------------------------------------------
-    //  Unoptimized version: Baseline to check against for regressions
-    //
-    auto get_declaration_of_old(
-        token const& t,
-        bool         look_beyond_current_function = false,
-        bool         include_implicit_this        = false
-    ) const
-        -> declaration_sym const*
-    {
-        CPP2_SCOPE_TIMER("get_declaration_of - old");
-
-        //  First find the position the query is coming from
-        //  and remember its depth
-        auto i = symbols.cbegin();
-        while (
-            i != symbols.cend()
-            && i->get_global_token_order() < t.get_global_token_order()
-            )
-        {
-            ++i;
-        }
-
-        if (i == symbols.cbegin()) {
-            return nullptr;
-        }
-
-        auto depth = 0;
-
-        //  If we found it exactly, we have its depth
-        if (
-            i != symbols.cend()
-            && i->get_global_token_order() == t.get_global_token_order()
-            )
-        {
-            depth = i->depth;
-        }
-        //  Else we're at cend or at the entry for the following token,
-        //  so move backward one entry to approximate the location
-        else
-        {
-            //  OK since we already checked that we're not at cbegin
-            --i;
-
-            //  If we're now at cbegin, not found
-            if (i == symbols.cbegin()) {
-                return nullptr;
-            }
-
-            //  Else if this location is the end of a named non-object
-            //  declaration, go to its beginning
-            if (i->is_declaration())
-            {
-                auto find_start_of_name = static_cast<token const*>(nullptr);
-
-                if (
-                    !i->start
-                    && !i->as_declaration().declaration->is_object()
-                    )
-                {
-                    find_start_of_name = i->as_declaration().declaration->name();
-                }
-
-                if (find_start_of_name)
-                {
-                    //  We want to go backwards until we're at the corresponding
-                    //  declaration start, and there could be intervening nested
-                    //  declaration ends/starts to pass by
-                    int relative_decl_depth = 1;
-                    while (--i != symbols.cbegin()) {
-                        if (
-                            i->is_declaration()
-                            && !i->as_declaration().declaration->is_object()
-                            )
-                        {
-                            if (i->start) {
-                                --relative_decl_depth;
-                                if (relative_decl_depth == 0) {
-                                    //  With proper nesting, this should be the name we're looking for
-                                    assert(
-                                        i->as_declaration().declaration->has_name(
-                                            find_start_of_name->as_string_view()
-                                        )
-                                    );
-                                    break;
-                                }
-                            }
-                            else {
-                                ++relative_decl_depth;
-                            }
-                        }
-                    }
-
-                    //  This shouldn't happen with correct nesting, so
-                    //  alternatively we could assert(i != symbols.cbegin())
-                    if (i == symbols.cbegin()) {
-                        return nullptr;
-                    }
-                }
-            }
-
-            depth = i->depth;
-        }
-
-        //  Then look backward to find the first declaration of
-        //  this name that is not deeper (in a nested scope)
-        //  and is in the same function
-        using I = stable_vector<symbol>::const_iterator;
-        auto advance = [](I& i, int n, I bound) {  // TODO Use `std::ranges::advance`
-            auto in = i;
-            if (std::abs(n) >= std::abs(bound - i)) {
-                i = bound;
-            }
-            else {
-                std::advance(i, n);
-            }
-            return n - (i - in);
-        };
-        advance(i, -int(i->position() > t.position()), symbols.cbegin());
-        advance(i, 1, symbols.cend());
-        while (advance(i, -1, symbols.begin()) == 0)
-        {
-            if (
-                i->sym.index() == symbol::active::declaration
-                && i->depth <= depth
-                )
-            {
-                auto const& decl = std::get<symbol::active::declaration>(i->sym);
-
-                //  Conditionally look beyond the start of the current named (has identifier)
-                //  function (an unnamed function is ok to look beyond) or enclosing scope
-                assert(decl.declaration);
-                if (
-                    (
-                        decl.declaration->type.index() == declaration_node::a_function
-                     || decl.declaration->type.index() == declaration_node::a_type
-                     || decl.declaration->type.index() == declaration_node::a_namespace
-                        )
-                    && decl.declaration->identifier
-                    && !look_beyond_current_function
-                    )
-                {
-                    return nullptr;
-                }
-
-                //  If the name matches, this is it
-                if (
-                    decl.identifier
-                    && *decl.identifier == t
-                    )
-                {
-                    return &decl;
-                }
-
-                //  If we reached a 'move this' parameter, look it up in the type members
-                if (
-                    include_implicit_this
-                    && decl.identifier
-                    && *decl.identifier == "this"
-                    )
-                {
-                    if (auto n = decl.declaration;
-                        decl.parameter
-                        && decl.parameter->pass == passing_style::move
-                        && n
-                        && n->parent_is_function()
-                        && (n = n->parent_declaration)->parent_is_type()
-                        && n->my_statement
-                        && n->my_statement->compound_parent
-                        && std::any_of(
-                               n->my_statement->compound_parent->statements.begin(),
-                               n->my_statement->compound_parent->statements.end(),
-                               [&t, n](std::unique_ptr<statement_node> const& s) mutable {
-                                   return s
-                                          && s->statement.index() == statement_node::declaration
-                                          && (n = &*std::get<statement_node::declaration>(s->statement))->identifier
-                                          && n->identifier->to_string() == t;
-                               })
-                        )
-                    {
-                        return &decl;
-                    }
-                    return nullptr;
-                }
-
-                depth = i->depth;
-            }
-        }
-
-        return nullptr;
     }
 
 
@@ -1708,7 +1496,7 @@ public:
             if (
                 decl->declaration->is_type()
                 && n.ops[0].op
-                && n.ops[0].op->type() == lexeme::Dot
+                && (n.ops[0].op->type() == lexeme::Dot || n.ops[0].op->type() == lexeme::DotDot)
                 )
             {
                 errors.emplace_back(
@@ -2751,8 +2539,7 @@ public:
             //  If we found it exactly
             if ((*i)->declaration->has_name(t))
             {
-                //  SUCCESS: Record it and break
-                //declaration_of[&t] = { *i, in_current_function && (*i)->declaration->parent_is_function() };
+                //  SUCCESS: Break and record it
                 break;
             }
 
@@ -2788,8 +2575,10 @@ public:
                     //  PARTIAL SUCCESS: Record the location of 'this' and keep going
                     //
                     found_this = *i;
-                    prev_token_was_this = *prev2_token == "this" && *prev_token == ".";
-                    //declaration_of[&t] = { *i, in_current_function, *prev2_token == "this" && *prev_token == "." };
+                    prev_token_was_this = 
+                        *prev2_token == "this"
+                        && (prev_token->type() == lexeme::Dot || prev_token->type() == lexeme::DotDot)
+                        ;
                 }
             }
         }
@@ -2814,7 +2603,7 @@ public:
 
         auto started_member_access =
             prev_token
-            && prev_token->type() == lexeme::Dot;
+            && (prev_token->type() == lexeme::Dot || prev_token->type() == lexeme::DotDot);
         auto started_this_member_access =
             started_member_access
             && prev2_token

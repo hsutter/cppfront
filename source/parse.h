@@ -36,10 +36,6 @@ auto violates_lifetime_safety = false;
 auto is_prefix_operator(token const& tok)
     -> bool
 {
-    //if (to_passing_style(tok) != passing_style::invalid) {
-    //    return true;
-    //}
-
     switch (tok.type()) {
     break;case lexeme::Not:
           case lexeme::Minus:
@@ -1682,7 +1678,7 @@ auto postfix_expression_node::get_first_token_ignoring_this() const
         expr->get_token()
         && *expr->get_token() == "this"
         && std::ssize(ops) == 1
-        && ops[0].op->type() == lexeme::Dot
+        && (ops[0].op->type() == lexeme::Dot || ops[0].op->type() == lexeme::DotDot)
         )
     {
         return ops[0].id_expr->get_token();
@@ -5820,6 +5816,7 @@ private:
     //G     postfix-expression '[' expression-list? ','? ']'
     //G     postfix-expression '(' expression-list? ','? ')'
     //G     postfix-expression '.' id-expression
+    //G     postfix-expression '..' id-expression
     //G
     auto postfix_expression()
         -> std::unique_ptr<postfix_expression_node>
@@ -5837,7 +5834,8 @@ private:
                 || curr().type() == lexeme::LeftBracket
                 || curr().type() == lexeme::LeftParen
                 || curr().type() == lexeme::Dot
-            )
+                || curr().type() == lexeme::DotDot
+                )
             )
         {
             //  * and & can't be unary operators if followed by a (, identifier, or literal
@@ -5916,7 +5914,10 @@ private:
                     break;
                 }
             }
-            else if (term.op->type() == lexeme::Dot)
+            else if (
+                term.op->type() == lexeme::Dot
+                || term.op->type() == lexeme::DotDot
+                )
             {
                 term.id_expr = id_expression();
                 if (!term.id_expr) {
