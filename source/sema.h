@@ -2449,11 +2449,17 @@ public:
         }
 
         //  All the scope-local names stay active for lookup until the end of their scope
-        while (current_declarations.back()) {
+        while (
+            !current_declarations.empty() 
+            && current_declarations.back() != nullptr
+            )
+        {
             current_declarations.pop_back();
         }
-        assert(!current_declarations.back());   // we're popping a lifetime scope
-        current_declarations.pop_back();
+        if (!current_declarations.empty()) {
+            assert(current_declarations.back() == nullptr); // we're popping a lifetime scope
+            current_declarations.pop_back();
+        }
 
         indices_of_uses_per_scope.pop_back();
         indices_of_activations_per_scope.pop_back();
