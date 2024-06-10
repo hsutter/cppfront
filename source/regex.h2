@@ -377,7 +377,15 @@ parse_context_group_state: @struct type = {
         }
     }
 
-    add: (inout this, token: token_ptr) = cur_match_list.push_back(token);
+    add: (inout this, token: token_ptr) = {
+        if token* is char_token && !cur_match_list.empty() && cur_match_list.back()* is char_token {
+            // This and the last token are char tokens. Combine them.
+            (cur_match_list.back()* as char_token).append(token* as char_token);
+        }
+        else {
+            cur_match_list.push_back(token);
+        }
+    }
 
     empty: (this) -> bool = cur_match_list.empty();
 }
@@ -1203,7 +1211,7 @@ any_token_matcher: <CharT, single_line: bool> (inout cur, inout ctx) -> bool = {
 char_token: @polymorphic_base type = {
     this: regex_token_base;
 
-    token: char;
+    token: std::string;
     ignore_case: bool;
 
     operator=: (out this, t: char, ignore_case_: bool) = {
@@ -1218,41 +1226,113 @@ char_token: @polymorphic_base type = {
 
     generate_code: (override this, inout ctx: generation_context) = {
         if ignore_case {
-            upper: = safe_toupper(token);
-            lower: = safe_tolower(token);
+            upper: std::string = token;
+            lower: std::string = token;
+
+            (copy i: int = 0) while i < token.ssize() next i += 1 {
+                lower[i] = safe_tolower(token[i]);
+                upper[i] = safe_toupper(token[i]);
+            }
 
             if upper != lower {
-                ctx.add_check("char_token_case_insensitive_matcher<char, '(lower)$', '(upper)$'>((ctx.match_parameters())$)");
+                gen_case_insensitive(lower, upper, ctx);
             }
             else {
-                ctx.add_check("char_token_matcher<char, '(token)$'>((ctx.match_parameters())$)");
+                gen_case_sensitive(ctx);
             }
         }
         else {
-            ctx.add_check("char_token_matcher<char, '(token)$'>((ctx.match_parameters())$)");
+            gen_case_sensitive(ctx);
         }
     }
+
+    gen_case_insensitive: (this, lower: std::string, upper: std::string, inout ctx: generation_context) = {
+        name: std::string = "str_(ctx.gen_temp())$";
+        lower_name: std::string = "lower_(name)$";
+        upper_name: std::string = "upper_(name)$";
+        size := token.size();
+        ctx.add("(lower_name)$ : std::array<char, (size)$ + 1> = \"(add_escapes(lower))$\";"); // TODO: Add constexpr when Issue https://github.com/hsutter/cppfront/issues/1104 is resolved.
+        ctx.add("(upper_name)$ : std::array<char, (size)$ + 1> = \"(add_escapes(upper))$\";"); // TODO: Add constexpr when Issue https://github.com/hsutter/cppfront/issues/1104 is resolved.
+        ctx.add("if !(std::distance(r.pos, ctx.end) < (size)$) {");
+        ctx.add("    r.matched = false;");
+        ctx.add("    return r;");
+        ctx.add("}");
+        ctx.add("");
+        ctx.add("(copy i : int = 0) while i < (size)$ next (i += 1) {");
+        ctx.add("    if !((lower_name)$[i] == r.pos[i] || (upper_name)$[i] == r.pos[i]) { r.matched = false; }");
+        ctx.add("}");
+        ctx.add("");
+        ctx.add("if r.matched { r.pos += (size)$; }");
+        ctx.add("else { return r; }");
+    }
+
+    gen_case_sensitive: (this, inout ctx: generation_context) = {
+        name: std::string = "str_(ctx.gen_temp())$";
+        size := token.size();
+        ctx.add("(name)$ : std::array<char, (size)$ + 1> = \"(add_escapes(token))$\";"); // TODO: Add constexpr when Issue https://github.com/hsutter/cppfront/issues/1104 is resolved.
+        ctx.add("if !(std::distance(r.pos, ctx.end) < (size)$) {");
+        ctx.add("    r.matched = false;");
+        ctx.add("    return r;");
+        ctx.add("}");
+        ctx.add("");
+        ctx.add("(copy i : int = 0) while i < (size)$ next (i += 1) {");
+        ctx.add("    if (name)$[i] != r.pos[i] { r.matched = false; }");
+        ctx.add("}");
+        ctx.add("");
+        ctx.add("if r.matched { r.pos += (size)$; }");
+        ctx.add("else { break; }");
+    }
+
+    add_escapes: (this, copy str: std::string) -> std::string = {
+        str = replace_all(str, "\\", "\\\\");
+        str = replace_all(str, "\a", "\\a");
+        str = replace_all(str, "\f", "\\f");
+        str = replace_all(str, "\e", "\\e");
+        str = replace_all(str, "\n", "\\n");
+        str = replace_all(str, "\r", "\\r");
+        str = replace_all(str, "\t", "\\t");
+
+        return str;
+    }
+
+    append: (inout this, that) = {
+        this.token += that.token;
+        this.string_rep += that.string_rep;
+    }
 }
 
-char_token_matcher: <CharT, C: CharT> (inout cur, inout ctx) -> bool = {
-    if cur != ctx.end && cur* == C {
-        cur += 1;
-        return true;
-    }
-    else {
-        return false;
-    }
-}
+// TODO: Check if vectorization works at some point with this implementation.
+// char_token_matcher: <tokens: fixed_string> (inout cur, inout ctx) -> bool = {
+//     if !(std::distance(cur, ctx.end) < tokens.size()) {
+//         return false;
+//     }
+//     matched : bool = true;
+//     (copy i: int = 0) while i < tokens.size() next i += 1 {
+//         if tokens.data()[i] != cur[i] {
+//             matched = false; // No break for performance optimization. Without break, the loop vectorizes.
+//         }
+//     }
+//     if matched {
+//         cur += tokens.size();
+//     }
+//     return matched;
+// }
 
-char_token_case_insensitive_matcher: <CharT, L: CharT, U: CharT> (inout cur, inout ctx) -> bool = {
-    if cur != ctx.end && (cur* == L || cur* == U) {
-        cur += 1;
-        return true;
-    }
-    else {
-        return false;
-    }
-}
+// char_token_case_insensitive_matcher: <lower: fixed_string, upper: fixed_string> (inout cur, inout ctx) -> bool = {
+//     if !(std::distance(cur, ctx.end) < lower.size()) {
+//         return false;
+//     }
+//     matched : bool = true;
+//     (copy i : int = 0) while i < lower.size() next i += 1 {
+//         if !(lower.data()[i] == cur[i] || upper.data()[i] == cur[i]) {
+//             matched = false; // No break for performance optimization. Without break, the loop vectorizes.
+//         }
+//     }
+//     if matched {
+//         cur += lower.size();
+//     }
+//     return matched;
+// }
 
 // Regex syntax: [<character classes>]  Example: [abcx-y[:digits:]]
 //
@@ -1452,7 +1532,19 @@ escape_token_parse: (inout ctx: parse_context) -> token_ptr = {
 
     if std::string::npos != std::string("afenrt\\").find(ctx.current()) {
         // Escape of string special char
-        return shared.new<escaped_char_token>(ctx.current());
+        t : char = '\0';
+        if      'a' == ctx.current() { t = '\a'; }
+        else if 'f' == ctx.current() { t = '\f'; }
+        else if 'e' == ctx.current() { t = '\e'; }
+        else if 'n' == ctx.current() { t = '\n'; }
+        else if 'r' == ctx.current() { t = '\r'; }
+        else if 't' == ctx.current() { t = '\t'; }
+        else if '\\' == ctx.current() { t = '\\'; }
+        else { /* TODO: throw error */ }
+        r: = shared.new<char_token>(t, false);
+        r*.set_string("\\\\(ctx.current())$");
+
+        return r;
     } else {
         // Escape of regex special char
         r := shared.new<char_token>(ctx.current(), false);
@@ -1461,21 +1553,6 @@ escape_token_parse: (inout ctx: parse_context) -> token_ptr = {
         return r;
     }
 
-}
-
-escaped_char_token: @polymorphic_base type = {
-    this: regex_token_base;
-
-    token: char;
-
-    operator=: (out this, t: char) = {
-        regex_token_base = "\\\\(t)$";
-        token = t;
-    }
-
-    generate_code: (override this, inout ctx: generation_context) = {
-        ctx.add_check("char_token_matcher<char, '\\(token)$'>((ctx.match_parameters())$)");
-    }
 }
 
 // Regex syntax: \K Example: ab\Kcd
