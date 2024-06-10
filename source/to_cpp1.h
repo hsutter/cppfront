@@ -272,9 +272,6 @@ private:
     )
         -> void
     {
-if (s.starts_with("..")) {
-    s == s;
-}
         //  Take ownership of (and reset) just_printed_line_directive value
         auto line_directive_already_done = std::exchange(just_printed_line_directive, false);
 
