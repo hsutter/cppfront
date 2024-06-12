@@ -844,7 +844,7 @@ generation_context: type = {
 
     add_check: (inout this, check: std::string) = {
         cur := get_current();
-        cur*.code += "(cur*.tabs)$if !cpp2::regex::(check)$ { r = ctx.fail(); return r; }\n";
+        cur*.code += "(cur*.tabs)$if !cpp2::regex::(check)$ { r.matched = false; break; }\n";
     }
 
     add_statefull: (inout this, next_func: std::string, c: std::string) = {
@@ -908,7 +908,8 @@ generation_context: type = {
         cur*.code += "(cur*.tabs)$(name)$: @struct type = {\n";
         cur*.code += "(cur*.tabs)$  operator(): (this, cur: Iter, inout ctx: context, other) -> cpp2::regex::match_return<Iter> = {\n";
         cur*.code += "(cur*.tabs)$    r := ctx.pass(cur);\n";
-        cur*.add_tabs(2);
+        cur*.code += "(cur*.tabs)$    do {\n";
+        cur*.add_tabs(3);
     }
 
     start_func: (inout this) -> std::string = {
@@ -919,9 +920,15 @@ generation_context: type = {
 
     end_func_statefull: (inout this, s: std::string) = {
         cur := get_current();
-        cur*.remove_tabs(2);
+        cur*.remove_tabs(3);
         cur*.code += "\n";
-        cur*.code += "(cur*.tabs)$    r = (s)$;\n";
+        cur*.code += "(cur*.tabs)$    } while false;\n";
+        cur*.code += "(cur*.tabs)$    if r.matched {\n";
+        cur*.code += "(cur*.tabs)$      r = (s)$;\n";
+        cur*.code += "(cur*.tabs)$    }\n";
+        cur*.code += "(cur*.tabs)$    else {\n";
+        cur*.code += "(cur*.tabs)$      r.pos = ctx.end;\n";
+        cur*.code += "(cur*.tabs)$    }\n";
         cur*.code += "(cur*.tabs)$    return r;\n";
         cur*.code += "(cur*.tabs)$  }\n";
         cur*.code += "(cur*.tabs)$}\n";
@@ -1255,7 +1262,7 @@ char_token: @polymorphic_base type = {
         ctx.add("(upper_name)$ : std::array<char, (size)$ + 1> = \"(add_escapes(upper))$\";"); // TODO: Add constexpr when Issue https://github.com/hsutter/cppfront/issues/1104 is resolved.
         ctx.add("if !(std::distance(r.pos, ctx.end) < (size)$) {");
         ctx.add("    r.matched = false;");
-        ctx.add("    return r;");
+        ctx.add("    break;");
         ctx.add("}");
         ctx.add("");
         ctx.add("(copy i : int = 0) while i < (size)$ next (i += 1) {");
@@ -1263,7 +1270,7 @@ char_token: @polymorphic_base type = {
         ctx.add("}");
         ctx.add("");
         ctx.add("if r.matched { r.pos += (size)$; }");
-        ctx.add("else { return r; }");
+        ctx.add("else { break; }");
     }
 
     gen_case_sensitive: (this, inout ctx: generation_context) = {
@@ -1272,7 +1279,7 @@ char_token: @polymorphic_base type = {
         ctx.add("(name)$ : std::array<char, (size)$ + 1> = \"(add_escapes(token))$\";"); // TODO: Add constexpr when Issue https://github.com/hsutter/cppfront/issues/1104 is resolved.
         ctx.add("if !(std::distance(r.pos, ctx.end) < (size)$) {");
         ctx.add("    r.matched = false;");
-        ctx.add("    return r;");
+        ctx.add("    break;");
         ctx.add("}");
         ctx.add("");
         ctx.add("(copy i : int = 0) while i < (size)$ next (i += 1) {");
