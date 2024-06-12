@@ -506,7 +506,7 @@ struct expression_statement_node;
 
 struct expression_node
 {
-    static inline std::vector<expression_node*> current_expressions = {};
+    static inline std::vector<expression_node*> current_expressions = {};   // TODO: static ?
 
     std::unique_ptr<assignment_expression_node> expr;
     int num_subexpressions = 0;
@@ -759,7 +759,7 @@ auto primary_expression_node::get_literal() const
 
 struct expression_statement_node
 {
-    static inline std::vector<expression_statement_node*> current_expression_statements = {};
+    static inline std::vector<expression_statement_node*> current_expression_statements = {};   // TODO: static ?
 
     std::unique_ptr<expression_node> expr;
     bool has_semicolon = false;
@@ -2479,6 +2479,18 @@ struct function_type_node
         return has_parameter_with_name_and_pass(s, passing_style::in);
     }
 
+    auto has_copy_parameter_named(std::string_view s) const
+        -> bool
+    {
+        return has_parameter_with_name_and_pass(s, passing_style::copy);
+    }
+
+    auto has_inout_parameter_named(std::string_view s) const
+        -> bool
+    {
+        return has_parameter_with_name_and_pass(s, passing_style::inout);
+    }
+
     auto has_out_parameter_named(std::string_view s) const
         -> bool
     {
@@ -2489,6 +2501,12 @@ struct function_type_node
         -> bool
     {
         return has_parameter_with_name_and_pass(s, passing_style::move);
+    }
+
+    auto has_forward_parameter_named(std::string_view s) const
+        -> bool
+    {
+        return has_parameter_with_name_and_pass(s, passing_style::forward);
     }
 
     //  Internals
@@ -2696,8 +2714,8 @@ struct declaration_node
     bool member_function_generation = true;
 
     //  Cache some context
-    bool is_template_parameter = false;
-    bool is_parameter          = false;
+    bool is_a_template_parameter = false;
+    bool is_a_parameter          = false;
 
     //  Constructor
     //
@@ -2707,6 +2725,19 @@ struct declaration_node
 
     //  API
     //
+
+    auto is_template_parameter() const
+        -> bool
+    {
+        return is_a_template_parameter;
+    }
+
+    auto is_parameter() const
+        -> bool
+    {
+        return is_a_parameter;
+    }
+
     auto type_member_mark_for_removal()
         -> bool
     {
@@ -2910,6 +2941,24 @@ public:
         return std::get<a_function>(type)->has_in_parameter_named(s);
     }
 
+    auto has_copy_parameter_named(std::string_view s) const
+        -> bool
+    {
+        if (!is_function()) {
+            return false;
+        }
+        return std::get<a_function>(type)->has_copy_parameter_named(s);
+    }
+
+    auto has_inout_parameter_named(std::string_view s) const
+        -> bool
+    {
+        if (!is_function()) {
+            return false;
+        }
+        return std::get<a_function>(type)->has_inout_parameter_named(s);
+    }
+
     auto has_out_parameter_named(std::string_view s) const
         -> bool
     {
@@ -2926,6 +2975,15 @@ public:
             return false;
         }
         return std::get<a_function>(type)->has_move_parameter_named(s);
+    }
+
+    auto has_forward_parameter_named(std::string_view s) const
+        -> bool
+    {
+        if (!is_function()) {
+            return false;
+        }
+        return std::get<a_function>(type)->has_forward_parameter_named(s);
     }
 
     auto nth_parameter_type_name(int n) const
@@ -5115,7 +5173,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
             initializer.pop_back();
         }
     }
-    else if (!n.is_parameter) {
+    else if (!n.is_parameter()) {
         initializer = ";";
     }
 
@@ -5128,7 +5186,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
     if (
         !n.parent_is_function()
         && !n.parent_is_object()
-        && !n.is_parameter
+        && !n.is_parameter()
         )
     {
         static declaration_node const* last_parent_type = {};
@@ -5144,7 +5202,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
             ret += "\n";
         }
     }
-    if (!n.is_parameter && n.name()) {
+    if (!n.is_parameter() && n.name()) {
         ret += std::string{"\n"} + pre(indent);
     }
 
@@ -5159,7 +5217,7 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
         ret += pretty_print_visualize(*n.identifier, indent);
     }
 
-    if (n.is_parameter && (n.has_name("this") || n.has_name("that"))) {
+    if (n.is_parameter() && (n.has_name("this") || n.has_name("that"))) {
         return ret;
     }
 
@@ -5318,7 +5376,7 @@ class parser
     };
 
     std::vector<token> const* tokens = {};
-    std::deque<token>* generated_tokens = {};
+    stable_vector<token>*     generated_tokens = {};
     int pos = 0;
     std::string parse_kind = {};
 
@@ -5417,8 +5475,8 @@ public:
     //  sections in a TU to build the whole TU's parse tree
     //
     auto parse(
-        std::vector<token> const& tokens_,
-        std::deque<token>&        generated_tokens_
+        std::vector<token> const&  tokens_,
+        stable_vector<token>&      generated_tokens_
     )
         -> bool
     {
@@ -5456,7 +5514,7 @@ public:
     //
     auto parse_one_declaration(
         std::vector<token> const& tokens_,
-        std::deque<token>&        generated_tokens_
+        stable_vector<token>&     generated_tokens_
     )
         -> std::unique_ptr<statement_node>
     {
@@ -5521,7 +5579,7 @@ public:
     //-----------------------------------------------------------------------
     //  visit
     //
-    auto visit(auto& v) -> void
+    auto visit(auto& v) const -> void
     {
         parse_tree->visit(v, 0);
     }
@@ -5758,7 +5816,7 @@ private:
 
     //G postfix-expression:
     //G     primary-expression
-    //G     postfix-expression postfix-operator     [Note: without whitespace before the operator]
+    //G     postfix-expression postfix-operator
     //G     postfix-expression '[' expression-list? ','? ']'
     //G     postfix-expression '(' expression-list? ','? ')'
     //G     postfix-expression '.' id-expression
@@ -5775,23 +5833,18 @@ private:
         while (
             !done()
             && (
-                (is_postfix_operator(curr().type())
-                    //  Postfix operators must be lexically adjacent
-                    && curr().position().lineno == peek(-1)->position().lineno
-                    && curr().position().colno == peek(-1)->position().colno + peek(-1)->length()
-                )
+                is_postfix_operator(curr().type())
                 || curr().type() == lexeme::LeftBracket
                 || curr().type() == lexeme::LeftParen
                 || curr().type() == lexeme::Dot
             )
             )
         {
-            //  these can't be unary operators if followed by a (, identifier, or literal
+            //  * and & can't be unary operators if followed by a (, identifier, or literal
             if (
                 (
                     curr().type() == lexeme::Multiply
                     || curr().type() == lexeme::Ampersand
-                    || curr().type() == lexeme::Tilde
                     )
                 && peek(1)
                 && (
@@ -5801,18 +5854,6 @@ private:
                     )
                 )
             {
-                auto op  = curr().to_string();
-                auto msg = "postfix unary " + op;
-                if      (curr().type() == lexeme::Multiply ) { msg += " (dereference)"          ; }
-                else if (curr().type() == lexeme::Ampersand) { msg += " (address-of)"           ; }
-                else if (curr().type() == lexeme::Tilde    ) { msg += " (unary bit-complement)" ; }
-                msg += " cannot be immediately followed by a (, identifier, or literal - add whitespace before "
-                    + op + " here if you meant binary " + op;
-                if      (curr().type() == lexeme::Multiply ) { msg += " (multiplication)"       ; }
-                else if (curr().type() == lexeme::Ampersand) { msg += " (bitwise and)"          ; }
-                else if (curr().type() == lexeme::Tilde    ) { msg += " (binary bit-complement)"; }
-
-                error(msg, false);
                 break;
             }
 
@@ -9074,8 +9115,8 @@ private:
         }
 
         //  Cache some context
-        n->is_template_parameter = is_template_parameter;
-        n->is_parameter          = is_parameter;
+        n->is_a_template_parameter = is_template_parameter;
+        n->is_a_parameter          = is_parameter;
 
         return n;
     }
@@ -9102,7 +9143,7 @@ public:
     //-----------------------------------------------------------------------
     //  debug_print
     //
-    auto debug_print(std::ostream& o)
+    auto debug_print(std::ostream& o) const
         -> void;
 };
 
@@ -9410,7 +9451,7 @@ public:
 };
 
 
-auto parser::debug_print(std::ostream& o)
+auto parser::debug_print(std::ostream& o) const
 
     -> void
 {

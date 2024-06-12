@@ -68,15 +68,15 @@ namespace ns {
 auto main() -> int{
   {
     int f {CPP2_UFCS(f)(t())}; 
-    if (cpp2::cpp2_default.is_active() && !(std::move(f) == 0) ) { cpp2::cpp2_default.report_violation(""); }
+    if (cpp2::cpp2_default.is_active() && !(cpp2::move(f) == 0) ) { cpp2::cpp2_default.report_violation(""); }
   }
   {
     auto f {t().f()}; 
-    if (cpp2::cpp2_default.is_active() && !(std::move(f) == 0) ) { cpp2::cpp2_default.report_violation(""); }
+    if (cpp2::cpp2_default.is_active() && !(cpp2::move(f) == 0) ) { cpp2::cpp2_default.report_violation(""); }
   }
   {
     auto f {t().f()}; 
-    if (cpp2::cpp2_default.is_active() && !(std::move(f) == 0) ) { cpp2::cpp2_default.report_violation(""); }
+    if (cpp2::cpp2_default.is_active() && !(cpp2::move(f) == 0) ) { cpp2::cpp2_default.report_violation(""); }
   }
 {
 auto const& f{t().f()};
@@ -102,7 +102,7 @@ auto const& f{t().f()};
       if (cpp2::cpp2_default.is_active() && !(CPP2_UFCS(f)(t()) == 0) ) { cpp2::cpp2_default.report_violation(""); }
       return CPP2_UFCS(f)(u()); 
     }(identity())}; 
-    static_cast<void>(std::move(f));
+    static_cast<void>(cpp2::move(f));
   }
   { // Rejected by MSVC.
     // f := :<f: _> (copy _: std::integral_constant<identity, f>) -> _ = {
@@ -125,7 +125,7 @@ cpp2::impl::in<identity> f{identity()};
 }
 #line 61 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
     }}; 
-    static_cast<void>(std::move(f));
+    static_cast<void>(cpp2::move(f));
   }
   {
     auto f {[]() mutable -> void{
@@ -133,16 +133,16 @@ cpp2::impl::in<identity> f{identity()};
       static_assert(CPP2_UFCS(f)(t()) == 0);
       // static_assert(u().f() == 1);
     }}; 
-    static_cast<void>(std::move(f));
+    static_cast<void>(cpp2::move(f));
   }
   {
     auto f {[]() mutable -> void{
       static_assert(t().f() == 0);
       auto g {[]<typename T>([[maybe_unused]] T const& unnamed_param_1) mutable -> std::void_t<decltype(T().f())>{}}; 
-      static_assert(!(std::is_invocable_v<decltype(std::move(g)),u>));
+      static_assert(!(std::is_invocable_v<decltype(cpp2::move(g)),u>));
       using ns::f;
     }}; 
-    static_cast<void>(std::move(f));
+    static_cast<void>(cpp2::move(f));
   }
   {
     auto f {[]() mutable -> void{
@@ -156,23 +156,23 @@ cpp2::impl::in<identity> f{identity()};
         // static_assert(u().f() == 1);
       }
     }}; 
-    static_cast<void>(std::move(f));
+    static_cast<void>(cpp2::move(f));
   }
   {
     auto f {[]() mutable -> void{
       static_cast<void>([]() mutable -> void{
         static_assert(t().f() == 0);
         auto g {[]<typename T>([[maybe_unused]] T const& unnamed_param_1) mutable -> std::void_t<decltype(T().f())>{}}; 
-        static_assert(!(std::is_invocable_v<decltype(std::move(g)),u>));
+        static_assert(!(std::is_invocable_v<decltype(cpp2::move(g)),u>));
       });
       {
         static_assert(t().f() == 0);
         auto g {[]<typename T>([[maybe_unused]] T const& unnamed_param_1) mutable -> std::void_t<decltype(T().f())>{}}; 
-        static_assert(!(std::is_invocable_v<decltype(std::move(g)),u>));
+        static_assert(!(std::is_invocable_v<decltype(cpp2::move(g)),u>));
       }
       using ns::f;
     }}; 
-    static_cast<void>(std::move(f));
+    static_cast<void>(cpp2::move(f));
   }
 }
 

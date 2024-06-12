@@ -37,7 +37,7 @@ auto insert_at(cpp2::impl::in<int> where, cpp2::impl::in<int> val) -> void;
 
     std::ranges::for_each(vec, callback);
     y = "-ish\n";
-    std::ranges::for_each(std::move(vec), std::move(callback));
+    std::ranges::for_each(cpp2::move(vec), cpp2::move(callback));
 }
 
 std::vector<int> vec {}; 

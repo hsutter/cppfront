@@ -67,7 +67,7 @@ All lists use `,` commas between list items, and may be enclosed by
 
 For example:
 
-``` cpp title="Lists, using optional trailing commas just because we can" hl_lines="1 4 6 7"
+``` cpp title="Lists" hl_lines="1 4 6 7"
 print: <T,U> (t: T, u: U) = std::cout << t << u << "\n";
 
 main: () = {
@@ -223,7 +223,6 @@ Unary suffix operators must not be preceded by whitespace. When `*`, `&`, and `~
 |---|---|---|
 | `#!cpp *` | `#!cpp pobj* * 42` | `#!cpp (*pobj)*42` |
 | `#!cpp &` | `#!cpp obj& & mask` <p> (note: allowed in unsafe code only) | `#!cpp &obj & mask` |
-| `#!cpp ~` | `#!cpp ~val ~ bitcomplement` | `#!cpp val~ ~ bitcomplement` |
 
 For more details, see [Design note: Postfix unary operators vs binary operators](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Postfix-unary-operators-vs-binary-operators).
 

@@ -32,7 +32,7 @@ For example:
 ``` cpp title="Precondition and postcondition examples" hl_lines="2 3"
 insert_at: (container, where: int, val: int)
     pre<bounds_safety>( 0 <= where <= container.ssize(), "position (where)$ is outside 'container'" )
-    post       ( container.ssize() == container.ssize()$ + 1 )
+    post              ( container.ssize() == container.ssize()$ + 1 )
 = {
     _ = container.insert( container.begin()+where, val );
 }

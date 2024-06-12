@@ -91,7 +91,7 @@ struct X { operator int() const { return I; } };
     v = X<16>(); std::cout << ("move(v) as X<16> = " + cpp2::to_string(int(cpp2::impl::as_<X<16>>((std::move(v)))))) << std::endl;
     v = X<17>(); std::cout << ("move(v) as X<17> = " + cpp2::to_string(int(cpp2::impl::as_<X<17>>((std::move(v)))))) << std::endl;
     v = X<18>(); std::cout << ("move(v) as X<18> = " + cpp2::to_string(int(cpp2::impl::as_<X<18>>((std::move(v)))))) << std::endl;
-    v = X<19>(); std::cout << ("move(v) as X<19> = " + cpp2::to_string(int(cpp2::impl::as_<X<19>>((std::move(std::move(v))))))) << std::endl;
+    v = X<19>(); std::cout << ("move(v) as X<19> = " + cpp2::to_string(int(cpp2::impl::as_<X<19>>((std::move(cpp2::move(v))))))) << std::endl;
 
 }
 

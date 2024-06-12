@@ -31,7 +31,7 @@
     auto const x {2}; 
     auto* p {&x}; 
     auto const* q {&p}; 
-    if (cpp2::cpp2_default.is_active() && !(std::move(q)) ) { cpp2::cpp2_default.report_violation(""); }
+    if (cpp2::cpp2_default.is_active() && !(cpp2::move(q)) ) { cpp2::cpp2_default.report_violation(""); }
 
     if (cpp2::impl::is(x, (less_than(20)))) {
         std::cout << "yes, less\n";

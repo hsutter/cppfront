@@ -49,7 +49,7 @@ For example:
 
 
 
-## <a id="wildcard"></a> `_` — the "don't care" wildcard, including explicit discard
+## <a id="wildcard"></a> <a id="discard"></a> `_` — the "don't care" wildcard, including explicit discard
 
 `_` is pronounced **"don't care"** and allowed as a wildcard in most contexts. For example:
 
@@ -173,13 +173,11 @@ Here are some `as` casts with their Cpp1 equivalents. In this table, uppercase n
 
 ## <a id="inspect"></a> `inspect` — pattern matching
 
-An `inspect expr -> Type` expression allows pattern matching using `is`.
+An `inspect expr -> Type = { /* alternatives */ }` expression allows pattern matching using `is`.
 
 - `expr` is evaluated once.
 
-- Each alternative spelled `is C` is evaluated in order as if called with `expr is C`.
-
-- If an alternative evaluates to `#!cpp true`, then its `#!cpp = alternative;` body is used as the value of the entire `inspect` expression, and the meaning is the same as if the entire `inspect` expression had been written as just `#!cpp :Type = alternative;` — i.e., an unnamed object expression (aka 'temporary object') of type `Type` initialized with `alternative`.
+- Each alternative is spelled `is C = statement;` and are evaluated in order. Each `is C` is evaluated as if called with `expr is C`, and if it evaluates to `#!cpp true`, then its `#!cpp = alternative;` body is used as the value of the entire `inspect` expression, and the meaning is the same as if the entire `inspect` expression had been written as just `#!cpp :Type = alternative;` — i.e., an unnamed object expression (aka 'temporary object') of type `Type` initialized with `alternative`.
 
 - A catchall `is _` is required.
 
@@ -277,7 +275,7 @@ For example:
 
 ``` cpp title="Capture in contract postconditions" hl_lines="2"
 push_back: (coll, value)
-    [[post: coll.ssize() == coll.ssize()$ + 1]]
+    post(coll.ssize() == coll.ssize()$ + 1)
     //  Paste the value of `coll.ssize()`
 = {
     // ...

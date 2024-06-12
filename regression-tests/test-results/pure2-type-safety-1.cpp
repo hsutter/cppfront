@@ -47,15 +47,15 @@ auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void;
     a = 2;
     o = 3;
     test_generic(42,   "int");
-    test_generic(std::move(v), "variant<int, int, double>");
-    test_generic(std::move(a), "any");
-    test_generic(std::move(o), "optional<int>");
+    test_generic(cpp2::move(v), "variant<int, int, double>");
+    test_generic(cpp2::move(a), "any");
+    test_generic(cpp2::move(o), "optional<int>");
 }
 
 #line 24 "pure2-type-safety-1.cpp2"
 auto test_generic(auto const& x, auto const& msg) -> void{
     std::string msgx {msg}; 
-    print(std::move(msgx) + " is int? ", cpp2::impl::is<int>(x));
+    print(cpp2::move(msgx) + " is int? ", cpp2::impl::is<int>(x));
 }
 
 #line 29 "pure2-type-safety-1.cpp2"
@@ -63,6 +63,6 @@ auto print(cpp2::impl::in<std::string> msg, cpp2::impl::in<bool> b) -> void{
     cpp2::impl::deferred_init<char const*> bmsg; 
     if (b) { bmsg.construct("true");}
     else {bmsg.construct("false"); }
-    std::cout << std::setw(40) << msg << std::move(bmsg.value()) << "\n";
+    std::cout << std::setw(40) << msg << cpp2::move(bmsg.value()) << "\n";
 }
 

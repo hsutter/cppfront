@@ -1,0 +1,26 @@
+pure2-type-and-namespace-aliases.cpp2:3:61: error: no member named 'pmr' in namespace 'std'
+    template<typename T> using pmr_vec = std::vector<T,std::pmr::polymorphic_allocator<T>>;
+                                                       ~~~~~^
+pure2-type-and-namespace-aliases.cpp2:3:88: error: 'T' does not refer to a value
+    template<typename T> using pmr_vec = std::vector<T,std::pmr::polymorphic_allocator<T>>;
+                                                                                       ^
+pure2-type-and-namespace-aliases.cpp2:3:23: note: declared here
+    template<typename T> using pmr_vec = std::vector<T,std::pmr::polymorphic_allocator<T>>;
+                      ^
+pure2-type-and-namespace-aliases.cpp2:3:91: error: expected ';' after alias declaration
+    template<typename T> using pmr_vec = std::vector<T,std::pmr::polymorphic_allocator<T>>;
+                                                                                          ^
+                                                                                          ;
+pure2-type-and-namespace-aliases.cpp2:18:9: error: no member named 'pmr_vec' in namespace 'N'
+    N1::pmr_vec<myclass::str> v {"xyzzy", "plugh"}; 
+    ~~~~^
+pure2-type-and-namespace-aliases.cpp2:18:29: error: expected '(' for function-style cast or type construction
+    N1::pmr_vec<myclass::str> v {"xyzzy", "plugh"}; 
+                ~~~~~~~~~~~~^
+pure2-type-and-namespace-aliases.cpp2:18:31: error: use of undeclared identifier 'v'
+    N1::pmr_vec<myclass::str> v {"xyzzy", "plugh"}; 
+                              ^
+pure2-type-and-namespace-aliases.cpp2:20:27: error: use of undeclared identifier 'v'
+auto const& v2{cpp2::move(v)};
+                          ^
+7 errors generated.

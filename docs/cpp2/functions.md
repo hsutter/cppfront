@@ -27,19 +27,38 @@ func: (
 }
 ```
 
-There are six ways to pass parameters that cover all use cases:
+There are six ways to pass parameters that cover all use cases, that can be written before the parameter name:
 
 | Parameter ***kind*** | "Pass me an `x` I can ______" | Accepts arguments that are | Special semantics | ***kind*** `x: X` Compiles to Cpp1 as |
 |---|---|---|---|---|
 | `in` (default) | read from | anything | always `#!cpp const`<p>automatically passes by value if cheaply copyable | `X const x` or `X const& x` |
 | `copy` | take a copy of | anything | acts like a normal local variable initialized with the argument | `X x` |
 | `inout` | read from and write to | lvalues | | `X& x` |
-| `out` | write to (including construct) | lvalues, including uninitialized lvalues | must `=` assign/construct before other uses | `cpp2::out<X>` |
-| `move` | move from | rvalues | automatically moves from every definite last use | `X&&` |
+| `out` | write to (including construct) | lvalues (including uninitialized) | must `=` assign/construct before other uses | `cpp2::impl::out<X>` |
+| `move` | move from (consume the value of) | rvalues | automatically moves from every definite last use | `X&&` |
 | `forward` | forward | anything | automatically forwards from every definite last use | `T&&` constrained to type `X` |
 
-
 > Note: All parameters and other objects in Cpp2 are `#!cpp const` by default, except for local variables. For details, see [Design note: `#!cpp const` objects by default](https://github.com/hsutter/cppfront/wiki/Design-note%3A-const-objects-by-default).
+
+For example:
+
+``` cpp title="Declaring parameter kinds" hl_lines="2 3 10"
+append_x_to_y: (
+    x       : i32,          // an i32 I can read from (i.e., const)
+    inout y : std::string   // a string I can read from and write to
+    )
+= {
+    y = y + to_string(x);   // read x, read and write y
+}
+
+wrap_f: (
+    forward x               // a generic value of deduced type I can forward
+)                           //  (omitting x's  type means the same as ': _')
+= {
+    global_counter += x;    // ok to read x
+    f(x);                   // last use: automatically does 'std::forward<T>(x)'
+}
+```
 
 
 ## <a id="return-values"></a> Return values
@@ -188,7 +207,7 @@ else {
 
 **`#!cpp do`** and **`#!cpp while`** are like always in C++, except that `(` `)` parentheses around the condition are not required. Instead, `{` `}` braces around the loop body *are* required.
 
-**`#!cpp for range do (e)`** ***statement*** says "for each element in `range`, call it `e` and perform the statement." The loop parameter `(e)` is an ordinary parameter that can be passed isoing any [parameter passing style](#parameters); as always, the default is `in`, which is read-only and expresses a read-only loop. The statement is not required to be enclosed in braces.
+**`#!cpp for range do (e)`** ***statement*** says "for each element in `range`, call it `e` and perform the statement." The loop parameter `(e)` is an ordinary parameter that can be passed using any [parameter passing style](#parameters); as always, the default is `in`, which is read-only and expresses a read-only loop. The statement is not required to be enclosed in braces.
 
 Every loop can have a `next` clause, that is performed at the end of each loop body execution. This makes it easy to have a counter for any loop, including a range `#!cpp for` loop.
 
@@ -246,6 +265,22 @@ if   i % 2 == 1         // if i is odd
 //  prints:
 //      counter: 1, word: [Betty]
 ```
+
+Here is the equivalent of the Cpp1 code `for ( int i = 0; i < 10; ++i ){ std::cout << i; }`:
+
+``` cpp title="Equivalent of Cpp1 'for ( int i = 0; i < 10; ++i ){ std::cout << i; }'"
+(copy i := 0)
+while i < 10
+next  i++ {
+    std::cout << i;
+}
+```
+
+Line by line:
+
+- `(copy i := 0)`: Any statement can have [statement-local parameters](declarations.md#from-functions-to-local-scopes-and-back-again), and this is declaring `i` as an `int` that's local to the loop. Parameters by default are `const`, and for not-cheap-to-copy types they bind to the original value; so because we want to modify `i` we say `copy` to explicitly declare this is the loop's own mutable scratch variable.
+- `while i < 10`: The termination condition.
+- `next i++`: The end-of-loop-iteration statement. Note `++` is always postfix in Cpp2.
 
 
 ### Loop names, `#!cpp break`, and `#!cpp continue`

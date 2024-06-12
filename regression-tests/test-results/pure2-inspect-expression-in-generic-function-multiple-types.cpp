@@ -35,9 +35,9 @@ auto test_generic(auto const& x, auto const& msg) -> void;
     a = 2;
     o = 3;
     test_generic(42,   "int");
-    test_generic(std::move(v), "variant<int, int, double>");
-    test_generic(std::move(a), "any");
-    test_generic(std::move(o), "optional<int>");
+    test_generic(cpp2::move(v), "variant<int, int, double>");
+    test_generic(cpp2::move(a), "any");
+    test_generic(cpp2::move(o), "optional<int>");
 }
 
 #line 20 "pure2-inspect-expression-in-generic-function-multiple-types.cpp2"

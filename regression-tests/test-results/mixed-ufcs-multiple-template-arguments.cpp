@@ -40,7 +40,7 @@ struct X {
     std::string test_string {"The rain in Spain flows mainly down the drain"}; 
     std::cout << substr<4,8>(test_string) << "\n";
 
-    X x {std::move(test_string)}; 
-    std::cout << CPP2_UFCS_TEMPLATE(substr<4,8>)(std::move(x)) << "\n";
+    X x {cpp2::move(test_string)}; 
+    std::cout << CPP2_UFCS_TEMPLATE(substr<4,8>)(cpp2::move(x)) << "\n";
 }
 

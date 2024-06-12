@@ -1,0 +1,41 @@
+fun: (name, v) = {
+    std::cout << name << ": " <<
+                inspect v -> std::string {
+                is (42) = "42";
+                is (123) = "op_is";
+                is (-123) = "generic op_is";
+                is (4321) = "comparable";
+                is ("text") = "text";
+                is _ = "unknown";
+              }
+              << std::endl;
+}
+
+main: () -> int = {
+    fun("3.14", 3.14);
+    fun("42", 42);
+    fun("WithOp()", WithOp());
+    fun("WithGenOp()", WithGenOp());
+    fun("Cmp()", Cmp());
+    fun("std::string(\"text\")", std::string("text"));
+    fun("\"text\"", "text");
+    fun("std::string_view(\"text\")", std::string_view("text"));
+    fun(":std::vector = ('t','e','x','t','\\0')", :std::vector = ('t','e','x','t','\0'));
+}
+
+WithOp : type = {
+    op_is: (this, x : int) x == 123;
+}
+
+WithGenOp : type = {
+    op_is: (this, x) -> bool = {
+        if constexpr std::convertible_to<decltype(x), int> {
+            return x == -123;
+        }
+        return false;
+    }
+}
+
+Cmp : type = {
+    operator==: (this, x : int) -> bool = x == 4321;
+}

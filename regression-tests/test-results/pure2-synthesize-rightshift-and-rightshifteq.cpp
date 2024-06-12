@@ -24,7 +24,7 @@
 #line 2 "pure2-synthesize-rightshift-and-rightshifteq.cpp2"
     auto x {a}; 
     x >>= b * 2;
-    return std::move(x) >> 1; 
+    return cpp2::move(x) >> 1; 
 }
 
 #line 7 "pure2-synthesize-rightshift-and-rightshifteq.cpp2"

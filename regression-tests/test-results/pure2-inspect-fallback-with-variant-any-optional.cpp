@@ -31,9 +31,9 @@ auto test_generic(auto const& x, auto const& msg) -> void;
 
     std::cout << "\nAll these cases satisfy \"matches std::string\"\n";
 
-    test_generic(std::move(v), "variant<int, int, string>");
-    test_generic(std::move(a), "string");
-    test_generic(std::move(o), "optional<string>");
+    test_generic(cpp2::move(v), "variant<int, int, string>");
+    test_generic(cpp2::move(a), "string");
+    test_generic(cpp2::move(o), "optional<string>");
 }
 
 #line 14 "pure2-inspect-fallback-with-variant-any-optional.cpp2"

@@ -35,7 +35,7 @@ using g_ret = int;
 #line 3 "pure2-look-up-parameter-across-unnamed-function.cpp2"
     auto pred {[](auto const& e) mutable -> auto { return e == 1;  }}; 
     ri = 42;
-    std::move(pred)(ri);
+    cpp2::move(pred)(ri);
     return ri; // "return;" is implicit"
 }
 
@@ -46,7 +46,7 @@ using g_ret = int;
     ri.construct(0);
     auto pred {[](auto const& e) mutable -> auto { return e == 1;  }}; 
     ri.value() = 42;
-    std::move(pred)(ri.value());
+    cpp2::move(pred)(ri.value());
     return std::move(ri.value()); 
 }
 

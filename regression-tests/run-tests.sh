@@ -4,6 +4,8 @@
 usage() {
     echo "Usage: $0 -c <compiler> [-l <run label>] [-t <tests to run>]"
     echo "    -c <compiler>     The compiler to use for the test"
+    echo "    -s <cxx_std>      The C++ standard to compile with (e.g. 'c++20', 'c++2b', 'c++latest' depending on the compiler)"
+    echo "    -d <stdlib>       Clang-only: the C++ Standard Library to link with ('libstdc++', 'libc++', or 'default' for platform default)"
     echo "    -l <run label>    The label to use in output patch file name"
     echo "    -t <tests to run> Runs only the provided, comma-separated tests (filenames including .cpp2)"
     echo "                      If the argument is not used all tests are run"
@@ -46,7 +48,7 @@ check_file () {
     git ls-files --error-unmatch "$file" > /dev/null 2>&1
     untracked=$?
 
-    patch_file="$label$cxx_compiler.patch"
+    patch_file="${label}-${cxx_compiler}-${cxx_std}-${cxx_stdlib}.patch"
 
     if [[ $untracked -eq 1 ]]; then
         # Add the file to the index to be able to diff it...
@@ -67,14 +69,20 @@ check_file () {
     fi
 }
 
-optstring="c:l:t:"
+optstring="c:s:d:l:t:"
 while getopts ${optstring} arg; do
   case "${arg}" in
     c)
         cxx_compiler="${OPTARG}"
         ;;
+    s)
+        cxx_std="${OPTARG}"
+        ;;
+    d)
+        cxx_stdlib="${OPTARG}"
+        ;;
     l)
-        label="${OPTARG}-"
+        label="${OPTARG}"
         ;;
     t)
         # Replace commas with spaces
@@ -125,8 +133,8 @@ expected_results_dir="test-results"
 ################
 # Get the directory with the exec outputs and compilation command
 if [[ "$cxx_compiler" == *"cl.exe"* ]]; then
-    compiler_cmd='cl.exe -nologo -std:c++latest -MD -EHsc -I ..\..\..\include -Fe:'
-    exec_out_dir="$expected_results_dir/msvc-2022"
+    compiler_cmd="cl.exe -nologo -std:${cxx_std} -MD -EHsc -I ..\..\..\include -Fe:"
+    exec_out_dir="$expected_results_dir/msvc-2022-${cxx_std}"
     compiler_version=$(cl.exe)
 else
     # Verify the compiler command
@@ -136,7 +144,6 @@ else
         exit 2
     fi
 
-    cpp_std=c++2b
     compiler_version=$("$cxx_compiler" --version)
 
     if [[ "$compiler_version" == *"Apple clang version 14.0"* ||
@@ -148,22 +155,51 @@ else
         exec_out_dir="$expected_results_dir/clang-12"
     elif [[ "$compiler_version" == *"clang version 15.0"* ]]; then 
         exec_out_dir="$expected_results_dir/clang-15"
-        # c++2b causes starge issues on GitHub ubuntu-latest runner
-        cpp_std="c++20"
+    elif [[ "$compiler_version" == *"clang version 18.1"* ]]; then 
+        exec_out_dir="$expected_results_dir/clang-18"
     elif [[ "$compiler_version" == *"g++-10"* ]]; then
         exec_out_dir="$expected_results_dir/gcc-10"
-        # GCC 10 does not support c++2b
-        cpp_std=c++20
     elif [[ "$compiler_version" == *"g++-12"* ||
             "$compiler_version" == *"g++-13"*
          ]]; then
         exec_out_dir="$expected_results_dir/gcc-13"
+    elif [[ "$compiler_version" == *"g++-14"* ]]; then
+        exec_out_dir="$expected_results_dir/gcc-14"
     else
         printf "Unhandled compiler version:\n$compiler_version\n\n"
         exit 2
     fi
 
-    compiler_cmd="$cxx_compiler -I../../../include -std=$cpp_std -pthread -o "
+    # Append the C++ standard (e.g. 'c++20') to the expected output dir name
+    exec_out_dir="${exec_out_dir}-${cxx_std}"
+
+    # Clang can link with either libstdc++ or libc++
+    # By default clang on ubuntu links with libstdc++ and on macOS links with libc++.
+    if [[ "$compiler_version" == *"clang"* ]]; then 
+        if [[ "$cxx_stdlib" == "default" || "$cxx_stdlib" == "" ]]; then
+            cxx_stdlib_link_arg=""  # Use compiler/platform default
+        elif [[ "$cxx_stdlib" == "libstdc++" ]]; then
+            cxx_stdlib_link_arg="-stdlib=libstdc++"
+        elif [[ "$cxx_stdlib" == *"libc++"* ]]; then
+
+            # Need to install the correct libc++ packages, e.g. `libc++-15-dev` and `libc++abi-15-dev` for clang 15.
+            # Our `cxx_stdlib` variable contains the `libc++-XX-dev` package name so we need to create the abi version.
+            cxx_stdlib_abi_package="${cxx_stdlib/libc++/libc++abi}"
+            printf "Installing packages: $cxx_stdlib $cxx_stdlib_abi_package\n\n"
+            sudo apt-get install -y $cxx_stdlib $cxx_stdlib_abi_package
+
+            cxx_stdlib_link_arg="-stdlib=libc++"
+            exec_out_dir="${exec_out_dir}-libcpp"
+        else
+            printf "Unhandled C++ Standard Library option:\n$cxx_stdlib\n\n"
+            exit 2
+        fi
+    else
+        cxx_stdlib_link_arg=""  # Use compiler/platform default
+    fi
+
+    compiler_cmd="$cxx_compiler -I../../../include -std=$cxx_std $cxx_stdlib_link_arg -pthread -o "
+    printf "\ncompiler_cmd: $compiler_cmd\n\n"
 fi
 
 if [[ -d "$exec_out_dir" ]]; then
@@ -171,7 +207,7 @@ if [[ -d "$exec_out_dir" ]]; then
 
     printf "Directory with reference compilation/execution files to use:\n$exec_out_dir\n\n"
 else
-    printf "Directory with reference compilation/execution files not found for compiler: '$cxx_compiler'\n\n"
+    printf "Directory with reference compilation/execution files not found for compiler: '$cxx_compiler' at $exec_out_dir\n\n"
     exit 2
 fi
 
@@ -191,8 +227,8 @@ regression_test_link_obj=""
 if [[ "$cxx_compiler" == *"cl.exe"* ]]; then
     echo "Building std and std.compat modules"
     (cd $exec_out_dir; \
-     cl.exe -nologo -std:c++latest -MD -EHsc -c "${VCToolsInstallDir}/modules/std.ixx";
-     cl.exe -nologo -std:c++latest -MD -EHsc -c "${VCToolsInstallDir}/modules/std.compat.ixx")
+     cl.exe -nologo -std:${cxx_std} -MD -EHsc -c "${VCToolsInstallDir}/modules/std.ixx";
+     cl.exe -nologo -std:${cxx_std} -MD -EHsc -c "${VCToolsInstallDir}/modules/std.compat.ixx")
     regression_test_link_obj="std.obj std.compat.obj"
 fi
 

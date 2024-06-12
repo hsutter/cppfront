@@ -24,22 +24,34 @@
 
 
 //===========================================================================
+//  When defined, builds cppfront in an instrumented (and slower) mode that
+//  prints more information under -_debug
+//===========================================================================
+
+//#define CPP2_DEBUG_BUILD
+
+
+//===========================================================================
 //  Common types
 //===========================================================================
 
 #ifndef CPP2_COMMON_H
 #define CPP2_COMMON_H
 
+#include <algorithm>
+#include <cassert>
+#include <cctype>
+#include <chrono>
+#include <compare>
+#include <cstdint>
+#include <iomanip>
+#include <iterator>
+#include <memory>
+#include <map>
 #include <string>
 #include <string_view>
-#include <vector>
-#include <cstdint>
-#include <cctype>
-#include <cassert>
-#include <iomanip>
-#include <compare>
-#include <algorithm>
 #include <unordered_map>
+#include <vector>
 
 namespace cpp2 {
 
@@ -248,44 +260,6 @@ struct multiline_raw_string
 {
     std::string     text;
     source_position end = {0, 0};
-};
-
-//-----------------------------------------------------------------------
-//
-//  error: represents a user-readable error message
-//
-//-----------------------------------------------------------------------
-//
-struct error_entry
-{
-    source_position where;
-    std::string     msg;
-    bool            internal = false;
-    bool            fallback = false;   // only emit this message if there was nothing better
-
-    error_entry(
-        source_position  w,
-        std::string_view m,
-        bool             i = false,
-        bool             f = false
-    )
-        : where{w}
-        , msg{m}
-        , internal{i}
-        , fallback{f}
-    { }
-
-    auto operator==(error_entry const& that)
-        -> bool
-    {
-        return
-            where == that.where
-            && msg == that.msg
-            ;
-    }
-
-    auto print(auto& o, std::string const& file) const
-        -> void;
 };
 
 
@@ -639,13 +613,18 @@ class cmdline_processor
     std::unordered_map<int, std::string> labels = {
         { 2, "Additional dynamic safety checks and contract information" },
         { 4, "Support for constrained target environments" },
-        { 9, "Other options" }
+        { 8, "Cpp1 file emission options" },
+        { 9, "Cppfront output options" }
     };
 
-    //  Define this in the main .cpp to avoid bringing <iostream> into the headers,
-    //  so that we can't accidentally start depending on iostreams in the compiler body
-    static auto print(std::string_view, int width = 0)
-        -> void;
+    static auto print(std::string_view s, int width = 0)
+        -> void
+    {
+        if (width > 0) {
+            std::cout << std::setw(width) << std::left;
+        }
+        std::cout << s;
+    }
 
 public:
     auto process_flags()
@@ -917,13 +896,262 @@ static cmdline_processor::register_flag cmd_gen_version(
     []{ cmdline.gen_version(); }
 );
 
+static auto flag_verbose = false;
+static cmdline_processor::register_flag cmd_verbose(
+    9,
+    "verbose",
+    "Print verbose output and statistics",
+    []{ flag_verbose = true; }
+);
+
 static auto flag_internal_debug = false;
 static cmdline_processor::register_flag cmd_internal_debug(
     0,
     "_debug",
-    "Generate internal debug instrumentation",
-    []{ flag_internal_debug = true; }
+    "Generate internal debug data, implies -verbose",
+    []{ flag_internal_debug = true; flag_verbose = true; }
 );
+
+static auto flag_print_colon_errors = false;
+static cmdline_processor::register_flag cmd_print_colon_errors(
+    9,
+    "format-colon-errors",
+    "Emit ':line:col:' format for messages - lights up some tools",
+    []{ flag_print_colon_errors = true; }
+);
+
+
+//-----------------------------------------------------------------------
+//
+//  error: represents a user-readable error message
+//
+//-----------------------------------------------------------------------
+//
+struct error_entry
+{
+    source_position where;
+    std::string     msg;
+    bool            internal = false;
+    bool            fallback = false;   // only emit this message if there was nothing better
+
+    error_entry(
+        source_position  w,
+        std::string_view m,
+        bool             i = false,
+        bool             f = false
+    )
+        : where{w}
+        , msg{m}
+        , internal{i}
+        , fallback{f}
+    { }
+
+    auto operator==(error_entry const& that)
+        -> bool
+    {
+        return
+            where == that.where
+            && msg == that.msg
+            ;
+    }
+
+    auto print(auto& o, std::string const& file) const
+        -> void
+    {
+        o << file ;
+        if (where.lineno > 0) {
+            if (flag_print_colon_errors) {
+                o << ":" << (where.lineno);
+                if (where.colno >= 0) {
+                    o << ":" << where.colno;
+                }
+            }
+            else {
+                o << "("<< (where.lineno);
+                if (where.colno >= 0) {
+                    o << "," << where.colno;
+                }
+                o  << ")";
+            }
+        }
+        o << ":";
+        if (internal) {
+            o << " internal compiler";
+        }
+        o << " error: " << msg << "\n";
+    }
+
+};
+
+
+//-----------------------------------------------------------------------
+//
+//  stable_vector: a simple segmented vector with limited interface
+//                 that doesn't invalidate by moving memory
+//
+//-----------------------------------------------------------------------
+//
+template <typename T>
+class stable_vector
+{
+    static constexpr size_t PageSize = 1'000;
+
+    std::vector< std::vector<T> > data;
+
+    auto add_segment( std::initializer_list<T> init = {} ) -> void {
+        data.push_back( init );
+        data.back().reserve(PageSize);
+    }
+
+public:
+    stable_vector( std::initializer_list<T> init = {}) {
+        add_segment( init);
+    }
+
+    auto empty() const -> bool {
+        return data.size() == 1 && data.back().empty();
+    }
+
+    auto size() const -> size_t {
+        testing.enforce(!data.empty());
+        return (data.size() - 1) * PageSize + data.back().size();
+    }
+
+    auto ssize() const -> ptrdiff_t {
+        return unsafe_narrow<ptrdiff_t>(size());
+    }
+
+    auto operator[](size_t idx) -> T& {
+        bounds_safety.enforce(idx < size());
+        return data[idx / PageSize][idx % PageSize];
+    }
+
+    auto operator[](size_t idx) const -> T const& {
+        bounds_safety.enforce(idx < size());
+        return data[idx / PageSize][idx % PageSize];
+    }
+
+    auto back() -> T& {
+        return data.back().back();
+    }
+
+    auto push_back(T const& t) -> void {
+        if (data.back().size() == data.back().capacity()) {
+            add_segment();
+        }
+        data.back().push_back(t);
+    }
+
+    template< class... Args >
+    auto emplace_back( Args&&... args ) -> T& {
+        if (data.back().size() == data.back().capacity()) {
+            add_segment();
+        }
+        return data.back().emplace_back(CPP2_FORWARD(args)...);
+    }
+
+    auto pop_back() -> void {
+        bounds_safety.enforce(size() > 0);
+        if (
+            data.back().empty()
+            && data.size() > 1
+            )
+        {
+            data.pop_back();
+        }
+        data.back().pop_back();
+    }
+
+    //-------------------------------------------------------------------
+    //  Debug interface
+    //
+    auto debug_print(std::ostream& o) const
+        -> void
+    {
+        o << "stable_vector:\n";
+        for (auto i = 0; auto& chunk : data) {
+            o << "  -- page " << i++ << " --\n    ";
+            for (auto e : chunk) {
+                o << e << ' ';
+            }
+            o << "\n";
+        }
+    }
+
+    //-------------------------------------------------------------------
+    //  Iterator interface
+    //
+    class iterator {
+        stable_vector* v;
+        size_t         pos = 0;
+    public:
+        using value_type        = T;
+        using difference_type   = std::ptrdiff_t;
+        using pointer           = T*;
+        using reference         = T&;
+        using iterator_category = std::random_access_iterator_tag;
+
+        iterator( stable_vector* v_ = nullptr, size_t pos_ = 0) : v{v_}, pos{pos_} { }
+        auto operator++ ()           -> iterator { if (pos < v->size()) { ++pos; } return *this; }
+        auto operator-- ()           -> iterator { if (pos > 0        ) { --pos; } return *this; }
+        auto operator+= (size_t off) -> iterator { if (pos + off < v->size()) { pos += off; } else { pos = v->size(); } return *this; }
+        auto operator-= (size_t off) -> iterator { if (pos - off > 0        ) { pos -= off; } else { pos = 0;         } return *this; }
+        auto operator*  () const     -> T&       { return  (*v)[pos      ]; }
+        auto operator-> () const     -> T*       { return &(*v)[pos      ]; }
+        auto operator[] (size_t off) -> T&       { return  (*v)[pos + off]; }
+        auto operator+  (size_t off) -> iterator { auto i = *this; i += off; return i; }
+        auto operator-  (size_t off) -> iterator { auto i = *this; i -= off; return i; }
+        auto operator-  (iterator const& that)   -> ptrdiff_t { return pos - that.pos; }
+        auto operator<=>(iterator const&) const  -> std::strong_ordering = default;
+    };
+
+    class const_iterator {
+        stable_vector const* v;
+        size_t               pos = 0;
+    public:
+        using value_type        = const T;
+        using difference_type   = std::ptrdiff_t;
+        using pointer           = T const*;
+        using reference         = T const&;
+        using iterator_category = std::random_access_iterator_tag;
+
+        const_iterator( stable_vector const* v_ = nullptr, size_t pos_ = 0) : v{v_}, pos{pos_} { }
+        auto operator++ ()           -> const_iterator { if (pos < v->size()) { ++pos; } return *this; }
+        auto operator-- ()           -> const_iterator { if (pos > 0        ) { --pos; } return *this; }
+        auto operator+= (size_t off) -> const_iterator { if (pos + off < v->size()) { pos += off; } else { pos = v->size(); } return *this; }
+        auto operator-= (size_t off) -> const_iterator { if (pos - off > 0        ) { pos -= off; } else { pos = 0;         } return *this; }
+        auto operator*  () const     -> T const&       { return  (*v)[pos      ]; }
+        auto operator-> () const     -> T const*       { return &(*v)[pos      ]; }
+        auto operator[] (size_t off) -> T const&       { return  (*v)[pos + off]; }
+        auto operator+  (size_t off) -> const_iterator { auto i = *this; i += off; return i; }
+        auto operator-  (size_t off) -> const_iterator { auto i = *this; i -= off; return i; }
+        auto operator-  (const_iterator const& that)   -> ptrdiff_t { return pos - that.pos; }
+        auto operator<=>(const_iterator const&) const  -> std::strong_ordering = default;
+    };
+
+    auto  begin()       -> iterator       { return {this, 0     }; }
+    auto  end  ()       -> iterator       { return {this, size()}; }
+    auto  begin() const -> const_iterator { return {this, 0     }; }
+    auto  end  () const -> const_iterator { return {this, size()}; }
+    auto cbegin() const -> const_iterator { return {this, 0     }; }
+    auto cend  () const -> const_iterator { return {this, size()}; }
+};
+
+template <typename T>
+auto operator+ (size_t off, typename stable_vector<T>::iterator const& it) -> typename stable_vector<T>::iterator { auto i = it; i += off; return i; }
+
+template <typename T>
+auto operator+ (size_t off, typename stable_vector<T>::const_iterator const& it) -> typename stable_vector<T>::const_iterator { auto i = it; i += off; return i; }
+
+//  And now jump over to std:: to drop in the size/ssize overloads
+}
+namespace std {
+    template <typename T>
+    auto  size(cpp2::stable_vector<T> const& v) -> ptrdiff_t { return v. size();  }
+    template <typename T>
+    auto ssize(cpp2::stable_vector<T> const& v) -> ptrdiff_t { return v.ssize();  }
+}
+namespace cpp2 {
 
 
 //-----------------------------------------------------------------------
@@ -933,6 +1161,14 @@ static cmdline_processor::register_flag cmd_internal_debug(
 //-----------------------------------------------------------------------
 //
 
+//-----------------------------------------------------------------------
+//
+//  stackinstr: builds debug information to find causes of large stacks
+//
+//  Useful if we need to optimize deep recursion to use less stack
+//
+//-----------------------------------------------------------------------
+//
 class stackinstr
 {
     struct entry
@@ -977,21 +1213,21 @@ class stackinstr
 
 public:
     struct guard {
-        guard( std::string_view name, std::string_view file, int line, char* p ) {
-            if (flag_internal_debug) {
-                entries.emplace_back(name, file, line ,p);
-                if (ssize(deepest) < ssize(entries)) {
-                    deepest = entries;
-                }
-                if (largest.empty() || largest.back().cumulative < entries.back().cumulative) {
-                    largest = entries;
-                }
-            }
+        guard( std::string_view /*name*/, std::string_view /*file*/, int /*line*/, char* /*p*/ ) {
+            //if (flag_internal_debug) {
+            //    entries.emplace_back(name, file, line ,p);
+            //    if (ssize(deepest) < ssize(entries)) {
+            //        deepest = entries;
+            //    }
+            //    if (largest.empty() || largest.back().cumulative < entries.back().cumulative) {
+            //        largest = entries;
+            //    }
+            //}
         }
         ~guard() {
-            if (flag_internal_debug) {
-                entries.pop_back();
-            }
+            //if (flag_internal_debug) {
+            //    entries.pop_back();
+            //}
         }
     };
 
@@ -1006,6 +1242,63 @@ std::vector<stackinstr::entry> stackinstr::largest;
 
 #define STACKINSTR stackinstr::guard _s_guard{ __func__, __FILE__, __LINE__, reinterpret_cast<char*>(&_s_guard) };
 
+
+//-----------------------------------------------------------------------
+//
+//  timer:  a little profiling timer to measure time spent in
+//          specific sections of code
+//
+//  Use CPP2_SCOPE_TIMER("unique name") to declare local objects whose
+//  total timings will be reported in -verbose in CPP2_DEBUG_BUILD builds.
+//
+//-----------------------------------------------------------------------
+//
+class timer
+{
+    using clock = std::chrono::high_resolution_clock;
+
+    bool                           running  = false;
+    std::chrono::time_point<clock> start_tm = clock::now();
+    std::chrono::duration<double>  duration = {};
+
+public:
+    auto start() {
+        testing.enforce( !running );
+        running  = true;
+        start_tm = clock::now();
+    }
+
+    auto stop() {
+        testing.enforce( running );
+        running   = false;
+        duration += clock::now() - start_tm;
+    }
+
+    void reset() {
+        duration = {};
+    }
+
+    auto elapsed() const {
+        testing.enforce( !running );
+        return std::chrono::duration_cast<std::chrono::milliseconds>(duration);
+    }
+};
+
+static std::unordered_map<std::string_view, timer> timers;  // global named timers
+
+auto scope_timer(std::string_view name) {
+    timers[name].start();
+    auto stop = [=]{ timers[name].stop(); };
+    return finally( std::move(stop) );
+}
+
+#ifdef CPP2_DEBUG_BUILD
+#define CPP2_CONCAT(x,y)       x##y
+#define CPP2_UNIQUE_NAME(x,y)  CPP2_CONCAT(x,y)
+#define CPP2_SCOPE_TIMER(name) auto CPP2_UNIQUE_NAME(timer,__LINE__) = scope_timer(name)
+#else
+#define CPP2_SCOPE_TIMER(name)
+#endif
 
 }
 

@@ -33,7 +33,7 @@ auto add_42_to_subrange(auto& rng, cpp2::impl::in<int> start, cpp2::impl::in<int
     std::vector<int> v {1, 2, 3, 4, 5}; 
     add_42_to_subrange(v, 1, 3);
 
-    for ( auto const& i : std::move(v) ) 
+    for ( auto const& i : cpp2::move(v) ) 
         std::cout << i << "\n";
 }
 

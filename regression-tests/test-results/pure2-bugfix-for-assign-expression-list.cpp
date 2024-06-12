@@ -26,6 +26,6 @@ auto main() -> int{
   v                   = { 1 };
   if (cpp2::cpp2_default.is_active() && !(v == vec{1}) ) { cpp2::cpp2_default.report_violation(""); }
   v                   = { 2, 3 };
-  if (cpp2::cpp2_default.is_active() && !(std::move(v) == vec{2, 3}) ) { cpp2::cpp2_default.report_violation(""); }
+  if (cpp2::cpp2_default.is_active() && !(cpp2::move(v) == vec{2, 3}) ) { cpp2::cpp2_default.report_violation(""); }
 }
 

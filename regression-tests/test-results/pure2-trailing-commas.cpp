@@ -59,7 +59,7 @@ auto a{42};
 
     std::array array {0, 1, 2}; 
 
-    static_cast<void>(std::move(array));
-    static_cast<void>(std::move(grouping));
+    static_cast<void>(cpp2::move(array));
+    static_cast<void>(cpp2::move(grouping));
 }
 

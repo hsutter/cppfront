@@ -186,7 +186,7 @@ auto main() -> int
     N::X x {cpp2::impl::out(&y)}; // construct y and x, and point them at each other
 
     // now have the two objects call each other back and forth a few times
-    CPP2_UFCS(exx)(std::move(x), 1);
+    CPP2_UFCS(exx)(cpp2::move(x), 1);
 
     // and test a nested template out-of-line definition
     N::M::A<int,int>::B<42>::f<int,43>("welt");

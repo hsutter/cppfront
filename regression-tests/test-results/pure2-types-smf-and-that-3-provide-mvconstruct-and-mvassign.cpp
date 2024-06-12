@@ -77,7 +77,7 @@ auto main() -> int;
 
 #line 8 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
     myclass::myclass(myclass&& that) noexcept
-        : name{ std::move(that).name + "(CM)" }
+        : name{ cpp2::move(that).name + "(CM)" }
         , addr{ std::move(that).addr }{
 
 #line 10 "pure2-types-smf-and-that-3-provide-mvconstruct-and-mvassign.cpp2"
@@ -136,14 +136,14 @@ auto main() -> int{
 
     auto z {std::move(x)}; 
     CPP2_UFCS(print)(z, "   mv-construct  ", " <- ");
-    CPP2_UFCS(print)(std::move(x), "", "\n");
+    CPP2_UFCS(print)(cpp2::move(x), "", "\n");
 
     z = y;
     CPP2_UFCS(print)(z, "   cp-assign     ", " <- ");
     CPP2_UFCS(print)(y, "", "\n");
 
     z = { std::move(y) };
-    CPP2_UFCS(print)(std::move(z), "   mv-assign     ", " <- ");
-    CPP2_UFCS(print)(std::move(y), "", "\n");
+    CPP2_UFCS(print)(cpp2::move(z), "   mv-assign     ", " <- ");
+    CPP2_UFCS(print)(cpp2::move(y), "", "\n");
 }
 

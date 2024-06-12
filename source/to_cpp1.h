@@ -23,18 +23,6 @@
 
 namespace cpp2 {
 
-//  Defined out of line here just to avoid bringing <iostream> in before this,
-//  so that we can't accidentally start depending on iostreams in earlier phases
-auto cmdline_processor::print(std::string_view s, int width)
-    -> void
-{
-    if (width > 0) {
-        std::cout << std::setw(width) << std::left;
-    }
-    std::cout << s;
-}
-
-
 //-----------------------------------------------------------------------
 //
 //  Stringingizing helpers
@@ -89,15 +77,15 @@ auto multi_return_type_name(declaration_node const& n)
 //
 static auto flag_emit_cppfront_info = false;
 static cmdline_processor::register_flag cmd_emit_cppfront_info(
-    9,
+    8,
     "emit-cppfront-info",
-    "Emit cppfront version/build in output file",
+    "Emit cppfront version/build in Cpp1 file",
     []{ flag_emit_cppfront_info = true; }
 );
 
 static auto flag_clean_cpp1 = false;
 static cmdline_processor::register_flag cmd_clean_cpp1(
-    9,
+    8,
     "clean-cpp1",
     "Emit clean Cpp1 without #line directives",
     []{ flag_clean_cpp1 = true; }
@@ -105,7 +93,7 @@ static cmdline_processor::register_flag cmd_clean_cpp1(
 
 static auto flag_line_paths = false;
 static cmdline_processor::register_flag cmd_line_paths(
-    9,
+    8,
     "line-paths",
     "Emit absolute paths in #line directives",
     [] { flag_line_paths = true; }
@@ -169,7 +157,7 @@ static cmdline_processor::register_flag cmd_enable_source_info(
 
 static auto flag_cpp1_filename = std::string{};
 static cmdline_processor::register_flag cmd_cpp1_filename(
-    9,
+    8,
     "output filename",
     "Output to 'filename' (can be 'stdout') - default is *.cpp/*.h",
     nullptr,
@@ -183,22 +171,6 @@ static cpp2::cmdline_processor::register_flag cmd_cwd(
     "Change current working directory",
     nullptr,
     [](std::string const& path) { flag_cwd = { path }; }
-);
-
-static auto flag_print_colon_errors = false;
-static cmdline_processor::register_flag cmd_print_colon_errors(
-    9,
-    "format-colon-errors",
-    "Emit ':line:col:' format for messages - lights up some tools",
-    []{ flag_print_colon_errors = true; }
-);
-
-static auto flag_verbose = false;
-static cmdline_processor::register_flag cmd_verbose(
-    9,
-    "verbose",
-    "Print verbose statistics and -debug output",
-    []{ flag_verbose = true; }
 );
 
 static auto flag_no_exceptions = false;
@@ -223,38 +195,14 @@ struct text_with_pos{
     text_with_pos(std::string const& t, source_position p) : text{t}, pos{p} { }
 };
 
-// Defined out of line so we can use flag_print_colon_errors.
-auto error_entry::print(
-    auto&              o,
-    std::string const& file
-) const
-    -> void
-{
-    o << file ;
-    if (where.lineno > 0) {
-        if (flag_print_colon_errors) {
-            o << ":" << (where.lineno);
-            if (where.colno >= 0) {
-                o << ":" << where.colno;
-            }
-        }
-        else {
-            o << "("<< (where.lineno);
-            if (where.colno >= 0) {
-                o << "," << where.colno;
-            }
-            o  << ")";
-        }
-    }
-    o << ":";
-    if (internal) {
-        o << " internal compiler";
-    }
-    o << " error: " << msg << "\n";
-}
-
 class positional_printer
 {
+public:
+    positional_printer()                          = default;
+private:
+    positional_printer(positional_printer const&) = delete;
+    void operator=(positional_printer const&)     = delete;
+
     //  Core information
     std::ofstream               out_file        = {}; // Cpp1 syntax output file
     std::ostream*               out             = {}; // will point to out_file or cout
@@ -1140,7 +1088,7 @@ class cppfront
     };
     class current_functions_
     {
-        std::deque<function_info> list = { {} };
+        stable_vector<function_info> list = { {} };
     public:
         auto push(
             declaration_node const*                    decl,
@@ -1779,6 +1727,17 @@ public:
             && !in_non_rvalue_context.back()
             && !is_class_member_access;
 
+        //  We always want to std::move from named return values,
+        //  regardless of their types, so use std::move for that
+        bool add_std_move =
+            synthesized_multi_return_size > 1
+            || (
+                synthesized_multi_return_size == 1
+                && decl
+                && !decl->initializer
+                );
+
+        //  Otherwise we'll use cpp2::move
         bool add_move =
             !add_forward
             && (
@@ -1786,18 +1745,13 @@ public:
                 || last_use->safe_to_move
                 )
             && (
-                synthesized_multi_return_size > 1
-                || (
-                    synthesized_multi_return_size == 1
-                    && decl
-                    && !decl->initializer
-                    )
+                add_std_move
                 || (last_use && !suppress_move_from_last_use)
                 )
             && !in_non_rvalue_context.back()
             && !is_class_member_access;
 
-        //  Add `std::move(*this).` when implicitly moving a member on last use
+        //  Add `cpp2::move(*this).` when implicitly moving a member on last use
         //  This way, members of lvalue reference type won't be implicitly moved
         bool add_this =
             add_move
@@ -1833,12 +1787,17 @@ public:
             add_forward = current_args.back().ptoken == n.identifier;
         }
 
-        if (add_move) {
+        if (add_std_move) {
             printer.print_cpp2("std::move(", n.position());
         }
+        else if (add_move) {
+            printer.print_cpp2("cpp2::move(", n.position());
+        }
+
         if (add_forward) {
             printer.print_cpp2("CPP2_FORWARD(", {n.position().lineno, n.position().colno - 8});
         }
+
         if (add_this) {
             printer.print_cpp2("*this).", n.position());
         }
@@ -1899,6 +1858,7 @@ public:
             !add_this
             && (
                 add_move
+                || add_std_move
                 || add_forward
                 )
             )
@@ -2431,13 +2391,14 @@ public:
                     is_parameter_name
                     && (
                         current_functions.back().decl->has_in_parameter_named(*tok)
+                        || current_functions.back().decl->has_copy_parameter_named(*tok)
                         || current_functions.back().decl->has_move_parameter_named(*tok)
                         )
                     )
                 {
                     errors.emplace_back(
                         n.position(),
-                        "a 'forward' return type cannot return an 'in' or 'move' parameter"
+                        "a 'forward' return type cannot return an 'in', 'copy', or 'move' parameter"
                     );
                     return;
                 }
@@ -2458,7 +2419,7 @@ public:
                 {
                     errors.emplace_back(
                         n.position(),
-                        "a 'forward' return type cannot return a temporary variable"
+                        "a 'forward' return type must return an 'inout', 'out', or 'forward' parameter; it cannot return a complex expression -- for example: for a function that takes a stream object 'output`, instead of 'return output << data;' write 'output << data; return output;'"
                     );
                     return;
                 }
@@ -3342,8 +3303,8 @@ public:
                 //
                 //  Note: This ensures a valid member call is still prioritized
                 //  by leveraging the last use only in the non-member branch
-                //  For example, `x.f()` won't emit as 'CPP2_UFCS(std::move(f))(x)'
-                //  to never take the branch that wants to call `x.std::move(f)()`
+                //  For example, `x.f()` won't emit as 'CPP2_UFCS(cpp2::move(f))(x)'
+                //  to never take the branch that wants to call `x.cpp2::move(f)()`
                 if (auto last_use = is_definite_last_use(i->id_expr->get_token());
                     last_use
                     && last_use->safe_to_move
@@ -3367,7 +3328,7 @@ public:
                 //  If the computed function name is an explicit member access
                 //  we don't need to go through the UFCS macro
                 //  Note: This also works around compiler bugs
-                if (funcname.starts_with("std::move(*this).")) {
+                if (funcname.starts_with("cpp2::move(*this).")) {
                     prefix.emplace_back(funcname + "(", args.value().open_pos );
                 }
                 else {
@@ -3512,7 +3473,7 @@ public:
             printer.print_cpp2(e.text, n.position());
         }
 
-        //  If this is an --, ++, or &, don't add std::move on the lhs
+        //  If this is an --, ++, or &, don't add cpp2::move on the lhs
         //  even if this is a definite last use (only do that when an rvalue is okay)
         if (
             n.ops.front().op->type() == lexeme::MinusMinus
@@ -3862,7 +3823,7 @@ public:
             }
         }
 
-        //  Else if this is an assignment expression, don't add std::move on the lhs
+        //  Else if this is an assignment expression, don't add cpp2::move on the lhs
         //  even if this is a definite last use (only do that when an rvalue is okay)
         if (
             !n.terms.empty()
@@ -4560,11 +4521,11 @@ public:
 
             auto name = n.declaration->identifier->get_token();
             assert(name);
-            auto req = std::string{"std::is_same_v<CPP2_TYPEOF("};
-            req += *name;
-            req += "), ";
+            auto req = std::string{"std::is_same_v<"};
             req += param_type;
-            req += ">";
+            req += ", CPP2_TYPEOF(";
+            req += *name;
+            req += ")>";
             function_requires_conditions.push_back(req);
         }
         else {
@@ -6916,7 +6877,7 @@ public:
     //-----------------------------------------------------------------------
     //  debug_print
     //
-    auto debug_print()
+    auto debug_print() const
         -> void
     {
         //  Only create debug output files if we managed to load the source file.

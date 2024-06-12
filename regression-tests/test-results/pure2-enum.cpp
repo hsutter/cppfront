@@ -83,7 +83,7 @@ public: constexpr auto operator^=(file_attributes const& that) & -> void;
 public: [[nodiscard]] constexpr auto operator|(file_attributes const& that) const& -> file_attributes;
 public: [[nodiscard]] constexpr auto operator&(file_attributes const& that) const& -> file_attributes;
 public: [[nodiscard]] constexpr auto operator^(file_attributes const& that) const& -> file_attributes;
-public: [[nodiscard]] constexpr auto has(file_attributes const& that) & -> bool;
+public: [[nodiscard]] constexpr auto has(file_attributes const& that) const& -> bool;
 public: constexpr auto set(file_attributes const& that) & -> void;
 public: constexpr auto clear(file_attributes const& that) & -> void;
 public: static const file_attributes cached;
@@ -202,7 +202,7 @@ constexpr auto file_attributes::operator^=(file_attributes const& that) & -> voi
 [[nodiscard]] constexpr auto file_attributes::operator|(file_attributes const& that) const& -> file_attributes { return _value | that._value; }
 [[nodiscard]] constexpr auto file_attributes::operator&(file_attributes const& that) const& -> file_attributes { return _value & that._value; }
 [[nodiscard]] constexpr auto file_attributes::operator^(file_attributes const& that) const& -> file_attributes { return _value ^ that._value; }
-[[nodiscard]] constexpr auto file_attributes::has(file_attributes const& that) & -> bool { return _value & that._value; }
+[[nodiscard]] constexpr auto file_attributes::has(file_attributes const& that) const& -> bool { return _value & that._value; }
 constexpr auto file_attributes::set(file_attributes const& that) & -> void { _value |= that._value; }
 constexpr auto file_attributes::clear(file_attributes const& that) & -> void { _value &= ~that._value; }
 inline CPP2_CONSTEXPR file_attributes file_attributes::cached = 1;
@@ -238,13 +238,13 @@ constexpr auto file_attributes::operator=(file_attributes&& that) noexcept -> fi
     if (((*this) & current) == current) {_ret += _comma + "current";_comma = ", ";}
     if (((*this) & obsolete) == obsolete) {_ret += _comma + "obsolete";_comma = ", ";}
     if (((*this) & cached_and_current) == cached_and_current) {_ret += _comma + "cached_and_current";_comma = ", ";}
-    return std::move(_ret) + ")"; 
+    return cpp2::move(_ret) + ")"; 
     }
 #line 28 "pure2-enum.cpp2"
 auto main() -> int{
     auto j {janus::past}; 
     CPP2_UFCS(flip)(j);
-    static_cast<void>(std::move(j));
+    static_cast<void>(cpp2::move(j));
 
     // x : skat_game = 9;               // error, can't construct skat_game from integer
 
@@ -256,7 +256,7 @@ auto main() -> int{
     // if x == rgb::red { }             // error, can't compare skat_game and rgb color
 
     std::cout << ("x.to_string() is " + cpp2::to_string(CPP2_UFCS(to_string)(x)) + "\n");
-    std::cout << ("x2.to_string() is " + cpp2::to_string(CPP2_UFCS(to_string)(std::move(x2))) + "\n");
+    std::cout << ("x2.to_string() is " + cpp2::to_string(CPP2_UFCS(to_string)(cpp2::move(x2))) + "\n");
 
     std::cout << "with if else: ";
     if (x == skat_game::diamonds) {     // ok, can compare two skat_games
@@ -328,9 +328,9 @@ auto main() -> int{
     std::cout << ("f2 is (f ) is " + cpp2::to_string(cpp2::impl::is(f2, (f))) + "\n");
     std::cout << ("(f & f2) == f2 is " + cpp2::to_string((f & f2) == f2) + "\n");
 
-    std::cout << "inspecting f: " << [&] () -> std::string { auto&& _expr = std::move(f);
+    std::cout << "inspecting f: " << [&] () -> std::string { auto&& _expr = cpp2::move(f);
         if (cpp2::impl::is(_expr, (file_attributes::current))) { if constexpr( requires{"exactly 'current'";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("exactly 'current'")),std::string> ) return "exactly 'current'"; else return std::string{}; else return std::string{}; }
-        else if (cpp2::impl::is(_expr, cpp2::has_flags(std::move(f2)))) { if constexpr( requires{"includes all f2's flags ('cached' and 'current')";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("includes all f2's flags ('cached' and 'current')")),std::string> ) return "includes all f2's flags ('cached' and 'current')"; else return std::string{}; else return std::string{}; }
+        else if (cpp2::impl::is(_expr, cpp2::has_flags(cpp2::move(f2)))) { if constexpr( requires{"includes all f2's flags ('cached' and 'current')";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("includes all f2's flags ('cached' and 'current')")),std::string> ) return "includes all f2's flags ('cached' and 'current')"; else return std::string{}; else return std::string{}; }
         else return "something else"; }
     () << "\n";
 }

@@ -50,7 +50,7 @@ constexpr auto empty = [](auto&& x){
         std::cout << "less than 20" << std::endl;
     }
 
-    if (cpp2::impl::is(std::move(i), (in(10, 30)))) {
+    if (cpp2::impl::is(cpp2::move(i), (in(10, 30)))) {
         std::cout << "i is between 10 and 30" << std::endl;
     }
 
@@ -60,7 +60,7 @@ constexpr auto empty = [](auto&& x){
         std::cout << "v is empty" << std::endl;
     }
 
-    if (cpp2::impl::is(std::move(v), (empty))) {
+    if (cpp2::impl::is(cpp2::move(v), (empty))) {
         std::cout << "v is empty" << std::endl;
     }
 }

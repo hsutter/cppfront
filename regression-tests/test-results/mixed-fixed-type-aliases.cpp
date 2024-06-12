@@ -51,10 +51,10 @@ auto test(auto const& x) -> void{
     auto const args = cpp2::make_args(argc_, argv_); 
 #line 20 "mixed-fixed-type-aliases.cpp2"
     my::u16 y {42}; 
-    test(std::move(y));
+    test(cpp2::move(y));
 
     cpp2::u16 z {42}; 
-    test(std::move(z));
+    test(cpp2::move(z));
 
     for ( auto const& arg : args ) 
         std::cout << CPP2_UFCS(filename)(std::filesystem::path(arg)) << "\n";

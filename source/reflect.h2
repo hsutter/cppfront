@@ -35,7 +35,7 @@ compiler_services: @polymorphic_base @copyable type =
     //
     errors               : *std::vector<error_entry>;
     errors_original_size : int;
-    generated_tokens     : *std::deque<token>;
+    generated_tokens     : *stable_vector<token>;
     parser               : cpp2::parser;
     metafunction_name    : std::string = ();
     metafunction_args    : std::vector<std::string> = ();
@@ -46,7 +46,7 @@ compiler_services: @polymorphic_base @copyable type =
     operator=: (
         out this,
         errors_          : *std::vector<error_entry>,
-        generated_tokens_: *std::deque<token>
+        generated_tokens_: *stable_vector<token>
     )
     = {
         errors = errors_;
@@ -345,8 +345,11 @@ function_declaration: @copyable type =
     index_of_parameter_named     : (this, s: std::string_view) -> int  = n*.index_of_parameter_named(s);
     has_parameter_named          : (this, s: std::string_view) -> bool = n*.has_parameter_named(s);
     has_in_parameter_named       : (this, s: std::string_view) -> bool = n*.has_in_parameter_named(s);
+    has_copy_parameter_named     : (this, s: std::string_view) -> bool = n*.has_copy_parameter_named(s);
+    has_inout_parameter_named    : (this, s: std::string_view) -> bool = n*.has_inout_parameter_named(s);
     has_out_parameter_named      : (this, s: std::string_view) -> bool = n*.has_out_parameter_named(s);
     has_move_parameter_named     : (this, s: std::string_view) -> bool = n*.has_move_parameter_named(s);
+    has_forward_parameter_named  : (this, s: std::string_view) -> bool = n*.has_forward_parameter_named(s);
     first_parameter_name         : (this) -> std::string               = n*.first_parameter_name();
 
     has_parameter_with_name_and_pass: (this, s: std::string_view, pass: passing_style) -> bool
@@ -406,7 +409,7 @@ function_declaration: @copyable type =
             error( "cannot add an initializer that is not a valid statement");
             return;
         }
-        require (n*.add_function_initializer(stmt),
+        require (n*.add_function_initializer(move stmt),
                  std::string("unexpected error while attempting to add initializer"));
     }
 }
@@ -572,7 +575,7 @@ type_declaration: @copyable type =
         if !decl*.is_declaration() {
             error("cannot add a member that is not a declaration");
         }
-        require( n*.add_type_member(decl),
+        require( n*.add_type_member(move decl),
                  std::string("unexpected error while attempting to add member:\n") + source );
     }
 
@@ -1098,7 +1101,7 @@ basic_enum: (
         t.add_member( "    operator| : (       this, that ) -> (t.name())$  == _value |  that._value;");
         t.add_member( "    operator& : (       this, that ) -> (t.name())$  == _value &  that._value;");
         t.add_member( "    operator^ : (       this, that ) -> (t.name())$  == _value ^  that._value;");
-        t.add_member( "    has       : ( inout this, that ) -> bool         == _value &  that._value;");
+        t.add_member( "    has       : (       this, that ) -> bool         == _value &  that._value;");
         t.add_member( "    set       : ( inout this, that )                 == _value |= that._value;");
         t.add_member( "    clear     : ( inout this, that )                 == _value &= that._value~;");
     }

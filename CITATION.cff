@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+title: cppfront
+authors:
+  - given-names: Herb
+    family-names: Sutter
+repository-code: 'https://github.com/hsutter/cppfront'
+abstract: A personal experimental C++ Syntax 2 -> Syntax 1 compiler
+license: CC-BY-NC-ND-4.0
