@@ -485,13 +485,13 @@ concept valid_custom_is_operator = predicate_member_fun<X, F, &F::op_is>
 
 template <typename T>
     requires (std::is_copy_constructible_v<std::remove_cvref_t<T>>)
-auto move(T&& t) -> decltype(auto) {
+constexpr auto move(T&& t) -> decltype(auto) {
     return std::move(t);
 }
 
 template <typename T>
     requires (!std::is_copy_constructible_v<std::remove_cvref_t<T>>)
-auto move(T&& t) -> decltype(auto) {
+constexpr auto move(T&& t) -> decltype(auto) {
     return std::forward<T>(t);
 }
 
