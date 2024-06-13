@@ -449,13 +449,6 @@ public:
 
             //  Now we have the lookup result, but based on lookup constraints flags
             //  we may decide it's unsuitable for this lookup and not use it...
-            //
-            //  TODO: The initial versions of these conditions are written to make the
-            //  new lookup results exactly match the prior lookup results, so we don't
-            //  introduce regressions. However, not all these wrinkles may be needed
-            //  or desirable, so after we know we didn't introduce regressions we can
-            //  consider tweaking/simplifying them -- which is easier now that they're
-            //  collected all in one place
             if (
                 result
                 //  If we were told not to look beyond the current function
@@ -481,33 +474,6 @@ public:
             }
 
         }
-
-        ////--------- START TEMPORARY REGRESSION TEST CODE FOR G_D_O OPTIMIZATION VERIFICATION ---------
-        ////  Now do a regression test violation check
-        ////
-        //if (
-        //    flag_internal_debug
-        //    && result_old != result
-        //    )
-        //{
-        //    std::cerr << "\n  Internal compiler error - see cppfront-ice-data.out for debug information\n\n";
-
-        //    auto out = std::ofstream{"cppfront-ice-data.out"};
-
-        //    out << "g_d_o arguments:\n";
-        //    out << "    " << static_cast<void const*>(&t) << " -> " << t.as_string_view() << " @ " << t.position().to_string()
-        //        << ", token order # " << t.get_global_token_order() << "\n";
-        //    out << "    look_beyond_current_function: " << std::boolalpha << look_beyond_current_function << "\n";
-        //    out << "    include_implicit_this:        " << std::boolalpha << include_implicit_this        << "\n";
-
-        //    out << "result_old:    "       << static_cast<void const*>(result_old) << "\n";
-        //    out << "result:        "       << static_cast<void const*>(result    ) << "\n\n";
-
-        //    debug_print(out);
-
-        //    exit(EXIT_FAILURE);
-        //}
-        ////--------- END TEMPORARY REGRESSION TEST CODE FOR G_D_O OPTIMIZATION VERIFICATION -----------
 
         return result;
     }
