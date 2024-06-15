@@ -36,7 +36,7 @@ using fun_ret = int;
 extern int y;
 
 class mytype {
-    public: static auto hun(cpp2::impl::in<int> i) -> void;
+    public: static auto hun([[maybe_unused]] auto const& unnamed_param_1) -> void;
     public: mytype() = default;
     public: mytype(mytype const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(mytype const&) -> void = delete;
@@ -103,5 +103,5 @@ auto no_return([[maybe_unused]] auto const& unnamed_param_1) -> void{}
 int y {CPP2_UFCS_NONLOCAL(f)(0)}; 
 
 #line 49 "pure2-ufcs-member-access-and-chaining.cpp2"
-    auto mytype::hun(cpp2::impl::in<int> i) -> void{}
+    auto mytype::hun([[maybe_unused]] auto const& unnamed_param_1) -> void{}
 

@@ -46,5 +46,5 @@ f: (_)->int = 0;
 y: int = 0.f();
 
 mytype: type = {
-    hun: (i: int) = { }
+    hun: (_) = { }
 }
