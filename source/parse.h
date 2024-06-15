@@ -8505,14 +8505,18 @@ private:
                 }
 
                 //  Then there may be a semicolon
-                //  If there is a semicolon, eat it
+                //  If there is a semicolon...
                 if (!done() && curr().type() == lexeme::Semicolon) {
-                    if (semicolon_allowed)
-                      next();
-                    else
-                      error("unexpected semicolon after declaration", {}, {}, {});
+                    //  If it's allowed, eat it
+                    if (semicolon_allowed) {
+                        next();
+                    }
+                    // Otherwise, diagnose an error
+                    else {
+                        error("unexpected semicolon after declaration", {}, {}, {});
+                    }
                 }
-                // But if there isn't one and it was required, diagnose an error
+                //  Otherwise if there isn't one and it was required, diagnose an error
                 else if (semicolon_required) {
                     if (curr().type() == lexeme::LeftBrace) {
                         error("expected '=' before '{' - did you mean '= {' ?", true, {}, true);
