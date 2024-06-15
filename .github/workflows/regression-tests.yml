@@ -101,9 +101,36 @@ jobs:
       shell: cmd
 
     - name: Upload patch
-      if: ${{ !cancelled() }}
+      if: success() || failure()
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.cxx_std }}-${{ matrix.stdlib }}.patch
         path: regression-tests/${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.cxx_std }}-${{ matrix.stdlib }}.patch
         if-no-files-found: ignore
+
+  aggregate-results:
+    needs: regression-tests
+    if:  success() || failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all patches
+        uses: actions/download-artifact@v4
+        with:
+          path: downloaded-results
+
+      - name: Prepare result files
+        id: prepare_files
+        run: |
+          mkdir aggregated-results
+          echo "Flattening file hierarchy"
+          find . -type f -wholename "./downloaded-results*" -exec mv {} aggregated-results \;
+          patch_count=$(ls aggregated-results 2>/dev/null | wc -l)
+          echo "patch_count=${patch_count}" >> $GITHUB_OUTPUT
+
+      - name: Upload aggregated results
+        if: steps.prepare_files.outputs.patch_count != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: aggregated-results
+          path: aggregated-results
+          if-no-files-found: ignore
