@@ -21,6 +21,9 @@ main: () -> int = {
     42.no_return();
 
     res.no_return();
+
+    obj: mytype = ();
+    obj..hun(42);   // explicit non-UFCS
 }
 
 no_return: (_) = { }
@@ -41,3 +44,7 @@ get_i: (r:_) -> int = {
 //  And a test for non-local UFCS, which shouldn't do a [&] capture
 f: (_)->int = 0;
 y: int = 0.f();
+
+mytype: type = {
+    hun: (_) = { }
+}

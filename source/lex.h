@@ -83,6 +83,7 @@ enum class lexeme : std::int8_t {
     Semicolon,
     Comma,
     Dot,
+    DotDot,
     Ellipsis,
     QuestionMark,
     At,
@@ -180,6 +181,7 @@ auto _as(lexeme l)
     break;case lexeme::Semicolon:           return "Semicolon";
     break;case lexeme::Comma:               return "Comma";
     break;case lexeme::Dot:                 return "Dot";
+    break;case lexeme::DotDot:              return "DotDot";
     break;case lexeme::Ellipsis:            return "Ellipsis";
     break;case lexeme::QuestionMark:        return "QuestionMark";
     break;case lexeme::At:                  return "At";
@@ -845,9 +847,9 @@ auto lex_line(
 
         if (
             i >= 3
-            && (tokens[i-3] != "::" && tokens[i-3] != ".")
+            && (tokens[i-3] != "::" && tokens[i-3].type() != lexeme::Dot && tokens[i - 3].type() != lexeme::DotDot)
             && (tokens[i-2] == "unique" || tokens[i-2] == "shared")
-            && tokens[i-1] == "."
+            && tokens[i-1].type() == lexeme::Dot
             && tokens[i] == "new"
             )
         {
@@ -1402,10 +1404,11 @@ auto lex_line(
 
             //G
             //G punctuator: one of
-            //G     '...' '.'
+            //G     '.' '..' '...'
             break;case '.':
-                if (peek1 == '.' && peek2 == '.') { store(3, lexeme::Ellipsis); }
-                else { store(1, lexeme::Dot); }
+                if      (peek1 == '.' && peek2 == '.') { store(3, lexeme::Ellipsis); }
+                else if (peek1 == '.')                 { store(2, lexeme::DotDot); }
+                else                                   { store(1, lexeme::Dot); }
 
             //G     '::' ':'
             break;case ':':

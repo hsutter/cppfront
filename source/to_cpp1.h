@@ -3419,7 +3419,11 @@ public:
                         args.reset();
                     }
 
-                    auto print = print_to_string(*i->id_expr, false /*not a local name*/, i->op->type() == lexeme::Dot);
+                    auto print = print_to_string(
+                        *i->id_expr, 
+                        false, // not a local name
+                        i->op->type() == lexeme::Dot || i->op->type() == lexeme::DotDot // member access
+                    );
                     suffix.emplace_back( print, i->id_expr->position() );
                 }
 
@@ -3449,6 +3453,9 @@ public:
                         prefix.emplace_back( "CPP2_ASSERT_IN_BOUNDS(", i->op->position() );
                     }
                     suffix.emplace_back( ", ", i->op->position() );
+                }
+                else if( i->op->type() == lexeme::DotDot) {
+                    suffix.emplace_back(".", i->op->position());
                 }
                 else {
                     suffix.emplace_back( i->op->to_string(), i->op->position() );

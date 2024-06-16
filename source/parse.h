@@ -36,10 +36,6 @@ auto violates_lifetime_safety = false;
 auto is_prefix_operator(token const& tok)
     -> bool
 {
-    //if (to_passing_style(tok) != passing_style::invalid) {
-    //    return true;
-    //}
-
     switch (tok.type()) {
     break;case lexeme::Not:
           case lexeme::Minus:
@@ -1682,7 +1678,7 @@ auto postfix_expression_node::get_first_token_ignoring_this() const
         expr->get_token()
         && *expr->get_token() == "this"
         && std::ssize(ops) == 1
-        && ops[0].op->type() == lexeme::Dot
+        && (ops[0].op->type() == lexeme::Dot || ops[0].op->type() == lexeme::DotDot)
         )
     {
         return ops[0].id_expr->get_token();
@@ -5820,6 +5816,7 @@ private:
     //G     postfix-expression '[' expression-list? ','? ']'
     //G     postfix-expression '(' expression-list? ','? ')'
     //G     postfix-expression '.' id-expression
+    //G     postfix-expression '..' id-expression
     //G
     auto postfix_expression()
         -> std::unique_ptr<postfix_expression_node>
@@ -5837,7 +5834,8 @@ private:
                 || curr().type() == lexeme::LeftBracket
                 || curr().type() == lexeme::LeftParen
                 || curr().type() == lexeme::Dot
-            )
+                || curr().type() == lexeme::DotDot
+                )
             )
         {
             //  * and & can't be unary operators if followed by a (, identifier, or literal
@@ -5916,7 +5914,10 @@ private:
                     break;
                 }
             }
-            else if (term.op->type() == lexeme::Dot)
+            else if (
+                term.op->type() == lexeme::Dot
+                || term.op->type() == lexeme::DotDot
+                )
             {
                 term.id_expr = id_expression();
                 if (!term.id_expr) {
@@ -7731,7 +7732,7 @@ private:
 
         //  Now the main declaration
         //
-        if (!(n->declaration = declaration(false, true, is_template))) {
+        if (!(n->declaration = declaration(false, true, is_template, {}, false))) {
             pos = start_pos;    // backtrack
             return {};
         }
@@ -8198,7 +8199,8 @@ private:
         std::unique_ptr<unqualified_id_node> id                    = {},
         accessibility                        access                = {},
         bool                                 is_variadic           = false,
-        statement_node*                      my_stmt               = {}
+        statement_node*                      my_stmt               = {},
+        bool                                 semicolon_allowed     = true
     )
         -> std::unique_ptr<declaration_node>
     {
@@ -8504,11 +8506,18 @@ private:
                 }
 
                 //  Then there may be a semicolon
-                //  If there is a semicolon, eat it
+                //  If there is a semicolon...
                 if (!done() && curr().type() == lexeme::Semicolon) {
-                    next();
+                    //  If it's allowed, eat it
+                    if (semicolon_allowed) {
+                        next();
+                    }
+                    // Otherwise, diagnose an error
+                    else {
+                        error("unexpected semicolon after declaration", {}, {}, {});
+                    }
                 }
-                // But if there isn't one and it was required, diagnose an error
+                //  Otherwise if there isn't one and it was required, diagnose an error
                 else if (semicolon_required) {
                     if (curr().type() == lexeme::LeftBrace) {
                         error("expected '=' before '{' - did you mean '= {' ?", true, {}, true);
@@ -8932,7 +8941,8 @@ private:
         bool            semicolon_required    = true,
         bool            is_parameter          = false,
         bool            is_template_parameter = false,
-        statement_node* my_stmt               = {}
+        statement_node* my_stmt               = {},
+        bool            semicolon_allowed     = true
     )
         -> std::unique_ptr<declaration_node>
     {
@@ -9089,7 +9099,8 @@ private:
                 std::move(id),
                 access,
                 is_variadic,
-                my_stmt
+                my_stmt,
+                semicolon_allowed
             );
             if (!n) {
                 pos = start_pos;    // backtrack
