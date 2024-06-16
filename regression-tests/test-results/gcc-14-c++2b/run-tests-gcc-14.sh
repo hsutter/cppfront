@@ -1,5 +1,5 @@
-# This is intended to be run in the /test-results/gcc-13 subdirectory
-# in a Linux shell with gcc 13 installed
+# This is intended to be run in the /test-results/gcc-14 subdirectory
+# in a Linux shell with gcc 14 installed
 #
 cp ../*.cpp .
 rm -f *.output
@@ -9,7 +9,7 @@ g++ --version > gcc-version.output 2>&1
 for f in *.cpp
 do
     let count=count+1
-    printf "[%s] Starting gcc 13 %s\n" "$count" "$f"
+    printf "[%s] Starting gcc 14 %s\n" "$count" "$f"
     g++ -I../../../include -std=c++2b -pthread -Wold-style-cast -Wunused-parameter -o test.exe $f > $f.output 2>&1
     rm -f $f
     if test -f "test.exe"; then

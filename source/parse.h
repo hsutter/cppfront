@@ -657,6 +657,7 @@ struct expression_list_node
     token const* open_paren  = {};
     token const* close_paren = {};
     bool inside_initializer  = false;
+    bool default_initializer = false;
 
     struct term {
         passing_style                    pass = {};
@@ -5389,6 +5390,7 @@ class parser
     };
     mutable std::vector<function_body_extent> function_body_extents;
     mutable bool                              is_function_body_extents_sorted = false;
+    bool                                      is_inside_call_expr = false;
 
 public:
     auto is_within_function_body(source_position p) const
@@ -5743,6 +5745,8 @@ private:
                 expr_list->inside_initializer = false;
             }
             n->expression_list_is_fold_expression = expr_list->is_fold_expression();
+            expr_list->default_initializer =
+                is_inside_call_expr && std::empty(expr_list->expressions);
             n->expr = std::move(expr_list);
             return n;
         }
@@ -5897,8 +5901,10 @@ private:
                 //  Next should be an expression-list followed by a ')'
                 //  If not, then this wasn't a call expression so backtrack to
                 //  the '(' which will be part of the next grammar production
-
+		        is_inside_call_expr = true;
                 term.expr_list = expression_list(term.op, lexeme::RightParen);
+		        is_inside_call_expr = false;
+
                 if (
                     term.expr_list
                     && curr().type() == lexeme::RightParen
