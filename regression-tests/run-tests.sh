@@ -17,12 +17,14 @@ usage() {
 # If the diff is not empty print it with the provided message
 report_diff () {
     file="$1"
-    diff_opt="$2"
-    error_msg="$3"
-    patch_file="$4"
+    error_msg="$2"
+    patch_file="$3"
+    # The remaining arguments will be passed to git
+    shift 3
+    diff_opts="$@"
 
     # Compare the content with the reference value checked in git
-    diff_output=$(git diff "$diff_opt" -- "$file")
+    diff_output=$(git diff $diff_opts -- "$file")
     if [[ -n "$diff_output" ]]; then
         echo "            $error_msg:"
         echo "                $file"
@@ -55,17 +57,21 @@ check_file () {
         git add "$file"
         # ... report the diff ...
         report_diff "$file" \
-            "HEAD" \
             "The $description is not tracked by git" \
-            "$patch_file"
+            "$patch_file" \
+            "HEAD"
         # ... and remove the file from the index
         git rm --cached -- "$file" > /dev/null 2>&1
     else
         # Compare the content with the reference value checked in git
+        # Lines includng Windows paths are excluded from diff
+        # This is necessary due to characters in those paths on GitHub runners
+        # that cause git diff to spuriously flag them
         report_diff "$file" \
-            "--ignore-cr-at-eol" \
             "Non-matching $description" \
-            "$patch_file"
+            "$patch_file" \
+            --ignore-cr-at-eol \
+            --ignore-matching-lines="C:\\\\"
     fi
 }
 
