@@ -6719,7 +6719,9 @@ public:
 
             //  Emit "auto" for deduced types (of course)
             if (type->is_wildcard()) {
-                assert(n.initializer);
+                if(!n.initializer) {
+                    return;
+                }
                 emit( *type, n.position() );
             }
             //  Otherwise, emit the type
