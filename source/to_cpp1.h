@@ -6758,7 +6758,7 @@ public:
                 if (n.has_wildcard_type()) {
                     errors.emplace_back(
                         n.identifier->position(),
-                        "an object can have an anonymous name or an anonymous type, but not both at the same type (rationale: if '_ := f();' were allowed to keep the returned object alive, that syntax would be dangerously close to '_ = f();' to discard the returned object, and such importantly opposite meanings deserve more than a one-character typo distance; and explicit discarding gets the nice syntax because it's likely more common)"
+                        "an object can have an anonymous name or an anonymous type, but not both at the same time (rationale: if '_ := f();' were allowed to keep the returned object alive, that syntax would be dangerously close to '_ = f();' to discard the returned object, and such importantly opposite meanings deserve more than a one-character typo distance; and explicit discarding gets the nice syntax because it's likely more common)"
                     );
                     return;
                 }
