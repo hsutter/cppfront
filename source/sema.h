@@ -1511,11 +1511,15 @@ public:
     )
         -> bool
     {
-        std::vector<error_entry> devnull;
-        auto& errors = emit_errors ? this->errors : devnull;
+        const std::function emit_error = [this](source_position pos, std::string_view msg) {
+            errors.emplace_back(pos, msg);
+        };
+        const std::function skip_error = [](source_position, std::string_view){};
+
+        const auto handle_error = emit_errors ? emit_error : skip_error;
 
         if (n.has_name("operator")) {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "the name 'operator' is incomplete - did you mean to write an overloaded operator name like 'operator*' or 'operator++'?"
             );
@@ -1529,7 +1533,7 @@ public:
             && !n.has_initializer()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "an object with a deduced type must have an = initializer"
             );
@@ -1543,7 +1547,7 @@ public:
             && !n.initializer->is_expression()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "an object initializer must be an expression"
             );
@@ -1559,7 +1563,7 @@ public:
                 )
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "a namespace must be = initialized with a { } body containing declarations"
             );
@@ -1573,7 +1577,7 @@ public:
             && n.initializer->is_return()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "a function with a single-expression body doesn't need to say 'return' - either omit 'return' or write a full { }-enclosed function body"
             );
@@ -1588,7 +1592,7 @@ public:
             && !n.has_initializer()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "a function must have a body ('=' initializer), unless it is virtual (has a 'virtual this' parameter) or is defaultable (operator== or operator<=>)"
             );
@@ -1601,7 +1605,7 @@ public:
             && !n.parent_is_type()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "(temporary alpha limitation) a type must be in a namespace or type scope - function-local types are not yet supported"
             );
@@ -1614,7 +1618,7 @@ public:
             && n.has_wildcard_type()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "a type scope variable must have a declared type"
             );
@@ -1632,7 +1636,7 @@ public:
                     )
                 )
             {
-                errors.emplace_back(
+                handle_error(
                     n.identifier->position(),
                     "'this' may only be declared as an ordinary function parameter or type-scope (base) object"
                 );
@@ -1646,14 +1650,14 @@ public:
 
             if (this_index >= 0) {
                 if (!n.parent_is_type()) {
-                    errors.emplace_back(
+                    handle_error(
                         n.position(),
                         "'this' must be the first parameter of a type-scope function"
                     );
                     return false;
                 }
                 if (this_index != 0) {
-                    errors.emplace_back(
+                    handle_error(
                         n.position(),
                         "'this' must be the first parameter"
                     );
@@ -1663,14 +1667,14 @@ public:
 
             if (that_index >= 0) {
                 if (!n.parent_is_type()) {
-                    errors.emplace_back(
+                    handle_error(
                         n.position(),
                         "'that' must be the second parameter of a type-scope function"
                     );
                     return false;
                 }
                 if (that_index != 1) {
-                    errors.emplace_back(
+                    handle_error(
                         n.position(),
                         "'that' must be the second parameter"
                     );
@@ -1685,7 +1689,7 @@ public:
             && n.parent_is_namespace()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.identifier->position(),
                 "namespace scope objects must have a concrete type, not a deduced type"
             );
@@ -1699,7 +1703,7 @@ public:
             && !n.is_object_alias()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.identifier->position(),
                 "'_' (wildcard) may not be the name of a function or type - it may only be used as the name of an anonymous object, object alias, or namespace"
             );
@@ -1712,7 +1716,7 @@ public:
             )
         {
             if (!n.is_object()) {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "a member named 'this' declares a base subobject, and must be followed by a base type name"
                 );
@@ -1724,7 +1728,7 @@ public:
                 && !n.is_default_access()
                 )
             {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "a base type must be public (the default)"
                 );
@@ -1733,7 +1737,7 @@ public:
 
             if (n.has_wildcard_type())
             {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "a base type must be a specific type, not a deduced type (omitted or '_'-wildcarded)"
                 );
@@ -1746,7 +1750,7 @@ public:
             && !n.parent_is_type()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "an access-specifier is only allowed on a type-scope (member) declaration"
             );
@@ -1761,7 +1765,7 @@ public:
                 && (*func->parameters)[0]->has_name("this")
             );
             if ((*func->parameters)[0]->is_polymorphic()) {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "a constructor may not be declared virtual, override, or final"
                 );
@@ -1777,7 +1781,7 @@ public:
         {
             assert (n.identifier->get_token());
             auto name = n.identifier->get_token()->to_string();
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "(temporary alpha limitation) local functions like '" + name + ": (/*params*/) = {/*body*/}' are not currently supported - write a local variable initialized with an unnamed function like '" + name + " := :(/*params*/) = {/*body*/};' instead (add '=' and ';')"
             );
@@ -1796,7 +1800,7 @@ public:
                 )
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "overloading '" + n.name()->to_string() + "' is not allowed"
             );
@@ -1824,7 +1828,7 @@ public:
                 )
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 n.name()->to_string() + " must have 'this' as the first parameter"
             );
@@ -1861,7 +1865,7 @@ public:
             //  ... and if it isn't that, then complain
             else
             {
-                errors.emplace_back(
+                handle_error(
                     params[0]->position(),
                     "'main' must be declared as 'main: ()' with zero parameters, or 'main: (args)' with one parameter named 'args' for which the type 'std::vector<std::string_view>' will be deduced"
                 );
@@ -1873,7 +1877,7 @@ public:
         {
             if (!n.is_function())
             {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "'operator=' must be a function"
                 );
@@ -1883,7 +1887,7 @@ public:
 
             if (func->has_declared_return_type())
             {
-                errors.emplace_back(
+                handle_error(
                     func->parameters->parameters[0]->position(),
                     "'operator=' may not have a declared return type"
                 );
@@ -1892,7 +1896,7 @@ public:
 
             if (func->parameters->ssize() == 0)
             {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "an operator= function must have a parameter"
                 );
@@ -1905,7 +1909,7 @@ public:
                 && (*func->parameters)[0]->pass != passing_style::move
                 )
             {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "an operator= function's 'this' parameter must be inout, out, or move"
                 );
@@ -1919,7 +1923,7 @@ public:
                 && (*func->parameters)[1]->pass != passing_style::move
                 )
             {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "an operator= function's 'that' parameter must be in or move"
                 );
@@ -1932,7 +1936,7 @@ public:
                 && (*func->parameters)[0]->pass == passing_style::move
                 )
             {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "a destructor may not have other parameters besides 'this'"
                 );
@@ -1944,7 +1948,7 @@ public:
         {
             if (decl->has_name("that"))
             {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "'that' may not be used as a type scope name"
                 );
@@ -1957,7 +1961,7 @@ public:
             && !n.has_bool_return_type()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 n.name()->to_string() + " must return bool"
             );
@@ -1973,7 +1977,7 @@ public:
                 && return_name.find("partial_ordering") == return_name.npos
                 )
             {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "operator<=> must return std::strong_ordering, std::weak_ordering, or std::partial_ordering"
                 );
@@ -1990,7 +1994,7 @@ public:
                     && !stmt->is_using()
                     )
                 {
-                    errors.emplace_back(
+                    handle_error(
                         stmt->position(),
                         "a user-defined type body must contain only declarations or 'using' statements, not other code"
                     );
