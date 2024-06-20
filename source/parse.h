@@ -8006,6 +8006,11 @@ private:
             }
         }
 
+        //  Consume trailing comma
+        if (curr().type() == lexeme::Comma) {
+            next();
+        }
+
         if (curr().type() != lexeme::RightParen) {
             error("expected ')' at the end of the contract");
             return {};
