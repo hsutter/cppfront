@@ -1,0 +1,19 @@
+v : std::any = 12;
+
+main: () = {
+    // object initializer must be an expression, not a statement
+    // inspect only allows a result type when it is an expression
+    i: int = inspect v -> int {
+        is 12 = 12;
+        is _ = 0;
+    };
+    [[assert: i == 12]]
+
+    // inference
+    s := inspect v -> std::string {
+        is 5 = "five";
+        is int = "some other integer";
+        is _ = "not an integer";
+    };
+    [[assert: s == "some other integer"]]
+}
