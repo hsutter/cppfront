@@ -5492,11 +5492,8 @@ public:
 
 
         //  Declarations are handled in multiple passes,
-        //  but we only want to do the sema checks once
-        if (
-            printer.get_phase() == printer.phase2_func_defs
-            && !sema.check(n)
-            )
+        //  but we only want to emit the error messages once (in phase 2)
+        if (!sema.check(n, printer.get_phase() == printer.phase2_func_defs))
         {
             return;
         }

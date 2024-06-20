@@ -1505,9 +1505,15 @@ public:
         return true;
     }
 
-    auto check(declaration_node const& n)
+    auto check(
+        declaration_node const& n,
+        bool                    emit_errors = true  // pass false to validate checks only
+    )
         -> bool
     {
+        std::vector<error_entry> devnull;
+        auto& errors = emit_errors ? this->errors : devnull;
+
         if (n.has_name("operator")) {
             errors.emplace_back(
                 n.position(),
