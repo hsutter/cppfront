@@ -2439,7 +2439,7 @@ public:
     {
         //  By giving tokens an order during sema
         //  generated code can be equally checked
-        t.set_global_token_order( global_token_counter++ );
+        t.set_global_token_order( global_token_counter );
 
         auto guard = finally([&]() {
             prev2_token = prev_token;
