@@ -164,6 +164,15 @@ static cmdline_processor::register_flag cmd_cpp1_filename(
     [](std::string const& name) { flag_cpp1_filename = name; }
 );
 
+static auto flag_cwd = std::filesystem::path{};
+static cpp2::cmdline_processor::register_flag cmd_cwd(
+    9,
+    "cwd path",
+    "Change current working directory to path",
+    nullptr,
+    [](std::string const& path) { flag_cwd = { path }; }
+);
+
 static auto flag_no_exceptions = false;
 static cmdline_processor::register_flag cmd_no_exceptions(
     4,
@@ -1245,8 +1254,14 @@ public:
 
         //  Now we'll open the Cpp1 file
         auto cpp1_filename = sourcefile.substr(0, std::ssize(sourcefile) - 1);
+        
+        //  Use explicit filename override if present,
+        //  otherwise strip leading path
         if (!flag_cpp1_filename.empty()) {
-            cpp1_filename = flag_cpp1_filename; // use override if present
+            cpp1_filename = flag_cpp1_filename;
+        }
+        else {
+            cpp1_filename = std::filesystem::path(cpp1_filename).filename().string();
         }
 
         printer.open(
