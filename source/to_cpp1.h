@@ -164,7 +164,7 @@ static cmdline_processor::register_flag cmd_cpp1_filename(
     [](std::string const& name) { flag_cpp1_filename = name; }
 );
 
-static auto flag_cwd = std::filesystem::path{};;
+static auto flag_cwd = std::filesystem::path{};
 static cpp2::cmdline_processor::register_flag cmd_cwd(
     9,
     "cwd path",
