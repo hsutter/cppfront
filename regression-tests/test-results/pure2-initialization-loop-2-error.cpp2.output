@@ -1,0 +1,4 @@
+pure2-initialization-loop-2-error.cpp2...
+pure2-initialization-loop-2-error.cpp2(6,13): error: local variable i cannot be initialized inside a loop
+  ==> program violates initialization safety guarantee - see previous errors
+

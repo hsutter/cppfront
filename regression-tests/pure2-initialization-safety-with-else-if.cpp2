@@ -23,3 +23,18 @@ main: (args) = {
 
     std::cout << p* << std::endl;
 }
+
+
+ok: () = {
+    i: int;
+    if true {
+        i = 42;
+        while true {    // OK: in-branch loop is after initialization
+            i = 42;
+        }
+    }
+    else {
+        i = 42;
+    }
+    i = 42;
+}

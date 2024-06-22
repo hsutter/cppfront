@@ -174,7 +174,7 @@ struct selection_sym {
 struct compound_sym {
     bool start = false;
     compound_statement_node const* compound = {};
-    enum kind { is_scope, is_true, is_false } kind_ = is_scope;
+    enum kind { is_scope, is_true, is_false, is_loop } kind_ = is_scope;
 
     compound_sym(
         bool                           s,
@@ -373,6 +373,7 @@ public:
     index_t                   global_token_counter = 1;
 
     std::vector<selection_statement_node const*> active_selections;
+    std::vector<iteration_statement_node const*> active_iterations;
     std::vector<declaration_sym          const*> current_declarations;
 
     struct declaration_of_t {
@@ -648,10 +649,12 @@ public:
                 else if (sym.kind_ == sym.is_false) {
                     o << "false branch";
                 }
+                else if (sym.kind_ == sym.is_loop) {
+                    o << "loop";
+                }
                 else {
                     o << "scope";
                 }
-
             }
 
             break;default:
@@ -1164,7 +1167,7 @@ private:
     {
         auto name = decl->identifier->to_string();
 
-        struct stack_entry{
+        struct selection_stack_entry{
             int pos;    // start of this selection statement
 
             struct branch {
@@ -1175,17 +1178,34 @@ private:
             };
             std::vector<branch> branches;
 
-            stack_entry(int p) : pos{p} { }
+            selection_stack_entry(int p) : pos{p} { }
 
             auto debug_print(std::ostream& o) const -> void
             {
-                o << "Stack entry: " << pos << "\n";
+                o << "Selection stack entry: " << pos << "\n";
                 for (auto const& e : branches) {
                     o << "  ( " << e.start << " , " << e.result << " )\n";
                 }
             }
         };
-        std::vector<stack_entry> selection_stack;
+        std::vector<selection_stack_entry> selection_stack;
+
+        std::vector<source_position> loop_stack;    // start of each active loop
+
+
+        auto record_result = [&](token const* t) -> bool {
+                if (!loop_stack.empty()) {
+                    errors.emplace_back(
+                        t->position(),
+                        "local variable " + name
+                        + " cannot be initialized inside a loop"
+                    );
+                    return false;
+                }
+                definite_initializations.push_back(t);
+                return true;
+            };
+
 
         for (
             ;
@@ -1236,7 +1256,9 @@ private:
                     //  just return true if it's an assignment to it, else return false
                     if (std::ssize(selection_stack) == 0) {
                         if (sym.standalone_assignment_to) {
-                            definite_initializations.push_back( sym.identifier );
+                            if (!record_result(sym.identifier)) {
+                                return false;
+                            }
                         }
                         else {
                             errors.emplace_back(
@@ -1254,7 +1276,9 @@ private:
                         //  if we weren't an a selection statement
                         if (std::ssize(selection_stack) == 1) {
                             if (sym.standalone_assignment_to) {
-                                definite_initializations.push_back( sym.identifier );
+                                if (!record_result(sym.identifier)) {
+                                    return false;
+                                }
                             }
                             else {
                                 errors.emplace_back(
@@ -1282,7 +1306,9 @@ private:
                     //  and record this as the result for the current branch
                     else {
                         if (sym.standalone_assignment_to) {
-                            definite_initializations.push_back( sym.identifier );
+                            if (!record_result(sym.identifier)) {
+                                return false;
+                            }
                         }
                         else {
                             errors.emplace_back(
@@ -1390,8 +1416,20 @@ private:
             break;case symbol::active::compound: {
                 auto const& sym = std::get<symbol::active::compound>(symbols[pos].sym);
 
-                //  If we're in a selection
-                if (std::ssize(selection_stack) > 0) {
+                //  Track loop entries/exits
+                if (sym.kind_ == sym.is_loop)
+                {
+                    if (sym.start) {
+                        loop_stack.push_back( sym.position() );
+                    }
+                    else {
+                        assert (!loop_stack.empty());
+                        loop_stack.pop_back();
+                    }
+                }
+
+                //  Else if we're at a selection
+                else if (std::ssize(selection_stack) > 0) {
                     //  If this is a compound start with the current selection's depth
                     //  plus one, it's the start of one of the branches of that selection
                     if (
@@ -2316,6 +2354,7 @@ public:
 
     auto start(iteration_statement_node const& n, int) -> void
     {
+        active_iterations.push_back(&n);
         if (*n.identifier != "for") {
              symbols.emplace_back( scope_depth, identifier_sym( false, n.identifier ) );
         }
@@ -2324,6 +2363,7 @@ public:
     auto end(iteration_statement_node const& n, int) -> void
     {
         symbols.emplace_back( scope_depth, identifier_sym( false, n.identifier, identifier_sym::deactivation ) );
+        active_iterations.pop_back();
     }
 
     auto start(loop_body_tag const& n, int) -> void
@@ -2688,7 +2728,16 @@ public:
         -> compound_sym::kind
     {
         auto kind = compound_sym::is_scope;
-        if (!active_selections.empty())
+
+        if (
+            !active_iterations.empty()
+            && active_iterations.back()->statements.get() == &n
+            )
+        {
+            kind = compound_sym::is_loop;
+        }
+
+        else if (!active_selections.empty())
         {
             assert(active_selections.back()->true_branch);
             if (active_selections.back()->true_branch.get() == &n)
@@ -2703,6 +2752,7 @@ public:
                 kind = compound_sym::is_false;
             }
         }
+
         return kind;
     }
 
