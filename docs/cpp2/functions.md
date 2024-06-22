@@ -84,7 +84,9 @@ add: <T: type, U: type> (a:T, b:U) -> decltype(a+b) = { return a+b; }
 add: (a, b) -> _ = a+b;
 ```
 
-(2) **`#!cpp -> ( /* parameter list */ )`** to return a list of named return parameters using the same [parameters](#parameters) syntax, but where the only passing styles are `out` (the default, which moves where possible) or `forward`. The function body must [initialize](objects.md#init) the value of each return-parameter `ret` in its body the same way as any other local variable. An explicit return statement is written just `#!cpp return;` and returns the named values; the function has an implicit `#!cpp return;` at the end. For example:
+(2) **`#!cpp -> ( /* parameter list */ )`** to return a list of named return parameters using the same [parameters](#parameters) syntax, but where the only passing styles are `out` (the default, which moves where possible) or `forward`. The function body must [initialize](objects.md#init) the value of each return-parameter `ret` in its body the same way as any other local variable. An explicit return statement is written just `#!cpp return;` and returns the named values; the function has an implicit `#!cpp return;` at the end. If only a single return parameter is in the list, it is emitted in the lowered Cpp1 code the same way as (1) above, so its name is only available inside the function body.
+
+For example:
 
 ``` cpp title="Function with multiple/named return values" hl_lines="1 3-4 7-8 14 16-17"
 divide: (dividend: int, divisor: int) -> (quotient: int, remainder: int) = {
