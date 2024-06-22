@@ -167,8 +167,8 @@ static cmdline_processor::register_flag cmd_cpp1_filename(
 static auto flag_cwd = std::filesystem::path{};;
 static cpp2::cmdline_processor::register_flag cmd_cwd(
     9,
-    "cwd directory",
-    "Change current working directory",
+    "cwd path",
+    "Change current working directory to path",
     nullptr,
     [](std::string const& path) { flag_cwd = { path }; }
 );
@@ -1254,10 +1254,13 @@ public:
 
         //  Now we'll open the Cpp1 file
         auto cpp1_filename = sourcefile.substr(0, std::ssize(sourcefile) - 1);
-        if (!flag_cpp1_filename.empty()) { // use override if present
+        
+        //  Use explicit filename override if present,
+        //  otherwise strip leading path
+        if (!flag_cpp1_filename.empty()) {
             cpp1_filename = flag_cpp1_filename;
         }
-        else if (!flag_cwd.empty()) {      // strip leading path if cwd was explicitly set
+        else {
             cpp1_filename = std::filesystem::path(cpp1_filename).filename().string();
         }
 
