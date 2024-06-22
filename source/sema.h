@@ -1518,9 +1518,13 @@ public:
     auto check(parameter_declaration_node const& n)
         -> bool
     {
+        assert(n.declaration);
+
         auto type_name = std::string{};
         if (n.declaration->has_declared_return_type()) {
-            type_name = n.declaration->get_object_type()->to_string();
+            auto object_type = n.declaration->get_object_type();
+            assert(object_type);
+            type_name = object_type->to_string();
         }
 
         if (
