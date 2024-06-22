@@ -1,0 +1,292 @@
+/*
+
+Expected usage:
+
+./regression-runner <target> <cppfront_exe_path> <tests_path_or_single_test>
+                    <compiler_path> <include_path> <compiler_flags...>
+
+*/
+#define LAUNCH_PROGRAM_IMPLEMENTATION
+#include "launch_program.hpp"
+
+fs: namespace == std::filesystem;
+
+main: (args) -> int = {
+	min_args :== 5;
+	assert(
+		args.ssize()-1 >= min_args,
+		"Expected at least (min_args)$ arguments. Received (args.ssize()-1)$\n",
+	);
+
+	ctx: testing_context = (
+		args[1],
+		fs::path(args[2]).canonical(),
+		fs::path(args[4]), // We trust that this exe is in PATH.
+		fs::path(args[5]).canonical(),
+	);
+	path_to_test := fs::path(args[3]).canonical();
+	(copy i := min_args + 1) while i < args.ssize() next i++ {
+		_ = ctx.unformatted_compiler_args.emplace_back(args[i]);
+	}
+
+	assert(
+		ctx.cppfront.is_regular_file(),
+		"Path to cppfront executable must be a regular file\n",
+	);
+
+	ext :== ".cpp2";
+
+	exit_status := EXIT_SUCCESS;
+	process_test_result := :(test_full_path: fs::path, result: test_result) = {
+		std::cout << "(test_full_path.filename().string())$: (result)$\n";
+		if !result.is_ok() { exit_status&$* = EXIT_FAILURE; }
+	};
+
+	if !path_to_test.is_directory() {
+		assert(
+			path_to_test.extension() == ext,
+			"For one-shot testing, the path must point to a (ext)$ file\n",
+		);
+		tr := test_one(ctx, path_to_test);
+		process_test_result(path_to_test, tr);
+	} else {
+		results: std::vector<std::pair<fs::path, std::future<test_result>>> = ();
+		// Collect all tests...
+		for : fs::directory_iterator = (path_to_test) do (entry)
+		if entry.path().extension() == ext {
+			results.emplace_back().first = entry.path();
+		}
+		// Sort them by name (optional!)
+		std::sort(
+			results.begin(),
+			results.end(),
+			: (lhs, rhs) -> _ = lhs.first.filename() < rhs.first.filename(),
+		);
+		// Launch them all (you better have a good scheduler!)
+		for results do (inout r) {
+			r.second = std::async(test_one, ctx, r.first);
+		}
+		// Wait each task and display its result
+		for results do (inout r) {
+			tr := r.second.get();
+			process_test_result(r.first, tr);
+		}
+	}
+
+	return exit_status;
+}
+
+testing_context: @struct type = {
+	target: std::string_view;
+	cppfront: fs::path;
+	compiler: fs::path;
+	include_dir: fs::path;
+	unformatted_compiler_args: std::vector<std::string_view> = ();
+	// override_files: bool; // TODO
+}
+
+test_result: @flag_enum type = {
+	first_run;
+	lowered_output_mismatch;
+	cppfront_output_mismatch;
+	compiler_output_mismatch;
+	compiler_output_exists_when_it_shouldnt; // or viceversa
+	test_exe_output_mismatch;
+	test_exe_output_exists_when_it_shouldnt; // or viceversa
+
+	is_ok: (this) -> bool == this == none;
+	is_first_run: (this) -> bool == has(first_run);
+}
+
+test_one: (
+	ctx: testing_context,
+	test_filepath: fs::path,
+) -> test_result = {
+	ins: testing_instance = (
+		test_filepath,
+		test_filepath.parent_path() / "results" / test_filepath.stem(),
+		fs::temp_directory_path() / "cppfront-regressions" / test_filepath.stem(),
+		nullptr,
+	);
+
+	if !ins.result_dir.exists() || ins.result_dir.is_empty() {
+		ins.result = test_result::first_run;
+		_ = ins.result_dir.create_directory();
+		ins.output_dir = ins.result_dir&;
+	} else {
+		ins.output_dir = ins.work_dir&;
+	}
+	assert(
+		ins.result_dir.is_directory(),
+		"The result path ((ins.result_dir)$) must be a directory\n",
+	);
+	assert(ins.output_dir != nullptr);
+
+	_ = ins.work_dir.create_directories();
+	_: finally = ( :() = { _ = ins.work_dir&$*.remove_all(); } );
+
+	source_fn := transpile(ctx, ins);
+	if source_fn.empty() { return ins.result; }
+
+	executable_filepath := compile(ctx, ins, source_fn);
+	if executable_filepath.empty() { return ins.result; }
+
+	execute(ins, executable_filepath);
+
+	return ins.result;
+}
+
+testing_instance: @struct type = {
+	test_filepath: fs::path;
+	result_dir: fs::path;
+	work_dir: fs::path;
+	output_dir: *const fs::path;
+	result: test_result = ();
+}
+
+transpile: (ctx: testing_context, inout ins: testing_instance) -> fs::path = {
+	lowered_output_fn :== "00-lowered.cpp";
+	lowered_output_filepath: const = ins.output_dir* / lowered_output_fn;
+
+	cppfront_args: std::vector<std::string> = (
+		"-o",
+		lowered_output_filepath.string(),
+		ins.test_filepath.filename().string(),
+	);
+
+	launch_result := launch_program(
+		ins.test_filepath.parent_path(),
+		ctx.cppfront,
+		cppfront_args,
+	);
+
+	cppfront_output_fn :== "01-cppfront.output";
+	cppfront_output_filepath: const = ins.output_dir* / cppfront_output_fn;
+
+	(: std::ofstream = (cppfront_output_filepath)) << launch_result.output;
+
+	if !ins.result.is_first_run() {
+		assert(ins.output_dir* != ins.result_dir);
+
+		if (ins.result_dir / lowered_output_fn).read_file() !=
+		                lowered_output_filepath.read_file() {
+			ins.result |= test_result::lowered_output_mismatch;
+		}
+
+		if (ins.result_dir / cppfront_output_fn).read_file() !=
+		                cppfront_output_filepath.read_file() {
+			ins.result |= test_result::cppfront_output_mismatch;
+		}
+	}
+
+	if lowered_output_filepath.exists() {
+		return lowered_output_fn;
+	} else {
+		return ();
+	}
+}
+
+compile: (
+	ctx: testing_context,
+	inout ins: testing_instance,
+	source_fn: fs::path
+) -> fs::path = {
+	compiler_exe_out_path: const = ins.work_dir / "test.exe";
+
+	// NOTE: We always want this to be run with result's path so compiler
+	// error output matches.
+	// TODO: Review since execution can continue with a wrong source file atm
+	source_file: const = ins.result_dir / source_fn;
+
+	compiler_args: std::vector<std::string> = ();
+	for ctx.unformatted_compiler_args do (uarg) {
+		arg := compiler_args.emplace_back(uarg)&;
+		arg*.replace_all("{source_file}", source_file.string());
+		arg*.replace_all("{include_dir}", ctx.include_dir.string());
+		arg*.replace_all("{exe_out}", compiler_exe_out_path.string());
+	}
+
+	launch_result := launch_program(
+		ins.work_dir,
+		ctx.compiler,
+		compiler_args,
+	);
+
+	compiler_output_fn: const = "02-(ctx.target)$-compiler.output";
+	compiler_output_filepath: const = ins.output_dir* / compiler_output_fn;
+
+	if !launch_result.output.empty() {
+		(: std::ofstream = (compiler_output_filepath)) << launch_result.output;
+	}
+
+	if !ins.result.is_first_run() {
+		assert(ins.output_dir* != ins.result_dir);
+
+		if !launch_result.output.empty() {
+			if (ins.result_dir / compiler_output_fn).read_file() !=
+			                compiler_output_filepath.read_file() {
+				ins.result |= test_result::compiler_output_mismatch;
+			}
+		} else if compiler_output_filepath.exists() {
+			ins.result |= test_result::compiler_output_exists_when_it_shouldnt;
+		}
+	}
+
+	if compiler_exe_out_path.exists() {
+		return compiler_exe_out_path;
+	} else {
+		return ();
+	}
+}
+
+execute: (
+	inout ins: testing_instance,
+	executable_filepath: fs::path,
+) = {
+	test_exe_output_fn :== "03-executable.output";
+	test_exe_output_filepath: const = ins.output_dir* / test_exe_output_fn;
+
+	cmd_result := launch_program(
+		ins.work_dir,
+		executable_filepath,
+		: std::vector<std::string> = (),
+	);
+
+	if !cmd_result.output.empty() {
+		(: std::ofstream = (test_exe_output_filepath)) << cmd_result.output;
+	}
+
+	if !ins.result.is_first_run() {
+		assert(ins.output_dir* != ins.result_dir);
+
+		if !cmd_result.output.empty() {
+			if (ins.result_dir / test_exe_output_fn).read_file() !=
+			                test_exe_output_filepath.read_file() {
+				ins.result |= test_result::test_exe_output_mismatch;
+			}
+		} else if test_exe_output_filepath.exists() {
+			ins.result |= test_result::test_exe_output_exists_when_it_shouldnt;
+		}
+	}
+}
+
+replace_all: (
+	inout subject: std::string,
+	search: std::string_view,
+	replacement: std::string_view,
+) = {
+	pos: std::string::size_type = 0;
+	while (pos = subject.find(search, pos)) != std::string::npos {
+		_ = subject.replace(pos, search.size(), replacement);
+		pos += replacement.size();
+	}
+}
+
+read_file: (fp: fs::path) -> std::string = {
+	out: std::string = ();
+	b: std::array<char, 4096> = (); // TODO: Find a way to avoid this init?
+	bd := b.data();
+	f: std::ifstream = (fp, std::ios::in | std::ios::binary);
+	while f.read(bd, b.size()) { _ = out.append(bd, 0, f.gcount()); }
+	return out;
+}
