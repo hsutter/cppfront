@@ -5637,8 +5637,9 @@ public:
                         }
                         //  Otherwise, just emit the general expression as usual
                         else {
-                            return " = "
-                                   + print_to_string(n);
+                            return "{ "
+                                   + print_to_string(n)
+                                   + " }";
                         }
                     };
 

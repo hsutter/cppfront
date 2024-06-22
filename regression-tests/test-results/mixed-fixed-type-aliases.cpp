@@ -44,7 +44,7 @@ auto test(auto const& x) -> void{
 }
 
 #line 16 "mixed-fixed-type-aliases.cpp2"
-    template <typename T> template<typename U> inline CPP2_CONSTEXPR bool mytype<T>::myvalue = true;
+    template <typename T> template<typename U> inline CPP2_CONSTEXPR bool mytype<T>::myvalue{ true };
 
 #line 19 "mixed-fixed-type-aliases.cpp2"
 [[nodiscard]] auto main(int const argc_, char** argv_) -> int{

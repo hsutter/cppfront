@@ -89,7 +89,7 @@ bool testing_enabled {false};
 
 #line 8 "pure2-print.cpp2"
     template<typename T> 
-requires (true) inline CPP2_CONSTEXPR T outer::object_alias = 42;
+requires (true) inline CPP2_CONSTEXPR T outer::object_alias{ 42 };
 #line 9 "pure2-print.cpp2"
 
 #line 12 "pure2-print.cpp2"
@@ -174,8 +174,8 @@ requires ((std::is_convertible_v<CPP2_TYPEOF(x), int> && ...)) {(std::cout << ..
 
         using type_alias = array<int,10>;
 
-        cpp2::i8 constexpr object_alias_1 = 42;
-        auto constexpr object_alias_2 = 42;
+        cpp2::i8 constexpr object_alias_1{ 42 };
+        auto constexpr object_alias_2{ 42 };
         std::array constexpr object_alias_3{ 4, 5, 6 };
 
 #line 83 "pure2-print.cpp2"

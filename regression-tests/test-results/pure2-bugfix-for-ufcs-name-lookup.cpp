@@ -90,11 +90,11 @@ auto const& f{t().f()};
 }
 #line 35 "pure2-bugfix-for-ufcs-name-lookup.cpp2"
   {
-    auto constexpr f = t().f();
+    auto constexpr f{ t().f() };
     static_assert(f == 0);
   }
   {
-    auto constexpr f = t().f();
+    auto constexpr f{ t().f() };
     static_assert(f == 0);
   }
   {

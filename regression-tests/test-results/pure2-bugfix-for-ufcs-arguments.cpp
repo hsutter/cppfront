@@ -48,7 +48,7 @@ template<typename UnnamedTypeParam1_6, typename U> [[nodiscard]] auto f([[maybe_
 
 extern t m;
 extern t const n;
-template<typename UnnamedTypeParam1_7, typename U> auto inline constexpr a = n;
+template<typename UnnamedTypeParam1_7, typename U> auto inline constexpr a{ n };
 
 extern cpp2::i32 auto_8;
 extern cpp2::i32 auto_9;

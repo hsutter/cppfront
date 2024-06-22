@@ -83,14 +83,14 @@ auto const& v2{cpp2::move(v)};
 }
 
 #line 26 "pure2-type-and-namespace-aliases.cpp2"
-    template <typename T> inline CPP2_CONSTEXPR int myclass2<T>::value = 42;
+    template <typename T> inline CPP2_CONSTEXPR int myclass2<T>::value{ 42 };
 
 #line 29 "pure2-type-and-namespace-aliases.cpp2"
 auto main() -> int{
     using view = std::string_view;
     namespace N4 = std::literals;
 
-    auto constexpr myfunc2 = myfunc;
+    auto constexpr myfunc2{ myfunc };
     myfunc2();
 }
 
