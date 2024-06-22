@@ -6482,9 +6482,6 @@ private:
             assert (n->id.index() == type_id_node::unqualified);
         }
         else {
-            if (!n->pc_qualifiers.empty()) {
-            error("'*'/'const' type qualifiers must be followed by a type name or '_' wildcard");
-            }
             return {};
         }
         if (curr().type() == lexeme::Multiply) {
