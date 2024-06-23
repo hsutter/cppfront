@@ -264,6 +264,7 @@
     #endif
     #include <functional>
     #include <iostream>
+    #include <sstream>
     #include <iterator>
     #include <limits>
     #include <memory>
@@ -1189,7 +1190,7 @@ struct nonesuch_ {
 };
 constexpr inline nonesuch_ nonesuch;
 
-inline auto to_string(...) -> std::string
+inline auto to_string([[maybe_unused]] auto const& _) -> std::string
 {
     return "(customize me - no cpp2::to_string overload exists for this type)";
 }
@@ -1214,6 +1215,25 @@ inline auto to_string(T const& t) -> std::string
     requires requires { std::to_string(t); }
 {
     return std::to_string(t);
+}
+
+////  We'd like to add this convenience, which would support std::filesystem::path() and similar.
+////
+////  TODO: As written, this one would make some cases ambiguous. We should rewrite these
+////  common to_string functions as a single template with 'if constexpr' alternatives,
+////  as was done with 'is', and then this will be simpler.
+//template<typename T>
+//inline auto to_string(T const& t) -> std::string
+//    requires std::is_convertible_v<decltype((std::stringstream() << t).str()), std::string>
+//{
+//    return (std::stringstream() << t).str();
+//}
+
+template<typename T>
+inline auto to_string(T const& t) -> std::string
+    requires std::is_convertible_v<decltype(t.to_string()), std::string>
+{
+    return t.to_string();
 }
 
 inline auto to_string(char const& t) -> std::string
