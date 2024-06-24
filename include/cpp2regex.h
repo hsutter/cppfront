@@ -2796,7 +2796,7 @@ template<typename CharT, bool single_line> [[nodiscard]] auto any_token_matcher(
             std::string upper {token}; 
             std::string lower {token}; 
 {
-int i{0};
+size_t i{0};
 
 #line 1239 "regex.h2"
             for( ; cpp2::impl::cmp_less(i,token.size()); i += 1 ) {
@@ -3110,7 +3110,7 @@ int i{0};
         if ([_0 = '0', _1 = ctx.peek(), _2 = '9']{ return cpp2::impl::cmp_less_eq(_0,_1) && cpp2::impl::cmp_less_eq(_1,_2); }()) {
             static_cast<void>(ctx.next());// Skip escape
             group = ctx.grab_number();
-            if (cpp2::impl::cmp_greater_eq(group.size(),3)) {
+            if (cpp2::impl::cmp_greater_eq(group.size(),cpp2::impl::as_<size_t, 3>())) {
                 // Octal syntax (\000) not a group ref matcher.
                 auto number {0}; 
                 if (!(string_to_int(group, number, 8))) {return ctx.error("Could not convert octal to int."); }

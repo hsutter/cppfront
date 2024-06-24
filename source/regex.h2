@@ -1236,7 +1236,7 @@ char_token: @polymorphic_base type = {
             upper: std::string = token;
             lower: std::string = token;
 
-            (copy i: int = 0) while i < token..size() next i += 1 {
+            (copy i: size_t = 0) while i < token..size() next i += 1 {
                 lower[i] = safe_tolower(token[i]);
                 upper[i] = safe_toupper(token[i]);
             }
@@ -1598,7 +1598,7 @@ group_ref_token: @polymorphic_base type = {
         if '0' <= ctx..peek() <= '9' {
             _ = ctx..next(); // Skip escape
             group = ctx..grab_number();
-            if group..size() >= 3 {
+            if group..size() >= 3 as size_t {
                 // Octal syntax (\000) not a group ref matcher.
                 number := 0;
                 if !string_to_int(group, number, 8) { return ctx..error("Could not convert octal to int."); }
