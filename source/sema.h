@@ -174,7 +174,7 @@ struct selection_sym {
 struct compound_sym {
     bool start = false;
     compound_statement_node const* compound = {};
-    enum kind { is_scope, is_true, is_false } kind_ = is_scope;
+    enum kind { is_scope, is_true, is_false, is_loop } kind_ = is_scope;
 
     compound_sym(
         bool                           s,
@@ -373,6 +373,7 @@ public:
     index_t                   global_token_counter = 1;
 
     std::vector<selection_statement_node const*> active_selections;
+    std::vector<iteration_statement_node const*> active_iterations;
     std::vector<declaration_sym          const*> current_declarations;
 
     struct declaration_of_t {
@@ -648,10 +649,12 @@ public:
                 else if (sym.kind_ == sym.is_false) {
                     o << "false branch";
                 }
+                else if (sym.kind_ == sym.is_loop) {
+                    o << "loop";
+                }
                 else {
                     o << "scope";
                 }
-
             }
 
             break;default:
@@ -1164,7 +1167,7 @@ private:
     {
         auto name = decl->identifier->to_string();
 
-        struct stack_entry{
+        struct selection_stack_entry{
             int pos;    // start of this selection statement
 
             struct branch {
@@ -1175,17 +1178,34 @@ private:
             };
             std::vector<branch> branches;
 
-            stack_entry(int p) : pos{p} { }
+            selection_stack_entry(int p) : pos{p} { }
 
             auto debug_print(std::ostream& o) const -> void
             {
-                o << "Stack entry: " << pos << "\n";
+                o << "Selection stack entry: " << pos << "\n";
                 for (auto const& e : branches) {
                     o << "  ( " << e.start << " , " << e.result << " )\n";
                 }
             }
         };
-        std::vector<stack_entry> selection_stack;
+        std::vector<selection_stack_entry> selection_stack;
+
+        std::vector<source_position> loop_stack;    // start of each active loop
+
+
+        auto record_result = [&](token const* t) -> bool {
+                if (!loop_stack.empty()) {
+                    errors.emplace_back(
+                        t->position(),
+                        "local variable " + name
+                        + " cannot be initialized inside a loop"
+                    );
+                    return false;
+                }
+                definite_initializations.push_back(t);
+                return true;
+            };
+
 
         for (
             ;
@@ -1236,7 +1256,9 @@ private:
                     //  just return true if it's an assignment to it, else return false
                     if (std::ssize(selection_stack) == 0) {
                         if (sym.standalone_assignment_to) {
-                            definite_initializations.push_back( sym.identifier );
+                            if (!record_result(sym.identifier)) {
+                                return false;
+                            }
                         }
                         else {
                             errors.emplace_back(
@@ -1254,7 +1276,9 @@ private:
                         //  if we weren't an a selection statement
                         if (std::ssize(selection_stack) == 1) {
                             if (sym.standalone_assignment_to) {
-                                definite_initializations.push_back( sym.identifier );
+                                if (!record_result(sym.identifier)) {
+                                    return false;
+                                }
                             }
                             else {
                                 errors.emplace_back(
@@ -1282,7 +1306,9 @@ private:
                     //  and record this as the result for the current branch
                     else {
                         if (sym.standalone_assignment_to) {
-                            definite_initializations.push_back( sym.identifier );
+                            if (!record_result(sym.identifier)) {
+                                return false;
+                            }
                         }
                         else {
                             errors.emplace_back(
@@ -1390,8 +1416,20 @@ private:
             break;case symbol::active::compound: {
                 auto const& sym = std::get<symbol::active::compound>(symbols[pos].sym);
 
-                //  If we're in a selection
-                if (std::ssize(selection_stack) > 0) {
+                //  Track loop entries/exits
+                if (sym.kind_ == sym.is_loop)
+                {
+                    if (sym.start) {
+                        loop_stack.push_back( sym.position() );
+                    }
+                    else {
+                        assert (!loop_stack.empty());
+                        loop_stack.pop_back();
+                    }
+                }
+
+                //  Else if we're at a selection
+                else if (std::ssize(selection_stack) > 0) {
                     //  If this is a compound start with the current selection's depth
                     //  plus one, it's the start of one of the branches of that selection
                     if (
@@ -1480,9 +1518,13 @@ public:
     auto check(parameter_declaration_node const& n)
         -> bool
     {
+        assert(n.declaration);
+
         auto type_name = std::string{};
         if (n.declaration->has_declared_return_type()) {
-            type_name = n.declaration->get_object_type()->to_string();
+            auto object_type = n.declaration->get_object_type();
+            assert(object_type);
+            type_name = object_type->to_string();
         }
 
         if (
@@ -1505,11 +1547,21 @@ public:
         return true;
     }
 
-    auto check(declaration_node const& n)
+    auto check(
+        declaration_node const& n,
+        bool                    emit_errors = true  // pass false to validate checks only
+    )
         -> bool
     {
+        const std::function emit_error = [this](source_position pos, std::string_view msg) {
+            errors.emplace_back(pos, msg);
+        };
+        const std::function skip_error = [](source_position, std::string_view){};
+
+        const auto handle_error = emit_errors ? emit_error : skip_error;
+
         if (n.has_name("operator")) {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "the name 'operator' is incomplete - did you mean to write an overloaded operator name like 'operator*' or 'operator++'?"
             );
@@ -1523,7 +1575,7 @@ public:
             && !n.has_initializer()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "an object with a deduced type must have an = initializer"
             );
@@ -1537,7 +1589,7 @@ public:
             && !n.initializer->is_expression()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "an object initializer must be an expression"
             );
@@ -1553,7 +1605,7 @@ public:
                 )
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "a namespace must be = initialized with a { } body containing declarations"
             );
@@ -1567,7 +1619,7 @@ public:
             && n.initializer->is_return()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "a function with a single-expression body doesn't need to say 'return' - either omit 'return' or write a full { }-enclosed function body"
             );
@@ -1582,7 +1634,7 @@ public:
             && !n.has_initializer()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "a function must have a body ('=' initializer), unless it is virtual (has a 'virtual this' parameter) or is defaultable (operator== or operator<=>)"
             );
@@ -1595,7 +1647,7 @@ public:
             && !n.parent_is_type()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "(temporary alpha limitation) a type must be in a namespace or type scope - function-local types are not yet supported"
             );
@@ -1608,7 +1660,7 @@ public:
             && n.has_wildcard_type()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "a type scope variable must have a declared type"
             );
@@ -1626,7 +1678,7 @@ public:
                     )
                 )
             {
-                errors.emplace_back(
+                handle_error(
                     n.identifier->position(),
                     "'this' may only be declared as an ordinary function parameter or type-scope (base) object"
                 );
@@ -1640,14 +1692,14 @@ public:
 
             if (this_index >= 0) {
                 if (!n.parent_is_type()) {
-                    errors.emplace_back(
+                    handle_error(
                         n.position(),
                         "'this' must be the first parameter of a type-scope function"
                     );
                     return false;
                 }
                 if (this_index != 0) {
-                    errors.emplace_back(
+                    handle_error(
                         n.position(),
                         "'this' must be the first parameter"
                     );
@@ -1657,14 +1709,14 @@ public:
 
             if (that_index >= 0) {
                 if (!n.parent_is_type()) {
-                    errors.emplace_back(
+                    handle_error(
                         n.position(),
                         "'that' must be the second parameter of a type-scope function"
                     );
                     return false;
                 }
                 if (that_index != 1) {
-                    errors.emplace_back(
+                    handle_error(
                         n.position(),
                         "'that' must be the second parameter"
                     );
@@ -1679,7 +1731,7 @@ public:
             && n.parent_is_namespace()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.identifier->position(),
                 "namespace scope objects must have a concrete type, not a deduced type"
             );
@@ -1693,7 +1745,7 @@ public:
             && !n.is_object_alias()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.identifier->position(),
                 "'_' (wildcard) may not be the name of a function or type - it may only be used as the name of an anonymous object, object alias, or namespace"
             );
@@ -1706,7 +1758,7 @@ public:
             )
         {
             if (!n.is_object()) {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "a member named 'this' declares a base subobject, and must be followed by a base type name"
                 );
@@ -1718,7 +1770,7 @@ public:
                 && !n.is_default_access()
                 )
             {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "a base type must be public (the default)"
                 );
@@ -1727,7 +1779,7 @@ public:
 
             if (n.has_wildcard_type())
             {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "a base type must be a specific type, not a deduced type (omitted or '_'-wildcarded)"
                 );
@@ -1740,7 +1792,7 @@ public:
             && !n.parent_is_type()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "an access-specifier is only allowed on a type-scope (member) declaration"
             );
@@ -1755,7 +1807,7 @@ public:
                 && (*func->parameters)[0]->has_name("this")
             );
             if ((*func->parameters)[0]->is_polymorphic()) {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "a constructor may not be declared virtual, override, or final"
                 );
@@ -1771,7 +1823,7 @@ public:
         {
             assert (n.identifier->get_token());
             auto name = n.identifier->get_token()->to_string();
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "(temporary alpha limitation) local functions like '" + name + ": (/*params*/) = {/*body*/}' are not currently supported - write a local variable initialized with an unnamed function like '" + name + " := :(/*params*/) = {/*body*/};' instead (add '=' and ';')"
             );
@@ -1790,7 +1842,7 @@ public:
                 )
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 "overloading '" + n.name()->to_string() + "' is not allowed"
             );
@@ -1818,7 +1870,7 @@ public:
                 )
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 n.name()->to_string() + " must have 'this' as the first parameter"
             );
@@ -1855,7 +1907,7 @@ public:
             //  ... and if it isn't that, then complain
             else
             {
-                errors.emplace_back(
+                handle_error(
                     params[0]->position(),
                     "'main' must be declared as 'main: ()' with zero parameters, or 'main: (args)' with one parameter named 'args' for which the type 'std::vector<std::string_view>' will be deduced"
                 );
@@ -1867,7 +1919,7 @@ public:
         {
             if (!n.is_function())
             {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "'operator=' must be a function"
                 );
@@ -1877,7 +1929,7 @@ public:
 
             if (func->has_declared_return_type())
             {
-                errors.emplace_back(
+                handle_error(
                     func->parameters->parameters[0]->position(),
                     "'operator=' may not have a declared return type"
                 );
@@ -1886,7 +1938,7 @@ public:
 
             if (func->parameters->ssize() == 0)
             {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "an operator= function must have a parameter"
                 );
@@ -1899,7 +1951,7 @@ public:
                 && (*func->parameters)[0]->pass != passing_style::move
                 )
             {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "an operator= function's 'this' parameter must be inout, out, or move"
                 );
@@ -1913,7 +1965,7 @@ public:
                 && (*func->parameters)[1]->pass != passing_style::move
                 )
             {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "an operator= function's 'that' parameter must be in or move"
                 );
@@ -1926,7 +1978,7 @@ public:
                 && (*func->parameters)[0]->pass == passing_style::move
                 )
             {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "a destructor may not have other parameters besides 'this'"
                 );
@@ -1938,7 +1990,7 @@ public:
         {
             if (decl->has_name("that"))
             {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "'that' may not be used as a type scope name"
                 );
@@ -1951,7 +2003,7 @@ public:
             && !n.has_bool_return_type()
             )
         {
-            errors.emplace_back(
+            handle_error(
                 n.position(),
                 n.name()->to_string() + " must return bool"
             );
@@ -1967,7 +2019,7 @@ public:
                 && return_name.find("partial_ordering") == return_name.npos
                 )
             {
-                errors.emplace_back(
+                handle_error(
                     n.position(),
                     "operator<=> must return std::strong_ordering, std::weak_ordering, or std::partial_ordering"
                 );
@@ -1984,7 +2036,7 @@ public:
                     && !stmt->is_using()
                     )
                 {
-                    errors.emplace_back(
+                    handle_error(
                         stmt->position(),
                         "a user-defined type body must contain only declarations or 'using' statements, not other code"
                     );
@@ -2306,6 +2358,7 @@ public:
 
     auto start(iteration_statement_node const& n, int) -> void
     {
+        active_iterations.push_back(&n);
         if (*n.identifier != "for") {
              symbols.emplace_back( scope_depth, identifier_sym( false, n.identifier ) );
         }
@@ -2314,6 +2367,7 @@ public:
     auto end(iteration_statement_node const& n, int) -> void
     {
         symbols.emplace_back( scope_depth, identifier_sym( false, n.identifier, identifier_sym::deactivation ) );
+        active_iterations.pop_back();
     }
 
     auto start(loop_body_tag const& n, int) -> void
@@ -2429,7 +2483,7 @@ public:
     {
         //  By giving tokens an order during sema
         //  generated code can be equally checked
-        t.set_global_token_order( global_token_counter++ );
+        t.set_global_token_order( global_token_counter );
 
         auto guard = finally([&]() {
             prev2_token = prev_token;
@@ -2678,7 +2732,16 @@ public:
         -> compound_sym::kind
     {
         auto kind = compound_sym::is_scope;
-        if (!active_selections.empty())
+
+        if (
+            !active_iterations.empty()
+            && active_iterations.back()->statements.get() == &n
+            )
+        {
+            kind = compound_sym::is_loop;
+        }
+
+        else if (!active_selections.empty())
         {
             assert(active_selections.back()->true_branch);
             if (active_selections.back()->true_branch.get() == &n)
@@ -2693,6 +2756,7 @@ public:
                 kind = compound_sym::is_false;
             }
         }
+
         return kind;
     }
 

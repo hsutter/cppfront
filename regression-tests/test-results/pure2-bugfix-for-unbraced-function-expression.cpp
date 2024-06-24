@@ -27,7 +27,7 @@ class t {
 [[nodiscard]] auto main() -> int;
 
 #line 14 "pure2-bugfix-for-unbraced-function-expression.cpp2"
-auto inline constexpr x = cpp2::i32{0};
+auto inline constexpr x{ cpp2::i32{0} };
 extern cpp2::i32 y;
 
 //=== Cpp2 function definitions =================================================

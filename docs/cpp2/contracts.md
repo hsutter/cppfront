@@ -11,11 +11,11 @@ Cpp2 currently supports three kinds of contracts:
 
 Notes:
 
-- `condition` is an expression that evaluates to `#!cpp true` or `#!cpp false`.
+- `condition` is an expression that evaluates to `#!cpp true` or `#!cpp false`. It will not be evaluated unless checking for this contract group is enabled (`group.is_active()` is `true`).
 
 - Optionally, `condition` may be followed by `, "message"`, a message to include if a violation occurs. For example, `pre(condition, "message")`.
 
-- Optionally, a `<group, pred1, pred2>` can be written inside `<` `>` angle brackets immediately before the `(`, to designate that this test is part of the [contract group](#groups) named `group` and (also optionally) [contract predicates](#predicates) `pred1` and `pred2`. If a violation occurs, `Group.report_violation()` will be called. For example, `pre<group>(condition)`.
+- Optionally, a `<group, pred1, pred2>` can be written inside `<` `>` angle brackets immediately before the `(`, to designate that this test is part of the [contract group](#groups) named `group` and (also optionally) [contract predicates](#predicates) `pred1` and `pred2`. If a violation occurs, `Group.report_violation()` will be called. For example, `pre<group>(condition)`. If no contract group is specified, the contract defaults to being part of the `cpp2_default` group.
 
 The order of evaluation is:
 
@@ -151,7 +151,7 @@ Cpp2 comes with five predefined `contract group` global objects in namespace `cp
 
 For these groups, the default handler is `cpp2::report_and_terminate`, which prints information about the violation to `std::cerr` and then calls `std::terminate()`. But you can customize it to do anything you want, including to integrate with any third-party or in-house error reporting system your project is already using. For example:
 
-``` cpp title="Example of customized contract violation handler" hl_lines="2 8-9 17"
+``` cpp title="Example of customized contract violation handler" hl_lines="2 8-10 17"
 main: () -> int = {
     cpp2::default.set_handler(call_my_framework&);
     assert<default>(false, "this is a test, this is only a test");

@@ -121,17 +121,17 @@ constexpr skat_game::skat_game(cpp2::impl::in<cpp2::i64> _val)
 constexpr auto skat_game::operator=(cpp2::impl::in<cpp2::i64> _val) -> skat_game&  { 
                                                           _value = cpp2::unsafe_narrow<cpp2::i8>(_val);
                                                           return *this; }
-inline CPP2_CONSTEXPR skat_game skat_game::diamonds = 9;
+inline CPP2_CONSTEXPR skat_game skat_game::diamonds{ 9 };
 
-inline CPP2_CONSTEXPR skat_game skat_game::hearts = 10;
+inline CPP2_CONSTEXPR skat_game skat_game::hearts{ 10 };
 
-inline CPP2_CONSTEXPR skat_game skat_game::spades = 11;
+inline CPP2_CONSTEXPR skat_game skat_game::spades{ 11 };
 
-inline CPP2_CONSTEXPR skat_game skat_game::clubs = 12;
+inline CPP2_CONSTEXPR skat_game skat_game::clubs{ 12 };
 
-inline CPP2_CONSTEXPR skat_game skat_game::grand = 20;
+inline CPP2_CONSTEXPR skat_game skat_game::grand{ 20 };
 
-inline CPP2_CONSTEXPR skat_game skat_game::null = 23;
+inline CPP2_CONSTEXPR skat_game skat_game::null{ 23 };
 
 [[nodiscard]] constexpr auto skat_game::get_raw_value() const& -> cpp2::i8 { return _value; }
 constexpr skat_game::skat_game()
@@ -168,9 +168,9 @@ return "invalid skat_game value";
 constexpr auto janus::operator=(cpp2::impl::in<cpp2::i64> _val) -> janus&  { 
                                                           _value = cpp2::unsafe_narrow<cpp2::i8>(_val);
                                                           return *this; }
-inline CPP2_CONSTEXPR janus janus::past = 0;
+inline CPP2_CONSTEXPR janus janus::past{ 0 };
 
-inline CPP2_CONSTEXPR janus janus::future = 1;
+inline CPP2_CONSTEXPR janus janus::future{ 1 };
 
 [[nodiscard]] constexpr auto janus::get_raw_value() const& -> cpp2::i8 { return _value; }
 constexpr janus::janus()
@@ -205,15 +205,15 @@ constexpr auto file_attributes::operator^=(file_attributes const& that) & -> voi
 [[nodiscard]] constexpr auto file_attributes::has(file_attributes const& that) const& -> bool { return _value & that._value; }
 constexpr auto file_attributes::set(file_attributes const& that) & -> void { _value |= that._value; }
 constexpr auto file_attributes::clear(file_attributes const& that) & -> void { _value &= ~that._value; }
-inline CPP2_CONSTEXPR file_attributes file_attributes::cached = 1;
+inline CPP2_CONSTEXPR file_attributes file_attributes::cached{ 1 };
 
-inline CPP2_CONSTEXPR file_attributes file_attributes::current = 2;
+inline CPP2_CONSTEXPR file_attributes file_attributes::current{ 2 };
 
-inline CPP2_CONSTEXPR file_attributes file_attributes::obsolete = 4;
+inline CPP2_CONSTEXPR file_attributes file_attributes::obsolete{ 4 };
 
-inline CPP2_CONSTEXPR file_attributes file_attributes::cached_and_current = cached | current;
+inline CPP2_CONSTEXPR file_attributes file_attributes::cached_and_current{ cached | current };
 
-inline CPP2_CONSTEXPR file_attributes file_attributes::none = 0;
+inline CPP2_CONSTEXPR file_attributes file_attributes::none{ 0 };
 
 [[nodiscard]] constexpr auto file_attributes::get_raw_value() const& -> cpp2::u8 { return _value; }
 constexpr file_attributes::file_attributes()

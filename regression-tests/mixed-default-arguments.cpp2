@@ -1,0 +1,14 @@
+auto cxx(int x, std::string y) -> void {
+    std::cout << x << " \"" << y << "\"" << "\n";
+}
+
+cxx2 : (x : int, y : std::string) = {
+    std::cout << "(x)$ \"(y)$\"\n";
+}
+
+main : () = {
+	cxx(1, "test");
+	cxx((), ());
+	cxx2(1, "test");
+	cxx2((), ());
+}

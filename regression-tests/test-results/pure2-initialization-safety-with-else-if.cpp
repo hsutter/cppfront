@@ -14,6 +14,9 @@
 #line 1 "pure2-initialization-safety-with-else-if.cpp2"
 auto main(int const argc_, char** argv_) -> int;
 
+#line 28 "pure2-initialization-safety-with-else-if.cpp2"
+auto ok() -> void;
+
 //=== Cpp2 function definitions =================================================
 
 #line 1 "pure2-initialization-safety-with-else-if.cpp2"
@@ -43,5 +46,20 @@ auto main(int const argc_, char** argv_) -> int{
     }}
 
     std::cout << *cpp2::impl::assert_not_null(cpp2::move(p.value())) << std::endl;
+}
+
+#line 28 "pure2-initialization-safety-with-else-if.cpp2"
+auto ok() -> void{
+    cpp2::impl::deferred_init<int> i; 
+    if (true) {
+        i.construct(42);
+        while( true ) { // OK: in-branch loop is after initialization
+            i.value() = 42;
+        }
+    }
+    else {
+        i.construct(42);
+    }
+    i.value() = 42;
 }
 

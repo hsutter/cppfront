@@ -314,11 +314,13 @@ public:
         }
     }
 
-    auto set_global_token_order(index_t fp) const
+    auto set_global_token_order(index_t& counter) const
         -> void
     {
-        assert(global_token_order == 0);    // we only expect to set this once
-        global_token_order = fp;
+        //  In a well-formed program we only expect to set this once
+        if (global_token_order == 0) {
+            global_token_order = ++counter;
+        }
     }
 
     auto get_global_token_order() const

@@ -164,6 +164,15 @@ static cmdline_processor::register_flag cmd_cpp1_filename(
     [](std::string const& name) { flag_cpp1_filename = name; }
 );
 
+static auto flag_cwd = std::filesystem::path{};
+static cpp2::cmdline_processor::register_flag cmd_cwd(
+    9,
+    "cwd path",
+    "Change current working directory to path",
+    nullptr,
+    [](std::string const& path) { flag_cwd = { path }; }
+);
+
 static auto flag_no_exceptions = false;
 static cmdline_processor::register_flag cmd_no_exceptions(
     4,
@@ -1245,8 +1254,14 @@ public:
 
         //  Now we'll open the Cpp1 file
         auto cpp1_filename = sourcefile.substr(0, std::ssize(sourcefile) - 1);
+        
+        //  Use explicit filename override if present,
+        //  otherwise strip leading path
         if (!flag_cpp1_filename.empty()) {
-            cpp1_filename = flag_cpp1_filename; // use override if present
+            cpp1_filename = flag_cpp1_filename;
+        }
+        else {
+            cpp1_filename = std::filesystem::path(cpp1_filename).filename().string();
         }
 
         printer.open(
@@ -3966,6 +3981,11 @@ public:
     )
         -> void
     {   STACKINSTR
+        if (n.default_initializer) {
+          printer.print_cpp2("{}", n.position());
+          return;
+        }
+
         auto add_parens =
             should_add_expression_list_parens()
             && !n.inside_initializer
@@ -5487,11 +5507,8 @@ public:
 
 
         //  Declarations are handled in multiple passes,
-        //  but we only want to do the sema checks once
-        if (
-            printer.get_phase() == printer.phase2_func_defs
-            && !sema.check(n)
-            )
+        //  but we only want to emit the error messages once (in phase 2)
+        if (!sema.check(n, printer.get_phase() == printer.phase2_func_defs))
         {
             return;
         }
@@ -5635,8 +5652,9 @@ public:
                         }
                         //  Otherwise, just emit the general expression as usual
                         else {
-                            return " = "
-                                   + print_to_string(n);
+                            return "{ "
+                                   + print_to_string(n)
+                                   + " }";
                         }
                     };
 
@@ -6753,7 +6771,7 @@ public:
                 if (n.has_wildcard_type()) {
                     errors.emplace_back(
                         n.identifier->position(),
-                        "an object can have an anonymous name or an anonymous type, but not both at the same type (rationale: if '_ := f();' were allowed to keep the returned object alive, that syntax would be dangerously close to '_ = f();' to discard the returned object, and such importantly opposite meanings deserve more than a one-character typo distance; and explicit discarding gets the nice syntax because it's likely more common)"
+                        "an object can have an anonymous name or an anonymous type, but not both at the same time (rationale: if '_ := f();' were allowed to keep the returned object alive, that syntax would be dangerously close to '_ = f();' to discard the returned object, and such importantly opposite meanings deserve more than a one-character typo distance; and explicit discarding gets the nice syntax because it's likely more common)"
                     );
                     return;
                 }

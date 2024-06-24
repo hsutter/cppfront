@@ -465,7 +465,7 @@ namespace captures {
 auto f() -> void;
 
 #line 923 "pure2-last-use.cpp2"
-int inline constexpr x = 0;
+int inline constexpr x{ 0 };
 
 class t {
   public: std::unique_ptr<int> x; 
