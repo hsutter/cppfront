@@ -358,6 +358,7 @@ parse_context_group_state: @struct type = {
     next_alternative: (inout this) = {
         new_list: token_vec = ();
         std::swap(new_list, cur_match_list);
+        post_process_list(new_list);
         _ = alternate_match_lists..insert(alternate_match_lists..end(), shared.new<regex_token_list>(new_list));
     }
 
@@ -369,6 +370,7 @@ parse_context_group_state: @struct type = {
 
     get_tokens: (inout this) -> token_ptr = {
         if alternate_match_lists..empty() {
+            post_process_list(cur_match_list);
             return shared.new<regex_token_list>(cur_match_list);
         }
         else {
@@ -378,16 +380,24 @@ parse_context_group_state: @struct type = {
     }
 
     add: (inout this, token: token_ptr) = {
-        if token* is char_token && !cur_match_list..empty() && cur_match_list..back()* is char_token {
-            // This and the last token are char tokens. Combine them.
-            (cur_match_list..back()* as char_token)..append(token* as char_token);
-        }
-        else {
-            cur_match_list..push_back(token);
-        }
+        cur_match_list..push_back(token);
     }
 
     empty: (this) -> bool = cur_match_list..empty();
+
+    post_process_list: (inout list: token_vec) = {
+        // Merge all characters
+        merge_pos := list.begin();
+        while merge_pos != list..end() next (merge_pos++) {
+            if merge_pos** is char_token {
+                combine_pos := merge_pos + 1;
+                while combine_pos != list..end() && combine_pos** is char_token { // The erase advances combine_pos
+                    (merge_pos** as char_token)..append(combine_pos** as char_token);
+                    combine_pos = list..erase(combine_pos);
+                }
+            }
+        }
+    }
 }
 
 // State for the branch reset. Takes care of the group numbering. See '(|<pattern>)'.
@@ -1260,7 +1270,7 @@ char_token: @polymorphic_base type = {
         size := token..size();
         ctx..add("(lower_name)$ : std::array<char, (size)$ + 1> = \"(add_escapes(lower))$\";"); // TODO: Add constexpr when Issue https://github.com/hsutter/cppfront/issues/1104 is resolved.
         ctx..add("(upper_name)$ : std::array<char, (size)$ + 1> = \"(add_escapes(upper))$\";"); // TODO: Add constexpr when Issue https://github.com/hsutter/cppfront/issues/1104 is resolved.
-        ctx..add("if !(std::distance(r.pos, ctx.end) < (size)$) {");
+        ctx..add("if std::distance(r.pos, ctx.end) < (size)$ {");
         ctx..add("    r.matched = false;");
         ctx..add("    break;");
         ctx..add("}");
@@ -1277,7 +1287,7 @@ char_token: @polymorphic_base type = {
         name: std::string = "str_(ctx..gen_temp())$";
         size := token..size();
         ctx..add("(name)$ : std::array<char, (size)$ + 1> = \"(add_escapes(token))$\";"); // TODO: Add constexpr when Issue https://github.com/hsutter/cppfront/issues/1104 is resolved.
-        ctx..add("if !(std::distance(r.pos, ctx.end) < (size)$) {");
+        ctx..add("if std::distance(r.pos, ctx.end) < (size)$ {");
         ctx..add("    r.matched = false;");
         ctx..add("    break;");
         ctx..add("}");
