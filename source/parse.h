@@ -6541,7 +6541,7 @@ private:
             assert (n->id.index() == type_id_node::unqualified);
         }
         else {
-            return {};
+            return n;
         }
         if (curr().type() == lexeme::Multiply) {
             error("'T*' is not a valid Cpp2 type; use '*T' for a pointer instead", false);
