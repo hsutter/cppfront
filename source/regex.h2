@@ -1956,13 +1956,13 @@ hexadecimal_token_parse: (inout ctx: parse_context) -> token_ptr = {
 line_end_token_parse: (inout ctx: parse_context) -> token_ptr = {
     if ctx..current() == '$' || (ctx..current() == '\\' && ctx..peek() == '$') {
         if (ctx..current() == '\\') { _ = ctx..next(); } // Skip escape
-        return shared.new<regex_token_check>("\\\\$", "line_end_token_matcher<char, (ctx..get_modifiers()..has(expression_flags::multiple_lines))$, true>");
+        return shared.new<regex_token_check>("$", "line_end_token_matcher<char, (ctx..get_modifiers()..has(expression_flags::multiple_lines))$, true>");
     }
     else if ctx..current() == '\\' && (ctx..peek() == 'z' || ctx..peek() == 'Z') {
         _ = ctx..next(); // Skip escape
 
         negate := ctx..current() == 'Z';
-        return shared.new<regex_token_check>("\\\\(ctx..current())$", "line_end_token_matcher<char, false, (negate)$>");
+        return shared.new<regex_token_check>("\\(ctx..current())$", "line_end_token_matcher<char, false, (negate)$>");
     }
     else {
         return nullptr;
@@ -2056,7 +2056,7 @@ named_class_token_parse: (inout ctx: parse_context) -> token_ptr = {
 
     _ = ctx..next(); // Skip escape
 
-    return shared.new<regex_token_check>("\\\\\\\\(ctx..current())$", "(name)$<char, (ctx..get_modifiers()..has(expression_flags::case_insensitive))$>::match");
+    return shared.new<regex_token_check>("\\(ctx..current())$", "(name)$<char, (ctx..get_modifiers()..has(expression_flags::case_insensitive))$>::match");
 }
 
 named_class_no_new_line: <CharT, case_insensitive: bool> type == class_token_matcher<CharT, true, case_insensitive, single_class_entry<CharT, '\n'>>;
@@ -2597,7 +2597,7 @@ regex_parser: <Error_out> type = {
         source += "}\n";
 
         string := parse_ctx..get_tokens()*..to_string();
-        source += "  to_string: () -> std::string = { return \"(string)$\"; }\n";
+        source += "  to_string: () -> std::string = { return R\"((string)$)\"; }\n";
         source += "}\n";
 
         _ = parse_ctx;

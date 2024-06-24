@@ -3474,13 +3474,13 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
 [[nodiscard]] auto line_end_token_parse(parse_context& ctx) -> token_ptr{
     if (ctx.current() == '$' || (ctx.current() == '\\' && ctx.peek() == '$')) {
         if ((ctx.current() == '\\')) {static_cast<void>(ctx.next()); }// Skip escape
-        return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_check>)(cpp2::shared, "\\\\$", ("line_end_token_matcher<char, " + cpp2::to_string(ctx.get_modifiers().has(expression_flags::multiple_lines)) + ", true>")); 
+        return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_check>)(cpp2::shared, "$", ("line_end_token_matcher<char, " + cpp2::to_string(ctx.get_modifiers().has(expression_flags::multiple_lines)) + ", true>")); 
     }
     else {if (ctx.current() == '\\' && (ctx.peek() == 'z' || ctx.peek() == 'Z')) {
         static_cast<void>(ctx.next());// Skip escape
 
         auto negate {ctx.current() == 'Z'}; 
-        return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_check>)(cpp2::shared, ("\\\\" + cpp2::to_string(ctx.current())), ("line_end_token_matcher<char, false, " + cpp2::to_string(cpp2::move(negate)) + ">")); 
+        return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_check>)(cpp2::shared, ("\\" + cpp2::to_string(ctx.current())), ("line_end_token_matcher<char, false, " + cpp2::to_string(cpp2::move(negate)) + ">")); 
     }
     else {
         return nullptr; 
@@ -3573,7 +3573,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
 
     static_cast<void>(ctx.next());// Skip escape
 
-    return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_check>)(cpp2::shared, ("\\\\\\\\" + cpp2::to_string(ctx.current())), (cpp2::to_string(cpp2::move(name)) + "<char, " + cpp2::to_string(ctx.get_modifiers().has(expression_flags::case_insensitive)) + ">::match")); 
+    return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_check>)(cpp2::shared, ("\\" + cpp2::to_string(ctx.current())), (cpp2::to_string(cpp2::move(name)) + "<char, " + cpp2::to_string(ctx.get_modifiers().has(expression_flags::case_insensitive)) + ">::match")); 
 }
 
 #line 2078 "regex.h2"
@@ -4074,7 +4074,7 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
         source += "}\n";
 
         auto string {(*cpp2::impl::assert_not_null(parse_ctx.get_tokens())).to_string()}; 
-        source += ("  to_string: () -> std::string = { return \"" + cpp2::to_string(cpp2::move(string)) + "\"; }\n");
+        source += ("  to_string: () -> std::string = { return R\"(" + cpp2::to_string(cpp2::move(string)) + ")\"; }\n");
         source += "}\n";
 
         static_cast<void>(cpp2::move(parse_ctx));

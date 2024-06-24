@@ -1414,10 +1414,15 @@ regex_gen: (inout t: meta::type_declaration) =
             }
 
             expr: std::string = m.initializer();
-            if !expr.is_escaped() {
+            if expr.starts_with("R\"(") && expr.ends_with(")\"") {
+                expr = expr.substr(3, expr.size() - 5);
+            }
+            else if expr.is_escaped() {
+                expr = expr.substr(1, expr.size() - 2);
+            }
+            else {
                 t.error("Unknown string format '(expr)$'");
             }
-            expr = expr.substr(1, expr.size() - 2);
 
             if name.ends_with(postfix) {
                 name = name.substr(0, name.size() - postfix.size());

@@ -39,7 +39,7 @@ class alias_declaration;
 #line 966 "reflect.h2"
 class value_member_info;
 
-#line 1562 "reflect.h2"
+#line 1567 "reflect.h2"
 }
 
 }
@@ -781,7 +781,7 @@ auto print(cpp2::impl::in<meta::type_declaration> t) -> void;
 //
 auto regex_gen(meta::type_declaration& t) -> void;
 
-#line 1452 "reflect.h2"
+#line 1457 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  apply_metafunctions
@@ -792,7 +792,7 @@ auto regex_gen(meta::type_declaration& t) -> void;
     auto const& error
     ) -> bool;
 
-#line 1562 "reflect.h2"
+#line 1567 "reflect.h2"
 }
 
 }
@@ -2044,10 +2044,15 @@ auto regex_gen(meta::type_declaration& t) -> void
             }
 
             std::string expr {CPP2_UFCS(initializer)(m)}; 
-            if (!(CPP2_UFCS(is_escaped)(expr))) {
-                CPP2_UFCS(error)(t, ("Unknown string format '" + cpp2::to_string(expr) + "'"));
+            if (CPP2_UFCS(starts_with)(expr, "R\"(") && CPP2_UFCS(ends_with)(expr, ")\"")) {
+                expr = CPP2_UFCS(substr)(expr, 3, CPP2_UFCS(size)(expr) - 5);
             }
-            expr = CPP2_UFCS(substr)(expr, 1, CPP2_UFCS(size)(expr) - 2);
+            else {if (CPP2_UFCS(is_escaped)(expr)) {
+                expr = CPP2_UFCS(substr)(expr, 1, CPP2_UFCS(size)(expr) - 2);
+            }
+            else {
+                CPP2_UFCS(error)(t, ("Unknown string format '" + cpp2::to_string(expr) + "'"));
+            }}
 
             if (CPP2_UFCS(ends_with)(name, postfix)) {
                 name = CPP2_UFCS(substr)(name, 0, CPP2_UFCS(size)(name) - CPP2_UFCS(size)(postfix));
@@ -2064,7 +2069,7 @@ auto regex_gen(meta::type_declaration& t) -> void
                 CPP2_ASSERT_IN_BOUNDS(expressions, name) = std::make_pair(cpp2::move(expr), "");
             }
 
-#line 1438 "reflect.h2"
+#line 1443 "reflect.h2"
         }
     }
 
@@ -2078,7 +2083,7 @@ auto regex_gen(meta::type_declaration& t) -> void
     }
 }
 
-#line 1456 "reflect.h2"
+#line 1461 "reflect.h2"
 [[nodiscard]] auto apply_metafunctions(
     declaration_node& n, 
     type_declaration& rtype, 
@@ -2184,7 +2189,7 @@ auto regex_gen(meta::type_declaration& t) -> void
     return true; 
 }
 
-#line 1562 "reflect.h2"
+#line 1567 "reflect.h2"
 }
 
 }
