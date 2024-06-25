@@ -189,6 +189,19 @@ static cmdline_processor::register_flag cmd_no_rtti(
     []{ flag_no_rtti = true; }
 );
 
+// This changes how an h2 header is intended to be used.
+// .h file becomes its interface, .hpp - implementation to include in a very bare bones .cpp that is easy to produce automatically by cmake.
+// This requires some changes to function properly and not break ODR:
+// 1. All aliases aka inline definitions should go to .h
+// 2. .hpp should not include other .hpp files
+static auto flag_tu_compat_h2 = false;
+static cmdline_processor::register_flag cmd_tu_compat_h2(
+    4,
+    "tu-compatible-h2",
+    "Make pure headers compatible with multiple translation units compilation",
+    [] { flag_tu_compat_h2 = true; }
+);
+
 struct text_with_pos{
     std::string     text;
     source_position pos;
@@ -246,7 +259,8 @@ public:
     enum phases {
         phase0_type_decls           = 0,
         phase1_type_defs_func_decls = 1,
-        phase2_func_defs            = 2
+        phase2_inline_defs          = 2,
+        phase3_regular_defs         = 3
     };
     auto get_phase() const { return phase; }
 
@@ -256,7 +270,8 @@ private:
     auto inc_phase() -> void {
         switch (phase) {
         break;case phase0_type_decls          : phase = phase1_type_defs_func_decls;
-        break;case phase1_type_defs_func_decls: phase = phase2_func_defs;
+        break;case phase1_type_defs_func_decls: phase = phase2_inline_defs;
+        break;case phase2_inline_defs         : phase = phase3_regular_defs;
         break;default                         : assert(!"ICE: invalid lowering phase");
         }
         curr_pos     = {};
@@ -458,7 +473,7 @@ private:
                 )
             {
                 //  Emit non-function body comments in phase1_type_defs_func_decls,
-                //  and emit function body comments in phase2_func_defs
+                //  and emit function body comments in phase3_regular_defs
                 assert(pparser);
                 if (
                     (
@@ -467,7 +482,7 @@ private:
                         )
                     ||
                     (
-                        phase == phase2_func_defs
+                        phase == phase3_regular_defs
                         && pparser->is_within_function_body( comments[next_comment].start.lineno )
                         )
                     )
@@ -605,7 +620,7 @@ public:
             //  -- but only if there's any Cpp2, otherwise don't
             //  because passing through all-Cpp1 code should always
             //  remain diff-identical
-            if (phase == phase2_func_defs) {
+            if (phase == phase3_regular_defs) {
                 print_extra("\n");
             }
         }
@@ -1447,7 +1462,10 @@ public:
                         //  Strip off the 2"
                         auto h_include = line.text.substr(0, line.text.size()-2);
                         printer.print_cpp1( h_include + "\"", curr_lineno );
-                        hpp_includes += h_include + "pp\"\n";
+
+                        if (!flag_tu_compat_h2) {
+                            hpp_includes += h_include + "pp\"\n";
+                        }
                     }
                     else {
                         printer.print_cpp1( line.text, curr_lineno );
@@ -1491,6 +1509,33 @@ public:
             return ret;
         }
 
+        //---------------------------------------------------------------------
+        //  Do phase2_inline_defs
+        //
+        printer.finalize_phase();
+        printer.next_phase();
+
+        if (
+            source.has_cpp2()
+            && !flag_clean_cpp1
+            )
+        {
+            printer.print_extra("\n//=== Cpp2 inline definitions =================================================\n\n");
+            printer.reset_line_to(1, true);
+        }
+
+        for (auto& section : tokens.get_map())
+        {
+            assert(!section.second.empty());
+
+            //  Get the parse tree for this section and emit each forward declaration
+            auto decls = parser.get_parse_tree_declarations_in_range(section.second);
+            for (auto& decl : decls) {
+                assert(decl);
+                emit(*decl);
+            }
+        }
+
         //  If there is Cpp2 code, we have more to do...
 
         //  First, if this is a .h2 and in a -pure-cpp2 compilation,
@@ -1522,9 +1567,8 @@ public:
             printer.print_extra( hpp_includes );
         }
 
-
         //---------------------------------------------------------------------
-        //  Do phase2_func_defs
+        //  Do phase3_regular_defs
         //
         printer.finalize_phase();
         printer.next_phase();
@@ -1534,7 +1578,7 @@ public:
             && !flag_clean_cpp1
             )
         {
-            printer.print_extra( "\n//=== Cpp2 function definitions =================================================\n\n" );
+            printer.print_extra( "\n//=== Cpp2 regular definitions =================================================\n\n" );
             printer.reset_line_to(1, true);
         }
 
@@ -5030,7 +5074,7 @@ public:
         auto ret = std::string{};
 
         if (
-            printer.get_phase() == printer.phase2_func_defs
+            printer.get_phase() >= printer.phase2_inline_defs
             && n.parent_is_type()
 //            && !n.name()->as_string_view().starts_with("operator")
             )
@@ -5104,7 +5148,7 @@ public:
         }
 
         //  Do the 'out' param and member init work only in the definition phase
-        if (printer.get_phase() == printer.phase2_func_defs)
+        if (printer.get_phase() == printer.phase3_regular_defs)
         {
             auto canonize_object_name = [&]( declaration_node const* obj )
                 -> std::string
@@ -5508,7 +5552,7 @@ public:
 
         //  Declarations are handled in multiple passes,
         //  but we only want to emit the error messages once (in phase 2)
-        if (!sema.check(n, printer.get_phase() == printer.phase2_func_defs))
+        if (!sema.check(n, printer.get_phase() == printer.phase3_regular_defs))
         {
             return;
         }
@@ -5524,10 +5568,24 @@ public:
             return;
         }
 
+        const auto is_inline_def = n.is_inline() || n.parent_is_inline();
+        const auto is_phase2_def = is_inline_def || n.is_namespace() || n.is_type();
+        const auto is_phase3_def = !is_inline_def || n.last_parent_function_is_not_inline();
+        const auto is_phase2_def_to_print = is_phase2_def && printer.get_phase() == printer.phase2_inline_defs;
+        const auto is_phase3_def_to_print = is_phase3_def && printer.get_phase() == printer.phase3_regular_defs;
+        const auto is_phase2_or_3_def_to_print = is_phase2_def_to_print || is_phase3_def_to_print;
+
+        if (
+            printer.get_phase() >= printer.phase2_inline_defs
+            && !is_phase2_or_3_def_to_print)
+        {
+            return;
+        }
+
         //  If this is a generated declaration (negative source line number),
         //  add a line break before
         if (
-            printer.get_phase() == printer.phase2_func_defs
+            printer.get_phase() >= printer.phase2_inline_defs
             && n.position().lineno < 1
             )
         {
@@ -5558,12 +5616,12 @@ public:
                 (
                     n.parent_is_type()
                     && n.is_object_alias()
-                    && printer.get_phase() == printer.phase2_func_defs
+                    && printer.get_phase() == printer.phase2_inline_defs
                     )
                 ||
                 (
                     n.parent_is_function()
-                    && printer.get_phase() == printer.phase2_func_defs
+                    && printer.get_phase() >= printer.phase2_inline_defs
                     )
                 )
             {
@@ -5591,7 +5649,7 @@ public:
                 if (
                     a->is_object_alias()
                     && n.parent_is_type()
-                    && printer.get_phase() == printer.phase2_func_defs
+                    && printer.get_phase() >= printer.phase2_inline_defs
                     )
                 {
                     emit_parent_template_parameters();
@@ -5673,7 +5731,7 @@ public:
                                 n.position()
                             );
                         }
-                        else if (printer.get_phase() == printer.phase2_func_defs) {
+                        else if (printer.get_phase() == printer.phase2_inline_defs) {
                             //  The following logic is not yet complete, so give a diagnostic for now
                             if (n.parent_declaration->parent_is_type()) {
                                 errors.emplace_back(
@@ -5861,7 +5919,7 @@ public:
         //  Print a line directive before every function definition, excluding lambdas.
         //  This is needed to enable debugging with lldb.
         if (
-            printer.get_phase() == printer.phase2_func_defs
+            printer.get_phase() >= printer.phase2_inline_defs
             && n.is_function()
             && n.has_name()
             && n.initializer
@@ -5874,7 +5932,7 @@ public:
         //  type(s) that have template parameters and/or requires clauses,
         //  emit those outer template parameters and requires clauses too
         if (
-            printer.get_phase() == printer.phase2_func_defs
+            printer.get_phase() >= printer.phase2_inline_defs
             && n.is_function()
             && n.initializer    // only if the function has a definition (is not abstract)
             )
@@ -5886,13 +5944,13 @@ public:
         if (
             n.template_parameters
             && (
-                printer.get_phase() <  printer.phase2_func_defs
+                printer.get_phase() <=  printer.phase1_type_defs_func_decls
                 || n.is_object()
                 || (
-                    n.is_function()
+                    printer.get_phase() >= printer.phase2_inline_defs
+                    && n.is_function()
                     && n.has_name()     // only if it is not unnamed function aka lambda
                     && n.initializer    // only if the function has a definition (is not abstract)
-                    && printer.get_phase() == printer.phase2_func_defs
                     )
                 )
             && (
@@ -5915,7 +5973,7 @@ public:
             );
             auto& compound_stmt = std::get<statement_node::compound>(n.initializer->statement);
 
-            if (printer.get_phase() != printer.phase2_func_defs)
+            if (printer.get_phase() <= printer.phase1_type_defs_func_decls)
             {
                 if (n.requires_clause_expression) {
                     printer.print_cpp2("requires( ", n.requires_pos);
@@ -6153,7 +6211,7 @@ public:
         else if (
             n.is_function()
             && (
-                printer.get_phase() < printer.phase2_func_defs
+                printer.get_phase() <= printer.phase1_type_defs_func_decls
                 || n.initializer    // only emit definition if the function has one (is not abstract)
                 || n.is_defaultable_function()
                 )
@@ -6269,7 +6327,7 @@ public:
 
                     //  Note: Include a phase check because Cpp1 does not allow
                     //        these on out-of-line definitions
-                    if (printer.get_phase() != printer.phase2_func_defs)
+                    if (printer.get_phase() <= printer.phase1_type_defs_func_decls)
                     {
                         switch (this_->mod) {
                         break;case parameter_declaration_node::modifier::implicit:
@@ -6299,7 +6357,7 @@ public:
                 //  it's a Cpp1 non-member function so we need to say so (on the declaration only)
                 else if (
                     is_in_type
-                    && printer.get_phase() != printer.phase2_func_defs
+                    && printer.get_phase() <= printer.phase1_type_defs_func_decls
                     ) {
                     if (emit_as_friend) {
                         prefix += "friend ";
@@ -6459,14 +6517,14 @@ public:
                 //  don't emit abstract virtual functions in phase 2
                 else if (
                     n.initializer
-                    || printer.get_phase() < printer.phase2_func_defs
+                    || printer.get_phase() <= printer.phase1_type_defs_func_decls
                     )
                 {
                     printer.print_cpp2( prefix, n.position() );
                     printer.print_cpp2( "auto ", n.position() );
                     if (
                         !emit_as_friend
-                        || printer.get_phase() != printer.phase2_func_defs
+                        || printer.get_phase() <= printer.phase1_type_defs_func_decls
                         )
                     {
                         printer.print_cpp2( type_qualification_if_any_for(n), n.position() );
@@ -6700,7 +6758,7 @@ public:
                 ||
                 (
                     n.parent_is_function()
-                    && printer.get_phase() == printer.phase2_func_defs
+                    && printer.get_phase() >= printer.phase2_inline_defs
                     )
                 ||
                 (
@@ -6712,7 +6770,7 @@ public:
         {
             auto& type = std::get<declaration_node::an_object>(n.type);
             if (
-                printer.get_phase() == printer.phase2_func_defs
+                printer.get_phase() >= printer.phase2_inline_defs
                 && type->is_concept()
                )
             {
@@ -6722,7 +6780,7 @@ public:
             emit_requires_clause();
 
             if (
-                printer.get_phase() != printer.phase2_func_defs
+                printer.get_phase() <= printer.phase1_type_defs_func_decls
                 && n.parent_is_namespace()
                 && !type->is_concept()
                 )
@@ -6799,7 +6857,7 @@ public:
 
             if (
                 n.parent_is_namespace()
-                && printer.get_phase() != printer.phase2_func_defs
+                && printer.get_phase() <= printer.phase1_type_defs_func_decls
                 && !type->is_concept()
                 )
             {
