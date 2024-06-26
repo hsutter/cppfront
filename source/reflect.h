@@ -39,7 +39,7 @@ class alias_declaration;
 #line 966 "reflect.h2"
 class value_member_info;
 
-#line 1567 "reflect.h2"
+#line 1552 "reflect.h2"
 }
 
 }
@@ -781,7 +781,7 @@ auto print(cpp2::impl::in<meta::type_declaration> t) -> void;
 //
 auto regex_gen(meta::type_declaration& t) -> void;
 
-#line 1457 "reflect.h2"
+#line 1442 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  apply_metafunctions
@@ -792,7 +792,7 @@ auto regex_gen(meta::type_declaration& t) -> void;
     auto const& error
     ) -> bool;
 
-#line 1567 "reflect.h2"
+#line 1552 "reflect.h2"
 }
 
 }
@@ -2023,7 +2023,7 @@ auto regex_gen(meta::type_declaration& t) -> void
     auto prefix {"regex"}; 
     std::string postfix {"_mod"};   // TODO: Remove mod syntax when 'm.initializer()' can be '("pat", "mod")'.
 
-    std::map<std::string,std::pair<std::string,std::string>> expressions {}; 
+    std::map<std::string,std::string> expressions {}; 
 
     for ( auto& m : CPP2_UFCS(get_member_objects)(t) ) 
     {
@@ -2054,36 +2054,21 @@ auto regex_gen(meta::type_declaration& t) -> void
                 CPP2_UFCS(error)(t, ("Unknown string format '" + cpp2::to_string(expr) + "'"));
             }}
 
-            if (CPP2_UFCS(ends_with)(name, postfix)) {
-                name = CPP2_UFCS(substr)(name, 0, CPP2_UFCS(size)(name) - CPP2_UFCS(size)(postfix));
-
-                if (CPP2_UFCS(contains)(expressions, name)) {
-                    CPP2_ASSERT_IN_BOUNDS(expressions, name).second = cpp2::move(expr);
-                }
-                else {
-                    CPP2_UFCS(error)(t, "Expression modifier defined without expression.");
-                }
-
-            }
-            else {
-                CPP2_ASSERT_IN_BOUNDS(expressions, name) = std::make_pair(cpp2::move(expr), "");
-            }
-
-#line 1443 "reflect.h2"
+            CPP2_ASSERT_IN_BOUNDS(expressions, name) = cpp2::move(expr);
         }
     }
 
     CPP2_UFCS(remove_marked_members)(t);
 
     for ( auto const& expr : cpp2::move(expressions) ) {
-        auto regular_expression {::cpp2::regex::generate_template(expr.second.first, expr.second.second, [_0 = t](auto const& message) mutable -> void { CPP2_UFCS(error)(_0, message);  })}; 
+        auto regular_expression {::cpp2::regex::generate_template(expr.second, [_0 = t](auto const& message) mutable -> void { CPP2_UFCS(error)(_0, message);  })}; 
 
         CPP2_UFCS(add_member)(t, ("public " + cpp2::to_string(expr.first) + "_matcher: type = " + cpp2::to_string(cpp2::move(regular_expression))));
         CPP2_UFCS(add_member)(t, ("public " + cpp2::to_string(expr.first) + ": cpp2::regex::regular_expression<char, " + cpp2::to_string(expr.first) + "_matcher> = ();"));
     }
 }
 
-#line 1461 "reflect.h2"
+#line 1446 "reflect.h2"
 [[nodiscard]] auto apply_metafunctions(
     declaration_node& n, 
     type_declaration& rtype, 
@@ -2189,7 +2174,7 @@ auto regex_gen(meta::type_declaration& t) -> void
     return true; 
 }
 
-#line 1567 "reflect.h2"
+#line 1552 "reflect.h2"
 }
 
 }

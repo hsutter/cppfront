@@ -1393,7 +1393,7 @@ regex_gen: (inout t: meta::type_declaration) =
     prefix:= "regex";
     postfix: std::string = "_mod";  // TODO: Remove mod syntax when 'm.initializer()' can be '("pat", "mod")'.
 
-    expressions: std::map<std::string, std::pair<std::string, std::string>> = ();
+    expressions: std::map<std::string, std::string> = ();
 
     for t.get_member_objects() do (inout m)
     {
@@ -1424,29 +1424,14 @@ regex_gen: (inout t: meta::type_declaration) =
                 t.error("Unknown string format '(expr)$'");
             }
 
-            if name.ends_with(postfix) {
-                name = name.substr(0, name.size() - postfix.size());
-
-                if expressions.contains(name) {
-                    expressions[name].second = expr;
-                }
-                else {
-                    t.error("Expression modifier defined without expression.");
-                }
-
-            }
-            else {
-                expressions[name] = std::make_pair(expr, "");
-            }
-
-
+            expressions[name] = expr;
         }
     }
 
     t.remove_marked_members();
 
     for expressions do (expr) {
-        regular_expression:= ::cpp2::regex::generate_template(expr.second.first, expr.second.second, :(message: _) = t$.error(message););
+        regular_expression:= ::cpp2::regex::generate_template(expr.second, :(message: _) = t$.error(message););
 
         t.add_member("public (expr.first)$_matcher: type = (regular_expression)$");
         t.add_member("public (expr.first)$: cpp2::regex::regular_expression<char, (expr.first)$_matcher> = ();");

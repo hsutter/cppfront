@@ -459,6 +459,7 @@ parse_context: type = {
     start_group: (inout this) -> parse_context_group_state = {
         old_state: parse_context_group_state = ();
         old_state..swap(cur_group_state);
+        cur_group_state.modifiers = old_state.modifiers;
 
         return old_state;
     }
@@ -1472,7 +1473,6 @@ class_token: @polymorphic_base type = {
 
         inner := ctx..join(classes);
         string_rep := ctx..get_range(start_pos, end_pos);
-        string_rep = replace_all(string_rep, "\\", "\\\\");
         return shared.new<class_token>(is_negate, ctx..get_modifiers()..has(expression_flags::case_insensitive), inner, string_rep);
     }
 
@@ -1559,13 +1559,13 @@ escape_token_parse: (inout ctx: parse_context) -> token_ptr = {
         else if '\\' == ctx..current() { t = '\\'; }
         else { /* TODO: throw error */ }
         r: = shared.new<char_token>(t, false);
-        r*..set_string("\\\\(ctx..current())$");
+        r*..set_string("\\(ctx..current())$");
 
         return r;
     } else {
         // Escape of regex special char
         r := shared.new<char_token>(ctx..current(), false);
-        r*..set_string("\\\\(ctx..current())$");
+        r*..set_string("\\(ctx..current())$");
 
         return r;
     }
@@ -1578,7 +1578,7 @@ global_group_reset_token_parse: (inout ctx: parse_context) -> token_ptr = {
     if !(ctx..current() == '\\' && ctx..peek() == 'K') { return nullptr; }
 
     _ = ctx..next(); // Skip escape.
-    return shared.new<regex_token_code>("\\\\K", "ctx..set_group_start(0, r.pos);");
+    return shared.new<regex_token_code>("\\K", "ctx..set_group_start(0, r.pos);");
 }
 
 // Regex syntax: \<number>  Example: \1
@@ -1602,7 +1602,7 @@ group_ref_token: @polymorphic_base type = {
     parse: (inout ctx: parse_context) -> token_ptr = {
         if ctx..current() != '\\' { return nullptr; }
 
-        str : std::string = "\\\\";
+        str : std::string = "\\";
         group : std::string = "";
 
         if '0' <= ctx..peek() <= '9' {
@@ -1855,7 +1855,7 @@ group_token: @polymorphic_base type = {
             ctx..set_modifiers(modifiers_change_to);
             if !ctx..parse_until(')') { return nullptr; }
             r*.inner = ctx..end_group(old_state);
-            r*..set_string(gen_string(group_name, group_name_brackets, modifiers, r*.inner));
+            r*..set_string(gen_string(group_name, group_name_brackets, !has_id, modifiers, r*.inner));
 
             return r;
         }
@@ -1867,7 +1867,7 @@ group_token: @polymorphic_base type = {
         }
     }
 
-    gen_string: (name: std::string, name_brackets: bool, modifiers: std::string, inner_: token_ptr) -> std::string = {
+    gen_string: (name: std::string, name_brackets: bool, has_modifier: bool, modifiers: std::string, inner_: token_ptr) -> std::string = {
         start : std::string = "(";
         if 0 != name..size() {
             if name_brackets {
@@ -1877,7 +1877,7 @@ group_token: @polymorphic_base type = {
                 start += "?'(name..data())$'";
             }
         }
-        else if ! modifiers..empty() {
+        else if has_modifier {
             start += "?" + modifiers + ":";
         }
 
@@ -1893,11 +1893,12 @@ group_token: @polymorphic_base type = {
         if -1 != number {
             ctx..add("ctx..set_group_end((number)$, r.pos);");
             tmp_name := ctx..gen_temp();
-            ctx..add("(tmp_name)$ :=  cpp2::regex::make_on_return(:() = {");
+            ctx..add("(tmp_name)$_func :=  :() = {");
             ctx..add("  if !r&$*.matched {");
             ctx..add("    ctx&$*..set_group_invalid((number)$);");
             ctx..add("  }");
-            ctx..add("});");
+            ctx..add("};");
+            ctx..add("(tmp_name)$ :=  cpp2::regex::make_on_return((tmp_name)$_func);");
             ctx..add("_ = (tmp_name)$;"); // TODO: Guard object problem.
         }
     }
@@ -1944,7 +1945,7 @@ hexadecimal_token_parse: (inout ctx: parse_context) -> token_ptr = {
     if has_brackets {
         syntax = "{(syntax)$}";
     }
-    syntax = "\\\\x(syntax)$";
+    syntax = "\\x(syntax)$";
 
     r := shared.new<char_token>(number_as_char, ctx..get_modifiers()..has(expression_flags::case_insensitive));
     r*..set_string(syntax);
@@ -1988,7 +1989,7 @@ line_start_token_parse: (inout ctx: parse_context) -> token_ptr = {
 
     if ctx..current() == '\\' {
         _ = ctx..next();
-        return shared.new<regex_token_check>("\\\\A", "line_start_token_matcher<char, false>");
+        return shared.new<regex_token_check>("\\A", "line_start_token_matcher<char, false>");
     }
     else {
         return shared.new<regex_token_check>("^", "line_start_token_matcher<char, (ctx..get_modifiers()..has(expression_flags::multiple_lines))$>");
@@ -2219,12 +2220,6 @@ range_token: @polymorphic_base type = {
             r += "{(min_count)$,(max_count)$}";
         }
 
-        if kind == range_flags::not_greedy {
-            r += "?";
-        }
-        else if kind == range_flags::possessive {
-            r += "+";
-        }
         return r;
     }
 
@@ -2412,11 +2407,11 @@ word_boundary_token_parse: (inout ctx: parse_context) -> token_ptr = {
 
     if ctx..peek() == 'b' {
         _ = ctx..next();
-        return shared.new<regex_token_check>("\\\\b", "word_boundary_token_matcher<char, false>");
+        return shared.new<regex_token_check>("\\b", "word_boundary_token_matcher<char, false>");
     }
     else if ctx..peek() == 'B' {
         _ = ctx..next();
-        return shared.new<regex_token_check>("\\\\B", "word_boundary_token_matcher<char, true>");
+        return shared.new<regex_token_check>("\\B", "word_boundary_token_matcher<char, true>");
     }
     else {
         return nullptr;
@@ -2547,18 +2542,18 @@ regular_expression: <CharT, matcher_wrapper> type = {
 // Parser and generator for regular expressions.
 regex_parser: <Error_out> type = {
 
-    regex:     std::string_view;
-    modifier:  std::string_view;
-    error_out: Error_out;
+    regex:           std::string_view;
+    modifier:        std::string = "";
+    modifier_escape: std::string = "";
+    error_out:       Error_out;
 
     pos:                    size_t = 0;
     has_error:              bool = false;
 
     source: std::string = "";
 
-    operator=: (out this, r: std::string_view, m: std::string_view, e: Error_out) = {
+    operator=: (out this, r: std::string_view, e: Error_out) = {
         this.regex = r;
-        this.modifier = m;
         this.error_out = e;
     }
 
@@ -2573,9 +2568,12 @@ regex_parser: <Error_out> type = {
     //
 
     parse:(inout this) -> std::string = {
+
+        // Extract modifiers and adapt regex.
+        extract_modifiers();
+
         parse_ctx: parse_context = (regex);
-        mod : std::string = modifier;
-        if !parse_ctx..parse(mod) {
+        if !parse_ctx..parse(modifier) {
             error(parse_ctx.error_text);
             return "Error";
         }
@@ -2597,17 +2595,31 @@ regex_parser: <Error_out> type = {
         source += "}\n";
 
         string := parse_ctx..get_tokens()*..to_string();
-        source += "  to_string: () -> std::string = { return R\"((string)$)\"; }\n";
+        source += "  to_string: () -> std::string = { return R\"((modifier_escape)$(string)$(modifier_escape)$(modifier)$)\"; }\n";
         source += "}\n";
 
         _ = parse_ctx;
 
         return source;
     }
+
+    private extract_modifiers: (inout this) = {
+        if regex..find_first_of("'/") == 0 {
+            mod_token: char = regex[0];
+
+            end_pos := regex..rfind(mod_token);
+            if end_pos != 0 {
+                // Found valid start end escape
+                modifier = regex..substr(end_pos + 1);
+                modifier_escape = mod_token;
+                regex = regex..substr(1, end_pos - 1);
+            }
+        }
+    }
 }
 
-generate_template: <Err> (regex: std::string_view, modifier: std::string_view, err: Err) -> std::string = {
-    parser: regex_parser<Err> = (regex, modifier, err);
+generate_template: <Err> (regex: std::string_view, err: Err) -> std::string = {
+    parser: regex_parser<Err> = (regex, err);
     r := parser..parse();
     _ = parser;
     return r;
