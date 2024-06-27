@@ -127,3 +127,16 @@ inline std::string replace_all(std::string str, const std::string& from, const s
     }
     return str;
 }
+
+template<typename List>
+inline std::string join(List const& list) {
+    std::string r = "";
+    std::string sep = "";
+
+    for (auto const& cur : list) {
+        r += sep + cur;
+        sep = ", ";
+    }
+
+    return r;
+}
