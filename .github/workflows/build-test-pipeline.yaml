@@ -1,0 +1,57 @@
+name: Build Test Pipeline
+
+on:
+  pull_request:
+    branches-ignore:
+      - docs
+  push:
+    branches-ignore:
+      - docs
+  workflow_dispatch:
+
+jobs:
+  build-test-pipeline:
+    runs-on: ${{ matrix.runs-on }}
+    name: ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x64-linux-g++-c++20
+            runs-on: ubuntu-latest
+            compiler-path: /usr/bin/g++
+            compiler-flags: -std=c++20 -Wall -Wextra -pedantic -Werror -O2 '-I{1}' -o '{2}' '{0}'
+          - target: x64-windows-msvc-c++latest
+            runs-on: windows-latest
+            compiler-path: cl.exe
+            compiler-flags: /std:c++latest /MD /EHsc /experimental:module /W4 /WX /O2 /I '{1}' '{0}' /link '/out:{2}'
+          # - target: x64-macos-clang-c++20
+          #   runs-on: macos-latest-large
+          #   compiler-path: /usr/bin/clang++
+          #   compiler-flags: -std=c++20 -Wall -Wextra -pedantic -Werror -I{include_dir} -o {exe_out} {source_file}
+          # - target: arm64-macos-clang-c++20
+          #   runs-on: macos-latest
+          #   compiler-path: /usr/bin/clang++
+          #   compiler-flags: -std=c++20 -Wall -Wextra -pedantic -Werror -I{include_dir} -o {exe_out} {source_file}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Activate MSVC dev environment (Windows only)
+        if: startsWith(matrix.runs-on, 'windows')
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Build cppfront
+        run: ${{ matrix.compiler-path }} ${{ format(matrix.compiler-flags, 'source/cppfront.cpp', './include/', 'cppfront.exe') }}
+
+      - name: Run passthrough test
+        run: echo TODO
+
+      - name: Transpile regression-runner
+        run: ./cppfront.exe -in -cwd test/ regression-runner.cpp2
+
+      - name: Build regression-runner
+        run: ${{ matrix.compiler-path }} ${{ format(matrix.compiler-flags, 'test/regression-runner.cpp', './include/', 'regression-runner.exe') }}
+
+      - name: Run regression-runner w/ directory (All tests)
+        run: ./regression-runner.exe ${{ matrix.target }} ./cppfront.exe ./test/regression ${{ matrix.compiler-path }} ./include/ ${{ format(matrix.compiler-flags, '{source_file}', '{include_dir}', '{exe_out}') }}
