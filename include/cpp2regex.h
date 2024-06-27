@@ -10,164 +10,160 @@
 
 #line 1 "regex.h2"
 
-#line 19 "regex.h2"
+#line 21 "regex.h2"
 namespace cpp2 {
 
 namespace regex {
 
-#line 35 "regex.h2"
+#line 37 "regex.h2"
 class expression_flags;
     
 
-#line 46 "regex.h2"
+#line 48 "regex.h2"
 template<typename Iter> class match_group;
     
 
-#line 55 "regex.h2"
+#line 57 "regex.h2"
 template<typename Iter> class match_return;
     
 
-#line 62 "regex.h2"
+#line 64 "regex.h2"
 template<typename CharT, typename Iter, int max_groups> class match_context;
 
-#line 124 "regex.h2"
+#line 126 "regex.h2"
 class true_end_func;
     
 
-#line 130 "regex.h2"
+#line 132 "regex.h2"
 class no_reset;
     
 
-#line 135 "regex.h2"
+#line 137 "regex.h2"
 template<typename Func> class on_return;
 
-#line 160 "regex.h2"
+#line 162 "regex.h2"
 template<typename CharT, CharT C> class single_class_entry;
 
-#line 168 "regex.h2"
+#line 170 "regex.h2"
 template<typename CharT, CharT Start, CharT End> class range_class_entry;
 
-#line 176 "regex.h2"
+#line 178 "regex.h2"
 template<typename CharT, typename ...List> class combined_class_entry;
     
 
-#line 183 "regex.h2"
+#line 185 "regex.h2"
 template<typename CharT, CharT ...List> class list_class_entry;
     
 
-#line 190 "regex.h2"
+#line 192 "regex.h2"
 template<typename CharT, fixed_string Name, typename Inner> class named_class_entry;
     
 
-#line 195 "regex.h2"
+#line 197 "regex.h2"
 template<typename CharT, typename Inner> class negated_class_entry;
     
 
-#line 202 "regex.h2"
+#line 204 "regex.h2"
 template<typename CharT, fixed_string Name, typename Inner> class shorthand_class_entry;
     
 
-#line 254 "regex.h2"
+#line 256 "regex.h2"
 class regex_token;
 
-#line 277 "regex.h2"
-class regex_token_list;
-    
-
-#line 317 "regex.h2"
-class parse_context_group_state;
-
-#line 378 "regex.h2"
-class parse_context_branch_reset_state;
-    
-
-#line 419 "regex.h2"
-class parse_context;
-    
-
-#line 800 "regex.h2"
-class generation_function_context;
-    
-
-#line 817 "regex.h2"
-class generation_context;
-
-#line 1015 "regex.h2"
-class regex_token_base;
-    
-
-#line 1029 "regex.h2"
+#line 281 "regex.h2"
 class regex_token_check;
     
 
-#line 1044 "regex.h2"
+#line 297 "regex.h2"
 class regex_token_code;
     
 
-#line 1060 "regex.h2"
+#line 313 "regex.h2"
 class regex_token_empty;
     
 
-#line 1076 "regex.h2"
+#line 327 "regex.h2"
+class regex_token_list;
+    
+
+#line 367 "regex.h2"
+class parse_context_group_state;
+
+#line 428 "regex.h2"
+class parse_context_branch_reset_state;
+    
+
+#line 469 "regex.h2"
+class parse_context;
+    
+
+#line 854 "regex.h2"
+class generation_function_context;
+    
+
+#line 871 "regex.h2"
+class generation_context;
+
+#line 1066 "regex.h2"
 class alternative_token;
     
 
-#line 1094 "regex.h2"
+#line 1080 "regex.h2"
 class alternative_token_gen;
     
 
-#line 1140 "regex.h2"
+#line 1125 "regex.h2"
 template<typename CharT> class alternative_token_matcher;
 
-#line 1166 "regex.h2"
+#line 1151 "regex.h2"
 class any_token;
     
 
-#line 1197 "regex.h2"
+#line 1178 "regex.h2"
 class char_token;
     
 
-#line 1325 "regex.h2"
+#line 1306 "regex.h2"
 class class_token;
     
 
-#line 1460 "regex.h2"
+#line 1441 "regex.h2"
 template<typename CharT, bool negate, bool case_insensitive, typename ...List> class class_token_matcher;
 
-#line 1558 "regex.h2"
+#line 1541 "regex.h2"
 class group_ref_token;
     
 
-#line 1692 "regex.h2"
+#line 1685 "regex.h2"
 class group_token;
     
 
-#line 1974 "regex.h2"
+#line 1969 "regex.h2"
 class lookahead_token;
     
 
-#line 2076 "regex.h2"
+#line 2071 "regex.h2"
 class range_flags;
     
 
-#line 2084 "regex.h2"
+#line 2079 "regex.h2"
 class range_token;
     
 
-#line 2221 "regex.h2"
+#line 2216 "regex.h2"
 template<typename CharT, int min_count, int max_count, int kind> class range_token_matcher;
 
-#line 2346 "regex.h2"
+#line 2341 "regex.h2"
 class special_range_token;
     
 
-#line 2433 "regex.h2"
+#line 2428 "regex.h2"
 template<typename CharT, typename matcher_wrapper> class regular_expression;
 
-#line 2522 "regex.h2"
-template<typename Error_out> class regex_parser;
+#line 2517 "regex.h2"
+template<typename Error_out> class regex_generator;
 
-#line 2607 "regex.h2"
+#line 2589 "regex.h2"
 }
 }
 
@@ -193,7 +189,9 @@ template<typename Error_out> class regex_parser;
 template<typename matcher_wrapper, typename Iter, typename CharT>
 using matcher_wrapper_type = typename matcher_wrapper::wrap<Iter, CharT>;
 
-#line 19 "regex.h2"
+using error_func = std::function<void(std::string)>;
+
+#line 21 "regex.h2"
 namespace cpp2 {
 
 namespace regex {
@@ -201,7 +199,7 @@ namespace regex {
 template<typename CharT> using bview = std::basic_string_view<CharT>;
 template<typename CharT> using bstring = std::basic_string<CharT>;
 
-#line 35 "regex.h2"
+#line 37 "regex.h2"
 class expression_flags {
 private: cpp2::u8 _value; private: constexpr expression_flags(cpp2::impl::in<cpp2::i64> _val);
 
@@ -231,10 +229,10 @@ public: constexpr auto operator=(expression_flags&& that) noexcept -> expression
 public: [[nodiscard]] auto operator<=>(expression_flags const& that) const& -> std::strong_ordering = default;
 public: [[nodiscard]] auto to_string() const& -> std::string;
 
-#line 42 "regex.h2"
+#line 44 "regex.h2"
 };
 
-#line 46 "regex.h2"
+#line 48 "regex.h2"
 template<typename Iter> class match_group {
     public: Iter start {}; 
     public: Iter end {}; 
@@ -242,13 +240,13 @@ template<typename Iter> class match_group {
     public: bool matched {false}; 
 };
 
-#line 55 "regex.h2"
+#line 57 "regex.h2"
 template<typename Iter> class match_return {
     public: bool matched {false}; 
     public: Iter pos {}; 
 };
 
-#line 62 "regex.h2"
+#line 64 "regex.h2"
 template<typename CharT, typename Iter, int max_groups> class match_context
  {
     public: Iter begin; 
@@ -258,76 +256,76 @@ template<typename CharT, typename Iter, int max_groups> class match_context
 
     public: explicit match_context(Iter const& begin_, Iter const& end_);
 
-#line 74 "regex.h2"
+#line 76 "regex.h2"
     public: match_context(match_context const& that);
-#line 74 "regex.h2"
+#line 76 "regex.h2"
     public: auto operator=(match_context const& that) -> match_context& ;
-#line 74 "regex.h2"
+#line 76 "regex.h2"
     public: match_context(match_context&& that) noexcept;
-#line 74 "regex.h2"
+#line 76 "regex.h2"
     public: auto operator=(match_context&& that) noexcept -> match_context& ;
 
-#line 78 "regex.h2"
+#line 80 "regex.h2"
     public: [[nodiscard]] auto get_group(auto const& group) const& -> auto;
 
     public: [[nodiscard]] auto get_group_end(auto const& group) const& -> int;
 
-#line 86 "regex.h2"
+#line 88 "regex.h2"
     public: [[nodiscard]] auto get_group_start(auto const& group) const& -> int;
 
-#line 92 "regex.h2"
+#line 94 "regex.h2"
     public: [[nodiscard]] auto get_group_string(auto const& group) const& -> std::string;
 
-#line 99 "regex.h2"
+#line 101 "regex.h2"
     public: auto set_group_end(auto const& group, auto const& pos) & -> void;
 
-#line 104 "regex.h2"
+#line 106 "regex.h2"
     public: auto set_group_invalid(auto const& group) & -> void;
 
-#line 108 "regex.h2"
+#line 110 "regex.h2"
     public: auto set_group_start(auto const& group, auto const& pos) & -> void;
 
-#line 112 "regex.h2"
+#line 114 "regex.h2"
     public: [[nodiscard]] auto size() const& -> auto;
 
-#line 117 "regex.h2"
+#line 119 "regex.h2"
     public: [[nodiscard]] auto fail() const& -> auto;
     public: [[nodiscard]] auto pass(cpp2::impl::in<Iter> cur) const& -> auto;
 
 };
 
-#line 124 "regex.h2"
+#line 126 "regex.h2"
 class true_end_func {
     public: [[nodiscard]] auto operator()(auto const& cur, auto& ctx) const& -> auto;
 };
 
-#line 130 "regex.h2"
+#line 132 "regex.h2"
 class no_reset {
     public: auto operator()([[maybe_unused]] auto& unnamed_param_2) const& -> void;
 };
 
-#line 135 "regex.h2"
+#line 137 "regex.h2"
 template<typename Func> class on_return {
 
     private: Func func; 
 
     public: explicit on_return(Func const& f);
-#line 139 "regex.h2"
+#line 141 "regex.h2"
     public: auto operator=(Func const& f) -> on_return& ;
 
-#line 143 "regex.h2"
+#line 145 "regex.h2"
     public: ~on_return() noexcept;
     public: on_return(on_return const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(on_return const&) -> void = delete;
 
 
-#line 146 "regex.h2"
+#line 148 "regex.h2"
 };
 
-#line 149 "regex.h2"
+#line 151 "regex.h2"
 template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> auto;
 
-#line 160 "regex.h2"
+#line 162 "regex.h2"
 template<typename CharT, CharT C> class single_class_entry
  {
     public: [[nodiscard]] static auto includes(cpp2::impl::in<CharT> c) -> auto;
@@ -336,10 +334,10 @@ template<typename CharT, CharT C> class single_class_entry
     public: single_class_entry(single_class_entry const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(single_class_entry const&) -> void = delete;
 
-#line 164 "regex.h2"
+#line 166 "regex.h2"
 };
 
-#line 168 "regex.h2"
+#line 170 "regex.h2"
 template<typename CharT, CharT Start, CharT End> class range_class_entry
  {
     public: [[nodiscard]] static auto includes(cpp2::impl::in<CharT> c) -> auto;
@@ -348,10 +346,10 @@ template<typename CharT, CharT Start, CharT End> class range_class_entry
     public: range_class_entry(range_class_entry const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(range_class_entry const&) -> void = delete;
 
-#line 172 "regex.h2"
+#line 174 "regex.h2"
 };
 
-#line 176 "regex.h2"
+#line 178 "regex.h2"
 template<typename CharT, typename ...List> class combined_class_entry {
     public: [[nodiscard]] static auto includes(cpp2::impl::in<CharT> c) -> auto;
     public: [[nodiscard]] static auto to_string() -> auto;
@@ -359,10 +357,10 @@ template<typename CharT, typename ...List> class combined_class_entry {
     public: combined_class_entry(combined_class_entry const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(combined_class_entry const&) -> void = delete;
 
-#line 179 "regex.h2"
+#line 181 "regex.h2"
 };
 
-#line 183 "regex.h2"
+#line 185 "regex.h2"
 template<typename CharT, CharT ...List> class list_class_entry {
     public: [[nodiscard]] static auto includes(cpp2::impl::in<CharT> c) -> auto;
     public: [[nodiscard]] static auto to_string() -> auto;
@@ -370,10 +368,10 @@ template<typename CharT, CharT ...List> class list_class_entry {
     public: list_class_entry(list_class_entry const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(list_class_entry const&) -> void = delete;
 
-#line 186 "regex.h2"
+#line 188 "regex.h2"
 };
 
-#line 190 "regex.h2"
+#line 192 "regex.h2"
 template<typename CharT, fixed_string Name, typename Inner> class named_class_entry {
     public: [[nodiscard]] static auto includes(cpp2::impl::in<CharT> c) -> auto;
     public: [[nodiscard]] static auto to_string() -> auto;
@@ -381,7 +379,7 @@ template<typename CharT, fixed_string Name, typename Inner> class named_class_en
     public: named_class_entry(named_class_entry const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(named_class_entry const&) -> void = delete;
 
-#line 193 "regex.h2"
+#line 195 "regex.h2"
 };
 
 template<typename CharT, typename Inner> class negated_class_entry: public Inner {
@@ -391,10 +389,10 @@ template<typename CharT, typename Inner> class negated_class_entry: public Inner
     public: negated_class_entry(negated_class_entry const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(negated_class_entry const&) -> void = delete;
 
-#line 198 "regex.h2"
+#line 200 "regex.h2"
 };
 
-#line 202 "regex.h2"
+#line 204 "regex.h2"
 template<typename CharT, fixed_string Name, typename Inner> class shorthand_class_entry {
     public: [[nodiscard]] static auto includes(cpp2::impl::in<CharT> c) -> auto;
     public: [[nodiscard]] static auto to_string() -> auto;
@@ -402,15 +400,15 @@ template<typename CharT, fixed_string Name, typename Inner> class shorthand_clas
     public: shorthand_class_entry(shorthand_class_entry const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(shorthand_class_entry const&) -> void = delete;
 
-#line 205 "regex.h2"
+#line 207 "regex.h2"
 };
 
-#line 210 "regex.h2"
+#line 212 "regex.h2"
 template        <typename CharT> using digits_class = named_class_entry<CharT,"digits",range_class_entry<CharT,'0','9'>>;
 template        <typename CharT> using lower_class = named_class_entry<CharT,"lower",range_class_entry<CharT,'a','z'>>;
 template        <typename CharT> using upper_class = named_class_entry<CharT,"upper",range_class_entry<CharT,'A','Z'>>;
 
-#line 216 "regex.h2"
+#line 218 "regex.h2"
 template          <typename CharT> using alnum_class = named_class_entry<CharT,"alnum",combined_class_entry<CharT,lower_class<CharT>,upper_class<CharT>,digits_class<CharT>>>;
 template          <typename CharT> using alpha_class = named_class_entry<CharT,"alpha",combined_class_entry<CharT,lower_class<CharT>,upper_class<CharT>>>;
 template          <typename CharT> using ascii_class = named_class_entry<CharT,"ascii",range_class_entry<CharT,'\x00','\x7F'>>;
@@ -425,31 +423,31 @@ template<typename CharT> using ver_space_class = named_class_entry<CharT,"vspace
 template          <typename CharT> using word_class = named_class_entry<CharT,"word",combined_class_entry<CharT,alnum_class<CharT>,single_class_entry<CharT,'_'>>>;
 template          <typename CharT> using xdigit_class = named_class_entry<CharT,"xdigit",combined_class_entry<CharT,range_class_entry<CharT,'A','F'>,range_class_entry<CharT,'a','f'>,digits_class<CharT>>>;
 
-#line 232 "regex.h2"
+#line 234 "regex.h2"
 template                 <typename CharT> using short_digits_class = shorthand_class_entry<CharT,"\\d",digits_class<CharT>>;
 template                 <typename CharT> using short_hor_space_class = shorthand_class_entry<CharT,"\\h",hor_space_class<CharT>>;
 template                 <typename CharT> using short_space_class = shorthand_class_entry<CharT,"\\s",space_class<CharT>>;
 template<typename CharT> using short_vert_space_class = shorthand_class_entry<CharT,"\\v",ver_space_class<CharT>>;
 template                 <typename CharT> using short_word_class = shorthand_class_entry<CharT,"\\w",word_class<CharT>>;
 
-#line 239 "regex.h2"
+#line 241 "regex.h2"
 template                     <typename CharT> using short_not_digits_class = negated_class_entry<CharT,shorthand_class_entry<CharT,"\\D",digits_class<CharT>>>;
 template                     <typename CharT> using short_not_hor_space_class = negated_class_entry<CharT,shorthand_class_entry<CharT,"\\H",hor_space_class<CharT>>>;
 template                     <typename CharT> using short_not_space_class = negated_class_entry<CharT,shorthand_class_entry<CharT,"\\S",space_class<CharT>>>;
 template<typename CharT> using short_not_vert_space_class = negated_class_entry<CharT,shorthand_class_entry<CharT,"\\V",ver_space_class<CharT>>>;
 template                     <typename CharT> using short_not_word_class = negated_class_entry<CharT,shorthand_class_entry<CharT,"\\W",word_class<CharT>>>;
 
-#line 254 "regex.h2"
+#line 256 "regex.h2"
 class regex_token {
 
     public: std::string string_rep; 
 
     public: explicit regex_token(cpp2::impl::in<std::string> str);
 
-#line 262 "regex.h2"
+#line 264 "regex.h2"
     public: explicit regex_token();
 
-#line 267 "regex.h2"
+#line 269 "regex.h2"
     public: virtual auto generate_code([[maybe_unused]] generation_context& unnamed_param_2) const -> void = 0;
 
     public: virtual auto add_groups([[maybe_unused]] std::set<int>& unnamed_param_2) const -> void;
@@ -460,26 +458,84 @@ class regex_token {
     public: regex_token(regex_token const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(regex_token const&) -> void = delete;
 
-#line 272 "regex.h2"
+#line 274 "regex.h2"
 };
 
 using token_ptr = std::shared_ptr<regex_token>;
 using token_vec = std::vector<token_ptr>;
 
+// Adds a check in code generation.
+//
+class regex_token_check: public regex_token {
+
+#line 284 "regex.h2"
+    private: std::string check; 
+
+    public: explicit regex_token_check(cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> check_);
+
+#line 291 "regex.h2"
+    public: auto generate_code(generation_context& ctx) const -> void override;
+    public: virtual ~regex_token_check() noexcept;
+
+    public: regex_token_check(regex_token_check const&) = delete; /* No 'that' constructor, suppress copy */
+    public: auto operator=(regex_token_check const&) -> void = delete;
+
+
+#line 294 "regex.h2"
+};
+
+// Adds code in code generation.
+class regex_token_code: public regex_token {
+
+#line 300 "regex.h2"
+    private: std::string code; 
+
+    public: explicit regex_token_code(cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> code_);
+
+#line 307 "regex.h2"
+    public: auto generate_code(generation_context& ctx) const -> void override;
+    public: virtual ~regex_token_code() noexcept;
+
+    public: regex_token_code(regex_token_code const&) = delete; /* No 'that' constructor, suppress copy */
+    public: auto operator=(regex_token_code const&) -> void = delete;
+
+
+#line 310 "regex.h2"
+};
+
+// Token that does not influence the matching. E.g. comment.
+class regex_token_empty: public regex_token {
+
+#line 316 "regex.h2"
+    public: explicit regex_token_empty(cpp2::impl::in<std::string> str);
+
+#line 320 "regex.h2"
+    public: auto generate_code([[maybe_unused]] generation_context& unnamed_param_2) const -> void override;
+    public: virtual ~regex_token_empty() noexcept;
+
+    public: regex_token_empty(regex_token_empty const&) = delete; /* No 'that' constructor, suppress copy */
+    public: auto operator=(regex_token_empty const&) -> void = delete;
+
+
+#line 323 "regex.h2"
+};
+
+// Represents a list of regex tokens as one token.
+//
 class regex_token_list: public regex_token {
 
-#line 280 "regex.h2"
+#line 330 "regex.h2"
     public: token_vec tokens; 
 
     public: explicit regex_token_list(cpp2::impl::in<token_vec> t);
 
-#line 287 "regex.h2"
+#line 337 "regex.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
 
-#line 293 "regex.h2"
+#line 343 "regex.h2"
     public: auto add_groups(std::set<int>& groups) const -> void override;
 
-#line 299 "regex.h2"
+#line 349 "regex.h2"
     public: [[nodiscard]] static auto gen_string(cpp2::impl::in<token_vec> vec) -> std::string;
     public: virtual ~regex_token_list() noexcept;
 
@@ -487,7 +543,7 @@ class regex_token_list: public regex_token {
     public: auto operator=(regex_token_list const&) -> void = delete;
 
 
-#line 306 "regex.h2"
+#line 356 "regex.h2"
 };
 
 //-----------------------------------------------------------------------
@@ -501,7 +557,7 @@ class regex_token_list: public regex_token {
 //
 class parse_context_group_state {
 
-#line 320 "regex.h2"
+#line 370 "regex.h2"
     public: token_vec cur_match_list {};           // Current list of matchers.
     public: token_vec alternate_match_lists {};    // List of alternate matcher lists. E.g. ab|cd|xy.
     public: expression_flags modifiers {};         // Current modifiers for the group/regular expression.
@@ -509,27 +565,27 @@ class parse_context_group_state {
     // Start a new alternative.
     public: auto next_alternative() & -> void;
 
-#line 332 "regex.h2"
+#line 382 "regex.h2"
     // Swap this state with the other one.
     public: auto swap(parse_context_group_state& t) & -> void;
 
-#line 339 "regex.h2"
+#line 389 "regex.h2"
     // Convert this state into a regex token.
     public: [[nodiscard]] auto get_as_token() & -> token_ptr;
 
-#line 351 "regex.h2"
+#line 401 "regex.h2"
     // Add a token to the current matcher list.
     public: auto add(cpp2::impl::in<token_ptr> token) & -> void;
 
-#line 356 "regex.h2"
+#line 406 "regex.h2"
     // True if current matcher list is empty.
     public: [[nodiscard]] auto empty() const& -> bool;
 
-#line 360 "regex.h2"
+#line 410 "regex.h2"
     // Apply optimizations to the matcher list.
     public: static auto post_process_list(token_vec& list) -> void;
 
-#line 374 "regex.h2"
+#line 424 "regex.h2"
 };
 
 // State for the branch reset. Takes care of the group numbering. See '(|<pattern>)'.
@@ -543,19 +599,19 @@ class parse_context_branch_reset_state {
     // Next group identifier.
     public: [[nodiscard]] auto next() & -> int;
 
-#line 393 "regex.h2"
+#line 443 "regex.h2"
     // Set next group identifier.
     public: auto set_next(cpp2::impl::in<int> g) & -> void;
 
-#line 399 "regex.h2"
+#line 449 "regex.h2"
     // Start a new alternative branch.
     public: auto next_alternative() & -> void;
 
-#line 406 "regex.h2"
+#line 456 "regex.h2"
     // Initialize for a branch reset group.
     public: auto set_active_reset(cpp2::impl::in<int> restart) & -> void;
 
-#line 413 "regex.h2"
+#line 463 "regex.h2"
 };
 
 // Context during parsing of the regular expressions.
@@ -570,74 +626,74 @@ class parse_context {
     private: parse_context_group_state cur_group_state {}; 
     private: parse_context_branch_reset_state cur_branch_reset_state {}; 
 
-#line 428 "regex.h2"
+#line 478 "regex.h2"
            public: std::map<std::string,int> named_groups {}; 
-           public: std::string error_text {""}; 
 
-    public: explicit parse_context(cpp2::impl::in<std::string_view> r);
-#line 431 "regex.h2"
-    public: auto operator=(cpp2::impl::in<std::string_view> r) -> parse_context& ;
+    private: error_func error_out; // TODO: Declaring std::function<void(std::string)> fails for cpp2.
+    private: bool has_error {false}; 
 
-#line 436 "regex.h2"
+    public: explicit parse_context(cpp2::impl::in<std::string_view> r, auto const& e);
+
+#line 489 "regex.h2"
     // State management functions
     //
 
     // Returned group state needs to be stored and provided in `end_group`.
     public: [[nodiscard]] auto start_group() & -> parse_context_group_state;
 
-#line 448 "regex.h2"
+#line 501 "regex.h2"
     // `old_state` argument needs to be from start group.
     public: [[nodiscard]] auto end_group(cpp2::impl::in<parse_context_group_state> old_state) & -> token_ptr;
 
-#line 455 "regex.h2"
+#line 508 "regex.h2"
     public: [[nodiscard]] auto get_modifiers() const& -> expression_flags;
 
-#line 459 "regex.h2"
+#line 512 "regex.h2"
     public: auto set_modifiers(cpp2::impl::in<expression_flags> mod) & -> void;
 
-#line 463 "regex.h2"
+#line 516 "regex.h2"
     // Branch reset management functions
     //
 
     public: [[nodiscard]] auto branch_reset_new_state() & -> parse_context_branch_reset_state;
 
-#line 474 "regex.h2"
+#line 527 "regex.h2"
     public: auto branch_reset_restore_state(cpp2::impl::in<parse_context_branch_reset_state> old_state) & -> void;
 
-#line 480 "regex.h2"
+#line 533 "regex.h2"
     public: auto next_alternative() & -> void;
 
-#line 485 "regex.h2"
+#line 538 "regex.h2"
     // Regex token management
     //
 
     public: auto add_token(cpp2::impl::in<token_ptr> token) & -> void;
 
-#line 492 "regex.h2"
+#line 545 "regex.h2"
     public: [[nodiscard]] auto has_token() const& -> bool;
 
-#line 496 "regex.h2"
+#line 549 "regex.h2"
     public: [[nodiscard]] auto pop_token() & -> token_ptr;
 
-#line 506 "regex.h2"
+#line 559 "regex.h2"
     public: [[nodiscard]] auto get_as_token() & -> token_ptr;
 
-#line 510 "regex.h2"
+#line 563 "regex.h2"
     // Group management
     //
 
     public: [[nodiscard]] auto get_cur_group() const& -> int;
 
-#line 517 "regex.h2"
+#line 570 "regex.h2"
     public: [[nodiscard]] auto next_group() & -> int;
 
-#line 521 "regex.h2"
+#line 574 "regex.h2"
     public: auto set_named_group(cpp2::impl::in<std::string> name, cpp2::impl::in<int> id) & -> void;
 
-#line 527 "regex.h2"
+#line 580 "regex.h2"
     public: [[nodiscard]] auto get_named_group(cpp2::impl::in<std::string> name) const& -> int;
 
-#line 537 "regex.h2"
+#line 590 "regex.h2"
     // Position management functions
     //
 
@@ -646,36 +702,36 @@ class parse_context {
     // Get the next token in the regex, skipping spaces according to the parameters. See `x` and `xx` modifiers.
     private: [[nodiscard]] auto get_next_position(cpp2::impl::in<bool> in_class, cpp2::impl::in<bool> no_skip) const& -> size_t;
 
-#line 581 "regex.h2"
+#line 634 "regex.h2"
     // Return true if next token is available.
     private: [[nodiscard]] auto next_impl(cpp2::impl::in<bool> in_class, cpp2::impl::in<bool> no_skip) & -> bool;
 
-#line 592 "regex.h2"
+#line 645 "regex.h2"
     public: [[nodiscard]] auto next() & -> auto;
     public: [[nodiscard]] auto next_in_class() & -> auto;
     public: [[nodiscard]] auto next_no_skip() & -> auto;
 
     public: [[nodiscard]] auto next_n(cpp2::impl::in<int> n) & -> bool;
 
-#line 605 "regex.h2"
+#line 658 "regex.h2"
     public: [[nodiscard]] auto has_next() const& -> bool;
 
     private: [[nodiscard]] auto grab_until_impl(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r, cpp2::impl::in<bool> any) & -> bool;
 
-#line 627 "regex.h2"
+#line 680 "regex.h2"
     public: [[nodiscard]] auto grab_until(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r) & -> auto;
     public: [[nodiscard]] auto grab_until(cpp2::impl::in<char> e, cpp2::impl::out<std::string> r) & -> auto;
     public: [[nodiscard]] auto grab_until_one_of(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r) & -> auto;
 
     public: [[nodiscard]] auto grab_n(cpp2::impl::in<int> n, cpp2::impl::out<std::string> r) & -> bool;
 
-#line 643 "regex.h2"
+#line 696 "regex.h2"
     public: [[nodiscard]] auto grab_number() & -> std::string;
 
-#line 663 "regex.h2"
+#line 716 "regex.h2"
     private: [[nodiscard]] auto peek_impl(cpp2::impl::in<bool> in_class) const& -> char;
 
-#line 673 "regex.h2"
+#line 726 "regex.h2"
     public: [[nodiscard]] auto peek() const& -> auto;
     public: [[nodiscard]] auto peek_in_class() const& -> auto;
 
@@ -684,13 +740,13 @@ class parse_context {
 
     public: [[nodiscard]] auto parser_group_modifiers(cpp2::impl::in<std::string> change_str, expression_flags& parser_modifiers) & -> bool;
 
-#line 734 "regex.h2"
+#line 787 "regex.h2"
     public: [[nodiscard]] auto parse_until(cpp2::impl::in<char> term) & -> bool;
 
-#line 771 "regex.h2"
+#line 824 "regex.h2"
     public: [[nodiscard]] auto parse(cpp2::impl::in<std::string> modifiers) & -> bool;
 
-#line 785 "regex.h2"
+#line 838 "regex.h2"
     // Misc functions
 
     public: [[nodiscard]] auto get_pos() const& -> auto;
@@ -702,7 +758,7 @@ class parse_context {
     public: auto operator=(parse_context const&) -> void = delete;
 
 
-#line 795 "regex.h2"
+#line 849 "regex.h2"
 };
 
 // Context for one function generation. Generation of functions can be interleaved, therefore we buffer the code for one
@@ -714,10 +770,10 @@ class generation_function_context {
 
     public: auto add_tabs(cpp2::impl::in<int> c) & -> void;
 
-#line 811 "regex.h2"
+#line 865 "regex.h2"
     public: auto remove_tabs(cpp2::impl::in<int> c) & -> void;
 
-#line 814 "regex.h2"
+#line 868 "regex.h2"
 };
 
 // Context for generating the state machine.
@@ -740,71 +796,71 @@ class generation_context {
     // Add code line.
     public: auto add(cpp2::impl::in<std::string> s) & -> void;
 
-#line 839 "regex.h2"
+#line 893 "regex.h2"
     // Add check for token. The check needs to be a function call that returns a boolean.
     public: auto add_check(cpp2::impl::in<std::string> check) & -> void;
 
-#line 845 "regex.h2"
+#line 899 "regex.h2"
     // Add a statefull check. The check needs to return a `match_return`.
     public: auto add_statefull(cpp2::impl::in<std::string> next_func, cpp2::impl::in<std::string> check) & -> void;
 
-#line 853 "regex.h2"
+#line 907 "regex.h2"
     protected: auto start_func_named(cpp2::impl::in<std::string> name) & -> void;
 
-#line 863 "regex.h2"
+#line 917 "regex.h2"
     protected: [[nodiscard]] auto start_func() & -> std::string;
 
-#line 869 "regex.h2"
+#line 923 "regex.h2"
     protected: auto end_func_statefull(cpp2::impl::in<std::string> s) & -> void;
 
-#line 887 "regex.h2"
+#line 941 "regex.h2"
     // Generate the function for a token.
     public: [[nodiscard]] auto generate_func(cpp2::impl::in<token_ptr> token) & -> std::string;
 
-#line 896 "regex.h2"
+#line 950 "regex.h2"
     // Generate the reset for a list of group identifiers.
     public: [[nodiscard]] auto generate_reset(cpp2::impl::in<std::set<int>> groups) & -> std::string;
 
-#line 918 "regex.h2"
+#line 972 "regex.h2"
     // Name generation
     //
 
     protected: [[nodiscard]] auto gen_func_name() & -> std::string;
 
-#line 927 "regex.h2"
+#line 981 "regex.h2"
     public: [[nodiscard]] auto next_func_name() & -> std::string;
 
-#line 931 "regex.h2"
+#line 985 "regex.h2"
     protected: [[nodiscard]] auto gen_reset_func_name() & -> std::string;
 
-#line 937 "regex.h2"
+#line 991 "regex.h2"
     public: [[nodiscard]] auto gen_temp() & -> std::string;
 
-#line 943 "regex.h2"
+#line 997 "regex.h2"
     // Context management
     //
 
     public: [[nodiscard]] auto new_context() & -> generation_function_context*;
 
-#line 954 "regex.h2"
+#line 1008 "regex.h2"
     public: auto finish_context() & -> void;
 
-#line 962 "regex.h2"
+#line 1016 "regex.h2"
     // Misc functions
     //
 
     private: [[nodiscard]] auto get_current() & -> generation_function_context*;
 
-#line 969 "regex.h2"
+#line 1023 "regex.h2"
     private: [[nodiscard]] auto get_base() & -> generation_function_context*;
 
-#line 973 "regex.h2"
+#line 1027 "regex.h2"
     public: [[nodiscard]] auto get_entry_func() const& -> std::string;
 
-#line 977 "regex.h2"
+#line 1031 "regex.h2"
     public: [[nodiscard]] auto create_named_group_lookup(cpp2::impl::in<std::map<std::string,int>> named_groups) const& -> std::string;
 
-#line 1000 "regex.h2"
+#line 1054 "regex.h2"
     // Run the generation for the token.
     public: [[nodiscard]] auto run(cpp2::impl::in<token_ptr> token) & -> std::string;
     public: generation_context() = default;
@@ -812,123 +868,42 @@ class generation_context {
     public: auto operator=(generation_context const&) -> void = delete;
 
 
-#line 1006 "regex.h2"
-};
-
-//-----------------------------------------------------------------------
-//
-// Matchers and generators for regular expressions.
-//
-//-----------------------------------------------------------------------
-//
-
-class regex_token_base: public regex_token {
-
-#line 1018 "regex.h2"
-    public: explicit regex_token_base(cpp2::impl::in<std::string> str);
-
-#line 1022 "regex.h2"
-    public: explicit regex_token_base();
-
-#line 1026 "regex.h2"
-    public: auto add_groups([[maybe_unused]] std::set<int>& unnamed_param_2) const -> void override;
-    public: virtual ~regex_token_base() noexcept;
-
-    public: regex_token_base(regex_token_base const&) = delete; /* No 'that' constructor, suppress copy */
-    public: auto operator=(regex_token_base const&) -> void = delete;
-
-#line 1027 "regex.h2"
-};
-
-class regex_token_check: public regex_token_base {
-
-#line 1032 "regex.h2"
-    private: std::string check; 
-
-    public: explicit regex_token_check(cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> check_);
-
-#line 1039 "regex.h2"
-    public: auto generate_code(generation_context& ctx) const -> void override;
-    public: virtual ~regex_token_check() noexcept;
-
-    public: regex_token_check(regex_token_check const&) = delete; /* No 'that' constructor, suppress copy */
-    public: auto operator=(regex_token_check const&) -> void = delete;
-
-
-#line 1042 "regex.h2"
-};
-
-class regex_token_code: public regex_token_base {
-
-#line 1047 "regex.h2"
-    private: std::string code; 
-
-    public: explicit regex_token_code(cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> code_);
-
-#line 1054 "regex.h2"
-    public: auto generate_code(generation_context& ctx) const -> void override;
-    public: virtual ~regex_token_code() noexcept;
-
-    public: regex_token_code(regex_token_code const&) = delete; /* No 'that' constructor, suppress copy */
-    public: auto operator=(regex_token_code const&) -> void = delete;
-
-
-#line 1057 "regex.h2"
-};
-
 #line 1060 "regex.h2"
-class regex_token_empty: public regex_token_base {
-
-#line 1063 "regex.h2"
-    public: explicit regex_token_empty(cpp2::impl::in<std::string> str);
-
-#line 1067 "regex.h2"
-    public: auto generate_code([[maybe_unused]] generation_context& unnamed_param_2) const -> void override;
-    public: virtual ~regex_token_empty() noexcept;
-
-    public: regex_token_empty(regex_token_empty const&) = delete; /* No 'that' constructor, suppress copy */
-    public: auto operator=(regex_token_empty const&) -> void = delete;
-
-
-#line 1070 "regex.h2"
 };
 
 //  Regex syntax: |  Example: ab|ba
 //
 //  Non greedy implementation. First alternative that matches is chosen.
 //
-class alternative_token: public regex_token_base {
+class alternative_token: public regex_token_empty {
+                                     // No code gen here. alternative_token_gen is created in the parse_context
 
-#line 1079 "regex.h2"
     public: explicit alternative_token();
 
     public: [[nodiscard]] static auto parse(parse_context& ctx) -> token_ptr;
-
-#line 1089 "regex.h2"
-    public: auto generate_code([[maybe_unused]] generation_context& unnamed_param_2) const -> void override;
     public: virtual ~alternative_token() noexcept;
 
     public: alternative_token(alternative_token const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(alternative_token const&) -> void = delete;
 
 
-#line 1092 "regex.h2"
+#line 1078 "regex.h2"
 };
 
 class alternative_token_gen: public regex_token {
 
-#line 1098 "regex.h2"
+#line 1083 "regex.h2"
     private: token_vec alternatives; 
 
     public: explicit alternative_token_gen(cpp2::impl::in<token_vec> a);
 
-#line 1105 "regex.h2"
+#line 1090 "regex.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
 
-#line 1121 "regex.h2"
+#line 1106 "regex.h2"
     public: auto add_groups(std::set<int>& groups) const -> void override;
 
-#line 1127 "regex.h2"
+#line 1112 "regex.h2"
     public: [[nodiscard]] static auto gen_string(cpp2::impl::in<token_vec> a) -> std::string;
     public: virtual ~alternative_token_gen() noexcept;
 
@@ -936,73 +911,70 @@ class alternative_token_gen: public regex_token {
     public: auto operator=(alternative_token_gen const&) -> void = delete;
 
 
-#line 1138 "regex.h2"
+#line 1123 "regex.h2"
 };
 
 template<typename CharT> class alternative_token_matcher {
 
     public: [[nodiscard]] static auto match(auto const& cur, auto& ctx, auto const& end_func, auto const& tail, auto const& ...functions) -> auto;
 
-#line 1145 "regex.h2"
+#line 1130 "regex.h2"
     private: template<typename ...Other> [[nodiscard]] static auto match_first(auto const& cur, auto& ctx, auto const& end_func, auto const& tail, auto const& cur_func, auto const& cur_reset, Other const& ...other) -> auto;
     public: alternative_token_matcher() = default;
     public: alternative_token_matcher(alternative_token_matcher const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(alternative_token_matcher const&) -> void = delete;
 
 
-#line 1162 "regex.h2"
+#line 1147 "regex.h2"
 };
 
 //  Regex syntax: .
 //
-class any_token: public regex_token_base {
+class any_token: public regex_token_check {
 
-#line 1169 "regex.h2"
-    private: bool single_line; 
+#line 1154 "regex.h2"
+    public: explicit any_token(cpp2::impl::in<bool> single_line);
 
-    public: explicit any_token(cpp2::impl::in<bool> single_line_);
-
-#line 1175 "regex.h2"
+#line 1158 "regex.h2"
     public: [[nodiscard]] static auto parse(parse_context& ctx) -> token_ptr;
-
-#line 1181 "regex.h2"
-    public: auto generate_code(generation_context& ctx) const -> void override;
     public: virtual ~any_token() noexcept;
 
     public: any_token(any_token const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(any_token const&) -> void = delete;
 
 
-#line 1184 "regex.h2"
+#line 1163 "regex.h2"
 };
 
 template<typename CharT, bool single_line> [[nodiscard]] auto any_token_matcher(auto& cur, auto& ctx) -> bool;
 
-#line 1197 "regex.h2"
-class char_token: public regex_token_base {
+#line 1176 "regex.h2"
+// Regex syntax: a
+//
+class char_token: public regex_token {
 
-#line 1200 "regex.h2"
+#line 1181 "regex.h2"
     private: std::string token; 
     private: bool ignore_case; 
 
     public: explicit char_token(cpp2::impl::in<char> t, cpp2::impl::in<bool> ignore_case_);
 
-#line 1209 "regex.h2"
+#line 1190 "regex.h2"
     public: [[nodiscard]] static auto parse(parse_context& ctx) -> token_ptr;
 
-#line 1213 "regex.h2"
+#line 1194 "regex.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
 
-#line 1235 "regex.h2"
+#line 1216 "regex.h2"
     public: auto gen_case_insensitive(cpp2::impl::in<std::string> lower, cpp2::impl::in<std::string> upper, generation_context& ctx) const& -> void;
 
-#line 1255 "regex.h2"
+#line 1236 "regex.h2"
     public: auto gen_case_sensitive(generation_context& ctx) const& -> void;
 
-#line 1272 "regex.h2"
+#line 1253 "regex.h2"
     public: [[nodiscard]] auto add_escapes(std::string str) const& -> std::string;
 
-#line 1284 "regex.h2"
+#line 1265 "regex.h2"
     public: auto append(char_token const& that) & -> void;
     public: virtual ~char_token() noexcept;
 
@@ -1010,7 +982,7 @@ class char_token: public regex_token_base {
     public: auto operator=(char_token const&) -> void = delete;
 
 
-#line 1288 "regex.h2"
+#line 1269 "regex.h2"
 };
 
 // TODO: Check if vectorization works at some point with this implementation.
@@ -1048,23 +1020,23 @@ class char_token: public regex_token_base {
 
 // Regex syntax: [<character classes>]  Example: [abcx-y[:digits:]]
 //
-class class_token: public regex_token_base {
+class class_token: public regex_token {
 
-#line 1328 "regex.h2"
+#line 1309 "regex.h2"
     private: bool negate; 
     private: bool case_insensitive; 
     private: std::string class_str; 
 
     public: explicit class_token(cpp2::impl::in<bool> negate_, cpp2::impl::in<bool> case_insensitive_, cpp2::impl::in<std::string> class_str_, cpp2::impl::in<std::string> str);
 
-#line 1339 "regex.h2"
+#line 1320 "regex.h2"
     // TODO: Rework class generation: Generate check functions for classes.
     public: [[nodiscard]] static auto parse(parse_context& ctx) -> token_ptr;
 
-#line 1447 "regex.h2"
+#line 1428 "regex.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
 
-#line 1452 "regex.h2"
+#line 1433 "regex.h2"
     private: [[nodiscard]] static auto create_matcher(cpp2::impl::in<std::string> name, cpp2::impl::in<std::string> template_arguments) -> std::string;
     public: virtual ~class_token() noexcept;
 
@@ -1072,21 +1044,21 @@ class class_token: public regex_token_base {
     public: auto operator=(class_token const&) -> void = delete;
 
 
-#line 1458 "regex.h2"
+#line 1439 "regex.h2"
 };
 
 template<typename CharT, bool negate, bool case_insensitive, typename ...List> class class_token_matcher
  {
     public: [[nodiscard]] static auto match(auto& cur, auto& ctx) -> bool;
 
-#line 1483 "regex.h2"
+#line 1464 "regex.h2"
     private: template<typename First, typename ...Other> [[nodiscard]] static auto match_any(cpp2::impl::in<CharT> c) -> bool;
     public: class_token_matcher() = default;
     public: class_token_matcher(class_token_matcher const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(class_token_matcher const&) -> void = delete;
 
 
-#line 1495 "regex.h2"
+#line 1476 "regex.h2"
     // TODO: Implement proper to string
     // to_string: () -> bstring<CharT> = {
     //     r: bstring<CharT> = "[";
@@ -1098,35 +1070,37 @@ template<typename CharT, bool negate, bool case_insensitive, typename ...List> c
 
     //     return r;
     // }
-#line 1506 "regex.h2"
+#line 1487 "regex.h2"
 };
 
+// Regex syntax: \a or \n or \[
+//
 [[nodiscard]] auto escape_token_parse(parse_context& ctx) -> token_ptr;
 
-#line 1543 "regex.h2"
+#line 1526 "regex.h2"
 // Regex syntax: \K Example: ab\Kcd
 //
 [[nodiscard]] auto global_group_reset_token_parse(parse_context& ctx) -> token_ptr;
 
-#line 1552 "regex.h2"
+#line 1535 "regex.h2"
 // Regex syntax: \<number>  Example: \1
 //               \g{name_or_number}
 //               \k{name_or_number}
 //               \k<name_or_number>
 //               \k'name_or_number'
 //
-class group_ref_token: public regex_token_base {
+class group_ref_token: public regex_token {
 
-#line 1561 "regex.h2"
+#line 1544 "regex.h2"
     private: int id; 
     private: bool case_insensitive; 
 
     public: explicit group_ref_token(cpp2::impl::in<int> id_, cpp2::impl::in<bool> case_insensitive_, cpp2::impl::in<std::string> str);
 
-#line 1570 "regex.h2"
+#line 1553 "regex.h2"
     public: [[nodiscard]] static auto parse(parse_context& ctx) -> token_ptr;
 
-#line 1662 "regex.h2"
+#line 1645 "regex.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
     public: virtual ~group_ref_token() noexcept;
 
@@ -1134,30 +1108,40 @@ class group_ref_token: public regex_token_base {
     public: auto operator=(group_ref_token const&) -> void = delete;
 
 
-#line 1665 "regex.h2"
+#line 1648 "regex.h2"
 };
 
 template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto group_ref_token_matcher(auto& cur, auto& ctx) -> bool;
 
-#line 1692 "regex.h2"
+#line 1675 "regex.h2"
+// Regex syntax: (<tokens>)      Example: (abc)
+//               (?<modifiers)            (?i)
+//               (?<modifiers>:<tokens>)  (?i:abc)
+//               (?<<name>>:<tokens>)     (?<start>:abc)
+//               (?#<comment>)            (#Step 1 finished)
+//               (?|<tokens>)             (?|(abc)|(cde))
+//               (?=<tokens>)             (?=abc)
+//               (?!<tokens>)             (?!abc)
+//               (*<name>:<tokens)        (*pla:abc)
+//
 class group_token: public regex_token {
 
-#line 1695 "regex.h2"
+#line 1688 "regex.h2"
     private: int number {-1}; 
     private: token_ptr inner {nullptr}; 
 
     public: [[nodiscard]] static auto parse_lookahead(parse_context& ctx, cpp2::impl::in<std::string> syntax, cpp2::impl::in<bool> positive) -> token_ptr;
 
-#line 1711 "regex.h2"
+#line 1704 "regex.h2"
     public: [[nodiscard]] static auto parse(parse_context& ctx) -> token_ptr;
 
-#line 1838 "regex.h2"
+#line 1831 "regex.h2"
     public: [[nodiscard]] static auto gen_string(cpp2::impl::in<std::string> name, cpp2::impl::in<bool> name_brackets, cpp2::impl::in<bool> has_modifier, cpp2::impl::in<std::string> modifiers, cpp2::impl::in<token_ptr> inner_) -> std::string;
 
-#line 1855 "regex.h2"
+#line 1848 "regex.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
 
-#line 1874 "regex.h2"
+#line 1867 "regex.h2"
     public: auto add_groups(std::set<int>& groups) const -> void override;
     public: virtual ~group_token() noexcept;
 
@@ -1166,44 +1150,46 @@ class group_token: public regex_token {
     public: auto operator=(group_token const&) -> void = delete;
 
 
-#line 1880 "regex.h2"
+#line 1873 "regex.h2"
 };
 
 // Regex syntax: \x<number> or \x{<number>}  Example: \x{62}
 //
 [[nodiscard]] auto hexadecimal_token_parse(parse_context& ctx) -> token_ptr;
 
-#line 1923 "regex.h2"
+#line 1916 "regex.h2"
 // Regex syntax: $  Example: aa$
 //
 [[nodiscard]] auto line_end_token_parse(parse_context& ctx) -> token_ptr;
 
-#line 1941 "regex.h2"
+#line 1934 "regex.h2"
 template<typename CharT, bool match_new_line, bool match_new_line_before_end> [[nodiscard]] auto line_end_token_matcher(auto const& cur, auto& ctx) -> bool;
 
-#line 1953 "regex.h2"
+#line 1946 "regex.h2"
 // Regex syntax: ^  Example: ^aa
 //
 [[nodiscard]] auto line_start_token_parse(parse_context& ctx) -> token_ptr;
 
-#line 1967 "regex.h2"
+#line 1960 "regex.h2"
 template<typename CharT, bool match_new_line> [[nodiscard]] auto line_start_token_matcher(auto const& cur, auto& ctx) -> bool;
 
-#line 1972 "regex.h2"
+#line 1965 "regex.h2"
 // Regex syntax: (?=) or (?!) or (*pla), etc.  Example: (?=AA)
+//
+// Parsed in group_token.
 //
 class lookahead_token: public regex_token {
 
-#line 1977 "regex.h2"
+#line 1972 "regex.h2"
     protected: bool positive; 
     public: token_ptr inner {nullptr}; 
 
     public: explicit lookahead_token(cpp2::impl::in<bool> positive_);
 
-#line 1984 "regex.h2"
+#line 1979 "regex.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
 
-#line 1990 "regex.h2"
+#line 1985 "regex.h2"
     public: auto add_groups(std::set<int>& groups) const -> void override;
     public: virtual ~lookahead_token() noexcept;
 
@@ -1211,18 +1197,18 @@ class lookahead_token: public regex_token {
     public: auto operator=(lookahead_token const&) -> void = delete;
 
 
-#line 1993 "regex.h2"
+#line 1988 "regex.h2"
 };
 
 template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_matcher(auto const& cur, auto& ctx, auto const& func) -> bool;
 
-#line 2004 "regex.h2"
+#line 1999 "regex.h2"
 // Named character classes
 //
 
 [[nodiscard]] auto named_class_token_parse(parse_context& ctx) -> token_ptr;
 
-#line 2031 "regex.h2"
+#line 2026 "regex.h2"
 template<typename CharT, bool case_insensitive> using named_class_no_new_line = class_token_matcher<CharT,true,case_insensitive,single_class_entry<CharT,'\n'>>;
 template                 <typename CharT,          bool case_insensitive> using named_class_digits = class_token_matcher<CharT,false,case_insensitive,digits_class<CharT>>;
 template                 <typename CharT,          bool case_insensitive> using named_class_hor_space = class_token_matcher<CharT,false,case_insensitive,hor_space_class<CharT>>;
@@ -1236,12 +1222,12 @@ template                    <typename CharT,          bool case_insensitive> usi
 template<typename CharT, bool case_insensitive> using named_class_not_ver_space = class_token_matcher<CharT,true,case_insensitive,ver_space_class<CharT>>;
 template                    <typename CharT,          bool case_insensitive> using named_class_not_word = class_token_matcher<CharT,true,case_insensitive,word_class<CharT>>;
 
-#line 2045 "regex.h2"
+#line 2040 "regex.h2"
 // Regex syntax: \o{<number>}  Example: \o{142}
 //
 [[nodiscard]] auto octal_token_parse(parse_context& ctx) -> token_ptr;
 
-#line 2071 "regex.h2"
+#line 2066 "regex.h2"
 // TODO: @enum as template parameter yields two error:
 //     error: type 'range_flags' of non-type template parameter is not a structural type
 //     error: non-type template parameter has incomplete type 'range_flags'
@@ -1256,13 +1242,13 @@ class range_flags {
     public: range_flags(range_flags const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(range_flags const&) -> void = delete;
 };
-#line 2081 "regex.h2"
+#line 2076 "regex.h2"
 
 // Regex syntax: <matcher>{min, max}  Example: a{2,4}
 //
 class range_token: public regex_token {
 
-#line 2087 "regex.h2"
+#line 2082 "regex.h2"
     protected: int min_count {-1}; 
     protected: int max_count {-1}; 
     protected: int kind {range_flags::greedy}; 
@@ -1272,19 +1258,19 @@ class range_token: public regex_token {
 
     public: [[nodiscard]] static auto parse(parse_context& ctx) -> token_ptr;
 
-#line 2164 "regex.h2"
+#line 2159 "regex.h2"
     public: auto parse_modifier(parse_context& ctx) & -> void;
 
-#line 2175 "regex.h2"
+#line 2170 "regex.h2"
     public: [[nodiscard]] auto gen_mod_string() const& -> std::string;
 
-#line 2187 "regex.h2"
+#line 2182 "regex.h2"
     public: [[nodiscard]] auto gen_range_string() const& -> std::string;
 
-#line 2205 "regex.h2"
+#line 2200 "regex.h2"
     public: auto generate_code(generation_context& ctx) const -> void override;
 
-#line 2215 "regex.h2"
+#line 2210 "regex.h2"
     public: auto add_groups(std::set<int>& groups) const -> void override;
     public: virtual ~range_token() noexcept;
 
@@ -1292,46 +1278,46 @@ class range_token: public regex_token {
     public: auto operator=(range_token const&) -> void = delete;
 
 
-#line 2219 "regex.h2"
+#line 2214 "regex.h2"
 };
 
 template<typename CharT, int min_count, int max_count, int kind> class range_token_matcher {
 
     public: template<typename Iter> [[nodiscard]] static auto match(Iter const& cur, auto& ctx, auto const& inner, auto const& reset_func, auto const& end_func, auto const& tail) -> auto;
 
-#line 2235 "regex.h2"
+#line 2230 "regex.h2"
     private: [[nodiscard]] static auto is_below_upper_bound(cpp2::impl::in<int> count) -> bool;
 
-#line 2240 "regex.h2"
+#line 2235 "regex.h2"
     private: [[nodiscard]] static auto is_below_lower_bound(cpp2::impl::in<int> count) -> bool;
 
-#line 2245 "regex.h2"
+#line 2240 "regex.h2"
     private: [[nodiscard]] static auto is_in_range(cpp2::impl::in<int> count) -> bool;
 
-#line 2251 "regex.h2"
+#line 2246 "regex.h2"
     private: template<typename Iter> [[nodiscard]] static auto match_min_count(Iter const& cur, auto& ctx, auto const& inner, auto const& end_func, int& count_r) -> auto;
 
-#line 2266 "regex.h2"
+#line 2261 "regex.h2"
     private: template<typename Iter> [[nodiscard]] static auto match_greedy(cpp2::impl::in<int> count, Iter const& cur, Iter const& last_valid, auto& ctx, auto const& inner, auto const& reset_func, auto const& end_func, auto const& other) -> match_return<Iter>;
 
-#line 2294 "regex.h2"
+#line 2289 "regex.h2"
     private: template<typename Iter> [[nodiscard]] static auto match_possessive(Iter const& cur, auto& ctx, auto const& inner, auto const& end_func, auto const& other) -> match_return<Iter>;
 
-#line 2318 "regex.h2"
+#line 2313 "regex.h2"
     private: template<typename Iter> [[nodiscard]] static auto match_not_greedy(Iter const& cur, auto& ctx, auto const& inner, auto const& end_func, auto const& other) -> match_return<Iter>;
     public: range_token_matcher() = default;
     public: range_token_matcher(range_token_matcher const&) = delete; /* No 'that' constructor, suppress copy */
     public: auto operator=(range_token_matcher const&) -> void = delete;
 
 
-#line 2342 "regex.h2"
+#line 2337 "regex.h2"
 };
 
 // Regex syntax: *, +, or ?  Example: aa*
 //
 class special_range_token: public range_token {
 
-#line 2349 "regex.h2"
+#line 2344 "regex.h2"
     public: [[nodiscard]] static auto parse(parse_context& ctx) -> token_ptr;
     public: virtual ~special_range_token() noexcept;
 
@@ -1340,7 +1326,7 @@ class special_range_token: public range_token {
     public: auto operator=(special_range_token const&) -> void = delete;
 
 
-#line 2378 "regex.h2"
+#line 2373 "regex.h2"
 };
 
 // Regex syntax: \b or \B  Example: \bword\b
@@ -1349,10 +1335,10 @@ class special_range_token: public range_token {
 //
 [[nodiscard]] auto word_boundary_token_parse(parse_context& ctx) -> token_ptr;
 
-#line 2400 "regex.h2"
+#line 2395 "regex.h2"
 template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_matcher(auto& cur, auto& ctx) -> bool;
 
-#line 2425 "regex.h2"
+#line 2420 "regex.h2"
 //-----------------------------------------------------------------------
 //
 //  Regular expression implementation.
@@ -1363,18 +1349,17 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
 // Regular expression implementation
 template<typename CharT, typename matcher_wrapper> class regular_expression {
 
-#line 2436 "regex.h2"
     public: template<typename Iter> using matcher = matcher_wrapper_type<matcher_wrapper,Iter,CharT>;// TODO: Remove when nested types are allowed: https://github.com/hsutter/cppfront/issues/727
     public: template<typename Iter> using context = matcher<Iter>::context;
 
-    // TODO: Named multiple return has problems with templates.
     public: template<typename Iter> class search_return {
         public: bool matched; 
         public: context<Iter> ctx; 
+        public: int pos; 
 
-        public: explicit search_return(cpp2::impl::in<bool> matched_, context<Iter> const& ctx_);
+        public: explicit search_return(cpp2::impl::in<bool> matched_, context<Iter> const& ctx_, Iter const& pos_);
 
-#line 2449 "regex.h2"
+#line 2444 "regex.h2"
         public: [[nodiscard]] auto group_number() const& -> auto;
         public: [[nodiscard]] auto group(cpp2::impl::in<int> g) const& -> auto;
         public: [[nodiscard]] auto group_start(cpp2::impl::in<int> g) const& -> auto;
@@ -1389,7 +1374,7 @@ template<typename CharT, typename matcher_wrapper> class regular_expression {
         public: auto operator=(search_return const&) -> void = delete;
 
 
-#line 2465 "regex.h2"
+#line 2460 "regex.h2"
     };
 
     public: [[nodiscard]] auto match(cpp2::impl::in<bview<CharT>> str) const& -> auto;
@@ -1397,13 +1382,13 @@ template<typename CharT, typename matcher_wrapper> class regular_expression {
     public: [[nodiscard]] auto match(cpp2::impl::in<bview<CharT>> str, auto const& start, auto const& length) const& -> auto;
     public: template<typename Iter> [[nodiscard]] auto match(Iter const& start, Iter const& end) const& -> search_return<Iter>;
 
-#line 2477 "regex.h2"
+#line 2472 "regex.h2"
     public: [[nodiscard]] auto search(cpp2::impl::in<bview<CharT>> str) const& -> auto;
     public: [[nodiscard]] auto search(cpp2::impl::in<bview<CharT>> str, auto const& start) const& -> auto;
     public: [[nodiscard]] auto search(cpp2::impl::in<bview<CharT>> str, auto const& start, auto const& length) const& -> auto;
     public: template<typename Iter> [[nodiscard]] auto search(Iter const& start, Iter const& end) const& -> search_return<Iter>;
 
-#line 2499 "regex.h2"
+#line 2494 "regex.h2"
     public: [[nodiscard]] auto to_string() const& -> auto;
 
     // Helper functions
@@ -1415,7 +1400,7 @@ template<typename CharT, typename matcher_wrapper> class regular_expression {
     public: auto operator=(regular_expression const&) -> void = delete;
 
 
-#line 2512 "regex.h2"
+#line 2507 "regex.h2"
 };
 
 //-----------------------------------------------------------------------
@@ -1426,43 +1411,33 @@ template<typename CharT, typename matcher_wrapper> class regular_expression {
 //
 
 // Parser and generator for regular expressions.
-template<typename Error_out> class regex_parser {
+template<typename Error_out> class regex_generator {
 
     private: std::string_view regex; 
     private: std::string modifier {""}; 
     private: std::string modifier_escape {""}; 
-    private: Error_out error_out; 
 
-    private: size_t pos {0}; 
-    private: bool has_error {false}; 
+    private: Error_out error_out; 
 
     private: std::string source {""}; 
 
-    public: explicit regex_parser(cpp2::impl::in<std::string_view> r, Error_out const& e);
+    public: explicit regex_generator(cpp2::impl::in<std::string_view> r, Error_out const& e);
 
-#line 2539 "regex.h2"
-    // Misc functions
-    //
-    public: auto error(cpp2::impl::in<std::string> message) & -> void;
-
-#line 2546 "regex.h2"
-    // Parsing functions
-    //
-
+#line 2532 "regex.h2"
     public: [[nodiscard]] auto parse() & -> std::string;
 
-#line 2585 "regex.h2"
+#line 2567 "regex.h2"
     private: auto extract_modifiers() & -> void;
-    public: regex_parser(regex_parser const&) = delete; /* No 'that' constructor, suppress copy */
-    public: auto operator=(regex_parser const&) -> void = delete;
+    public: regex_generator(regex_generator const&) = delete; /* No 'that' constructor, suppress copy */
+    public: auto operator=(regex_generator const&) -> void = delete;
 
 
-#line 2598 "regex.h2"
+#line 2580 "regex.h2"
 };
 
-template<typename Err> [[nodiscard]] auto generate_template(cpp2::impl::in<std::string_view> regex, Err const& err) -> std::string;
+template<typename Err> [[nodiscard]] auto generate_regex(cpp2::impl::in<std::string_view> regex, Err const& err) -> std::string;
 
-#line 2607 "regex.h2"
+#line 2589 "regex.h2"
 }
 }
 
@@ -1471,7 +1446,7 @@ template<typename Err> [[nodiscard]] auto generate_template(cpp2::impl::in<std::
 
 #line 1 "regex.h2"
 
-#line 19 "regex.h2"
+#line 21 "regex.h2"
 namespace cpp2 {
 
 namespace regex {
@@ -1533,7 +1508,7 @@ if (((*this) & perl_code_syntax) == perl_code_syntax) {_ret += _comma + "perl_co
 if (((*this) & perl_code_syntax_in_classes) == perl_code_syntax_in_classes) {_ret += _comma + "perl_code_syntax_in_classes";_comma = ", ";}
 return cpp2::move(_ret) + ")"; 
 }
-#line 26 "regex.h2"
+#line 28 "regex.h2"
 //-----------------------------------------------------------------------
 //
 //  Helper structures for the expression matching.
@@ -1551,43 +1526,43 @@ return cpp2::move(_ret) + ")";
                                   // mod: x
                                   // mod: xx
 
-#line 44 "regex.h2"
+#line 46 "regex.h2"
 // Structure for storing group information.
 //
 
-#line 53 "regex.h2"
+#line 55 "regex.h2"
 // Return value for every matcher.
 // 
 
-#line 60 "regex.h2"
+#line 62 "regex.h2"
 // Modifiable state during matching.
 //
 
-#line 69 "regex.h2"
+#line 71 "regex.h2"
     template <typename CharT, typename Iter, int max_groups> match_context<CharT,Iter,max_groups>::match_context(Iter const& begin_, Iter const& end_)
         : begin{ begin_ }
         , end{ end_ }{
 
-#line 72 "regex.h2"
+#line 74 "regex.h2"
     }
 
-#line 74 "regex.h2"
+#line 76 "regex.h2"
     template <typename CharT, typename Iter, int max_groups> match_context<CharT,Iter,max_groups>::match_context(match_context const& that)
                                    : begin{ that.begin }
                                    , end{ that.end }
                                    , groups{ that.groups }{}
-#line 74 "regex.h2"
+#line 76 "regex.h2"
     template <typename CharT, typename Iter, int max_groups> auto match_context<CharT,Iter,max_groups>::operator=(match_context const& that) -> match_context& {
                                    begin = that.begin;
                                    end = that.end;
                                    groups = that.groups;
                                    return *this; }
-#line 74 "regex.h2"
+#line 76 "regex.h2"
     template <typename CharT, typename Iter, int max_groups> match_context<CharT,Iter,max_groups>::match_context(match_context&& that) noexcept
                                    : begin{ std::move(that).begin }
                                    , end{ std::move(that).end }
                                    , groups{ std::move(that).groups }{}
-#line 74 "regex.h2"
+#line 76 "regex.h2"
     template <typename CharT, typename Iter, int max_groups> auto match_context<CharT,Iter,max_groups>::operator=(match_context&& that) noexcept -> match_context& {
                                    begin = std::move(that).begin;
                                    end = std::move(that).end;
@@ -1596,24 +1571,24 @@ return cpp2::move(_ret) + ")";
 
     // Getter and setter for groups
     //
-#line 78 "regex.h2"
+#line 80 "regex.h2"
     template <typename CharT, typename Iter, int max_groups> [[nodiscard]] auto match_context<CharT,Iter,max_groups>::get_group(auto const& group) const& -> auto { return CPP2_ASSERT_IN_BOUNDS(groups, group);  }
 
-#line 80 "regex.h2"
+#line 82 "regex.h2"
     template <typename CharT, typename Iter, int max_groups> [[nodiscard]] auto match_context<CharT,Iter,max_groups>::get_group_end(auto const& group) const& -> int{
         if (cpp2::impl::cmp_greater_eq(group,max_groups) || !(CPP2_ASSERT_IN_BOUNDS(groups, group).matched)) {
             return 0; 
         }
         return std::distance(begin, CPP2_ASSERT_IN_BOUNDS(groups, group).end); 
     }
-#line 86 "regex.h2"
+#line 88 "regex.h2"
     template <typename CharT, typename Iter, int max_groups> [[nodiscard]] auto match_context<CharT,Iter,max_groups>::get_group_start(auto const& group) const& -> int{
         if (cpp2::impl::cmp_greater_eq(group,max_groups) || !(CPP2_ASSERT_IN_BOUNDS(groups, group).matched)) {
             return 0; 
         }
         return std::distance(begin, CPP2_ASSERT_IN_BOUNDS(groups, group).start); 
     }
-#line 92 "regex.h2"
+#line 94 "regex.h2"
     template <typename CharT, typename Iter, int max_groups> [[nodiscard]] auto match_context<CharT,Iter,max_groups>::get_group_string(auto const& group) const& -> std::string{
         if (cpp2::impl::cmp_greater_eq(group,max_groups) || !(CPP2_ASSERT_IN_BOUNDS(groups, group).matched)) {
             return ""; 
@@ -1621,72 +1596,72 @@ return cpp2::move(_ret) + ")";
         return std::string(CPP2_ASSERT_IN_BOUNDS(groups, group).start, CPP2_ASSERT_IN_BOUNDS(groups, group).end); 
     }
 
-#line 99 "regex.h2"
+#line 101 "regex.h2"
     template <typename CharT, typename Iter, int max_groups> auto match_context<CharT,Iter,max_groups>::set_group_end(auto const& group, auto const& pos) & -> void{
         CPP2_ASSERT_IN_BOUNDS(groups, group).end = pos;
         CPP2_ASSERT_IN_BOUNDS(groups, group).matched = true;
     }
 
-#line 104 "regex.h2"
+#line 106 "regex.h2"
     template <typename CharT, typename Iter, int max_groups> auto match_context<CharT,Iter,max_groups>::set_group_invalid(auto const& group) & -> void{
         CPP2_ASSERT_IN_BOUNDS(groups, group).matched = false;
     }
 
-#line 108 "regex.h2"
+#line 110 "regex.h2"
     template <typename CharT, typename Iter, int max_groups> auto match_context<CharT,Iter,max_groups>::set_group_start(auto const& group, auto const& pos) & -> void{
         CPP2_ASSERT_IN_BOUNDS(groups, group).start = pos;
     }
 
-#line 112 "regex.h2"
+#line 114 "regex.h2"
     template <typename CharT, typename Iter, int max_groups> [[nodiscard]] auto match_context<CharT,Iter,max_groups>::size() const& -> auto { return max_groups;  }
 
     // Misc functions
     //
 
-#line 117 "regex.h2"
+#line 119 "regex.h2"
     template <typename CharT, typename Iter, int max_groups> [[nodiscard]] auto match_context<CharT,Iter,max_groups>::fail() const& -> auto { return match_return(false, end); }
-#line 118 "regex.h2"
+#line 120 "regex.h2"
     template <typename CharT, typename Iter, int max_groups> [[nodiscard]] auto match_context<CharT,Iter,max_groups>::pass(cpp2::impl::in<Iter> cur) const& -> auto { return match_return(true, cur);  }
 
-#line 122 "regex.h2"
+#line 124 "regex.h2"
 // End function that returns a valid match.
 //
 
-#line 125 "regex.h2"
+#line 127 "regex.h2"
     [[nodiscard]] auto true_end_func::operator()(auto const& cur, auto& ctx) const& -> auto { return ctx.pass(cur);  }
 
-#line 128 "regex.h2"
+#line 130 "regex.h2"
 // Empty group reset function.
 //
 
-#line 131 "regex.h2"
+#line 133 "regex.h2"
     auto no_reset::operator()([[maybe_unused]] auto& unnamed_param_2) const& -> void{}
 
-#line 134 "regex.h2"
+#line 136 "regex.h2"
 // Evaluate func on destruction of the handle.
 
-#line 139 "regex.h2"
+#line 141 "regex.h2"
     template <typename Func> on_return<Func>::on_return(Func const& f)
         : func{ f }{
 
-#line 141 "regex.h2"
+#line 143 "regex.h2"
     }
-#line 139 "regex.h2"
+#line 141 "regex.h2"
     template <typename Func> auto on_return<Func>::operator=(Func const& f) -> on_return& {
         func = f;
         return *this;
 
-#line 141 "regex.h2"
+#line 143 "regex.h2"
     }
 
-#line 143 "regex.h2"
+#line 145 "regex.h2"
     template <typename Func> on_return<Func>::~on_return() noexcept{
         cpp2::move(*this).func();
     }
 
-#line 148 "regex.h2"
+#line 150 "regex.h2"
 // Helper for auto deduction of the Func type.
-#line 149 "regex.h2"
+#line 151 "regex.h2"
 template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> auto { return on_return<Func>(func);  }
 
 //-----------------------------------------------------------------------
@@ -1699,72 +1674,72 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
 // Class syntax: <any character> Example: a
 //
 
-#line 162 "regex.h2"
+#line 164 "regex.h2"
     template <typename CharT, CharT C> [[nodiscard]] auto single_class_entry<CharT,C>::includes(cpp2::impl::in<CharT> c) -> auto { return c == C;  }
-#line 163 "regex.h2"
+#line 165 "regex.h2"
     template <typename CharT, CharT C> [[nodiscard]] auto single_class_entry<CharT,C>::to_string() -> auto { return bstring<CharT>(1, C); }
 
-#line 166 "regex.h2"
+#line 168 "regex.h2"
 // Class syntax: - Example: a-c
 //
 
-#line 170 "regex.h2"
+#line 172 "regex.h2"
     template <typename CharT, CharT Start, CharT End> [[nodiscard]] auto range_class_entry<CharT,Start,End>::includes(cpp2::impl::in<CharT> c) -> auto { return [_0 = Start, _1 = c, _2 = End]{ return cpp2::impl::cmp_less_eq(_0,_1) && cpp2::impl::cmp_less_eq(_1,_2); }();  }
-#line 171 "regex.h2"
+#line 173 "regex.h2"
     template <typename CharT, CharT Start, CharT End> [[nodiscard]] auto range_class_entry<CharT,Start,End>::to_string() -> auto { return cpp2::to_string(Start) + "-" + cpp2::to_string(End); }
 
-#line 174 "regex.h2"
+#line 176 "regex.h2"
 // Helper for combining two character classes
 //
 
-#line 177 "regex.h2"
+#line 179 "regex.h2"
     template <typename CharT, typename ...List> [[nodiscard]] auto combined_class_entry<CharT,List...>::includes(cpp2::impl::in<CharT> c) -> auto { return (false || ... || List::includes(c));  }
-#line 178 "regex.h2"
+#line 180 "regex.h2"
     template <typename CharT, typename ...List> [[nodiscard]] auto combined_class_entry<CharT,List...>::to_string() -> auto { return (bstring<CharT>() + ... + List::to_string()); }
 
-#line 181 "regex.h2"
+#line 183 "regex.h2"
 // Class syntax: <list of characters>  Example: abcd
 //
 
-#line 184 "regex.h2"
+#line 186 "regex.h2"
     template <typename CharT, CharT ...List> [[nodiscard]] auto list_class_entry<CharT,List...>::includes(cpp2::impl::in<CharT> c) -> auto { return (false || ... || (List == c));  }
-#line 185 "regex.h2"
+#line 187 "regex.h2"
     template <typename CharT, CharT ...List> [[nodiscard]] auto list_class_entry<CharT,List...>::to_string() -> auto { return (bstring<CharT>() + ... + List); }
 
-#line 188 "regex.h2"
+#line 190 "regex.h2"
 // Class syntax: [:<class name:]  Example: [:alnum:]
 //
 
-#line 191 "regex.h2"
+#line 193 "regex.h2"
     template <typename CharT, fixed_string Name, typename Inner> [[nodiscard]] auto named_class_entry<CharT,Name,Inner>::includes(cpp2::impl::in<CharT> c) -> auto { return Inner::includes(c);  }
-#line 192 "regex.h2"
+#line 194 "regex.h2"
     template <typename CharT, fixed_string Name, typename Inner> [[nodiscard]] auto named_class_entry<CharT,Name,Inner>::to_string() -> auto { return "[:" + cpp2::to_string(Name.data()) + ":]"; }
 
-#line 197 "regex.h2"
+#line 199 "regex.h2"
     template <typename CharT, typename Inner> [[nodiscard]] auto negated_class_entry<CharT,Inner>::includes(cpp2::impl::in<CharT> c) -> auto { return !(Inner::includes(c));  }
 
-#line 200 "regex.h2"
+#line 202 "regex.h2"
 // Short class syntax: \<character>  Example: \w
 //
 
-#line 203 "regex.h2"
+#line 205 "regex.h2"
     template <typename CharT, fixed_string Name, typename Inner> [[nodiscard]] auto shorthand_class_entry<CharT,Name,Inner>::includes(cpp2::impl::in<CharT> c) -> auto { return Inner::includes(c);  }
-#line 204 "regex.h2"
+#line 206 "regex.h2"
     template <typename CharT, fixed_string Name, typename Inner> [[nodiscard]] auto shorthand_class_entry<CharT,Name,Inner>::to_string() -> auto { return Name.str(); }
 
-#line 208 "regex.h2"
+#line 210 "regex.h2"
 // Named basic character classes
 //
 
-#line 214 "regex.h2"
+#line 216 "regex.h2"
 // Named other classes
 //
 
-#line 230 "regex.h2"
+#line 232 "regex.h2"
 // Shorthand class entries
 //
 
-#line 245 "regex.h2"
+#line 247 "regex.h2"
 //-----------------------------------------------------------------------
 //
 // Tokens for regular expressions.
@@ -1775,55 +1750,99 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
 // Basic class for a regex token.
 //
 
-#line 258 "regex.h2"
+#line 260 "regex.h2"
     regex_token::regex_token(cpp2::impl::in<std::string> str)
         : string_rep{ str }{
 
-#line 260 "regex.h2"
+#line 262 "regex.h2"
     }
 
-#line 262 "regex.h2"
+#line 264 "regex.h2"
     regex_token::regex_token()
         : string_rep{ "" }{
 
-#line 264 "regex.h2"
+#line 266 "regex.h2"
     }
 
     //parse: (inout ctx: parse_context) -> token_ptr;
                                                                        // Generate the matching code.
 
-#line 269 "regex.h2"
-    auto regex_token::add_groups([[maybe_unused]] std::set<int>& unnamed_param_2) const -> void{}// Adds all group indices to the set.
-#line 270 "regex.h2"
-    [[nodiscard]] auto regex_token::to_string() const& -> std::string{return string_rep; }// Create a string representation.
 #line 271 "regex.h2"
+    auto regex_token::add_groups([[maybe_unused]] std::set<int>& unnamed_param_2) const -> void{}// Adds all group indices to the set.
+#line 272 "regex.h2"
+    [[nodiscard]] auto regex_token::to_string() const& -> std::string{return string_rep; }// Create a string representation.
+#line 273 "regex.h2"
     auto regex_token::set_string(cpp2::impl::in<std::string> s) & -> void{string_rep = s; }
 
     regex_token::~regex_token() noexcept{}// Set the string representation.
 
-#line 282 "regex.h2"
+#line 286 "regex.h2"
+    regex_token_check::regex_token_check(cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> check_)
+        : regex_token{ str }
+        , check{ check_ }{
+
+#line 289 "regex.h2"
+    }
+
+#line 291 "regex.h2"
+    auto regex_token_check::generate_code(generation_context& ctx) const -> void{
+        ctx.add_check(check + "(" + ctx.match_parameters() + ")");
+    }
+
+    regex_token_check::~regex_token_check() noexcept{}
+
+#line 302 "regex.h2"
+    regex_token_code::regex_token_code(cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> code_)
+        : regex_token{ str }
+        , code{ code_ }{
+
+#line 305 "regex.h2"
+    }
+
+#line 307 "regex.h2"
+    auto regex_token_code::generate_code(generation_context& ctx) const -> void{
+        ctx.add(code);
+    }
+
+    regex_token_code::~regex_token_code() noexcept{}
+
+#line 316 "regex.h2"
+    regex_token_empty::regex_token_empty(cpp2::impl::in<std::string> str)
+        : regex_token{ str }{
+
+#line 318 "regex.h2"
+    }
+
+#line 320 "regex.h2"
+    auto regex_token_empty::generate_code([[maybe_unused]] generation_context& unnamed_param_2) const -> void{
+        // Nothing.
+    }
+
+    regex_token_empty::~regex_token_empty() noexcept{}
+
+#line 332 "regex.h2"
     regex_token_list::regex_token_list(cpp2::impl::in<token_vec> t)
         : regex_token{ gen_string(t) }
         , tokens{ t }{
 
-#line 285 "regex.h2"
+#line 335 "regex.h2"
     }
 
-#line 287 "regex.h2"
+#line 337 "regex.h2"
     auto regex_token_list::generate_code(generation_context& ctx) const -> void{
         for ( auto const& token : tokens ) {
             (*cpp2::impl::assert_not_null(token)).generate_code(ctx);
         }
     }
 
-#line 293 "regex.h2"
+#line 343 "regex.h2"
     auto regex_token_list::add_groups(std::set<int>& groups) const -> void{
         for ( auto const& token : tokens ) {
             (*cpp2::impl::assert_not_null(token)).add_groups(groups);
         }
     }
 
-#line 299 "regex.h2"
+#line 349 "regex.h2"
     [[nodiscard]] auto regex_token_list::gen_string(cpp2::impl::in<token_vec> vec) -> std::string{
         std::string r {""}; 
         for ( auto const& token : vec ) {
@@ -1834,7 +1853,7 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
 
     regex_token_list::~regex_token_list() noexcept{}
 
-#line 325 "regex.h2"
+#line 375 "regex.h2"
     auto parse_context_group_state::next_alternative() & -> void{
         token_vec new_list {}; 
         std::swap(new_list, cur_match_list);
@@ -1842,14 +1861,14 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         static_cast<void>(alternate_match_lists.insert(alternate_match_lists.end(), CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_list>)(cpp2::shared, cpp2::move(new_list))));
     }
 
-#line 333 "regex.h2"
+#line 383 "regex.h2"
     auto parse_context_group_state::swap(parse_context_group_state& t) & -> void{
         std::swap(cur_match_list, t.cur_match_list);
         std::swap(alternate_match_lists, t.alternate_match_lists);
         std::swap(modifiers, t.modifiers);
     }
 
-#line 340 "regex.h2"
+#line 390 "regex.h2"
     [[nodiscard]] auto parse_context_group_state::get_as_token() & -> token_ptr{
         if (alternate_match_lists.empty()) {
             post_process_list(cur_match_list);
@@ -1861,15 +1880,15 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         }
     }
 
-#line 352 "regex.h2"
+#line 402 "regex.h2"
     auto parse_context_group_state::add(cpp2::impl::in<token_ptr> token) & -> void{
         cur_match_list.push_back(token);
     }
 
-#line 357 "regex.h2"
+#line 407 "regex.h2"
     [[nodiscard]] auto parse_context_group_state::empty() const& -> bool { return cur_match_list.empty();  }
 
-#line 361 "regex.h2"
+#line 411 "regex.h2"
     auto parse_context_group_state::post_process_list(token_vec& list) -> void{
         // Merge all characters
         auto merge_pos {CPP2_UFCS(begin)(list)}; 
@@ -1884,7 +1903,7 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         }
     }
 
-#line 385 "regex.h2"
+#line 435 "regex.h2"
     [[nodiscard]] auto parse_context_branch_reset_state::next() & -> int{
         auto g {cur_group}; 
         cur_group += 1;
@@ -1893,20 +1912,20 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         return g; 
     }
 
-#line 394 "regex.h2"
+#line 444 "regex.h2"
     auto parse_context_branch_reset_state::set_next(cpp2::impl::in<int> g) & -> void{
         cur_group = g;
         max_group = max(max_group, g);
     }
 
-#line 400 "regex.h2"
+#line 450 "regex.h2"
     auto parse_context_branch_reset_state::next_alternative() & -> void{
         if (is_active) {
             cur_group = from;
         }
     }
 
-#line 407 "regex.h2"
+#line 457 "regex.h2"
     auto parse_context_branch_reset_state::set_active_reset(cpp2::impl::in<int> restart) & -> void{
         is_active = true;
         cur_group = restart;
@@ -1914,28 +1933,16 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         max_group = restart;
     }
 
-#line 431 "regex.h2"
-    parse_context::parse_context(cpp2::impl::in<std::string_view> r)
+#line 483 "regex.h2"
+    parse_context::parse_context(cpp2::impl::in<std::string_view> r, auto const& e)
         : regex{ r }
-        , root{ CPP2_UFCS_TEMPLATE_NONLOCAL(cpp2_new<regex_token_empty>)(cpp2::shared, "") }{
+        , root{ CPP2_UFCS_TEMPLATE_NONLOCAL(cpp2_new<regex_token_empty>)(cpp2::shared, "") }
+        , error_out{ e }{
 
-#line 434 "regex.h2"
-    }
-#line 431 "regex.h2"
-    auto parse_context::operator=(cpp2::impl::in<std::string_view> r) -> parse_context& {
-        regex = r;
-        pos = 0;
-        root = CPP2_UFCS_TEMPLATE_NONLOCAL(cpp2_new<regex_token_empty>)(cpp2::shared, "");
-        cur_group_state = {};
-        cur_branch_reset_state = {};
-        named_groups = {};
-        error_text = "";
-        return *this;
-
-#line 434 "regex.h2"
+#line 487 "regex.h2"
     }
 
-#line 440 "regex.h2"
+#line 493 "regex.h2"
     [[nodiscard]] auto parse_context::start_group() & -> parse_context_group_state{
         parse_context_group_state old_state {}; 
         old_state.swap(cur_group_state);
@@ -1944,24 +1951,24 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         return old_state; 
     }
 
-#line 449 "regex.h2"
+#line 502 "regex.h2"
     [[nodiscard]] auto parse_context::end_group(cpp2::impl::in<parse_context_group_state> old_state) & -> token_ptr{
         auto inner {cur_group_state.get_as_token()}; 
         cur_group_state = old_state;
         return inner; 
     }
 
-#line 455 "regex.h2"
+#line 508 "regex.h2"
     [[nodiscard]] auto parse_context::get_modifiers() const& -> expression_flags{
         return cur_group_state.modifiers; 
     }
 
-#line 459 "regex.h2"
+#line 512 "regex.h2"
     auto parse_context::set_modifiers(cpp2::impl::in<expression_flags> mod) & -> void{
         cur_group_state.modifiers = mod;
     }
 
-#line 466 "regex.h2"
+#line 519 "regex.h2"
     [[nodiscard]] auto parse_context::branch_reset_new_state() & -> parse_context_branch_reset_state{
         parse_context_branch_reset_state old_state {}; 
         std::swap(old_state, cur_branch_reset_state);
@@ -1970,30 +1977,30 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         return old_state; 
     }
 
-#line 474 "regex.h2"
+#line 527 "regex.h2"
     auto parse_context::branch_reset_restore_state(cpp2::impl::in<parse_context_branch_reset_state> old_state) & -> void{
         auto max_group {cur_branch_reset_state.max_group}; 
         cur_branch_reset_state = old_state;
         cur_branch_reset_state.set_next(cpp2::move(max_group));
     }
 
-#line 480 "regex.h2"
+#line 533 "regex.h2"
     auto parse_context::next_alternative() & -> void{
         cur_group_state.next_alternative();
         cur_branch_reset_state.next_alternative();
     }
 
-#line 488 "regex.h2"
+#line 541 "regex.h2"
     auto parse_context::add_token(cpp2::impl::in<token_ptr> token) & -> void{
         cur_group_state.add(token);
     }
 
-#line 492 "regex.h2"
+#line 545 "regex.h2"
     [[nodiscard]] auto parse_context::has_token() const& -> bool{
         return !(cur_group_state.empty()); 
     }
 
-#line 496 "regex.h2"
+#line 549 "regex.h2"
     [[nodiscard]] auto parse_context::pop_token() & -> token_ptr{
         token_ptr r {nullptr}; 
         if (has_token()) {
@@ -2004,29 +2011,29 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         return r; 
     }
 
-#line 506 "regex.h2"
+#line 559 "regex.h2"
     [[nodiscard]] auto parse_context::get_as_token() & -> token_ptr{
         return root; 
     }
 
-#line 513 "regex.h2"
+#line 566 "regex.h2"
     [[nodiscard]] auto parse_context::get_cur_group() const& -> int{
         return cur_branch_reset_state.cur_group; 
     }
 
-#line 517 "regex.h2"
+#line 570 "regex.h2"
     [[nodiscard]] auto parse_context::next_group() & -> int{
         return cur_branch_reset_state.next(); 
     }
 
-#line 521 "regex.h2"
+#line 574 "regex.h2"
     auto parse_context::set_named_group(cpp2::impl::in<std::string> name, cpp2::impl::in<int> id) & -> void{
         if (!(named_groups.contains(name))) {// Redefinition of group name is not an error. The left most one is retained.
             CPP2_ASSERT_IN_BOUNDS(named_groups, name) = id;
         }
     }
 
-#line 527 "regex.h2"
+#line 580 "regex.h2"
     [[nodiscard]] auto parse_context::get_named_group(cpp2::impl::in<std::string> name) const& -> int{
         auto iter {named_groups.find(name)}; 
         if (iter == named_groups.end()) {
@@ -2037,10 +2044,10 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         }
     }
 
-#line 540 "regex.h2"
+#line 593 "regex.h2"
     [[nodiscard]] auto parse_context::current() const& -> char{return CPP2_ASSERT_IN_BOUNDS(regex, pos); }
 
-#line 543 "regex.h2"
+#line 596 "regex.h2"
     [[nodiscard]] auto parse_context::get_next_position(cpp2::impl::in<bool> in_class, cpp2::impl::in<bool> no_skip) const& -> size_t{
         auto perl_syntax {false}; 
         if (!(no_skip)) {
@@ -2079,7 +2086,7 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         return cur; 
     }
 
-#line 582 "regex.h2"
+#line 635 "regex.h2"
     [[nodiscard]] auto parse_context::next_impl(cpp2::impl::in<bool> in_class, cpp2::impl::in<bool> no_skip) & -> bool{
         pos = get_next_position(in_class, no_skip);
         if (pos != regex.size()) {
@@ -2090,14 +2097,14 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         }
     }
 
-#line 592 "regex.h2"
+#line 645 "regex.h2"
     [[nodiscard]] auto parse_context::next() & -> auto { return next_impl(false, false); }
-#line 593 "regex.h2"
+#line 646 "regex.h2"
     [[nodiscard]] auto parse_context::next_in_class() & -> auto { return next_impl(true, false);  }
-#line 594 "regex.h2"
+#line 647 "regex.h2"
     [[nodiscard]] auto parse_context::next_no_skip() & -> auto { return next_impl(false, true); }
 
-#line 596 "regex.h2"
+#line 649 "regex.h2"
     [[nodiscard]] auto parse_context::next_n(cpp2::impl::in<int> n) & -> bool{
         auto r {true}; 
         auto cur {0}; 
@@ -2107,10 +2114,10 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         return r; 
     }
 
-#line 605 "regex.h2"
+#line 658 "regex.h2"
     [[nodiscard]] auto parse_context::has_next() const& -> bool{return cpp2::impl::cmp_less(pos,regex.size()); }
 
-#line 607 "regex.h2"
+#line 660 "regex.h2"
     [[nodiscard]] auto parse_context::grab_until_impl(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r, cpp2::impl::in<bool> any) & -> bool{
         auto end {pos}; 
         if (any) {
@@ -2131,14 +2138,14 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         }
     }
 
-#line 627 "regex.h2"
+#line 680 "regex.h2"
     [[nodiscard]] auto parse_context::grab_until(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r) & -> auto { return grab_until_impl(e, cpp2::impl::out(&r), false); }
-#line 628 "regex.h2"
+#line 681 "regex.h2"
     [[nodiscard]] auto parse_context::grab_until(cpp2::impl::in<char> e, cpp2::impl::out<std::string> r) & -> auto { return grab_until_impl(std::string(1, e), cpp2::impl::out(&r), false); }
-#line 629 "regex.h2"
+#line 682 "regex.h2"
     [[nodiscard]] auto parse_context::grab_until_one_of(cpp2::impl::in<std::string> e, cpp2::impl::out<std::string> r) & -> auto { return grab_until_impl(e, cpp2::impl::out(&r), true);  }
 
-#line 631 "regex.h2"
+#line 684 "regex.h2"
     [[nodiscard]] auto parse_context::grab_n(cpp2::impl::in<int> n, cpp2::impl::out<std::string> r) & -> bool{
         if (cpp2::impl::cmp_less_eq(pos + n,regex.size())) {
             r.construct(regex.substr(pos, n));
@@ -2151,7 +2158,7 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         }
     }
 
-#line 643 "regex.h2"
+#line 696 "regex.h2"
     [[nodiscard]] auto parse_context::grab_number() & -> std::string{
         auto start {pos}; 
         auto start_search {pos}; 
@@ -2172,7 +2179,7 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         return cpp2::move(r.value()); 
     }
 
-#line 663 "regex.h2"
+#line 716 "regex.h2"
     [[nodiscard]] auto parse_context::peek_impl(cpp2::impl::in<bool> in_class) const& -> char{
         auto next_pos {get_next_position(in_class, false)}; 
         if (cpp2::impl::cmp_less(next_pos,regex.size())) {
@@ -2183,12 +2190,12 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         }
     }
 
-#line 673 "regex.h2"
+#line 726 "regex.h2"
     [[nodiscard]] auto parse_context::peek() const& -> auto { return peek_impl(false); }
-#line 674 "regex.h2"
+#line 727 "regex.h2"
     [[nodiscard]] auto parse_context::peek_in_class() const& -> auto { return peek_impl(true);  }
 
-#line 679 "regex.h2"
+#line 732 "regex.h2"
     [[nodiscard]] auto parse_context::parser_group_modifiers(cpp2::impl::in<std::string> change_str, expression_flags& parser_modifiers) & -> bool{
         auto is_negative {false}; 
         auto is_reset {false}; 
@@ -2244,7 +2251,7 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         return true; 
     }
 
-#line 734 "regex.h2"
+#line 787 "regex.h2"
     [[nodiscard]] auto parse_context::parse_until(cpp2::impl::in<char> term) & -> bool{
         token_ptr cur_token {}; 
 
@@ -2282,7 +2289,7 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         return true; 
     }
 
-#line 771 "regex.h2"
+#line 824 "regex.h2"
     [[nodiscard]] auto parse_context::parse(cpp2::impl::in<std::string> modifiers) & -> bool{
 
         expression_flags flags {}; 
@@ -2297,20 +2304,21 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         return r; 
     }
 
-#line 787 "regex.h2"
+#line 840 "regex.h2"
     [[nodiscard]] auto parse_context::get_pos() const& -> auto { return pos; }
-#line 788 "regex.h2"
+#line 841 "regex.h2"
     [[nodiscard]] auto parse_context::get_range(cpp2::impl::in<int> start, cpp2::impl::in<int> end) const& -> auto { return std::string(regex.substr(start, end - start + 1));  }
-#line 789 "regex.h2"
-    [[nodiscard]] auto parse_context::valid() const& -> bool{return has_next() && error_text.empty(); }
+#line 842 "regex.h2"
+    [[nodiscard]] auto parse_context::valid() const& -> bool{return has_next() && !(has_error); }
 
-#line 791 "regex.h2"
+#line 844 "regex.h2"
     [[nodiscard]] auto parse_context::error(cpp2::impl::in<std::string> err) & -> token_ptr{
-        error_text = err;
+        has_error = true;
+        error_out(("Error during parsing of regex '" + cpp2::to_string(regex) + "' at position '" + cpp2::to_string(pos) + "': " + cpp2::to_string(err)));
         return nullptr; 
     }
 
-#line 804 "regex.h2"
+#line 858 "regex.h2"
     auto generation_function_context::add_tabs(cpp2::impl::in<int> c) & -> void{
         int i {0}; 
         for( ; cpp2::impl::cmp_less(i,c); i += 1 ) {
@@ -2318,27 +2326,27 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         }
     }
 
-#line 811 "regex.h2"
+#line 865 "regex.h2"
     auto generation_function_context::remove_tabs(cpp2::impl::in<int> c) & -> void{
         tabs = tabs.substr(0, c * 2);
     }
 
-#line 829 "regex.h2"
+#line 883 "regex.h2"
     [[nodiscard]] auto generation_context::match_parameters() const& -> std::string{return "r.pos, ctx"; }
 
-#line 834 "regex.h2"
+#line 888 "regex.h2"
     auto generation_context::add(cpp2::impl::in<std::string> s) & -> void{
         auto cur {get_current()}; 
         (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + cpp2::to_string(s) + "\n");
     }
 
-#line 840 "regex.h2"
+#line 894 "regex.h2"
     auto generation_context::add_check(cpp2::impl::in<std::string> check) & -> void{
         auto cur {get_current()}; 
         (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "if !cpp2::regex::" + cpp2::to_string(check) + " { r.matched = false; break; }\n");
     }
 
-#line 846 "regex.h2"
+#line 900 "regex.h2"
     auto generation_context::add_statefull(cpp2::impl::in<std::string> next_func, cpp2::impl::in<std::string> check) & -> void{
         end_func_statefull(check);
 
@@ -2346,7 +2354,7 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         start_func_named(cpp2::move(name));
     }
 
-#line 853 "regex.h2"
+#line 907 "regex.h2"
     auto generation_context::start_func_named(cpp2::impl::in<std::string> name) & -> void{
         auto cur {new_context()}; 
 
@@ -2357,14 +2365,14 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         (*cpp2::impl::assert_not_null(cpp2::move(cur))).add_tabs(3);
     }
 
-#line 863 "regex.h2"
+#line 917 "regex.h2"
     [[nodiscard]] auto generation_context::start_func() & -> std::string{
         auto name {gen_func_name()}; 
         start_func_named(name);
         return cpp2::move(name) + "()"; 
     }
 
-#line 869 "regex.h2"
+#line 923 "regex.h2"
     auto generation_context::end_func_statefull(cpp2::impl::in<std::string> s) & -> void{
         auto cur {get_current()}; 
         (*cpp2::impl::assert_not_null(cur)).remove_tabs(3);
@@ -2383,7 +2391,7 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         finish_context();
     }
 
-#line 888 "regex.h2"
+#line 942 "regex.h2"
     [[nodiscard]] auto generation_context::generate_func(cpp2::impl::in<token_ptr> token) & -> std::string{
         auto name {start_func()}; 
         (*cpp2::impl::assert_not_null(token)).generate_code((*this));
@@ -2392,7 +2400,7 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         return name; 
     }
 
-#line 897 "regex.h2"
+#line 951 "regex.h2"
     [[nodiscard]] auto generation_context::generate_reset(cpp2::impl::in<std::set<int>> groups) & -> std::string{
         if (groups.empty()) {
             return "cpp2::regex::no_reset()"; 
@@ -2414,33 +2422,33 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         return cpp2::move(name) + "()"; 
     }
 
-#line 921 "regex.h2"
+#line 975 "regex.h2"
     [[nodiscard]] auto generation_context::gen_func_name() & -> std::string{
         auto cur_id {matcher_func}; 
         matcher_func += 1;
         return { "func_" + cpp2::to_string(cpp2::move(cur_id)) }; 
     }
 
-#line 927 "regex.h2"
+#line 981 "regex.h2"
     [[nodiscard]] auto generation_context::next_func_name() & -> std::string{
         return gen_func_name() + "()"; 
     }
 
-#line 931 "regex.h2"
+#line 985 "regex.h2"
     [[nodiscard]] auto generation_context::gen_reset_func_name() & -> std::string{
         auto cur_id {reset_func}; 
         reset_func += 1;
         return { "reset_" + cpp2::to_string(cpp2::move(cur_id)) }; 
     }
 
-#line 937 "regex.h2"
+#line 991 "regex.h2"
     [[nodiscard]] auto generation_context::gen_temp() & -> std::string{
         auto cur_id {temp_name}; 
         temp_name += 1;
         return { "tmp_" + cpp2::to_string(cpp2::move(cur_id)) }; 
     }
 
-#line 946 "regex.h2"
+#line 1000 "regex.h2"
     [[nodiscard]] auto generation_context::new_context() & -> generation_function_context*{
         gen_stack.push_back(generation_function_context());
         auto cur {get_current()}; 
@@ -2449,7 +2457,7 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         return cur; 
     }
 
-#line 954 "regex.h2"
+#line 1008 "regex.h2"
     auto generation_context::finish_context() & -> void{
         auto cur {get_current()}; 
         auto base {get_base()}; 
@@ -2458,22 +2466,22 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         gen_stack.pop_back();
     }
 
-#line 965 "regex.h2"
+#line 1019 "regex.h2"
     [[nodiscard]] auto generation_context::get_current() & -> generation_function_context*{
         return &gen_stack.back(); 
     }
 
-#line 969 "regex.h2"
+#line 1023 "regex.h2"
     [[nodiscard]] auto generation_context::get_base() & -> generation_function_context*{
         return &CPP2_ASSERT_IN_BOUNDS_LITERAL(gen_stack, 0); 
     }
 
-#line 973 "regex.h2"
+#line 1027 "regex.h2"
     [[nodiscard]] auto generation_context::get_entry_func() const& -> std::string{
         return entry_func; 
     }
 
-#line 977 "regex.h2"
+#line 1031 "regex.h2"
     [[nodiscard]] auto generation_context::create_named_group_lookup(cpp2::impl::in<std::map<std::string,int>> named_groups) const& -> std::string{
         std::string res {"get_named_group_index: (name) -> int = {\n"}; 
 
@@ -2496,81 +2504,18 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         return res; 
     }
 
-#line 1001 "regex.h2"
+#line 1055 "regex.h2"
     [[nodiscard]] auto generation_context::run(cpp2::impl::in<token_ptr> token) & -> std::string{
         entry_func = generate_func(token);
 
         return (*cpp2::impl::assert_not_null(get_base())).code; 
     }
 
-#line 1018 "regex.h2"
-    regex_token_base::regex_token_base(cpp2::impl::in<std::string> str)
-        : regex_token{ str }{
-
-#line 1020 "regex.h2"
-    }
-
-#line 1022 "regex.h2"
-    regex_token_base::regex_token_base()
-        : regex_token{  }{
-
-#line 1024 "regex.h2"
-    }
-
-#line 1026 "regex.h2"
-    auto regex_token_base::add_groups([[maybe_unused]] std::set<int>& unnamed_param_2) const -> void{}
-
-    regex_token_base::~regex_token_base() noexcept{}
-
-#line 1034 "regex.h2"
-    regex_token_check::regex_token_check(cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> check_)
-        : regex_token_base{ str }
-        , check{ check_ }{
-
-#line 1037 "regex.h2"
-    }
-
-#line 1039 "regex.h2"
-    auto regex_token_check::generate_code(generation_context& ctx) const -> void{
-        ctx.add_check(check + "(" + ctx.match_parameters() + ")");
-    }
-
-    regex_token_check::~regex_token_check() noexcept{}
-
-#line 1049 "regex.h2"
-    regex_token_code::regex_token_code(cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> code_)
-        : regex_token_base{ str }
-        , code{ code_ }{
-
-#line 1052 "regex.h2"
-    }
-
-#line 1054 "regex.h2"
-    auto regex_token_code::generate_code(generation_context& ctx) const -> void{
-        ctx.add(code);
-    }
-
-    regex_token_code::~regex_token_code() noexcept{}
-
-#line 1063 "regex.h2"
-    regex_token_empty::regex_token_empty(cpp2::impl::in<std::string> str)
-        : regex_token_base{ str }{
-
-#line 1065 "regex.h2"
-    }
-
-#line 1067 "regex.h2"
-    auto regex_token_empty::generate_code([[maybe_unused]] generation_context& unnamed_param_2) const -> void{
-        // Nothing.
-    }
-
-    regex_token_empty::~regex_token_empty() noexcept{}
-
-#line 1079 "regex.h2"
+#line 1069 "regex.h2"
     alternative_token::alternative_token()
-                            : regex_token_base{  }{}
+                            : regex_token_empty{ "" }{}
 
-#line 1081 "regex.h2"
+#line 1071 "regex.h2"
     [[nodiscard]] auto alternative_token::parse(parse_context& ctx) -> token_ptr{
         if (ctx.current() != '|') {return nullptr; }
 
@@ -2579,22 +2524,17 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         return CPP2_UFCS_TEMPLATE(cpp2_new<alternative_token>)(cpp2::shared); 
     }
 
-#line 1089 "regex.h2"
-    auto alternative_token::generate_code([[maybe_unused]] generation_context& unnamed_param_2) const -> void{
-        // No code gen here. alternative_token_gen is created in the parse_context
-    }
-
     alternative_token::~alternative_token() noexcept{}
 
-#line 1100 "regex.h2"
+#line 1085 "regex.h2"
     alternative_token_gen::alternative_token_gen(cpp2::impl::in<token_vec> a)
         : regex_token{ gen_string(a) }
         , alternatives{ a }{
 
-#line 1103 "regex.h2"
+#line 1088 "regex.h2"
     }
 
-#line 1105 "regex.h2"
+#line 1090 "regex.h2"
     auto alternative_token_gen::generate_code(generation_context& ctx) const -> void{
         std::string functions {""}; 
 
@@ -2611,14 +2551,14 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         ctx.add_statefull(next_name, ("cpp2::regex::alternative_token_matcher<char>::match(" + cpp2::to_string(ctx.match_parameters()) + ", other, " + cpp2::to_string(next_name) + " " + cpp2::to_string(cpp2::move(functions)) + ")"));
     }
 
-#line 1121 "regex.h2"
+#line 1106 "regex.h2"
     auto alternative_token_gen::add_groups(std::set<int>& groups) const -> void{
         for ( auto const& cur : alternatives ) {
             (*cpp2::impl::assert_not_null(cur)).add_groups(groups);
         }
     }
 
-#line 1127 "regex.h2"
+#line 1112 "regex.h2"
     [[nodiscard]] auto alternative_token_gen::gen_string(cpp2::impl::in<token_vec> a) -> std::string{
         std::string r {""}; 
         std::string sep {""}; 
@@ -2633,11 +2573,11 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
 
     alternative_token_gen::~alternative_token_gen() noexcept{}
 
-#line 1142 "regex.h2"
+#line 1127 "regex.h2"
     template <typename CharT> [[nodiscard]] auto alternative_token_matcher<CharT>::match(auto const& cur, auto& ctx, auto const& end_func, auto const& tail, auto const& ...functions) -> auto{
         return match_first(cur, ctx, end_func, tail, functions...); 
     }
-#line 1145 "regex.h2"
+#line 1130 "regex.h2"
     template <typename CharT> template<typename ...Other> [[nodiscard]] auto alternative_token_matcher<CharT>::match_first(auto const& cur, auto& ctx, auto const& end_func, auto const& tail, auto const& cur_func, auto const& cur_reset, Other const& ...other) -> auto{
         auto inner_call {[_0 = (tail), _1 = (end_func)](auto const& tail_cur, auto& tail_ctx) -> auto{
             return _0(tail_cur, tail_ctx, _1); 
@@ -2656,29 +2596,23 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         }
     }
 
-#line 1171 "regex.h2"
-    any_token::any_token(cpp2::impl::in<bool> single_line_)
-        : regex_token_base{ "." }
-        , single_line{ single_line_ }{
+#line 1154 "regex.h2"
+    any_token::any_token(cpp2::impl::in<bool> single_line)
+        : regex_token_check{ ".", ("any_token_matcher<char, " + cpp2::to_string(single_line) + ">") }{
 
-#line 1173 "regex.h2"
+#line 1156 "regex.h2"
     }
 
-#line 1175 "regex.h2"
+#line 1158 "regex.h2"
     [[nodiscard]] auto any_token::parse(parse_context& ctx) -> token_ptr{
         if ('.' != ctx.current()) {return nullptr; }
 
         return CPP2_UFCS_TEMPLATE(cpp2_new<any_token>)(cpp2::shared, ctx.get_modifiers().has(expression_flags::single_line)); 
     }
 
-#line 1181 "regex.h2"
-    auto any_token::generate_code(generation_context& ctx) const -> void{
-        ctx.add_check(("any_token_matcher<char, " + cpp2::to_string(single_line) + ">(" + cpp2::to_string(ctx.match_parameters()) + ")"));
-    }
-
     any_token::~any_token() noexcept{}
 
-#line 1186 "regex.h2"
+#line 1165 "regex.h2"
 template<typename CharT, bool single_line> [[nodiscard]] auto any_token_matcher(auto& cur, auto& ctx) -> bool{
     if (cur != ctx.end // Any char except the end
         && (single_line || *cpp2::impl::assert_not_null(cur) != '\n')) {// Do not match new lines in multi line mode.
@@ -2690,21 +2624,21 @@ template<typename CharT, bool single_line> [[nodiscard]] auto any_token_matcher(
     }
 }
 
-#line 1203 "regex.h2"
+#line 1184 "regex.h2"
     char_token::char_token(cpp2::impl::in<char> t, cpp2::impl::in<bool> ignore_case_)
-        : regex_token_base{ std::string(1, t) }
+        : regex_token{ std::string(1, t) }
         , token{ t }
         , ignore_case{ ignore_case_ }{
 
-#line 1207 "regex.h2"
+#line 1188 "regex.h2"
     }
 
-#line 1209 "regex.h2"
+#line 1190 "regex.h2"
     [[nodiscard]] auto char_token::parse(parse_context& ctx) -> token_ptr{
         return CPP2_UFCS_TEMPLATE(cpp2_new<char_token>)(cpp2::shared, ctx.current(), ctx.get_modifiers().has(expression_flags::case_insensitive)); 
     }
 
-#line 1213 "regex.h2"
+#line 1194 "regex.h2"
     auto char_token::generate_code(generation_context& ctx) const -> void{
         if (ignore_case) {
             std::string upper {token}; 
@@ -2712,14 +2646,14 @@ template<typename CharT, bool single_line> [[nodiscard]] auto any_token_matcher(
 {
 size_t i{0};
 
-#line 1218 "regex.h2"
+#line 1199 "regex.h2"
             for( ; cpp2::impl::cmp_less(i,token.size()); i += 1 ) {
                 CPP2_ASSERT_IN_BOUNDS(lower, i) = safe_tolower(CPP2_ASSERT_IN_BOUNDS(token, i));
                 CPP2_ASSERT_IN_BOUNDS(upper, i) = safe_toupper(CPP2_ASSERT_IN_BOUNDS(token, i));
             }
 }
 
-#line 1223 "regex.h2"
+#line 1204 "regex.h2"
             if (upper != lower) {
                 gen_case_insensitive(cpp2::move(lower), cpp2::move(upper), ctx);
             }
@@ -2732,7 +2666,7 @@ size_t i{0};
         }
     }
 
-#line 1235 "regex.h2"
+#line 1216 "regex.h2"
     auto char_token::gen_case_insensitive(cpp2::impl::in<std::string> lower, cpp2::impl::in<std::string> upper, generation_context& ctx) const& -> void{
         std::string name {"str_" + cpp2::to_string(ctx.gen_temp())}; 
         std::string lower_name {"lower_" + cpp2::to_string(name)}; 
@@ -2753,7 +2687,7 @@ size_t i{0};
         ctx.add("else { break; }");
     }
 
-#line 1255 "regex.h2"
+#line 1236 "regex.h2"
     auto char_token::gen_case_sensitive(generation_context& ctx) const& -> void{
         std::string name {"str_" + cpp2::to_string(ctx.gen_temp())}; 
         auto size {token.size()}; 
@@ -2771,7 +2705,7 @@ size_t i{0};
         ctx.add("else { break; }");
     }
 
-#line 1272 "regex.h2"
+#line 1253 "regex.h2"
     [[nodiscard]] auto char_token::add_escapes(std::string str) const& -> std::string{
         str = replace_all(str, "\\", "\\\\");
         str = replace_all(str, "\a", "\\a");
@@ -2784,7 +2718,7 @@ size_t i{0};
         return cpp2::move(str); 
     }
 
-#line 1284 "regex.h2"
+#line 1265 "regex.h2"
     auto char_token::append(char_token const& that) & -> void{
         (*this).token += that.token;
         (*this).string_rep += that.string_rep;
@@ -2792,17 +2726,17 @@ size_t i{0};
 
     char_token::~char_token() noexcept{}
 
-#line 1332 "regex.h2"
+#line 1313 "regex.h2"
     class_token::class_token(cpp2::impl::in<bool> negate_, cpp2::impl::in<bool> case_insensitive_, cpp2::impl::in<std::string> class_str_, cpp2::impl::in<std::string> str)
-        : regex_token_base{ str }
+        : regex_token{ str }
         , negate{ negate_ }
         , case_insensitive{ case_insensitive_ }
         , class_str{ class_str_ }{
 
-#line 1337 "regex.h2"
+#line 1318 "regex.h2"
     }
 
-#line 1340 "regex.h2"
+#line 1321 "regex.h2"
     [[nodiscard]] auto class_token::parse(parse_context& ctx) -> token_ptr{
         if (ctx.current() != '[') {return nullptr; }
 
@@ -2839,7 +2773,7 @@ size_t i{0};
             else {if (ctx.current() == '\\') {
                 if (ctx. next_no_skip()  && (ctx. current() != ']')) {
                     if ( ' ' == ctx. current() && ctx. get_modifiers(). has(expression_flags::perl_code_syntax) && ctx. get_modifiers(). has(expression_flags::perl_code_syntax_in_classes)) {
-                        classes.push_back(std::string(1, ctx.current()));   // TODO: UFCS error with char as argument.
+                        classes.push_back(std::string(1, ctx.current()));
                     }
                     else {
                         auto name {""}; 
@@ -2910,12 +2844,12 @@ size_t i{0};
         return CPP2_UFCS_TEMPLATE(cpp2_new<class_token>)(cpp2::shared, cpp2::move(is_negate), ctx.get_modifiers().has(expression_flags::case_insensitive), cpp2::move(inner), cpp2::move(string_rep)); 
     }
 
-#line 1447 "regex.h2"
+#line 1428 "regex.h2"
     auto class_token::generate_code(generation_context& ctx) const -> void{
         ctx.add_check(("class_token_matcher<char, " + cpp2::to_string(negate) + ", " + cpp2::to_string(case_insensitive) + ", " + cpp2::to_string(class_str) + ">::match(" + cpp2::to_string(ctx.match_parameters()) + ")"));
     }
 
-#line 1452 "regex.h2"
+#line 1433 "regex.h2"
     [[nodiscard]] auto class_token::create_matcher(cpp2::impl::in<std::string> name, cpp2::impl::in<std::string> template_arguments) -> std::string{
         auto sep {", "}; 
         if (template_arguments.empty()) {sep = ""; }
@@ -2925,7 +2859,7 @@ size_t i{0};
 
     class_token::~class_token() noexcept{}
 
-#line 1462 "regex.h2"
+#line 1443 "regex.h2"
     template <typename CharT, bool negate, bool case_insensitive, typename ...List> [[nodiscard]] auto class_token_matcher<CharT,negate,case_insensitive,List...>::match(auto& cur, auto& ctx) -> bool{
         if constexpr (case_insensitive) {
             if (cur != ctx.end && negate != (match_any<List...>(safe_tolower(*cpp2::impl::assert_not_null(cur))) || match_any<List...>(safe_toupper(*cpp2::impl::assert_not_null(cur))))) {
@@ -2947,7 +2881,7 @@ size_t i{0};
         }
     }
 
-#line 1483 "regex.h2"
+#line 1464 "regex.h2"
     template <typename CharT, bool negate, bool case_insensitive, typename ...List> template<typename First, typename ...Other> [[nodiscard]] auto class_token_matcher<CharT,negate,case_insensitive,List...>::match_any(cpp2::impl::in<CharT> c) -> bool{
         bool r {First::includes(c)}; 
 
@@ -2960,11 +2894,11 @@ size_t i{0};
         return r; 
     }
 
-#line 1508 "regex.h2"
+#line 1491 "regex.h2"
 [[nodiscard]] auto escape_token_parse(parse_context& ctx) -> token_ptr{
     if (ctx.current() != '\\') {return nullptr; }
 
-#line 1512 "regex.h2"
+#line 1495 "regex.h2"
     if (std::string::npos == std::string("afenrt^.[]()*{}?+|\\").find(ctx.peek())) {
         return nullptr; 
     }
@@ -2996,7 +2930,7 @@ size_t i{0};
 
 }
 
-#line 1545 "regex.h2"
+#line 1528 "regex.h2"
 [[nodiscard]] auto global_group_reset_token_parse(parse_context& ctx) -> token_ptr{
     if (!((ctx.current() == '\\' && ctx.peek() == 'K'))) {return nullptr; }
 
@@ -3004,16 +2938,16 @@ size_t i{0};
     return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_code>)(cpp2::shared, "\\K", "ctx..set_group_start(0, r.pos);"); 
 }
 
-#line 1564 "regex.h2"
+#line 1547 "regex.h2"
     group_ref_token::group_ref_token(cpp2::impl::in<int> id_, cpp2::impl::in<bool> case_insensitive_, cpp2::impl::in<std::string> str)
-        : regex_token_base{ str }
+        : regex_token{ str }
         , id{ id_ }
         , case_insensitive{ case_insensitive_ }{
 
-#line 1568 "regex.h2"
+#line 1551 "regex.h2"
     }
 
-#line 1570 "regex.h2"
+#line 1553 "regex.h2"
     [[nodiscard]] auto group_ref_token::parse(parse_context& ctx) -> token_ptr{
         if (ctx.current() != '\\') {return nullptr; }
 
@@ -3106,14 +3040,14 @@ size_t i{0};
         return CPP2_UFCS_TEMPLATE(cpp2_new<group_ref_token>)(cpp2::shared, cpp2::move(group_id), ctx.get_modifiers().has(expression_flags::case_insensitive), cpp2::move(str)); 
     }
 
-#line 1662 "regex.h2"
+#line 1645 "regex.h2"
     auto group_ref_token::generate_code(generation_context& ctx) const -> void{
         ctx.add_check(("group_ref_token_matcher<char, " + cpp2::to_string(id) + ", " + cpp2::to_string(case_insensitive) + ">(" + cpp2::to_string(ctx.match_parameters()) + ")"));
     }
 
     group_ref_token::~group_ref_token() noexcept{}
 
-#line 1667 "regex.h2"
+#line 1650 "regex.h2"
 template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto group_ref_token_matcher(auto& cur, auto& ctx) -> bool{
     auto g {ctx.get_group(group)}; 
 
@@ -3139,7 +3073,7 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
     }
 }
 
-#line 1698 "regex.h2"
+#line 1691 "regex.h2"
     [[nodiscard]] auto group_token::parse_lookahead(parse_context& ctx, cpp2::impl::in<std::string> syntax, cpp2::impl::in<bool> positive) -> token_ptr{
         static_cast<void>(ctx.next());// Skip last token defining the syntax
 
@@ -3153,7 +3087,7 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
         return r; 
     }
 
-#line 1711 "regex.h2"
+#line 1704 "regex.h2"
     [[nodiscard]] auto group_token::parse(parse_context& ctx) -> token_ptr{
         if (ctx.current() != '(') {return nullptr; }
 
@@ -3281,7 +3215,7 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
         }
     }
 
-#line 1838 "regex.h2"
+#line 1831 "regex.h2"
     [[nodiscard]] auto group_token::gen_string(cpp2::impl::in<std::string> name, cpp2::impl::in<bool> name_brackets, cpp2::impl::in<bool> has_modifier, cpp2::impl::in<std::string> modifiers, cpp2::impl::in<token_ptr> inner_) -> std::string{
         std::string start {"("}; 
         if (0 != name.size()) {
@@ -3299,7 +3233,7 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
         return cpp2::move(start) + (*cpp2::impl::assert_not_null(inner_)).to_string() + ")"; 
     }
 
-#line 1855 "regex.h2"
+#line 1848 "regex.h2"
     auto group_token::generate_code(generation_context& ctx) const -> void{
         if (-1 != number) {
             ctx.add(("ctx..set_group_start(" + cpp2::to_string(number) + ", r.pos);"));
@@ -3319,7 +3253,7 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
         }
     }
 
-#line 1874 "regex.h2"
+#line 1867 "regex.h2"
     auto group_token::add_groups(std::set<int>& groups) const -> void{
         (*cpp2::impl::assert_not_null(inner)).add_groups(groups);
         if (-1 != number) {
@@ -3329,7 +3263,7 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
 
     group_token::~group_token() noexcept{}
 
-#line 1884 "regex.h2"
+#line 1877 "regex.h2"
 [[nodiscard]] auto hexadecimal_token_parse(parse_context& ctx) -> token_ptr{
     if (!((ctx.current() == '\\' && ctx.peek() == 'x'))) {return nullptr; }
 
@@ -3369,7 +3303,7 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
     return r; 
 }
 
-#line 1925 "regex.h2"
+#line 1918 "regex.h2"
 [[nodiscard]] auto line_end_token_parse(parse_context& ctx) -> token_ptr{
     if (ctx.current() == '$' || (ctx.current() == '\\' && ctx.peek() == '$')) {
         if ((ctx.current() == '\\')) {static_cast<void>(ctx.next()); }// Skip escape
@@ -3386,7 +3320,7 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
     }}
 }
 
-#line 1941 "regex.h2"
+#line 1934 "regex.h2"
 template<typename CharT, bool match_new_line, bool match_new_line_before_end> [[nodiscard]] auto line_end_token_matcher(auto const& cur, auto& ctx) -> bool{
     if (cur == ctx.end || (match_new_line && *cpp2::impl::assert_not_null(cur) == '\n')) {
         return true; 
@@ -3399,7 +3333,7 @@ template<typename CharT, bool match_new_line, bool match_new_line_before_end> [[
     }}
 }
 
-#line 1955 "regex.h2"
+#line 1948 "regex.h2"
 [[nodiscard]] auto line_start_token_parse(parse_context& ctx) -> token_ptr{
     if (ctx.current() != '^' && !((ctx.current() == '\\' && ctx.peek() == 'A'))) {return nullptr; }
 
@@ -3412,35 +3346,35 @@ template<typename CharT, bool match_new_line, bool match_new_line_before_end> [[
     }
 }
 
-#line 1967 "regex.h2"
+#line 1960 "regex.h2"
 template<typename CharT, bool match_new_line> [[nodiscard]] auto line_start_token_matcher(auto const& cur, auto& ctx) -> bool{
     return cur == ctx.begin || // Start of string
            (match_new_line && *cpp2::impl::assert_not_null((cur - 1)) == '\n'); // Start of new line
 }
 
-#line 1980 "regex.h2"
+#line 1975 "regex.h2"
     lookahead_token::lookahead_token(cpp2::impl::in<bool> positive_)
         : regex_token{ "" }
         , positive{ positive_ }{
 
-#line 1982 "regex.h2"
+#line 1977 "regex.h2"
     }
 
-#line 1984 "regex.h2"
+#line 1979 "regex.h2"
     auto lookahead_token::generate_code(generation_context& ctx) const -> void{
         auto inner_name {ctx.generate_func(inner)}; 
 
         ctx.add_check(("lookahead_token_matcher<char, " + cpp2::to_string(positive) + ">(" + cpp2::to_string(ctx.match_parameters()) + ", " + cpp2::to_string(cpp2::move(inner_name)) + ")"));
     }
 
-#line 1990 "regex.h2"
+#line 1985 "regex.h2"
     auto lookahead_token::add_groups(std::set<int>& groups) const -> void{
         (*cpp2::impl::assert_not_null(inner)).add_groups(groups);
     }
 
     lookahead_token::~lookahead_token() noexcept{}
 
-#line 1995 "regex.h2"
+#line 1990 "regex.h2"
 template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_matcher(auto const& cur, auto& ctx, auto const& func) -> bool{
     auto r {func(cur, ctx, true_end_func())}; 
     if (!(positive)) {
@@ -3450,14 +3384,14 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
     return cpp2::move(r).matched; 
 }
 
-#line 2007 "regex.h2"
+#line 2002 "regex.h2"
 [[nodiscard]] auto named_class_token_parse(parse_context& ctx) -> token_ptr{
     if (ctx.current() != '\\') {return nullptr; }
 
     auto name {""}; 
     auto c_next {ctx.peek()}; 
 
-    if ('d' == c_next) {name = "named_class_digits"; }
+    if (     'd' == c_next) { name = "named_class_digits"; }
     else {if ('D' == c_next) {name = "named_class_not_digits"; }
     else {if ('h' == c_next) {name = "named_class_hor_space"; }
     else {if ('H' == c_next) {name = "named_class_not_hor_space"; }
@@ -3468,14 +3402,14 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
     else {if ('V' == c_next) {name = "named_class_not_ver_space"; }
     else {if ('w' == c_next) {name = "named_class_word"; }
     else {if ('W' == cpp2::move(c_next)) {name = "named_class_not_word"; }
-    else {return nullptr; }}}}}}}}}}}
+    else                  { return nullptr; }}}}}}}}}}}
 
     static_cast<void>(ctx.next());// Skip escape
 
     return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_check>)(cpp2::shared, ("\\" + cpp2::to_string(ctx.current())), (cpp2::to_string(cpp2::move(name)) + "<char, " + cpp2::to_string(ctx.get_modifiers().has(expression_flags::case_insensitive)) + ">::match")); 
 }
 
-#line 2047 "regex.h2"
+#line 2042 "regex.h2"
 [[nodiscard]] auto octal_token_parse(parse_context& ctx) -> token_ptr{
     if (!((ctx.current() == '\\' && ctx.peek() == 'o'))) {return nullptr; }
 
@@ -3500,16 +3434,16 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
     return r; 
 }
 
-#line 2077 "regex.h2"
+#line 2072 "regex.h2"
     inline CPP2_CONSTEXPR int range_flags::not_greedy{ 1 };
     inline CPP2_CONSTEXPR int range_flags::greedy{ 2 };
     inline CPP2_CONSTEXPR int range_flags::possessive{ 3 };
 
-#line 2092 "regex.h2"
+#line 2087 "regex.h2"
     range_token::range_token()
                              : regex_token{ "" }{}
 
-#line 2094 "regex.h2"
+#line 2089 "regex.h2"
     [[nodiscard]] auto range_token::parse(parse_context& ctx) -> token_ptr{
         auto r {CPP2_UFCS_TEMPLATE(cpp2_new<range_token>)(cpp2::shared)}; 
         if (ctx.current() == '{') {
@@ -3553,7 +3487,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
                 }
             }
 
-#line 2138 "regex.h2"
+#line 2133 "regex.h2"
             // Check validity of the range.
             if (-1 != (*cpp2::impl::assert_not_null(r)).min_count) {
                 if (!((cpp2::impl::cmp_less_eq(0,(*cpp2::impl::assert_not_null(r)).min_count)))) {
@@ -3580,7 +3514,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
         return nullptr; 
     }
 
-#line 2164 "regex.h2"
+#line 2159 "regex.h2"
     auto range_token::parse_modifier(parse_context& ctx) & -> void{
         if (ctx.peek() == '?') {
             kind = range_flags::not_greedy;
@@ -3592,7 +3526,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
         }}
     }
 
-#line 2175 "regex.h2"
+#line 2170 "regex.h2"
     [[nodiscard]] auto range_token::gen_mod_string() const& -> std::string{
         if (kind == range_flags::not_greedy) {
             return "?"; 
@@ -3605,7 +3539,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
         }}
     }
 
-#line 2187 "regex.h2"
+#line 2182 "regex.h2"
     [[nodiscard]] auto range_token::gen_range_string() const& -> std::string{
         std::string r {""}; 
         if (min_count == max_count) {
@@ -3624,7 +3558,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
         return r; 
     }
 
-#line 2205 "regex.h2"
+#line 2200 "regex.h2"
     auto range_token::generate_code(generation_context& ctx) const -> void{
         auto inner_name {ctx.generate_func(inner_token)}; 
         std::set<int> groups {}; 
@@ -3635,14 +3569,14 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
         ctx.add_statefull(next_name, ("cpp2::regex::range_token_matcher<char, " + cpp2::to_string(min_count) + ", " + cpp2::to_string(max_count) + ", " + cpp2::to_string(kind) + ">::match(" + cpp2::to_string(ctx.match_parameters()) + ", " + cpp2::to_string(cpp2::move(inner_name)) + ", " + cpp2::to_string(cpp2::move(reset_name)) + ", other, " + cpp2::to_string(next_name) + ")"));
     }
 
-#line 2215 "regex.h2"
+#line 2210 "regex.h2"
     auto range_token::add_groups(std::set<int>& groups) const -> void{
         (*cpp2::impl::assert_not_null(inner_token)).add_groups(groups);
     }
 
     range_token::~range_token() noexcept{}
 
-#line 2223 "regex.h2"
+#line 2218 "regex.h2"
     template <typename CharT, int min_count, int max_count, int kind> template<typename Iter> [[nodiscard]] auto range_token_matcher<CharT,min_count,max_count,kind>::match(Iter const& cur, auto& ctx, auto const& inner, auto const& reset_func, auto const& end_func, auto const& tail) -> auto{
         if (range_flags::possessive == kind) {
             return match_possessive(cur, ctx, inner, end_func, tail); 
@@ -3655,26 +3589,26 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
         }}
     }
 
-#line 2235 "regex.h2"
+#line 2230 "regex.h2"
     template <typename CharT, int min_count, int max_count, int kind> [[nodiscard]] auto range_token_matcher<CharT,min_count,max_count,kind>::is_below_upper_bound(cpp2::impl::in<int> count) -> bool{
         if (-1 == max_count) {return true; }
         else {return cpp2::impl::cmp_less(count,max_count); }
     }
 
-#line 2240 "regex.h2"
+#line 2235 "regex.h2"
     template <typename CharT, int min_count, int max_count, int kind> [[nodiscard]] auto range_token_matcher<CharT,min_count,max_count,kind>::is_below_lower_bound(cpp2::impl::in<int> count) -> bool{
         if (-1 == min_count) {return false; }
         else {return cpp2::impl::cmp_less(count,min_count); }
     }
 
-#line 2245 "regex.h2"
+#line 2240 "regex.h2"
     template <typename CharT, int min_count, int max_count, int kind> [[nodiscard]] auto range_token_matcher<CharT,min_count,max_count,kind>::is_in_range(cpp2::impl::in<int> count) -> bool{
         if (-1 != min_count && cpp2::impl::cmp_less(count,min_count)) {return false; }
         if (-1 != max_count && cpp2::impl::cmp_greater(count,max_count)) {return false; }
         return true; 
     }
 
-#line 2251 "regex.h2"
+#line 2246 "regex.h2"
     template <typename CharT, int min_count, int max_count, int kind> template<typename Iter> [[nodiscard]] auto range_token_matcher<CharT,min_count,max_count,kind>::match_min_count(Iter const& cur, auto& ctx, auto const& inner, auto const& end_func, int& count_r) -> auto{// TODO: count_r as out parameter introduces a performance loss.
         auto res {ctx.pass(cur)}; 
         auto count {0}; 
@@ -3690,7 +3624,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
         return res; 
     }
 
-#line 2266 "regex.h2"
+#line 2261 "regex.h2"
     template <typename CharT, int min_count, int max_count, int kind> template<typename Iter> [[nodiscard]] auto range_token_matcher<CharT,min_count,max_count,kind>::match_greedy(cpp2::impl::in<int> count, Iter const& cur, Iter const& last_valid, auto& ctx, auto const& inner, auto const& reset_func, auto const& end_func, auto const& other) -> match_return<Iter>{
         auto inner_call {[_0 = (count + 1), _1 = (cur), _2 = (inner), _3 = (reset_func), _4 = (end_func), _5 = (other)](auto const& tail_cur, auto& tail_ctx) -> auto{
             return match_greedy(_0, tail_cur, _1, tail_ctx, _2, _3, _4, _5); 
@@ -3719,7 +3653,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
         return r; 
     }
 
-#line 2294 "regex.h2"
+#line 2289 "regex.h2"
     template <typename CharT, int min_count, int max_count, int kind> template<typename Iter> [[nodiscard]] auto range_token_matcher<CharT,min_count,max_count,kind>::match_possessive(Iter const& cur, auto& ctx, auto const& inner, auto const& end_func, auto const& other) -> match_return<Iter>{
         auto count {0}; 
         auto r {match_min_count(cur, ctx, inner, end_func, count)}; 
@@ -3744,7 +3678,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
         return other(cpp2::move(pos), ctx, end_func); 
     }
 
-#line 2318 "regex.h2"
+#line 2313 "regex.h2"
     template <typename CharT, int min_count, int max_count, int kind> template<typename Iter> [[nodiscard]] auto range_token_matcher<CharT,min_count,max_count,kind>::match_not_greedy(Iter const& cur, auto& ctx, auto const& inner, auto const& end_func, auto const& other) -> match_return<Iter>{
         auto count {0}; 
         auto start {match_min_count(cur, ctx, inner, end_func, count)}; 
@@ -3770,7 +3704,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
         return other(cpp2::move(pos), ctx, end_func); // Upper bound reached.
     }
 
-#line 2349 "regex.h2"
+#line 2344 "regex.h2"
     [[nodiscard]] auto special_range_token::parse(parse_context& ctx) -> token_ptr{
         auto r {CPP2_UFCS_TEMPLATE(cpp2_new<special_range_token>)(cpp2::shared)}; 
         char symbol {'\0'}; 
@@ -3793,7 +3727,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
 
         if (!(ctx.has_token())) {return ctx.error(("'" + cpp2::to_string(ctx.current()) + "' without previous element.")); }
 
-#line 2372 "regex.h2"
+#line 2367 "regex.h2"
         (*cpp2::impl::assert_not_null(r)).parse_modifier(ctx);
 
         (*cpp2::impl::assert_not_null(r)).inner_token = ctx.pop_token();
@@ -3803,7 +3737,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
 
     special_range_token::~special_range_token() noexcept{}
 
-#line 2384 "regex.h2"
+#line 2379 "regex.h2"
 [[nodiscard]] auto word_boundary_token_parse(parse_context& ctx) -> token_ptr{
     if (ctx.current() != '\\') {return nullptr; }
 
@@ -3820,7 +3754,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
     }}
 }
 
-#line 2400 "regex.h2"
+#line 2395 "regex.h2"
 template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_matcher(auto& cur, auto& ctx) -> bool{
     word_class<CharT> words {}; 
     auto is_match {false}; 
@@ -3845,31 +3779,32 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
     return is_match; 
 }
 
-#line 2444 "regex.h2"
-        template <typename CharT, typename matcher_wrapper> template <typename Iter> regular_expression<CharT,matcher_wrapper>::search_return<Iter>::search_return(cpp2::impl::in<bool> matched_, context<Iter> const& ctx_)
+#line 2438 "regex.h2"
+        template <typename CharT, typename matcher_wrapper> template <typename Iter> regular_expression<CharT,matcher_wrapper>::search_return<Iter>::search_return(cpp2::impl::in<bool> matched_, context<Iter> const& ctx_, Iter const& pos_)
             : matched{ matched_ }
-            , ctx{ ctx_ }{
+            , ctx{ ctx_ }
+            , pos{ unsafe_narrow<int>(std::distance(ctx_.begin, pos_)) }{
 
-#line 2447 "regex.h2"
+#line 2442 "regex.h2"
         }
 
-#line 2449 "regex.h2"
+#line 2444 "regex.h2"
         template <typename CharT, typename matcher_wrapper> template <typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search_return<Iter>::group_number() const& -> auto { return ctx.size();  }
-#line 2450 "regex.h2"
+#line 2445 "regex.h2"
         template <typename CharT, typename matcher_wrapper> template <typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search_return<Iter>::group(cpp2::impl::in<int> g) const& -> auto { return ctx.get_group_string(g); }
-#line 2451 "regex.h2"
+#line 2446 "regex.h2"
         template <typename CharT, typename matcher_wrapper> template <typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search_return<Iter>::group_start(cpp2::impl::in<int> g) const& -> auto { return ctx.get_group_start(g); }
-#line 2452 "regex.h2"
+#line 2447 "regex.h2"
         template <typename CharT, typename matcher_wrapper> template <typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search_return<Iter>::group_end(cpp2::impl::in<int> g) const& -> auto { return ctx.get_group_end(g); }
 
-#line 2454 "regex.h2"
+#line 2449 "regex.h2"
         template <typename CharT, typename matcher_wrapper> template <typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search_return<Iter>::group(cpp2::impl::in<bstring<CharT>> g) const& -> auto { return group(get_group_id(g)); }
-#line 2455 "regex.h2"
+#line 2450 "regex.h2"
         template <typename CharT, typename matcher_wrapper> template <typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search_return<Iter>::group_start(cpp2::impl::in<bstring<CharT>> g) const& -> auto { return group_start(get_group_id(g)); }
-#line 2456 "regex.h2"
+#line 2451 "regex.h2"
         template <typename CharT, typename matcher_wrapper> template <typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search_return<Iter>::group_end(cpp2::impl::in<bstring<CharT>> g) const& -> auto { return group_end(get_group_id(g)); }
 
-#line 2458 "regex.h2"
+#line 2453 "regex.h2"
         template <typename CharT, typename matcher_wrapper> template <typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search_return<Iter>::get_group_id(cpp2::impl::in<bstring<CharT>> g) const& -> auto{
             auto group_id {matcher<Iter>::get_named_group_index(g)}; 
             if (-1 == group_id) {
@@ -3878,35 +3813,35 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
             return group_id; 
         }
 
-#line 2467 "regex.h2"
+#line 2462 "regex.h2"
     template <typename CharT, typename matcher_wrapper> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::match(cpp2::impl::in<bview<CharT>> str) const& -> auto { return match(str.begin(), str.end()); }
-#line 2468 "regex.h2"
+#line 2463 "regex.h2"
     template <typename CharT, typename matcher_wrapper> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::match(cpp2::impl::in<bview<CharT>> str, auto const& start) const& -> auto { return match(get_iter(str, start), str.end()); }
-#line 2469 "regex.h2"
+#line 2464 "regex.h2"
     template <typename CharT, typename matcher_wrapper> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::match(cpp2::impl::in<bview<CharT>> str, auto const& start, auto const& length) const& -> auto { return match(get_iter(str, start), get_iter(str, start + length)); }
-#line 2470 "regex.h2"
+#line 2465 "regex.h2"
     template <typename CharT, typename matcher_wrapper> template<typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::match(Iter const& start, Iter const& end) const& -> search_return<Iter>{
         context<Iter> ctx {start, end}; 
 
         auto r {matcher<Iter>::entry(start, ctx)}; 
-        return search_return<Iter>(r.matched && r.pos == end, cpp2::move(ctx)); 
+        return search_return<Iter>(r.matched && r.pos == end, cpp2::move(ctx), r.pos); 
     }
 
-#line 2477 "regex.h2"
+#line 2472 "regex.h2"
     template <typename CharT, typename matcher_wrapper> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search(cpp2::impl::in<bview<CharT>> str) const& -> auto { return search(str.begin(), str.end()); }
-#line 2478 "regex.h2"
+#line 2473 "regex.h2"
     template <typename CharT, typename matcher_wrapper> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search(cpp2::impl::in<bview<CharT>> str, auto const& start) const& -> auto { return search(get_iter(str, start), str.end()); }
-#line 2479 "regex.h2"
+#line 2474 "regex.h2"
     template <typename CharT, typename matcher_wrapper> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search(cpp2::impl::in<bview<CharT>> str, auto const& start, auto const& length) const& -> auto { return search(get_iter(str, start), get_iter(str, start + length)); }
-#line 2480 "regex.h2"
+#line 2475 "regex.h2"
     template <typename CharT, typename matcher_wrapper> template<typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search(Iter const& start, Iter const& end) const& -> search_return<Iter>{
-        auto matched {false}; 
         context<Iter> ctx {start, end}; 
+        auto r {CPP2_UFCS(fail)(ctx)}; 
 
         auto cur {start}; 
         for( ; true; (++cur) ) {
-            if (matcher<Iter>::entry(cur, ctx).matched) {
-                matched = true;
+            r = matcher<Iter>::entry(cur, ctx);
+            if (r.matched) {
                 break;
             }
 
@@ -3915,13 +3850,13 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
             }
         }
 
-        return search_return<Iter>(cpp2::move(matched), cpp2::move(ctx)); 
+        return search_return<Iter>(r.matched, cpp2::move(ctx), cpp2::move(r).pos); 
     }
 
-#line 2499 "regex.h2"
+#line 2494 "regex.h2"
     template <typename CharT, typename matcher_wrapper> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::to_string() const& -> auto { return matcher_wrapper::to_string();  }
 
-#line 2504 "regex.h2"
+#line 2499 "regex.h2"
     template <typename CharT, typename matcher_wrapper> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::get_iter(cpp2::impl::in<bview<CharT>> str, auto const& pos) -> auto{
         if (cpp2::impl::cmp_less(pos,str.size())) {
             return str.begin() + pos; 
@@ -3931,30 +3866,23 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
         }
     }
 
-#line 2534 "regex.h2"
-    template <typename Error_out> regex_parser<Error_out>::regex_parser(cpp2::impl::in<std::string_view> r, Error_out const& e)
+#line 2527 "regex.h2"
+    template <typename Error_out> regex_generator<Error_out>::regex_generator(cpp2::impl::in<std::string_view> r, Error_out const& e)
         : regex{ r }
         , error_out{ e }{
 
-#line 2537 "regex.h2"
+#line 2530 "regex.h2"
     }
 
-#line 2541 "regex.h2"
-    template <typename Error_out> auto regex_parser<Error_out>::error(cpp2::impl::in<std::string> message) & -> void{
-        error_out(("Error during parsing of regex '" + cpp2::to_string(regex) + "' at position '" + cpp2::to_string(pos) + "': " + cpp2::to_string(message)));
-        has_error = true;
-    }
-
-#line 2549 "regex.h2"
-    template <typename Error_out> [[nodiscard]] auto regex_parser<Error_out>::parse() & -> std::string{
+#line 2532 "regex.h2"
+    template <typename Error_out> [[nodiscard]] auto regex_generator<Error_out>::parse() & -> std::string{
 
         // Extract modifiers and adapt regex.
         extract_modifiers();
 
-        parse_context parse_ctx {regex}; 
+        parse_context parse_ctx {regex, error_out}; 
         if (!(parse_ctx.parse(modifier))) {
-            error(parse_ctx.error_text);
-            return "Error"; 
+            return ""; 
         }
 
         source += "{\n";
@@ -3982,8 +3910,8 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
         return source; 
     }
 
-#line 2585 "regex.h2"
-    template <typename Error_out> auto regex_parser<Error_out>::extract_modifiers() & -> void{
+#line 2567 "regex.h2"
+    template <typename Error_out> auto regex_generator<Error_out>::extract_modifiers() & -> void{
         if (regex.find_first_of("'/") == 0) {
             char mod_token {CPP2_ASSERT_IN_BOUNDS_LITERAL(regex, 0)}; 
 
@@ -3997,9 +3925,9 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
         }
     }
 
-#line 2600 "regex.h2"
-template<typename Err> [[nodiscard]] auto generate_template(cpp2::impl::in<std::string_view> regex, Err const& err) -> std::string{
-    regex_parser<Err> parser {regex, err}; 
+#line 2582 "regex.h2"
+template<typename Err> [[nodiscard]] auto generate_regex(cpp2::impl::in<std::string_view> regex, Err const& err) -> std::string{
+    regex_generator<Err> parser {regex, err}; 
     auto r {parser.parse()}; 
     static_cast<void>(cpp2::move(parser));
     return r; 

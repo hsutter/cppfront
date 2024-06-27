@@ -16,6 +16,8 @@
 template<typename matcher_wrapper, typename Iter, typename CharT>
 using matcher_wrapper_type = typename matcher_wrapper::wrap<Iter, CharT>;
 
+using error_func = std::function<void(std::string)>;
+
 cpp2: namespace = {
 
 regex: namespace = {
@@ -274,6 +276,54 @@ regex_token: @polymorphic_base type = {
 token_ptr : type == std::shared_ptr<regex_token>;
 token_vec: type == std::vector<token_ptr>;
 
+// Adds a check in code generation.
+//
+regex_token_check: @polymorphic_base type = {
+    this: regex_token;
+
+    check: std::string;
+
+    operator=:(out this, str: std::string, check_: std::string) = {
+        regex_token = (str);
+        check = check_;
+    }
+
+    generate_code: (override this, inout ctx: generation_context) = {
+        ctx..add_check(check + "(" + ctx..match_parameters() + ")");
+    }
+}
+
+// Adds code in code generation.
+regex_token_code: @polymorphic_base type = {
+    this: regex_token;
+
+    code: std::string;
+
+    operator=:(out this, str: std::string, code_: std::string) = {
+        regex_token = (str);
+        code = code_;
+    }
+
+    generate_code: (override this, inout ctx: generation_context) = {
+        ctx..add(code);
+    }
+}
+
+// Token that does not influence the matching. E.g. comment.
+regex_token_empty: @polymorphic_base type = {
+    this: regex_token;
+
+    operator=:(out this, str: std::string) = {
+        regex_token = (str);
+    }
+
+    generate_code: (override this, inout _: generation_context) = {
+        // Nothing.
+    }
+}
+
+// Represents a list of regex tokens as one token.
+//
 regex_token_list: @polymorphic_base type = {
     this: regex_token;
 
@@ -426,11 +476,14 @@ parse_context: type = {
 
     
     public named_groups:  std::map<std::string, int> = ();
-    public error_text:    std::string = "";
 
-    operator=:(out this, r: std::string_view) = {
+    error_out: error_func; // TODO: Declaring std::function<void(std::string)> fails for cpp2.
+    has_error: bool      = false;
+
+    operator=:(out this, r: std::string_view, e) = {
         regex = r;
         root = shared.new<regex_token_empty>("");
+        error_out = e;
     }
 
     // State management functions
@@ -786,10 +839,11 @@ parse_context: type = {
 
     get_pos:   (this)                       pos;
     get_range: (this, start: int, end: int) std::string(regex..substr(start, end - start + 1));
-    valid:     (this) -> bool               = { return has_next() && error_text..empty(); }
+    valid:     (this) -> bool               = { return has_next() && !has_error; }
 
     error: (inout this, err: std::string) -> token_ptr = {
-        error_text = err;
+        has_error = true;
+        error_out("Error during parsing of regex '(regex)$' at position '(pos)$': (err)$");
         return nullptr;
     }
 }
@@ -1005,76 +1059,12 @@ generation_context: type = {
     }
 }
 
-//-----------------------------------------------------------------------
-//
-// Matchers and generators for regular expressions.
-//
-//-----------------------------------------------------------------------
-//
-
-regex_token_base: @polymorphic_base type = {
-    this: regex_token;
-
-    operator=:(out this, str: std::string) = {
-        regex_token = (str);
-    }
-
-    operator=:(out this) = {
-        regex_token = ();
-    }
-
-    add_groups: (override this, inout _: std::set<int>) = {}
-}
-
-regex_token_check: @polymorphic_base type = {
-    this: regex_token_base;
-
-    check: std::string;
-
-    operator=:(out this, str: std::string, check_: std::string) = {
-        regex_token_base = (str);
-        check = check_;
-    }
-
-    generate_code: (override this, inout ctx: generation_context) = {
-        ctx..add_check(check + "(" + ctx..match_parameters() + ")");
-    }
-}
-
-regex_token_code: @polymorphic_base type = {
-    this: regex_token_base;
-
-    code: std::string;
-
-    operator=:(out this, str: std::string, code_: std::string) = {
-        regex_token_base = (str);
-        code = code_;
-    }
-
-    generate_code: (override this, inout ctx: generation_context) = {
-        ctx..add(code);
-    }
-}
-
-
-regex_token_empty: @polymorphic_base type = {
-    this: regex_token_base;
-
-    operator=:(out this, str: std::string) = {
-        regex_token_base = (str);
-    }
-
-    generate_code: (override this, inout _: generation_context) = {
-        // Nothing.
-    }
-}
-
 //  Regex syntax: |  Example: ab|ba
 //
 //  Non greedy implementation. First alternative that matches is chosen.
 //
 alternative_token: @polymorphic_base type = {
-    this: regex_token_base = ();
+    this: regex_token_empty = ("");  // No code gen here. alternative_token_gen is created in the parse_context
 
     operator=:(out this) = {}
 
@@ -1085,15 +1075,10 @@ alternative_token: @polymorphic_base type = {
         ctx..next_alternative();
         return shared.new<alternative_token>();
     }
-
-    generate_code: (override this, inout _: generation_context) = {
-        // No code gen here. alternative_token_gen is created in the parse_context
-    }
 }
 
 alternative_token_gen: @polymorphic_base type = {
     this: regex_token;
-
 
     alternatives: token_vec;
 
@@ -1164,22 +1149,16 @@ alternative_token_matcher: <CharT> type = {
 //  Regex syntax: .
 //
 any_token: @polymorphic_base type = {
-    this: regex_token_base = (".");
+    this: regex_token_check = (".");
 
-    single_line: bool;
-
-    operator=:(out this, single_line_: bool) = {
-        single_line = single_line_;
+    operator=:(out this, single_line: bool) = {
+        regex_token_check = (".", "any_token_matcher<char, (single_line)$>");
     }
 
     parse: (inout ctx: parse_context) -> token_ptr = {
         if '.' != ctx..current() { return nullptr;}
 
         return shared.new<any_token>(ctx..get_modifiers()..has(expression_flags::single_line));
-    }
-
-    generate_code: (override this, inout ctx: generation_context) = {
-        ctx..add_check("any_token_matcher<char, (single_line)$>((ctx..match_parameters())$)");
     }
 }
 
@@ -1194,14 +1173,16 @@ any_token_matcher: <CharT, single_line: bool> (inout cur, inout ctx) -> bool = {
     }
 }
 
+// Regex syntax: a
+//
 char_token: @polymorphic_base type = {
-    this: regex_token_base;
+    this: regex_token;
 
     token: std::string;
     ignore_case: bool;
 
     operator=: (out this, t: char, ignore_case_: bool) = {
-        regex_token_base = (std::string(1, t));
+        regex_token = (std::string(1, t));
         token = t;
         ignore_case = ignore_case_;
     }
@@ -1323,14 +1304,14 @@ char_token: @polymorphic_base type = {
 // Regex syntax: [<character classes>]  Example: [abcx-y[:digits:]]
 //
 class_token: @polymorphic_base type = {
-    this: regex_token_base = ();
+    this: regex_token = ();
 
     negate: bool;
     case_insensitive: bool;
     class_str: std::string;
 
     operator=: (out this, negate_: bool, case_insensitive_: bool, class_str_: std::string, str: std::string) = {
-        regex_token_base = str;
+        regex_token = str;
         negate = negate_;
         case_insensitive = case_insensitive_;
         class_str = class_str_;
@@ -1373,7 +1354,7 @@ class_token: @polymorphic_base type = {
             else if ctx..current() == '\\' {
                 if ctx..next_no_skip()  && (ctx..current() != ']') {
                     if  ' ' == ctx..current() && ctx..get_modifiers()..has(expression_flags::perl_code_syntax) && ctx..get_modifiers()..has(expression_flags::perl_code_syntax_in_classes) {
-                        classes..push_back(std::string(1, ctx..current())); // TODO: UFCS error with char as argument.
+                        classes..push_back(std::string(1, ctx..current()));
                     }
                     else {
                         name := "";
@@ -1505,6 +1486,8 @@ class_token_matcher: <CharT, negate: bool, case_insensitive: bool, List ...> typ
     // }
 }
 
+// Regex syntax: \a or \n or \[
+//
 escape_token_parse: (inout ctx: parse_context) -> token_ptr = {
     if ctx..current() != '\\' { return nullptr; }
 
@@ -1556,13 +1539,13 @@ global_group_reset_token_parse: (inout ctx: parse_context) -> token_ptr = {
 //               \k'name_or_number'
 //
 group_ref_token: @polymorphic_base type = {
-    this: regex_token_base = ();
+    this: regex_token = ();
 
     id: int;
     case_insensitive: bool;
 
     operator=:(out this, id_: int, case_insensitive_: bool, str: std::string) = {
-        regex_token_base = str;
+        regex_token = str;
         id = id_;
         case_insensitive = case_insensitive_;
     }
@@ -1689,6 +1672,16 @@ group_ref_token_matcher: <CharT, group: int, case_insensitive: bool> (inout cur,
     }
 }
 
+// Regex syntax: (<tokens>)      Example: (abc)
+//               (?<modifiers)            (?i)
+//               (?<modifiers>:<tokens>)  (?i:abc)
+//               (?<<name>>:<tokens>)     (?<start>:abc)
+//               (?#<comment>)            (#Step 1 finished)
+//               (?|<tokens>)             (?|(abc)|(cde))
+//               (?=<tokens>)             (?=abc)
+//               (?!<tokens>)             (?!abc)
+//               (*<name>:<tokens)        (*pla:abc)
+//
 group_token: @polymorphic_base type = {
     this: regex_token = ();
 
@@ -1971,6 +1964,8 @@ line_start_token_matcher: <CharT, match_new_line: bool> (cur, inout ctx) -> bool
 
 // Regex syntax: (?=) or (?!) or (*pla), etc.  Example: (?=AA)
 //
+// Parsed in group_token.
+//
 lookahead_token: @polymorphic_base type = {
     this: regex_token = ("");
 
@@ -2010,7 +2005,7 @@ named_class_token_parse: (inout ctx: parse_context) -> token_ptr = {
     name := "";
     c_next := ctx..peek();
 
-    if 'd' == c_next { name = "named_class_digits"; }
+    if      'd' == c_next { name = "named_class_digits"; }
     else if 'D' == c_next { name = "named_class_not_digits"; }
     else if 'h' == c_next { name = "named_class_hor_space"; }
     else if 'H' == c_next { name = "named_class_not_hor_space"; }
@@ -2021,7 +2016,7 @@ named_class_token_parse: (inout ctx: parse_context) -> token_ptr = {
     else if 'V' == c_next { name = "named_class_not_ver_space"; }
     else if 'w' == c_next { name = "named_class_word"; }
     else if 'W' == c_next { name = "named_class_not_word"; }
-    else { return nullptr; }
+    else                  { return nullptr; }
 
     _ = ctx..next(); // Skip escape
 
@@ -2432,18 +2427,18 @@ word_boundary_token_matcher: <CharT, negate: bool> (inout cur, inout ctx) -> boo
 // Regular expression implementation
 regular_expression: <CharT, matcher_wrapper> type = {
 
-
     matcher: <Iter> type == matcher_wrapper_type<matcher_wrapper, Iter, CharT>; // TODO: Remove when nested types are allowed: https://github.com/hsutter/cppfront/issues/727
     context: <Iter> type == matcher<Iter>::context;
 
-    // TODO: Named multiple return has problems with templates.
     search_return: <Iter> type = {
         public matched: bool;
-        public ctx: context<Iter>;
+        public ctx:     context<Iter>;
+        public pos:     int;
 
-        operator=:(out this, matched_: bool, ctx_: context<Iter>) = {
+        operator=:(out this, matched_: bool, ctx_: context<Iter>, pos_: Iter) = {
             matched = matched_;
             ctx = ctx_;
+            pos = unsafe_narrow<int>(std::distance(ctx_.begin, pos_));
         }
 
         group_number: (this) ctx..size();
@@ -2471,20 +2466,20 @@ regular_expression: <CharT, matcher_wrapper> type = {
         ctx: context<Iter> = (start, end);
 
         r := matcher<Iter>::entry(start, ctx);
-        return search_return<Iter>(r.matched && r.pos == end, ctx);
+        return search_return<Iter>(r.matched && r.pos == end, ctx, r.pos);
     }
 
     search: (in this, str: bview<CharT>)                 search(str..begin(), str..end());
     search: (in this, str: bview<CharT>, start)          search(get_iter(str, start), str..end());
     search: (in this, str: bview<CharT>, start, length)  search(get_iter(str, start), get_iter(str, start + length));
     search: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> = {
-        matched := false;
         ctx: context<Iter> = (start, end);
+        r := ctx.fail();
 
         cur:= start;
         while true next (cur++) {
-            if matcher<Iter>::entry(cur, ctx).matched {
-                matched = true;
+            r = matcher<Iter>::entry(cur, ctx);
+            if r.matched {
                 break;
             }
 
@@ -2493,7 +2488,7 @@ regular_expression: <CharT, matcher_wrapper> type = {
             }
         }
 
-        return search_return<Iter>(matched, ctx);
+        return search_return<Iter>(r.matched, ctx, r.pos);
     }
 
     to_string: (in this) matcher_wrapper::to_string();
@@ -2519,42 +2514,29 @@ regular_expression: <CharT, matcher_wrapper> type = {
 //
 
 // Parser and generator for regular expressions.
-regex_parser: <Error_out> type = {
+regex_generator: <Error_out> type = {
 
     regex:           std::string_view;
     modifier:        std::string = "";
     modifier_escape: std::string = "";
-    error_out:       Error_out;
 
-    pos:                    size_t = 0;
-    has_error:              bool = false;
+    error_out: Error_out;
 
     source: std::string = "";
 
     operator=: (out this, r: std::string_view, e: Error_out) = {
-        this.regex = r;
-        this.error_out = e;
+        regex = r;
+        error_out = e;
     }
-
-    // Misc functions
-    //
-    error:(inout this, message: std::string) = {
-        error_out("Error during parsing of regex '(regex)$' at position '(pos)$': (message)$");
-        has_error = true;
-    }
-
-    // Parsing functions
-    //
 
     parse:(inout this) -> std::string = {
 
         // Extract modifiers and adapt regex.
         extract_modifiers();
 
-        parse_ctx: parse_context = (regex);
+        parse_ctx: parse_context = (regex, error_out);
         if !parse_ctx..parse(modifier) {
-            error(parse_ctx.error_text);
-            return "Error";
+            return "";
         }
 
         source += "{\n";
@@ -2597,8 +2579,8 @@ regex_parser: <Error_out> type = {
     }
 }
 
-generate_template: <Err> (regex: std::string_view, err: Err) -> std::string = {
-    parser: regex_parser<Err> = (regex, err);
+generate_regex: <Err> (regex: std::string_view, err: Err) -> std::string = {
+    parser: regex_generator<Err> = (regex, err);
     r := parser..parse();
     _ = parser;
     return r;

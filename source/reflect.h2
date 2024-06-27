@@ -1431,10 +1431,12 @@ regex_gen: (inout t: meta::type_declaration) =
     t.remove_marked_members();
 
     for expressions do (expr) {
-        regular_expression:= ::cpp2::regex::generate_template(expr.second, :(message: _) = t$.error(message););
+        regular_expression := ::cpp2::regex::generate_regex(expr.second, :(message) = t$.error(message););
 
-        t.add_member("public (expr.first)$_matcher: type = (regular_expression)$");
-        t.add_member("public (expr.first)$: cpp2::regex::regular_expression<char, (expr.first)$_matcher> = ();");
+        if !regular_expression..empty() {
+            t.add_member("public (expr.first)$_matcher: type = (regular_expression)$");
+            t.add_member("public (expr.first)$: cpp2::regex::regular_expression<char, (expr.first)$_matcher> = ();");
+        }
     }
 }
 

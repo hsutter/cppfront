@@ -39,7 +39,7 @@ class alias_declaration;
 #line 966 "reflect.h2"
 class value_member_info;
 
-#line 1552 "reflect.h2"
+#line 1554 "reflect.h2"
 }
 
 }
@@ -781,7 +781,7 @@ auto print(cpp2::impl::in<meta::type_declaration> t) -> void;
 //
 auto regex_gen(meta::type_declaration& t) -> void;
 
-#line 1442 "reflect.h2"
+#line 1444 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  apply_metafunctions
@@ -792,7 +792,7 @@ auto regex_gen(meta::type_declaration& t) -> void;
     auto const& error
     ) -> bool;
 
-#line 1552 "reflect.h2"
+#line 1554 "reflect.h2"
 }
 
 }
@@ -2061,14 +2061,16 @@ auto regex_gen(meta::type_declaration& t) -> void
     CPP2_UFCS(remove_marked_members)(t);
 
     for ( auto const& expr : cpp2::move(expressions) ) {
-        auto regular_expression {::cpp2::regex::generate_template(expr.second, [_0 = t](auto const& message) mutable -> void { CPP2_UFCS(error)(_0, message);  })}; 
+        auto regular_expression {::cpp2::regex::generate_regex(expr.second, [_0 = t](auto const& message) mutable -> void { CPP2_UFCS(error)(_0, message);  })}; 
 
-        CPP2_UFCS(add_member)(t, ("public " + cpp2::to_string(expr.first) + "_matcher: type = " + cpp2::to_string(cpp2::move(regular_expression))));
-        CPP2_UFCS(add_member)(t, ("public " + cpp2::to_string(expr.first) + ": cpp2::regex::regular_expression<char, " + cpp2::to_string(expr.first) + "_matcher> = ();"));
+        if (!(regular_expression.empty())) {
+            CPP2_UFCS(add_member)(t, ("public " + cpp2::to_string(expr.first) + "_matcher: type = " + cpp2::to_string(cpp2::move(regular_expression))));
+            CPP2_UFCS(add_member)(t, ("public " + cpp2::to_string(expr.first) + ": cpp2::regex::regular_expression<char, " + cpp2::to_string(expr.first) + "_matcher> = ();"));
+        }
     }
 }
 
-#line 1446 "reflect.h2"
+#line 1448 "reflect.h2"
 [[nodiscard]] auto apply_metafunctions(
     declaration_node& n, 
     type_declaration& rtype, 
@@ -2174,7 +2176,7 @@ auto regex_gen(meta::type_declaration& t) -> void
     return true; 
 }
 
-#line 1552 "reflect.h2"
+#line 1554 "reflect.h2"
 }
 
 }
