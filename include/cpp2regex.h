@@ -56,7 +56,7 @@ template<typename CharT, CharT ...List> class list_class_entry;
     
 
 #line 192 "regex.h2"
-template<typename CharT, fixed_string Name, typename Inner> class named_class_entry;
+template<typename CharT, string_util::fixed_string Name, typename Inner> class named_class_entry;
     
 
 #line 197 "regex.h2"
@@ -64,7 +64,7 @@ template<typename CharT, typename Inner> class negated_class_entry;
     
 
 #line 204 "regex.h2"
-template<typename CharT, fixed_string Name, typename Inner> class shorthand_class_entry;
+template<typename CharT, string_util::fixed_string Name, typename Inner> class shorthand_class_entry;
     
 
 #line 256 "regex.h2"
@@ -372,7 +372,7 @@ template<typename CharT, CharT ...List> class list_class_entry {
 };
 
 #line 192 "regex.h2"
-template<typename CharT, fixed_string Name, typename Inner> class named_class_entry {
+template<typename CharT, string_util::fixed_string Name, typename Inner> class named_class_entry {
     public: [[nodiscard]] static auto includes(cpp2::impl::in<CharT> c) -> auto;
     public: [[nodiscard]] static auto to_string() -> auto;
     public: named_class_entry() = default;
@@ -393,7 +393,7 @@ template<typename CharT, typename Inner> class negated_class_entry: public Inner
 };
 
 #line 204 "regex.h2"
-template<typename CharT, fixed_string Name, typename Inner> class shorthand_class_entry {
+template<typename CharT, string_util::fixed_string Name, typename Inner> class shorthand_class_entry {
     public: [[nodiscard]] static auto includes(cpp2::impl::in<CharT> c) -> auto;
     public: [[nodiscard]] static auto to_string() -> auto;
     public: shorthand_class_entry() = default;
@@ -986,7 +986,7 @@ class char_token: public regex_token {
 };
 
 // TODO: Check if vectorization works at some point with this implementation.
-// char_token_matcher: <tokens: fixed_string> (inout cur, inout ctx) -> bool = {
+// char_token_matcher: <tokens: string_util::fixed_string> (inout cur, inout ctx) -> bool = {
 //     if !(std::distance(cur, ctx.end) < tokens..size()) {
 //         return false;
 //     }
@@ -1002,7 +1002,7 @@ class char_token: public regex_token {
 //     return matched;
 // }
 
-// char_token_case_insensitive_matcher: <lower: fixed_string, upper: fixed_string> (inout cur, inout ctx) -> bool = {
+// char_token_case_insensitive_matcher: <lower: string_util::fixed_string, upper: string_util::fixed_string> (inout cur, inout ctx) -> bool = {
 //     if !(std::distance(cur, ctx.end) < lower..size()) {
 //         return false;
 //     }
@@ -1711,9 +1711,9 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
 //
 
 #line 193 "regex.h2"
-    template <typename CharT, fixed_string Name, typename Inner> [[nodiscard]] auto named_class_entry<CharT,Name,Inner>::includes(cpp2::impl::in<CharT> c) -> auto { return Inner::includes(c);  }
+    template <typename CharT, string_util::fixed_string Name, typename Inner> [[nodiscard]] auto named_class_entry<CharT,Name,Inner>::includes(cpp2::impl::in<CharT> c) -> auto { return Inner::includes(c);  }
 #line 194 "regex.h2"
-    template <typename CharT, fixed_string Name, typename Inner> [[nodiscard]] auto named_class_entry<CharT,Name,Inner>::to_string() -> auto { return "[:" + cpp2::to_string(Name.data()) + ":]"; }
+    template <typename CharT, string_util::fixed_string Name, typename Inner> [[nodiscard]] auto named_class_entry<CharT,Name,Inner>::to_string() -> auto { return "[:" + cpp2::to_string(Name.data()) + ":]"; }
 
 #line 199 "regex.h2"
     template <typename CharT, typename Inner> [[nodiscard]] auto negated_class_entry<CharT,Inner>::includes(cpp2::impl::in<CharT> c) -> auto { return !(Inner::includes(c));  }
@@ -1723,9 +1723,9 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
 //
 
 #line 205 "regex.h2"
-    template <typename CharT, fixed_string Name, typename Inner> [[nodiscard]] auto shorthand_class_entry<CharT,Name,Inner>::includes(cpp2::impl::in<CharT> c) -> auto { return Inner::includes(c);  }
+    template <typename CharT, string_util::fixed_string Name, typename Inner> [[nodiscard]] auto shorthand_class_entry<CharT,Name,Inner>::includes(cpp2::impl::in<CharT> c) -> auto { return Inner::includes(c);  }
 #line 206 "regex.h2"
-    template <typename CharT, fixed_string Name, typename Inner> [[nodiscard]] auto shorthand_class_entry<CharT,Name,Inner>::to_string() -> auto { return Name.str(); }
+    template <typename CharT, string_util::fixed_string Name, typename Inner> [[nodiscard]] auto shorthand_class_entry<CharT,Name,Inner>::to_string() -> auto { return Name.str(); }
 
 #line 210 "regex.h2"
 // Named basic character classes
@@ -2648,8 +2648,8 @@ size_t i{0};
 
 #line 1199 "regex.h2"
             for( ; cpp2::impl::cmp_less(i,token.size()); i += 1 ) {
-                CPP2_ASSERT_IN_BOUNDS(lower, i) = safe_tolower(CPP2_ASSERT_IN_BOUNDS(token, i));
-                CPP2_ASSERT_IN_BOUNDS(upper, i) = safe_toupper(CPP2_ASSERT_IN_BOUNDS(token, i));
+                CPP2_ASSERT_IN_BOUNDS(lower, i) = string_util::safe_tolower(CPP2_ASSERT_IN_BOUNDS(token, i));
+                CPP2_ASSERT_IN_BOUNDS(upper, i) = string_util::safe_toupper(CPP2_ASSERT_IN_BOUNDS(token, i));
             }
 }
 
@@ -2707,13 +2707,13 @@ size_t i{0};
 
 #line 1253 "regex.h2"
     [[nodiscard]] auto char_token::add_escapes(std::string str) const& -> std::string{
-        str = replace_all(str, "\\", "\\\\");
-        str = replace_all(str, "\a", "\\a");
-        str = replace_all(str, "\f", "\\f");
-        str = replace_all(str, "\e", "\\e");
-        str = replace_all(str, "\n", "\\n");
-        str = replace_all(str, "\r", "\\r");
-        str = replace_all(str, "\t", "\\t");
+        str = string_util::replace_all(str, "\\", "\\\\");
+        str = string_util::replace_all(str, "\a", "\\a");
+        str = string_util::replace_all(str, "\f", "\\f");
+        str = string_util::replace_all(str, "\e", "\\e");
+        str = string_util::replace_all(str, "\n", "\\n");
+        str = string_util::replace_all(str, "\r", "\\r");
+        str = string_util::replace_all(str, "\t", "\\t");
 
         return cpp2::move(str); 
     }
@@ -2763,7 +2763,7 @@ size_t i{0};
                 std::string name {""}; 
                 if (!(ctx.grab_until(":]", cpp2::impl::out(&name)))) {return ctx.error("Could not find end of character class."); }
                 if (supported_classes.end() == std::find(supported_classes.begin(), supported_classes.end(), name)) {
-                    return ctx.error(("Unsupported character class. Supported ones are: " + cpp2::to_string(join(supported_classes)))); 
+                    return ctx.error(("Unsupported character class. Supported ones are: " + cpp2::to_string(string_util::join(supported_classes)))); 
                 }
 
                 classes.push_back(("[:" + cpp2::to_string(cpp2::move(name)) + ":]"));
@@ -2777,7 +2777,7 @@ size_t i{0};
                     }
                     else {
                         auto name {""}; 
-                            if ('d' == ctx.current()) {name = "short_digits"; }
+                        if (     'd' == ctx. current()) { name = "short_digits"; }
                         else {if ('D' == ctx.current()) {name = "short_not_digits"; }
                         else {if ('h' == ctx.current()) {name = "short_hor_space"; }
                         else {if ('H' == ctx.current()) {name = "short_not_hor_space"; }
@@ -2839,7 +2839,7 @@ size_t i{0};
             }}
         }
 
-        auto inner {join(cpp2::move(classes))}; 
+        auto inner {string_util::join(cpp2::move(classes))}; 
         auto string_rep {ctx.get_range(cpp2::move(start_pos), cpp2::move(end_pos))}; 
         return CPP2_UFCS_TEMPLATE(cpp2_new<class_token>)(cpp2::shared, cpp2::move(is_negate), ctx.get_modifiers().has(expression_flags::case_insensitive), cpp2::move(inner), cpp2::move(string_rep)); 
     }
@@ -2862,7 +2862,7 @@ size_t i{0};
 #line 1443 "regex.h2"
     template <typename CharT, bool negate, bool case_insensitive, typename ...List> [[nodiscard]] auto class_token_matcher<CharT,negate,case_insensitive,List...>::match(auto& cur, auto& ctx) -> bool{
         if constexpr (case_insensitive) {
-            if (cur != ctx.end && negate != (match_any<List...>(safe_tolower(*cpp2::impl::assert_not_null(cur))) || match_any<List...>(safe_toupper(*cpp2::impl::assert_not_null(cur))))) {
+            if (cur != ctx.end && negate != (match_any<List...>(string_util::safe_tolower(*cpp2::impl::assert_not_null(cur))) || match_any<List...>(string_util::safe_toupper(*cpp2::impl::assert_not_null(cur))))) {
                 cur += 1;
                 return true; 
             }
@@ -2960,12 +2960,12 @@ size_t i{0};
             if (cpp2::impl::cmp_greater_eq(group.size(),cpp2::impl::as_<size_t, 3>())) {
                 // Octal syntax (\000) not a group ref matcher.
                 auto number {0}; 
-                if (!(string_to_int(group, number, 8))) {return ctx.error("Could not convert octal to int."); }
+                if (!(string_util::string_to_int(group, number, 8))) {return ctx.error("Could not convert octal to int."); }
 
                 char number_as_char {unsafe_narrow<char>(cpp2::move(number))}; 
 
                 auto token {CPP2_UFCS_TEMPLATE(cpp2_new<char_token>)(cpp2::shared, number_as_char, ctx.get_modifiers().has(expression_flags::case_insensitive))}; 
-                (*cpp2::impl::assert_not_null(token)).set_string(("\\" + cpp2::to_string(int_to_string(cpp2::impl::as_<int>(cpp2::move(number_as_char)), 8))));
+                (*cpp2::impl::assert_not_null(token)).set_string(("\\" + cpp2::to_string(string_util::int_to_string(cpp2::impl::as_<int>(cpp2::move(number_as_char)), 8))));
 
                 return token; 
             }
@@ -3016,9 +3016,9 @@ size_t i{0};
         }}}
 
         // Parse the group
-        group = trim_copy(group);
+        group = string_util::trim_copy(group);
         int group_id {0}; 
-        if (string_to_int(group, group_id)) {
+        if (string_util::string_to_int(group, group_id)) {
             if (cpp2::impl::cmp_less(group_id,0)) {
                 group_id = ctx.get_cur_group() + group_id;
 
@@ -3054,7 +3054,7 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
     auto group_pos {cpp2::move(g).start}; 
     for( ; group_pos != g.end && cur != ctx.end; (++group_pos, ++cur) ) {
         if constexpr (case_insensitive) {
-            if (safe_tolower(*cpp2::impl::assert_not_null(group_pos)) != safe_tolower(*cpp2::impl::assert_not_null(cur))) {
+            if (string_util::safe_tolower(*cpp2::impl::assert_not_null(group_pos)) != string_util::safe_tolower(*cpp2::impl::assert_not_null(cur))) {
                 return false; 
             }
         }
@@ -3287,12 +3287,12 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
     }
 
     auto number {0}; 
-    if (!(string_to_int(cpp2::move(number_str), number, 16))) {return ctx.error("Could not convert hexadecimal to int."); }
+    if (!(string_util::string_to_int(cpp2::move(number_str), number, 16))) {return ctx.error("Could not convert hexadecimal to int."); }
 
     // TODO: Change for unicode.
     char number_as_char {unsafe_narrow<char>(cpp2::move(number))}; 
 
-    std::string syntax {int_to_string(cpp2::impl::as_<int>(number_as_char), 16)}; 
+    std::string syntax {string_util::int_to_string(cpp2::impl::as_<int>(number_as_char), 16)}; 
     if (cpp2::move(has_brackets)) {
         syntax = { "{" + cpp2::to_string(syntax) + "}" };
     }
@@ -3423,12 +3423,12 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
     if (!(ctx.grab_until('}', cpp2::impl::out(&number_str)))) {return ctx.error("No ending bracket for \\o"); }
 
     auto number {0}; 
-    if (!(string_to_int(cpp2::move(number_str), number, 8))) {return ctx.error("Could not convert octal to int."); }
+    if (!(string_util::string_to_int(cpp2::move(number_str), number, 8))) {return ctx.error("Could not convert octal to int."); }
 
     // TODO: Change for unicode.
     char number_as_char {unsafe_narrow<char>(cpp2::move(number))}; 
 
-    std::string syntax {"\\o{" + cpp2::to_string(int_to_string(cpp2::impl::as_<int>(number_as_char), 8)) + "}"}; 
+    std::string syntax {"\\o{" + cpp2::to_string(string_util::int_to_string(cpp2::impl::as_<int>(number_as_char), 8)) + "}"}; 
     auto r {CPP2_UFCS_TEMPLATE(cpp2_new<char_token>)(cpp2::shared, cpp2::move(number_as_char), ctx.get_modifiers().has(expression_flags::case_insensitive))}; 
     (*cpp2::impl::assert_not_null(r)).set_string(cpp2::move(syntax));
     return r; 
@@ -3452,7 +3452,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
             std::string inner {""}; 
             if (!(ctx.grab_until('}', cpp2::impl::out(&inner)))) {return ctx.error("Missing closing bracket '}'."); }
 
-            inner = trim_copy(inner.substr(1));  // Remove '{' and white spaces.
+            inner = string_util::trim_copy(inner.substr(1));  // Remove '{' and white spaces.
             if (inner.empty()) {return ctx.error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'"); }
 
             // Non-greedy or possessive
@@ -3466,12 +3466,12 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
             if (sep == std::string::npos) {
                 min_count_str = inner;
                 max_count_str = inner;
-                if (!(string_to_int(cpp2::move(inner), (*cpp2::impl::assert_not_null(r)).min_count))) {return ctx.error("Could not convert range to number."); }
+                if (!(string_util::string_to_int(cpp2::move(inner), (*cpp2::impl::assert_not_null(r)).min_count))) {return ctx.error("Could not convert range to number."); }
                 (*cpp2::impl::assert_not_null(r)).max_count = (*cpp2::impl::assert_not_null(r)).min_count;
             }
             else {
-                std::string inner_first {trim_copy(inner.substr(0, sep))}; 
-                std::string inner_last {trim_copy(cpp2::move(inner).substr(cpp2::move(sep) + 1))}; 
+                std::string inner_first {string_util::trim_copy(inner.substr(0, sep))}; 
+                std::string inner_last {string_util::trim_copy(cpp2::move(inner).substr(cpp2::move(sep) + 1))}; 
 
                 if ((inner_first.empty() && inner_last.empty())) {
                     return ctx.error("Empty range specifier. Either '{n}', '{n,}', '{,m}' '{n,m}'"); 
@@ -3479,11 +3479,11 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
 
                 if (!(inner_first.empty())) {
                     min_count_str = inner_first;
-                    if (!(string_to_int(cpp2::move(inner_first), (*cpp2::impl::assert_not_null(r)).min_count))) {return ctx.error("Could not convert range to number."); }
+                    if (!(string_util::string_to_int(cpp2::move(inner_first), (*cpp2::impl::assert_not_null(r)).min_count))) {return ctx.error("Could not convert range to number."); }
                 }
                 if (!(inner_last.empty())) {
                     max_count_str = inner_last;
-                    if (!(string_to_int(cpp2::move(inner_last), (*cpp2::impl::assert_not_null(r)).max_count))) {return ctx.error("Could not convert range to number."); }
+                    if (!(string_util::string_to_int(cpp2::move(inner_last), (*cpp2::impl::assert_not_null(r)).max_count))) {return ctx.error("Could not convert range to number."); }
                 }
             }
 

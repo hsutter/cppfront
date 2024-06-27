@@ -1417,7 +1417,7 @@ regex_gen: (inout t: meta::type_declaration) =
             if expr.starts_with("R\"(") && expr.ends_with(")\"") {
                 expr = expr.substr(3, expr.size() - 5);
             }
-            else if expr.is_escaped() {
+            else if string_util::is_escaped(expr) {
                 expr = expr.substr(1, expr.size() - 2);
             }
             else {

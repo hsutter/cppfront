@@ -2047,7 +2047,7 @@ auto regex_gen(meta::type_declaration& t) -> void
             if (CPP2_UFCS(starts_with)(expr, "R\"(") && CPP2_UFCS(ends_with)(expr, ")\"")) {
                 expr = CPP2_UFCS(substr)(expr, 3, CPP2_UFCS(size)(expr) - 5);
             }
-            else {if (CPP2_UFCS(is_escaped)(expr)) {
+            else {if (string_util::is_escaped(expr)) {
                 expr = CPP2_UFCS(substr)(expr, 1, CPP2_UFCS(size)(expr) - 2);
             }
             else {

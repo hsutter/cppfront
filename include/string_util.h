@@ -4,6 +4,9 @@
 #include <algorithm>
 #include <sstream>
 
+namespace cpp2 {
+namespace string_util {
+
 // From https://stackoverflow.com/questions/216823/how-to-trim-a-stdstring
 
 // trim from start (in place)
@@ -140,3 +143,6 @@ inline std::string join(List const& list) {
 
     return r;
 }
+
+} // namespace string_util
+} // namespace cpp2
