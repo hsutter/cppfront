@@ -14,7 +14,7 @@
 #include <set>
 
 template<typename matcher_wrapper, typename Iter, typename CharT>
-using matcher_wrapper_type = typename matcher_wrapper::wrap<Iter, CharT>;
+using matcher_wrapper_type = typename matcher_wrapper::template wrap<Iter, CharT>;
 
 using error_func = std::function<void(std::string)>;
 
@@ -733,9 +733,6 @@ parse_context: type = {
         is_negative := false;
         is_reset    := false;
 
-        add    := 0;
-        remove := 0;
-
         apply := :(flag: expression_flags) = {
             if is_negative&$* {
                 parser_modifiers&$*..clear(flag);
@@ -1254,7 +1251,7 @@ char_token: @polymorphic_base type = {
         str = string_util::replace_all(str, "\\", "\\\\");
         str = string_util::replace_all(str, "\a", "\\a");
         str = string_util::replace_all(str, "\f", "\\f");
-        str = string_util::replace_all(str, "\e", "\\e");
+        str = string_util::replace_all(str, "\x1b", "\\e"); // TODO: A bug in gcc prevents us from using the safe "\\x{1b}". \x{1b} is replaced despite the escape.
         str = string_util::replace_all(str, "\n", "\\n");
         str = string_util::replace_all(str, "\r", "\\r");
         str = string_util::replace_all(str, "\t", "\\t");
@@ -1332,7 +1329,7 @@ class_token: @polymorphic_base type = {
         is_negate:= false;
         first:= true;
         range:= false;
-        while ctx..next_in_class() & (ctx..current() != ']' || first) {
+        while ctx..next_in_class() && (ctx..current() != ']' || first) {
             if ctx..current() == '^' {
                 is_negate = true;
                 continue; // Skip rest of the loop. Also the first update.
@@ -1503,7 +1500,7 @@ escape_token_parse: (inout ctx: parse_context) -> token_ptr = {
         t : char = '\0';
         if      'a' == ctx..current() { t = '\a'; }
         else if 'f' == ctx..current() { t = '\f'; }
-        else if 'e' == ctx..current() { t = '\e'; }
+        else if 'e' == ctx..current() { t = '\x1b'; }
         else if 'n' == ctx..current() { t = '\n'; }
         else if 'r' == ctx..current() { t = '\r'; }
         else if 't' == ctx..current() { t = '\t'; }
