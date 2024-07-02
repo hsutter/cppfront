@@ -1,0 +1,35 @@
+Running tests_16_perl_syntax_modifier:
+01_y: OK Warning: Parsed regex does not match. regex: /\N {1}/x parsed_regex: /\N{1}/x str: abbbbc result_expr: $& expected_results a
+02_y: OK Warning: Parsed regex does not match. regex: /\N {1}/x parsed_regex: /\N{1}/x str: abbbbc result_expr: $-[0] expected_results 0
+03_y: OK Warning: Parsed regex does not match. regex: /\N {1}/x parsed_regex: /\N{1}/x str: abbbbc result_expr: $+[0] expected_results 1
+04_y: OK Warning: Parsed regex does not match. regex: /\N {3,4}/x parsed_regex: /\N{3,4}/x str: abbbbc result_expr: $& expected_results abbb
+05_y: OK Warning: Parsed regex does not match. regex: /\N {3,4}/x parsed_regex: /\N{3,4}/x str: abbbbc result_expr: $-[0] expected_results 0
+06_y: OK Warning: Parsed regex does not match. regex: /\N {3,4}/x parsed_regex: /\N{3,4}/x str: abbbbc result_expr: $+[0] expected_results 4
+07_y: OK Warning: Parsed regex does not match. regex: /a\N c/x parsed_regex: /a\Nc/x str: abc result_expr: $& expected_results abc
+08_y: OK Warning: Parsed regex does not match. regex: /a\N *c/x parsed_regex: /a\N*c/x str: axyzc result_expr: $& expected_results axyzc
+09_n: OK Warning: Parsed regex does not match. regex: /a\N *c/x parsed_regex: /a\N*c/x str: axyzd result_expr: - expected_results -
+10_yS: OK regex: /[a b]/x parsed_regex: /[a b]/x str:   result_expr: $& expected_results  
+11_n: OK regex: /[a b]/xx parsed_regex: /[a b]/xx str:   result_expr: - expected_results -
+12_y: OK regex: /[a\ b]/xx parsed_regex: /[a\ b]/xx str:   result_expr: $& expected_results  
+13_n: OK regex: /[ ^ a b ]/xx parsed_regex: /[ ^ a b ]/xx str: a result_expr: - expected_results -
+14_n: OK regex: /[ ^ a b ]/xx parsed_regex: /[ ^ a b ]/xx str: b result_expr: - expected_results -
+15_y: OK regex: /[ ^ a b ]/xx parsed_regex: /[ ^ a b ]/xx str: A result_expr: $& expected_results A
+16_yS: OK regex: /(?x:[a b])/xx parsed_regex: /(?x:[a b])/xx str:   result_expr: $& expected_results  
+17_n: OK regex: /(?xx:[a b])/x parsed_regex: /(?xx:[a b])/x str:   result_expr: - expected_results -
+18_yS: OK regex: /(?x)[a b]/xx parsed_regex: /(?x)[a b]/xx str:   result_expr: $& expected_results  
+19_n: OK regex: /(?xx)[a b]/x parsed_regex: /(?xx)[a b]/x str:   result_expr: - expected_results -
+20_yS: OK regex: /(?-x:[a b])/xx parsed_regex: /(?-x:[a b])/xx str:   result_expr: $& expected_results  
+21_y: OK Warning: Parsed regex does not match. regex: /\N {1}/x parsed_regex: /\N{1}/x str: abbbbc result_expr: $& expected_results a
+22_y: OK Warning: Parsed regex does not match. regex: /\N {1}/x parsed_regex: /\N{1}/x str: abbbbc result_expr: $-[0] expected_results 0
+23_y: OK Warning: Parsed regex does not match. regex: /\N {1}/x parsed_regex: /\N{1}/x str: abbbbc result_expr: $+[0] expected_results 1
+24_y: OK Warning: Parsed regex does not match. regex: /\N {3,4}/x parsed_regex: /\N{3,4}/x str: abbbbc result_expr: $& expected_results abbb
+25_y: OK Warning: Parsed regex does not match. regex: /\N {3,4}/x parsed_regex: /\N{3,4}/x str: abbbbc result_expr: $-[0] expected_results 0
+26_y: OK Warning: Parsed regex does not match. regex: /\N {3,4}/x parsed_regex: /\N{3,4}/x str: abbbbc result_expr: $+[0] expected_results 4
+27_y: OK Warning: Parsed regex does not match. regex: /a\N c/x parsed_regex: /a\Nc/x str: abc result_expr: $& expected_results abc
+28_y: OK Warning: Parsed regex does not match. regex: /a\N *c/x parsed_regex: /a\N*c/x str: axyzc result_expr: $& expected_results axyzc
+29_n: OK Warning: Parsed regex does not match. regex: /a\N *c/x parsed_regex: /a\N*c/x str: axyzd result_expr: - expected_results -
+30_y: OK regex: /[#]/ parsed_regex: /[#]/ str: a#b result_expr: $& expected_results #
+31_y: OK regex: /[#]b/ parsed_regex: /[#]b/ str: a#b result_expr: $& expected_results #b
+32_y: OK regex: /[#]/x parsed_regex: /[#]/x str: a#b result_expr: $& expected_results #
+33_y: OK regex: /[#]b/x parsed_regex: /[#]b/x str: a#b result_expr: $& expected_results #b
+

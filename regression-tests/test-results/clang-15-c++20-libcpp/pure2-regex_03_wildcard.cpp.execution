@@ -1,0 +1,22 @@
+Running tests_03_wildcard:
+01_y: OK regex: .{1} parsed_regex: .{1} str: abbbbc result_expr: $& expected_results a
+02_y: OK regex: .{1} parsed_regex: .{1} str: abbbbc result_expr: $-[0] expected_results 0
+03_y: OK regex: .{1} parsed_regex: .{1} str: abbbbc result_expr: $+[0] expected_results 1
+04_y: OK regex: .{3,4} parsed_regex: .{3,4} str: abbbbc result_expr: $& expected_results abbb
+05_y: OK regex: .{3,4} parsed_regex: .{3,4} str: abbbbc result_expr: $-[0] expected_results 0
+06_y: OK regex: .{3,4} parsed_regex: .{3,4} str: abbbbc result_expr: $+[0] expected_results 4
+07_y: OK regex: \N{1} parsed_regex: \N{1} str: abbbbc result_expr: $& expected_results a
+08_y: OK regex: \N{1} parsed_regex: \N{1} str: abbbbc result_expr: $-[0] expected_results 0
+09_y: OK regex: \N{1} parsed_regex: \N{1} str: abbbbc result_expr: $+[0] expected_results 1
+10_y: OK regex: \N{3,4} parsed_regex: \N{3,4} str: abbbbc result_expr: $& expected_results abbb
+11_y: OK regex: \N{3,4} parsed_regex: \N{3,4} str: abbbbc result_expr: $-[0] expected_results 0
+12_y: OK regex: \N{3,4} parsed_regex: \N{3,4} str: abbbbc result_expr: $+[0] expected_results 4
+13_y: OK Warning: Parsed regex does not match. regex: \N{ 3 , 4 } parsed_regex: \N{3,4} str: abbbbc result_expr: $+[0] expected_results 4
+14_y: OK regex: a.c parsed_regex: a.c str: abc result_expr: $& expected_results abc
+15_y: OK regex: a.c parsed_regex: a.c str: axc result_expr: $& expected_results axc
+16_y: OK regex: a\Nc parsed_regex: a\Nc str: abc result_expr: $& expected_results abc
+17_y: OK regex: a.*c parsed_regex: a.*c str: axyzc result_expr: $& expected_results axyzc
+18_y: OK regex: a\N*c parsed_regex: a\N*c str: axyzc result_expr: $& expected_results axyzc
+19_n: OK regex: a.*c parsed_regex: a.*c str: axyzd result_expr: - expected_results -
+20_n: OK regex: a\N*c parsed_regex: a\N*c str: axyzd result_expr: - expected_results -
+

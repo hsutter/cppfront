@@ -1,0 +1,26 @@
+Running tests_11_group_references:
+01_y: OK regex: (foo)(\g-2) parsed_regex: (foo)(\g-2) str: foofoo result_expr: $1-$2 expected_results foo-foo
+02_y: OK regex: (foo)(\g-2)(foo)(\g-2) parsed_regex: (foo)(\g-2)(foo)(\g-2) str: foofoofoofoo result_expr: $1-$2-$3-$4 expected_results foo-foo-foo-foo
+03_y: OK regex: (([abc]+) \g-1)(([abc]+) \g{-1}) parsed_regex: (([abc]+) \g-1)(([abc]+) \g{-1}) str: abc abccba cba result_expr: $2-$4 expected_results abc-cba
+04_y: OK regex: (a)(b)(c)\g1\g2\g3 parsed_regex: (a)(b)(c)\g1\g2\g3 str: abcabc result_expr: $1$2$3 expected_results abc
+05_y: OK regex: /(?'n'foo) \g{n}/ parsed_regex: /(?'n'foo) \g{n}/ str: ..foo foo.. result_expr: $1 expected_results foo
+06_y: OK regex: /(?'n'foo) \g{ n }/ parsed_regex: /(?'n'foo) \g{ n }/ str: ..foo foo.. result_expr: $1 expected_results foo
+07_yM: OK regex: /(?'n'foo) \g{n}/ parsed_regex: /(?'n'foo) \g{n}/ str: ..foo foo.. result_expr: $+{n} expected_results foo
+08_y: OK regex: /(?<n>foo) \g{n}/ parsed_regex: /(?<n>foo) \g{n}/ str: ..foo foo.. result_expr: $1 expected_results foo
+09_yM: OK regex: /(?<n>foo) \g{n}/ parsed_regex: /(?<n>foo) \g{n}/ str: ..foo foo.. result_expr: $+{n} expected_results foo
+10_y: OK regex: /(?<as>as) (\w+) \g{as} (\w+)/ parsed_regex: /(?<as>as) (\w+) \g{as} (\w+)/ str: as easy as pie result_expr: $1-$2-$3 expected_results as-easy-pie
+11_y: OK regex: /(?'n'foo) \k<n>/ parsed_regex: /(?'n'foo) \k<n>/ str: ..foo foo.. result_expr: $1 expected_results foo
+12_yM: OK regex: /(?'n'foo) \k<n>/ parsed_regex: /(?'n'foo) \k<n>/ str: ..foo foo.. result_expr: $+{n} expected_results foo
+13_y: OK regex: /(?<n>foo) \k'n'/ parsed_regex: /(?<n>foo) \k'n'/ str: ..foo foo.. result_expr: $1 expected_results foo
+14_yM: OK regex: /(?<n>foo) \k'n'/ parsed_regex: /(?<n>foo) \k'n'/ str: ..foo foo.. result_expr: $+{n} expected_results foo
+15_yM: OK regex: /(?'a1'foo) \k'a1'/ parsed_regex: /(?'a1'foo) \k'a1'/ str: ..foo foo.. result_expr: $+{a1} expected_results foo
+16_yM: OK regex: /(?<a1>foo) \k<a1>/ parsed_regex: /(?<a1>foo) \k<a1>/ str: ..foo foo.. result_expr: $+{a1} expected_results foo
+17_yM: OK regex: /(?'_'foo) \k'_'/ parsed_regex: /(?'_'foo) \k'_'/ str: ..foo foo.. result_expr: $+{_} expected_results foo
+18_yM: OK regex: /(?<_>foo) \k<_>/ parsed_regex: /(?<_>foo) \k<_>/ str: ..foo foo.. result_expr: $+{_} expected_results foo
+19_yM: OK regex: /(?'_0_'foo) \k'_0_'/ parsed_regex: /(?'_0_'foo) \k'_0_'/ str: ..foo foo.. result_expr: $+{_0_} expected_results foo
+20_yM: OK regex: /(?<_0_>foo) \k<_0_>/ parsed_regex: /(?<_0_>foo) \k<_0_>/ str: ..foo foo.. result_expr: $+{_0_} expected_results foo
+21_y: OK regex: /(?<as>as) (\w+) \k<as> (\w+)/ parsed_regex: /(?<as>as) (\w+) \k<as> (\w+)/ str: as easy as pie result_expr: $1-$2-$3 expected_results as-easy-pie
+22_y: OK regex: /(?<as>as) (\w+) \k{as} (\w+)/ parsed_regex: /(?<as>as) (\w+) \k{as} (\w+)/ str: as easy as pie result_expr: $1-$2-$3 expected_results as-easy-pie
+23_y: OK regex: /(?<as>as) (\w+) \k'as' (\w+)/ parsed_regex: /(?<as>as) (\w+) \k'as' (\w+)/ str: as easy as pie result_expr: $1-$2-$3 expected_results as-easy-pie
+24_y: OK regex: /(?<as>as) (\w+) \k{ as } (\w+)/ parsed_regex: /(?<as>as) (\w+) \k{ as } (\w+)/ str: as easy as pie result_expr: $1-$2-$3 expected_results as-easy-pie
+
