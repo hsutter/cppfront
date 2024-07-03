@@ -1507,7 +1507,7 @@ escape_token_parse: (inout ctx: parse_context) -> token_ptr = {
         else if 'r' == ctx..current() { t = '\r'; }
         else if 't' == ctx..current() { t = '\t'; }
         else if '\\' == ctx..current() { t = '\\'; }
-        else { /* TODO: throw error */ }
+        else { return ctx..error("Internal: missing switch case for special escape."); }
         r: = shared.new<char_token>(t, false);
         r*..set_string("\\(ctx..current())$");
 
@@ -1859,7 +1859,7 @@ group_token: @polymorphic_base type = {
             ctx..add("  }");
             ctx..add("};");
             ctx..add("(tmp_name)$ :=  cpp2::regex::make_on_return((tmp_name)$_func);");
-            ctx..add("_ = (tmp_name)$;"); // TODO: Guard object problem.
+            ctx..add("_ = (tmp_name)$;"); // Logic is done in the destructor. Same behavior as for guard objects.
         }
     }
 
@@ -1883,7 +1883,6 @@ hexadecimal_token_parse: (inout ctx: parse_context) -> token_ptr = {
     has_brackets := false;
     number_str: std::string = "";
     if '{' == ctx..current() {
-        // TODO: Currently does not work since the compiler handles \x also.
         // Bracketed
         has_brackets = true;
         _  = ctx..next(); // Skip '{'
@@ -2062,9 +2061,7 @@ octal_token_parse: (inout ctx: parse_context) -> token_ptr = {
     return r;
 }
 
-// TODO: @enum as template parameter yields two error:
-//     error: type 'range_flags' of non-type template parameter is not a structural type
-//     error: non-type template parameter has incomplete type 'range_flags'
+// TODO: @enum as template parameter currently not working. See issue https://github.com/hsutter/cppfront/issues/1147
 
 // Options for range matching.
 range_flags: type = {
