@@ -118,8 +118,8 @@ match_context: <CharT, Iter, max_groups: int> type =
     // Misc functions
     //
 
-    fail: (in this)            match_return(false, end);
-    pass: (in this, cur: Iter) match_return(true, cur);
+    fail: (in this)            match_return<Iter>(false, end);
+    pass: (in this, cur: Iter) match_return<Iter>(true, cur);
 
 }
 

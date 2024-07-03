@@ -92,7 +92,7 @@ while getopts ${optstring} arg; do
         ;;
     t)
         # Replace commas with spaces
-        chosen_tests=${OPTARG/,/ }
+        chosen_tests=${OPTARG//,/ }
         ;;
     \?)
         echo "Invalid option: -${OPTARG}."

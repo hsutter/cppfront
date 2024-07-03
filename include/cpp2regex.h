@@ -1621,9 +1621,9 @@ return cpp2::move(_ret) + ")";
     //
 
 #line 121 "regex.h2"
-    template <typename CharT, typename Iter, int max_groups> [[nodiscard]] auto match_context<CharT,Iter,max_groups>::fail() const& -> auto { return match_return(false, end); }
+    template <typename CharT, typename Iter, int max_groups> [[nodiscard]] auto match_context<CharT,Iter,max_groups>::fail() const& -> auto { return match_return<Iter>(false, end); }
 #line 122 "regex.h2"
-    template <typename CharT, typename Iter, int max_groups> [[nodiscard]] auto match_context<CharT,Iter,max_groups>::pass(cpp2::impl::in<Iter> cur) const& -> auto { return match_return(true, cur);  }
+    template <typename CharT, typename Iter, int max_groups> [[nodiscard]] auto match_context<CharT,Iter,max_groups>::pass(cpp2::impl::in<Iter> cur) const& -> auto { return match_return<Iter>(true, cur);  }
 
 #line 126 "regex.h2"
 // End function that returns a valid match.
