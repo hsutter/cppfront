@@ -412,7 +412,7 @@ parse_context_group_state: @struct type = {
     // Apply optimizations to the matcher list.
     post_process_list: (inout list: token_vec) = {
         // Merge all characters
-        merge_pos := list.begin();
+        merge_pos := list..begin();
         while merge_pos != list..end() next (merge_pos++) {
             if merge_pos** is char_token {
                 combine_pos := merge_pos + 1;
@@ -2473,7 +2473,7 @@ regular_expression: <CharT, matcher_wrapper> type = {
     search: (in this, str: bview<CharT>, start, length)  search(get_iter(str, start), get_iter(str, start + length));
     search: <Iter> (in this, start: Iter, end: Iter) -> search_return<Iter> = {
         ctx: context<Iter> = (start, end);
-        r := ctx.fail();
+        r := ctx..fail();
 
         cur:= start;
         while true next (cur++) {

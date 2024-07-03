@@ -1893,7 +1893,7 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
 #line 413 "regex.h2"
     auto parse_context_group_state::post_process_list(token_vec& list) -> void{
         // Merge all characters
-        auto merge_pos {CPP2_UFCS(begin)(list)}; 
+        auto merge_pos {list.begin()}; 
         for( ; merge_pos != list.end(); (++merge_pos) ) {
             if (cpp2::impl::is<char_token>(*cpp2::impl::assert_not_null(*cpp2::impl::assert_not_null(merge_pos)))) {
                 auto combine_pos {merge_pos + 1}; 
@@ -3835,7 +3835,7 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
 #line 2474 "regex.h2"
     template <typename CharT, typename matcher_wrapper> template<typename Iter> [[nodiscard]] auto regular_expression<CharT,matcher_wrapper>::search(Iter const& start, Iter const& end) const& -> search_return<Iter>{
         context<Iter> ctx {start, end}; 
-        auto r {CPP2_UFCS(fail)(ctx)}; 
+        auto r {ctx.fail()}; 
 
         auto cur {start}; 
         for( ; true; (++cur) ) {
