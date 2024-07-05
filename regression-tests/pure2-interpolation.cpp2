@@ -28,4 +28,7 @@ main: ()->int = {
         std::cout << "(x.name():20)$ color (x.color():10)$ price (x.price(): <10.2f)$ in stock = (x.count() > 0)$\n";
     }
 
+    ri: std::complex = ( 1.2, 3.4 );
+    std::cout << "complex: (ri)$\n";    // works on GCC 11.2+ and Clang 13+
+                                        // prints "customize me" on GCC 11.1 and Clang 12
 }
