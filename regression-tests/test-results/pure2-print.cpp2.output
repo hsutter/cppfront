@@ -2,18 +2,18 @@ pure2-print.cpp2...
 
 outer:/* @print */ type = 
 {
-    object_alias: <T: type> T requires (true) == 42;
+    object_alias: <T: type, > T requires (true) == 42;
     mytype: final type = 
     {
         protected f:() -> move int = 42;
 
         g:(
             virtual in this, 
-            in i: int
+            in i: int, 
         ) -> move int = 
         {
             using namespace ::std;
-            s: = "string literal";
+            s: _ = "string literal";
             ret: int = i;
             p: const * const int = ret&;
             if p* < 0
@@ -30,18 +30,18 @@ outer:/* @print */ type =
 
         private h:(
             in s: std::string, 
-            inout m: std::map<const int, std::string>
+            inout m: std::map<const int, std::string>, 
         ) -> move std::string
             pre( m.empty() == false || false, "message" )
             pre<bounds_safety,testing_enabled>( 0 < m.ssize() < 100 && true != false, ("size is " + cpp2::to_string(m.ssize())) ) = 
         {
-            a: = :() = 
+            a: _ = :() = 
                 {
                 };
-            b: = :() = 
+            b: _ = :() = 
                 {
                 };
-            c: = :() = 
+            c: _ = :() = 
                 {
                 };
             while s.empty()
@@ -56,7 +56,7 @@ outer:/* @print */ type =
             while s.empty();
             label: for m
             next c()
-            do (in _:)
+            do (in _: _)
                 {
                     continue label;
                 }
@@ -79,12 +79,12 @@ outer:/* @print */ type =
             return :() -> move std::string = (s + m[0])$;();
         }
 
-        values: <T: type>(
+        values: <T: type, >(
             in this, 
-            in _: T
+            in _: T, 
         ) throws -> (
                 out offset: int, 
-                out name: std::string
+                out name: std::string, 
             ) = 
         {
             offset = 53;
@@ -92,25 +92,25 @@ outer:/* @print */ type =
             return;
         }
 
-        operator=:(out this) = 
+        operator=:(out this, ) = 
         {
         }
 
         operator=:(
             out this, 
-            in that
+            in that, 
         ) = 
         {
         }
 
         operator=:(
             implicit out this, 
-            in _: int
+            in _: int, 
         ) = 
         {
         }
 
-        variadic:(in x...: int) = 
+        variadic:(in x...: int, ) = 
         {
             (std::cout << ... << x);
         }
@@ -132,20 +132,20 @@ outer:/* @print */ type =
             is _ = "default case";
         } << "\n";
     }
-    x: <Ts...: type> type = 
+    x: <Ts...: type, > type = 
     {
         tup: std::tuple<Ts...> = ();
     }
 
-    print: <Args...: type>(
+    print: <Args...: type, >(
         inout out: std::ostream, 
-        in args...: Args
+        in args...: Args, 
     ) requires (sizeof...(Args) >= 0u) = 
     {
         (out << ... << args);
     }
 
-    all: <Args...: type>(in args...: Args) -> move bool = (... && args);
+    all: <Args...: type, >(in args...: Args, ) -> move bool = (... && args);
 }
  ok (all Cpp2, passes safety checks)
 

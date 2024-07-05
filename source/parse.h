@@ -699,6 +699,26 @@ struct expression_list_node
         return ret;
     }
 
+    auto to_string() const
+        -> std::string
+    {
+        auto ret = std::string{};
+
+        if (open_paren) {
+            ret += *open_paren;
+        }
+
+        for (auto& term : expressions) {
+            ret += term.expr->to_string();
+        }
+
+        if (open_paren) {
+            ret += *open_paren;
+        }
+
+        return ret;
+    }
+
 
     //  Internals
     //
@@ -1724,7 +1744,7 @@ auto postfix_expression_node::to_string() const
             ret += x.id_expr->to_string();
         }
         if (x.expr_list) {
-            return "(*ERROR*) temporary alpha limitation: type metafunctions cannot stringize expressions that involve nested expression-lists, declarations, or inspect expressions";
+            ret += x.expr_list->to_string();
         }
     }
 
@@ -4178,38 +4198,6 @@ auto primary_expression_node::get_token() const
 }
 
 
-auto primary_expression_node::to_string() const
-    -> std::string
-{
-    switch (expr.index())
-    {
-    break;case empty:
-        return {};
-
-    break;case identifier: {
-        auto const& s = std::get<identifier>(expr);
-        assert (s);
-        return s->to_string();
-    }
-
-    break;case id_expression: {
-        auto const& s = std::get<id_expression>(expr);
-        assert (s);
-        return s->to_string();
-    }
-
-    break;case literal: {
-        auto const& i = std::get<literal>(expr);
-        assert (i);
-        return i->to_string();
-    }
-
-    break;default:
-        return "(*ERROR*) temporary alpha limitation: type metafunctions cannot stringize expressions that involve nested expression-lists, declarations, or inspect expressions";
-    }
-}
-
-
 auto primary_expression_node::position() const
     -> source_position
 {
@@ -4446,6 +4434,7 @@ inspect_expression_node::~inspect_expression_node() = default;
 
 statement_node::~statement_node() = default;
 
+
 //-----------------------------------------------------------------------
 //
 //  pretty_print_visualize: pretty-prints Cpp2 ASTs
@@ -4516,6 +4505,50 @@ auto pretty_print_visualize(namespace_node const& n, int indent)
     -> std::string;
 auto pretty_print_visualize(declaration_node const& n, int indent, bool include_metafunctions_list = false)
     -> std::string;
+
+
+auto primary_expression_node::to_string() const
+-> std::string
+{
+    switch (expr.index())
+    {
+    break; case empty:
+        return {};
+
+    break; case identifier: {
+        auto const& s = std::get<identifier>(expr);
+        assert(s);
+        return s->to_string();
+    }
+
+    break; case expression_list: {
+        auto const& s = std::get<expression_list>(expr);
+        assert(s);
+        return s->to_string();
+    }
+
+    break; case id_expression: {
+        auto const& s = std::get<id_expression>(expr);
+        assert(s);
+        return s->to_string();
+    }
+
+    break; case declaration: {
+        auto const& s = std::get<declaration>(expr);
+        assert(s);
+        return pretty_print_visualize(*s, 0);
+    }
+
+    break; case literal: {
+        auto const& i = std::get<literal>(expr);
+        assert(i);
+        return i->to_string();
+    }
+
+    break; default:
+        return "(*ERROR*) temporary alpha limitation: type metafunctions cannot stringize expressions that involve nested inspect expressions";
+    }
+}
 
 
 
