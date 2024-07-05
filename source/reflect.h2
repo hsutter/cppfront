@@ -929,6 +929,9 @@ cpp1_rule_of_zero: (inout t: meta::type_declaration) =
 //
 struct: (inout t: meta::type_declaration) =
 {
+    ctor_params: std::string = ();
+    ctor_inits : std::string = ();
+
     for t.get_members() do (inout m)
     {
         m.require( m.make_public(),
@@ -940,8 +943,16 @@ struct: (inout t: meta::type_declaration) =
             t.require( !mf.has_name("operator="),
                        "a struct may not have a user-defined operator=");
         }
+        else if m.is_object() {
+            ctor_params += "(m.name())$_, ";
+            ctor_inits  += "(m.name())$ = (m.name())$_; ";
+        }
     }
     t.cpp1_rule_of_zero();
+
+    //  However, to enable construction from values requires a
+    //  constructor... an exception to the rule of zero
+    t.add_member("    operator=: (out this, (ctor_params)$) = { (ctor_inits)$ }");
 }
 
 

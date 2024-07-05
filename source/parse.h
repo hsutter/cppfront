@@ -5111,11 +5111,8 @@ auto pretty_print_visualize(parameter_declaration_list_node const& n, int indent
         space += std::string{"\n"} + pre(indent+1);
     }
 
-    for (auto i = 0; auto& param : n.parameters) {
-        ret += space + pretty_print_visualize(*param, indent+1, is_template_param_list);
-        if (++i < std::ssize(n.parameters)) {
-            ret += ", ";
-        }
+    for (auto& param : n.parameters) {
+        ret += space + pretty_print_visualize(*param, indent+1, is_template_param_list) + ", ";
     }
 
     if (std::ssize(n.parameters) > 1) {
@@ -5296,11 +5293,9 @@ auto pretty_print_visualize(declaration_node const& n, int indent, bool include_
         auto& type_id = std::get<declaration_node::an_object>(n.type);
         assert(type_id);
         ret += metafunctions
-            + template_params;
-        if (!n.has_wildcard_type()) {
-            ret += " " + pretty_print_visualize(*type_id, indent);
-        }
-        ret += requires_clause
+            + template_params
+            + " " + pretty_print_visualize(*type_id, indent)
+            + requires_clause
             + initializer;
     }
     else if (n.is_type()) {
