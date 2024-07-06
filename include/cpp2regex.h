@@ -240,12 +240,20 @@ template<typename Iter> class match_group {
     public: Iter end {}; 
 
     public: bool matched {false}; 
+    public: explicit match_group(auto const& start_, auto const& end_, auto const& matched_);
+public: explicit match_group();
+
+#line 55 "regex.h2"
 };
 
 #line 59 "regex.h2"
 template<typename Iter> class match_return {
     public: bool matched {false}; 
     public: Iter pos {}; 
+    public: explicit match_return(auto const& matched_, auto const& pos_);
+public: explicit match_return();
+
+#line 62 "regex.h2"
 };
 
 #line 66 "regex.h2"
@@ -586,6 +594,9 @@ class parse_context_group_state {
 #line 412 "regex.h2"
     // Apply optimizations to the matcher list.
     public: static auto post_process_list(token_vec& list) -> void;
+    public: explicit parse_context_group_state(auto const& cur_match_list_, auto const& alternate_match_lists_, auto const& modifiers_);
+public: explicit parse_context_group_state();
+
 
 #line 426 "regex.h2"
 };
@@ -612,6 +623,9 @@ class parse_context_branch_reset_state {
 #line 458 "regex.h2"
     // Initialize for a branch reset group.
     public: auto set_active_reset(cpp2::impl::in<int> restart) & -> void;
+    public: explicit parse_context_branch_reset_state(auto const& is_active_, auto const& cur_group_, auto const& max_group_, auto const& from_);
+public: explicit parse_context_branch_reset_state();
+
 
 #line 465 "regex.h2"
 };
@@ -774,6 +788,9 @@ class generation_function_context {
 
 #line 864 "regex.h2"
     public: auto remove_tabs(cpp2::impl::in<int> c) & -> void;
+    public: explicit generation_function_context(auto const& code_, auto const& tabs_);
+public: explicit generation_function_context();
+
 
 #line 867 "regex.h2"
 };
@@ -1508,6 +1525,16 @@ if (((*this) & perl_code_syntax) == perl_code_syntax) {_ret += _comma + "perl_co
 if (((*this) & perl_code_syntax_in_classes) == perl_code_syntax_in_classes) {_ret += _comma + "perl_code_syntax_in_classes";_comma = ", ";}
 return cpp2::move(_ret) + ")"; 
 }
+
+template <typename Iter> match_group<Iter>::match_group(auto const& start_, auto const& end_, auto const& matched_)
+                                                        : start{ start_ }
+                                                        , end{ end_ }
+                                                        , matched{ matched_ }{}
+template <typename Iter> match_group<Iter>::match_group(){}
+template <typename Iter> match_return<Iter>::match_return(auto const& matched_, auto const& pos_)
+                                                : matched{ matched_ }
+                                                , pos{ pos_ }{}
+template <typename Iter> match_return<Iter>::match_return(){}
 #line 30 "regex.h2"
 //-----------------------------------------------------------------------
 //
@@ -1903,6 +1930,12 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         }
     }
 
+    parse_context_group_state::parse_context_group_state(auto const& cur_match_list_, auto const& alternate_match_lists_, auto const& modifiers_)
+                                                                                     : cur_match_list{ cur_match_list_ }
+                                                                                     , alternate_match_lists{ alternate_match_lists_ }
+                                                                                     , modifiers{ modifiers_ }{}
+parse_context_group_state::parse_context_group_state(){}
+
 #line 437 "regex.h2"
     [[nodiscard]] auto parse_context_branch_reset_state::next() & -> int{
         auto g {cur_group}; 
@@ -1932,6 +1965,13 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
         from      = restart;
         max_group = restart;
     }
+
+    parse_context_branch_reset_state::parse_context_branch_reset_state(auto const& is_active_, auto const& cur_group_, auto const& max_group_, auto const& from_)
+                                                                           : is_active{ is_active_ }
+                                                                           , cur_group{ cur_group_ }
+                                                                           , max_group{ max_group_ }
+                                                                           , from{ from_ }{}
+parse_context_branch_reset_state::parse_context_branch_reset_state(){}
 
 #line 485 "regex.h2"
     parse_context::parse_context(cpp2::impl::in<std::string_view> r, auto const& e)
@@ -2327,6 +2367,11 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
     auto generation_function_context::remove_tabs(cpp2::impl::in<int> c) & -> void{
         tabs = tabs.substr(0, c * 2);
     }
+
+    generation_function_context::generation_function_context(auto const& code_, auto const& tabs_)
+                                              : code{ code_ }
+                                              , tabs{ tabs_ }{}
+generation_function_context::generation_function_context(){}
 
 #line 882 "regex.h2"
     [[nodiscard]] auto generation_context::match_parameters() const& -> std::string{return "r.pos, ctx"; }
