@@ -965,11 +965,11 @@ struct: (inout t: meta::type_declaration) =
     {
         //  Then to enable construction from corresponding values
         //  requires a constructor... an exception to the rule of zero
-        t.add_member("    operator=: (out this, (ctor_params)$) = { (ctor_inits)$ }");
+        t.add_member("    operator=: (implicit out this, (ctor_params)$) = { (ctor_inits)$ }");
 
         //  And if all members had initializers, we need a default constructor
         if !found_member_without_initializer {
-            t.add_member("    operator=: (out this) = { }");
+            t.add_member("    operator=: (implicit out this) = { }");
         }
     }
 }

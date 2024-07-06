@@ -1653,11 +1653,11 @@ auto cpp2_struct(meta::type_declaration& t) -> void
     {
         //  Then to enable construction from corresponding values
         //  requires a constructor... an exception to the rule of zero
-        CPP2_UFCS(add_member)(t, ("    operator=: (out this, " + cpp2::to_string(cpp2::move(ctor_params)) + ") = { " + cpp2::to_string(cpp2::move(ctor_inits)) + " }"));
+        CPP2_UFCS(add_member)(t, ("    operator=: (implicit out this, " + cpp2::to_string(cpp2::move(ctor_params)) + ") = { " + cpp2::to_string(cpp2::move(ctor_inits)) + " }"));
 
         //  And if all members had initializers, we need a default constructor
         if (!(cpp2::move(found_member_without_initializer))) {
-            CPP2_UFCS(add_member)(t, "    operator=: (out this) = { }");
+            CPP2_UFCS(add_member)(t, "    operator=: (implicit out this) = { }");
         }
     }
 }
