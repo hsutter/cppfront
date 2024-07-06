@@ -81,7 +81,7 @@ class A {
 class B {
   public: A m; 
   public: auto f() const& -> void;
-  public: explicit B(auto const& m_);
+  public: B(auto const& m_);
 
 public: auto operator=(auto const& m_) -> B& ;
 
@@ -173,8 +173,8 @@ namespace ns {
   auto B::f() const& -> void { CPP2_UFCS(f)(m);  }
 
   B::B(auto const& m_)
-                                    : m{ m_ }{}
+                                             : m{ m_ }{}
 
 auto B::operator=(auto const& m_) -> B& {
-                                    m = m_;
-                                    return *this;}
+                                             m = m_;
+                                             return *this;}

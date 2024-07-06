@@ -27,7 +27,7 @@ using doubler_ret = int;
 
 #line 9 "pure2-trailing-commas.cpp2"
 class vals {public: int i; 
-public: explicit vals(auto const& i_);
+public: vals(auto const& i_);
 
 public: auto operator=(auto const& i_) -> vals& ;
 
@@ -52,11 +52,11 @@ template<typename T, typename U> [[nodiscard]] auto g(T const& a, U const& b) ->
 return std::move(i.value()); }
 
 vals::vals(auto const& i_)
-                                    : i{ i_ }{}
+                                             : i{ i_ }{}
 
 auto vals::operator=(auto const& i_) -> vals& {
-                                    i = i_;
-                                    return *this;}
+                                             i = i_;
+                                             return *this;}
 #line 11 "pure2-trailing-commas.cpp2"
 auto main() -> int{
 {

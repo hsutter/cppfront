@@ -244,7 +244,7 @@ class issue_857 {
 
 class issue_857_2 {
   public: std::unique_ptr<int> a; 
-  public: explicit issue_857_2(auto const& a_);
+  public: issue_857_2(auto const& a_);
 
 public: auto operator=(auto const& a_) -> issue_857_2& ;
 
@@ -257,20 +257,20 @@ extern int gi;
 class issue_857_3 {
   public: std::add_lvalue_reference_t<int> i {gi}; 
   public: auto f() && -> void;
-  public: explicit issue_857_3(auto const& i_);
+  public: issue_857_3(auto const& i_);
 
 public: auto operator=(auto const& i_) -> issue_857_3& ;
-public: explicit issue_857_3();
+public: issue_857_3();
 
 #line 265 "pure2-last-use.cpp2"
 };
 class issue_857_6 {
   public: auto f() && -> void;
   public: std::add_lvalue_reference_t<int> i {gi}; 
-  public: explicit issue_857_6(auto const& i_);
+  public: issue_857_6(auto const& i_);
 
 public: auto operator=(auto const& i_) -> issue_857_6& ;
-public: explicit issue_857_6();
+public: issue_857_6();
 
 #line 269 "pure2-last-use.cpp2"
 };
@@ -289,7 +289,7 @@ class issue_857_4 {
    public: std::add_pointer_t<int(int)> g; 
   public: move_only_function<int()> mf; 
   public: move_only_function<int(int)> mg; 
-  public: explicit issue_857_4(auto const& f_, auto const& g_, auto const& mf_, auto const& mg_);
+  public: issue_857_4(auto const& f_, auto const& g_, auto const& mf_, auto const& mg_);
 
 //   h0: (move this) = _ = mf();
 //   h1: (move this) = _ = this.mf();
@@ -350,7 +350,7 @@ class issue_857_4 {
 class issue_857_5 {
   public: auto f() && -> void;
   public: std::unique_ptr<int> a; 
-  public: explicit issue_857_5(auto const& a_);
+  public: issue_857_5(auto const& a_);
 
 public: auto operator=(auto const& a_) -> issue_857_5& ;
 
@@ -363,7 +363,7 @@ class issue_857_7: public issue_857_7_A_as_base, public std::monostate {
 
 #line 346 "pure2-last-use.cpp2"
   public: auto F() && -> void;
-  public: explicit issue_857_7(auto const& A_);
+  public: issue_857_7(auto const& A_);
 
 #line 347 "pure2-last-use.cpp2"
 };
@@ -373,7 +373,7 @@ class issue_857_8 {
   public: move_only_function<int()> b; 
   public: std::add_lvalue_reference_t<int> c; 
   public: auto d() && -> void;
-  public: explicit issue_857_8(auto const& a_, auto const& b_, auto const& c_);
+  public: issue_857_8(auto const& a_, auto const& b_, auto const& c_);
 
 #line 354 "pure2-last-use.cpp2"
 };
@@ -471,7 +471,7 @@ class cpp2_union {
 class my_string {
   public: std::string string; 
   public: std::size_t size {CPP2_UFCS(size)(string)}; 
-  public: explicit my_string(auto const& string_, auto const& size_);
+  public: my_string(auto const& string_, auto const& size_);
 
 #line 855 "pure2-last-use.cpp2"
 };
@@ -506,7 +506,7 @@ int inline constexpr x{ 0 };
 class t {
   public: std::unique_ptr<int> x; 
   public: auto operator()() && -> void;
-  public: explicit t(auto const& x_);
+  public: t(auto const& x_);
 
 public: auto operator=(auto const& x_) -> t& ;
 
@@ -523,7 +523,7 @@ auto loops_and_captures() -> void;
 #line 984 "pure2-last-use.cpp2"
 class types {
   public: std::unique_ptr<int> x; 
-  public: explicit types(auto const& x_);
+  public: types(auto const& x_);
 
 public: auto operator=(auto const& x_) -> types& ;
 
@@ -738,11 +738,11 @@ auto issue_850() -> void{
   auto issue_857::h() & -> void { f_inout(a);  }
 
   issue_857_2::issue_857_2(auto const& a_)
-                                    : a{ a_ }{}
+                                             : a{ a_ }{}
 
 auto issue_857_2::operator=(auto const& a_) -> issue_857_2& {
-                                    a = a_;
-                                    return *this;}
+                                             a = a_;
+                                             return *this;}
 #line 261 "pure2-last-use.cpp2"
 int gi {0}; 
 
@@ -750,11 +750,11 @@ int gi {0};
   auto issue_857_3::f() && -> void { f_inout(cpp2::move(*this).i);  }
 
   issue_857_3::issue_857_3(auto const& i_)
-                                    : i{ i_ }{}
+                                             : i{ i_ }{}
 
 auto issue_857_3::operator=(auto const& i_) -> issue_857_3& {
-                                    i = i_;
-                                    return *this;}
+                                             i = i_;
+                                             return *this;}
 issue_857_3::issue_857_3(){}
 #line 264 "pure2-last-use.cpp2"
                                // OK: The implicit `this` is moved, not `i`.
@@ -763,11 +763,11 @@ issue_857_3::issue_857_3(){}
   auto issue_857_6::f() && -> void { f_inout(cpp2::move(*this).i);  }
 
   issue_857_6::issue_857_6(auto const& i_)
-                                    : i{ i_ }{}
+                                             : i{ i_ }{}
 
 auto issue_857_6::operator=(auto const& i_) -> issue_857_6& {
-                                    i = i_;
-                                    return *this;}
+                                             i = i_;
+                                             return *this;}
 issue_857_6::issue_857_6(){}
 #line 267 "pure2-last-use.cpp2"
                                // OK: The implicit `this` is moved, not `i`.
@@ -783,34 +783,34 @@ issue_857_6::issue_857_6(){}
   template <typename T> [[nodiscard]] auto move_only_function<T>::operator()([[maybe_unused]] auto const& ...unnamed_param_2) && -> int { return 0;  }
 
   issue_857_4::issue_857_4(auto const& f_, auto const& g_, auto const& mf_, auto const& mg_)
-                                                  : f{ f_ }
-                                                  , g{ g_ }
-                                                  , mf{ mf_ }
-                                                  , mg{ mg_ }{}
+                                                           : f{ f_ }
+                                                           , g{ g_ }
+                                                           , mf{ mf_ }
+                                                           , mg{ mg_ }{}
 
 #line 339 "pure2-last-use.cpp2"
   auto issue_857_5::f() && -> void { f_copy(std::move(cpp2::move(*this).a));  }
 
   issue_857_5::issue_857_5(auto const& a_)
-                                    : a{ a_ }{}
+                                             : a{ a_ }{}
 
 auto issue_857_5::operator=(auto const& a_) -> issue_857_5& {
-                                    a = a_;
-                                    return *this;}
+                                             a = a_;
+                                             return *this;}
 #line 346 "pure2-last-use.cpp2"
   auto issue_857_7::F() && -> void { f_inout(cpp2::move(*this).A);  }
 
   issue_857_7::issue_857_7(auto const& A_)
-                                    : issue_857_7_A_as_base{ A_ }
-                                    , std::monostate{  }{}
+                                             : issue_857_7_A_as_base{ A_ }
+                                             , std::monostate{  }{}
 
 #line 353 "pure2-last-use.cpp2"
   auto issue_857_8::d() && -> void{}
 
   issue_857_8::issue_857_8(auto const& a_, auto const& b_, auto const& c_)
-                                            : a{ a_ }
-                                            , b{ b_ }
-                                            , c{ c_ }{}
+                                                     : a{ a_ }
+                                                     , b{ b_ }
+                                                     , c{ c_ }{}
 
 #line 362 "pure2-last-use.cpp2"
   auto issue_857_9::f2() && -> void { f_inout(c);  }// OK: Happens to work, like non-'move' 'this' parameters.
@@ -1363,8 +1363,8 @@ auto enum_2() -> void{
   }
 
   my_string::my_string(auto const& string_, auto const& size_)
-                                                : string{ string_ }
-                                                , size{ size_ }{}
+                                                         : string{ string_ }
+                                                         , size{ size_ }{}
 
 #line 857 "pure2-last-use.cpp2"
 [[nodiscard]] auto no_pessimizing_move() -> no_pessimizing_move_ret{
@@ -1454,11 +1454,11 @@ auto f() -> void{
   }
 
   t::t(auto const& x_)
-                                    : x{ x_ }{}
+                                             : x{ x_ }{}
 
 auto t::operator=(auto const& x_) -> t& {
-                                    x = x_;
-                                    return *this;}
+                                             x = x_;
+                                             return *this;}
 #line 940 "pure2-last-use.cpp2"
 auto g() -> void{
   static_cast<void>([]() mutable -> void{
@@ -1505,11 +1505,11 @@ auto loops_and_captures() -> void{
 }
 
 types::types(auto const& x_)
-                                    : x{ x_ }{}
+                                             : x{ x_ }{}
 
 auto types::operator=(auto const& x_) -> types& {
-                                    x = x_;
-                                    return *this;}
+                                             x = x_;
+                                             return *this;}
 #line 994 "pure2-last-use.cpp2"
 auto skip_hidden_names() -> void{
   static_cast<void>([]() mutable -> void{
