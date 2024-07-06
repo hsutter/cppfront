@@ -1191,73 +1191,63 @@ struct nonesuch_ {
 };
 constexpr inline nonesuch_ nonesuch;
 
-inline auto to_string([[maybe_unused]] auto const& _) -> std::string
+//  Suppress spurious MSVC warnings about unreachable code
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4702 )
+#endif
+inline auto to_string(auto const& x) -> std::string
 {
+    //  Handle degenerate case
+    if constexpr (std::is_same_v<CPP2_TYPEOF(x), std::string>) {
+        return x;
+    }
+
+    //  Else customize bool (prefer this over << to avoid std::boolalpha)
+    if constexpr( std::is_same_v<CPP2_TYPEOF(x), bool> ) {
+        return x ? "true" : "false";
+    }
+
+    //  Else customize char (before int)
+    if constexpr (std::is_same_v<CPP2_TYPEOF(x), char>) {
+        return std::string{ x };
+    }
+
+    //  Else customize char*
+    if constexpr (std::is_same_v<CPP2_TYPEOF(x), const char*>) {
+        return std::string{ x };
+    }
+
+    //  Else prefer string_view if available
+    if constexpr (std::is_convertible_v<CPP2_TYPEOF(x), std::string_view>) {
+        return std::string{ x };
+    }
+
+    //  Else prefer std::to_string if available
+    if constexpr( requires { std::to_string(x); } ) {
+        return std::to_string(x);
+    }
+
+    //  Else prefer streaming << if available
+    if constexpr( requires { { (std::stringstream() << x).str() } -> std::convertible_to<std::string>; } ) {
+        return (std::stringstream() << x).str();
+    }
+
+    //  Else complain about a 'nonesuch' result
+    if constexpr( std::is_same_v<CPP2_TYPEOF(x), nonesuch_> ) {
+        return "(invalid type)";
+    }
+
+    //  Else prompt to customize
     return "(customize me - no cpp2::to_string overload exists for this type)";
 }
-
-inline auto to_string(nonesuch_) -> std::string
-{
-    return "(invalid type)";
-}
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 inline auto to_string(std::same_as<std::any> auto const&) -> std::string
 {
     return "std::any";
-}
-
-inline auto to_string(bool b) -> std::string
-{
-    return b ? "true" : "false";
-}
-
-template<typename T>
-inline auto to_string(T const& t) -> std::string
-    requires requires { std::to_string(t); }
-{
-    return std::to_string(t);
-}
-
-////  We'd like to add this convenience, which would support std::filesystem::path() and similar.
-////
-////  TODO: As written, this one would make some cases ambiguous. We should rewrite these
-////  common to_string functions as a single template with 'if constexpr' alternatives,
-////  as was done with 'is', and then this will be simpler.
-//template<typename T>
-//inline auto to_string(T const& t) -> std::string
-//    requires std::is_convertible_v<decltype((std::stringstream() << t).str()), std::string>
-//{
-//    return (std::stringstream() << t).str();
-//}
-
-template<typename T>
-inline auto to_string(T const& t) -> std::string
-    requires std::is_convertible_v<decltype(t.to_string()), std::string>
-{
-    return t.to_string();
-}
-
-inline auto to_string(char const& t) -> std::string
-{
-    return std::string{t};
-}
-
-inline auto to_string(char const* s) -> std::string
-{
-    return std::string{s};
-}
-
-inline auto to_string(std::string const& s) -> std::string const&
-{
-    return s;
-}
-
-template<typename T>
-inline auto to_string(T const& sv) -> std::string
-    requires (std::is_convertible_v<T, std::string_view>
-              && !std::is_convertible_v<T, const char*>)
-{
-    return std::string{sv};
 }
 
 template <typename... Ts>

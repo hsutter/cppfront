@@ -88,10 +88,10 @@ g: () = {
     else {
         load_from_disk( out buf );      // constructs buf (*)
     }
-    std::cout buf[0];                   // ok, a has been initialized
+    std::cout << buf[0];                // ok, a has been initialized
 }
 
-load_from_disk: (out buffer) = {
+load_from_disk: (out x) = {
     x = /* data read from disk */ ;     // when `buffer` is uninitialized,
 }                                       // constructs it; otherwise, assigns
 ```

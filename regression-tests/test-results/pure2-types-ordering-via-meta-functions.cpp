@@ -70,6 +70,12 @@ class person_in_family_tree {
 
 class mystruct {
     public: int val {0}; 
+    public: explicit mystruct(auto const& val_);
+
+public: auto operator=(auto const& val_) -> mystruct& ;
+public: explicit mystruct();
+
+#line 19 "pure2-types-ordering-via-meta-functions.cpp2"
 };
 
 auto main() -> int;
@@ -105,6 +111,13 @@ auto main() -> int;
                                             return *this; }
 
 
+    mystruct::mystruct(auto const& val_)
+                                      : val{ val_ }{}
+
+auto mystruct::operator=(auto const& val_) -> mystruct& {
+                                      val = val_;
+                                      return *this;}
+mystruct::mystruct(){}
 #line 21 "pure2-types-ordering-via-meta-functions.cpp2"
 auto main() -> int{
     my_integer a {1}; 

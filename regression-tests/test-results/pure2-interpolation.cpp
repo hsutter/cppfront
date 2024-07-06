@@ -71,5 +71,8 @@ auto const& x{item()};
 }
 
 #line 31 "pure2-interpolation.cpp2"
+    std::complex ri {1.2, 3.4}; 
+    std::cout << ("complex: " + cpp2::to_string(cpp2::move(ri)) + "\n");// works on GCC 11.2+ and Clang 13+
+                                        // prints "customize me" on GCC 11.1 and Clang 12
 }
 
