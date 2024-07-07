@@ -10,8 +10,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <map>
-#include <set>
+// #include <map>
+// #include <set>
 
 template<typename matcher_wrapper, typename Iter, typename CharT>
 using matcher_wrapper_type = typename matcher_wrapper::template wrap<Iter, CharT>;
@@ -85,13 +85,13 @@ match_context: <CharT, Iter, max_groups: int> type =
         if group >= max_groups || !groups[group].matched {
             return 0;
         }
-        return std::distance(begin, groups[group].end);
+        return cpp2::unsafe_narrow<int>( std::distance(begin, groups[group].end) );
     }
     get_group_start:  (in this, group) -> int = {
         if group >= max_groups || !groups[group].matched {
             return 0;
         }
-        return std::distance(begin, groups[group].start);
+        return cpp2::unsafe_narrow<int>( std::distance(begin, groups[group].start) );
     }
     get_group_string: (in this, group) -> std::string = {
         if group >= max_groups || !groups[group].matched {

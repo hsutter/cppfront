@@ -183,8 +183,8 @@ template<typename Error_out> class regex_generator;
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <map>
-#include <set>
+// #include <map>
+// #include <set>
 
 template<typename matcher_wrapper, typename Iter, typename CharT>
 using matcher_wrapper_type = typename matcher_wrapper::template wrap<Iter, CharT>;
@@ -1606,14 +1606,14 @@ template <typename Iter> match_return<Iter>::match_return(){}
         if (cpp2::impl::cmp_greater_eq(group,max_groups) || !(CPP2_ASSERT_IN_BOUNDS(groups, group).matched)) {
             return 0; 
         }
-        return std::distance(begin, CPP2_ASSERT_IN_BOUNDS(groups, group).end); 
+        return cpp2::unsafe_narrow<int>(std::distance(begin, CPP2_ASSERT_IN_BOUNDS(groups, group).end)); 
     }
 #line 90 "regex.h2"
     template <typename CharT, typename Iter, int max_groups> [[nodiscard]] auto match_context<CharT,Iter,max_groups>::get_group_start(auto const& group) const& -> int{
         if (cpp2::impl::cmp_greater_eq(group,max_groups) || !(CPP2_ASSERT_IN_BOUNDS(groups, group).matched)) {
             return 0; 
         }
-        return std::distance(begin, CPP2_ASSERT_IN_BOUNDS(groups, group).start); 
+        return cpp2::unsafe_narrow<int>(std::distance(begin, CPP2_ASSERT_IN_BOUNDS(groups, group).start)); 
     }
 #line 96 "regex.h2"
     template <typename CharT, typename Iter, int max_groups> [[nodiscard]] auto match_context<CharT,Iter,max_groups>::get_group_string(auto const& group) const& -> std::string{

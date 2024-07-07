@@ -267,6 +267,7 @@
     #include <sstream>
     #include <iterator>
     #include <limits>
+    #include <map>
     #include <memory>
     #include <new>
     #include <random>
@@ -274,7 +275,9 @@
     #if defined(CPP2_USE_SOURCE_LOCATION)
         #include <source_location>
     #endif
+    #include <set>
     #include <span>
+    #include <sstream>
     #include <string>
     #include <string_view>
     #include <system_error>
