@@ -939,16 +939,30 @@ auto lex_line(
         if (
             peek(  offset) == '\\'
             && peek(1+offset) == 'x'
-            && is_hexadecimal_digit(peek(2+offset))
+            && (is_hexadecimal_digit(peek(2+offset))
+              || (peek(2+offset) == '{' && is_hexadecimal_digit(peek(3+offset)))
             )
+        )
         {
+            bool has_bracket = peek(2+offset) == '{';
             auto j = 3;
+
+            if (has_bracket) { ++j; }
+
             while (
                 peek(j+offset)
                 && is_hexadecimal_digit(peek(j+offset))
                 )
             {
                 ++j;
+            }
+
+            if (has_bracket) {
+                if (peek(j+offset) == '}') {
+                    ++j;
+                } else {
+                    return 0;
+                }
             }
             return j;
         }
