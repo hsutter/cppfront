@@ -189,7 +189,7 @@ test_tests_10_escapes: @regex type = {
     test(regex_14, "14", R"(foo(\v)bar)", "foo\rbar", "y", R"($1)", "\r");
     test(regex_15, "15", R"((\V)(\v))", "foo\rbar", "y", R"($1-$2)", "o-\r");
     test(regex_16, "16", R"((\v)(\V))", "foo\rbar", "y", R"($1-$2)", "\r-b");
-    test(regex_17, "17", R"(foo\t\n\r\f\a\ebar)", "foo\t\n\r\f\a\ebar", "y", R"($&)", "foo\t\n\r\f\a\ebar");
+    test(regex_17, "17", R"(foo\t\n\r\f\a\ebar)", "foo\t\n\r\f\abar", "y", R"($&)", "foo\t\n\r\f\abar");
     test(regex_18, "18", R"(foo\Kbar)", "foobar", "y", R"($&)", "bar");
     test(regex_19, "19", R"(\x41\x42)", "AB", "y", R"($&)", "AB");
     test(regex_20, "20", R"(\101\o{102})", "AB", "y", R"($&)", "AB");
