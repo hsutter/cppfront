@@ -696,7 +696,7 @@ class value_member_info {
     public: std::string name; 
     public: std::string type; 
     public: std::string value; 
-    public: explicit value_member_info(auto const& name_, auto const& type_, auto const& value_);
+    public: value_member_info(auto const& name_, auto const& type_, auto const& value_);
 
 #line 998 "reflect.h2"
 };
@@ -1645,9 +1645,9 @@ auto cpp2_struct(meta::type_declaration& t) -> void
 }
 
 value_member_info::value_member_info(auto const& name_, auto const& type_, auto const& value_)
-                                                      : name{ name_ }
-                                                      , type{ type_ }
-                                                      , value{ value_ }{}
+                                                               : name{ name_ }
+                                                               , type{ type_ }
+                                                               , value{ value_ }{}
 
 #line 1000 "reflect.h2"
 auto basic_enum(
