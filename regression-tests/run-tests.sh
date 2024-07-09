@@ -116,6 +116,11 @@ if [ -z "$cxx_compiler" ]; then
     usage
 fi
 
+if [ -z "$label" ]; then
+    echo "Run label not specified"
+    usage
+fi
+
 tests=$(ls | grep ".cpp2$")
 if [[ -n "$chosen_tests" ]]; then
     for test in $chosen_tests; do
