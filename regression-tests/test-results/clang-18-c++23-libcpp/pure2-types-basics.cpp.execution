@@ -1,0 +1,27 @@
+myclass: implicit from int
+    data: 1, more: 504
+N::myclass::f with 53
+N::myclass::nested::g
+f1: 2
+f2: 4
+f3: 6
+f4: 8
+myclass: explicit from string
+    data: 99, more: abracadabra
+myclass: default
+    data: 504, more: 3.141590
+myclass: from int and string
+    data: 77, more: hair1 plugh
+x's state before assignments:     data: 1, more: 504
+myclass: implicit from int
+    data: 84, more: 504
+myclass: explicit from string
+    data: 99, more: syzygy
+myclass: implicit from int
+    data: 84, more: 504
+myclass: explicit from string
+    data: 99, more: syzygy
+myclass: destructor
+myclass: destructor
+myclass: destructor
+myclass: destructor

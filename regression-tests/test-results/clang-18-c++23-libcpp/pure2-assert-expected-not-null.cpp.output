@@ -1,0 +1,27 @@
+pure2-assert-expected-not-null.cpp2:7:22: error: expected '(' for function-style cast or type construction
+    7 |     std::expected<int,bool> ex {4}; 
+      |                   ~~~^
+pure2-assert-expected-not-null.cpp2:7:10: error: no member named 'expected' in namespace 'std'; did you mean 'unexpected'?
+    7 |     std::expected<int,bool> ex {4}; 
+      |     ~~~~~^~~~~~~~
+      |          unexpected
+/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/exception:110:8: note: 'unexpected' declared here
+  110 |   void unexpected() __attribute__ ((__noreturn__,__cold__));
+      |        ^
+pure2-assert-expected-not-null.cpp2:9:193: error: use of undeclared identifier 'ex'
+    9 |     return *cpp2::impl::assert_not_null(cpp2::move(up)) + *cpp2::impl::assert_not_null(cpp2::move(sp)) + *cpp2::impl::assert_not_null(cpp2::move(op)) + *cpp2::impl::assert_not_null(cpp2::move(ex)); 
+      |                                                                                                                                                                                                 ^
+pure2-assert-expected-not-null.cpp2:14:22: error: expected '(' for function-style cast or type construction
+   14 |     std::expected<int,bool> ex {std::unexpected(false)}; 
+      |                   ~~~^
+pure2-assert-expected-not-null.cpp2:14:10: error: no member named 'expected' in namespace 'std'; did you mean 'unexpected'?
+   14 |     std::expected<int,bool> ex {std::unexpected(false)}; 
+      |     ~~~~~^~~~~~~~
+      |          unexpected
+/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/exception:110:8: note: 'unexpected' declared here
+  110 |   void unexpected() __attribute__ ((__noreturn__,__cold__));
+      |        ^
+pure2-assert-expected-not-null.cpp2:15:52: error: use of undeclared identifier 'ex'
+   15 |     return *cpp2::impl::assert_not_null(cpp2::move(ex)); 
+      |                                                    ^
+6 errors generated.
