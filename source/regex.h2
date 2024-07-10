@@ -1253,7 +1253,9 @@ char_token: @polymorphic_base type = {
         str = string_util::replace_all(str, "\\", "\\\\");
         str = string_util::replace_all(str, "\a", "\\a");
         str = string_util::replace_all(str, "\f", "\\f");
-        //str = string_util::replace_all(str, "\x1b", "\\x{1b}"); // TODO: Add again after https://github.com/hsutter/cppfront/issues/1152 is fixed or concat strings are allowed.
+        str = string_util::replace_all(str, "\x1b", "\" \"\\x1b\" \""); // Generate a separated string. This prevents
+                                                                        // situations like `\x1bblub` from generating
+                                                                        // wrong hex characters.
         str = string_util::replace_all(str, "\n", "\\n");
         str = string_util::replace_all(str, "\r", "\\r");
         str = string_util::replace_all(str, "\t", "\\t");

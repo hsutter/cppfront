@@ -811,7 +811,7 @@ template<typename M> auto test(M const& regex, cpp2::impl::in<std::string> id, c
     test(regex_14, "14", R"(foo(\v)bar)", "foo\rbar", "y", R"($1)", "\r");
     test(regex_15, "15", R"((\V)(\v))", "foo\rbar", "y", R"($1-$2)", "o-\r");
     test(regex_16, "16", R"((\v)(\V))", "foo\rbar", "y", R"($1-$2)", "\r-b");
-    test(regex_17, "17", R"(foo\t\n\r\f\a\ebar)", "foo\t\n\r\f\abar", "y", R"($&)", "foo\t\n\r\f\abar");
+    test(regex_17, "17", R"(foo\t\n\r\f\a\ebar)", "foo\t\n\r\f\a""\x1b""bar", "y", R"($&)", "foo\t\n\r\f\a""\x1b""bar");
     test(regex_18, "18", R"(foo\Kbar)", "foobar", "y", R"($&)", "bar");
     test(regex_19, "19", R"(\x41\x42)", "AB", "y", R"($&)", "AB");
     test(regex_20, "20", R"(\101\o{102})", "AB", "y", R"($&)", "AB");
@@ -2211,7 +2211,7 @@ int i{0};
   auto r {ctx.pass(cur)}; 
   do {
 
-  std::array<char,12 + 1> str_tmp_0 {"foo\t\n\r\f\abar"}; 
+  std::array<char,12 + 1> str_tmp_0 {"foo\t\n\r\f\a""\x1b""bar"}; 
   if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),12)) {
   r.matched = false;
   break;
