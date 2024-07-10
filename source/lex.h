@@ -1659,8 +1659,8 @@ auto lex_line(
                 }
 
                 //G string-literal:
-                //G     encoding-prefix? '"' s-char-seq? '"'
-                //G     encoding-prefix? 'R"' d-char-seq? '(' s-char-seq? ')' d-char-seq? '"'
+                //G     string-literal? encoding-prefix? '"' s-char-seq? '"'
+                //G     string-literal? encoding-prefix? 'R"' d-char-seq? '(' s-char-seq? ')' d-char-seq? '"'
                 //G
                 //G s-char-seq:
                 //G     interpolation? s-char
