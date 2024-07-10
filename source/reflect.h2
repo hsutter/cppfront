@@ -167,7 +167,10 @@ compiler_services: @polymorphic_base @copyable type =
     //
     report_violation: (this, msg) = {
         error(msg);
-        throw( std::runtime_error("  ==> programming bug found in metafunction @(metafunction_name)$ - contract violation - see previous errors") );
+        throw( std::runtime_error(
+            "  ==> programming bug found in metafunction @(metafunction_name)$ "
+            "- contract violation - see previous errors"
+        ) );
     }
 
     is_active:(this) true;
@@ -473,7 +476,9 @@ type_declaration: @copyable type =
         for get_members()
         do  (m) {
             m.require( !m.has_name( name ),
-                       "in a '(get_metafunction_name())$' type, the name '(name)$' is reserved for use by the '(get_metafunction_name())$' implementation");
+                       "in a '(get_metafunction_name())$' type, the name '(name)$' "
+                       "is reserved for use by the '(get_metafunction_name())$' implementation"
+            );
         }
         if constexpr !CPP2_PACK_EMPTY(etc) {
             reserve_names( etc... );
@@ -807,7 +812,13 @@ copyable: (inout t: meta::type_declaration) =
             || smfs.inout_this_move_that
         )
     {
-        t.error( "this type is partially copyable/movable - when you provide any of the more-specific operator= signatures, you must also provide the one with the general signature (out this, that); alternatively, consider removing all the operator= functions and let them all be generated for you with default memberwise semantics" );
+        t.error( 
+            "this type is partially copyable/movable - when you provide "
+            "any of the more-specific operator= signatures, you must also provide "
+            "the one with the general signature (out this, that); alternatively, "
+            "consider removing all the operator= functions and let them all be "
+            "generated for you with default memberwise semantics" 
+        );
     }
     else if !smfs.out_this_in_that {
         t.add_member( "operator=: (out this, that) = { }");
@@ -1029,7 +1040,10 @@ basic_enum: (
 
         mo := m.as_object();
         if !mo.has_wildcard_type() {
-            mo.error( "an explicit underlying type should be specified as a template argument to the metafunction - try 'enum<u16>' or 'flag_enum<u64>'");
+            mo.error( 
+                "an explicit underlying type should be specified as a compile-time argument "
+                "to the metafunction - try 'enum<u16>' or 'flag_enum<u64>'"
+            );
         }
 
         init := mo.initializer();
@@ -1066,7 +1080,9 @@ basic_enum: (
     if underlying_type == ""
     {
         t.require( !found_non_numeric,
-            "if you write an enumerator with a non-numeric-literal value, you must specify the enumeration's underlying type");
+            "if you write an enumerator with a non-numeric-literal value, "
+            "you must specify the enumeration's underlying type"
+        );
 
         if !bitwise {
             if min_value >= std::numeric_limits<i8>::min() && max_value <= std::numeric_limits<i8>::max() {
@@ -1082,7 +1098,10 @@ basic_enum: (
                 underlying_type = "i64";
             }
             else {
-                t.error( "values are outside the range representable by the largest supported underlying signed type (i64)" );
+                t.error(
+                    "values are outside the range representable by the "
+                    "largest supported underlying signed type (i64)" 
+                );
             }
         }
         else {
@@ -1120,7 +1139,8 @@ basic_enum: (
 
     //  Generate all the private implementation
     t.add_member( "    _value            : (underlying_type)$;");
-    t.add_member( "    private operator= : (implicit out this, _val: i64) == _value = cpp2::unsafe_narrow<(underlying_type)$>(_val);");
+    t.add_member( "    private operator= : (implicit out this, _val: i64) == "
+                                            "_value = cpp2::unsafe_narrow<(underlying_type)$>(_val);");
 
     //  Generate the bitwise operations
     if bitwise {
@@ -1150,9 +1170,9 @@ basic_enum: (
     (copy to_string: std::string = "    to_string: (this) -> std::string = { \n")
     {
         if bitwise {
-            to_string += "    _ret   : std::string = \"(\";\n";
-            to_string += "    _comma : std::string = ();\n";
-            to_string += "    if this == none { return \"(none)\"; }\n";
+            to_string += "    _ret   : std::string = \"(\";\n"
+                         "    _comma : std::string = ();\n"
+                         "    if this == none { return \"(none)\"; }\n";
         }
 
         for  enumerators
@@ -1160,7 +1180,9 @@ basic_enum: (
             if e.name != "_" {  // ignore unnamed values
                 if bitwise {
                     if e.name != "none" {
-                        to_string += "    if (this & (e.name)$) == (e.name)$ { _ret += _comma + \"(e.name)$\"; _comma = \", \"; }\n";
+                        to_string += "    if (this & (e.name)$) == (e.name)$ { "
+                                             "_ret += _comma + \"(e.name)$\"; _comma = \", \"; "
+                                         "}\n";
                     }
                 }
                 else {
@@ -1276,15 +1298,19 @@ union: (inout t : meta::type_declaration)
     if    m.is_member_object()
     {
         m.require( m.is_public() || m.is_default_access(),
-                   "a union alternative cannot be protected or private");
+                   "a union alternative cannot be protected or private"
+                );
 
         m.require( !m.name().starts_with("is_")
                    && !m.name().starts_with("set_"),
-                   "a union alternative's name cannot start with 'is_' or 'set_' - that could cause user confusion with the 'is_alternative' and 'set_alternative' generated functions");
+                   "a union alternative's name cannot start with 'is_' or 'set_' - that could cause "
+                   "user confusion with the 'is_alternative' and 'set_alternative' generated functions"
+                );
 
         mo := m.as_object();
         mo.require( mo.initializer().empty(),
-                    "a union alternative cannot have an initializer");
+                    "a union alternative cannot have an initializer"
+                );
 
         //  Adding local variable 'e' to work around a Clang warning
         e: value_member_info = ( mo.name() as std::string, mo.type(), value as std::string );
@@ -1341,13 +1367,27 @@ union: (inout t : meta::type_declaration)
     {
         t.add_member( "    is_(a.name)$: (this) -> bool = _discriminator == (a.value)$;\n");
 
-        t.add_member( "    (a.name)$: (this) -> forward (a.type)$ pre(is_(a.name)$()) = reinterpret_cast<* const (a.type)$>(_storage&)*;\n");
+        t.add_member( "    (a.name)$: (this) -> forward (a.type)$ pre(is_(a.name)$()) = "
+                            "reinterpret_cast<* const (a.type)$>(_storage&)*;\n"
+                    );
 
-        t.add_member( "    (a.name)$: (inout this) -> forward (a.type)$ pre(is_(a.name)$()) = reinterpret_cast<*(a.type)$>(_storage&)*;\n");
+        t.add_member( "    (a.name)$: (inout this) -> forward (a.type)$ pre(is_(a.name)$()) = "
+                            "reinterpret_cast<*(a.type)$>(_storage&)*;\n"
+                    );
 
-        t.add_member( "    set_(a.name)$: (inout this, _value: (a.type)$) = { if !is_(a.name)$() { _destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(_storage&), _value); } else { reinterpret_cast<*(a.type)$>(_storage&)* = _value; } _discriminator = (a.value)$; }\n");
+        t.add_member( "    set_(a.name)$: (inout this, _value: (a.type)$) = { "
+                            "if !is_(a.name)$() { _destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(_storage&), _value); } "
+                            "else { reinterpret_cast<*(a.type)$>(_storage&)* = _value; } "
+                            "_discriminator = (a.value)$; "
+                            "}\n"
+                    );
 
-        t.add_member( "    set_(a.name)$: (inout this, forward _args...: _) = { if !is_(a.name)$() { _destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(_storage&), _args...); } else { reinterpret_cast<*(a.type)$>(_storage&)* = :(a.type)$ = (_args...); } _discriminator = (a.value)$; }\n");
+        t.add_member( "    set_(a.name)$: (inout this, forward _args...: _) = { "
+                            "if !is_(a.name)$() { _destroy(); std::construct_at( reinterpret_cast<*(a.type)$>(_storage&), _args...); } "
+                            " else { reinterpret_cast<*(a.type)$>(_storage&)* = :(a.type)$ = (_args...); } "
+                            "_discriminator = (a.value)$; "
+                            "}\n"
+                    );
     }
 
     //  Add destroy
@@ -1358,8 +1398,8 @@ union: (inout t : meta::type_declaration)
             destroy += "        if _discriminator == (a.value)$ { std::destroy_at( reinterpret_cast<*(a.type)$>(_storage&) ); }\n";
         }
 
-        destroy += "        _discriminator = -1;\n";
-        destroy += "    }\n";
+        destroy += "        _discriminator = -1;\n"
+                   "    }\n";
         t.add_member( destroy );
     }
 
@@ -1378,15 +1418,15 @@ union: (inout t : meta::type_declaration)
         }
         value_set += "    }\n";
 
-        t.add_member( std::string("    operator=: (out this, that) = {\n")
-                    + "        _storage = ();\n"
-                    + "        _discriminator = -1;\n"
-                    + value_set
+        t.add_member( "    operator=: (out this, that) = {\n"
+                      "        _storage = ();\n"
+                      "        _discriminator = -1;\n"
+                      + value_set
                     );
-        t.add_member( std::string("    operator=: (inout this, that) = {\n")
-                    + "        _storage = _;\n"
-                    + "        _discriminator = _;\n"
-                    + value_set
+        t.add_member( "    operator=: (inout this, that) = {\n"
+                      "        _storage = _;\n"
+                      "        _discriminator = _;\n"
+                      + value_set
                     );
     }
 }
@@ -1419,8 +1459,12 @@ apply_metafunctions: (
     for  rtype.get_members()
     do   (m)
     {
-        m.require( !m.name().starts_with("_") || m.name().ssize() == 1,
-                    "a type that applies a metafunction cannot have a body that declares a name that starts with '_' - those names are reserved for the metafunction implementation");
+        m.require( 
+            !m.name().starts_with("_") || m.name().ssize() == 1,
+            "a type that applies a metafunction cannot have a body that declares "
+            "a name that starts with '_' - those names are reserved for the "
+            "metafunction implementation"
+        );
     }
 
     //  For each metafunction, apply it
@@ -1491,7 +1535,12 @@ apply_metafunctions: (
         }
         else {
             error( "unrecognized metafunction name: " + name );
-            error( "(temporary alpha limitation) currently the supported names are: interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, struct, enum, flag_enum, union, cpp1_rule_of_zero, print" );
+            error( 
+                "(temporary alpha limitation) currently the supported names are: "
+                "interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, "
+                "copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, "
+                "struct, enum, flag_enum, union, cpp1_rule_of_zero, print"
+            );
             return false;
         }
 

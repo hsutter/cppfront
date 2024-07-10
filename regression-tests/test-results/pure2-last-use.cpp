@@ -1298,7 +1298,7 @@ auto const& x{cpp2_new<int>(0)};
 #line 790 "pure2-last-use.cpp2"
 auto issue_962(cpp2::impl::in<::std::string> s) -> void{
   using ::std::string;
-  std::cout << ("A: " + cpp2::to_string(s)) << std::endl;
+  std::cout << "" + ("A: " + cpp2::to_string(s)) + "" << std::endl;
 }
 
 #line 795 "pure2-last-use.cpp2"

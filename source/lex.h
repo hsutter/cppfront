@@ -1733,7 +1733,9 @@ auto lex_line(
                                 );
                                 return {};
                             }
-                            mutable_line.replace( i, j+1, s );
+                            //  The reason for the ""+ and +"" is in case of adjacent string literals,
+                            //  so they concatenate. These extras could be optimized away in the future.
+                            mutable_line.replace( i, j+1, "\"\" + " + s + "+ \"\"" );
 
                             reset_processing_of_the_line();
                         }

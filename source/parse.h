@@ -6931,7 +6931,7 @@ private:
             }
 
             //  String literals can have multiple chunks, such as "xyzzy" "plugh"
-            //  (in Cpp2 these are merged in the preprocessor, in Cpp2 they're in the grammar)
+            //  (in Cpp1 these are merged in the preprocessor, in Cpp2 they're in the grammar)
             if (n->pieces.front()->type() == lexeme::StringLiteral) {
                 while (curr().type() == lexeme::StringLiteral) {
                     n->pieces.push_back(&curr());

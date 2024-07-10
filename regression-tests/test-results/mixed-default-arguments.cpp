@@ -27,7 +27,7 @@ auto main() -> int;
 
 #line 5 "mixed-default-arguments.cpp2"
 auto cxx2(cpp2::impl::in<int> x, cpp2::impl::in<std::string> y) -> void{
-    std::cout << (cpp2::to_string(x) + " \"" + cpp2::to_string(y) + "\"\n");
+    std::cout << "" + (cpp2::to_string(x) + " \"" + cpp2::to_string(y) + "\"\n") + "";
 }
 
 #line 9 "mixed-default-arguments.cpp2"
