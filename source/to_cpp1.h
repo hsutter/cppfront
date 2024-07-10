@@ -1699,10 +1699,9 @@ public:
             pos = n.position();
         }
 
-        assert(n.literal);
-        emit(*n.literal);
-        if (n.user_defined_suffix) {
-            emit(*n.user_defined_suffix);
+        for (auto p : n.pieces) {
+            assert(p);
+            emit(*p);
         }
     }
 
@@ -3458,7 +3457,7 @@ public:
                 {
                     if (auto lit = i->expr_list->expressions.front().expr->get_literal();
                         lit
-                        && lit->literal->type() == lexeme::DecimalLiteral
+                        && lit->get_token()->type() == lexeme::DecimalLiteral
                         )
                     {
                         prefix.emplace_back( "CPP2_ASSERT_IN_BOUNDS_LITERAL(", i->op->position() );
@@ -3561,7 +3560,7 @@ public:
                 && is_literal(t->type())
                 && t->type() != lexeme::StringLiteral
                 && t->type() != lexeme::FloatLiteral
-                && !std::get<primary_expression_node::literal>(p->expr)->user_defined_suffix
+                && !std::get<primary_expression_node::literal>(p->expr)->has_user_defined_suffix()
                 && std::ssize(n.ops) > 0
                 && *n.ops[0].op == "as"
                 )

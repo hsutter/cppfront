@@ -186,26 +186,53 @@ struct primary_expression_node
 
 
 struct literal_node {
-    token const* literal             = {};
-    token const* user_defined_suffix = {};
+    //  A literal is represented as a sequence of tokens:
+    //      - length 1: a literal (most common)
+    //      - length 2: a literal and a user-defined suffix
+    //      - length >= 2: a series of one or more of either of the above for string literals
+    std::vector <token const*> pieces = {};
 
     //  API
     //
     auto get_token() const
         -> token const*
     {
-        return literal;
+        assert(!pieces.empty());
+        return pieces.front();
     }
 
     auto to_string() const
         -> std::string
     {
-        assert (literal);
-        auto ret = literal->to_string();
-        if (user_defined_suffix) {
-            ret += user_defined_suffix->to_string();
+        assert(!pieces.empty());
+        auto ret = std::string{};
+
+        for (bool first = true; auto p : pieces)
+        {
+            assert(p);
+
+            //  Add a space to non-first pieces that start with " (i.e., not a UDL suffix)
+            if (
+                !std::exchange(first, false)
+                && p->as_string_view().starts_with("\"")
+                ) 
+            {
+                ret += " ";
+            }
+
+            ret += *p;
         }
+
         return ret;
+    }
+
+    auto has_user_defined_suffix()
+        -> bool
+    {
+        return
+            std::ssize(pieces) > 1
+            && !pieces[1]->as_string_view().starts_with("\"")
+            ;
     }
 
     //  Internals
@@ -213,17 +240,16 @@ struct literal_node {
     auto position() const
         -> source_position
     {
-        assert (literal);
-        return literal->position();
+        assert(!pieces.empty());
+        return get_token()->position();
     }
 
     auto visit(auto& v, int depth) -> void
     {
         v.start(*this, depth);
-        assert (literal);
-        literal->visit(v, depth+1);
-        if (user_defined_suffix) {
-            user_defined_suffix->visit(v, depth+1);
+        for (auto p : pieces) {
+            assert(p);
+            p->visit(v, depth+1);
         }
         v.end(*this, depth);
     }
@@ -4617,18 +4643,7 @@ auto pretty_print_visualize(primary_expression_node const& n, int indent)
 auto pretty_print_visualize(literal_node const& n, int)
     -> std::string
 {
-    //  TODO: This is an initial visualizer implementation, and still
-    //        skips a few rarer things (such as raw string literals)
-
-    assert(n.literal);
-
-    auto ret = n.literal->to_string();
-
-    if (n.user_defined_suffix) {
-        ret += n.user_defined_suffix->as_string_view();
-    }
-
-    return ret;
+    return n.to_string();
 }
 
 
@@ -6908,12 +6923,26 @@ private:
     {
         if (is_literal(curr().type())) {
             auto n = std::make_unique<literal_node>();
-            n->literal = &curr();
+            n->pieces.push_back( &curr() );
             next();
             if (curr().type() == lexeme::UserDefinedLiteralSuffix) {
-                n->user_defined_suffix = &curr();
+                n->pieces.push_back(&curr());
                 next();
             }
+
+            //  String literals can have multiple chunks, such as "xyzzy" "plugh"
+            //  (in Cpp2 these are merged in the preprocessor, in Cpp2 they're in the grammar)
+            if (n->pieces.front()->type() == lexeme::StringLiteral) {
+                while (curr().type() == lexeme::StringLiteral) {
+                    n->pieces.push_back(&curr());
+                    next();
+                    if (curr().type() == lexeme::UserDefinedLiteralSuffix) {
+                        n->pieces.push_back(&curr());
+                        next();
+                    }
+                }
+            }
+
             return n;
         }
         return {};
