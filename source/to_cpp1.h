@@ -1646,6 +1646,8 @@ public:
             && (
                 n.type() == lexeme::Cpp2FixedType
                 || n == "finally"
+                || n == "cpp1_ref"
+                || n == "cpp1_rvalue_ref"
                 )
             )
         {
