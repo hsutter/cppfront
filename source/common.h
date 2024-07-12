@@ -375,6 +375,46 @@ auto is_separator_or(auto pred, char c)
 }
 
 
+auto peek(
+    std::string_view line,
+    int i,
+    int num
+    )
+{
+    return
+        (i + num < std::ssize(line) && i + num >= 0)
+        ? line[i + num]
+        : '\0';
+}
+
+
+//G encoding-prefix: one of
+//G     'u8' 'u' 'uR' 'u8R' 'U' 'UR' 'L' 'LR' 'R'
+//G
+auto is_encoding_prefix_and(std::string_view line, int i, char next) {
+    auto peek1 = peek(line, i, 1);
+    auto peek2 = peek(line, i, 2);
+    auto peek3 = peek(line, i, 3);
+    if (line[i] == next) { return 1; } // "
+    else if (line[i] == 'u') {
+        if (peek1 == next) { return 2; } // u"
+        else if (peek1 == '8' && peek2 == next) { return 3; } // u8"
+        else if (peek1 == 'R' && peek2 == next) { return 3; } // uR"
+        else if (peek1 == '8' && peek2 == 'R' && peek3 == next) { return 4; } // u8R"
+    }
+    else if (line[i] == 'U') {
+        if (peek1 == next) { return 2; } // U"
+        else if (peek1 == 'R' && peek2 == next) { return 3; } // UR"
+    }
+    else if (line[i] == 'L') {
+        if (peek1 == next) { return 2; } // L"
+        else if (peek1 == 'R' && peek2 == next) { return 3; } // LR"
+    }
+    else if (line[i] == 'R' && peek1 == next) { return 2; } // R"
+    return 0;
+};
+
+
 //  Bool to string
 //
 template<typename T>

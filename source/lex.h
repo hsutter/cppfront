@@ -1236,29 +1236,6 @@ auto lex_line(
         auto peek2 = peek(2);
         auto peek3 = peek(3);
 
-        //G encoding-prefix: one of
-        //G     'u8' 'u' 'uR' 'u8R' 'U' 'UR' 'L' 'LR' 'R'
-        //G
-        auto is_encoding_prefix_and = [&](char next) {
-            if (line[i] == next)                                        { return 1; } // "
-            else if (line[i] == 'u') {
-                if (peek1 == next)                                      { return 2; } // u"
-                else if (peek1 == '8' && peek2 == next)                 { return 3; } // u8"
-                else if (peek1 == 'R' && peek2 == next)                 { return 3; } // uR"
-                else if (peek1 == '8' && peek2 == 'R' && peek3 == next) { return 4; } // u8R"
-            }
-            else if (line[i] == 'U') {
-                if ( peek1 == next)                                     { return 2; } // U"
-                else if (peek1 == 'R' && peek2 == next)                 { return 3; } // UR"
-            }
-            else if (line[i] == 'L') {
-                if ( peek1 == next )                                    { return 2; } // L"
-                else if (peek1 == 'R' && peek2 == next)                 { return 3; } // LR"
-            }
-            else if (line[i] == 'R' && peek1 == next)                   { return 2; } // R"
-            return 0;
-        };
-
         //  If we're currently in a multiline comment,
         //  the only thing to look for is the */ comment end
         //
@@ -1728,7 +1705,7 @@ auto lex_line(
                 //G interpolation:
                 //G     '(' expression ')' '$'
                 //G
-                else if (auto j = is_encoding_prefix_and('\"')) {
+                else if (auto j = is_encoding_prefix_and(line, i, '\"')) {
                     // if peek(j-2) is 'R' it means that we deal with raw-string literal
                     if (peek(j-2) == 'R') {
                         auto seq_pos = i + j;
@@ -1805,7 +1782,7 @@ auto lex_line(
                 //G     c-char
                 //G     c-char-seq c-char
                 //G
-                else if (auto j = is_encoding_prefix_and('\'')) {
+                else if (auto j = is_encoding_prefix_and(line, i, '\'')) {
                     auto len = peek_is_sc_char(j, '\'');
                     if (len > 0) {
                         j += len;

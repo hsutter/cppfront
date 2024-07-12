@@ -741,6 +741,15 @@ auto process_cpp2_line(
             break;default: ;
             }
         }
+        else if (
+            auto j = is_encoding_prefix_and(line, i, '\'');
+            j > 1
+            )
+        {
+            in_char_literal = true;
+            i += j-1;
+            prev = line[i-1];
+        }
         else
         {
             switch (line[i])
