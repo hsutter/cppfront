@@ -893,7 +893,7 @@ auto newline_pos{CPP2_UFCS(find)(source, '\n')};
                 *cpp2::impl::assert_not_null(generated_tokens)
               ));
         if (!(ret.value())) {
-            error("" + ("parse failed - the source string is not a valid statement:\n" + cpp2::to_string(cpp2::move(original_source))) + "");
+            error("parse failed - the source string is not a valid statement:\n" + cpp2::to_string(cpp2::move(original_source)) + "");
         }return std::move(ret.value()); 
     }
 
@@ -921,7 +921,7 @@ auto newline_pos{CPP2_UFCS(find)(source, '\n')};
     {
         auto message {cpp2::impl::as_<std::string>(msg)}; 
         if (!(CPP2_UFCS(empty)(metafunction_name))) {
-            message = "" + ("while applying @" + cpp2::to_string(metafunction_name) + " - " + cpp2::to_string(message)) + "";
+            message = "while applying @" + cpp2::to_string(metafunction_name) + " - " + cpp2::to_string(message) + "";
         }
         static_cast<void>(CPP2_UFCS(emplace_back)((*cpp2::impl::assert_not_null(errors)), position(), cpp2::move(message)));
     }
@@ -930,7 +930,7 @@ auto newline_pos{CPP2_UFCS(find)(source, '\n')};
     auto compiler_services::report_violation(auto const& msg) const& -> void{
         error(msg);
         throw(std::runtime_error(
-            "" + ("  ==> programming bug found in metafunction @" + cpp2::to_string(metafunction_name) + " ") + ""
+            "  ==> programming bug found in metafunction @" + cpp2::to_string(metafunction_name) + " "
             "- contract violation - see previous errors"
         ));
     }
@@ -1279,8 +1279,8 @@ declaration::declaration(declaration const& that)
         for ( 
              auto const& m : get_members() ) {
             CPP2_UFCS(require)(m, !(CPP2_UFCS(has_name)(m, name)), 
-                       "" + ("in a '" + cpp2::to_string(get_metafunction_name()) + "' type, the name '" + cpp2::to_string(name) + "' ") + ""
-                       "" + ("is reserved for use by the '" + cpp2::to_string(get_metafunction_name()) + "' implementation") + ""
+                       "in a '" + cpp2::to_string(get_metafunction_name()) + "' type, the name '" + cpp2::to_string(name) + "' "
+                       "is reserved for use by the '" + cpp2::to_string(get_metafunction_name()) + "' implementation"
             );
         }
         if constexpr (!(CPP2_PACK_EMPTY(etc))) {
@@ -1630,11 +1630,11 @@ auto cpp2_struct(meta::type_declaration& t) -> void
         else {if (CPP2_UFCS(is_object)(m)) {
             auto mo {CPP2_UFCS(as_object)(m)}; 
             if (CPP2_UFCS(name)(mo) != "this") {
-                ctor_params += "" + (cpp2::to_string(CPP2_UFCS(name)(mo)) + "_, ") + "";
-                ctor_inits  += "" + (cpp2::to_string(CPP2_UFCS(name)(mo)) + " = " + cpp2::to_string(CPP2_UFCS(name)(mo)) + "_; ") + "";
+                ctor_params += "" + cpp2::to_string(CPP2_UFCS(name)(mo)) + "_, ";
+                ctor_inits  += "" + cpp2::to_string(CPP2_UFCS(name)(mo)) + " = " + cpp2::to_string(CPP2_UFCS(name)(mo)) + "_; ";
             }
             else {
-                ctor_inits += "" + (cpp2::to_string(CPP2_UFCS(type)(mo)) + " = (); ") + "";
+                ctor_inits += "" + cpp2::to_string(CPP2_UFCS(type)(mo)) + " = (); ";
             }
             found_member_without_initializer |= !(CPP2_UFCS(has_initializer)(cpp2::move(mo)));
         }}
@@ -1646,7 +1646,7 @@ auto cpp2_struct(meta::type_declaration& t) -> void
     {
         //  Then to enable construction from corresponding values
         //  requires a constructor... an exception to the rule of zero
-        CPP2_UFCS(add_member)(t, "" + ("    operator=: (implicit out this, " + cpp2::to_string(cpp2::move(ctor_params)) + ") = { " + cpp2::to_string(cpp2::move(ctor_inits)) + " }") + "");
+        CPP2_UFCS(add_member)(t, "    operator=: (implicit out this, " + cpp2::to_string(cpp2::move(ctor_params)) + ") = { " + cpp2::to_string(cpp2::move(ctor_inits)) + " }");
 
         //  And if all members had initializers, we need a default constructor
         if (!(cpp2::move(found_member_without_initializer))) {
@@ -1706,7 +1706,7 @@ std::string value{"-1"};
         auto is_default_or_numeric {is_empty_or_a_decimal_number(init)}; 
         found_non_numeric |= !(CPP2_UFCS(empty)(init)) && !(is_default_or_numeric);
         CPP2_UFCS(require)(m, !(cpp2::move(is_default_or_numeric)) || !(found_non_numeric) || CPP2_UFCS(has_name)(mo, "none"), 
-            "" + (cpp2::to_string(CPP2_UFCS(name)(mo)) + ": enumerators with non-numeric values must come after all default and numeric values") + "");
+            "" + cpp2::to_string(CPP2_UFCS(name)(mo)) + ": enumerators with non-numeric values must come after all default and numeric values");
 
         nextval(value, cpp2::move(init));
 
@@ -1795,18 +1795,18 @@ std::string value{"-1"};
     }
 
     //  Generate all the private implementation
-    CPP2_UFCS(add_member)(t, "" + ("    _value            : " + cpp2::to_string(underlying_type.value()) + ";") + "");
+    CPP2_UFCS(add_member)(t, "    _value            : " + cpp2::to_string(underlying_type.value()) + ";");
     CPP2_UFCS(add_member)(t, "    private operator= : (implicit out this, _val: i64) == "
-                                            "" + ("_value = cpp2::unsafe_narrow<" + cpp2::to_string(underlying_type.value()) + ">(_val);") + "");
+                                            "_value = cpp2::unsafe_narrow<" + cpp2::to_string(underlying_type.value()) + ">(_val);");
 
     //  Generate the bitwise operations
     if (bitwise) {
         CPP2_UFCS(add_member)(t, "    operator|=: ( inout this, that )                 == _value |= that._value;");
         CPP2_UFCS(add_member)(t, "    operator&=: ( inout this, that )                 == _value &= that._value;");
         CPP2_UFCS(add_member)(t, "    operator^=: ( inout this, that )                 == _value ^= that._value;");
-        CPP2_UFCS(add_member)(t, "" + ("    operator| : (       this, that ) -> " + cpp2::to_string(CPP2_UFCS(name)(t)) + "  == _value |  that._value;") + "");
-        CPP2_UFCS(add_member)(t, "" + ("    operator& : (       this, that ) -> " + cpp2::to_string(CPP2_UFCS(name)(t)) + "  == _value &  that._value;") + "");
-        CPP2_UFCS(add_member)(t, "" + ("    operator^ : (       this, that ) -> " + cpp2::to_string(CPP2_UFCS(name)(t)) + "  == _value ^  that._value;") + "");
+        CPP2_UFCS(add_member)(t, "    operator| : (       this, that ) -> " + cpp2::to_string(CPP2_UFCS(name)(t)) + "  == _value |  that._value;");
+        CPP2_UFCS(add_member)(t, "    operator& : (       this, that ) -> " + cpp2::to_string(CPP2_UFCS(name)(t)) + "  == _value &  that._value;");
+        CPP2_UFCS(add_member)(t, "    operator^ : (       this, that ) -> " + cpp2::to_string(CPP2_UFCS(name)(t)) + "  == _value ^  that._value;");
         CPP2_UFCS(add_member)(t, "    has       : (       this, that ) -> bool         == _value &  that._value;");
         CPP2_UFCS(add_member)(t, "    set       : ( inout this, that )                 == _value |= that._value;");
         CPP2_UFCS(add_member)(t, "    clear     : ( inout this, that )                 == _value &= that._value~;");
@@ -1814,12 +1814,12 @@ std::string value{"-1"};
 
     //  Add the enumerators
     for ( auto const& e : enumerators ) {
-        CPP2_UFCS(add_member)(t, "" + ("    " + cpp2::to_string(e.name) + " : " + cpp2::to_string(CPP2_UFCS(name)(t)) + " == " + cpp2::to_string(e.value) + ";") + "");
+        CPP2_UFCS(add_member)(t, "    " + cpp2::to_string(e.name) + " : " + cpp2::to_string(CPP2_UFCS(name)(t)) + " == " + cpp2::to_string(e.value) + ";");
     }
 
     //  Generate the common functions
-    CPP2_UFCS(add_member)(t, "" + ("    get_raw_value     : (this) -> " + cpp2::to_string(cpp2::move(underlying_type.value())) + " == _value;") + "");
-    CPP2_UFCS(add_member)(t, "" + ("    operator=         : (out this) == { _value = " + cpp2::to_string(cpp2::move(default_value)) + "._value; }") + "");
+    CPP2_UFCS(add_member)(t, "    get_raw_value     : (this) -> " + cpp2::to_string(cpp2::move(underlying_type.value())) + " == _value;");
+    CPP2_UFCS(add_member)(t, "    operator=         : (out this) == { _value = " + cpp2::to_string(cpp2::move(default_value)) + "._value; }");
     CPP2_UFCS(add_member)(t, "    operator=         : (out this, that) == { }");
     CPP2_UFCS(add_member)(t, "    operator<=>       : (this, that) -> std::strong_ordering;");
 {
@@ -1840,13 +1840,13 @@ std::string to_string{"    to_string: (this) -> std::string = { \n"};
             if (e.name != "_") {// ignore unnamed values
                 if (bitwise) {
                     if (e.name != "none") {
-                        to_string += "" + ("    if (this & " + cpp2::to_string(e.name) + ") == " + cpp2::to_string(e.name) + " { ") + ""
-                                             "" + ("_ret += _comma + \"" + cpp2::to_string(e.name) + "\"; _comma = \", \"; ") + ""
+                        to_string += "    if (this & " + cpp2::to_string(e.name) + ") == " + cpp2::to_string(e.name) + " { "
+                                             "_ret += _comma + \"" + cpp2::to_string(e.name) + "\"; _comma = \", \"; "
                                          "}\n";
                     }
                 }
                 else {
-                    to_string += "" + ("    if this == " + cpp2::to_string(e.name) + " { return \"" + cpp2::to_string(e.name) + "\"; }\n") + "";
+                    to_string += "    if this == " + cpp2::to_string(e.name) + " { return \"" + cpp2::to_string(e.name) + "\"; }\n";
                 }
             }
         }
@@ -1855,7 +1855,7 @@ std::string to_string{"    to_string: (this) -> std::string = { \n"};
             to_string += "    return _ret+\")\";\n}\n";
         }
         else {
-            to_string += "" + ("    return \"invalid " + cpp2::to_string(CPP2_UFCS(name)(t)) + " value\";\n}\n") + "";
+            to_string += "    return \"invalid " + cpp2::to_string(CPP2_UFCS(name)(t)) + " value\";\n}\n";
         }
 
         CPP2_UFCS(add_member)(t, cpp2::move(to_string));
@@ -1970,14 +1970,14 @@ std::string storage{"    _storage: cpp2::aligned_storage<cpp2::max( "};
     {
         for ( 
               auto const& e : alternatives ) {
-            storage += "" + ("sizeof(" + cpp2::to_string(e.type) + "), ") + "";
+            storage += "sizeof(" + cpp2::to_string(e.type) + "), ";
         }
 
         storage += "), cpp2::max( ";
 
         for ( 
               auto const& e : alternatives ) {
-            storage += "" + ("alignof(" + cpp2::to_string(e.type) + "), ") + "";
+            storage += "alignof(" + cpp2::to_string(e.type) + "), ";
         }
 
         storage += " )> = ();\n";
@@ -1987,33 +1987,33 @@ std::string storage{"    _storage: cpp2::aligned_storage<cpp2::max( "};
 
     //  Provide discriminator
 #line 1362 "reflect.h2"
-    CPP2_UFCS(add_member)(t, "" + ("    _discriminator: " + cpp2::to_string(cpp2::move(discriminator_type)) + " = -1;\n") + "");
+    CPP2_UFCS(add_member)(t, "    _discriminator: " + cpp2::to_string(cpp2::move(discriminator_type)) + " = -1;\n");
 
     //  Add the alternatives: is_alternative, get_alternative, and set_alternative
     for ( 
          auto const& a : alternatives ) 
     {
-        CPP2_UFCS(add_member)(t, "" + ("    is_" + cpp2::to_string(a.name) + ": (this) -> bool = _discriminator == " + cpp2::to_string(a.value) + ";\n") + "");
+        CPP2_UFCS(add_member)(t, "    is_" + cpp2::to_string(a.name) + ": (this) -> bool = _discriminator == " + cpp2::to_string(a.value) + ";\n");
 
-        CPP2_UFCS(add_member)(t, "" + ("    " + cpp2::to_string(a.name) + ": (this) -> forward " + cpp2::to_string(a.type) + " pre(is_" + cpp2::to_string(a.name) + "()) = ") + ""
-                            "" + ("reinterpret_cast<* const " + cpp2::to_string(a.type) + ">(_storage&)*;\n") + ""
+        CPP2_UFCS(add_member)(t, "    " + cpp2::to_string(a.name) + ": (this) -> forward " + cpp2::to_string(a.type) + " pre(is_" + cpp2::to_string(a.name) + "()) = "
+                            "reinterpret_cast<* const " + cpp2::to_string(a.type) + ">(_storage&)*;\n"
                     );
 
-        CPP2_UFCS(add_member)(t, "" + ("    " + cpp2::to_string(a.name) + ": (inout this) -> forward " + cpp2::to_string(a.type) + " pre(is_" + cpp2::to_string(a.name) + "()) = ") + ""
-                            "" + ("reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&)*;\n") + ""
+        CPP2_UFCS(add_member)(t, "    " + cpp2::to_string(a.name) + ": (inout this) -> forward " + cpp2::to_string(a.type) + " pre(is_" + cpp2::to_string(a.name) + "()) = "
+                            "reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&)*;\n"
                     );
 
-        CPP2_UFCS(add_member)(t, "" + ("    set_" + cpp2::to_string(a.name) + ": (inout this, _value: " + cpp2::to_string(a.type) + ") = { ") + ""
-                            "" + ("if !is_" + cpp2::to_string(a.name) + "() { _destroy(); std::construct_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&), _value); } ") + ""
-                            "" + ("else { reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&)* = _value; } ") + ""
-                            "" + ("_discriminator = " + cpp2::to_string(a.value) + "; ") + ""
+        CPP2_UFCS(add_member)(t, "    set_" + cpp2::to_string(a.name) + ": (inout this, _value: " + cpp2::to_string(a.type) + ") = { "
+                            "if !is_" + cpp2::to_string(a.name) + "() { _destroy(); std::construct_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&), _value); } "
+                            "else { reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&)* = _value; } "
+                            "_discriminator = " + cpp2::to_string(a.value) + "; "
                             "}\n"
                     );
 
-        CPP2_UFCS(add_member)(t, "" + ("    set_" + cpp2::to_string(a.name) + ": (inout this, forward _args...: _) = { ") + ""
-                            "" + ("if !is_" + cpp2::to_string(a.name) + "() { _destroy(); std::construct_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&), _args...); } ") + ""
-                            "" + (" else { reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&)* = :" + cpp2::to_string(a.type) + " = (_args...); } ") + ""
-                            "" + ("_discriminator = " + cpp2::to_string(a.value) + "; ") + ""
+        CPP2_UFCS(add_member)(t, "    set_" + cpp2::to_string(a.name) + ": (inout this, forward _args...: _) = { "
+                            "if !is_" + cpp2::to_string(a.name) + "() { _destroy(); std::construct_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&), _args...); } "
+                            " else { reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&)* = :" + cpp2::to_string(a.type) + " = (_args...); } "
+                            "_discriminator = " + cpp2::to_string(a.value) + "; "
                             "}\n"
                     );
     }
@@ -2026,7 +2026,7 @@ std::string destroy{"    private _destroy: (inout this) = {\n"};
     {
         for ( 
               auto const& a : alternatives ) {
-            destroy += "" + ("        if _discriminator == " + cpp2::to_string(a.value) + " { std::destroy_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&) ); }\n") + "";
+            destroy += "        if _discriminator == " + cpp2::to_string(a.value) + " { std::destroy_at( reinterpret_cast<*" + cpp2::to_string(a.type) + ">(_storage&) ); }\n";
         }
 
         destroy += "        _discriminator = -1;\n"
@@ -2050,7 +2050,7 @@ std::string value_set{""};
     {
         for ( 
               auto const& a : cpp2::move(alternatives) ) {
-            value_set += "" + ("        if that.is_" + cpp2::to_string(a.name) + "() { set_" + cpp2::to_string(a.name) + "( that." + cpp2::to_string(a.name) + "() ); }\n") + "";
+            value_set += "        if that.is_" + cpp2::to_string(a.name) + "() { set_" + cpp2::to_string(a.name) + "( that." + cpp2::to_string(a.name) + "() ); }\n";
         }
         value_set += "    }\n";
 

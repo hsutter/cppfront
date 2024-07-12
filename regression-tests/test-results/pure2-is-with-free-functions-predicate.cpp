@@ -32,15 +32,15 @@ auto fun(auto const& v) -> void;
 auto fun(auto const& v) -> void{
 #line 2 "pure2-is-with-free-functions-predicate.cpp2"
     if (cpp2::impl::is(v, (pred_i))) {
-        std::cout << "" + (cpp2::to_string(v) + " is integer bigger than 3") + "" << std::endl;
+        std::cout << "" + cpp2::to_string(v) + " is integer bigger than 3" << std::endl;
     }
 
     if (cpp2::impl::is(v, (pred_d))) {
-        std::cout << "" + (cpp2::to_string(v) + " is double bigger than 3") + "" << std::endl;
+        std::cout << "" + cpp2::to_string(v) + " is double bigger than 3" << std::endl;
     }
 
     if (cpp2::impl::is(v, (pred_))) {
-        std::cout << "" + (cpp2::to_string(v) + " is bigger than 3") + "" << std::endl;
+        std::cout << "" + cpp2::to_string(v) + " is bigger than 3" << std::endl;
     }
 }
 

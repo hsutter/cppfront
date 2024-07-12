@@ -161,6 +161,8 @@ struct string_parts {
 
     void clear() { parts.clear(); }
 
+    auto empty() const { return parts.empty(); }
+
     auto generate() const -> std::string
     {
         if (parts.empty()) {
@@ -412,7 +414,7 @@ auto is_encoding_prefix_and(std::string_view line, int i, char next) {
     }
     else if (line[i] == 'R' && peek1 == next) { return 2; } // R"
     return 0;
-};
+}
 
 
 //  Bool to string

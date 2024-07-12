@@ -376,7 +376,6 @@ auto expand_string_literal(
 )
     -> std::string
 {
-    auto expanded_interpolation = false;
     auto const length = std::ssize(text);
 
     assert(length >= 2);
@@ -453,8 +452,13 @@ auto expand_string_literal(
 
             //  'open' is now at the matching (
 
-            //  Put the next non-empty non-interpolated chunk straight into ret
-            if (open != current_start) {
+            //  Put the next non-interpolated chunk straight into ret
+            //  unless it's an empty internal "" chunk
+            if (
+                open != current_start
+                || parts.empty()
+                )
+            {
                 parts.add_string(text.substr(current_start, open - current_start));
             }
 
@@ -506,7 +510,6 @@ auto expand_string_literal(
             parts.add_code("cpp2::to_string" + chunk);
 
             current_start = pos+1;
-            expanded_interpolation = true;
         }
     }
 
@@ -517,18 +520,8 @@ auto expand_string_literal(
     );
 
     //  Put the final non-interpolated chunk straight into ret
-    if (current_start < std::ssize(text)-1) {
-        parts.add_string(text.substr(current_start, std::ssize(text)-current_start-1));
-    }
+    parts.add_string(text.substr(current_start, std::ssize(text)-current_start-1));
 
-    //  Only for expand_string_literal: If we expanded any interpolations,
-    //  parenthesize the result to support cases like "(1)$+".append("2 is 2")
-    //  But don't do this for expand_raw_string_literal, where injecting a ) can
-    //  interfere with the closing sequence... raw literals really are raw-er
-    if (expanded_interpolation) {
-        return "(" + parts.generate() + ")";
-    }
-    //  Else
     return parts.generate();
 }
 
@@ -1766,9 +1759,7 @@ auto lex_line(
                                 );
                                 return {};
                             }
-                            //  The reason for the ""+ and +"" is in case of adjacent string literals,
-                            //  so they concatenate. These extras could be optimized away in the future.
-                            mutable_line.replace( i, j+1, "\"\" + " + s + "+ \"\"" );
+                            mutable_line.replace( i, j+1, s );
 
                             reset_processing_of_the_line();
                         }
