@@ -6546,7 +6546,9 @@ private:
     //G     'const'
     //G     '*'
     //G
-    auto type_id()
+    auto type_id(
+        bool allow_omitting_type_name = false
+    )
         -> std::unique_ptr<type_id_node>
     {
         auto n = std::make_unique<type_id_node>();
@@ -6579,7 +6581,7 @@ private:
             n->id  = std::move(id);
             assert (n->id.index() == type_id_node::unqualified);
         }
-        else {
+        else if (!allow_omitting_type_name) {
             return {};
         }
         if (curr().type() == lexeme::Multiply) {
@@ -8524,8 +8526,8 @@ private:
             }
         }
 
-        //  Or just a type-id, declaring a non-pointer object
-        else if (auto t = type_id())
+        //  Or just a (possibly empty == deduced) type-id
+        else if (auto t = type_id(true))
         {
             if (
                 t->get_token()
@@ -8545,6 +8547,7 @@ private:
 
             n->type = std::move(t);
             assert (n->is_object());
+            deduced_type = n->has_wildcard_type();
 
             if (!n->metafunctions.empty()) {
                 errors.emplace_back(
@@ -8558,14 +8561,6 @@ private:
                 error("C-style array types are not allowed, use std::array instead");
                 return {};
             }
-        }
-
-        //  Or nothing, declaring an object of deduced type,
-        //  which we'll represent using an empty type-id
-        else {
-            n->type = std::make_unique<type_id_node>();
-            assert (n->is_object());
-            deduced_type = true;
         }
 
         //  If we've already validated that this is a function where the parameter
