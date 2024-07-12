@@ -930,21 +930,27 @@ auto lex_line(
         return 0;
     };
 
+    //G simple-hexadecimal-digit-sequence:
+    //G     hexadecimal-digit
+    //G     simple-hexadecimal-digit-sequence hexadecimal-digit
+    //G
     //G hexadecimal-escape-sequence:
     //G     '\x' hexadecimal-digit
     //G     hexadecimal-escape-sequence hexadecimal-digit
+    //G     '\x{' simple-hexadecimal-digit-sequence '}'
     //G
     auto peek_is_hexadecimal_escape_sequence = [&](int offset)
     {
         if (
-            peek(  offset) == '\\'
+            peek(offset) == '\\'
             && peek(1+offset) == 'x'
-            && (is_hexadecimal_digit(peek(2+offset))
-              || (peek(2+offset) == '{' && is_hexadecimal_digit(peek(3+offset)))
+            && (
+                is_hexadecimal_digit(peek(2+offset))
+                || (peek(2+offset) == '{' && is_hexadecimal_digit(peek(3+offset)))
+                )
             )
-        )
         {
-            bool has_bracket = peek(2+offset) == '{';
+            auto has_bracket = peek(2+offset) == '{';
             auto j = 3;
 
             if (has_bracket) { ++j; }
@@ -961,6 +967,11 @@ auto lex_line(
                 if (peek(j+offset) == '}') {
                     ++j;
                 } else {
+                    errors.emplace_back(
+                        source_position(lineno, i + offset),
+                        "invalid hexadecimal escape sequence - \\x{ must"
+                        " be followed by hexadecimal digits and a closing }"
+                    );
                     return 0;
                 }
             }
@@ -972,6 +983,7 @@ auto lex_line(
     //G universal-character-name:
     //G     '\u' hex-quad
     //G     '\U' hex-quad hex-quad
+    //G     '\u{' simple-hexadecimal-digit-sequence '}'
     //G
     //G hex-quad:
     //G     hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit
@@ -981,6 +993,7 @@ auto lex_line(
         if (
             peek(offset) == '\\'
             && peek(1 + offset) == 'u'
+            && peek(2 + offset) != '{'
             )
         {
             auto j = 2;
@@ -994,11 +1007,41 @@ auto lex_line(
             if (j == 6) { return j; }
             errors.emplace_back(
                 source_position( lineno, i + offset ),
-                "invalid universal character name (\\u must"
-                " be followed by 4 hexadecimal digits)"
+                "invalid universal character name - \\u without { must"
+                " be followed by 4 hexadecimal digits"
             );
         }
-        if (
+
+        else if (
+            peek(offset) == '\\'
+            && peek(1 + offset) == 'u'
+            && peek(2 + offset) == '{'
+            )
+        {
+            auto j = 4;
+
+            while (
+                peek(j + offset)
+                && is_hexadecimal_digit(peek(j + offset))
+                )
+            {
+                ++j;
+            }
+
+            if (peek(j + offset) == '}') {
+                ++j;
+            }
+            else {
+                errors.emplace_back(
+                    source_position(lineno, i + offset),
+                    "invalid universal character name - \\u{ must"
+                    " be followed by hexadecimal digits and a closing }"
+                );
+            }
+            return j;
+        }
+
+        else if (
             peek(offset) == '\\'
             && peek(1+offset) == 'U'
             )
@@ -1014,8 +1057,8 @@ auto lex_line(
             if (j == 10) { return j; }
             errors.emplace_back(
                 source_position(lineno, i+offset),
-                "invalid universal character name (\\U must"
-                    " be followed by 8 hexadecimal digits)"
+                "invalid universal character name - \\U must"
+                    " be followed by 8 hexadecimal digits"
             );
         }
         return 0;
