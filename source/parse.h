@@ -6485,19 +6485,24 @@ private:
         n->open_paren = open_paren;
         n->inside_initializer = inside_initializer;
 
-        if (auto dir = to_passing_style(curr());
-            (
-                dir == passing_style::out
-                || dir == passing_style::move
-                || dir == passing_style::forward
+        auto consume_optional_passing_style = [&] {
+            pass = passing_style::in;
+            if (auto dir = to_passing_style(curr());
+                (
+                    dir == passing_style::out
+                    || dir == passing_style::move
+                    || dir == passing_style::forward
+                    )
+                && peek(1)
+                && peek(1)->type() == lexeme::Identifier
                 )
-            && peek(1)
-            && peek(1)->type() == lexeme::Identifier
-            )
-        {
-            pass = dir;
-            next();
-        }
+            {
+                pass = dir;
+                next();
+            }
+        };
+
+        consume_optional_passing_style();
         auto x = expression();
 
         //  If this is an empty expression_list, we're done
@@ -6516,16 +6521,7 @@ private:
                 break;
             }
 
-            pass = passing_style::in;
-            if (auto dir = to_passing_style(curr());
-                dir == passing_style::out
-                || dir == passing_style::move
-                || dir == passing_style::forward
-                )
-            {
-                pass = dir;
-                next();
-            }
+            consume_optional_passing_style();
             auto expr = expression();
             if (!expr) {
                 error("invalid text in expression list", true, {}, true);

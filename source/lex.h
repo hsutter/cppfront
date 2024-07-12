@@ -935,8 +935,7 @@ auto lex_line(
     //G     simple-hexadecimal-digit-sequence hexadecimal-digit
     //G
     //G hexadecimal-escape-sequence:
-    //G     '\x' hexadecimal-digit
-    //G     hexadecimal-escape-sequence hexadecimal-digit
+    //G     '\x' simple-hexadecimal-digit-sequence
     //G     '\x{' simple-hexadecimal-digit-sequence '}'
     //G
     auto peek_is_hexadecimal_escape_sequence = [&](int offset)

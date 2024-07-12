@@ -101,16 +101,15 @@ In the above example, note the simple rule for branches: The local variable must
 
 ## <a id="heap"></a>Heap objects
 
-Objects can also be allocated on the heap using `#!cpp arena.new <T> (/*initializer, arguments*/)` where `arena` is any object that acts as a memory arena and provides a `#!cpp .new` function template. Two memory arena objects are provided in namespace `cpp2`:
+Objects can also be allocated on the heap using `#!cpp xxx.new <T> (/*initializer, arguments*/)` where `xxx` is any object that acts as a memory allocator and provides a `#!cpp .new` function template. Two memory allocators objects are provided in namespace `cpp2`:
 
 - `#!cpp unique.new<T>` calls `std::make_unique<T>` and returns a `std::unique_ptr<T>`.
 
 - `#!cpp shared.new<T>` calls `std::make_shared<T>` and returns a `std::shared_ptr<T>`.
 
-The default is `#!cpp unique.new` if you don't specify an arena object.
+The default is `#!cpp unique.new` if you don't specify an allocator object.
 
 For example (see [types](types.md) for more details about writing types):
-
 
 ``` cpp title="Heap allocation" hl_lines="3-6 10-11"
 f: () -> std::shared_ptr<widget>
