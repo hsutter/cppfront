@@ -8575,7 +8575,9 @@ private:
         {
             n->equal_sign = curr().position();
             n->initializer = statement(/*ignore semicolon_required*/ false, n->equal_sign);
-            assert( n->initializer && "ICE: should have already validated that there's a valid expression-statement here" );
+            if (!n->initializer) {
+                return {};
+            }
         }
 
         else
