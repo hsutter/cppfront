@@ -43,8 +43,10 @@
 
 //  If this implementation doesn't support source_location yet, disable it
 #include <version>
-#if !defined(_MSC_VER) && !defined(__cpp_lib_source_location)
-    #undef CPP2_USE_SOURCE_LOCATION
+
+#undef CPP2_USE_SOURCE_LOCATION
+#if defined(__cpp_lib_source_location)
+    #define CPP2_USE_SOURCE_LOCATION Yes
 #endif
 
 //  If the user requested making the entire C++ standard library available
@@ -553,15 +555,17 @@ auto pointer_eq(T const* a, T const* b) {
 //
 
 #ifdef CPP2_USE_SOURCE_LOCATION
-    #define CPP2_SOURCE_LOCATION_PARAM              , std::source_location where
-    #define CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT , std::source_location where = std::source_location::current()
-    #define CPP2_SOURCE_LOCATION_PARAM_SOLO         std::source_location where
+    #define CPP2_SOURCE_LOCATION_PARAM              , [[maybe_unused]] std::source_location where
+    #define CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT , [[maybe_unused]] std::source_location where = std::source_location::current()
+    #define CPP2_SOURCE_LOCATION_PARAM_SOLO         [[maybe_unused]] std::source_location where
     #define CPP2_SOURCE_LOCATION_ARG                , where
+    #define CPP2_SOURCE_LOCATION_VALUE              (cpp2::to_string(where.file_name()) + "(" + cpp2::to_string(where.line()) + ") " + where.function_name())
 #else
     #define CPP2_SOURCE_LOCATION_PARAM
     #define CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT
     #define CPP2_SOURCE_LOCATION_PARAM_SOLO
     #define CPP2_SOURCE_LOCATION_ARG
+    #define CPP2_SOURCE_LOCATION_VALUE              std::string("")
 #endif
 
 //  For C++23: make this std::string_view and drop the macro
@@ -1520,8 +1524,16 @@ inline constexpr auto as() -> auto
     return cpp2::to_string(CPP2_FORWARD(x));
 }
 
+//  Work around MSVC modules bugs: source_location doesn't work correctly if imported via a module
+#if defined(_MSC_VER) && defined(CPP2_IMPORT_STD)
+    #define CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT_AS
+    #define CPP2_SOURCE_LOCATION_ARG_AS
+#else
+    #define CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT_AS    CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT
+    #define CPP2_SOURCE_LOCATION_ARG_AS                   CPP2_SOURCE_LOCATION_ARG
+#endif
 template< typename C >
-auto as(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+auto as(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT_AS) -> decltype(auto)
     //  This "requires" list may need to be tweaked further. The idea is to have
     //  this function used for all the cases it's supposed to cover, but not
     //  hide user-supplied extensions (such as the ones later in this file for
@@ -1555,7 +1567,7 @@ auto as(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
         const C c = static_cast<C>(CPP2_FORWARD(x));
         type_safety.enforce(   // precondition check: must be round-trippable => not lossy
             static_cast<CPP2_TYPEOF(x)>(c) == x && (c < C{}) == (x < CPP2_TYPEOF(x){}),
-            "dynamic lossy narrowing conversion attempt detected" CPP2_SOURCE_LOCATION_ARG
+            "dynamic lossy narrowing conversion attempt detected" CPP2_SOURCE_LOCATION_ARG_AS
         );
         return CPP2_COPY(c);
     }

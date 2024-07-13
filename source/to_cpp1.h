@@ -147,14 +147,6 @@ static cmdline_processor::register_flag cmd_safe_comparisons(
     []{ flag_safe_comparisons = false; }
 );
 
-static auto flag_use_source_location = false;
-static cmdline_processor::register_flag cmd_enable_source_info(
-    2,
-    "add-source-info",
-    "Enable source_location information for contract checks",
-    []{ flag_use_source_location = true; }
-);
-
 static auto flag_cpp1_filename = std::string{};
 static cmdline_processor::register_flag cmd_cpp1_filename(
     8,
@@ -1307,10 +1299,6 @@ public:
             if (cpp1_filename.back() == 'h') {
                 printer.print_extra( "#ifndef " + cpp1_FILENAME+"_CPP2\n");
                 printer.print_extra( "#define " + cpp1_FILENAME+"_CPP2" + "\n\n" );
-            }
-
-            if (flag_use_source_location) {
-                printer.print_extra( "#define CPP2_USE_SOURCE_LOCATION Yes\n" );
             }
 
             if (flag_include_std) {
