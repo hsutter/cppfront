@@ -28,7 +28,9 @@ report_diff () {
     if [[ -n "$diff_output" ]]; then
         echo "            $error_msg:"
         echo "                $file"
-        printf "\n$diff_output\n\n" | tee -a "$patch_file"
+        # $diff_output cannot be put directly in the format string
+        # Otherwise \ might be interpreted as an escape character
+        printf "\n%s\n\n" "$diff_output" | tee -a "$patch_file"
         failure=1
     fi
 }
@@ -70,8 +72,7 @@ check_file () {
         report_diff "$file" \
             "Non-matching $description" \
             "$patch_file" \
-            --ignore-cr-at-eol \
-            --ignore-matching-lines="C:\\\\"
+            --ignore-cr-at-eol
     fi
 }
 

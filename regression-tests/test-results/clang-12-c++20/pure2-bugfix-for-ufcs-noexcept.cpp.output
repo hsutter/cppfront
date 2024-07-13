@@ -1,10 +1,17 @@
 pure2-bugfix-for-ufcs-noexcept.cpp2:5:26: error: lambda expression in an unevaluated operand
   static_assert(noexcept(CPP2_UFCS(swap)(t(), t())));// Fails on Clang 12 (lambda in unevaluated context) and GCC 10 (static assertion failed)
                          ^
+<<<<<<< HEAD
 ../../../include/cpp2util.h:1171:59: note: expanded from macro 'CPP2_UFCS'
 #define CPP2_UFCS(...)                                    CPP2_UFCS_(&,CPP2_UFCS_EMPTY,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
                                                           ^
 ../../../include/cpp2util.h:1138:66: note: expanded from macro 'CPP2_UFCS_'
+=======
+../../../include/cpp2util.h:2132:59: note: expanded from macro 'CPP2_UFCS'
+#define CPP2_UFCS(...)                                    CPP2_UFCS_(&,CPP2_UFCS_EMPTY,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
+                                                          ^
+../../../include/cpp2util.h:2099:66: note: expanded from macro 'CPP2_UFCS_'
+>>>>>>> origin/main
 #define CPP2_UFCS_(LAMBDADEFCAPT,SFINAE,MVFWD,QUALID,TEMPKW,...) \
                                                                  ^
 1 error generated.

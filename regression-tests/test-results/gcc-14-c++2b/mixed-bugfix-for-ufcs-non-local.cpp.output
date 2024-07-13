@@ -1,4 +1,5 @@
 In file included from mixed-bugfix-for-ufcs-non-local.cpp:6:
+<<<<<<< HEAD
 ../../../include/cpp2util.h:1139:1: error: lambda-expression in template parameter type
  1139 | [LAMBDADEFCAPT]< \
       | ^
@@ -37,5 +38,45 @@ mixed-bugfix-for-ufcs-non-local.cpp2:33:36: error: template argument 1 is invali
 ../../../include/cpp2util.h:1176:59: note: in expansion of macro ‘CPP2_UFCS_’
  1176 | #define CPP2_UFCS_NONLOCAL(...)                           CPP2_UFCS_(,CPP2_UFCS_IDENTITY,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
       |                                                           ^~~~~~~~~~
+=======
+../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
+ 2100 | template<typename T>
+      | ^
+../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
+ 2137 | class c_raii {
+      |                                                           ^         
+mixed-bugfix-for-ufcs-non-local.cpp2:13:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
+mixed-bugfix-for-ufcs-non-local.cpp2:13:36: error: template argument 1 is invalid
+../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
+ 2100 | template<typename T>
+      | ^
+../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
+ 2137 | class c_raii {
+      |                                                           ^         
+mixed-bugfix-for-ufcs-non-local.cpp2:21:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
+mixed-bugfix-for-ufcs-non-local.cpp2:21:36: error: template argument 1 is invalid
+../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
+ 2100 | template<typename T>
+      | ^
+../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
+ 2137 | class c_raii {
+      |                                                           ^         
+mixed-bugfix-for-ufcs-non-local.cpp2:31:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
+mixed-bugfix-for-ufcs-non-local.cpp2:31:36: error: template argument 1 is invalid
+../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
+ 2100 | template<typename T>
+      | ^
+../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
+ 2137 | class c_raii {
+      |                                                           ^         
+mixed-bugfix-for-ufcs-non-local.cpp2:33:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
+mixed-bugfix-for-ufcs-non-local.cpp2:33:36: error: template argument 1 is invalid
+../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
+ 2100 | template<typename T>
+      | ^
+../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
+ 2137 | class c_raii {
+      |                                                           ^         
+>>>>>>> origin/main
 mixed-bugfix-for-ufcs-non-local.cpp2:21:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
 mixed-bugfix-for-ufcs-non-local.cpp2:21:36: error: template argument 1 is invalid

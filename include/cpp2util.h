@@ -361,6 +361,32 @@ using longdouble = long double;
 using _schar     = signed char;      // normally use i8 instead
 using _uchar     = unsigned char;    // normally use u8 instead
 
+
+//-----------------------------------------------------------------------
+//
+//  Conveniences for expressing Cpp1 references (rarely useful)
+// 
+//  Note: Only needed in rare cases to take full control of matching a
+//        Cpp1 signature exactly. Most cases don't need this, for example
+//        a Cpp1 virtual function signature declaration like
+// 
+//              virtual void f(int&) const
+// 
+//        can already be directly overriden by a Cpp2 declaration of
+// 
+//              f: (override this, inout val : int)
+// 
+//        without any need to say cpp1_ref on the int parameter.
+// 
+//-----------------------------------------------------------------------
+//
+template <typename T>
+using cpp1_ref = std::add_lvalue_reference_t<T>;
+
+template <typename T>
+using cpp1_rvalue_ref = std::add_rvalue_reference_t<T>;
+
+
 //-----------------------------------------------------------------------
 //
 //  Helper for concepts
@@ -1035,6 +1061,10 @@ public:
     }
 };
 
+
+//  Stabilize line numbers for UFCS code that we know will generate
+//  errors for some compilers, to keep regression test outputs cleaner
+#line 1999
 
 //-----------------------------------------------------------------------
 //

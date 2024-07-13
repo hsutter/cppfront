@@ -82,7 +82,7 @@ auto main() -> int;
 
 #line 16 "pure2-types-that-parameters.cpp2"
     auto myclass::print() const& -> void{
-        std::cout << ("name '" + cpp2::to_string(name) + "', addr '" + cpp2::to_string(addr) + "'\n");
+        std::cout << "name '" + cpp2::to_string(name) + "', addr '" + cpp2::to_string(addr) + "'\n";
     }
 
 #line 25 "pure2-types-that-parameters.cpp2"

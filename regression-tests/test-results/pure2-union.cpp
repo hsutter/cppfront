@@ -200,7 +200,7 @@ auto print_name(cpp2::impl::in<name_or_number> non) -> void{
 auto main() -> int{
     name_or_number x {}; 
     std::cout << "sizeof(x) - alignof(x) == max(sizeof(fields))" 
-              << (" is " + cpp2::to_string(sizeof(x) - alignof(name_or_number) == std::max(sizeof(cpp2::i32), sizeof(std::string))) + "\n");
+              << " is " + cpp2::to_string(sizeof(x) - alignof(name_or_number) == std::max(sizeof(cpp2::i32), sizeof(std::string))) + "\n";
 
     CPP2_UFCS(print_name)(x);
 

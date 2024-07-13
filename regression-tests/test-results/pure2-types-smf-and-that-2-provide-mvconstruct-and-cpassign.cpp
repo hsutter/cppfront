@@ -119,7 +119,7 @@ auto main() -> int;
         cpp2::impl::in<std::string_view> prefix, 
         cpp2::impl::in<std::string_view> suffix
         ) const& -> void { 
-    std::cout << prefix << ("[ " + cpp2::to_string(name) + " | " + cpp2::to_string(addr) + " ]") << suffix;  }
+    std::cout << prefix << "[ " + cpp2::to_string(name) + " | " + cpp2::to_string(addr) + " ]" << suffix;  }
 
 #line 39 "pure2-types-smf-and-that-2-provide-mvconstruct-and-cpassign.cpp2"
 auto main() -> int{

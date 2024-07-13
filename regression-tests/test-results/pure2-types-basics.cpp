@@ -152,12 +152,12 @@ namespace N {
 
 #line 34 "pure2-types-basics.cpp2"
     auto myclass::print() const& -> void{
-        std::cout << ("    data: " + cpp2::to_string(data) + ", more: " + cpp2::to_string(more) + "\n");
+        std::cout << "    data: " + cpp2::to_string(data) + ", more: " + cpp2::to_string(more) + "\n";
     }
 
 #line 38 "pure2-types-basics.cpp2"
     auto myclass::print() && -> void{
-        std::cout << ("    (move print) data: " + cpp2::to_string(data) + ", more: " + cpp2::to_string(cpp2::move(*this).more) + "\n");
+        std::cout << "    (move print) data: " + cpp2::to_string(data) + ", more: " + cpp2::to_string(cpp2::move(*this).more) + "\n";
     }
 
 #line 42 "pure2-types-basics.cpp2"
@@ -167,7 +167,7 @@ namespace N {
 
 #line 46 "pure2-types-basics.cpp2"
     auto myclass::f(cpp2::impl::in<int> x) const& -> void{
-        std::cout << ("N::myclass::f with " + cpp2::to_string(x) + "\n");
+        std::cout << "N::myclass::f with " + cpp2::to_string(x) + "\n";
     }
 
 #line 54 "pure2-types-basics.cpp2"
@@ -190,10 +190,10 @@ auto main() -> int{
     N::myclass x {1}; 
     CPP2_UFCS(f)(x, 53);
     N::myclass::nested::g();
-    std::cout << ("f1: " + cpp2::to_string(CPP2_UFCS(f1)(x, 1, 1)) + "\n");
-    std::cout << ("f2: " + cpp2::to_string(CPP2_UFCS(f2)(x, 2, 2)) + "\n");
-    std::cout << ("f3: " + cpp2::to_string(CPP2_UFCS_TEMPLATE(f3<3,3>)(x)) + "\n");
-    std::cout << ("f4: " + cpp2::to_string(CPP2_UFCS_TEMPLATE(f4<4,4>)(x)) + "\n");
+    std::cout << "f1: " + cpp2::to_string(CPP2_UFCS(f1)(x, 1, 1)) + "\n";
+    std::cout << "f2: " + cpp2::to_string(CPP2_UFCS(f2)(x, 2, 2)) + "\n";
+    std::cout << "f3: " + cpp2::to_string(CPP2_UFCS_TEMPLATE(f3<3,3>)(x)) + "\n";
+    std::cout << "f4: " + cpp2::to_string(CPP2_UFCS_TEMPLATE(f4<4,4>)(x)) + "\n";
     N::myclass auto_1 {"abracadabra"}; 
     N::myclass auto_2 {}; 
     N::myclass auto_3 {1, "hair"}; 

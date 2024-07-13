@@ -1713,7 +1713,7 @@ template<typename Func> [[nodiscard]] auto make_on_return(Func const& func) -> a
 #line 174 "regex.h2"
     template <typename CharT, CharT Start, CharT End> [[nodiscard]] auto range_class_entry<CharT,Start,End>::includes(cpp2::impl::in<CharT> c) -> auto { return [_0 = Start, _1 = c, _2 = End]{ return cpp2::impl::cmp_less_eq(_0,_1) && cpp2::impl::cmp_less_eq(_1,_2); }();  }
 #line 175 "regex.h2"
-    template <typename CharT, CharT Start, CharT End> [[nodiscard]] auto range_class_entry<CharT,Start,End>::to_string() -> auto { return cpp2::to_string(Start) + "-" + cpp2::to_string(End); }
+    template <typename CharT, CharT Start, CharT End> [[nodiscard]] auto range_class_entry<CharT,Start,End>::to_string() -> auto { return "" + cpp2::to_string(Start) + "-" + cpp2::to_string(End) + ""; }
 
 #line 178 "regex.h2"
 // Helper for combining two character classes
@@ -2281,7 +2281,7 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
                 }
             }
             else {
-                static_cast<void>(error(("Unknown modifier: " + cpp2::to_string(cpp2::move(cur))))); return false; 
+                static_cast<void>(error("Unknown modifier: " + cpp2::to_string(cpp2::move(cur)) + "")); return false; 
             }}}}}}}
         }
 
@@ -2351,7 +2351,7 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
 #line 843 "regex.h2"
     [[nodiscard]] auto parse_context::error(cpp2::impl::in<std::string> err) & -> token_ptr{
         has_error = true;
-        error_out(("Error during parsing of regex '" + cpp2::to_string(regex) + "' at position '" + cpp2::to_string(pos) + "': " + cpp2::to_string(err)));
+        error_out("Error during parsing of regex '" + cpp2::to_string(regex) + "' at position '" + cpp2::to_string(pos) + "': " + cpp2::to_string(err) + "");
         return nullptr; 
     }
 
@@ -2379,13 +2379,13 @@ generation_function_context::generation_function_context(){}
 #line 887 "regex.h2"
     auto generation_context::add(cpp2::impl::in<std::string> s) & -> void{
         auto cur {get_current()}; 
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + cpp2::to_string(s) + "\n");
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + cpp2::to_string(s) + "\n";
     }
 
 #line 893 "regex.h2"
     auto generation_context::add_check(cpp2::impl::in<std::string> check) & -> void{
         auto cur {get_current()}; 
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "if !cpp2::regex::" + cpp2::to_string(check) + " { r.matched = false; break; }\n");
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "if !cpp2::regex::" + cpp2::to_string(check) + " { r.matched = false; break; }\n";
     }
 
 #line 899 "regex.h2"
@@ -2400,10 +2400,10 @@ generation_function_context::generation_function_context(){}
     auto generation_context::start_func_named(cpp2::impl::in<std::string> name) & -> void{
         auto cur {new_context()}; 
 
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + cpp2::to_string(name) + ": @struct type = {\n");
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "  operator(): (this, cur: Iter, inout ctx: context, other) -> cpp2::regex::match_return<Iter> = {\n");
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "    r := ctx..pass(cur);\n");
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "    do {\n");
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + cpp2::to_string(name) + ": @struct type = {\n";
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "  operator(): (this, cur: Iter, inout ctx: context, other) -> cpp2::regex::match_return<Iter> = {\n";
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "    r := ctx..pass(cur);\n";
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "    do {\n";
         (*cpp2::impl::assert_not_null(cpp2::move(cur))).add_tabs(3);
     }
 
@@ -2419,16 +2419,16 @@ generation_function_context::generation_function_context(){}
         auto cur {get_current()}; 
         (*cpp2::impl::assert_not_null(cur)).remove_tabs(3);
         (*cpp2::impl::assert_not_null(cur)).code += "\n";
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "    } while false;\n");
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "    if r.matched {\n");
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "      r = " + cpp2::to_string(s) + ";\n");
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "    }\n");
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "    else {\n");
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "      r.pos = ctx.end;\n");
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "    }\n");
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "    return r;\n");
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "  }\n");
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "}\n");
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "    } while false;\n";
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "    if r.matched {\n";
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "      r = " + cpp2::to_string(s) + ";\n";
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "    }\n";
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "    else {\n";
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "      r.pos = ctx.end;\n";
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "    }\n";
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "    return r;\n";
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "  }\n";
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "}\n";
 
         finish_context();
     }
@@ -2437,7 +2437,7 @@ generation_function_context::generation_function_context(){}
     [[nodiscard]] auto generation_context::generate_func(cpp2::impl::in<token_ptr> token) & -> std::string{
         auto name {start_func()}; 
         (*cpp2::impl::assert_not_null(token)).generate_code((*this));
-        end_func_statefull(("other(" + cpp2::to_string(match_parameters()) + ")"));
+        end_func_statefull("other(" + cpp2::to_string(match_parameters()) + ")");
 
         return name; 
     }
@@ -2451,13 +2451,13 @@ generation_function_context::generation_function_context(){}
         auto name {gen_reset_func_name()}; 
         auto cur {new_context()}; 
 
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + cpp2::to_string(name) + ": @struct type = {\n");
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "  operator(): (this, inout ctx) = {\n");
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + cpp2::to_string(name) + ": @struct type = {\n";
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "  operator(): (this, inout ctx) = {\n";
         for ( auto const& g : groups ) {
-            (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "  ctx..set_group_invalid(" + cpp2::to_string(g) + ");\n");
+            (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "  ctx..set_group_invalid(" + cpp2::to_string(g) + ");\n";
         }
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "  }\n");
-        (*cpp2::impl::assert_not_null(cur)).code += (cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "}\n");
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "  }\n";
+        (*cpp2::impl::assert_not_null(cur)).code += "" + cpp2::to_string((*cpp2::impl::assert_not_null(cur)).tabs) + "}\n";
 
         finish_context();
 
@@ -2468,7 +2468,7 @@ generation_function_context::generation_function_context(){}
     [[nodiscard]] auto generation_context::gen_func_name() & -> std::string{
         auto cur_id {matcher_func}; 
         matcher_func += 1;
-        return { "func_" + cpp2::to_string(cpp2::move(cur_id)) }; 
+        return "func_" + cpp2::to_string(cpp2::move(cur_id)) + ""; 
     }
 
 #line 980 "regex.h2"
@@ -2480,14 +2480,14 @@ generation_function_context::generation_function_context(){}
     [[nodiscard]] auto generation_context::gen_reset_func_name() & -> std::string{
         auto cur_id {reset_func}; 
         reset_func += 1;
-        return { "reset_" + cpp2::to_string(cpp2::move(cur_id)) }; 
+        return "reset_" + cpp2::to_string(cpp2::move(cur_id)) + ""; 
     }
 
 #line 990 "regex.h2"
     [[nodiscard]] auto generation_context::gen_temp() & -> std::string{
         auto cur_id {temp_name}; 
         temp_name += 1;
-        return { "tmp_" + cpp2::to_string(cpp2::move(cur_id)) }; 
+        return "tmp_" + cpp2::to_string(cpp2::move(cur_id)) + ""; 
     }
 
 #line 999 "regex.h2"
@@ -2530,7 +2530,7 @@ generation_function_context::generation_function_context(){}
         // Generate if selection.
         std::string sep {""}; 
         for ( auto const& cur : named_groups ) {
-            res += (cpp2::to_string(sep) + "if name == \"" + cpp2::to_string(cur.first) + "\" { return " + cpp2::to_string(cur.second) + "; }");
+            res += "" + cpp2::to_string(sep) + "if name == \"" + cpp2::to_string(cur.first) + "\" { return " + cpp2::to_string(cur.second) + "; }";
             sep = "else ";
         }
 
@@ -2590,7 +2590,7 @@ generation_function_context::generation_function_context(){}
 
         auto next_name {ctx.next_func_name()}; 
 
-        ctx.add_statefull(next_name, ("cpp2::regex::alternative_token_matcher<char>::match(" + cpp2::to_string(ctx.match_parameters()) + ", other, " + cpp2::to_string(next_name) + " " + cpp2::to_string(cpp2::move(functions)) + ")"));
+        ctx.add_statefull(next_name, "cpp2::regex::alternative_token_matcher<char>::match(" + cpp2::to_string(ctx.match_parameters()) + ", other, " + cpp2::to_string(next_name) + " " + cpp2::to_string(cpp2::move(functions)) + ")");
     }
 
 #line 1105 "regex.h2"
@@ -2640,7 +2640,7 @@ generation_function_context::generation_function_context(){}
 
 #line 1153 "regex.h2"
     any_token::any_token(cpp2::impl::in<bool> single_line)
-        : regex_token_check{ ".", ("any_token_matcher<char, " + cpp2::to_string(single_line) + ">") }{
+        : regex_token_check{ ".", "any_token_matcher<char, " + cpp2::to_string(single_line) + ">" }{
 
 #line 1155 "regex.h2"
     }
@@ -2710,40 +2710,40 @@ size_t i{0};
 
 #line 1215 "regex.h2"
     auto char_token::gen_case_insensitive(cpp2::impl::in<std::string> lower, cpp2::impl::in<std::string> upper, generation_context& ctx) const& -> void{
-        std::string name {"str_" + cpp2::to_string(ctx.gen_temp())}; 
-        std::string lower_name {"lower_" + cpp2::to_string(name)}; 
-        std::string upper_name {"upper_" + cpp2::to_string(cpp2::move(name))}; 
+        std::string name {"str_" + cpp2::to_string(ctx.gen_temp()) + ""}; 
+        std::string lower_name {"lower_" + cpp2::to_string(name) + ""}; 
+        std::string upper_name {"upper_" + cpp2::to_string(cpp2::move(name)) + ""}; 
         auto size {token.size()}; 
-        ctx.add((cpp2::to_string(lower_name) + " : std::array<char, " + cpp2::to_string(size) + " + 1> = \"" + cpp2::to_string(add_escapes(lower)) + "\";"));  // TODO: Add constexpr when Issue https://github.com/hsutter/cppfront/issues/1104 is resolved.
-        ctx.add((cpp2::to_string(upper_name) + " : std::array<char, " + cpp2::to_string(size) + " + 1> = \"" + cpp2::to_string(add_escapes(upper)) + "\";"));  // TODO: Add constexpr when Issue https://github.com/hsutter/cppfront/issues/1104 is resolved.
-        ctx.add(("if std::distance(r.pos, ctx.end) < " + cpp2::to_string(size) + " {"));
+        ctx.add("" + cpp2::to_string(lower_name) + " : std::array<char, " + cpp2::to_string(size) + " + 1> = \"" + cpp2::to_string(add_escapes(lower)) + "\";");  // TODO: Add constexpr when Issue https://github.com/hsutter/cppfront/issues/1104 is resolved.
+        ctx.add("" + cpp2::to_string(upper_name) + " : std::array<char, " + cpp2::to_string(size) + " + 1> = \"" + cpp2::to_string(add_escapes(upper)) + "\";");  // TODO: Add constexpr when Issue https://github.com/hsutter/cppfront/issues/1104 is resolved.
+        ctx.add("if std::distance(r.pos, ctx.end) < " + cpp2::to_string(size) + " {");
         ctx.add("    r.matched = false;");
         ctx.add("    break;");
         ctx.add("}");
         ctx.add("");
-        ctx.add(("(copy i : int = 0) while i < " + cpp2::to_string(size) + " next (i += 1) {"));
-        ctx.add(("    if !(" + cpp2::to_string(cpp2::move(lower_name)) + "[i] == r.pos[i] || " + cpp2::to_string(cpp2::move(upper_name)) + "[i] == r.pos[i]) { r.matched = false; }"));
+        ctx.add("(copy i : int = 0) while i < " + cpp2::to_string(size) + " next (i += 1) {");
+        ctx.add("    if !(" + cpp2::to_string(cpp2::move(lower_name)) + "[i] == r.pos[i] || " + cpp2::to_string(cpp2::move(upper_name)) + "[i] == r.pos[i]) { r.matched = false; }");
         ctx.add("}");
         ctx.add("");
-        ctx.add(("if r.matched { r.pos += " + cpp2::to_string(cpp2::move(size)) + "; }"));
+        ctx.add("if r.matched { r.pos += " + cpp2::to_string(cpp2::move(size)) + "; }");
         ctx.add("else { break; }");
     }
 
 #line 1235 "regex.h2"
     auto char_token::gen_case_sensitive(generation_context& ctx) const& -> void{
-        std::string name {"str_" + cpp2::to_string(ctx.gen_temp())}; 
+        std::string name {"str_" + cpp2::to_string(ctx.gen_temp()) + ""}; 
         auto size {token.size()}; 
-        ctx.add((cpp2::to_string(name) + " : std::array<char, " + cpp2::to_string(size) + " + 1> = \"" + cpp2::to_string(add_escapes(token)) + "\";"));  // TODO: Add constexpr when Issue https://github.com/hsutter/cppfront/issues/1104 is resolved.
-        ctx.add(("if std::distance(r.pos, ctx.end) < " + cpp2::to_string(size) + " {"));
+        ctx.add("" + cpp2::to_string(name) + " : std::array<char, " + cpp2::to_string(size) + " + 1> = \"" + cpp2::to_string(add_escapes(token)) + "\";");  // TODO: Add constexpr when Issue https://github.com/hsutter/cppfront/issues/1104 is resolved.
+        ctx.add("if std::distance(r.pos, ctx.end) < " + cpp2::to_string(size) + " {");
         ctx.add("    r.matched = false;");
         ctx.add("    break;");
         ctx.add("}");
         ctx.add("");
-        ctx.add(("(copy i : int = 0) while i < " + cpp2::to_string(size) + " next (i += 1) {"));
-        ctx.add(("    if " + cpp2::to_string(cpp2::move(name)) + "[i] != r.pos[i] { r.matched = false; }"));
+        ctx.add("(copy i : int = 0) while i < " + cpp2::to_string(size) + " next (i += 1) {");
+        ctx.add("    if " + cpp2::to_string(cpp2::move(name)) + "[i] != r.pos[i] { r.matched = false; }");
         ctx.add("}");
         ctx.add("");
-        ctx.add(("if r.matched { r.pos += " + cpp2::to_string(cpp2::move(size)) + "; }"));
+        ctx.add("if r.matched { r.pos += " + cpp2::to_string(cpp2::move(size)) + "; }");
         ctx.add("else { break; }");
     }
 
@@ -2752,7 +2752,7 @@ size_t i{0};
         str = string_util::replace_all(str, "\\", "\\\\");
         str = string_util::replace_all(str, "\a", "\\a");
         str = string_util::replace_all(str, "\f", "\\f");
-        str = string_util::replace_all(str, "\x1b", "\" \"\\x1b\" \""); // Generate a separated string. This prevents 
+        str = string_util::replace_all(str, "\x1b", "\" \"\\x1b\" \""); // Generate a separated string. This prevents
                                                                         // situations like `\x1bblub` from generating
                                                                         // wrong hex characters.
         str = string_util::replace_all(str, "\n", "\\n");
@@ -2807,10 +2807,10 @@ size_t i{0};
                 std::string name {""}; 
                 if (!(ctx.grab_until(":]", cpp2::impl::out(&name)))) {return ctx.error("Could not find end of character class."); }
                 if (supported_classes.end() == std::find(supported_classes.begin(), supported_classes.end(), name)) {
-                    return ctx.error(("Unsupported character class. Supported ones are: " + cpp2::to_string(string_util::join(supported_classes)))); 
+                    return ctx.error("Unsupported character class. Supported ones are: " + cpp2::to_string(string_util::join(supported_classes)) + ""); 
                 }
 
-                classes.push_back(("[:" + cpp2::to_string(cpp2::move(name)) + ":]"));
+                classes.push_back("[:" + cpp2::to_string(cpp2::move(name)) + ":]");
 
                 static_cast<void>(ctx.next());// Skip ':' pointing to the ending ']'.
             }
@@ -2834,7 +2834,7 @@ size_t i{0};
                         else {
                             return ctx.error("Unknown group escape."); 
                         }}}}}}}}}}
-                        classes.push_back(("[:" + cpp2::to_string(cpp2::move(name)) + ":]"));
+                        classes.push_back("[:" + cpp2::to_string(cpp2::move(name)) + ":]");
                     }
                 }else {
                     return ctx.error("Escape without a following character."); 
@@ -2842,18 +2842,18 @@ size_t i{0};
             }
             else {if (ctx.current() == '-') {
                 if (first) {// Literal if first entry.
-                    classes.push_back((cpp2::to_string(ctx.current())));
+                    classes.push_back("" + cpp2::to_string(ctx.current()) + "");
                 }else {
                     range = true;
                 }
             }
             else {
                 if (range) {// Modify last element to be a range.
-                    classes.back() += ("-" + cpp2::to_string(ctx.current()));
+                    classes.back() += "-" + cpp2::to_string(ctx.current()) + "";
                     range = false;
                 }
                 else {
-                    classes.push_back((cpp2::to_string(ctx.current())));
+                    classes.push_back("" + cpp2::to_string(ctx.current()) + "");
                 }
             }}}
 
@@ -2873,13 +2873,13 @@ size_t i{0};
         for ( auto& cur : classes ) {
             if (cur.starts_with("[:")) {
                 auto name {cur.substr(2, cur.size() - 4)}; 
-                cur = create_matcher((cpp2::to_string(cpp2::move(name)) + "_class"), "");
+                cur = create_matcher("" + cpp2::to_string(cpp2::move(name)) + "_class", "");
             }
             else {if (1 != cur.size()) {
-                cur = create_matcher("range_class_entry", ("'" + cpp2::to_string(CPP2_ASSERT_IN_BOUNDS_LITERAL(cur, 0)) + "', '" + cpp2::to_string(CPP2_ASSERT_IN_BOUNDS_LITERAL(cur, 2)) + "'"));
+                cur = create_matcher("range_class_entry", "'" + cpp2::to_string(CPP2_ASSERT_IN_BOUNDS_LITERAL(cur, 0)) + "', '" + cpp2::to_string(CPP2_ASSERT_IN_BOUNDS_LITERAL(cur, 2)) + "'");
             }
             else {
-                cur = create_matcher("single_class_entry", ("'" + cpp2::to_string(cur) + "'"));
+                cur = create_matcher("single_class_entry", "'" + cpp2::to_string(cur) + "'");
             }}
         }
 
@@ -2890,7 +2890,7 @@ size_t i{0};
 
 #line 1429 "regex.h2"
     auto class_token::generate_code(generation_context& ctx) const -> void{
-        ctx.add_check(("class_token_matcher<char, " + cpp2::to_string(negate) + ", " + cpp2::to_string(case_insensitive) + ", " + cpp2::to_string(class_str) + ">::match(" + cpp2::to_string(ctx.match_parameters()) + ")"));
+        ctx.add_check("class_token_matcher<char, " + cpp2::to_string(negate) + ", " + cpp2::to_string(case_insensitive) + ", " + cpp2::to_string(class_str) + ">::match(" + cpp2::to_string(ctx.match_parameters()) + ")");
     }
 
 #line 1434 "regex.h2"
@@ -2898,7 +2898,7 @@ size_t i{0};
         auto sep {", "}; 
         if (template_arguments.empty()) {sep = ""; }
 
-        return { "::cpp2::regex::" + cpp2::to_string(name) + "<char" + cpp2::to_string(cpp2::move(sep)) + cpp2::to_string(template_arguments) + ">" }; 
+        return "::cpp2::regex::" + cpp2::to_string(name) + "<char" + cpp2::to_string(cpp2::move(sep)) + cpp2::to_string(template_arguments) + ">"; 
     }
 
     class_token::~class_token() noexcept{}
@@ -2961,13 +2961,13 @@ size_t i{0};
         else {if ('\\' == ctx.current()) {t = '\\'; }
         else {return ctx.error("Internal: missing switch case for special escape."); }}}}}}}
         auto r {CPP2_UFCS_TEMPLATE(cpp2_new<char_token>)(cpp2::shared, cpp2::move(t), false)}; 
-        (*cpp2::impl::assert_not_null(r)).set_string(("\\" + cpp2::to_string(ctx.current())));
+        (*cpp2::impl::assert_not_null(r)).set_string("\\" + cpp2::to_string(ctx.current()) + "");
 
         return r; 
     }else {
         // Escape of regex special char
         auto r {CPP2_UFCS_TEMPLATE(cpp2_new<char_token>)(cpp2::shared, ctx.current(), false)}; 
-        (*cpp2::impl::assert_not_null(r)).set_string(("\\" + cpp2::to_string(ctx.current())));
+        (*cpp2::impl::assert_not_null(r)).set_string("\\" + cpp2::to_string(ctx.current()) + "");
 
         return r; 
     }
@@ -3009,7 +3009,7 @@ size_t i{0};
                 char number_as_char {unsafe_narrow<char>(cpp2::move(number))}; 
 
                 auto token {CPP2_UFCS_TEMPLATE(cpp2_new<char_token>)(cpp2::shared, number_as_char, ctx.get_modifiers().has(expression_flags::case_insensitive))}; 
-                (*cpp2::impl::assert_not_null(token)).set_string(("\\" + cpp2::to_string(string_util::int_to_string(cpp2::impl::as_<int>(cpp2::move(number_as_char)), 8))));
+                (*cpp2::impl::assert_not_null(token)).set_string("\\" + cpp2::to_string(string_util::int_to_string(cpp2::impl::as_<int>(cpp2::move(number_as_char)), 8)) + "");
 
                 return token; 
             }
@@ -3067,7 +3067,7 @@ size_t i{0};
                 group_id = ctx.get_cur_group() + group_id;
 
                 if (cpp2::impl::cmp_less(group_id,1)) {// Negative and zero are no valid groups.
-                    return ctx.error(("Relative group reference does not reference a valid group. (Would be " + cpp2::to_string(group_id) + ".)")); 
+                    return ctx.error("Relative group reference does not reference a valid group. (Would be " + cpp2::to_string(group_id) + ".)"); 
                 }
             }
 
@@ -3078,7 +3078,7 @@ size_t i{0};
         else {
             // Named group
             group_id = ctx.get_named_group(group);
-            if (-1 == group_id) {return ctx.error(("Group names does not exist. (Name is: " + cpp2::to_string(cpp2::move(group)) + ")")); }
+            if (-1 == group_id) {return ctx.error("Group names does not exist. (Name is: " + cpp2::to_string(cpp2::move(group)) + ")"); }
         }
 
         return CPP2_UFCS_TEMPLATE(cpp2_new<group_ref_token>)(cpp2::shared, cpp2::move(group_id), ctx.get_modifiers().has(expression_flags::case_insensitive), cpp2::move(str)); 
@@ -3086,7 +3086,7 @@ size_t i{0};
 
 #line 1646 "regex.h2"
     auto group_ref_token::generate_code(generation_context& ctx) const -> void{
-        ctx.add_check(("group_ref_token_matcher<char, " + cpp2::to_string(id) + ", " + cpp2::to_string(case_insensitive) + ">(" + cpp2::to_string(ctx.match_parameters()) + ")"));
+        ctx.add_check("group_ref_token_matcher<char, " + cpp2::to_string(id) + ", " + cpp2::to_string(case_insensitive) + ">(" + cpp2::to_string(ctx.match_parameters()) + ")");
     }
 
     group_ref_token::~group_ref_token() noexcept{}
@@ -3126,7 +3126,7 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
         auto old_state {ctx.start_group()}; 
         if (!(ctx.parse_until(')'))) {return ctx.error("Lookahead without a closing bracket."); }
         (*cpp2::impl::assert_not_null(r)).inner = ctx.end_group(cpp2::move(old_state));
-        (*cpp2::impl::assert_not_null(r)).set_string(("(" + cpp2::to_string(syntax) + cpp2::to_string((*cpp2::impl::assert_not_null((*cpp2::impl::assert_not_null(r)).inner)).to_string()) + ")"));
+        (*cpp2::impl::assert_not_null(r)).set_string("(" + cpp2::to_string(syntax) + cpp2::to_string((*cpp2::impl::assert_not_null((*cpp2::impl::assert_not_null(r)).inner)).to_string()) + ")");
 
         return r; 
     }
@@ -3173,12 +3173,12 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
                 if (ctx.has_token()) {
                     token_vec list {}; 
                     list.push_back(ctx.pop_token());
-                    list.push_back(CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_empty>)(cpp2::shared, ("(?#" + cpp2::to_string(cpp2::move(comment_str)) + ")")));
+                    list.push_back(CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_empty>)(cpp2::shared, "(?#" + cpp2::to_string(cpp2::move(comment_str)) + ")"));
 
                     return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_list>)(cpp2::shared, cpp2::move(list)); 
                 }
                 else {
-                    return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_empty>)(cpp2::shared, ("(?#" + cpp2::to_string(cpp2::move(comment_str)) + ")")); 
+                    return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_empty>)(cpp2::shared, "(?#" + cpp2::to_string(cpp2::move(comment_str)) + ")"); 
                 }
             }
             else {if (ctx.current() == '|') {
@@ -3196,7 +3196,7 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
                 return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_list>)(cpp2::shared, cpp2::move(list)); 
             }
             else {if (ctx.current() == '=' || ctx.current() == '!') {
-                return parse_lookahead(ctx, ("?" + cpp2::to_string(ctx.current())), ctx.current() == '='); 
+                return parse_lookahead(ctx, "?" + cpp2::to_string(ctx.current()) + "", ctx.current() == '='); 
             }
             else {
                 // Simple modifier
@@ -3221,13 +3221,13 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
             if (!(ctx.grab_until(':', cpp2::impl::out(&name)))) {return ctx.error("Missing colon for named pattern."); }
 
             if (name == "pla" || name == "positive_lookahead") {
-                return parse_lookahead(ctx, ("*" + cpp2::to_string(cpp2::move(name)) + ":"), true); 
+                return parse_lookahead(ctx, "*" + cpp2::to_string(cpp2::move(name)) + ":", true); 
             }
             else {if (name == "nla" || name == "negative_lookahead") {
-                return parse_lookahead(ctx, ("*" + cpp2::to_string(cpp2::move(name)) + ":"), false); 
+                return parse_lookahead(ctx, "*" + cpp2::to_string(cpp2::move(name)) + ":", false); 
             }
             else {
-                return ctx.error(("Unknown named group pattern: '" + cpp2::to_string(cpp2::move(name)) + "'")); 
+                return ctx.error("Unknown named group pattern: '" + cpp2::to_string(cpp2::move(name)) + "'"); 
             }}
         }}
 
@@ -3255,7 +3255,7 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
             // Only a modifier
             ctx.set_modifiers(cpp2::move(modifiers_change_to));
 
-            return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_empty>)(cpp2::shared, ("(?" + cpp2::to_string(cpp2::move(modifiers)) + ")")); 
+            return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_empty>)(cpp2::shared, "(?" + cpp2::to_string(cpp2::move(modifiers)) + ")"); 
         }
     }
 
@@ -3264,10 +3264,10 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
         std::string start {"("}; 
         if (0 != name.size()) {
             if (name_brackets) {
-                start += ("?<" + cpp2::to_string(name.data()) + ">");
+                start += "?<" + cpp2::to_string(name.data()) + ">";
             }
             else {
-                start += ("?'" + cpp2::to_string(name.data()) + "'");
+                start += "?'" + cpp2::to_string(name.data()) + "'";
             }
         }
         else {if (has_modifier) {
@@ -3280,20 +3280,20 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
 #line 1849 "regex.h2"
     auto group_token::generate_code(generation_context& ctx) const -> void{
         if (-1 != number) {
-            ctx.add(("ctx..set_group_start(" + cpp2::to_string(number) + ", r.pos);"));
+            ctx.add("ctx..set_group_start(" + cpp2::to_string(number) + ", r.pos);");
         }
 
         (*cpp2::impl::assert_not_null(inner)).generate_code(ctx);
         if (-1 != number) {
-            ctx.add(("ctx..set_group_end(" + cpp2::to_string(number) + ", r.pos);"));
+            ctx.add("ctx..set_group_end(" + cpp2::to_string(number) + ", r.pos);");
             auto tmp_name {ctx.gen_temp()}; 
-            ctx.add((cpp2::to_string(tmp_name) + "_func :=  :() = {"));
+            ctx.add("" + cpp2::to_string(tmp_name) + "_func :=  :() = {");
             ctx.add("  if !r&$*.matched {");
-            ctx.add(("    ctx&$*..set_group_invalid(" + cpp2::to_string(number) + ");"));
+            ctx.add("    ctx&$*..set_group_invalid(" + cpp2::to_string(number) + ");");
             ctx.add("  }");
             ctx.add("};");
-            ctx.add((cpp2::to_string(tmp_name) + " :=  cpp2::regex::make_on_return(" + cpp2::to_string(tmp_name) + "_func);"));
-            ctx.add(("_ = " + cpp2::to_string(cpp2::move(tmp_name)) + ";"));// Logic is done in the destructor. Same behavior as for guard objects.
+            ctx.add("" + cpp2::to_string(tmp_name) + " :=  cpp2::regex::make_on_return(" + cpp2::to_string(tmp_name) + "_func);");
+            ctx.add("_ = " + cpp2::to_string(cpp2::move(tmp_name)) + ";");// Logic is done in the destructor. Same behavior as for guard objects.
         }
     }
 
@@ -3337,9 +3337,9 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
 
     std::string syntax {string_util::int_to_string(cpp2::impl::as_<int>(number_as_char), 16)}; 
     if (cpp2::move(has_brackets)) {
-        syntax = { "{" + cpp2::to_string(syntax) + "}" };
+        syntax = "{" + cpp2::to_string(syntax) + "}";
     }
-    syntax = { "\\x" + cpp2::to_string(syntax) };
+    syntax = "\\x" + cpp2::to_string(syntax) + "";
 
     auto r {CPP2_UFCS_TEMPLATE(cpp2_new<char_token>)(cpp2::shared, cpp2::move(number_as_char), ctx.get_modifiers().has(expression_flags::case_insensitive))}; 
     (*cpp2::impl::assert_not_null(r)).set_string(cpp2::move(syntax));
@@ -3350,13 +3350,13 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
 [[nodiscard]] auto line_end_token_parse(parse_context& ctx) -> token_ptr{
     if (ctx.current() == '$' || (ctx.current() == '\\' && ctx.peek() == '$')) {
         if ((ctx.current() == '\\')) {static_cast<void>(ctx.next()); }// Skip escape
-        return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_check>)(cpp2::shared, "$", ("line_end_token_matcher<char, " + cpp2::to_string(ctx.get_modifiers().has(expression_flags::multiple_lines)) + ", true>")); 
+        return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_check>)(cpp2::shared, "$", "line_end_token_matcher<char, " + cpp2::to_string(ctx.get_modifiers().has(expression_flags::multiple_lines)) + ", true>"); 
     }
     else {if (ctx.current() == '\\' && (ctx.peek() == 'z' || ctx.peek() == 'Z')) {
         static_cast<void>(ctx.next());// Skip escape
 
         auto negate {ctx.current() == 'Z'}; 
-        return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_check>)(cpp2::shared, ("\\" + cpp2::to_string(ctx.current())), ("line_end_token_matcher<char, false, " + cpp2::to_string(cpp2::move(negate)) + ">")); 
+        return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_check>)(cpp2::shared, "\\" + cpp2::to_string(ctx.current()) + "", "line_end_token_matcher<char, false, " + cpp2::to_string(cpp2::move(negate)) + ">"); 
     }
     else {
         return nullptr; 
@@ -3385,7 +3385,7 @@ template<typename CharT, bool match_new_line, bool match_new_line_before_end> [[
         return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_check>)(cpp2::shared, "\\A", "line_start_token_matcher<char, false>"); 
     }
     else {
-        return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_check>)(cpp2::shared, "^", ("line_start_token_matcher<char, " + cpp2::to_string(ctx.get_modifiers().has(expression_flags::multiple_lines)) + ">")); 
+        return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_check>)(cpp2::shared, "^", "line_start_token_matcher<char, " + cpp2::to_string(ctx.get_modifiers().has(expression_flags::multiple_lines)) + ">"); 
     }
 }
 
@@ -3407,7 +3407,7 @@ template<typename CharT, bool match_new_line> [[nodiscard]] auto line_start_toke
     auto lookahead_token::generate_code(generation_context& ctx) const -> void{
         auto inner_name {ctx.generate_func(inner)}; 
 
-        ctx.add_check(("lookahead_token_matcher<char, " + cpp2::to_string(positive) + ">(" + cpp2::to_string(ctx.match_parameters()) + ", " + cpp2::to_string(cpp2::move(inner_name)) + ")"));
+        ctx.add_check("lookahead_token_matcher<char, " + cpp2::to_string(positive) + ">(" + cpp2::to_string(ctx.match_parameters()) + ", " + cpp2::to_string(cpp2::move(inner_name)) + ")");
     }
 
 #line 1985 "regex.h2"
@@ -3449,7 +3449,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
 
     static_cast<void>(ctx.next());// Skip escape
 
-    return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_check>)(cpp2::shared, ("\\" + cpp2::to_string(ctx.current())), (cpp2::to_string(cpp2::move(name)) + "<char, " + cpp2::to_string(ctx.get_modifiers().has(expression_flags::case_insensitive)) + ">::match")); 
+    return CPP2_UFCS_TEMPLATE(cpp2_new<regex_token_check>)(cpp2::shared, "\\" + cpp2::to_string(ctx.current()) + "", "" + cpp2::to_string(cpp2::move(name)) + "<char, " + cpp2::to_string(ctx.get_modifiers().has(expression_flags::case_insensitive)) + ">::match"); 
 }
 
 #line 2042 "regex.h2"
@@ -3534,16 +3534,16 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
             // Check validity of the range.
             if (-1 != (*cpp2::impl::assert_not_null(r)).min_count) {
                 if (!((cpp2::impl::cmp_less_eq(0,(*cpp2::impl::assert_not_null(r)).min_count)))) {
-                    return ctx.error(("Min value in range is negative. Have " + cpp2::to_string((*cpp2::impl::assert_not_null(r)).min_count) + ")")); 
+                    return ctx.error("Min value in range is negative. Have " + cpp2::to_string((*cpp2::impl::assert_not_null(r)).min_count) + ")"); 
                 }
             }
             if (-1 != (*cpp2::impl::assert_not_null(r)).max_count) {
                 if (!((cpp2::impl::cmp_less_eq(0,(*cpp2::impl::assert_not_null(r)).max_count)))) {
-                    return ctx.error(("Max value in range is negative. Have " + cpp2::to_string((*cpp2::impl::assert_not_null(r)).max_count) + ")")); 
+                    return ctx.error("Max value in range is negative. Have " + cpp2::to_string((*cpp2::impl::assert_not_null(r)).max_count) + ")"); 
                 }
                 if (-1 != (*cpp2::impl::assert_not_null(r)).min_count) {
                     if (!((cpp2::impl::cmp_less_eq((*cpp2::impl::assert_not_null(r)).min_count,(*cpp2::impl::assert_not_null(r)).max_count)))) {
-                        return ctx.error(("Min and max values in range are wrong it should hold 0 <= min <= max. Have 0 <= " + cpp2::to_string((*cpp2::impl::assert_not_null(r)).min_count) + " <= " + cpp2::to_string((*cpp2::impl::assert_not_null(r)).max_count))); 
+                        return ctx.error("Min and max values in range are wrong it should hold 0 <= min <= max. Have 0 <= " + cpp2::to_string((*cpp2::impl::assert_not_null(r)).min_count) + " <= " + cpp2::to_string((*cpp2::impl::assert_not_null(r)).max_count) + ""); 
                     }
                 }
             }
@@ -3586,16 +3586,16 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
     [[nodiscard]] auto range_token::gen_range_string() const& -> std::string{
         std::string r {""}; 
         if (min_count == max_count) {
-            r += ("{" + cpp2::to_string(min_count) + "}");
+            r += "{" + cpp2::to_string(min_count) + "}";
         }
         else {if (min_count == -1) {
-            r += ("{," + cpp2::to_string(max_count) + "}");
+            r += "{," + cpp2::to_string(max_count) + "}";
         }
         else {if (max_count == -1) {
-            r += ("{" + cpp2::to_string(min_count) + ",}");
+            r += "{" + cpp2::to_string(min_count) + ",}";
         }
         else {
-            r += ("{" + cpp2::to_string(min_count) + "," + cpp2::to_string(max_count) + "}");
+            r += "{" + cpp2::to_string(min_count) + "," + cpp2::to_string(max_count) + "}";
         }}}
 
         return r; 
@@ -3609,7 +3609,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
         auto reset_name {ctx.generate_reset(cpp2::move(groups))}; 
 
         auto next_name {ctx.next_func_name()}; 
-        ctx.add_statefull(next_name, ("cpp2::regex::range_token_matcher<char, " + cpp2::to_string(min_count) + ", " + cpp2::to_string(max_count) + ", " + cpp2::to_string(kind) + ">::match(" + cpp2::to_string(ctx.match_parameters()) + ", " + cpp2::to_string(cpp2::move(inner_name)) + ", " + cpp2::to_string(cpp2::move(reset_name)) + ", other, " + cpp2::to_string(next_name) + ")"));
+        ctx.add_statefull(next_name, "cpp2::regex::range_token_matcher<char, " + cpp2::to_string(min_count) + ", " + cpp2::to_string(max_count) + ", " + cpp2::to_string(kind) + ">::match(" + cpp2::to_string(ctx.match_parameters()) + ", " + cpp2::to_string(cpp2::move(inner_name)) + ", " + cpp2::to_string(cpp2::move(reset_name)) + ", other, " + cpp2::to_string(next_name) + ")");
     }
 
 #line 2208 "regex.h2"
@@ -3768,7 +3768,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
             return nullptr; 
         }}}
 
-        if (!(ctx.has_token())) {return ctx.error(("'" + cpp2::to_string(ctx.current()) + "' without previous element.")); }
+        if (!(ctx.has_token())) {return ctx.error("'" + cpp2::to_string(ctx.current()) + "' without previous element."); }
 
 #line 2365 "regex.h2"
         (*cpp2::impl::assert_not_null(r)).parse_modifier(ctx);
@@ -3930,13 +3930,13 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
 
         source += "{\n";
         source += " wrap: <Iter, CharT> type = {\n"; // TODO: Remove wrapper when template template parameters are available.
-        source += ("  context: type == cpp2::regex::match_context<CharT, Iter, " + cpp2::to_string(parse_ctx.get_cur_group()) + ">;");
+        source += "  context: type == cpp2::regex::match_context<CharT, Iter, " + cpp2::to_string(parse_ctx.get_cur_group()) + ">;";
 
         generation_context gen_ctx {}; 
         source += gen_ctx.run(parse_ctx.get_as_token());
         source += "  entry: (cur: Iter, inout ctx: context) -> cpp2::regex::match_return<Iter> = {\n";
         source += "    ctx..set_group_start(0, cur);\n";
-        source += ("    r := " + cpp2::to_string(gen_ctx.get_entry_func()) + "(cur, ctx, cpp2::regex::true_end_func());\n");
+        source += "    r := " + cpp2::to_string(gen_ctx.get_entry_func()) + "(cur, ctx, cpp2::regex::true_end_func());\n";
         source += "    if r.matched { ctx..set_group_end(0, r.pos); }\n";
         source += "    return r;\n";
         source += "  }\n";
@@ -3945,7 +3945,7 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
         source += "}\n";
 
         auto string {(*cpp2::impl::assert_not_null(parse_ctx.get_as_token())).to_string()}; 
-        source += ("  to_string: () -> std::string = { return R\"(" + cpp2::to_string(modifier_escape) + cpp2::to_string(cpp2::move(string)) + cpp2::to_string(modifier_escape) + cpp2::to_string(modifier) + ")\"; }\n");
+        source += "  to_string: () -> std::string = { return R\"(" + cpp2::to_string(modifier_escape) + cpp2::to_string(cpp2::move(string)) + cpp2::to_string(modifier_escape) + cpp2::to_string(modifier) + ")\"; }\n";
         source += "}\n";
 
         static_cast<void>(cpp2::move(parse_ctx));

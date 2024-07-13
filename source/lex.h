@@ -376,7 +376,6 @@ auto expand_string_literal(
 )
     -> std::string
 {
-    auto expanded_interpolation = false;
     auto const length = std::ssize(text);
 
     assert(length >= 2);
@@ -453,8 +452,13 @@ auto expand_string_literal(
 
             //  'open' is now at the matching (
 
-            //  Put the next non-empty non-interpolated chunk straight into ret
-            if (open != current_start) {
+            //  Put the next non-interpolated chunk straight into ret
+            //  unless it's an empty internal "" chunk
+            if (
+                open != current_start
+                || parts.empty()
+                )
+            {
                 parts.add_string(text.substr(current_start, open - current_start));
             }
 
@@ -506,7 +510,6 @@ auto expand_string_literal(
             parts.add_code("cpp2::to_string" + chunk);
 
             current_start = pos+1;
-            expanded_interpolation = true;
         }
     }
 
@@ -517,18 +520,8 @@ auto expand_string_literal(
     );
 
     //  Put the final non-interpolated chunk straight into ret
-    if (current_start < std::ssize(text)-1) {
-        parts.add_string(text.substr(current_start, std::ssize(text)-current_start-1));
-    }
+    parts.add_string(text.substr(current_start, std::ssize(text)-current_start-1));
 
-    //  Only for expand_string_literal: If we expanded any interpolations,
-    //  parenthesize the result to support cases like "(1)$+".append("2 is 2")
-    //  But don't do this for expand_raw_string_literal, where injecting a ) can
-    //  interfere with the closing sequence... raw literals really are raw-er
-    if (expanded_interpolation) {
-        return "(" + parts.generate() + ")";
-    }
-    //  Else
     return parts.generate();
 }
 
@@ -930,25 +923,49 @@ auto lex_line(
         return 0;
     };
 
+    //G simple-hexadecimal-digit-sequence:
+    //G     hexadecimal-digit
+    //G     simple-hexadecimal-digit-sequence hexadecimal-digit
+    //G
     //G hexadecimal-escape-sequence:
-    //G     '\x' hexadecimal-digit
-    //G     hexadecimal-escape-sequence hexadecimal-digit
+    //G     '\x' simple-hexadecimal-digit-sequence
+    //G     '\x{' simple-hexadecimal-digit-sequence '}'
     //G
     auto peek_is_hexadecimal_escape_sequence = [&](int offset)
     {
         if (
-            peek(  offset) == '\\'
+            peek(offset) == '\\'
             && peek(1+offset) == 'x'
-            && is_hexadecimal_digit(peek(2+offset))
+            && (
+                is_hexadecimal_digit(peek(2+offset))
+                || (peek(2+offset) == '{' && is_hexadecimal_digit(peek(3+offset)))
+                )
             )
         {
+            auto has_bracket = peek(2+offset) == '{';
             auto j = 3;
+
+            if (has_bracket) { ++j; }
+
             while (
                 peek(j+offset)
                 && is_hexadecimal_digit(peek(j+offset))
                 )
             {
                 ++j;
+            }
+
+            if (has_bracket) {
+                if (peek(j+offset) == '}') {
+                    ++j;
+                } else {
+                    errors.emplace_back(
+                        source_position(lineno, i + offset),
+                        "invalid hexadecimal escape sequence - \\x{ must"
+                        " be followed by hexadecimal digits and a closing }"
+                    );
+                    return 0;
+                }
             }
             return j;
         }
@@ -958,6 +975,7 @@ auto lex_line(
     //G universal-character-name:
     //G     '\u' hex-quad
     //G     '\U' hex-quad hex-quad
+    //G     '\u{' simple-hexadecimal-digit-sequence '}'
     //G
     //G hex-quad:
     //G     hexadecimal-digit hexadecimal-digit hexadecimal-digit hexadecimal-digit
@@ -967,6 +985,7 @@ auto lex_line(
         if (
             peek(offset) == '\\'
             && peek(1 + offset) == 'u'
+            && peek(2 + offset) != '{'
             )
         {
             auto j = 2;
@@ -980,11 +999,41 @@ auto lex_line(
             if (j == 6) { return j; }
             errors.emplace_back(
                 source_position( lineno, i + offset ),
-                "invalid universal character name (\\u must"
-                " be followed by 4 hexadecimal digits)"
+                "invalid universal character name - \\u without { must"
+                " be followed by 4 hexadecimal digits"
             );
         }
-        if (
+
+        else if (
+            peek(offset) == '\\'
+            && peek(1 + offset) == 'u'
+            && peek(2 + offset) == '{'
+            )
+        {
+            auto j = 4;
+
+            while (
+                peek(j + offset)
+                && is_hexadecimal_digit(peek(j + offset))
+                )
+            {
+                ++j;
+            }
+
+            if (peek(j + offset) == '}') {
+                ++j;
+            }
+            else {
+                errors.emplace_back(
+                    source_position(lineno, i + offset),
+                    "invalid universal character name - \\u{ must"
+                    " be followed by hexadecimal digits and a closing }"
+                );
+            }
+            return j;
+        }
+
+        else if (
             peek(offset) == '\\'
             && peek(1+offset) == 'U'
             )
@@ -1000,8 +1049,8 @@ auto lex_line(
             if (j == 10) { return j; }
             errors.emplace_back(
                 source_position(lineno, i+offset),
-                "invalid universal character name (\\U must"
-                    " be followed by 8 hexadecimal digits)"
+                "invalid universal character name - \\U must"
+                    " be followed by 8 hexadecimal digits"
             );
         }
         return 0;
@@ -1179,29 +1228,6 @@ auto lex_line(
         auto peek1 = peek(1);
         auto peek2 = peek(2);
         auto peek3 = peek(3);
-
-        //G encoding-prefix: one of
-        //G     'u8' 'u' 'uR' 'u8R' 'U' 'UR' 'L' 'LR' 'R'
-        //G
-        auto is_encoding_prefix_and = [&](char next) {
-            if (line[i] == next)                                        { return 1; } // "
-            else if (line[i] == 'u') {
-                if (peek1 == next)                                      { return 2; } // u"
-                else if (peek1 == '8' && peek2 == next)                 { return 3; } // u8"
-                else if (peek1 == 'R' && peek2 == next)                 { return 3; } // uR"
-                else if (peek1 == '8' && peek2 == 'R' && peek3 == next) { return 4; } // u8R"
-            }
-            else if (line[i] == 'U') {
-                if ( peek1 == next)                                     { return 2; } // U"
-                else if (peek1 == 'R' && peek2 == next)                 { return 3; } // UR"
-            }
-            else if (line[i] == 'L') {
-                if ( peek1 == next )                                    { return 2; } // L"
-                else if (peek1 == 'R' && peek2 == next)                 { return 3; } // LR"
-            }
-            else if (line[i] == 'R' && peek1 == next)                   { return 2; } // R"
-            return 0;
-        };
 
         //  If we're currently in a multiline comment,
         //  the only thing to look for is the */ comment end
@@ -1672,7 +1698,7 @@ auto lex_line(
                 //G interpolation:
                 //G     '(' expression ')' '$'
                 //G
-                else if (auto j = is_encoding_prefix_and('\"')) {
+                else if (auto j = is_encoding_prefix_and(line, i, '\"')) {
                     // if peek(j-2) is 'R' it means that we deal with raw-string literal
                     if (peek(j-2) == 'R') {
                         auto seq_pos = i + j;
@@ -1747,7 +1773,7 @@ auto lex_line(
                 //G     c-char
                 //G     c-char-seq c-char
                 //G
-                else if (auto j = is_encoding_prefix_and('\'')) {
+                else if (auto j = is_encoding_prefix_and(line, i, '\'')) {
                     auto len = peek_is_sc_char(j, '\'');
                     if (len > 0) {
                         j += len;

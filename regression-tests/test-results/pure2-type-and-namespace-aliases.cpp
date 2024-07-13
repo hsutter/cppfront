@@ -77,7 +77,7 @@ auto const& v2{cpp2::move(v)};
 
 #line 21 "pure2-type-and-namespace-aliases.cpp2"
     for ( auto const& s : v2 ) 
-        std::cout << (cpp2::to_string(s) + "\n");
+        std::cout << "" + cpp2::to_string(s) + "\n";
 }
 #line 23 "pure2-type-and-namespace-aliases.cpp2"
 }

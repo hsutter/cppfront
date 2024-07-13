@@ -6485,19 +6485,24 @@ private:
         n->open_paren = open_paren;
         n->inside_initializer = inside_initializer;
 
-        if (auto dir = to_passing_style(curr());
-            (
-                dir == passing_style::out
-                || dir == passing_style::move
-                || dir == passing_style::forward
+        auto consume_optional_passing_style = [&] {
+            pass = passing_style::in;
+            if (auto dir = to_passing_style(curr());
+                (
+                    dir == passing_style::out
+                    || dir == passing_style::move
+                    || dir == passing_style::forward
+                    )
+                && peek(1)
+                && peek(1)->type() == lexeme::Identifier
                 )
-            && peek(1)
-            && peek(1)->type() == lexeme::Identifier
-            )
-        {
-            pass = dir;
-            next();
-        }
+            {
+                pass = dir;
+                next();
+            }
+        };
+
+        consume_optional_passing_style();
         auto x = expression();
 
         //  If this is an empty expression_list, we're done
@@ -6516,16 +6521,7 @@ private:
                 break;
             }
 
-            pass = passing_style::in;
-            if (auto dir = to_passing_style(curr());
-                dir == passing_style::out
-                || dir == passing_style::move
-                || dir == passing_style::forward
-                )
-            {
-                pass = dir;
-                next();
-            }
+            consume_optional_passing_style();
             auto expr = expression();
             if (!expr) {
                 error("invalid text in expression list", true, {}, true);
@@ -6550,7 +6546,9 @@ private:
     //G     'const'
     //G     '*'
     //G
-    auto type_id()
+    auto type_id(
+        bool allow_omitting_type_name = false
+    )
         -> std::unique_ptr<type_id_node>
     {
         auto n = std::make_unique<type_id_node>();
@@ -6583,7 +6581,7 @@ private:
             n->id  = std::move(id);
             assert (n->id.index() == type_id_node::unqualified);
         }
-        else {
+        else if (!allow_omitting_type_name) {
             return {};
         }
         if (curr().type() == lexeme::Multiply) {
@@ -6931,7 +6929,7 @@ private:
             }
 
             //  String literals can have multiple chunks, such as "xyzzy" "plugh"
-            //  (in Cpp2 these are merged in the preprocessor, in Cpp2 they're in the grammar)
+            //  (in Cpp1 these are merged in the preprocessor, in Cpp2 they're in the grammar)
             if (n->pieces.front()->type() == lexeme::StringLiteral) {
                 while (curr().type() == lexeme::StringLiteral) {
                     n->pieces.push_back(&curr());
@@ -8528,8 +8526,8 @@ private:
             }
         }
 
-        //  Or just a type-id, declaring a non-pointer object
-        else if (auto t = type_id())
+        //  Or just a (possibly empty == deduced) type-id
+        else if (auto t = type_id(true))
         {
             if (
                 t->get_token()
@@ -8549,6 +8547,7 @@ private:
 
             n->type = std::move(t);
             assert (n->is_object());
+            deduced_type = n->has_wildcard_type();
 
             if (!n->metafunctions.empty()) {
                 errors.emplace_back(
@@ -8564,14 +8563,6 @@ private:
             }
         }
 
-        //  Or nothing, declaring an object of deduced type,
-        //  which we'll represent using an empty type-id
-        else {
-            n->type = std::make_unique<type_id_node>();
-            assert (n->is_object());
-            deduced_type = true;
-        }
-
         //  If we've already validated that this is a function where the parameter
         //  list is followed by a valid expression-statement, parse that again
         //  (requiring a semicolon as we validated when determining terse_no_equals)
@@ -8579,7 +8570,9 @@ private:
         {
             n->equal_sign = curr().position();
             n->initializer = statement(/*ignore semicolon_required*/ false, n->equal_sign);
-            assert( n->initializer && "ICE: should have already validated that there's a valid expression-statement here" );
+            if (!n->initializer) {
+                return {};
+            }
         }
 
         else

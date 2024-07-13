@@ -32,7 +32,7 @@ constexpr int a = 1;
 
     std::vector<int> v {1, 2, 3}; 
     std::cout << (1 + 2) * (3 + CPP2_ASSERT_IN_BOUNDS_LITERAL(cpp2::move(v), 0));
-    std::cout << ("\n13*14 is " + cpp2::to_string(13 * 14) + "\n");
+    std::cout << "\n13*14 is " + cpp2::to_string(13 * 14) + "\n";
     f<(cpp2::impl::cmp_greater(1,2))>(3, 4);
     f<a + a>(5, 6);
 }
