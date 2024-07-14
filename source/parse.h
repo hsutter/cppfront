@@ -6960,6 +6960,9 @@ private:
         expression_statement_node::current_expression_statements.push_back(n.get());
         auto guard = finally([&]{ expression_statement_node::current_expression_statements.pop_back(); });
 
+        //  Remember current position, in case this isn't a valid expression-statement
+        auto start_pos = pos;
+
         if (!(n->expr = expression(true, true))) {
             return {};
         }
@@ -6978,6 +6981,7 @@ private:
                 //  it doesn't destabilize any regression tests
             )
         {
+            pos = start_pos;    // backtrack
             return {};
         }
         if (
@@ -7246,6 +7250,10 @@ private:
             if (!n->range) {
                 error("expected valid range expression after 'for'", true, {}, true);
                 return {};
+            }
+
+            if (curr().type() == lexeme::Comma) {
+                error("iterating over multiple ranges at once is not currently supported");
             }
 
             if (!handle_optional_next_clause()) { return {}; }
@@ -7671,6 +7679,15 @@ private:
         }
 
         else {
+            if (
+                curr().type() == lexeme::Identifier
+                && peek(1)
+                && peek(1)->type() == lexeme::Comma
+                )
+            {
+                next();
+                error("declaring multiple names at once is not currently supported");
+            }
             return {};
         }
     }

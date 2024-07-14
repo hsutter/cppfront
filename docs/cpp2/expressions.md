@@ -27,16 +27,27 @@ f: ( v : std::vector<widget> ) = {
     log( v.ssize() );
 }
 
-//  Generic function to print "hello, ___!" for any printable type
-hello: (name) = {
-    myfile := fopen("xyzzy.txt", "w");
-    //  Direct calls to C nonmember functions, using UFCS and safe
-    //  string interpolation (instead of type-unsafe format strings)
-    myfile.fprintf( "Hello, (name)$!\n" );
-    myfile.fclose();
+//  Generic function to use standard I/O to print any printable types
+//  safely using string interpolation (instead of type-unsafe format strings)
+hello: (name, height: float) = {
+    //  Using UFCS to make direct calls to C functions as if they were members
+    stdout.fprintf( "%s", ("Hello (name)$, your height is (height:.1f)$ inches!\n").c_str() );
+    //  Equivalent using iostreams:
+    //        std::cout << "Hello (name)$, your height is (height:.1f)$ inches!\n";
+
     //  The C and C++ standard libraries are not only fully available,
     //  but safer (and arguably nicer) when used from Cpp2 syntax code
 }
+
+main: () = {
+    hello("Flimnap", 6.5);
+    hello("Goliath", 115);
+    hello("Polyphemus", 180);
+}
+//  Sample output:
+//      Hello Flimnap, your height is 6.5 inches!
+//      Hello Goliath, your height is 115.0 inches!
+//      Hello Polyphemus, your height is 180.0 inches!
 ```
 
 To explicitly treat an object name passed as an argument as `move` or `out`, write that keyword before the variable name.
