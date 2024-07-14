@@ -1582,22 +1582,22 @@ template<typename M> auto test(M const& regex, cpp2::impl::in<std::string> id, c
       auto result {create_result(resultExpr, cpp2::move(r))}; 
 
       if (result != resultExpected) {
-        status = { "Failure: Result is wrong. (is: " + cpp2::to_string(cpp2::move(result)) + ")" };
+        status = "Failure: Result is wrong. (is: " + cpp2::to_string(cpp2::move(result)) + ")";
       }
     }
   }
   else {if ("n" == kind) {
     if (r.matched) {
-      status = { "Failure: Regex should not apply. Result is '" + cpp2::to_string(CPP2_UFCS(group)(cpp2::move(r), 0)) + "'" };
+      status = "Failure: Regex should not apply. Result is '" + cpp2::to_string(CPP2_UFCS(group)(cpp2::move(r), 0)) + "'";
     }
   }else {
-    status = { "Unknown kind '" + cpp2::to_string(kind) + "'" };
+    status = "Unknown kind '" + cpp2::to_string(kind) + "'";
   }}
 
   if (!(CPP2_UFCS(empty)(warning))) {
     warning += " ";
   }
-  std::cout << (cpp2::to_string(id) + "_" + cpp2::to_string(kind) + ": " + cpp2::to_string(cpp2::move(status)) + " " + cpp2::to_string(cpp2::move(warning)) + "regex: " + cpp2::to_string(regex_str) + " parsed_regex: " + cpp2::to_string(CPP2_UFCS(to_string)(regex)) + " str: " + cpp2::to_string(str) + " result_expr: " + cpp2::to_string(resultExpr) + " expected_results " + cpp2::to_string(resultExpected)) << std::endl;
+  std::cout << "" + cpp2::to_string(id) + "_" + cpp2::to_string(kind) + ": " + cpp2::to_string(cpp2::move(status)) + " " + cpp2::to_string(cpp2::move(warning)) + "regex: " + cpp2::to_string(regex_str) + " parsed_regex: " + cpp2::to_string(CPP2_UFCS(to_string)(regex)) + " str: " + cpp2::to_string(str) + " result_expr: " + cpp2::to_string(resultExpr) + " expected_results " + cpp2::to_string(resultExpected) + "" << std::endl;
 }
 
 #line 207 "pure2-regex_15_group_modifiers.cpp2"
