@@ -1,1 +1,1 @@
-Contract violation: fill: value must contain at least count elements
+mixed-initialization-safety-3-contract-violation.cpp2(25) void __cdecl fill(class cpp2::impl::out<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > >,const class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > &,const int): Contract violation: fill: value must contain at least count elements

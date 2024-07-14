@@ -1,1 +1,1 @@
-Bounds safety violation
+mixed-bounds-safety-with-assert.cpp2(11) void __cdecl print_subrange<class std::vector<int,class std::allocator<int> >>(const class std::vector<int,class std::allocator<int> > &,const int,const int): Bounds safety violation
