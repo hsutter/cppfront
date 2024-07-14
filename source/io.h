@@ -175,7 +175,7 @@ auto starts_with_whitespace_slash_star_and_no_star_slash(std::string const& line
         && line[i + 1] == '*'
         )
     {
-        return line.find("*/", i) == std::string::npos;
+        return line.find("*/", i) == line.npos;
     }
     else {
         return false;
@@ -604,7 +604,7 @@ auto process_cpp_line(
         }
         else if (in_raw_string_literal) {
             auto end_pos = line.find(raw_string_closing_seq, i);
-            if (end_pos == std::string::npos) {
+            if (end_pos == line.npos) {
                 return r;
             }
             in_raw_string_literal = false;
@@ -626,7 +626,7 @@ auto process_cpp_line(
                         if (i < ssize(line) - 1)
                         {
                             if (auto paren_pos = line.find("(", i);
-                                paren_pos != std::string::npos
+                                paren_pos != line.npos
                                 )
                             {
                                 raw_string_closing_seq = ")"+line.substr(i, paren_pos-i)+"\"";

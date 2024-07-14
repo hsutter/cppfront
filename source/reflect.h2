@@ -101,7 +101,7 @@ compiler_services: @polymorphic_base @copyable type =
         if  source.ssize() > 1
             && newline_pos != source.npos
         {
-            while newline_pos != std::string_view::npos
+            while newline_pos != source.npos
             {
                 add_line( source.substr(0, newline_pos) );
                 source.remove_prefix( newline_pos+1 );

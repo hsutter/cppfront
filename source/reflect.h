@@ -863,7 +863,7 @@ auto newline_pos{CPP2_UFCS(find)(source, '\n')};
         if ( cpp2::impl::cmp_greater(CPP2_UFCS(ssize)(source),1) 
             && newline_pos != source.npos) 
         {
-            while( newline_pos != std::string_view::npos ) 
+            while( newline_pos != source.npos ) 
             {
                 add_line(CPP2_UFCS(substr)(source, 0, newline_pos));
                 CPP2_UFCS(remove_prefix)(source, newline_pos + 1);
