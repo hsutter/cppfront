@@ -1267,7 +1267,7 @@ auto lex_line(
             // raw string was not expanded
 
             raw_string_multiline.value().text += part;
-            if (end_pos == std::string::npos) {
+            if (end_pos == line.npos) {
                 raw_string_multiline.value().text += '\n';
                 break;
             }
@@ -1328,7 +1328,7 @@ auto lex_line(
                         comment::comment_kind::line_comment,
                         {lineno, i},
                         {lineno, _as<colno_t>(std::ssize(line))},
-                        std::string(&line[i], std::ssize(line) - i)
+                        line.substr(i)
                         });
                     in_comment = false;
                     goto END;
@@ -1484,7 +1484,7 @@ auto lex_line(
                     auto R_pos = i + 1;
                     auto seq_pos = i + 3;
 
-                    if (auto paren_pos = line.find("(", seq_pos); paren_pos != std::string::npos) {
+                    if (auto paren_pos = line.find("(", seq_pos); paren_pos != line.npos) {
                         auto opening_seq = line.substr(i, paren_pos - i + 1);
                         auto closing_seq = ")"+line.substr(seq_pos, paren_pos-seq_pos)+"\"";
 
@@ -1532,7 +1532,7 @@ auto lex_line(
                     else {
                         errors.emplace_back(
                             source_position(lineno, i + 1),
-                            "invalid new-line in raw string delimiter \"" + std::string(&line[i],3)
+                            "invalid new-line in raw string delimiter \"" + line.substr(i, 3)
                                 + "\" - stray 'R' in program \""
                         );
                     }
@@ -1579,7 +1579,6 @@ auto lex_line(
                             source_position(lineno, i),
                             "binary literal cannot be empty (0B must be followed by binary digits)"
                         );
-                        ++i;
                     }
                 }
                 else if (peek1 == 'x' || peek1 == 'X') {
@@ -1593,7 +1592,6 @@ auto lex_line(
                             source_position(lineno, i),
                             "hexadecimal literal cannot be empty (0X must be followed by hexadecimal digits)"
                         );
-                        ++i;
                     }
                 }
             }
@@ -1703,7 +1701,7 @@ auto lex_line(
                     if (peek(j-2) == 'R') {
                         auto seq_pos = i + j;
 
-                        if (auto paren_pos = line.find("(", seq_pos); paren_pos != std::string::npos) {
+                        if (auto paren_pos = line.find("(", seq_pos); paren_pos != line.npos) {
                             auto opening_seq = line.substr(i, paren_pos - i + 1);
                             auto closing_seq = ")"+line.substr(seq_pos, paren_pos-seq_pos)+"\"";
 
@@ -1724,7 +1722,7 @@ auto lex_line(
                         else {
                             errors.emplace_back(
                                 source_position(lineno, i + j - 2),
-                                "invalid new-line in raw string delimiter \"" + std::string(&line[i],j)
+                                "invalid new-line in raw string delimiter \"" + line.substr(i, j)
                                     + "\" - stray 'R' in program \""
                             );
                         }
@@ -1734,7 +1732,7 @@ auto lex_line(
                         if (peek(j) != '\"') {
                             errors.emplace_back(
                                 source_position(lineno, i),
-                                "string literal \"" + std::string(&line[i+1],j)
+                                "string literal \"" + line.substr(i+1, j)
                                     + "\" is missing its closing \""
                             );
                         }
@@ -1781,7 +1779,7 @@ auto lex_line(
                             assert (j > 1);
                             errors.emplace_back(
                                 source_position(lineno, i),
-                                "character literal '" + std::string(&line[i+1],j-1)
+                                "character literal '" + line.substr(i+1, j-1)
                                     + "' is missing its closing '"
                             );
                         }

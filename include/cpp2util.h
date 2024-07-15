@@ -762,20 +762,20 @@ constexpr auto process_type_name(std::string_view name) -> std::string_view {
     constexpr auto types_close_parenthesis = '>';
 #endif
     auto pos = name.find(type_prefix);
-    if (pos != std::string_view::npos) {
+    if (pos != name.npos) {
         name = name.substr(pos);
         name.remove_prefix(type_prefix.size());
     }
 
     pos = name.find_last_of(types_close_parenthesis);
-    if (pos != std::string_view::npos) {
+    if (pos != name.npos) {
         name = name.substr(0, pos);
     }
 
 #if defined(__GNUC__)
     constexpr auto type_separator = ';';
     pos = name.find(type_separator);
-    if (pos != std::string_view::npos) {
+    if (pos != name.npos) {
         name = name.substr(0, pos);
     }
 #endif

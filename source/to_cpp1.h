@@ -343,9 +343,9 @@ private:
         //  and where the last one was which determines our current colno
         if (track_curr_pos)
         {
-            auto last_newline = std::string::npos;  // the last newline we found in the string
+            auto last_newline = s.npos;             // the last newline we found in the string
             auto newline_pos  = std::size_t(0);     // the current newline we found in the string
-            while ((newline_pos = s.find('\n', newline_pos)) != std::string::npos)
+            while ((newline_pos = s.find('\n', newline_pos)) != s.npos)
             {
                 //  For each line break we find, reset pad and inc current lineno
                 pad_for_this_line = 0;
@@ -355,7 +355,7 @@ private:
             }
 
             //  Now also adjust the colno
-            if (last_newline != std::string::npos) {
+            if (last_newline != s.npos) {
                 //  If we found a newline, it's the distance from the last newline to EOL
                 curr_pos.colno = unsafe_narrow<colno_t>(s.length() - last_newline);
             }
@@ -415,7 +415,7 @@ private:
         if (c.kind == comment::comment_kind::line_comment) {
             print( pad( c.start.colno - curr_pos.colno + 1 ) );
             print( c.text );
-            assert( c.text.find("\n") == std::string::npos );  // we shouldn't have newlines
+            assert( c.text.find("\n") == c.text.npos ); // we shouldn't have newlines
             print("\n");
         }
 
@@ -792,7 +792,7 @@ public:
             && newline_pos != s.npos
             )
         {
-            while (newline_pos != std::string_view::npos)
+            while (newline_pos != s.npos)
             {
                 //  Print the text before the next newline
                 if (newline_pos > 0) {
@@ -4424,8 +4424,8 @@ public:
                         tparam->declaration->is_type()
                         && (
                             name == tparam_name
-                            || name.find("<"+tparam_name) != std::string_view::npos
-                            || name.find(","+tparam_name) != std::string_view::npos
+                            || name.find("<"+tparam_name) != name.npos
+                            || name.find(","+tparam_name) != name.npos
                         )
                         )
                     {
