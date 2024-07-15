@@ -1352,7 +1352,7 @@ auto lex_line(
                 }
                 else { store(1, lexeme::Less); }
 
-            //  Note: >> and >>= are not source tokens, they are synthesized from > > and > >= where legal
+            //  Note: >= and >> and >>= synthesized from > = and > > and > >= where legal
             //G     '>>=' '>>' '>=' '>'
             break;case '>':
                 //---------------------------------------------------------
@@ -1362,10 +1362,10 @@ auto lex_line(
                 //    if (peek2 == '=') { store(3, lexeme::RightShiftEq); }
                 //    else { store(2, lexeme::RightShift); }
                 //}
+                //else if (peek1 == '=') { store(2, lexeme::GreaterEq); }
                 //else
                 //---------------------------------------------------------
-                if (peek1 == '=') { store(2, lexeme::GreaterEq); }
-                else { store(1, lexeme::Greater); }
+                { store(1, lexeme::Greater); }
 
             //G     '++' '+=' '+'
             break;case '+':

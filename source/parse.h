@@ -6157,6 +6157,26 @@ private:
                     next();
                 }
 
+                //  And for assignment-expression we may synthesize >>= from > > =
+                //  which will return a token* == a valid operator for this production
+                //  (possibly a synthesized new token) or nullptr otherwise
+                else if constexpr (requires{ validate_op(curr(), *peek(1), *peek(2)); }) {
+                    if (
+                        peek(1) == nullptr
+                        || peek(2) == nullptr
+                        || (t.op = validate_op(curr(), *peek(1), *peek(2))) == nullptr
+                        )
+                    {
+                        break;
+                    }
+                    //  If we didn't consume the next token, we consumed the next three
+                    if (t.op != &curr()) {
+                        next();
+                        next();
+                    }
+                    next();
+                }
+
                 //  And it shouldn't be anything else
                 else {
                     assert (!"ICE: validate_op should take one token and return bool, or two tokens and return token const* ");
@@ -6269,12 +6289,20 @@ private:
     {
         if (allow_angle_operators) {
             return binary_expression<relational_expression_node> (
-                [](token const& t, token const& next) -> token const* {
+                [this](token const& t, token const& next) -> token const* {
+                    if (
+                        t.type() == lexeme::Greater
+                        && next.type() == lexeme::Assignment
+                        && t.position() == source_position{ next.position().lineno, next.position().colno - 1 }
+                        )
+                    {
+                        generated_tokens->emplace_back(">=", t.position(), lexeme::GreaterEq);
+                        return &generated_tokens->back();
+                    }
                     if (
                         t.type() == lexeme::Less
                         || t.type() == lexeme::LessEq
-                        || (t.type() == lexeme::Greater && next.type() != lexeme::GreaterEq)
-                        || t.type() == lexeme::GreaterEq
+                        || t.type() == lexeme::Greater
                         ) {
                         return &t;
                     }
@@ -6394,13 +6422,14 @@ private:
         if (allow_angle_operators)
         {
             ret = binary_expression<assignment_expression_node> (
-                [this](token const& t, token const& next) -> token const* {
+                [this](token const& t, token const& next, token const& third) -> token const* {
                     if (is_assignment_operator(t.type())) {
                         return &t;
                     }
                     if (
                         t.type() == lexeme::Greater
-                        && next.type() == lexeme::GreaterEq
+                        && next.type() == lexeme::Greater
+                        && third.type() == lexeme::Assignment
                         && t.position() == source_position{ next.position().lineno, next.position().colno-1 }
                         )
                     {
