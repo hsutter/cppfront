@@ -1735,6 +1735,7 @@ auto lex_line(
                                 "string literal \"" + line.substr(i+1, j)
                                     + "\" is missing its closing \""
                             );
+                            return {};
                         }
 
                         //  At this point we have a string-literal, but it may contain
