@@ -1,41 +1,10 @@
-In file included from mixed-bugfix-for-ufcs-non-local.cpp:6:
-../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
- 2100 | //                compiler may not assume it knows anything at all about
-      | ^
-../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 | //
-      |                                                           ^         
-mixed-bugfix-for-ufcs-non-local.cpp2:13:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
-mixed-bugfix-for-ufcs-non-local.cpp2:13:36: error: template argument 1 is invalid
-../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
- 2100 | //                compiler may not assume it knows anything at all about
-      | ^
-../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 | //
-      |                                                           ^         
-mixed-bugfix-for-ufcs-non-local.cpp2:21:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
-mixed-bugfix-for-ufcs-non-local.cpp2:21:36: error: template argument 1 is invalid
-../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
- 2100 | //                compiler may not assume it knows anything at all about
-      | ^
-../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 | //
-      |                                                           ^         
-mixed-bugfix-for-ufcs-non-local.cpp2:31:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
-mixed-bugfix-for-ufcs-non-local.cpp2:31:36: error: template argument 1 is invalid
-../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
- 2100 | //                compiler may not assume it knows anything at all about
-      | ^
-../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 | //
-      |                                                           ^         
-mixed-bugfix-for-ufcs-non-local.cpp2:33:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
-mixed-bugfix-for-ufcs-non-local.cpp2:33:36: error: template argument 1 is invalid
-../../../include/cpp2util.h:2100:1: error: lambda-expression in template parameter type
- 2100 | //                compiler may not assume it knows anything at all about
-      | ^
-../../../include/cpp2util.h:2137:59: note: in expansion of macro ‘CPP2_UFCS_’
- 2137 | //
-      |                                                           ^         
-mixed-bugfix-for-ufcs-non-local.cpp2:21:12: note: in expansion of macro ‘CPP2_UFCS_NONLOCAL’
-mixed-bugfix-for-ufcs-non-local.cpp2:21:36: error: template argument 1 is invalid
+pure2-bugfix-for-ufcs-noexcept.cpp2:5:26: error: lambda expression in an unevaluated operand
+  static_assert(noexcept(CPP2_UFCS(swap)(t(), t())));// Fails on Clang 12 (lambda in unevaluated context) and GCC 10 (static assertion failed)
+                         ^
+../../../include/cpp2util.h:2132:59: note: expanded from macro 'CPP2_UFCS'
+#define CPP2_UFCS(...)                                    CPP2_UFCS_(&,CPP2_UFCS_EMPTY,CPP2_UFCS_IDENTITY,(),,__VA_ARGS__)
+                                                          ^
+../../../include/cpp2util.h:2099:66: note: expanded from macro 'CPP2_UFCS_'
+#define CPP2_UFCS_(LAMBDADEFCAPT,SFINAE,MVFWD,QUALID,TEMPKW,...) \
+                                                                 ^
+1 error generated.
