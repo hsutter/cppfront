@@ -1,4 +1,4 @@
 pure2-return-tuple-no-identifier-error.cpp2...
 pure2-return-tuple-no-identifier-error.cpp2(1,11): error: expected identifier, not 'int'
-pure2-return-tuple-no-identifier-error.cpp2(1,16): error: expected identifier, not 'int'
+pure2-return-tuple-no-identifier-error.cpp2(1,14): error: missing function return after -> (at ',')
 

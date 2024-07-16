@@ -751,6 +751,8 @@ auto lex_line(
                 "        short, ushort, int, uint, long, ulong, longlong, ulonglong, longdouble, _schar, _uchar\n"
                 "    - see also cpp2util.h > \"Convenience names for integer types\""
             );
+
+            return;
         }
 
         tokens.push_back(last_token);
@@ -1002,6 +1004,7 @@ auto lex_line(
                 "invalid universal character name - \\u without { must"
                 " be followed by 4 hexadecimal digits"
             );
+            return 0;
         }
 
         else if (
@@ -1022,6 +1025,7 @@ auto lex_line(
 
             if (peek(j + offset) == '}') {
                 ++j;
+                return j;
             }
             else {
                 errors.emplace_back(
@@ -1029,8 +1033,8 @@ auto lex_line(
                     "invalid universal character name - \\u{ must"
                     " be followed by hexadecimal digits and a closing }"
                 );
+                return 0;
             }
-            return j;
         }
 
         else if (
@@ -1052,7 +1056,9 @@ auto lex_line(
                 "invalid universal character name - \\U must"
                     " be followed by 8 hexadecimal digits"
             );
+            return 0;
         }
+
         return 0;
     };
 
@@ -1535,6 +1541,7 @@ auto lex_line(
                             "invalid new-line in raw string delimiter \"" + line.substr(i, 3)
                                 + "\" - stray 'R' in program \""
                         );
+                        return {};
                     }
                 } else {
                     store(1, lexeme::Dollar);
@@ -1579,6 +1586,7 @@ auto lex_line(
                             source_position(lineno, i),
                             "binary literal cannot be empty (0B must be followed by binary digits)"
                         );
+                        return {};
                     }
                 }
                 else if (peek1 == 'x' || peek1 == 'X') {
@@ -1592,6 +1600,7 @@ auto lex_line(
                             source_position(lineno, i),
                             "hexadecimal literal cannot be empty (0X must be followed by hexadecimal digits)"
                         );
+                        return {};
                     }
                 }
             }
@@ -1658,6 +1667,7 @@ auto lex_line(
                                     source_position(lineno, i),
                                     "a floating point literal must have at least one digit after the decimal point (can be '.0')"
                                 );
+                                return {};
                             }
                             while (is_separator_or(is_digit,peek(j))) {
                                 ++j;
@@ -1725,6 +1735,7 @@ auto lex_line(
                                 "invalid new-line in raw string delimiter \"" + line.substr(i, j)
                                     + "\" - stray 'R' in program \""
                             );
+                            return {};
                         }
                     }
                     else {
@@ -1783,6 +1794,7 @@ auto lex_line(
                                 "character literal '" + line.substr(i+1, j-1)
                                     + "' is missing its closing '"
                             );
+                            return {};
                         }
                         store(j+1, lexeme::CharacterLiteral);
                     }
@@ -1791,6 +1803,7 @@ auto lex_line(
                             source_position(lineno, i),
                             "character literal is empty"
                         );
+                        return {};
                     }
                 }
 
@@ -1816,18 +1829,21 @@ auto lex_line(
                             source_position(lineno, i),
                             "'const_cast' is not supported in Cpp2 - the current C++ best practice is to never cast away const, and that is const_cast's only effective use"
                         );
+                        return {};
                     }
                     if (tokens.back() == "static_cast") {
                         errors.emplace_back(
                             source_position(lineno, i),
                             "'static_cast<T>(val)' is not supported in Cpp2 - use 'val as T' for safe conversions instead, or if necessary cpp2::unsafe_narrow<T>(val) for a possibly-lossy narrowing conversion"
                         );
+                        return {};
                     }
                     if (tokens.back() == "dynamic_cast") {
                         errors.emplace_back(
                             source_position(lineno, i),
                             "'dynamic_cast<Derived*>(pBase)' is not supported in Cpp2 - use 'pBase as *Derived' for safe dynamic conversions instead"
                         );
+                        return {};
                     }
                 }
 
@@ -1854,12 +1870,14 @@ auto lex_line(
                                 source_position(lineno, i),
                                 "'NULL' is not supported in Cpp2 - for a local pointer variable, leave it uninitialized instead, and set it to a non-null value when you have one"
                             );
+                            return {};
                         }
                         if (tokens.back() == "delete") {
                             errors.emplace_back(
                                 source_position(lineno, i),
                                 "'delete' and owning raw pointers are not supported in Cpp2 - use unique.new<T> or shared.new<T> instead in that order (or, in the future, gc.new<T>, but that is not yet implemented)"
                             );
+                            return {};
                         }
                     }
                 }
@@ -1873,6 +1891,7 @@ auto lex_line(
                         false,
                         true    // a noisy fallback error message
                     );
+                    return {};
                 }
             }
         }

@@ -779,6 +779,7 @@ auto process_cpp2_line(
                                 " after the closing ; or } of a definition, the rest"
                                 " of the line cannot begin a /*...*/ comment")
                         );
+                        return false;
                     }
                 }
 
@@ -807,6 +808,7 @@ auto process_cpp2_line(
             source_position(lineno, unsafe_narrow<colno_t>(ssize(line))),
             std::string("line ended before character literal was terminated")
         );
+        return false;
     }
 
     return found_end;
