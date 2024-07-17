@@ -930,6 +930,17 @@ struct postfix_expression_node
         return ops.empty() && expr->is_id_expression();
     }
 
+    auto starts_with_function_call_with_n_parameters(int n) const
+        -> bool
+    {
+        return
+            std::ssize(ops) >= 1
+            && ops.front().op->type() == lexeme::LeftParen
+            && ops.front().expr_list
+            && std::ssize(ops.front().expr_list->expressions) == n
+            ;
+    }
+
     auto is_unqualified_id() const
         -> bool
     {
@@ -6874,11 +6885,14 @@ private:
         //  Reject "std" :: "move" / "forward"
         assert (term.id->identifier);
         auto first_uid_was_std = (*term.id->identifier == "std");
-        auto first_time_through_loop = true;
 
         n->ids.push_back( std::move(term) );
 
-        while (curr().type() == lexeme::Scope)
+        for ( 
+            auto first_time_through_loop = true;
+            curr().type() == lexeme::Scope;
+            first_time_through_loop = false
+            )
         {
             auto term = qualified_id_node::term{ &curr() };
             next();
@@ -6892,17 +6906,11 @@ private:
                 first_time_through_loop
                 && first_uid_was_std
                 && term.scope_op->type() == lexeme::Scope
-                )
+                && *term.id->identifier == "forward"
+                ) 
             {
-                if (*term.id->identifier == "move") {
-                    error("std::move is not needed in Cpp2 - use 'move' parameters/arguments instead", false);
-                    return {};
-                }
-                else if (*term.id->identifier == "forward") {
-                    error("std::forward is not needed in Cpp2 - use 'forward' parameters/arguments instead", false);
-                    return {};
-                }
-                first_time_through_loop = false;
+                error("std::forward is not needed in Cpp2 - use 'forward' parameters/arguments instead", false);
+                return {};
             }
             n->ids.push_back( std::move(term) );
         }

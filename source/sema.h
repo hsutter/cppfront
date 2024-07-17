@@ -1511,6 +1511,18 @@ public:
             }
         }
 
+        if (
+            n.expr->to_string() == "std::move"
+            && n.starts_with_function_call_with_n_parameters(1)
+            )
+        {
+            errors.emplace_back(
+                n.position(),
+                "std::move(one_argument) is not needed in Cpp2 - use 'move' parameters/arguments instead"
+            );
+            return false;
+        }
+
         return true;
     }
 
