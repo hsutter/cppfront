@@ -1442,6 +1442,7 @@ print: (t: meta::type_declaration) =
     std::cout << t.print() << "\n";
 }
 
+
 //-----------------------------------------------------------------------
 //
 //  regex - creates regular expressions from members
@@ -1458,18 +1459,17 @@ print: (t: meta::type_declaration) =
 //
 regex_gen: (inout t: meta::type_declaration) =
 {
-    has_default: = false;
-    prefix:= "regex";
-    postfix: std::string = "_mod";  // TODO: Remove mod syntax when 'm.initializer()' can be '("pat", "mod")'.
-
-    expressions: std::map<std::string, std::string> = ();
+    has_default := false;
+    prefix      := "regex";
+    postfix     : std::string = "_mod";     // TODO: remove mod syntax when 'm.initializer()' can be '("pat", "mod")'
+    expressions : std::map<std::string, std::string> = ();
 
     for t.get_member_objects() do (inout m)
     {
         name: std::string = m.name();
 
-        if name.starts_with(prefix) {
-
+        if name.starts_with(prefix)
+        {
             if !m.has_initializer() {
                 t.error("Regular expression must have an initializer.");
             }

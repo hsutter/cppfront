@@ -44,8 +44,8 @@
 // 
 //===========================================================================
 
-#ifndef CPP2_UTIL_H
-#define CPP2_UTIL_H
+#ifndef CPP2_CPP2UTIL_H
+#define CPP2_CPP2UTIL_H
 
 //  If this implementation doesn't support source_location yet, disable it
 #include <version>

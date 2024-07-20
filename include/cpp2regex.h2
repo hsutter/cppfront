@@ -10,11 +10,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// #include <map>
-// #include <set>
+
+//===========================================================================
+//  Regex support
+//===========================================================================
+
+#ifndef CPP2_CPP2REGEX_H
+#define CPP2_CPP2REGEX_H
+
 
 template<typename matcher_wrapper, typename Iter, typename CharT>
 using matcher_wrapper_type = typename matcher_wrapper::template wrap<Iter, CharT>;
+
 template<typename matcher>
 using matcher_context_type = typename matcher::context;
 
@@ -24,8 +31,9 @@ cpp2: namespace = {
 
 regex: namespace = {
 
-bview: <CharT> type == std::basic_string_view<CharT>;
+bview  : <CharT> type == std::basic_string_view<CharT>;
 bstring: <CharT> type == std::basic_string<CharT>;
+
 
 //-----------------------------------------------------------------------
 //
@@ -34,9 +42,10 @@ bstring: <CharT> type == std::basic_string<CharT>;
 //-----------------------------------------------------------------------
 //
 
-// Possible modifiers for a regular expression.
+//  Possible modifiers for a regular expression.
 //
-expression_flags: @flag_enum<u8> type = {
+expression_flags: @flag_enum<u8> type = 
+{
     case_insensitive;             // mod: i
     multiple_lines;               // mod: m
     single_line;                  // mod: s
@@ -45,28 +54,30 @@ expression_flags: @flag_enum<u8> type = {
     perl_code_syntax_in_classes;  // mod: xx
 }
 
-// Structure for storing group information.
+//  Structure for storing group information.
 //
-match_group: @struct <Iter> type = {
+match_group: @struct <Iter> type = 
+{
     start: Iter = ();
     end: Iter = ();
 
     matched: bool = false;
 }
 
-// Return value for every matcher.
+//  Return value for every matcher.
 // 
-match_return: @struct <Iter> type = {
+match_return: @struct <Iter> type = 
+{
     matched: bool = false;
     pos: Iter = ();
 }
 
-// Modifiable state during matching.
+//  Modifiable state during matching.
 //
 match_context: <CharT, Iter, max_groups: int> type =
 {
-    public begin: Iter;
-    public end: Iter;
+    public  begin : Iter;
+    public  end   : Iter;
 
     private groups: std::array<match_group<Iter>, max_groups> = ();
 
@@ -77,7 +88,7 @@ match_context: <CharT, Iter, max_groups: int> type =
 
     operator=: (out this, that) = {}
 
-    // Getter and setter for groups
+    //  Getter and setter for groups
     //
     get_group: (in this, group) groups[group];
 
@@ -115,29 +126,32 @@ match_context: <CharT, Iter, max_groups: int> type =
 
     size: (in this) max_groups;
 
-    // Misc functions
+    //  Misc functions
     //
-
     fail: (in this)            match_return<Iter>(false, end);
     pass: (in this, cur: Iter) match_return<Iter>(true, cur);
-
 }
 
-// End function that returns a valid match.
+
+//  End function that returns a valid match.
 //
-true_end_func: @struct type = {
+true_end_func: @struct type = 
+{
     operator(): (in this, cur, inout ctx) ctx..pass(cur);
 }
 
-// Empty group reset function.
+
+//  Empty group reset function.
 //
-no_reset: @struct type = {
+no_reset: @struct type = 
+{
     operator(): (this, inout _:) = {}
 }
 
-// Evaluate func on destruction of the handle.
-on_return: <Func> type = {
 
+//  Evaluate func on destruction of the handle.
+on_return: <Func> type = 
+{
     func: Func;
 
     operator=: (out this, f: Func) = {
@@ -149,8 +163,10 @@ on_return: <Func> type = {
     }
 }
 
-// Helper for auto deduction of the Func type.
+
+//  Helper for auto deduction of the Func type.
 make_on_return: <Func> (func: Func) on_return<Func>(func);
+
 
 //-----------------------------------------------------------------------
 //
@@ -159,76 +175,87 @@ make_on_return: <Func> (func: Func) on_return<Func>(func);
 //-----------------------------------------------------------------------
 //
 
-// Class syntax: <any character> Example: a
+//  Class syntax: <any character> Example: a
 //
 single_class_entry: <CharT, C: CharT> type =
 {
-    includes: (c: CharT) c == C;
-    to_string: ()        bstring<CharT>(1, C);
+    includes : (c: CharT) c == C;
+    to_string: ()         bstring<CharT>(1, C);
 }
 
-// Class syntax: - Example: a-c
+
+//  Class syntax: - Example: a-c
 //
 range_class_entry: <CharT, Start: CharT, End: CharT> type =
 {
-    includes: (c: CharT) Start <= c <= End;
-    to_string:        () "(Start)$-(End)$";
+    includes : (c: CharT) Start <= c <= End;
+    to_string: ()         "(Start)$-(End)$";
 }
 
-// Helper for combining two character classes
+
+//  Helper for combining two character classes
 //
-combined_class_entry: <CharT, List ...> type = {
-    includes: (c: CharT) (false || ... || List::includes(c));
-    to_string: ()        (bstring<CharT>() + ... + List::to_string());
+combined_class_entry: <CharT, List ...> type = 
+{
+    includes : (c: CharT) (false || ... || List::includes(c));
+    to_string: ()         (bstring<CharT>() + ... + List::to_string());
 }
 
-// Class syntax: <list of characters>  Example: abcd
+
+//  Class syntax: <list of characters>  Example: abcd
 //
-list_class_entry: <CharT, List ... : CharT> type = {
-    includes: (c: CharT) (false || ... || (List == c));
-    to_string: ()        (bstring<CharT>() + ... + List);
+list_class_entry: <CharT, List ... : CharT> type = 
+{
+    includes : (c: CharT) (false || ... || (List == c));
+    to_string: ()         (bstring<CharT>() + ... + List);
 }
 
-// Class syntax: [:<class name:]  Example: [:alnum:]
+
+//  Class syntax: [:<class name:]  Example: [:alnum:]
 //
-named_class_entry: <CharT, Name: string_util::fixed_string, Inner> type = {
-    includes: (c: CharT) Inner::includes(c);
-    to_string: ()        "[:(Name..data())$:]";
+named_class_entry: <CharT, Name: string_util::fixed_string, Inner> type = 
+{
+    includes : (c: CharT) Inner::includes(c);
+    to_string: ()         "[:(Name..data())$:]";
 }
 
-negated_class_entry: <CharT, Inner> type = {
-    this: Inner = ();
+
+negated_class_entry: <CharT, Inner> type = 
+{
+    this    : Inner      = ();
     includes: (c: CharT) !Inner::includes(c);
 }
 
-// Short class syntax: \<character>  Example: \w
+
+//  Short class syntax: \<character>  Example: \w
 //
-shorthand_class_entry: <CharT, Name: string_util::fixed_string, Inner> type = {
-    includes: (c: CharT) Inner::includes(c);
-    to_string: ()        Name..str();
+shorthand_class_entry: <CharT, Name: string_util::fixed_string, Inner> type = 
+{
+    includes : (c: CharT) Inner::includes(c);
+    to_string: ()         Name..str();
 }
 
 
-// Named basic character classes
+//  Named basic character classes
 //
 digits_class  : <CharT> type == named_class_entry<CharT, "digits", range_class_entry<CharT, '0', '9'>>;
-lower_class   : <CharT> type == named_class_entry<CharT, "lower", range_class_entry<CharT, 'a', 'z'>>;
-upper_class   : <CharT> type == named_class_entry<CharT, "upper", range_class_entry<CharT, 'A', 'Z'>>;
+lower_class   : <CharT> type == named_class_entry<CharT, "lower",  range_class_entry<CharT, 'a', 'z'>>;
+upper_class   : <CharT> type == named_class_entry<CharT, "upper",  range_class_entry<CharT, 'A', 'Z'>>;
 
-// Named other classes
+//  Named other classes
 //
-alnum_class     : <CharT> type == named_class_entry<CharT, "alnum", combined_class_entry<CharT, lower_class<CharT>, upper_class<CharT>, digits_class<CharT>>>;
-alpha_class     : <CharT> type == named_class_entry<CharT, "alpha", combined_class_entry<CharT, lower_class<CharT>, upper_class<CharT>>>;
-ascii_class     : <CharT> type == named_class_entry<CharT, "ascii", range_class_entry<CharT, '\x00', '\x7F'>>;
-blank_class     : <CharT> type == named_class_entry<CharT, "blank", list_class_entry<CharT, ' ', '\t'>>;
-cntrl_class     : <CharT> type == named_class_entry<CharT, "cntrl", combined_class_entry<CharT, range_class_entry<CharT, '\x00', '\x1F'>, single_class_entry<CharT, '\x7F'>>>;
-graph_class     : <CharT> type == named_class_entry<CharT, "graph", range_class_entry<CharT, '\x21', '\x7E'>>;
+alnum_class     : <CharT> type == named_class_entry<CharT, "alnum",  combined_class_entry<CharT, lower_class<CharT>, upper_class<CharT>, digits_class<CharT>>>;
+alpha_class     : <CharT> type == named_class_entry<CharT, "alpha",  combined_class_entry<CharT, lower_class<CharT>, upper_class<CharT>>>;
+ascii_class     : <CharT> type == named_class_entry<CharT, "ascii",  range_class_entry<CharT, '\x00', '\x7F'>>;
+blank_class     : <CharT> type == named_class_entry<CharT, "blank",  list_class_entry<CharT, ' ', '\t'>>;
+cntrl_class     : <CharT> type == named_class_entry<CharT, "cntrl",  combined_class_entry<CharT, range_class_entry<CharT, '\x00', '\x1F'>, single_class_entry<CharT, '\x7F'>>>;
+graph_class     : <CharT> type == named_class_entry<CharT, "graph",  range_class_entry<CharT, '\x21', '\x7E'>>;
 hor_space_class : <CharT> type == named_class_entry<CharT, "hspace", list_class_entry<CharT, '\t', ' '>>;
-print_class     : <CharT> type == named_class_entry<CharT, "print", range_class_entry<CharT, '\x20', '\x7E'>>;
-punct_class     : <CharT> type == named_class_entry<CharT, "punct", list_class_entry<CharT, '[','!','"','#','$','%','&','\'','(',')','*','+',',','-','.','/',':',';','<','=','>','?','@','[','\\',']','^','_','`','{','|','}','~',']'>>;
-space_class     : <CharT> type == named_class_entry<CharT, "space", list_class_entry<CharT, ' ', '\t', '\r', '\n', '\v', '\f'>>;
+print_class     : <CharT> type == named_class_entry<CharT, "print",  range_class_entry<CharT, '\x20', '\x7E'>>;
+punct_class     : <CharT> type == named_class_entry<CharT, "punct",  list_class_entry<CharT, '[','!','"','#','$','%','&','\'','(',')','*','+',',','-','.','/',':',';','<','=','>','?','@','[','\\',']','^','_','`','{','|','}','~',']'>>;
+space_class     : <CharT> type == named_class_entry<CharT, "space",  list_class_entry<CharT, ' ', '\t', '\r', '\n', '\v', '\f'>>;
 ver_space_class : <CharT> type == named_class_entry<CharT, "vspace", list_class_entry<CharT, '\n', '\v', '\f', '\r'>>;
-word_class      : <CharT> type == named_class_entry<CharT, "word", combined_class_entry<CharT, alnum_class<CharT>, single_class_entry<CharT, '_'>>>;
+word_class      : <CharT> type == named_class_entry<CharT, "word",   combined_class_entry<CharT, alnum_class<CharT>, single_class_entry<CharT, '_'>>>;
 xdigit_class    : <CharT> type == named_class_entry<CharT, "xdigit", combined_class_entry<CharT, range_class_entry<CharT, 'A', 'F'>, range_class_entry<CharT, 'a', 'f'>, digits_class<CharT>>>;
 
 // Shorthand class entries
@@ -239,24 +266,24 @@ short_space_class      : <CharT> type == shorthand_class_entry<CharT, "\\s", spa
 short_vert_space_class : <CharT> type == shorthand_class_entry<CharT, "\\v", ver_space_class<CharT>>;
 short_word_class       : <CharT> type == shorthand_class_entry<CharT, "\\w", word_class<CharT>>;
 
-
 short_not_digits_class     : <CharT> type == negated_class_entry<CharT, shorthand_class_entry<CharT, "\\D", digits_class<CharT>>>;
 short_not_hor_space_class  : <CharT> type == negated_class_entry<CharT, shorthand_class_entry<CharT, "\\H", hor_space_class<CharT>>>;
 short_not_space_class      : <CharT> type == negated_class_entry<CharT, shorthand_class_entry<CharT, "\\S", space_class<CharT>>>;
 short_not_vert_space_class : <CharT> type == negated_class_entry<CharT, shorthand_class_entry<CharT, "\\V", ver_space_class<CharT>>>;
 short_not_word_class       : <CharT> type == negated_class_entry<CharT, shorthand_class_entry<CharT, "\\W", word_class<CharT>>>;
 
+
 //-----------------------------------------------------------------------
 //
-// Tokens for regular expressions.
+//  Tokens for regular expressions.
 //
 //-----------------------------------------------------------------------
 //
 
 // Basic class for a regex token.
 //
-regex_token: @polymorphic_base type = {
-
+regex_token: @polymorphic_base type = 
+{
     public string_rep: std::string;
 
     operator=:(out this, str: std::string) = {
@@ -278,9 +305,11 @@ regex_token: @polymorphic_base type = {
 token_ptr : type == std::shared_ptr<regex_token>;
 token_vec: type == std::vector<token_ptr>;
 
-// Adds a check in code generation.
+
+//  Adds a check in code generation.
 //
-regex_token_check: @polymorphic_base type = {
+regex_token_check: @polymorphic_base type = 
+{
     this: regex_token;
 
     check: std::string;
@@ -295,8 +324,11 @@ regex_token_check: @polymorphic_base type = {
     }
 }
 
-// Adds code in code generation.
-regex_token_code: @polymorphic_base type = {
+
+//  Adds code in code generation.
+//
+regex_token_code: @polymorphic_base type = 
+{
     this: regex_token;
 
     code: std::string;
@@ -311,8 +343,11 @@ regex_token_code: @polymorphic_base type = {
     }
 }
 
-// Token that does not influence the matching. E.g. comment.
-regex_token_empty: @polymorphic_base type = {
+
+//  Token that does not influence the matching. E.g. comment.
+//
+regex_token_empty: @polymorphic_base type = 
+{
     this: regex_token;
 
     operator=:(out this, str: std::string) = {
@@ -324,9 +359,11 @@ regex_token_empty: @polymorphic_base type = {
     }
 }
 
-// Represents a list of regex tokens as one token.
+
+//  Represents a list of regex tokens as one token.
 //
-regex_token_list: @polymorphic_base type = {
+regex_token_list: @polymorphic_base type = 
+{
     this: regex_token;
 
     public tokens: token_vec;
@@ -357,23 +394,23 @@ regex_token_list: @polymorphic_base type = {
     }
 }
 
+
 //-----------------------------------------------------------------------
 //
-// Parse and generation context.
+//  Parse and generation context.
 //
 //-----------------------------------------------------------------------
 //
 
-// State of the current capturing group. See '(<pattern>)'
+//  State of the current capturing group. See '(<pattern>)'
 //
-parse_context_group_state: @struct type = {
-
-    
+parse_context_group_state: @struct type = 
+{    
     cur_match_list:        token_vec = ();         // Current list of matchers.
     alternate_match_lists: token_vec = ();         // List of alternate matcher lists. E.g. ab|cd|xy.
     modifiers :            expression_flags = ();  // Current modifiers for the group/regular expression.
 
-    // Start a new alternative.
+    //  Start a new alternative.
     next_alternative: (inout this) = {
         new_list: token_vec = ();
         std::swap(new_list, cur_match_list);
@@ -381,14 +418,14 @@ parse_context_group_state: @struct type = {
         _ = alternate_match_lists..insert(alternate_match_lists..end(), shared.new<regex_token_list>(new_list));
     }
 
-    // Swap this state with the other one.
+    //  Swap this state with the other one.
     swap: (inout this, inout t: parse_context_group_state) = {
         std::swap(cur_match_list, t.cur_match_list);
         std::swap(alternate_match_lists, t.alternate_match_lists);
         std::swap(modifiers, t.modifiers);
     }
 
-    // Convert this state into a regex token.
+    //  Convert this state into a regex token.
     get_as_token: (inout this) -> token_ptr = {
         if alternate_match_lists..empty() {
             post_process_list(cur_match_list);
@@ -400,16 +437,16 @@ parse_context_group_state: @struct type = {
         }
     }
 
-    // Add a token to the current matcher list.
+    //  Add a token to the current matcher list.
     add: (inout this, token: token_ptr) = {
         cur_match_list..push_back(token);
     }
 
-    // True if current matcher list is empty.
+    //  True if current matcher list is empty.
     empty: (this) -> bool = cur_match_list..empty();
 
     
-    // Apply optimizations to the matcher list.
+    //  Apply optimizations to the matcher list.
     post_process_list: (inout list: token_vec) = {
         // Merge all characters
         merge_pos := list..begin();
@@ -425,15 +462,17 @@ parse_context_group_state: @struct type = {
     }
 }
 
-// State for the branch reset. Takes care of the group numbering. See '(|<pattern>)'.
-//
-parse_context_branch_reset_state: @struct type = {
-    is_active : bool = false;  // If we have a branch reset group.
-    cur_group : int  = 1;      // Next group identifier. 0 == global capture group.
-    max_group : int  = 1;      // Maximum group identifier generated.
-    from      : int  = 1;      // Starting identifier on new alternative branch.
 
-    // Next group identifier.
+//  State for the branch reset. Takes care of the group numbering. See '(|<pattern>)'.
+//
+parse_context_branch_reset_state: @struct type = 
+{
+    is_active : bool = false; // If we have a branch reset group.
+    cur_group : int  = 1;     // Next group identifier. 0 == global capture group.
+    max_group : int  = 1;     // Maximum group identifier generated.
+    from      : int  = 1;     // Starting identifier on new alternative branch.
+
+    //  Next group identifier.
     next: (inout this) -> int = {
         g := cur_group;
         cur_group += 1;
@@ -442,20 +481,20 @@ parse_context_branch_reset_state: @struct type = {
         return g;
     }
 
-    // Set next group identifier.
+    //  Set next group identifier.
     set_next: (inout this, g: int) = {
         cur_group = g;
         max_group = max(max_group, g);
     }
 
-    // Start a new alternative branch.
+    //  Start a new alternative branch.
     next_alternative: (inout this) = {
         if is_active {
             cur_group = from;
         }
     }
 
-    // Initialize for a branch reset group.
+    //  Initialize for a branch reset group.
     set_active_reset: (inout this, restart: int) = {
         is_active = true;
         cur_group = restart;
@@ -464,11 +503,13 @@ parse_context_branch_reset_state: @struct type = {
     }
 }
 
-// Context during parsing of the regular expressions.
+
+//  Context during parsing of the regular expressions.
 // 
-// Keeps track of the distributed group identifiers, current parsed group and branch resets.
+//  Keeps track of the distributed group identifiers, current parsed group and branch resets.
 //
-parse_context: type = {
+parse_context: type = 
+{
     regex: std::string_view;   // Regular expression string.
     pos:   size_t = 0;         // Current parsing position.
     root:  token_ptr;          // Token representing the regular expression.
@@ -488,11 +529,12 @@ parse_context: type = {
         error_out = e;
     }
 
-    // State management functions
+    //  State management functions
     //
 
-    // Returned group state needs to be stored and provided in `end_group`.
-    start_group: (inout this) -> parse_context_group_state = {
+    //  Returned group state needs to be stored and provided in `end_group`.
+    start_group: (inout this) -> parse_context_group_state = 
+    {
         old_state: parse_context_group_state = ();
         old_state..swap(cur_group_state);
         cur_group_state.modifiers = old_state.modifiers;
@@ -500,8 +542,9 @@ parse_context: type = {
         return old_state;
     }
 
-    // `old_state` argument needs to be from start group.
-    end_group: (inout this, old_state: parse_context_group_state) -> token_ptr = {
+    //  `old_state` argument needs to be from start group.
+    end_group: (inout this, old_state: parse_context_group_state) -> token_ptr =
+    {
         inner := cur_group_state..get_as_token();
         cur_group_state = old_state;
         return inner;
@@ -515,10 +558,11 @@ parse_context: type = {
         cur_group_state.modifiers = mod;
     }
 
-    // Branch reset management functions
+    //  Branch reset management functions
     //
 
-    branch_reset_new_state: (inout this) -> parse_context_branch_reset_state = {
+    branch_reset_new_state: (inout this) -> parse_context_branch_reset_state = 
+    {
         old_state: parse_context_branch_reset_state = ();
         std::swap(old_state, cur_branch_reset_state);
 
@@ -526,20 +570,21 @@ parse_context: type = {
         return old_state;
     }
 
-    branch_reset_restore_state: (inout this, old_state: parse_context_branch_reset_state) = {
+    branch_reset_restore_state: (inout this, old_state: parse_context_branch_reset_state) = 
+    {
         max_group := cur_branch_reset_state.max_group;
         cur_branch_reset_state = old_state;
         cur_branch_reset_state..set_next(max_group);
     }
 
-    next_alternative: (inout this) = {
+    next_alternative: (inout this) = 
+    {
         cur_group_state..next_alternative();
         cur_branch_reset_state..next_alternative();
     }
 
-    // Regex token management
+    //  Regex token management
     //
-
     add_token: (inout this, token: token_ptr) = {
         cur_group_state..add(token);
     }
@@ -548,7 +593,8 @@ parse_context: type = {
         return !cur_group_state..empty();
     }
 
-    pop_token: (inout this) -> token_ptr = {
+    pop_token: (inout this) -> token_ptr = 
+    {
         r : token_ptr = nullptr;
         if has_token() {
             r = cur_group_state.cur_match_list..back();
@@ -562,9 +608,8 @@ parse_context: type = {
         return root;
     }
 
-    // Group management
+    //  Group management
     //
-
     get_cur_group: (this) -> int = {
         return cur_branch_reset_state.cur_group;
     }
@@ -573,13 +618,15 @@ parse_context: type = {
         return cur_branch_reset_state..next();
     }
 
-    set_named_group: (inout this, name: std::string, id: int) = {
+    set_named_group: (inout this, name: std::string, id: int) = 
+    {
         if !named_groups..contains(name) { // Redefinition of group name is not an error. The left most one is retained.
             named_groups[name] = id;
         }
     }
 
-    get_named_group: (this, name: std::string) -> int = {
+    get_named_group: (this, name: std::string) -> int = 
+    {
         iter := named_groups..find(name);
         if iter == named_groups..end() {
              return -1;
@@ -589,13 +636,13 @@ parse_context: type = {
         }
     }
     
-    // Position management functions
+    //  Position management functions
     //
-
     current: (this) -> char = { return regex[pos]; }
 
-    // Get the next token in the regex, skipping spaces according to the parameters. See `x` and `xx` modifiers.
-    private get_next_position: (in this, in_class: bool, no_skip: bool) -> size_t = {
+    //  Get the next token in the regex, skipping spaces according to the parameters. See `x` and `xx` modifiers.
+    private get_next_position: (in this, in_class: bool, no_skip: bool) -> size_t = 
+    {
         perl_syntax := false;
         if !no_skip {
             if in_class {
@@ -626,15 +673,16 @@ parse_context: type = {
             }
         }
 
-        // Check for end of file.
+        //  Check for end of file.
         if cur > regex..size() {
             cur = regex..size();
         }
         return cur;
     }
 
-    // Return true if next token is available.
-    private next_impl: (inout this, in_class: bool, no_skip: bool) -> bool = {
+    //  Return true if next token is available.
+    private next_impl: (inout this, in_class: bool, no_skip: bool) -> bool = 
+    {
         pos = get_next_position(in_class, no_skip);
         if pos != regex..size() {
             return true;
@@ -644,9 +692,9 @@ parse_context: type = {
         }
     }
 
-    next:          (inout this) next_impl(false, false);
-    next_in_class: (inout this) next_impl(true, false);
-    next_no_skip:  (inout this) next_impl(false, true);
+    next         : (inout this) next_impl(false, false);
+    next_in_class: (inout this) next_impl( true, false);
+    next_no_skip : (inout this) next_impl(false,  true);
 
     next_n: (inout this, n: int) -> bool = {
         r := true;
@@ -659,7 +707,8 @@ parse_context: type = {
 
     has_next: (this) -> bool = { return pos < regex..size(); }
 
-    private grab_until_impl: (inout this, in e: std::string, out r: std::string, any: bool) -> bool = {
+    private grab_until_impl: (inout this, in e: std::string, out r: std::string, any: bool) -> bool = 
+    {
         end:= pos;
         if any {
             end = regex..find_first_of(e, pos);
@@ -683,7 +732,8 @@ parse_context: type = {
     grab_until: (inout this, in e: char, out r: std::string)               grab_until_impl(std::string(1, e), out r, false);
     grab_until_one_of: (inout this, in e: std::string, out r: std::string) grab_until_impl(e, out r, true);
 
-    grab_n: (inout this, in n: int, out r: std::string) -> bool = {
+    grab_n: (inout this, in n: int, out r: std::string) -> bool = 
+    {
         if pos + n <= regex..size() {
             r = regex..substr(pos, n);
             pos += n - 1;
@@ -695,7 +745,8 @@ parse_context: type = {
         }
     }
 
-    grab_number: (inout this) -> std::string = {
+    grab_number: (inout this) -> std::string = 
+    {
         start := pos;
         start_search := pos;
         if regex[start_search] == '-' {
@@ -725,13 +776,14 @@ parse_context: type = {
         }
     }
 
-    peek: (in this)          peek_impl(false);
-    peek_in_class: (in this) peek_impl(true);
+    peek         : (in this) peek_impl(false);
+    peek_in_class: (in this) peek_impl( true);
 
-    // Parsing functions
+
+    //  Parsing functions
     //
-
-    parser_group_modifiers: (inout this, change_str: std::string, inout parser_modifiers: expression_flags) -> bool = {
+    parser_group_modifiers: (inout this, change_str: std::string, inout parser_modifiers: expression_flags) -> bool = 
+    {
         is_negative := false;
         is_reset    := false;
 
@@ -745,7 +797,8 @@ parse_context: type = {
         };
 
         iter := change_str..begin();
-        while iter != change_str..end() next (iter++) {
+        while iter != change_str..end() next (iter++) 
+        {
             cur := iter*;
             if cur == '^' {
                 is_reset = true;
@@ -786,7 +839,8 @@ parse_context: type = {
     parse_until:(inout this, term: char) -> bool = {
         cur_token: token_ptr = ();
 
-        while valid() next _ = next() {
+        while valid() next _ = next()
+        {
             if term == current() { break; }
 
             cur_token = nullptr;
@@ -820,7 +874,8 @@ parse_context: type = {
         return true;
     }
 
-    parse: (inout this, modifiers: std::string) -> bool = {
+    parse: (inout this, modifiers: std::string) -> bool = 
+    {
 
         flags : expression_flags = ();
         if !parser_group_modifiers(modifiers, flags) { return false; }
@@ -834,7 +889,7 @@ parse_context: type = {
         return r;
     }
 
-    // Misc functions
+    //  Misc functions
 
     get_pos:   (this)                             pos;
     get_range: (this, start: size_t, end: size_t) std::string(regex..substr(start, end - start + 1));
@@ -847,8 +902,9 @@ parse_context: type = {
     }
 }
 
-// Context for one function generation. Generation of functions can be interleaved, therefore we buffer the code for one
-// function here.
+
+//  Context for one function generation. Generation of functions can be interleaved,
+//  therefore we buffer the code for one function here.
 //
 generation_function_context: @struct type = {
     code: std::string = "";
@@ -866,9 +922,10 @@ generation_function_context: @struct type = {
     }
 }
 
-// Context for generating the state machine.
-generation_context: type = {
 
+//  Context for generating the state machine.
+generation_context: type = 
+{
     gen_stack: std::vector<generation_function_context> = (1); // Element 0 contains all the code.
 
     matcher_func: int         = 0;
@@ -876,34 +933,35 @@ generation_context: type = {
     temp_name:    int         = 0;
     entry_func:   std::string = "";
 
-    // Generation helpers
+    //  Generation helpers
     //
-
     match_parameters: (this) -> std::string = { return "r.pos, ctx"; }
 
-    // Code generation.
+    //  Code generation.
 
-    // Add code line.
+    //  Add code line.
     add: (inout this, s: std::string) = {
         cur := get_current();
         cur*.code += "(cur*.tabs)$(s)$\n";
     }
 
-    // Add check for token. The check needs to be a function call that returns a boolean.
+    //  Add check for token. The check needs to be a function call that returns a boolean.
     add_check: (inout this, check: std::string) = {
         cur := get_current();
         cur*.code += "(cur*.tabs)$if !cpp2::regex::(check)$ { r.matched = false; break; }\n";
     }
 
-    // Add a statefull check. The check needs to return a `match_return`.
-    add_statefull: (inout this, next_func: std::string, check: std::string) = {
+    //  Add a stateful check. The check needs to return a `match_return`.
+    add_statefull: (inout this, next_func: std::string, check: std::string) = 
+    {
         end_func_statefull(check);
 
         name := next_func..substr(0, next_func..size() - 2);
         start_func_named(name);
     }
 
-    protected start_func_named: (inout this, name: std::string) = {
+    protected start_func_named: (inout this, name: std::string) = 
+    {
         cur := new_context();
 
         cur*.code += "(cur*.tabs)$(name)$: @struct type = {\n";
@@ -913,13 +971,15 @@ generation_context: type = {
         cur*..add_tabs(3);
     }
 
-    protected start_func: (inout this) -> std::string = {
+    protected start_func: (inout this) -> std::string = 
+    {
         name := gen_func_name();
         start_func_named(name);
         return name + "()";
     }
 
-    protected end_func_statefull: (inout this, s: std::string) = {
+    protected end_func_statefull: (inout this, s: std::string) = 
+    {
         cur := get_current();
         cur*..remove_tabs(3);
         cur*.code += "\n";
@@ -937,8 +997,9 @@ generation_context: type = {
         finish_context();
     }
 
-    // Generate the function for a token.
-    generate_func: (inout this, token: token_ptr) -> std::string = {
+    //  Generate the function for a token.
+    generate_func: (inout this, token: token_ptr) -> std::string = 
+    {
         name := start_func();
         token*..generate_code(this);
         end_func_statefull("other((match_parameters())$)");
@@ -946,8 +1007,9 @@ generation_context: type = {
         return name;
     }
 
-    // Generate the reset for a list of group identifiers.
-    generate_reset: (inout this, groups: std::set<int>) -> std::string = {
+    //  Generate the reset for a list of group identifiers.
+    generate_reset: (inout this, groups: std::set<int>) -> std::string = 
+    {
         if groups..empty() {
             return "cpp2::regex::no_reset()";
         }
@@ -968,9 +1030,8 @@ generation_context: type = {
         return name + "()";
     }
 
-    // Name generation
+    //  Name generation
     //
-
     protected gen_func_name: (inout this) -> std::string = {
         cur_id : = matcher_func;
         matcher_func += 1;
@@ -993,9 +1054,8 @@ generation_context: type = {
         return "tmp_(cur_id)$";
     }
 
-    // Context management
+    //  Context management
     //
-
     new_context: (inout this) -> *generation_function_context = {
         gen_stack..push_back(generation_function_context());
         cur := get_current();
@@ -1012,9 +1072,8 @@ generation_context: type = {
         gen_stack..pop_back();
     }
 
-    // Misc functions
+    //  Misc functions
     //
-
     private get_current: (inout this) -> *generation_function_context = {
         return gen_stack..back()&;
     }
@@ -1027,17 +1086,18 @@ generation_context: type = {
         return entry_func;
     }
 
-    create_named_group_lookup: (this, named_groups: std::map<std::string, int>) -> std::string = {
+    create_named_group_lookup: (this, named_groups: std::map<std::string, int>) -> std::string = 
+    {
         res: std::string = "get_named_group_index: (name) -> int = {\n";
 
-        // Generate if selection.
+        //  Generate if selection.
         sep: std::string = "";
         for named_groups do (cur) {
             res += "(sep)$if name == \"(cur.first)$\" { return (cur.second)$; }";
             sep = "else ";
         }
 
-        // Generate else branch or return if list is empty.
+        //  Generate else branch or return if list is empty.
         if named_groups..empty() {
             res += "  _ = name;\n";
             res += "  return -1;\n";
@@ -1050,7 +1110,7 @@ generation_context: type = {
     }
 
 
-    // Run the generation for the token.
+    //  Run the generation for the token.
     run: (inout this, token: token_ptr) -> std::string = {
         entry_func = generate_func(token);
 
@@ -1058,11 +1118,13 @@ generation_context: type = {
     }
 }
 
+
 //  Regex syntax: |  Example: ab|ba
 //
 //  Non greedy implementation. First alternative that matches is chosen.
 //
-alternative_token: @polymorphic_base type = {
+alternative_token: @polymorphic_base type = 
+{
     this: regex_token_empty = ("");  // No code gen here. alternative_token_gen is created in the parse_context
 
     operator=:(out this) = {}
@@ -1076,7 +1138,8 @@ alternative_token: @polymorphic_base type = {
     }
 }
 
-alternative_token_gen: @polymorphic_base type = {
+alternative_token_gen: @polymorphic_base type = 
+{
     this: regex_token;
 
     alternatives: token_vec;
@@ -1086,7 +1149,8 @@ alternative_token_gen: @polymorphic_base type = {
         alternatives = a;
     }
 
-    generate_code: (override this, inout ctx: generation_context) = {
+    generate_code: (override this, inout ctx: generation_context) = 
+    {
         functions: std::string = "";
 
         for alternatives do (cur) {
@@ -1102,13 +1166,15 @@ alternative_token_gen: @polymorphic_base type = {
         ctx..add_statefull(next_name, "cpp2::regex::alternative_token_matcher<char>::match((ctx..match_parameters())$, other, (next_name)$ (functions)$)");
     }
 
-    add_groups: (override this, inout groups: std::set<int>) = {
+    add_groups: (override this, inout groups: std::set<int>) = 
+    {
         for alternatives do (cur) {
             cur*..add_groups(groups);
         }
     }
 
-    gen_string: (a: token_vec) -> std::string = {
+    gen_string: (a: token_vec) -> std::string = 
+    {
         r: std::string = "";
         sep: std::string = "";
 
@@ -1121,12 +1187,15 @@ alternative_token_gen: @polymorphic_base type = {
     }
 }
 
-alternative_token_matcher: <CharT> type = {
 
+alternative_token_matcher: <CharT> type = 
+{
     match: (cur, inout ctx, end_func, tail, functions ...) -> _ = {
         return match_first(cur, ctx, end_func, tail, functions...);
     }
-    private match_first: <Other ...> (cur, inout ctx, end_func, tail, cur_func, cur_reset, other ...: Other) -> _ = {
+
+    private match_first: <Other ...> (cur, inout ctx, end_func, tail, cur_func, cur_reset, other ...: Other) -> _ = 
+    {
         inner_call := :(tail_cur, inout tail_ctx) -> _ == {
             return (tail)$(tail_cur, tail_ctx, (end_func)$);
         };
@@ -1145,9 +1214,11 @@ alternative_token_matcher: <CharT> type = {
     }
 }
 
+
 //  Regex syntax: .
 //
-any_token: @polymorphic_base type = {
+any_token: @polymorphic_base type = 
+{
     this: regex_token_check = (".");
 
     operator=:(out this, single_line: bool) = {
@@ -1161,23 +1232,27 @@ any_token: @polymorphic_base type = {
     }
 }
 
-any_token_matcher: <CharT, single_line: bool> (inout cur, inout ctx) -> bool = {
-    if cur != ctx.end // Any char except the end
-        && (single_line || cur* != '\n') { // Do not match new lines in multi line mode.
+
+any_token_matcher: <CharT, single_line: bool> (inout cur, inout ctx) -> bool = 
+{
+    if  cur != ctx.end                      // any char except the end
+        && (single_line || cur* != '\n')    // do not match new lines in multi line mode
+    {
         cur += 1;
         return true;
     }
-    else {
-        return false;
-    }
+    //  Else
+    return false;
 }
 
-// Regex syntax: a
+
+//  Regex syntax: a
 //
-char_token: @polymorphic_base type = {
+char_token: @polymorphic_base type = 
+{
     this: regex_token;
 
-    token: std::string;
+    token      : std::string;
     ignore_case: bool;
 
     operator=: (out this, t: char, ignore_case_: bool) = {
@@ -1190,7 +1265,8 @@ char_token: @polymorphic_base type = {
         return shared.new<char_token>(ctx..current(), ctx..get_modifiers()..has(expression_flags::case_insensitive));
     }
 
-    generate_code: (override this, inout ctx: generation_context) = {
+    generate_code: (override this, inout ctx: generation_context) = 
+    {
         if ignore_case {
             upper: std::string = token;
             lower: std::string = token;
@@ -1212,7 +1288,8 @@ char_token: @polymorphic_base type = {
         }
     }
 
-    gen_case_insensitive: (this, lower: std::string, upper: std::string, inout ctx: generation_context) = {
+    gen_case_insensitive: (this, lower: std::string, upper: std::string, inout ctx: generation_context) = 
+    {
         name: std::string = "str_(ctx..gen_temp())$";
         lower_name: std::string = "lower_(name)$";
         upper_name: std::string = "upper_(name)$";
@@ -1232,7 +1309,8 @@ char_token: @polymorphic_base type = {
         ctx..add("else { break; }");
     }
 
-    gen_case_sensitive: (this, inout ctx: generation_context) = {
+    gen_case_sensitive: (this, inout ctx: generation_context) = 
+    {
         name: std::string = "str_(ctx..gen_temp())$";
         size := token..size();
         ctx..add("(name)$ : std::array<char, (size)$ + 1> = \"(add_escapes(token))$\";"); // TODO: Add constexpr when Issue https://github.com/hsutter/cppfront/issues/1104 is resolved.
@@ -1249,7 +1327,8 @@ char_token: @polymorphic_base type = {
         ctx..add("else { break; }");
     }
 
-    add_escapes: (this, copy str: std::string) -> std::string = {
+    add_escapes: (this, copy str: std::string) -> std::string = 
+    {
         str = string_util::replace_all(str, "\\", "\\\\");
         str = string_util::replace_all(str, "\a", "\\a");
         str = string_util::replace_all(str, "\f", "\\f");
@@ -1268,6 +1347,7 @@ char_token: @polymorphic_base type = {
         this.string_rep += that.string_rep;
     }
 }
+
 
 // TODO: Check if vectorization works at some point with this implementation.
 // char_token_matcher: <tokens: string_util::fixed_string> (inout cur, inout ctx) -> bool = {
@@ -1302,24 +1382,28 @@ char_token: @polymorphic_base type = {
 //     return matched;
 // }
 
-// Regex syntax: [<character classes>]  Example: [abcx-y[:digits:]]
+
+//  Regex syntax: [<character classes>]  Example: [abcx-y[:digits:]]
 //
-class_token: @polymorphic_base type = {
-    this: regex_token = ();
+class_token: @polymorphic_base type = 
+{
+    this            : regex_token = ();
 
-    negate: bool;
+    negate          : bool;
     case_insensitive: bool;
-    class_str: std::string;
+    class_str       : std::string;
 
-    operator=: (out this, negate_: bool, case_insensitive_: bool, class_str_: std::string, str: std::string) = {
+    operator=: (out this, negate_: bool, case_insensitive_: bool, class_str_: std::string, str: std::string) = 
+    {
         regex_token = str;
         negate = negate_;
         case_insensitive = case_insensitive_;
         class_str = class_str_;
     }
 
-    // TODO: Rework class generation: Generate check functions for classes.
-    parse: (inout ctx: parse_context) -> token_ptr = {
+    //  TODO: Rework class generation: Generate check functions for classes.
+    parse: (inout ctx: parse_context) -> token_ptr = 
+    {
         if ctx..current() != '[' { return nullptr; }
 
         start_pos := ctx..get_pos();
@@ -1329,17 +1413,21 @@ class_token: @polymorphic_base type = {
 
         classes: std::vector<std::string> = ();
 
-        // First step: parse until the end bracket and push single chars, ranges or groups on the class stack.
-        is_negate:= false;
-        first:= true;
-        range:= false;
-        while ctx..next_in_class() && (ctx..current() != ']' || first) {
-            if ctx..current() == '^' {
+        //  First step: parse until the end bracket and push single chars, ranges or groups on the class stack.
+        is_negate := false;
+        first     := true;
+        range     := false;
+        while ctx..next_in_class() && (ctx..current() != ']' || first) 
+        {
+            if ctx..current() == '^' 
+            {
                 is_negate = true;
                 continue; // Skip rest of the loop. Also the first update.
             }
-            if ctx..current() == '[' && ctx..peek_in_class() == ':' {
-                // We have a character class.
+
+            if ctx..current() == '[' && ctx..peek_in_class() == ':' 
+            {
+                //  We have a character class.
                 _ = ctx..next_n(2);  // Skip [:
 
                 name: std::string = "";
@@ -1352,9 +1440,14 @@ class_token: @polymorphic_base type = {
 
                 _ = ctx..next(); // Skip ':' pointing to the ending ']'.
             }
-            else if ctx..current() == '\\' {
-                if ctx..next_no_skip()  && (ctx..current() != ']') {
-                    if  ' ' == ctx..current() && ctx..get_modifiers()..has(expression_flags::perl_code_syntax) && ctx..get_modifiers()..has(expression_flags::perl_code_syntax_in_classes) {
+            else if ctx..current() == '\\' 
+            {
+                if ctx..next_no_skip()  && (ctx..current() != ']') 
+                {
+                    if  ' ' == ctx..current() 
+                        && ctx..get_modifiers()..has(expression_flags::perl_code_syntax) 
+                        && ctx..get_modifiers()..has(expression_flags::perl_code_syntax_in_classes) 
+                    {
                         classes..push_back(std::string(1, ctx..current()));
                     }
                     else {
@@ -1378,14 +1471,16 @@ class_token: @polymorphic_base type = {
                     return ctx..error("Escape without a following character.");
                 }
             }
-            else if ctx..current() == '-' {
+            else if ctx..current() == '-' 
+            {
                 if first { // Literal if first entry.
                     classes..push_back("(ctx..current())$");
                 } else {
                     range = true;
                 }
             }
-            else {
+            else 
+            {
                 if range { // Modify last element to be a range.
                     classes..back() += "-(ctx..current())$";
                     range = false;
@@ -1408,7 +1503,8 @@ class_token: @polymorphic_base type = {
         }
 
         // Second step: Wrap the item on the class stack with corresponding class implementation.
-        for classes do (inout cur) {
+        for classes do (inout cur) 
+        {
             if cur..starts_with("[:") {
                 name := cur..substr(2, cur..size() - 4);
                 cur = create_matcher("(name)$_class", "");
@@ -1421,17 +1517,23 @@ class_token: @polymorphic_base type = {
             }
         }
 
-        inner := string_util::join(classes);
+        inner      := string_util::join(classes);
         string_rep := ctx..get_range(start_pos, end_pos);
-        return shared.new<class_token>(is_negate, ctx..get_modifiers()..has(expression_flags::case_insensitive), inner, string_rep);
+        return shared.new<class_token>(
+            is_negate, 
+            ctx..get_modifiers()..has(expression_flags::case_insensitive), 
+            inner, 
+            string_rep
+            );
     }
 
-    generate_code: (override this, inout ctx: generation_context) = {
+    generate_code: (override this, inout ctx: generation_context) = 
+    {
         ctx..add_check("class_token_matcher<char, (negate)$, (case_insensitive)$, (class_str)$>::match((ctx..match_parameters())$)");
     }
 
-
-    private create_matcher: (name: std::string, template_arguments: std::string) -> std::string = {
+    private create_matcher: (name: std::string, template_arguments: std::string) -> std::string = 
+    {
         sep := ", ";
         if template_arguments..empty() { sep = ""; }
 
@@ -1439,11 +1541,19 @@ class_token: @polymorphic_base type = {
     }
 }
 
+
 class_token_matcher: <CharT, negate: bool, case_insensitive: bool, List ...> type =
 {
-    match: (inout cur, inout ctx) -> bool = {
-        if constexpr case_insensitive {
-            if cur != ctx.end && negate != ( match_any<List...>(string_util::safe_tolower(cur*)) || match_any<List...>(string_util::safe_toupper(cur*))) {
+    match: (inout cur, inout ctx) -> bool = 
+    {
+        if constexpr case_insensitive 
+        {
+            if  cur != ctx.end 
+                && negate != ( 
+                       match_any<List...>(string_util::safe_tolower(cur*)) 
+                    || match_any<List...>(string_util::safe_toupper(cur*))
+                    ) 
+            {
                 cur += 1;
                 return true;
             }
@@ -1451,7 +1561,8 @@ class_token_matcher: <CharT, negate: bool, case_insensitive: bool, List ...> typ
                 return false;
             }
         }
-        else {
+        else 
+        {
             if cur != ctx.end && negate != match_any<List...>(cur*) {
                 cur += 1;
                 return true;
@@ -1462,7 +1573,8 @@ class_token_matcher: <CharT, negate: bool, case_insensitive: bool, List ...> typ
         }
     }
 
-    private match_any: <First, Other ...> (c: CharT) -> bool = {
+    private match_any: <First, Other ...> (c: CharT) -> bool = 
+    {
         r: bool = First::includes(c);
 
         if !r {
@@ -1486,6 +1598,7 @@ class_token_matcher: <CharT, negate: bool, case_insensitive: bool, List ...> typ
     //     return r;
     // }
 }
+
 
 // Regex syntax: \a or \n or \[
 //
@@ -2586,3 +2699,7 @@ generate_regex: <Err> (regex: std::string_view, err: Err) -> std::string = {
 
 }
 }
+
+
+#endif
+

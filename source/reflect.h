@@ -767,7 +767,7 @@ auto cpp2_union(meta::type_declaration& t) -> void;
 //
 auto print(cpp2::impl::in<meta::type_declaration> t) -> void;
 
-#line 1445 "reflect.h2"
+#line 1446 "reflect.h2"
 //-----------------------------------------------------------------------
 //
 //  regex - creates regular expressions from members
@@ -2093,21 +2093,20 @@ auto print(cpp2::impl::in<meta::type_declaration> t) -> void
     std::cout << CPP2_UFCS(print)(t) << "\n";
 }
 
-#line 1459 "reflect.h2"
+#line 1460 "reflect.h2"
 auto regex_gen(meta::type_declaration& t) -> void
 {
     auto has_default {false}; 
     auto prefix {"regex"}; 
-    std::string postfix {"_mod"};   // TODO: Remove mod syntax when 'm.initializer()' can be '("pat", "mod")'.
-
+    std::string postfix {"_mod"};           // TODO: remove mod syntax when 'm.initializer()' can be '("pat", "mod")'
     std::map<std::string,std::string> expressions {}; 
 
     for ( auto& m : CPP2_UFCS(get_member_objects)(t) ) 
     {
         std::string name {CPP2_UFCS(name)(m)}; 
 
-        if (CPP2_UFCS(starts_with)(name, prefix)) {
-
+        if (CPP2_UFCS(starts_with)(name, prefix)) 
+        {
             if (!(CPP2_UFCS(has_initializer)(m))) {
                 CPP2_UFCS(error)(t, "Regular expression must have an initializer.");
             }

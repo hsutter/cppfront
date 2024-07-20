@@ -6,25 +6,25 @@
 
 #include "cpp2util.h"
 
-#line 1 "pure2-regex_13_posessive_modifier.cpp2"
+#line 1 "pure2-regex_13_possessive_modifier.cpp2"
 
-#line 153 "pure2-regex_13_posessive_modifier.cpp2"
-class test_tests_13_posessive_modifier;
+#line 153 "pure2-regex_13_possessive_modifier.cpp2"
+class test_tests_13_possessive_modifier;
   
 
 //=== Cpp2 type definitions and function declarations ===========================
 
-#line 1 "pure2-regex_13_posessive_modifier.cpp2"
+#line 1 "pure2-regex_13_possessive_modifier.cpp2"
 [[nodiscard]] auto create_result(cpp2::impl::in<std::string> resultExpr, auto const& r) -> std::string;
 
-#line 112 "pure2-regex_13_posessive_modifier.cpp2"
+#line 112 "pure2-regex_13_possessive_modifier.cpp2"
 template<typename M> auto test(M const& regex, cpp2::impl::in<std::string> id, cpp2::impl::in<std::string> regex_str, cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> kind, cpp2::impl::in<std::string> resultExpr, 
            cpp2::impl::in<std::string> resultExpected) -> void;
 
-#line 153 "pure2-regex_13_posessive_modifier.cpp2"
-class test_tests_13_posessive_modifier {
+#line 153 "pure2-regex_13_possessive_modifier.cpp2"
+class test_tests_13_possessive_modifier {
 
-#line 202 "pure2-regex_13_posessive_modifier.cpp2"
+#line 202 "pure2-regex_13_possessive_modifier.cpp2"
   public: auto run() const& -> void;
   public: class regex_01_matcher {
   public: template<typename Iter, typename CharT> class wrap {
@@ -2275,20 +2275,20 @@ public: class func_2 {
   };
 
   public: cpp2::regex::regular_expression<char,regex_48_matcher> regex_48 {}; 
-  public: test_tests_13_posessive_modifier() = default;
-  public: test_tests_13_posessive_modifier(test_tests_13_posessive_modifier const&) = delete; /* No 'that' constructor, suppress copy */
-  public: auto operator=(test_tests_13_posessive_modifier const&) -> void = delete;
+  public: test_tests_13_possessive_modifier() = default;
+  public: test_tests_13_possessive_modifier(test_tests_13_possessive_modifier const&) = delete; /* No 'that' constructor, suppress copy */
+  public: auto operator=(test_tests_13_possessive_modifier const&) -> void = delete;
 
 
-#line 254 "pure2-regex_13_posessive_modifier.cpp2"
+#line 254 "pure2-regex_13_possessive_modifier.cpp2"
 };
 auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
 
-#line 1 "pure2-regex_13_posessive_modifier.cpp2"
+#line 1 "pure2-regex_13_possessive_modifier.cpp2"
 [[nodiscard]] auto create_result(cpp2::impl::in<std::string> resultExpr, auto const& r) -> std::string{
-#line 2 "pure2-regex_13_posessive_modifier.cpp2"
+#line 2 "pure2-regex_13_possessive_modifier.cpp2"
   std::string result {""}; 
 
   auto get_next {[_0 = (&resultExpr)](auto const& iter) mutable -> auto{
@@ -2399,7 +2399,7 @@ auto main() -> int;
   return result; 
 }
 
-#line 112 "pure2-regex_13_posessive_modifier.cpp2"
+#line 112 "pure2-regex_13_possessive_modifier.cpp2"
 template<typename M> auto test(M const& regex, cpp2::impl::in<std::string> id, cpp2::impl::in<std::string> regex_str, cpp2::impl::in<std::string> str, cpp2::impl::in<std::string> kind, cpp2::impl::in<std::string> resultExpr, 
            cpp2::impl::in<std::string> resultExpected) -> void{
 
@@ -2440,9 +2440,9 @@ template<typename M> auto test(M const& regex, cpp2::impl::in<std::string> id, c
   std::cout << "" + cpp2::to_string(id) + "_" + cpp2::to_string(kind) + ": " + cpp2::to_string(cpp2::move(status)) + " " + cpp2::to_string(cpp2::move(warning)) + "regex: " + cpp2::to_string(regex_str) + " parsed_regex: " + cpp2::to_string(CPP2_UFCS(to_string)(regex)) + " str: " + cpp2::to_string(str) + " result_expr: " + cpp2::to_string(resultExpr) + " expected_results " + cpp2::to_string(resultExpected) + "" << std::endl;
 }
 
-#line 202 "pure2-regex_13_posessive_modifier.cpp2"
-  auto test_tests_13_posessive_modifier::run() const& -> void{
-    std::cout << "Running tests_13_posessive_modifier:" << std::endl;
+#line 202 "pure2-regex_13_possessive_modifier.cpp2"
+  auto test_tests_13_possessive_modifier::run() const& -> void{
+    std::cout << "Running tests_13_possessive_modifier:" << std::endl;
     test(regex_01, "01", R"(a++a)", "aaaaa", "n", R"(-)", "-");
     test(regex_02, "02", R"(a*+a)", "aaaaa", "n", R"(-)", "-");
     test(regex_03, "03", R"(a{1,5}+a)", "aaaaa", "n", R"(-)", "-");
@@ -2498,7 +2498,7 @@ template<typename M> auto test(M const& regex, cpp2::impl::in<std::string> id, c
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_01_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_01_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -2530,7 +2530,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_01_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_01_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -2548,7 +2548,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_01_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_01_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -2579,7 +2579,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_01_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_01_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -2587,19 +2587,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_01_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_01_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_01_matcher::to_string() -> std::string{return R"(a++a)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_01_matcher::to_string() -> std::string{return R"(a++a)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_02_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_02_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -2631,7 +2631,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_02_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_02_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -2649,7 +2649,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_02_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_02_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -2680,7 +2680,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_02_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_02_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -2688,19 +2688,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_02_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_02_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_02_matcher::to_string() -> std::string{return R"(a*+a)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_02_matcher::to_string() -> std::string{return R"(a*+a)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_03_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_03_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -2732,7 +2732,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_03_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_03_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -2750,7 +2750,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_03_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_03_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -2781,7 +2781,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_03_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_03_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -2789,19 +2789,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_03_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_03_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_03_matcher::to_string() -> std::string{return R"(a{1,5}+a)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_03_matcher::to_string() -> std::string{return R"(a{1,5}+a)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_04_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_04_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -2833,7 +2833,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_04_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_04_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -2851,7 +2851,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_04_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_04_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -2882,7 +2882,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_04_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_04_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -2890,19 +2890,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_04_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_04_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_04_matcher::to_string() -> std::string{return R"(a?+a)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_04_matcher::to_string() -> std::string{return R"(a?+a)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_05_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_05_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -2934,7 +2934,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_05_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_05_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -2952,7 +2952,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_05_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_05_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -2983,7 +2983,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_05_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_05_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -2991,19 +2991,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_05_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_05_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_05_matcher::to_string() -> std::string{return R"(a++b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_05_matcher::to_string() -> std::string{return R"(a++b)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_06_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_06_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -3035,7 +3035,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_06_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_06_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -3053,7 +3053,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_06_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_06_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -3084,7 +3084,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_06_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_06_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -3092,19 +3092,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_06_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_06_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_06_matcher::to_string() -> std::string{return R"(a*+b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_06_matcher::to_string() -> std::string{return R"(a*+b)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_07_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_07_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -3136,7 +3136,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_07_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_07_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -3154,7 +3154,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_07_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_07_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -3185,7 +3185,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_07_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_07_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -3193,19 +3193,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_07_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_07_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_07_matcher::to_string() -> std::string{return R"(a{1,5}+b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_07_matcher::to_string() -> std::string{return R"(a{1,5}+b)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_08_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_08_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -3237,7 +3237,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_08_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_08_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -3255,7 +3255,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_08_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_08_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -3286,7 +3286,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_08_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_08_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -3294,19 +3294,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_08_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_08_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_08_matcher::to_string() -> std::string{return R"(a?+b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_08_matcher::to_string() -> std::string{return R"(a?+b)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_09_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_09_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -3338,467 +3338,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_09_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 3;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::range_token_matcher<char,1,-1,3>::match(r.pos, ctx, func_1(), cpp2::regex::no_reset(), other, func_2());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_09_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,1 + 1> str_tmp_2 {"a"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_2, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 1;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_09_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
-  ctx.set_group_start(0, cur);
-
-  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
-  if (r.matched) {ctx.set_group_end(0, r.pos);}
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_09_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
-  static_cast<void>(name);
-  return -1; 
-  }
-
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_09_matcher::to_string() -> std::string{return R"(fooa++a)"; }
-
-
-
-
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_10_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,1 + 1> str_tmp_1 {"a"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 1;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_10_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 3;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::range_token_matcher<char,0,-1,3>::match(r.pos, ctx, func_1(), cpp2::regex::no_reset(), other, func_2());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_10_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,1 + 1> str_tmp_2 {"a"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_2, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 1;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_10_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
-  ctx.set_group_start(0, cur);
-
-  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
-  if (r.matched) {ctx.set_group_end(0, r.pos);}
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_10_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
-  static_cast<void>(name);
-  return -1; 
-  }
-
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_10_matcher::to_string() -> std::string{return R"(fooa*+a)"; }
-
-
-
-
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_11_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,1 + 1> str_tmp_1 {"a"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 1;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_11_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 3;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::range_token_matcher<char,1,5,3>::match(r.pos, ctx, func_1(), cpp2::regex::no_reset(), other, func_2());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_11_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,1 + 1> str_tmp_2 {"a"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_2, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 1;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_11_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
-  ctx.set_group_start(0, cur);
-
-  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
-  if (r.matched) {ctx.set_group_end(0, r.pos);}
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_11_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
-  static_cast<void>(name);
-  return -1; 
-  }
-
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_11_matcher::to_string() -> std::string{return R"(fooa{1,5}+a)"; }
-
-
-
-
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_12_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,1 + 1> str_tmp_1 {"a"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 1;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_12_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 3;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::range_token_matcher<char,0,1,3>::match(r.pos, ctx, func_1(), cpp2::regex::no_reset(), other, func_2());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_12_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,1 + 1> str_tmp_2 {"a"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_2, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 1;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_12_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
-  ctx.set_group_start(0, cur);
-
-  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
-  if (r.matched) {ctx.set_group_end(0, r.pos);}
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_12_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
-  static_cast<void>(name);
-  return -1; 
-  }
-
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_12_matcher::to_string() -> std::string{return R"(fooa?+a)"; }
-
-
-
-
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_13_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,1 + 1> str_tmp_1 {"a"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 1;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_13_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_09_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -3830,12 +3370,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_13_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_09_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
 
-  std::array<char,1 + 1> str_tmp_2 {"b"}; 
+  std::array<char,1 + 1> str_tmp_2 {"a"}; 
   if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
   r.matched = false;
   break;
@@ -3861,7 +3401,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_13_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_09_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -3869,19 +3409,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_13_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_09_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_13_matcher::to_string() -> std::string{return R"(fooa++b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_09_matcher::to_string() -> std::string{return R"(fooa++a)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_14_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_10_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -3913,7 +3453,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_14_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_10_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -3945,12 +3485,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_14_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_10_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
 
-  std::array<char,1 + 1> str_tmp_2 {"b"}; 
+  std::array<char,1 + 1> str_tmp_2 {"a"}; 
   if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
   r.matched = false;
   break;
@@ -3976,7 +3516,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_14_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_10_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -3984,19 +3524,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_14_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_10_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_14_matcher::to_string() -> std::string{return R"(fooa*+b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_10_matcher::to_string() -> std::string{return R"(fooa*+a)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_15_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_11_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4028,7 +3568,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_15_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_11_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4060,12 +3600,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_15_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_11_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
 
-  std::array<char,1 + 1> str_tmp_2 {"b"}; 
+  std::array<char,1 + 1> str_tmp_2 {"a"}; 
   if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
   r.matched = false;
   break;
@@ -4091,7 +3631,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_15_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_11_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -4099,19 +3639,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_15_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_11_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_15_matcher::to_string() -> std::string{return R"(fooa{1,5}+b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_11_matcher::to_string() -> std::string{return R"(fooa{1,5}+a)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_16_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_12_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4143,7 +3683,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_16_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_12_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4175,7 +3715,122 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_16_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_12_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,1 + 1> str_tmp_2 {"a"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_2, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 1;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_12_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  ctx.set_group_start(0, cur);
+
+  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
+  if (r.matched) {ctx.set_group_end(0, r.pos);}
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_12_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  static_cast<void>(name);
+  return -1; 
+  }
+
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_12_matcher::to_string() -> std::string{return R"(fooa?+a)"; }
+
+
+
+
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_13_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,1 + 1> str_tmp_1 {"a"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 1;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_13_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 3;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::range_token_matcher<char,1,-1,3>::match(r.pos, ctx, func_1(), cpp2::regex::no_reset(), other, func_2());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_13_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4206,7 +3861,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_16_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_13_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -4214,19 +3869,364 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_16_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_13_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_16_matcher::to_string() -> std::string{return R"(fooa?+b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_13_matcher::to_string() -> std::string{return R"(fooa++b)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_17_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_14_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,1 + 1> str_tmp_1 {"a"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 1;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_14_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 3;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::range_token_matcher<char,0,-1,3>::match(r.pos, ctx, func_1(), cpp2::regex::no_reset(), other, func_2());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_14_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,1 + 1> str_tmp_2 {"b"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_2, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 1;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_14_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  ctx.set_group_start(0, cur);
+
+  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
+  if (r.matched) {ctx.set_group_end(0, r.pos);}
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_14_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  static_cast<void>(name);
+  return -1; 
+  }
+
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_14_matcher::to_string() -> std::string{return R"(fooa*+b)"; }
+
+
+
+
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_15_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,1 + 1> str_tmp_1 {"a"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 1;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_15_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 3;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::range_token_matcher<char,1,5,3>::match(r.pos, ctx, func_1(), cpp2::regex::no_reset(), other, func_2());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_15_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,1 + 1> str_tmp_2 {"b"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_2, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 1;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_15_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  ctx.set_group_start(0, cur);
+
+  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
+  if (r.matched) {ctx.set_group_end(0, r.pos);}
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_15_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  static_cast<void>(name);
+  return -1; 
+  }
+
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_15_matcher::to_string() -> std::string{return R"(fooa{1,5}+b)"; }
+
+
+
+
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_16_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,1 + 1> str_tmp_1 {"a"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 1;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_16_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 3;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::range_token_matcher<char,0,1,3>::match(r.pos, ctx, func_1(), cpp2::regex::no_reset(), other, func_2());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_16_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,1 + 1> str_tmp_2 {"b"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_2, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 1;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_16_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  ctx.set_group_start(0, cur);
+
+  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
+  if (r.matched) {ctx.set_group_end(0, r.pos);}
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_16_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  static_cast<void>(name);
+  return -1; 
+  }
+
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_16_matcher::to_string() -> std::string{return R"(fooa?+b)"; }
+
+
+
+
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_17_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4271,12 +4271,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_17_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_17_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_17_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_17_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4294,7 +4294,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_17_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_17_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4338,7 +4338,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_17_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_17_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -4346,19 +4346,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_17_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_17_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_17_matcher::to_string() -> std::string{return R"((aA)++(aA))"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_17_matcher::to_string() -> std::string{return R"((aA)++(aA))"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_18_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_18_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4390,7 +4390,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_18_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_18_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4422,7 +4422,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_18_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_18_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4441,7 +4441,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_18_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_18_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4471,12 +4471,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_18_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_18_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_18_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_18_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4494,7 +4494,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_18_matcher::wrap<Iter,CharT>::func_6::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_18_matcher::wrap<Iter,CharT>::func_6::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4526,7 +4526,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_18_matcher::wrap<Iter,CharT>::func_7::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_18_matcher::wrap<Iter,CharT>::func_7::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4558,7 +4558,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_18_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_18_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4577,7 +4577,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_18_matcher::wrap<Iter,CharT>::func_8::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_18_matcher::wrap<Iter,CharT>::func_8::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4606,7 +4606,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_18_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_18_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -4614,19 +4614,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_18_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_18_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_18_matcher::to_string() -> std::string{return R"((aA|bB)++(aA|bB))"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_18_matcher::to_string() -> std::string{return R"((aA|bB)++(aA|bB))"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_19_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_19_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4671,12 +4671,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_19_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_19_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_19_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_19_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4694,7 +4694,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_19_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_19_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4738,7 +4738,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_19_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_19_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -4746,19 +4746,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_19_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_19_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_19_matcher::to_string() -> std::string{return R"((aA)*+(aA))"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_19_matcher::to_string() -> std::string{return R"((aA)*+(aA))"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_20_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_20_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4790,7 +4790,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_20_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_20_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4822,7 +4822,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_20_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_20_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4841,7 +4841,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_20_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_20_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4871,12 +4871,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_20_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_20_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_20_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_20_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4894,7 +4894,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_20_matcher::wrap<Iter,CharT>::func_6::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_20_matcher::wrap<Iter,CharT>::func_6::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4926,7 +4926,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_20_matcher::wrap<Iter,CharT>::func_7::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_20_matcher::wrap<Iter,CharT>::func_7::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4958,7 +4958,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_20_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_20_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -4977,7 +4977,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_20_matcher::wrap<Iter,CharT>::func_8::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_20_matcher::wrap<Iter,CharT>::func_8::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5006,7 +5006,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_20_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_20_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -5014,19 +5014,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_20_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_20_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_20_matcher::to_string() -> std::string{return R"((aA|bB)*+(aA|bB))"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_20_matcher::to_string() -> std::string{return R"((aA|bB)*+(aA|bB))"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_21_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_21_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5071,12 +5071,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_21_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_21_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_21_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_21_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5094,7 +5094,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_21_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_21_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5138,7 +5138,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_21_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_21_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -5146,19 +5146,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_21_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_21_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_21_matcher::to_string() -> std::string{return R"((aA){1,5}+(aA))"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_21_matcher::to_string() -> std::string{return R"((aA){1,5}+(aA))"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_22_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_22_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5190,7 +5190,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_22_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_22_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5222,7 +5222,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_22_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_22_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5241,7 +5241,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_22_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_22_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5271,12 +5271,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_22_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_22_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_22_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_22_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5294,7 +5294,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_22_matcher::wrap<Iter,CharT>::func_6::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_22_matcher::wrap<Iter,CharT>::func_6::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5326,7 +5326,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_22_matcher::wrap<Iter,CharT>::func_7::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_22_matcher::wrap<Iter,CharT>::func_7::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5358,7 +5358,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_22_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_22_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5377,7 +5377,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_22_matcher::wrap<Iter,CharT>::func_8::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_22_matcher::wrap<Iter,CharT>::func_8::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5406,7 +5406,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_22_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_22_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -5414,19 +5414,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_22_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_22_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_22_matcher::to_string() -> std::string{return R"((aA|bB){1,5}+(aA|bB))"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_22_matcher::to_string() -> std::string{return R"((aA|bB){1,5}+(aA|bB))"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_23_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_23_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5471,12 +5471,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_23_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_23_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_23_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_23_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5494,7 +5494,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_23_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_23_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5538,7 +5538,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_23_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_23_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -5546,19 +5546,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_23_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_23_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_23_matcher::to_string() -> std::string{return R"((aA)?+(aA))"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_23_matcher::to_string() -> std::string{return R"((aA)?+(aA))"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_24_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_24_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5590,7 +5590,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_24_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_24_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5622,7 +5622,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_24_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_24_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5641,7 +5641,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_24_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_24_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5671,12 +5671,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_24_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_24_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_24_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_24_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5694,7 +5694,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_24_matcher::wrap<Iter,CharT>::func_6::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_24_matcher::wrap<Iter,CharT>::func_6::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5726,7 +5726,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_24_matcher::wrap<Iter,CharT>::func_7::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_24_matcher::wrap<Iter,CharT>::func_7::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5758,7 +5758,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_24_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_24_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5777,7 +5777,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_24_matcher::wrap<Iter,CharT>::func_8::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_24_matcher::wrap<Iter,CharT>::func_8::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5806,7 +5806,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_24_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_24_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -5814,19 +5814,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_24_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_24_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_24_matcher::to_string() -> std::string{return R"((aA|bB)?+(aA|bB))"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_24_matcher::to_string() -> std::string{return R"((aA|bB)?+(aA|bB))"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_25_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_25_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5871,12 +5871,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_25_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_25_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_25_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_25_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5894,7 +5894,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_25_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_25_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5925,7 +5925,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_25_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_25_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -5933,19 +5933,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_25_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_25_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_25_matcher::to_string() -> std::string{return R"((aA)++b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_25_matcher::to_string() -> std::string{return R"((aA)++b)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_26_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_26_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -5977,7 +5977,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_26_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_26_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6009,7 +6009,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_26_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_26_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6028,7 +6028,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_26_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_26_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6058,12 +6058,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_26_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_26_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_26_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_26_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6081,7 +6081,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_26_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_26_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6112,7 +6112,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_26_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_26_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -6120,19 +6120,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_26_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_26_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_26_matcher::to_string() -> std::string{return R"((aA|bB)++b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_26_matcher::to_string() -> std::string{return R"((aA|bB)++b)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_27_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_27_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6177,12 +6177,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_27_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_27_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_27_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_27_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6200,7 +6200,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_27_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_27_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6231,7 +6231,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_27_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_27_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -6239,19 +6239,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_27_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_27_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_27_matcher::to_string() -> std::string{return R"((aA)*+b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_27_matcher::to_string() -> std::string{return R"((aA)*+b)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_28_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_28_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6283,7 +6283,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_28_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_28_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6315,7 +6315,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_28_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_28_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6334,7 +6334,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_28_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_28_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6364,12 +6364,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_28_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_28_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_28_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_28_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6387,7 +6387,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_28_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_28_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6418,7 +6418,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_28_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_28_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -6426,19 +6426,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_28_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_28_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_28_matcher::to_string() -> std::string{return R"((aA|bB)*+b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_28_matcher::to_string() -> std::string{return R"((aA|bB)*+b)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_29_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_29_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6483,12 +6483,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_29_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_29_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_29_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_29_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6506,7 +6506,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_29_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_29_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6537,7 +6537,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_29_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_29_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -6545,19 +6545,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_29_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_29_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_29_matcher::to_string() -> std::string{return R"((aA){1,5}+b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_29_matcher::to_string() -> std::string{return R"((aA){1,5}+b)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_30_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_30_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6589,7 +6589,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_30_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_30_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6621,7 +6621,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_30_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_30_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6640,7 +6640,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_30_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_30_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6670,12 +6670,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_30_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_30_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_30_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_30_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6693,7 +6693,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_30_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_30_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6724,7 +6724,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_30_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_30_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -6732,19 +6732,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_30_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_30_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_30_matcher::to_string() -> std::string{return R"((aA|bB){1,5}+b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_30_matcher::to_string() -> std::string{return R"((aA|bB){1,5}+b)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_31_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_31_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6789,12 +6789,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_31_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_31_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_31_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_31_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6812,7 +6812,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_31_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_31_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6843,7 +6843,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_31_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_31_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -6851,19 +6851,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_31_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_31_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_31_matcher::to_string() -> std::string{return R"((aA)?+b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_31_matcher::to_string() -> std::string{return R"((aA)?+b)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_32_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_32_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6895,7 +6895,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_32_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_32_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6927,7 +6927,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_32_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_32_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6946,7 +6946,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_32_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_32_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6976,12 +6976,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_32_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_32_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_32_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_32_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -6999,7 +6999,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_32_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_32_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -7030,7 +7030,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_32_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_32_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -7038,19 +7038,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_32_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_32_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_32_matcher::to_string() -> std::string{return R"((aA|bB)?+b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_32_matcher::to_string() -> std::string{return R"((aA|bB)?+b)"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_33_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_33_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -7095,1724 +7095,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_33_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_33_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_33_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 3;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::range_token_matcher<char,1,-1,3>::match(r.pos, ctx, func_1(), reset_0(), other, func_2());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_33_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_start(2, r.pos);
-
-  std::array<char,2 + 1> str_tmp_3 {"aA"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_3, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  ctx.set_group_end(2, r.pos);
-
-  auto tmp_4_func {
-[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
-  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
-  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(2);
-  }
-  }
-  }; 
-
-  auto tmp_4 {cpp2::regex::make_on_return(cpp2::move(tmp_4_func))}; 
-  static_cast<void>(cpp2::move(tmp_4));
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_33_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
-  ctx.set_group_start(0, cur);
-
-  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
-  if (r.matched) {ctx.set_group_end(0, r.pos);}
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_33_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
-  static_cast<void>(name);
-  return -1; 
-  }
-
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_33_matcher::to_string() -> std::string{return R"(foo(aA)++(aA))"; }
-
-
-
-
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_34_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,2 + 1> str_tmp_1 {"aA"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_34_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,2 + 1> str_tmp_2 {"bB"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_2, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_34_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_start(1, r.pos);
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::alternative_token_matcher<char>::match(r.pos, ctx, other, func_4(), func_2(), cpp2::regex::no_reset(), func_3(), cpp2::regex::no_reset());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_34_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_end(1, r.pos);
-
-  auto tmp_3_func {
-[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
-  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
-  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(1);
-  }
-  }
-  }; 
-
-  auto tmp_3 {cpp2::regex::make_on_return(cpp2::move(tmp_3_func))}; 
-  static_cast<void>(cpp2::move(tmp_3));
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_34_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
-  ctx.set_group_invalid(1);
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_34_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 3;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::range_token_matcher<char,1,-1,3>::match(r.pos, ctx, func_1(), reset_0(), other, func_5());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_34_matcher::wrap<Iter,CharT>::func_6::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,2 + 1> str_tmp_4 {"aA"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_4, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_34_matcher::wrap<Iter,CharT>::func_7::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,2 + 1> str_tmp_5 {"bB"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_5, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_34_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_start(2, r.pos);
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::alternative_token_matcher<char>::match(r.pos, ctx, other, func_8(), func_6(), cpp2::regex::no_reset(), func_7(), cpp2::regex::no_reset());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_34_matcher::wrap<Iter,CharT>::func_8::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_end(2, r.pos);
-
-  auto tmp_6_func {
-[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
-  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
-  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(2);
-  }
-  }
-  }; 
-
-  auto tmp_6 {cpp2::regex::make_on_return(cpp2::move(tmp_6_func))}; 
-  static_cast<void>(cpp2::move(tmp_6));
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_34_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
-  ctx.set_group_start(0, cur);
-
-  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
-  if (r.matched) {ctx.set_group_end(0, r.pos);}
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_34_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
-  static_cast<void>(name);
-  return -1; 
-  }
-
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_34_matcher::to_string() -> std::string{return R"(foo(aA|bB)++(aA|bB))"; }
-
-
-
-
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_35_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_start(1, r.pos);
-
-  std::array<char,2 + 1> str_tmp_1 {"aA"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  ctx.set_group_end(1, r.pos);
-
-  auto tmp_2_func {
-[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
-  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
-  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(1);
-  }
-  }
-  }; 
-
-  auto tmp_2 {cpp2::regex::make_on_return(cpp2::move(tmp_2_func))}; 
-  static_cast<void>(cpp2::move(tmp_2));
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_35_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
-  ctx.set_group_invalid(1);
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_35_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 3;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::range_token_matcher<char,0,-1,3>::match(r.pos, ctx, func_1(), reset_0(), other, func_2());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_35_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_start(2, r.pos);
-
-  std::array<char,2 + 1> str_tmp_3 {"aA"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_3, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  ctx.set_group_end(2, r.pos);
-
-  auto tmp_4_func {
-[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
-  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
-  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(2);
-  }
-  }
-  }; 
-
-  auto tmp_4 {cpp2::regex::make_on_return(cpp2::move(tmp_4_func))}; 
-  static_cast<void>(cpp2::move(tmp_4));
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_35_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
-  ctx.set_group_start(0, cur);
-
-  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
-  if (r.matched) {ctx.set_group_end(0, r.pos);}
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_35_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
-  static_cast<void>(name);
-  return -1; 
-  }
-
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_35_matcher::to_string() -> std::string{return R"(foo(aA)*+(aA))"; }
-
-
-
-
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_36_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,2 + 1> str_tmp_1 {"aA"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_36_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,2 + 1> str_tmp_2 {"bB"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_2, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_36_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_start(1, r.pos);
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::alternative_token_matcher<char>::match(r.pos, ctx, other, func_4(), func_2(), cpp2::regex::no_reset(), func_3(), cpp2::regex::no_reset());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_36_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_end(1, r.pos);
-
-  auto tmp_3_func {
-[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
-  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
-  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(1);
-  }
-  }
-  }; 
-
-  auto tmp_3 {cpp2::regex::make_on_return(cpp2::move(tmp_3_func))}; 
-  static_cast<void>(cpp2::move(tmp_3));
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_36_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
-  ctx.set_group_invalid(1);
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_36_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 3;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::range_token_matcher<char,0,-1,3>::match(r.pos, ctx, func_1(), reset_0(), other, func_5());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_36_matcher::wrap<Iter,CharT>::func_6::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,2 + 1> str_tmp_4 {"aA"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_4, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_36_matcher::wrap<Iter,CharT>::func_7::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,2 + 1> str_tmp_5 {"bB"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_5, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_36_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_start(2, r.pos);
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::alternative_token_matcher<char>::match(r.pos, ctx, other, func_8(), func_6(), cpp2::regex::no_reset(), func_7(), cpp2::regex::no_reset());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_36_matcher::wrap<Iter,CharT>::func_8::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_end(2, r.pos);
-
-  auto tmp_6_func {
-[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
-  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
-  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(2);
-  }
-  }
-  }; 
-
-  auto tmp_6 {cpp2::regex::make_on_return(cpp2::move(tmp_6_func))}; 
-  static_cast<void>(cpp2::move(tmp_6));
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_36_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
-  ctx.set_group_start(0, cur);
-
-  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
-  if (r.matched) {ctx.set_group_end(0, r.pos);}
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_36_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
-  static_cast<void>(name);
-  return -1; 
-  }
-
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_36_matcher::to_string() -> std::string{return R"(foo(aA|bB)*+(aA|bB))"; }
-
-
-
-
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_37_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_start(1, r.pos);
-
-  std::array<char,2 + 1> str_tmp_1 {"aA"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  ctx.set_group_end(1, r.pos);
-
-  auto tmp_2_func {
-[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
-  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
-  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(1);
-  }
-  }
-  }; 
-
-  auto tmp_2 {cpp2::regex::make_on_return(cpp2::move(tmp_2_func))}; 
-  static_cast<void>(cpp2::move(tmp_2));
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_37_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
-  ctx.set_group_invalid(1);
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_37_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 3;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::range_token_matcher<char,1,5,3>::match(r.pos, ctx, func_1(), reset_0(), other, func_2());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_37_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_start(2, r.pos);
-
-  std::array<char,2 + 1> str_tmp_3 {"aA"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_3, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  ctx.set_group_end(2, r.pos);
-
-  auto tmp_4_func {
-[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
-  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
-  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(2);
-  }
-  }
-  }; 
-
-  auto tmp_4 {cpp2::regex::make_on_return(cpp2::move(tmp_4_func))}; 
-  static_cast<void>(cpp2::move(tmp_4));
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_37_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
-  ctx.set_group_start(0, cur);
-
-  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
-  if (r.matched) {ctx.set_group_end(0, r.pos);}
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_37_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
-  static_cast<void>(name);
-  return -1; 
-  }
-
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_37_matcher::to_string() -> std::string{return R"(foo(aA){1,5}+(aA))"; }
-
-
-
-
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_38_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,2 + 1> str_tmp_1 {"aA"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_38_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,2 + 1> str_tmp_2 {"bB"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_2, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_38_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_start(1, r.pos);
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::alternative_token_matcher<char>::match(r.pos, ctx, other, func_4(), func_2(), cpp2::regex::no_reset(), func_3(), cpp2::regex::no_reset());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_38_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_end(1, r.pos);
-
-  auto tmp_3_func {
-[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
-  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
-  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(1);
-  }
-  }
-  }; 
-
-  auto tmp_3 {cpp2::regex::make_on_return(cpp2::move(tmp_3_func))}; 
-  static_cast<void>(cpp2::move(tmp_3));
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_38_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
-  ctx.set_group_invalid(1);
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_38_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 3;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::range_token_matcher<char,1,5,3>::match(r.pos, ctx, func_1(), reset_0(), other, func_5());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_38_matcher::wrap<Iter,CharT>::func_6::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,2 + 1> str_tmp_4 {"aA"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_4, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_38_matcher::wrap<Iter,CharT>::func_7::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,2 + 1> str_tmp_5 {"bB"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_5, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_38_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_start(2, r.pos);
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::alternative_token_matcher<char>::match(r.pos, ctx, other, func_8(), func_6(), cpp2::regex::no_reset(), func_7(), cpp2::regex::no_reset());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_38_matcher::wrap<Iter,CharT>::func_8::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_end(2, r.pos);
-
-  auto tmp_6_func {
-[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
-  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
-  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(2);
-  }
-  }
-  }; 
-
-  auto tmp_6 {cpp2::regex::make_on_return(cpp2::move(tmp_6_func))}; 
-  static_cast<void>(cpp2::move(tmp_6));
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_38_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
-  ctx.set_group_start(0, cur);
-
-  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
-  if (r.matched) {ctx.set_group_end(0, r.pos);}
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_38_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
-  static_cast<void>(name);
-  return -1; 
-  }
-
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_38_matcher::to_string() -> std::string{return R"(foo(aA|bB){1,5}+(aA|bB))"; }
-
-
-
-
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_39_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_start(1, r.pos);
-
-  std::array<char,2 + 1> str_tmp_1 {"aA"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  ctx.set_group_end(1, r.pos);
-
-  auto tmp_2_func {
-[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
-  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
-  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(1);
-  }
-  }
-  }; 
-
-  auto tmp_2 {cpp2::regex::make_on_return(cpp2::move(tmp_2_func))}; 
-  static_cast<void>(cpp2::move(tmp_2));
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_39_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
-  ctx.set_group_invalid(1);
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_39_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 3;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::range_token_matcher<char,0,1,3>::match(r.pos, ctx, func_1(), reset_0(), other, func_2());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_39_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_start(2, r.pos);
-
-  std::array<char,2 + 1> str_tmp_3 {"aA"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_3, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  ctx.set_group_end(2, r.pos);
-
-  auto tmp_4_func {
-[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
-  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
-  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(2);
-  }
-  }
-  }; 
-
-  auto tmp_4 {cpp2::regex::make_on_return(cpp2::move(tmp_4_func))}; 
-  static_cast<void>(cpp2::move(tmp_4));
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_39_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
-  ctx.set_group_start(0, cur);
-
-  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
-  if (r.matched) {ctx.set_group_end(0, r.pos);}
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_39_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
-  static_cast<void>(name);
-  return -1; 
-  }
-
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_39_matcher::to_string() -> std::string{return R"(foo(aA)?+(aA))"; }
-
-
-
-
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_40_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,2 + 1> str_tmp_1 {"aA"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_40_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,2 + 1> str_tmp_2 {"bB"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_2, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_40_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_start(1, r.pos);
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::alternative_token_matcher<char>::match(r.pos, ctx, other, func_4(), func_2(), cpp2::regex::no_reset(), func_3(), cpp2::regex::no_reset());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_40_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_end(1, r.pos);
-
-  auto tmp_3_func {
-[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
-  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
-  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(1);
-  }
-  }
-  }; 
-
-  auto tmp_3 {cpp2::regex::make_on_return(cpp2::move(tmp_3_func))}; 
-  static_cast<void>(cpp2::move(tmp_3));
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_40_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
-  ctx.set_group_invalid(1);
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_40_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 3;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::range_token_matcher<char,0,1,3>::match(r.pos, ctx, func_1(), reset_0(), other, func_5());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_40_matcher::wrap<Iter,CharT>::func_6::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,2 + 1> str_tmp_4 {"aA"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_4, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_40_matcher::wrap<Iter,CharT>::func_7::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-
-  std::array<char,2 + 1> str_tmp_5 {"bB"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_5, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_40_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_start(2, r.pos);
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = cpp2::regex::alternative_token_matcher<char>::match(r.pos, ctx, other, func_8(), func_6(), cpp2::regex::no_reset(), func_7(), cpp2::regex::no_reset());
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_40_matcher::wrap<Iter,CharT>::func_8::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_end(2, r.pos);
-
-  auto tmp_6_func {
-[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
-  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
-  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(2);
-  }
-  }
-  }; 
-
-  auto tmp_6 {cpp2::regex::make_on_return(cpp2::move(tmp_6_func))}; 
-  static_cast<void>(cpp2::move(tmp_6));
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_40_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
-  ctx.set_group_start(0, cur);
-
-  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
-  if (r.matched) {ctx.set_group_end(0, r.pos);}
-  return r; 
-  }
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_40_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
-  static_cast<void>(name);
-  return -1; 
-  }
-
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_40_matcher::to_string() -> std::string{return R"(foo(aA|bB)?+(aA|bB))"; }
-
-
-
-
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_41_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
-
-  auto r {ctx.pass(cur)}; 
-  do {
-  ctx.set_group_start(1, r.pos);
-
-  std::array<char,2 + 1> str_tmp_1 {"aA"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
-  r.matched = false;
-  break;
-  }
-{
-int i{0};
-  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
-  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
-  }
-}
-  if (r.matched) {r.pos += 2;}
-  else {break;}
-  ctx.set_group_end(1, r.pos);
-
-  auto tmp_2_func {
-[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
-  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
-  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(1);
-  }
-  }
-  }; 
-
-  auto tmp_2 {cpp2::regex::make_on_return(cpp2::move(tmp_2_func))}; 
-  static_cast<void>(cpp2::move(tmp_2));
-  }
-   while ( 
-  false
-  );
-  if (r.matched) {
-  r = other(r.pos, ctx);
-  }
-  else {
-  r.pos = ctx.end;
-  }
-  return r; 
-  }
-
-
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_41_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
-  ctx.set_group_invalid(1);
-  }
-
-
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_41_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_33_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -8844,24 +7132,37 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_41_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_33_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
+  ctx.set_group_start(2, r.pos);
 
-  std::array<char,1 + 1> str_tmp_3 {"b"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  std::array<char,2 + 1> str_tmp_3 {"aA"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
   r.matched = false;
   break;
   }
 {
 int i{0};
-  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
   if (CPP2_ASSERT_IN_BOUNDS(str_tmp_3, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
   }
 }
-  if (r.matched) {r.pos += 1;}
+  if (r.matched) {r.pos += 2;}
   else {break;}
+  ctx.set_group_end(2, r.pos);
+
+  auto tmp_4_func {
+[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
+  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
+  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(2);
+  }
+  }
+  }; 
+
+  auto tmp_4 {cpp2::regex::make_on_return(cpp2::move(tmp_4_func))}; 
+  static_cast<void>(cpp2::move(tmp_4));
   }
    while ( 
   false
@@ -8875,7 +7176,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_41_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_33_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -8883,19 +7184,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_41_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_33_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_41_matcher::to_string() -> std::string{return R"(foo(aA)++b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_33_matcher::to_string() -> std::string{return R"(foo(aA)++(aA))"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_42_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_34_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -8927,7 +7228,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_42_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_34_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -8959,7 +7260,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_42_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_34_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -8978,7 +7279,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_42_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_34_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9008,12 +7309,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_42_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_34_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_42_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_34_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9045,23 +7346,23 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_42_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_34_matcher::wrap<Iter,CharT>::func_6::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
 
-  std::array<char,1 + 1> str_tmp_4 {"b"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  std::array<char,2 + 1> str_tmp_4 {"aA"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
   r.matched = false;
   break;
   }
 {
 int i{0};
-  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
   if (CPP2_ASSERT_IN_BOUNDS(str_tmp_4, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
   }
 }
-  if (r.matched) {r.pos += 1;}
+  if (r.matched) {r.pos += 2;}
   else {break;}
   }
    while ( 
@@ -9076,7 +7377,88 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_42_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_34_matcher::wrap<Iter,CharT>::func_7::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,2 + 1> str_tmp_5 {"bB"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_5, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 2;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_34_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_start(2, r.pos);
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::alternative_token_matcher<char>::match(r.pos, ctx, other, func_8(), func_6(), cpp2::regex::no_reset(), func_7(), cpp2::regex::no_reset());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_34_matcher::wrap<Iter,CharT>::func_8::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_end(2, r.pos);
+
+  auto tmp_6_func {
+[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
+  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
+  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(2);
+  }
+  }
+  }; 
+
+  auto tmp_6 {cpp2::regex::make_on_return(cpp2::move(tmp_6_func))}; 
+  static_cast<void>(cpp2::move(tmp_6));
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_34_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -9084,19 +7466,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_42_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_34_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_42_matcher::to_string() -> std::string{return R"(foo(aA|bB)++b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_34_matcher::to_string() -> std::string{return R"(foo(aA|bB)++(aA|bB))"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_43_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_35_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9141,12 +7523,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_43_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_35_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_43_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_35_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9178,24 +7560,37 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_43_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_35_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
+  ctx.set_group_start(2, r.pos);
 
-  std::array<char,1 + 1> str_tmp_3 {"b"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  std::array<char,2 + 1> str_tmp_3 {"aA"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
   r.matched = false;
   break;
   }
 {
 int i{0};
-  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
   if (CPP2_ASSERT_IN_BOUNDS(str_tmp_3, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
   }
 }
-  if (r.matched) {r.pos += 1;}
+  if (r.matched) {r.pos += 2;}
   else {break;}
+  ctx.set_group_end(2, r.pos);
+
+  auto tmp_4_func {
+[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
+  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
+  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(2);
+  }
+  }
+  }; 
+
+  auto tmp_4 {cpp2::regex::make_on_return(cpp2::move(tmp_4_func))}; 
+  static_cast<void>(cpp2::move(tmp_4));
   }
    while ( 
   false
@@ -9209,7 +7604,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_43_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_35_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -9217,19 +7612,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_43_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_35_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_43_matcher::to_string() -> std::string{return R"(foo(aA)*+b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_35_matcher::to_string() -> std::string{return R"(foo(aA)*+(aA))"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_44_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_36_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9261,7 +7656,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_44_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_36_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9293,7 +7688,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_44_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_36_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9312,7 +7707,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_44_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_36_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9342,12 +7737,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_44_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_36_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_44_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_36_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9379,23 +7774,23 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_44_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_36_matcher::wrap<Iter,CharT>::func_6::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
 
-  std::array<char,1 + 1> str_tmp_4 {"b"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  std::array<char,2 + 1> str_tmp_4 {"aA"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
   r.matched = false;
   break;
   }
 {
 int i{0};
-  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
   if (CPP2_ASSERT_IN_BOUNDS(str_tmp_4, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
   }
 }
-  if (r.matched) {r.pos += 1;}
+  if (r.matched) {r.pos += 2;}
   else {break;}
   }
    while ( 
@@ -9410,7 +7805,88 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_44_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_36_matcher::wrap<Iter,CharT>::func_7::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,2 + 1> str_tmp_5 {"bB"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_5, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 2;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_36_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_start(2, r.pos);
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::alternative_token_matcher<char>::match(r.pos, ctx, other, func_8(), func_6(), cpp2::regex::no_reset(), func_7(), cpp2::regex::no_reset());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_36_matcher::wrap<Iter,CharT>::func_8::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_end(2, r.pos);
+
+  auto tmp_6_func {
+[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
+  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
+  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(2);
+  }
+  }
+  }; 
+
+  auto tmp_6 {cpp2::regex::make_on_return(cpp2::move(tmp_6_func))}; 
+  static_cast<void>(cpp2::move(tmp_6));
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_36_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -9418,19 +7894,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_44_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_36_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_44_matcher::to_string() -> std::string{return R"(foo(aA|bB)*+b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_36_matcher::to_string() -> std::string{return R"(foo(aA|bB)*+(aA|bB))"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_45_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_37_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9475,12 +7951,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_45_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_37_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_45_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_37_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9512,24 +7988,37 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_45_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_37_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
+  ctx.set_group_start(2, r.pos);
 
-  std::array<char,1 + 1> str_tmp_3 {"b"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  std::array<char,2 + 1> str_tmp_3 {"aA"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
   r.matched = false;
   break;
   }
 {
 int i{0};
-  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
   if (CPP2_ASSERT_IN_BOUNDS(str_tmp_3, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
   }
 }
-  if (r.matched) {r.pos += 1;}
+  if (r.matched) {r.pos += 2;}
   else {break;}
+  ctx.set_group_end(2, r.pos);
+
+  auto tmp_4_func {
+[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
+  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
+  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(2);
+  }
+  }
+  }; 
+
+  auto tmp_4 {cpp2::regex::make_on_return(cpp2::move(tmp_4_func))}; 
+  static_cast<void>(cpp2::move(tmp_4));
   }
    while ( 
   false
@@ -9543,7 +8032,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_45_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_37_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -9551,19 +8040,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_45_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_37_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_45_matcher::to_string() -> std::string{return R"(foo(aA){1,5}+b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_37_matcher::to_string() -> std::string{return R"(foo(aA){1,5}+(aA))"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_46_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_38_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9595,7 +8084,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_46_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_38_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9627,7 +8116,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_46_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_38_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9646,7 +8135,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_46_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_38_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9676,12 +8165,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_46_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_38_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_46_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_38_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9713,23 +8202,23 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_46_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_38_matcher::wrap<Iter,CharT>::func_6::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
 
-  std::array<char,1 + 1> str_tmp_4 {"b"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  std::array<char,2 + 1> str_tmp_4 {"aA"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
   r.matched = false;
   break;
   }
 {
 int i{0};
-  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
   if (CPP2_ASSERT_IN_BOUNDS(str_tmp_4, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
   }
 }
-  if (r.matched) {r.pos += 1;}
+  if (r.matched) {r.pos += 2;}
   else {break;}
   }
    while ( 
@@ -9744,7 +8233,88 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_46_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_38_matcher::wrap<Iter,CharT>::func_7::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,2 + 1> str_tmp_5 {"bB"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_5, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 2;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_38_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_start(2, r.pos);
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::alternative_token_matcher<char>::match(r.pos, ctx, other, func_8(), func_6(), cpp2::regex::no_reset(), func_7(), cpp2::regex::no_reset());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_38_matcher::wrap<Iter,CharT>::func_8::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_end(2, r.pos);
+
+  auto tmp_6_func {
+[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
+  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
+  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(2);
+  }
+  }
+  }; 
+
+  auto tmp_6 {cpp2::regex::make_on_return(cpp2::move(tmp_6_func))}; 
+  static_cast<void>(cpp2::move(tmp_6));
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_38_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -9752,19 +8322,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_46_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_38_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_46_matcher::to_string() -> std::string{return R"(foo(aA|bB){1,5}+b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_38_matcher::to_string() -> std::string{return R"(foo(aA|bB){1,5}+(aA|bB))"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_47_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_39_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9809,12 +8379,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_47_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_39_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_47_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_39_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9846,24 +8416,37 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_47_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_39_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
+  ctx.set_group_start(2, r.pos);
 
-  std::array<char,1 + 1> str_tmp_3 {"b"}; 
-  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  std::array<char,2 + 1> str_tmp_3 {"aA"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
   r.matched = false;
   break;
   }
 {
 int i{0};
-  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
   if (CPP2_ASSERT_IN_BOUNDS(str_tmp_3, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
   }
 }
-  if (r.matched) {r.pos += 1;}
+  if (r.matched) {r.pos += 2;}
   else {break;}
+  ctx.set_group_end(2, r.pos);
+
+  auto tmp_4_func {
+[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
+  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
+  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(2);
+  }
+  }
+  }; 
+
+  auto tmp_4 {cpp2::regex::make_on_return(cpp2::move(tmp_4_func))}; 
+  static_cast<void>(cpp2::move(tmp_4));
   }
    while ( 
   false
@@ -9877,7 +8460,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_47_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_39_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -9885,19 +8468,19 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_47_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_39_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_47_matcher::to_string() -> std::string{return R"(foo(aA)?+b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_39_matcher::to_string() -> std::string{return R"(foo(aA)?+(aA))"; }
 
 
 
 
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_48_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_40_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9929,7 +8512,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_48_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_40_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9961,7 +8544,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_48_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_40_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -9980,7 +8563,7 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_48_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_40_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -10010,12 +8593,12 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> auto test_tests_13_posessive_modifier::regex_48_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_40_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
   ctx.set_group_invalid(1);
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_48_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_40_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -10047,7 +8630,422 @@ int i{0};
   }
 
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_48_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_40_matcher::wrap<Iter,CharT>::func_6::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,2 + 1> str_tmp_4 {"aA"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_4, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 2;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_40_matcher::wrap<Iter,CharT>::func_7::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,2 + 1> str_tmp_5 {"bB"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_5, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 2;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_40_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_start(2, r.pos);
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::alternative_token_matcher<char>::match(r.pos, ctx, other, func_8(), func_6(), cpp2::regex::no_reset(), func_7(), cpp2::regex::no_reset());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_40_matcher::wrap<Iter,CharT>::func_8::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_end(2, r.pos);
+
+  auto tmp_6_func {
+[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
+  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
+  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(2);
+  }
+  }
+  }; 
+
+  auto tmp_6 {cpp2::regex::make_on_return(cpp2::move(tmp_6_func))}; 
+  static_cast<void>(cpp2::move(tmp_6));
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_40_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  ctx.set_group_start(0, cur);
+
+  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
+  if (r.matched) {ctx.set_group_end(0, r.pos);}
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_40_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  static_cast<void>(name);
+  return -1; 
+  }
+
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_40_matcher::to_string() -> std::string{return R"(foo(aA|bB)?+(aA|bB))"; }
+
+
+
+
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_41_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_start(1, r.pos);
+
+  std::array<char,2 + 1> str_tmp_1 {"aA"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 2;}
+  else {break;}
+  ctx.set_group_end(1, r.pos);
+
+  auto tmp_2_func {
+[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
+  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
+  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(1);
+  }
+  }
+  }; 
+
+  auto tmp_2 {cpp2::regex::make_on_return(cpp2::move(tmp_2_func))}; 
+  static_cast<void>(cpp2::move(tmp_2));
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_41_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  ctx.set_group_invalid(1);
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_41_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 3;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::range_token_matcher<char,1,-1,3>::match(r.pos, ctx, func_1(), reset_0(), other, func_2());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_41_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,1 + 1> str_tmp_3 {"b"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_3, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 1;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_41_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  ctx.set_group_start(0, cur);
+
+  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
+  if (r.matched) {ctx.set_group_end(0, r.pos);}
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_41_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  static_cast<void>(name);
+  return -1; 
+  }
+
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_41_matcher::to_string() -> std::string{return R"(foo(aA)++b)"; }
+
+
+
+
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_42_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,2 + 1> str_tmp_1 {"aA"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 2;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_42_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,2 + 1> str_tmp_2 {"bB"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_2, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 2;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_42_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_start(1, r.pos);
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::alternative_token_matcher<char>::match(r.pos, ctx, other, func_4(), func_2(), cpp2::regex::no_reset(), func_3(), cpp2::regex::no_reset());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_42_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_end(1, r.pos);
+
+  auto tmp_3_func {
+[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
+  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
+  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(1);
+  }
+  }
+  }; 
+
+  auto tmp_3 {cpp2::regex::make_on_return(cpp2::move(tmp_3_func))}; 
+  static_cast<void>(cpp2::move(tmp_3));
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_42_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  ctx.set_group_invalid(1);
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_42_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 3;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::range_token_matcher<char,1,-1,3>::match(r.pos, ctx, func_1(), reset_0(), other, func_5());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_42_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
 
   auto r {ctx.pass(cur)}; 
   do {
@@ -10078,7 +9076,7 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_48_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_42_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
   ctx.set_group_start(0, cur);
 
   auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
@@ -10086,16 +9084,1018 @@ int i{0};
   return r; 
   }
 
-  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_posessive_modifier::regex_48_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_42_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
   static_cast<void>(name);
   return -1; 
   }
 
-  [[nodiscard]] auto test_tests_13_posessive_modifier::regex_48_matcher::to_string() -> std::string{return R"(foo(aA|bB)?+b)"; }
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_42_matcher::to_string() -> std::string{return R"(foo(aA|bB)++b)"; }
 
 
-#line 255 "pure2-regex_13_posessive_modifier.cpp2"
+
+
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_43_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_start(1, r.pos);
+
+  std::array<char,2 + 1> str_tmp_1 {"aA"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 2;}
+  else {break;}
+  ctx.set_group_end(1, r.pos);
+
+  auto tmp_2_func {
+[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
+  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
+  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(1);
+  }
+  }
+  }; 
+
+  auto tmp_2 {cpp2::regex::make_on_return(cpp2::move(tmp_2_func))}; 
+  static_cast<void>(cpp2::move(tmp_2));
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_43_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  ctx.set_group_invalid(1);
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_43_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 3;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::range_token_matcher<char,0,-1,3>::match(r.pos, ctx, func_1(), reset_0(), other, func_2());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_43_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,1 + 1> str_tmp_3 {"b"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_3, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 1;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_43_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  ctx.set_group_start(0, cur);
+
+  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
+  if (r.matched) {ctx.set_group_end(0, r.pos);}
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_43_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  static_cast<void>(name);
+  return -1; 
+  }
+
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_43_matcher::to_string() -> std::string{return R"(foo(aA)*+b)"; }
+
+
+
+
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_44_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,2 + 1> str_tmp_1 {"aA"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 2;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_44_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,2 + 1> str_tmp_2 {"bB"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_2, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 2;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_44_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_start(1, r.pos);
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::alternative_token_matcher<char>::match(r.pos, ctx, other, func_4(), func_2(), cpp2::regex::no_reset(), func_3(), cpp2::regex::no_reset());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_44_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_end(1, r.pos);
+
+  auto tmp_3_func {
+[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
+  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
+  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(1);
+  }
+  }
+  }; 
+
+  auto tmp_3 {cpp2::regex::make_on_return(cpp2::move(tmp_3_func))}; 
+  static_cast<void>(cpp2::move(tmp_3));
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_44_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  ctx.set_group_invalid(1);
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_44_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 3;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::range_token_matcher<char,0,-1,3>::match(r.pos, ctx, func_1(), reset_0(), other, func_5());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_44_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,1 + 1> str_tmp_4 {"b"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_4, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 1;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_44_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  ctx.set_group_start(0, cur);
+
+  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
+  if (r.matched) {ctx.set_group_end(0, r.pos);}
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_44_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  static_cast<void>(name);
+  return -1; 
+  }
+
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_44_matcher::to_string() -> std::string{return R"(foo(aA|bB)*+b)"; }
+
+
+
+
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_45_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_start(1, r.pos);
+
+  std::array<char,2 + 1> str_tmp_1 {"aA"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 2;}
+  else {break;}
+  ctx.set_group_end(1, r.pos);
+
+  auto tmp_2_func {
+[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
+  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
+  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(1);
+  }
+  }
+  }; 
+
+  auto tmp_2 {cpp2::regex::make_on_return(cpp2::move(tmp_2_func))}; 
+  static_cast<void>(cpp2::move(tmp_2));
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_45_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  ctx.set_group_invalid(1);
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_45_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 3;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::range_token_matcher<char,1,5,3>::match(r.pos, ctx, func_1(), reset_0(), other, func_2());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_45_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,1 + 1> str_tmp_3 {"b"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_3, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 1;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_45_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  ctx.set_group_start(0, cur);
+
+  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
+  if (r.matched) {ctx.set_group_end(0, r.pos);}
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_45_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  static_cast<void>(name);
+  return -1; 
+  }
+
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_45_matcher::to_string() -> std::string{return R"(foo(aA){1,5}+b)"; }
+
+
+
+
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_46_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,2 + 1> str_tmp_1 {"aA"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 2;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_46_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,2 + 1> str_tmp_2 {"bB"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_2, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 2;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_46_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_start(1, r.pos);
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::alternative_token_matcher<char>::match(r.pos, ctx, other, func_4(), func_2(), cpp2::regex::no_reset(), func_3(), cpp2::regex::no_reset());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_46_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_end(1, r.pos);
+
+  auto tmp_3_func {
+[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
+  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
+  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(1);
+  }
+  }
+  }; 
+
+  auto tmp_3 {cpp2::regex::make_on_return(cpp2::move(tmp_3_func))}; 
+  static_cast<void>(cpp2::move(tmp_3));
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_46_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  ctx.set_group_invalid(1);
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_46_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 3;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::range_token_matcher<char,1,5,3>::match(r.pos, ctx, func_1(), reset_0(), other, func_5());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_46_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,1 + 1> str_tmp_4 {"b"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_4, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 1;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_46_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  ctx.set_group_start(0, cur);
+
+  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
+  if (r.matched) {ctx.set_group_end(0, r.pos);}
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_46_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  static_cast<void>(name);
+  return -1; 
+  }
+
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_46_matcher::to_string() -> std::string{return R"(foo(aA|bB){1,5}+b)"; }
+
+
+
+
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_47_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_start(1, r.pos);
+
+  std::array<char,2 + 1> str_tmp_1 {"aA"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 2;}
+  else {break;}
+  ctx.set_group_end(1, r.pos);
+
+  auto tmp_2_func {
+[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
+  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
+  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(1);
+  }
+  }
+  }; 
+
+  auto tmp_2 {cpp2::regex::make_on_return(cpp2::move(tmp_2_func))}; 
+  static_cast<void>(cpp2::move(tmp_2));
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_47_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  ctx.set_group_invalid(1);
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_47_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 3;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::range_token_matcher<char,0,1,3>::match(r.pos, ctx, func_1(), reset_0(), other, func_2());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_47_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,1 + 1> str_tmp_3 {"b"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_3, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 1;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_47_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  ctx.set_group_start(0, cur);
+
+  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
+  if (r.matched) {ctx.set_group_end(0, r.pos);}
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_47_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  static_cast<void>(name);
+  return -1; 
+  }
+
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_47_matcher::to_string() -> std::string{return R"(foo(aA)?+b)"; }
+
+
+
+
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_48_matcher::wrap<Iter,CharT>::func_2::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,2 + 1> str_tmp_1 {"aA"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_1, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 2;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_48_matcher::wrap<Iter,CharT>::func_3::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,2 + 1> str_tmp_2 {"bB"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),2)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,2); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_2, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 2;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_48_matcher::wrap<Iter,CharT>::func_1::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_start(1, r.pos);
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::alternative_token_matcher<char>::match(r.pos, ctx, other, func_4(), func_2(), cpp2::regex::no_reset(), func_3(), cpp2::regex::no_reset());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_48_matcher::wrap<Iter,CharT>::func_4::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+  ctx.set_group_end(1, r.pos);
+
+  auto tmp_3_func {
+[&, _1 = (&r), _2 = (&ctx)]() mutable -> void{
+  if (!((*cpp2::impl::assert_not_null(_1)).matched)) {
+  (*cpp2::impl::assert_not_null(_2)).set_group_invalid(1);
+  }
+  }
+  }; 
+
+  auto tmp_3 {cpp2::regex::make_on_return(cpp2::move(tmp_3_func))}; 
+  static_cast<void>(cpp2::move(tmp_3));
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> auto test_tests_13_possessive_modifier::regex_48_matcher::wrap<Iter,CharT>::reset_0::operator()(auto& ctx) const& -> void{
+  ctx.set_group_invalid(1);
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_48_matcher::wrap<Iter,CharT>::func_0::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,3 + 1> str_tmp_0 {"foo"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),3)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,3); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_0, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 3;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = cpp2::regex::range_token_matcher<char,0,1,3>::match(r.pos, ctx, func_1(), reset_0(), other, func_5());
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_48_matcher::wrap<Iter,CharT>::func_5::operator()(cpp2::impl::in<Iter> cur, context& ctx, auto const& other) const& -> cpp2::regex::match_return<Iter>{
+
+  auto r {ctx.pass(cur)}; 
+  do {
+
+  std::array<char,1 + 1> str_tmp_4 {"b"}; 
+  if (cpp2::impl::cmp_less(std::distance(r.pos, ctx.end),1)) {
+  r.matched = false;
+  break;
+  }
+{
+int i{0};
+  for( ; cpp2::impl::cmp_less(i,1); (i += 1) ) {
+  if (CPP2_ASSERT_IN_BOUNDS(str_tmp_4, i) != CPP2_ASSERT_IN_BOUNDS(r.pos, i)) {r.matched = false;}
+  }
+}
+  if (r.matched) {r.pos += 1;}
+  else {break;}
+  }
+   while ( 
+  false
+  );
+  if (r.matched) {
+  r = other(r.pos, ctx);
+  }
+  else {
+  r.pos = ctx.end;
+  }
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_48_matcher::wrap<Iter,CharT>::entry(cpp2::impl::in<Iter> cur, context& ctx) -> cpp2::regex::match_return<Iter>{
+  ctx.set_group_start(0, cur);
+
+  auto r {func_0()(cur, ctx, cpp2::regex::true_end_func())}; 
+  if (r.matched) {ctx.set_group_end(0, r.pos);}
+  return r; 
+  }
+
+  template <typename Iter, typename CharT> [[nodiscard]] auto test_tests_13_possessive_modifier::regex_48_matcher::wrap<Iter,CharT>::get_named_group_index(auto const& name) -> int{
+  static_cast<void>(name);
+  return -1; 
+  }
+
+  [[nodiscard]] auto test_tests_13_possessive_modifier::regex_48_matcher::to_string() -> std::string{return R"(foo(aA|bB)?+b)"; }
+
+
+#line 255 "pure2-regex_13_possessive_modifier.cpp2"
 auto main() -> int{
-    CPP2_UFCS(run)(test_tests_13_posessive_modifier());
+    CPP2_UFCS(run)(test_tests_13_possessive_modifier());
 }
 

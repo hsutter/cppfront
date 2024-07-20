@@ -150,7 +150,7 @@ test: <M> (regex: M, id: std::string, regex_str: std::string, str: std::string, 
 }
 
 
-test_tests_13_posessive_modifier: @regex type = {
+test_tests_13_possessive_modifier: @regex type = {
   regex_01 := R"(a++a)";
   regex_02 := R"(a*+a)";
   regex_03 := R"(a{1,5}+a)";
@@ -200,7 +200,7 @@ test_tests_13_posessive_modifier: @regex type = {
   regex_47 := R"(foo(aA)?+b)";
   regex_48 := R"(foo(aA|bB)?+b)";
   run: (this) = {
-    std::cout << "Running tests_13_posessive_modifier:"<< std::endl;
+    std::cout << "Running tests_13_possessive_modifier:"<< std::endl;
     test(regex_01, "01", R"(a++a)", "aaaaa", "n", R"(-)", "-");
     test(regex_02, "02", R"(a*+a)", "aaaaa", "n", R"(-)", "-");
     test(regex_03, "03", R"(a{1,5}+a)", "aaaaa", "n", R"(-)", "-");
@@ -253,5 +253,5 @@ test_tests_13_posessive_modifier: @regex type = {
   }
 }
 main: () = {
-    test_tests_13_posessive_modifier().run();
+    test_tests_13_possessive_modifier().run();
 }
