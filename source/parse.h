@@ -7902,6 +7902,11 @@ private:
 
         //  And some error checks
         //
+        if (n->declaration->is_function()) {
+            error("a parameter cannot be a function", false);
+            return {};
+        }
+
         if (
             n->mod != parameter_declaration_node::modifier::none
             && !n->declaration->has_name("this")

@@ -461,20 +461,30 @@ public:
     //  --- Preprocessor matching functions - #if/#else/#endif
 
     //  Entering an #if
-    auto found_pre_if() -> void {
-        assert(std::ssize(preprocessor) > 0);
+    auto found_pre_if(lineno_t) -> void {
         preprocessor.push_back({});
     }
 
     //  Encountered an #else
-    auto found_pre_else() -> void {
-        assert(std::ssize(preprocessor) > 1);
+    auto found_pre_else(lineno_t lineno) -> void {
+        if (std::ssize(preprocessor) < 2) {
+            errors.emplace_back(
+                lineno,
+                "#else does not match a prior #if"
+            );
+        }
+
         preprocessor.back().found_preprocessor_else();
     }
 
     //  Exiting an #endif
-    auto found_pre_endif() -> void {
-        assert(std::ssize(preprocessor) > 1);
+    auto found_pre_endif(lineno_t lineno) -> void {
+        if (std::ssize(preprocessor) < 2) {
+            errors.emplace_back(
+                lineno,
+                "#endif does not match a prior #if"
+            );
+        }
 
         //  If the #if/#else/#endif introduced the same net number of braces,
         //  then we will have recorded that number too many open braces, and
@@ -898,11 +908,11 @@ public:
             {
                 switch (pre) {
                 break;case preprocessor_conditional::pre_if:
-                    braces.found_pre_if();
+                    braces.found_pre_if( cpp2::unsafe_narrow<lineno_t>(std::ssize(lines)) );
                 break;case preprocessor_conditional::pre_else:
-                    braces.found_pre_else();
+                    braces.found_pre_else( cpp2::unsafe_narrow<lineno_t>(std::ssize(lines)) );
                 break;case preprocessor_conditional::pre_endif:
-                    braces.found_pre_endif();
+                    braces.found_pre_endif( cpp2::unsafe_narrow<lineno_t>(std::ssize(lines)) );
                 break;default:
                     assert(false);
                 }
