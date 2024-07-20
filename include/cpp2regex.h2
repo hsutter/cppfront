@@ -1568,7 +1568,7 @@ group_ref_token: @polymorphic_base type = {
                 number_as_char : char = unsafe_narrow<char>(number);
 
                 token := shared.new<char_token>(number_as_char, ctx..get_modifiers()..has(expression_flags::case_insensitive));
-                token*..set_string("\\(string_util::int_to_string(number_as_char as int, 8))$");
+                token*..set_string("\\(string_util::int_to_string<8>(number_as_char as int))$");
 
                 return token;
             }
@@ -1902,7 +1902,7 @@ hexadecimal_token_parse: (inout ctx: parse_context) -> token_ptr = {
     // TODO: Change for unicode.
     number_as_char : char = unsafe_narrow<char>(number);
 
-    syntax: std::string = string_util::int_to_string(number_as_char as int, 16);
+    syntax: std::string = string_util::int_to_string<16>(number_as_char as int);
     if has_brackets {
         syntax = "{(syntax)$}";
     }
@@ -2057,7 +2057,7 @@ octal_token_parse: (inout ctx: parse_context) -> token_ptr = {
     // TODO: Change for unicode.
     number_as_char : char = unsafe_narrow<char>(number);
 
-    syntax: std::string = "\\o{(string_util::int_to_string(number_as_char as int, 8))$}";
+    syntax: std::string = "\\o{(string_util::int_to_string<8>(number_as_char as int))$}";
     r := shared.new<char_token>(number_as_char, ctx..get_modifiers()..has(expression_flags::case_insensitive));
     r*..set_string(syntax);
     return r;

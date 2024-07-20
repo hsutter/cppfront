@@ -3009,7 +3009,7 @@ size_t i{0};
                 char number_as_char {unsafe_narrow<char>(cpp2::move(number))}; 
 
                 auto token {CPP2_UFCS_TEMPLATE(cpp2_new<char_token>)(cpp2::shared, number_as_char, ctx.get_modifiers().has(expression_flags::case_insensitive))}; 
-                (*cpp2::impl::assert_not_null(token)).set_string("\\" + cpp2::to_string(string_util::int_to_string(cpp2::impl::as_<int>(cpp2::move(number_as_char)), 8)) + "");
+                (*cpp2::impl::assert_not_null(token)).set_string("\\" + cpp2::to_string(string_util::int_to_string<8>(cpp2::impl::as_<int>(cpp2::move(number_as_char)))) + "");
 
                 return token; 
             }
@@ -3335,7 +3335,7 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
     // TODO: Change for unicode.
     char number_as_char {unsafe_narrow<char>(cpp2::move(number))}; 
 
-    std::string syntax {string_util::int_to_string(cpp2::impl::as_<int>(number_as_char), 16)}; 
+    std::string syntax {string_util::int_to_string<16>(cpp2::impl::as_<int>(number_as_char))}; 
     if (cpp2::move(has_brackets)) {
         syntax = "{" + cpp2::to_string(syntax) + "}";
     }
@@ -3471,7 +3471,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
     // TODO: Change for unicode.
     char number_as_char {unsafe_narrow<char>(cpp2::move(number))}; 
 
-    std::string syntax {"\\o{" + cpp2::to_string(string_util::int_to_string(cpp2::impl::as_<int>(number_as_char), 8)) + "}"}; 
+    std::string syntax {"\\o{" + cpp2::to_string(string_util::int_to_string<8>(cpp2::impl::as_<int>(number_as_char))) + "}"}; 
     auto r {CPP2_UFCS_TEMPLATE(cpp2_new<char_token>)(cpp2::shared, cpp2::move(number_as_char), ctx.get_modifiers().has(expression_flags::case_insensitive))}; 
     (*cpp2::impl::assert_not_null(r)).set_string(cpp2::move(syntax));
     return r; 

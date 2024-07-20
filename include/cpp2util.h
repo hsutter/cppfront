@@ -36,6 +36,12 @@
 //      because it can't happen; using the name impl::deferred_init directly
 //      from program code is not supported.
 // 
+//  3)  Entities in other subnamespaces, such as cpp2::string_util
+// 
+//      These are typically metafunction "runtime-library" functions,
+//      implementation details called by metafunction-generated code.
+//      For example, @regex generates code that uses string_util:: functions.
+// 
 //===========================================================================
 
 #ifndef CPP2_UTIL_H
@@ -323,8 +329,6 @@
     #define CPP2_CONSTEXPR constexpr
 #endif
 
-#include "string_util.h"
-
 namespace cpp2 {
 
 
@@ -362,6 +366,152 @@ using longdouble = long double;
 //  Strongly discouraged, for compatibility/interop only
 using _schar     = signed char;      // normally use i8 instead
 using _uchar     = unsigned char;    // normally use u8 instead
+
+
+//-----------------------------------------------------------------------
+//
+//  String utilities
+//
+
+namespace string_util {
+
+//  From https://stackoverflow.com/questions/216823/how-to-trim-a-stdstring
+
+//  Trim from start (in place)
+inline void ltrim(std::string &s) {
+    s.erase(
+        s.begin(), 
+        std::find_if(s.begin(), s.end(), [](unsigned char ch) { return !std::isspace(ch); })
+    );
+}
+
+//  Trim from end (in place)
+inline void rtrim(std::string &s) {
+    s.erase(
+        std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), 
+        s.end()
+    );
+}
+
+//  Trim from both ends (in place)
+inline void trim(std::string &s) {
+    rtrim(s);
+    ltrim(s);
+}
+
+//  Trim from both ends (copying)
+inline std::string trim_copy(std::string_view s) {
+    std::string t(s);
+    trim(t);
+    return t;
+}
+
+//  From https://oleksandrkvl.github.io/2021/04/02/cpp-20-overview.html#nttp
+
+template<typename CharT, std::size_t N>
+struct fixed_string {
+    constexpr fixed_string(const CharT (&s)[N+1]) {
+        std::copy_n(s, N + 1, c_str);
+    }
+    constexpr const CharT* data() const {
+        return c_str;
+    }
+    constexpr std::size_t size() const {
+        return N;
+    }
+
+    constexpr auto str() const {
+        return std::basic_string<CharT>(c_str);
+    }
+
+    CharT c_str[N+1];
+};
+
+template<typename CharT, std::size_t N>
+fixed_string(const CharT (&)[N])->fixed_string<CharT, N-1>;
+
+//  Other string utility functions.
+
+inline bool is_escaped(std::string_view s) {
+    return 
+        s.starts_with("\"") 
+        && s.ends_with("\"")
+        ;
+}
+
+inline bool string_to_int(std::string const& s, int& v, int base = 10) {
+    try {
+        v = stoi(s, nullptr, base);
+        return true;
+    }
+    catch (std::invalid_argument const&)
+    {
+        return false;
+    }
+    catch (std::out_of_range const&)
+    {
+        return false;
+    }
+}
+
+template<int Base = 10>
+inline std::string int_to_string(int i) {
+    if constexpr (8 == Base) {
+        std::ostringstream oss;
+        oss << std::oct << i;
+        return oss.str();
+    }
+    else if constexpr (10 == Base) {
+        return std::to_string(i);
+    }
+    else if constexpr (16 == Base) {
+        std::ostringstream oss;
+        oss << std::hex << i;
+        return oss.str();
+    }
+    else {
+        [] <bool flag = false>() {
+            static_assert(flag, "Unsupported int_to_string Base");
+        }();
+    }
+}
+
+inline char safe_toupper(char ch) {
+    return static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
+}
+
+inline char safe_tolower(char ch) {
+    return static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+}
+
+inline std::string replace_all(
+    std::string        str, 
+    const std::string& from, 
+    const std::string& to
+)
+{
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length();   // safe also when 'to' is a substring of 'from'
+    }
+    return str;
+}
+
+template<typename List>
+inline std::string join(List const& list) {
+    std::string r = "";
+    std::string sep = "";
+
+    for (auto const& cur : list) {
+        r += sep + cur;
+        sep = ", ";
+    }
+
+    return r;
+}
+
+} // namespace string_util
 
 
 //-----------------------------------------------------------------------
