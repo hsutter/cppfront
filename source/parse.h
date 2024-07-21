@@ -930,6 +930,17 @@ struct postfix_expression_node
         return ops.empty() && expr->is_id_expression();
     }
 
+    auto starts_with_function_call_with_n_parameters(int n) const
+        -> bool
+    {
+        return
+            std::ssize(ops) >= 1
+            && ops.front().op->type() == lexeme::LeftParen
+            && ops.front().expr_list
+            && std::ssize(ops.front().expr_list->expressions) == n
+            ;
+    }
+
     auto is_unqualified_id() const
         -> bool
     {
@@ -5827,12 +5838,10 @@ private:
             auto expr_list = expression_list(open_paren, lexeme::RightParen, inside_initializer);
             if (!expr_list) {
                 error("unexpected text - ( is not followed by an expression-list");
-                next();
                 return {};
             }
             if (curr().type() != close_paren_type(open_paren->type())) {
                 error("unexpected text - expression-list is not terminated by " + close_text);
-                next();
                 return {};
             }
             expr_list->close_paren = &curr();
@@ -5863,14 +5872,12 @@ private:
             if (auto obj = std::get_if<declaration_node::an_object>(&decl->type)) {
                 if ((*obj)->is_wildcard()) {
                     error("an unnamed object at expression scope currently cannot have a deduced type (the reason to create an unnamed object is typically to create a temporary of a named type)");
-                    next();
                     return {};
                 }
             }
             else if (auto func = std::get_if<declaration_node::a_function>(&decl->type)) {
                 if ((*func)->returns.index() == function_type_node::list) {
                     error("an unnamed function at expression scope currently cannot return multiple values");
-                    next();
                     return {};
                 }
                 if ( // check if a single-expression function is followed by an extra second semicolon
@@ -5881,13 +5888,11 @@ private:
                 }
                 if (!(*func)->contracts.empty()) {
                     error("an unnamed function at expression scope currently cannot have contracts");
-                    next();
                     return {};
                 }
             }
             else {
                 error("(temporary alpha limitation) an unnamed declaration at expression scope must be a function or an object");
-                next();
                 return {};
             }
 
@@ -6157,6 +6162,26 @@ private:
                     next();
                 }
 
+                //  And for assignment-expression we may synthesize >>= from > > =
+                //  which will return a token* == a valid operator for this production
+                //  (possibly a synthesized new token) or nullptr otherwise
+                else if constexpr (requires{ validate_op(curr(), *peek(1), *peek(2)); }) {
+                    if (
+                        peek(1) == nullptr
+                        || peek(2) == nullptr
+                        || (t.op = validate_op(curr(), *peek(1), *peek(2))) == nullptr
+                        )
+                    {
+                        break;
+                    }
+                    //  If we didn't consume the next token, we consumed the next three
+                    if (t.op != &curr()) {
+                        next();
+                        next();
+                    }
+                    next();
+                }
+
                 //  And it shouldn't be anything else
                 else {
                     assert (!"ICE: validate_op should take one token and return bool, or two tokens and return token const* ");
@@ -6269,12 +6294,20 @@ private:
     {
         if (allow_angle_operators) {
             return binary_expression<relational_expression_node> (
-                [](token const& t, token const& next) -> token const* {
+                [this](token const& t, token const& next) -> token const* {
+                    if (
+                        t.type() == lexeme::Greater
+                        && next.type() == lexeme::Assignment
+                        && t.position() == source_position{ next.position().lineno, next.position().colno - 1 }
+                        )
+                    {
+                        generated_tokens->emplace_back(">=", t.position(), lexeme::GreaterEq);
+                        return &generated_tokens->back();
+                    }
                     if (
                         t.type() == lexeme::Less
                         || t.type() == lexeme::LessEq
-                        || (t.type() == lexeme::Greater && next.type() != lexeme::GreaterEq)
-                        || t.type() == lexeme::GreaterEq
+                        || t.type() == lexeme::Greater
                         ) {
                         return &t;
                     }
@@ -6394,13 +6427,14 @@ private:
         if (allow_angle_operators)
         {
             ret = binary_expression<assignment_expression_node> (
-                [this](token const& t, token const& next) -> token const* {
+                [this](token const& t, token const& next, token const& third) -> token const* {
                     if (is_assignment_operator(t.type())) {
                         return &t;
                     }
                     if (
                         t.type() == lexeme::Greater
-                        && next.type() == lexeme::GreaterEq
+                        && next.type() == lexeme::Greater
+                        && third.type() == lexeme::Assignment
                         && t.position() == source_position{ next.position().lineno, next.position().colno-1 }
                         )
                     {
@@ -6553,6 +6587,9 @@ private:
     {
         auto n = std::make_unique<type_id_node>();
 
+        //  Remember current position, because we need to look ahead
+        auto start_pos = pos;
+
         while (
             (curr().type() == lexeme::Keyword && curr() == "const")
             || curr().type() == lexeme::Multiply
@@ -6586,6 +6623,7 @@ private:
         }
         if (curr().type() == lexeme::Multiply) {
             error("'T*' is not a valid Cpp2 type; use '*T' for a pointer instead", false);
+            pos = start_pos;    // backtrack
             return {};
         }
 
@@ -6847,11 +6885,14 @@ private:
         //  Reject "std" :: "move" / "forward"
         assert (term.id->identifier);
         auto first_uid_was_std = (*term.id->identifier == "std");
-        auto first_time_through_loop = true;
 
         n->ids.push_back( std::move(term) );
 
-        while (curr().type() == lexeme::Scope)
+        for ( 
+            auto first_time_through_loop = true;
+            curr().type() == lexeme::Scope;
+            first_time_through_loop = false
+            )
         {
             auto term = qualified_id_node::term{ &curr() };
             next();
@@ -6865,17 +6906,11 @@ private:
                 first_time_through_loop
                 && first_uid_was_std
                 && term.scope_op->type() == lexeme::Scope
-                )
+                && *term.id->identifier == "forward"
+                ) 
             {
-                if (*term.id->identifier == "move") {
-                    error("std::move is not needed in Cpp2 - use 'move' parameters/arguments instead", false);
-                    return {};
-                }
-                else if (*term.id->identifier == "forward") {
-                    error("std::forward is not needed in Cpp2 - use 'forward' parameters/arguments instead", false);
-                    return {};
-                }
-                first_time_through_loop = false;
+                error("std::forward is not needed in Cpp2 - use 'forward' parameters/arguments instead", false);
+                return {};
             }
             n->ids.push_back( std::move(term) );
         }
@@ -7116,7 +7151,6 @@ private:
         //  Final semicolon
         if (curr().type() != lexeme::Semicolon) {
             error("missing ; after return");
-            next();
             return {};
         }
 
@@ -7235,7 +7269,6 @@ private:
             if (!handle_logical_expression  ()) { return {}; }
             if (curr().type() != lexeme::Semicolon) {
                 error("missing ; after do..while loop condition");
-                next();
                 return {};
             }
             next();
@@ -7254,6 +7287,7 @@ private:
 
             if (curr().type() == lexeme::Comma) {
                 error("iterating over multiple ranges at once is not currently supported");
+                return {};
             }
 
             if (!handle_optional_next_clause()) { return {}; }
@@ -7685,7 +7719,6 @@ private:
                 && peek(1)->type() == lexeme::Comma
                 )
             {
-                next();
                 error("declaring multiple names at once is not currently supported");
             }
             return {};
@@ -7723,9 +7756,6 @@ private:
             n->body_indent = peek(1)->position().colno-1;
         }
 
-        //  Remember current position, in case this isn't a valid statement
-        auto start_pos = pos;
-
         //  In the case where this is a declaration initializer with
         //      = {
         //  on the same line, we want to remember our start position
@@ -7754,11 +7784,10 @@ private:
             auto s = statement(true, source_position{}, true, n.get());
             if (!s) {
 
-                // Only add error when no specific one already exist
+                // Only add a general error when no specific one already exists
                 if(!has_error()) {
                     error("invalid statement encountered inside a compound-statement", true);
                 }
-                pos = start_pos;    // backtrack
                 return {};
             }
             n->statements.push_back( std::move(s) );
@@ -7873,12 +7902,18 @@ private:
 
         //  And some error checks
         //
+        if (n->declaration->is_function()) {
+            error("a parameter cannot be a function", false);
+            return {};
+        }
+
         if (
             n->mod != parameter_declaration_node::modifier::none
             && !n->declaration->has_name("this")
             )
         {
             error( "only a 'this' parameter may be declared implicit, virtual, override, or final", false );
+            return {};
         }
 
         if (
@@ -7890,6 +7925,7 @@ private:
             )
         {
             error( "a 'this' parameter must be in, inout, out, or move", false );
+            return {};
         }
 
         if (
@@ -7899,6 +7935,7 @@ private:
             )
         {
             error( "a 'that' parameter must be in or move", false );
+            return {};
         }
 
         //  The only parameter type that could be const-qualified is a 'copy' parameter, because
@@ -7943,10 +7980,12 @@ private:
             if (tok->type() != lexeme::Identifier) {
                 error("expected identifier, not '" + tok->to_string() + "'",
                     false, tok->position());
+                return {};
             }
             else if (n->declaration->has_wildcard_type()) {
                 error("return parameter '" + tok->to_string() + "' must have a type",
                     false, tok->position());
+                return {};
             }
         }
         return n;
@@ -8004,6 +8043,7 @@ private:
                 )
             {
                 error("'that' may not be followed by any additional parameters", false);
+                return {};
             }
 
             n->parameters.push_back( std::move(param) );
@@ -8237,6 +8277,7 @@ private:
                     )
                 {
                     error("only 'forward' and 'move' return passing style are allowed from functions");
+                    return {};
                 }
                 next();
                 if (auto t = type_id()) {
@@ -8247,6 +8288,7 @@ private:
                     auto msg = std::string("'");
                     msg += to_string_view(pass);
                     error(msg + "' must be followed by a type-id");
+                    return {};
                 }
             }
 
@@ -8450,6 +8492,7 @@ private:
 
         if (curr() == "union") {
             error("unsafe 'union' is not supported in Cpp2 - write '@union' to apply Cpp2's safe 'union' type metafunction instead, or use std::variant");
+            return {};
         }
 
         //  Next is an optional metafunctions clause
@@ -8580,6 +8623,14 @@ private:
             }
         }
 
+        else {
+            // Only add a general error when no specific one already exists
+            if (!has_error()) {
+                error("syntax error - unknown declaration");
+            }
+            return {};
+        }
+
         //  If we've already validated that this is a function where the parameter
         //  list is followed by a valid expression-statement, parse that again
         //  (requiring a semicolon as we validated when determining terse_no_equals)
@@ -8650,6 +8701,7 @@ private:
                     // Otherwise, diagnose an error
                     else {
                         error("unexpected semicolon after declaration", {}, {}, {});
+                        return {};
                     }
                 }
                 //  Otherwise if there isn't one and it was required, diagnose an error
@@ -8672,6 +8724,7 @@ private:
                 if (curr().type() == lexeme::EqualComparison) {
                     if (!n->is_function()) {
                         error("syntax error at '==' - did you mean '='?");
+                        return {};
                     }
                     n->is_constexpr = true;
                 }
@@ -8735,7 +8788,6 @@ private:
                         "ill-formed initializer",
                         true, {}, true
                     );
-                    next();
                     return {};
                 }
             }
@@ -8761,7 +8813,7 @@ private:
 
             if (at_a_statement) {
                 error("in this scope, a single-statement function body cannot be immediately followed by a statement - did you forget to put { } braces around a multi-statement function body?", false);
-                return n;
+                return {};
             }
         }
 
@@ -9136,7 +9188,7 @@ private:
                     curr().position(),
                     "a variadic declaration must have a name - did you forget to write a name before '...'?"
                 );
-                pos = start_pos;    // backtrack
+                return {};
             }
 
             auto is_variadic = false;

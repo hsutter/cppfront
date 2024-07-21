@@ -669,6 +669,18 @@ class cmdline_processor
     }
 
 public:
+    auto flags_starting_with(std::string_view s)
+        -> std::vector<std::string>
+    {
+        auto ret = std::vector<std::string>{};
+        for (auto const& f : flags) {
+            if (f.name.starts_with(s)) {
+                ret.push_back(f.name);
+            }
+        }
+        return ret;
+    }
+
     auto process_flags()
         -> void
     {

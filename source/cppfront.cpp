@@ -61,6 +61,24 @@ auto main(
     int exit_status = EXIT_SUCCESS;
     for (auto const& arg : cmdline.arguments())
     {
+        if (
+            arg.text.starts_with("-")
+            || arg.text.starts_with("/")
+            )
+        {
+            auto ambiguous = cmdline.flags_starting_with(arg.text.substr(1));
+            if (ambiguous.empty()) {
+                std::cerr << arg.text << " - unknown compiler flag name (try " << arg.text.front() << "help)\n";
+            }
+            else {
+                std::cerr << arg.text << " - ambiguous compiler flag name, did you mean one of these?\n";
+                for (auto a : ambiguous) {
+                    std::cerr << "    " << arg.text.front() << a << "\n";
+                }
+            }
+            return EXIT_FAILURE;
+        }
+
         cpp2::timer t;
         t.start();
 

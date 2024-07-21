@@ -1,4 +1,4 @@
 pure2-return-tuple-no-type-error.cpp2...
 pure2-return-tuple-no-type-error.cpp2(1,11): error: return parameter 'a' must have a type
-pure2-return-tuple-no-type-error.cpp2(1,14): error: return parameter 'b' must have a type
+pure2-return-tuple-no-type-error.cpp2(1,12): error: missing function return after -> (at ',')
 
