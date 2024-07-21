@@ -1,0 +1,19 @@
+Running tests_06_boundaries:
+01_y: OK regex: \ba\b parsed_regex: \ba\b str: a- result_expr: - expected_results -
+02_y: OK regex: \ba\b parsed_regex: \ba\b str: -a result_expr: - expected_results -
+03_y: OK regex: \ba\b parsed_regex: \ba\b str: -a- result_expr: - expected_results -
+04_n: OK regex: \by\b parsed_regex: \by\b str: xy result_expr: - expected_results -
+05_n: OK regex: \by\b parsed_regex: \by\b str: yz result_expr: - expected_results -
+06_n: OK regex: \by\b parsed_regex: \by\b str: xyz result_expr: - expected_results -
+07_n: OK regex: \Ba\B parsed_regex: \Ba\B str: a- result_expr: - expected_results -
+08_n: OK regex: \Ba\B parsed_regex: \Ba\B str: -a result_expr: - expected_results -
+09_n: OK regex: \Ba\B parsed_regex: \Ba\B str: -a- result_expr: - expected_results -
+10_y: OK regex: \By\b parsed_regex: \By\b str: xy result_expr: - expected_results -
+11_y: OK regex: \By\b parsed_regex: \By\b str: xy result_expr: $-[0] expected_results 1
+12_y: OK regex: \By\b parsed_regex: \By\b str: xy result_expr: $+[0] expected_results 2
+13_y: OK regex: \By\b parsed_regex: \By\b str: xy result_expr: - expected_results -
+14_y: OK regex: \by\B parsed_regex: \by\B str: yz result_expr: - expected_results -
+15_y: OK regex: \By\B parsed_regex: \By\B str: xyz result_expr: - expected_results -
+16_n: OK regex: \b parsed_regex: \b str:  result_expr: - expected_results -
+17_y: OK regex: \B parsed_regex: \B str:  result_expr: - expected_results -
+

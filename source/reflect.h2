@@ -16,6 +16,7 @@
 //===========================================================================
 
 #include "parse.h"
+#include "cpp2regex.h"
 
 cpp2: namespace = {
 
@@ -1444,6 +1445,73 @@ print: (t: meta::type_declaration) =
 
 //-----------------------------------------------------------------------
 //
+//  regex - creates regular expressions from members
+//
+//  Each member that starts with `regex` is replaced by a regular expression
+//  of the initializer string. E.g.:
+//  ```
+//    regex := "ab";
+//  ```
+//  is replaced with
+//  ```
+//    regex := ::cpp2::regex::regular_expression<...>;
+//  ```
+//
+regex_gen: (inout t: meta::type_declaration) =
+{
+    has_default := false;
+    prefix      := "regex";
+    postfix     : std::string = "_mod";     // TODO: remove mod syntax when 'm.initializer()' can be '("pat", "mod")'
+    expressions : std::map<std::string, std::string> = ();
+
+    for t.get_member_objects() do (inout m)
+    {
+        name: std::string = m.name();
+
+        if name.starts_with(prefix)
+        {
+            if !m.has_initializer() {
+                t.error("Regular expression must have an initializer.");
+            }
+            m.mark_for_removal_from_enclosing_type();
+
+            if name == prefix {
+                if has_default {
+                    t.error("Type can only contain one default named regular expression.");
+                }
+                has_default = true;
+            }
+
+            expr: std::string = m.initializer();
+            if expr.starts_with("R\"(") && expr.ends_with(")\"") {
+                expr = expr.substr(3, expr.size() - 5);
+            }
+            else if string_util::is_escaped(expr) {
+                expr = expr.substr(1, expr.size() - 2);
+            }
+            else {
+                t.error("Unknown string format '(expr)$'");
+            }
+
+            expressions[name] = expr;
+        }
+    }
+
+    t.remove_marked_members();
+
+    for expressions do (expr) {
+        regular_expression := ::cpp2::regex::generate_regex(expr.second, :(message) = t$.error(message););
+
+        if !regular_expression..empty() {
+            t.add_member("public (expr.first)$_matcher: type = (regular_expression)$");
+            t.add_member("public (expr.first)$: cpp2::regex::regular_expression<char, (expr.first)$_matcher> = ();");
+        }
+    }
+}
+
+
+//-----------------------------------------------------------------------
+//
 //  apply_metafunctions
 //
 apply_metafunctions: (
@@ -1533,13 +1601,16 @@ apply_metafunctions: (
         else if name == "print" {
             print( rtype );
         }
+        else if name == "regex" {
+            regex_gen( rtype );
+        }
         else {
             error( "unrecognized metafunction name: " + name );
             error( 
                 "(temporary alpha limitation) currently the supported names are: "
                 "interface, polymorphic_base, ordered, weakly_ordered, partially_ordered, "
                 "copyable, basic_value, value, weakly_ordered_value, partially_ordered_value, "
-                "struct, enum, flag_enum, union, cpp1_rule_of_zero, print"
+                "struct, enum, flag_enum, union, cpp1_rule_of_zero, regex, print"
             );
             return false;
         }
