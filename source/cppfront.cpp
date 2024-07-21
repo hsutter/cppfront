@@ -63,7 +63,7 @@ auto main(
     {
         if (
             arg.text.starts_with("-")
-            || arg.text.starts_with("/")
+            || (arg.text.starts_with("/") && arg.text.find('.') != std::string::npos)
             )
         {
             auto ambiguous = cmdline.flags_starting_with(arg.text.substr(1));
