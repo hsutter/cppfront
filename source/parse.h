@@ -61,7 +61,8 @@ auto is_postfix_operator(lexeme l)
           case lexeme::Tilde:
           case lexeme::Dollar:
           case lexeme::Ellipsis:
-        return true;
+          case lexeme::EllipsisEq:
+              return true;
     break;default:
         return false;
     }
@@ -902,6 +903,9 @@ struct postfix_expression_node
         //  These are used if *op is [ or ( - can be null
         std::unique_ptr<expression_list_node> expr_list = {};
         token const* op_close = {};
+
+        //  This is used if *op is ... to hold the 'last' expression
+        std::unique_ptr<expression_node> last_expr= {};
     };
     std::vector<term> ops;
     capture_group* cap_grp = {};
@@ -1802,7 +1806,10 @@ auto postfix_expression_node::visit(auto& v, int depth)
             x.id_expr->visit(v, depth+1);
         }
         if (x.expr_list) {
-            x.expr_list->visit(v, depth+1);
+            x.expr_list->visit(v, depth + 1);
+        }
+        if (x.last_expr) {
+            x.last_expr->visit(v, depth+1);
         }
     }
     v.end(*this, depth);
@@ -4766,6 +4773,9 @@ auto pretty_print_visualize(postfix_expression_node const& n, int indent)
             if (op.id_expr) {
                 ret += pretty_print_visualize(*op.id_expr, indent);
             }
+            if (op.last_expr) {
+                ret += pretty_print_visualize(*op.last_expr, indent);
+            }
         }
     }
 
@@ -5928,6 +5938,7 @@ private:
     //G     postfix-expression '(' expression-list? ','? ')'
     //G     postfix-expression '.' id-expression
     //G     postfix-expression '..' id-expression
+    //G     postfix-expression '...' primary-expression
     //G
     auto postfix_expression()
         -> std::unique_ptr<postfix_expression_node>
@@ -5946,6 +5957,8 @@ private:
                 || curr().type() == lexeme::LeftParen
                 || curr().type() == lexeme::Dot
                 || curr().type() == lexeme::DotDot
+                || curr().type() == lexeme::Ellipsis
+                || curr().type() == lexeme::EllipsisEq
                 )
             )
         {
@@ -6038,6 +6051,16 @@ private:
                     return {};
                 }
             }
+            else if (
+                ( 
+                    term.op->type() == lexeme::Ellipsis
+                    || term.op->type() == lexeme::EllipsisEq
+                    )
+                && n->expr->to_string() != "sizeof"
+                )
+            {
+                term.last_expr = expression();
+            }
 
             n->ops.push_back( std::move(term) );
         }
@@ -6067,10 +6090,10 @@ private:
     //G prefix-expression:
     //G     postfix-expression
     //G     prefix-operator prefix-expression
-    //GTODO     await-expression
+    //G     'sizeof' '...' ( identifier ')'
     //GTODO     'sizeof' '(' type-id ')'
-    //GTODO     'sizeof' '...' ( identifier ')'
     //GTODO     'alignof' '(' type-id ')'
+    //GTODO     await-expression
     //GTODO     throws-expression
     //G
     auto prefix_expression()

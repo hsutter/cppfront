@@ -3383,8 +3383,13 @@ public:
                 last_was_prefixed = true;
             }
 
-            //  Handle the other Cpp2 postfix operators that stay postfix in Cpp1 (currently: '...')
-            else if (is_postfix_operator(i->op->type())) {
+            //  Handle the other Cpp2 postfix operators that stay postfix in Cpp1 
+            //  (currently '...' for expansion, not when used as a range operator)
+            else if (
+                is_postfix_operator(i->op->type())
+                && !i->last_expr    // not being used as a range operator
+                ) 
+            {
                 flush_args();
                 suffix.emplace_back( i->op->to_string(), i->op->position());
             }
@@ -3438,6 +3443,16 @@ public:
                     }
                 }
 
+                if (i->last_expr)
+                {
+                    prefix.emplace_back( "cpp2::range(", i->op->position() );
+                    auto print = print_to_string( *i->last_expr );
+                    if (i->op->type() == lexeme::EllipsisEq) {
+                        print += ",true";
+                    }
+                    suffix.emplace_back( "," + print + ")", i->last_expr->position());
+                }
+
                 //  Enable subscript bounds checks
                 if (
                     flag_safe_subscripts
@@ -3458,10 +3473,13 @@ public:
                     }
                     suffix.emplace_back( ", ", i->op->position() );
                 }
+                //  If this is a .., emit . instead
                 else if( i->op->type() == lexeme::DotDot) {
                     suffix.emplace_back(".", i->op->position());
                 }
-                else {
+                //  If this is a range expression, suppress emitting the .../..= operator
+                //  Otherwise emit the postfix operator here
+                else if (!i->last_expr) {
                     suffix.emplace_back( i->op->to_string(), i->op->position() );
                 }
             }

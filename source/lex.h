@@ -85,6 +85,7 @@ enum class lexeme : std::int8_t {
     Dot,
     DotDot,
     Ellipsis,
+    EllipsisEq,
     QuestionMark,
     At,
     Dollar,
@@ -183,6 +184,7 @@ auto _as(lexeme l)
     break;case lexeme::Dot:                 return "Dot";
     break;case lexeme::DotDot:              return "DotDot";
     break;case lexeme::Ellipsis:            return "Ellipsis";
+    break;case lexeme::EllipsisEq:          return "EllipsisEq";
     break;case lexeme::QuestionMark:        return "QuestionMark";
     break;case lexeme::At:                  return "At";
     break;case lexeme::Dollar:              return "Dollar";
@@ -1438,9 +1440,10 @@ auto lex_line(
 
             //G
             //G punctuator: one of
-            //G     '.' '..' '...'
+            //G     '.' '..' '...' '..='
             break;case '.':
                 if      (peek1 == '.' && peek2 == '.') { store(3, lexeme::Ellipsis); }
+                else if (peek1 == '.' && peek2 == '=') { store(3, lexeme::EllipsisEq); }
                 else if (peek1 == '.')                 { store(2, lexeme::DotDot); }
                 else                                   { store(1, lexeme::Dot); }
 
