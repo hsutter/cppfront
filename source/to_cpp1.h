@@ -4537,6 +4537,16 @@ public:
             break;case passing_style::forward: printer.print_cpp2( name+"&&",      n.position() );
             break;default: ;
             }
+
+            if (type_id.constraint) {
+                auto name = n.declaration->identifier->get_token();
+                assert(name);
+                auto req = print_to_string(*type_id.constraint);
+                req += "<CPP2_TYPEOF(";
+                req += *name;
+                req += ")>";
+                function_requires_conditions.push_back(req);
+            }
         }
         else if (n.pass == passing_style::forward) {
             printer.print_cpp2("auto", n.position());
@@ -6740,6 +6750,11 @@ public:
             //  Emit "auto" for deduced types (of course)
             if (type->is_wildcard()) {
                 assert(n.initializer);
+                //  And the constraint if there is one
+                if (type->constraint) {
+                    emit( *type->constraint, n.position() );
+                    printer.print_cpp2(" ", n.position());
+                }
                 emit( *type, n.position() );
             }
             //  Otherwise, emit the type

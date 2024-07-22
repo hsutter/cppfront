@@ -1343,6 +1343,8 @@ struct type_id_node
         token const*
     > id;
 
+    std::unique_ptr<type_id_node> constraint = {};
+
     auto is_wildcard() const
         -> bool
     {
@@ -1383,15 +1385,20 @@ struct type_id_node
     auto to_string() const
         -> std::string
     {
+        auto suffix = std::string{};
+        if (constraint) {
+            suffix = "is " + constraint->to_string();
+        }
+
         switch (id.index()) {
         break;case empty:
             return {};
         break;case qualified:
-            return std::get<qualified>(id)->to_string();
+            return std::get<qualified>(id)->to_string() + suffix;
         break;case unqualified:
-            return std::get<unqualified>(id)->to_string();
+            return std::get<unqualified>(id)->to_string() + suffix;
         break;case keyword:
-            return std::get<keyword>(id)->to_string();
+            return std::get<keyword>(id)->to_string() + suffix;
         break;default:
             assert(!"ICE: invalid type_id state");
         }
@@ -1434,6 +1441,9 @@ struct type_id_node
         try_visit<qualified  >(id, v, depth);
         try_visit<unqualified>(id, v, depth);
         try_visit<keyword    >(id, v, depth);
+        if (constraint) {
+            constraint->visit(v, depth + 1);
+        }
         v.end(*this, depth);
     }
 };
@@ -1932,15 +1942,15 @@ struct return_statement_node
 
 struct alternative_node
 {
-    std::unique_ptr<unqualified_id_node> name;
-    token const*                         is_as_keyword = {};
+    std::unique_ptr<unqualified_id_node>     name;
+    token const*                             is_as_keyword = {};
 
     //  One of these will be used
     std::unique_ptr<type_id_node>            type_id;
     std::unique_ptr<postfix_expression_node> value;
 
-    source_position                      equal_sign;
-    std::unique_ptr<statement_node>      statement;
+    source_position                          equal_sign;
+    std::unique_ptr<statement_node>          statement;
 
     // Out-of-line definition of the dtor is necessary due to the forward-declared
     // type(s) used in a std::unique_ptr as a member
@@ -1960,12 +1970,12 @@ struct alternative_node
 
 struct inspect_expression_node
 {
-    bool                                     is_constexpr = false;
-    token const*                             identifier   = {};
-    std::unique_ptr<expression_node>         expression;
-    std::unique_ptr<type_id_node>            result_type;
-    source_position                          open_brace;
-    source_position                          close_brace;
+    bool                             is_constexpr = false;
+    token const*                     identifier   = {};
+    std::unique_ptr<expression_node> expression;
+    std::unique_ptr<type_id_node>    result_type;
+    source_position                  open_brace;
+    source_position                  close_brace;
 
     std::vector<std::unique_ptr<alternative_node>> alternatives;
 
@@ -4840,6 +4850,10 @@ auto pretty_print_visualize(type_id_node const& n, int indent)
     ret += try_pretty_print_visualize<type_id_node::unqualified>(n.id, indent);
     ret += try_pretty_print_visualize<type_id_node::keyword    >(n.id, indent);
 
+    if (n.constraint) {
+        ret += " is " + pretty_print_visualize(*n.constraint, indent);
+    }
+
     return ret;
 }
 
@@ -5939,6 +5953,7 @@ private:
     //G     postfix-expression '.' id-expression
     //G     postfix-expression '..' id-expression
     //G     postfix-expression '...' primary-expression
+    //G     postfix-expression '..=' primary-expression
     //G
     auto postfix_expression()
         -> std::unique_ptr<postfix_expression_node>
@@ -6592,8 +6607,8 @@ private:
 
 
     //G type-id:
-    //G     type-qualifier-seq? qualified-id
-    //G     type-qualifier-seq? unqualified-id
+    //G     type-qualifier-seq? qualified-id is-type-constraint?
+    //G     type-qualifier-seq? unqualified-id is-type-constraint?
     //G
     //G type-qualifier-seq:
     //G     type-qualifier
@@ -6604,7 +6619,8 @@ private:
     //G     '*'
     //G
     auto type_id(
-        bool allow_omitting_type_name = false
+        bool allow_omitting_type_name = false,
+        bool allow_constraint         = false
     )
         -> std::unique_ptr<type_id_node>
     {
@@ -6646,8 +6662,20 @@ private:
         }
         if (curr().type() == lexeme::Multiply) {
             error("'T*' is not a valid Cpp2 type; use '*T' for a pointer instead", false);
-            pos = start_pos;    // backtrack
             return {};
+        }
+
+        if (
+            allow_constraint
+            && n->is_wildcard()
+            && curr() == "is"
+            )
+        {
+            next();
+            if (!(n->constraint = type_id())) {
+                pos = start_pos;    // backtrack
+                return {};
+            }
         }
 
         return n;
@@ -8610,7 +8638,7 @@ private:
         }
 
         //  Or just a (possibly empty == deduced) type-id
-        else if (auto t = type_id(true))
+        else if (auto t = type_id(true, !is_template_parameter))
         {
             if (
                 t->get_token()

@@ -37,3 +37,4 @@ venv/*
 # VSCode workspace directory
 .vscode/
 buildh2.bat
+gen_version.bat

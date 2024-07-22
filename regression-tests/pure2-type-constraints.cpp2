@@ -1,0 +1,18 @@
+
+print: (r: _ is std::regular) = {
+    std::cout << "satisfies std::regular\n";
+}
+
+print: (_) = {
+    std::cout << "fallback\n";
+}
+
+irregular: type = {}
+
+main: () = {
+    print(42);
+    print(irregular());
+
+    ok : _ is std::regular = 42;
+    //err: _ is std::regular = irregular();
+}
