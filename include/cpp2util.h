@@ -2200,12 +2200,15 @@ constexpr auto unsafe_narrow( X&& x ) noexcept -> decltype(auto)
 //
 //  Does not perform any dynamic memory allocation - each string_view
 //  is directly bound to the string provided by the host environment
+// 
+//  Note: These string_views happen to be null-terminated. We ought
+//        to also have a std::zstring_view to express that...
 //
 //-----------------------------------------------------------------------
 //
-struct args_t
+struct args
 {
-    args_t(int c, char** v) : argc{c}, argv{v} {}
+    args(int c, char** v) : argc{c}, argv{v} {}
 
     class iterator {
     public:
@@ -2238,22 +2241,91 @@ struct args_t
     auto end()    const -> iterator    { return iterator{ argc, argv, argc }; }
     auto cbegin() const -> iterator    { return begin(); }
     auto cend()   const -> iterator    { return end(); }
-    auto size()   const -> std::size_t { return cpp2::unsafe_narrow<std::size_t>(argc); }
+    auto size()   const -> std::size_t { return cpp2::unsafe_narrow<std::size_t>(ssize()); }
     auto ssize()  const -> int         { return argc; }
 
     auto operator[](int i) const {
-        if (0 <= i && i < argc) { return std::string_view{ argv[i] }; }
-        else                    { return std::string_view{}; }
+        if (0 <= i && i < ssize())     { return std::string_view{ argv[i] }; }
+        else                           { return std::string_view{}; }
     }
 
     mutable int        argc = 0;        //  mutable for compatibility with frameworks that take 'int& argc'
     char**             argv = nullptr;
 };
 
-inline auto make_args(int argc, char** argv) -> args_t
+inline auto make_args(int argc, char** argv) -> args
 {
-    return args_t{argc, argv};
+    return args{argc, argv};
 }
+
+
+//-----------------------------------------------------------------------
+//
+//  range: a range of [begin, end) or [first, last]
+//
+//-----------------------------------------------------------------------
+//
+template<typename T>
+struct range
+{
+    range(
+        T const& f, 
+        T const& l, 
+        bool     include_last = false
+    ) 
+        : first{ f }
+        , last{ l } 
+    { 
+        if (include_last) { 
+            ++last; 
+        }
+    }
+
+    class iterator {
+    public:
+        iterator(T const& f, T const& l, T start) : first{ f }, last{ l }, curr{ start } {}
+
+        auto operator*() const {
+            if (curr != last) { return curr; }
+            else { return T{}; }
+        }
+
+        auto operator+(int i) -> iterator {
+            if (i > 0) { return { first, last, std::min(curr + i, last) }; }
+            else { return { first, last, std::max(curr + i, 0) }; }
+        }
+        auto operator-(int i) -> iterator  { return operator+(-i); }
+        auto operator++()     -> iterator& { if (curr != last ) { ++curr; }  return *this; }
+        auto operator--()     -> iterator& { if (curr != first) { --curr; }  return *this; }
+        auto operator++(int)  -> iterator  { auto old = *this;  ++*this;  return old; }
+        auto operator--(int)  -> iterator  { auto old = *this;  ++*this;  return old; }
+
+        auto operator<=>(iterator const&) const = default;
+
+    private:
+        T first;
+        T last;
+        T curr;
+    };
+
+    auto begin()  const -> iterator    { return iterator{ first, last, first }; }
+    auto end()    const -> iterator    { return iterator{ first, last, last }; }
+    auto cbegin() const -> iterator    { return begin(); }
+    auto cend()   const -> iterator    { return end(); }
+    auto size()   const -> std::size_t { return cpp2::unsafe_narrow<std::size_t>(ssize()); }
+    auto ssize()  const -> int         { return last - first; }
+
+    auto operator[](int i) const {
+        if (0 <= i && i < ssize())     { return first + i; }
+        else                           { return T{}; }
+    }
+
+    T first;
+    T last;
+};
+
+template<class T, class U>
+range(T, U, bool = false) -> range<std::common_type_t<T, U>>;
 
 
 //-----------------------------------------------------------------------

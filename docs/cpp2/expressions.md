@@ -1,7 +1,7 @@
 
 # Common expressions
 
-## <a id="ufcs"></a> Calling functions: `f(x)` syntax, and `x.f()` UFCS syntax
+## <a id="ufcs"></a> Calling functions: `f(x)` syntax, `x.f()` UFCS syntax, and `x..f()` members-only syntax
 
 A function argument list is a [list](common.md#lists) of arguments enclosed by `(` `)` parentheses.
 
@@ -10,6 +10,8 @@ A function call like `f(x)` is a normal function call that will call non-member 
 A function call like `x.f()` is a unified function call syntax (aka UFCS) call. It will call a member function if one is available, and otherwise will call `f(x)`. Having UFCS is important for generic code that may want to call a member or a non-member function, whichever is available. It's also important to enable fluid programming styles and natural IDE autocompletion support.
 
 An operator notation call like `#!cpp a + b` will call an overloaded operator function if one is available, as usual in C++.
+
+A function call like `x..f()` will consider only member functions.
 
 For example:
 
@@ -219,6 +221,41 @@ test(42);
 ```
 
 For more examples, see also the examples in the previous two sections on `is` and `as`, many of which use `inspect`.
+
+
+## <a id="ranges"></a> `...` and `..=` — range operators
+
+`...` and `..=` designate a range of things. In addition to using `...` for variadic parameters, variadic pack expansion, and fold expressions as in Cpp1, Cpp2 also supports using `begin...end` for a half-open range (that does not include `end`) and `first..=last` for a closed range (that does include `last`).
+
+For example:
+
+``` cpp title="Using ... and ..= for ranges" hl_lines="4,11"
+test: (v: std::vector<std::string>) =
+{
+    //  Print strings from "Nonesuch" (if present) onward
+    i1 := v.std::ranges::find("Nonesuch");
+    for i1 ... v.end() do (e) {
+        std::cout << "  (e*)$\n";
+    }
+
+    if v.ssize() > 2 {
+        //  Print indexes 1 and 2 of v
+        for 1 ..= 2 do (e) {
+            std::cout << "  (e)$  (v[e])$\n";
+        }
+    }
+}
+
+main: () = {
+    vec: std::vector<std::string> = ("Beholder", "Grue", "Nonesuch", "Wumpus");
+    test( vec );
+}
+//  Prints:
+//    Nonesuch
+//    Wumpus
+//    1  Grue
+//    2  Nonesuch
+```
 
 
 ## <a id="captures"></a> `$` — captures, including interpolations
