@@ -1,0 +1,20 @@
+We have some alpabetical animals:
+  Aardvark
+  Baboon
+  Cat
+  Dolphin
+  Elephant
+  Flicker
+  Grue
+  Wumpus
+
+And from indexes 1..=5 they are:
+  1  Baboon
+  2  Cat
+  3  Dolphin
+  4  Elephant
+  5  Flicker
+
+Make sure non-random-access iterators work:
+  Hokey
+  Pokey
