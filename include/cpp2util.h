@@ -2107,7 +2107,7 @@ inline auto make_args(int argc, char** argv) -> args
 
 //-----------------------------------------------------------------------
 //
-//  range: a half-open range of [first, last)
+//  range: a range of [begin, end) or [first, last]
 //
 //-----------------------------------------------------------------------
 //
@@ -2117,7 +2117,7 @@ struct range
     range(
         T const& f, 
         T const& l, 
-        bool include_last = false
+        bool     include_last = false
     ) 
         : first{ f }
         , last{ l } 
@@ -2154,21 +2154,24 @@ struct range
         T curr;
     };
 
-    auto begin()  const -> iterator { return iterator{ first, last, first }; }
-    auto end()    const -> iterator { return iterator{ first, last, last }; }
-    auto cbegin() const -> iterator { return begin(); }
-    auto cend()   const -> iterator { return end(); }
-    auto size()   const -> std::size_t { return /*cpp2::unsafe_narrow<std::size_t>*/(ssize()); }
-    auto ssize()  const -> int { return last - first; }
+    auto begin()  const -> iterator    { return iterator{ first, last, first }; }
+    auto end()    const -> iterator    { return iterator{ first, last, last }; }
+    auto cbegin() const -> iterator    { return begin(); }
+    auto cend()   const -> iterator    { return end(); }
+    auto size()   const -> std::size_t { return cpp2::unsafe_narrow<std::size_t>(ssize()); }
+    auto ssize()  const -> int         { return last - first; }
 
     auto operator[](int i) const {
-        if (0 <= i && i < ssize()) { return first + i; }
-        else { return T{}; }
+        if (0 <= i && i < ssize())     { return first + i; }
+        else                           { return T{}; }
     }
 
     T first;
     T last;
 };
+
+template<class T, class U>
+range(T, U, bool = false) -> range<std::common_type_t<T, U>>;
 
 
 //-----------------------------------------------------------------------

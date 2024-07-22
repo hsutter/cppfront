@@ -1806,7 +1806,7 @@ auto postfix_expression_node::visit(auto& v, int depth)
             x.id_expr->visit(v, depth+1);
         }
         if (x.expr_list) {
-            x.expr_list->visit(v, depth + 1);
+            x.expr_list->visit(v, depth+1);
         }
         if (x.last_expr) {
             x.last_expr->visit(v, depth+1);

@@ -168,6 +168,7 @@ Cpp2 supports using Cpp1 user-defined literals for compatibility, to support sea
 
 Both **`123.nm()`** and **`123.u8()`** are very similar to user-defined literal syntax, and more general.
 
+
 ## <a id="operators"></a> Operators
 
 Operators have the same precedence and associativity as in Cpp1, but some unary operators that are prefix (always or sometimes) in Cpp1 are postfix (always) in Cpp2.
@@ -188,7 +189,7 @@ if !vec.empty() {
 | `+` | `#!cpp +100` | `#!cpp +100` |
 | `-` | `#!cpp -100` | `#!cpp -100` |
 
-The operators `.`, `*`, `&`, `~`, `++`, `--`, `()`, `[]`, and `$` are postfix. For example:
+The operators `.`, `..`, `*`, `&`, `~`, `++`, `--`, `()`, `[]`, `...`, `..=`, and `$` are postfix. For example:
 
 ``` cpp title="Using postfix operators"
 //  Cpp1 examples, from cppfront's own source code:
@@ -201,7 +202,7 @@ The operators `.`, `*`, `&`, `~`, `++`, `--`, `()`, `[]`, and `$` are postfix. F
 
 Postfix notation lets the code read fluidly left-to-right, in the same order in which the operators will be applied, and lets declaration syntax be consistent with usage syntax. For more details, see [Design note: Postfix operators](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Postfix-operators).
 
-> Note: The function call syntax `f(x)` calls a namespace-scope function, or a function object, named `f`. The function call syntax `x.f()` is a unified function call syntax (aka UFCS) that calls a type-scope function in the type of `x` if available, otherwise calls the same as `f(x)`. For details, see [Design note: UFCS](https://github.com/hsutter/cppfront/wiki/Design-note%3A-UFCS).
+> Note: The function call syntax `f(x)` calls a namespace-scope function, or a function object, named `f`. The function call syntax `x.f()` is a unified function call syntax (aka UFCS) that calls a type-scope function in the type of `x` if available, otherwise calls the same as `f(x)`. The function call syntax `x..f()` calls a type-scope function only. For details, see [Design note: UFCS](https://github.com/hsutter/cppfront/wiki/Design-note%3A-UFCS).
 
 | Unary operator | Cpp2 example | Cpp1 equivalent |
 |---|---|---|
@@ -213,18 +214,13 @@ Postfix notation lets the code read fluidly left-to-right, in the same order in 
 | `#!cpp --` | `#!cpp iter--` | `#!cpp --iter` |
 | `(` `)` | `#!cpp f( 1, 2, 3)` | `#!cpp f( 1, 2, 3)` |
 | `[` `]` | `#!cpp vec[123]` | `#!cpp vec[123]` |
-| `$` | `val$` | _reflection — no Cpp1 equivalent yet_ |
+| `...` (half-open range operator) | `#!cpp v.begin()...v.end()` | `#!cpp std::ranges::subrange(v.begin(), v.end())` |
+| `..=` (closed range operator) | `#!cpp 1..=10` | `#!cpp std::views::iota(1, 11)` |
+| `$` (capture operator) | `val$` | _reflection — no Cpp1 equivalent yet_ |
 
-> Because `++` and `--` always have in-place update semantics, we never need to remember "use prefix `++`/`--` unless you need a copy of the old value." If you do need a copy of the old value, just take the copy before calling `++`/`--`.
+> Note: The `...` pack expansion syntax is also supported. The above `...` and `..=` are the Cpp2 range operators, which overlap in syntax.
 
-Unary suffix operators must not be preceded by whitespace. When `*`, `&`, and `~` are used as binary operators they must be preceded by whitespace. For example:
-
-| Unary postfix operators that<br>are also binary operators | Cpp2 example | Cpp1 equivalent |
-|---|---|---|
-| `#!cpp *` | `#!cpp pobj* * 42` | `#!cpp (*pobj)*42` |
-| `#!cpp &` | `#!cpp obj& & mask` <p> (note: allowed in unsafe code only) | `#!cpp &obj & mask` |
-
-For more details, see [Design note: Postfix unary operators vs binary operators](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Postfix-unary-operators-vs-binary-operators).
+> Note: Because `++` and `--` always have in-place update semantics, we never need to remember "use prefix `++`/`--` unless you need a copy of the old value." If you do need a copy of the old value, just take the copy before calling `++`/`--`.
 
 
 ### <a id="binary-operators"></a> Binary operators
