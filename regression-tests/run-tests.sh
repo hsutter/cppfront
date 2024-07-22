@@ -55,15 +55,21 @@ check_file () {
     patch_file="${label}-${cxx_compiler}-${cxx_std}-${cxx_stdlib}.patch"
 
     if [[ $untracked -eq 1 ]]; then
-        # Add the file to the index to be able to diff it...
-        git add "$file"
-        # ... report the diff ...
-        report_diff "$file" \
-            "The $description is not tracked by git" \
-            "$patch_file" \
-            "HEAD"
-        # ... and remove the file from the index
-        git rm --cached -- "$file" > /dev/null 2>&1
+        # Untraced files are expected to be empty - report if they are not
+        if [[ -s ""$file"" ]]; then
+            # Add the file to the index to be able to diff it...
+            git add "$file"
+            # ... report the diff ...
+            report_diff "$file" \
+                "The $description is not tracked by git, it is expected to be empty" \
+                "$patch_file" \
+                "HEAD"
+            # ... and remove the file from the index
+            git rm --cached -- "$file" > /dev/null 2>&1
+        else
+            # The file is empty as expected - it can be removed
+            rm "$file"
+        fi
     else
         # Compare the content with the reference value checked in git
         # Lines includng Windows paths are excluded from diff
@@ -73,6 +79,13 @@ check_file () {
             "Non-matching $description" \
             "$patch_file" \
             --ignore-cr-at-eol
+
+        # If the file is tracked an empty report an error
+        if [[ $failure != 1 && ! -s "$file" ]]; then
+            echo "            Empty tracked file:"
+            echo "                $file"
+            failure=1
+        fi
     fi
 }
 
