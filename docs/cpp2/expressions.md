@@ -11,7 +11,7 @@ A function call like `x.f()` is a unified function call syntax (aka UFCS) call. 
 
 An operator notation call like `#!cpp a + b` will call an overloaded operator function if one is available, as usual in C++.
 
-A function call like `x..f()` will consider only member functions.
+A function call like `x..f()` will consider member functions only.
 
 For example:
 
@@ -33,7 +33,7 @@ f: ( v : std::vector<widget> ) = {
 //  safely using string interpolation (instead of type-unsafe format strings)
 hello: (name, height: float) = {
     //  Using UFCS to make direct calls to C functions as if they were members
-    stdout.fprintf( "%s", ("Hello (name)$, your height is (height:.1f)$ inches!\n").c_str() );
+    stdout.fprintf("%s", ("Hi (name)$, your height is (height:.1f)$\"!\n").c_str());
     //  Equivalent using iostreams:
     //        std::cout << "Hello (name)$, your height is (height:.1f)$ inches!\n";
 
@@ -47,9 +47,9 @@ main: () = {
     hello("Polyphemus", 180);
 }
 //  Sample output:
-//      Hello Flimnap, your height is 6.5 inches!
-//      Hello Goliath, your height is 115.0 inches!
-//      Hello Polyphemus, your height is 180.0 inches!
+//      Hi Flimnap, your height is 6.5"!
+//      Hi Goliath, your height is 115.0"!
+//      Hi Polyphemus, your height is 180.0"!
 ```
 
 To explicitly treat an object name passed as an argument as `move` or `out`, write that keyword before the variable name.
@@ -229,7 +229,7 @@ For more examples, see also the examples in the previous two sections on `is` an
 
 For example:
 
-``` cpp title="Using ... and ..= for ranges" hl_lines="4,11"
+``` cpp title="Using ... and ..= for ranges" hl_lines="5 11"
 test: (v: std::vector<std::string>) =
 {
     //  Print strings from "Nonesuch" (if present) onward

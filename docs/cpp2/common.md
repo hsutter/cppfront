@@ -202,7 +202,7 @@ The operators `.`, `..`, `*`, `&`, `~`, `++`, `--`, `()`, `[]`, `...`, `..=`, an
 
 Postfix notation lets the code read fluidly left-to-right, in the same order in which the operators will be applied, and lets declaration syntax be consistent with usage syntax. For more details, see [Design note: Postfix operators](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Postfix-operators).
 
-> Note: The function call syntax `f(x)` calls a namespace-scope function, or a function object, named `f`. The function call syntax `x.f()` is a unified function call syntax (aka UFCS) that calls a type-scope function in the type of `x` if available, otherwise calls the same as `f(x)`. The function call syntax `x..f()` calls a type-scope function only. For details, see [Design note: UFCS](https://github.com/hsutter/cppfront/wiki/Design-note%3A-UFCS).
+> Note: The function call syntax `f(x)` calls a namespace-scope function only. The function call syntax `x.f()` is a unified function call syntax (aka UFCS) that calls a type-scope function in the type of `x` if available, otherwise calls the same as `f(x)`. The function call syntax `x..f()` calls a type-scope function only. For details, see [Design note: UFCS](https://github.com/hsutter/cppfront/wiki/Design-note%3A-UFCS).
 
 | Unary operator | Cpp2 example | Cpp1 equivalent |
 |---|---|---|
@@ -214,9 +214,9 @@ Postfix notation lets the code read fluidly left-to-right, in the same order in 
 | `#!cpp --` | `#!cpp iter--` | `#!cpp --iter` |
 | `(` `)` | `#!cpp f( 1, 2, 3)` | `#!cpp f( 1, 2, 3)` |
 | `[` `]` | `#!cpp vec[123]` | `#!cpp vec[123]` |
-| `...` (half-open range operator) | `#!cpp v.begin()...v.end()` | `#!cpp std::ranges::subrange(v.begin(), v.end())` |
-| `..=` (closed range operator) | `#!cpp 1..=10` | `#!cpp std::views::iota(1, 11)` |
-| `$` (capture operator) | `val$` | _reflection — no Cpp1 equivalent yet_ |
+| `...` | `#!cpp v.begin()...v.end()` | `#!cpp std::ranges::subrange(v.begin(), v.end())` |
+| `..=` | `#!cpp 1..=10` | `#!cpp std::views::iota(1, 11)` |
+| `$` | `val$` | _reflection — no Cpp1 equivalent yet_ |
 
 > Note: The `...` pack expansion syntax is also supported. The above `...` and `..=` are the Cpp2 range operators, which overlap in syntax.
 

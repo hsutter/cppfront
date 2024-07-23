@@ -27,6 +27,17 @@ func: (
 }
 ```
 
+The parameter type can be deduced by writing `_` (the default, so it can be omitted). You can use `is` to declare a type constraint (e.g., a concept) that a deduced type must match, in which case `_` is required. For example:
+
+``` cpp title="Declaring a parameter of constrained deduced type" hl_lines="2 3 6"
+//  ordinary generic function, x's type is deduced
+print: (x: _) = { std::cout << x; }
+print: (x)    = { std::cout << x; } // same, using the _ default
+
+//  number's type is deduced, but must match the std::integral concept
+calc: (number: _ is std::integral) = { /*...*/ }
+```
+
 There are six ways to pass parameters that cover all use cases, that can be written before the parameter name:
 
 | Parameter ***kind*** | "Pass me an `x` I can ______" | Accepts arguments that are | Special semantics | ***kind*** `x: X` Compiles to Cpp1 as |
