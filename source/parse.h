@@ -1325,6 +1325,8 @@ struct qualified_id_node
 };
 
 
+struct function_type_id_node;
+
 struct type_id_node
 {
     source_position pos;
@@ -1335,15 +1337,20 @@ struct type_id_node
     int dereference_cnt                     = {};
     token const* suspicious_initialization  = {};
 
-    enum active { empty=0, qualified, unqualified, keyword };
+    enum active { empty=0, qualified, unqualified, function, keyword };
     std::variant<
         std::monostate,
         std::unique_ptr<qualified_id_node>,
         std::unique_ptr<unqualified_id_node>,
+        std::unique_ptr<function_type_id_node>,
         token const*
     > id;
 
     std::unique_ptr<type_id_node> constraint = {};
+
+    // Out-of-line definition of the dtor is necessary due to the forward-declared
+    // type(s) used in a std::unique_ptr as a member
+    ~type_id_node();
 
     auto is_wildcard() const
         -> bool
@@ -1416,6 +1423,8 @@ struct type_id_node
             return {};
         break;case unqualified:
             return get<unqualified>(id)->get_token();
+        break;case function:
+            return {};
         break;case keyword:
             return get<keyword>(id);
         break;default:
@@ -1440,6 +1449,7 @@ struct type_id_node
         }
         try_visit<qualified  >(id, v, depth);
         try_visit<unqualified>(id, v, depth);
+        try_visit<function   >(id, v, depth);
         try_visit<keyword    >(id, v, depth);
         if (constraint) {
             constraint->visit(v, depth + 1);
@@ -2655,6 +2665,23 @@ struct function_type_node
         v.end(*this, depth);
     }
 };
+
+
+struct function_type_id_node {
+    std::unique_ptr<function_type_node> type;
+
+    function_type_id_node(decltype(type) v)
+        : type{ std::move(v) }
+    { }
+
+    auto visit(auto& v, int depth)
+        -> void
+    {
+        v.start(*this, depth);
+        type->visit(v, depth + 1);
+        v.end(*this, depth);
+    }
+}; 
 
 
 struct type_node
@@ -4467,7 +4494,11 @@ struct translation_unit_node
     }
 };
 
+
 // Definitions of out-of-line dtors for nodes with unique_ptr members of forward-declared types
+
+type_id_node::~type_id_node() = default;
+
 primary_expression_node::~primary_expression_node() = default;
 
 prefix_expression_node::~prefix_expression_node() = default;
@@ -5453,6 +5484,16 @@ auto pretty_print_visualize(translation_unit_node const& n)
 
     return ret;
 }
+
+
+template <typename T>
+auto stack_value(T& var, std::type_identity_t<T> const& value)
+    -> auto
+{
+    return finally([&var, old = std::exchange(var, value)]() {
+        var = old;
+    });
+};
 
 
 //-----------------------------------------------------------------------
@@ -6609,6 +6650,7 @@ private:
     //G type-id:
     //G     type-qualifier-seq? qualified-id is-type-constraint?
     //G     type-qualifier-seq? unqualified-id is-type-constraint?
+    //G     type-qualifier-seq? function-type
     //G
     //G type-qualifier-seq:
     //G     type-qualifier
@@ -6619,8 +6661,10 @@ private:
     //G     '*'
     //G
     auto type_id(
-        bool allow_omitting_type_name = false,
-        bool allow_constraint         = false
+        bool allow_omitting_type_name   = false,
+        bool allow_constraint           = false,
+        bool function_is_optional       = false,
+        bool could_be_anonymous_returns = false
     )
         -> std::unique_ptr<type_id_node>
     {
@@ -6657,9 +6701,63 @@ private:
             n->id  = std::move(id);
             assert (n->id.index() == type_id_node::unqualified);
         }
+        else if (
+            auto undo_function_parse =
+            [&, start_pos = pos]() {
+                errors.clear();
+                pos = start_pos;
+            };
+            auto f = function_type_id(nullptr, true, true)
+        ) 
+        {
+            if (!errors.empty() && (function_is_optional || could_be_anonymous_returns)) {
+                undo_function_parse();
+                return {};
+            }
+            if (f->type->parameters) {
+                for (auto& p : f->type->parameters->parameters) {
+                    assert(p->has_name());
+                    if (p->name()->as_string_view() != "_") {
+                        if (could_be_anonymous_returns && n->pc_qualifiers.empty()) {
+                            undo_function_parse();
+                            return {};
+                        }
+                        //error(
+                        //    "the parameter of a function type must be named '_'",
+                        //    false,
+                        //    p->position()
+                        //);
+                        return {};
+                    }
+                }
+            }
+            if (auto l = get_if<function_type_node::list>(&f->type->returns)) {
+                //error(
+                //    "a function type can't have an anonymous return type",
+                //    false,
+                //    (*l)->position()
+                //);
+                return {};
+            }
+            if (!f->type->contracts.empty()) {
+                //error(
+                //    "a function type can't have contracts",
+                //    false,
+                //    f->type->contracts.front()->position()
+                //);
+                return {};
+            }
+            n->pos = f->type->position();
+            n->id = std::move(f);
+            assert(n->id.index() == type_id_node::function);
+        }
         else if (!allow_omitting_type_name) {
+            if (function_is_optional) {
+                undo_function_parse();
+            }
             return {};
         }
+
         if (curr().type() == lexeme::Multiply) {
             error("'T*' is not a valid Cpp2 type; use '*T' for a pointer instead", false);
             return {};
@@ -6735,7 +6833,7 @@ private:
             term.op = &curr();
             next();
 
-            if ((term.type = type_id()) != nullptr) {
+            if ((term.type = type_id(false, false, true)) != nullptr) {
                 ;
             }
             else if ((term.expr = expression()) != nullptr) {
@@ -6826,6 +6924,8 @@ private:
             auto term = template_argument{};
 
             do {
+                auto stack = stack_value(start_pos, pos);
+
                 //  If it doesn't start with * or const (which can only be a type id),
                 //  try parsing it as an expression
                 if (auto e = [&]{
@@ -6837,27 +6937,40 @@ private:
                             return decltype(expression()){};
                         }
                         return expression(false);   // false == disallow unparenthesized relational comparisons in template args
-                    }()
+                    }();
+                    e
+                    && (
+                        !e->is_expression_list()
+                        // an empty expression-list is actually a function type
+                        // (Cpp1 `auto () -> void`) (so far, see CWG2450)
+                        || !e->get_expression_list()->expressions.empty()
+                        )
                 )
                 {
                     term.arg = std::move(e);
                 }
 
-                //  Else try parsing it as a type id
-                else if (auto i = type_id()) {
-                    term.arg = std::move(i);
-                }
+                else 
+                {
+                    errors.clear();
+                    pos = start_pos;
 
-                //  Else if we already got at least one template-argument, this is a
-                //  ',' followed by something that isn't a valid template-arg
-                else if (std::ssize(n->template_args) > 0) {
-                    error( "expected a template argument after ','", false);
-                    return {};
-                }
+                    //  Else try parsing it as a type id
+                    if (auto i = type_id()) {
+                        term.arg = std::move(i);
+                    }
 
-                //  Else this is an empty '<>' list which is okay
-                else {
-                    break;
+                    //  Else if we already got at least one template-argument, this is a
+                    //  ',' followed by something that isn't a valid template-arg
+                    else if (std::ssize(n->template_args) > 0) {
+                        error( "expected a template argument after ','", false);
+                        return {};
+                    }
+
+                    //  Else this is an empty '<>' list which is okay
+                    else {
+                        break;
+                    }
                 }
 
                 n->template_args.push_back( std::move(term) );
@@ -7418,7 +7531,7 @@ private:
             return {};
         }
 
-        //  Now we should be as "is" or "as"
+        //  Now we should be at "is" or "as"
         //  (initial partial implementation, just "is/as id-expression")
         if (
             curr() != "is"
@@ -7431,7 +7544,7 @@ private:
         n->is_as_keyword = &curr();
         next();
 
-        if (auto id = type_id()) {
+        if (auto id = type_id(false, false, true)) {
             n->type_id = std::move(id);
         }
         else if (auto e = postfix_expression()) {
@@ -7869,7 +7982,8 @@ private:
         bool is_returns   = false,
         bool is_named     = true,
         bool is_template  = true,
-        bool is_statement = false
+        bool is_statement = false,
+        bool is_type_id   = false
     )
         -> std::unique_ptr<parameter_declaration_node>
     {
@@ -8025,7 +8139,9 @@ private:
             error("Cpp2 is currently exploring the path of not allowing default arguments - use overloading instead", false);
             return {};
         }
-        if (is_named && is_returns) {
+
+        if (is_named && (is_returns || is_type_id)) 
+        {
             auto tok = n->name();
             assert(tok);
             if (tok->type() != lexeme::Identifier) {
@@ -8034,8 +8150,14 @@ private:
                 return {};
             }
             else if (n->declaration->has_wildcard_type()) {
-                error("return parameter '" + tok->to_string() + "' must have a type",
-                    false, tok->position());
+                if (is_returns) {
+                    error("return parameter '" + tok->to_string() + "' must have a type",
+                        false, tok->position());
+                }
+                else {
+                    //error("function type parameter '" + tok->to_string(true) + "' must have a type",
+                    //    false, tok->position());
+                }
                 return {};
             }
         }
@@ -8054,7 +8176,8 @@ private:
         bool is_returns    = false,
         bool is_named      = true,
         bool is_template   = false,
-        bool is_statement  = false
+        bool is_statement  = false,
+        bool is_type_id    = false
     )
         -> std::unique_ptr<parameter_declaration_list_node>
     {
@@ -8083,7 +8206,7 @@ private:
 
         auto count = 1;
 
-        while ((param = parameter_declaration(is_returns, is_named, is_template, is_statement)) != nullptr)
+        while ((param = parameter_declaration(is_returns, is_named, is_template, is_statement, is_type_id)) != nullptr)
         {
             param->ordinal = count;
             ++count;
@@ -8246,6 +8369,7 @@ private:
     //G
     //G throws-specifier:
     //G     'throws'
+    //G     '!' 'throws'
     //G
     //G return-list:
     //G     expression-statement
@@ -8258,14 +8382,15 @@ private:
     //G
     auto function_type(
         declaration_node* my_decl,
-        bool              is_named = true
+        bool              is_named   = true,
+        bool              is_type_id = false
         )
         -> std::unique_ptr<function_type_node>
     {
         auto n = std::make_unique<function_type_node>( my_decl );
 
         //  Parameters
-        auto parameters = parameter_declaration_list(false, is_named, false);
+        auto parameters = parameter_declaration_list(false, is_named, false, false, is_type_id);
         if (!parameters) {
             return {};
         }
@@ -8273,10 +8398,25 @@ private:
 
         //  Optional "throws"
         if (
+            curr().type() == lexeme::Not
+            && !is_type_id
+            )
+        {
+            error("'!throws' is only allowed on a function type-id, not on a function declaration");
+            return {};
+        }
+
+        if (
             curr().type() == lexeme::Keyword
             && curr() == "throws"
             )
         {
+            if (is_type_id)
+            {
+                error("expected '!' before 'throws', or no 'throws' (the default for function type-id)");
+                return {};
+            }
+
             if (
                 n->is_move()
                 || n->is_swap()
@@ -8290,12 +8430,25 @@ private:
             n->throws = true;
             next();
         }
-
+        else if (
+            curr().type() == lexeme::Not
+            && peek(1)
+            && *peek(1) == "throws"
+            )
+        {
+            n->throws = false;
+            next(2);
+        }
+        else if (is_type_id)
+        {
+            n->throws = true;
+        }
 
         //  If we're not at a '->' or 'requires' or contract and what follows is
         //  an expression, this is a ":(params) expr" shorthand function syntax
         if (
-            curr().type() != lexeme::Arrow
+            !is_type_id
+            && curr().type() != lexeme::Arrow
             && curr() != "requires"
             && (curr() != "pre" && curr() != "post")
             )
@@ -8343,7 +8496,7 @@ private:
                 }
             }
 
-            else if (auto t = type_id())
+            else if (auto t = type_id(false, false, false, true))
             {
                 if (
                     t->get_token()
@@ -8396,6 +8549,20 @@ private:
         }
 
         return n;
+    }
+
+
+    auto function_type_id(
+        declaration_node* my_decl,
+        bool              is_named = true,
+        bool              is_type_id = false
+    )
+        -> std::unique_ptr<function_type_id_node>
+    {
+        if (auto type = function_type(my_decl, is_named, is_type_id)) {
+            return std::make_unique<function_type_id_node>(std::move(type));
+        }
+        return {};
     }
 
 
@@ -8607,17 +8774,26 @@ private:
         }
 
         //  Or a function type, declaring a function - and tell the function whether it's in a user-defined type
-        else if (auto t = function_type(n.get(), named))
+        else if (auto t = function_type_id(n.get(), named, is_parameter))
         {
-            n->type = std::move(t);
-            assert (n->is_function());
+            if (is_parameter) {
+                t->type->my_decl = nullptr;
+                auto type = std::make_unique<type_id_node>();
+                type->pos = t->type->position();
+                type->id  = std::move(t);
+                n->type   = std::move(type);
+            }
+            else {
+                n->type = std::move(t->type);
+                assert(n->is_function());
 
-            if (!n->metafunctions.empty()) {
-                errors.emplace_back(
-                    n->metafunctions.front()->position(),
-                    "(temporary alpha limitation) metafunctions are currently not supported on functions, only on types"
-                );
-                return {};
+                if (!n->metafunctions.empty()) {
+                    errors.emplace_back(
+                        n->metafunctions.front()->position(),
+                        "(temporary alpha limitation) metafunctions are currently not supported on functions, only on types"
+                    );
+                    return {};
+                }
             }
         }
 

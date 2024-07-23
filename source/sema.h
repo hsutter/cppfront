@@ -688,6 +688,7 @@ public:
                 if (is_uninitialized_decl(*sym)) {
                     if (
                         sym->declaration->is_object()
+                        && !sym->declaration->parent_is_object()
                         && !sym->declaration->parent_is_namespace()
                         )
                     {

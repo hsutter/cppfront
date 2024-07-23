@@ -1892,12 +1892,19 @@ public:
     //
     auto emit(
         type_id_node const& n,
-        source_position     pos = {}
+        bool                anonymous_object = false,
+        source_position     pos              = {}
     )
         -> void
     {   STACKINSTR
         if (pos == source_position{}) {
             pos = n.position();
+        }
+
+        //  A type that has more than 1 non-nested token may need to be wrapped
+        auto wrap_type = anonymous_object && !n.pc_qualifiers.empty();
+        if (wrap_type) {
+            printer.print_cpp2("std::type_identity_t<", pos);
         }
 
         if (n.is_wildcard()) {
@@ -1906,12 +1913,17 @@ public:
         else {
             try_emit<type_id_node::unqualified>(n.id, 0, false);
             try_emit<type_id_node::qualified  >(n.id);
+            try_emit<type_id_node::function   >(n.id);
             try_emit<type_id_node::keyword    >(n.id);
         }
 
         for (auto i = n.pc_qualifiers.rbegin(); i != n.pc_qualifiers.rend(); ++i) {
             if ((**i) == "const") { printer.print_cpp2(" ", pos); }
             emit(**i, false, pos);
+        }
+
+        if (wrap_type) {
+            printer.print_cpp2(">", pos);
         }
     }
 
@@ -2688,7 +2700,7 @@ public:
 
                 printer.add_pad_in_this_line( -5 );
 
-                emit(*type_id);
+                emit(*type_id, true);
                 printer.print_cpp2("{", decl->position());
 
                 if (!decl->initializer) {
@@ -4283,7 +4295,8 @@ public:
         parameter_declaration_node const& n,
         bool                              is_returns            = false,
         bool                              is_template_parameter = false,
-        bool                              is_statement          = false
+        bool                              is_statement          = false,
+        bool                              in_function_type_id   = false
     )
         -> void
     {   STACKINSTR
@@ -4293,7 +4306,16 @@ public:
 
         //  Can't declare functions as parameters -- only pointers to functions which are objects
         assert( n.declaration );
-        assert( !n.declaration->is_function() );
+
+        //  Can't declare function values as parameters --  only pointers to functions which are objects
+        assert(
+            !n.declaration->is_function()
+            //  or lowered references to function
+            || (
+                n.pass != passing_style::out
+                && n.pass != passing_style::copy
+                )
+        );
 
         if (!check_shadowing_of_type_scope_names(*n.declaration)) {
             return;
@@ -4466,7 +4488,11 @@ public:
 
         //  First any prefix
 
-        if (identifier == "_") {
+        if (
+            identifier == "_"
+            && !in_function_type_id
+            )
+        {
             printer.print_cpp2( "[[maybe_unused]] ", identifier_pos );
             identifier = "unnamed_param_" + std::to_string(n.ordinal);
         }
@@ -4595,7 +4621,7 @@ public:
         if (is_returns) {
             printer.print_extra( " " + identifier );
         }
-        else {
+        else if (!in_function_type_id) {
             printer.print_cpp2( " ", identifier_pos );
             if (n.declaration->is_variadic)
             {
@@ -4641,11 +4667,12 @@ public:
         parameter_declaration_list_node const& n,
         bool                                   is_returns                 = false,
         bool                                   is_template_parameter      = false,
-        bool                                   generating_postfix_inc_dec = false
+        bool                                   generating_postfix_inc_dec = false,
+        bool                                   in_function_type_id        = false
     )
         -> void
     {   STACKINSTR
-        in_parameter_list = true;
+        auto stack = stack_value(in_parameter_list, true);
 
         if (is_returns) {
             printer.print_extra( "{ " );
@@ -4670,7 +4697,7 @@ public:
             }
             prev_pos = x->position();
             assert(x);
-            emit(*x, is_returns, is_template_parameter);
+            emit(*x, is_returns, is_template_parameter, false, in_function_type_id);
             if (!x->declaration->has_name("this")) {
                 first = false;
             }
@@ -4699,8 +4726,6 @@ public:
             emit(*n.close_paren);
             printer.preempt_position_pop();
         }
-
-        in_parameter_list = false;
     }
 
 
@@ -4859,10 +4884,31 @@ public:
 
         printer.print_cpp2( suffix1, n.position() );
 
+        emit(n, function_returns_tag{}, is_main, is_ctor_or_dtor, false, generating_postfix_inc_dec);
+    }
+
+    auto emit(
+        function_type_node const& n,
+        function_returns_tag,
+        bool                      is_main,
+        bool                      is_ctor_or_dtor,
+        bool                      is_function_type_id,
+        bool                      generating_postfix_inc_dec = false
+    )
+        -> void
+    {
+        auto return_type_introducer = std::string{ " -> " };
+        if (is_function_type_id) {
+            return_type_introducer.clear();
+        }
+
         //  Handle a special member function
         if (
-            n.is_assignment()
-            || generating_assignment_from == n.my_decl
+            !is_function_type_id
+            && (
+                n.is_assignment()
+                || generating_assignment_from == n.my_decl
+                )
             )
         {
             assert(
@@ -4870,7 +4916,7 @@ public:
                 && n.my_decl->parent_declaration->name()
             );
             printer.print_cpp2(
-                " -> " + print_to_string( *n.my_decl->parent_declaration->name() ) + "& ",
+                return_type_introducer + print_to_string( *n.my_decl->parent_declaration->name() ) + "& ",
                 n.position()
             );
         }
@@ -4880,11 +4926,11 @@ public:
         {
             if (is_main)
             {
-                printer.print_cpp2( " -> int", n.position() );
+                printer.print_cpp2( return_type_introducer + "int", n.position() );
             }
             else if(!is_ctor_or_dtor)
             {
-                printer.print_cpp2( " -> void", n.position() );
+                printer.print_cpp2( return_type_introducer + "void", n.position() );
             }
         }
 
@@ -4892,12 +4938,13 @@ public:
         else if (n.returns.index() == function_type_node::id)
         {
             auto is_type_scope_function_with_in_this =
-                n.my_decl->parent_is_type()
+                !is_function_type_id
+                && n.my_decl->parent_is_type()
                 && n.parameters->ssize() > 0
                 && (*n.parameters)[0]->direction() == passing_style::in
                 ;
 
-            printer.print_cpp2( " -> ", n.position() );
+            printer.print_cpp2( return_type_introducer, n.position() );
             auto& r = std::get<function_type_node::id>(n.returns);
             assert(r.type);
 
@@ -4924,10 +4971,24 @@ public:
 
         //  Otherwise, handle multiple/named returns
         else {
-            printer.print_cpp2( " -> ", n.position() );
+            printer.print_cpp2( return_type_introducer, n.position() );
             assert (n.my_decl);
             printer.print_cpp2( multi_return_type_name(*n.my_decl), n.position());
         }
+    }
+
+
+    auto emit(function_type_id_node const& n)
+        -> void
+    {
+        assert(n.type);
+        printer.print_cpp2("cpp2::fn_t<", n.type->position());
+        emit(*n.type, function_returns_tag{}, false, false, true);
+        emit(*n.type->parameters, false, false, true);
+        if (!n.type->throws) {
+            printer.print_cpp2(" noexcept", n.type->position());
+        }
+        printer.print_cpp2(">", n.type->position());
     }
 
 
@@ -6752,10 +6813,10 @@ public:
                 assert(n.initializer);
                 //  And the constraint if there is one
                 if (type->constraint) {
-                    emit( *type->constraint, n.position() );
+                    emit( *type->constraint, false, n.position() );
                     printer.print_cpp2(" ", n.position());
                 }
-                emit( *type, n.position() );
+                emit( *type, false, n.position() );
             }
             //  Otherwise, emit the type
             else {

@@ -370,6 +370,17 @@ using _uchar     = unsigned char;    // normally use u8 instead
 
 //-----------------------------------------------------------------------
 //
+//  fn_t<R(ArgTypes...)>       For emitted Cpp2 function types
+//
+//-----------------------------------------------------------------------
+//
+template<typename T>
+    requires std::is_function_v<T>
+using fn_t = T;
+
+
+//-----------------------------------------------------------------------
+//
 //  String utilities
 //
 
