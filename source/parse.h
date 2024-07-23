@@ -5493,7 +5493,7 @@ auto stack_value(T& var, std::type_identity_t<T> const& value)
     return finally([&var, old = std::exchange(var, value)]() {
         var = old;
     });
-};
+}
 
 
 //-----------------------------------------------------------------------
@@ -6731,7 +6731,7 @@ private:
                     }
                 }
             }
-            if (auto l = get_if<function_type_node::list>(&f->type->returns)) {
+            if ([[maybe_unused]] auto l = get_if<function_type_node::list>(&f->type->returns)) {
                 //error(
                 //    "a function type can't have an anonymous return type",
                 //    false,
