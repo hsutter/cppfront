@@ -2307,8 +2307,15 @@ public:
         , last{ l }
     {
         //  Represent all ranges as half-open; after this we can forget the flag
-        if (include_last) {
-            ++last;
+        if (include_last) { 
+            if constexpr (std::integral<TT>) {
+                if (last == std::numeric_limits<TT>::max()) {
+                    throw std::runtime_error(
+                        "range with last == numeric_limits<T>::max() will "
+                        "overflow");
+                }
+            }
+            ++last; 
         }
     }
 
