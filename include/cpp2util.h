@@ -2268,63 +2268,107 @@ inline auto make_args(int argc, char** argv) -> args
 template<typename T>
 struct range
 {
+    using difference_type = std::ptrdiff_t;
+    using value_type = T;
+    using pointer = T*;
+    using reference = T&;
+
     range(
-        T const& f, 
-        T const& l, 
+        T const& f,
+        T const& l,
         bool     include_last = false
-    ) 
+    )
         : first{ f }
-        , last{ l } 
-    { 
-        if (include_last) { 
-            ++last; 
+        , last{ l }
+    {
+        if (include_last) {
+            ++last;
         }
     }
 
-    class iterator {
+    //  If T is numeric, use explicit narrowing to avoid compiler warnings
+    static auto inc_by(T& t, difference_type i) -> T&
+    {
+        if constexpr (std::integral<T>) {
+            return t += unsafe_narrow<T>(i);
+        }
+        else {
+            return t += i;
+        }
+    }
+
+    class iterator 
+    {
     public:
+        using difference_type   = std::ptrdiff_t;
+        using value_type        = T;
+        using pointer           = T*;
+        using reference         = T&;
+        using iterator_category = std::random_access_iterator_tag;
+
+        iterator() { }
+
         iterator(T const& f, T const& l, T start) : first{ f }, last{ l }, curr{ start } {}
-
-        auto operator*() const {
-            if (curr != last) { return curr; }
-            else { return T{}; }
-        }
-
-        auto operator+(int i) -> iterator {
-            if (i > 0) { return { first, last, std::min(curr + i, last) }; }
-            else { return { first, last, std::max(curr + i, 0) }; }
-        }
-        auto operator-(int i) -> iterator  { return operator+(-i); }
-        auto operator++()     -> iterator& { if (curr != last ) { ++curr; }  return *this; }
-        auto operator--()     -> iterator& { if (curr != first) { --curr; }  return *this; }
-        auto operator++(int)  -> iterator  { auto old = *this;  ++*this;  return old; }
-        auto operator--(int)  -> iterator  { auto old = *this;  ++*this;  return old; }
 
         auto operator<=>(iterator const&) const = default;
 
+        auto operator*() const -> T {
+            if (curr != last) { return curr; }
+            else              { return T{}; }
+        }
+
+        auto operator++()                  -> iterator& { if (curr != last ) { ++curr; }  return *this; }
+        auto operator--()                  -> iterator& { if (curr != first) { --curr; }  return *this; }
+        auto operator++(int)               -> iterator  { auto old = *this;  ++*this;  return old; }
+        auto operator--(int)               -> iterator  { auto old = *this;  ++*this;  return old; }
+
+        //  And now all the random-access operations (valid if T is random-access)
+        //
+        auto operator[](difference_type i) const -> T {
+            if (curr + i != last) { return curr + i; }
+            else                  { return T{}; }
+        }
+
+        auto operator+=(difference_type i) -> iterator& { if (curr + i <= last ) { inc_by(curr,  i); } else { curr = last; }  return *this; }
+        auto operator-=(difference_type i) -> iterator& { if (curr - i >= first) { inc_by(curr, -i); } else { curr = first; }  return *this; }
+
+        friend 
+        auto operator+ (difference_type i, iterator const& this_) -> iterator { auto ret = *this_;  return ret += i; }
+
+        auto operator+ (difference_type i   ) const -> iterator        { auto ret = *this;  return ret += i; }
+        auto operator- (difference_type i   ) const -> iterator        { auto ret = *this;  return ret -= i; }
+        auto operator- (iterator        that) const -> difference_type { return that.curr - curr; }
+
+        //auto operator+(difference_type i) -> iterator {
+        //    if (i > 0) { return { first, last, std::min(curr + i, last) }; }
+        //    else       { return { first, last, std::max(curr + i, 0) }; }
+        //}
+        //auto operator- (difference_type i) -> iterator  { return operator+(-i); }
+
     private:
-        T first;
-        T last;
-        T curr;
+        T first = T{};
+        T last = T{};
+        T curr = T{};
     };
 
     auto begin()  const -> iterator    { return iterator{ first, last, first }; }
     auto end()    const -> iterator    { return iterator{ first, last, last }; }
     auto cbegin() const -> iterator    { return begin(); }
     auto cend()   const -> iterator    { return end(); }
-    auto size()   const -> std::size_t { return cpp2::unsafe_narrow<std::size_t>(ssize()); }
+    auto size()   const -> std::size_t { return unsafe_narrow<std::size_t>(ssize()); }
     auto ssize()  const -> int         { return last - first; }
 
-    auto operator[](int i) const {
-        if (0 <= i && i < ssize())     { return first + i; }
-        else                           { return T{}; }
+    auto operator[](difference_type i) const {
+        if (0 <= i && i < ssize()) { return first + i; }
+        else                       { return T{}; }
     }
 
     T first;
     T last;
 };
 
-template<class T, class U>
+
+template<typename T, typename U>
 range(T, U, bool = false) -> range<std::common_type_t<T, U>>;
 
 
