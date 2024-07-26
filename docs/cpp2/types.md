@@ -81,7 +81,7 @@ For example:
 abstract_base: type
 = {
     //  A pure virtual function: virtual + no body
-    print: (virtual this, msg: std::string) = { /*...*/ }
+    print: (virtual this, msg: std::string);
 
     // ...
 }
