@@ -20,5 +20,6 @@ do
     fi
 done
 rm -f *.obj *.exp *.lib
+find . -type f -exec bash -c "[ ! -s \"{}\" ] && rm \"{}\"" \;
 printf "\nDone: %s .cpp tests compiled\n" "$count"
 printf "\n      %s .cpp executables generated and run\n" "$exe_count"

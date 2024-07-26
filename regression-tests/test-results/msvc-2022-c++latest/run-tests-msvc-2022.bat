@@ -26,6 +26,7 @@ for %%f in (*.cpp) do (
     )
 )
 del pure2-*.obj mixed-*.obj *.exp *.lib
+..\..\rm-empty-files.bat
 echo.
 echo Done: %count% .cpp tests compiled
 echo.

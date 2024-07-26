@@ -518,15 +518,17 @@ inline std::string join(List const& list) {
 //
 //  Conveniences for expressing Cpp1 references (rarely useful)
 // 
-//  Note: Only needed in rare cases to take full control of matching a
-//        Cpp1 signature exactly. Most cases don't need this, for example
-//        a Cpp1 virtual function signature declaration like
+//  Note: Only needed in rare cases to take full control of matching an
+//        odd Cpp1 signature exactly. Most cases don't need this... for
+//        example, a Cpp1 virtual function signature declaration like
 // 
-//              virtual void f(int&) const
+//              virtual void myfunc(int& val) const
 // 
 //        can already be directly overriden by a Cpp2 declaration of
 // 
-//              f: (override this, inout val : int)
+//              myfunc: (override this, inout val: int)
+//                  // identical to this in Cpp1 syntax:
+//                  //  void myfunc(int& val) const override
 // 
 //        without any need to say cpp1_ref on the int parameter.
 // 

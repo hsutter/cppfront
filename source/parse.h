@@ -1325,6 +1325,8 @@ struct qualified_id_node
 };
 
 
+struct function_type_node;
+
 struct type_id_node
 {
     source_position pos;
@@ -1335,15 +1337,26 @@ struct type_id_node
     int dereference_cnt                     = {};
     token const* suspicious_initialization  = {};
 
-    enum active { empty=0, qualified, unqualified, keyword };
+    enum active { empty=0, qualified, unqualified, function, keyword };
     std::variant<
         std::monostate,
         std::unique_ptr<qualified_id_node>,
         std::unique_ptr<unqualified_id_node>,
+        std::unique_ptr<function_type_node>,
         token const*
     > id;
 
     std::unique_ptr<type_id_node> constraint = {};
+
+    // Out-of-line definition of the dtor is necessary due to the forward-declared
+    // type(s) used in a std::unique_ptr as a member
+    ~type_id_node();
+
+    auto is_function_typeid() const
+        -> bool
+    {
+        return id.index() == function;
+    }
 
     auto is_wildcard() const
         -> bool
@@ -1416,6 +1429,8 @@ struct type_id_node
             return {};
         break;case unqualified:
             return get<unqualified>(id)->get_token();
+        break;case function:
+            return {};
         break;case keyword:
             return get<keyword>(id);
         break;default:
@@ -1440,6 +1455,7 @@ struct type_id_node
         }
         try_visit<qualified  >(id, v, depth);
         try_visit<unqualified>(id, v, depth);
+        try_visit<function   >(id, v, depth);
         try_visit<keyword    >(id, v, depth);
         if (constraint) {
             constraint->visit(v, depth + 1);
@@ -2246,14 +2262,18 @@ auto compound_statement_node::visit(auto& v, int depth)
 
 struct parameter_declaration_node
 {
-    source_position pos = {};
-    passing_style pass  = passing_style::in;
-    int ordinal = 1;
+    parameter_declaration_list_node const* my_list;
+
+    source_position pos     = {};
+    passing_style   pass    = passing_style::in;
+    int             ordinal = 1;
 
     enum class modifier { none=0, implicit, virtual_, override_, final_ };
     modifier mod = modifier::none;
 
     std::unique_ptr<declaration_node> declaration;
+
+    parameter_declaration_node(parameter_declaration_list_node const* my) : my_list{my} { }
 
     //  API
     //
@@ -2271,6 +2291,9 @@ struct parameter_declaration_node
     {
         return pass;
     }
+
+    auto is_in_function_typeid() const
+        -> bool;
 
     auto is_implicit() const
         -> bool
@@ -2327,10 +2350,13 @@ struct parameter_declaration_node
 
 struct parameter_declaration_list_node
 {
-    token const* open_paren  = {};
-    token const* close_paren = {};
+    token const* open_paren         = {};
+    token const* close_paren        = {};
+    bool         in_function_typeid = false;
 
     std::vector<std::unique_ptr<parameter_declaration_node>> parameters;
+
+    parameter_declaration_list_node(bool f = false) : in_function_typeid{f} { }
 
     //  API
     //
@@ -3112,6 +3138,8 @@ public:
         { return type.index() == a_function;  }
     auto is_object   () const -> bool
         { return type.index() == an_object;   }
+    auto is_object_with_function_typeid() const -> bool
+        { return is_object() && std::get<an_object>(type)->is_function_typeid(); }
     auto is_base_object() const -> bool
         { return is_object() && has_name("this"); }
     auto is_member_object() const -> bool
@@ -3884,6 +3912,13 @@ auto parameter_declaration_node::has_name(std::string_view s) const
 }
 
 
+auto parameter_declaration_node::is_in_function_typeid() const
+    -> bool
+{
+    return my_list && my_list->in_function_typeid;
+}
+
+
 auto function_type_node::first_parameter_name() const
     -> std::string
 {
@@ -3963,8 +3998,11 @@ auto function_type_node::is_defaultable() const
     -> bool
 {
     if (
-        my_decl->has_name("operator==")
-        || my_decl->has_name("operator<=>")
+        my_decl
+        && (
+            my_decl->has_name("operator==")
+            || my_decl->has_name("operator<=>")
+            )
         )
     {
         return true;
@@ -3982,7 +4020,7 @@ auto function_type_node::is_constructor() const
         && (*parameters)[0]->direction() == passing_style::out
         )
     {
-        assert(my_decl->has_name("operator="));
+        assert(my_decl && my_decl->has_name("operator="));
         return true;
     }
     return false;
@@ -4022,9 +4060,9 @@ auto function_type_node::is_move() const
 auto function_type_node::is_swap() const
     -> bool
 {
-    assert (my_decl);
     if (
-        my_decl->has_name("swap")
+        my_decl
+        && my_decl->has_name("swap")
         && (*parameters).ssize() == 2
         && (*parameters)[1]->has_name("that")
         )
@@ -4101,7 +4139,8 @@ auto function_type_node::is_comparison() const
     -> bool
 {
     if (
-        (
+        my_decl
+        && (
             my_decl->has_name("operator==")
             || my_decl->has_name("operator!=")
             || my_decl->has_name("operator<")
@@ -4122,8 +4161,11 @@ auto function_type_node::is_increment_or_decrement() const
     -> bool
 {
     if (
-        my_decl->has_name("operator++")
-        || my_decl->has_name("operator--")
+        my_decl
+        && (
+            my_decl->has_name("operator++")
+            || my_decl->has_name("operator--")
+            )
         )
     {
         return true;
@@ -4136,7 +4178,8 @@ auto function_type_node::is_compound_assignment() const
     -> bool
 {
     if (
-        (
+        my_decl
+        && (
             my_decl->has_name("operator+=")
             || my_decl->has_name("operator-=")
             || my_decl->has_name("operator*=")
@@ -4163,7 +4206,8 @@ auto function_type_node::is_assignment() const
     -> bool
 {
     if (
-        my_decl->has_name("operator=")
+        my_decl
+        && my_decl->has_name("operator=")
         && (*parameters).ssize() > 1
         && (*parameters)[0]->has_name("this")
         && (*parameters)[0]->direction() == passing_style::inout
@@ -4211,7 +4255,8 @@ auto function_type_node::is_destructor() const
     -> bool
 {
     if (
-        my_decl->has_name("operator=")
+        my_decl
+        && my_decl->has_name("operator=")
         && (*parameters).ssize() == 1
         && (*parameters)[0]->has_name("this")
         && (*parameters)[0]->direction() == passing_style::move
@@ -4468,6 +4513,9 @@ struct translation_unit_node
 };
 
 // Definitions of out-of-line dtors for nodes with unique_ptr members of forward-declared types
+
+type_id_node::~type_id_node() = default;
+
 primary_expression_node::~primary_expression_node() = default;
 
 prefix_expression_node::~prefix_expression_node() = default;
@@ -4848,6 +4896,7 @@ auto pretty_print_visualize(type_id_node const& n, int indent)
     if (n.id.index() == type_id_node::empty) { ret += "_"; }
     ret += try_pretty_print_visualize<type_id_node::qualified  >(n.id, indent);
     ret += try_pretty_print_visualize<type_id_node::unqualified>(n.id, indent);
+    ret += try_pretty_print_visualize<type_id_node::function   >(n.id, indent);
     ret += try_pretty_print_visualize<type_id_node::keyword    >(n.id, indent);
 
     if (n.constraint) {
@@ -5852,6 +5901,9 @@ private:
             //      || curr().type() == lexeme::LeftBrace
             )
         {
+            //  Remember current position, because we may need to backtrack
+            auto start_pos = pos;
+
             bool inside_initializer = (
                 peek(-1) && peek(-1)->type() == lexeme::Assignment
             );
@@ -5859,17 +5911,23 @@ private:
             auto close = close_paren_type(open_paren->type());
             auto close_text = [&] () -> std::string { if (close == lexeme::RightParen) { return ")"; } return "}"; }();
             next();
+
             auto expr_list = expression_list(open_paren, lexeme::RightParen, inside_initializer);
             if (!expr_list) {
-                error("unexpected text - ( is not followed by an expression-list");
+                //error("unexpected text - ( is not followed by an expression-list");
+                pos = start_pos;    // backtrack
                 return {};
             }
+
             if (curr().type() != close_paren_type(open_paren->type())) {
-                error("unexpected text - expression-list is not terminated by " + close_text);
+                //error("unexpected text - expression-list is not terminated by " + close_text);
+                pos = start_pos;    // backtrack
                 return {};
             }
+
             expr_list->close_paren = &curr();
             next();
+
             if (
                    curr().type() != lexeme::Semicolon
                 && curr().type() != lexeme::RightParen
@@ -5882,6 +5940,7 @@ private:
             n->expression_list_is_fold_expression = expr_list->is_fold_expression();
             expr_list->default_initializer =
                 is_inside_call_expr && std::empty(expr_list->expressions);
+
             n->expr = std::move(expr_list);
             return n;
         }
@@ -6530,7 +6589,7 @@ private:
             && curr().type() == lexeme::Arrow
             )
         {
-            error("'->' is not Cpp2 deference syntax - write '*.' instead");
+            error("'->' is not Cpp2 dereference syntax - write '*.' instead");
             return {};
         }
         }
@@ -6609,6 +6668,7 @@ private:
     //G type-id:
     //G     type-qualifier-seq? qualified-id is-type-constraint?
     //G     type-qualifier-seq? unqualified-id is-type-constraint?
+    //G     type-qualifier-seq? function-type is-type-constraint?
     //G
     //G type-qualifier-seq:
     //G     type-qualifier
@@ -6620,7 +6680,8 @@ private:
     //G
     auto type_id(
         bool allow_omitting_type_name = false,
-        bool allow_constraint         = false
+        bool allow_constraint         = false,
+        bool allow_function_type      = false
     )
         -> std::unique_ptr<type_id_node>
     {
@@ -6657,9 +6718,19 @@ private:
             n->id  = std::move(id);
             assert (n->id.index() == type_id_node::unqualified);
         }
+        else if (std::unique_ptr<function_type_node> id = {};
+            allow_function_type
+            && (id = function_type({})) != nullptr
+            )
+        {
+            n->pos = id->position();
+            n->id  = std::move(id);
+            assert (n->id.index() == type_id_node::function);
+        }
         else if (!allow_omitting_type_name) {
             return {};
         }
+
         if (curr().type() == lexeme::Multiply) {
             error("'T*' is not a valid Cpp2 type; use '*T' for a pointer instead", false);
             return {};
@@ -6826,12 +6897,17 @@ private:
             auto term = template_argument{};
 
             do {
-                //  If it doesn't start with * or const (which can only be a type id),
+                //  If it doesn't start with * or const or ()-> (which can only be a type id),
                 //  try parsing it as an expression
                 if (auto e = [&]{
                         if (
                             curr().type() == lexeme::Multiply // '*'
                             || curr() == "const"              // 'const'
+                            || (
+                                curr().type() == lexeme::LeftParen
+                                && peek(1) && peek(1)->type() == lexeme::RightParen
+                                && peek(2) && peek(2)->type() == lexeme::Arrow
+                                )
                         )
                         {
                             return decltype(expression()){};
@@ -6844,7 +6920,7 @@ private:
                 }
 
                 //  Else try parsing it as a type id
-                else if (auto i = type_id()) {
+                else if (auto i = type_id(false, false, true)) {
                     term.arg = std::move(i);
                 }
 
@@ -7360,7 +7436,7 @@ private:
             }
             next(2);    // eat 'do' and '('
 
-            n->parameter = parameter_declaration(false, false, false);
+            n->parameter = parameter_declaration(nullptr, false, false, false);
             if (!n->parameter) {
                 error("'for range do (' must be followed by a parameter declaration", false, source_position{}, true);
                 return {};
@@ -7866,10 +7942,11 @@ private:
     //G     'final'
     //G
     auto parameter_declaration(
-        bool is_returns   = false,
-        bool is_named     = true,
-        bool is_template  = true,
-        bool is_statement = false
+        parameter_declaration_list_node const* my_list,
+        bool                                   is_returns   = false,
+        bool                                   is_named     = true,
+        bool                                   is_template  = true,
+        bool                                   is_statement = false
     )
         -> std::unique_ptr<parameter_declaration_node>
     {
@@ -7877,7 +7954,7 @@ private:
         //  a parenthesized expression statement, not a statement parameter list
         auto start_pos = pos;
 
-        auto n = std::make_unique<parameter_declaration_node>();
+        auto n = std::make_unique<parameter_declaration_node>(my_list);
         n->pass =
             is_returns ? passing_style::out  :
             passing_style::in;
@@ -8051,10 +8128,11 @@ private:
     //G     parameter-declaration-seq ',' parameter-declaration
     //G
     auto parameter_declaration_list(
-        bool is_returns    = false,
-        bool is_named      = true,
-        bool is_template   = false,
-        bool is_statement  = false
+        bool is_returns         = false,
+        bool is_named           = true,
+        bool is_template        = false,
+        bool is_statement       = false,
+        bool is_function_typeid = false
     )
         -> std::unique_ptr<parameter_declaration_list_node>
     {
@@ -8075,15 +8153,15 @@ private:
             return {};
         }
 
-        auto n = std::make_unique<parameter_declaration_list_node>();
+        auto n = std::make_unique<parameter_declaration_list_node>(is_function_typeid);
         n->open_paren = &curr();
         next();
 
-        auto param = std::make_unique<parameter_declaration_node>();
+        auto param = std::unique_ptr<parameter_declaration_node>();
 
         auto count = 1;
 
-        while ((param = parameter_declaration(is_returns, is_named, is_template, is_statement)) != nullptr)
+        while ((param = parameter_declaration(n.get(), is_returns, is_named, is_template, is_statement)) != nullptr)
         {
             param->ordinal = count;
             ++count;
@@ -8257,7 +8335,7 @@ private:
     //G     contract-seq contract
     //G
     auto function_type(
-        declaration_node* my_decl,
+        declaration_node* my_decl,          // if null, this is a type-id not a declaration
         bool              is_named = true
         )
         -> std::unique_ptr<function_type_node>
@@ -8265,7 +8343,7 @@ private:
         auto n = std::make_unique<function_type_node>( my_decl );
 
         //  Parameters
-        auto parameters = parameter_declaration_list(false, is_named, false);
+        auto parameters = parameter_declaration_list(false, is_named, false, false, my_decl == nullptr);
         if (!parameters) {
             return {};
         }
@@ -8292,10 +8370,12 @@ private:
         }
 
 
-        //  If we're not at a '->' or 'requires' or contract and what follows is
+        //  If we're in an actual function declaration (not just a function type-id),
+        //  and are not at a '->' or 'requires' or contract and what follows is
         //  an expression, this is a ":(params) expr" shorthand function syntax
         if (
-            curr().type() != lexeme::Arrow
+            my_decl
+            && curr().type() != lexeme::Arrow
             && curr() != "requires"
             && (curr() != "pre" && curr() != "post")
             )
@@ -8366,6 +8446,11 @@ private:
 
             else if (auto returns_list = parameter_declaration_list(true, is_named))
             {
+                if (!my_decl) {
+                    error("a function type alias with multiple/named return values is not yet supported");
+                    return {};
+                }
+
                 if (std::ssize(returns_list->parameters) < 1) {
                     error("an explicit return value list cannot be empty");
                     return {};
@@ -8384,6 +8469,11 @@ private:
         //  Pre/post conditions
         while (auto c = contract())
         {
+            if (!my_decl) {
+                error("a function type alias with contracts is not yet supported");
+                return {};
+            }
+
             if (
                 *c->kind != "pre"
                 && *c->kind != "post"
@@ -8638,7 +8728,7 @@ private:
         }
 
         //  Or just a (possibly empty == deduced) type-id
-        else if (auto t = type_id(true, !is_template_parameter))
+        else if (auto t = type_id(true, !is_template_parameter, true))
         {
             if (
                 t->get_token()
@@ -9682,9 +9772,10 @@ public:
         assert( n.declaration );
     }
 
-    auto start(parameter_declaration_list_node const&, int indent) -> void
+    auto start(parameter_declaration_list_node const& n, int indent) -> void
     {
         o << pre(indent) << "parameter-declaration-list\n";
+        o << pre(indent+1) << "in_function_type " << std::boolalpha << n.in_function_typeid << "\n";
     }
 
     auto start(translation_unit_node const&, int indent) -> void

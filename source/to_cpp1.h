@@ -1906,6 +1906,7 @@ public:
         else {
             try_emit<type_id_node::unqualified>(n.id, 0, false);
             try_emit<type_id_node::qualified  >(n.id);
+            try_emit<type_id_node::function   >(n.id);
             try_emit<type_id_node::keyword    >(n.id);
         }
 
@@ -4808,6 +4809,63 @@ public:
             return;
         }
 
+        //  Common parts we may use in different orders
+        //
+        auto handle_default_return_type = [&]{
+            if (is_main)
+            {
+                printer.print_cpp2( " -> int", n.position() );
+            }
+            else if(!is_ctor_or_dtor)
+            {
+                printer.print_cpp2( " -> void", n.position() );
+            }
+        };
+
+        auto handle_single_anon_return_type = [&]{
+            auto is_type_scope_function_with_in_this =
+                n.my_decl
+                && n.my_decl->parent_is_type()
+                && n.parameters->ssize() > 0
+                && (*n.parameters)[0]->direction() == passing_style::in
+                ;
+
+            auto& r = std::get<function_type_node::id>(n.returns);
+            assert(r.type);
+
+            auto return_type = print_to_string(*r.type);
+
+            if (r.pass == passing_style::forward) {
+                if (r.type->is_wildcard()) {
+                    printer.print_cpp2( "auto&&", n.position() );
+                }
+                else {
+                    printer.print_cpp2( return_type, n.position() );
+                    if (is_type_scope_function_with_in_this) {
+                        printer.print_cpp2( " const&", n.position() );
+                    }
+                    else if (!generating_postfix_inc_dec) {
+                        printer.print_cpp2( "&", n.position() );
+                    }
+                }
+            }
+            else {
+                printer.print_cpp2( return_type, n.position() );
+            }
+        };
+
+
+        //  If this is not part of a declaration, just a function type-id,
+        //  the return type comes first
+        if (!n.my_decl) {
+            if (n.returns.index() == function_type_node::empty) {
+                handle_default_return_type();
+            }
+            else if (n.returns.index() == function_type_node::id) {
+                handle_single_anon_return_type();
+            }
+        }
+
         if (
             is_main
             && n.parameters->parameters.size() > 0
@@ -4826,7 +4884,10 @@ public:
         }
 
         //  For an anonymous function, the emitted lambda is 'constexpr' or 'mutable'
-        if (!n.my_decl->has_name())
+        if (
+            n.my_decl
+            && !n.my_decl->has_name()
+            )
         {
             if (n.my_decl->is_constexpr) {
                 //  The current design path we're trying out is for all '==' functions to be
@@ -4851,7 +4912,10 @@ public:
             n.is_move()
             || n.is_swap()
             || n.is_destructor()
-            || generating_move_from == n.my_decl
+            || (
+                n.my_decl 
+                && generating_move_from == n.my_decl
+                )
             )
         {
             printer.print_cpp2( " noexcept", n.position() );
@@ -4862,7 +4926,10 @@ public:
         //  Handle a special member function
         if (
             n.is_assignment()
-            || generating_assignment_from == n.my_decl
+            || (
+                n.my_decl 
+                && generating_assignment_from == n.my_decl
+                )
             )
         {
             assert(
@@ -4875,58 +4942,26 @@ public:
             );
         }
 
-        //  Otherwise, handle a default return type
-        else if (n.returns.index() == function_type_node::empty)
+        //  If this is a declaration, emit the trailing return type
+        else if (n.my_decl)
         {
-            if (is_main)
-            {
-                printer.print_cpp2( " -> int", n.position() );
+            //  Otherwise, handle a default return type
+            if (n.returns.index() == function_type_node::empty) {
+                handle_default_return_type();
             }
-            else if(!is_ctor_or_dtor)
-            {
-                printer.print_cpp2( " -> void", n.position() );
+
+            //  Otherwise, handle a single anonymous return type
+            else if (n.returns.index() == function_type_node::id) {
+                printer.print_cpp2( " -> ", n.position() );
+                handle_single_anon_return_type();
             }
-        }
 
-        //  Otherwise, handle a single anonymous return type
-        else if (n.returns.index() == function_type_node::id)
-        {
-            auto is_type_scope_function_with_in_this =
-                n.my_decl->parent_is_type()
-                && n.parameters->ssize() > 0
-                && (*n.parameters)[0]->direction() == passing_style::in
-                ;
-
-            printer.print_cpp2( " -> ", n.position() );
-            auto& r = std::get<function_type_node::id>(n.returns);
-            assert(r.type);
-
-            auto return_type = print_to_string(*r.type);
-
-            if (r.pass == passing_style::forward) {
-                if (r.type->is_wildcard()) {
-                    printer.print_cpp2( "auto&&", n.position() );
-                }
-                else {
-                    printer.print_cpp2( return_type, n.position() );
-                    if (is_type_scope_function_with_in_this) {
-                        printer.print_cpp2( " const&", n.position() );
-                    }
-                    else if (!generating_postfix_inc_dec) {
-                        printer.print_cpp2( "&", n.position() );
-                    }
-                }
-            }
+            //  Otherwise, handle multiple/named returns
             else {
-                printer.print_cpp2( return_type, n.position() );
+                printer.print_cpp2( " -> ", n.position() );
+                assert (n.my_decl);
+                printer.print_cpp2( multi_return_type_name(*n.my_decl), n.position());
             }
-        }
-
-        //  Otherwise, handle multiple/named returns
-        else {
-            printer.print_cpp2( " -> ", n.position() );
-            assert (n.my_decl);
-            printer.print_cpp2( multi_return_type_name(*n.my_decl), n.position());
         }
     }
 
