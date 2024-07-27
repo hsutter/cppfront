@@ -11,6 +11,10 @@ g_move : (move  s: std::string) = std::cout << "I hear you've moving, (s)$?\n";
 h_forward: (inout s: std::string) -> forward std::string = { std::cout << "Inout (s)$ ... "; return s; }
 h_out    : (      s: std::string) ->         std::string = { std::cout << "In (s)$ ... "; return "yohoho"; }
 
+f1: (a: std::function< (x:int) -> int >) -> int = a(1);
+f2: (a:              * (x:int) -> int  ) -> int = a(2);
+g :                    (x:int) -> int           = x+42;
+
 
 main: () = 
 {
@@ -80,4 +84,9 @@ main: () =
     //  Test out return
     std::cout << "fh_out returned: (fh_out(gandalf))$\n";
     std::cout << "ph_out returned: (ph_out(galadriel))$\n";
+
+
+    //  --- Tests for function parameters
+    std::cout << "(f1(g&))$\n";
+    std::cout << "(f2(g&))$\n";
 }

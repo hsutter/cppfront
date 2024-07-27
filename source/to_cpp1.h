@@ -4434,7 +4434,8 @@ public:
         //-----------------------------------------------------------------------
         //  Else handle ordinary parameters
 
-        auto param_type = print_to_string(type_id);
+        assert(n.declaration->identifier);
+        auto param_type = print_to_string(type_id, source_position{}, print_to_string(*n.declaration->identifier));
 
         //  If there are template parameters on this function or its enclosing
         //  type, see if this parameter's name is an unqualified-id with a
@@ -4612,7 +4613,7 @@ public:
         if (is_returns) {
             printer.print_extra( " " + identifier );
         }
-        else {
+        else if (!n.declaration->is_object_with_function_typeid()) {
             printer.print_cpp2( " ", identifier_pos );
             if (n.declaration->is_variadic)
             {
