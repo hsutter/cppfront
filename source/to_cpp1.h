@@ -1892,7 +1892,8 @@ public:
     //
     auto emit(
         type_id_node const& n,
-        source_position     pos = {}
+        source_position     pos        = {},
+        std::string         identifier = {}
     )
         -> void
     {   STACKINSTR
@@ -1900,13 +1901,28 @@ public:
             pos = n.position();
         }
 
+        //  Handle function types
+        if (n.is_function_typeid()) {
+            //  If identifier is nonempty, we're doing a local variable with a (pointer to)
+            //  function typeid, so stick in the pointers here for inside-out Cpp1 declarations
+            if (!identifier.empty()) {
+                for (auto q: n.pc_qualifiers) {
+                    if (*q == "const") { identifier = " " + identifier; }
+                    identifier = q->as_string_view() + identifier;
+                }
+                identifier = "(" + identifier + ")";
+            }
+            emit( *std::get<type_id_node::function>(n.id), false, false, {}, false, identifier );
+            return;
+        }
+
+        //  Handle all other types
         if (n.is_wildcard()) {
             printer.print_cpp2("auto", pos);
         }
         else {
             try_emit<type_id_node::unqualified>(n.id, 0, false);
             try_emit<type_id_node::qualified  >(n.id);
-            try_emit<type_id_node::function   >(n.id);
             try_emit<type_id_node::keyword    >(n.id);
         }
 
@@ -4801,7 +4817,8 @@ public:
         bool                      is_main                    = false,
         bool                      is_ctor_or_dtor            = false,
         std::string               suffix1                    = {},
-        bool                      generating_postfix_inc_dec = false
+        bool                      generating_postfix_inc_dec = false,
+        std::string               identifier                 = {}
     )
         -> void
     {   STACKINSTR
@@ -4864,6 +4881,7 @@ public:
             else if (n.returns.index() == function_type_node::id) {
                 handle_single_anon_return_type();
             }
+            printer.print_cpp2( identifier, n.position() );
         }
 
         if (
@@ -6782,6 +6800,8 @@ public:
                 printer.print_cpp2( "extern ", n.position() );
             }
 
+            assert(n.identifier);
+
             //  Emit "auto" for deduced types (of course)
             if (type->is_wildcard()) {
                 assert(n.initializer);
@@ -6807,10 +6827,10 @@ public:
                         return;
                     }
                 }
-                printer.preempt_position_push(n.position());
-                emit( *type );
+                printer.preempt_position_push(n.position()); 
+                emit( *type, {}, print_to_string(*n.identifier) ); 
                 printer.preempt_position_pop();
-                //  one pointer is enough for now, pointer-to-function fun can be later
+
                 if (
                     !n.initializer
                     && n.parent_is_function()
@@ -6821,14 +6841,19 @@ public:
             }
 
             printer.print_cpp2( " ", n.position());
-            assert(n.identifier);
 
             //  If this is anonymous object (named "_"), generate a unique name
             if (n.has_name("_")) {
                 if (n.has_wildcard_type()) {
                     errors.emplace_back(
                         n.identifier->position(),
-                        "an object can have an anonymous name or an anonymous type, but not both at the same time (rationale: if '_ := f();' were allowed to keep the returned object alive, that syntax would be dangerously close to '_ = f();' to discard the returned object, and such importantly opposite meanings deserve more than a one-character typo distance; and explicit discarding gets the nice syntax because it's likely more common)"
+                        "an object can have an anonymous name or an anonymous type, "
+                        "but not both at the same time (rationale: if '_ := f();' were "
+                        "allowed to keep the returned object alive, that syntax would "
+                        "be dangerously close to '_ = f();' to discard the returned "
+                        "object, and such importantly opposite meanings deserve more "
+                        "than a one-character typo distance; and explicit discarding "
+                        "gets the nice syntax because it's likely more common)"
                     );
                     return;
                 }
@@ -6850,7 +6875,7 @@ public:
                     n.identifier->position()
                 );
             }
-            else {
+            else if (!n.is_object_with_function_typeid()) {
                 emit(*n.identifier);
             }
 
@@ -6868,9 +6893,15 @@ public:
             if (n.initializer)
             {
                 printer.add_pad_in_this_line(-100);
-                if (type->is_concept()) {
+                if (
+                    type->is_concept()
+                    || type->is_function_typeid()
+                    )
+                {
                     printer.print_cpp2( " = ", n.position() );
-                } else {
+                }
+                else
+                {
                     printer.print_cpp2( " {", n.position() );
                 }
 
@@ -6879,7 +6910,11 @@ public:
                 emit( *n.initializer, false );
                 pop_need_expression_list_parens();
 
-                if (!type->is_concept()) {
+                if (
+                    !type->is_concept()
+                    && !type->is_function_typeid()
+                    )
+                {
                     printer.print_cpp2( "}", n.position() );
                 }
             }

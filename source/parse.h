@@ -1332,10 +1332,10 @@ struct type_id_node
     source_position pos;
 
     std::vector<token const*> pc_qualifiers;
-    token const* address_of                 = {};
-    token const* dereference_of             = {};
-    int dereference_cnt                     = {};
-    token const* suspicious_initialization  = {};
+    token const*              address_of                = {};
+    token const*              dereference_of            = {};
+    int                       dereference_cnt           = {};
+    token const*              suspicious_initialization = {};
 
     enum active { empty=0, qualified, unqualified, function, keyword };
     std::variant<

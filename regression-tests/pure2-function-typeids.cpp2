@@ -5,64 +5,79 @@ f: () = std::cout << "hello world!\n";
 
 g_in   : (      s: std::string) = std::cout << "Come in, (s)$\n";
 g_inout: (inout s: std::string) = std::cout << "Come in awhile, but take some biscuits on your way out, (s)$!\n";
-g_out  : (out   s: std::string) = s = "Gandalf";
+g_out  : (out   s: std::string) = s = "A Powerful Mage";
 g_move : (move  s: std::string) = std::cout << "I hear you've moving, (s)$?\n";
 
-h_out    : (      s: std::string) ->         std::string = { std::cout << "In (s)$ ... "; return "yohoho"; }
 h_forward: (inout s: std::string) -> forward std::string = { std::cout << "Inout (s)$ ... "; return s; }
+h_out    : (      s: std::string) ->         std::string = { std::cout << "In (s)$ ... "; return "yohoho"; }
 
 
 main: () = 
 {
     //  --- Test basic/degenerate cases
 
-    //  Ordinary pointer to function, deduced (always worked)
-    pf := f&;
-    pf();
-
     //  Test std::function< void() >
     ff: std::function< () -> void > = f&;
     ff();
+
+    //  Ordinary pointer to function, deduced (always worked)
+    pf: * () -> void = f&;
+    pf();
 
 
     //  --- Tests for parameters
     //      Note: Not forward parameters which imply a template...
     //            function type-ids are for single function signatures
 
-    fg_in   : std::function< (inout s: std::string) -> void > = g_in&;
+    fg_in   : std::function< (      s: std::string) -> void > = g_in&;
     fg_inout: std::function< (inout s: std::string) -> void > = g_inout&;
     fg_out  : std::function< (out   s: std::string) -> void > = g_out&;
     fg_move : std::function< (move  s: std::string) -> void > = g_move&;
+    pg_in   :              * (      s: std::string) -> void   = g_in&;
+    pg_inout:              * (inout s: std::string) -> void   = g_inout&;
+    pg_out  :              * (out   s: std::string) -> void   = g_out&;
+    pg_move :              * (move  s: std::string) -> void   = g_move&;
 
     frodo: std::string = "Frodo";
+    sam  : std::string = "Sam";
 
     //  Test in param
     fg_in(frodo);
+    pg_in(sam);
 
     //  Test inout
     fg_inout(frodo);
+    pg_inout(sam);
 
     //  Test out
-    gandalf: std::string;
+    gandalf  : std::string;
+    galadriel: std::string;
     fg_out(out gandalf);
-    std::cout << "fg_out initialized the arg to: (gandalf)$\n";
+    std::cout << "fg_out initialized gandalf to: (gandalf)$\n";
+    pg_out(out galadriel);
+    std::cout << "pg_out initialized galadriel to: (galadriel)$\n";
+    gandalf   = "Gandalf";
+    galadriel = "Galadriel";
 
     //  Test move
     fg_move(frodo); // last use, so (move frodo) is not required
+    pg_move(sam);   // last use, so (move sam) is not required
 
 
     //  --- Tests for single anonymous returns
     //      Note: Not multiple named return values... function-type-ids 
     //      are for Cpp1-style (single anonymous, possibly void) returns
 
-    fh_out    : std::function< (      s: std::string) ->         std::string > = h_out&;
     fh_forward: std::function< (inout s: std::string) -> forward std::string > = h_forward&;
-
-    //  Test out return
-    std::cout << "fh_out returned: (fh_out(gandalf))$\n";
+    fh_out    : std::function< (      s: std::string) ->         std::string > = h_out&;
+    ph_forward:              * (inout s: std::string) -> forward std::string   = h_forward&;
+    ph_out    :              * (      s: std::string) ->         std::string   = h_out&;
 
     //  Test forward return
     std::cout << "fh_forward returned: (fh_forward(gandalf))$\n";
+    std::cout << "ph_forward returned: (ph_forward(galadriel))$\n";
 
-    _ = gandalf;
+    //  Test out return
+    std::cout << "fh_out returned: (fh_out(gandalf))$\n";
+    std::cout << "ph_out returned: (ph_out(galadriel))$\n";
 }
