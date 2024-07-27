@@ -2069,8 +2069,11 @@ public:
         //  An increment/decrement function must have a single 'inout' parameter,
         //  and if it's a member flag it if we know the type is not copyable
         if (
-            n.my_decl->has_name("operator++")
-            || n.my_decl->has_name("operator--")
+            n.my_decl
+            && (
+                n.my_decl->has_name("operator++")
+                || n.my_decl->has_name("operator--")
+                )
             )
         {
             if (
@@ -2302,10 +2305,12 @@ public:
         inside_next_expression = false;
     }
 
-    auto start(parameter_declaration_list_node const&, int) -> void
+    auto start(parameter_declaration_list_node const& n, int) -> void
     {
         inside_parameter_list = true;
-        push_lifetime_scope();
+        if (!n.in_function_typeid) {
+            push_lifetime_scope();
+        }
     }
 
     auto end(parameter_declaration_list_node const&, int) -> void
@@ -2325,6 +2330,11 @@ public:
 
     auto start(parameter_declaration_node const& n, int) -> void
     {
+        //  Ignore parameters in function type-ids
+        if (n.is_in_function_typeid()) {
+            return;
+        }
+
         if (
             //  If it's an 'out' parameter
             (
@@ -2439,6 +2449,7 @@ public:
         }
 
         if (
+            //  Skip aliases
             !n.is_alias()
             //  Skip type scope (member) variables
             && !(n.parent_is_type() && n.is_object())
@@ -2452,6 +2463,8 @@ public:
                 !inside_parameter_list
                 || inside_out_parameter
                 )
+            //  Skip local variables that are pointers/etc. to functions
+            //&& !n.is_object_with_function_typeid()
             )
         {
             symbols.emplace_back( scope_depth, declaration_sym( false, &n, nullptr, nullptr, inside_out_parameter, false, inside_returns_list ) );

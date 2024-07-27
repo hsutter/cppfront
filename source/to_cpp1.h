@@ -1892,7 +1892,8 @@ public:
     //
     auto emit(
         type_id_node const& n,
-        source_position     pos = {}
+        source_position     pos        = {},
+        std::string         identifier = {}
     )
         -> void
     {   STACKINSTR
@@ -1900,6 +1901,22 @@ public:
             pos = n.position();
         }
 
+        //  Handle function types
+        if (n.is_function_typeid()) {
+            //  If identifier is nonempty, we're doing a local variable with a (pointer to)
+            //  function typeid, so stick in the pointers here for inside-out Cpp1 declarations
+            if (!identifier.empty()) {
+                for (auto q: n.pc_qualifiers) {
+                    if (*q == "const") { identifier = " " + identifier; }
+                    identifier = q->as_string_view() + identifier;
+                }
+                identifier = "(" + identifier + ")";
+            }
+            emit( *std::get<type_id_node::function>(n.id), false, false, {}, false, identifier );
+            return;
+        }
+
+        //  Handle all other types
         if (n.is_wildcard()) {
             printer.print_cpp2("auto", pos);
         }
@@ -4417,7 +4434,8 @@ public:
         //-----------------------------------------------------------------------
         //  Else handle ordinary parameters
 
-        auto param_type = print_to_string(type_id);
+        assert(n.declaration->identifier);
+        auto param_type = print_to_string(type_id, source_position{}, print_to_string(*n.declaration->identifier));
 
         //  If there are template parameters on this function or its enclosing
         //  type, see if this parameter's name is an unqualified-id with a
@@ -4595,7 +4613,7 @@ public:
         if (is_returns) {
             printer.print_extra( " " + identifier );
         }
-        else {
+        else if (!n.declaration->is_object_with_function_typeid()) {
             printer.print_cpp2( " ", identifier_pos );
             if (n.declaration->is_variadic)
             {
@@ -4800,12 +4818,71 @@ public:
         bool                      is_main                    = false,
         bool                      is_ctor_or_dtor            = false,
         std::string               suffix1                    = {},
-        bool                      generating_postfix_inc_dec = false
+        bool                      generating_postfix_inc_dec = false,
+        std::string               identifier                 = {}
     )
         -> void
     {   STACKINSTR
         if (!sema.check(n)) {
             return;
+        }
+
+        //  Common parts we may use in different orders
+        //
+        auto handle_default_return_type = [&]{
+            if (is_main)
+            {
+                printer.print_cpp2( " -> int", n.position() );
+            }
+            else if(!is_ctor_or_dtor)
+            {
+                printer.print_cpp2( " -> void", n.position() );
+            }
+        };
+
+        auto handle_single_anon_return_type = [&]{
+            auto is_type_scope_function_with_in_this =
+                n.my_decl
+                && n.my_decl->parent_is_type()
+                && n.parameters->ssize() > 0
+                && (*n.parameters)[0]->direction() == passing_style::in
+                ;
+
+            auto& r = std::get<function_type_node::id>(n.returns);
+            assert(r.type);
+
+            auto return_type = print_to_string(*r.type);
+
+            if (r.pass == passing_style::forward) {
+                if (r.type->is_wildcard()) {
+                    printer.print_cpp2( "auto&&", n.position() );
+                }
+                else {
+                    printer.print_cpp2( return_type, n.position() );
+                    if (is_type_scope_function_with_in_this) {
+                        printer.print_cpp2( " const&", n.position() );
+                    }
+                    else if (!generating_postfix_inc_dec) {
+                        printer.print_cpp2( "&", n.position() );
+                    }
+                }
+            }
+            else {
+                printer.print_cpp2( return_type, n.position() );
+            }
+        };
+
+
+        //  If this is not part of a declaration, just a function type-id,
+        //  the return type comes first
+        if (!n.my_decl) {
+            if (n.returns.index() == function_type_node::empty) {
+                handle_default_return_type();
+            }
+            else if (n.returns.index() == function_type_node::id) {
+                handle_single_anon_return_type();
+            }
+            printer.print_cpp2( identifier, n.position() );
         }
 
         if (
@@ -4826,7 +4903,10 @@ public:
         }
 
         //  For an anonymous function, the emitted lambda is 'constexpr' or 'mutable'
-        if (!n.my_decl->has_name())
+        if (
+            n.my_decl
+            && !n.my_decl->has_name()
+            )
         {
             if (n.my_decl->is_constexpr) {
                 //  The current design path we're trying out is for all '==' functions to be
@@ -4851,7 +4931,10 @@ public:
             n.is_move()
             || n.is_swap()
             || n.is_destructor()
-            || generating_move_from == n.my_decl
+            || (
+                n.my_decl 
+                && generating_move_from == n.my_decl
+                )
             )
         {
             printer.print_cpp2( " noexcept", n.position() );
@@ -4862,7 +4945,10 @@ public:
         //  Handle a special member function
         if (
             n.is_assignment()
-            || generating_assignment_from == n.my_decl
+            || (
+                n.my_decl 
+                && generating_assignment_from == n.my_decl
+                )
             )
         {
             assert(
@@ -4875,58 +4961,26 @@ public:
             );
         }
 
-        //  Otherwise, handle a default return type
-        else if (n.returns.index() == function_type_node::empty)
+        //  If this is a declaration, emit the trailing return type
+        else if (n.my_decl)
         {
-            if (is_main)
-            {
-                printer.print_cpp2( " -> int", n.position() );
+            //  Otherwise, handle a default return type
+            if (n.returns.index() == function_type_node::empty) {
+                handle_default_return_type();
             }
-            else if(!is_ctor_or_dtor)
-            {
-                printer.print_cpp2( " -> void", n.position() );
+
+            //  Otherwise, handle a single anonymous return type
+            else if (n.returns.index() == function_type_node::id) {
+                printer.print_cpp2( " -> ", n.position() );
+                handle_single_anon_return_type();
             }
-        }
 
-        //  Otherwise, handle a single anonymous return type
-        else if (n.returns.index() == function_type_node::id)
-        {
-            auto is_type_scope_function_with_in_this =
-                n.my_decl->parent_is_type()
-                && n.parameters->ssize() > 0
-                && (*n.parameters)[0]->direction() == passing_style::in
-                ;
-
-            printer.print_cpp2( " -> ", n.position() );
-            auto& r = std::get<function_type_node::id>(n.returns);
-            assert(r.type);
-
-            auto return_type = print_to_string(*r.type);
-
-            if (r.pass == passing_style::forward) {
-                if (r.type->is_wildcard()) {
-                    printer.print_cpp2( "auto&&", n.position() );
-                }
-                else {
-                    printer.print_cpp2( return_type, n.position() );
-                    if (is_type_scope_function_with_in_this) {
-                        printer.print_cpp2( " const&", n.position() );
-                    }
-                    else if (!generating_postfix_inc_dec) {
-                        printer.print_cpp2( "&", n.position() );
-                    }
-                }
-            }
+            //  Otherwise, handle multiple/named returns
             else {
-                printer.print_cpp2( return_type, n.position() );
+                printer.print_cpp2( " -> ", n.position() );
+                assert (n.my_decl);
+                printer.print_cpp2( multi_return_type_name(*n.my_decl), n.position());
             }
-        }
-
-        //  Otherwise, handle multiple/named returns
-        else {
-            printer.print_cpp2( " -> ", n.position() );
-            assert (n.my_decl);
-            printer.print_cpp2( multi_return_type_name(*n.my_decl), n.position());
         }
     }
 
@@ -6747,6 +6801,8 @@ public:
                 printer.print_cpp2( "extern ", n.position() );
             }
 
+            assert(n.identifier);
+
             //  Emit "auto" for deduced types (of course)
             if (type->is_wildcard()) {
                 assert(n.initializer);
@@ -6772,10 +6828,10 @@ public:
                         return;
                     }
                 }
-                printer.preempt_position_push(n.position());
-                emit( *type );
+                printer.preempt_position_push(n.position()); 
+                emit( *type, {}, print_to_string(*n.identifier) ); 
                 printer.preempt_position_pop();
-                //  one pointer is enough for now, pointer-to-function fun can be later
+
                 if (
                     !n.initializer
                     && n.parent_is_function()
@@ -6786,14 +6842,19 @@ public:
             }
 
             printer.print_cpp2( " ", n.position());
-            assert(n.identifier);
 
             //  If this is anonymous object (named "_"), generate a unique name
             if (n.has_name("_")) {
                 if (n.has_wildcard_type()) {
                     errors.emplace_back(
                         n.identifier->position(),
-                        "an object can have an anonymous name or an anonymous type, but not both at the same time (rationale: if '_ := f();' were allowed to keep the returned object alive, that syntax would be dangerously close to '_ = f();' to discard the returned object, and such importantly opposite meanings deserve more than a one-character typo distance; and explicit discarding gets the nice syntax because it's likely more common)"
+                        "an object can have an anonymous name or an anonymous type, "
+                        "but not both at the same time (rationale: if '_ := f();' were "
+                        "allowed to keep the returned object alive, that syntax would "
+                        "be dangerously close to '_ = f();' to discard the returned "
+                        "object, and such importantly opposite meanings deserve more "
+                        "than a one-character typo distance; and explicit discarding "
+                        "gets the nice syntax because it's likely more common)"
                     );
                     return;
                 }
@@ -6815,7 +6876,7 @@ public:
                     n.identifier->position()
                 );
             }
-            else {
+            else if (!n.is_object_with_function_typeid()) {
                 emit(*n.identifier);
             }
 
@@ -6833,9 +6894,15 @@ public:
             if (n.initializer)
             {
                 printer.add_pad_in_this_line(-100);
-                if (type->is_concept()) {
+                if (
+                    type->is_concept()
+                    || type->is_function_typeid()
+                    )
+                {
                     printer.print_cpp2( " = ", n.position() );
-                } else {
+                }
+                else
+                {
                     printer.print_cpp2( " {", n.position() );
                 }
 
@@ -6844,7 +6911,11 @@ public:
                 emit( *n.initializer, false );
                 pop_need_expression_list_parens();
 
-                if (!type->is_concept()) {
+                if (
+                    !type->is_concept()
+                    && !type->is_function_typeid()
+                    )
+                {
                     printer.print_cpp2( "}", n.position() );
                 }
             }
