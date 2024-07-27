@@ -12,7 +12,9 @@ func: ( /* no parameters */ ) = { /* empty body */ }
 ```
 
 
-## <a id="parameters"></a> Parameters
+## <a id="function-signatures"></a> Function signatures: Parameters, returns, and using function types
+
+### <a id="parameters"></a> Parameters
 
 The parameter list is a [list](common.md#lists) enclosed by `(` `)` parentheses. Each parameter is declared using the [same unified syntax](declarations.md) as used for all declarations. For example:
 
@@ -72,7 +74,7 @@ wrap_f: (
 ```
 
 
-## <a id="return-values"></a> Return values
+### <a id="return-values"></a> Return values
 
 A function can return either of the following. The default is `#!cpp -> void`.
 
@@ -152,7 +154,7 @@ main: () = {
 ```
 
 
-### <a id="nodiscard-outputs"></a> Function outputs are not implicitly discardable
+#### <a id="nodiscard-outputs"></a> Function outputs are not implicitly discardable
 
 A function's outputs are its return values, and the "out" state of any `out` and `inout` parameters.
 
@@ -200,9 +202,29 @@ main: ()
 > - A function call written in Cpp2 `x.f()` member call syntax always treats a non-`#!cpp void` return type as not discardable, even if the function was written in Cpp1 syntax that did not write `[[nodiscard]]`.
 
 
+### <a id = "function-types"></a> Using function types
+
+The same function parameter/return syntax can be used as a function type, for example to instantiate `std::function` or to declare a pointer to function variable. For example:
+
+``` cpp title="Using function types with std::function and *pfunc" hl_lines="4 7"
+decorate_int: (i: i32) -> std::string = "--> (i)$ <--";
+
+main: () = {
+    pf1: std::function< (i: i32) -> std::string > = decorate_int&;
+    std::cout << "pf1(123) returned \"(pf1(123))$\"\n";
+
+    pf2: * (i: i32) -> std::string = decorate_int&;
+    std::cout << "pf2(456) returned \"(pf2(456))$\"\n";
+}
+//  Prints:
+//    pf1 returned "--> 123 <--"
+//    pf2 returned "--> 456 <--"
+```
+
+
 ## <a id="control flow"></a> Control flow
 
-## <a id="branches"></a> `#!cpp if`, `#!cpp else` — Branches
+### <a id="branches"></a> `#!cpp if`, `#!cpp else` — Branches
 
 `if` and `else` are like always in C++, except that `(` `)` parentheses around the condition are not required. Instead, `{` `}` braces around a branch body *are* required. For example:
 
@@ -216,7 +238,7 @@ else {
 ```
 
 
-## <a id="loops"></a> `#!cpp for`, `#!cpp while`, `#!cpp do` — Loops
+### <a id="loops"></a> `#!cpp for`, `#!cpp while`, `#!cpp do` — Loops
 
 **`#!cpp do`** and **`#!cpp while`** are like always in C++, except that `(` `)` parentheses around the condition are not required. Instead, `{` `}` braces around the loop body *are* required.
 
@@ -296,7 +318,7 @@ Line by line:
 - `next i++`: The end-of-loop-iteration statement. Note `++` is always postfix in Cpp2.
 
 
-### Loop names, `#!cpp break`, and `#!cpp continue`
+#### Loop names, `#!cpp break`, and `#!cpp continue`
 
 Loops can be named using the usual **name `:`** syntax that introduces all names, and `#!cpp break` and `#!cpp continue` can refer to those names. For example:
 
