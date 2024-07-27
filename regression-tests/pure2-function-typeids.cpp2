@@ -16,6 +16,11 @@ f2: (a:              * (x:int) -> int  ) -> int = a(2);
 g :                    (x:int) -> int           = x+42;
 
 
+// --- Tests for type aliases
+
+A_h_forward: type == (inout s: std::string) -> forward std::string;
+
+
 main: () = 
 {
     //  --- Test basic/degenerate cases
@@ -77,9 +82,12 @@ main: () =
     ph_forward:              * (inout s: std::string) -> forward std::string   = h_forward&;
     ph_out    :              * (      s: std::string) ->         std::string   = h_out&;
 
+    ph_forward2: * A_h_forward = h_forward&;
+
     //  Test forward return
     std::cout << "fh_forward returned: (fh_forward(gandalf))$\n";
     std::cout << "ph_forward returned: (ph_forward(galadriel))$\n";
+    std::cout << "ph_forward2 returned: (ph_forward2(galadriel))$\n";
 
     //  Test out return
     std::cout << "fh_out returned: (fh_out(gandalf))$\n";
@@ -89,4 +97,6 @@ main: () =
     //  --- Tests for function parameters
     std::cout << "(f1(g&))$\n";
     std::cout << "(f2(g&))$\n";
+
+
 }

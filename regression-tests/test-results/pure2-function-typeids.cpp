@@ -31,6 +31,11 @@ auto g_move(std::string&& s) -> void;
 [[nodiscard]] auto g   (cpp2::impl::in<int> x) -> int;
 
 #line 19 "pure2-function-typeids.cpp2"
+// --- Tests for type aliases
+
+using A_h_forward = std::string&(std::string& s);
+
+#line 24 "pure2-function-typeids.cpp2"
 auto main() -> int;
 
 //=== Cpp2 function definitions =================================================
@@ -61,7 +66,7 @@ auto g_move(std::string&& s) -> void { std::cout << "I hear you've moving, " + c
 #line 16 "pure2-function-typeids.cpp2"
 [[nodiscard]] auto g   (cpp2::impl::in<int> x) -> int { return x + 42; }
 
-#line 19 "pure2-function-typeids.cpp2"
+#line 24 "pure2-function-typeids.cpp2"
 auto main() -> int
 {
     //  --- Test basic/degenerate cases
@@ -74,7 +79,7 @@ auto main() -> int
     void(*pf)()  = &f; 
     cpp2::move(pf)();
 
-#line 32 "pure2-function-typeids.cpp2"
+#line 37 "pure2-function-typeids.cpp2"
     //  --- Tests for parameters
     //      Note: Not forward parameters which imply a template...
     //            function type-ids are for single function signatures
@@ -113,7 +118,7 @@ auto main() -> int
     cpp2::move(fg_move)(cpp2::move(frodo));// last use, so (move frodo) is not required
     cpp2::move(pg_move)(cpp2::move(sam));// last use, so (move sam) is not required
 
-#line 71 "pure2-function-typeids.cpp2"
+#line 76 "pure2-function-typeids.cpp2"
     //  --- Tests for single anonymous returns
     //      Note: Not multiple named return values... function-type-ids 
     //      are for Cpp1-style (single anonymous, possibly void) returns
@@ -123,17 +128,22 @@ auto main() -> int
     std::string&(*ph_forward)(  std::string& s)  = &h_forward; 
     std::string(*ph_out)(cpp2::impl::in<std::string> s)  = &h_out; 
 
+    A_h_forward* ph_forward2 {&h_forward}; 
+
     //  Test forward return
     std::cout << "fh_forward returned: " + cpp2::to_string(cpp2::move(fh_forward)(gandalf.value())) + "\n";
     std::cout << "ph_forward returned: " + cpp2::to_string(cpp2::move(ph_forward)(galadriel.value())) + "\n";
+    std::cout << "ph_forward2 returned: " + cpp2::to_string(cpp2::move(ph_forward2)(galadriel.value())) + "\n";
 
     //  Test out return
     std::cout << "fh_out returned: " + cpp2::to_string(cpp2::move(fh_out)(cpp2::move(gandalf.value()))) + "\n";
     std::cout << "ph_out returned: " + cpp2::to_string(cpp2::move(ph_out)(cpp2::move(galadriel.value()))) + "\n";
 
-#line 89 "pure2-function-typeids.cpp2"
+#line 97 "pure2-function-typeids.cpp2"
     //  --- Tests for function parameters
     std::cout << "" + cpp2::to_string(f1(&g)) + "\n";
     std::cout << "" + cpp2::to_string(f2(&g)) + "\n";
+
+#line 102 "pure2-function-typeids.cpp2"
 }
 

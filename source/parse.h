@@ -9185,7 +9185,7 @@ private:
         //  Type alias
         if (*a->type == "type")
         {
-            auto t = type_id();
+            auto t = type_id(false, false, true);
             if (!t) {
                 errors.emplace_back(
                     curr().position(),
