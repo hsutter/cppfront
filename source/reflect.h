@@ -1883,7 +1883,7 @@ std::string to_string{"    to_string: (this) -> std::string = { \n"};
 #line 1205 "reflect.h2"
     if (!(bitwise)) {
 {
-std::string from_string{"    from_string: (s: std::string) -> " + cpp2::to_string(CPP2_UFCS(name)(t)) + " = { \n"};
+std::string from_string{"    from_string: (s: std::string_view) -> " + cpp2::to_string(CPP2_UFCS(name)(t)) + " = { \n"};
         //  Provide a 'from_string' function to parse strings into enumerators    
 
 #line 1208 "reflect.h2"

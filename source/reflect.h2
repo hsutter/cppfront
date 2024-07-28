@@ -1204,7 +1204,7 @@ basic_enum: (
 
     if !bitwise {
         //  Provide a 'from_string' function to parse strings into enumerators    
-        (copy from_string: std::string = "    from_string: (s: std::string) -> (t.name())$ = { \n")
+        (copy from_string: std::string = "    from_string: (s: std::string_view) -> (t.name())$ = { \n")
         {
             for  enumerators
             do   (e) {
