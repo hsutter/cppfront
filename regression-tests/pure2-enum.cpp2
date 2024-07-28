@@ -35,12 +35,14 @@ main: () = {
     x: skat_game = skat_game::clubs;
     x2 := skat_game::diamonds;
     x2 = x;
+    x3 := skat_game::from_string("hearts");
 
     // if x == 9 { }                    // error, can't compare skat_game and integer
     // if x == rgb::red { }             // error, can't compare skat_game and rgb color
 
     std::cout << "x.to_string() is (x.to_string())$\n";
     std::cout << "x2.to_string() is (x2.to_string())$\n";
+    std::cout << "x3.to_string() is (x3.to_string())$\n";
 
     std::cout << "with if else: ";
     if x == skat_game::diamonds {       // ok, can compare two skat_games

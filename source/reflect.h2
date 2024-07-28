@@ -1201,6 +1201,25 @@ basic_enum: (
 
         t.add_member( to_string );
     }
+
+    if !bitwise {
+        //  Provide a 'from_string' function to parse strings into enumerators    
+        (copy from_string: std::string = "    from_string: (s: std::string) -> (t.name())$ = { \n")
+        {
+            for  enumerators
+            do   (e) {
+                from_string += "    if \"(e.name)$\" == s { "
+                               "        return (e.name)$;"
+                               "    }\n";
+            }
+
+            from_string += "    std::cerr << \"can't convert string to enum of type (t.name())$\" << std::endl;\n"
+                           "    std::abort();\n"
+                           "}\n\n";
+
+            t.add_member( from_string );
+        }
+    }
 }
 
 

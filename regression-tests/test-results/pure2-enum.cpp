@@ -43,6 +43,8 @@ public: constexpr skat_game(skat_game&& that) noexcept;
 public: constexpr auto operator=(skat_game&& that) noexcept -> skat_game& ;
 public: [[nodiscard]] auto operator<=>(skat_game const& that) const& -> std::strong_ordering = default;
 public: [[nodiscard]] auto to_string() const& -> std::string;
+public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string> s) -> skat_game;
+
 
 #line 4 "pure2-enum.cpp2"
              // 10
@@ -69,6 +71,7 @@ public: constexpr janus(janus&& that) noexcept;
 public: constexpr auto operator=(janus&& that) noexcept -> janus& ;
 public: [[nodiscard]] auto operator<=>(janus const& that) const& -> std::strong_ordering = default;
 public: [[nodiscard]] auto to_string() const& -> std::string;
+public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string> s) -> janus;
 
 #line 19 "pure2-enum.cpp2"
 };
@@ -155,6 +158,17 @@ if ((*this) == grand) {return "grand"; }
 if ((*this) == null) {return "null"; }
 return "invalid skat_game value"; 
 }
+
+[[nodiscard]] auto skat_game::from_string(cpp2::impl::in<std::string> s) -> skat_game{
+if ("diamonds" == s) {return diamonds; }
+if ("hearts" == s) {return hearts; }
+if ("spades" == s) {return spades; }
+if ("clubs" == s) {return clubs; }
+if ("grand" == s) {return grand; }
+if ("null" == s) {return null; }
+std::cerr << "can't convert string to enum of type skat_game" << std::endl;
+std::abort();
+}
 #line 15 "pure2-enum.cpp2"
     constexpr auto janus::flip() & -> void{
         if ((*this) == past) {(*this) = future; }
@@ -189,6 +203,13 @@ constexpr auto janus::operator=(janus&& that) noexcept -> janus& {
     if ((*this) == past) {return "past"; }
     if ((*this) == future) {return "future"; }
     return "invalid janus value"; 
+    }
+
+    [[nodiscard]] auto janus::from_string(cpp2::impl::in<std::string> s) -> janus{
+    if ("past" == s) {return past; }
+    if ("future" == s) {return future; }
+    std::cerr << "can't convert string to enum of type janus" << std::endl;
+    std::abort();
     }
 
     constexpr file_attributes::file_attributes(cpp2::impl::in<cpp2::i64> _val)
@@ -251,12 +272,14 @@ auto main() -> int{
     skat_game x {skat_game::clubs}; 
     auto x2 {skat_game::diamonds}; 
     x2 = x;
+    auto x3 {skat_game::from_string("hearts")}; 
 
     // if x == 9 { }                    // error, can't compare skat_game and integer
     // if x == rgb::red { }             // error, can't compare skat_game and rgb color
 
     std::cout << "x.to_string() is " + cpp2::to_string(CPP2_UFCS(to_string)(x)) + "\n";
     std::cout << "x2.to_string() is " + cpp2::to_string(CPP2_UFCS(to_string)(cpp2::move(x2))) + "\n";
+    std::cout << "x3.to_string() is " + cpp2::to_string(CPP2_UFCS(to_string)(cpp2::move(x3))) + "\n";
 
     std::cout << "with if else: ";
     if (x == skat_game::diamonds) {     // ok, can compare two skat_games
