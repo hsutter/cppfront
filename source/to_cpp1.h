@@ -149,7 +149,7 @@ static cmdline_processor::register_flag cmd_safe_comparisons(
 
 static auto flag_cpp1_filename = std::string{};
 static cmdline_processor::register_flag cmd_cpp1_filename(
-    8,
+    9,
     "output filename",
     "Output to 'filename' (can be 'stdout') - default is *.cpp/*.h",
     nullptr,

@@ -655,7 +655,7 @@ class cmdline_processor
     std::unordered_map<int, std::string> labels = {
         { 2, "Additional dynamic safety checks and contract information" },
         { 4, "Support for constrained target environments" },
-        { 8, "Cpp1 file emission options" },
+        { 8, "Cpp1 file content options" },
         { 9, "Cppfront output options" }
     };
 

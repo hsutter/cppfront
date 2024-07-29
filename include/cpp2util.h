@@ -153,6 +153,9 @@
             #include <hazard_pointer>
         #endif
         #include <initializer_list>
+        #ifdef __cpp_lib_inplace_vector
+            #include <inplace_vector>
+        #endif
         #include <iomanip>
         #include <ios>
         #include <iosfwd>

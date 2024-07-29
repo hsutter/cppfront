@@ -15,11 +15,13 @@ Notes:
 
 - Optionally, `condition` may be followed by `, "message"`, a message to include if a violation occurs. For example, `pre(condition, "message")`.
 
-- Optionally, a `<group, pred1, pred2>` can be written inside `<` `>` angle brackets immediately before the `(`, to designate that this test is part of the [contract group](#groups) named `group` and (also optionally) [contract predicates](#predicates) `pred1` and `pred2`. If a violation occurs, `Group.report_violation()` will be called. For example, `pre<group>(condition)`. If no contract group is specified, the contract defaults to being part of the `cpp2_default` group.
+- Optionally, a `<group, pred1, pred2>` can be written inside `<` `>` angle brackets immediately before the `(`, to designate that this test is part of the [contract group](#groups) named `group` and (also optionally) [contract predicates](#predicates) `pred1` and `pred2`. If a violation occurs, `Group.report_violation()` will be called. For example, `pre<group>(condition)`. If no contract group is specified, the contract defaults to being part of the `default` group (spelled `cpp2_default` when used from Cpp1 code).
 
 The order of evaluation is:
 
-- First, predicates are evaluated in order. If any predicte evaluates to `#!cpp false`, stop.
+- First, if the contract group is `unevaluated` then the contract is ignored; `condition` is never evaluated. This special group is designates conditions intended for use by static analyzers only, and the only requirement is that the condition be grammatically valid.
+
+- Next, predicates are evaluated in order. If any predicate evaluates to `#!cpp false`, stop.
 
 - Next, `group.is_active()` is evaluated. If that evaluates to `#!cpp false`, stop.
 
