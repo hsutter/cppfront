@@ -1,0 +1,17 @@
+hello world!
+hello world!
+Come in, Frodo
+Come in, Sam
+Come in awhile, but take some biscuits on your way out, Frodo!
+Come in awhile, but take some biscuits on your way out, Sam!
+fg_out initialized gandalf to: A Powerful Mage
+pg_out initialized galadriel to: A Powerful Mage
+I hear you've moving, Frodo?
+I hear you've moving, Sam?
+Inout Gandalf ... fh_forward returned: Gandalf
+Inout Galadriel ... ph_forward returned: Galadriel
+Inout Galadriel ... ph_forward2 returned: Galadriel
+In Gandalf ... fh_out returned: yohoho
+In Galadriel ... ph_out returned: yohoho
+43
+44
