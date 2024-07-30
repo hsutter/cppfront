@@ -1837,7 +1837,7 @@ std::string value{"-1"};
 
     //  Generate the common functions
     CPP2_UFCS(add_member)(t, "    get_raw_value     : (this) -> " + cpp2::to_string(cpp2::move(underlying_type.value())) + " == _value;");
-    CPP2_UFCS(add_member)(t, "    operator=         : (out this) == { _value = " + cpp2::to_string(cpp2::move(default_value)) + "._value; }");
+    CPP2_UFCS(add_member)(t, "    operator=         : (out this) == { _value = " + cpp2::to_string(default_value) + "._value; }");
     CPP2_UFCS(add_member)(t, "    operator=         : (out this, that) == { }");
     CPP2_UFCS(add_member)(t, "    operator<=>       : (this, that) -> std::strong_ordering;");
 {
@@ -1879,31 +1879,30 @@ std::string to_string{"    to_string: (this) -> std::string = { \n"};
         CPP2_UFCS(add_member)(t, cpp2::move(to_string));
     }
 }
-
-#line 1205 "reflect.h2"
-    if (!(bitwise)) {
 {
 std::string from_string{"    from_string: (s: std::string_view) -> " + cpp2::to_string(CPP2_UFCS(name)(t)) + " = { \n"};
-        //  Provide a 'from_string' function to parse strings into enumerators    
 
-#line 1208 "reflect.h2"
-        {
-            for ( 
-                  auto const& e : cpp2::move(enumerators) ) {
-                from_string += "    if \"" + cpp2::to_string(e.name) + "\" == s { "
-                               "        return " + cpp2::to_string(e.name) + ";"
-                               "    }\n";
-            }
+    //  Provide a 'from_string' function to parse strings into enumerators    
 
-            from_string += "    std::cerr << \"can't convert string to enum of type " + cpp2::to_string(CPP2_UFCS(name)(t)) + "\" << std::endl;\n"
-                           "    std::abort();\n"
-                           "}\n\n";
-
-            CPP2_UFCS(add_member)(t, cpp2::move(from_string));
+#line 1207 "reflect.h2"
+    {
+        for ( 
+              auto const& e : cpp2::move(enumerators) ) {
+            from_string += "    if \"" + cpp2::to_string(e.name) + "\" == s { "
+                            "        return " + cpp2::to_string(e.name) + ";"
+                            "    }\n";
         }
-}
-#line 1222 "reflect.h2"
+
+        std::string prefix {}; 
+        if (bitwise) {prefix = "flag_"; }
+        from_string += "        cpp2::type_safety.report_violation( \"can't convert string to " + cpp2::to_string(cpp2::move(prefix)) + "enum of type " + cpp2::to_string(CPP2_UFCS(name)(t)) + "\" );\n"
+                        "        return " + cpp2::to_string(cpp2::move(default_value)) + ";"
+                        "}\n\n";
+
+        CPP2_UFCS(add_member)(t, cpp2::move(from_string));
     }
+}
+#line 1223 "reflect.h2"
 }
 
 #line 1235 "reflect.h2"

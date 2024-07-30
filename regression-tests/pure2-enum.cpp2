@@ -119,4 +119,8 @@ main: () = {
         is (cpp2::has_flags(f2))      = "includes all f2's flags ('cached' and 'current')";
         is _                          = "something else";
     } << "\n";
+
+    f_from_string := file_attributes::from_string("cached_and_current");
+
+    std::cout << "f_from_string is " << f.to_string() << "\n";
 }

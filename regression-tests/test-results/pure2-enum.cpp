@@ -101,6 +101,7 @@ public: constexpr file_attributes(file_attributes&& that) noexcept;
 public: constexpr auto operator=(file_attributes&& that) noexcept -> file_attributes& ;
 public: [[nodiscard]] auto operator<=>(file_attributes const& that) const& -> std::strong_ordering = default;
 public: [[nodiscard]] auto to_string() const& -> std::string;
+public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string_view> s) -> file_attributes;
 
 #line 22 "pure2-enum.cpp2"
                 // 1
@@ -165,9 +166,8 @@ if ("spades" == s) {return spades; }
 if ("clubs" == s) {return clubs; }
 if ("grand" == s) {return grand; }
 if ("null" == s) {return null; }
-std::cerr << "can't convert string to enum of type skat_game" << std::endl;
-std::abort();
-}
+CPP2_UFCS(report_violation)(cpp2::type_safety, "can't convert string to enum of type skat_game");
+return diamonds; }
 #line 15 "pure2-enum.cpp2"
     constexpr auto janus::flip() & -> void{
         if ((*this) == past) {(*this) = future; }
@@ -207,9 +207,8 @@ constexpr auto janus::operator=(janus&& that) noexcept -> janus& {
     [[nodiscard]] auto janus::from_string(cpp2::impl::in<std::string_view> s) -> janus{
     if ("past" == s) {return past; }
     if ("future" == s) {return future; }
-    std::cerr << "can't convert string to enum of type janus" << std::endl;
-    std::abort();
-    }
+    CPP2_UFCS(report_violation)(cpp2::type_safety, "can't convert string to enum of type janus");
+    return past; }
 
     constexpr file_attributes::file_attributes(cpp2::impl::in<cpp2::i64> _val)
                                                           : _value{ cpp2::unsafe_narrow<cpp2::u8>(_val) } {  }
@@ -260,6 +259,15 @@ constexpr auto file_attributes::operator=(file_attributes&& that) noexcept -> fi
     if (((*this) & cached_and_current) == cached_and_current) {_ret += _comma + "cached_and_current";_comma = ", ";}
     return cpp2::move(_ret) + ")"; 
     }
+
+    [[nodiscard]] auto file_attributes::from_string(cpp2::impl::in<std::string_view> s) -> file_attributes{
+    if ("cached" == s) {return cached; }
+    if ("current" == s) {return current; }
+    if ("obsolete" == s) {return obsolete; }
+    if ("cached_and_current" == s) {return cached_and_current; }
+    if ("none" == s) {return none; }
+    CPP2_UFCS(report_violation)(cpp2::type_safety, "can't convert string to flag_enum of type file_attributes");
+    return none; }
 #line 28 "pure2-enum.cpp2"
 auto main() -> int{
     auto j {janus::past}; 
@@ -350,10 +358,14 @@ auto main() -> int{
     std::cout << "f2 is (f ) is " + cpp2::to_string(cpp2::impl::is(f2, (f))) + "\n";
     std::cout << "(f & f2) == f2 is " + cpp2::to_string((f & f2) == f2) + "\n";
 
-    std::cout << "inspecting f: " << [&] () -> std::string { auto&& _expr = cpp2::move(f);
+    std::cout << "inspecting f: " << [&] () -> std::string { auto&& _expr = f;
         if (cpp2::impl::is(_expr, (file_attributes::current))) { if constexpr( requires{"exactly 'current'";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("exactly 'current'")),std::string> ) return "exactly 'current'"; else return std::string{}; else return std::string{}; }
         else if (cpp2::impl::is(_expr, cpp2::has_flags(cpp2::move(f2)))) { if constexpr( requires{"includes all f2's flags ('cached' and 'current')";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("includes all f2's flags ('cached' and 'current')")),std::string> ) return "includes all f2's flags ('cached' and 'current')"; else return std::string{}; else return std::string{}; }
         else return "something else"; }
     () << "\n";
+
+    auto f_from_string {file_attributes::from_string("cached_and_current")}; 
+
+    std::cout << "f_from_string is " << CPP2_UFCS(to_string)(cpp2::move(f)) << "\n";
 }
 

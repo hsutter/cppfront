@@ -1,5 +1,6 @@
 x.to_string() is clubs
 x2.to_string() is clubs
+x3.to_string() is hearts
 with if else: clubs
 with inspect: clubs
 
@@ -27,3 +28,4 @@ f  is (f2) is false
 f2 is (f ) is false
 (f & f2) == f2 is true
 inspecting f: includes all f2's flags ('cached' and 'current')
+f_from_string is (cached, current, obsolete, cached_and_current)

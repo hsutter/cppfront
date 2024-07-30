@@ -212,6 +212,7 @@ public: constexpr expression_flags(expression_flags&& that) noexcept;
 public: constexpr auto operator=(expression_flags&& that) noexcept -> expression_flags& ;
 public: [[nodiscard]] auto operator<=>(expression_flags const& that) const& -> std::strong_ordering = default;
 public: [[nodiscard]] auto to_string() const& -> std::string;
+public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string_view> s) -> expression_flags;
 
 #line 55 "cpp2regex.h2"
 };
@@ -1554,6 +1555,17 @@ if (((*this) & perl_code_syntax) == perl_code_syntax) {_ret += _comma + "perl_co
 if (((*this) & perl_code_syntax_in_classes) == perl_code_syntax_in_classes) {_ret += _comma + "perl_code_syntax_in_classes";_comma = ", ";}
 return cpp2::move(_ret) + ")"; 
 }
+
+[[nodiscard]] auto expression_flags::from_string(cpp2::impl::in<std::string_view> s) -> expression_flags{
+if ("case_insensitive" == s) {return case_insensitive; }
+if ("multiple_lines" == s) {return multiple_lines; }
+if ("single_line" == s) {return single_line; }
+if ("no_group_captures" == s) {return no_group_captures; }
+if ("perl_code_syntax" == s) {return perl_code_syntax; }
+if ("perl_code_syntax_in_classes" == s) {return perl_code_syntax_in_classes; }
+if ("none" == s) {return none; }
+CPP2_UFCS(report_violation)(cpp2::type_safety, "can't convert string to flag_enum of type expression_flags");
+return none; }
 
 template <typename Iter> match_group<Iter>::match_group(auto const& start_, auto const& end_, auto const& matched_)
                                                                  : start{ start_ }
