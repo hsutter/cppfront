@@ -4,12 +4,12 @@ main: () = {
         ( "Aardvark", "Baboon", "Cat", "Dolphin", "Elephant", "Flicker", "Grue", "Wumpus" );
 
     std::cout << "We have some alpabetical animals:\n";
-    for v.begin()...v.end() do (e) {
+    for v.begin() ..< v.end() do (e) {
         std::cout << "  (e*)$\n";
     }
 
     std::cout << "\nAnd from indexes 1..=5 they are:\n";
-    for 1..=5 do (e) {
+    for 1 ..= 5 do (e) {
         std::cout << "  (e)$  (v[e])$\n";
     }
 
@@ -17,7 +17,7 @@ main: () = {
         ( "Hokey", "Pokey" );
         
     std::cout << "\nMake sure non-random-access iterators work:\n";
-    for all_about.begin()...all_about.end() do (e) {
+    for all_about.begin() ..< all_about.end() do (e) {
         std::cout << "  (e*)$\n";
     }
 

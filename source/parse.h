@@ -61,7 +61,8 @@ auto is_postfix_operator(lexeme l)
           case lexeme::Tilde:
           case lexeme::Dollar:
           case lexeme::Ellipsis:
-          case lexeme::EllipsisEq:
+          case lexeme::EllipsisLess:
+          case lexeme::EllipsisEqual:
               return true;
     break;default:
         return false;
@@ -6031,8 +6032,8 @@ private:
                 || curr().type() == lexeme::LeftParen
                 || curr().type() == lexeme::Dot
                 || curr().type() == lexeme::DotDot
-                || curr().type() == lexeme::Ellipsis
-                || curr().type() == lexeme::EllipsisEq
+                || curr().type() == lexeme::EllipsisLess
+                || curr().type() == lexeme::EllipsisEqual
                 )
             )
         {
@@ -6127,8 +6128,8 @@ private:
             }
             else if (
                 ( 
-                    term.op->type() == lexeme::Ellipsis
-                    || term.op->type() == lexeme::EllipsisEq
+                    term.op->type() == lexeme::EllipsisLess
+                    || term.op->type() == lexeme::EllipsisEqual
                     )
                 && n->expr->to_string() != "sizeof"
                 )

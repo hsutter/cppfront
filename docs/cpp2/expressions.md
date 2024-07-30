@@ -223,18 +223,18 @@ test(42);
 For more examples, see also the examples in the previous two sections on `is` and `as`, many of which use `inspect`.
 
 
-## <a id="ranges"></a> `...` and `..=` — range operators
+## <a id="ranges"></a> `..<` and `..=` — range operators
 
-`...` and `..=` designate a range of things. In addition to using `...` for variadic parameters, variadic pack expansion, and fold expressions as in Cpp1, Cpp2 also supports using `begin...end` for a half-open range (that does not include `end`) and `first..=last` for a closed range (that does include `last`).
+`..<` and `..=` designate a range of things. Use `begin ..< end` for a half-open range (that does not include `end`) and `first ..= last` for a closed range (that does include `last`). These operators work for any type that supports `++`; they start with the first value, and use `++` to increment until they reach the last value (which is included by `..=`, and not included by `..<`).
 
 For example:
 
-``` cpp title="Using ... and ..= for ranges" hl_lines="5 11"
+``` cpp title="Using ..< and ..= for ranges" hl_lines="5 11"
 test: (v: std::vector<std::string>) =
 {
     //  Print strings from "Nonesuch" (if present) onward
     i1 := v.std::ranges::find("Nonesuch");
-    for i1 ... v.end() do (e) {
+    for i1 ..< v.end() do (e) {
         std::cout << "  (e*)$\n";
     }
 

@@ -3472,8 +3472,11 @@ public:
                 {
                     prefix.emplace_back( "cpp2::range(", i->op->position() );
                     auto print = print_to_string( *i->last_expr );
-                    if (i->op->type() == lexeme::EllipsisEq) {
+                    if (i->op->type() == lexeme::EllipsisEqual) {
                         print += ",true";
+                    }
+                    else {
+                        assert(i->op->type() == lexeme::EllipsisLess);
                     }
                     suffix.emplace_back( "," + print + ")", i->last_expr->position());
                 }
