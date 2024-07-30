@@ -653,7 +653,7 @@ class cmdline_processor
     int max_flag_length = 0;
 
     std::unordered_map<int, std::string> labels = {
-        { 2, "Additional dynamic safety checks and contract information" },
+        { 2, "Additional dynamic safety check controls" },
         { 4, "Support for constrained target environments" },
         { 8, "Cpp1 file content options" },
         { 9, "Cppfront output options" }

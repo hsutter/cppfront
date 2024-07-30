@@ -131,6 +131,14 @@ static cmdline_processor::register_flag cmd_safe_null_pointers(
     []{ flag_safe_null_pointers = false; }
 );
 
+static auto flag_safe_zero_division = true;
+static cmdline_processor::register_flag cmd_safe_zero_division(
+    2,
+    "no-div-zero-checks",
+    "Disable integer division by zero checks",
+    []{ flag_safe_zero_division = false; }
+);
+
 static auto flag_safe_subscripts = true;
 static cmdline_processor::register_flag cmd_safe_subscripts(
     2,
@@ -3868,6 +3876,7 @@ public:
         }
         //  If it's "_ =" then emit static_cast<void>()
         bool emit_discard = false;
+        auto last_expr    = decltype(n.expr.get()){};
         if (
             !n.terms.empty()
             && n.terms.front().op->type() == lexeme::Assignment
@@ -3881,6 +3890,7 @@ public:
         }
         else
         {
+            last_expr = n.expr.get();
             emit(*n.expr);
         }
         suppress_move_from_last_use = false;
@@ -3972,7 +3982,33 @@ public:
                 }
                 //  Otherwise, just emit the general expression as usual
                 else {
+                    //  If this is a division, wrap the denominator in a not-zero check
+                    auto suffix = std::string{};
+                    if (
+                        flag_safe_zero_division
+                        && (
+                            x.op->type() == lexeme::Slash
+                            || x.op->type() == lexeme::SlashEq
+                            )
+                        )
+                    {
+                        assert(last_expr && "ICE: shouldn't get here without having captured a pointer to the numerator expression");
+                        if (auto lit = x.expr->get_literal();
+                            lit
+                            && lit->get_token()->type() == lexeme::DecimalLiteral
+                            )
+                        {
+                            printer.print_cpp2( "CPP2_ASSERT_NOT_ZERO_LITERAL(CPP2_TYPEOF(" + print_to_string(*last_expr) + "),", x.op->position() );
+                        }
+                        else
+                        {
+                            printer.print_cpp2( "CPP2_ASSERT_NOT_ZERO(CPP2_TYPEOF(" + print_to_string(*last_expr) + "),", x.op->position() );
+                        }
+                        suffix = ")";
+                    }
+                    last_expr = x.expr.get();
                     emit(*x.expr);
+                    printer.print_cpp2( suffix, x.expr->position() );
                 }
             }
 

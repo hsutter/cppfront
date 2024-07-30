@@ -38,3 +38,4 @@ venv/*
 .vscode/
 buildh2.bat
 gen_version.bat
+mkdocs_serve.sh

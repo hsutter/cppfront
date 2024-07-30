@@ -51,11 +51,15 @@ This option also sets `-import-std`.
 Print version, build, copyright, and license information.
 
 
-## Additional dynamic safety checks and contract information
+## Additional dynamic safety check controls
 
 ### `-no-comparison-checks`, `-no-c`
 
 Disable mixed-sign comparison safety checks. If not disabled, mixed-sign comparisons are diagnosed by default.
+
+### `-no-div-zero-checks`, `-no-d`
+
+Disable integer division by zero checks. If not disabled, integer division by zero checks are performed by default.
 
 ### `-no-null-checks`, `-no-n`
 

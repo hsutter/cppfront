@@ -798,7 +798,7 @@ namespace impl {
 
 //-----------------------------------------------------------------------
 // 
-//  Check for invalid dereference or indirection which would result in undefined behavior.
+//  Invalid/null dereference checking - cases that would result in UB.
 //
 //     - Null pointer
 //     - std::unique_ptr that owns nothing
@@ -861,11 +861,60 @@ auto assert_not_null(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decl
     return CPP2_FORWARD(arg);
 }
 
-//  Subscript bounds checking
+
+//-----------------------------------------------------------------------
+// 
+//  Integer divide-by-zero checking - cases that would result in UB.
+//  
+//  Notes:
+//      NumType is the Numerator type
+//      arg is the denominator value
+//      Both must be integral to enable the check
+//
+
+#define CPP2_ASSERT_NOT_ZERO_IMPL \
+    requires (std::is_integral_v<CPP2_TYPEOF(arg)> && \
+              std::is_integral_v<NumType>) \
+{ \
+    if (0 == arg) { \
+        type_safety.report_violation("integer division by zero attempt detected"  CPP2_SOURCE_LOCATION_ARG); \
+    } \
+    return arg; \
+}
+
+template<typename NumType, auto arg>
+auto assert_not_zero([[maybe_unused]] char _ CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto
+    CPP2_ASSERT_NOT_ZERO_IMPL
+
+template<typename NumType, auto arg>
+auto assert_not_zero([[maybe_unused]] char _ CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto
+{
+    return arg;
+}
+
+template<typename NumType>
+auto assert_not_zero(auto   arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> auto
+    CPP2_ASSERT_NOT_ZERO_IMPL
+
+template<typename NumType>
+auto assert_not_zero(auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+    requires (!std::is_integral_v<CPP2_TYPEOF(arg)>
+              || !std::is_integral_v<NumType>)
+{
+    return CPP2_FORWARD(arg);
+}
+
+#define CPP2_ASSERT_NOT_ZERO(NumType, arg)          (cpp2::impl::assert_not_zero<NumType>((arg)))
+#define CPP2_ASSERT_NOT_ZERO_LITERAL(NumType, arg)  (cpp2::impl::assert_not_zero<NumType, (arg)>('_'))
+
+
+//-----------------------------------------------------------------------
+// 
+//  Subscript bounds checking - cases that would result in UB.
 //
 #define CPP2_ASSERT_IN_BOUNDS_IMPL \
     requires (std::is_integral_v<CPP2_TYPEOF(arg)> && \
-             requires { std::size(x); std::ssize(x); x[arg]; std::begin(x) + 2; }) \
+              requires { std::size(x); std::ssize(x); x[arg]; std::begin(x) + 2; }) \
 { \
     auto max = [&]() -> auto { \
         if constexpr (std::is_signed_v<CPP2_TYPEOF(arg)>) { return std::ssize(x); } \
@@ -888,14 +937,14 @@ template<auto arg>
 auto assert_in_bounds(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
     CPP2_ASSERT_IN_BOUNDS_IMPL
 
-auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
-    CPP2_ASSERT_IN_BOUNDS_IMPL
-
 template<auto arg>
 auto assert_in_bounds(auto&& x CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
 {
     return CPP2_FORWARD(x) [ arg ];
 }
+
+auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
+    CPP2_ASSERT_IN_BOUNDS_IMPL
 
 auto assert_in_bounds(auto&& x, auto&& arg CPP2_SOURCE_LOCATION_PARAM_WITH_DEFAULT) -> decltype(auto)
 {
