@@ -2277,6 +2277,10 @@ struct parameter_declaration_node
     // type(s) used in a std::unique_ptr as a member
     parameter_declaration_node(parameter_declaration_list_node const* my);
 
+    // Out-of-line definition of the dtor is necessary due to the forward-declared
+    // type(s) used in a std::unique_ptr as a member
+    ~parameter_declaration_node();
+
     //  API
     //
     auto has_name() const
@@ -4523,6 +4527,8 @@ struct translation_unit_node
 parameter_declaration_node::parameter_declaration_node(parameter_declaration_list_node const* my)
     : my_list{my}
 { }
+
+parameter_declaration_node::~parameter_declaration_node() = default;
 
 type_id_node::~type_id_node() = default;
 
