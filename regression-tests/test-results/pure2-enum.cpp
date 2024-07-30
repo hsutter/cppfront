@@ -43,8 +43,7 @@ public: constexpr skat_game(skat_game&& that) noexcept;
 public: constexpr auto operator=(skat_game&& that) noexcept -> skat_game& ;
 public: [[nodiscard]] auto operator<=>(skat_game const& that) const& -> std::strong_ordering = default;
 public: [[nodiscard]] auto to_string() const& -> std::string;
-public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string> s) -> skat_game;
-
+public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string_view> s) -> skat_game;
 
 #line 4 "pure2-enum.cpp2"
              // 10
@@ -71,7 +70,7 @@ public: constexpr janus(janus&& that) noexcept;
 public: constexpr auto operator=(janus&& that) noexcept -> janus& ;
 public: [[nodiscard]] auto operator<=>(janus const& that) const& -> std::strong_ordering = default;
 public: [[nodiscard]] auto to_string() const& -> std::string;
-public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string> s) -> janus;
+public: [[nodiscard]] static auto from_string(cpp2::impl::in<std::string_view> s) -> janus;
 
 #line 19 "pure2-enum.cpp2"
 };
@@ -159,7 +158,7 @@ if ((*this) == null) {return "null"; }
 return "invalid skat_game value"; 
 }
 
-[[nodiscard]] auto skat_game::from_string(cpp2::impl::in<std::string> s) -> skat_game{
+[[nodiscard]] auto skat_game::from_string(cpp2::impl::in<std::string_view> s) -> skat_game{
 if ("diamonds" == s) {return diamonds; }
 if ("hearts" == s) {return hearts; }
 if ("spades" == s) {return spades; }
@@ -205,7 +204,7 @@ constexpr auto janus::operator=(janus&& that) noexcept -> janus& {
     return "invalid janus value"; 
     }
 
-    [[nodiscard]] auto janus::from_string(cpp2::impl::in<std::string> s) -> janus{
+    [[nodiscard]] auto janus::from_string(cpp2::impl::in<std::string_view> s) -> janus{
     if ("past" == s) {return past; }
     if ("future" == s) {return future; }
     std::cerr << "can't convert string to enum of type janus" << std::endl;
