@@ -2274,7 +2274,13 @@ struct parameter_declaration_node
 
     std::unique_ptr<declaration_node> declaration;
 
-    parameter_declaration_node(parameter_declaration_list_node const* my) : my_list{my} { }
+    // Out-of-line definition of the ctor is necessary due to the forward-declared
+    // type(s) used in a std::unique_ptr as a member
+    parameter_declaration_node(parameter_declaration_list_node const* my);
+
+    // Out-of-line definition of the dtor is necessary due to the forward-declared
+    // type(s) used in a std::unique_ptr as a member
+    ~parameter_declaration_node();
 
     //  API
     //
@@ -2859,6 +2865,10 @@ struct declaration_node
     declaration_node(declaration_node* parent)
         : parent_declaration{parent}
     { }
+
+    // Out-of-line definition of the dtor is necessary due to the forward-declared
+    // type(s) used in a std::unique_ptr as a member
+    ~declaration_node();
 
     //  API
     //
@@ -4513,7 +4523,13 @@ struct translation_unit_node
     }
 };
 
-// Definitions of out-of-line dtors for nodes with unique_ptr members of forward-declared types
+// Definitions of out-of-line ctors & dtors for nodes with unique_ptr members of forward-declared types
+
+parameter_declaration_node::parameter_declaration_node(parameter_declaration_list_node const* my)
+    : my_list{my}
+{ }
+
+parameter_declaration_node::~parameter_declaration_node() = default;
 
 type_id_node::~type_id_node() = default;
 
@@ -4536,6 +4552,8 @@ template_argument::~template_argument() = default;
 inspect_expression_node::~inspect_expression_node() = default;
 
 statement_node::~statement_node() = default;
+
+declaration_node::~declaration_node() = default;
 
 
 //-----------------------------------------------------------------------
