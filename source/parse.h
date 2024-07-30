@@ -2861,6 +2861,10 @@ struct declaration_node
         : parent_declaration{parent}
     { }
 
+    // Out-of-line definition of the dtor is necessary due to the forward-declared
+    // type(s) used in a std::unique_ptr as a member
+    ~declaration_node();
+
     //  API
     //
 
@@ -4541,6 +4545,8 @@ template_argument::~template_argument() = default;
 inspect_expression_node::~inspect_expression_node() = default;
 
 statement_node::~statement_node() = default;
+
+declaration_node::~declaration_node() = default;
 
 
 //-----------------------------------------------------------------------
