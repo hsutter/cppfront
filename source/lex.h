@@ -1116,15 +1116,15 @@ auto lex_line(
     //G     one of: 'import' 'module' 'export' 'is' 'as'
     //G
     auto do_is_keyword = [&](std::vector<std::string_view> const& r) {
-        auto remaining_line = std::string_view(line).substr(unsafe_narrow<std::size_t>(i));
+        auto remaining_line = std::string_view(line).substr(i);
         auto m = std::find_if(r.begin(), r.end(), [&](std::string_view s) {
             return remaining_line.starts_with(s);
         });
         if (m != r.end()) {
             //  If we matched and what's next is EOL or a non-identifier char, we matched!
             if (
-                i+std::ssize(*m) == std::ssize(line)                                            // EOL
-                || !is_identifier_continue(line[unsafe_narrow<std::size_t>(i)+std::size(*m)])   // non-identifier char
+                i+std::ssize(*m) == std::ssize(line)                // EOL
+                || !is_identifier_continue(line[i+std::size(*m)])   // non-identifier char
                 )
             {
                 return static_cast<int>(std::ssize(*m));

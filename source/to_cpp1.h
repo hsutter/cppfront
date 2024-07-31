@@ -1635,8 +1635,8 @@ public:
             pos = n.position();
         }
 
-        //  Implicit "cpp2::" qualification of Cpp2 fixed-width type aliases
-        //  and cpp2::finally
+        //  Implicit "cpp2::" qualification of utilities we want to
+        //  make usable without cpp2:: qualification
         if (
             !is_qualified
             && (
@@ -1644,6 +1644,8 @@ public:
                 || n == "finally"
                 || n == "cpp1_ref"
                 || n == "cpp1_rvalue_ref"
+                || n == "unsafe_narrow"
+                || n == "unsafe_cast"
                 )
             )
         {

@@ -3111,7 +3111,7 @@ size_t i{0};
                 auto number {0}; 
                 if (!(string_util::string_to_int(group, number, 8))) {return ctx.error("Could not convert octal to int."); }
 
-                char number_as_char {unsafe_narrow<char>(cpp2::move(number))}; 
+                char number_as_char {cpp2::unsafe_narrow<char>(cpp2::move(number))}; 
 
                 auto token {CPP2_UFCS_TEMPLATE(cpp2_new<char_token>)(cpp2::shared, number_as_char, ctx.get_modifiers().has(expression_flags::case_insensitive))}; 
                 (*cpp2::impl::assert_not_null(token)).set_string("\\" + cpp2::to_string(string_util::int_to_string<8>(cpp2::impl::as_<int>(cpp2::move(number_as_char)))) + "");
@@ -3462,7 +3462,7 @@ template<typename CharT, int group, bool case_insensitive> [[nodiscard]] auto gr
     if (!(string_util::string_to_int(cpp2::move(number_str), number, 16))) {return ctx.error("Could not convert hexadecimal to int."); }
 
     // TODO: Change for unicode.
-    char number_as_char {unsafe_narrow<char>(cpp2::move(number))}; 
+    char number_as_char {cpp2::unsafe_narrow<char>(cpp2::move(number))}; 
 
     std::string syntax {string_util::int_to_string<16>(cpp2::impl::as_<int>(number_as_char))}; 
     if (cpp2::move(has_brackets)) {
@@ -3605,7 +3605,7 @@ template<typename CharT, bool positive> [[nodiscard]] auto lookahead_token_match
     if (!(string_util::string_to_int(cpp2::move(number_str), number, 8))) {return ctx.error("Could not convert octal to int."); }
 
     // TODO: Change for unicode.
-    char number_as_char {unsafe_narrow<char>(cpp2::move(number))}; 
+    char number_as_char {cpp2::unsafe_narrow<char>(cpp2::move(number))}; 
 
     std::string syntax {"\\o{" + cpp2::to_string(string_util::int_to_string<8>(cpp2::impl::as_<int>(number_as_char))) + "}"}; 
     auto r {CPP2_UFCS_TEMPLATE(cpp2_new<char_token>)(cpp2::shared, cpp2::move(number_as_char), ctx.get_modifiers().has(expression_flags::case_insensitive))}; 
@@ -3981,7 +3981,7 @@ template<typename CharT, bool negate> [[nodiscard]] auto word_boundary_token_mat
         template <typename CharT, typename matcher_wrapper> template <typename Iter> regular_expression<CharT,matcher_wrapper>::search_return<Iter>::search_return(cpp2::impl::in<bool> matched_, context<Iter> const& ctx_, Iter const& pos_)
             : matched{ matched_ }
             , ctx{ ctx_ }
-            , pos{ unsafe_narrow<int>(std::distance(ctx_.begin, pos_)) }{
+            , pos{ cpp2::unsafe_narrow<int>(std::distance(ctx_.begin, pos_)) }{
 
 #line 2633 "cpp2regex.h2"
         }

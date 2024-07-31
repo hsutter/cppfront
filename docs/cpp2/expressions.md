@@ -99,7 +99,9 @@ _ = vec.emplace_back(1,2,3);
 For details, see [Design note: Explicit discard](https://github.com/hsutter/cppfront/wiki/Design-note%3A-Explicit-discard). In Cpp2, data is always initialized, data is never silently lost, data flow is always visible. Data is precious, and it's always safe.
 
 
-## <a id="is"></a> `is` — safe type/value queries
+## Type/value queries and casts
+
+### <a id="is"></a> `is` — safe type/value queries
 
 An `x is C` expression allows safe type and value queries, and evaluates to `#!cpp true` if `x` matches constraint `C`. It supports both static and dynamic queries, including customization, with support for standard library dynamic types like `std::variant`, `std::optional`, `std::expected`, and `std::any` provided out of the box.
 
@@ -147,7 +149,7 @@ Here are some `is` queries with their Cpp1 equivalents. In this table, uppercase
 > Note: `is` unifies a variety of differently-named Cpp1 language and library queries under one syntax, and supports only the type-safe ones.
 
 
-## <a id="as"></a> `as` — safe casts and conversions
+### <a id="as"></a> `as` — safe casts and conversions
 
 An `x as T` expression allows safe type casts. `x` must be an object or expression, and `T` must be a type. Like `is`, `as` supports both static and dynamic typing, including customization, with support for standard library dynamic types like `std::variant`, `std::optional`, `std::expected`, and `std::any` provided out of the box. For example:
 
@@ -182,6 +184,24 @@ Here are some `as` casts with their Cpp1 equivalents. In this table, uppercase n
 | `o as T`  | `o.value()` |
 
 > Note: `as` unifies a variety of differently-named Cpp1 language and library casts and conversions under one syntax, and supports only the type-safe ones.
+
+
+### <a id="unsafe-casts"></a> Unsafe casts
+
+Unsafe casts must always be explicit.
+
+To perform a numeric narrowing cast, such as `i32` to `i16` or `u32`, use `unsafe_narrow<To>(from)`. For example:
+
+``` cpp title="Unsafe narrowing and casts must be explicit" hl_lines="2 3 6 7"
+f: (i: i32, inout s: std::string) = {
+    // j := i as i16;                     // error, maybe-lossy narrowing
+    j := unsafe_narrow<i16>(i);           // ok, 'unsafe' is explicit
+
+    pv: *void = s&;
+    // pi := pv as *std::string;          // error, unsafe cast
+    pi := unsafe_cast<*std::string>(pv);  // ok, 'unsafe' is explicit
+}
+```
 
 
 ## <a id="inspect"></a> `inspect` — pattern matching
@@ -353,3 +373,4 @@ std::cout << "now x+2 is (x+2)$\n";
 ```
 
 A string literal capture can include a `:suffix` where the suffix is a [standard C++ format specification](https://en.cppreference.com/w/cpp/utility/format/spec). For example, `#!cpp (x.price(): <10.2f)$` evaluates `x.price()` and converts the result to a string with 10-character width, 2 digits of precision, and left-justified.
+
