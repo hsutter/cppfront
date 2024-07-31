@@ -734,9 +734,9 @@ parse_context: type =
 
     grab_n: (inout this, in n: int, out r: std::string) -> bool = 
     {
-        if pos + n <= regex..size() {
-            r = regex..substr(pos, n);
-            pos += n - 1;
+        if pos + n as size_t <= regex..size() {
+            r = regex..substr(pos, n as size_t);
+            pos += (n as size_t) - 1;
             return true;
         }
         else {
@@ -918,7 +918,7 @@ generation_function_context: @struct type = {
     }
 
     remove_tabs: (inout this, c: int) = {
-        tabs = tabs..substr(0, c * 2);
+        tabs = tabs..substr(0, (c as size_t) * 2);
     }
 }
 

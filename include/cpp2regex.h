@@ -2229,9 +2229,9 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
 #line 735 "cpp2regex.h2"
     [[nodiscard]] auto parse_context::grab_n(cpp2::impl::in<int> n, cpp2::impl::out<std::string> r) & -> bool
     {
-        if (cpp2::impl::cmp_less_eq(pos + n,regex.size())) {
-            r.construct(regex.substr(pos, n));
-            pos += n - 1;
+        if (cpp2::impl::cmp_less_eq(pos + cpp2::impl::as_<size_t>(n),regex.size())) {
+            r.construct(regex.substr(pos, cpp2::impl::as_<size_t>(n)));
+            pos += (cpp2::impl::as_<size_t>(n)) - 1;
             return true; 
         }
         else {
@@ -2412,7 +2412,7 @@ parse_context_branch_reset_state::parse_context_branch_reset_state(){}
 
 #line 920 "cpp2regex.h2"
     auto generation_function_context::remove_tabs(cpp2::impl::in<int> c) & -> void{
-        tabs = tabs.substr(0, c * 2);
+        tabs = tabs.substr(0, (cpp2::impl::as_<size_t>(c)) * 2);
     }
 
     generation_function_context::generation_function_context(auto const& code_, auto const& tabs_)
