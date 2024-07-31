@@ -19,7 +19,7 @@ Notes:
 
 The order of evaluation is:
 
-- First, if the contract group is `unevaluated` then the contract is ignored; `condition` is never evaluated. This special group is designates conditions intended for use by static analyzers only, and the only requirement is that the condition be grammatically valid.
+- First, if the contract group is `unevaluated` then the contract is ignored; `condition` is never evaluated. This special group designates conditions intended for use by static analyzers only, and the only requirement is that the condition be grammatically valid.
 
 - Next, predicates are evaluated in order. If any predicate evaluates to `#!cpp false`, stop.
 

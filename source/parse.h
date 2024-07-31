@@ -6030,7 +6030,7 @@ private:
     //G     postfix-expression '(' expression-list? ','? ')'
     //G     postfix-expression '.' id-expression
     //G     postfix-expression '..' id-expression
-    //G     postfix-expression '...' primary-expression
+    //G     postfix-expression '..<' primary-expression
     //G     postfix-expression '..=' primary-expression
     //G
     auto postfix_expression()
@@ -6747,11 +6747,6 @@ private:
             assert (n->id.index() == type_id_node::function);
         }
         else if (!allow_omitting_type_name) {
-            return {};
-        }
-
-        if (curr().type() == lexeme::Multiply) {
-            error("'T*' is not a valid Cpp2 type; use '*T' for a pointer instead", false);
             return {};
         }
 

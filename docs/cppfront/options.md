@@ -59,7 +59,7 @@ Disable mixed-sign comparison safety checks. If not disabled, mixed-sign compari
 
 ### `-no-div-zero-checks`, `-no-d`
 
-Disable integer division by zero checks. If not disabled, integer division by zero checks are performed by default.
+Disable integer division by zero checks. If not disabled, integer division by zero checks are performed by default when both the numerator and denominator are integer types.
 
 ### `-no-null-checks`, `-no-n`
 

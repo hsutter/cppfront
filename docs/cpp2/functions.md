@@ -80,7 +80,7 @@ A function can return either of the following. The default is `#!cpp -> void`.
 
 (1) **`#!cpp -> X`** to return a single unnamed value of type `X`, which can be  `#!cpp void` to signify the function has no return value. If `X` is not `#!cpp void`, the function body must have a `#!cpp return /*value*/;` statement that returns a value of type `X` on every path that exits the function.
 
-To deduce the return type, write `-> _`. A function whose body returns a single expression `expr` can deduce the return type and omit writing `-> _ = { return /*expr*/ ; }`.
+To deduce the return type, write `-> _`. A function whose body returns a single expression `expr` can deduce the return type, and omit writing the leading `-> _ = { return` and trailing `; }`.
 
 For example:
 
