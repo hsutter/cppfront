@@ -358,7 +358,7 @@ auto main() -> int{
     std::cout << "f2 is (f ) is " + cpp2::to_string(cpp2::impl::is(f2, (f))) + "\n";
     std::cout << "(f & f2) == f2 is " + cpp2::to_string((f & f2) == f2) + "\n";
 
-    std::cout << "inspecting f: " << [&] () -> std::string { auto&& _expr = f;
+    std::cout << "inspecting f: " << [&] () -> std::string { auto&& _expr = cpp2::move(f);
         if (cpp2::impl::is(_expr, (file_attributes::current))) { if constexpr( requires{"exactly 'current'";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("exactly 'current'")),std::string> ) return "exactly 'current'"; else return std::string{}; else return std::string{}; }
         else if (cpp2::impl::is(_expr, cpp2::has_flags(cpp2::move(f2)))) { if constexpr( requires{"includes all f2's flags ('cached' and 'current')";} ) if constexpr( std::is_convertible_v<CPP2_TYPEOF(("includes all f2's flags ('cached' and 'current')")),std::string> ) return "includes all f2's flags ('cached' and 'current')"; else return std::string{}; else return std::string{}; }
         else return "something else"; }
@@ -366,6 +366,6 @@ auto main() -> int{
 
     auto f_from_string {file_attributes::from_string("cached_and_current")}; 
 
-    std::cout << "f_from_string is " << CPP2_UFCS(to_string)(cpp2::move(f)) << "\n";
+    std::cout << "f_from_string is " << CPP2_UFCS(to_string)(cpp2::move(f_from_string)) << "\n";
 }
 

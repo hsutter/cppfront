@@ -122,5 +122,5 @@ main: () = {
 
     f_from_string := file_attributes::from_string("cached_and_current");
 
-    std::cout << "f_from_string is " << f.to_string() << "\n";
+    std::cout << "f_from_string is " << f_from_string.to_string() << "\n";
 }
