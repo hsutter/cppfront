@@ -375,6 +375,49 @@ using _uchar     = unsigned char;    // normally use u8 instead
 
 namespace string_util {
 
+//  Break a string_view that could be a single string or a parenthesized 
+//  and comma/whitepace delimited list of strings into a vector of views
+auto split_string_list(std::string_view str)
+    -> std::vector<std::string_view>
+{
+    std::vector<std::string_view> ret;
+
+    //  Remove leading '(' and trailing ')' if present
+    if (!str.empty() && str.front() == '(') {
+        str.remove_prefix(1);
+    }
+    if (!str.empty() && str.back() == ')') {
+        str.remove_suffix(1);
+    }
+
+    auto pos = 0;
+    
+    auto at_delimiter = [&]{ 
+        return std::isspace(str[pos]) || str[pos] == ',';
+    };
+
+    while( pos < std::ssize(str) ) {
+        //  Skip spaces and commas
+        while (pos < std::ssize(str) && at_delimiter()) {
+            ++pos;
+        }
+        auto start = pos;
+
+        //  Find the end of the current component
+        while (pos < std::ssize(str) && !at_delimiter()) {
+            ++pos;
+        }
+
+        //  Add nonempty substring to the vector
+        if (start < pos) {
+            ret.emplace_back(str.substr(start, pos - start));
+        }
+    }
+
+    return ret;
+}
+
+
 //  From https://stackoverflow.com/questions/216823/how-to-trim-a-stdstring
 
 //  Trim from start (in place)

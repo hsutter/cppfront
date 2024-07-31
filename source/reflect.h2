@@ -1205,18 +1205,39 @@ basic_enum: (
     //  Provide a 'from_string' function to parse strings into enumerators    
     (copy from_string: std::string = "    from_string: (s: std::string_view) -> (t.name())$ = { \n")
     {
-        for  enumerators
-        do   (e) {
-            from_string += "    if \"(e.name)$\" == s { "
-                            "        return (e.name)$;"
-                            "    }\n";
+        prefix    : std::string_view = "";
+        combine_op: std::string_view = "return";
+
+        //  For flags, accept a list that we break apart and then |= together
+        if bitwise 
+        {
+            prefix      = "flag_";
+            combine_op  = "ret |=";
+
+            from_string += "        ret := none;\n"
+                           "        for cpp2::string_util::split_string_list(s) do (x) {\n";
+        }
+        //  Otherwise, accept just a single string
+        else {
+            from_string += "        x := s;\n";
         }
 
-        prefix: std::string = ();
-        if bitwise { prefix = "flag_"; }
-        from_string += "        cpp2::type_safety.report_violation( \"can't convert string to (prefix)$enum of type (t.name())$\" );\n"
-                        "        return (default_value)$;"
-                        "}\n\n";
+        (copy else_: std::string_view = "")
+        for  enumerators
+        do   (e) {
+            from_string += "            (else_)$if \"(e.name)$\" == x { (combine_op)$ (e.name)$; }\n";
+            else_ = "else ";
+        }
+
+        if bitwise {
+            from_string += "            else { break; }\n"
+                           "        }\n"
+                           "        return ret;";
+        }
+
+        from_string += "        cpp2::type_safety.report_violation( (\"can't convert string '\" + cpp2::to_string(s) + \"' to (prefix)$enum of type (t.name())$\").c_str() );\n"
+                       "        return (default_value)$;\n"
+                       "    }\n\n";
 
         t.add_member( from_string );
     }

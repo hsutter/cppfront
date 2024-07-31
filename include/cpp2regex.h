@@ -1557,15 +1557,24 @@ return cpp2::move(_ret) + ")";
 }
 
 [[nodiscard]] auto expression_flags::from_string(cpp2::impl::in<std::string_view> s) -> expression_flags{
-if ("case_insensitive" == s) {return case_insensitive; }
-if ("multiple_lines" == s) {return multiple_lines; }
-if ("single_line" == s) {return single_line; }
-if ("no_group_captures" == s) {return no_group_captures; }
-if ("perl_code_syntax" == s) {return perl_code_syntax; }
-if ("perl_code_syntax_in_classes" == s) {return perl_code_syntax_in_classes; }
-if ("none" == s) {return none; }
-CPP2_UFCS(report_violation)(cpp2::type_safety, "can't convert string to flag_enum of type expression_flags");
-return none; }
+
+auto ret {none}; 
+for ( auto const& x : cpp2::string_util::split_string_list(s) ) {
+if ("case_insensitive" == x) {ret |= case_insensitive;}
+else {if ("multiple_lines" == x) {ret |= multiple_lines;}
+else {if ("single_line" == x) {ret |= single_line;}
+else {if ("no_group_captures" == x) {ret |= no_group_captures;}
+else {if ("perl_code_syntax" == x) {ret |= perl_code_syntax;}
+else {if ("perl_code_syntax_in_classes" == x) {ret |= perl_code_syntax_in_classes;}
+else {if ("none" == x) {ret |= none;}
+else {break;}
+#line 1 "cpp2regex.h2"
+}}}}}}
+}
+
+CPP2_UFCS(report_violation)(cpp2::type_safety, CPP2_UFCS(c_str)(("can't convert string '" + cpp2::to_string(s) + "' to flag_enum of type expression_flags")));
+return none; 
+}
 
 template <typename Iter> match_group<Iter>::match_group(auto const& start_, auto const& end_, auto const& matched_)
                                                                  : start{ start_ }
@@ -1576,6 +1585,7 @@ template <typename Iter> match_return<Iter>::match_return(auto const& matched_, 
                                                          : matched{ matched_ }
                                                          , pos{ pos_ }{}
 template <typename Iter> match_return<Iter>::match_return(){}
+
 #line 38 "cpp2regex.h2"
 //-----------------------------------------------------------------------
 //
