@@ -68,6 +68,8 @@ nav:
   - 'Cppfront reference':
     - 'Using Cpp1 (today''s syntax) and Cpp2 in the same source file': cppfront/mixed.md
     - 'Cppfront command line options': cppfront/options.md
+  - 'Other':
+    - 'Regular expression features': other/regex_status.md
 
 markdown_extensions:
   - pymdownx.highlight:
