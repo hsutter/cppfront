@@ -6589,12 +6589,18 @@ public:
                     printer.print_cpp2( suffix2, n.position() );
 
                     //  If this is ++ or --, also generate a Cpp1 postfix version of the operator
+                    //  (as long as we don't know for sure this isn't a copyable type)
                     if (func->is_increment_or_decrement())
                     {
                         if (generating_postfix_inc_dec_from) {
                             assert (generating_postfix_inc_dec_from == &n);
                         }
-                        else {
+                        else if (
+                                !n.parent_declaration
+                                || !n.parent_declaration->is_type()
+                                || !n.parent_declaration->cannot_be_a_copy_constructible_type()
+                                )
+                        {
                             need_to_generate_postfix_inc_dec = true;
                         }
                     }
