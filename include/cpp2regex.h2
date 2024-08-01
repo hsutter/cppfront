@@ -90,38 +90,42 @@ match_context: <CharT, Iter, max_groups: int> type =
 
     //  Getter and setter for groups
     //
-    get_group: (in this, group) groups[group];
+    get_group: (in this, group) groups[get_group_idx(group)];
 
     get_group_end:    (in this, group) -> int = {
-        if group >= max_groups || !groups[group].matched {
+        idx:= get_group_idx(group);
+        if group >= max_groups || !groups[idx].matched {
             return 0;
         }
-        return cpp2::unsafe_narrow<int>( std::distance(begin, groups[group].end) );
+        return cpp2::unsafe_narrow<int>( std::distance(begin, groups[idx].end) );
     }
     get_group_start:  (in this, group) -> int = {
-        if group >= max_groups || !groups[group].matched {
+        idx:= get_group_idx(group);
+        if group >= max_groups || !groups[idx].matched {
             return 0;
         }
-        return cpp2::unsafe_narrow<int>( std::distance(begin, groups[group].start) );
+        return cpp2::unsafe_narrow<int>( std::distance(begin, groups[idx].start) );
     }
     get_group_string: (in this, group) -> std::string = {
-        if group >= max_groups || !groups[group].matched {
+        idx:= get_group_idx(group);
+        if group >= max_groups || !groups[idx].matched {
             return "";
         }
-        return std::string(groups[group].start, groups[group].end);
+        return std::string(groups[idx].start, groups[idx].end);
     }
     
     set_group_end: (inout this, group, pos) = {
-        groups[group].end = pos;
-        groups[group].matched = true;
+        idx:= get_group_idx(group);
+        groups[idx].end = pos;
+        groups[idx].matched = true;
     }
 
     set_group_invalid: (inout this, group) = {
-        groups[group].matched = false;
+        groups[get_group_idx(group)].matched = false;
     }
 
     set_group_start: (inout this, group, pos) = {
-        groups[group].start = pos;
+        groups[get_group_idx(group)].start = pos;
     }
 
     size: (in this) max_groups;
@@ -130,6 +134,13 @@ match_context: <CharT, Iter, max_groups: int> type =
     //
     fail: (in this)            match_return<Iter>(false, end);
     pass: (in this, cur: Iter) match_return<Iter>(true, cur);
+
+    //  Private functions
+    //
+    get_group_idx: (in this, group) -> size_t = {
+        assert(group >= 0);
+        return group as size_t;
+    }
 }
 
 
