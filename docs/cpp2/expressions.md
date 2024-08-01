@@ -245,7 +245,9 @@ For more examples, see also the examples in the previous two sections on `is` an
 
 ## <a id="ranges"></a> `..<` and `..=` — range operators
 
-`..<` and `..=` designate a range of things. Use `begin ..< end` for a half-open range (that does not include `end`) and `first ..= last` for a closed range (that does include `last`). These operators work for any type that supports `++`; they start with the first value, and use `++` to increment until they reach the last value (which is included by `..=`, and not included by `..<`).
+`..<` and `..=` designate a range of things. Use `begin ..< end` for a half-open range (that does not include `end`) and `first ..= last` for a closed range (that does include `last`, and `last` must be a valid value and must be valid to increment once). These operators work for any type that supports `++`; they start with the `first` value, and use `++` to increment until they reach the `last` value (which is included by `..=`, and not included by `..<`).
+
+> Note: For all numeric ranges, `last`'s value must be reachable by incrementing `first` a finite number of times. For `..=` closed numeric ranges, `last` must not be `std::numeric_limits<size_t>::max()` or `std::numeric_limits<ptrdiff_t>::max()`.
 
 For example:
 
