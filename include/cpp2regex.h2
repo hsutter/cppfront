@@ -137,7 +137,7 @@ match_context: <CharT, Iter, max_groups: int> type =
 
     //  Private functions
     //
-    get_group_idx: (in this, group) -> size_t = {
+    private get_group_idx: (in this, group) -> size_t = {
         assert(group >= 0);
         return group as size_t;
     }

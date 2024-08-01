@@ -287,7 +287,7 @@ template<typename CharT, typename Iter, int max_groups> class match_context
     public: [[nodiscard]] auto pass(cpp2::impl::in<Iter> cur) const& -> auto;
 
 #line 140 "cpp2regex.h2"
-    public: [[nodiscard]] auto get_group_idx(auto const& group) const& -> size_t;
+    private: [[nodiscard]] auto get_group_idx(auto const& group) const& -> size_t;
 
 #line 144 "cpp2regex.h2"
 };
